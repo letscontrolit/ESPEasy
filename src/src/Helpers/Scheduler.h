@@ -186,8 +186,8 @@ public:
   * GPIO Timer
   * Special timer to handle timed GPIO actions
   \*********************************************************************************************/
-  static unsigned long createGPIOTimerId(byte GPIOType,
-                                         byte pinNumber,
+  static unsigned long createGPIOTimerId(uint8_t GPIOType,
+                                         uint8_t pinNumber,
                                          int  Par1);
 
 
@@ -230,44 +230,49 @@ public:
   * Thus only use these when the result is not needed immediately.
   * Proper use case is calling from a callback function, since those cannot use yield() or delay()
   \*********************************************************************************************/
+
+  // Note: event will be moved
   void schedule_plugin_task_event_timer(deviceIndex_t       DeviceIndex,
-                                        byte                Function,
-                                        struct EventStruct *event);
+                                        uint8_t                Function,
+                                        struct EventStruct &&event);
 
   void schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
                                                taskIndex_t     TaskIndex,
-                                               byte            Function,
+                                               uint8_t            Function,
                                                char           *c_topic,
-                                               byte           *b_payload,
+                                               uint8_t           *b_payload,
                                                unsigned int    length);
 
 
+  // Note: the event will be moved
   void schedule_controller_event_timer(protocolIndex_t     ProtocolIndex,
-                                       byte                Function,
-                                       struct EventStruct *event);
+                                       uint8_t                Function,
+                                       struct EventStruct &&event);
 
   void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
                                             CPlugin::Function Function,
                                             char           *c_topic,
-                                            byte           *b_payload,
+                                            uint8_t           *b_payload,
                                             unsigned int    length);
 
-  void schedule_notification_event_timer(byte                NotificationProtocolIndex,
+  // Note: The event will be moved
+  void schedule_notification_event_timer(uint8_t                NotificationProtocolIndex,
                                          NPlugin::Function   Function,
-                                         struct EventStruct *event);
+                                         struct EventStruct &&event);
 
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
                                                 uint16_t      crc16);
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
-                                                byte          Index,
-                                                byte          Function);
+                                                uint8_t          Index,
+                                                uint8_t          Function);
 
+  // Note, the event will be moved
   void schedule_event_timer(PluginPtrType       ptr_type,
-                            byte                Index,
-                            byte                Function,
-                            struct EventStruct *event);
+                            uint8_t                Index,
+                            uint8_t                Function,
+                            struct EventStruct &&event);
 
   void process_system_event_queue();
 

@@ -26,6 +26,7 @@ else:
 #    "-DPLUGIN_BUILD_NORMAL",
     "-DUSES_P001",  # Switch
     "-DUSES_P002",  # ADC
+    "-DUSES_P003",  # Generic pulse counter
     "-DUSES_P004",  # Dallas DS18b20
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
@@ -52,7 +53,7 @@ else:
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
-  
+    "-DUSE_EXT_RTC",
     "-DFEATURE_SD",
     "-DFEATURE_I2CMULTIPLEXER",
     "-DUSE_TRIGONOMETRIC_FUNCTIONS_RULES",

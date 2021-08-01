@@ -24,10 +24,10 @@ No initial history available.
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
 
-volatile byte Plugin_008_bitCount = 0;     // Count the number of bits received.
+volatile uint8_t Plugin_008_bitCount = 0;     // Count the number of bits received.
 uint64_t Plugin_008_keyBuffer = 0;    // A 64-bit-long keyBuffer into which the number is stored.
-byte Plugin_008_timeoutCount = 0;
-byte Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
+uint8_t Plugin_008_timeoutCount = 0;
+uint8_t Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
 
 boolean Plugin_008_init = false;
 
@@ -51,7 +51,7 @@ uint64_t castHexAsDec(uint64_t hexValue) {
   return result;
 }
 
-boolean Plugin_008(byte function, struct EventStruct *event, String& string)
+boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -144,9 +144,11 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
               Plugin_008_timeoutCount++;
               if (Plugin_008_timeoutCount > 5)
               {
-                String log = F("RFID : reset bits: ");
-                log += Plugin_008_bitCount;
-                addLog(LOG_LEVEL_INFO, log );
+                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                  String log = F("RFID : reset bits: ");
+                  log += Plugin_008_bitCount;
+                  addLog(LOG_LEVEL_INFO, log );
+                }
                 // reset after ~5 sec
                 Plugin_008_keyBuffer = 0;
                 Plugin_008_bitCount = 0;
@@ -204,14 +206,16 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_LOAD:
         {
-          byte choice = PCONFIG(0);
-          String options[2];
-          options[0] = F("26 Bits");
-          options[1] = F("34 Bits");
-          int optionValues[2];
-          optionValues[0] = 26;
-          optionValues[1] = 34;
-          addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
+          uint8_t choice = PCONFIG(0);
+          {
+            const __FlashStringHelper * options[2];
+            options[0] = F("26 Bits");
+            options[1] = F("34 Bits");
+            int optionValues[2];
+            optionValues[0] = 26;
+            optionValues[1] = 34;
+            addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
+          }
           bool presentHexToDec = PCONFIG(1) == 1;
           addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
           addFormNote(F("Useful only for numeric keypad input!"));

@@ -1,6 +1,9 @@
+#include "ESPEasy_common.h"
+
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
-#include "ESPEasy_common.h"
+
+#include "src/Helpers/Misc.h"
 
 
 // ********************************************************************************
@@ -17,7 +20,6 @@
 
 void PluginInit(void)
 {
-  DeviceIndex_to_Plugin_id.resize(PLUGIN_MAX + 1); // INVALID_DEVICE_INDEX may be used as index for this array.
   DeviceIndex_to_Plugin_id[PLUGIN_MAX] = INVALID_PLUGIN_ID;
   // Clear pointer table for all plugins
   for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++)
@@ -1048,6 +1050,10 @@ void PluginInit(void)
   ADDPLUGIN(255)
 #endif
 
+#ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("ADDPLUGIN(...)"));
+#endif
+
   String dummy;
   PluginCall(PLUGIN_DEVICE_ADD, nullptr, dummy);
     // Set all not supported plugins to disabled.
@@ -1057,7 +1063,15 @@ void PluginInit(void)
     }
   }
 
+#ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("PLUGIN_DEVICE_ADD"));
+#endif
+
   PluginCall(PLUGIN_INIT_ALL, nullptr, dummy);
+#ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("PLUGIN_INIT_ALL"));
+#endif
+
   sortDeviceIndexArray(); // Used in device selector dropdown.
 }
 

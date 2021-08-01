@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 class LongTermTimer {
 public:
@@ -44,6 +44,10 @@ public:
 
   void set(uint64_t start_time) {
     _timer_usec = start_time;
+  }
+
+  void setMillisFromNow(uint32_t millisFromNow) {
+    _timer_usec = getMicros64() + (millisFromNow * 1000ull);
   }
 
   bool isSet() const {

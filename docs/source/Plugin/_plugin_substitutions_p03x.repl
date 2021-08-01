@@ -80,7 +80,7 @@
 .. |P036_type| replace:: :cyan:`Display`
 .. |P036_typename| replace:: :cyan:`Display - OLED SSD1306/SH1106 Framed`
 .. |P036_porttype| replace:: `.`
-.. |P036_status| replace:: :green:`NORMAL`
+.. |P036_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P036_github| replace:: P036_FrameOLED.ino
 .. _P036_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P036_FrameOLED.ino
 .. |P036_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P038_type| replace:: :cyan:`Output`
 .. |P038_typename| replace:: :cyan:`Output - NeoPixel (Basic)`
 .. |P038_porttype| replace:: `.`
-.. |P038_status| replace:: :green:`NORMAL`
+.. |P038_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P038_github| replace:: P038_NeoPixel.ino
 .. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
 .. |P038_usedby| replace:: `.`
@@ -115,13 +115,13 @@
 .. |P038_compileinfo| replace:: `.`
 .. |P038_usedlibraries| replace:: `.`
 
-.. |P039_name| replace:: :cyan:`Thermocouple`
+.. |P039_name| replace:: :cyan:`Thermosensors`
 .. |P039_type| replace:: :cyan:`Environment`
-.. |P039_typename| replace:: :cyan:`Environment - Thermocouple`
+.. |P039_typename| replace:: :cyan:`Environment - Thermosensors`
 .. |P039_porttype| replace:: `.`
 .. |P039_status| replace:: :green:`NORMAL`
-.. |P039_github| replace:: P039_Thermocouple.ino
-.. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermocouple.ino
+.. |P039_github| replace:: P039_Thermosensors.ino
+.. _P039_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P039_Thermosensors.ino
 .. |P039_usedby| replace:: `.`
 .. |P039_shortinfo| replace:: `.`
 .. |P039_maintainer| replace:: `.`

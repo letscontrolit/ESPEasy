@@ -13,6 +13,10 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -30,9 +34,9 @@ void I2CMultiplexerSelect(uint8_t i);
 
 void I2CMultiplexerOff();
 
-void SetI2CMultiplexer(byte toWrite);
+void SetI2CMultiplexer(uint8_t toWrite);
 
-byte I2CMultiplexerMaxChannels();
+uint8_t I2CMultiplexerMaxChannels();
 
 void I2CMultiplexerReset();
 
@@ -69,14 +73,20 @@ uint32_t getChipId();
 
 uint8_t getChipCores();
 
-String getChipModel();
+const __FlashStringHelper * getChipModel();
 
 uint8_t getChipRevision();
 
 /********************************************************************************************\
+   Boot information
+ \*********************************************************************************************/
+void readBootCause();
+
+
+/********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
-String getDeviceModelBrandString(DeviceModel model);
+const __FlashStringHelper * getDeviceModelBrandString(DeviceModel model);
 
 String getDeviceModelString(DeviceModel model);
 
@@ -91,7 +101,7 @@ void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name, bool a
 
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
 
-void addButtonRelayRule(byte buttonNumber, int relay_gpio);
+void addButtonRelayRule(uint8_t buttonNumber, int relay_gpio);
 
 void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 

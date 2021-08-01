@@ -14,13 +14,31 @@
 
 /*********************************************************************************************\
 * EventStruct
+* This should not be copied, only moved.
+* When copy is really needed, use deep_copy
 \*********************************************************************************************/
 struct EventStruct
 {
   EventStruct();
+  // Delete the copy constructor
+  EventStruct(const struct EventStruct& event) = delete;
+private:
+  // Hide the copy assignment operator by making it private
+  EventStruct& operator=(const EventStruct&) = default; 
+
+public:
+  EventStruct(struct EventStruct&& event) = default;
+  EventStruct& operator=(struct EventStruct&& other) = default;
+
   explicit EventStruct(taskIndex_t taskIndex);
-  explicit EventStruct(const struct EventStruct& event);
-  EventStruct& operator=(const struct EventStruct& other);
+
+  // Explicit deep_copy function to make sure this object is not accidentally copied using the copy-constructor
+  // Copy constructor and assignment operator should not be used.
+  void deep_copy(const struct EventStruct& other);
+  void deep_copy(const struct EventStruct* other);
+  //  explicit EventStruct(const struct EventStruct& event);
+  //  EventStruct& operator=(const struct EventStruct& other);
+
 
   void setTaskIndex(taskIndex_t taskIndex);
 
@@ -32,7 +50,7 @@ struct EventStruct
   String String3;
   String String4;
   String String5;
-  byte  *Data = nullptr;
+  uint8_t  *Data = nullptr;
   int    idx  = 0;
   int    Par1 = 0;
   int    Par2 = 0;
@@ -45,9 +63,9 @@ struct EventStruct
   taskIndex_t            TaskIndex         = INVALID_TASK_INDEX;       // index position in TaskSettings array, 0-11
   controllerIndex_t      ControllerIndex   = INVALID_CONTROLLER_INDEX; // index position in Settings.Controller, 0-3
   notifierIndex_t        NotificationIndex = INVALID_NOTIFIER_INDEX;   // index position in Settings.Notification, 0-3
-  byte                   BaseVarIndex      = 0;
+  uint8_t                   BaseVarIndex      = 0;
   Sensor_VType           sensorType        = Sensor_VType::SENSOR_TYPE_NOT_SET;
-  byte                   OriginTaskIndex   = 0;
+  uint8_t                   OriginTaskIndex   = 0;
 };
 
 #endif // ESPEASY_EVENTSTRUCT_H

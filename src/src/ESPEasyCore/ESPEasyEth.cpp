@@ -10,7 +10,11 @@
 #include "../Helpers/StringConverter.h"
 
 #include <ETH.h>
-#include <eth_phy/phy.h>
+#if ESP_IDF_VERSION_MAJOR > 3
+ #include <esp_eth_phy.h>
+#else
+ #include <eth_phy/phy.h>
+#endif
 
 bool ethUseStaticIP() {
   return Settings.ETH_IP[0] != 0 && Settings.ETH_IP[0] != 255;
@@ -82,9 +86,18 @@ void ethPrintSettings() {
   }
 }
 
-uint8_t * ETHMacAddress(uint8_t* mac) {
-    esp_eth_get_mac(mac);
-    return mac;
+MAC_address ETHMacAddress() {
+  MAC_address mac;
+  if(!EthEventData.ethInitSuccess) {
+    addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
+  } else {
+    #if ESP_IDF_VERSION_MAJOR > 3
+    ETH.macAddress(mac.mac);
+    #else
+    esp_eth_get_mac(mac.mac);
+    #endif
+  }
+  return mac;
 }
 
 bool ETHConnectRelaxed() {
@@ -106,11 +119,41 @@ bool ETHConnectRelaxed() {
     Settings.ETH_Pin_mdio,
     (eth_phy_type_t)Settings.ETH_Phy_Type,
     (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+  if (EthEventData.ethInitSuccess) {
+    EthEventData.ethConnectAttemptNeeded = false;
+  }
   return EthEventData.ethInitSuccess;
 }
 
 bool ETHConnected() {
-  return EthEventData.EthServicesInitialized();
+  if (EthEventData.EthServicesInitialized()) {
+    if (EthLinkUp()) {
+      return true;
+    }
+    // Apparently we missed an event
+    EthEventData.processedDisconnect = false;
+  } else if (EthEventData.ethInitSuccess) {
+    if (EthLinkUp()) {
+      EthEventData.setEthConnected();
+      if (NetworkLocalIP() != IPAddress(0, 0, 0, 0) && 
+          !EthEventData.EthGotIP()) {
+        EthEventData.processedGotIP = false;
+      }
+      if (EthEventData.lastConnectMoment.isSet()) {
+        if (!EthEventData.EthServicesInitialized()) {
+          if (EthEventData.lastConnectMoment.millisPassedSince() > 10000 &&
+              EthEventData.lastGetIPmoment.isSet()) {
+            EthEventData.processedGotIP = false;
+            EthEventData.markLostIP();
+          }
+        }
+      }
+      return false;
+    } else {
+      setNetworkMedium(NetworkMedium_t::WIFI);
+    }
+  }
+  return false;
 }
 
 #endif

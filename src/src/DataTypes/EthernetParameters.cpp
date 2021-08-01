@@ -13,7 +13,7 @@ bool isValid(EthClockMode_t clockMode) {
   return false;
 }
 
-String toString(EthClockMode_t clockMode) {
+const __FlashStringHelper * toString(EthClockMode_t clockMode) {
   switch (clockMode) {
     case  EthClockMode_t::Ext_crystal_osc:       return F("External crystal oscillator");
     case  EthClockMode_t::Int_50MHz_GPIO_0:      return F("50MHz APLL Output on GPIO0");
@@ -36,7 +36,7 @@ bool isValid(EthPhyType_t phyType) {
   return false;
 }
 
-String toString(EthPhyType_t phyType) {
+const __FlashStringHelper * toString(EthPhyType_t phyType) {
   switch (phyType) {
     case EthPhyType_t::LAN8710: return F("LAN8710");
     case EthPhyType_t::TLK110:  return F("TLK110");

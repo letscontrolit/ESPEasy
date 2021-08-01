@@ -205,11 +205,11 @@ const char Plugin_023_myFont[][8] PROGMEM = {
 };
 
 
-P023_data_struct::P023_data_struct(byte _address,   byte _type, P023_data_struct::Spacing _font_spacing, byte _displayTimer)
-  :  address(_address), type(_type),  font_spacing(_font_spacing),  displayTimer(_displayTimer)
+P023_data_struct::P023_data_struct(uint8_t _address,   uint8_t _type, P023_data_struct::Spacing _font_spacing, uint8_t _displayTimer,uint8_t _use_sh1106)
+  :  address(_address), type(_type),  font_spacing(_font_spacing),  displayTimer(_displayTimer), use_sh1106(_use_sh1106)
 {}
 
-void P023_data_struct::setDisplayTimer(byte _displayTimer) {
+void P023_data_struct::setDisplayTimer(uint8_t _displayTimer) {
   displayOn();
   displayTimer = _displayTimer;
 }
@@ -226,7 +226,7 @@ void P023_data_struct::checkDisplayTimer() {
 }
 
 // Perform some specific changes for OLED display
-String P023_data_struct::parseTemplate(String& tmpString, byte lineSize) {
+String P023_data_struct::parseTemplate(String& tmpString, uint8_t lineSize) {
   String result             = parseTemplate_padded(tmpString, lineSize);
   const char degree[3]      = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
   const char degree_oled[2] = { 0x7F, 0 };       // P023_OLED degree symbol
@@ -315,6 +315,12 @@ void P023_data_struct::sendCommand(unsigned char com)
 // or 8 COL * 5 ROW map (64x48 pixels)
 void P023_data_struct::setXY(unsigned char row, unsigned char col)
 {
+  unsigned char col_offset = 0;
+
+  if (use_sh1106) {
+      col_offset = 0x02;    // offset of 2 when using SSH1106 controller
+  }
+
   switch (type)
   {
     case OLED_64x48:
@@ -325,9 +331,9 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col)
       row += 2;
   }
 
-  sendCommand(0xb0 + row);                     // set page address
-  sendCommand(0x00 + (8 * col & 0x0f));        // set low col address
-  sendCommand(0x10 + ((8 * col >> 4) & 0x0f)); // set high col address
+  sendCommand(0xb0 + row);                              // set page address
+  sendCommand(0x00 + ((8 * col + col_offset) & 0x0f));  // set low col address
+  sendCommand(0x10 + ((8 * col >> 4) & 0x0f));          // set high col address
 }
 
 // Prints a string regardless the cursor position.
@@ -407,16 +413,24 @@ void P023_data_struct::init_OLED()
   sendCommand(0xD3);       // SETDISPLAYOFFSET
   sendCommand(0x00);       // no offset
   sendCommand(0x40 | 0x0); // SETSTARTLINE
-  sendCommand(0x8D);       // CHARGEPUMP
-  sendCommand(0x14);
+  if (use_sh1106) {
+    sendCommand(0xAD);       // CHARGEPUMP mode SH1106
+    sendCommand(0x8B);       // CHARGEPUMP On SH1106
+    sendCommand(0x32);       // CHARGEPUMP voltage 8V SH1106
+    sendCommand(0x81);       // SETCONTRAS
+    sendCommand(0x80);       // SH1106
+  } else {
+    sendCommand(0x8D);       // CHARGEPUMP
+    sendCommand(0x14);
+    sendCommand(0x81);       // SETCONTRAS
+    sendCommand(0xCF);
+  }
   sendCommand(0x20);       // MEMORYMODE
   sendCommand(0x00);       // 0x0 act like ks0108
   sendCommand(0xA0);       // 128x32 ???
   sendCommand(0xC0);       // 128x32 ???
   sendCommand(0xDA);       // COMPINS
   sendCommand(compins);    // 0x02 if 128x32, 0x12 if others (e.g. 128x64)
-  sendCommand(0x81);       // SETCONTRAS
-  sendCommand(0xCF);
   sendCommand(0xD9);       // SETPRECHARGE
   sendCommand(0xF1);
   sendCommand(0xDB);       // SETVCOMDETECT

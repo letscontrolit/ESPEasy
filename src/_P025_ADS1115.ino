@@ -14,11 +14,11 @@
 #define PLUGIN_VALUENAME1_025 "Analog"
 
 
-boolean Plugin_025(byte function, struct EventStruct *event, String& string)
+boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static byte portValue = 0;
+  // static uint8_t portValue = 0;
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -52,7 +52,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
         #define ADS1115_I2C_OPTION 4
-      byte addr                            = PCONFIG(0);
+      uint8_t addr                            = PCONFIG(0);
       int optionValues[ADS1115_I2C_OPTION] = { 0x48, 0x49, 0x4A, 0x4B };
       addFormSelectorI2C(F("i2c_addr"), ADS1115_I2C_OPTION, optionValues, addr);
       break;
@@ -60,7 +60,7 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte port = CONFIG_PORT;
+      uint8_t port = CONFIG_PORT;
 
       if (port > 0) // map old port logic to new gain and mode settings
       {
@@ -74,8 +74,8 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
       {
           #define ADS1115_PGA_OPTION 6
-        byte pga                              = PCONFIG(1);
-        String pgaOptions[ADS1115_PGA_OPTION] = {
+        uint8_t pga                              = PCONFIG(1);
+        const __FlashStringHelper * pgaOptions[ADS1115_PGA_OPTION] = {
           F("2/3x gain (FS=6.144V)"),
           F("1x gain (FS=4.096V)"),
           F("2x gain (FS=2.048V)"),
@@ -88,8 +88,8 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
       {
           #define ADS1115_MUX_OPTION 8
-        byte mux                              = PCONFIG(2);
-        String muxOptions[ADS1115_MUX_OPTION] = {
+        uint8_t mux                              = PCONFIG(2);
+        const __FlashStringHelper * muxOptions[ADS1115_MUX_OPTION] = {
           F("AIN0 - AIN1 (Differential)"),
           F("AIN0 - AIN3 (Differential)"),
           F("AIN1 - AIN3 (Differential)"),
@@ -141,8 +141,8 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // int value = 0;
-      // byte unit = (CONFIG_PORT - 1) / 4;
-      // byte port = CONFIG_PORT - (unit * 4);
+      // uint8_t unit = (CONFIG_PORT - 1) / 4;
+      // uint8_t port = CONFIG_PORT - (unit * 4);
       // uint8_t address = 0x48 + unit;
       const uint8_t address = PCONFIG(0);
       const uint8_t pga     = PCONFIG(1);
@@ -165,9 +165,13 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
 
       if (nullptr != P025_data) {
         const int16_t value = P025_data->read();
-        String log          = F("ADS1115 : Analog value: ");
         UserVar[event->BaseVarIndex] = (float)value;
-        log                         += value;
+
+        String log;
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          log  = F("ADS1115 : Analog value: ");
+          log += value;
+        }
 
         if (PCONFIG(3)) // Calibration?
         {
@@ -180,15 +184,18 @@ boolean Plugin_025(byte function, struct EventStruct *event, String& string)
           {
             float normalized = (float)(value - adc1) / (float)(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
-
-            log += ' ';
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              log += ' ';
+              log += formatUserVarNoCheck(event->TaskIndex, 0);
+            }
           }
         }
 
         // TEST log += F(" @0x");
         // TEST log += String(config, 16);
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
         success = true;
       }
       break;

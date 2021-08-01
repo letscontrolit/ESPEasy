@@ -4,6 +4,7 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
@@ -30,7 +31,7 @@ void ControllerSettingsStruct::reset() {
   SampleSetInitiator         = INVALID_TASK_INDEX;
   VariousFlags               = 0;
 
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     IP[i] = 0;
   }
   ZERO_FILL(HostName);
@@ -102,7 +103,7 @@ bool ControllerSettingsStruct::checkHostReachable(bool quick) {
   if (!NetworkConnected(10)) {
     return false; // Not connected, so no use in wasting time to connect to a host.
   }
-  delay(1);       // Make sure the Watchdog will not trigger a reset.
+  delay(0);       // Make sure the Watchdog will not trigger a reset.
 
   if (quick && ipSet()) { return true; }
 
@@ -118,12 +119,12 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
-  byte retry     = 2;
+  uint8_t retry     = 2;
   bool connected = false;
 
   while (retry > 0 && !connected) {
     --retry;
-    connected = connectClient(client, getIP(), Port);
+    connected = connectClient(client, getIP(), Port, ClientTimeout);
 
     if (connected) { return true; }
 
@@ -138,9 +139,10 @@ bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
-  byte retry     = 2;
+  uint8_t retry     = 2;
   while (retry > 0) {
     --retry;
+    FeedSW_watchdog();
     if (client.beginPacket(getIP(), Port) == 1) {
       return true;
     }
@@ -162,7 +164,7 @@ String ControllerSettingsStruct::getHostPortString() const {
 }
 
 bool ControllerSettingsStruct::ipSet() const {
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     if (IP[i] != 0) { return true; }
   }
   return false;
@@ -176,8 +178,8 @@ bool ControllerSettingsStruct::updateIPcache() {
   if (!NetworkConnected()) { return false; }
   IPAddress tmpIP;
 
-  if (resolveHostByName(HostName, tmpIP)) {
-    for (byte x = 0; x < 4; x++) {
+  if (resolveHostByName(HostName, tmpIP, ClientTimeout)) {
+    for (uint8_t x = 0; x < 4; x++) {
       IP[x] = tmpIP[x];
     }
     return true;

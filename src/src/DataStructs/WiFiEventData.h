@@ -1,6 +1,7 @@
 #ifndef DATASTRUCTS_WIFIEVENTDATA_H
 #define DATASTRUCTS_WIFIEVENTDATA_H
 
+#include "../DataStructs/MAC_address.h"
 #include "../DataTypes/WiFiDisconnectReason.h"
 #include "../Helpers/LongTermTimer.h"
 
@@ -29,6 +30,7 @@ struct WiFiEventData_t {
   bool unprocessedWifiEvents() const;
 
   void clearAll();
+  void markWiFiTurnOn();
   void markWiFiBegin();
 
   bool WiFiDisconnected() const;
@@ -47,7 +49,7 @@ struct WiFiEventData_t {
   void markDisconnect(WiFiDisconnectReason reason);
   void markConnected(const String& ssid,
                      const uint8_t bssid[6],
-                     byte          channel);
+                     uint8_t          channel);
   void markConnectedAPmode(const uint8_t mac[6]);
   void markDisconnectedAPmode(const uint8_t mac[6]);
 
@@ -68,8 +70,14 @@ struct WiFiEventData_t {
   bool          channel_changed = false;
 
   uint8_t       auth_mode = 0;
+  uint8_t       lastScanChannel = 0;
+  uint8_t       usedChannel = 0;
+
+  bool          eventError = false;
+
 
   WiFiDisconnectReason    lastDisconnectReason = WIFI_DISCONNECT_REASON_UNSPECIFIED;
+  LongTermTimer           lastScanMoment;
   LongTermTimer           lastConnectMoment;
   LongTermTimer           lastDisconnectMoment;
   LongTermTimer           lastWiFiResetMoment;
@@ -79,8 +87,12 @@ struct WiFiEventData_t {
   LongTermTimer           timerAPoff;   // Timer to check whether the AP mode should be disabled (0 = disabled)
   LongTermTimer           timerAPstart; // Timer to start AP mode, started when no valid network is detected.
   bool                    intent_to_reboot             = false;
-  uint8_t                 lastMacConnectedAPmode[6]    = { 0 };
-  uint8_t                 lastMacDisconnectedAPmode[6] = { 0 };
+  MAC_address             lastMacConnectedAPmode;
+  MAC_address             lastMacDisconnectedAPmode;
+
+  // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
+  // This can cause recursion, so a semaphore is needed here.
+  LongTermTimer           processingDisconnect;
 
 
   // Semaphore like bools for processing data gathered from WiFi events.
@@ -95,7 +107,11 @@ struct WiFiEventData_t {
   bool wifiConnectInProgress     = false;
   bool warnedNoValidWiFiSettings = false;
 
+  bool performedClearWiFiCredentials = false;
+
   unsigned long connectionFailures = 0;
+
+
 };
 
 #endif   // ifndef DATASTRUCTS_WIFIEVENTDATA_H

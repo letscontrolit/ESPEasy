@@ -3,6 +3,9 @@
 
 #include "../../ESPEasy_common.h"
 
+
+
+
 struct LabelType;
 
 // enum LabelType::Enum : short;
@@ -14,6 +17,7 @@ struct LabelType {
     HOST_NAME,
 
     LOCAL_TIME,
+    TIME_SOURCE,
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
@@ -22,6 +26,9 @@ struct LabelType {
     WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
+    WIFI_NR_EXTRA_SCANS,
+    WIFI_PERIODICAL_SCAN,
+    WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
@@ -35,15 +42,21 @@ struct LabelType {
 #ifdef ESP32
     HEAP_SIZE,
     HEAP_MIN_FREE,
+    #ifdef ESP32_ENABLE_PSRAM
     PSRAM_SIZE,
     PSRAM_FREE,
     PSRAM_MIN_FREE,
     PSRAM_MAX_FREE_BLOCK,
+    #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
+
+    JSON_BOOL_QUOTES,
+    ENABLE_TIMING_STATISTICS,
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
     RESET_REASON,            // Software/System restart
+    DEEP_SLEEP_ALTERNATIVE_CALL,
     LAST_TASK_BEFORE_REBOOT, // Last scheduled task.
     SW_WD_COUNT,
 
@@ -75,6 +88,8 @@ struct LabelType {
     LAST_DISCONNECT_REASON,  // 200
     LAST_DISC_REASON_STR,    // Beacon timeout
     NUMBER_RECONNECTS,       // 5
+    WIFI_STORED_SSID1,
+    WIFI_STORED_SSID2,
 
     FORCE_WIFI_BG,
     RESTART_WIFI_LOST_CONN,
@@ -134,6 +149,20 @@ struct LabelType {
     ETH_CONNECTED,
 #endif // ifdef HAS_ETHERNET
     ETH_WIFI_MODE,
+    SUNRISE,
+    SUNSET,
+    ISNTP,
+    UPTIME_MS,
+    TIMEZONE_OFFSET,
+    LATITUDE,
+    LONGITUDE,
+    SUNRISE_S,
+    SUNSET_S,
+    SUNRISE_M,
+    SUNSET_M,
+
+
+    MAX_LABEL  // Keep as last
   };
 };
 
@@ -146,7 +175,7 @@ String getEthLinkSpeedState();
 
 String getInternalLabel(LabelType::Enum label,
                         char            replaceSpace = '_');
-String getLabel(LabelType::Enum label);
+const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
 

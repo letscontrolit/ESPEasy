@@ -14,7 +14,7 @@
 # define PLUGIN_NAME_100       "Pulse Counter - DS2423 [TESTING]"
 # define PLUGIN_VALUENAME1_100 "CountDelta"
 
-boolean Plugin_100(byte function, struct EventStruct *event, String& string)
+boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -65,7 +65,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin, Plugin_100_DallasPin);
 
         // Counter select
-        String resultsOptions[2]      = { F("A"), F("B") };
+        const __FlashStringHelper * resultsOptions[2]      = { F("A"), F("B") };
         int    resultsOptionValues[2] = { 0, 1 };
         addFormSelector(F("Counter"), F("p100_counter"), 2, resultsOptions, resultsOptionValues, PCONFIG(0));
         addFormNote(F("Counter value is incremental"));

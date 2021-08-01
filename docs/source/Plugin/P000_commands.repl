@@ -1,5 +1,4 @@
 
-
 **TODO** : Check commands M..Z and check for all commands whether the "class" is still valid.
 
 
@@ -102,8 +101,8 @@
     DeepSleep","
     :red:`Internal`","
     Switch the node to deep sleep.
-    Max sleep time depends on library version and differs from roughly 71 minutes to 3h46.
-    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. 
+    Max sleep time depends on library version and differs from roughly 71 minutes (4294 sec.) to 3h46 for ESP8266, and up to 8 years (281474976 sec.) on ESP32 (theoretically).
+    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. If you specify a negative sleep time value, the maximum will be applied.
 
     ``DeepSleep,<sleep time in seconds>``"
     "
@@ -204,7 +203,16 @@
     :red:`Internal`","
     Add string to log
 
-    ``LogEntry,<string>``"
+    ``LogEntry,<string>[,<level>]``
+    
+    ``<level>`` is optional and can be any of these (numeric) values:
+    
+    - 1 = ERROR
+    - 2 = INFO (default)
+    - 3 = DEBUG
+    - 4 = DEBUG_DEV
+    
+    When a ``<level>`` is provided, it will be present in the log output if the 'Tolerant last parameter' Advanced setting is enabled."
     "
     LogPortStatus","
     :red:`Internal`","
@@ -365,7 +373,7 @@
     :red:`Internal`","
     Delete the given task/device
 
-    ``TaskClear,<task nr>``"
+    ``TaskClear,<task nr/task name>``"
     "
     TaskClearAll","
     :red:`Internal`","
@@ -378,32 +386,32 @@
     Disable a task.
     This will not save the settings, but if the settings get saved anyway the task will remain disabled at reboot.
 
-    ``TaskDisable,<task nr>``"
+    ``TaskDisable,<task nr/task name>``"
     "
     TaskEnable","
     :red:`Internal`","
     Enable a task. (only possible when a plugin is assigned to the task)
     This will not save the settings, but if the settings get saved anyway the task will remain enabled at reboot.
 
-    ``TaskEnable,<task nr>``"
+    ``TaskEnable,<task nr/task name>``"
     "
     TaskRun","
     :red:`Internal`","
     Run/excecute the given task/device, use to manually force an update/read of the task.
 
-    ``TaskRun,<task nr>``"
+    ``TaskRun,<task nr/task name>``"
     "
     TaskValueSet","
     :green:`Rules`","
-    Set values on a **Dummy Task** (device)
+    Set values on a **Dummy Task** (device).
 
-    ``TaskValueSet,<task nr>,<value nr>,<value/formula>``"
+    ``TaskValueSet,<task nr/task name>,<value nr/value name>,<value/formula>``"
     "
     TaskValueSetAndRun","
     :green:`Rules`","
-    Set values on a **Dummy Task** (device) and execute a TaskRun on it
+    Set values on a **Dummy Task** (device) and run/execute the task/device, to manually force an update/read of the task.
 
-    ``TaskValueSetAndRun,<task nr>,<value nr>,<value/formula>``"
+    ``TaskValueSetAndRun,<task nr/task name>,<value nr/value name>,<value/formula>``"
     "
     TimerPause","
     :green:`Rules`","
@@ -486,6 +494,12 @@
     Change AP WPA key
 
     ``WifiAPKey,<WPA key>``"
+    "
+    WifiAllowAP","
+    :red:`Internal`","
+    Uncheck the setting to prevent starting AP when unable to connect to a network.
+
+    ``WifiAllowAP``"
     "
     WifiAPMode","
     :red:`Internal`","
@@ -604,3 +618,4 @@ Try to use AsyncEvents where possible, to keep rules processing times low.
         endif
       endon
     "
+

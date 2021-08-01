@@ -81,6 +81,8 @@
 # define HANDLE_SCHEDULER_IDLE   60
 # define HANDLE_SCHEDULER_TASK   61
 # define HANDLE_SERVING_WEBPAGE  62
+# define WIFI_SCAN_ASYNC         63
+# define WIFI_SCAN_SYNC          64
 
 
 class TimingStats {
@@ -105,9 +107,9 @@ private:
 };
 
 
-String getPluginFunctionName(int function);
+const __FlashStringHelper * getPluginFunctionName(int function);
 bool   mustLogFunction(int function);
-String getCPluginCFunctionName(CPlugin::Function function);
+const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function);
 bool   mustLogCFunction(CPlugin::Function function);
 String getMiscStatsName(int stat);
 
@@ -124,10 +126,10 @@ extern unsigned long timingstats_last_reset;
   if (mustLogCFunction(F)) controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart));
 
 // #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
-# define STOP_TIMER(L) miscStats[L].add(usecPassedSince(statisticsTimerStart));
+# define STOP_TIMER(L) if (Settings.EnableTimingStats()) { miscStats[L].add(usecPassedSince(statisticsTimerStart)); }
 
 // Add a timer statistic value in usec.
-# define ADD_TIMER_STAT(L, T) miscStats[L].add(T);
+# define ADD_TIMER_STAT(L, T) if (Settings.EnableTimingStats()) { miscStats[L].add(T); }
 
 #else // ifdef USES_TIMING_STATS
 

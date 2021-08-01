@@ -905,6 +905,15 @@ For example:
    logentry,{bitwrite:0:122:1}   // Set least significant bit of the given nr '122' to '1' => '123'
  endon
 
+urlencode
+^^^^^^^^^^
+
+(Added: 2021-07-22)
+
+Replace any not-allowed characters in an url with their hex replacement (%-notation).
+
+Usage: ``{urlencode:"string to/encode"}`` will result in ``string%20to%2fencode``
+
 XOR / AND / OR
 ^^^^^^^^^^^^^^
 
@@ -1075,18 +1084,18 @@ Radian Angle:
 * ``sin(x)`` Sine of x (radian)
 * ``cos(x)`` Cosine of x (radian)
 * ``tan(x)`` Tangent of x (radian)
-* ``arcSin(x)`` Arc Sine of x (radian)
-* ``arcCos(x)`` Arc Cosine of x (radian)
-* ``arcTan(x)`` Arc Tangent of x (radian)
+* ``aSin(x)`` Arc Sine of x (radian)
+* ``aCos(x)`` Arc Cosine of x (radian)
+* ``aTan(x)`` Arc Tangent of x (radian)
 
 Degree Angle:
 
 * ``sin_d(x)`` Sine of x (degree)
 * ``cos_d(x)`` Cosine of x (degree)
 * ``tan_d(x)`` Tangent of x (degree)
-* ``arcSin_d(x)`` Arc Sine of x (degree)
-* ``arcCos_d(x)`` Arc Cosine of x (degree)
-* ``arcTan_d(x)`` Arc Tangent of x (degree)
+* ``aSin_d(x)`` Arc Sine of x (degree)
+* ``aCos_d(x)`` Arc Cosine of x (degree)
+* ``aTan_d(x)`` Arc Tangent of x (degree)
 
 
 
@@ -1139,6 +1148,14 @@ Just create Generic - Dummy Device and variables inside it.
 
  TaskValueSet,TASKnr,VARnr,Value
 
+Alternatively, TASKname and/or VARname can be used instead of TASKnr and VARnr:
+
+ .. code-block:: html
+
+ TaskValueSet,TASKname,VARname,Value
+ TaskValueSet,TASKnr,VARname,Value
+ TaskValueSet,TASKname,VARnr,Value
+
 This example for two switches that toggle one device (LED and Relay on GPIO 13 and 16).
 
 
@@ -1159,6 +1176,27 @@ This example for two switches that toggle one device (LED and Relay on GPIO 13 a
     TaskValueSet 12,1,1
   else
     TaskValueSet 12,1,0
+  endif
+  gpio,16,[dummy#var1]
+  gpio,13,[dummy#var1]
+ endon
+
+ // Alternative for above example using TASKname/VARname
+ on sw1#state do
+  if [dummy#var1]=0
+    TaskValueSet dummy,var1,0
+  else
+    TaskValueSet dummy,var1,1
+  endif
+  gpio,16,[dummy#var1]
+  gpio,13,[dummy#var1]
+ endon
+
+ on sw1a#state do
+  if [dummy#var1]=0
+    TaskValueSet dummy,var1,1
+  else
+    TaskValueSet dummy,var1,0
   endif
   gpio,16,[dummy#var1]
   gpio,13,[dummy#var1]
