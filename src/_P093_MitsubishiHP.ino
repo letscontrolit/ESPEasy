@@ -92,9 +92,9 @@ struct P093_data_struct : public PluginTaskData_base {
     result += map(_currentValues.vane, _mappings.vane);
     result += F("\",\"iSee\":");
     result += boolToString(_currentValues.iSee);
-    result += F("\",\"operating\":");
+    result += F(",\"operating\":");
     result += boolToString(_currentValues.operating);
-    result += F("\",\"compressorFrequency\":");
+    result += F(",\"compressorFrequency\":");
     result += _currentValues.compressorFrequency;
     result += F(",\"temperature\":");
     result += toString(_currentValues.temperature, 1) + '}';
