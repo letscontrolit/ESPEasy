@@ -29,7 +29,8 @@ static const uint8_t READ_BUFFER_LEN = 32;
 
 static const uint8_t INFOMODE[] = {
   0x02, // request a settings packet
-  0x03  // request the current room temp
+  0x03, // request the current room temp
+  0x06  // request status
 };
 
 struct P093_data_struct : public PluginTaskData_base {
@@ -91,6 +92,10 @@ struct P093_data_struct : public PluginTaskData_base {
     result += map(_currentValues.vane, _mappings.vane);
     result += F("\",\"iSee\":");
     result += boolToString(_currentValues.iSee);
+    result += F("\",\"operating\":");
+    result += boolToString(_currentValues.operating);
+    result += F("\",\"compressorFrequency\":");
+    result += _currentValues.compressorFrequency;
     result += F(",\"temperature\":");
     result += toString(_currentValues.temperature, 1) + '}';
 
@@ -220,6 +225,8 @@ private:
     uint8_t vane;
     uint8_t wideVane;
     float roomTemperature;
+    boolean operating;
+    uint8_t compressorFrequency;
 
     Values() :
       power(0),
@@ -229,7 +236,9 @@ private:
       fan(0),
       vane(0),
       wideVane(0),
-      roomTemperature(0) {
+      roomTemperature(0),
+      operating(false),
+      compressorFrequency(0) {
     }
 
     boolean operator!=(const Values& rhs) const {
@@ -240,7 +249,9 @@ private:
         vane != rhs.vane ||
         wideVane != rhs.wideVane ||
         iSee != rhs.iSee ||
-        roomTemperature != rhs.roomTemperature;
+        roomTemperature != rhs.roomTemperature ||
+        operating != rhs.operating ||
+        compressorFrequency != rhs.compressorFrequency;
     }
   };
 
@@ -569,6 +580,14 @@ private:
           } else {
             _currentValues.roomTemperature = data[3] + 10;
           }
+          return true;
+        }
+        break;
+
+      case 0x06:
+        if (length > 4) {
+          _currentValues.operating = data[4];
+          _currentValues.compressorFrequency = data[3];
           return true;
         }
         break;
