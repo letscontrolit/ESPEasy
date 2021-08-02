@@ -77,15 +77,15 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
 
   if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
     success = false;
-    return F("Invalid parameters");
+    return F("INVALID_PARAMETERS");
   }
   if (getPluginID_from_TaskIndex(taskIndex) != 33) { // PluginID 33 = Dummy Device
     success = false;
-    return F("Not a 'Dummy' task");
+    return F("NOT_A_DUMMY_TASK");
   }
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
     success = false;
-    return F("Task Not Enabled");
+    return F("TASK_NOT_ENABLED");
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
@@ -96,7 +96,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
 
     if (isError(Calculate(TmpStr1, result))) {
       success = false;
-      return F("Calculation Error");
+      return F("CALCULATION_ERROR");
     }
     UserVar[uservarIndex] = result;
   } else  {
@@ -113,7 +113,7 @@ const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const 
   unsigned int varNr;
 
   if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
-    return F("Invalid parameters"); 
+    return F("INVALID_PARAMETERS"); 
   }
 
   taskClear(taskIndex, true);
@@ -142,7 +142,7 @@ const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event
     }
     return return_command_failed();
   }
-  return F("Invalid parameters");
+  return F("INVALID_PARAMETERS");
 }
 
 const __FlashStringHelper * Command_Task_Disable(struct EventStruct *event, const char *Line)
@@ -168,10 +168,10 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   unsigned int varNr;
 
   if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
-    return F("Invalid parameters");
+    return F("INVALID_PARAMETERS");
   }
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
-    return F("Task Not Enabled");
+    return F("TASK_NOT_ENABLED");
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
@@ -202,10 +202,10 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   unsigned int varNr;
 
   if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
-    return F("Invalid parameters");
+    return F("INVALID_PARAMETERS");
   }
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
-    return F("Task Not Enabled");
+    return F("TASK_NOT_ENABLED");
   }
 
   SensorSendTask(taskIndex);
