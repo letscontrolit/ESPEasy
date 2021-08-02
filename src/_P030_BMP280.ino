@@ -130,6 +130,12 @@ boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       uint8_t idx = PCONFIG(0) & 0x1;                                                                              // Addresses are 0x76 and

@@ -1,4 +1,390 @@
 -------------------------------------------------
+Changes in release mega-20210802 (since mega-20210503)
+-------------------------------------------------
+
+Release date: ma  2 aug 2021 16:16:24 CEST
+
+Christoph Kaiser (15):
+      [P039] added support for RTD sensors to plugin P039; updated SPI handling of all sensors to optimize ROM usage
+      [P039] place form selectors in separated scopes
+      [P039] corrected first review findings
+      [P039] further corrections rfom revews and initial documentation for P039 plugin
+      [039] fixing multiple typos in P039.rst file
+      [P039] fixing multiple typos in P039.rst file
+      [P039] added taskname and taskVarName to the log entries in INFO log  file
+      [P039] smallervfixes of diagnostic handling for thermocouples; added TODOs to not forget design changes
+      [P039] migrated RTD functionality to use of TIMER API and state machine
+      [P039] resolved review findings from TD-er, fixed static fault flag with data structure
+      [P039] resolve issues with MAX6675 + MAX31855 and latest updates
+      [P039] fixed typos and typecast issues, corrected MAX 31856 access
+      [P039] fixed recent findings and added automated reload for device family and type selector in plugin parameters
+      [P039] corrected log length reserve values and reworked fault logging
+      [P039] enhanced logfile formatting,; update of documentation; enhanced Voltage Modes for MAX 31856
+
+Joerg Heinemann (8):
+      Add _P112_AS7265x.ino
+      Add _P112_AS7265x
+      Add SparkFun AS7265X library
+      Change MeasurementMode
+      Giving up - Running into a loop without sensor readings
+      Handle Measurement Status
+      Reduce plugin READ time
+      Improved settings options
+
+KimPanda4 (8):
+      P003 New enhanced version 2.2  (PULSE Modes)
+      introduce taskIndex_t instead of byte for taskID
+      Updated P003 docu
+      correction of reference in P003 command docu
+      avoided nested switch, added overdue statistics
+      Requested changes from today in P003
+      Review corrections re. logging, commands, memspace
+      Enhancd docu of commands. Mention TaskName option.
+
+Lars Volker (1):
+      Fix small typos in heatpumpir documentation (P088)
+
+Maxim Prokhorov (5):
+      ci: allow builds to fail
+      ci: release single binaries .zip, merge all available build artifacts
+      ci: try to ignore build workflow when releasing
+      ci: bump python version for actions
+      ci: build documentation for push & pr
+
+Paul Berry (2):
+      added prometheus exporter on /metrics path
+      added prometheus exporter on /metrics path
+
+Peter Kretz (38):
+      Nextion available for ESP32
+      Personal upload settings
+      - Name Changed from ORP EZO to EZO ORP Configuration ofEZO pH now error tolerant. if you misconfigure a temperature correction, a temperature of 20° will be taken. More documentation about temperature correction for EZO pH as Note. Bug fix for pH calibration: if you stored a calibration for pH of e.g. 9.18 he restored 9 and you have to change it manually, now the value will be restored correctly
+      now without monitor_filters = time
+      now with Nextion Plugin P075
+      com port settings
+      colorize raus
+      WebServerPort duplicate thrown away
+      further merging
+      further merging
+      now fits to new changes
+      [Atlas EZO]: Unified Plugin for pH, ORP and EC Sensors from Atlas via I2C
+      Removed upload speed
+      Added use of html functions
+      removed speed
+      Removed speed
+      Fixed 0 terminated strings and substring issue
+      ZEROTERMINATE, safe_strncpy , an 0 character handling as requested by review
+      dtostrf
+      my settings
+      configuration stuff
+      - rework in calibration --> streamline and reuse of duplicated code - show # of calibration points - possibility to clear calibration
+      Probe Type for EC could be configurated, improvement of displaying calibration status and some minor improvements
+      Debuggin Prupose Removed name = K now
+      Update _P103_Atlas_EZO_pH_ORP_EC.ino
+      empty line removed
+      upload speed
+      Update Custom-sample.h
+      CUSTOM_EMERGENCY_FALLBACK_START_AP
+      Custom Sample
+      platformio
+      Removed build error for Build error for ESP32 builds: byte board_type = UNKNOWN;
+      Update platformio_esp32_envs.ini
+      Update Custom-sample.h
+      Update platformio_esp32_envs.ini
+      Update platformio_esp82xx_envs.ini
+      [Atlas EZO EC pH ORP] added device name to I2C address scan, reorganized plugin in Custom build
+      Commented Atlas EZO Plugin in Custom sample
+
+TD-er (195):
+      [Playground] Move P168_ThermoOLED.ino to main repo
+      Rename P107_ThermoOLED to P109
+      [Controllers] Optimize memory usage by using std::move
+      [Controller] Do not keep unitMessageCount as member when not needed
+      Add move assignment to EventStruct
+      [Events] Make sure events are not copied unless absolutely needed
+      [Controllers] Implement move constructor to guarantee no copy is made
+      [MQTT] Fix MQTT controller may not connect when re-enabled after a while
+      [Memory] getMaxFreeBlock() should return valid value on ESP32
+      [Network] Properly switch between ETH and WiFi
+      [WiFi] Fix small issues showing WiFi state & abort WiFi connection process
+      [WiFi] Show WiFi STA MAC in sysinfo when eth is active
+      [Network] Allow fallback to WiFi when Ethernet not connected at boot
+      [Oopsie] Need to hide in other commits, deny this ever was committed!
+      [Cleanup] Remove unneeded std::move and copy/assignment constructors
+      [Controller Queue] Remove unneeded constructors using =default and =delete
+      Plugin 115 MAX1704x I2C, Sparkfun Fuel Gauge Sensor
+      Add library to lib dir + PIO environments
+      [P115] Restructure code + allow for multiple instances
+      [MAX1704x] Add documentation
+      [Build] Revert splitting lib_deps and lib_ignore to multi-line
+      [P115] Fix missing #ifdef + register library in PIO
+      [Locking] Add mutex to access map structures (#3623)
+      [Docs] Fix some small documentation issues.
+      [P115] Clean up documentation
+      [MAX1704x] Add changerate for MAX17048/MAX17049
+      Added MAX1704x comment line to Custom-sample.h
+      MS5611 (GY-63) unrealistic values for <20C (#3626)
+      [MAX1704x] Fix crash with device not yet initialised
+      [Boot Cause] Make boot cause more clear + add %bootcause% for rules
+      [Linux Build] Add some checks to prevent wiping ALL data on PC
+      [Linux Build] Cleanup + document build script + add options
+      [Linux Build] No longer use before_deploy from build_ESPeasy.sh
+      [ESP32 RTC] Add RTC memory usage like on the ESP8266
+      [Cache controller] Make Cache controller work on ESP32
+      Disable left over RTC_STRUCT_DEBUG flag
+      [P115] Cleanup code & add 4th variable name
+      [P115] Fix nullptr de-reference crash
+      [P115] Constrain threshold value to 1...32 & copy charge rate value
+      [P115] Add work-around as detect of sensor not seems to work.
+      [Git Build] Fix Git Build description on root page
+      [LoRaWAN TTN] Fix controller not setting SF or FP & add ADR (#3630)
+      [P115] Remove comment
+      [P012 LCD] Fix use of USES_P012_POLISH_CHARS define
+      [Cleanup] Move setup() from ESPEasy.ino to .h/.cpp file
+      [Cleanup] Move ESPEasy loop() and backgroundtasks() to .h/.cpp
+      [Cleanup] Uncrustify ESPEasy_loop(), _setup() and backgroundtasks()
+      Fix missing include on SysInfoPage.cpp
+      [Cleanup] Missing include in C013
+      [Cleanup] Fix return value of gpio_mode_range_helper (real bug)
+      [Cleanup] Uncrustify Commands/GPIO.cpp
+      [Cleanup] Missing include in P016
+      [Cleanup] Remove SI1145 from standard custom build, to make it fit
+      [WiFi] Allow for unprocessed WiFi events to timeout
+      [WiFi] Change unprocessed event timeout to 10 sec.
+      [P012 LCD] Add custom defined Polish characters (#2669)
+      [P012 LCD] Fix compile ambiguity & comment unused letter definitions
+      [P012 LCD] Remove Polish "Wait..." print statement
+      [WiFi AP] Add flag to prevent starting WiFi AP.
+      Fix build errors + reword label to "Do Not Start AP"
+      [Build] Fix build issues since ESPEasy.ino split
+      [Build] Fix build issues Nxxx & P001-P080
+      [Build] Fix build issues other files.
+      [MQTT] Check MQTT status before sending
+      [PubSubClient] Apply fixes related to crashes on connect to broker
+      [MQTT] Fix MQTT controller not (re)connecting
+      [WiFi] Fix issue where WiFi could not scan to reconnect
+      [WiFi] Load known credentials right after loading settings
+      [Cleanup] Fix warnings of some uninitialised variables.
+      [Docs] Document %iswifi% system environment variable
+      [Domoticz MQTT] Move JSON serialize/deserialize to helper .h/.cpp
+      [Cleanup] Reduce build size handle internal commands macros
+      [GPIO] Split duplicate code into shared function to reduce build size
+      [Rules] Remove unused parameter & change event parameter to const
+      [WiFi] Remove unneeded log connection status
+      [Cleanup] Remove code duplication to reduce build size
+      [Cleanup] Stream JSON from PROGMEM LabelType::Enum array to reduce size
+      [Cleanup] Do not include DNS server in minimal OTA builds to reduce size
+      [Cleanup] Reduce build size by keeping flash strings as flash string
+      [Cleanup] Optimise streaming JSON
+      [Cleanup] Add FlashStringHelper function wrappers to reduce build size
+      [Cleanup] Add missing F() macro where applicable
+      [Serial log] Small optimization to reduce build size + process logs
+      [Cleanup] Add small optimisations to reduce build size
+      [Cleanup] Change return type of static get string functions to flash string
+      [Cleanup] Reduce build size of parseStandardConversions function
+      [Cleanup] Reduce build size using flash strings in selectors
+      [Cleanup] Fix build error due to missing change in commit.
+      [Cleanup] Change return type of some commands to FlashString
+      [Cleanup] Remove unneeded String() wrappers
+      [Cleanup] Remove "new rules" from any build
+      [Cleanup] Domoticz MQTT, generate own JSON, not using ArduinoJSON lib
+      [Cleanup] Serialize JSON not using ArduinoJSON to reduce build size
+      [Cleanup] Use EMPTY_STRING instead of F("") to reduce build size
+      [Cleanup] Reduce build size for Factory Default device name
+      [Cleanup] Fix build issue on Serial Proxy
+      [Cleanup] Add more functions with flash string as parameter to reduce size
+      [Cleanup] Add wrapper to web_server.arg() with flash string arg
+      [Cleanup] Remove addLog macro and use separate functions per type
+      Fix new introduced bug in htmlEscape function
+      [DeviceModel] Change to enum class to allow compiler help check usage
+      [P003 Pulse] Uncrustify _P003_Pulse.ino
+      [Pulse] Split pulse handling into .h/.cpp & remove task index limit
+      [P003_Pulse] Make pull-up configurable
+      [WebServer] Optimize serving flash strings
+      [WebServer] Speedup serving flash strings directly
+      [WebServer] Speedup serving single char chunks + missing F-macros
+      [P003 Pulse] Fix build error without pulse statistics enabled
+      [P003 Pulse] Fix compile issue when plugin not included in build.
+      [Log] Prevent generating logs if loglevel not enabled
+      [SD] call SD.end() if not successful at begin()
+      [WebServer] Small optimization in serving ints and small strings
+      [WebServer] Reduce memory usage when streaming web template
+      [WebServer] Balance speed vs. stability based on free memory
+      Add DL-bus plugin to "Testing C"
+      [DL-bus] Wrap logs in checks for active loglevel
+      [Webserver] Fix build for ESP32 as WiFiClient.flush() cannot have timeout
+      [Mem analysis] Log free memory  during setup phase
+      [String] Change == "" into .isEmpty()
+      [Strings] Change .length() == 0 into .isEmpty()
+      [Strings] Change .length() != 0 into !...isEmpty()
+      [Build] Fix SDFS & SD lib_ignore defines
+      [CaptivePortal] Fix root page redirect when connected via LAN
+      [GPIO Selection] Filter possible GPIO pins based on needed properties
+      [Pulse counter] Fix values not being updated on Devices tab
+      [ESP32] Fix PWM not cleared when changing pin mode (#3671)
+      [Pulse] Fix copy/paste error in pulse counter plugin
+      [Build] Update Python packages
+      [Docs Build] Update to Sphinx 4.0.2
+      [WiFi] Make sure to clear pending WiFi events on reconnect
+      [Deep Sleep] Revert default deep sleep call & make it optional
+      [WiFi] Clear WiFi events when turning off WiFi
+      Add Mac_address object to simplify handling MAC addresses
+      [WiFi] Only store last used AP in RTC when connection is stable
+      [WiFi] Small flash string optimisation
+      [WiFi] Handle slow connect to WiFi AP
+      Add link to experimental web flash page
+      [DeepSleep] Turn off WiFi before DeepSleep + limit max. deepsleep
+      [WiFi] Make reconnect to last from RTC optional
+      [Reduce size] Add build flag to remove the 4-bytes alignment for PSTR()
+      [Webserver]  Fix unneeded copy of object when serving data(#3693)
+      [WiFi] Allow longer scan time per channel
+      [Cleanup] Keep flash string when executing internal commands
+      [Numerical] Fix bug where "-" is considered numerical
+      [Cleanup] Wrap strings in F()
+      [Web UI] Update served static files
+      [WebUI] Allow slightly longer flash strings to be sent in a single chunk
+      [Cleanup] Fix some possible uninitialised members & other loose ends
+      [Cleanup] Fix bugs reported by PVS Studio
+      [Cleanup] Fix return value in MQTT Publish command
+      [LoRaWAN] Fix crash when LoRa or serial could not be allocated
+      Fix uninitialised members of RegExp
+      [Memory] Allow to disable collecting timing stats to save RAM
+      [Framed OLED] Reduce memory usage slightly.
+      Fix merge issues
+      Fix build issue on ESP32 (ETS_UART_INTR_DISABLE is ESP8266 only)
+      [Mutex] Fix no longer using fishy assembly for ESP8266 mutex
+      [Cleanup] Use of "byte" as a type. uint8_t or (C++17) std::byte are better
+      [Libs] Don't use "byte" as type anymore
+      [Cleanup] Don't use "byte" as type anymore (.ino files)
+      [ESP32 3.3.0] Update to PlatformIO ESP32 3.3.0
+      [Bug] EnableTimingStats DoNotStartAP used same bit
+      [TinyGPS] TinyGPSCustom::valid was not initialized
+      [WiFi] Fix scan issue, causing failed connections
+      [WiFi] Fix WiFi need to connect flag not always set
+      [WiFi] No need to disable interrupts when connecting WiFi
+      [WiFi] Clear wifiConnectInProgress when prepare WiFi failed
+      [Security Settings] Add alignment checks at compile time.
+      [WiFi] Try to connect right after WiFi scan found known APs
+      [WiFi] Fix build issue
+      [Tooltips] Fix merge issues
+      [DS1307] Add support for external RTC clock DS1307
+      [Ext. RTC] Use Adafruit library to support DS1307/DS3231/PCF8523
+      [RTClib] Add lib/Adafruit_RTClib
+      [Build] Add TinyWireM to lib_ignore to prevent build issues.
+      [RTClib] Remove TinyWireM from depends
+      [Build] Lib_ignore TinyWireM for all envs
+      [Build] Do not use PIO library finder for RTClib (TinyWireM issues)
+      [Ext. RTC] Fix reading from RTC module
+      [Ext. RTC] Show time source + I2C scan result
+      [Ext. RTC] Fix some library bugs and add some validity checks
+      Fix TSL2591 overflow at high Lux values
+      [Ext.RTC] Make sure time is set immediately when received from ext. src
+      [Ext. RTC] Document external RTC chip support
+      [TimeSource] Move ExtTimeSource_e to TimeSource.h to fix includes
+      [P109] Fix issue with SPIFFS vs LittleFS
+      [P109] Uncrustify ThermoOLED plugin
+      [P109] Remove it from "display" build due to build size
+      [P109] Disabled also for "testing B" builds due to size.
+      [Prometheus] Add text/plain as header
+      [Custom build] Make external RTC optional via USE_EXT_RTC define
+      Rename getDevicePluginID_from_TaskIndex to getPluginID_from_TaskIndex
+      [Commands] Output proper feedback on command execution
+      [Commands] Add feedback on other task commands
+      [Commands] Don't use newline in JSON value
+
+Ton Huisman (72):
+      [P114] Move VEML6075 (P130) from PluginPlayground
+      [P114] Move string log.reserve to first use of log
+      [P114] More string log.reserve optimizations, initialize floats with f postfix
+      [P114] Move plugin to correct category (UV)
+      [P114] Add documentation
+      [P012] Add Inversed option for display button
+      [P012] Fix a compare-confusion
+      [P012] Update documentation
+      [P012] Fixed typo preventing new setting to be saved
+      [P012] Documentation: improve 5V warning display and text
+      [P012] Add commands to command reference
+      [Build] Fix builds having USES_SSDP for missing include
+      [Commands] Enable LogEntry to log for other level than INFO #3312
+      [Command] Update LogEntry documentation, small code optimization
+      [UI] Enable optional tooltip for most input controls
+      [UI] Add tooltip option for a few more input controls
+      [UI] Add conditional compilation to Tooltip feature
+      [Build] Re-enable RTTTL in TESTING where it fits
+      [Sysvars] Add %s_sunrise%, %m_sunrise%, %s_sunset% and %m_sunset% variables
+      [Sysvars] Extend documentation for s_sunrise, m_sunrise, s_sunset and m_sunset
+      [Build] Include all TESTING plugins even when using LIMIT_BUILD_SIZE
+      [UI] Rename `title` argument to `tooltip`
+      [UI] Fix manual merge typo
+      [Build] Include Trigonometric functions also in 1M Normal builds
+      [Doc] Correct function names for asin, acos, atan and friends
+      [Build] Keep trigonometric stuff out of MINIMAL_OTA builds
+      [UI] Correct manual merge error
+      [P057] Add support for periods in display
+      [P036] Add Generate Events option for Display and Contrast
+      [P036] Eliminate a few unneeded variables, saving a little .bin size
+      [P036] Add events for Frame and Line, reduce code size
+      [P036] Make Frame & Line events optional, introduce #defines for flags
+      [P036] Updated documentation (and a small textual improvement in the setting)
+      [P068] Add temperature offset setting, with humidity compensation
+      [P068] Use proper float-comparison functions
+      [P068] Simplify float-comparison
+      [UI] Add extra definition of addSelector() with tooltip support
+      [P068] Reverse inverted calculation
+      [P057] Improve dot display, code optimizations
+      [P057] Add extra check to avoid reading past string length
+      [Domoticz MQTT] Always wrap svalue with quotes
+      [P053] Add support for PMS5003ST, PMS2003 and PMS3003
+      [Sysvars] Add %dns1% and %dns2% sysvars and urlencode stringfunction
+      [Sysvars] Correct typo in documentation
+      [P053] Only generate events when Rules enabled
+      [P053] Documentation (partly transplanted from the wiki)
+      [P053] Add count of particles per 0.1L options to plugin, update documentation
+      [P053] Correct unit terminology, improvements and fixes
+      [P053] Update documentation
+      [P053] Correct typos in the measurement units
+      [UI] Show release date in header
+      [P053] Limit disabling new features to 1M OTA builds
+      [UI] Allow Build date/name in either Header or Footer
+      [UI] Only show Build in footer
+      [P053] Correct reading from PMS2003/PMS3003, minor improvements
+      [ESP32] Fix maximum deepsleep time for ESP32
+      [P053] Minor improvements
+      [UI] Show build date in header, add build date to build filename in footer
+      [UI] Build name/date is link to Github Releases page
+      [UI] Open Releases link in new tab, show tooltip on hover
+      [UI] Small source improvement
+      [UI] Fix compiler warning
+      [TaskValueSet] Only allowed for Dummy Device (bugfix)
+      [UI] Move Github Releases link define to ESPEasyDefaults.h
+      [TaskValueSet] Rename and move new support function to Plugin.h/cpp
+      [TaskValueSet] Remove not needed include
+      [P033] Return true on PLUGIN_INIT so TaskEnable returns OK
+      [Task commands] Check if task enabled before action
+      [PLUGIN_INIT] Fix remaining plugins missing the PLUGIN_INIT case
+      [Commands] Fix camelcase typo
+      [Commands] Change OK, FAILED and new error messages to uppercase
+      [Commands] Revert Failed to original case
+
+dependabot[bot] (1):
+      Bump urllib3 from 1.25.10 to 1.26.5
+
+kretzp (1):
+      VCC flag removed
+
+peter.kretz (1):
+      Poolmeter
+
+unknown (6):
+      fix for building esp32 firmware from directory with space in name
+      fixes from PR
+      more PR fixes
+      Added prometheus documentation
+      Added ifdef, updated image name as per PR comments
+      removed unused string definition
+
+
+-------------------------------------------------
 Changes in release mega-20210503 (since mega-20210223)
 -------------------------------------------------
 

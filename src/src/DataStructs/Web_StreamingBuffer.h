@@ -59,11 +59,15 @@ public:
 
   void startStream(const String& origin);
 
+  void startStream(const String& content_type, const String& origin);
+
   void startJsonStream();
 
 private:
 
-  void startStream(bool json, const String& origin);
+  void startStream(bool allowOriginAll, 
+                   const String& content_type, 
+                   const String& origin);
 
   void trackTotalMem();
 
@@ -76,8 +80,9 @@ public:
 private: 
 
   void sendContentBlocking(String& data);
-  void sendHeaderBlocking(bool          json,
-                          const String& origin = "");
+  void sendHeaderBlocking(bool          allowOriginAll,
+                          const String& content_type,
+                          const String& origin);
 
 };
 
