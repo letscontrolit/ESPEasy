@@ -39,7 +39,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
              command.equals(F("taskvaluesetandrun")) ||
              command.equals(F("taskvaluetoggle")) ||
              command.equals(F("let")) ||
-             command.equals(F("logPortStatus")) ||
+             command.equals(F("logportstatus")) ||
              command.equals(F("jsonportstatus")) ||
              command.equals(F("rules"))) {
     printToWeb = true;
