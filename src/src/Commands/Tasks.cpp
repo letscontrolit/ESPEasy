@@ -112,7 +112,9 @@ const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const 
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) { return return_command_failed(); }
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+    return F("Invalid parameters"); 
+  }
 
   taskClear(taskIndex, true);
   return return_command_success();
@@ -138,8 +140,9 @@ const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event
     if (setTaskEnableStatus(event, enable)) {
       return return_command_success();
     }
+    return return_command_failed();
   }
-  return return_command_failed();
+  return F("Invalid parameters");
 }
 
 const __FlashStringHelper * Command_Task_Disable(struct EventStruct *event, const char *Line)
@@ -164,9 +167,11 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr) 
-        && Settings.TaskDeviceEnabled[taskIndex])) {
-    return return_command_failed();
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+    return F("Invalid parameters");
+  }
+  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+    return F("Task Not Enabled");
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
@@ -196,9 +201,11 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   taskIndex_t  taskIndex;
   unsigned int varNr;
 
-  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)
-        && Settings.TaskDeviceEnabled[taskIndex])) {
-    return return_command_failed();
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+    return F("Invalid parameters");
+  }
+  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+    return F("Task Not Enabled");
   }
 
   SensorSendTask(taskIndex);
