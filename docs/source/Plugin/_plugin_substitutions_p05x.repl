@@ -37,9 +37,9 @@
 .. |P052_compileinfo| replace:: `.`
 .. |P052_usedlibraries| replace:: `.`
 
-.. |P053_name| replace:: :cyan:`PMSx003`
+.. |P053_name| replace:: :cyan:`PMSx003 / PMSx003ST`
 .. |P053_type| replace:: :cyan:`Dust`
-.. |P053_typename| replace:: :cyan:`Dust - PMSx003`
+.. |P053_typename| replace:: :cyan:`Dust - PMSx003 / PMSx003ST`
 .. |P053_porttype| replace:: `Serial`
 .. |P053_status| replace:: :green:`NORMAL`
 .. |P053_github| replace:: P053_PMSx003.ino
