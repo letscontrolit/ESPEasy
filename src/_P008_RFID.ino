@@ -6,6 +6,9 @@
 
 /*
 History:
+2021-08-02 tonhuisman: Add checkbos for 'Alternative decoding', swapping the receving of the bits, resulting
+           in little-endian versus big-endian output. This is supposed to give the same output as the
+           official Wiegand RFID scanner.
 2020-07-04 tonhuisman: Add checkbox for 'Present hex as decimal value' option (with note) so hexadecimal
            value of f.e. a numeric keypad using the Wiegand protocol (hexadecimal data) will be cast to decimal.
            When enabled entering 1234# will result in Tag = 1234 instead of 4660 (= 0x1234), any A-F
@@ -98,8 +101,13 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
         Plugin_008_WiegandSize = PCONFIG(0);
         pinMode(CONFIG_PIN1, INPUT_PULLUP);
         pinMode(CONFIG_PIN2, INPUT_PULLUP);
-        attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
-        attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
+        if (PCONFIG(4) == 1) { // Alternative decoding
+          attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt2, FALLING);
+          attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt1, FALLING);
+        } else {
+          attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
+          attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
+        }
         success = true;
         break;
       }
@@ -216,12 +224,13 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
             optionValues[1] = 34;
             addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
           }
-          bool presentHexToDec = PCONFIG(1) == 1;
-          addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), presentHexToDec);
+          addFormCheckBox(F("Alternative decoding"), F("p008_alternative"), PCONFIG(4) == 1);
+          addFormNote(F("Enable to use an alternative decoding method."));
+
+          addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), PCONFIG(1) == 1);
           addFormNote(F("Useful only for numeric keypad input!"));
 
-          bool autoTagRemoval = PCONFIG(2) == 0; // Inverted state!
-          addFormCheckBox(F("Automatic Tag removal"), F("p008_autotagremoval"), autoTagRemoval);
+          addFormCheckBox(F("Automatic Tag removal"), F("p008_autotagremoval"), PCONFIG(2) == 0); // Inverted state!
 
           if (PCONFIG_LONG(1) == 0) PCONFIG_LONG(1) = 500; // Defaulty 500 mSec (was hardcoded value)
           addFormNumericBox(F("Automatic Tag removal after"),F("p008_removaltimeout"), PCONFIG_LONG(1), 250, 60000); // 0.25 to 60 seconds
@@ -229,8 +238,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
 
           addFormNumericBox(F("Value to set on Tag removal"),F("p008_removalvalue"), PCONFIG_LONG(0), 0, 2147483647); // Max allowed is int = 0x7FFFFFFF ...
 
-          bool eventOnRemoval = PCONFIG(3) == 1; // Normal state!
-          addFormCheckBox(F("Event on Tag removal"), F("p008_sendreset"), eventOnRemoval);
+          addFormCheckBox(F("Event on Tag removal"), F("p008_sendreset"), PCONFIG(3) == 1); // Normal state!
 
           success = true;
           break;
@@ -242,6 +250,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
           PCONFIG(1)      = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
           PCONFIG(2)      = isFormItemChecked(F("p008_autotagremoval")) ? 0 : 1; // Inverted logic!
           PCONFIG(3)      = isFormItemChecked(F("p008_sendreset")) ? 1 : 0;
+          PCONFIG(4)      = isFormItemChecked(F("p008_alternative")) ? 1 : 0;
           PCONFIG_LONG(0) = getFormItemInt(F("p008_removalvalue"));
           PCONFIG_LONG(1) = getFormItemInt(F("p008_removaltimeout"));
 
