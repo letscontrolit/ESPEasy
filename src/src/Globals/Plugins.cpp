@@ -88,12 +88,14 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
  * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
  ********************************************************************************************/
 pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
-  deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+  if (validTaskIndex(taskIndex)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
-  if (!validDeviceIndex(deviceIndex)) {
-    return INVALID_PLUGIN_ID;
+    if (validDeviceIndex(DeviceIndex)) {
+      return DeviceIndex_to_Plugin_id[DeviceIndex];
+    }
   }
-  return DeviceIndex_to_Plugin_id[deviceIndex];
+  return INVALID_PLUGIN_ID;
 }
 
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
