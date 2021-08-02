@@ -70,15 +70,22 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
   return true;
 }
 
-bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex)
+const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex, bool& success)
 {
   String TmpStr1;
   unsigned int varNr;
 
-  if (!(validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)
-        && Settings.TaskDeviceEnabled[taskIndex]
-        && (getPluginID_from_TaskIndex(taskIndex) == 33))) { // PluginID 33 = Dummy Device
-    return false; 
+  if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
+    success = false;
+    return F("Invalid parameters");
+  }
+  if (getPluginID_from_TaskIndex(taskIndex) != 33) { // PluginID 33 = Dummy Device
+    success = false;
+    return F("Not a 'Dummy' task");
+  }
+  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+    success = false;
+    return F("Task Not Enabled");
   }
 
   unsigned int uservarIndex = (VARS_PER_TASK * taskIndex) + varNr;
@@ -88,14 +95,16 @@ bool taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& task
     double result = 0;
 
     if (isError(Calculate(TmpStr1, result))) {
-      return false;
+      success = false;
+      return F("Calculation Error");
     }
     UserVar[uservarIndex] = result;
   } else  {
     // TODO: Get Task description and var name
     serialPrintln(String(UserVar[uservarIndex]));
   }
-  return true;
+  success = true;
+  return return_command_success();
 }
 
 const __FlashStringHelper * Command_Task_Clear(struct EventStruct *event, const char *Line)
@@ -146,9 +155,8 @@ const __FlashStringHelper * Command_Task_Enable(struct EventStruct *event, const
 const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
-
-  if (taskValueSet(event, Line, taskIndex)) { return return_command_success(); }
-  return return_command_failed();
+  bool success;
+  return taskValueSet(event, Line, taskIndex, success);
 }
 
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
@@ -173,13 +181,14 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
 const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *event, const char *Line)
 {
   taskIndex_t taskIndex;
-
-  if (taskValueSet(event, Line, taskIndex))
+  bool success;
+  const __FlashStringHelper * returnvalue = taskValueSet(event, Line, taskIndex, success);
+  if (success)
   {
     SensorSendTask(taskIndex);
     return return_command_success();
   }
-  return return_command_failed();
+  return returnvalue;
 }
 
 const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const char *Line)
