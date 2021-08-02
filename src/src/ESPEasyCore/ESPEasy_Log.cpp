@@ -225,8 +225,8 @@ void addToLog(uint8_t logLevel, const String& string)
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile) {
       const size_t stringLength = string.length();
-      for (size_t i = 0; i < stringLengh; ++i) {
-        logFile.print(ch);
+      for (size_t i = 0; i < stringLength; ++i) {
+        logFile.print(string[i]);
       }
       logFile.println();
     }
