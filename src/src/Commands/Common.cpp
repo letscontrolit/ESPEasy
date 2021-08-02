@@ -23,7 +23,7 @@ const __FlashStringHelper * return_command_success()
 
 const __FlashStringHelper * return_command_failed()
 {
-  return F("\nFAILED");
+  return F("\nFailed");
 }
 
 const __FlashStringHelper * return_incorrect_nr_arguments()
