@@ -47,7 +47,8 @@ uint64_t castHexAsDec(uint64_t hexValue) {
   for (int i = 0; i < 8; i++) {
     digit = (hexValue & 0x0000000F);
 
-    if (digit > 10) { digit = 0; // Cast by dropping any non-decimal input
+    if (digit > 10) {
+      digit = 0; // Cast by dropping any non-decimal input
     }
 
     if (digit > 0) {             // Avoid 'expensive' pow operation if not used
