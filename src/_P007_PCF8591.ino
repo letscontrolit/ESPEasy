@@ -54,7 +54,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       uint8_t address = 0x48 + unit;
 
       for (uint8_t x = 0; x < 4; x++) {
-        portValues[x] = x;
+        portValues[x] = x + 1;
         portNames[x]  = F("A");
         portNames[x] += x;
       }
