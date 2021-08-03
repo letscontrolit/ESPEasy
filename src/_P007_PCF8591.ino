@@ -55,7 +55,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t x = 0; x < 4; x++) {
         portValues[x] = x + 1;
-        portNames[x]  = F("A");
+        portNames[x]  = 'A';
         portNames[x] += x;
       }
       int optionValues[8] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
