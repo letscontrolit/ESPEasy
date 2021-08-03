@@ -68,6 +68,15 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = F("49"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG_LONG(0) = AS7265X_GAIN_37X;               // Set Gain (AS7265X_GAIN_37X) => This is 3.7x

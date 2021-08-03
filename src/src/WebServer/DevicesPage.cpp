@@ -212,8 +212,9 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-  # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin = "P";
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        String plugin;
+        plugin += 'P';
 
         if (pluginID < 10) { plugin += '0'; }
 
@@ -221,7 +222,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
-  # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,

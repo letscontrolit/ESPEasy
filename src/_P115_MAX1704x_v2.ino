@@ -69,6 +69,15 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = F("36"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_INIT:
     {
       const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(P115_DEVICESELECTOR);

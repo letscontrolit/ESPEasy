@@ -141,6 +141,17 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
 
+#if USE_I2C_DEVICE_SCAN
+String getPluginI2CAddressesFromDeviceIndex(deviceIndex_t deviceIndex) {
+  String i2cAdresses;
+
+  if (validDeviceIndex(deviceIndex)) {
+    Plugin_ptr[deviceIndex](PLUGIN_I2C_GET_ADDRESSES_HEX, nullptr, i2cAdresses);
+  }
+  return i2cAdresses;
+}
+#endif // if USE_I2C_DEVICE_SCAN
+
 // ********************************************************************************
 // Device Sort routine, compare two array entries
 // ********************************************************************************
@@ -629,6 +640,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:

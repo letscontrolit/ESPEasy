@@ -87,6 +87,9 @@ pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
 deviceIndex_t getDeviceIndex(pluginID_t Number);
 
 String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
+#endif // if USE_I2C_DEVICE_SCAN
+String        getPluginI2CAddressesFromDeviceIndex(deviceIndex_t deviceIndex);
+#if USE_I2C_DEVICE_SCAN
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();

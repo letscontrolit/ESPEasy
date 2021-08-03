@@ -88,6 +88,15 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = F("20,21,22,23,24,25,26,27,38,39,3a,3b,3c,3d,3e,3f"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_WEBFORM_LOAD:
     {
       {

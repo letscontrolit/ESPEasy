@@ -67,6 +67,15 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("SDO Low=0x29, High=0x30"));
         break;
       }
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+      {
+        string = F("29,30"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+        success = true;
+        break;
+      }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_WEBFORM_LOAD:
       {
         unsigned int choiceMode2 = PCONFIG(1);

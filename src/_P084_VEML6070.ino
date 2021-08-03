@@ -69,6 +69,15 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = F("38,39"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };

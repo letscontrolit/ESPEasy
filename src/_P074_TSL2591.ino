@@ -153,6 +153,15 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = F("29"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_WEBFORM_LOAD: {
       //        P074_data_struct* P074_data =
       //        static_cast<P074_data_struct*>(getPluginTaskData(event->TaskIndex));

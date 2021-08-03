@@ -90,6 +90,21 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = EMPTY_STRING;
+      string.reserve(PCA9685_NUMS_ADDRESS * 3); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      {
+        string += String(PCA9685_ADDRESS + i, HEX);
+        string += ',';
+      }
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // The options lists are quite long.

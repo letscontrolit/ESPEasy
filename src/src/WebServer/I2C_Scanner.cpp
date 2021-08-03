@@ -145,6 +145,51 @@ void handle_i2cscanner_json() {
 
 String getKnownI2Cdevice(uint8_t address) {
   String result;
+
+  #if USE_I2C_DEVICE_SCAN
+  String i2cAddresses;
+
+  for (uint8_t x = 0; x <= deviceCount; x++) {
+    const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
+
+    if (validDeviceIndex(deviceIndex)) {
+      const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+
+      if (validPluginID(pluginID)) {
+        i2cAddresses = getPluginI2CAddressesFromDeviceIndex(deviceIndex);
+
+        if (!i2cAddresses.isEmpty()) {
+          String addresses;
+          addresses.reserve(i2cAddresses.length() + 2);
+          addresses += ',';
+          addresses += i2cAddresses;
+          addresses += ',';
+          addresses.toLowerCase();
+          String findAddress;
+          findAddress += ',';
+          findAddress += String(address, HEX);
+          findAddress += ',';
+          findAddress.toLowerCase();
+
+          if (addresses.indexOf(findAddress) > -1) {
+            result += F("(Device) ");
+            # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
+            result += 'P';
+
+            if (pluginID < 10) { result += '0'; }
+
+            if (pluginID < 100) { result += '0'; }
+            result += pluginID;
+            result += F(" - ");
+            # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+            result += getPluginNameFromDeviceIndex(deviceIndex);
+            result += ',';
+          }
+        }
+      }
+    }
+  }
+  #endif // if USE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE
 
   switch (address)
@@ -155,118 +200,118 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x25:
     case 0x26:
     case 0x27:
-      result =  F("PCF8574,MCP23017,LCD");
+      result +=  F("PCF8574,MCP23017,LCD");
       break;
     case 0x23:
-      result =  F("PCF8574,MCP23017,LCD,BH1750");
+      result +=  F("PCF8574,MCP23017,LCD,BH1750");
       break;
     case 0x24:
-      result =  F("PCF8574,MCP23017,LCD,PN532");
+      result +=  F("PCF8574,MCP23017,LCD,PN532");
       break;
     case 0x29:
-      result =  F("TSL2561,TCS34725,VL53L0X,VL53L1X");
+      result +=  F("TSL2561,TSL2591,TCS34725,VL53L0X,VL53L1X");
       break;
     case 0x30:
-      result =  F("VL53L0X,VL53L1X");
+      result +=  F("VL53L0X,VL53L1X");
       break;
     case 0x36:
-      result =  F("MAX1704x");
+      result +=  F("MAX1704x");
       break;
     case 0x38:
     case 0x3A:
     case 0x3B:
     case 0x3E:
     case 0x3F:
-      result =  F("PCF8574A");
+      result +=  F("PCF8574A");
       break;
     case 0x39:
-      result =  F("PCF8574A,TSL2561,APDS9960");
+      result +=  F("PCF8574A,TSL2561,APDS9960");
       break;
     case 0x3C:
     case 0x3D:
-      result =  F("PCF8574A,OLED");
+      result +=  F("PCF8574A,OLED");
       break;
     case 0x40:
-      result =  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
+      result +=  F("SI7021,HTU21D,INA219,PCA9685,HDC1080");
       break;
     case 0x41:
     case 0x42:
     case 0x43:
-      result =  F("INA219");
+      result +=  F("INA219");
       break;
     case 0x44:
     case 0x45:
-      result =  F("SHT30/31/35");
+      result +=  F("SHT30/31/35");
       break;
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result =  F("PCF8591,ADS1115,LM75A");
+      result +=  F("PCF8591,ADS1115,LM75A");
       break;
     case 0x49:
-      result =  F("PCF8591,ADS1115,TSL2561,LM75A");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A");
       break;
     case 0x4C:
     case 0x4E:
     case 0x4F:
-      result =  F("PCF8591,LM75A");
+      result +=  F("PCF8591,LM75A");
       break;
     case 0x4D:
-      result =  F("PCF8591,MCP3221,LM75A");
+      result +=  F("PCF8591,MCP3221,LM75A");
       break;
     case 0x51:
-      result =  F("PCF8563");
+      result +=  F("PCF8563");
       break;
     case 0x58:
-      result =  F("SGP30");
+      result +=  F("SGP30");
       break;
     case 0x5A:
-      result =  F("MLX90614,MPR121,CCS811");
+      result +=  F("MLX90614,MPR121,CCS811");
       break;
     case 0x5B:
-      result =  F("MPR121,CCS811");
+      result +=  F("MPR121,CCS811");
       break;
     case 0x5C:
-      result =  F("DHT12,AM2320,BH1750,MPR121");
+      result +=  F("DHT12,AM2320,BH1750,MPR121");
       break;
     case 0x5D:
-      result =  F("MPR121");
+      result +=  F("MPR121");
       break;
     case 0x60:
-      result =  F("Adafruit Motorshield v2,SI1145");
+      result +=  F("Adafruit Motorshield v2,SI1145");
       break;
     case 0x62:
-      result = F("Atlas EZO ORP");
+      result += F("Atlas EZO ORP");
       break;
     case 0x63:
-      result = F("Atlas EZO pH");
+      result += F("Atlas EZO pH");
       break;
     case 0x64:
-      result = F("Atlas EZO EC");
+      result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result =  F("DS1307,DS3231,PCF8523");
+      result +=  F("DS1307,DS3231,PCF8523");
       break;
     case 0x70:
-      result =  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
+      result +=  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
       break;
     case 0x71:
     case 0x72:
     case 0x73:
-      result =  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
+      result +=  F("HT16K33,TCA9543a/6a/8a I2C multiplexer");
       break;
     case 0x74:
     case 0x75:
-      result =  F("HT16K33,TCA9546a/8a I2C multiplexer");
+      result +=  F("HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x76:
-      result =  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result +=  F("BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x77:
-      result =  F("BMP085,BMP180,BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
+      result +=  F("BMP085,BMP180,BMP280,BME280,BME680,MS5607,MS5611,HT16K33,TCA9546a/8a I2C multiplexer");
       break;
     case 0x7f:
-      result =  F("Arduino PME");
+      result +=  F("Arduino PME");
       break;
   }
   #endif // LIMIT_BUILD_SIZE

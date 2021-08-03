@@ -45,6 +45,7 @@
 #define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 #define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
+#define PLUGIN_I2C_GET_ADDRESSES_HEX       40 // Fetch the I2C addresses from the plugin, hex formatted, no 0x prefix, comma separated, output in 'string'
 
 
 
