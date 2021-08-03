@@ -79,12 +79,21 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int Plugin_28_i2c_addresses[2] = { 0x38, 0x39 };
-      addFormSelectorI2C(F("i2c_addr"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
+      int Plugin_105_i2c_addresses[2] = { 0x38, 0x39 };
+      addFormSelectorI2C(F("i2c_addr"), 2, Plugin_105_i2c_addresses, PCONFIG(0));
       addFormNote(F("SDO Low=0x38, High=0x39. NB: Only available on AHT10 sensors."));
 
       break;
     }
+
+    #if USE_I2C_DEVICE_SCAN
+    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    {
+      string = F("38,39"); // List of device addresses, hex, comma separated, _no_ 0x prefix
+      success = true;
+      break;
+    }
+    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_WEBFORM_LOAD:
     {
