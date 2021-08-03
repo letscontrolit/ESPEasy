@@ -100,7 +100,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t x = 0; x < 8; x++) {
         portValues[x] = x + 1;
-        portNames[x]  = F("P");
+        portNames[x]  = 'P';
         portNames[x] += x;
       }
       int optionValues[16] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
