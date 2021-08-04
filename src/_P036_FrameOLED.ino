@@ -170,23 +170,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int     optionValues[2];
-      optionValues[0] = 0x3C;
-      optionValues[1] = 0x3D;
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, P036_ADR);
+      const int i2cAddressValues[] = { 0x3c, 0x3d };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P036_ADR);
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
-
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
-    {
-      string = F("3c,3d"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
-      break;
-    }
-    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_WEBFORM_LOAD:
     {

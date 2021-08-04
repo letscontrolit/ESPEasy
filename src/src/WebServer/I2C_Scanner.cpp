@@ -146,50 +146,30 @@ void handle_i2cscanner_json() {
 String getKnownI2Cdevice(uint8_t address) {
   String result;
 
-  #if USE_I2C_DEVICE_SCAN
-  String i2cAddresses;
-
   for (uint8_t x = 0; x <= deviceCount; x++) {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
     if (validDeviceIndex(deviceIndex)) {
       const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
 
-      if (validPluginID(pluginID)) {
-        i2cAddresses = getPluginI2CAddressesFromDeviceIndex(deviceIndex);
+      if (validPluginID(pluginID) &&
+          checkPluginI2CAddressFromDeviceIndex(deviceIndex, address)) {
+        result += F("(Device) ");
 
-        if (!i2cAddresses.isEmpty()) {
-          String addresses;
-          addresses.reserve(i2cAddresses.length() + 2);
-          addresses += ',';
-          addresses += i2cAddresses;
-          addresses += ',';
-          addresses.toLowerCase();
-          String findAddress;
-          findAddress += ',';
-          findAddress += String(address, HEX);
-          findAddress += ',';
-          findAddress.toLowerCase();
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
+        result += 'P';
 
-          if (addresses.indexOf(findAddress) > -1) {
-            result += F("(Device) ");
-            # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX) // Use same name as in Add Device combobox
-            result += 'P';
+        if (pluginID < 10) { result += '0'; }
 
-            if (pluginID < 10) { result += '0'; }
-
-            if (pluginID < 100) { result += '0'; }
-            result += pluginID;
-            result += F(" - ");
-            # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-            result += getPluginNameFromDeviceIndex(deviceIndex);
-            result += ',';
-          }
-        }
+        if (pluginID < 100) { result += '0'; }
+        result += pluginID;
+        result += F(" - ");
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        result += getPluginNameFromDeviceIndex(deviceIndex);
+        result += ',';
       }
     }
   }
-  #endif // if USE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE
 
   switch (address)

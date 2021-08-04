@@ -16,8 +16,6 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static uint8_t portValue = 0;
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -54,14 +52,12 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    case PLUGIN_I2C_HAS_ADDRESS:
     {
-      string = F("48,49,4a,4b,4c,4d"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
+      const int i2cAddressValues[] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
+      success = intArrayContains(8, i2cAddressValues, event->Par1);
       break;
     }
-    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_READ:
     {

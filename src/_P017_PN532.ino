@@ -68,14 +68,11 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    case PLUGIN_I2C_HAS_ADDRESS:
     {
-      string = F("24"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
+      success = (event->Par1 == 0x24);
       break;
     }
-    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_WEBFORM_LOAD:
     {

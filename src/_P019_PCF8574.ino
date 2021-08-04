@@ -55,8 +55,6 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static int8_t switchstate[TASKS_MAX];
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -88,14 +86,12 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    case PLUGIN_I2C_HAS_ADDRESS:
     {
-      string = F("20,21,22,23,24,25,26,27"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
+      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+      success = intArrayContains(8, i2cAddressValues, event->Par1);
       break;
     }
-    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_WEBFORM_LOAD:
     {

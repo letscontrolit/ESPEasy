@@ -97,23 +97,17 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t addr = 0x39;                                         // P064_ADDR; chip has only 1 address
-
-      int optionValues[1] = { 0x39 };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr); // Only for display I2C address
+      const int i2cAddressValues[] = { 0x39 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, 0x39); // Only for display I2C address
+      } else {
+        success = (event->Par1 == 0x39);
+      }
       break;
     }
-
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
-    {
-      string = F("39"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
-      break;
-    }
-    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_WEBFORM_LOAD:
     {

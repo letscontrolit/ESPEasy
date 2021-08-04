@@ -61,21 +61,17 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { AS7265X_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, AS7265X_ADDR);
+      const int i2cAddressValues[1] = { AS7265X_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, AS7265X_ADDR);
+      } else {
+        success = (event->Par1 == AS7265X_ADDR);
+      }
       break;
     }
-
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
-    {
-      string = F("49"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
-      break;
-    }
-    #endif // if USE_I2C_DEVICE_SCAN
 
     case PLUGIN_SET_DEFAULTS:
     {
