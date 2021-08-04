@@ -382,33 +382,37 @@ void handle_i2cscanner() {
   html_table_header(F("I2C Addresses in use"));
   html_table_header(F("Supported devices"));
 
-  int  nDevices = 0;
-  I2CSelectClockSpeed(true);  // Scan bus using low speed
-#ifdef FEATURE_I2CMULTIPLEXER
-  i2c_addresses_t mainBusDevices;
-  mainBusDevices.resize(128);
-  for (int i = 0; i < 128; i++) {
-    mainBusDevices[i] = false;
-  }
-  nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
-#else
-  nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
-#endif
-
-#ifdef FEATURE_I2CMULTIPLEXER
-  if (isI2CMultiplexerEnabled()) {
-    uint8_t mux_max = I2CMultiplexerMaxChannels();
-    for (int8_t channel = 0; channel < mux_max; channel++) {
-      I2CMultiplexerSelect(channel);
-      nDevices += scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, channel, nDevices, mainBusDevices);
+  if ((Settings.Pin_i2c_scl != -1) && (Settings.Pin_i2c_sda != -1)) {
+    int  nDevices = 0;
+    I2CSelectClockSpeed(true);  // Scan bus using low speed
+    #ifdef FEATURE_I2CMULTIPLEXER
+    i2c_addresses_t mainBusDevices;
+    mainBusDevices.resize(128);
+    for (int i = 0; i < 128; i++) {
+      mainBusDevices[i] = false;
     }
-    I2CMultiplexerOff();
-  }
-#endif
-  I2CSelectClockSpeed(false);   // By default the bus is in standard speed
+    nDevices = scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, -1, nDevices, mainBusDevices); // Channel -1 = standard I2C bus
+    #else
+    nDevices = scanI2CbusForDevices(-1, -1, nDevices); // Standard scan
+    #endif
 
-  if (nDevices == 0) {
-    addHtml(F("<TR>No I2C devices found"));
+    #ifdef FEATURE_I2CMULTIPLEXER
+    if (isI2CMultiplexerEnabled()) {
+      uint8_t mux_max = I2CMultiplexerMaxChannels();
+      for (int8_t channel = 0; channel < mux_max; channel++) {
+        I2CMultiplexerSelect(channel);
+        nDevices += scanI2CbusForDevices(Settings.I2C_Multiplexer_Addr, channel, nDevices, mainBusDevices);
+      }
+      I2CMultiplexerOff();
+    }
+    #endif
+    I2CSelectClockSpeed(false);   // By default the bus is in standard speed
+
+    if (nDevices == 0) {
+      addHtml(F("<TR>No I2C devices found"));
+    }
+  } else {
+    addHtml(F("<TR>No I2C pins configured"));
   }
 
   html_end_table();
