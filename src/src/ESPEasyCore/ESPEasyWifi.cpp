@@ -1209,7 +1209,9 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (WifiIsAP(cur_mode) != new_mode_AP_enabled) {
     // Mode has changed
-    setAPinternal(new_mode_AP_enabled);
+    if (!Settings.DoNotStartAP()) {
+      setAPinternal(new_mode_AP_enabled);
+    }
   }
   #ifdef FEATURE_MDNS
   #ifdef ESP8266
