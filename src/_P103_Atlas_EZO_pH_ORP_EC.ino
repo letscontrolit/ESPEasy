@@ -25,6 +25,8 @@
 
 #define ATLAS_EZO_RETURN_ARRAY_SIZE 33
 
+#define _P103_ATLASEZO_I2C_NB_OPTIONS 6
+
 #define FIXED_TEMP_VALUE 20 // Temperature correction for pH and EC sensor if no temperature is given from calculation
 
 boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
@@ -65,22 +67,22 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     break;
   }
 
-    #if USE_I2C_DEVICE_SCAN
-    case PLUGIN_I2C_GET_ADDRESSES_HEX:
+    case PLUGIN_I2C_HAS_ADDRESS:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      string = F("62,63,64"); // List of device addresses, hex, comma separated, _no_ 0x prefix
-      success = true;
+      const int i2cAddressValues[] = {0x62, 0x63, 0x64, 0x65, 0x66, 0x67};
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("plugin_103_i2c"), _P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, PCONFIG(1));
+        addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically."));
+      } else {
+        success = intArrayContains(_P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, event->Par1);
+      }
       break;
     }
-    #endif // if USE_I2C_DEVICE_SCAN
 
   case PLUGIN_WEBFORM_LOAD:
   {
     I2Cchoice = PCONFIG(1);
-#define _P103_ATLASEZO_I2C_NB_OPTIONS 6
-    int optionValues[_P103_ATLASEZO_I2C_NB_OPTIONS] = {0x62, 0x63, 0x64, 0x65, 0x66, 0x67};
-    addFormSelectorI2C(F("plugin_103_i2c"), _P103_ATLASEZO_I2C_NB_OPTIONS, optionValues, I2Cchoice);
-    addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically."));
 
     addFormSubHeader(F("Board"));
 
