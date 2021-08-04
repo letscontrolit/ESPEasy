@@ -65,7 +65,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_009;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports              = 16;
+      Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = true;
       Device[deviceCount].FormulaOption      = false;
@@ -86,6 +86,27 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_009));
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      String  portNames[16];
+      int     portValues[16];
+      uint8_t unit    = (CONFIG_PORT - 1) / 16;
+      uint8_t port    = CONFIG_PORT - (unit * 16);
+      uint8_t address = 0x20 + unit;
+
+      for (uint8_t x = 0; x < 16; x++) {
+        portValues[x] = x;
+        portNames[x]  = 'P';
+        portNames[x] += (x < 8 ? 'A' : 'B');
+        portNames[x] += (x < 8 ? x : x - 8);
+      }
+      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+      addFormSelectorI2C(F("p009_i2c"), 8, i2cAddressValues, address);
+      addFormSelector(F("Port"), F("p009_port"), 16, portNames, portValues, port);
+
       break;
     }
 
@@ -161,6 +182,10 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      uint8_t i2c  = getFormItemInt(F("p009_i2c"));
+      uint8_t port = getFormItemInt(F("p009_port"));
+      CONFIG_PORT = (((i2c - 0x20) << 4) + port);
+
       PCONFIG(0) = isFormItemChecked(F("p009_boot"));
 
       // @giig1967-20181022
