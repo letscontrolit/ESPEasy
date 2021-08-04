@@ -98,7 +98,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       uint8_t address = 0x20 + unit;
 
       for (uint8_t x = 0; x < 16; x++) {
-        portValues[x] = x;
+        portValues[x] = x + 1;
         portNames[x]  = 'P';
         portNames[x] += (x < 8 ? 'A' : 'B');
         portNames[x] += (x < 8 ? x : x - 8);
