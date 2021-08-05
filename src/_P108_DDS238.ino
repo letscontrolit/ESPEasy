@@ -395,12 +395,12 @@ float p108_readValue(uint8_t query, struct EventStruct *event) {
         value = P108_data->modbus.readHoldingRegister(0x0D, errorcode) / 100.0f; // 0.01 A => A
         break;
       case P108_QUERY_W:
-        value =  P108_data->modbus.readHoldingRegister(0x0E, errorcode) * 1.0f;
-        if (value > 32767) { value = 0 - (65535 - value); }
+        value =  P108_data->modbus.readHoldingRegister(0x0E, errorcode);
+        if (value > 32767) { value -= 65535; }
         break;
       case P108_QUERY_VA:
-        value = P108_data->modbus.readHoldingRegister(0x0F, errorcode) * 1.0f;
-        if (value > 32767) { value = 0 - (65535 - value); }
+        value = P108_data->modbus.readHoldingRegister(0x0F, errorcode);
+        if (value > 32767) { value -= 65535; }
         break;
       case P108_QUERY_PF:
         value = P108_data->modbus.readHoldingRegister(0x10, errorcode) / 1000.0f; // 0.001 Pf => Pf
