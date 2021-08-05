@@ -47,9 +47,10 @@
 #  define P016_SEND_IR_TO_CONTROLLER false
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
-# define P016_MAX_DECODETYPES 104 // The number of decodeTypes supported by IRrecv, actual value is logged during PLUGIN_WEBFORM_LOAD
-
 // History
+// @tonhuisman: 2021-08-05
+// FIX: Resolve stack size issues by replacing 2 arrays by std::vectors
+// CHG: Remove unneeded #define for nr. of decoding types
 // @tonhuisman: 2021-07-20
 // CHG: Merge in branch 'mega', minor changes, formatted source using Uncrustify
 // @tonhuisman: 2021-06-05
@@ -329,12 +330,6 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             log.reserve(30);
             log  = F("IR: available decodetypes: ");
             log += size;
-
-            if (size > P016_MAX_DECODETYPES) { // If this happens, there is a penalty of re-allocating the log string,
-                                               // but it should be fixed ASAP by the developer, so doesn't show again!
-              log += F(" #define P016_MAX_DECODETYPES should be updated, currently: ");
-              log += P016_MAX_DECODETYPES;
-            }
             addLog(LOG_LEVEL_INFO, log);
           }
 
@@ -342,7 +337,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           std::vector<String> decodeTypes;
           std::vector<int>    decodeTypeOptions;
 
-          for (int i = 0; i < size && i < P016_MAX_DECODETYPES; i++) {
+          for (int i = 0; i < size; i++) {
             decodeTypeOptions.push_back(i);
             decodeTypes.push_back(typeToString(static_cast<decode_type_t>(i), false));
 
@@ -377,7 +372,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), P016_MAX_DECODETYPES, &decodeTypes[0], &decodeTypeOptions[0], NULL,
+              addSelector(getPluginCustomArgName(rowCnt + 0), size, &decodeTypes[0], &decodeTypeOptions[0], NULL,
                           static_cast<int>(P016_data->CommandLines[varNr].CodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
@@ -392,7 +387,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), P016_MAX_DECODETYPES, &decodeTypes[0], &decodeTypeOptions[0], NULL,
+              addSelector(getPluginCustomArgName(rowCnt + 3), size, &decodeTypes[0], &decodeTypeOptions[0], NULL,
                           static_cast<int>(P016_data->CommandLines[varNr].AlternativeCodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
