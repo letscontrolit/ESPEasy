@@ -22,8 +22,6 @@
  \*********************************************************************************************/
 void hardwareInit();
 
-bool isI2CEnabled();
-
 void initI2C();
 
 void I2CSelectClockSpeed(bool setLowSpeed);

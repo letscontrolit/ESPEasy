@@ -1014,7 +1014,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      && !isI2CEnabled()) {
+      && !Settings.isI2CEnabled()) {
     addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
   }
 

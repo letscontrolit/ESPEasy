@@ -382,7 +382,7 @@ void handle_i2cscanner() {
   html_table_header(F("I2C Addresses in use"));
   html_table_header(F("Supported devices"));
 
-  if (isI2CEnabled()) {
+  if (Settings.isI2CEnabled()) {
     int  nDevices = 0;
     I2CSelectClockSpeed(true);  // Scan bus using low speed
     #ifdef FEATURE_I2CMULTIPLEXER
