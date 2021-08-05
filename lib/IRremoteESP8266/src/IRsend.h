@@ -118,11 +118,16 @@ namespace stdAc {
 
 /// Fujitsu A/C model numbers
 enum fujitsu_ac_remote_model_t {
-  ARRAH2E = 1,  // (1) AR-RAH2E, AR-RAC1E, AR-RAE1E, AR-RCE1E (Default)
-  ARDB1,        // (2) AR-DB1, AR-DL10 (AR-DL10 swing doesn't work)
-  ARREB1E,      // (3) AR-REB1E
-  ARJW2,        // (4) AR-JW2  (Same as ARDB1 but with horiz control)
-  ARRY4,        // (5) AR-RY4 (Same as AR-RAH2E but with clean & filter)
+  ARRAH2E = 1,  ///< (1) AR-RAH2E, AR-RAC1E, AR-RAE1E, AR-RCE1E (Default)
+                ///< Warning: Use on incorrect models can cause the A/C to lock
+                ///< up, requring the A/C to be physically powered off to fix.
+                ///< e.g. AR-RAH1U may lock up with a Swing command.
+  ARDB1,        ///< (2) AR-DB1, AR-DL10 (AR-DL10 swing doesn't work)
+  ARREB1E,      ///< (3) AR-REB1E, AR-RAH1U (Similar to ARRAH2E but no horiz
+                ///<     control)
+  ARJW2,        ///< (4) AR-JW2  (Same as ARDB1 but with horiz control)
+  ARRY4,        ///< (5) AR-RY4 (Same as AR-RAH2E but with clean & filter)
+  ARREW4E,      ///< (6) Similar to ARRAH2E, but with different temp config.
 };
 
 /// Gree A/C model numbers
@@ -150,8 +155,9 @@ enum panasonic_ac_remote_model_t {
 
 /// Sharp A/C model numbers
 enum sharp_ac_remote_model_t {
-  A907 = 1,  // 802 too.
+  A907 = 1,
   A705 = 2,
+  A903 = 3,  // 820 too
 };
 
 /// Voltas A/C model numbers
@@ -516,16 +522,21 @@ class IRsend {
   void sendCarrierAC64(uint64_t data, uint16_t nbits = kCarrierAc64Bits,
                        uint16_t repeat = kCarrierAc64MinRepeat);
 #endif
-#if (SEND_HAIER_AC || SEND_HAIER_AC_YRW02)
+#if (SEND_HAIER_AC || SEND_HAIER_AC_YRW02 || SEND_HAIER_AC176)
   void sendHaierAC(const unsigned char data[],
                    const uint16_t nbytes = kHaierACStateLength,
                    const uint16_t repeat = kHaierAcDefaultRepeat);
-#endif
+#endif  // (SEND_HAIER_AC || SEND_HAIER_AC_YRW02 || SEND_HAIER_AC176)
 #if SEND_HAIER_AC_YRW02
   void sendHaierACYRW02(const unsigned char data[],
                         const uint16_t nbytes = kHaierACYRW02StateLength,
                         const uint16_t repeat = kHaierAcYrw02DefaultRepeat);
-#endif
+#endif  // SEND_HAIER_AC_YRW02
+#if SEND_HAIER_AC176
+  void sendHaierAC176(const unsigned char data[],
+                      const uint16_t nbytes = kHaierAC176StateLength,
+                      const uint16_t repeat = kHaierAc176DefaultRepeat);
+#endif  // SEND_HAIER_AC176
 #if SEND_HITACHI_AC
   void sendHitachiAC(const unsigned char data[],
                      const uint16_t nbytes = kHitachiAcStateLength,
@@ -663,8 +674,8 @@ class IRsend {
 #endif  // SEND_ZEPEAL
 #if SEND_VOLTAS
   void sendVoltas(const unsigned char data[],
-                       const uint16_t nbytes = kVoltasStateLength,
-                       const uint16_t repeat = kNoRepeat);
+                  const uint16_t nbytes = kVoltasStateLength,
+                  const uint16_t repeat = kNoRepeat);
 #endif  // SEND_VOLTAS
 #if SEND_METZ
   void sendMetz(const uint64_t data,
@@ -682,6 +693,34 @@ class IRsend {
                         const uint16_t nbits = kEliteScreensBits,
                         const uint16_t repeat = kEliteScreensDefaultRepeat);
 #endif  // SEND_ELITESCREENS
+#if SEND_MILESTAG2
+  // Since There 2 types of transmissions
+  // (14bits for Shooting by default, you can set 24 bit for msg delivery)
+  void sendMilestag2(const uint64_t data,
+                     const uint16_t nbits = kMilesTag2ShotBits,
+                     const uint16_t repeat = kMilesMinRepeat);
+#endif  // SEND_MILESTAG2
+#if SEND_ECOCLIM
+  void sendEcoclim(const uint64_t data, const uint16_t nbits = kEcoclimBits,
+                   const uint16_t repeat = kNoRepeat);
+#endif  // SEND_ECOCLIM
+#if SEND_XMP
+  void sendXmp(const uint64_t data, const uint16_t nbits = kXmpBits,
+               const uint16_t repeat = kNoRepeat);
+#endif  // SEND_XMP
+#if SEND_TRUMA
+  void sendTruma(const uint64_t data, const uint16_t nbits = kTrumaBits,
+                 const uint16_t repeat = kNoRepeat);
+#endif  // SEND_TRUMA
+#if SEND_TEKNOPOINT
+  void sendTeknopoint(const unsigned char data[],
+                      const uint16_t nbytes = kTeknopointStateLength,
+                      const uint16_t repeat = kNoRepeat);
+#endif  // SEND_TEKNOPOINT
+#if SEND_KELON
+  void sendKelon(const uint64_t data, const uint16_t nbits = kKelonBits,
+                 const uint16_t repeat = kNoRepeat);
+#endif  // SEND_KELON
 
  protected:
 #ifdef UNIT_TEST

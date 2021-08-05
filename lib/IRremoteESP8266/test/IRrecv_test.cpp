@@ -42,6 +42,49 @@ TEST(TestIRrecv, IRrecvDestructor) {
   delete irrecv_ptr;
 }
 
+TEST(TestIRrecv, DecodeHeapOverflow) {
+  // Check that we handle the rawbuf correctly when we fill it. e.g. overflow.
+  // Ref: https://github.com/crankyoldgit/IRremoteESP8266/issues/1516
+  IRrecv irrecv(1);
+  irrecv.enableIRIn();
+  ASSERT_EQ(kRawBuf, irrecv.getBufSize());
+  volatile irparams_t *params_ptr = irrecv._getParamsPtr();
+  // replace the buffer with a slightly bigger one to see if we go past the end
+  // accidentally.
+  params_ptr->rawbuf = new uint16_t[kRawBuf + 10];
+  ASSERT_EQ(kRawBuf, irrecv.getBufSize());  // Should not change.
+  // Fill the raw buffer with canaries
+  //  Values of 100 for the proper buffer size, & values of 99 for the extras
+  for (uint16_t i = 0; i < irrecv.getBufSize() + 10; i++) {
+    params_ptr->rawbuf[i] = 100;
+    if (i >= irrecv.getBufSize()) params_ptr->rawbuf[i]--;
+  }
+  ASSERT_EQ(100, params_ptr->rawbuf[kRawBuf - 1]);
+  EXPECT_EQ(99, params_ptr->rawbuf[kRawBuf]);
+  EXPECT_EQ(99, params_ptr->rawbuf[kRawBuf + 1]);
+  ASSERT_EQ(kRawBuf, params_ptr->bufsize);
+  decode_results results;
+  // Mock up the rest of params like we've received a message that has used
+  // all the rawbuf.
+  params_ptr->rawlen = kRawBuf;
+  params_ptr->overflow = true;
+  params_ptr->rcvstate = kStopState;
+  // Need to tweak results structure too.
+  results.rawbuf = params_ptr->rawbuf;
+  results.rawlen = params_ptr->rawlen;
+  results.overflow = params_ptr->overflow;
+
+  // Do the decode.
+  ASSERT_TRUE(irrecv.decode(&results));
+  // Yay, nothing exploded! Now check everything is as we expect
+  // w.r.t. the buffer.
+  ASSERT_EQ(kRawBuf, params_ptr->rawlen);
+  ASSERT_TRUE(params_ptr->overflow);
+  ASSERT_EQ(100, params_ptr->rawbuf[params_ptr->rawlen - 1]);
+  EXPECT_EQ(99, params_ptr->rawbuf[params_ptr->rawlen]);
+  EXPECT_EQ(99, params_ptr->rawbuf[params_ptr->rawlen + 1]);
+}
+
 // Tests for copyIrParams()
 
 TEST(TestCopyIrParams, CopyEmpty) {
@@ -1012,6 +1055,74 @@ TEST(TestMatchGeneric, MissingHeaderFooter) {
   EXPECT_EQ(0b1010, result_data);
   EXPECT_EQ(irsend.capture.rawlen - offset, entries_used);
   EXPECT_EQ(kentries - 2, entries_used);
+}
+
+TEST(TestMatchGeneric, MissingFooterMarkEncoded) {
+  IRsendTest irsend(0);
+  IRrecv irrecv(1);
+  irsend.begin();
+
+  const uint16_t kentries = 10;
+  uint16_t data[kentries] = {  // Mark encoded data.
+      8000,  // Header mark
+      4000,  // Header space
+      2000, 500,   // Bit #0 (1)
+      1000, 500,   // Bit #1 (0)
+      2000, 500,   // Bit #2 (1)
+      1000, 500};  // Bit #3 (0)
+                   // (No Footer)
+
+  uint16_t offset = kStartOffset;
+  irsend.reset();
+
+  // Send it with the "trailing data space."
+  irsend.sendRaw(data, kentries, 38000);
+  irsend.makeDecodeResult();
+  uint16_t entries_used = 0;
+
+  uint64_t result_data = 0;
+
+  // No footer match
+  entries_used = irrecv.matchGeneric(
+      irsend.capture.rawbuf + offset, &result_data,
+      irsend.capture.rawlen - offset,
+      4,  // nbits
+      8000, 4000,  // Header
+      2000, 500,  // one mark & space
+      1000, 500,  // zero mark & space
+      0, 0,  // NO Footer
+      true,  // atleast on the footer space.
+      1,  // 1% Tolerance
+      0,  // No excess margin
+      true);  // MSB first.
+  ASSERT_NE(0, entries_used);
+  EXPECT_EQ(0b1010, result_data);
+  EXPECT_EQ(irsend.capture.rawlen- kStartOffset, kentries);
+  EXPECT_EQ(irsend.capture.rawlen - kStartOffset - 1, entries_used);
+  EXPECT_EQ(kentries - 1, entries_used);
+
+  // Now send it again, but make it appear like a real capture.
+  // i.e. The trailing space is removed.
+  irsend.reset();
+  irsend.sendRaw(data, kentries - 1, 38000);
+  irsend.makeDecodeResult();
+  entries_used = irrecv.matchGeneric(
+      irsend.capture.rawbuf + offset, &result_data,
+      irsend.capture.rawlen - offset,
+      4,  // nbits
+      8000, 4000,  // Header
+      2000, 500,  // one mark & space
+      1000, 500,  // zero mark & space
+      0, 0,  // NO Footer
+      true,  // atleast on the footer space.
+      1,  // 1% Tolerance
+      0,  // No excess margin
+      true);  // MSB first.
+  ASSERT_NE(0, entries_used);
+  EXPECT_EQ(0b1010, result_data);
+  EXPECT_EQ(irsend.capture.rawlen - kStartOffset, kentries - 1);
+  EXPECT_EQ(irsend.capture.rawlen - kStartOffset, entries_used);
+  EXPECT_EQ(kentries - 1, entries_used);
 }
 
 TEST(TestMatchGeneric, BitOrdering) {

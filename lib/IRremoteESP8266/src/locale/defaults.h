@@ -135,6 +135,9 @@
 #ifndef D_STR_8C_HEAT
 #define D_STR_8C_HEAT "8C " D_STR_HEAT  // Set `D_STR_HEAT` first!
 #endif  // D_STR_8C_HEAT
+#ifndef D_STR_10C_HEAT
+#define D_STR_10C_HEAT "10C " D_STR_HEAT  // Set `D_STR_HEAT` first!
+#endif  // D_STR_10C_HEAT
 #ifndef D_STR_BUTTON
 #define D_STR_BUTTON "Button"
 #endif  // D_STR_BUTTON
@@ -270,6 +273,12 @@
 #ifndef D_STR_SPECIAL
 #define D_STR_SPECIAL "Special"
 #endif  // D_STR_SPECIAL
+#ifndef D_STR_RECYCLE
+#define D_STR_RECYCLE "Recycle"
+#endif  // D_STR_RECYCLE
+#ifndef D_STR_ID
+#define D_STR_ID "Id"
+#endif  // D_STR_ID
 
 #ifndef D_STR_AUTO
 #define D_STR_AUTO "Auto"
@@ -544,6 +553,9 @@
 #ifndef D_STR_DOSHISHA
 #define D_STR_DOSHISHA "DOSHISHA"
 #endif  // D_STR_DOSHISHA
+#ifndef D_STR_ECOCLIM
+#define D_STR_ECOCLIM "ECOCLIM"
+#endif  // D_STR_ECOCLIM
 #ifndef D_STR_ELECTRA_AC
 #define D_STR_ELECTRA_AC "ELECTRA_AC"
 #endif  // D_STR_ELECTRA_AC
@@ -574,6 +586,9 @@
 #ifndef D_STR_HAIER_AC_YRW02
 #define D_STR_HAIER_AC_YRW02 "HAIER_AC_YRW02"
 #endif  // D_STR_HAIER_AC_YRW02
+#ifndef D_STR_HAIER_AC176
+#define D_STR_HAIER_AC176 "HAIER_AC176"
+#endif  // D_STR_HAIER_AC176
 #ifndef D_STR_HITACHI_AC
 #define D_STR_HITACHI_AC "HITACHI_AC"
 #endif  // D_STR_HITACHI_AC
@@ -598,6 +613,9 @@
 #ifndef D_STR_JVC
 #define D_STR_JVC "JVC"
 #endif  // D_STR_JVC
+#ifndef D_STR_KELON
+#define D_STR_KELON "KELON"
+#endif  // D_STR_KELON
 #ifndef D_STR_KELVINATOR
 #define D_STR_KELVINATOR "KELVINATOR"
 #endif  // D_STR_KELVINATOR
@@ -628,6 +646,9 @@
 #ifndef D_STR_MIDEA24
 #define D_STR_MIDEA24 "MIDEA24"
 #endif  // D_STR_MIDEA24
+#ifndef D_STR_MILESTAG2
+#define D_STR_MILESTAG2 "MILESTAG2"
+#endif  // D_STR_MILESTAG2
 #ifndef D_STR_MIRAGE
 #define D_STR_MIRAGE "MIRAGE"
 #endif  // D_STR_MIRAGE
@@ -748,6 +769,9 @@
 #ifndef D_STR_TECO
 #define D_STR_TECO "TECO"
 #endif  // D_STR_TECO
+#ifndef D_STR_TEKNOPOINT
+#define D_STR_TEKNOPOINT "TEKNOPOINT"
+#endif  // D_STR_TEKNOPOINT
 #ifndef D_STR_TOSHIBA_AC
 #define D_STR_TOSHIBA_AC "TOSHIBA_AC"
 #endif  // D_STR_TOSHIBA_AC
@@ -757,6 +781,9 @@
 #ifndef D_STR_TROTEC
 #define D_STR_TROTEC "TROTEC"
 #endif  // D_STR_TROTEC
+#ifndef D_STR_TRUMA
+#define D_STR_TRUMA "TRUMA"
+#endif  // D_STR_TRUMA
 #ifndef D_STR_UNUSED
 #define D_STR_UNUSED "UNUSED"
 #endif  // D_STR_UNUSED
@@ -772,6 +799,9 @@
 #ifndef D_STR_WHYNTER
 #define D_STR_WHYNTER "WHYNTER"
 #endif  // D_STR_WHYNTER
+#ifndef D_STR_XMP
+#define D_STR_XMP "XMP"
+#endif  // D_STR_XMP
 #ifndef D_STR_ZEPEAL
 #define D_STR_ZEPEAL "ZEPEAL"
 #endif  // D_STR_ZEPEAL

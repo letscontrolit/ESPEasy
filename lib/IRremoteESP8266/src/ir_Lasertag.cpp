@@ -18,7 +18,7 @@ const uint16_t kLasertagTick = 333;
 const uint32_t kLasertagMinGap = kDefaultMessageGap;  // Just a guess.
 const uint8_t kLasertagTolerance = 0;     // Percentage error margin.
 const uint16_t kLasertagExcess = 0;       // See kMarkExcess.
-const uint16_t kLasertagDelta = 150;  // Use instead of Excess and Tolerance.
+const uint16_t kLasertagDelta = 165;  // Use instead of Excess and Tolerance.
 const int16_t kSpace = 1;
 const int16_t kMark = 0;
 
@@ -63,7 +63,7 @@ void IRsend::sendLasertag(uint64_t data, uint16_t nbits, uint16_t repeat) {
 /// @param[in] strict Flag indicating if we should perform strict matching.
 /// @return True if it can decode it, false if it can't.
 /// @note This protocol is pretty much just raw Manchester encoding.
-/// @see http://www.sbprojects.com/knowledge/ir/rc5.php
+/// @see http://www.sbprojects.net/knowledge/ir/rc5.php
 /// @see https://en.wikipedia.org/wiki/RC-5
 /// @see https://en.wikipedia.org/wiki/Manchester_code
 /// @todo Convert to using `matchManchester()` if we can.
