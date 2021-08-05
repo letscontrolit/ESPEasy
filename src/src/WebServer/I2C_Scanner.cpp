@@ -382,7 +382,7 @@ void handle_i2cscanner() {
   html_table_header(F("I2C Addresses in use"));
   html_table_header(F("Supported devices"));
 
-  if ((Settings.Pin_i2c_scl != -1) && (Settings.Pin_i2c_sda != -1)) {
+  if (isI2CEnabled()) {
     int  nDevices = 0;
     I2CSelectClockSpeed(true);  // Scan bus using low speed
     #ifdef FEATURE_I2CMULTIPLEXER
@@ -412,7 +412,7 @@ void handle_i2cscanner() {
       addHtml(F("<TR>No I2C devices found"));
     }
   } else {
-    addHtml(F("<TR>No I2C pins configured"));
+    addHtml(F("<TR>I2C pins not configured"));
   }
 
   html_end_table();

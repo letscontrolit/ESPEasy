@@ -148,7 +148,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       if (counter == 3)
       {
         // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
-        if ((Settings.Pin_i2c_sda >= 0) && (Settings.Pin_i2c_scl >= 0)
+        if (isI2CEnabled()
             && ((digitalRead(Settings.Pin_i2c_sda) == 0) || (digitalRead(Settings.Pin_i2c_scl) == 0)))
         {
           addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
