@@ -90,11 +90,11 @@ private:
   # ifdef P16_SETTINGS_V1
   std::vector<tCommandLines>CommandLinesV1; // holds the CustomTaskSettings V1, allocated when needed for conversion
   # endif  // ifdef P16_SETTINGS_V1
-  uint16_t      iCmdInhibitTime;            // inhibit time for sending the same command again
   uint64_t      iLastCmd;                   // last command send
-  decode_type_t iLastDecodeType;            // last decode_type sent
-  uint16_t      iLastCodeFlags;             // last flags sent
   uint32_t      iLastCmdTime;               // time while last command was send
+  decode_type_t iLastDecodeType;            // last decode_type sent
+  uint16_t      iCmdInhibitTime;            // inhibit time for sending the same command again
+  uint16_t      iLastCodeFlags;             // last flags sent
 };
 
 #endif // ifdef USES_P016

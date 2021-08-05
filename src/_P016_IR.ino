@@ -27,6 +27,7 @@
 # include <IRrecv.h>
 # include "src/Helpers/Memory.h"
 
+# include <vector>
 # include "src/PluginStructs/P016_data_struct.h"
 
 # include "src/ESPEasyCore/Serial.h"
@@ -46,8 +47,7 @@
 #  define P016_SEND_IR_TO_CONTROLLER false
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
-# define P016_MAX_DECODETYPES 97 // The number of decodeTypes supported by IRrecv, actual value is logged during PLUGIN_WEBFORM_LOAD when
-                                 // PLUGIN_016_DEBUG is on
+# define P016_MAX_DECODETYPES 104 // The number of decodeTypes supported by IRrecv, actual value is logged during PLUGIN_WEBFORM_LOAD
 
 // History
 // @tonhuisman: 2021-07-20
@@ -226,8 +226,17 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
         }
         irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
-        irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
-        irReceiver->enableIRIn();                         // Start the receiver
+        # ifdef PLUGIN_016_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver created"));
+        # endif // PLUGIN_016_DEBUG
+
+        if (nullptr != irReceiver) {
+          irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
+          irReceiver->enableIRIn(); // Start the receiver
+          # ifdef PLUGIN_016_DEBUG
+          addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver initialized"));
+          # endif // PLUGIN_016_DEBUG
+        }
       }
 
       if ((nullptr != irReceiver) && (irPin == -1))
@@ -235,6 +244,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         irReceiver->disableIRIn();
         delete irReceiver;
         irReceiver = nullptr;
+        # ifdef PLUGIN_016_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver destroyed"));
+        # endif // PLUGIN_016_DEBUG
       }
 
       # ifdef PLUGIN_016_DEBUG
@@ -255,6 +267,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         irReceiver->disableIRIn(); // Stop the receiver
         delete irReceiver;
         irReceiver = nullptr;
+        # ifdef PLUGIN_016_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_EXIT IR receiver destroyed"));
+        # endif // PLUGIN_016_DEBUG
       }
 
       # ifdef PLUGIN_016_DEBUG
@@ -308,28 +323,30 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           addFormSubHeader(F("Code - command map"));
 
           int size = static_cast<int>(decode_type_t::kLastDecodeType) + 1;
-          # ifdef PLUGIN_016_DEBUG
-          String log;
-          log.reserve(35);
-          log  = F("P016: available decodetypes: ");
-          log += size;
 
-          if (size > P016_MAX_DECODETYPES) {
-            log += F(" #define P016_MAX_DECODETYPES should be updated, currently:");
-            log += P016_MAX_DECODETYPES;
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log; // Log this always
+            log.reserve(30);
+            log  = F("IR: available decodetypes: ");
+            log += size;
+
+            if (size > P016_MAX_DECODETYPES) { // If this happens, there is a penalty of re-allocating the log string,
+                                               // but it should be fixed ASAP by the developer, so doesn't show again!
+              log += F(" #define P016_MAX_DECODETYPES should be updated, currently: ");
+              log += P016_MAX_DECODETYPES;
+            }
+            addLog(LOG_LEVEL_INFO, log);
           }
-          addLog(LOG_LEVEL_INFO, log);
-          # endif // ifdef PLUGIN_016_DEBUG
 
-          // Fill an array with all supported decode_type_t
-          String decodeTypes[P016_MAX_DECODETYPES];
-          int    decodeTypeOptions[P016_MAX_DECODETYPES];
+          // Fill a vector with all supported decode_type_t names
+          std::vector<String> decodeTypes;
+          std::vector<int>    decodeTypeOptions;
 
           for (int i = 0; i < size && i < P016_MAX_DECODETYPES; i++) {
-            decodeTypeOptions[i] = i;
-            decodeTypes[i]       = typeToString(static_cast<decode_type_t>(i), false);
+            decodeTypeOptions.push_back(i);
+            decodeTypes.push_back(typeToString(static_cast<decode_type_t>(i), false));
 
-            // addLog(LOG_LEVEL_INFO,typeToString(static_cast<decode_type_t>(i), false)); // For debugging purposes
+            // addLog(LOG_LEVEL_INFO, decodeTypes[i]); // For development debugging purposes
             delay(0);
           }
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
@@ -360,7 +377,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), size, decodeTypes, decodeTypeOptions, NULL,
+              addSelector(getPluginCustomArgName(rowCnt + 0), P016_MAX_DECODETYPES, &decodeTypes[0], &decodeTypeOptions[0], NULL,
                           static_cast<int>(P016_data->CommandLines[varNr].CodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
@@ -375,7 +392,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), size, decodeTypes, decodeTypeOptions, NULL,
+              addSelector(getPluginCustomArgName(rowCnt + 3), P016_MAX_DECODETYPES, &decodeTypes[0], &decodeTypeOptions[0], NULL,
                           static_cast<int>(P016_data->CommandLines[varNr].AlternativeCodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
@@ -557,7 +574,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
         if (results.overflow)
         {
-          addLog(LOG_LEVEL_INFO, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
+          addLog(LOG_LEVEL_ERROR, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
           success = false;
           break;             // Do not continue and risk hanging the ESP
         }
