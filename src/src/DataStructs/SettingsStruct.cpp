@@ -236,7 +236,15 @@ void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
   bitWrite(VariousBits1, 20, value);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins() const {
+  return bitRead(VariousBits1, 21);
+}
 
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins(bool value) {
+  bitWrite(VariousBits1, 21, value);
+}
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
