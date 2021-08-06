@@ -55,8 +55,6 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static int8_t switchstate[TASKS_MAX];
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -88,25 +86,30 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      String  portNames[8];
-      int     portValues[8];
-      uint8_t unit    = (CONFIG_PORT - 1) / 8;
-      uint8_t port    = CONFIG_PORT - (unit * 8);
-      uint8_t address = 0x20 + unit;
+      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        String  portNames[8];
+        int     portValues[8];
+        uint8_t unit    = (CONFIG_PORT - 1) / 8;
+        uint8_t port    = CONFIG_PORT - (unit * 8);
+        uint8_t address = 0x20 + unit;
 
-      if (unit > 7) { address += 0x10; }
+        if (unit > 7) { address += 0x10; }
 
-      for (uint8_t x = 0; x < 8; x++) {
-        portValues[x] = x + 1;
-        portNames[x]  = 'P';
-        portNames[x] += x;
+        for (uint8_t x = 0; x < 8; x++) {
+          portValues[x] = x + 1;
+          portNames[x]  = 'P';
+          portNames[x] += x;
+        }
+        addFormSelectorI2C(F("plugin_019_i2c"), 16, i2cAddressValues, address);
+        addFormSelector(F("Port"), F("plugin_019_port"), 8, portNames, portValues, port);
+        addFormNote(F("PCF8574 uses addresses 0x20..0x27, PCF8574<b>A</b> uses addresses 0x38..0x3F."));
+      } else {
+        success = intArrayContains(16, i2cAddressValues, event->Par1);
       }
-      int optionValues[16] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
-      addFormSelectorI2C(F("plugin_019_i2c"), 16, optionValues, address);
-      addFormSelector(F("Port"), F("plugin_019_port"), 8, portNames, portValues, port);
-
       break;
     }
 

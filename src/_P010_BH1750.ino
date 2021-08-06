@@ -49,23 +49,18 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t choice = PCONFIG(0);
-
-      /*
-         String options[2];
-         options[0] = F("0x23 - default settings (ADDR Low)");
-         options[1] = F("0x5c - alternate settings (ADDR High)");
-       */
-      int optionValues[2];
-      optionValues[0] = BH1750_DEFAULT_I2CADDR;
-      optionValues[1] = BH1750_SECOND_I2CADDR;
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
-      addFormNote(F("ADDR Low=0x23, High=0x5c"));
+      const int i2cAddressValues[] = { BH1750_DEFAULT_I2CADDR, BH1750_SECOND_I2CADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+        addFormNote(F("ADDR Low=0x23, High=0x5c"));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
-
 
     case PLUGIN_WEBFORM_LOAD:
     {
