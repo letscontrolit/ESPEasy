@@ -2,30 +2,32 @@
 
 #ifdef USES_P103
 
-// ########################################################################
-// ################## Plugin 103 : Atlas Scientific EZO pH ORP EC sensors #
-// ########################################################################
+// ###########################################################################
+// ################## Plugin 103 : Atlas Scientific EZO pH ORP EC DO sensors #
+// ###########################################################################
 
 // datasheet at https://atlas-scientific.com/files/pH_EZO_Datasheet.pdf
 // datasheet at https://atlas-scientific.com/files/ORP_EZO_Datasheet.pdf
 // datasheet at https://atlas-scientific.com/files/EC_EZO_Datasheet.pdf
+// datasheet at https://atlas-scientific.com/files/DO_EZO_Datasheet.pdf
 // works only in i2c mode
 
 #include "src/Helpers/Rules_calculate.h"
 
 #define PLUGIN_103
 #define PLUGIN_ID_103 103
-#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC [TESTING]"
+#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO [TESTING]"
 #define PLUGIN_VALUENAME1_103 "SensorData"
 #define PLUGIN_VALUENAME2_103 "Voltage"
 #define UNKNOWN 0
 #define PH 1
 #define ORP 2
 #define EC 3
+#define DO 4
 
 #define ATLAS_EZO_RETURN_ARRAY_SIZE 33
 
-#define _P103_ATLASEZO_I2C_NB_OPTIONS 3  // was: 6 see comment below at 'const int i2cAddressValues' 
+#define _P103_ATLASEZO_I2C_NB_OPTIONS 4  // was: 6 see comment below at 'const int i2cAddressValues' 
 
 #define FIXED_TEMP_VALUE 20 // Temperature correction for pH and EC sensor if no temperature is given from calculation
 
@@ -70,10 +72,10 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = {0x62, 0x63, 0x64}; // , 0x65, 0x66, 0x67}; // Disabled unsupported devices as discussed here: https://github.com/letscontrolit/ESPEasy/pull/3733 (review comment by TD-er)
+      const uint8_t i2cAddressValues[] = {0x61, 0x62, 0x63, 0x64}; // , 0x65, 0x66, 0x67}; // Disabled unsupported devices as discussed here: https://github.com/letscontrolit/ESPEasy/pull/3733 (review comment by TD-er)
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("plugin_103_i2c"), _P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, PCONFIG(1));
-        addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically."));
+        addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64, DO: 0x61. The plugin is able to detect the type of device automatically."));
       } else {
         success = intArrayContains(_P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, event->Par1);
       }
@@ -109,12 +111,16 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       {
         board_type = EC;
       }
+      else if (board == F("D.O."))
+      {
+        board_type = DO;
+      }
 
       PCONFIG(0) = board_type;
 
       if (board_type == UNKNOWN)
       {
-        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c address? </span>"));
+        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC' od 'DO', check your i2c address? </span>"));
       }
       addRowLabel(F("Board version"));
       addHtml(version);
@@ -202,6 +208,11 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
         addUnit(F("&micro;S"));
         break;
       }
+      case DO:
+      {
+        addUnit(F("mg/L"));
+        break;
+      }
       }
     }
     else
@@ -263,6 +274,13 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addCreateDryCalibration();
       addCreate3PointCalibration(board_type, event, I2Cchoice, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
     }
+
+    case DO:
+    {
+      addFormSubHeader(F("DO Calibration"));
+      addDOCalibration(I2Cchoice);
+    }
+    
     break;
     }
 
@@ -270,7 +288,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     addClearCalibration();
 
     // Temperature compensation
-    if (board_type == PH || board_type == EC)
+    if (board_type == PH || board_type == EC || board_type == DO)
     {
       double value;
       char strValue[6] = {0};
@@ -333,7 +351,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
     }
 
-    String cmd(F("Cal,"));
+    String cmd(F("Cal"));
     bool triggerCalibrate = false;
 
     PCONFIG_FLOAT(1) = getFormItemFloat(F("Plugin_103_ref_cal_single"));
@@ -342,33 +360,42 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
     if (isFormItemChecked(F("Plugin_103_enable_cal_clear")))
     {
-      cmd += F("clear");
+      cmd += F(",clear");
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_dry")))
     {
-      cmd += F("dry");
+      cmd += F(",dry");
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_single")))
     {
       if (board_type == PH)
       {
-        cmd += F("mid,");
+        cmd += F(",mid,");
       }
       cmd += PCONFIG_FLOAT(1);
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_L")))
     {
-      cmd += F("low,");
+      cmd += F(",low,");
       cmd += PCONFIG_FLOAT(2);
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_H")))
     {
-      cmd += F("high,");
+      cmd += F(",high,");
       cmd += PCONFIG_FLOAT(3);
+      triggerCalibrate = true;
+    }
+    else if (isFormItemChecked(F("Plugin_103_enable_cal_atm")))
+    {
+      triggerCalibrate = true;
+    }
+    else if (isFormItemChecked(F("Plugin_103_enable_cal_0")))
+    {
+      cmd += F(",0");
       triggerCalibrate = true;
     }
 
@@ -378,7 +405,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       _P103_send_I2C_command(I2Cchoice, cmd, calibration);
     }
 
-    if (board_type == PH || board_type == EC)
+    if (board_type == PH || board_type == EC || board_type == DO)
     {
       char deviceTemperatureTemplate[40] = {0};
       String tmpString = webArg(F("Plugin_103_temperature_template"));
@@ -404,7 +431,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
     String readCommand;
 
-    if (board_type == PH || board_type == EC)
+    if (board_type == PH || board_type == EC || board_type == DO)
     {
       // first set the temperature of reading
       char deviceTemperatureTemplate[40] = {0};
@@ -579,6 +606,38 @@ void addClearCalibration()
   addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_clear\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_single\").checked = false;document.getElementById(\"Plugin_103_enable_cal_L\").checked = false;document.getElementById(\"Plugin_103_enable_cal_H\").checked = false;document.getElementById(\"Plugin_103_enable_cal_dry\").checked = false;};</script>"));
   addFormNote(F("Attention! This will reset all calibrated data. New calibration will be needed!!!"));
 }
+
+int addDOCalibration(uint8_t I2Cchoice)
+{
+  int nb_calibration_points = getCalibrationPoints(I2Cchoice);
+
+  addRowLabel("Calibrated Points");
+  addHtmlInt(nb_calibration_points);
+  if (nb_calibration_points < 1)
+  {
+    addHtml(F("<span style='color:red'>   Calibration needed</span>"));
+  }
+
+  addRowLabel(F("<strong>Calibrate to atmospheric oxygen levels</strong>"));
+  addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_atm"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_atm\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_0\").checked = false;document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;};</script>"));
+
+  addRowLabel(F("<strong>Calibrate device to 0 dissolved oxygen</strong>"));
+  addFormCheckBox(F("Enable"), F("Plugin_103_enable_cal_0"), false);
+  addHtml(F("\n<script type='text/javascript'>document.getElementById(\"Plugin_103_enable_cal_0\").onclick=function() {document.getElementById(\"Plugin_103_enable_cal_atm\").checked = false;document.getElementById(\"Plugin_103_enable_cal_clear\").checked = false;};</script>"));
+
+  if (nb_calibration_points > 0)
+  {
+    addHtml(F("&nbsp;<span style='color:green;'>OK</span>"));
+  }
+  else
+  {
+    addHtml(F("&nbsp;<span style='color:red;'>Not yet calibrated</span>"));
+  }
+
+  return nb_calibration_points;
+}
+
 
 void addCreateDryCalibration()
 {
