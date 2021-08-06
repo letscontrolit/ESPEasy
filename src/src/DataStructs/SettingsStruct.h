@@ -137,6 +137,9 @@ class SettingsStruct_tmpl
   bool UseNTP() const;
   void UseNTP(bool value);
 
+  bool AllowTaskValueSetAllPlugins() const;
+  void AllowTaskValueSetAllPlugins(bool value);
+
 
   void validate();
 
