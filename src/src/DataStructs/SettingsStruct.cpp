@@ -581,7 +581,8 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
   return (Pin_i2c_sda != -1) &&
          (Pin_i2c_scl != -1) &&
-         (I2C_clockSpeed > 0);
+         (I2C_clockSpeed > 0) &&
+         (I2C_clockSpeed_Slow > 0);
 }
 
 template<unsigned int N_TASKS>
