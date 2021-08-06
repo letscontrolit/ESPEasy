@@ -172,7 +172,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 
       if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        log.reserve(48);
+        log.reserve(20);
         log  = F("MP3  : ");
         log += command;
 

@@ -71,6 +71,8 @@
         3 = Random
 
         NB: To have actual repeat playing a track, the ``repeat`` command should also be enabled.
+
+        NB2: This command does not work on all players, it may start a ``play,<mode>`` with repeat enabled instead. That seems hardware related.
         "
         "
         ``repeat,<0|1>``
