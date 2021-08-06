@@ -83,6 +83,10 @@ void   removeExtraNewLine(String& line);
 
 void   addNewLine(String& line);
 
+size_t UTF8_charLength(char firstByte);
+
+void   replaceUnicodeByChar(String& line, char replChar);
+
 /*********************************************************************************************\
    Format a value to the set number of decimals
 \*********************************************************************************************/

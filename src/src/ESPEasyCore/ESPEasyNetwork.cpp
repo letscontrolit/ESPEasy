@@ -167,8 +167,44 @@ String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
 String createRFCCompliantHostname(const String& oldString) {
   String result(oldString);
 
-  result.replace(' ', '-');
-  result.replace('_', '-'); // See RFC952
+  // See RFC952.
+  // Allowed chars:
+  // * letters (a-z, A-Z)
+  // * numerals (0-9)
+  // * Hyphen (-)
+  replaceUnicodeByChar(result, '-');
+  for (size_t i = 0; i < result.length(); ++i) {
+    const char c = result[i];
+    if (!isAlphaNumeric(c)) {
+      result[i] = '-';
+    }
+  }
+
+
+  // May not start or end with a hyphen
+  while (result.startsWith(String('-'))) {
+    result = result.substring(1);
+  }
+  while (result.endsWith(String('-'))) {
+    result = result.substring(0, result.length() - 1);
+  }
+
+  // May not contain only numerals
+  bool onlyNumerals = true;
+  for (size_t i = 0; onlyNumerals && i < result.length(); ++i) {
+    const char c = result[i];
+    if (!isdigit(c)) {
+      onlyNumerals = false;
+    }
+  }
+  if (onlyNumerals) {
+    result = String(F("ESPEasy-")) + result;
+  }
+
+  if (result.length() > 24) {
+    result = result.substring(0, 24);
+  }
+
   return result;
 }
 
