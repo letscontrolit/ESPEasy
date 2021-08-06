@@ -286,7 +286,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("Adafruit Motorshield v2,SI1145");
       break;
     case 0x61:
-      result += F("Atlas EZO DO,SCD30");
+      result += F("Atlas EZO DO");
       break;
     case 0x62:
       result += F("Atlas EZO ORP");
