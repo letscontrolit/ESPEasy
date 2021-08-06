@@ -37,7 +37,7 @@ void handle_controllers() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  byte controllerindex     = getFormItemInt(F("index"), 0);
+  uint8_t controllerindex     = getFormItemInt(F("index"), 0);
   boolean controllerNotSet = controllerindex == 0;
   --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
 
@@ -123,7 +123,7 @@ void handle_controllers() {
 // Selected controller has changed.
 // Clear all Controller settings and load some defaults
 // ********************************************************************************
-void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettingsStruct& ControllerSettings)
+void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings)
 {
   // Protocol has changed and it was not an empty one.
   // reset (some) default-settings
@@ -162,7 +162,7 @@ void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettin
 // ********************************************************************************
 // Collect all submitted form data and store in the ControllerSettings
 // ********************************************************************************
-void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSettingsStruct& ControllerSettings)
+void handle_controllers_CopySubmittedSettings(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings)
 {
   // copy all settings to controller settings struct
   for (int parameterIdx = 0; parameterIdx <= ControllerSettingsStruct::CONTROLLER_ENABLED; ++parameterIdx) {
@@ -171,7 +171,7 @@ void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSe
   }
 }
 
-void handle_controllers_CopySubmittedSettings_CPluginCall(byte controllerindex) {
+void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerindex) {
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (validProtocolIndex(ProtocolIndex)) {
@@ -191,8 +191,8 @@ void handle_controllers_ShowAllControllersTable()
 {
   html_table_class_multirow();
   html_TR();
-  html_table_header(F(""),           70);
-  html_table_header(F("Nr"),         50);
+  html_table_header(F(""),        70);
+  html_table_header(F("Nr"),      50);
   html_table_header(F("Enabled"), 100);
   html_table_header(F("Protocol"));
   html_table_header(F("Host"));
@@ -243,7 +243,7 @@ void handle_controllers_ShowAllControllersTable()
           String hostDescription;
           CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
 
-          if (hostDescription.length() != 0) {
+          if (!hostDescription.isEmpty()) {
             addHtml(hostDescription);
           } else {
             addHtml(ControllerSettings.getHost());
@@ -275,18 +275,17 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   html_table_class_normal();
   addFormHeader(F("Controller Settings"));
   addRowLabel(F("Protocol"));
-  byte choice = Settings.Protocol[controllerindex];
+  uint8_t choice = Settings.Protocol[controllerindex];
   addSelector_Head_reloadOnChange(F("protocol"));
-  addSelector_Item(F("- Standalone -"), 0, false, false, "");
+  addSelector_Item(F("- Standalone -"), 0, false, false, EMPTY_STRING);
 
-  for (byte x = 0; x <= protocolCount; x++)
+  for (uint8_t x = 0; x <= protocolCount; x++)
   {
     boolean disabled = false; // !((controllerindex == 0) || !Protocol[x].usesMQTT);
     addSelector_Item(getCPluginNameFromProtocolIndex(x),
                      Protocol[x].Number,
                      choice == Protocol[x].Number,
-                     disabled,
-                     "");
+                     disabled);
   }
   addSelector_Foot();
 

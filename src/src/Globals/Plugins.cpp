@@ -30,18 +30,15 @@
 
 
 
-std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
-std::vector<deviceIndex_t> DeviceIndex_sorted;
-
 int deviceCount = -1;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
                                   struct EventStruct *,
                                   String&);
 
-
-
+pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
+std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
+std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
@@ -85,6 +82,20 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
     return getDeviceIndex(Settings.TaskDeviceNumber[taskIndex]);
   }
   return INVALID_DEVICE_INDEX;
+}
+
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
+  if (validTaskIndex(taskIndex)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+    if (validDeviceIndex(DeviceIndex)) {
+      return DeviceIndex_to_Plugin_id[DeviceIndex];
+    }
+  }
+  return INVALID_PLUGIN_ID;
 }
 
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
@@ -258,7 +269,7 @@ void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) 
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
-bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
   bool retval = false;
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
@@ -311,7 +322,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEv
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-bool PluginCall(byte Function, struct EventStruct *event, String& str)
+bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 {
   struct EventStruct TempEvent;
 
@@ -412,8 +423,8 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
-          thisTaskName.replace(F("["), F(""));                      // Remove the optional square brackets
-          thisTaskName.replace(F("]"), F(""));
+          thisTaskName.replace(F("["), EMPTY_STRING);                      // Remove the optional square brackets
+          thisTaskName.replace(F("]"), EMPTY_STRING);
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
@@ -510,7 +521,39 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
+        #ifndef BUILD_NO_DEBUG
+        const int freemem_begin = ESP.getFreeHeap();
+        #endif
+
         PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
+
+        #ifndef BUILD_NO_DEBUG
+        if (Function == PLUGIN_INIT) {
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            // See also logMemUsageAfter()
+            const int freemem_end = ESP.getFreeHeap();
+            String log;
+            log.reserve(128);
+            log  = F("After PLUGIN_INIT ");
+            log += F(" task: ");
+            if (taskIndex < 9) log += ' ';
+            log += taskIndex + 1;
+            while (log.length() < 30) log += ' ';
+            log += F("Free mem after: ");
+            log += freemem_end;
+            while (log.length() < 53) log += ' ';
+            log += F("plugin: ");
+            log += freemem_begin - freemem_end;
+            while (log.length() < 67) log += ' ';
+
+            log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+            while (log.length() < 73) log += ' ';
+            log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
+
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+        }
+        #endif
       }
       if (Function == PLUGIN_INIT) {
         updateTaskCaches();
@@ -538,7 +581,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
+          descr  = F("PluginCall_task_");
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
           #endif
@@ -582,6 +625,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
@@ -600,7 +644,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
+          descr  = F("PluginCall_task_");
           descr += event->TaskIndex;
           checkRAM(descr, String(Function));
           #endif

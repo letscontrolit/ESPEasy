@@ -102,6 +102,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_SYSINFO
         #define WEBSERVER_SYSINFO
     #endif
+    #ifndef WEBSERVER_METRICS
+        #define WEBSERVER_METRICS
+    #endif
     #ifndef WEBSERVER_TOOLS
         #define WEBSERVER_TOOLS
     #endif
@@ -112,11 +115,11 @@ To create/register a plugin, you have to :
         #define WEBSERVER_WIFI_SCANNER
     #endif
     #ifndef WEBSERVER_NEW_RULES
-        #define WEBSERVER_NEW_RULES
+//        #define WEBSERVER_NEW_RULES
     #endif
 #endif
 
-#ifndef USE_CUSTOM_H
+#ifndef PLUGIN_BUILD_CUSTOM
     #ifndef USES_SSDP
         #define USES_SSDP
     #endif
@@ -128,6 +131,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
+    #ifndef USE_EXT_RTC
+        #define USE_EXT_RTC
     #endif
 #endif
 
@@ -143,6 +149,9 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifndef ENABLE_TOOLTIPS
+  #define ENABLE_TOOLTIPS
+#endif // ENABLE_TOOLTIPS
 
 /******************************************************************************\
  * Available options **********************************************************
@@ -280,6 +289,7 @@ To create/register a plugin, you have to :
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
+    #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
 #endif
 
 #ifdef USES_FHEM
@@ -402,8 +412,14 @@ To create/register a plugin, you have to :
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
     #endif
+    #ifdef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+        #undef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
+    #endif
+    #ifdef USE_EXT_RTC
+        #undef USE_EXT_RTC
     #endif
 #endif
 
@@ -1091,7 +1107,8 @@ To create/register a plugin, you have to :
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
-
+    // FIXME TD-er: Disabled due to build size
+    //#define USES_P109   // ThermoOLED
     #define USES_P110   // VL53L0X Time of Flight sensor
     #define USES_P113   // VL53L1X ToF
 #endif
@@ -1186,6 +1203,10 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
+   #endif
+   #ifndef USES_P109
+     // FIXME TD-er: Disabled for now, due to build size.
+     //#define USES_P109   // ThermoOLED
    #endif
 #endif
 
@@ -1309,10 +1330,10 @@ To create/register a plugin, you have to :
 
   // Plugins
   #ifndef USES_P016
-    #define USES_P016   // IR
+//    #define USES_P016   // IR
   #endif
   #ifndef USES_P035
-    #define USES_P035   // IRTX
+//    #define USES_P035   // IRTX
   #endif
   #ifndef USES_P041
     #define USES_P041   // NeoClock
@@ -1531,6 +1552,9 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
+  #ifdef USE_EXT_RTC
+    #undef USE_EXT_RTC
+  #endif
 #endif
 
 // Disable some diagnostic parts to make builds fit.
@@ -1563,20 +1587,22 @@ To create/register a plugin, you have to :
   #ifdef USE_RTTTL
     #undef USE_RTTTL
   #endif
+  #ifdef ENABLE_TOOLTIPS
+    #undef ENABLE_TOOLTIPS
+  #endif
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifdef USES_P076
-    #undef USES_P076   // HWL8012   in POW r1
-  #endif
-  #ifdef USES_P092
-    #undef USES_P092   // DL-Bus
-  #endif
-  #ifdef USES_P093
-    #undef USES_P093   // Mitsubishi Heat Pump
-  #endif
-  #ifdef USES_P100 // Pulse Counter - DS2423
-    #undef USES_P100
+  #ifndef PLUGIN_SET_TESTING
+    #ifdef USES_P076
+      #undef USES_P076   // HWL8012   in POW r1
+    #endif
+    #ifdef USES_P093
+      #undef USES_P093   // Mitsubishi Heat Pump
+    #endif
+    #ifdef USES_P100 // Pulse Counter - DS2423
+      #undef USES_P100
+    #endif
   #endif
   #ifdef USES_C012
     #undef USES_C012 // Blynk
@@ -1593,7 +1619,7 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
-  #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  #if defined(USE_TRIGONOMETRIC_FUNCTIONS_RULES) && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
   #ifdef USES_SSDP
@@ -1685,11 +1711,18 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef WEBSERVER_SETUP
-  #ifndef FEATURE_DNS_SERVER
-    #define FEATURE_DNS_SERVER
+  #ifndef PLUGIN_BUILD_MINIMAL_OTA
+    #ifndef FEATURE_DNS_SERVER
+      #define FEATURE_DNS_SERVER
+    #endif
   #endif
 #endif
 
-
+// Here we can re-enable specific features in the TESTING sets as we have created some space there by splitting them up
+#if defined(TESTING_USE_RTTTL) && (defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D))
+  #ifndef USE_RTTTL
+    #define USE_RTTTL
+  #endif
+#endif
 
 #endif // DEFINE_PLUGIN_SETS_H

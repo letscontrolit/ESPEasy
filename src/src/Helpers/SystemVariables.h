@@ -19,6 +19,8 @@ public:
     SUBNET,
     GATEWAY,
     DNS,
+    DNS_1,
+    DNS_2,
     CLIENTIP,
     ISMQTT,
     ISMQTTIMP,
@@ -42,6 +44,10 @@ public:
     SSID,
     SUNRISE,
     SUNSET,
+    SUNRISE_S,
+    SUNSET_S,
+    SUNRISE_M,
+    SUNSET_M,
     SYSBUILD_DATE,
     SYSBUILD_DESCR,
     SYSBUILD_FILENAME,
@@ -90,7 +96,7 @@ public:
   // Return UNKNOWN when nothing needs to be replaced.
   static Enum nextReplacementEnum(const String& str, Enum last_tested);
 
-  static String toString(Enum enumval);
+  static const __FlashStringHelper * toString(Enum enumval);
 
   static void parseSystemVariables(String& s, boolean useURLencode);
 

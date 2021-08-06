@@ -27,12 +27,12 @@
 
 #define FIXED_TEMP_VALUE 20 // Temperature correction for pH and EC sensor if no temperature is given from calculation
 
-boolean Plugin_103(byte function, struct EventStruct *event, String &string)
+boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 {
   boolean success = false;
 
-  byte board_type = UNKNOWN;
-  byte I2Cchoice;
+  uint8_t board_type = UNKNOWN;
+  uint8_t I2Cchoice;
 
   switch (function)
   {
@@ -266,7 +266,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
 
       addFormSubHeader(F("Temperature compensation"));
       char deviceTemperatureTemplate[40] = {0};
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
       addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormNote(F("You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
@@ -317,7 +317,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     {
       addLog(LOG_LEVEL_DEBUG, F("isFormItemChecked"));
       String probeType(F("K,"));
-      probeType += web_server.arg(F("Plugin_103_ec_probe_type"));
+      probeType += webArg(F("Plugin_103_ec_probe_type"));
       char setProbeTypeCmd[ATLAS_EZO_RETURN_ARRAY_SIZE] = {0};
       _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
     }
@@ -370,11 +370,11 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     if (board_type == PH || board_type == EC)
     {
       char deviceTemperatureTemplate[40] = {0};
-      String tmpString = web_server.arg(F("Plugin_103_temperature_template"));
+      String tmpString = webArg(F("Plugin_103_temperature_template"));
       safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
       ZERO_TERMINATE(deviceTemperatureTemplate); // be sure that our string ends with a \0
 
-      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate)));
+      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate)));
     }
 
     success = true;
@@ -397,7 +397,7 @@ boolean Plugin_103(byte function, struct EventStruct *event, String &string)
     {
       // first set the temperature of reading
       char deviceTemperatureTemplate[40] = {0};
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
 
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
@@ -453,9 +453,9 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
 
   uint16_t sensor_bytes_received = 0;
 
-  byte error;
-  byte i2c_response_code = 0;
-  byte in_char = 0;
+  uint8_t error;
+  uint8_t i2c_response_code = 0;
+  uint8_t in_char = 0;
 
   String log = F("> cmd = ");
   log += cmd;
@@ -506,7 +506,7 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
           addLog(LOG_LEVEL_ERROR, F("< result array to short!"));
           return false;
         }
-        sensordata[sensor_bytes_received] = in_char; // load this byte into our array.
+        sensordata[sensor_bytes_received] = in_char; // load this uint8_t into our array.
         sensor_bytes_received++;
       }
     }
@@ -578,7 +578,7 @@ void addCreateDryCalibration()
   addFormNote(F("Calibration for pH-Probe could be 1 (single) or 2 point (low, high)."));
 }
 
-int addCreateSinglePointCalibration(byte board_type, struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
+int addCreateSinglePointCalibration(uint8_t board_type, struct EventStruct *event, uint8_t I2Cchoice, String unit, float min, float max, uint8_t nrDecimals, float stepsize)
 {
   int nb_calibration_points = getCalibrationPoints(I2Cchoice);
 
@@ -614,7 +614,7 @@ int addCreateSinglePointCalibration(byte board_type, struct EventStruct *event, 
   return nb_calibration_points;
 }
 
-int addCreate3PointCalibration(byte board_type, struct EventStruct *event, byte I2Cchoice, String unit, float min, float max, byte nrDecimals, float stepsize)
+int addCreate3PointCalibration(uint8_t board_type, struct EventStruct *event, uint8_t I2Cchoice, String unit, float min, float max, uint8_t nrDecimals, float stepsize)
 {
   int nb_calibration_points = addCreateSinglePointCalibration(board_type, event, I2Cchoice, unit, min, max, nrDecimals, stepsize);
 

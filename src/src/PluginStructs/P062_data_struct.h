@@ -58,11 +58,11 @@ public:
 private:
   void updateCalibration(uint8_t t);
 
-  Adafruit_MPR121 *keypad = NULL;
+  Adafruit_MPR121 *keypad = nullptr;
   uint16_t        keyLast = 0;
   int8_t          _i2c_addr = -1;
-  bool            _use_scancode;
-  bool            _keepCalibrationData;
+  bool            _use_scancode = false;
+  bool            _keepCalibrationData = false;
 };
 
 #endif // ifdef USES_P062

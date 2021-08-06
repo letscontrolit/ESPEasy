@@ -101,8 +101,8 @@
     DeepSleep","
     :red:`Internal`","
     Switch the node to deep sleep.
-    Max sleep time depends on library version and differs from roughly 71 minutes to 3h46.
-    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. 
+    Max sleep time depends on library version and differs from roughly 71 minutes (4294 sec.) to 3h46 for ESP8266, and up to 8 years (281474976 sec.) on ESP32 (theoretically).
+    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. If you specify a negative sleep time value, the maximum will be applied.
 
     ``DeepSleep,<sleep time in seconds>``"
     "
@@ -203,7 +203,16 @@
     :red:`Internal`","
     Add string to log
 
-    ``LogEntry,<string>``"
+    ``LogEntry,<string>[,<level>]``
+    
+    ``<level>`` is optional and can be any of these (numeric) values:
+    
+    - 1 = ERROR
+    - 2 = INFO (default)
+    - 3 = DEBUG
+    - 4 = DEBUG_DEV
+    
+    When a ``<level>`` is provided, it will be present in the log output if the 'Tolerant last parameter' Advanced setting is enabled."
     "
     LogPortStatus","
     :red:`Internal`","
@@ -485,6 +494,12 @@
     Change AP WPA key
 
     ``WifiAPKey,<WPA key>``"
+    "
+    WifiAllowAP","
+    :red:`Internal`","
+    Uncheck the setting to prevent starting AP when unable to connect to a network.
+
+    ``WifiAllowAP``"
     "
     WifiAPMode","
     :red:`Internal`","

@@ -1,4 +1,4 @@
-#include "Controller.h"
+#include "../ESPEasyCore/Controller.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
@@ -97,7 +97,7 @@ bool validUserVar(struct EventStruct *event) {
     default:
       break;
   }
-  byte valueCount = getValueCountForTask(event->TaskIndex);
+  uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -114,7 +114,7 @@ bool validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 
 // handle MQTT messages
-void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length) {
+void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int length) {
   statusLED(true);
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -236,7 +236,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
 
 
-  byte controller_number = Settings.Protocol[controller_idx];
+  uint8_t controller_number = Settings.Protocol[controller_idx];
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
 
@@ -279,7 +279,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
   String clientid = ControllerSettings.ClientID;
 
-  if (clientid.length() == 0) {
+  if (clientid.isEmpty()) {
     // Try to generate some default
     clientid = F(CONTROLLER_DEFAULT_CLIENTID);
   }
@@ -380,12 +380,12 @@ String getLWT_topic(const ControllerSettingsStruct& ControllerSettings) {
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTTopic = ControllerSettings.MQTTLwtTopic;
 
-    if (LWTTopic.length() == 0)
+    if (LWTTopic.isEmpty())
     {
       LWTTopic  = ControllerSettings.Subscribe;
       LWTTopic += F("/LWT");
     }
-    LWTTopic.replace(String(F("/#")), String(F("/status")));
+    LWTTopic.replace(F("/#"), F("/status"));
     parseSystemVariables(LWTTopic, false);
   }
   return LWTTopic;
@@ -397,7 +397,7 @@ String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings)
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTMessageConnect = ControllerSettings.LWTMessageConnect;
 
-    if (LWTMessageConnect.length() == 0) {
+    if (LWTMessageConnect.isEmpty()) {
       LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
     }
     parseSystemVariables(LWTMessageConnect, false);
@@ -411,7 +411,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
 
-    if (LWTMessageDisconnect.length() == 0) {
+    if (LWTMessageDisconnect.isEmpty()) {
       LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
     }
     parseSystemVariables(LWTMessageDisconnect, false);
@@ -448,7 +448,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
 
 void SendStatus(struct EventStruct *event, const String& status)
 {
-  if (status.length() == 0) { return; }
+  if (status.isEmpty()) { return; }
 
   switch (event->Source)
   {
@@ -607,7 +607,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
 
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+    for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
       preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
     }
 
@@ -625,7 +625,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
       if (Device[DeviceIndex].FormulaOption) {
         START_TIMER;
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
           if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {

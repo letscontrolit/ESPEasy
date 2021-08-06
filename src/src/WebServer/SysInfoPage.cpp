@@ -5,7 +5,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../Commands/Diagnostic.h"
@@ -26,6 +26,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
+#include "../Helpers/Misc.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -286,6 +287,7 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    addRowLabelValue(LabelType::TIME_SOURCE);
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -353,7 +355,7 @@ void handle_sysinfo_memory() {
 # endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 # if defined(CORE_POST_2_5_0)
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
-  addHtml("%");
+  addHtml('%');
 # endif // ifdef CORE_POST_2_5_0
 
 
@@ -423,14 +425,10 @@ void handle_sysinfo_Network() {
   addRowLabel(LabelType::WIFI_CONNECTION);
   if (showWiFiConnectionInfo)
   {
-    String html;
-    html.reserve(64);
-
-    html += toString(getConnectionProtocol());
-    html += F(" (RSSI ");
-    html += WiFi.RSSI();
-    html += F(" dBm)");
-    addHtml(html);
+    addHtml(toString(getConnectionProtocol()));
+    addHtml(F(" (RSSI "));
+    addHtmlInt(WiFi.RSSI());
+    addHtml(F(" dBm)"));
   } else addHtml('-');
 
   addRowLabel(LabelType::SSID);
@@ -486,19 +484,20 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
   addRowLabelValue(LabelType::WIFI_PERIODICAL_SCAN);
+  addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 
 void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
 
   addRowLabelValue_copy(LabelType::BUILD_DESC);
-  addHtml(" ");
+  addHtml(' ');
   addHtml(F(BUILD_NOTES));
 
   addRowLabelValue_copy(LabelType::SYSTEM_LIBRARIES);
   addRowLabelValue_copy(LabelType::GIT_BUILD);
   addRowLabelValue_copy(LabelType::PLUGIN_COUNT);
-  addHtml(" ");
+  addHtml(' ');
   addHtml(getPluginDescriptionString());
 
   addRowLabel(F("Build Origin"));
@@ -595,7 +594,7 @@ void handle_sysinfo_Storage() {
       } else {
         addHtml(F(HTML_SYMBOL_WARNING));
       }
-      addHtml(")");
+      addHtml(')');
     }
     addHtml(F(" Device: "));
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);

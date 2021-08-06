@@ -29,7 +29,7 @@
 # define P115_ALERTEVENT      PCONFIG(2)
 # define P115_DEVICESELECTOR  PCONFIG(3)
 
-boolean Plugin_115(byte function, struct EventStruct *event, String& string)
+boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -85,7 +85,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       /*
-         byte choice          = P115_I2CADDR;
+         uint8_t choice          = P115_I2CADDR;
          int  optionValues[1] = { 0x36 };
          addFormSelectorI2C(F("plugin_115_i2c"), 1, optionValues, choice);
        */
@@ -96,7 +96,7 @@ boolean Plugin_115(byte function, struct EventStruct *event, String& string)
     {
       {
         unsigned int choice = P115_DEVICESELECTOR;
-        String options[4];
+        const __FlashStringHelper * options[4];
         options[0]          = F("MAX17043");
         options[1]          = F("MAX17044 (2S)"); // 2-cell version of the MAX17043 (full-scale range of 10V)
         options[2]          = F("MAX17048");

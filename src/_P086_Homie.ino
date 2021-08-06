@@ -28,7 +28,7 @@
 
 #define PLUGIN_086_DEBUG            true
 
-boolean Plugin_086(byte function, struct EventStruct *event, String& string)
+boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -73,10 +73,10 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
       {
         addFormNote(F("Translation Plugin for controllers able to receive value updates according to the Homie convention."));
 
-        byte choice = 0;
+        uint8_t choice = 0;
         String labelText;
         String keyName;
-        String options[PLUGIN_086_VALUE_TYPES];
+        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES];
         options[0] = F("integer");
         options[1] = F("float");
         options[2] = F("boolean");
@@ -155,9 +155,15 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_INIT:
+      {
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
-        for (byte x=0; x<PLUGIN_086_VALUE_MAX;x++)
+        for (uint8_t x=0; x<PLUGIN_086_VALUE_MAX;x++)
         {
           String log = F("P086 : Value ");
           log += x+1;
@@ -233,7 +239,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
             switch (Settings.TaskDevicePluginConfig[event->TaskIndex][taskVarIndex]) {
               case PLUGIN_086_VALUE_INTEGER:
               case PLUGIN_086_VALUE_FLOAT:
-                if (parameter!="") {
+                if (!parameter.isEmpty()) {
                   if (string2float(parameter,floatValue)) {
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                       log += F(" integer/float set to ");
@@ -285,7 +291,7 @@ boolean Plugin_086(byte function, struct EventStruct *event, String& string)
               case PLUGIN_086_VALUE_ENUM:
                 enumList = ExtraTaskSettings.TaskDeviceFormula[taskVarIndex];
                 i = 1;
-                while (parseString(enumList,i)!="") { // lookup result in enum List
+                while (!parseString(enumList,i).isEmpty()) { // lookup result in enum List
                   if (parseString(enumList,i)==parameter) {
                     floatValue = i;
                     break;

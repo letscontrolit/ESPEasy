@@ -26,7 +26,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       , i2c_addresses_t &excludeDevices
 #endif
 ) {
-  byte error, address;
+  uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {
@@ -72,7 +72,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
               int newpos = description.indexOf(',', pos);
 
               if (pos != 0) {
-                addHtml(",");
+                addHtml(',');
               }
 
               if (newpos == -1) {
@@ -91,7 +91,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
           nDevices++;
         }
         json_close();
-        addHtml("\n");
+        addHtml('\n');
       }
 #ifdef FEATURE_I2CMULTIPLEXER
     }
@@ -143,7 +143,7 @@ void handle_i2cscanner_json() {
 #endif // WEBSERVER_NEW_UI
 
 
-String getKnownI2Cdevice(byte address) {
+String getKnownI2Cdevice(uint8_t address) {
   String result;
   #ifndef LIMIT_BUILD_SIZE
 
@@ -214,6 +214,9 @@ String getKnownI2Cdevice(byte address) {
     case 0x4D:
       result =  F("PCF8591,MCP3221,LM75A");
       break;
+    case 0x51:
+      result =  F("PCF8563");
+      break;
     case 0x58:
       result =  F("SGP30");
       break;
@@ -231,6 +234,18 @@ String getKnownI2Cdevice(byte address) {
       break;
     case 0x60:
       result =  F("Adafruit Motorshield v2,SI1145");
+      break;
+    case 0x62:
+      result = F("Atlas EZO ORP");
+      break;
+    case 0x63:
+      result = F("Atlas EZO pH");
+      break;
+    case 0x64:
+      result = F("Atlas EZO EC");
+      break;
+    case 0x68:
+      result =  F("DS1307,DS3231,PCF8523");
       break;
     case 0x70:
       result =  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
@@ -266,7 +281,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       , i2c_addresses_t &excludeDevices
 #endif
 ) {
-  byte error, address;
+  uint8_t error, address;
 
   for (address = 1; address <= 127; address++)
   {

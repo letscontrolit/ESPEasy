@@ -90,12 +90,12 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
         addTableSeparator(F("HTTP Config"), 2, 3);
         {
-          byte   choice    = 0;
-          String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
+          uint8_t   choice    = 0;
+          const __FlashStringHelper * methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
-          for (byte i = 0; i < 5; i++)
+          for (uint8_t i = 0; i < 5; i++)
           {
-            if (methods[i].equals(HttpMethod)) {
+            if (HttpMethod.equals(methods[i])) {
               choice = i;
             }
           }
@@ -132,10 +132,10 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
 
       if (customConfig) {
-        byte   choice    = 0;
+        uint8_t   choice    = 0;
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
-        for (byte i = 0; i < 5; i++)
+        for (uint8_t i = 0; i < 5; i++)
         {
           if (methods[i].equals(customConfig->HttpMethod)) {
             choice = i;
@@ -143,16 +143,16 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
 
         int httpmethod    = getFormItemInt(F("P011httpmethod"), choice);
-        String httpuri    = web_server.arg(F("P011httpuri"));
-        String httpheader = web_server.arg(F("P011httpheader"));
-        String httpbody   = web_server.arg(F("P011httpbody"));
+        String httpuri    = webArg(F("P011httpuri"));
+        String httpheader = webArg(F("P011httpheader"));
+        String httpbody   = webArg(F("P011httpbody"));
 
         strlcpy(customConfig->HttpMethod, methods[httpmethod].c_str(), sizeof(customConfig->HttpMethod));
         strlcpy(customConfig->HttpUri,    httpuri.c_str(),             sizeof(customConfig->HttpUri));
         strlcpy(customConfig->HttpHeader, httpheader.c_str(),          sizeof(customConfig->HttpHeader));
         strlcpy(customConfig->HttpBody,   httpbody.c_str(),            sizeof(customConfig->HttpBody));
         customConfig->zero_last();
-        SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
+        SaveCustomControllerSettings(event->ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C011_ConfigStruct));
       }
       break;
     }
@@ -216,7 +216,7 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
   if (!customConfig) {
     return false;
   }
-  LoadCustomControllerSettings(ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
+  LoadCustomControllerSettings(ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
   HttpMethod = customConfig->HttpMethod;
   HttpUri    = customConfig->HttpUri;
@@ -276,21 +276,26 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 
 // parses the string and returns only the the number of name/values we want
 // according to the parameter numberOfValuesWanted
-void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
+void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted)
 {
   numberOfValuesWanted++;
 
-  for (byte i = 1; i < 5; i++)
+  for (uint8_t i = 1; i < 5; i++)
   {
-    String startToken = String(F("%")) + i + F("%");
-    String endToken   = String(F("%/")) + i + F("%");
+    String startToken;
+    startToken += '%';
+    startToken += i;
+    startToken += '%';
+    String endToken = F("%/");
+    endToken += i;
+    endToken += '%';
 
     // do we want to keep this one?
     if (i < numberOfValuesWanted)
     {
       // yes, so just remove the tokens
-      s.replace(startToken, "");
-      s.replace(endToken,   "");
+      s.replace(startToken, EMPTY_STRING);
+      s.replace(endToken,  EMPTY_STRING);
     }
     else
     {
@@ -303,7 +308,7 @@ void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
         String p = s.substring(startIndex, endIndex + 4);
 
         // remove the whole string including tokens
-        s.replace(p, "");
+        s.replace(p, EMPTY_STRING);
 
         // find next ones
         startIndex = s.indexOf(startToken);
@@ -329,19 +334,25 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
   // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
   //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname%
   //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
-  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
-  addLog(LOG_LEVEL_DEBUG_MORE, s);
-  const byte valueCount = getValueCountForTask(event->TaskIndex);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
+    addLog(LOG_LEVEL_DEBUG_MORE, s);
+  }
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 
-  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
-  addLog(LOG_LEVEL_DEBUG_MORE, s);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
+    addLog(LOG_LEVEL_DEBUG_MORE, s);
+  }
 
   parseControllerVariables(s, event, !sendBinary);
 
-  addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
-  addLog(LOG_LEVEL_DEBUG_MORE, s);
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
+    addLog(LOG_LEVEL_DEBUG_MORE, s);
+  }
 }
 
 #endif // ifdef USES_C011

@@ -1,4 +1,4 @@
-#include "ESPEasy_checks.h"
+#include "../Helpers/ESPEasy_checks.h"
 
 
 #include "../../ESPEasy_common.h"
@@ -113,8 +113,30 @@ void run_compiletime_checks() {
   #endif
 
   // Check for alignment issues at compile time
-  static_assert(256u == offsetof(SecurityStruct, ControllerUser), "");
-  static_assert((256 + (CONTROLLER_MAX * 26))  == offsetof(SecurityStruct, ControllerPassword), "");
+  {
+    const unsigned int ControllerUser_offset = 256u;
+    static_assert(ControllerUser_offset == offsetof(SecurityStruct, ControllerUser), "");
+
+    const unsigned int ControllerPassword_offset = 256u + (CONTROLLER_MAX * 26);
+    static_assert(ControllerPassword_offset == offsetof(SecurityStruct, ControllerPassword), "");
+
+    const unsigned int Password_offset = ControllerPassword_offset + (CONTROLLER_MAX * 64);
+    static_assert(Password_offset == offsetof(SecurityStruct, Password), "");
+
+    const unsigned int AllowedIPrangeLow_offset = Password_offset + 26;
+    static_assert(AllowedIPrangeLow_offset == offsetof(SecurityStruct, AllowedIPrangeLow), "");
+
+    const unsigned int IPblockLevel_offset = AllowedIPrangeLow_offset + 8;
+    static_assert(IPblockLevel_offset == offsetof(SecurityStruct, IPblockLevel), "");
+
+    const unsigned int ProgmemMd5_offset = IPblockLevel_offset + 1;
+    static_assert(ProgmemMd5_offset == offsetof(SecurityStruct, ProgmemMd5), "");
+
+    const unsigned int md5_offset = ProgmemMd5_offset + 16;
+    static_assert(md5_offset == offsetof(SecurityStruct, md5), "");
+  }
+
+
   static_assert(192u == offsetof(SettingsStruct, Protocol), "");
   static_assert(195u == offsetof(SettingsStruct, Notification), "CONTROLLER_MAX has changed?");
   static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber), "NOTIFICATION_MAX has changed?");
@@ -167,7 +189,7 @@ bool SettingsCheck(String& error) {
 
   #endif
 
-  return error.length() == 0;
+  return error.isEmpty();
 }
 
 #include "Numerical.h"
@@ -187,7 +209,7 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   if (isNumerical(deviceName, detectedType)) {
     return F("Invalid name. Should not be numeric.");
   }
-  if (deviceName.length() == 0) {
+  if (deviceName.isEmpty()) {
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       // Decide what to do here, for now give a warning when task is enabled.
       return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");

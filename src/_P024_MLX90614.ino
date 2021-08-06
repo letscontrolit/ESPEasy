@@ -15,11 +15,11 @@
 #define PLUGIN_NAME_024 "Environment - MLX90614"
 #define PLUGIN_VALUENAME1_024 "Temperature"
 
-boolean Plugin_024(byte function, struct EventStruct *event, String& string)
+boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static byte portValue = 0;
+  // static uint8_t portValue = 0;
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -54,8 +54,8 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
     {
         #define MLX90614_OPTION 2
 
-      byte choice = PCONFIG(0);
-      String options[MLX90614_OPTION];
+      uint8_t choice = PCONFIG(0);
+      const __FlashStringHelper * options[MLX90614_OPTION];
       int optionValues[MLX90614_OPTION];
       optionValues[0] = (0x07);
       options[0]      = F("IR object temperature");
@@ -76,7 +76,7 @@ boolean Plugin_024(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte unit       = CONFIG_PORT;
+      uint8_t unit       = CONFIG_PORT;
       uint8_t address = 0x5A + unit;
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P024_data_struct(address));

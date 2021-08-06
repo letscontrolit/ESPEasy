@@ -1,7 +1,12 @@
+# ref. https://github.blog/changelog/2020-04-15-github-actions-new-workflow-features/
+#
+# This script is expected to print out something like this to supply the next Actions step with environments to build in parallel:
+# ::set-output name=matrix::{"include": [{"chip": "esp8266", "env": "custom_ESP8266_4M1M"}, {"chip": "esp32", "env": "custom_ESP32_4M316k"}]}
+#
+# These are the same environment names as with tools/build_ESPeasy.sh (i.e. all of them)
+
 import json
 from platformio.project.config import ProjectConfig
-
-# This will select the same environments as tools/build_ESPeasy.sh
 
 
 def get_jobs(cfg):
@@ -24,10 +29,6 @@ def filter_jobs(jobs, ignore=("spec_",)):
 
         yield job
 
-
-# ref. https://github.blog/changelog/2020-04-15-github-actions-new-workflow-features/
-# we need to echo something like this:
-# ::set-output name=matrix::{"include": [{"chip": "esp8266", "env": "custom_ESP8266_4M1M"}, {"chip": "esp32", "env": "custom_ESP32_4M316k"}]}
 
 if __name__ == "__main__":
     jobs = list(filter_jobs(get_jobs(ProjectConfig.get_instance())))

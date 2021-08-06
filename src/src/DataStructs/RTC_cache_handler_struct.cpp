@@ -77,7 +77,7 @@ bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
         fname = createCacheFilename(peekfilenr);
       }
 
-      if (fname.length() == 0) { return false; }
+      if (fname.isEmpty()) { return false; }
       fp = tryOpenFile(fname, "r");
     }
 
@@ -249,12 +249,12 @@ bool RTC_cache_handler_struct::loadMetaData()
   // No need to load on ESP32, as the data is already allocated to the RTC memory by the compiler
 
   #ifdef ESP8266
-  if (!system_rtc_mem_read(RTC_BASE_CACHE, (byte *)&RTC_cache, sizeof(RTC_cache))) {
+  if (!system_rtc_mem_read(RTC_BASE_CACHE, (uint8_t *)&RTC_cache, sizeof(RTC_cache))) {
     return false;
   }
   #endif
 
-  return RTC_cache.checksumMetadata == calc_CRC32((byte *)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
+  return RTC_cache.checksumMetadata == calc_CRC32((uint8_t *)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
 }
 
 bool RTC_cache_handler_struct::loadData()
@@ -263,7 +263,7 @@ bool RTC_cache_handler_struct::loadData()
 
   // No need to load on ESP32, as the data is already allocated to the RTC memory by the compiler
   #ifdef ESP8266
-  if (!system_rtc_mem_read(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), (byte *)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE)) {
+  if (!system_rtc_mem_read(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), (uint8_t *)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE)) {
     return false;
   }
   #endif
@@ -284,13 +284,13 @@ bool RTC_cache_handler_struct::saveRTCcache() {
 bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrBytes)
 {
   RTC_cache.checksumData     = getDataChecksum();
-  RTC_cache.checksumMetadata = calc_CRC32((byte *)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
+  RTC_cache.checksumMetadata = calc_CRC32((uint8_t *)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
   #ifdef ESP32
   return true;
   #endif
 
   #ifdef ESP8266
-  if (!system_rtc_mem_write(RTC_BASE_CACHE, (byte *)&RTC_cache, sizeof(RTC_cache)) || !loadMetaData())
+  if (!system_rtc_mem_write(RTC_BASE_CACHE, (uint8_t *)&RTC_cache, sizeof(RTC_cache)) || !loadMetaData())
   {
         # ifdef RTC_STRUCT_DEBUG
     addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache metadata to RTC"));
@@ -302,7 +302,7 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
   if (nrBytes > 0) { // Check needed?
     const size_t address = RTC_BASE_CACHE + ((sizeof(RTC_cache) + startOffset) / 4);
 
-    if (!system_rtc_mem_write(address, (byte *)&RTC_cache_data[startOffset], nrBytes))
+    if (!system_rtc_mem_write(address, (uint8_t *)&RTC_cache_data[startOffset], nrBytes))
     {
           # ifdef RTC_STRUCT_DEBUG
       addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache data to RTC"));
@@ -329,7 +329,7 @@ uint32_t RTC_cache_handler_struct::getDataChecksum() {
   */
 
   // Only compute the checksum over the number of samples stored.
-  return calc_CRC32((byte *)&RTC_cache_data[0], /*dataLength*/ RTC_CACHE_DATA_SIZE);
+  return calc_CRC32((uint8_t *)&RTC_cache_data[0], /*dataLength*/ RTC_CACHE_DATA_SIZE);
 }
 
 void RTC_cache_handler_struct::initRTCcache_data() {
@@ -375,7 +375,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
   //    }
   if (SpiffsFull()) {
       #ifdef RTC_STRUCT_DEBUG
-    addLog(LOG_LEVEL_ERROR, String(F("RTC  : FS full")));
+    addLog(LOG_LEVEL_ERROR, F("RTC  : FS full"));
       #endif // ifdef RTC_STRUCT_DEBUG
     return false;
   }
@@ -405,7 +405,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
 
       if (!fw) {
           #ifdef RTC_STRUCT_DEBUG
-        addLog(LOG_LEVEL_ERROR, String(F("RTC  : error opening file")));
+        addLog(LOG_LEVEL_ERROR, F("RTC  : error opening file"));
           #endif // ifdef RTC_STRUCT_DEBUG
       } else {
           #ifdef RTC_STRUCT_DEBUG
@@ -426,7 +426,7 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
     }
   }
     #ifdef RTC_STRUCT_DEBUG
-  addLog(LOG_LEVEL_ERROR, String(F("RTC  : prepareFileForWrite failed")));
+  addLog(LOG_LEVEL_ERROR, F("RTC  : prepareFileForWrite failed"));
     #endif // ifdef RTC_STRUCT_DEBUG
   return false;
 }

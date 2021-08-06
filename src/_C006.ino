@@ -72,7 +72,7 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       String tmpTopic = event->String1.substring(1);
       String topicSplit[10];
       int    SlashIndex = tmpTopic.indexOf('/');
-      byte   count      = 0;
+      uint8_t   count      = 0;
 
       while (SlashIndex > 0 && count < 10 - 1)
       {
@@ -119,9 +119,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       LoadTaskSettings(event->TaskIndex);
       parseControllerVariables(pubname, event, false);
 
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      for (byte x = 0; x < valueCount; x++)
+      for (uint8_t x = 0; x < valueCount; x++)
       {
         String tmppubname = pubname;
         parseSingleControllerVariable(tmppubname, event, x, false);

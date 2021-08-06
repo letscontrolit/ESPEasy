@@ -1,0 +1,30 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``lcdcmd,<value>``
+
+        Value:
+
+        * ``on`` will turn the display ON.
+        * ``off`` will turn the display OFF.
+        * ``clear`` will clear any information from the display.
+
+        ","
+        Using these commands, either from rules, via http or mqtt, the state of the display can be controlled.
+        "
+        "
+        ``lcd,<row>,<col>,<text>``
+        ","
+        The <row> parameter corresponds with the same lines as the plugin configuration has.
+
+        The <col> parameter sets the column the text will be displayed.
+
+        The <text> parameter must be a single command parameter. 
+        Meaning, it must be wrapped in quotes when using a space or comma as text.
+
+        If double quote characters are needed, wrap the parameter in single quotes or back quotes.
+
+        All template notations can be used, like system variables, or reference to a task value.
+        "

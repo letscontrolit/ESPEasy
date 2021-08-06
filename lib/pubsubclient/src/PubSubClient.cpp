@@ -5,7 +5,11 @@
 */
 
 #include "PubSubClient.h"
-#include "Arduino.h"
+#include <Arduino.h>
+
+#ifdef ESP32
+#include <WiFiClient.h>
+#endif
 
 PubSubClient::PubSubClient() {
     this->_state = MQTT_DISCONNECTED;
@@ -128,9 +132,19 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
             result = 1;
         } else {
             if (domain.length() != 0) {
+#ifdef ESP32
+                WiFiClient* wfc = (WiFiClient*)_client;
+                result = wfc->connect(this->domain.c_str(), this->port, ESP32_CONNECTION_TIMEOUT);
+#else
                 result = _client->connect(this->domain.c_str(), this->port);
+#endif
             } else {
+#ifdef ESP32
+                WiFiClient* wfc = (WiFiClient*)_client;
+                result = wfc->connect(this->ip, this->port, ESP32_CONNECTION_TIMEOUT);
+#else
                 result = _client->connect(this->ip, this->port);
+#endif
             }
         }
         if (result == 1) {
@@ -194,6 +208,7 @@ boolean PubSubClient::connect(const char *id, const char *user, const char *pass
             write(MQTTCONNECT,buffer,length-MQTT_MAX_HEADER_SIZE);
 
             lastInActivity = lastOutActivity = millis();
+            pingOutstanding = false; // See: https://github.com/knolleary/pubsubclient/pull/802
 
             while (!_client->available()) {
                 delay(0);  // Prevent watchdog crashes
@@ -445,7 +460,7 @@ boolean PubSubClient::publish(const char* topic, const uint8_t* payload, unsigne
 }
 
 boolean PubSubClient::publish_P(const char* topic, const char* payload, boolean retained) {
-    size_t plength = (payload != nullptr) ? strlen(payload) : 0;
+    size_t plength = (payload != nullptr) ? strlen_P(payload) : 0;
     return publish_P(topic, (const uint8_t*)payload, plength, retained);
 }
 

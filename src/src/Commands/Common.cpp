@@ -16,27 +16,27 @@
 
 
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
-String return_command_success()
+const __FlashStringHelper * return_command_success()
 {
-  return F("\nOk");
+  return F("\nOK");
 }
 
-String return_command_failed()
+const __FlashStringHelper * return_command_failed()
 {
   return F("\nFailed");
 }
 
-String return_incorrect_nr_arguments()
+const __FlashStringHelper * return_incorrect_nr_arguments()
 {
   return F("Too many arguments, try using quotes!");
 }
 
-String return_incorrect_source()
+const __FlashStringHelper * return_incorrect_source()
 {
   return F("Command not allowed from this source!");
 }
 
-String return_not_connected()
+const __FlashStringHelper * return_not_connected()
 {
   return F("Not connected to WiFi");
 }
@@ -51,7 +51,7 @@ String return_result(struct EventStruct *event, const String& result)
   return result;
 }
 
-String return_see_serial(struct EventStruct *event)
+const __FlashStringHelper * return_see_serial(struct EventStruct *event)
 {
   if (event->Source == EventValueSource::Enum::VALUE_SOURCE_SERIAL) {
     return return_command_success();
@@ -62,7 +62,7 @@ String return_see_serial(struct EventStruct *event)
 String Command_GetORSetIP(struct EventStruct *event,
                           const String      & targetDescription,
                           const char         *Line,
-                          byte               *IP,
+                          uint8_t               *IP,
                           const IPAddress   & dhcpIP,
                           int                 arg)
 {
@@ -120,7 +120,7 @@ String Command_GetORSetString(struct EventStruct *event,
         serialPrintln();
         return return_result(event, result);
       }
-      strcpy(target, TmpStr1.c_str());
+      safe_strncpy(target, TmpStr1, len);
     }
   }
 

@@ -72,7 +72,7 @@
 #define PLUGIN_VALUENAME1_045               ""
 
 
-boolean Plugin_045(byte function, struct EventStruct *event, String& string)
+boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -104,7 +104,7 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      uint8_t choice = PCONFIG(0);
 
       // Setup webform for address selection
 
@@ -123,9 +123,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte choice = PCONFIG(1);
+      uint8_t choice = PCONFIG(1);
       {
-        String options[10];
+        const __FlashStringHelper * options[10];
         options[0] = F("Movement detection");
         options[1] = F("Range acceleration X");
         options[2] = F("Range acceleration Y");
@@ -236,9 +236,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           {
             // Check if all (enabled, so !=0) thresholds are exceeded, if one fails then thresexceed (thesholds exceeded) is reset to false;
             boolean thresexceed = true;
-            byte    count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
+            uint8_t    count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
 
-            for (byte i = 0; i < 3; i++)
+            for (uint8_t i = 0; i < 3; i++)
             {
               // for each axis:
               if (PCONFIG(i + 2) != 0) { // not disabled, check threshold

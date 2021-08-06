@@ -113,7 +113,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
   {
     String id = F("i2cuart_addr");
     addRowLabel_tr_id(F("I2C Address"), id);
-    do_addSelector_Head(id, "", "", false);
+    do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
     if ((address < SC16IS752_I2C_BASE_ADDR) || (address >= (SC16IS752_I2C_BASE_ADDR + SC16IS752_I2C_ADDRESSES))) {
       // selected address is not in range
@@ -129,7 +129,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
       option += F(" (datasheet: ");
       option += formatToHex(addr * 2);
       option += ')';
-      addSelector_Item(option, addr, addr == address, false, "");
+      addSelector_Item(option, addr, addr == address);
     }
     addSelector_Foot();
   }
@@ -137,7 +137,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel) {
     if ((channel != SC16IS752_CHANNEL_A) && (channel != SC16IS752_CHANNEL_B)) {
       channel = SC16IS752_CHANNEL_A;
     }
-    String chOptions[SC16IS752_CHANNELS];
+    const __FlashStringHelper * chOptions[SC16IS752_CHANNELS];
     int    chValues[SC16IS752_CHANNELS];
     chValues[0]  = SC16IS752_CHANNEL_A;
     chValues[1]  = SC16IS752_CHANNEL_B;
@@ -251,7 +251,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #endif
 }
 
-void serialHelper_webformSave(byte& port, int8_t& rxPin, int8_t& txPin) {
+void serialHelper_webformSave(uint8_t& port, int8_t& rxPin, int8_t& txPin) {
   int serialPortSelected = getFormItemInt(F("serPort"), -1);
 
   if (serialPortSelected < 0) { return; }
@@ -295,28 +295,28 @@ void serialHelper_webformSave(struct EventStruct *event) {
   serialHelper_webformSave(CONFIG_PORT, CONFIG_PIN1, CONFIG_PIN2);
 }
 
-bool serialHelper_isValid_serialconfig(byte serialconfig) {
+bool serialHelper_isValid_serialconfig(uint8_t serialconfig) {
   if ((serialconfig >= 0x10) && (serialconfig <= 0x3f)) {
     return true;
   }
   return false;
 }
 
-void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte currentSelection) {
+void serialHelper_serialconfig_webformLoad(struct EventStruct *event, uint8_t currentSelection) {
   // nrOptions = 4 * 3 * 2  = 24  (bits 5..8 , parity N/E/O  , stopbits 1/2)
   String id = F("serConf");
 
   addRowLabel_tr_id(F("Serial Config"), id);
-  do_addSelector_Head(id, "", "", false);
+  do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false);
 
   if (currentSelection == 0) {
-    // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
-    currentSelection = static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
+    // Must truncate it to 1 uint8_t, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+    currentSelection = static_cast<uint8_t>(SERIAL_8N1 & 0xFF); // Some default
   }
 
-  for (byte parity = 0; parity < 3; ++parity) {
-    for (byte stopBits = 1; stopBits <= 2; ++stopBits) {
-      for (byte bits = 5; bits <= 8; ++bits) {
+  for (uint8_t parity = 0; parity < 3; ++parity) {
+    for (uint8_t stopBits = 1; stopBits <= 2; ++stopBits) {
+      for (uint8_t bits = 5; bits <= 8; ++bits) {
         String label;
         label.reserve(36);
         label  = String(bits);
@@ -336,30 +336,30 @@ void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte curre
           case 1:  value += 0x10; break;
           case 2:  value += 0x30; break;
         }
-        addSelector_Item(label, value, value == currentSelection, false, "");
+        addSelector_Item(label, value, value == currentSelection);
       }
     }
   }
   addSelector_Foot();
 }
 
-byte serialHelper_serialconfig_webformSave() {
+uint8_t serialHelper_serialconfig_webformSave() {
   int serialConfSelected = getFormItemInt(F("serConf"), 0);
 
   if (serialHelper_isValid_serialconfig(serialConfSelected)) {
     return serialConfSelected;
   }
 
-  // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
-  return static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
+  // Must truncate it to 1 uint8_t, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+  return static_cast<uint8_t>(SERIAL_8N1 & 0xFF); // Some default
 }
 
 // Used by some plugins, which used several TaskDevicePluginConfigLong
-byte serialHelper_convertOldSerialConfig(byte newLocationConfig) {
+uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig) {
   if (serialHelper_isValid_serialconfig(newLocationConfig)) {
     return newLocationConfig;
   }
-  byte serialconfig = 0x10;                                                   // Default stopbits = 1
+  uint8_t serialconfig = 0x10;                                                   // Default stopbits = 1
 
   serialconfig += ExtraTaskSettings.TaskDevicePluginConfigLong[3];            // Parity
   serialconfig += (ExtraTaskSettings.TaskDevicePluginConfigLong[2] - 5) << 2; // databits
@@ -372,6 +372,6 @@ byte serialHelper_convertOldSerialConfig(byte newLocationConfig) {
     return serialconfig;
   }
 
-  // Must truncate it to 1 byte, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
-  return static_cast<byte>(SERIAL_8N1 & 0xFF); // Some default
+  // Must truncate it to 1 uint8_t, since ESP32 uses a 32-bit value. We add these high bits later for ESP32.
+  return static_cast<uint8_t>(SERIAL_8N1 & 0xFF); // Some default
 }

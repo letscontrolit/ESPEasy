@@ -41,7 +41,7 @@ void P087_data_struct::post_init() {
   for (uint8_t i = 0; i < P87_MAX_CAPTURE_INDEX; ++i) {
     capture_index_used[i] = false;
   }
-  regex_empty = _lines[P087_REGEX_POS].length() == 0;
+  regex_empty = _lines[P087_REGEX_POS].isEmpty();
   String log = F("P087_post_init:");
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
@@ -143,7 +143,7 @@ bool P087_data_struct::loop() {
 
 bool P087_data_struct::getSentence(String& string) {
   string        = last_sentence;
-  if (string.length() == 0) {
+  if (string.isEmpty()) {
     return false;
   }
   last_sentence = "";
@@ -160,7 +160,7 @@ void P087_data_struct::setMaxLength(uint16_t maxlenght) {
   max_length = maxlenght;
 }
 
-void P087_data_struct::setLine(byte varNr, const String& line) {
+void P087_data_struct::setLine(uint8_t varNr, const String& line) {
   if (varNr < P87_Nlines) {
     _lines[varNr] = line;
   }
@@ -247,7 +247,7 @@ static std::vector<capture_tuple> capture_vector;
 // called for each match
 void P087_data_struct::match_callback(const char *match, const unsigned int length, const MatchState& ms)
 {
-  for (byte i = 0; i < ms.level; i++)
+  for (uint8_t i = 0; i < ms.level; i++)
   {
     capture_tuple tuple;
     tuple.first  = i;
@@ -288,7 +288,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
         for (uint8_t n = 0; n < P087_NR_FILTERS; ++n) {
           unsigned int lines_index = n * 3 + P087_FIRST_FILTER_POS + 2;
 
-          if ((capture_index[n] == capture_vector[i].first) && (_lines[lines_index].length() != 0)) {
+          if ((capture_index[n] == capture_vector[i].first) && !(_lines[lines_index].isEmpty())) {
             String log;
             log.reserve(32);
             log  = F("P087: Index: ");
@@ -342,7 +342,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
   return match_result;
 }
 
-String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
+const __FlashStringHelper * P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
   switch (matchType)
   {
     case P087_Match_Type::Regular_Match:          return F("Regular Match");
@@ -351,7 +351,7 @@ String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
     case P087_Match_Type::Global_Match_inverted:  return F("Global Match inverted");
     case P087_Match_Type::Filter_Disabled:        return F("Filter Disabled");
   }
-  return "";
+  return F("");
 }
 
 bool P087_data_struct::max_length_reached() const {

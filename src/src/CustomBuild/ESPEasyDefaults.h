@@ -109,7 +109,11 @@
 #endif
 
 #ifndef DEFAULT_AP_DONT_FORCE_SETUP                       
-#define DEFAULT_AP_DONT_FORCE_SETUP            false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+#define DEFAULT_AP_DONT_FORCE_SETUP      false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+#endif
+
+#ifndef DEFAULT_DONT_ALLOW_START_AP
+#define DEFAULT_DONT_ALLOW_START_AP      false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.     
 #endif
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -219,6 +223,9 @@
 #ifndef DEFAULT_JSON_BOOL_WITHOUT_QUOTES
 #define DEFAULT_JSON_BOOL_WITHOUT_QUOTES false
 #endif
+#ifndef DEFAULT_ENABLE_TIMING_STATS
+#define DEFAULT_ENABLE_TIMING_STATS false
+#endif
 
 
 
@@ -301,6 +308,21 @@
 #ifndef DEFAULT_SYNC_UDP_PORT
 #define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
+
+#ifndef BUILD_IN_WEBHEADER
+#define BUILD_IN_WEBHEADER                      false
+#endif
+#ifndef BUILD_IN_WEBFOOTER
+#define BUILD_IN_WEBFOOTER                      true                    // If not defined show build in footer of webpage
+#endif
+
+#ifndef GITHUB_RELEASES_LINK_PREFIX
+# define GITHUB_RELEASES_LINK_PREFIX "<a href='https://github.com/letscontrolit/ESPEasy/releases' title='Click to show latest release on Github' target='_blank' style='font-size: 15px; text-decoration: none'>"
+#endif
+#ifndef GITHUB_RELEASES_LINK_SUFFIX
+# define GITHUB_RELEASES_LINK_SUFFIX "</a>"
+#endif
+
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------

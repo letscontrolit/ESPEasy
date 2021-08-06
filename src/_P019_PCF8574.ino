@@ -3,6 +3,7 @@
 
 #include "src/DataStructs/PinMode.h"
 #include "src/Commands/GPIO.h"
+#include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################
 // #################################### Plugin 019: PCF8574 ##############################################
@@ -50,7 +51,7 @@
 #define PLUGIN_019_LONGPRESS_HIGH 2
 #define PLUGIN_019_LONGPRESS_BOTH 3
 
-boolean Plugin_019(byte function, struct EventStruct *event, String& string)
+boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -109,14 +110,16 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(1) = PLUGIN_019_DOUBLECLICK_MIN_INTERVAL;
       }
 
-      byte   choiceDC = PCONFIG(4);
-      String buttonDC[4];
-      buttonDC[0] = F("Disabled");
-      buttonDC[1] = F("Active only on LOW (EVENT=3)");
-      buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-      buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
-      int buttonDCValues[4] = { PLUGIN_019_DC_DISABLED, PLUGIN_019_DC_LOW, PLUGIN_019_DC_HIGH, PLUGIN_019_DC_BOTH };
-      addFormSelector(F("Doubleclick event"), F("p019_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      {
+        uint8_t   choiceDC = PCONFIG(4);
+        const __FlashStringHelper * buttonDC[4];
+        buttonDC[0] = F("Disabled");
+        buttonDC[1] = F("Active only on LOW (EVENT=3)");
+        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
+        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        int buttonDCValues[4] = { PLUGIN_019_DC_DISABLED, PLUGIN_019_DC_LOW, PLUGIN_019_DC_HIGH, PLUGIN_019_DC_BOTH };
+        addFormSelector(F("Doubleclick event"), F("p019_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+      }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
                         F("p019_dcmaxinterval"),
@@ -129,15 +132,17 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = PLUGIN_019_LONGPRESS_MIN_INTERVAL;
       }
 
-      byte   choiceLP = PCONFIG(5);
-      String buttonLP[4];
-      buttonLP[0] = F("Disabled");
-      buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-      buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-      buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
-      int buttonLPValues[4] =
-      { PLUGIN_019_LONGPRESS_DISABLED, PLUGIN_019_LONGPRESS_LOW, PLUGIN_019_LONGPRESS_HIGH, PLUGIN_019_LONGPRESS_BOTH };
-      addFormSelector(F("Longpress event"), F("p019_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      {
+        uint8_t   choiceLP = PCONFIG(5);
+        const __FlashStringHelper * buttonLP[4];
+        buttonLP[0] = F("Disabled");
+        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
+        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
+        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+        int buttonLPValues[4] =
+        { PLUGIN_019_LONGPRESS_DISABLED, PLUGIN_019_LONGPRESS_LOW, PLUGIN_019_LONGPRESS_HIGH, PLUGIN_019_LONGPRESS_BOTH };
+        addFormSelector(F("Longpress event"), F("p019_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+      }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
                         F("p019_lpmininterval"),
@@ -331,7 +336,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
         // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
         if (round(PCONFIG_FLOAT(3)) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
-          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."))
+          addLog(LOG_LEVEL_DEBUG, F("PCF :SafeButton 1st click."));
           PCONFIG_LONG(3) = 1;
         }
 
@@ -343,6 +348,10 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
           // Reset SafeButton counter
           PCONFIG_LONG(3) = 0;
+
+          // @giig1967g-20210804: reset timer for long press
+          PCONFIG_LONG(2) = millis();
+          PCONFIG(6)      = false;
 
           const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
 
@@ -379,7 +388,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
             }
             currentStatus.state = state;
 
-            byte output_value;
+            uint8_t output_value;
 
             // boolean sendState = switchstate[event->TaskIndex];
             boolean sendState = currentStatus.state;
@@ -448,7 +457,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 
           if (deltaLP >= (unsigned long)lround(PCONFIG_FLOAT(2)))
           {
-            byte output_value;
+            uint8_t output_value;
             PCONFIG(6) = true; // fired = true
 
             boolean sendState = state;
@@ -481,7 +490,7 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
           }
         } else {
           if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
-            const byte SAFE_BUTTON_EVENT = 4;
+            const uint8_t SAFE_BUTTON_EVENT = 4;
 
             // Reset SafeButton counter
             PCONFIG_LONG(3) = 0;
@@ -625,11 +634,11 @@ boolean Plugin_019(byte function, struct EventStruct *event, String& string)
 // PCF8574 read
 // ********************************************************************************
 // @giig1967g-20181023: changed to int8_t
-int8_t Plugin_019_Read(byte Par1)
+int8_t Plugin_019_Read(uint8_t Par1)
 {
   int8_t state    = -1;
-  byte unit       = (Par1 - 1) / 8;
-  byte port       = Par1 - (unit * 8);
+  uint8_t unit       = (Par1 - 1) / 8;
+  uint8_t port       = Par1 - (unit * 8);
   uint8_t address = 0x20 + unit;
 
   if (unit > 7) { address += 0x10; }
@@ -660,7 +669,7 @@ uint8_t Plugin_019_ReadAllPins(uint8_t address)
 // ********************************************************************************
 // PCF8574 write
 // ********************************************************************************
-boolean Plugin_019_Write(byte Par1, byte Par2)
+boolean Plugin_019_Write(uint8_t Par1, uint8_t Par2)
 {
   uint8_t unit    = (Par1 - 1) / 8;
   uint8_t port    = Par1 - (unit * 8);
