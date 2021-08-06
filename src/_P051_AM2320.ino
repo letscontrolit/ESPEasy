@@ -69,6 +69,12 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       AM2320 th;
