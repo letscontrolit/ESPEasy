@@ -85,6 +85,13 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x29);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       uint8_t   choiceMode = PCONFIG(0);

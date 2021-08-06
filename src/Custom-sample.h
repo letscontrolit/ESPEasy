@@ -102,6 +102,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
+#define USE_I2C_DEVICE_SCAN                     true
 
 #define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
 
@@ -366,6 +367,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P102   // PZEM004Tv3
 // #define USES_P103   // Atlas_EZO_pH_ORP_EC
 // #define USES_P104   // MAX7219 dotmatrix
+// #define USES_P105   //
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
