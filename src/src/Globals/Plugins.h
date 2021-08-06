@@ -77,7 +77,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 /*********************************************************************************************
  * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
  ********************************************************************************************/
-pluginID_t getDevicePluginID_from_TaskIndex(taskIndex_t taskIndex);
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
 
 
 
@@ -87,6 +87,9 @@ pluginID_t getDevicePluginID_from_TaskIndex(taskIndex_t taskIndex);
 deviceIndex_t getDeviceIndex(pluginID_t Number);
 
 String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
+#if USE_I2C_DEVICE_SCAN
+bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
+#endif // if USE_I2C_DEVICE_SCAN
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();

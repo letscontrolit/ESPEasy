@@ -70,12 +70,15 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t addr = PCONFIG(0);
-
-      int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
-      addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
+      const int i2cAddressValues[] = { 0x5A, 0x5B, 0x5C, 0x5D };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(4, i2cAddressValues, event->Par1);
+      }
       break;
     }
 

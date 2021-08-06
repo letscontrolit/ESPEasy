@@ -36,11 +36,13 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
     sendOK     = true;
   } else if (command.equals(F("taskrun")) ||
              command.equals(F("taskvalueset")) ||
+             command.equals(F("taskvaluesetandrun")) ||
              command.equals(F("taskvaluetoggle")) ||
              command.equals(F("let")) ||
-             command.equals(F("logPortStatus")) ||
+             command.equals(F("logportstatus")) ||
              command.equals(F("jsonportstatus")) ||
              command.equals(F("rules"))) {
+    printToWeb = true;
     handledCmd = ExecuteCommand_internal(source, webrequest.c_str());
     sendOK     = true;
 
@@ -53,15 +55,17 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   if (handledCmd) {
     if (sendOK) {
+      String reply = printWebString.isEmpty() ? F("OK") : printWebString;
+      reply.replace(F("\n"), EMPTY_STRING); // Don't use newline in JSON.
       if (printToWebJSON) {
         // Format "OK" to JSON format
         printWebString = F("{\"return\": \"");
-        printWebString += F("OK");
+        printWebString += reply;
         printWebString += F("\",\"command\": \"");
         printWebString += webrequest;
         printWebString += F("\"}");
       } else {
-        printWebString = F("OK");
+        printWebString = reply;
       }
     }
     return HandledWebCommand_result::CommandHandled;
