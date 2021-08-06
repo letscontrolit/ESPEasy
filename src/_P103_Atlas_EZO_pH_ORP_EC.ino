@@ -285,7 +285,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
       String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
 
-      if (Calculate(pooltempString.c_str(), value) != CalculateReturnCode::OK)
+      if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
       {
         addFormNote(F("It seems I can't parse your formulae. Fixed value will be used!"));
         value = FIXED_TEMP_VALUE;
@@ -417,7 +417,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       readCommand = F("RT,");
       double temperatureReading;
 
-      if (Calculate(pooltempString.c_str(), temperatureReading) != CalculateReturnCode::OK)
+      if (Calculate(pooltempString, temperatureReading) != CalculateReturnCode::OK)
       {
         temperatureReading = FIXED_TEMP_VALUE;
       }
