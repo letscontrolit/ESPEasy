@@ -158,7 +158,7 @@ bool CPlugin_014_sendMQTTnode(String      tmppubname,
 // and String a comma seperated list
 void CPLUGIN_014_addToList(String& valuesList, const String& node)
 {
-  if (valuesList.length() > 0) { valuesList += F(","); }
+  if (valuesList.length() > 0) { valuesList += ','; }
   valuesList += node;
 }
 
@@ -755,9 +755,9 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 {
                   cmd        = F("DummyValueSet,"); // Set a Dummy Device Value
                   cmd       += (taskIndex + 1);     // set the device Number
-                  cmd       += F(",");
+                  cmd       += ',';
                   cmd       += (valueNr + 1);       // set the value Number
-                  cmd       += F(",");
+                  cmd       += ',';
                   cmd       += event->String2;      // expect float as payload!
                   validTopic = true;
                 }
@@ -977,7 +977,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log += valueBool;
             log += F(" (");
             log += valueInt;
-            log += F(")");
+            log += ')';
             log += F(" success!");
             addLog(LOG_LEVEL_INFO, log);
           }
@@ -989,7 +989,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
             log += valueBool;
             log += F(" (");
             log += valueInt;
-            log += F(")");
+            log += ')';
             log += F(" ERROR!");
             addLog(LOG_LEVEL_ERROR, log);
           }
