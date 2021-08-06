@@ -165,7 +165,7 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1 && Settings.Pin_i2c_scl != -1)
+  if (Settings.isI2CEnabled())
   {
     addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
     I2CSelectClockSpeed(false); // Set normal clock speed

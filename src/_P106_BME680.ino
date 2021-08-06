@@ -64,18 +64,16 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t choice = PCONFIG(0);
-
-      /*
-         String options[2];
-         options[0] = F("0x76 - default settings (SDO Low)");
-         options[1] = F("0x77 - alternate settings (SDO HIGH)");
-       */
-      int optionValues[2] = { 0x77, 0x76 };
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
-      addFormNote(F("SDO Low=0x76, High=0x77"));
+      const int i2cAddressValues[] = { 0x77, 0x76 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+        addFormNote(F("SDO Low=0x76, High=0x77"));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
