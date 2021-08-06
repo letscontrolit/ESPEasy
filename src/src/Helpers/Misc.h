@@ -177,6 +177,8 @@ int getLoopCountPerSec();
 
 int getUptimeMinutes();
 
+bool intArrayContains(const int arraySize, const int array[], const int value);
+
 #ifndef BUILD_NO_RAM_TRACKER
 void logMemUsageAfter(const __FlashStringHelper * function, int value = -1);
 #endif

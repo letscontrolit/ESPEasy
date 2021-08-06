@@ -16,8 +16,6 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static uint8_t portValue = 0;
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -51,6 +49,13 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       success = true;
+      break;
+    }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      const int i2cAddressValues[] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
+      success = intArrayContains(8, i2cAddressValues, event->Par1);
       break;
     }
 
