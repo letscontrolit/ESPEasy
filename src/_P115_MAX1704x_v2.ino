@@ -69,6 +69,12 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x36);
+      break;
+    }
+
     case PLUGIN_INIT:
     {
       const sfe_max1704x_devices_e device = static_cast<sfe_max1704x_devices_e>(P115_DEVICESELECTOR);

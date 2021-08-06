@@ -65,22 +65,17 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      /*
-          String options1[3];
-          options1[0] = F("0x39 - (default)");
-          options1[1] = F("0x49");
-          options1[2] = F("0x29");
-       */
-      int optionValues[3];
-      optionValues[0] = TSL2561_ADDR;
-      optionValues[1] = TSL2561_ADDR_1;
-      optionValues[2] = TSL2561_ADDR_0;
-      addFormSelectorI2C(F("i2c_addr"), 3, optionValues, P015_I2C_ADDR);
+      const int i2cAddressValues[] = { TSL2561_ADDR, TSL2561_ADDR_1, TSL2561_ADDR_0 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 3, i2cAddressValues, P015_I2C_ADDR);
+      } else {
+        success = intArrayContains(3, i2cAddressValues, event->Par1);
+      }
       break;
     }
-
 
     case PLUGIN_WEBFORM_LOAD:
     {

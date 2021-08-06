@@ -212,8 +212,9 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-  # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin = "P";
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        String plugin;
+        plugin += 'P';
 
         if (pluginID < 10) { plugin += '0'; }
 
@@ -221,7 +222,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
-  # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,
@@ -1013,9 +1014,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      && ((Settings.Pin_i2c_sda == -1)
-          || (Settings.Pin_i2c_scl == -1)
-          || (Settings.I2C_clockSpeed == 0))) {
+      && !Settings.isI2CEnabled()) {
     addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
   }
 

@@ -184,6 +184,9 @@
 #ifndef DEFAULT_I2C_CLOCK_SPEED_SLOW
 #define DEFAULT_I2C_CLOCK_SPEED_SLOW      100000            // Use 100 kHz for old/slow I2C chips
 #endif
+#ifndef USE_I2C_DEVICE_SCAN
+#define USE_I2C_DEVICE_SCAN              true               // Show device name in I2C scan
+#endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
 #define DEFAULT_PIN_STATUS_LED           (-1)

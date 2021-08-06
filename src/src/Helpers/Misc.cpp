@@ -444,6 +444,16 @@ int getUptimeMinutes() {
   return wdcounter / 2;
 }
 
+/******************************************************************************
+ * scan an int array of specified size for a value
+ *****************************************************************************/
+bool intArrayContains(const int arraySize, const int array[], const int value){
+  for(int i = 0; i < arraySize; i++) {
+    if (array[i] == value) return true;
+  }
+  return false;
+}
+
 #ifndef BUILD_NO_RAM_TRACKER
 void logMemUsageAfter(const __FlashStringHelper * function, int value) {
   // Store free memory in an int, as subtracting may sometimes result in negative value.

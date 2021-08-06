@@ -407,6 +407,12 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x40);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
         #define SI7021_RESOLUTION_OPTION 4
