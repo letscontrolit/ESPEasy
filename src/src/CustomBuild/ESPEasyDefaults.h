@@ -184,6 +184,9 @@
 #ifndef DEFAULT_I2C_CLOCK_SPEED_SLOW
 #define DEFAULT_I2C_CLOCK_SPEED_SLOW      100000            // Use 100 kHz for old/slow I2C chips
 #endif
+#ifndef USE_I2C_DEVICE_SCAN
+#define USE_I2C_DEVICE_SCAN              true               // Show device name in I2C scan
+#endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
 #define DEFAULT_PIN_STATUS_LED           (-1)
@@ -308,6 +311,21 @@
 #ifndef DEFAULT_SYNC_UDP_PORT
 #define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
+
+#ifndef BUILD_IN_WEBHEADER
+#define BUILD_IN_WEBHEADER                      false
+#endif
+#ifndef BUILD_IN_WEBFOOTER
+#define BUILD_IN_WEBFOOTER                      true                    // If not defined show build in footer of webpage
+#endif
+
+#ifndef GITHUB_RELEASES_LINK_PREFIX
+# define GITHUB_RELEASES_LINK_PREFIX "<a href='https://github.com/letscontrolit/ESPEasy/releases' title='Click to show latest release on Github' target='_blank' style='font-size: 15px; text-decoration: none'>"
+#endif
+#ifndef GITHUB_RELEASES_LINK_SUFFIX
+# define GITHUB_RELEASES_LINK_SUFFIX "</a>"
+#endif
+
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------

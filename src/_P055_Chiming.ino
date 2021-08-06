@@ -158,7 +158,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
         //addHtml(F("<TR><TD><TD>"));
         addButton(F("'control?cmd=chimeplay,hours'"), F("Test 1&hellip;12"));
 
-        if (PCONFIG(2) && !Settings.UseNTP)
+        if (PCONFIG(2) && !(Settings.UseNTP()))
           addFormNote(F("Enable and configure NTP!"));
 
         success = true;

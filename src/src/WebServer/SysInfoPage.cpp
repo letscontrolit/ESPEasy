@@ -287,6 +287,7 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    addRowLabelValue(LabelType::TIME_SOURCE);
   }
 
   addRowLabel(LabelType::UPTIME);

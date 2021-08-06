@@ -239,6 +239,31 @@ void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
 
 
 template<unsigned int N_TASKS>
+ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
+  return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::ExtTimeSource(ExtTimeSource_e value) {
+  uint8_t newValue = static_cast<uint8_t>(value) << 1;
+  if (UseNTP()) {
+    newValue += 1;
+  }
+  ExternalTimeSource = newValue;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseNTP() const {
+  return bitRead(ExternalTimeSource, 0);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseNTP(bool value) {
+  bitWrite(ExternalTimeSource, 0, value);
+}
+
+
+template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
   if (UDPPort > 65535) { UDPPort = 0; }
 
@@ -276,7 +301,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearNetworkSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
-  UseNTP = false;
+  ExternalTimeSource = 0;
   ZERO_FILL(NTPHost);
   TimeZone  = 0;
   DST       = false;
@@ -550,6 +575,14 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
   if (pin < 0) return false;
   return Pin_i2c_sda == pin || Pin_i2c_scl == pin;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
+  return (Pin_i2c_sda != -1) &&
+         (Pin_i2c_scl != -1) &&
+         (I2C_clockSpeed > 0) &&
+         (I2C_clockSpeed_Slow > 0);
 }
 
 template<unsigned int N_TASKS>
