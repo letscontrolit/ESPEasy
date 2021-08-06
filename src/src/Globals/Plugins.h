@@ -77,7 +77,7 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 /*********************************************************************************************
  * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
  ********************************************************************************************/
-pluginID_t getDevicePluginID_from_TaskIndex(taskIndex_t taskIndex);
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
 
 
 

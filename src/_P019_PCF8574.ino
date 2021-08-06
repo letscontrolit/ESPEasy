@@ -349,6 +349,10 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
           // Reset SafeButton counter
           PCONFIG_LONG(3) = 0;
 
+          // @giig1967g-20210804: reset timer for long press
+          PCONFIG_LONG(2) = millis();
+          PCONFIG(6)      = false;
+
           const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
 
           if (debounceTime >= (unsigned long)lround(PCONFIG_FLOAT(0))) // de-bounce check
