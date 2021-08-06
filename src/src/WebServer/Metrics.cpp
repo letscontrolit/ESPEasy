@@ -7,9 +7,9 @@
 # include "../../_Plugin_Helper.h"
 # include "../Helpers/ESPEasyStatistics.h"
 # include "../Static/WebStaticData.h"
-//HELPERS_ESPEASY_MATH_H  //clumsy-stefan: what's this for?
 
 #ifdef WEBSERVER_METRICS
+
 #ifdef ESP32
 # include <esp_partition.h>
 #endif // ifdef ESP32
