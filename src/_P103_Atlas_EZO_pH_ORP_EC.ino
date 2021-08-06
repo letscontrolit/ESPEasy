@@ -120,7 +120,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
       if (board_type == UNKNOWN)
       {
-        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC' od 'DO', check your i2c address? </span>"));
+        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC' or 'DO', check your i2c address? </span>"));
       }
       addRowLabel(F("Board version"));
       addHtml(version);
@@ -134,7 +134,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addHtml(F("<span style='color:red;'>Unable to send command to device</span>"));
       if (board_type == UNKNOWN)
       {
-        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC', check your i2c address?</span>"));
+        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC' or 'DO', check your i2c address?</span>"));
       }
       success = false;
       break;
