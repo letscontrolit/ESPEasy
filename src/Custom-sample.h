@@ -365,7 +365,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
-// #define USES_P103   // Atlas_EZO_pH_ORP_EC
+// #define USES_P103   // Atlas_EZO_pH_ORP_EC_DO
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
