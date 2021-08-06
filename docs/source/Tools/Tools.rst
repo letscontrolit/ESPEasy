@@ -486,7 +486,7 @@ Show JSON
 =========
 
 Show Metrics
-=========
+============
 
 Shows various system metrics and device values in prometheus format
 
