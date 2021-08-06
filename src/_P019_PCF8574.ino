@@ -55,8 +55,6 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static int8_t switchstate[TASKS_MAX];
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -85,6 +83,13 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_019));
+      break;
+    }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+      success = intArrayContains(8, i2cAddressValues, event->Par1);
       break;
     }
 
