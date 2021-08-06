@@ -645,7 +645,7 @@ void SensorSendTask(taskIndex_t TaskIndex)
             formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
             double result = 0;
 
-            if (!isError(Calculate(formula, result))) {
+            if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
             }
           }
