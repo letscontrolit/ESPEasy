@@ -18,7 +18,7 @@
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
 const __FlashStringHelper * return_command_success()
 {
-  return F("\nOk");
+  return F("\nOK");
 }
 
 const __FlashStringHelper * return_command_failed()
