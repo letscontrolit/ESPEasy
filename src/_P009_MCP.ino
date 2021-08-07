@@ -107,7 +107,6 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += (x < 8 ? 'A' : 'B');
           portNames[x] += (x < 8 ? x : x - 8);
         }
-        const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
         addFormSelectorI2C(F("p009_i2c"), 8, i2cAddressValues, address);
         addFormSelector(F("Port"), F("p009_port"), 16, portNames, portValues, port);
       } else {
@@ -139,7 +138,6 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(1) = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
       }
 
-      uint8_t choiceDC = PCONFIG(4);
       {
         const __FlashStringHelper *buttonDC[4];
         buttonDC[0] = F("Disabled");
@@ -147,7 +145,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         buttonDC[2] = F("Active only on HIGH (EVENT=3)");
         buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
         int buttonDCValues[4] = { PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH, PLUGIN_009_DC_BOTH };
-        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, PCONFIG(4));
       }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
@@ -163,7 +161,6 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
 
       {
-        uint8_t choiceLP = PCONFIG(5);
         const __FlashStringHelper *buttonLP[4];
         buttonLP[0] = F("Disabled");
         buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
@@ -172,7 +169,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         int buttonLPValues[4] =
         { PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH, PLUGIN_009_LONGPRESS_BOTH };
-        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, PCONFIG(5));
       }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
