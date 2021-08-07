@@ -8,14 +8,14 @@
 // # define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
-# include "src/Globals/EventQueue.h"
-# include "src/Globals/MQTT.h"
-# include "src/Globals/CPlugins.h"
-# include "src/Globals/Plugins.h"
-# include "src/Helpers/ESPEasy_Storage.h"
-# include "src/Helpers/Hardware.h"
-# include "src/Helpers/Misc.h"
-# include "src/Helpers/StringParser.h"
+# include "../Globals/EventQueue.h"
+# include "../Globals/MQTT.h"
+# include "../Globals/CPlugins.h"
+# include "../Globals/Plugins.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware.h"
+# include "../Helpers/Misc.h"
+# include "../Helpers/StringParser.h"
 
 # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
 #  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                // Enables double height numeric font for double-height time/date
@@ -88,7 +88,7 @@
 #  define P104_SETTINGS_BUFFER  512
 # endif // ifdef ESP32
 
-# define P104_MAX_MODULES_PER_ZONE     255   // Maximum allowed modules per zone
+# define P104_MAX_MODULES_PER_ZONE     255   // Maximum supported modules per zone
 # define P104_MAX_TEXT_LENGTH_PER_ZONE 100   // Limit the Text content length
 # define P104_MAX_SPEED_PAUSE_VALUE    65535 // Value is in milliseconds
 # define P104_MAX_REPEATDELAY_VALUE    86400 // Value is in seconds
@@ -217,7 +217,7 @@
 # define P104_SPECIAL_EFFECT_NONE       0
 # define P104_SPECIAL_EFFECT_UP_DOWN    1
 # define P104_SPECIAL_EFFECT_LEFT_RIGHT 2
-# define P104_SPECIAL_EFFECT_BOTH       P104_SPECIAL_EFFECT_UP_DOWN + P104_SPECIAL_EFFECT_LEFT_RIGHT // Used as a bitmap
+# define P104_SPECIAL_EFFECT_BOTH       (P104_SPECIAL_EFFECT_UP_DOWN + P104_SPECIAL_EFFECT_LEFT_RIGHT) // Used as a bitmap
 
 # define P104_LAYOUT_STANDARD     0
 # define P104_LAYOUT_DOUBLE_UPPER 1
@@ -297,6 +297,7 @@
 # endif // ifdef P104_USE_KATAKANA_FONT
 
 struct P104_zone_struct {
+  P104_zone_struct() = delete; // Not used, so leave out explicitly
   P104_zone_struct(uint8_t _zone) : zone(_zone) {
     size          = 0u;
     text          = F("\"\"");
@@ -337,6 +338,7 @@ struct P104_zone_struct {
 
 # ifdef P104_USE_BAR_GRAPH
 struct P104_bargraph_struct {
+  P104_bargraph_struct() = delete; // Not used, so leave out explicitly
   P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
 
   double  value;
@@ -354,6 +356,7 @@ struct tP104_StoredSettings {
 };
 
 struct P104_data_struct : public PluginTaskData_base {
+  P104_data_struct() = delete; // Not used, so leave out explicitly
   P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                    taskIndex_t              _taskIndex,
                    int8_t                   _cs_pin,
@@ -361,7 +364,6 @@ struct P104_data_struct : public PluginTaskData_base {
 
   bool   begin();
   void   loadSettings();
-  bool   saveSettings();
   bool   webform_load(struct EventStruct *event);
   bool   webform_save(struct EventStruct *event);
   String getError() {
@@ -378,8 +380,6 @@ struct P104_data_struct : public PluginTaskData_base {
                          const String& string);
   bool handlePluginOncePerSecond(struct EventStruct *event);
   void checkRepeatTimer(uint8_t z);
-  void updateZone(uint8_t                 zone,
-                  const P104_zone_struct& zstruct);
 
   MD_Parola *P = nullptr;
 
@@ -387,6 +387,9 @@ struct P104_data_struct : public PluginTaskData_base {
 
 private:
 
+  bool saveSettings();
+  void updateZone(uint8_t                 zone,
+                  const P104_zone_struct& zstruct);
   # ifdef P104_USE_BAR_GRAPH
   MD_MAX72XX *pM = nullptr;
   void displayBarGraph(uint8_t                 zone,
@@ -420,19 +423,20 @@ private:
   String                       sZoneInitial[P104_MAX_ZONES];
 
   MD_MAX72XX::moduleType_t mod;
-  uint16_t                 numDevices = 0;
   taskIndex_t              taskIndex;
   int8_t                   cs_pin;
-  uint8_t                  modules          = 1u;
-  int8_t                   expectedZones    = -1;
-  int8_t                   previousZones    = -1;
-  uint8_t                  zoneOrder        = 0;
-  bool                     initialized      = false;
-  bool                     zonesInitialized = false;
-  bool                     flasher          = false; // seconds passing flasher
+  uint8_t                  modules;
+
+  uint16_t numDevices       = 0u;
+  uint8_t  zoneOrder        = 0u;
+  int8_t   expectedZones    = -1;
+  int8_t   previousZones    = -1;
+  bool     initialized      = false;
+  bool     zonesInitialized = false;
+  bool     flasher          = false; // seconds passing flasher
 
   // time/date stuff
-  char szTimeL[P104_MAX_MESG];                       // dd-mm-yy mm:ss\0
+  char szTimeL[P104_MAX_MESG];       // dd-mm-yy mm:ss\0
   char szTimeH[P104_MAX_MESG];
 };
 

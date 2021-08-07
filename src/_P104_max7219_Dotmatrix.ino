@@ -67,6 +67,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2021-08-07 tonhuisman: Review feedback: several small improvements and corrections
 // 2021-07-18 tonhuisman: Small optimizations and improvements
 // 2021-07-14 tonhuisman: Fix some bugs in font selection, add Text reverse content type to improve usability of Vertical font
 // 2021-07-12 tonhuisman: Reduce number of reconfiguration during command handling, will be applied the next time content is displayed
@@ -277,19 +278,10 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
 
       P104_data->logAllText = bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_LOG_ALL_TEXT);
 
-      // initialise the LED display
+      // initialize the LED display
       if (P104_data->begin()) {
         // Setup the zones from configuration
         P104_data->configureZones();
-
-        // Not sure if we'll need this in the future...
-        //     invertUpperZone = (HARDWARE_TYPE == MD_MAX72XX::GENERIC_HW || HARDWARE_TYPE == MD_MAX72XX::PAROLA_HW);
-
-        //      if (invertUpperZone)
-        //      {
-        //        P.setZoneEffect(ZONE_UPPER, true, PA_FLIP_UD);
-        //        P.setZoneEffect(ZONE_UPPER, true, PA_FLIP_LR);
-
 
         success = true;
       }
