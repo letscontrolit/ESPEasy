@@ -222,6 +222,48 @@ void addNewLine(String& line) {
   line += F("\r\n");
 }
 
+size_t UTF8_charLength(char firstByte) {
+  if (firstByte <= 0x7f) {
+    return 1;
+  }
+  // First Byte  Second Byte Third Byte  Fourth Byte
+  // [0x00,0x7F]         
+  // [0xC2,0xDF] [0x80,0xBF]     
+  // 0xE0        [0xA0,0xBF] [0x80,0xBF] 
+  // [0xE1,0xEC] [0x80,0xBF] [0x80,0xBF] 
+  // 0xED        [0x80,0x9F] [0x80,0xBF] 
+  // [0xEE,0xEF] [0x80,0xBF] [0x80,0xBF] 
+  // 0xF0        [0x90,0xBF] [0x80,0xBF] [0x80,0xBF]
+  // [0xF1,0xF3] [0x80,0xBF] [0x80,0xBF] [0x80,0xBF]
+  // 0xF4        [0x80,0x8F] [0x80,0xBF] [0x80,0xBF]
+  // See: https://lemire.me/blog/2018/05/09/how-quickly-can-you-check-that-a-string-is-valid-unicode-utf-8/
+
+  size_t charLength = 2;
+  if (firstByte > 0xEF) {
+    charLength = 4;
+  } else if (firstByte > 0xDF) {
+    charLength = 3;
+  }
+  return charLength;
+}
+
+void replaceUnicodeByChar(String& line, char replChar) {
+  size_t pos = 0;
+  while (pos < line.length()) {
+    const size_t charLength = UTF8_charLength(line[pos]);
+
+    if (charLength > 1) {
+      // Is unicode char in UTF-8 format
+      // Need to find how many characters we need to replace.
+      const size_t charsLeft = line.length() - pos;
+      if (charsLeft >= charLength) {
+        line.replace(line.substring(pos, pos + charLength), String(replChar));
+      }
+    }
+    ++pos;
+  }
+}
+
 /*********************************************************************************************\
    Format a value to the set number of decimals
 \*********************************************************************************************/
@@ -634,7 +676,7 @@ void htmlStrongEscape(String& html)
 
   for (unsigned i = 0; i < html.length(); ++i)
   {
-    if (((html[i] >= 'a') && (html[i] <= 'z')) || ((html[i] >= 'A') && (html[i] <= 'Z')) || ((html[i] >= '0') && (html[i] <= '9')))
+    if (isAlphaNumeric(html[i]))
     {
       escaped += html[i];
     }
@@ -665,9 +707,7 @@ String URLEncode(const String& msg)
 
   for (size_t i = 0; i < msg_length; ++i) {
     const char ch = msg[i];
-    if ((('a' <= ch) && (ch <= 'z'))
-        || (('A' <= ch) && (ch <= 'Z'))
-        || (('0' <= ch) && (ch <= '9'))
+    if (isAlphaNumeric(ch)
         || ('-' == ch) || ('_' == ch)
         || ('.' == ch) || ('~' == ch)) {
       encodedMsg += ch;
