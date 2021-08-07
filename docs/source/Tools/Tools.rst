@@ -119,6 +119,8 @@ Supported RTC chips:
 Most modules sold with one of these RTC chips also have a battery socket to keep track of time while the rest is not powered.
 This allows ESPEasy to know the correct date and time after been powered off for a while, or deep sleep, without the need for working network to query a NTP server.
 
+N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
+
 DST Settings
 ------------
 
@@ -207,6 +209,19 @@ JSON bool output without quotes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ESPEasy JSON output has always used quoted bool values, ``"true"`` and ``"false"``, that are in fact string values. According to JSON standards, bool values should be ``true`` and ``false``, so this setting selects what type of bool values will be emitted. As existing functionality is to be left unaltered/backward compatible as much as possible, by default this setting is unchecked.
+
+Allow TaskValueSet on all plugins
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-08-06
+
+The command TaskValueSet was never intended to be used on any other then a 'dummy' task.
+However it appeared there are some use cases where it may be useful to use TaskValueSet on other types of tasks.
+
+To use it on other then a 'dummy' task, this option must be checked.
+
+Default: unchecked
+
 
 
 Deep Sleep Alternative
