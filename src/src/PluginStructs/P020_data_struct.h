@@ -12,7 +12,7 @@
 # endif // ifndef PLUGIN_020_DEBUG
 
 # define P020_STATUS_LED                    12
-# define P020_DATAGRAM_MAX_SIZE             256
+# define P020_DATAGRAM_MAX_SIZE             1024
 struct P020_Task : public PluginTaskData_base {
   P020_Task(taskIndex_t taskIndex);
   ~P020_Task();
