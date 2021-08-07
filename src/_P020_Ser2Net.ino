@@ -24,7 +24,7 @@
 # define P020_RX_WAIT              PCONFIG(4)
 # define P020_SERIAL_CONFIG        PCONFIG(1)
 # define P020_SERIAL_PROCESSING    PCONFIG(5)
-# define P020_RESET_TARGET_PIN     CONFIG_PIN1
+# define P020_RESET_TARGET_PIN     PCONFIG(6)
 
 
 # define P020_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
@@ -35,6 +35,7 @@
 
 # define P020_DEFAULT_SERVER_PORT 1234
 # define P020_DEFAULT_BAUDRATE   115200
+# define P020_DEFAULT_RESET_TARGET_PIN -1
 
 
 boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
@@ -69,6 +70,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
     {
       P020_BAUDRATE    = P020_DEFAULT_BAUDRATE;
       P020_SERVER_PORT = P020_DEFAULT_SERVER_PORT;
+      P020_RESET_TARGET_PIN = P020_DEFAULT_RESET_TARGET_PIN;
       success          = true;
       break;
     }
@@ -103,6 +105,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Event processing"), F("p020_events"), 3, options, NULL, choice);
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0);
+      addFormPinSelect(F("Reset target after init"), F("resetpin"), P020_RESET_TARGET_PIN);
       success = true;
       break; 
     }
@@ -114,6 +117,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       P020_SERIAL_CONFIG     = serialHelper_serialconfig_webformSave();
       P020_SERIAL_PROCESSING = getFormItemInt(F("p020_events"));
       P020_RX_WAIT           = getFormItemInt(F("p020_rxwait"));
+      P020_RESET_TARGET_PIN  = getFormItemInt(F("resetpin"));
       success                = true;
       break;
     }
@@ -184,6 +188,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P020_RESET_TARGET_PIN != -1) {
+        addLog(LOG_LEVEL_INFO, (String(F("Ser2net   :P020_RESET_TARGET_PIN "))+P020_RESET_TARGET_PIN));
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
         digitalWrite(P020_RESET_TARGET_PIN, LOW);
         delay(500);
