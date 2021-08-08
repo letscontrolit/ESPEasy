@@ -56,6 +56,10 @@ Special Notations
 * ``{...:...}`` Referring to String conversions
 * Quotes (single, double or back quotes) Marking begin and end of a command parameter
 
+.. note::
+ Formulas used in tasks (thus not using the rules) may refer to ``%value%`` for the new current value and ``%pvalue%`` for the previous value before ``PLUGIN_READ`` was called.
+ These notations cannot be used in the rules.
+ If a previous value is needed, one has to use variables for it.
 
 
 Syntax
