@@ -1599,7 +1599,7 @@ void RTC_DS3231::adjust(const DateTime &dt) {
   // The RTC must know the day of the week for the weekly alarms to work.
   RTCWireBus->_I2C_WRITE(bin2bcd(dowToDS3231(dt.dayOfTheWeek())));
   RTCWireBus->_I2C_WRITE(bin2bcd(dt.day()));
-  RTCWireBus->_I2C_WRITE(bin2bcd(dt.month()) + 0x7F); // Need to write the century bit
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.month()) & 0x7f | (dt.year()>=2000 ? 0x80 : 0x00)); // Need to add the century bit
   RTCWireBus->_I2C_WRITE(bin2bcd(dt.year() - 2000U));
   RTCWireBus->endTransmission();
 
