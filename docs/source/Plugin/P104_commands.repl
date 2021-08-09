@@ -6,11 +6,15 @@
         ``DotMatrix,clear[,All|<zone>]``
         ","
         Clears a zone by number or the entire display. All ``<zone>`` arguments are the zone numbers as shown on the Device settings page.
+
+        Without a <zone> or All specified, the All action is executed.
         "
         "
         ``DotMatrix,update[,All|<zone>]``
         ","
         Update a zone, or all zones, with any updated content. Can be used instead of the Repeat (sec) option of a zone.
+
+        Without a <zone> or All specified, the All action is executed.
         "
         "
         ``DotMatrix,size,<zone>,<size>``
@@ -20,7 +24,7 @@
         "
         ``DotMatrix,[set]txt,<zone>,""<text content>""``
         ","
-        Replace the text displayed in the zone if it is of Content type Text.
+        Set the text displayed in the zone if it is of Content type Text.
 
         ``txt`` will only replace the current content.
 
@@ -50,12 +54,12 @@
         "
         ``DotMatrix,anim.in,<zone>,<animationnr>``
         ","
-        Change the Animation In setting for the zone. The ``<animationnr>`` value can be obtained from the dropdown in the Device settings page. The None (0) setting is not accepted here.
+        Change the **Animation In** setting for the zone. The ``<animationnr>`` value can be obtained from the dropdown in the Device settings page. The None (0) setting is *not* accepted here.
         "
         "
         ``DotMatrix,anim.out,<zone>,<animationnr>``
         ","
-        Change the Animation Out setting for the zone. The ``<animationnr>`` value can be obtained from the dropdown in the Device settings page.
+        Change the **Animation Out** setting for the zone. The ``<animationnr>`` value can be obtained from the dropdown in the Device settings page.
         "
         "
         ``DotMatrix,speed,<zone>,<speed_ms>``
@@ -125,22 +129,22 @@
         "
         ``DotMatrix,repeat,<zone>,<repeat_sec>``
         ","
-        Set the Repeat (sec) in seconds for the indicated zone. Valid values -1 (disabled)..86400 (1 day).
+        Set the Repeat (sec) in seconds for the indicated zone. Valid values -1 (disabled)..86400 seconds (1 day).
         "
         "
-        ``DotMatrix,[set]bar,<zone>,'<graph_string>[|...]`'``
+        ``DotMatrix,[set]bar,<zone>,'<graph_string>[|...]'``
         ","
         Set a zone with a Content type of Bar graph with 1 to 8 graph strings, to be displayed as bar graphs.
 
-        ``bar`` will replace the current Bar graph(s) displayed.
+        ``bar`` will display the Bar graph(s).
 
-        ``setbar`` will also store it in the device settings if it is not longer than the allowed input length (100 characters), but *not* save the settings. 
+        ``setbar`` will display the Bar graph(s), and also store the provided graph string(s) in the device settings if it is not longer than the allowed input length (100 characters), but *not* save the settings. 
 
         The graph string used for displaying 1 or more bar graphs is formatted like this: *(square backets denoting optional arguments)*
 
         ``<value>[,<max value>[,<min value>[,<direction[,<bartype>]]]]][|...]``
 
-        **<value>** The value to display. This is the only required argument. The usual ``[Taskname#Taskvar]``, ``%function%`` etc. syntax can be used here.
+        **<value>** The value to display. This is the only required argument. The usual ``[Taskname#Taskvar]``, ``%function%`` etc. syntax can be used here. It should result in a numeric value.
 
         **<max value>** The maximum expected value, defaults to 100 (treated as if it was a percentage). Can be negative if desired, but the min value should always be lower than the max value, but the values will be swapped if min value is larger than max value.
 
