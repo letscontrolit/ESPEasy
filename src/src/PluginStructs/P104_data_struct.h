@@ -78,15 +78,17 @@
 // # define P104_MEDIUM_ANIMATIONS             // disable some complex animations
 
 
-# define P104_MAX_MESG  15           // Message size for time/date
+# define P104_MAX_MESG             20        // Message size for time/date (dd-mm-yyyy hh:mm:ss\0)
 
 # ifdef ESP32
-#  define P104_MAX_ZONES        16u  // 1..P104_MAX_ZONES zones selectable
-#  define P104_SETTINGS_BUFFER  1020 // Bigger buffer possible on ESP32
+#  define P104_MAX_ZONES           16u       // 1..P104_MAX_ZONES zones selectable
+#  define P104_SETTINGS_BUFFER_V1  1020      // Bigger buffer possible on ESP32
 # else // ifdef ESP32
-#  define P104_MAX_ZONES        8u   // 1..P104_MAX_ZONES zones selectable
-#  define P104_SETTINGS_BUFFER  512
+#  define P104_MAX_ZONES           8u        // 1..P104_MAX_ZONES zones selectable
+#  define P104_SETTINGS_BUFFER_V1  512
 # endif // ifdef ESP32
+# define P104_SETTINGS_BUFFER_V2   150       // Settings stored per zone only needs this kind of buffer size, max. length without text is 45
+                                             // bytes, 100 chars + 2 quotes around it => 150 (rounded up to a nice number)
 
 # define P104_MAX_MODULES_PER_ZONE     255   // Maximum supported modules per zone
 # define P104_MAX_TEXT_LENGTH_PER_ZONE 100   // Limit the Text content length
@@ -224,6 +226,7 @@
 # define P104_LAYOUT_DOUBLE_LOWER 2
 
 # define P104_BRIGHTNESS_MAX      15 // Brightness levels range from 0 .. 15
+# define P104_BRIGHTNESS_DEFAULT  3  // Default brightness level
 
 # define P104_BARTYPE_STANDARD    0  // Solid line, with zero-mark if width > 2
 # define P104_BARTYPE_SINGLE      1  // Solid single-line, even if width allows more
@@ -350,17 +353,13 @@ struct P104_bargraph_struct {
 };
 # endif // ifdef P104_USE_BAR_GRAPH
 
-struct tP104_StoredSettings {
-  uint16_t bufferSize = 0u;
-  char     buffer[P104_SETTINGS_BUFFER]; // Max. acceptable value would be ~1020
-};
-
 struct P104_data_struct : public PluginTaskData_base {
   P104_data_struct() = delete; // Not used, so leave out explicitly
   P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                    taskIndex_t              _taskIndex,
                    int8_t                   _cs_pin,
-                   uint8_t                  _modules);
+                   uint8_t                  _modules,
+                   uint8_t                  _zonesCount);
 
   bool   begin();
   void   loadSettings();
@@ -415,9 +414,6 @@ private:
 
   String error;
 
-  // Stored settings
-  tP104_StoredSettings StoredSettings;
-
   std::vector<P104_zone_struct>zones;
   String                       sZoneBuffers[P104_MAX_ZONES];
   String                       sZoneInitial[P104_MAX_ZONES];
@@ -436,7 +432,7 @@ private:
   bool     flasher          = false; // seconds passing flasher
 
   // time/date stuff
-  char szTimeL[P104_MAX_MESG];       // dd-mm-yy mm:ss\0
+  char szTimeL[P104_MAX_MESG];       // dd-mm-yyyy hh:mm:ss\0
   char szTimeH[P104_MAX_MESG];
 };
 
