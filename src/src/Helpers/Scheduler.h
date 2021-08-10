@@ -50,25 +50,25 @@ public:
     TIMER_C023_DELAY_QUEUE,
     TIMER_C024_DELAY_QUEUE,
     TIMER_C025_DELAY_QUEUE,
-    // When extending this, search for EXTEND_CONTROLLER_IDS 
-    // in the code to find all places that need to be updated too.
 
+    // When extending this, search for EXTEND_CONTROLLER_IDS
+    // in the code to find all places that need to be updated too.
   };
 
   static String toString(IntervalTimer_e timer);
 
   enum class SchedulerTimerType_e {
-    SYSTEM_EVENT_QUEUE  = 0, // Not really a timer.
-    CONST_INTERVAL_TIMER= 1,
-    PLUGIN_TASK_TIMER   = 2,
-    TASK_DEVICE_TIMER   = 3,
-    GPIO_TIMER          = 4,
-    PLUGIN_TIMER        = 5,
-    RULES_TIMER         = 6,
-    REBOOT_TIMER        = 15 // Used to show intended reboot
+    SYSTEM_EVENT_QUEUE   = 0, // Not really a timer.
+    CONST_INTERVAL_TIMER = 1,
+    PLUGIN_TASK_TIMER    = 2,
+    TASK_DEVICE_TIMER    = 3,
+    GPIO_TIMER           = 4,
+    PLUGIN_TIMER         = 5,
+    RULES_TIMER          = 6,
+    REBOOT_TIMER         = 15 // Used to show intended reboot
   };
 
-  static const __FlashStringHelper * toString(SchedulerTimerType_e timerType);
+  static const __FlashStringHelper* toString(SchedulerTimerType_e timerType);
 
 
   enum class PluginPtrType {
@@ -77,7 +77,7 @@ public:
     NotificationPlugin
   };
 
-  static const __FlashStringHelper * toString(PluginPtrType pluginType);
+  static const __FlashStringHelper* toString(PluginPtrType pluginType);
 
   enum class IntendedRebootReason_e {
     DeepSleep,
@@ -89,25 +89,24 @@ public:
     RestoreSettings,
     OTA_error,
     ConnectionFailuresThreshold,
-
   };
 
   static String toString(IntendedRebootReason_e reason);
 
 
-  void markIntendedReboot(IntendedRebootReason_e reason);
+  void          markIntendedReboot(IntendedRebootReason_e reason);
 
   /*********************************************************************************************\
   * Generic Timer functions.
   \*********************************************************************************************/
-  void setNewTimerAt(unsigned long id,
-                     unsigned long timer);
+  void          setNewTimerAt(unsigned long id,
+                              unsigned long timer);
 
   // Mix timer type int with an ID describing the scheduled job.
   static unsigned long getMixedId(SchedulerTimerType_e timerType,
-                                  unsigned long id);
+                                  unsigned long        id);
 
-  static unsigned long decodeSchedulerId(unsigned long  mixed_id,
+  static unsigned long decodeSchedulerId(unsigned long         mixed_id,
                                          SchedulerTimerType_e& timerType);
 
   static String        decodeSchedulerId(unsigned long mixed_id);
@@ -204,7 +203,7 @@ public:
   \*********************************************************************************************/
   static unsigned long createGPIOTimerId(uint8_t GPIOType,
                                          uint8_t pinNumber,
-                                         int  Par1);
+                                         int     Par1);
 
 
   void setGPIOTimer(unsigned long msecFromNow,
@@ -248,44 +247,44 @@ public:
   \*********************************************************************************************/
 
   // Note: event will be moved
-  void schedule_plugin_task_event_timer(deviceIndex_t       DeviceIndex,
-                                        uint8_t                Function,
-                                        struct EventStruct &&event);
+  void schedule_plugin_task_event_timer(deviceIndex_t        DeviceIndex,
+                                        uint8_t              Function,
+                                        struct EventStruct&& event);
 
-  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
-                                               taskIndex_t     TaskIndex,
-                                               uint8_t            Function,
-                                               char           *c_topic,
-                                               uint8_t           *b_payload,
-                                               unsigned int    length);
+  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
+                                               taskIndex_t   TaskIndex,
+                                               uint8_t       Function,
+                                               char         *c_topic,
+                                               uint8_t      *b_payload,
+                                               unsigned int  length);
 
 
   // Note: the event will be moved
-  void schedule_controller_event_timer(protocolIndex_t     ProtocolIndex,
-                                       uint8_t                Function,
-                                       struct EventStruct &&event);
+  void schedule_controller_event_timer(protocolIndex_t      ProtocolIndex,
+                                       uint8_t              Function,
+                                       struct EventStruct&& event);
 
-  void schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
+  void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                             CPlugin::Function Function,
-                                            char           *c_topic,
-                                            uint8_t           *b_payload,
-                                            unsigned int    length);
+                                            char             *c_topic,
+                                            uint8_t          *b_payload,
+                                            unsigned int      length);
 
   // Note: The event will be moved
-  void schedule_notification_event_timer(uint8_t                NotificationProtocolIndex,
-                                         NPlugin::Function   Function,
-                                         struct EventStruct &&event);
+  void schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
+                                         NPlugin::Function    Function,
+                                         struct EventStruct&& event);
 
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
-                                                uint8_t          Index,
-                                                uint8_t          Function);
+                                                uint8_t       Index,
+                                                uint8_t       Function);
 
   // Note, the event will be moved
-  void schedule_event_timer(PluginPtrType       ptr_type,
-                            uint8_t                Index,
-                            uint8_t                Function,
-                            struct EventStruct &&event);
+  void schedule_event_timer(PluginPtrType        ptr_type,
+                            uint8_t              Index,
+                            uint8_t              Function,
+                            struct EventStruct&& event);
 
   void process_system_event_queue();
 
