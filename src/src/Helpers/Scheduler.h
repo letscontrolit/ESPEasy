@@ -57,11 +57,27 @@ public:
 
   static String toString(IntervalTimer_e timer);
 
+  enum class SchedulerTimerType_e {
+    SYSTEM_EVENT_QUEUE  = 0, // Not really a timer.
+    CONST_INTERVAL_TIMER= 1,
+    PLUGIN_TASK_TIMER   = 2,
+    TASK_DEVICE_TIMER   = 3,
+    GPIO_TIMER          = 4,
+    PLUGIN_TIMER        = 5,
+    RULES_TIMER         = 6,
+    REBOOT_TIMER        = 15 // Used to show intended reboot
+  };
+
+  static const __FlashStringHelper * toString(SchedulerTimerType_e timerType);
+
+
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin,
     NotificationPlugin
   };
+
+  static const __FlashStringHelper * toString(PluginPtrType pluginType);
 
   enum class IntendedRebootReason_e {
     DeepSleep,
@@ -88,11 +104,11 @@ public:
                      unsigned long timer);
 
   // Mix timer type int with an ID describing the scheduled job.
-  static unsigned long getMixedId(unsigned long timerType,
+  static unsigned long getMixedId(SchedulerTimerType_e timerType,
                                   unsigned long id);
 
   static unsigned long decodeSchedulerId(unsigned long  mixed_id,
-                                         unsigned long& timerType);
+                                         SchedulerTimerType_e& timerType);
 
   static String        decodeSchedulerId(unsigned long mixed_id);
 
@@ -260,9 +276,6 @@ public:
                                          NPlugin::Function   Function,
                                          struct EventStruct &&event);
 
-
-  static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
-                                                uint16_t      crc16);
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,
                                                 uint8_t          Index,
