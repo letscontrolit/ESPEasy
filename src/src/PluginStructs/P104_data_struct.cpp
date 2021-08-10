@@ -10,6 +10,7 @@
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
 # include "../Globals/ESPEasy_time.h"
+# include "../Globals/RTC.h"
 
 # include <vector>
 # include <MD_Parola.h>
@@ -1613,6 +1614,7 @@ bool P104_data_struct::saveSettings() {
   numDevices = 0;                                           // Count the number of connected display units
 
   bufferSize = P104_CONFIG_VERSION_V2;                      // Save special marker that we're using V2 settings
+  // This write is counting
   SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
   saveOffset += sizeof(bufferSize);
 
@@ -1662,11 +1664,20 @@ bool P104_data_struct::saveSettings() {
       } else {
         // Store length of buffer
         bufferSize = zbuffer.length();
+
+        // As we write in parts, only count as single write.
+        if (RTC.flashDayCounter > 0) {
+          RTC.flashDayCounter--;
+        }
         SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
         saveOffset += sizeof(bufferSize);
 
         // If copy succeeds, then store the actual buffer
         if (safe_strncpy(settingsBuffer, zbuffer.c_str(), bufferSize + 1)) {
+          // As we write in parts, only count as single write.
+          if (RTC.flashDayCounter > 0) {
+            RTC.flashDayCounter--;
+          }
           SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)settingsBuffer, bufferSize, saveOffset);
           saveOffset += bufferSize;
         } else {
@@ -1699,6 +1710,8 @@ bool P104_data_struct::saveSettings() {
 
     // Store an End-of-settings marker == 0
     bufferSize = 0u;
+
+    // This write is counting
     SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
 
     delete[] settingsBuffer;
@@ -2019,49 +2032,49 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , F("Numeric, double height (1)")
-    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , F("Full, double height (2)")
-    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , F("Vertical (3)")
-    # endif   // ifdef P104_USE_VERTICAL_FONT
+    # endif // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , F("Extended ASCII (4)")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , F("Arabic (5)")
-    # endif   // ifdef P104_USE_ARABIC_FONT
+    # endif // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , F("Greek (6)")
-    # endif   // ifdef P104_USE_GREEK_FONT
+    # endif // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , F("Katakana (7)")
-    # endif   // ifdef P104_USE_KATAKANA_FONT
+    # endif // ifdef P104_USE_KATAKANA_FONT
     };
     const int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
-    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , P104_FULL_DOUBLEHEIGHT_FONT_ID
-    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , P104_VERTICAL_FONT_ID
-    # endif   // ifdef P104_USE_VERTICAL_FONT
+    # endif // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , P104_EXT_ASCII_FONT_ID
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , P104_ARABIC_FONT_ID
-    # endif   // ifdef P104_USE_ARABIC_FONT
+    # endif // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , P104_GREEK_FONT_ID
-    # endif   // ifdef P104_USE_GREEK_FONT
+    # endif // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , P104_KATAKANA_FONT_ID
-    # endif   // ifdef P104_USE_KATAKANA_FONT
+    # endif // ifdef P104_USE_KATAKANA_FONT
     };
 
     int layoutCount = 1;

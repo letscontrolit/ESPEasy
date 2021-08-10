@@ -34,7 +34,8 @@
 
 # define P104_ADD_SETTINGS_NOTES                            // Adds some notes on the Settings page
 
-# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) // To make it fit in the ESP8266 display build
+// To make it fit in the ESP8266 display build
+# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
 #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -98,9 +99,9 @@
 # define P104_USE_TOOLTIPS                   // Enable tooltips in UI
 
 # ifdef LIMIT_BUILD_SIZE
-#  ifdef P104_DEBUG
-#   undef P104_DEBUG
-#  endif // ifdef P104_DEBUG
+// #  ifdef P104_DEBUG
+// #   undef P104_DEBUG
+// #  endif // ifdef P104_DEBUG
 #  ifdef P104_DEBUG_DEV
 #   undef P104_DEBUG_DEV
 #  endif // ifdef P104_DEBUG_DEV
@@ -111,12 +112,12 @@
 #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #  endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-#  ifdef P104_USE_VERTICAL_FONT
-#   undef P104_USE_VERTICAL_FONT
-#  endif // ifdef P104_USE_VERTICAL_FONT
-#  ifdef P104_USE_EXT_ASCII_FONT
-#   undef P104_USE_EXT_ASCII_FONT
-#  endif // ifdef P104_USE_EXT_ASCII_FONT
+// #  ifdef P104_USE_VERTICAL_FONT
+// #   undef P104_USE_VERTICAL_FONT
+// #  endif // ifdef P104_USE_VERTICAL_FONT
+// #  ifdef P104_USE_EXT_ASCII_FONT
+// #   undef P104_USE_EXT_ASCII_FONT
+// #  endif // ifdef P104_USE_EXT_ASCII_FONT
 #  ifdef P104_USE_ARABIC_FONT
 #   undef P104_USE_ARABIC_FONT
 #  endif // ifdef P104_USE_ARABIC_FONT
