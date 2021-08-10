@@ -58,14 +58,14 @@ public:
   static String toString(IntervalTimer_e timer);
 
   enum class SchedulerTimerType_e {
-    SYSTEM_EVENT_QUEUE   = 0, // Not really a timer.
-    CONST_INTERVAL_TIMER = 1,
-    PLUGIN_TASK_TIMER    = 2,
-    TASK_DEVICE_TIMER    = 3,
-    GPIO_TIMER           = 4,
-    PLUGIN_TIMER         = 5,
-    RULES_TIMER          = 6,
-    REBOOT_TIMER         = 15 // Used to show intended reboot
+    SystemEventQueue       = 0, // Not really a timer.
+    ConstIntervalTimer     = 1,
+    PLUGIN_TIMER_IN_e      = 2, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+    TaskDeviceTimer        = 3, // Essentially calling PLUGIN_READ
+    GPIO_timer             = 4,
+    PLUGIN_ONLY_TIMER_IN_e = 5, // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+    RulesTimer             = 6,
+    IntendedReboot         = 15 // Used to show intended reboot
   };
 
   static const __FlashStringHelper* toString(SchedulerTimerType_e timerType);
