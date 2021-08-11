@@ -39,7 +39,8 @@ struct ControllerDelayHandlerStruct {
     max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
     delete_oldest(false),
     must_check_reply(false),
-    deduplicate(false) {}
+    deduplicate(false),
+    useLocalSystemTime(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
@@ -48,6 +49,7 @@ struct ControllerDelayHandlerStruct {
     delete_oldest          = settings.DeleteOldest;
     must_check_reply       = settings.MustCheckReply;
     deduplicate            = settings.deduplicate();
+    useLocalSystemTime          = settings.useLocalSystemTime();
     if (settings.allowExpire()) {
       expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
       if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
@@ -266,6 +268,7 @@ struct ControllerDelayHandlerStruct {
   bool          delete_oldest;
   bool          must_check_reply;
   bool          deduplicate;
+  bool          useLocalSystemTime;
 };
 
 
