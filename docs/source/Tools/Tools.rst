@@ -89,6 +89,20 @@ For the best performance the log level on all output directions should be set as
 Info
 ====
 
+The ``sysinfo`` page does show a lot of information about the system.
+
+* Unit Number: The assigned unit number of the node.
+* Local Time:	The local time as known by the node. This includes any set timezone and DST (Daylight Saving).
+* Time Source:	The origin of the current system time. (e.g. NTP / GPS / Manual set)
+* Time Wander:	Time drift of the crystal in msec/sec. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.
+* Uptime:	Current uptime of the node
+* Load:	CPU load in percent. ``LC`` is the number of calls to the ``loop()`` function per second.
+* CPU Eco Mode:	Whether the ECO mode is enabled or not.
+* Boot:	e.g. ``Manual Reboot (22)`` Stating the latest reboot reason and number of reboots since power on.
+* Reset Reason:	More extensive last reboot reason.
+* Last Action before Reboot:	Some indicator of the last action performed before the last reboot.
+* SW WD count:	Counter of the number of reboots triggered by the Software Watchdog. (not reliable at this moment)
+
 Advanced
 ========
 
