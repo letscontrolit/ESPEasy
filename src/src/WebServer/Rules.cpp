@@ -66,7 +66,7 @@ void handle_rules() {
   html_table_header(F("Rules"));
 
   html_TR_TD();
-  addHtml(F("<form name = 'frmselect'>"));
+  html_add_form();
   {
     // Place combo box in its own scope to release these arrays as soon as possible
     uint8_t   choice = rulesSet;
