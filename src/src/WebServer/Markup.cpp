@@ -90,6 +90,33 @@ void addSelector(const String             & id,
   addSelector_Foot();
 }
 
+void addSelector_reloadOnChange(
+                 const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 const String& onChangeCall,
+                 bool          enabled,
+                 const String& classname
+                 #ifdef        ENABLE_TOOLTIPS
+                 ,
+                 const String& tooltip
+                 #endif // ifdef ENABLE_TOOLTIPS
+                 )
+{
+  // FIXME TD-er Change boolean to disabled
+  do_addSelector_Head(id, classname, onChangeCall, !enabled
+                      #ifdef ENABLE_TOOLTIPS
+                      , tooltip
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
+}
+
+
 void addSelector(const String  & id,
                  int             optionCount,
                  const String    options[],
