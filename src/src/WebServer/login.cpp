@@ -55,6 +55,7 @@ void handle_login() {
     {
       WebLoggedIn      = true;
       WebLoggedInTimer = 0;
+      WebLoggedInClientIP = web_server.client().remoteIP();
       addHtml(F("<script>window.location = '.'</script>"));
     }
     else

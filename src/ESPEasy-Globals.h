@@ -94,6 +94,7 @@ extern float vcc;
 
 extern boolean WebLoggedIn;
 extern int WebLoggedInTimer;
+extern IPAddress WebLoggedInClientIP;
 
 
 extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.

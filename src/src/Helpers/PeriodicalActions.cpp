@@ -176,8 +176,10 @@ void runOncePerSecond()
   {
     if (WebLoggedIn)
       WebLoggedInTimer++;
-    if (WebLoggedInTimer > 300)
+    if (WebLoggedInTimer > 300) {
       WebLoggedIn = false;
+      WebLoggedInClientIP = IPAddress();
+    }
   }
 
   // I2C Watchdog feed
