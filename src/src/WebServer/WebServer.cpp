@@ -977,6 +977,11 @@ bool isLoggedIn(bool mustProvideLogin)
   if (!clientIPallowed()) { return false; }
 
   if (SecuritySettings.Password[0] == 0) { return true; }
+  
+  if (!mustProvideLogin) {
+    return false;
+  }
+  
   {
     String www_username = F(DEFAULT_ADMIN_USERNAME);
     if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
