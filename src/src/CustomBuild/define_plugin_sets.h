@@ -412,6 +412,10 @@ To create/register a plugin, you have to :
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
     #endif
+    #if USE_I2C_DEVICE_SCAN
+        #undef USE_I2C_DEVICE_SCAN
+        #define USE_I2C_DEVICE_SCAN     false   // turn feature off in OTA builds
+    #endif // if USE_I2C_DEVICE_SCAN
     #ifdef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
         #undef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif

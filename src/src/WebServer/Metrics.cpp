@@ -7,11 +7,12 @@
 # include "../../_Plugin_Helper.h"
 # include "../Helpers/ESPEasyStatistics.h"
 # include "../Static/WebStaticData.h"
-HELPERS_ESPEASY_MATH_H
+
+#ifdef WEBSERVER_METRICS
+
 #ifdef ESP32
 # include <esp_partition.h>
 #endif // ifdef ESP32
-
 
 void handle_metrics() {
     TXBuffer.startStream(F("text/plain"), F("*"));
@@ -71,12 +72,7 @@ void handle_metrics() {
       TXBuffer.endStream();
 }
 
-
-
-
 void handle_metrics_devices(){
-
-
     for (taskIndex_t x = 0; validTaskIndex(x); x++)
     {        
         const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
@@ -118,4 +114,4 @@ void handle_metrics_devices(){
          }
     }
 }
-
+#endif // WEBSERVER_METRICS
