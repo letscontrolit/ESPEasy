@@ -66,7 +66,10 @@ void handle_rules() {
   html_table_header(F("Rules"));
 
   html_TR_TD();
-  html_add_form();
+
+  // Need a separate script to only include the 'set' attribute and not also
+  // send the 'rules' as that will need a lot of memory on the ESP to process.
+  addHtml(F("<form id='rulesselect' name='rulesselect' method='get'>"));
   {
     // Place combo box in its own scope to release these arrays as soon as possible
     uint8_t   choice = rulesSet;
@@ -80,7 +83,16 @@ void handle_rules() {
       optionValues[x] = x + 1;
     }
 
-    addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
+    addSelector_reloadOnChange(
+      F("set"), 
+      RULESETS_MAX, 
+      options, 
+      optionValues, 
+      NULL, 
+      choice, 
+      F("return rules_set_onchange(rulesselect)"), 
+      true,
+      F("wide"));
     addHelpButton(F("Tutorial_Rules"));
     addRTDHelpButton(F("Rules/Rules.html"));
   }

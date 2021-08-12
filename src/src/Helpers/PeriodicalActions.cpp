@@ -172,16 +172,6 @@ void runOncePerSecond()
 //  unsigned long elapsed = micros() - start;
 
 
-  if (SecuritySettings.Password[0] != 0)
-  {
-    if (WebLoggedIn)
-      WebLoggedInTimer++;
-    if (WebLoggedInTimer > 300) {
-      WebLoggedIn = false;
-      WebLoggedInClientIP = IPAddress();
-    }
-  }
-
   // I2C Watchdog feed
   if (Settings.WDI2CAddress != 0)
   {

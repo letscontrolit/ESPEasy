@@ -25,10 +25,6 @@ unsigned long timerAwakeFromDeepSleep = 0;
 float vcc = -1.0f;
 #endif
 
-boolean WebLoggedIn = false;
-int WebLoggedInTimer = 300;
-IPAddress WebLoggedInClientIP;
-
 
 String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
 
