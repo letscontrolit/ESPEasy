@@ -1172,6 +1172,9 @@ To create/register a plugin, you have to :
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
+   #if !defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
+    #define LIMIT_BUILD_SIZE // Redice buildsize on ESP8266 to fit in all Display plugins
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1209,8 +1212,10 @@ To create/register a plugin, you have to :
     #define USES_P099   // XPT2046 Touchscreen
    #endif
    #ifndef USES_P109
-     // FIXME TD-er: Disabled for now, due to build size.
-     //#define USES_P109   // ThermoOLED
+     #define USES_P109   // ThermoOLED
+   #endif
+   #ifndef USES_P116
+     #define USES_P116   // ST7735/ST7789
    #endif
 #endif
 
