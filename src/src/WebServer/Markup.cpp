@@ -169,6 +169,7 @@ void addSelector_options(int optionCount, const __FlashStringHelper *options[], 
       attr_str = attr[x];
     }
     addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
+    if (x % 10 == 0) delay(0);
   }
 }
 
@@ -191,6 +192,7 @@ void addSelector_options(int optionCount, const String options[], const int indi
       attr_str = attr[x];
     }
     addSelector_Item(options[x], index, selectedIndex == index, false, attr_str);
+    if (x % 10 == 0) delay(0);
   }
 }
 
