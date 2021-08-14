@@ -4,8 +4,8 @@
 
 # include "../Helpers/Hardware.h"
 
-String                     P116_parseTemplate(String& tmpString,
-                                              uint8_t lineSize); // Forward declaration
+String P116_parseTemplate(String& tmpString,
+                          uint8_t lineSize); // Forward declaration
 
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
@@ -142,8 +142,11 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         } else {
           st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
         }
-        st7735->initR(initRoptions);        // initialize a ST7735s chip
-        st77xx = st7735;                    // pass pointer after initialization
+
+        if (st7735 != nullptr) {
+          st7735->initR(initRoptions); // initialize a ST7735s chip
+          st77xx = st7735;             // pass pointer after initialization
+        }
         break;
       }
       case ST77xx_type_e::ST7789vw_240x320: // ST7789vw 240x320
@@ -158,13 +161,15 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
         }
 
-        if (_device == ST77xx_type_e::ST7789vw_240x240) {
-          st7789->init(240, 240, SPI_MODE2);
+        if (st7789 != nullptr) {
+          if (_device == ST77xx_type_e::ST7789vw_240x240) {
+            st7789->init(240, 240, SPI_MODE2);
+          }
+          else if (_device == ST77xx_type_e::ST7789vw_240x280) {
+            st7789->init(240, 280, SPI_MODE2);
+          }
+          st77xx = st7789;
         }
-        else if (_device == ST77xx_type_e::ST7789vw_240x280) {
-          st7789->init(240, 280, SPI_MODE2);
-        }
-        st77xx = st7789;
         break;
       }
       case ST77xx_type_e::ST77xx_MAX:

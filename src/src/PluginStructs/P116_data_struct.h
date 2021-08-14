@@ -4,17 +4,19 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P116
 
-# include <Adafruit_GFX.h>                              // include Adafruit graphics library
-# include <Adafruit_ST77xx.h>                           // include Adafruit ST77xx TFT library
-# include <Adafruit_ST7735.h>                           // include Adafruit ST7735 TFT library
-# include <Adafruit_ST7789.h>                           // include Adafruit ST7789 TFT library
+# include <Adafruit_GFX.h>                  // include Adafruit graphics library
+# include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
+# include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
+# include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
 
-# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
+# include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper objecr
 
-# define P116_Nlines 24                                 // The number of different lines which can be displayed
+# define P116_Nlines 24                     // The number of different lines which can be displayed
 # define P116_Nchars 50
 
-# define P116_USE_ADA_GRAPHICS                          // Use AdaGFX_Helper for graphics support
+# ifdef PLUGIN_USES_ADAFRUITGFX
+#  define P116_USE_ADA_GRAPHICS                         // Use AdaGFX_Helper for graphics support
+# endif // ifdef PLUGIN_USES_ADAFRUITGFX
 
 # define P116_CONFIG_BUTTON_PIN         PCONFIG(0)      // Pin for display-button
 # define P116_CONFIG_DISPLAY_TIMEOUT    PCONFIG(1)      // Time-out when display-button is enable

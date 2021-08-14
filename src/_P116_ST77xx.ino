@@ -151,7 +151,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Clear display on exit"), F("p116_clearOnExit"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT));
 
       {
-        const __FlashStringHelper *commandTriggers[] = {
+        const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum!
           P116_CommandTrigger_toString(P116_CommandTrigger::tft),
           P116_CommandTrigger_toString(P116_CommandTrigger::st77xx),
           P116_CommandTrigger_toString(P116_CommandTrigger::st7735),
@@ -174,7 +174,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       # ifdef P116_USE_ADA_GRAPHICS
       addFormCheckBox(F("Text Coordinates in col/row"), F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-      addUnit(F("Default in pixels."));
+      addFormNote(F("Unchecked: Coordinates in pixels. Applies to 'txp' and 'txtfull' subcommands."));
       # endif // ifdef P116_USE_ADA_GRAPHICS
 
       addFormSubHeader(F("Content"));
