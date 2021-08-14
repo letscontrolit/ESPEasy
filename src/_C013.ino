@@ -163,7 +163,7 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void C013_sendUDP(uint8_t unit, uint8_t *data, uint8_t size)
+void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -217,14 +217,15 @@ void C013_Receive(struct EventStruct *event) {
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    if ((event->Data[1] > 1) && (event->Data[1] < 6))
+    if ((event->Data != nullptr) &&
+        (event->Data[1] > 1) && (event->Data[1] < 6))
     {
       String log = (F("C013 : msg "));
 
       for (uint8_t x = 1; x < 6; x++)
       {
         log += ' ';
-        log += (int)event->Data[x];
+        log += static_cast<int>(event->Data[x]);
       }
       addLog(LOG_LEVEL_DEBUG_MORE, log);
     }

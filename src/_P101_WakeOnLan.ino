@@ -171,8 +171,8 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      char   ipString[IP_BUFF_SIZE_P101]   = "";
-      char   macString[MAC_BUFF_SIZE_P101] = "";
+      char   ipString[IP_BUFF_SIZE_P101]   = {0};
+      char   macString[MAC_BUFF_SIZE_P101] = {0};
       char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
       String errorStr;
       String msgStr;
@@ -184,7 +184,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       uint8_t nameCode = safeName(event->TaskIndex);
 
       if ((nameCode == NAME_MISSING) || (nameCode == NAME_UNSAFE)) {               // Check to see if user submitted safe device name.
-        strcpy(ExtraTaskSettings.TaskDeviceName, (char *)(F(DEF_TASK_NAME_P101))); // Use default name.
+        strcpy(ExtraTaskSettings.TaskDeviceName, String(F(DEF_TASK_NAME_P101)).c_str()); // Use default name.
 
         if (nameCode == NAME_UNSAFE) {
           errorStr = F("ALERT, Renamed Unsafe Task Name. ");
@@ -200,7 +200,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (strlen(ipString) == 0) { // IP Address missing, use default value (without webform warning).
-        strcpy_P(ipString, (char *)(F(IP_STR_DEF_P101)));
+        strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
 
         msgStr  = wolStr;
         msgStr += F("Loaded Default IP = ");
@@ -208,7 +208,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_INFO, msgStr);
       }
       else if (strlen(ipString) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
-        strcpy_P(ipString, (char *)(F(IP_STR_DEF_P101)));
+        strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
 
         msgStr    = F("Provided IP Invalid (Using Default). ");
         errorStr += msgStr;
@@ -237,7 +237,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (strlen(macString) == 0) { // MAC Address missing, use default value.
-        strcpy_P(macString, (char *)(F(MAC_STR_DEF_P101)));
+        strcpy_P(macString, String(F(MAC_STR_DEF_P101)).c_str());
 
         msgStr    = F("MAC Address Not Provided, Populated with Zero Values. ");
         errorStr += msgStr;

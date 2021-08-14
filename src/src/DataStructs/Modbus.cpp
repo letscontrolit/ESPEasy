@@ -118,7 +118,8 @@ bool Modbus::handle() {
         rxValue = rxValue << 8;
         char a = ModbusClient->read();
         rxValue    = rxValue | a;
-        LogString += ((int)a);  LogString += (" ");
+        LogString += static_cast<int>(a);  
+        LogString += (" ");
       }
 
       switch (incomingValue) {

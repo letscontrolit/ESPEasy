@@ -335,7 +335,7 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
@@ -370,7 +370,7 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   float cos_h, cos_1047_h;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;

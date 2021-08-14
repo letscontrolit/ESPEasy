@@ -689,10 +689,10 @@ void ESPEasy_time::calcSunRiseAndSet() {
   float rise = 12 - da - eqt;
   float set  = 12 + da - eqt;
 
-  tsRise.tm_hour = (int)rise;
-  tsRise.tm_min  = (rise - (int)rise) * 60.0f;
-  tsSet.tm_hour  = (int)set;
-  tsSet.tm_min   = (set - (int)set) * 60.0f;
+  tsRise.tm_hour = rise;
+  tsRise.tm_min  = (rise - static_cast<int>(rise)) * 60.0f;
+  tsSet.tm_hour  = set;
+  tsSet.tm_min   = (set - static_cast<int>(set)) * 60.0f;
   tsRise.tm_mday = tsSet.tm_mday = tm.tm_mday;
   tsRise.tm_mon  = tsSet.tm_mon = tm.tm_mon;
   tsRise.tm_year = tsSet.tm_year = tm.tm_year;

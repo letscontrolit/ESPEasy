@@ -516,8 +516,8 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
               {
                 P109_setHeater(F("1"));
                 Plugin_109_changed = 1;
-              } else if (((((float)atemp - (float)Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]) >=
-                           (float)UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
+              } else if ((((static_cast<float>(atemp) - static_cast<float>(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) >=
+                           UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
                 P109_setHeater(F("0"));
                 Plugin_109_changed = 1;
               } else {
@@ -758,9 +758,9 @@ void P109_display_timeout() {
   if (UserVar[Plugin_109_varindex + 2] == 2) {
     if (Plugin_109_prev_timeout >= (UserVar[Plugin_109_varindex + 3] + 60)) {
       float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60;
-      String thour     = toString(((int)(timeinmin / 60)), 0);
+      String thour     = toString((static_cast<int>(timeinmin / 60)), 0);
       thour += F(":");
-      String thour2 = toString(((int)timeinmin % 60), 0);
+      String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
 
       if (thour2.length() < 2) {
         thour += "0" + thour2;

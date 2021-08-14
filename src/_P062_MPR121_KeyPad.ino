@@ -271,7 +271,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
 
         if (P062_data->readKey(key))
         {
-          UserVar[event->BaseVarIndex] = (float)key;
+          UserVar[event->BaseVarIndex] = key;
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
