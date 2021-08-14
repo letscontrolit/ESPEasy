@@ -12,15 +12,15 @@ String P116_parseTemplate(String& tmpString,
  ***************************************************************************/
 const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
   switch (device) {
-    case ST77xx_type_e::ST7735s_128x128: return F("ST7735s 128 x 128px");
-    case ST77xx_type_e::ST7735s_128x160: return F("ST7735s 128 x 160px");
-    case ST77xx_type_e::ST7735s_80x160: return F("ST7735s 80 x 160px");
-    case ST77xx_type_e::ST7789vw_240x320: return F("ST7789vw 240 x 320px");
-    case ST77xx_type_e::ST7789vw_240x240: return F("ST7789vw 240 x 240px");
-    case ST77xx_type_e::ST7789vw_240x280: return F("ST7789vw 240 x 280px");
+    case ST77xx_type_e::ST7735s_128x128: return F("ST7735 128 x 128px");
+    case ST77xx_type_e::ST7735s_128x160: return F("ST7735 128 x 160px");
+    case ST77xx_type_e::ST7735s_80x160: return F("ST7735 80 x 160px");
+    case ST77xx_type_e::ST7789vw_240x320: return F("ST7789 240 x 320px");
+    case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
+    case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
     case ST77xx_type_e::ST77xx_MAX: break;
   }
-  return F("Unsupported type");
+  return F("Unsupported type!");
 }
 
 /****************************************************************************
