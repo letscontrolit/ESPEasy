@@ -45,7 +45,7 @@ Each time a plugin sends data to this controller, a sample set is stored.
 
 A typical sample set contains:
 
-- UNIX timestamp
+- Timestamp (Default: Unix Time, but can be switched to "local time" in the controller settings)
 - task index delivering the data
 - 4 float values
 
@@ -63,7 +63,7 @@ Data Delivery
 
 The controller can deliver the data to:
 
-- JavaScript to process the data inside the browser. See the ``dump5.htm`` file in the ``misc`` folder.
+- JavaScript to process the data inside the browser. See the ``dump6.htm`` file in the ``misc`` folder.
 - Upload bin files to some server (HTTP post?) (TODO)
 - Provide a sample to any connected controller (TODO)
 - Do nothing and let some extern host pull the data from the node. (TODO)
@@ -73,7 +73,7 @@ The controller can deliver the data to:
 Fetch and Decode data in the browser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ``dump5.htm`` (in ``misc`` directory) file should be uploaded to the file system of the ESP.
+The ``dump6.htm`` (in ``misc`` directory) file should be uploaded to the file system of the ESP.
 When there are cache controller bin files present on the file system,
 open this htm file from the file browser in ESPEasy into a new tab in your browser.
 
