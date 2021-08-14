@@ -47,7 +47,7 @@ const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode) {
 void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                              uint8_t                    selectedIndex) {
   const int textModeCount                            = static_cast<int>(AdaGFXTextPrintMode::MAX);
-  const __FlashStringHelper *options3[textModeCount] = {
+  const __FlashStringHelper *options3[textModeCount] = { // Be sure to use all available modes from enum!
     getAdaGFXTextPrintMode(AdaGFXTextPrintMode::ContinueToNextLine),
     getAdaGFXTextPrintMode(AdaGFXTextPrintMode::TruncateExceedingMessage),
     getAdaGFXTextPrintMode(AdaGFXTextPrintMode::ClearThenTruncate)
@@ -81,7 +81,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
 }
 
 /****************************************************************************
- * parseCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
+ * processCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
  ***************************************************************************/
 bool AdafruitGFX_helper::processCommand(const String& string) {
   bool success = false;
@@ -93,11 +93,11 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
+  String log;
   String sParams[ADAGFX_PARSE_MAX_ARGS];
   int    nParams[ADAGFX_PARSE_MAX_ARGS];
   int    argCount = 0;
   bool   loop     = true;
-  String log;
 
   while (argCount < ADAGFX_PARSE_MAX_ARGS && loop) {
     sParams[argCount] = parseStringKeepCase(string, argCount + 3); // 0-offset + 1st and 2nd argument used by trigger/subcommand
@@ -133,26 +133,34 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (subcommand.equals(F("txt")))
+  if (subcommand.equals(F("txt"))) // txt: Print text at last cursor position, ends at next line!
   {
     for (uint8_t n = 0; n < argCount; n++) {
-      _display->print(sParams[n]); // write all pending cars
+      _display->print(sParams[n]);                         // write all pending cars
 
       if (n < argCount - 1) {
-        _display->print(' ');      // a space-separator if not at end
+        _display->print(' ');                              // a space-separator if not at end
       }
     }
-    _display->println();           // Next line
+    _display->println();                                   // Next line
   }
-  else if (subcommand.equals(F("txp")) && (argCount == 2))
+  else if (subcommand.equals(F("txp")) && (argCount == 2)) // txp: Text position
   {
-    if (_columnRowMode) {
-      _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
-    } else {
-      _display->setCursor(nParams[0], nParams[1]);
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1], _columnRowMode)) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      if (_columnRowMode) {
+        _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
+      } else {
+        _display->setCursor(nParams[0], nParams[1]);
+      }
     }
   }
-  else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2)))
+  else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
   {
     _fgcolor = parseColor(sParams[0]);
 
@@ -168,39 +176,75 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     _fontscaling = nParams[0];
     _display->setTextSize(_fontscaling);
   }
-  else if (subcommand.equals(F("txtfull")) && (argCount >= 3) && (argCount <= 6)) {
+  else if (subcommand.equals(F("txtfull")) && (argCount >= 3) && (argCount <= 6)) { // txtfull: Text at position, with size and color
     switch (argCount) {
-      case 3: // single text
-        printText(sParams[2].c_str(),
-                  nParams[0] - _p095_compensation,
-                  nParams[1] - _p095_compensation,
-                  _fontscaling,
-                  _fgcolor,
-                  _bgcolor);
+      case 3:                                                                       // single text
+
+        # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+          success = false;
+        } else
+        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        {
+          printText(sParams[2].c_str(),
+                    nParams[0] - _p095_compensation,
+                    nParams[1] - _p095_compensation,
+                    _fontscaling,
+                    _fgcolor,
+                    _bgcolor);
+        }
         break;
       case 4: // text + size
-        printText(sParams[3].c_str(),
-                  nParams[0] - _p095_compensation,
-                  nParams[1] - _p095_compensation,
-                  nParams[2],
-                  _fgcolor,
-                  _bgcolor);
+
+        # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+          success = false;
+        } else
+        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        {
+          printText(sParams[3].c_str(),
+                    nParams[0] - _p095_compensation,
+                    nParams[1] - _p095_compensation,
+                    nParams[2],
+                    _fgcolor,
+                    _bgcolor);
+        }
         break;
       case 5: // text + size + color
-        printText(sParams[4].c_str(),
-                  nParams[0] - _p095_compensation,
-                  nParams[1] - _p095_compensation,
-                  nParams[2],
-                  parseColor(sParams[3]),
-                  _bgcolor);
+
+        # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+          success = false;
+        } else
+        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        {
+          printText(sParams[4].c_str(),
+                    nParams[0] - _p095_compensation,
+                    nParams[1] - _p095_compensation,
+                    nParams[2],
+                    parseColor(sParams[3]),
+                    _bgcolor);
+        }
         break;
       case 6: // text + size + color + bkcolor
-        printText(sParams[5].c_str(),
-                  nParams[0] - _p095_compensation,
-                  nParams[1] - _p095_compensation,
-                  nParams[2],
-                  parseColor(sParams[3]),
-                  parseColor(sParams[4]));
+
+        # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+          success = false;
+        } else
+        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        {
+          printText(sParams[5].c_str(),
+                    nParams[0] - _p095_compensation,
+                    nParams[1] - _p095_compensation,
+                    nParams[2],
+                    parseColor(sParams[3]),
+                    parseColor(sParams[4]));
+        }
         break;
       default:
         success = false;
@@ -211,7 +255,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   {
     _display->fillScreen(ADAGFX_BLACK);
   }
-  else if (subcommand.equals(F("font")) && (argCount == 1)) {
+  else if (subcommand.equals(F("font")) && (argCount == 1)) { // font: Change font
     # ifdef ADAGFX_FONTS_INCLUDED
     sParams[0].toLowerCase();
 
@@ -301,76 +345,192 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     success = false;
     # endif // ifdef ADAGFX_FONTS_INCLUDED
   }
-  else if (subcommand.equals(F("l")) && (argCount == 5)) {  // line
-    _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
-  }
-  else if (subcommand.equals(F("lh")) && (argCount == 3)) { // Horizontal line
-    _display->drawFastHLine(0, nParams[0], nParams[1], parseColor(sParams[2]));
-  }
-  else if (subcommand.equals(F("lv")) && (argCount == 3)) { // Vertical line
-    _display->drawFastVLine(nParams[0], 0, nParams[1], parseColor(sParams[2]));
-  }
-  else if (subcommand.equals(F("r")) && (argCount == 5)) {  // Rectangle
-    _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
-  }
-  else if (subcommand.equals(F("rf")) && (argCount == 6)) { // Rectangled, filled
-    _display->fillRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[5]));
-    _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
-  }
-  else if (subcommand.equals(F("c")) && (argCount == 4)) {  // Circle
-    _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
-  }
-  else if (subcommand.equals(F("cf")) && (argCount == 5)) { // Circle, filled
-    _display->fillCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[4]));
-    _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
-  }
-  else if (subcommand.equals(F("t")) && (argCount == 7)) {  // Triangle
-    _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
-  }
-  else if (subcommand.equals(F("tf")) && (argCount == 8)) { // Triangle, filled
-    _display->fillTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[7]));
-    _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
-  }
-  else if (subcommand.equals(F("rr")) && (argCount == 6)) {  // Rounded rectangle
-    _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
-  }
-  else if (subcommand.equals(F("rrf")) && (argCount == 7)) { // Rounded rectangled, filled
-    _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[6]));
-    _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
-  }
-  else if (subcommand.equals(F("px")) && (argCount == 3)) {                                  // Pixel
-    _display->drawPixel(nParams[0], nParams[1], parseColor(sParams[2]));
-  }
-  else if ((subcommand.equals(F("pxh")) || subcommand.equals(F("pxv"))) && (argCount > 2)) { // Pixels, hor./vert. incremented
-    _display->startWrite();                                                                  // merged loop is smaller than 2 separate loops
-    _display->writePixel(nParams[0], nParams[1], parseColor(sParams[2]));
-    loop = true;
-    uint8_t h = 0;
-    uint8_t v = 0;
+  else if (subcommand.equals(F("l")) && (argCount == 5)) { // l: Line
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
 
-    if (subcommand.equals(F("pxh"))) {
-      h++;
-    } else {
-      v++;
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
     }
+  }
+  else if (subcommand.equals(F("lh")) && (argCount == 3)) { // lh: Horizontal line
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
 
-    while (loop) {
-      String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed
+    if (invalidCoordinates(nParams[0], nParams[1])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawFastHLine(0, nParams[0], nParams[1], parseColor(sParams[2]));
+    }
+  }
+  else if (subcommand.equals(F("lv")) && (argCount == 3)) { // lv: Vertical line
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
 
-      if (color.isEmpty()) {
-        loop = false;
+    if (invalidCoordinates(nParams[0], nParams[1])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawFastVLine(nParams[0], 0, nParams[1], parseColor(sParams[2]));
+    }
+  }
+  else if (subcommand.equals(F("r")) && (argCount == 5)) { // r: Rectangle
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
+    }
+  }
+  else if (subcommand.equals(F("rf")) && (argCount == 6)) { // rf: Rectangled, filled
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->fillRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[5]));
+      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
+    }
+  }
+  else if (subcommand.equals(F("c")) && (argCount == 4)) { // c: Circle
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], 0)) { // Also check radius
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
+    }
+  }
+  else if (subcommand.equals(F("cf")) && (argCount == 5)) { // cf: Circle, filled
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], 0)) { // Also check radius
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->fillCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[4]));
+      _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
+    }
+  }
+  else if (subcommand.equals(F("t")) && (argCount == 7)) { // t: Triangle
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3]) ||
+        invalidCoordinates(nParams[4], nParams[5])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
+    }
+  }
+  else if (subcommand.equals(F("tf")) && (argCount == 8)) { // tf: Triangle, filled
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3]) ||
+        invalidCoordinates(nParams[4], nParams[5])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->fillTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[7]));
+      _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
+    }
+  }
+  else if (subcommand.equals(F("rr")) && (argCount == 6)) { // rr: Rounded rectangle
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3]) ||
+        invalidCoordinates(nParams[4], 0)) { // Also check radius
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
+    }
+  }
+  else if (subcommand.equals(F("rrf")) && (argCount == 7)) { // rrf: Rounded rectangle, filled
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[2], nParams[3])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[6]));
+      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
+    }
+  }
+  else if (subcommand.equals(F("px")) && (argCount == 3)) { // px: Pixel
+    # ifdef ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->drawPixel(nParams[0], nParams[1], parseColor(sParams[2]));
+    }
+  }
+  else if ((subcommand.equals(F("pxh")) || subcommand.equals(F("pxv"))) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert. incremented
+    # ifdef ADAGFX_ARGUMENT_VALIDATION                                                       // merged loop is smaller than 2 separate loops
+
+    if (invalidCoordinates(nParams[0], nParams[1])) {
+      success = false;
+    } else
+    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    {
+      _display->startWrite();
+      _display->writePixel(nParams[0], nParams[1], parseColor(sParams[2]));
+      loop = true;
+      uint8_t h = 0;
+      uint8_t v = 0;
+
+      if (subcommand.equals(F("pxh"))) {
+        h++;
       } else {
-        _display->writePixel(nParams[0] + h, nParams[1] + v, parseColor(color));
-
-        if (subcommand.equals(F("pxh"))) {
-          h++;
-        } else {
-          v++;
-        }
+        v++;
       }
-      delay(0);
+
+      while (loop) {
+        String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed
+
+        if (color.isEmpty()) {
+          loop = false;
+        } else {
+          _display->writePixel(nParams[0] + h, nParams[1] + v, parseColor(color));
+
+          if (subcommand.equals(F("pxh"))) {
+            h++;
+          } else {
+            v++;
+          }
+        }
+        delay(0);
+      }
+      _display->endWrite();
     }
-    _display->endWrite();
   } else {
     success = false;
   }
@@ -542,4 +702,30 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
   # endif // ifndef BUILD_NO_DEBUG
 }
 
-#endif // ifdef PLUGIN_USES_ADAFRUITGFX
+# ifdef ADAGFX_ARGUMENT_VALIDATION
+
+/****************************************************************************
+ * invalidCoordinates: Check if X/Y coordinates stay within the limits of the display,
+ * default pixel-mode, colRowMode true = character mode.
+ * If Y == 0 then X is allowed the max. value of the display size.
+ * *** Returns TRUE when invalid !! ***
+ ***************************************************************************/
+bool AdafruitGFX_helper::invalidCoordinates(int  X,
+                                            int  Y,
+                                            bool colRowMode) {
+  if (colRowMode) {
+    return !((X >= 0) && (X <= _textcols) &&
+             (Y >= 0) && (Y <= _textrows));
+  } else {
+    if (Y == 0) {
+      return !((X >= 0) && (X <= std::max(_res_x, _res_y)));
+    } else {
+      return !((X >= 0) && (X <= _res_x) &&
+               (Y >= 0) && (Y <= _res_y));
+    }
+  }
+}
+
+# endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+
+#endif  // ifdef PLUGIN_USES_ADAFRUITGFX

@@ -14,8 +14,9 @@
 # include "../Helpers/Numerical.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# define ADAGFX_PARSE_MAX_ARGS  8 // Maximum number of arguments needed and supported
-# define ADAGFX_FONTS_INCLUDED    // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+# define ADAGFX_PARSE_MAX_ARGS  8   // Maximum number of arguments needed and supported
+# define ADAGFX_ARGUMENT_VALIDATION // Validate command arguments
+# define ADAGFX_FONTS_INCLUDED      // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 // #define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
 // #define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
 
@@ -35,9 +36,14 @@
 # define ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
 # define ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 
-# if defined(LIMIT_BUILD_SIZE) && defined(ADAGFX_FONTS_INCLUDED)
-#  undef ADAGFX_FONTS_INCLUDED
-# endif // if defined(LIMIT_BUILD_SIZE) && defined(ADAGFX_FONTS_INCLUDED)
+# ifdef LIMIT_BUILD_SIZE
+#  ifdef ADAGFX_FONTS_INCLUDED
+#   undef ADAGFX_FONTS_INCLUDED
+#  endif // ifdef ADAGFX_FONTS_INCLUDED
+#  ifdef ADAGFX_ARGUMENT_VALIDATION
+#   undef ADAGFX_ARGUMENT_VALIDATION
+#  endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+# endif  // ifdef LIMIT_BUILD_SIZE
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
@@ -119,6 +125,12 @@ public:
   }
 
 private:
+
+  # ifdef ADAGFX_ARGUMENT_VALIDATION
+  bool invalidCoordinates(int  X,
+                           int  Y,
+                           bool colRowMode = false);
+  # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
 
   Adafruit_GFX *_display;
   String _trigger;
