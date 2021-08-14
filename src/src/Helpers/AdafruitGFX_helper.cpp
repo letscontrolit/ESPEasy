@@ -713,6 +713,24 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
 bool AdafruitGFX_helper::invalidCoordinates(int  X,
                                             int  Y,
                                             bool colRowMode) {
+  #  ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+
+    log.reserve(49);
+    log  = F("invalidCoordinates: X:");
+    log += X;
+    log += '/';
+    log += (colRowMode ? _textcols : _res_x);
+    log += F(" Y:");
+    log += Y;
+    log += '/';
+    log += (colRowMode ? _textrows : _res_y);
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  #  endif // ifndef BUILD_NO_DEBUG
+
   if (colRowMode) {
     return !((X >= 0) && (X <= _textcols) &&
              (Y >= 0) && (Y <= _textrows));
