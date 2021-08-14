@@ -46,19 +46,19 @@ const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode) {
  ****************************************************************************************/
 void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                              uint8_t                    selectedIndex) {
-  const int textModeCount                            = static_cast<int>(AdaGFXTextPrintMode::MAX);
-  const __FlashStringHelper *options3[textModeCount] = { // Be sure to use all available modes from enum!
+  const int textModeCount                             = static_cast<int>(AdaGFXTextPrintMode::MAX);
+  const __FlashStringHelper *textModes[textModeCount] = { // Be sure to use all available modes from enum!
     getAdaGFXTextPrintMode(AdaGFXTextPrintMode::ContinueToNextLine),
     getAdaGFXTextPrintMode(AdaGFXTextPrintMode::TruncateExceedingMessage),
     getAdaGFXTextPrintMode(AdaGFXTextPrintMode::ClearThenTruncate)
   };
-  const int optionValues3[textModeCount] = {
+  const int textModeOptions[textModeCount] = {
     static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
     static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage),
     static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate)
   };
 
-  addFormSelector(F("Text print Mode"), id, textModeCount, options3, optionValues3, selectedIndex);
+  addFormSelector(F("Text print Mode"), id, textModeCount, textModes, textModeOptions, selectedIndex);
 }
 
 // AdafruitGFX_helper class methods

@@ -128,8 +128,8 @@ private:
 
   # ifdef ADAGFX_ARGUMENT_VALIDATION
   bool invalidCoordinates(int  X,
-                           int  Y,
-                           bool colRowMode = false);
+                          int  Y,
+                          bool colRowMode = false);
   # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
 
   Adafruit_GFX *_display;
