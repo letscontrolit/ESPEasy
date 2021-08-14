@@ -447,12 +447,20 @@ int getUptimeMinutes() {
 /******************************************************************************
  * scan an int array of specified size for a value
  *****************************************************************************/
-bool intArrayContains(const int arraySize, const int array[], const int value){
+bool intArrayContains(const int arraySize, const int array[], const int& value){
   for(int i = 0; i < arraySize; i++) {
     if (array[i] == value) return true;
   }
   return false;
 }
+
+bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t& value) {
+  for(int i = 0; i < arraySize; i++) {
+    if (array[i] == value) return true;
+  }
+  return false;
+}
+
 
 #ifndef BUILD_NO_RAM_TRACKER
 void logMemUsageAfter(const __FlashStringHelper * function, int value) {
