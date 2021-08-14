@@ -146,12 +146,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("txp")) && (argCount == 2)) // txp: Text position
   {
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1], _columnRowMode)) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       if (_columnRowMode) {
         _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
@@ -180,12 +180,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     switch (argCount) {
       case 3:                                                                       // single text
 
-        # ifdef ADAGFX_ARGUMENT_VALIDATION
+        # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
           success = false;
         } else
-        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[2].c_str(),
                     nParams[0] - _p095_compensation,
@@ -197,12 +197,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         break;
       case 4: // text + size
 
-        # ifdef ADAGFX_ARGUMENT_VALIDATION
+        # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
           success = false;
         } else
-        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[3].c_str(),
                     nParams[0] - _p095_compensation,
@@ -214,12 +214,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         break;
       case 5: // text + size + color
 
-        # ifdef ADAGFX_ARGUMENT_VALIDATION
+        # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
           success = false;
         } else
-        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[4].c_str(),
                     nParams[0] - _p095_compensation,
@@ -231,12 +231,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         break;
       case 6: // text + size + color + bkcolor
 
-        # ifdef ADAGFX_ARGUMENT_VALIDATION
+        # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, true)) {
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
           success = false;
         } else
-        # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[5].c_str(),
                     nParams[0] - _p095_compensation,
@@ -346,160 +346,161 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // ifdef ADAGFX_FONTS_INCLUDED
   }
   else if (subcommand.equals(F("l")) && (argCount == 5)) { // l: Line
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], nParams[3])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
     }
   }
   else if (subcommand.equals(F("lh")) && (argCount == 3)) { // lh: Horizontal line
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawFastHLine(0, nParams[0], nParams[1], parseColor(sParams[2]));
     }
   }
   else if (subcommand.equals(F("lv")) && (argCount == 3)) { // lv: Vertical line
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawFastVLine(nParams[0], 0, nParams[1], parseColor(sParams[2]));
     }
   }
   else if (subcommand.equals(F("r")) && (argCount == 5)) { // r: Rectangle
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], nParams[3])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
     }
   }
   else if (subcommand.equals(F("rf")) && (argCount == 6)) { // rf: Rectangled, filled
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], nParams[3])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->fillRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[5]));
       _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
     }
   }
   else if (subcommand.equals(F("c")) && (argCount == 4)) { // c: Circle
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], 0)) { // Also check radius
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
     }
   }
   else if (subcommand.equals(F("cf")) && (argCount == 5)) { // cf: Circle, filled
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], 0)) { // Also check radius
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->fillCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[4]));
       _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
     }
   }
   else if (subcommand.equals(F("t")) && (argCount == 7)) { // t: Triangle
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], nParams[3]) ||
         invalidCoordinates(nParams[4], nParams[5])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
     }
   }
   else if (subcommand.equals(F("tf")) && (argCount == 8)) { // tf: Triangle, filled
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], nParams[3]) ||
         invalidCoordinates(nParams[4], nParams[5])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->fillTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[7]));
       _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
     }
   }
   else if (subcommand.equals(F("rr")) && (argCount == 6)) { // rr: Rounded rectangle
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
         invalidCoordinates(nParams[2], nParams[3]) ||
         invalidCoordinates(nParams[4], 0)) { // Also check radius
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
     }
   }
   else if (subcommand.equals(F("rrf")) && (argCount == 7)) { // rrf: Rounded rectangle, filled
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3])) {
+        invalidCoordinates(nParams[2], nParams[3]) ||
+        invalidCoordinates(nParams[4], 0)) { // Also check radius
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[6]));
       _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
     }
   }
   else if (subcommand.equals(F("px")) && (argCount == 3)) { // px: Pixel
-    # ifdef ADAGFX_ARGUMENT_VALIDATION
+    # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawPixel(nParams[0], nParams[1], parseColor(sParams[2]));
     }
   }
   else if ((subcommand.equals(F("pxh")) || subcommand.equals(F("pxv"))) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert. incremented
-    # ifdef ADAGFX_ARGUMENT_VALIDATION                                                       // merged loop is smaller than 2 separate loops
+    # if ADAGFX_ARGUMENT_VALIDATION                                                          // merged loop is smaller than 2 separate loops
 
     if (invalidCoordinates(nParams[0], nParams[1])) {
       success = false;
     } else
-    # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->startWrite();
       _display->writePixel(nParams[0], nParams[1], parseColor(sParams[2]));
@@ -573,43 +574,78 @@ uint16_t AdafruitGFX_helper::parseColor(String& string) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
-  if (s.equals(F("black"))) { result = ADAGFX_BLACK; }
+  if ((_colorDepth == AdafruitGFX_helper::ColorDepth::Monochrome) ||
+      (_colorDepth == AdafruitGFX_helper::ColorDepth::Duochrome) ||
+      (_colorDepth == AdafruitGFX_helper::ColorDepth::Quadrochrome)) { // Only a limited set of colors is supported
+    if (s.equals(F("black")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK); }
 
-  if (s.equals(F("navy"))) { result = ADAGFX_NAVY; }
+    if (s.equals(F("white")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE); }
 
-  if (s.equals(F("darkgreen"))) { result = ADAGFX_DARKGREEN; }
+    if (s.equals(F("inverse"))) { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_INVERSE); }
 
-  if (s.equals(F("darkcyan"))) { result = ADAGFX_DARKCYAN; }
+    if (s.equals(F("red")))     { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_RED); }
 
-  if (s.equals(F("maroon"))) { result = ADAGFX_MAROON; }
+    if (s.equals(F("dark")))    { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_DARK); }
 
-  if (s.equals(F("purple"))) { result = ADAGFX_PURPLE; }
+    if (s.equals(F("light")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_LIGHT); }
 
-  if (s.equals(F("olive"))) { result = ADAGFX_OLIVE; }
+    // If we get this far, return the default
+    return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE);
+  # if ADAGFX_SUPPORT_7COLOR
+  } else if (_colorDepth == AdafruitGFX_helper::ColorDepth::Septochrome) {
+    if (s.equals(F("black")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); }
 
-  if (s.equals(F("lightgrey"))) { result = ADAGFX_LIGHTGREY; }
+    if (s.equals(F("white")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); }
 
-  if (s.equals(F("darkgrey"))) { result = ADAGFX_DARKGREY; }
+    if (s.equals(F("green")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN); }
 
-  if (s.equals(F("blue"))) { result = ADAGFX_BLUE; }
+    if (s.equals(F("blue")))   { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE); }
 
-  if (s.equals(F("green"))) { result = ADAGFX_GREEN; }
+    if (s.equals(F("red")))    { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED); }
 
-  if (s.equals(F("cyan"))) { result = ADAGFX_CYAN; }
+    if (s.equals(F("yellow"))) { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_YELLOW); }
 
-  if (s.equals(F("red"))) { result = ADAGFX_RED; }
+    if (s.equals(F("orange"))) { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_ORANGE); }
+  # endif // if ADAGFX_SUPPORT_7COLOR
+  } else { // Some predefined colors
+    if (s.equals(F("black")))       { result = ADAGFX_BLACK; }
 
-  if (s.equals(F("magenta"))) { result = ADAGFX_MAGENTA; }
+    if (s.equals(F("navy")))        { result = ADAGFX_NAVY; }
 
-  if (s.equals(F("yellow"))) { result = ADAGFX_YELLOW; }
+    if (s.equals(F("darkgreen")))   { result = ADAGFX_DARKGREEN; }
 
-  if (s.equals(F("white"))) { result = ADAGFX_WHITE; }
+    if (s.equals(F("darkcyan")))    { result = ADAGFX_DARKCYAN; }
 
-  if (s.equals(F("orange"))) { result = ADAGFX_ORANGE; }
+    if (s.equals(F("maroon")))      { result = ADAGFX_MAROON; }
 
-  if (s.equals(F("greenyellow"))) { result = ADAGFX_GREENYELLOW; }
+    if (s.equals(F("purple")))      { result = ADAGFX_PURPLE; }
 
-  if (s.equals(F("pink"))) { result = ADAGFX_PINK; }
+    if (s.equals(F("olive")))       { result = ADAGFX_OLIVE; }
+
+    if (s.equals(F("lightgrey")))   { result = ADAGFX_LIGHTGREY; }
+
+    if (s.equals(F("darkgrey")))    { result = ADAGFX_DARKGREY; }
+
+    if (s.equals(F("blue")))        { result = ADAGFX_BLUE; }
+
+    if (s.equals(F("green")))       { result = ADAGFX_GREEN; }
+
+    if (s.equals(F("cyan")))        { result = ADAGFX_CYAN; }
+
+    if (s.equals(F("red")))         { result = ADAGFX_RED; }
+
+    if (s.equals(F("magenta")))     { result = ADAGFX_MAGENTA; }
+
+    if (s.equals(F("yellow")))      { result = ADAGFX_YELLOW; }
+
+    if (s.equals(F("white")))       { result = ADAGFX_WHITE; }
+
+    if (s.equals(F("orange")))      { result = ADAGFX_ORANGE; }
+
+    if (s.equals(F("greenyellow"))) { result = ADAGFX_GREENYELLOW; }
+
+    if (s.equals(F("pink")))        { result = ADAGFX_PINK; }
+  }
 
   // Parse default hex #rgb565 (hex) string (1-4 hex nibbles accepted!)
   if ((result == -1) && (s.length() >= 2) && (s.length() <= 5) && (s[0] == '#')) {
@@ -630,44 +666,88 @@ uint16_t AdafruitGFX_helper::parseColor(String& string) {
 
   if (result == -1) {
     result = ADAGFX_WHITE; // fallback value
-  }
-
-  switch (_colorDepth) {
-    case ColorDepth::Monochrome:
-
-      if ((result != ADAGFX_WHITE) && (result != ADAGFX_BLACK)) {
-        result = ADAGFX_WHITE;
-      }
-      break;
-    case ColorDepth::Duochrome:
-
-      if ((result != ADAGFX_WHITE) && (result != ADAGFX_BLACK)) {
-        result = ADAGFX_LIGHTGREY;
-      }
-      break;
-    case ColorDepth::Quadrochrome:
-
-      if ((result != ADAGFX_WHITE) && (result != ADAGFX_BLACK)) {
-        if (result > ADAGFX_LIGHTGREY) {
-          result = ADAGFX_LIGHTGREY;
-        } else if (result > ADAGFX_DARKGREY) {
-          result = ADAGFX_DARKGREY;
-        } else {
-          result = ADAGFX_BLACK;
-        }
-      }
-      break;
-    case ColorDepth::Octochrome:
-      result = color565((result >> 11) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
-      break;
-    case ColorDepth::Quintochrome:
-      result = color565((result >> 11) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
-      break;
-    case ColorDepth::FullColor:
-      break;
+  } else {
+    // Reduce colors?
+    switch (_colorDepth) {
+      case ColorDepth::Monochrome:
+      case ColorDepth::Duochrome:
+      case ColorDepth::Quadrochrome:
+        // Unsupported at this point, but compiler needs the cases because of the enum class
+        break;
+      # if ADAGFX_SUPPORT_7COLOR
+      case ColorDepth::Septochrome:
+        result = rgb565ToColor7(result); // Convert
+        break;
+      # endif // if ADAGFX_SUPPORT_7COLOR
+      case ColorDepth::Octochrome:
+        result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
+        break;
+      case ColorDepth::Quintochrome:
+        result = color565((result >> 11 & 0x1F) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
+        break;
+      case ColorDepth::FullColor:
+        // No color reduction
+        break;
+    }
   }
   return result;
 }
+
+# if ADAGFX_SUPPORT_7COLOR
+
+/****************************************************************************
+ * rgb565ToColor7: Convert a rgb565 color to the 7 colors supported by 7-color eInk displays
+ * Borrowed from https://github.com/ZinggJM/GxEPD2 color7() routine
+ ***************************************************************************/
+uint16_t AdafruitGFX_helper::rgb565ToColor7(uint16_t color) {
+  uint16_t cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); // Default = white
+
+  uint16_t red   = (color & 0xF800);
+  uint16_t green = (color & 0x07E0) << 5;
+  uint16_t blue  = (color & 0x001F) << 11;
+
+  if ((red < 0x8000) && (green < 0x8000) && (blue < 0x8000)) {
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); // black
+  }
+  else if ((red >= 0x8000) && (green >= 0x8000) && (blue >= 0x8000)) {
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); // white
+  }
+  else if ((red >= 0x8000) && (blue >= 0x8000)) {
+    if (red > blue) {
+      cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED);
+    } else {
+      cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE); // red, blue
+    }
+  }
+  else if ((green >= 0x8000) && (blue >= 0x8000)) {
+    if (green > blue) {
+      cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN);
+    } else {
+      cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE); // green, blue
+    }
+  }
+  else if ((red >= 0x8000) && (green >= 0x8000)) {
+    static const uint16_t y2o_lim = ((ADAGFX_YELLOW - ADAGFX_ORANGE) / 2 + (ADAGFX_ORANGE & 0x07E0)) << 5;
+
+    if (green > y2o_lim) {
+      cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_YELLOW);
+    } else {
+      cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_ORANGE); // yellow, orange
+    }
+  }
+  else if (red >= 0x8000) {
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED);   // red
+  }
+  else if (green >= 0x8000) {
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN); // green
+  }
+  else {
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE);  // blue
+  }
+  return cv7;
+}
+
+# endif // if ADAGFX_SUPPORT_7COLOR
 
 /****************************************************************************
  * getTextMetrics: Returns the metrics related to current font
@@ -702,7 +782,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
   # endif // ifndef BUILD_NO_DEBUG
 }
 
-# ifdef ADAGFX_ARGUMENT_VALIDATION
+# if ADAGFX_ARGUMENT_VALIDATION
 
 /****************************************************************************
  * invalidCoordinates: Check if X/Y coordinates stay within the limits of the display,
@@ -744,6 +824,6 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
   }
 }
 
-# endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+# endif // if ADAGFX_ARGUMENT_VALIDATION
 
 #endif  // ifdef PLUGIN_USES_ADAFRUITGFX

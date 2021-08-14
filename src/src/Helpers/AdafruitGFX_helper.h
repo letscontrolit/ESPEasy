@@ -14,9 +14,14 @@
 # include "../Helpers/Numerical.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# define ADAGFX_PARSE_MAX_ARGS  8   // Maximum number of arguments needed and supported
-# define ADAGFX_ARGUMENT_VALIDATION // Validate command arguments
-# define ADAGFX_FONTS_INCLUDED      // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+# define ADAGFX_PARSE_MAX_ARGS        8 // Maximum number of arguments needed and supported
+# ifndef ADAGFX_ARGUMENT_VALIDATION
+#  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
+# endif // ifndef ADAGFX_ARGUMENT_VALIDATION
+# ifndef ADAGFX_SUPPORT_7COLOR
+#  define ADAGFX_SUPPORT_7COLOR       1 // Do we support 7-Color displays?
+# endif // ifndef ADAGFX_SUPPORT_7COLOR
+# define ADAGFX_FONTS_INCLUDED          // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 // #define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
 // #define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
 
@@ -67,6 +72,27 @@
 # define ADAGFX_GREENYELLOW  0xAFE5 ///< 173, 255,  41
 # define ADAGFX_PINK         0xFC18 ///< 255, 130, 198
 
+enum class AdaGFXMonoDuoQuadColors: uint16_t {
+  ADAGFXEPD_BLACK,                  ///< black color
+  ADAGFXEPD_WHITE,                  ///< white color
+  ADAGFXEPD_INVERSE,                ///< invert color
+  ADAGFXEPD_RED,                    ///< red color
+  ADAGFXEPD_DARK,                   ///< darker color
+  ADAGFXEPD_LIGHT                   ///< lighter color
+};
+
+# ifdef ADAGFX_SUPPORT_7COLOR
+enum class AdaGFX7Colors: uint16_t {
+  ADAGFX7C_BLACK,  ///< black color
+  ADAGFX7C_WHITE,  ///< white color
+  ADAGFX7C_GREEN,  ///< green color
+  ADAGFX7C_BLUE,   ///< blue color
+  ADAGFX7C_RED,    ///< red color
+  ADAGFX7C_YELLOW, ///< yellow color
+  ADAGFX7C_ORANGE  ///< orange color
+};
+# endif // ifdef ADAGFX_SUPPORT_7COLOR
+
 enum class AdaGFXTextPrintMode : uint8_t {
   ContinueToNextLine       = 0,
   TruncateExceedingMessage = 1,
@@ -83,12 +109,15 @@ class AdafruitGFX_helper {
 public:
 
   enum class ColorDepth : uint16_t {
-    Monochrome   = 2,     // Black & white
-    Duochrome    = 3,     // Black, white & grey
-    Quadrochrome = 4,     // Black, white, lightgrey & darkgrey
-    Octochrome   = 8,     // 8 regular colors
-    Quintochrome = 16,    // 16 colors
-    FullColor    = 0xFFFF // 65535 colors (max. supported by RGB565)
+    Monochrome   = 2,    // Black & white
+    Duochrome    = 3,    // Black, white & grey
+    Quadrochrome = 4,    // Black, white, lightgrey & darkgrey
+    # ifdef ADAGFX_SUPPORT_7COLOR
+    Septochrome = 7,     // Black, white, red, yellow, blue, green, orange
+    # endif // ifdef ADAGFX_SUPPORT_7COLOR
+    Octochrome   = 8,    // 8 regular colors
+    Quintochrome = 16,   // 16 colors
+    FullColor    = 65535 // 65535 colors (max. supported by RGB565)
   };
 
   AdafruitGFX_helper(Adafruit_GFX       *display,
@@ -115,8 +144,11 @@ public:
                       uint16_t& textrows,
                       uint8_t & fontwidth,
                       uint8_t & fontheight);
+  # if ADAGFX_SUPPORT_7COLOR
+  uint16_t rgb565ToColor7(uint16_t color);                    // Convert rgb565 color to 7-color
+  # endif // if ADAGFX_SUPPORT_7COLOR
 
-  void setP095TxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095 txtfull subcommands, uses offset -1
+  void     setP095TxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095 txtfull subcommands, uses offset -1
     _p095_compensation = compensation;
   }
 
@@ -126,11 +158,11 @@ public:
 
 private:
 
-  # ifdef ADAGFX_ARGUMENT_VALIDATION
+  # if ADAGFX_ARGUMENT_VALIDATION
   bool invalidCoordinates(int  X,
                           int  Y,
                           bool colRowMode = false);
-  # endif // ifdef ADAGFX_ARGUMENT_VALIDATION
+  # endif // if ADAGFX_ARGUMENT_VALIDATION
 
   Adafruit_GFX *_display;
   String _trigger;
