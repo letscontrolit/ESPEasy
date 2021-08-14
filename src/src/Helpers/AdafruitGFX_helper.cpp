@@ -1,4 +1,5 @@
 #include "../Helpers/AdafruitGFX_helper.h"
+#include "../../_Plugin_Helper.h"
 
 #ifdef PLUGIN_USES_ADAFRUITGFX
 

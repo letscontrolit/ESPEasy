@@ -1,6 +1,8 @@
 #ifndef HELPERS_ADAFRUITGFX_HELPER_H
 #define HELPERS_ADAFRUITGFX_HELPER_H
 
+#include "../../_Plugin_Helper.h"
+
 #ifdef PLUGIN_USES_ADAFRUITGFX
 
 /****************************************************************************

@@ -1408,7 +1408,7 @@ To create/register a plugin, you have to :
     #define USES_P115   // 
   #endif
   #ifndef USES_P116
-    #define USES_P116   // 
+    #define USES_P116   // ST7735/ST7789
   #endif
   #ifndef USES_P117
     #define USES_P117   // 
