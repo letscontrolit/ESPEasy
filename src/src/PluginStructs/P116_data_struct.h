@@ -5,6 +5,7 @@
 #ifdef USES_P116
 
 # include <Adafruit_GFX.h>                              // include Adafruit graphics library
+# include <Adafruit_ST77xx.h>                           // include Adafruit ST77xx TFT library
 # include <Adafruit_ST7735.h>                           // include Adafruit ST7735 TFT library
 # include <Adafruit_ST7789.h>                           // include Adafruit ST7789 TFT library
 
