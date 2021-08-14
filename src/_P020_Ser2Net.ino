@@ -109,7 +109,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
 
       addFormNumericBox(F("RX extra long messages (bytes)"), F("p020_rx_buffer"), P020_RX_BUFFER, 256, 1024);
-      addFormNote(F("Standard RX buffer 256B; higher value could be unstable; energy meeters could require 1024B"));
+      addFormNote(F("Standard RX buffer 256B; higher values could be unstable; energy meters could require 1024B"));
 
       success = true;
       break;
