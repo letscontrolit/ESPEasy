@@ -1,28 +1,31 @@
 #include "../Helpers/AdafruitGFX_helper.h"
-#include "../Helpers/StringConverter.h"
-#include "../WebServer/Markup_Forms.h"
 
-#ifdef ADAGFX_FONTS_INCLUDED
-# include "src/Static/Fonts/Seven_Segment24pt7b.h"
-# include "src/Static/Fonts/Seven_Segment18pt7b.h"
-# include "src/Static/Fonts/FreeSans9pt7b.h"
-# ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#  include "src/Static/Fonts/angelina8pt7b.h"
-#  include "src/Static/Fonts/NovaMono8pt7b.h"
-#  include "src/Static/Fonts/RepetitionScrolling8pt7b.h"
-#  include "src/Static/Fonts/unispace8pt7b.h"
-#  include "src/Static/Fonts/unispace_italic8pt7b.h"
-#  include "src/Static/Fonts/whitrabt8pt7b.h"
-# endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-# ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#  include "src/Static/Fonts/angelina12pt7b.h"
-#  include "src/Static/Fonts/NovaMono12pt7b.h"
-#  include "src/Static/Fonts/RepetitionScrolling12pt7b.h"
-#  include "src/Static/Fonts/unispace12pt7b.h"
-#  include "src/Static/Fonts/unispace_italic12pt7b.h"
-#  include "src/Static/Fonts/whitrabt12pt7b.h"
-# endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#endif  // ifdef ADAGFX_FONTS_INCLUDED
+#ifdef PLUGIN_USES_ADAFRUITGFX
+
+# include "../Helpers/StringConverter.h"
+# include "../WebServer/Markup_Forms.h"
+
+# ifdef ADAGFX_FONTS_INCLUDED
+#  include "src/Static/Fonts/Seven_Segment24pt7b.h"
+#  include "src/Static/Fonts/Seven_Segment18pt7b.h"
+#  include "src/Static/Fonts/FreeSans9pt7b.h"
+#  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#   include "src/Static/Fonts/angelina8pt7b.h"
+#   include "src/Static/Fonts/NovaMono8pt7b.h"
+#   include "src/Static/Fonts/RepetitionScrolling8pt7b.h"
+#   include "src/Static/Fonts/unispace8pt7b.h"
+#   include "src/Static/Fonts/unispace_italic8pt7b.h"
+#   include "src/Static/Fonts/whitrabt8pt7b.h"
+#  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#   include "src/Static/Fonts/angelina12pt7b.h"
+#   include "src/Static/Fonts/NovaMono12pt7b.h"
+#   include "src/Static/Fonts/RepetitionScrolling12pt7b.h"
+#   include "src/Static/Fonts/unispace12pt7b.h"
+#   include "src/Static/Fonts/unispace_italic12pt7b.h"
+#   include "src/Static/Fonts/whitrabt12pt7b.h"
+#  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+# endif  // ifdef ADAGFX_FONTS_INCLUDED
 
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
@@ -100,7 +103,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     validIntFromString(sParams[argCount], nParams[argCount]);
     loop = !sParams[argCount].isEmpty();
 
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       log  = ':';
@@ -109,13 +112,13 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       log += sParams[argCount];
       addLog(LOG_LEVEL_DEBUG_DEV, log);
     }
-    #endif // ifndef BUILD_NO_DEBUG
+    # endif // ifndef BUILD_NO_DEBUG
 
     if (loop) { argCount++; }
   }
   success = true; // If we get this far, we'll flip the flag if something wrong is found
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(90);
@@ -127,7 +130,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     log += string;
     addLog(LOG_LEVEL_INFO, log);
   }
-  #endif // ifndef BUILD_NO_DEBUG
+  # endif // ifndef BUILD_NO_DEBUG
 
   if (subcommand.equals(F("txt")))
   {
@@ -208,7 +211,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     _display->fillScreen(ADAGFX_BLACK);
   }
   else if (subcommand.equals(F("font")) && (argCount == 1)) {
-    #ifdef ADAGFX_FONTS_INCLUDED
+    # ifdef ADAGFX_FONTS_INCLUDED
     sParams[0].toLowerCase();
 
     if (sParams[0].equals(F("sevenseg24"))) {
@@ -222,82 +225,82 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       calculateTextMetrics(10, 21);
 
       // Extra 8pt fonts:
-    # ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+    #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
     } else if (sParams[0].equals(F("angelina8prop"))) { // Proportional font!
       _display->setFont(&angelina8pt7b);
       calculateTextMetrics(6, 16);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono8pt"))) {
       _display->setFont(&NovaMono8pt7b);
       calculateTextMetrics(9, 16);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
     } else if (sParams[0].equals(F("repetitionscrolling8pt"))) {
       _display->setFont(&RepetitionScrolling8pt7b);
       calculateTextMetrics(9, 16);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
     } else if (sParams[0].equals(F("unispace8pt"))) {
       _display->setFont(&unispace8pt7b);
       calculateTextMetrics(12, 24);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
     } else if (sParams[0].equals(F("unispaceitalic8pt"))) {
       _display->setFont(&unispace_italic8pt7b);
       calculateTextMetrics(12, 24);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
-    #  ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
     } else if (sParams[0].equals(F("whiterabbit8pt"))) {
       _display->setFont(&whitrabt8pt7b);
       calculateTextMetrics(12, 24);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
-    # endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+    #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
       // Extra 12pt fonts:
-    # ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+    #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     } else if (sParams[0].equals(F("angelina12prop"))) { // Proportional font!
       _display->setFont(&angelina12pt7b);
       calculateTextMetrics(8, 24);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono12pt"))) {
       _display->setFont(&NovaMono12pt7b);
       calculateTextMetrics(13, 34);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
     } else if (sParams[0].equals(F("repetitionscrolling12pt"))) {
       _display->setFont(&RepetitionScrolling12pt7b);
       calculateTextMetrics(13, 24);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
     } else if (sParams[0].equals(F("unispace12pt"))) {
       _display->setFont(&unispace12pt7b);
       calculateTextMetrics(13, 18);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
     } else if (sParams[0].equals(F("unispaceitalic12pt"))) {
       _display->setFont(&unispace_italic12pt7b);
       calculateTextMetrics(13, 18);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
-    #  ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
     } else if (sParams[0].equals(F("whiterabbir12pt"))) {
       _display->setFont(&whitrabt12pt7b);
       calculateTextMetrics(13, 18);
-    #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    # endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+    #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
     } else if (sParams[0].equals(F("default"))) { // font,default is always available!
       _display->setFont();
       calculateTextMetrics(6, 10);
     } else {
       success = false;
     }
-    #else // ifdef ADAGFX_FONTS_INCLUDED
+    # else // ifdef ADAGFX_FONTS_INCLUDED
     success = false;
-    #endif // ifdef ADAGFX_FONTS_INCLUDED
+    # endif // ifdef ADAGFX_FONTS_INCLUDED
   }
-  else if (subcommand.equals(F("l")) && (argCount == 5)) { // line
+  else if (subcommand.equals(F("l")) && (argCount == 5)) {  // line
     _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
   }
   else if (subcommand.equals(F("lh")) && (argCount == 3)) { // Horizontal line
@@ -524,7 +527,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
   _textcols   = _res_x / (_fontwidth * _fontscaling);
   _textrows   = _res_y / (_fontheight * _fontscaling);
 
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -535,5 +538,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
     log += _textrows;
     addLog(LOG_LEVEL_INFO, log);
   }
-  #endif // ifndef BUILD_NO_DEBUG
+  # endif // ifndef BUILD_NO_DEBUG
 }
+
+#endif // ifdef PLUGIN_USES_ADAFRUITGFX

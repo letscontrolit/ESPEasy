@@ -177,6 +177,7 @@
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+// #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 
 /*
  #######################################################################################################

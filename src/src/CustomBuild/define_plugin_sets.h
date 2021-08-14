@@ -1175,6 +1175,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
     #define LIMIT_BUILD_SIZE // Redice buildsize on ESP8266 to fit in all Display plugins
    #endif
+   #ifndef USES_ADAFRUITGFX_HELPER
+    #define USES_ADAFRUITGFX_HELPER
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1494,6 +1497,11 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
+  #ifndef PLUGIN_USES_ADAFRUITGFX
+    #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
+  #endif
+#endif
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)
