@@ -207,7 +207,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         log += sizeof(P062_data->StoredSettings);
         addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_062_DEBUG
-        SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P062_data->StoredSettings), sizeof(P062_data->StoredSettings));
+        SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P062_data->StoredSettings)), sizeof(P062_data->StoredSettings));
         if (!canCalibrate) {
           delete P062_data;
         } else {

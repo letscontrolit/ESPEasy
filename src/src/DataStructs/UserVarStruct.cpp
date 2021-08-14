@@ -89,5 +89,5 @@ size_t UserVarStruct::getNrElements() const
 
 uint8_t * UserVarStruct::get()
 {
-  return (uint8_t *)(&_data[0]);
+  return reinterpret_cast<uint8_t *>(&_data[0]);
 }

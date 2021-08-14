@@ -110,13 +110,13 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (destUnit != 0)
   {
     infoReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (uint8_t *)&infoReply, sizeof(C013_SensorInfoStruct));
+    C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
-        C013_sendUDP(it->first, (uint8_t *)&infoReply, sizeof(C013_SensorInfoStruct));
+        C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
         delay(10);
       }
     }
@@ -146,13 +146,13 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (destUnit != 0)
   {
     dataReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (uint8_t *)&dataReply, sizeof(C013_SensorDataStruct));
+    C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
-        C013_sendUDP(it->first, (uint8_t *)&dataReply, sizeof(C013_SensorDataStruct));
+        C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
         delay(10);
       }
     }
@@ -245,7 +245,7 @@ void C013_Receive(struct EventStruct *event) {
 
       if (event->Par2 < count) { count = event->Par2; }
 
-      memcpy((uint8_t *)&infoReply, (uint8_t *)event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&infoReply), event->Data, count);
 
       if (infoReply.isValid()) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
@@ -286,7 +286,7 @@ void C013_Receive(struct EventStruct *event) {
       int count = sizeof(C013_SensorDataStruct);
 
       if (event->Par2 < count) { count = event->Par2; }
-      memcpy((uint8_t *)&dataReply, (uint8_t *)event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&dataReply), event->Data, count);
 
       if (dataReply.isValid()) {
         // only if this task has a remote feed, update values

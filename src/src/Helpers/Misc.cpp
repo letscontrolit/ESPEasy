@@ -187,7 +187,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }

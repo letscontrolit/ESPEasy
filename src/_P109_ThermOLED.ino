@@ -179,7 +179,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       const int                  optionValues1[] = { 1, 2 };
       addFormSelector(F("Rotation"), F("plugin_109_rotate"), 2, options1, optionValues1, PCONFIG(1));
 
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       for (byte varNr = 0; varNr < P109_Nlines; varNr++)
       {
@@ -236,7 +236,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
         strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]));
       }
 
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       success = true;
       break;
@@ -247,7 +247,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       P109_lastWiFiState = P109_WIFI_STATE_UNSET;
 
       // Load the custom settings from flash
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       //      Init the display and turn it on
       if (P109_display)
@@ -300,7 +300,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
       if (f)
       {
-        f.read(((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16);
+        f.read(reinterpret_cast<uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
         f.close();
       }
       Plugin_109_lastsavetime = millis();
@@ -484,7 +484,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
             if (f)
             {
-              f.write(((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16);
+              f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
               f.close();
               flashCount();
             }

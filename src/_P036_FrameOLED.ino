@@ -446,7 +446,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
+          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_data->DisplayLinesV1)), sizeof(P036_data->DisplayLinesV1));
 
           // Need to delete the allocated object here
           delete P036_data;

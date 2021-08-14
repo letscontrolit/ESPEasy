@@ -262,7 +262,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // Save all the Task parameters.
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       UDP_PORT_P101 = getFormItemInt(F(FORM_PORT_P101));
       success       = true;
       break;
