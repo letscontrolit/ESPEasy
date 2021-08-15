@@ -8,6 +8,9 @@
 
 
 // History:
+// 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
+//                        P116: Use more features of AdafruitGFX_helper
+//                        AdafruitGFX: Apply 'Text Print Mode' options
 // 2021-08 tonhuisman: Refactor into AdafruitGFX_helper
 // 2021-08 tonhuisman: Continue development, added new features, font scaling, display limits, extra text lines
 //                     update to current ESPEasy state/style of development, make multi-instance possible
@@ -18,7 +21,8 @@
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
 # define PLUGIN_NAME_116       "Display - ST7735/ST7789 TFT [DEVELOPMENT]"
-# define PLUGIN_VALUENAME1_116 "TFT"
+# define PLUGIN_VALUENAME1_116 "CursorX"
+# define PLUGIN_VALUENAME2_116 "CursorY"
 
 # include "src/PluginStructs/P116_data_struct.h"
 
@@ -37,10 +41,14 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      # ifdef PLUGIN_USES_ADAFRUITGFX
+      Device[deviceCount].ValueCount = 2;
+      # else // ifdef PLUGIN_USES_ADAFRUITGFX
+      Device[deviceCount].ValueCount = 0;
+      # endif // ifdef PLUGIN_USES_ADAFRUITGFX
+      Device[deviceCount].SendDataOption = false;
+      Device[deviceCount].TimerOption    = true;
+      Device[deviceCount].TimerOptional  = true;
       break;
     }
 
@@ -53,14 +61,15 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_116));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_116));
       break;
     }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_output_optional(F("TFT CS"));
-      event->String2 = formatGpioName_output(F("TFT DC"));
-      event->String3 = formatGpioName_output_optional(F("TFT RST"));
+      event->String1 = formatGpioName_output_optional(F("CS "));
+      event->String2 = formatGpioName_output(F("DC"));
+      event->String3 = formatGpioName_output_optional(F("RST "));
       break;
     }
 
@@ -100,7 +109,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(formatGpioName_output_optional(F("Backlight")), F("p116_backlight"), P116_CONFIG_BACKLIGHT_PIN);
+      addFormPinSelect(formatGpioName_output_optional(F("Backlight ")), F("p116_backlight"), P116_CONFIG_BACKLIGHT_PIN);
       addFormNumericBox(F("Backlight percentage"), F("p116_backpercentage"), P116_CONFIG_BACKLIGHT_PERCENT, 1, 100);
       addUnit(F("1-100%"));
 
@@ -141,9 +150,11 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("TFT display model"), F("p116_type"), 6, options4, optionValues4, P116_CONFIG_FLAG_GET_TYPE);
       }
 
-      const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
-      const int optionValues5[]             = { 0, 1, 2, 3 };
-      addFormSelector(F("Rotation"), F("p116_rotate"), 4, options5, optionValues5, P116_CONFIG_FLAG_GET_ROTATION);
+      {
+        const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
+        const int optionValues5[]             = { 0, 1, 2, 3 };
+        addFormSelector(F("Rotation"), F("p116_rotate"), 4, options5, optionValues5, P116_CONFIG_FLAG_GET_ROTATION);
+      }
 
       addFormNumericBox(F("Font scaling"), F("p116_fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE, 1, 10);
       addUnit(F("1x..10x"));
@@ -174,7 +185,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       # ifdef P116_USE_ADA_GRAPHICS
       addFormCheckBox(F("Text Coordinates in col/row"), F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-      addFormNote(F("Unchecked: Coordinates in pixels. Applies to 'txp' and 'txtfull' subcommands."));
+      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp' and 'txtfull' subcommands."));
       # endif // ifdef P116_USE_ADA_GRAPHICS
 
       addFormSubHeader(F("Content"));

@@ -90,7 +90,9 @@ public:
                    uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
                    uint8_t             displayTimer,
-                   String              commandTrigger);
+                   String              commandTrigger,
+                   uint16_t            fgcolor = ADAGFX_WHITE,
+                   uint16_t            bgcolor = ADAGFX_BLACK);
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
@@ -129,6 +131,8 @@ private:
   AdaGFXTextPrintMode _textmode;
   uint8_t             _displayTimer;
   String              _commandTrigger;
+  uint16_t            _fgcolor;
+  uint16_t            _bgcolor;
 
   String _commandTriggerCmd;
 
