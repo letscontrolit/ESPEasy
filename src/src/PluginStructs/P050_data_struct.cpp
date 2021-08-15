@@ -45,27 +45,27 @@ void P050_data_struct::resetTransformation() {
  * applyTransformation : calibrate r/g/b inputs (uint16_t) to rc/gc/bc outputs (float, by reference)
  */
 void P050_data_struct::applyTransformation(uint16_t r, uint16_t g, uint16_t b, float *rc, float *gc, float *bc) {
-  *rc = TransformationSettings.matrix[0][0] * (float)r + TransformationSettings.matrix[0][1] * (float)g + TransformationSettings.matrix[0][2] * (float)b;
-  *gc = TransformationSettings.matrix[1][0] * (float)r + TransformationSettings.matrix[1][1] * (float)g + TransformationSettings.matrix[1][2] * (float)b;
-  *bc = TransformationSettings.matrix[2][0] * (float)r + TransformationSettings.matrix[2][1] * (float)g + TransformationSettings.matrix[2][2] * (float)b;
+  *rc = TransformationSettings.matrix[0][0] * static_cast<float>(r) + TransformationSettings.matrix[0][1] * static_cast<float>(g) + TransformationSettings.matrix[0][2] * static_cast<float>(b);
+  *gc = TransformationSettings.matrix[1][0] * static_cast<float>(r) + TransformationSettings.matrix[1][1] * static_cast<float>(g) + TransformationSettings.matrix[1][2] * static_cast<float>(b);
+  *bc = TransformationSettings.matrix[2][0] * static_cast<float>(r) + TransformationSettings.matrix[2][1] * static_cast<float>(g) + TransformationSettings.matrix[2][2] * static_cast<float>(b);
 }
 
 /**
  * applyTransformation : calibrate normalized r/g/b inputs (float) to rc/gc/bc outputs (float, by reference)
  */
 void P050_data_struct::applyTransformation(float nr, float ng, float nb, float *rc, float *gc, float *bc) {
-  *rc = TransformationSettings.matrix[0][0] * (float)nr + TransformationSettings.matrix[0][1] * (float)ng + TransformationSettings.matrix[0][2] * (float)nb;
-  *gc = TransformationSettings.matrix[1][0] * (float)nr + TransformationSettings.matrix[1][1] * (float)ng + TransformationSettings.matrix[1][2] * (float)nb;
-  *bc = TransformationSettings.matrix[2][0] * (float)nr + TransformationSettings.matrix[2][1] * (float)ng + TransformationSettings.matrix[2][2] * (float)nb;
+  *rc = TransformationSettings.matrix[0][0] * static_cast<float>(nr) + TransformationSettings.matrix[0][1] * static_cast<float>(ng) + TransformationSettings.matrix[0][2] * static_cast<float>(nb);
+  *gc = TransformationSettings.matrix[1][0] * static_cast<float>(nr) + TransformationSettings.matrix[1][1] * static_cast<float>(ng) + TransformationSettings.matrix[1][2] * static_cast<float>(nb);
+  *bc = TransformationSettings.matrix[2][0] * static_cast<float>(nr) + TransformationSettings.matrix[2][1] * static_cast<float>(ng) + TransformationSettings.matrix[2][2] * static_cast<float>(nb);
 }
 
 bool P050_data_struct::loadSettings(taskIndex_t taskIndex) {
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(TransformationSettings), sizeof(TransformationSettings));
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&TransformationSettings), sizeof(TransformationSettings));
   return  true;
 }
 
 bool P050_data_struct::saveSettings(taskIndex_t taskIndex) {
-  SaveCustomTaskSettings(taskIndex, (uint8_t *)&(TransformationSettings), sizeof(TransformationSettings));
+  SaveCustomTaskSettings(taskIndex, reinterpret_cast<const uint8_t *>(&TransformationSettings), sizeof(TransformationSettings));
   return true;
 }
 

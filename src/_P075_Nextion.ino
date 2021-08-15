@@ -167,7 +167,7 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
-//    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
+//    int datax = static_cast<int>(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
 //    String Data = "Debug. Plugin Enable State: ";
 //    Data += String(datax);
 //    addFormNote(Data);

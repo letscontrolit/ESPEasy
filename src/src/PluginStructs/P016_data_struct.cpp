@@ -107,7 +107,7 @@ void P016_data_struct::convertCommandLines(struct EventStruct *event) {
     CommandLinesV1.push_back(tCommandLines());
     LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
                  event->TaskIndex,
-                 (uint8_t *)&(CommandLinesV1[i]),
+                 reinterpret_cast<uint8_t *>(&(CommandLinesV1[i])),
                  sizeof(tCommandLines),
                  loadOffset);
     loadOffset += sizeof(tCommandLines);
@@ -146,7 +146,7 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
       CommandLines.push_back(tCommandLinesV2());
       LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
                    event->TaskIndex,
-                   (uint8_t *)&(CommandLines[i]),
+                   reinterpret_cast<uint8_t *>(&(CommandLines[i])),
                    sizeof(tCommandLinesV2),
                    loadOffset);
       loadOffset += sizeof(tCommandLinesV2);
@@ -164,7 +164,7 @@ void P016_data_struct::saveCommandLines(struct EventStruct *event) {
   for (uint8_t i = 0; i < P16_Nlines; i++) {
     SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
                event->TaskIndex,
-               (uint8_t *)&(CommandLines[i]),
+               reinterpret_cast<const uint8_t *>(&(CommandLines[i])),
                sizeof(tCommandLinesV2),
                saveOffset);
     saveOffset += sizeof(tCommandLinesV2);
