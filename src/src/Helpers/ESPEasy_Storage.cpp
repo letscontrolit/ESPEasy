@@ -391,7 +391,7 @@ String SaveSettings()
       uint8_t    tmp_md5[16] = { 0 };
       memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
       md5.begin();
-      md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
+      md5.add(reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings)-16);
       md5.calculate();
       md5.getBytes(tmp_md5);
       if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
@@ -399,7 +399,7 @@ String SaveSettings()
         memcpy(Settings.md5, tmp_md5, 16);
     */
     Settings.validate();
-    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (uint8_t *)&Settings, sizeof(Settings));
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
   }
 
   if (err.length()) {
@@ -424,14 +424,14 @@ String SaveSecuritySettings() {
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
-  md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings) - 16);
+  md5.add(reinterpret_cast<uint8_t *>(&SecuritySettings), static_cast<uint16_t>(sizeof(SecuritySettings) - 16));
   md5.calculate();
   md5.getBytes(tmp_md5);
 
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(SecuritySettings.md5, tmp_md5, 16);
-    err = SaveToFile((char *)FILE_SECURITY, 0, (uint8_t *)&SecuritySettings, sizeof(SecuritySettings));
+    err = SaveToFile((char *)FILE_SECURITY, 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
@@ -475,7 +475,7 @@ String LoadSettings()
   uint8_t calculatedMd5[16];
   MD5Builder md5;
 
-  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (uint8_t *)&Settings, sizeof(SettingsStruct));
+  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&Settings), sizeof(SettingsStruct));
 
   if (err.length()) {
     return err;
@@ -487,7 +487,7 @@ String LoadSettings()
   /*
      if (Settings.StructSize > 16) {
       md5.begin();
-      md5.add((uint8_t *)&Settings, Settings.StructSize -16);
+      md5.add(reinterpret_cast<const uint8_t *>(&Settings), Settings.StructSize -16);
       md5.calculate();
       md5.getBytes(calculatedMd5);
      }
@@ -501,9 +501,9 @@ String LoadSettings()
      }
    */
 
-  err = LoadFromFile((char *)FILE_SECURITY, 0, (uint8_t *)&SecuritySettings, sizeof(SecurityStruct));
+  err = LoadFromFile((char *)FILE_SECURITY, 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
   md5.begin();
-  md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings) - 16);
+  md5.add(reinterpret_cast< uint8_t *>(&SecuritySettings), sizeof(SecuritySettings) - 16);
   md5.calculate();
   md5.getBytes(calculatedMd5);
 
@@ -613,7 +613,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
   if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
 
-  char buffer[bufferSize];
+  char buffer[bufferSize] = {0};
 
   String   result;
   uint32_t readPos       = 0;
@@ -631,7 +631,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
       result += LoadFromFile(settingsType,
                             index,
-                            (uint8_t *)&buffer,
+                            reinterpret_cast<uint8_t *>(&buffer),
                             readSize,
                             readPos);
 
@@ -772,7 +772,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   }
   String err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                           TaskIndex,
-                          (uint8_t *)&ExtraTaskSettings,
+                          reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                           sizeof(struct ExtraTaskSettingsStruct));
 
   if (err.isEmpty()) {
@@ -799,7 +799,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   START_TIMER
   ExtraTaskSettings.clear();
-  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, (uint8_t *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -831,7 +831,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize)
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomTaskSettings"));
@@ -911,7 +911,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #endif
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
   return SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
-                    (uint8_t *)&controller_settings, sizeof(controller_settings));
+                    reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
 }
 
 /********************************************************************************************\
@@ -923,7 +923,7 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #endif
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
-                 (uint8_t *)&controller_settings, sizeof(controller_settings));
+                 reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
   return result;
 }
@@ -944,7 +944,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 /********************************************************************************************\
    Save Custom Controller settings to file system
  \*********************************************************************************************/
-String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *memAddress, int datasize)
+String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uint8_t *memAddress, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomControllerSettings"));
@@ -966,7 +966,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
-String SaveNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize)
+String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveNotificationSettings"));
@@ -1279,11 +1279,11 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   return LoadFromFile(settingsType, index, memAddress, datasize, 0);
 }
 
-String SaveToFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize) {
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize) {
   return SaveToFile(settingsType, index, memAddress, datasize, 0);
 }
 
-String SaveToFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int posInBlock) {
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock) {
   bool read = false;
   int  offset, max_size;
 

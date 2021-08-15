@@ -257,7 +257,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     hlwMultipliers[1] = getFormItemFloat(F("p076_voltmult"));
     hlwMultipliers[2] = getFormItemFloat(F("p076_powmult"));
     if (hlwMultipliers[0] > 1.0f && hlwMultipliers[1] > 1.0f && hlwMultipliers[2] > 1.0f) {
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&hlwMultipliers,
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                              sizeof(hlwMultipliers));
       if (PLUGIN_076_DEBUG) {
         addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
@@ -491,7 +491,7 @@ void Plugin076_SaveMultipliers() {
   if (StoredTaskIndex < 0) return; // Not yet initialized.
   double hlwMultipliers[3];
   if (Plugin076_ReadMultipliers(hlwMultipliers[0], hlwMultipliers[1], hlwMultipliers[2])) {
-    SaveCustomTaskSettings(StoredTaskIndex, (uint8_t *)&hlwMultipliers,
+    SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                            sizeof(hlwMultipliers));
   }
 }
@@ -517,7 +517,7 @@ bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& v
     return false;
   }
   double hlwMultipliers[3];
-  LoadCustomTaskSettings(TaskIndex, (uint8_t *)&hlwMultipliers,
+  LoadCustomTaskSettings(TaskIndex, reinterpret_cast<uint8_t *>(&hlwMultipliers),
                          sizeof(hlwMultipliers));
   if (hlwMultipliers[0] > 1.0f) {
     current = hlwMultipliers[0];

@@ -582,7 +582,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         if (!customConfig) {
           break;
         }
-        LoadCustomControllerSettings(event->ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C018_ConfigStruct));
+        LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C018_ConfigStruct));
         customConfig->validate();
         baudrate      = customConfig->baudrate;
         rxpin         = customConfig->rxpin;
@@ -745,7 +745,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         customConfig->stackVersion  = getFormItemInt(F("ttnstack"), customConfig->stackVersion);
         customConfig->adr           = isFormItemChecked(F("adr"));
         serialHelper_webformSave(customConfig->serialPort, customConfig->rxpin, customConfig->txpin);
-        SaveCustomControllerSettings(event->ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C018_ConfigStruct));
+        SaveCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(customConfig.get()), sizeof(C018_ConfigStruct));
       }
       break;
     }
@@ -878,7 +878,7 @@ bool C018_init(struct EventStruct *event) {
   if (!customConfig) {
     return false;
   }
-  LoadCustomControllerSettings(event->ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C018_ConfigStruct));
+  LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C018_ConfigStruct));
   customConfig->validate();
 
   if (!C018_data->init(customConfig->serialPort, customConfig->rxpin, customConfig->txpin, customConfig->baudrate,

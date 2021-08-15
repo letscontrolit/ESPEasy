@@ -477,7 +477,7 @@ bool Dallas_readCounter(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, 
   }
 
   uint16_t crc      = Dallas_crc16(data, 43, 0);
-  uint8_t *crcBytes = (uint8_t *)&crc;
+  const uint8_t *crcBytes = reinterpret_cast<const uint8_t *>(&crc);
   uint8_t  crcLo    = ~data[43];
   uint8_t  crcHi    = ~data[44];
   bool     error    = (crcLo != crcBytes[0]) || (crcHi != crcBytes[1]);
