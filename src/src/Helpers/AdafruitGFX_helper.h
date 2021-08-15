@@ -14,7 +14,7 @@
 # include "../Helpers/Numerical.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# define ADAGFX_PARSE_MAX_ARGS        8 // Maximum number of arguments needed and supported
+# define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION
 #  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
 # endif // ifndef ADAGFX_ARGUMENT_VALIDATION
@@ -94,11 +94,11 @@ enum class AdaGFX7Colors: uint16_t {
 # endif // ifdef ADAGFX_SUPPORT_7COLOR
 
 enum class AdaGFXTextPrintMode : uint8_t {
-  ContinueToNextLine       = 0,
-  TruncateExceedingMessage = 1,
-  ClearThenTruncate        = 2, // Should have max. 16 options
+  ContinueToNextLine       = 0u,
+  TruncateExceedingMessage = 1u,
+  ClearThenTruncate        = 2u, // Should have max. 16 options
 
-  MAX                           // Keep as last
+  MAX                            // Keep as last
 };
 
 const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode);
@@ -109,15 +109,15 @@ class AdafruitGFX_helper {
 public:
 
   enum class ColorDepth : uint16_t {
-    Monochrome   = 2,    // Black & white
-    Duochrome    = 3,    // Black, white & grey
-    Quadrochrome = 4,    // Black, white, lightgrey & darkgrey
+    Monochrome   = 2u,    // Black & white
+    Duochrome    = 3u,    // Black, white & grey
+    Quadrochrome = 4u,    // Black, white, lightgrey & darkgrey
     # ifdef ADAGFX_SUPPORT_7COLOR
-    Septochrome = 7,     // Black, white, red, yellow, blue, green, orange
+    Septochrome = 7u,     // Black, white, red, yellow, blue, green, orange
     # endif // ifdef ADAGFX_SUPPORT_7COLOR
-    Octochrome   = 8,    // 8 regular colors
-    Quintochrome = 16,   // 16 colors
-    FullColor    = 65535 // 65535 colors (max. supported by RGB565)
+    Octochrome   = 8u,    // 8 regular colors
+    Quintochrome = 16u,   // 16 colors
+    FullColor    = 65535u // 65535 colors (max. supported by RGB565)
   };
 
   AdafruitGFX_helper(Adafruit_GFX       *display,
@@ -126,7 +126,9 @@ public:
                      uint16_t            res_y,
                      ColorDepth          colorDepth    = ColorDepth::FullColor,
                      AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
-                     uint8_t             fontscaling   = 1);
+                     uint8_t             fontscaling   = 1,
+                     uint16_t            fgcolor       = ADAGFX_WHITE,
+                     uint16_t            bgcolor       = ADAGFX_BLACK);
 
   bool     processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
   uint16_t parseColor(String& s);                // Parse either a color by name, 6 digit hex rrggbb color, or 1..4 digit #rgb565 color
@@ -144,6 +146,9 @@ public:
                       uint16_t& textrows,
                       uint8_t & fontwidth,
                       uint8_t & fontheight);
+  void getCursorXY(int16_t& currentX,                         // Get last known (text)cursor position, recalculates to col/row if that
+                   int16_t& currentY);                        // setting is acive
+
   # if ADAGFX_SUPPORT_7COLOR
   uint16_t rgb565ToColor7(uint16_t color);                    // Convert rgb565 color to 7-color
   # endif // if ADAGFX_SUPPORT_7COLOR
@@ -170,11 +175,13 @@ private:
   uint16_t _res_y;
   ColorDepth _colorDepth;
   AdaGFXTextPrintMode _textPrintMode;
+  uint8_t _fontscaling;
+  uint16_t _fgcolor;
+  uint16_t _bgcolor;
   uint16_t _textcols;
   uint16_t _textrows;
-  uint16_t _fgcolor          = ADAGFX_WHITE;
-  uint16_t _bgcolor          = ADAGFX_BLACK;
-  uint8_t _fontscaling       = 1;
+  int16_t _lastX;
+  int16_t _lastY;
   uint8_t _fontwidth         = 8; // Default font characteristics
   uint8_t _fontheight        = 10;
   uint8_t _p095_compensation = 0;

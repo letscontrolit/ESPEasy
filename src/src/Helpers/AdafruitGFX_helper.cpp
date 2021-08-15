@@ -72,12 +72,50 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
                                        uint16_t            res_y,
                                        ColorDepth          colorDepth,
                                        AdaGFXTextPrintMode textPrintMode,
-                                       uint8_t             fontscaling)
+                                       uint8_t             fontscaling,
+                                       uint16_t            fgcolor,
+                                       uint16_t            bgcolor)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
-  _textPrintMode(textPrintMode), _fontscaling(fontscaling)
+  _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor)
 {
-  _trigger.toLowerCase();      // store trigger in lowercase
-  calculateTextMetrics(6, 10); // Defaults for built-in font
+  _trigger.toLowerCase(); // store trigger in lowercase
+  # ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log.reserve(65);
+    log  = F("AdaGFX: Init, x: ");
+    log += _res_x;
+    log += F(", y: ");
+    log += _res_y;
+    log += F(", colors: ");
+    log += static_cast<uint16_t>(colorDepth);
+    log += F(", trigger: ");
+    log += _trigger;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  # endif // ifndef BUILD_NO_DEBUG
+
+  calculateTextMetrics(6, 10);                  // Defaults for built-in font
+
+  if (_display != nullptr) {
+    _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
+  }
+}
+
+/****************************************************************************
+ * getCursorXY: get the current (text) cursor coordinates, either in pixels or cols/rows, depending on related setting
+ ***************************************************************************/
+void AdafruitGFX_helper::getCursorXY(int16_t& currentX,
+                                     int16_t& currentY) {
+  _lastX = _display->getCursorX();
+  _lastY = _display->getCursorY();
+
+  if (_columnRowMode && (_lastX != 0)) { _lastX /= _fontwidth; }
+
+  if (_columnRowMode && (_lastY != 0)) { _lastY /= _fontheight; }
+  currentX = _lastX;
+  currentY = _lastY;
 }
 
 /****************************************************************************
@@ -94,12 +132,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
   String log;
-  String sParams[ADAGFX_PARSE_MAX_ARGS];
-  int    nParams[ADAGFX_PARSE_MAX_ARGS];
+  String sParams[ADAGFX_PARSE_MAX_ARGS + 1];
+  int    nParams[ADAGFX_PARSE_MAX_ARGS + 1];
   int    argCount = 0;
   bool   loop     = true;
 
-  while (argCount < ADAGFX_PARSE_MAX_ARGS && loop) {
+  while (argCount <= ADAGFX_PARSE_MAX_ARGS && loop) {
     sParams[argCount] = parseStringKeepCase(string, argCount + 3); // 0-offset + 1st and 2nd argument used by trigger/subcommand
     validIntFromString(sParams[argCount], nParams[argCount]);
     loop = !sParams[argCount].isEmpty();
@@ -542,15 +580,54 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 /****************************************************************************
  * printText: Print text on display at a specific pixel or column/row location
  ***************************************************************************/
-void AdafruitGFX_helper::printText(const char *string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor) {
+void AdafruitGFX_helper::printText(const char    *string,
+                                   int            X,
+                                   int            Y,
+                                   unsigned int   textSize,
+                                   unsigned short color,
+                                   unsigned short bkcolor) {
+  uint16_t _x = X / (_fontwidth * textSize); // We need this multiple times
+  uint16_t _y = Y / (_fontheight * textSize);
+
   if (_columnRowMode) {
-    _display->setCursor(X * _fontwidth, Y * _fontheight);
+    _display->setCursor(_x, _y);
   } else {
     _display->setCursor(X, Y);
   }
   _display->setTextColor(color, bkcolor);
   _display->setTextSize(textSize);
-  _display->println(string);
+
+  String newString = string;
+
+  if ((_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) && (newString.length() > static_cast<unsigned int>(_textcols - _x))) {
+    newString = newString.substring(0, (_textcols - _x) - 1);
+  }
+
+  if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
+    if (_columnRowMode) {
+      _display->setCursor(_x, _y);
+    } else {
+      _display->setCursor(X, Y);
+    }
+
+    for (uint16_t c = 0; c < newString.length(); c++) {
+      _display->print(' ');
+    }
+    delay(0);
+  }
+
+  if (_columnRowMode) {
+    _display->setCursor(X * _fontwidth * textSize, Y * _fontheight * textSize);
+  } else {
+    _display->setCursor(X, Y);
+  }
+  _display->print(newString);
+
+  for (uint16_t c = _x + newString.length() + 1; c < _textcols && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; c++) {
+    _display->print(' ');
+  }
+
+  // _display->println(); // Leave cursor at next (new) line?
 }
 
 /****************************************************************************
@@ -568,9 +645,7 @@ uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
 // Parse color string to RGB565 color
 // param [in] s : The color string (white, red, ...)
 // return : color (default ADAGFX_WHITE)
-uint16_t AdafruitGFX_helper::parseColor(String& string) {
-  String s = string;
-
+uint16_t AdafruitGFX_helper::parseColor(String& s) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
@@ -664,8 +739,8 @@ uint16_t AdafruitGFX_helper::parseColor(String& string) {
     result = color565(number >> 16 & 0xFF, number >> 8 & 0xFF, number & 0xFF);
   }
 
-  if (result == -1) {
-    result = ADAGFX_WHITE; // fallback value
+  if ((result == -1) || (result == ADAGFX_WHITE)) { // Default & don't convert white
+    result = ADAGFX_WHITE;                          // fallback value
   } else {
     // Reduce colors?
     switch (_colorDepth) {
@@ -772,8 +847,12 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(30);
-    log  = F("AdaGFX: text columns: ");
+    log.reserve(50);
+    log  = F("AdaGFX: x: ");
+    log += _res_x;
+    log += F(", y: ");
+    log += _res_y;
+    log += F(", text columns: ");
     log += _textcols;
     log += F(" rows: ");
     log += _textrows;
@@ -815,7 +894,7 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
     return !((X >= 0) && (X <= _textcols) &&
              (Y >= 0) && (Y <= _textrows));
   } else {
-    if (Y == 0) {
+    if (Y == 0) { // Y == 0: Accept largest x/y size value for x
       return !((X >= 0) && (X <= std::max(_res_x, _res_y)));
     } else {
       return !((X >= 0) && (X <= _res_x) &&
