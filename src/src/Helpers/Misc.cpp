@@ -157,7 +157,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
     serialPrint(String(pgm_read_byte(a), HEX));
     serialPrint(" ");
   }
-  serialPrintln("");
+  serialPrintln();
 }
 
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)

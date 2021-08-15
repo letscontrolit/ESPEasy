@@ -57,7 +57,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
 
   for (unsigned int i = 0; i < sizeof(sendBuffer); i++) {
     LogString += ((unsigned int)(sendBuffer[i]));
-    LogString += (" ");
+    LogString += ' ';
   }
   TXRXstate = MODBUS_RECEIVE;
 
@@ -119,7 +119,7 @@ bool Modbus::handle() {
         char a = ModbusClient->read();
         rxValue    = rxValue | a;
         LogString += static_cast<int>(a);  
-        LogString += (" ");
+        LogString += ' ';
       }
 
       switch (incomingValue) {
