@@ -54,7 +54,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
       Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
+      Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = false;
       Device[deviceCount].GlobalSyncOption   = false;
       break;
