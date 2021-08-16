@@ -557,9 +557,13 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       }
 
       while (loop) {
-        String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed
+        String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed merged loop is smaller than 2 separate loops
 
-        if (color.isEmpty() || invalidCoordinates(nParams[0] + h, nParams[1] + v)) {
+        if (color.isEmpty()
+            # if ADAGFX_ARGUMENT_VALIDATION
+            || invalidCoordinates(nParams[0] + h, nParams[1] + v)
+            # endif // if ADAGFX_ARGUMENT_VALIDATION
+            ) {
           loop = false;
         } else {
           _display->writePixel(nParams[0] + h, nParams[1] + v, parseColor(color));
