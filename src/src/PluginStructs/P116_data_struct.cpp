@@ -50,6 +50,11 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
   : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _displayTimer(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor)
 {
+  if (_fgcolor == _bgcolor) { // Sanity check
+    _fgcolor = ADAGFX_WHITE;
+    _bgcolor = ADAGFX_BLACK;
+  }
+
   switch (_device) {
     case ST77xx_type_e::ST7735s_128x128:
       _xpix = 128;
@@ -101,8 +106,6 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     int8_t  spi_SCLK_pin = -1;
     # if defined(ESP8266) || defined(ESP8285)
 
-    // spi_MOSI_pin = D7;
-    // spi_SCLK_pin = D5;
     # endif // if defined(ESP8266) || defined(ESP8285)
     # if defined(ESP32)
 

@@ -8,6 +8,7 @@
 
 
 // History:
+// 2021-08-16 tonhuisman: P116: Add default color settings
 // 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
 // 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
 //                        P116: Use more features of AdafruitGFX_helper
@@ -101,9 +102,11 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       // Truncate exceeding message
       set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        1);
       # endif // ifdef P116_USE_ADA_GRAPHICS
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   2); // Font scaling 2 as 1 is very small
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   1);
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, 1); // Default trigger on st77xx
       P116_CONFIG_FLAGS = lSettings;
+
+      P116_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
 
       break;
     }
@@ -193,6 +196,20 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Content"));
 
+      # ifdef P116_USE_ADA_GRAPHICS
+      String color;
+      color  = '#';
+      color += String(P116_CONFIG_GET_COLOR_FOREGROUND, HEX);
+      color.toUpperCase();
+      addFormTextBox(F("Foreground color"), F("p116_foregroundcolor"), color, 11);
+      color  = '#';
+      color += String(P116_CONFIG_GET_COLOR_BACKGROUND, HEX);
+      color.toUpperCase();
+      addFormTextBox(F("Background color"), F("p116_backgroundcolor"), color, 11);
+      addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
+      addFormNote(F("NB: Colors stored as RGB565 value!"));
+      # endif // ifdef P116_USE_ADA_GRAPHICS
+
       // Inverted state!
       addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
@@ -234,6 +251,31 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p116_commandtrigger")));  // Bit 20..23 Command trigger
       P116_CONFIG_FLAGS = lSettings;
 
+      # ifdef P116_USE_ADA_GRAPHICS
+      AdafruitGFX_helper *gfxHelper = new (std::nothrow) AdafruitGFX_helper(nullptr, // Mostly dummy values except color depth!
+                                                                            EMPTY_STRING,
+                                                                            12,
+                                                                            20,
+                                                                            AdafruitGFX_helper::ColorDepth::FullColor,
+                                                                            AdaGFXTextPrintMode::ContinueToNextLine);
+
+      if (gfxHelper != nullptr) {
+        String   color   = web_server.arg(F("p116_foregroundcolor"));
+        uint16_t fgcolor = gfxHelper->parseColor(color); // Reduce to rgb565
+        color = web_server.arg(F("p116_backgroundcolor"));
+        uint16_t bgcolor = gfxHelper->parseColor(color);
+
+        if (fgcolor == bgcolor) { // Sanity check
+          fgcolor = ADAGFX_WHITE;
+          bgcolor = ADAGFX_BLACK;
+        }
+        P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
+        delete gfxHelper;
+      }
+      # else // ifdef P116_USE_ADA_GRAPHICS
+      P116_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
+      # endif // ifdef P116_USE_ADA_GRAPHICS
+
       String strings[P116_Nlines];
       String error;
 
@@ -261,7 +303,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                static_cast<AdaGFXTextPrintMode>(P116_CONFIG_FLAG_GET_MODE),
                                                                P116_CONFIG_DISPLAY_TIMEOUT,
                                                                P116_CommandTrigger_toString(static_cast<P116_CommandTrigger>(
-                                                                                              P116_CONFIG_FLAG_GET_CMD_TRIGGER))));
+                                                                                              P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
+                                                               P116_CONFIG_GET_COLOR_FOREGROUND,
+                                                               P116_CONFIG_GET_COLOR_BACKGROUND));
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P116_data) {
