@@ -69,7 +69,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
     {
       event->String1 = formatGpioName_output_optional(F("CS "));
       event->String2 = formatGpioName_output(F("DC"));
-      event->String3 = formatGpioName_output_optional(F("RST "));
+      event->String3 = formatGpioName_output_optional(F("RES "));
       break;
     }
 
@@ -119,19 +119,6 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Display Timeout"), F("p116_timer"), P116_CONFIG_DISPLAY_TIMEOUT);
 
-      # ifdef P116_USE_ADA_GRAPHICS
-      AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
-      # else // ifdef P116_USE_ADA_GRAPHICS
-      {
-        const __FlashStringHelper *options3[] = {
-          F("Continue to next line"),
-          F("Truncate exceeding message"),
-          F("Clear then truncate exceeding message") };
-        const int optionValues3[] = { 0, 1, 2 };
-        addFormSelector(F("Text print Mode"), F("p116_mode"), 3, options3, optionValues3, P116_CONFIG_FLAG_GET_MODE);
-      }
-      # endif // ifdef P116_USE_ADA_GRAPHICS
-
       {
         const __FlashStringHelper *options4[] = {
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x128),
@@ -149,6 +136,21 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280) };
         addFormSelector(F("TFT display model"), F("p116_type"), 6, options4, optionValues4, P116_CONFIG_FLAG_GET_TYPE);
       }
+
+      addFormSubHeader(F("Layout"));
+
+      # ifdef P116_USE_ADA_GRAPHICS
+      AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
+      # else // ifdef P116_USE_ADA_GRAPHICS
+      {
+        const __FlashStringHelper *options3[] = {
+          F("Continue to next line"),
+          F("Truncate exceeding message"),
+          F("Clear then truncate exceeding message") };
+        const int optionValues3[] = { 0, 1, 2 };
+        addFormSelector(F("Text print Mode"), F("p116_mode"), 3, options3, optionValues3, P116_CONFIG_FLAG_GET_MODE);
+      }
+      # endif // ifdef P116_USE_ADA_GRAPHICS
 
       {
         const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
