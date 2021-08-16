@@ -316,7 +316,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
             }
           }
-          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+          if (Protocol[ProtocolIndex].usesPort) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+          }
 
           if (Protocol[ProtocolIndex].usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);
@@ -341,6 +343,10 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           if (Protocol[ProtocolIndex].usesSampleSets) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
+          if (Protocol[ProtocolIndex].allowLocalSystemTime) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME);
+          }
+
 
           if (Protocol[ProtocolIndex].useCredentials()) {
             addTableSeparator(F("Credentials"), 2, 3);

@@ -139,7 +139,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           PCONFIG(1) = 400;
 
         // FIXME TD-er: Should we add support for 4 pin definitions?
-        addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("Driver#8")), F("TDP4"), (int)(Settings.TaskDevicePin[3][event->TaskIndex]));
+        addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("Driver#8")), F("TDP4"), static_cast<int>(Settings.TaskDevicePin[3][event->TaskIndex]));
 
         addFormSubHeader(F("Timing"));
 

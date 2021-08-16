@@ -576,12 +576,10 @@ uint8_t P073_mapCharToFontPosition(char character, uint8_t fontset) {
     case 2: // Siekoo with uppercase 'CHNORUX'
       if (fontset == 2 && chnorux.indexOf(character) > -1) {
         position = chnorux.indexOf(character) + 35;
-      } else if ((character >= '0') && (character <= '9')) {
+      } else if (isDigit(character)) {
         position = character - '0';
-      } else if ((character >= 'A') && (character <= 'Z')) {
-        position = character - 'A' + 42;
-      } else if ((character >= 'a') && (character <= 'z')) {
-        position = character - 'a' + 42;
+      } else if (isAlpha(character)) {
+        position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
       } else {
         uint8_t idx = specialChars.indexOf(character);
         if (idx > -1) {
@@ -592,12 +590,10 @@ uint8_t P073_mapCharToFontPosition(char character, uint8_t fontset) {
     case 3: // dSEG7 (same table size as 7Dgt)
     default: // Original fontset (7Dgt)
 #endif // P073_EXTRA_FONTS
-      if ((character >= '0') && (character <= '9')) {
+      if (isDigit(character)) {
         position = character - '0';
-      } else if ((character >= 'A') && (character <= 'Z')) {
-        position = character - 'A' + 16;
-      } else if ((character >= 'a') && (character <= 'z')) {
-        position = character - 'a' + 16;
+      } else if (isAlpha(character)) {
+        position = character - (isLowerCase(character) ? 'a' : 'A') + 16;
       } else {
         switch (character) {
           case ' ': position = 10; break;

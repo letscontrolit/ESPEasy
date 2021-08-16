@@ -50,6 +50,12 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x5a);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
         #define MLX90614_OPTION 2
@@ -100,7 +106,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P024_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P024_data) {
-        UserVar[event->BaseVarIndex] = (float)P024_data->readTemperature(PCONFIG(0));
+        UserVar[event->BaseVarIndex] = P024_data->readTemperature(PCONFIG(0));
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MLX90614  : Temperature: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);

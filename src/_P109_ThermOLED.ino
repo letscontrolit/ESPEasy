@@ -157,29 +157,29 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      const int i2cAddressValues[] = { 0x3c, 0x3d };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("plugin_109_adr"), 2, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choice5 = Settings.TaskDevicePluginConfig[event->TaskIndex][2];
-      String options5[2];
-      options5[0] = F("SSD1306");
-      options5[1] = F("SH1106");
-      int optionValues5[2] = { 1, 2 };
-      addFormSelector(F("Controller"), F("plugin_109_controler"), 2, options5, optionValues5, choice5);
+      const __FlashStringHelper* options5[]      = { F("SSD1306"), F("SH1106") };
+      const int                  optionValues5[] = { 1, 2 };
+      addFormSelector(F("Controller"), F("plugin_109_controler"), 2, options5, optionValues5, PCONFIG(2));
 
-      byte choice0 = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
-      int  optionValues0[2];
-      optionValues0[0] = 0x3C;
-      optionValues0[1] = 0x3D;
-      addFormSelectorI2C(F("plugin_109_adr"), 2, optionValues0, choice0);
+      const __FlashStringHelper* options1[]      = { F("Normal"), F("Rotated") };
+      const int                  optionValues1[] = { 1, 2 };
+      addFormSelector(F("Rotation"), F("plugin_109_rotate"), 2, options1, optionValues1, PCONFIG(1));
 
-      byte   choice1 = Settings.TaskDevicePluginConfig[event->TaskIndex][1];
-      String options1[2];
-      options1[0] = F("Normal");
-      options1[1] = F("Rotated");
-      int optionValues1[2] = { 1, 2 };
-      addFormSelector(F("Rotation"), F("plugin_109_rotate"), 2, options1, optionValues1, choice1);
-
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       for (byte varNr = 0; varNr < P109_Nlines; varNr++)
       {
@@ -196,34 +196,22 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormPinSelect(F("Button left"),  F("taskdevicepin1"), Settings.TaskDevicePin1[event->TaskIndex]);
-      addFormPinSelect(F("Button right"), F("taskdevicepin2"), Settings.TaskDevicePin2[event->TaskIndex]);
-      addFormPinSelect(F("Button mode"),  F("taskdevicepin3"), Settings.TaskDevicePin3[event->TaskIndex]);
+      addFormPinSelect(F("Button left"),  F("taskdevicepin1"), CONFIG_PIN1);
+      addFormPinSelect(F("Button right"), F("taskdevicepin2"), CONFIG_PIN2);
+      addFormPinSelect(F("Button mode"),  F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormPinSelect(F("Relay"),        F("heatrelay"),      Settings.TaskDevicePluginConfig[event->TaskIndex][4]);
+      addFormPinSelect(F("Relay"),        F("heatrelay"),      PCONFIG(4));
 
-      byte choice6 = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
+      byte choice6 = PCONFIG(3);
 
       if (choice6 == 0) { choice6 = P109_CONTRAST_HIGH; }
-      String options6[3];
-      options6[0] = F("Low");
-      options6[1] = F("Medium");
-      options6[2] = F("High");
-      int optionValues6[3];
-      optionValues6[0] = P109_CONTRAST_LOW;
-      optionValues6[1] = P109_CONTRAST_MED;
-      optionValues6[2] = P109_CONTRAST_HIGH;
+      const __FlashStringHelper* options6[]      = { F("Low"), F("Medium"), F("High") };
+      const int                  optionValues6[] = { P109_CONTRAST_LOW, P109_CONTRAST_MED, P109_CONTRAST_HIGH };
       addFormSelector(F("Contrast"), F("plugin_109_contrast"), 3, options6, optionValues6, choice6);
 
-      byte   choice4 = (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] * 10);
-      String options4[3];
-      options4[0] = F("0.2");
-      options4[1] = F("0.5");
-      options4[2] = F("1");
-      int optionValues4[3];
-      optionValues4[0] = 2;
-      optionValues4[1] = 5;
-      optionValues4[2] = 10;
+      byte   choice4 = (PCONFIG_FLOAT(0) * 10);
+      const __FlashStringHelper* options4[] = { F("0.2"), F("0.5"), F("1") };
+      const int                  optionValues4[] = { 2, 5, 10 };
       addFormSelector(F("Hysteresis"), F("plugin_109_hyst"), 3, options4, optionValues4, choice4);
 
       success = true;
@@ -232,12 +220,12 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      Settings.TaskDevicePluginConfig[event->TaskIndex][0]      = getFormItemInt(F("plugin_109_adr"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][1]      = getFormItemInt(F("plugin_109_rotate"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][2]      = getFormItemInt(F("plugin_109_controler"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][3]      = getFormItemInt(F("plugin_109_contrast"));
-      Settings.TaskDevicePluginConfig[event->TaskIndex][4]      = getFormItemInt(F("heatrelay"));
-      Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0] = (getFormItemInt(F("plugin_109_hyst")) / 10.0);
+      PCONFIG(0)       = getFormItemInt(F("plugin_109_adr"));
+      PCONFIG(1)       = getFormItemInt(F("plugin_109_rotate"));
+      PCONFIG(2)       = getFormItemInt(F("plugin_109_controler"));
+      PCONFIG(3)       = getFormItemInt(F("plugin_109_contrast"));
+      PCONFIG(4)       = getFormItemInt(F("heatrelay"));
+      PCONFIG_FLOAT(0) = (getFormItemInt(F("plugin_109_hyst")) / 10.0f);
 
       String argName;
 
@@ -248,7 +236,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
         strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]));
       }
 
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       success = true;
       break;
@@ -259,7 +247,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       P109_lastWiFiState = P109_WIFI_STATE_UNSET;
 
       // Load the custom settings from flash
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       //      Init the display and turn it on
       if (P109_display)
@@ -312,7 +300,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
       if (f)
       {
-        f.read(((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16);
+        f.read(reinterpret_cast<uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
         f.close();
       }
       Plugin_109_lastsavetime = millis();
@@ -496,7 +484,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
             if (f)
             {
-              f.write(((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16);
+              f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
               f.close();
               flashCount();
             }
@@ -528,8 +516,8 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
               {
                 P109_setHeater(F("1"));
                 Plugin_109_changed = 1;
-              } else if (((((float)atemp - (float)Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]) >=
-                           (float)UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
+              } else if ((((static_cast<float>(atemp) - static_cast<float>(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) >=
+                           UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
                 P109_setHeater(F("0"));
                 Plugin_109_changed = 1;
               } else {
@@ -770,9 +758,9 @@ void P109_display_timeout() {
   if (UserVar[Plugin_109_varindex + 2] == 2) {
     if (Plugin_109_prev_timeout >= (UserVar[Plugin_109_varindex + 3] + 60)) {
       float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60;
-      String thour     = toString(((int)(timeinmin / 60)), 0);
+      String thour     = toString((static_cast<int>(timeinmin / 60)), 0);
       thour += F(":");
-      String thour2 = toString(((int)timeinmin % 60), 0);
+      String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
 
       if (thour2.length() < 2) {
         thour += "0" + thour2;

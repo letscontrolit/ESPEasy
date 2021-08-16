@@ -25,6 +25,8 @@
 
 #define ATLAS_EZO_RETURN_ARRAY_SIZE 33
 
+#define _P103_ATLASEZO_I2C_NB_OPTIONS 3  // was: 6 see comment below at 'const int i2cAddressValues' 
+
 #define FIXED_TEMP_VALUE 20 // Temperature correction for pH and EC sensor if no temperature is given from calculation
 
 boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
@@ -65,13 +67,22 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     break;
   }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      const int i2cAddressValues[] = {0x62, 0x63, 0x64}; // , 0x65, 0x66, 0x67}; // Disabled unsupported devices as discussed here: https://github.com/letscontrolit/ESPEasy/pull/3733 (review comment by TD-er)
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("plugin_103_i2c"), _P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, PCONFIG(1));
+        addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically."));
+      } else {
+        success = intArrayContains(_P103_ATLASEZO_I2C_NB_OPTIONS, i2cAddressValues, event->Par1);
+      }
+      break;
+    }
+
   case PLUGIN_WEBFORM_LOAD:
   {
     I2Cchoice = PCONFIG(1);
-#define _P103_ATLASEZO_I2C_NB_OPTIONS 6
-    int optionValues[_P103_ATLASEZO_I2C_NB_OPTIONS] = {0x62, 0x63, 0x64, 0x65, 0x66, 0x67};
-    addFormSelectorI2C(F("plugin_103_i2c"), _P103_ATLASEZO_I2C_NB_OPTIONS, optionValues, I2Cchoice);
-    addFormNote(F("pH: 0x63, ORP: 0x62, EC: 0x64. The plugin is able to detect the type of device automatically."));
 
     addFormSubHeader(F("Board"));
 
@@ -266,7 +277,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
       addFormSubHeader(F("Temperature compensation"));
       char deviceTemperatureTemplate[40] = {0};
-      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
       addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormNote(F("You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
@@ -274,7 +285,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
       String pooltempString(parseTemplate(deviceTemperatureTemplateString, 40));
 
-      if (Calculate(pooltempString.c_str(), value) != CalculateReturnCode::OK)
+      if (Calculate(pooltempString, value) != CalculateReturnCode::OK)
       {
         addFormNote(F("It seems I can't parse your formulae. Fixed value will be used!"));
         value = FIXED_TEMP_VALUE;
@@ -374,7 +385,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
       ZERO_TERMINATE(deviceTemperatureTemplate); // be sure that our string ends with a \0
 
-      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate)));
+      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate)));
     }
 
     success = true;
@@ -397,7 +408,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     {
       // first set the temperature of reading
       char deviceTemperatureTemplate[40] = {0};
-      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
 
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);
@@ -406,7 +417,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       readCommand = F("RT,");
       double temperatureReading;
 
-      if (Calculate(pooltempString.c_str(), temperatureReading) != CalculateReturnCode::OK)
+      if (Calculate(pooltempString, temperatureReading) != CalculateReturnCode::OK)
       {
         temperatureReading = FIXED_TEMP_VALUE;
       }

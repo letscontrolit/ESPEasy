@@ -49,6 +49,12 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x7f);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       uint8_t   choice     = PCONFIG(0);
@@ -63,6 +69,12 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = getFormItemInt(F("p011"));
       success    = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      success = true;
       break;
     }
 

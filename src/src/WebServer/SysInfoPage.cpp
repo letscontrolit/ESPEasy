@@ -288,6 +288,8 @@ void handle_sysinfo_basicInfo() {
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
     addRowLabelValue(LabelType::TIME_SOURCE);
+    addRowLabelValue(LabelType::TIME_WANDER);
+    addUnit(F("msec/sec"));
   }
 
   addRowLabel(LabelType::UPTIME);

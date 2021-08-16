@@ -51,12 +51,15 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t addr = PCONFIG(0);
-
-      int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
-      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      const int i2cAddressValues[] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -148,7 +151,7 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 
           if (adc1 != adc2)
           {
-            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+            const float normalized = (UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
             log += F(" = ");

@@ -19,7 +19,6 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Log.h"
-#include "../WebServer/Login.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -30,6 +29,7 @@
 #include "../WebServer/SettingsArchive.h"
 #include "../WebServer/SetupPage.h"
 #include "../WebServer/SysInfoPage.h"
+#include "../WebServer/Metrics.h"
 #include "../WebServer/SysVarPage.h"
 #include "../WebServer/TimingStats.h"
 #include "../WebServer/ToolsPage.h"
@@ -46,6 +46,7 @@
 #include "../DataTypes/SettingsType.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/CPlugins.h"
@@ -60,6 +61,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/CompiletimeDefines.h"
 
 #include "../Static/WebStaticData.h"
 
@@ -345,7 +347,6 @@ void WebServerInit()
   web_server.on(F("/json"),            handle_json); // Also part of WEBSERVER_NEW_UI
   web_server.on(F("/csv"),             handle_csvval);
   web_server.on(F("/log"),             handle_log);
-  web_server.on(F("/login"),           handle_login);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifdef USES_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
@@ -374,6 +375,9 @@ void WebServerInit()
 #ifdef WEBSERVER_SYSINFO
   web_server.on(F("/sysinfo"),     handle_sysinfo);
 #endif // ifdef WEBSERVER_SYSINFO
+#ifdef WEBSERVER_METRICS
+  web_server.on(F("/metrics"),     handle_metrics);
+#endif // ifdef WEBSERVER_METRICS
 #ifdef WEBSERVER_SYSVARS
   web_server.on(F("/sysvars"),     handle_sysvars);
 #endif // WEBSERVER_SYSVARS
@@ -545,12 +549,20 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
   {
     String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><BR>");
+    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
+            #if BUILD_IN_WEBHEADER
+            "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
+            #endif // #if BUILD_IN_WEBHEADER
+            "</h1><BR>"
+            );
   #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
   #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
 
     tmp.replace(F("{{title}}"), title);
+    #if BUILD_IN_WEBHEADER
+    tmp.replace(F("{{date}}"), get_build_date());
+    #endif // #if BUILD_IN_WEBHEADER
     tmpl += tmp;
   }
 
@@ -572,13 +584,21 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F("<footer>"
             "<br>"
-            "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6>"
+            "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
+            #if BUILD_IN_WEBFOOTER
+            "<div style='float: right'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{build}} {{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
+            #endif // #if BUILD_IN_WEBFOOTER
+            "</h6>"
             "</footer>"
             "</body></html>"
             );
 #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
 #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
+  #if BUILD_IN_WEBFOOTER
+  tmpl.replace(F("{{build}}"), get_binary_filename()); // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
+  tmpl.replace(F("{{date}}"),  get_build_date());      // And the compile-date
+  #endif // #if BUILD_IN_WEBFOOTER
 }
 
 void getErrorNotifications() {
@@ -948,42 +968,54 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   }
 }
 
+
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin)
 {
-  String www_username = F(DEFAULT_ADMIN_USERNAME);
-
   if (!clientIPallowed()) { return false; }
 
   if (SecuritySettings.Password[0] == 0) { return true; }
-
+  
   if (!mustProvideLogin) {
     return false;
   }
-  if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
-
-  // Basic Auth Method with Custom realm and Failure Response
-  // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
-  // Digest Auth Method with realm="Login Required" and empty Failure Response
-  // return server.requestAuthentication(DIGEST_AUTH);
-  // Digest Auth Method with Custom realm and empty Failure Response
-  // return server.requestAuthentication(DIGEST_AUTH, www_realm);
-  // Digest Auth Method with Custom realm and Failure Response
+  
   {
+    String www_username = F(DEFAULT_ADMIN_USERNAME);
+    if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
+
+    // Basic Auth Method with Custom realm and Failure Response
+    // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
+    // Digest Auth Method with realm="Login Required" and empty Failure Response
+    // return server.requestAuthentication(DIGEST_AUTH);
+    // Digest Auth Method with Custom realm and empty Failure Response
+    // return server.requestAuthentication(DIGEST_AUTH, www_realm);
+    // Digest Auth Method with Custom realm and Failure Response
+    {
 #ifdef CORE_PRE_2_5_0
 
-    // See https://github.com/esp8266/Arduino/issues/4717
-    HTTPAuthMethod mode = BASIC_AUTH;
+      // See https://github.com/esp8266/Arduino/issues/4717
+      HTTPAuthMethod mode = BASIC_AUTH;
 #else // ifdef CORE_PRE_2_5_0
-    HTTPAuthMethod mode = DIGEST_AUTH;
+      HTTPAuthMethod mode = DIGEST_AUTH;
 #endif // ifdef CORE_PRE_2_5_0
-    String message = F("Login Required (default user: ");
-    message += www_username;
-    message += ')';
-    web_server.requestAuthentication(mode, message.c_str());
-    return false;
+      String message = F("Login Required (default user: ");
+      message += www_username;
+      message += ')';
+      web_server.requestAuthentication(mode, message.c_str());
+
+      if (Settings.UseRules)
+      {
+        String event = F("Login#Failed");
+
+        // TD-er: Do not add to the eventQueue, but execute right now.
+        rulesProcessing(event);
+      }
+
+      return false;
+    }
   }
   return true;
 }

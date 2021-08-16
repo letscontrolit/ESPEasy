@@ -61,6 +61,12 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));

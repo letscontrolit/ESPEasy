@@ -62,10 +62,15 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { VEML6040_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR); // Only for display I2C address
+      const int i2cAddressValues[] = { VEML6040_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, VEML6040_ADDR); // Only for display I2C address
+      } else {
+        success = (event->Par1 == VEML6040_ADDR);
+      }
       break;
     }
 
@@ -200,7 +205,7 @@ float VEML6040_GetValue(uint8_t reg)
   {
     uint16_t lsb = Wire.read();
     uint16_t msb = Wire.read();
-    return (float)((msb << 8) | lsb);
+    return static_cast<float>((msb << 8) | lsb);
   }
   return -1.0f;
 }

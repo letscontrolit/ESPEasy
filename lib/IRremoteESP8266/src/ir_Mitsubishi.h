@@ -1,5 +1,5 @@
 // Copyright 2009 Ken Shirriff
-// Copyright 2017-2019 David Conran
+// Copyright 2017-2021 David Conran
 // Copyright 2019 Mark Kuchel
 
 /// @file
@@ -13,6 +13,8 @@
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/619
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/888
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/947
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1398
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1399
 /// @see https://github.com/kuchel77
 
 // Supports:
@@ -25,6 +27,10 @@
 //   Brand: Mitsubishi Electric,  Model: MSH-A24WV A/C (MITSUBISHI112)
 //   Brand: Mitsubishi Electric,  Model: MUH-A24WV A/C (MITSUBISHI112)
 //   Brand: Mitsubishi Electric,  Model: KPOA remote (MITSUBISHI112)
+//   Brand: Mitsubishi Electric,  Model: MLZ-RX5017AS A/C (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: SG153/M21EDF426 remote (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: MSZ-GV2519 A/C (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: RH151/M21ED6426 remote (MITSUBISHI_AC)
 
 #ifndef IR_MITSUBISHI_H_
 #define IR_MITSUBISHI_H_
@@ -55,7 +61,9 @@ union Mitsubishi144Protocol{
     uint8_t Mode  :3;
     uint8_t       :2;
     // Byte 7
-    uint8_t Temp  :8;
+    uint8_t Temp       :4;
+    uint8_t HalfDegree :1;
+    uint8_t            :3;
     // Byte 8
     uint8_t         :4;
     uint8_t WideVane:4;  // SwingH
@@ -71,8 +79,9 @@ union Mitsubishi144Protocol{
     // Byte 12
     uint8_t StartClock:8;
     // Byte 13
-    uint8_t Timer :3;
-    uint8_t       :5;
+    uint8_t Timer       :3;
+    uint8_t WeeklyTimer :1;
+    uint8_t             :4;
     // Byte 14~16
     uint8_t pad1[3];
     // Byte 17
@@ -90,15 +99,27 @@ const uint8_t kMitsubishiAcFanMax = 5;
 const uint8_t kMitsubishiAcFanRealMax = 4;
 const uint8_t kMitsubishiAcFanSilent = 6;
 const uint8_t kMitsubishiAcFanQuiet = kMitsubishiAcFanSilent;
-const uint8_t kMitsubishiAcMinTemp = 16;  // 16C
-const uint8_t kMitsubishiAcMaxTemp = 31;  // 31C
-const uint8_t kMitsubishiAcVaneAuto = 0;
-const uint8_t kMitsubishiAcVaneAutoMove = 7;
+const float   kMitsubishiAcMinTemp = 16.0;  // 16C
+const float   kMitsubishiAcMaxTemp = 31.0;  // 31C
+const uint8_t kMitsubishiAcVaneAuto    = 0b000;  // Vanes move when AC wants to.
+const uint8_t kMitsubishiAcVaneHighest = 0b001;
+const uint8_t kMitsubishiAcVaneHigh    = 0b010;
+const uint8_t kMitsubishiAcVaneMiddle  = 0b011;
+const uint8_t kMitsubishiAcVaneLow     = 0b100;
+const uint8_t kMitsubishiAcVaneLowest  = 0b101;
+const uint8_t kMitsubishiAcVaneSwing   = 0b111;  // Vanes move all the time.
+const uint8_t kMitsubishiAcVaneAutoMove = kMitsubishiAcVaneSwing;  // Deprecated
+const uint8_t kMitsubishiAcWideVaneLeftMax  = 0b0001;  // 1
+const uint8_t kMitsubishiAcWideVaneLeft     = 0b0010;  // 2
+const uint8_t kMitsubishiAcWideVaneMiddle   = 0b0011;  // 3
+const uint8_t kMitsubishiAcWideVaneRight    = 0b0100;  // 4
+const uint8_t kMitsubishiAcWideVaneRightMax = 0b0101;  // 5
+const uint8_t kMitsubishiAcWideVaneWide     = 0b0110;  // 6
+const uint8_t kMitsubishiAcWideVaneAuto     = 0b1000;  // 8
 const uint8_t kMitsubishiAcNoTimer = 0;
 const uint8_t kMitsubishiAcStartTimer = 5;
 const uint8_t kMitsubishiAcStopTimer = 3;
 const uint8_t kMitsubishiAcStartStopTimer = 7;
-const uint8_t kMitsubishiAcWideVaneAuto = 8;
 
 /// Native representation of a Mitsubishi 136-bit A/C message.
 union Mitsubishi136Protocol{
@@ -237,8 +258,8 @@ class IRMitsubishiAC {
   void off(void);
   void setPower(const bool on);
   bool getPower(void) const;
-  void setTemp(const uint8_t degrees);
-  uint8_t getTemp(void) const;
+  void setTemp(const float degrees);
+  float getTemp(void) const;
   void setFan(const uint8_t speed);
   uint8_t getFan(void) const;
   void setMode(const uint8_t mode);
@@ -257,6 +278,8 @@ class IRMitsubishiAC {
   void setStopClock(const uint8_t clock);
   uint8_t getTimer(void) const;
   void setTimer(const uint8_t timer);
+  bool getWeeklyTimerEnabled(void) const;
+  void setWeeklyTimerEnabled(const bool on);
   static uint8_t convertMode(const stdAc::opmode_t mode);
   static uint8_t convertFan(const stdAc::fanspeed_t speed);
   static uint8_t convertSwingV(const stdAc::swingv_t position);

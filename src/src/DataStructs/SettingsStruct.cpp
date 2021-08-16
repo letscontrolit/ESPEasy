@@ -236,7 +236,15 @@ void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
   bitWrite(VariousBits1, 20, value);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins() const {
+  return bitRead(VariousBits1, 21);
+}
 
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins(bool value) {
+  bitWrite(VariousBits1, 21, value);
+}
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
@@ -575,6 +583,14 @@ template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
   if (pin < 0) return false;
   return Pin_i2c_sda == pin || Pin_i2c_scl == pin;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
+  return (Pin_i2c_sda != -1) &&
+         (Pin_i2c_scl != -1) &&
+         (I2C_clockSpeed > 0) &&
+         (I2C_clockSpeed_Slow > 0);
 }
 
 template<unsigned int N_TASKS>

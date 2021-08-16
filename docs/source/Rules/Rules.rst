@@ -56,6 +56,10 @@ Special Notations
 * ``{...:...}`` Referring to String conversions
 * Quotes (single, double or back quotes) Marking begin and end of a command parameter
 
+.. note::
+ Formulas used in tasks (thus not using the rules) may refer to ``%value%`` for the new current value and ``%pvalue%`` for the previous value before ``PLUGIN_READ`` was called.
+ These notations cannot be used in the rules.
+ If a previous value is needed, one has to use variables for it.
 
 
 Syntax
@@ -1084,18 +1088,18 @@ Radian Angle:
 * ``sin(x)`` Sine of x (radian)
 * ``cos(x)`` Cosine of x (radian)
 * ``tan(x)`` Tangent of x (radian)
-* ``arcSin(x)`` Arc Sine of x (radian)
-* ``arcCos(x)`` Arc Cosine of x (radian)
-* ``arcTan(x)`` Arc Tangent of x (radian)
+* ``aSin(x)`` Arc Sine of x (radian)
+* ``aCos(x)`` Arc Cosine of x (radian)
+* ``aTan(x)`` Arc Tangent of x (radian)
 
 Degree Angle:
 
 * ``sin_d(x)`` Sine of x (degree)
 * ``cos_d(x)`` Cosine of x (degree)
 * ``tan_d(x)`` Tangent of x (degree)
-* ``arcSin_d(x)`` Arc Sine of x (degree)
-* ``arcCos_d(x)`` Arc Cosine of x (degree)
-* ``arcTan_d(x)`` Arc Tangent of x (degree)
+* ``aSin_d(x)`` Arc Sine of x (degree)
+* ``aCos_d(x)`` Arc Cosine of x (degree)
+* ``aTan_d(x)`` Arc Tangent of x (degree)
 
 
 

@@ -68,6 +68,12 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x24);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -142,7 +148,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       if (counter == 3)
       {
         // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
-        if ((Settings.Pin_i2c_sda >= 0) && (Settings.Pin_i2c_scl >= 0)
+        if (Settings.isI2CEnabled()
             && ((digitalRead(Settings.Pin_i2c_sda) == 0) || (digitalRead(Settings.Pin_i2c_scl) == 0)))
         {
           addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));

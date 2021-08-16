@@ -60,7 +60,7 @@ void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
     lcd.setCursor(col, row);
 
     for (uint8_t i = col; i < Plugin_012_cols; i++) {
-      lcd.print(" ");
+      lcd.print(' ');
     }
   }
 

@@ -167,8 +167,7 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (!validGpio(Settings.Pin_i2c_sda) ||
-      !validGpio(Settings.Pin_i2c_scl)) 
+  if (Settings.isI2CEnabled())
   {
     return;
   }
@@ -701,7 +700,9 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-  uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+#if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+  const uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+#endif
 
   // TD-er: This also checks for ESP8266/ESP8285/ESP32
   switch (model) {
