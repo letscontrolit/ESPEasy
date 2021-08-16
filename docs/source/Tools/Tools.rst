@@ -193,7 +193,7 @@ Showing detected chip and used board definition.
 * **ESP Chip ID**:	Unique chip ID, showin in decimal and hexadecimal notation. Example: ``3740679 (0x391407)``
 * **ESP Chip Frequency**:	Set CPU clock frequency. Example: ``80 MHz``
 * **ESP Chip Model**:	Detected or configured CPU platform. Example: ``ESP8266``
-* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1`
+* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1``
 * **ESP Board Name**:	Used board definition. Example: ``PLATFORMIO_ESP12E``
 
 Storage
