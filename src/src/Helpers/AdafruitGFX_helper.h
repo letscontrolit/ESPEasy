@@ -21,7 +21,9 @@
 # ifndef ADAGFX_SUPPORT_7COLOR
 #  define ADAGFX_SUPPORT_7COLOR       1 // Do we support 7-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_7COLOR
-# define ADAGFX_FONTS_INCLUDED          // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+#ifndef ADAGFX_FONTS_INCLUDED
+# define ADAGFX_FONTS_INCLUDED        1 // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+#endif
 // #define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
 // #define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
 

@@ -6,7 +6,7 @@
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
 
-# ifdef ADAGFX_FONTS_INCLUDED
+# if ADAGFX_FONTS_INCLUDED
 #  include "src/Static/Fonts/Seven_Segment24pt7b.h"
 #  include "src/Static/Fonts/Seven_Segment18pt7b.h"
 #  include "src/Static/Fonts/FreeSans9pt7b.h"
@@ -26,7 +26,7 @@
 #   include "src/Static/Fonts/unispace_italic12pt7b.h"
 #   include "src/Static/Fonts/whitrabt12pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-# endif  // ifdef ADAGFX_FONTS_INCLUDED
+# endif  // if ADAGFX_FONTS_INCLUDED
 
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
@@ -295,10 +295,22 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("clear")))
   {
-    _display->fillScreen(_bgcolor);
+    if (argCount >= 1) {
+      _display->fillScreen(parseColor(sParams[0]));
+    } else {
+      _display->fillScreen(_bgcolor);
+    }
+  }
+  else if (subcommand.equals(F("rot")) && (argCount == 1))
+  {
+    if ((nParams[0] < 0) || (nParams[0] > 3)) {
+      success = false;
+    } else {
+      _display->setRotation(nParams[0]);
+    }
   }
   else if (subcommand.equals(F("font")) && (argCount == 1)) { // font: Change font
-    # ifdef ADAGFX_FONTS_INCLUDED
+    # if ADAGFX_FONTS_INCLUDED
     sParams[0].toLowerCase();
 
     if (sParams[0].equals(F("sevenseg24"))) {
@@ -383,9 +395,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else {
       success = false;
     }
-    # else // ifdef ADAGFX_FONTS_INCLUDED
+    # else // if ADAGFX_FONTS_INCLUDED
     success = false;
-    # endif // ifdef ADAGFX_FONTS_INCLUDED
+    # endif // if ADAGFX_FONTS_INCLUDED
   }
   else if (subcommand.equals(F("l")) && (argCount == 5)) { // l: Line
     # if ADAGFX_ARGUMENT_VALIDATION

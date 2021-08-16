@@ -11,9 +11,19 @@
     * For ``color`` arguments, see how colors can be defined in the ``txc`` subcommand description.
     "
     "
-    ``<trigger>,clear``
+    ``<trigger>,clear[,<color>]``
     ","
-    Clear the screen using last set background color. Color is either from configuration or ``txc`` subcommand.
+    Clear the screen using last set background color, or a specified color. Background color is either from configuration or ``txc`` subcommand.
+    "
+    "
+    ``<trigger>,rot,<rotation>``
+    ","
+    Rotate the display contents clock-wise, where rotation means:
+
+    * 0 : No rotation
+    * 1 : 90 degrees
+    * 2 : 180 degrees
+    * 3+ : 270 degrees
     "
     "
     ``<trigger>,txt,<text>``
