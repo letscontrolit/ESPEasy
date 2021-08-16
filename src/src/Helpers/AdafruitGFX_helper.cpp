@@ -211,8 +211,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("txs")) && (argCount == 1))
   {
-    _fontscaling = nParams[0];
-    _display->setTextSize(_fontscaling);
+    if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
+      _fontscaling = nParams[0];
+      _display->setTextSize(_fontscaling);
+    } else {
+      success = false;
+    }
   }
   else if (subcommand.equals(F("txtfull")) && (argCount >= 3) && (argCount <= 6)) { // txtfull: Text at position, with size and color
     switch (argCount) {
@@ -291,7 +295,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("clear")))
   {
-    _display->fillScreen(ADAGFX_BLACK);
+    _display->fillScreen(_bgcolor);
   }
   else if (subcommand.equals(F("font")) && (argCount == 1)) { // font: Change font
     # ifdef ADAGFX_FONTS_INCLUDED
@@ -555,7 +559,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       while (loop) {
         String color = parseString(string, h + v + 5); // 5 = 2 + 3 already parsed
 
-        if (color.isEmpty()) {
+        if (color.isEmpty() || invalidCoordinates(nParams[0] + h, nParams[1] + v)) {
           loop = false;
         } else {
           _display->writePixel(nParams[0] + h, nParams[1] + v, parseColor(color));
