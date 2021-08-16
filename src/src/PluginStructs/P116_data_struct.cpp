@@ -361,7 +361,21 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
       displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
     }
     else if (arg1.equals(F("clear"))) {
-      st77xx->fillScreen(ST7735_BLACK);
+      st77xx->fillScreen(_bgcolor);
+    }
+    else if (arg1.equals(F("backlight"))) {
+      String arg2 = parseString(string, 3);
+      int    nArg2;
+
+      if ((P116_CONFIG_BACKLIGHT_PIN != -1) && // All is valid?
+          validIntFromString(arg2, nArg2) &&
+          (nArg2 > 0) &&
+          (nArg2 <= 100)) {
+        P116_CONFIG_BACKLIGHT_PERCENT = nArg2; // Set but don't store
+        displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+      } else {
+        success = false;
+      }
     } else {
       success = false;
     }

@@ -8,6 +8,7 @@
 
 
 // History:
+// 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
 // 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
 //                        P116: Use more features of AdafruitGFX_helper
 //                        AdafruitGFX: Apply 'Text Print Mode' options
