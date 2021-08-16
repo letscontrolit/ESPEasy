@@ -402,7 +402,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   else if (subcommand.equals(F("lh")) && (argCount == 3)) { // lh: Horizontal line
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1])) {
+    if ((nParams[0] < 0) || (nParams[0] > _res_x)) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -413,7 +413,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   else if (subcommand.equals(F("lv")) && (argCount == 3)) { // lv: Vertical line
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[0], nParams[1])) {
+    if ((nParams[0] < 0) || (nParams[0] > _res_y)) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -425,7 +425,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3])) {
+        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -437,7 +437,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3])) {
+        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -502,8 +502,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3]) ||
-        invalidCoordinates(nParams[4], 0)) { // Also check radius
+        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3]) ||
+        invalidCoordinates(nParams[4],              0)) { // Also check radius
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -515,8 +515,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # if ADAGFX_ARGUMENT_VALIDATION
 
     if (invalidCoordinates(nParams[0], nParams[1]) ||
-        invalidCoordinates(nParams[2], nParams[3]) ||
-        invalidCoordinates(nParams[4], 0)) { // Also check radius
+        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3]) ||
+        invalidCoordinates(nParams[4],              0)) { // Also check radius
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
