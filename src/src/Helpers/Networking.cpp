@@ -109,7 +109,7 @@ void syslog(uint8_t logLevel, const char *message)
       portUDP.write(header.c_str(),            header.length());
       #endif // ifdef ESP8266
       #ifdef ESP32
-      portUDP.write((uint8_t *)header.c_str(), header.length());
+      portUDP.write(reinterpret_cast<const uint8_t *>(header.c_str()), header.length());
       #endif // ifdef ESP32
     }
     const char *c = message;
@@ -221,7 +221,7 @@ void checkUDP()
         int len = portUDP.read(&packetBuffer[0], packetSize);
 
         if (len >= 2) {
-          if (reinterpret_cast<unsigned char&>(packetBuffer[0]) != 255)
+          if (static_cast<uint8_t>(packetBuffer[0]) != 255)
           {
             packetBuffer[len] = 0;
             addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
@@ -500,7 +500,7 @@ void sendSysInfoUDP(uint8_t repeats)
     data[12] = Settings.Unit;
     data[13] =  lowByte(Settings.Build);
     data[14] = highByte(Settings.Build);
-    memcpy((uint8_t *)data + 15, Settings.Name, 25);
+    memcpy(reinterpret_cast<uint8_t *>(data) + 15, Settings.Name, 25);
     data[40] = NODE_TYPE_ID;
     data[41] =  lowByte(Settings.WebserverPort);
     data[42] = highByte(Settings.WebserverPort);
@@ -1253,7 +1253,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     // read all data from server
     while (http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
-      const size_t c = stream->readBytes(buff, std::min((size_t)len, downloadBuffSize));
+      const size_t c = stream->readBytes(buff, std::min(static_cast<size_t>(len), downloadBuffSize));
 
       if (c > 0) {
         timeout = millis() + 2000;

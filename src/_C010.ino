@@ -141,7 +141,7 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
   }
 
   C010_portUDP.write(
-    (uint8_t *)element.txt[element.valuesSent].c_str(),
+    reinterpret_cast<const uint8_t *>(element.txt[element.valuesSent].c_str()),
     element.txt[element.valuesSent].length());
   bool reply = C010_portUDP.endPacket();
 

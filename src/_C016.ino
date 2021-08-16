@@ -117,7 +117,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
         event, 
         valueCount, 
         C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
-      success = ControllerCache.write((uint8_t *)&element, sizeof(element));
+      success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&element), sizeof(element));
 
       /*
               if (C016_DelayHandler == nullptr) {

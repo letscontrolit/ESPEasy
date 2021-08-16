@@ -104,7 +104,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       if (Wire.available())
       {
         Wire.read();                                       // Read older value first (stored in chip)
-        UserVar[event->BaseVarIndex] = (float)Wire.read(); // now read actual value and store into Nodo var
+        UserVar[event->BaseVarIndex] = Wire.read(); // now read actual value and store into Nodo var
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;

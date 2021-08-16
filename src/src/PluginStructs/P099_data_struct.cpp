@@ -86,7 +86,7 @@ void P099_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
   log += sizeof(StoredSettings);
   addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_099_DEBUG
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(StoredSettings), sizeof(StoredSettings));
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 
   for (int i = 0; i < P099_MaxObjectCount; i++) {
     StoredSettings.TouchObjects[i].objectname[P099_MaxObjectNameLength - 1] = 0; // Terminate strings in case of uninitialized data

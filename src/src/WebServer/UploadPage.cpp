@@ -133,7 +133,7 @@ void handleFileUpload() {
         for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
         {
           uint8_t b = upload.buf[x];
-          memcpy((uint8_t *)&Temp + x, &b, 1);
+          memcpy(reinterpret_cast<uint8_t *>(&Temp) + x, &b, 1);
         }
 
         if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
