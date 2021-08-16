@@ -140,6 +140,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Layout"));
 
+      {
+        const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
+        const int optionValues5[]             = { 0, 1, 2, 3 };
+        addFormSelector(F("Rotation"), F("p116_rotate"), 4, options5, optionValues5, P116_CONFIG_FLAG_GET_ROTATION);
+      }
+
       # ifdef P116_USE_ADA_GRAPHICS
       AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
       # else // ifdef P116_USE_ADA_GRAPHICS
@@ -152,12 +158,6 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Text print Mode"), F("p116_mode"), 3, options3, optionValues3, P116_CONFIG_FLAG_GET_MODE);
       }
       # endif // ifdef P116_USE_ADA_GRAPHICS
-
-      {
-        const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
-        const int optionValues5[]             = { 0, 1, 2, 3 };
-        addFormSelector(F("Rotation"), F("p116_rotate"), 4, options5, optionValues5, P116_CONFIG_FLAG_GET_ROTATION);
-      }
 
       addFormNumericBox(F("Font scaling"), F("p116_fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE, 1, 10);
       addUnit(F("1x..10x"));
