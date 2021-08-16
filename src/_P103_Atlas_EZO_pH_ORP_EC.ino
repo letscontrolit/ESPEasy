@@ -277,7 +277,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
       addFormSubHeader(F("Temperature compensation"));
       char deviceTemperatureTemplate[40] = {0};
-      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
       addFormTextBox(F("Temperature "), F("Plugin_103_temperature_template"), deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
       addFormNote(F("You can use a formulae and idealy refer to a temp sensor (directly, via ESPEasyP2P or MQTT import) ,e.g. '[Pool#Temperature]'. If you don't have a sensor, you could type a fixed value like '25' for '25.5'."));
@@ -385,7 +385,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       safe_strncpy(deviceTemperatureTemplate, tmpString.c_str(), sizeof(deviceTemperatureTemplate) - 1);
       ZERO_TERMINATE(deviceTemperatureTemplate); // be sure that our string ends with a \0
 
-      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate)));
+      addHtmlError(SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate)));
     }
 
     success = true;
@@ -408,7 +408,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     {
       // first set the temperature of reading
       char deviceTemperatureTemplate[40] = {0};
-      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemperatureTemplate, sizeof(deviceTemperatureTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemperatureTemplate), sizeof(deviceTemperatureTemplate));
       ZERO_TERMINATE(deviceTemperatureTemplate);
 
       String deviceTemperatureTemplateString(deviceTemperatureTemplate);

@@ -108,7 +108,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize);
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Save array of Strings to Custom Task settings
@@ -152,7 +152,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex);
 /********************************************************************************************\
    Save Custom Controller settings to file system
  \*********************************************************************************************/
-String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *memAddress, int datasize);
+String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Load Custom Controller settings to file system
@@ -162,7 +162,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
-String SaveNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
+String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress, int datasize);
 
 
 /********************************************************************************************\
@@ -209,9 +209,9 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
 
 String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize);
 
-String SaveToFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize);
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize);
 
-String SaveToFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int posInBlock);
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock);
 
 String ClearInFile(SettingsType::Enum settingsType, int index);
 
