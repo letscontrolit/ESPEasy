@@ -4,9 +4,6 @@
 
 # include "../Helpers/Hardware.h"
 
-String P116_parseTemplate(String& tmpString,
-                          uint8_t lineSize); // Forward declaration
-
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
  ***************************************************************************/
@@ -281,7 +278,7 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
     # endif // ifdef P116_USE_ADA_GRAPHICS
 
     for (uint8_t x = 0; x < _textrows; x++) {
-      String newString = P116_parseTemplate(strings[x], _textcols);
+      String newString = AdaGFXparseTemplate(strings[x], _textcols);
 
       if (!newString.isEmpty()) {
         # ifdef P116_USE_ADA_GRAPHICS
@@ -393,7 +390,7 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
 
     if (gfxHelper != nullptr) {
       String tmp = string;
-      success = gfxHelper->processCommand(P116_parseTemplate(tmp, _textcols)); // Hand it over after replacing variables
+      success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols)); // Hand it over after replacing variables
 
       if (success) {
         updateFontMetrics();                                                   // Font may have changed
@@ -407,7 +404,7 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
     int colPos  = (event->Par2 - 1) + _leftMarginCompensation;
     int rowPos  = ((event->Par1 - 1) * 10 * _fontscaling) + _topMarginCompensation;
     String text = parseStringKeepCase(string, 4);
-    text = P116_parseTemplate(text, _textcols);
+    text = AdaGFXparseTemplate(text, _textcols);
 
     // clear line before writing new string
     if (_textmode == 2) {
@@ -477,57 +474,6 @@ void P116_data_struct::displayOnOff(bool    state,
   }
   st77xx->enableDisplay(state);           // Display on
   _displayTimer = (state ? displayTimeout : 0);
-}
-
-/****************************************************************************
- * P116_parseTemplate: Replace variables and adjust unicode special characters to Adafruit font
- ***************************************************************************/
-
-// Änderung WDS: Tabelle vorerst Abgeschaltet !!!!
-// Perform some specific changes for LCD display
-// https://www.letscontrolit.com/forum/viewtopic.php?t=2368
-String P116_parseTemplate(String& tmpString, uint8_t lineSize) {
-  String result            = parseTemplate_padded(tmpString, lineSize);
-  const char degree[3]     = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
-  const char degree_tft[2] = { 0xdf, 0 };       // P116_LCD degree symbol
-
-  result.replace(degree, degree_tft);
-
-  char unicodePrefix = 0xc3;
-
-  if (result.indexOf(unicodePrefix) != -1) {
-    // See: https://github.com/letscontrolit/ESPEasy/issues/2081
-
-    const char umlautAE_uni[3] = { 0xc3, 0x84, 0 };  // Unicode Umlaute AE
-    const char umlautAE_tft[2] = { 0x8e, 0 };        // P116_LCD Umlaute
-    result.replace(umlautAE_uni, umlautAE_tft);
-
-    const char umlaut_ae_uni[3] = { 0xc3, 0xa4, 0 }; // Unicode Umlaute ae
-    const char umlautae_tft[2]  = { 0x84, 0 };       // P116_LCD Umlaute
-    result.replace(umlaut_ae_uni, umlautae_tft);
-
-    const char umlautOE_uni[3] = { 0xc3, 0x96, 0 };  // Unicode Umlaute OE
-    const char umlautOE_tft[2] = { 0x99, 0 };        // P116_LCD Umlaute
-    result.replace(umlautOE_uni, umlautOE_tft);
-
-    const char umlaut_oe_uni[3] = { 0xc3, 0xb6, 0 }; // Unicode Umlaute oe
-    const char umlautoe_tft[2]  = { 0x98, 0 };       // P116_LCD Umlaute
-    result.replace(umlaut_oe_uni, umlautoe_tft);
-
-    const char umlautUE_uni[3] = { 0xc3, 0x9c, 0 };  // Unicode Umlaute UE
-    const char umlautUE_tft[2] = { 0x9a, 0 };        // P116_LCD Umlaute
-    result.replace(umlautUE_uni, umlautUE_tft);
-
-    const char umlaut_ue_uni[3] = { 0xc3, 0xbc, 0 }; // Unicode Umlaute ue
-    const char umlautue_tft[2]  = { 0x81, 0 };       // P116_LCD Umlaute
-    result.replace(umlaut_ue_uni, umlautue_tft);
-
-    //    const char umlaut_sz_uni[3] = {0xc3, 0x9f, 0}; // Unicode Umlaute sz
-    //    const char umlaut_sz_tft[2] = {0xe2, 0}; // P116_LCD Umlaute
-    //    result.replace(umlaut_sz_uni, umlaut_sz_tft);
-    delay(0);
-  }
-  return result;
 }
 
 #endif // ifdef USES_P116

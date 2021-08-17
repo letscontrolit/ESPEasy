@@ -61,6 +61,68 @@ void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
   addFormSelector(F("Text print Mode"), id, textModeCount, textModes, textModeOptions, selectedIndex);
 }
 
+/*****************************************************************************************
+ * Show a selector for Rotation options, supported by Adafruit_GFX
+ ****************************************************************************************/
+void AdaGFXFormRotation(const __FlashStringHelper *id,
+                        uint8_t                    selectedIndex) {
+  const __FlashStringHelper *rotationOptions[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
+  const int rotationOptionValues[]             = { 0, 1, 2, 3 };
+
+  addFormSelector(F("Rotation"), id, 4, rotationOptions, rotationOptionValues, selectedIndex);
+}
+
+/****************************************************************************
+ * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
+ ***************************************************************************/
+String AdaGFXparseTemplate(String& tmpString,
+                           uint8_t lineSize) {
+  // Änderung WDS: Tabelle vorerst Abgeschaltet !!!!
+  // Perform some specific changes for LCD display
+  // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
+  String result            = parseTemplate_padded(tmpString, lineSize);
+  const char degree[3]     = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
+  const char degree_tft[2] = { 0xdf, 0 };       // P116_LCD degree symbol
+
+  result.replace(degree, degree_tft);
+
+  char unicodePrefix = 0xc3;
+
+  if (result.indexOf(unicodePrefix) != -1) {
+    // See: https://github.com/letscontrolit/ESPEasy/issues/2081
+
+    const char umlautAE_uni[3] = { 0xc3, 0x84, 0 };  // Unicode Umlaute AE
+    const char umlautAE_tft[2] = { 0x8e, 0 };        // P116_LCD Umlaute
+    result.replace(umlautAE_uni, umlautAE_tft);
+
+    const char umlaut_ae_uni[3] = { 0xc3, 0xa4, 0 }; // Unicode Umlaute ae
+    const char umlautae_tft[2]  = { 0x84, 0 };       // P116_LCD Umlaute
+    result.replace(umlaut_ae_uni, umlautae_tft);
+
+    const char umlautOE_uni[3] = { 0xc3, 0x96, 0 };  // Unicode Umlaute OE
+    const char umlautOE_tft[2] = { 0x99, 0 };        // P116_LCD Umlaute
+    result.replace(umlautOE_uni, umlautOE_tft);
+
+    const char umlaut_oe_uni[3] = { 0xc3, 0xb6, 0 }; // Unicode Umlaute oe
+    const char umlautoe_tft[2]  = { 0x98, 0 };       // P116_LCD Umlaute
+    result.replace(umlaut_oe_uni, umlautoe_tft);
+
+    const char umlautUE_uni[3] = { 0xc3, 0x9c, 0 };  // Unicode Umlaute UE
+    const char umlautUE_tft[2] = { 0x9a, 0 };        // P116_LCD Umlaute
+    result.replace(umlautUE_uni, umlautUE_tft);
+
+    const char umlaut_ue_uni[3] = { 0xc3, 0xbc, 0 }; // Unicode Umlaute ue
+    const char umlautue_tft[2]  = { 0x81, 0 };       // P116_LCD Umlaute
+    result.replace(umlaut_ue_uni, umlautue_tft);
+
+    //    const char umlaut_sz_uni[3] = {0xc3, 0x9f, 0}; // Unicode Umlaute sz
+    //    const char umlaut_sz_tft[2] = {0xe2, 0}; // P116_LCD Umlaute
+    //    result.replace(umlaut_sz_uni, umlaut_sz_tft);
+    delay(0);
+  }
+  return result;
+}
+
 // AdafruitGFX_helper class methods
 
 /****************************************************************************

@@ -143,11 +143,15 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Layout"));
 
+      # ifdef P116_USE_ADA_GRAPHICS
+      AdaGFXFormRotation(F("p116_rotate"), P116_CONFIG_FLAG_GET_ROTATION);
+      # else // ifdef P116_USE_ADA_GRAPHICS
       {
         const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         const int optionValues5[]             = { 0, 1, 2, 3 };
         addFormSelector(F("Rotation"), F("p116_rotate"), 4, options5, optionValues5, P116_CONFIG_FLAG_GET_ROTATION);
       }
+      # endif // ifdef P116_USE_ADA_GRAPHICS
 
       # ifdef P116_USE_ADA_GRAPHICS
       AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
