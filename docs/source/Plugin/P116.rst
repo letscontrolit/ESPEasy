@@ -180,7 +180,7 @@ Colors can be specified in 3 ways:
 * *#RGB565* A ``#`` prefixed, 1 to 4 digit, hex-coded color value in RGB565 format (5 bits red, 6 bits green, 5 bits blue) giving the max. number of 65535 colors. This is the value that is shown after the settings are saved.
 * *#RRGGBB* A ``#`` prefixed, 6 digit, hex coded RGB color value. Will be transformed to an RGB565 value!
 
-If the Foreground and Background colors are the same, f.e. when saved empty, the default White (#FFFF) foreground and Black (#0) background colors will be set.
+If the Foreground and Background colors are the same, the background color will become ``transparent``. If the Forground color is empty, as a default ``white`` will be set.
 
 * **Wake display on receiving text** When checked, the display will be enabled once any content is written to the screen, either triggered by the Interval, or from a command.
 

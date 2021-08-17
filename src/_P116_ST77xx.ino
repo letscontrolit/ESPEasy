@@ -265,14 +265,14 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       if (gfxHelper != nullptr) {
         String   color   = web_server.arg(F("p116_foregroundcolor"));
-        uint16_t fgcolor = gfxHelper->parseColor(color); // Reduce to rgb565
+        uint16_t fgcolor = ADAGFX_WHITE;          // Default to white when empty
+
+        if (!color.isEmpty()) {
+          fgcolor = gfxHelper->parseColor(color); // Reduce to rgb565
+        }
         color = web_server.arg(F("p116_backgroundcolor"));
         uint16_t bgcolor = gfxHelper->parseColor(color);
 
-        if (fgcolor == bgcolor) { // Sanity check
-          fgcolor = ADAGFX_WHITE;
-          bgcolor = ADAGFX_BLACK;
-        }
         P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
         delete gfxHelper;
       }

@@ -265,8 +265,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     _fgcolor = parseColor(sParams[0]);
 
     if (argCount == 1) {
+      _bgcolor = _fgcolor; // Transparent background
       _display->setTextColor(_fgcolor);
-    } else { // argCount=2
+    } else {               // argCount=2
       _bgcolor = parseColor(sParams[1]);
       _display->setTextColor(_fgcolor, _bgcolor);
     }
@@ -296,10 +297,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                     nParams[1] - _p095_compensation,
                     _fontscaling,
                     _fgcolor,
-                    _bgcolor);
+                    _fgcolor); // transparent bg
         }
         break;
-      case 4: // text + size
+      case 4:                  // text + size
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
@@ -313,10 +314,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                     nParams[1] - _p095_compensation,
                     nParams[2],
                     _fgcolor,
-                    _bgcolor);
+                    _fgcolor); // transparent bg
         }
         break;
-      case 5: // text + size + color
+      case 5:                  // text + size + color
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
@@ -325,15 +326,16 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
+          uint16_t color = parseColor(sParams[3]);
           printText(sParams[4].c_str(),
                     nParams[0] - _p095_compensation,
                     nParams[1] - _p095_compensation,
                     nParams[2],
-                    parseColor(sParams[3]),
-                    _bgcolor);
+                    color,
+                    color); // transparent bg
         }
         break;
-      case 6: // text + size + color + bkcolor
+      case 6:               // text + size + color + bkcolor
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
