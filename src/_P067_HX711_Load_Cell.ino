@@ -394,7 +394,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
           if (Plugin_067_OversamplingCountChanA[event->TaskIndex] > 0)
           {
-            UserVar[event->BaseVarIndex + 2] = (float)Plugin_067_OversamplingValueChanA[event->TaskIndex] / Plugin_067_OversamplingCountChanA[event->TaskIndex];
+            UserVar[event->BaseVarIndex + 2] = static_cast<float>(Plugin_067_OversamplingValueChanA[event->TaskIndex]) / Plugin_067_OversamplingCountChanA[event->TaskIndex];
 
             Plugin_067_OversamplingValueChanA[event->TaskIndex] = 0;
             Plugin_067_OversamplingCountChanA[event->TaskIndex] = 0;
@@ -412,7 +412,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
               float out2 = PCONFIG_FLOAT(1);
               if (adc1 != adc2)
               {
-                float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+                const float normalized = static_cast<float>(UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
                 UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
                 log += F(" = ");
@@ -434,7 +434,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
           if (Plugin_067_OversamplingCountChanB[event->TaskIndex] > 0)
           {
-            UserVar[event->BaseVarIndex + 3] = (float)Plugin_067_OversamplingValueChanB[event->TaskIndex] / Plugin_067_OversamplingCountChanB[event->TaskIndex];
+            UserVar[event->BaseVarIndex + 3] = static_cast<float>(Plugin_067_OversamplingValueChanB[event->TaskIndex]) / Plugin_067_OversamplingCountChanB[event->TaskIndex];
 
             Plugin_067_OversamplingValueChanB[event->TaskIndex] = 0;
             Plugin_067_OversamplingCountChanB[event->TaskIndex] = 0;
@@ -452,7 +452,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
               float out2 = PCONFIG_FLOAT(3);
               if (adc1 != adc2)
               {
-                float normalized = (float)(UserVar[event->BaseVarIndex + 1] - adc1) / (float)(adc2 - adc1);
+                float normalized = (UserVar[event->BaseVarIndex + 1] - adc1) / static_cast<float>(adc2 - adc1);
                 UserVar[event->BaseVarIndex + 1] = normalized * (out2 - out1) + out1;
 
                 log += F(" = ");

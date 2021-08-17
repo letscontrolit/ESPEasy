@@ -16,11 +16,13 @@
 #include "ir_Daikin.h"
 #include "ir_Delonghi.h"
 #include "ir_Fujitsu.h"
+#include "ir_Ecoclim.h"
 #include "ir_Electra.h"
 #include "ir_Goodweather.h"
 #include "ir_Gree.h"
 #include "ir_Haier.h"
 #include "ir_Hitachi.h"
+#include "ir_Kelon.h"
 #include "ir_Kelvinator.h"
 #include "ir_LG.h"
 #include "ir_Midea.h"
@@ -37,6 +39,7 @@
 #include "ir_Toshiba.h"
 #include "ir_Transcold.h"
 #include "ir_Trotec.h"
+#include "ir_Truma.h"
 #include "ir_Vestel.h"
 #include "ir_Voltas.h"
 #include "ir_Whirlpool.h"
@@ -206,6 +209,12 @@ void daikin216(IRDaikin216 *ac,
                   const float degrees, const stdAc::fanspeed_t fan,
                   const bool turbo, const int16_t sleep = -1);
 #endif  // SEND_DELONGHI_AC
+#if SEND_ECOCLIM
+void ecoclim(IREcoclimAc *ac,
+             const bool on, const stdAc::opmode_t mode,
+             const float degrees, const stdAc::fanspeed_t fan,
+             const int16_t sleep = -1, const int16_t clock = -1);
+#endif  // SEND_ECOCLIM
 #if SEND_ELECTRA_AC
 void electra(IRElectraAc *ac,
              const bool on, const stdAc::opmode_t mode,
@@ -216,7 +225,8 @@ void electra(IRElectraAc *ac,
 #endif  // SEND_ELECTRA_AC
 #if SEND_FUJITSU_AC
   void fujitsu(IRFujitsuAC *ac, const fujitsu_ac_remote_model_t model,
-               const bool on, const stdAc::opmode_t mode, const float degrees,
+               const bool on, const stdAc::opmode_t mode,
+               const bool celsius, const float degrees,
                const stdAc::fanspeed_t fan,
                const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
                const bool quiet, const bool turbo, const bool econo,
@@ -280,6 +290,12 @@ void electra(IRElectraAc *ac,
                   const float degrees, const stdAc::fanspeed_t fan,
                   const stdAc::swingv_t swingv);
 #endif  // SEND_HITACHI_AC424
+#if SEND_KELON
+  void kelon(IRKelonAc *ac, const bool togglePower, const stdAc::opmode_t mode,
+             const int8_t dryGrade, const float degrees,
+             const stdAc::fanspeed_t fan, const bool toggleSwing,
+             const bool superCool, const int16_t sleep);
+#endif  // SEND_KELON
 #if SEND_KELVINATOR
   void kelvinator(IRKelvinatorAC *ac,
                   const bool on, const stdAc::opmode_t mode,
@@ -354,6 +370,12 @@ void electra(IRElectraAc *ac,
                  const bool quiet, const bool turbo, const bool filter,
                  const int16_t clock = -1);
 #endif  // SEND_PANASONIC_AC
+#if SEND_PANASONIC_AC32
+  void panasonic32(IRPanasonicAc32 *ac,
+                   const bool on, const stdAc::opmode_t mode,
+                   const float degrees, const stdAc::fanspeed_t fan,
+                   const stdAc::swingv_t swingv, const stdAc::swingh_t swingh);
+#endif  // SEND_PANASONIC_AC32
 #if SEND_SAMSUNG_AC
   void samsung(IRSamsungAc *ac,
                const bool on, const stdAc::opmode_t mode, const float degrees,
@@ -407,6 +429,11 @@ void electra(IRElectraAc *ac,
               const bool on, const stdAc::opmode_t mode, const float degrees,
               const stdAc::fanspeed_t fan, const int16_t sleep = -1);
 #endif  // SEND_TROTEC
+#if SEND_TRUMA
+  void truma(IRTrumaAc *ac,
+              const bool on, const stdAc::opmode_t mode, const float degrees,
+              const stdAc::fanspeed_t fan, const bool quiet);
+#endif  // SEND_TRUMA
 #if SEND_VESTEL_AC
   void vestel(IRVestelAc *ac,
               const bool on, const stdAc::opmode_t mode, const float degrees,

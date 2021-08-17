@@ -16,8 +16,8 @@ The filename is quite descriptive:
 
 Build type can be:  (differ in included plugins)
 - normal  => Only Stable plugins and controllers
-- test    => Stable + Testing
-- dev     => Stable + Testing + Development
+- test    => Stable + Testing, divided in various build sets to fit max. build size.
+- max     => Only for ESP32 boards with large flash size, includes all plugins.
 
 There is also a number of special builds:
 - normal_IR => "Normal" + IR receiver/transmitter plugins and library
@@ -29,19 +29,24 @@ There is also a number of special builds:
 Chip can be:
 - ESP8266      => Most likely option
 - ESP8285      => Used in some Sonoff modules
-- ESP32        => Experimental support at this moment
+- ESP32        => Showing up in commercial products, but mainly seen on NodeMCU like boards.
 
 MemorySize can be:
 - 1M  => 1 MB flash modules (e.g. almost all Sonoff modules)
 - 2M  => 2 MB flash modules (e.g. Shelly1/WROOM02)
 - 4M  => 4 MB flash modules (e.g. NodeMCU/ESP32)
-- 16M => 16 MB flash modules (e.g. Wemos D1 mini pro)
+- 16M => 16 MB flash modules (e.g. Wemos D1 mini pro or some of the modern ESP32 boards)
 
 Please note that the performance of 14MB SPIFFS (16M flash modules) is really slow.
 All file access takes a lot longer and since the settings are also read from flash, the entire node will perform slower.
 See [Arduino issue - SPIFFS file access slow on 16/14M flash config](https://github.com/esp8266/Arduino/issues/5932)
 
 If these speed issues will be fixed, it is very likely the SPIFFS must then be re-partitioned, thus loosing all data in the SPIFFS.
+
+As alternative for SPIFFS, one can chose for LittleFS.
+This currently is very fast when using it, but extremely slow when storing settings as updating a part of a file is not suitable for LittleFS.
+However this will be dealt with in the future.
+N.B. SPIFFS and LittleFS are not compatible. Switching from one to the other will delete all existing settings and configuration stored on the file system.
 
 Special memory partitioning:
 - 2M256  => 2 MB flash modules (e.g. Shelly1/WROOM02) with 256k SPIFFS (only core 2.5.0 or newer)
@@ -55,10 +60,15 @@ Please note that this only can be used on installs already running a very recent
 This also means we still need to update the 2-step updater to support .bin.gz files.
 
 
-ESP32 now has 3 builds:
+ESP32 now has a number of builds:
 - custom_ESP32_4M316k  Build template using either the plugin set defined in ``Custom.h`` or ``tools/pio/pre_custom_esp32.py``
 - test_ESP32_4M316k  Build using the "testing" set of plugins for ESP32
 - test_ESP32-wrover-kit_4M316k  A build for ESP32 including build flags for the official WRover test kit.
+- max_ESP32_16M1M  A build for ESP32 with larger flash size including all plugins.
+
+ESP32 also supports Ethernet.
+Ethernet support is included in similar builds as mentioned before, only ending with "_ETH" in the file name.
+
 
 
 Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build:
@@ -83,6 +93,12 @@ To help recover from a bad flash, there are also blank images included.
 
 When the wrong image is flashed, or the module behaves unstable, or is in a reboot loop,
 flash these images first and then the right image for the module.
+
+Sometimes an update performed via OTA (Over The Air) is not performing as stable as one might expect.
+It is yet unclear why this happens or what may cause it.
+The remedy is often to flash the same build another time via serial.
+There does seem to be some correlation to bad OTA flashes and flash chips made by XMC, but it is not exclusive to this brand of flash chips.
+
 
 ESP.Easy.Flasher.exe...
 ... is the new flashing tool for ESP Easy. You need to run it in elevated mode (as admin)

@@ -681,7 +681,9 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-  uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+#if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+  const uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+#endif
 
   // TD-er: This also checks for ESP8266/ESP8285/ESP32
   switch (model) {

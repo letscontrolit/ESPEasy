@@ -37,6 +37,7 @@
  * Vestel AC code by Erdem U. Altınyurt
  * Teco AC code by Fabien Valthier (hcoohb)
  * Mitsubishi 112 AC Code by kuchel77
+ * Kelon AC code by Davide Depau (Depau)
  *
  *  GPL license, all text above must be included in any redistribution
  ****************************************************/
@@ -52,7 +53,7 @@
 #endif  // UNIT_TEST
 
 // Library Version
-#define _IRREMOTEESP8266_VERSION_ "2.7.13"
+#define _IRREMOTEESP8266_VERSION_ "2.7.19"
 
 // Set the language & locale for the library. See the `locale` dir for options.
 #ifndef _IR_LOCALE_
@@ -719,6 +720,55 @@
 #define SEND_ELITESCREENS      _IR_ENABLE_DEFAULT_
 #endif  // SEND_ELITESCREENS
 
+#ifndef DECODE_MILESTAG2
+#define DECODE_MILESTAG2    _IR_ENABLE_DEFAULT_
+#endif  // DECODE_MILESTAG2
+#ifndef SEND_MILESTAG2
+#define SEND_MILESTAG2      _IR_ENABLE_DEFAULT_
+#endif  // SEND_MILESTAG2
+
+#ifndef DECODE_ECOCLIM
+#define DECODE_ECOCLIM      _IR_ENABLE_DEFAULT_
+#endif  // DECODE_ECOCLIM
+#ifndef SEND_ECOCLIM
+#define SEND_ECOCLIM        _IR_ENABLE_DEFAULT_
+#endif  // SEND_ECOCLIM
+
+#ifndef DECODE_XMP
+#define DECODE_XMP          _IR_ENABLE_DEFAULT_
+#endif  // DECODE_XMP
+#ifndef SEND_XMP
+#define SEND_XMP            _IR_ENABLE_DEFAULT_
+#endif  // SEND_XMP
+
+#ifndef DECODE_TRUMA
+#define DECODE_TRUMA        _IR_ENABLE_DEFAULT_
+#endif  // DECODE_TRUMA
+#ifndef SEND_TRUMA
+#define SEND_TRUMA          _IR_ENABLE_DEFAULT_
+#endif  // SEND_TRUMA
+
+#ifndef DECODE_HAIER_AC176
+#define DECODE_HAIER_AC176  _IR_ENABLE_DEFAULT_
+#endif  // DECODE_HAIER_AC176
+#ifndef SEND_HAIER_AC176
+#define SEND_HAIER_AC176    _IR_ENABLE_DEFAULT_
+#endif  // SEND_HAIER_AC176
+
+#ifndef DECODE_TEKNOPOINT
+#define DECODE_TEKNOPOINT  _IR_ENABLE_DEFAULT_
+#endif  // DECODE_TEKNOPOINT
+#ifndef SEND_TEKNOPOINT
+#define SEND_TEKNOPOINT    _IR_ENABLE_DEFAULT_
+#endif  // SEND_TEKNOPOINT
+
+#ifndef DECODE_KELON
+#define DECODE_KELON        _IR_ENABLE_DEFAULT_
+#endif  // DECODE_KELON
+#ifndef SEND_KELON
+#define SEND_KELON          _IR_ENABLE_DEFAULT_
+#endif  // SEND_KELON
+
 #if (DECODE_ARGO || DECODE_DAIKIN || DECODE_FUJITSU_AC || DECODE_GREE || \
      DECODE_KELVINATOR || DECODE_MITSUBISHI_AC || DECODE_TOSHIBA_AC || \
      DECODE_TROTEC || DECODE_HAIER_AC || DECODE_HITACHI_AC || \
@@ -731,7 +781,9 @@
      DECODE_AMCOR || DECODE_DAIKIN152 || DECODE_MITSUBISHI136 || \
      DECODE_MITSUBISHI112 || DECODE_HITACHI_AC424 || DECODE_HITACHI_AC3 || \
      DECODE_HITACHI_AC344 || DECODE_CORONA_AC || DECODE_SANYO_AC || \
-     DECODE_VOLTAS || DECODE_MIRAGE)
+     DECODE_VOLTAS || DECODE_MIRAGE || DECODE_HAIER_AC176 || \
+     DECODE_TEKNOPOINT || DECODE_KELON || \
+     false)
   // Add any DECODE to the above if it uses result->state (see kStateSizeMax)
   // you might also want to add the protocol to hasACState function
 #define DECODE_AC true  // We need some common infrastructure for decoding A/Cs.
@@ -867,8 +919,15 @@ enum decode_type_t {
   MIRAGE,
   ELITESCREENS,  // 95
   PANASONIC_AC32,
+  MILESTAG2,
+  ECOCLIM,
+  XMP,
+  TRUMA,  // 100
+  HAIER_AC176,
+  TEKNOPOINT,
+  KELON,
   // Add new entries before this one, and update it to point to the last entry.
-  kLastDecodeType = PANASONIC_AC32,
+  kLastDecodeType = KELON,
 };
 
 // Message lengths & required repeat values
@@ -933,6 +992,8 @@ const uint16_t kDenonLegacyBits = 14;
 const uint16_t kDishBits = 16;
 const uint16_t kDishMinRepeat = 3;
 const uint16_t kDoshishaBits = 40;
+const uint16_t kEcoclimBits = 56;
+const uint16_t kEcoclimShortBits = 15;
 const uint16_t kEpsonBits = 32;
 const uint16_t kEpsonMinRepeat = 2;
 const uint16_t kElectraAcStateLength = 13;
@@ -958,6 +1019,9 @@ const uint16_t kHaierAcDefaultRepeat = kNoRepeat;
 const uint16_t kHaierACYRW02StateLength = 14;
 const uint16_t kHaierACYRW02Bits = kHaierACYRW02StateLength * 8;
 const uint16_t kHaierAcYrw02DefaultRepeat = kNoRepeat;
+const uint16_t kHaierAC176StateLength = 22;
+const uint16_t kHaierAC176Bits = kHaierAC176StateLength * 8;
+const uint16_t kHaierAc176DefaultRepeat = kNoRepeat;
 const uint16_t kHitachiAcStateLength = 28;
 const uint16_t kHitachiAcBits = kHitachiAcStateLength * 8;
 const uint16_t kHitachiAcDefaultRepeat = kNoRepeat;
@@ -976,6 +1040,7 @@ const uint16_t kHitachiAc424Bits = kHitachiAc424StateLength * 8;
 const uint16_t kInaxBits = 24;
 const uint16_t kInaxMinRepeat = kSingleRepeat;
 const uint16_t kJvcBits = 16;
+const uint16_t kKelonBits = 48;
 const uint16_t kKelvinatorStateLength = 16;
 const uint16_t kKelvinatorBits = kKelvinatorStateLength * 8;
 const uint16_t kKelvinatorDefaultRepeat = kNoRepeat;
@@ -1073,6 +1138,8 @@ const uint16_t kTcl112AcBits = kTcl112AcStateLength * 8;
 const uint16_t kTcl112AcDefaultRepeat = kNoRepeat;
 const uint16_t kTecoBits = 35;
 const uint16_t kTecoDefaultRepeat = kNoRepeat;
+const uint16_t kTeknopointStateLength = 14;
+const uint16_t kTeknopointBits = kTeknopointStateLength * 8;
 const uint16_t kToshibaACStateLength = 9;
 const uint16_t kToshibaACBits = kToshibaACStateLength * 8;
 const uint16_t kToshibaACMinRepeat = kSingleRepeat;
@@ -1085,15 +1152,20 @@ const uint16_t kTranscoldDefaultRepeat = kNoRepeat;
 const uint16_t kTrotecStateLength = 9;
 const uint16_t kTrotecBits = kTrotecStateLength * 8;
 const uint16_t kTrotecDefaultRepeat = kNoRepeat;
+const uint16_t kTrumaBits = 56;
 const uint16_t kWhirlpoolAcStateLength = 21;
 const uint16_t kWhirlpoolAcBits = kWhirlpoolAcStateLength * 8;
 const uint16_t kWhirlpoolAcDefaultRepeat = kNoRepeat;
 const uint16_t kWhynterBits = 32;
 const uint8_t  kVestelAcBits = 56;
+const uint16_t kXmpBits = 64;
 const uint16_t kZepealBits = 16;
 const uint16_t kZepealMinRepeat = 4;
 const uint16_t kVoltasBits = 80;
 const uint16_t kVoltasStateLength = 10;
+const uint16_t kMilesTag2ShotBits = 14;
+const uint16_t kMilesTag2MsgBits = 24;
+const uint16_t kMilesMinRepeat = 0;
 
 
 // Legacy defines. (Deprecated)
