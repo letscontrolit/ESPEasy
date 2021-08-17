@@ -28,7 +28,7 @@
     "
     ``<trigger>,txt,<text>``
     ","
-    Write simple text, use last position, color and size. Color is either from configuration or ``txc`` subcommand.
+    Write simple text (entire rest of the text provided), use last position, color and size. Color is either from configuration or ``txc`` subcommand.
     "
     "
     ``<trigger>,txp,<x>,<y>``

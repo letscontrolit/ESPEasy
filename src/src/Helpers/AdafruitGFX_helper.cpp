@@ -136,9 +136,11 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
                                        AdaGFXTextPrintMode textPrintMode,
                                        uint8_t             fontscaling,
                                        uint16_t            fgcolor,
-                                       uint16_t            bgcolor)
+                                       uint16_t            bgcolor,
+                                       bool                useValidation)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
-  _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor)
+  _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
+  _useValidation(useValidation)
 {
   _trigger.toLowerCase(); // store trigger in lowercase
   # ifndef BUILD_NO_DEBUG
@@ -223,7 +225,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(90);
-    log  = F("AdaGFX: parseCommand: ");
+    log  = F("AdaGFX: command: ");
     log += _trigger;
     log += F(" argCount: ");
     log += argCount;
@@ -235,16 +237,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if (subcommand.equals(F("txt"))) // txt: Print text at last cursor position, ends at next line!
   {
-    for (uint8_t n = 0; n < argCount; n++) {
-      _display->print(sParams[n]);                         // write all pending cars
-
-      if (n < argCount - 1) {
-        _display->print(' ');                              // a space-separator if not at end
-      }
-    }
-    _display->println();                                   // Next line
+    _display->println(parseStringToEndKeepCase(string, 3)); // Print entire rest of provided line
   }
-  else if (subcommand.equals(F("txp")) && (argCount == 2)) // txp: Text position
+  else if (subcommand.equals(F("txp")) && (argCount == 2))  // txp: Text position
   {
     # if ADAGFX_ARGUMENT_VALIDATION
 
@@ -277,6 +272,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
       _display->setTextSize(_fontscaling);
+      calculateTextMetrics(_fontwidth, _fontheight);
     } else {
       success = false;
     }
@@ -921,7 +917,8 @@ void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols, uint16_t& textrows, 
 /****************************************************************************
  * calculateTextMetrix: Recalculate the text mertics based on supplied font parameters
  ***************************************************************************/
-void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fontheight) {
+void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
+                                              uint8_t fontheight) {
   _fontwidth  = fontwidth;
   _fontheight = fontheight;
   _textcols   = _res_x / (_fontwidth * _fontscaling);
@@ -931,8 +928,14 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth, uint8_t fonthei
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(50);
-    log  = F("AdaGFX: x: ");
+    log.reserve(60);
+    log = F("AdaGFX:");
+
+    if (!_trigger.isEmpty()) {
+      log += F(" tr: ");
+      log += _trigger;
+    }
+    log += F(" x: ");
     log += _res_x;
     log += F(", y: ");
     log += _res_y;
@@ -973,6 +976,8 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
     addLog(LOG_LEVEL_DEBUG, log);
   }
   #  endif // ifndef BUILD_NO_DEBUG
+
+  if (!_useValidation) { return false; }
 
   if (colRowMode) {
     return !((X >= 0) && (X <= _textcols) &&

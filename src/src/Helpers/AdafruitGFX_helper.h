@@ -136,7 +136,8 @@ public:
                      AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
                      uint8_t             fontscaling   = 1,
                      uint16_t            fgcolor       = ADAGFX_WHITE,
-                     uint16_t            bgcolor       = ADAGFX_BLACK);
+                     uint16_t            bgcolor       = ADAGFX_BLACK,
+                     bool                useValidation = true);
 
   bool     processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
   uint16_t parseColor(String& s);                // Parse either a color by name, 6 digit hex rrggbb color, or 1..4 digit #rgb565 color
@@ -186,6 +187,7 @@ private:
   uint8_t _fontscaling;
   uint16_t _fgcolor;
   uint16_t _bgcolor;
+  bool _useValidation;
   uint16_t _textcols;
   uint16_t _textrows;
   int16_t _lastX;
