@@ -17,6 +17,7 @@
 
 /**
  * Changelog:
+ * 2021-08-16 tonhuisman: Initial refactoring into the use of AdafruitGFX_helper
  * 2020-08-29 tonhuisman: Removed TS (Touchscreen) related stuff, XPT2046 will be a separate plugin
  *                        Changed initial text from '--cdt--' to 'ESPEasy'
  * 2020-08 tonhuisman: SPI improvements
@@ -116,14 +117,25 @@ Examples:
 		http://<espeasy_ip>/control?cmd=tftcmd,clear,green
 */
 
+#define P095_USE_ADA_GRAPHICS   // Enable AdafruitGFX_helper
+
 //plugin dependency
 #include <Adafruit_ILI9341.h>
 
 #ifdef PLUGIN_095_FONT_INCLUDED
+#ifdef P095_USE_ADA_GRAPHICS
+#define ADAGFX_FONTS_INCLUDED   1 // Enable 3 extra fonts
+#else
       #include "src/Static/Fonts/Seven_Segment24pt7b.h"
       #include "src/Static/Fonts/Seven_Segment18pt7b.h"
       #include "Fonts/FreeSans9pt7b.h"
 #endif   
+#endif   
+
+// #define ADAGFX_FONTS_INCLUDED   0 // Disable 3 extra fonts
+#ifdef P095_USE_ADA_GRAPHICS
+#include "src/Helpers/AdafruitGFX_helper.h"
+#endif
 
 
 //declare functions for using default value parameters
@@ -159,6 +171,9 @@ struct Plugin_095_TFT_SettingStruct
 
 //The display pointer
 Adafruit_ILI9341 *tft = NULL;
+#ifdef P095_USE_ADA_GRAPHICS
+AdafruitGFX_helper *gfxHelper = nullptr;
+#endif
 
 boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -236,10 +251,13 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           TFT_Settings.address_tft_rst = PIN(2);
         }
 
-        uint8_t choice2 = PCONFIG(1);
+        # ifdef P095_USE_ADA_GRAPHICS
+        AdaGFXFormRotation(F("p095_rotate"), PCONFIG(1));
+        # else // ifdef P116_USE_ADA_GRAPHICS
         const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[4] = { 0, 1, 2, 3 };
-        addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, choice2);
+        addFormSelector(F("Rotation"), F("p095_rotate"), 4, options2, optionValues2, PCONFIG(1));
+        #endif
 
         success = true;
         break;
@@ -263,18 +281,34 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         TFT_Settings.rotation = PCONFIG(1);
 
         tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
+        #ifdef P095_USE_ADA_GRAPHICS
+        gfxHelper = new (std::nothrow) AdafruitGFX_helper(tft,
+                                                          F("tft"),
+                                                          240,
+                                                          320,
+                                                          AdafruitGFX_helper::ColorDepth::FullColor,
+                                                          AdaGFXTextPrintMode::ContinueToNextLine,
+                                                          1,
+                                                          ADAGFX_WHITE,
+                                                          ADAGFX_BLACK,
+                                                          false);
+
+        if (gfxHelper != nullptr) {
+          gfxHelper->setP095TxtfullCompensation(1); // Set backward compatibility
+        }
+        #endif
         tft->begin();
         tft->setRotation(TFT_Settings.rotation);
         tft->fillScreen(ILI9341_WHITE);
-        Plugin_095_printText("ESPEasy", 1, 1);
+        Plugin_095_printText(String(F("ESPEasy")).c_str(), 1, 1);
         success = true;
         break;
       }
 
     case PLUGIN_WRITE:
       {
-        String tmpString = String(string);
-        String arguments = String(string);
+        String tmpString = string;
+        String arguments = string;
 
         String command;
         String subcommand;
@@ -290,7 +324,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
           tmpString += "<br/> command= " + command;
           tmpString += "<br/> arguments= " + arguments;
-          tmpString += "<br/> argIndex= " + String(argIndex);
+          tmpString += "<br/> argIndex= " + argIndex;
           tmpString += "<br/> subcommand= " + subcommand;
 
 
@@ -328,6 +362,9 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           }
           else if (command.equalsIgnoreCase(F("TFT")))
           {
+            #ifdef P095_USE_ADA_GRAPHICS
+            success = gfxHelper->processCommand(AdaGFXparseTemplate(string, 128)); // Hand it over after replacing variables
+            #else
             tmpString += "<br/> TFT  ";
 
             arguments = arguments.substring(argIndex + 1);
@@ -453,6 +490,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
             {
               success = false;
             }
+            #endif
           }
           else {
             success = false;
@@ -478,7 +516,11 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         {
             String log;
             log.reserve(110);                           // Prevent re-allocation
+            // #ifdef P095_USE_ADA_GRAPHICS  // TODO Restore original message!
+            // log = F("P095-AdaGFX : WRITE = ");
+            // #else
             log = F("P095-ILI9341 : WRITE = ");
+            // #endif
             log += tmpString;
             SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.
         }
@@ -510,6 +552,7 @@ void Plugin_095_printText(const char *string, int X, int Y, unsigned int textSiz
 //Parse color string to ILI9341 color
 //param [in] s : The color string (white, red, ...)
 //return : color (default ILI9341_WHITE)
+#ifdef P095_USE_ADA_GRAPHICS
 unsigned short Plugin_095_ParseColor(String & s)
 {
   if (s.equalsIgnoreCase(F("BLACK")))
@@ -563,6 +606,7 @@ unsigned short Plugin_095_ParseColor(String & s)
   }
   return ILI9341_WHITE; //fallback value
 }
+#endif
 
 //Split a string by delimiter
 //param [in] s : The input string
@@ -570,6 +614,7 @@ unsigned short Plugin_095_ParseColor(String & s)
 //param [out] op : The resulting string array
 //param [in] limit : The maximum strings to find
 //return : The string count
+#ifdef P095_USE_ADA_GRAPHICS
 int Plugin_095_StringSplit(String &s, char c, String op[], int limit)
 {
   int count = 0;
@@ -584,6 +629,6 @@ int Plugin_095_StringSplit(String &s, char c, String op[], int limit)
   }
   return count;
 }
-
+#endif
 
 #endif // USES_P095
