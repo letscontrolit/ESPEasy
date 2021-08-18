@@ -62,12 +62,6 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_SET_DEFAULTS:
-    {
-      Settings.TaskDeviceTimer[event->TaskIndex] = Settings.Delay; // 'Old' default value (before TimerOptional was enabled)
-      break;
-    }
-
     case PLUGIN_INIT:
     {
       success = true;
