@@ -97,7 +97,7 @@ bool validUserVar(struct EventStruct *event) {
     default:
       break;
   }
-  byte valueCount = getValueCountForTask(event->TaskIndex);
+  uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -114,7 +114,7 @@ bool validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 
 // handle MQTT messages
-void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length) {
+void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int length) {
   statusLED(true);
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -236,7 +236,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
 
 
-  byte controller_number = Settings.Protocol[controller_idx];
+  uint8_t controller_number = Settings.Protocol[controller_idx];
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
 
@@ -603,12 +603,21 @@ void SensorSendTask(taskIndex_t TaskIndex)
     struct EventStruct TempEvent(TaskIndex);
     checkDeviceVTypeForTask(&TempEvent);
 
-    // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
 
-    float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
-
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++) {
-      preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
+    const uint8_t valueCount = getValueCountForTask(TaskIndex);
+    // Store the previous value, in case %pvalue% is used in the formula
+    String preValue[VARS_PER_TASK];
+    if (Device[DeviceIndex].FormulaOption) {
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+      {
+        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        {
+          const String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+          if (formula.indexOf(F("%pvalue%")) != -1) {
+            preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
+          }
+        }
+      }
     }
 
     if (Settings.TaskDeviceDataFeed[TaskIndex] == 0) // only read local connected sensorsfeeds
@@ -625,16 +634,18 @@ void SensorSendTask(taskIndex_t TaskIndex)
       if (Device[DeviceIndex].FormulaOption) {
         START_TIMER;
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {
+            // TD-er: Should we use the set nr of decimals here, or not round at all?
+            // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
-            formula.replace(F("%pvalue%"), String(preValue[varNr]));
-            formula.replace(F("%value%"),  String(UserVar[TempEvent.BaseVarIndex + varNr]));
+            formula.replace(F("%pvalue%"), preValue[varNr]);
+            formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
             double result = 0;
 
-            if (!isError(Calculate(formula, result))) {
+            if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
             }
           }

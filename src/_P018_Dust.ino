@@ -13,9 +13,9 @@
 #define PLUGIN_VALUENAME1_018 "Dust"
 
 boolean Plugin_018_init = false;
-byte Plugin_GP2Y10_LED_Pin = 0;
+uint8_t Plugin_GP2Y10_LED_Pin = 0;
 
-boolean Plugin_018(byte function, struct EventStruct *event, String& string)
+boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -70,7 +70,7 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
       {
         Plugin_GP2Y10_LED_Pin = CONFIG_PIN1;
         noInterrupts();
-        byte x;
+        uint8_t x;
         int value;
         value = 0;
         for (x = 0; x < 25; x++)
@@ -83,7 +83,7 @@ boolean Plugin_018(byte function, struct EventStruct *event, String& string)
           delayMicroseconds(9680);
         }
         interrupts();
-        UserVar[event->BaseVarIndex] = (float)value;
+        UserVar[event->BaseVarIndex] = value;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("GPY  : Dust value: ");
           log += value;

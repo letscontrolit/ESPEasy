@@ -36,12 +36,12 @@ String parseTemplate(String& tmpString, bool useURLencode)
   return parseTemplate_padded(tmpString, 0, useURLencode);
 }
 
-String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
+String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize)
 {
   return parseTemplate_padded(tmpString, minimal_lineSize, false);
 }
 
-String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useURLencode)
+String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool useURLencode)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
@@ -49,7 +49,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
-  byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  uint8_t   currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
 
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
@@ -126,7 +126,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
       taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
       if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
-        byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+        uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
         if (valueNr != VARS_PER_TASK) {
           // here we know the task and value, so find the uservar
@@ -197,7 +197,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 // valueFormat="transformation#justification"
 void transformValue(
   String      & newString,
-  byte          lineSize,
+  uint8_t          lineSize,
   String        value,
   String      & valueFormat,
   const String& tmpString)
@@ -347,22 +347,22 @@ void transformValue(
 
                 if (isDigit(tempValueFormat[1]))
                 {
-                  x = (int)tempValueFormat[1] - '0';
+                  x = static_cast<int>(tempValueFormat[1]) - '0';
                 }
                 break;
               case 3: // D.y
 
                 if ((tempValueFormat[1] == '.') && isDigit(tempValueFormat[2]))
                 {
-                  y = (int)tempValueFormat[2] - '0';
+                  y = static_cast<int>(tempValueFormat[2]) - '0';
                 }
                 break;
               case 4: // Dx.y
 
                 if (isDigit(tempValueFormat[1]) && (tempValueFormat[2] == '.') && isDigit(tempValueFormat[3]))
                 {
-                  x = (int)tempValueFormat[1] - '0';
-                  y = (int)tempValueFormat[3] - '0';
+                  x = static_cast<int>(tempValueFormat[1]) - '0';
+                  y = static_cast<int>(tempValueFormat[3]) - '0';
                 }
                 break;
               case 1:  // D
@@ -377,16 +377,16 @@ void transformValue(
               indexDot = value.length();
             }
 
-            for (byte f = 0; f < (x - indexDot); f++) {
+            for (uint8_t f = 0; f < (x - indexDot); f++) {
               value = (tempValueFormat[0] == 'd' ? ' ' : '0') + value;
             }
             break;
           }
           case 'F': // FLOOR (round down)
-            value = (int)floorf(valFloat);
+            value = static_cast<int>(floorf(valFloat));
             break;
           case 'E': // CEILING (round up)
-            value = (int)ceilf(valFloat);
+            value = static_cast<int>(ceilf(valFloat));
             break;
           default:
             value = F("ERR");
@@ -410,7 +410,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0'; // char '0' = 48; char '9' = 58
 
-                  for (byte f = 0; f < filler; f++) {
+                  for (uint8_t f = 0; f < filler; f++) {
                     newString += ' ';
                   }
                 }
@@ -424,7 +424,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0'; // 48
 
-                  for (byte f = 0; f < filler; f++) {
+                  for (uint8_t f = 0; f < filler; f++) {
                     value += ' ';
                   }
                 }
@@ -436,7 +436,7 @@ void transformValue(
               {
                 if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(0, (int)valueJust[1] - '0');
+                  value = value.substring(0, static_cast<int>(valueJust[1]) - '0');
                 }
               }
               break;
@@ -446,7 +446,7 @@ void transformValue(
               {
                 if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(std::max(0, (int)value.length() - ((int)valueJust[1] - '0')));
+                  value = value.substring(std::max(0, static_cast<int>(value.length()) - (static_cast<int>(valueJust[1]) - '0')));
                 }
               }
               break;
@@ -456,8 +456,8 @@ void transformValue(
               {
                 if (isDigit(valueJust[1]) && (valueJust[2] == '.') && isDigit(valueJust[3]) && (valueJust[1] > '0') && (valueJust[3] > '0'))
                 {
-                  value = value.substring(std::min((int)value.length(), (int)valueJust[1] - '0' - 1),
-                                          (int)valueJust[1] - '0' - 1 + (int)valueJust[3] - '0');
+                  value = value.substring(std::min(static_cast<int>(value.length()), static_cast<int>(valueJust[1]) - '0' - 1),
+                                          static_cast<int>(valueJust[1]) - '0' - 1 + static_cast<int>(valueJust[3]) - '0');
                 }
                 else
                 {
@@ -496,7 +496,7 @@ void transformValue(
       {
         int filler = lineSize - newString.length() - value.length() - tmpString.length();
 
-        for (byte f = 0; f < filler; f++) {
+        for (uint8_t f = 0; f < filler; f++) {
           newString += ' ';
         }
       }
@@ -566,7 +566,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
+uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
 {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
@@ -590,9 +590,9 @@ byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
-  const byte valCount = getValueCountForTask(taskIndex);
+  const uint8_t valCount = getValueCountForTask(taskIndex);
 
-  for (byte valueNr = 0; valueNr < valCount; valueNr++)
+  for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))

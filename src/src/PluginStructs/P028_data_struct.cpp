@@ -16,7 +16,7 @@ P028_data_struct::P028_data_struct(uint8_t addr) :
   state(BMx_Uninitialized) {}
 
 
-byte P028_data_struct::get_config_settings() const {
+uint8_t P028_data_struct::get_config_settings() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -26,7 +26,7 @@ byte P028_data_struct::get_config_settings() const {
   }
 }
 
-byte P028_data_struct::get_control_settings() const {
+uint8_t P028_data_struct::get_control_settings() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -127,8 +127,8 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   last_measurement = current_time;
   state            = BMx_New_values;
   last_temp_val    = readTemperature();
-  last_press_val   = ((float)readPressure()) / 100.0f;
-  last_hum_val     = ((float)readHumidity());
+  last_press_val   = readPressure() / 100.0f;
+  last_hum_val     = readHumidity();
 
 
   String log;
@@ -366,7 +366,7 @@ float P028_data_struct::readPressure()
   var2 = (((int64_t)calib.dig_P8) * p) >> 19;
 
   p = ((p + var1 + var2) >> 8) + (((int64_t)calib.dig_P7) << 4);
-  return (float)p / 256;
+  return static_cast<float>(p) / 256;
 }
 
 float P028_data_struct::readHumidity()

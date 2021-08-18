@@ -89,7 +89,7 @@ void ResetFactory()
 
   if (!ResetFactoryDefaultPreference.keepNTP()) {
     Settings.clearTimeSettings();
-    Settings.UseNTP = DEFAULT_USE_NTP;
+    Settings.UseNTP(DEFAULT_USE_NTP);
     strcpy_P(Settings.NTPHost, PSTR(DEFAULT_NTP_HOST));
     Settings.TimeZone = DEFAULT_TIME_ZONE;
     Settings.DST      = DEFAULT_USE_DST;
@@ -220,6 +220,7 @@ void ResetFactory()
   Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
 
   Settings.JSONBoolWithoutQuotes(DEFAULT_JSON_BOOL_WITHOUT_QUOTES);
+  Settings.EnableTimingStats(DEFAULT_ENABLE_TIMING_STATS);
 
 #ifdef PLUGIN_DESCR
   strcpy_P(Settings.Name, PSTR(PLUGIN_DESCR));

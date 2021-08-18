@@ -56,7 +56,7 @@ const __FlashStringHelper * getLastBootCauseString() {
 #include <rom/rtc.h>
 
 // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
-String getResetReasonString(byte icore) {
+String getResetReasonString(uint8_t icore) {
   bool isDEEPSLEEP_RESET(false);
 
   switch (rtc_get_reset_reason((RESET_REASON)icore)) {

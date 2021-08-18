@@ -23,13 +23,13 @@
 
 struct LogStruct {
     
-    void add(const byte loglevel, const char *line);
+    void add(const uint8_t loglevel, const char *line);
 
     // Read the next item and append it to the given string.
     // Returns whether new lines are available.
     bool get(String& output, const String& lineEnd);
 
-    bool getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, byte& loglevel);
+    bool getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, uint8_t& loglevel);
 
     bool isEmpty();
 
@@ -45,7 +45,7 @@ struct LogStruct {
     int write_idx = 0;
     int read_idx = 0;
     unsigned long lastReadTimeStamp = 0;
-    byte log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
+    uint8_t log_level[LOG_STRUCT_MESSAGE_LINES] = {0};
 
 };
 

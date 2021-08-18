@@ -12,7 +12,7 @@
 #define PLUGIN_VALUENAME1_043 "Output"
 #define PLUGIN_043_MAX_SETTINGS 8
 
-boolean Plugin_043(byte function, struct EventStruct *event, String& string)
+boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -58,7 +58,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
         options[1] = F("Off");
         options[2] = F("On");
 
-        for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
         	addFormTextBox(String(F("Day,Time ")) + (x + 1), String(F("p043_clock")) + (x), timeLong2String(ExtraTaskSettings.TaskDevicePluginConfigLong[x]), 32);
 //          addHtml(F("<TR><TD>Day,Time "));
@@ -70,7 +70,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 //          addHtml("'>");
 
           addHtml(' ');
-          byte choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
+          uint8_t choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
           addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
         }
         success = true;
@@ -79,7 +79,7 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
       {
-        for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
           String argc = F("p043_clock");
           argc += x;
@@ -104,14 +104,14 @@ boolean Plugin_043(byte function, struct EventStruct *event, String& string)
     case PLUGIN_CLOCK_IN:
       {
         LoadTaskSettings(event->TaskIndex);
-        for (byte x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
+        for (uint8_t x = 0; x < PLUGIN_043_MAX_SETTINGS; x++)
         {
           unsigned long clockEvent = (unsigned long)node_time.minute() % 10 | (unsigned long)(node_time.minute() / 10) << 4 | (unsigned long)(node_time.hour() % 10) << 8 | (unsigned long)(node_time.hour() / 10) << 12 | (unsigned long)node_time.weekday() << 16;
           unsigned long clockSet = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
 
           if (matchClockEvent(clockEvent,clockSet))
           {
-            byte state = ExtraTaskSettings.TaskDevicePluginConfig[x];
+            uint8_t state = ExtraTaskSettings.TaskDevicePluginConfig[x];
             if (state != 0)
             {
               state--;

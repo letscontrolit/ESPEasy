@@ -143,7 +143,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       if (data && line.startsWith("["))
       {
         String strValue = line;
-        byte   pos      = strValue.indexOf('"', 2);
+        uint8_t   pos      = strValue.indexOf('"', 2);
         strValue = strValue.substring(2, pos);
         strValue.trim();
         *data   = 0.0f;

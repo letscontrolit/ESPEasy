@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-extern byte cmd_within_mainloop;
+extern uint8_t cmd_within_mainloop;
 
 // ********************************************************************************
 //   DO NOT CHANGE ANYTHING BELOW THIS LINE

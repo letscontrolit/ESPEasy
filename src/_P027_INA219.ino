@@ -17,7 +17,7 @@
 
 #define P027_I2C_ADDR    (uint8_t)PCONFIG(1)
 
-boolean Plugin_027(byte function, struct EventStruct *event, String& string)
+boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -53,17 +53,22 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
-      addFormSelectorI2C(F("i2c_addr"), 4, Plugin_27_i2c_addresses, P027_I2C_ADDR);
+      const int i2cAddressValues[] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, P027_I2C_ADDR);
+      } else {
+        success = intArrayContains(4, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        byte choiceMode = PCONFIG(0);
+        uint8_t choiceMode = PCONFIG(0);
         const __FlashStringHelper * optionsMode[3];
         optionsMode[0] = F("32V, 2A");
         optionsMode[1] = F("32V, 1A");
@@ -75,7 +80,7 @@ boolean Plugin_027(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Measure range"), F("p027_range"), 3, optionsMode, optionValuesMode, choiceMode);
       }
       {
-        byte   choiceMeasureType = PCONFIG(2);
+        uint8_t   choiceMeasureType = PCONFIG(2);
         const __FlashStringHelper * options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType);
       }

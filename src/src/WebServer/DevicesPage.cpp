@@ -71,7 +71,7 @@ void handle_devices() {
   // String taskdeviceglobalsync = webArg(F("TDGS"));
   // String taskdeviceenabled = webArg(F("TDE"));
 
-  // for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+  // for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
   // {
   //   char argc[25];
   //   String arg = F("TDF");
@@ -104,12 +104,12 @@ void handle_devices() {
   //   taskdevicesenddata[controllerNr] = webArg(argc);
   // }
 
-  byte page = getFormItemInt(F("page"), 0);
+  uint8_t page = getFormItemInt(F("page"), 0);
 
   if (page == 0) {
     page = 1;
   }
-  byte setpage = getFormItemInt(F("setpage"), 0);
+  uint8_t setpage = getFormItemInt(F("setpage"), 0);
 
   if (setpage > 0)
   {
@@ -201,7 +201,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
   addSelector_Head_reloadOnChange(name);
   addSelector_Item(F("- None -"), 0, false);
 
-  for (byte x = 0; x <= deviceCount; x++)
+  for (uint8_t x = 0; x <= deviceCount; x++)
   {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
@@ -212,8 +212,9 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-  # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin = "P";
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        String plugin;
+        plugin += 'P';
 
         if (pluginID < 10) { plugin += '0'; }
 
@@ -221,7 +222,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
-  # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,
@@ -302,9 +303,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
         // nr output values has changed, generate new variable names
         String oldNames[VARS_PER_TASK];
-        byte   oldNrDec[VARS_PER_TASK];
+        uint8_t   oldNrDec[VARS_PER_TASK];
 
-        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
           oldNrDec[i] = ExtraTaskSettings.TaskDeviceValueDecimals[i];
         }
@@ -313,7 +314,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
         PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
 
         // Restore the settings that were already set by the user
-        for (byte i = 0; i < VARS_PER_TASK; ++i) {
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           if (!oldNames[i].isEmpty()) {
             safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[i], oldNames[i], sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
             ExtraTaskSettings.TaskDeviceValueDecimals[i] = oldNrDec[i];
@@ -361,9 +362,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     # endif // ifdef PLUGIN_USES_SERIAL
   }
 
-  const byte valueCount = getValueCountForTask(taskIndex);
+  const uint8_t valueCount = getValueCountForTask(taskIndex);
 
-  for (byte varNr = 0; varNr < valueCount; varNr++)
+  for (uint8_t varNr = 0; varNr < valueCount; varNr++)
   {
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr], String(F("TDF")) + (varNr + 1));
     update_whenset_FormItemInt(String(F("TDVD")) + (varNr + 1), ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
@@ -413,7 +414,7 @@ void Label_Gpio_toHtml(const __FlashStringHelper * label, const String& gpio_pin
 // ********************************************************************************
 // Show table with all selected Tasks/Devices
 // ********************************************************************************
-void handle_devicess_ShowAllTasksTable(byte page)
+void handle_devicess_ShowAllTasksTable(uint8_t page)
 {
   serve_JS(JSfiles_e::UpdateSensorValuesDevicePage);
   html_table_class_multirow();
@@ -521,7 +522,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] != 0) {
           // Show originating node number
-          const byte remoteUnit = Settings.TaskDeviceDataFeed[x];
+          const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[x];
           format_originating_node(remoteUnit);
         } else {
           String portDescr;
@@ -715,9 +716,9 @@ void handle_devicess_ShowAllTasksTable(byte page)
 
         if (!customValues)
         {
-          const byte valueCount = getValueCountForTask(x);
+          const uint8_t valueCount = getValueCountForTask(x);
 
-          for (byte varNr = 0; varNr < valueCount; varNr++)
+          for (uint8_t varNr = 0; varNr < valueCount; varNr++)
           {
             if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
             {
@@ -735,7 +736,7 @@ void handle_devicess_ShowAllTasksTable(byte page)
   html_end_form();
 }
 
-void format_originating_node(byte remoteUnit) {
+void format_originating_node(uint8_t remoteUnit) {
   addHtml(F("Unit "));
   addHtmlInt(remoteUnit);
 
@@ -831,7 +832,7 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
 // ********************************************************************************
 // Show the task settings page
 // ********************************************************************************
-void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
+void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 {
   if (!validTaskIndex(taskIndex)) { return; }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
@@ -932,7 +933,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page)
     else {
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
-      byte remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
+      uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
       addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
 
       if (remoteUnit != 255) {
@@ -1013,9 +1014,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      && ((Settings.Pin_i2c_sda == -1)
-          || (Settings.Pin_i2c_scl == -1)
-          || (Settings.I2C_clockSpeed == 0))) {
+      && !Settings.isI2CEnabled()) {
     addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
   }
 
@@ -1224,7 +1223,7 @@ void devicePage_show_interval_config(taskIndex_t taskIndex, deviceIndex_t Device
 void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   // section: Values
-  const byte valueCount = getValueCountForTask(taskIndex);
+  const uint8_t valueCount = getValueCountForTask(taskIndex);
 
   if (!Device[DeviceIndex].Custom && (valueCount > 0))
   {
@@ -1247,7 +1246,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     }
 
     // table body
-    for (byte varNr = 0; varNr < valueCount; varNr++)
+    for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {
       html_TR_TD();
       addHtmlInt(varNr + 1);

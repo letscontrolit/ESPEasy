@@ -67,17 +67,17 @@ String LoadSettings();
 /********************************************************************************************\
    Disable Plugin, based on bootFailedCount
  \*********************************************************************************************/
-byte disablePlugin(byte bootFailedCount);
+uint8_t disablePlugin(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
-byte disableController(byte bootFailedCount);
+uint8_t disableController(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
-byte disableNotification(byte bootFailedCount);
+uint8_t disableNotification(uint8_t bootFailedCount);
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);
 
@@ -108,7 +108,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize);
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Save array of Strings to Custom Task settings
@@ -116,7 +116,7 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datas
  \*********************************************************************************************/
 String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
 
-String getCustomTaskSettingsError(byte varNr);
+String getCustomTaskSettingsError(uint8_t varNr);
 
 /********************************************************************************************\
    Clear custom task settings
@@ -126,7 +126,7 @@ String ClearCustomTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Load Custom Task settings from file system
  \*********************************************************************************************/
-String LoadCustomTaskSettings(taskIndex_t TaskIndex, byte *memAddress, int datasize);
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Load array of Strings from Custom Task settings
@@ -152,23 +152,23 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex);
 /********************************************************************************************\
    Save Custom Controller settings to file system
  \*********************************************************************************************/
-String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize);
+String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Load Custom Controller settings to file system
  \*********************************************************************************************/
-String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, byte *memAddress, int datasize);
+String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
-String SaveNotificationSettings(int NotificationIndex, byte *memAddress, int datasize);
+String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress, int datasize);
 
 
 /********************************************************************************************\
    Load Controller settings to file system
  \*********************************************************************************************/
-String LoadNotificationSettings(int NotificationIndex, byte *memAddress, int datasize);
+String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
 
 
 /********************************************************************************************\
@@ -182,10 +182,10 @@ String InitFile(SettingsType::SettingsFileEnum file_type);
 /********************************************************************************************\
    Save data into config file on file system
  \*********************************************************************************************/
-String SaveToFile(const char *fname, int index, const byte *memAddress, int datasize);
+String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize);
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
-String doSaveToFile(const char *fname, int index, const byte *memAddress, int datasize, const char *mode);
+String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize, const char *mode);
 
 
 /********************************************************************************************\
@@ -196,7 +196,7 @@ String ClearInFile(const char *fname, int index, int datasize);
 /********************************************************************************************\
    Load data from config file on file system
  \*********************************************************************************************/
-String LoadFromFile(const char *fname, int offset, byte *memAddress, int datasize);
+String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int datasize);
 
 /********************************************************************************************\
    Wrapper functions to handle errors in accessing settings
@@ -205,13 +205,13 @@ String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType
 
 String getSettingsFileDatasizeError(bool read, SettingsType::Enum settingsType, int index, int datasize, int max_size);
 
-String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int offset_in_block);
+String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int offset_in_block);
 
-String LoadFromFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
+String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize);
 
-String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize);
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize);
 
-String SaveToFile(SettingsType::Enum settingsType, int index, byte *memAddress, int datasize, int posInBlock);
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock);
 
 String ClearInFile(SettingsType::Enum settingsType, int index);
 
@@ -249,11 +249,11 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
  \*********************************************************************************************/
 #ifdef ESP32
 
-String getPartitionType(byte pType, byte pSubType);
+String getPartitionType(uint8_t pType, uint8_t pSubType);
 
 String getPartitionTableHeader(const String& itemSep, const String& lineEnd);
 
-String getPartitionTable(byte pType, const String& itemSep, const String& lineEnd);
+String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd);
 
 #endif // ifdef ESP32
 

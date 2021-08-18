@@ -21,7 +21,7 @@
 // Forward declarations of functions used in this module
 // Normally those would be declared in the .h file as private members
 // But since these are not part of a class, forward declare them in the .cpp
-//void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState);
+//void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t newState);
 bool getPluginIDAndPrefix(char selection, pluginID_t &pluginID, String &logPrefix);
 void logErrorGpioOffline(const String& prefix, int port);
 void logErrorGpioOutOfRange(const String& prefix, int port, const char* Line = nullptr);
@@ -31,13 +31,13 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char* Line);
 bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char* Line);
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
-bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, const char* Line);
-byte getPcfAddress(uint8_t pin);
-bool setGPIOMode(byte pin, byte mode);
-bool setPCFMode(byte pin, byte mode);
-bool setMCPMode(byte pin, byte mode);
-bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result);
-bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t &result);
+bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char* Line);
+uint8_t getPcfAddress(uint8_t pin);
+bool setGPIOMode(uint8_t pin, uint8_t mode);
+bool setPCFMode(uint8_t pin, uint8_t mode);
+bool setMCPMode(uint8_t pin, uint8_t mode);
+bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
+bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
 
 
 /*************************************************************************/
@@ -56,7 +56,7 @@ const __FlashStringHelper * Command_GPIO_MonitorRange(struct EventStruct *event,
 {
   bool success = true;
 
-  for (byte i = event->Par2; i <= event->Par3; i++) {
+  for (uint8_t i = event->Par2; i <= event->Par3; i++) {
     success &= gpio_monitor_helper(i, event, Line);
   }
   return success ? return_command_success() : return_command_failed();
@@ -115,7 +115,7 @@ const __FlashStringHelper * Command_GPIO_UnMonitorRange(struct EventStruct *even
 {
   bool success = true;
 
-  for (byte i = event->Par2; i <= event->Par3; i++) {
+  for (uint8_t i = event->Par2; i <= event->Par3; i++) {
     success &= gpio_unmonitor_helper(i, event, Line);
   }
   return success ? return_command_success() : return_command_failed();
@@ -193,7 +193,7 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
 {
   bool success = true;
   bool sendStatusFlag;
-  byte pluginID = 0;
+  uint8_t pluginID = 0;
 
   switch (tolower(parseString(Line, 2).charAt(0)))
   {
@@ -278,7 +278,7 @@ const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const c
   if (tone_espEasy(event->Par1, event->Par2, duration)) {
     if (mustScheduleToneOff) {
       // For now, we only support the internal GPIO pins.
-      byte pluginID = PLUGIN_GPIO;
+      uint8_t pluginID = PLUGIN_GPIO;
       Scheduler.setGPIOTimer(event->Par3, pluginID, event->Par1, 0);
     }
     return return_command_success();
@@ -318,7 +318,7 @@ const __FlashStringHelper * Command_GPIO_Pulse(struct EventStruct *event, const 
 {
   const __FlashStringHelper * logPrefix = F("");
   bool   success  = false;
-  byte   pluginID = INVALID_PLUGIN_ID;
+  uint8_t   pluginID = INVALID_PLUGIN_ID;
 
   switch (tolower(Line[0]))
   {
@@ -383,7 +383,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
 
     // WARNING: operator [] creates an entry in the map if key does not exist
     // So the next command should be part of each command:
-    byte   mode;
+    uint8_t   mode;
     int8_t state;
 
     auto it = globalMapPortStatus.find(key);
@@ -407,7 +407,7 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
         log += F(" toggle: port#");
         log += event->Par1;
         log += F(": set to ");
-        log += !state;
+        log += static_cast<int>(!state);
         addLog(LOG_LEVEL_ERROR, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
 
@@ -417,11 +417,9 @@ const __FlashStringHelper * Command_GPIO_Toggle(struct EventStruct *event, const
       case PIN_MODE_OFFLINE:
         logErrorGpioOffline(logPrefix, event->Par1);
         return return_command_failed();
-        break;
       default:
         logErrorGpioNotOutput(logPrefix, event->Par1);
         return return_command_failed();
-        break;
     }
   } else {
     logErrorGpioOutOfRange(logPrefix, event->Par1, Line);
@@ -440,7 +438,7 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
   if (success && checkValidPortRange(pluginID, event->Par1))
   {
     int8_t state = 0;
-    byte   mode;
+    uint8_t   mode;
 
     if (event->Par2 == 2) { // INPUT
       mode = PIN_MODE_INPUT_PULLUP;
@@ -531,7 +529,7 @@ void logErrorGpioNotOutput(const String& prefix, int port)
   logErrorGpio(prefix, port, F(" is not an output port"));
 }
 
-void createAndSetPortStatus_Mode_State(uint32_t key, byte newMode, int8_t newState)
+void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t newState)
 {
   // WARNING: operator [] creates an entry in the map if key does not exist
 
@@ -596,20 +594,20 @@ struct range_pattern_helper_data {
   uint32_t write = 0;
   uint32_t mask  = 0;
 
-  byte firstPin     = 0;
-  byte lastPin      = 0;
-  byte numBytes     = 0;
-  byte deltaStart   = 0;
-  byte numBits      = 0;
-  byte firstAddress = 0;
-  byte firstBank    = 0;
-  byte initVal      = 0;
+  uint8_t firstPin     = 0;
+  uint8_t lastPin      = 0;
+  uint8_t numBytes     = 0;
+  uint8_t deltaStart   = 0;
+  uint8_t numBits      = 0;
+  uint8_t firstAddress = 0;
+  uint8_t firstBank    = 0;
+  uint8_t initVal      = 0;
   bool isMask       = false;
   bool valid        = false;
 };
 
 
-range_pattern_helper_data range_helper_shared(pluginID_t plugin, byte pin1, byte pin2)
+range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, uint8_t pin2)
 {
   range_pattern_helper_data data;
 
@@ -667,7 +665,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   data.isMask = !parseString(Line, 5).isEmpty();
 
   if (data.isMask) {
-    data.mask  = event->Par4 & ((1 << data.numBytes * 8) - 1);
+    data.mask  = event->Par4 & ((1 << (data.numBytes * 8)) - 1);
     data.mask &= ((1 << data.numBits) - 1);
     data.mask  = data.mask << data.deltaStart;
   } else {
@@ -676,7 +674,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   }
 
   if (isWritePattern) {                                         // write pattern is present
-    data.write  = event->Par3 & ((1 << data.numBytes * 8) - 1); // limit number of bytes
+    data.write  = event->Par3 & ((1 << (data.numBytes * 8)) - 1); // limit number of bytes
     data.write &= ((1 << data.numBits) - 1);                    // limit to number of bits
     data.write  = data.write << data.deltaStart;                // shift to start from starting pin
   } else {                                                      // write pattern not present
@@ -776,20 +774,20 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   bool   onLine = false;
   String log;
 
-  for (byte i = 0; i < data.numBytes; i++) {
+  for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
-    byte    currentVal            = data.initVal + i;
-    byte    currentAddress        = static_cast<int>(currentVal / 2);
-    byte    currentMask           = (data.mask  >> (8 * i)) & 0xFF;
-    byte    currentInvertedMask   = 0xFF - currentMask;
-    byte    currentWrite          = (data.write >> (8 * i)) & 0xFF;
-    byte    currentGPIORegister   = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
-    byte    currentIOModeRegister = ((currentVal % 2) == 0) ? MCP23017_IODIRA : MCP23017_IODIRB;
-    byte    writeGPIOValue        = 0;
+    uint8_t    currentVal            = data.initVal + i;
+    uint8_t    currentAddress        = static_cast<int>(currentVal / 2);
+    uint8_t    currentMask           = (data.mask  >> (8 * i)) & 0xFF;
+    uint8_t    currentInvertedMask   = 0xFF - currentMask;
+    uint8_t    currentWrite          = (data.write >> (8 * i)) & 0xFF;
+    uint8_t    currentGPIORegister   = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
+    uint8_t    currentIOModeRegister = ((currentVal % 2) == 0) ? MCP23017_IODIRA : MCP23017_IODIRB;
+    uint8_t    writeGPIOValue        = 0;
 
     if (GPIO_MCP_ReadRegister(currentAddress, currentIOModeRegister, &readValue)) {
       // set type to output only for the pins of the mask
-      byte writeModeValue = (readValue & currentInvertedMask);
+      uint8_t writeModeValue = (readValue & currentInvertedMask);
       GPIO_MCP_WriteRegister(currentAddress, currentIOModeRegister, writeModeValue);
       GPIO_MCP_ReadRegister(currentAddress, currentGPIORegister, &readValue);
 
@@ -802,16 +800,16 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
       onLine = false;
     }
 
-    byte   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
+    uint8_t   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
     int8_t state;
 
-    for (byte j = 0; j < 8; j++) {
-      // if ((currentMask & (byte(pow(2,j)))) >> j) { //only for the pins in the mask
+    for (uint8_t j = 0; j < 8; j++) {
+      // if ((currentMask & (uint8_t(pow(2,j)))) >> j) { //only for the pins in the mask
       if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
-        byte currentPin    = data.firstPin + j + 8 * i;
+        uint8_t currentPin    = data.firstPin + j + 8 * i;
         const uint32_t key = createKey(PLUGIN_MCP, currentPin);
 
-        // state = onLine ? ((writeGPIOValue & byte(pow(2,j))) >> j) : -1;
+        // state = onLine ? ((writeGPIOValue & uint8_t(pow(2,j))) >> j) : -1;
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
@@ -824,9 +822,9 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   return onLine;
 }
 
-byte getPcfAddress(uint8_t pin)
+uint8_t getPcfAddress(uint8_t pin)
 {
-  byte retValue = static_cast<int>((pin - 1) / 8) + 0x20;
+  uint8_t retValue = static_cast<int>((pin - 1) / 8) + 0x20;
 
   if (retValue > 0x27) { retValue += 0x10; }
   return retValue;
@@ -843,24 +841,24 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   bool   onLine = false;
   String log;
 
-  for (byte i = 0; i < data.numBytes; i++) {
+  for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
-    byte    currentAddress = getPcfAddress(event->Par1 + 8 * i);
+    uint8_t    currentAddress = getPcfAddress(event->Par1 + 8 * i);
 
-    byte currentMask         = (data.mask  >> (8 * i)) & 0xFF;
-    byte currentInvertedMask = 0xFF - currentMask;
-    byte currentWrite        = (data.write >> (8 * i)) & 0xFF;
-    byte writeGPIOValue      = 255;
+    uint8_t currentMask         = (data.mask  >> (8 * i)) & 0xFF;
+    uint8_t currentInvertedMask = 0xFF - currentMask;
+    uint8_t currentWrite        = (data.write >> (8 * i)) & 0xFF;
+    uint8_t writeGPIOValue      = 255;
 
     onLine = GPIO_PCF_ReadAllPins(currentAddress, &readValue);
 
     if (onLine) { writeGPIOValue = (readValue & currentInvertedMask) | (currentWrite & data.mask); }
 
-    byte   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
+    uint8_t   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
     int8_t state;
 
-    for (byte j = 0; j < 8; j++) {
-      byte currentPin    = data.firstPin + j + 8 * i;
+    for (uint8_t j = 0; j < 8; j++) {
+      uint8_t currentPin    = data.firstPin + j + 8 * i;
       const uint32_t key = createKey(PLUGIN_PCF, currentPin);
 
       if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
@@ -890,7 +888,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   return onLine;
 }
 
-bool setGPIOMode(byte pin, byte mode)
+bool setGPIOMode(uint8_t pin, uint8_t mode)
 {
   if (checkValidPortRange(PLUGIN_GPIO, pin)) {
     switch (mode) {
@@ -910,7 +908,7 @@ bool setGPIOMode(byte pin, byte mode)
   }
 }
 
-bool setMCPMode(byte pin, byte mode)
+bool setMCPMode(uint8_t pin, uint8_t mode)
 {
   if (checkValidPortRange(PLUGIN_MCP, pin)) {
     switch (mode) {
@@ -930,7 +928,7 @@ bool setMCPMode(byte pin, byte mode)
   }
 }
 
-bool setPCFMode(byte pin, byte mode)
+bool setPCFMode(uint8_t pin, uint8_t mode)
 {
   if (checkValidPortRange(PLUGIN_PCF, pin)) {
     switch (mode) {
@@ -969,13 +967,13 @@ const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, co
 {
   bool success = true;
 
-  for (byte i = event->Par1; i <= event->Par2; i++) {
+  for (uint8_t i = event->Par1; i <= event->Par2; i++) {
     success &= gpio_mode_range_helper(i, event->Par3, event, Line);
   }
   return success ? return_command_success() : return_command_failed();
 }
 
-bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, const char *Line)
+bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char *Line)
 {
   String logPrefix;  // = new char;
   String logPostfix; // = new char;
@@ -987,7 +985,7 @@ bool gpio_mode_range_helper(byte pin, byte pinMode, struct EventStruct *event, c
   if (success && checkValidPortRange(pluginID, pin))
   {
     // int8_t state=0;
-    byte mode = 255;
+    uint8_t mode = 255;
 
     // bool setSuccess=false;
 
@@ -1160,7 +1158,7 @@ bool getGPIOPinStateValues(String& str) {
   return success;
 }
 
-bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
+bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t& result)
 {
   const range_pattern_helper_data data = range_helper_shared(PLUGIN_MCP, pin1, pin2);
 
@@ -1174,11 +1172,11 @@ bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
   bool success = false;
   uint32_t tempResult = 0;
 
-  for (byte i = 0; i < data.numBytes; i++) {
+  for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue              = 0;
-    const byte currentVal          = data.initVal + i;
-    const byte currentAddress      = static_cast<int>(currentVal / 2);
-    const byte currentGPIORegister = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
+    const uint8_t currentVal          = data.initVal + i;
+    const uint8_t currentAddress      = static_cast<int>(currentVal / 2);
+    const uint8_t currentGPIORegister = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
 
     const bool onLine = GPIO_MCP_ReadRegister(currentAddress, currentGPIORegister, &readValue);
 
@@ -1195,7 +1193,7 @@ bool mcpgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
   return success;
 }
 
-bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
+bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t& result)
 {
   const range_pattern_helper_data data = range_helper_shared(PLUGIN_PCF, pin1, pin2);
 
@@ -1210,9 +1208,9 @@ bool pcfgpio_plugin_range_helper(byte pin1, byte pin2, uint16_t& result)
   bool success = false;
   uint32_t tempResult = 0;
 
-  for (byte i = 0; i < data.numBytes; i++) {
+  for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue         = 0;
-    const byte currentAddress = getPcfAddress(pin1 + 8 * i);
+    const uint8_t currentAddress = getPcfAddress(pin1 + 8 * i);
 
     const bool onLine = GPIO_PCF_ReadAllPins(currentAddress, &readValue);
 

@@ -13,7 +13,7 @@
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
-const __FlashStringHelper * getNodeTypeDisplayString(byte nodeType);
+const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType);
 
 /*********************************************************************************************\
 * NodeStruct
@@ -25,11 +25,11 @@ struct NodeStruct
   String    nodeName;
   IPAddress ip;
   uint16_t  build;
-  byte      age;
-  byte      nodeType;
+  uint8_t      age;
+  uint8_t      nodeType;
   uint16_t  webgui_portnumber;
 };
-typedef std::map<byte, NodeStruct> NodesMap;
+typedef std::map<uint8_t, NodeStruct> NodesMap;
 
 
 #endif // DATASTRUCTS_NODESTRUCT_H

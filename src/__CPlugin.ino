@@ -25,7 +25,7 @@
 void CPluginInit(void)
 {
   ProtocolIndex_to_CPlugin_id[CPLUGIN_MAX] = INVALID_C_PLUGIN_ID;
-  byte x;
+  uint8_t x;
 
   // Clear pointer table for all plugins
   for (x = 0; x < CPLUGIN_MAX; x++)

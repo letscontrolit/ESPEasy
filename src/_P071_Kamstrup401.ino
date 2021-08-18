@@ -23,10 +23,10 @@
 #define PLUGIN_VALUENAME2_071 "Volume"
 
 boolean Plugin_071_init = false;
-byte PIN_KAMSER_RX = 0;
-byte PIN_KAMSER_TX = 0;
+uint8_t PIN_KAMSER_RX = 0;
+uint8_t PIN_KAMSER_TX = 0;
 
-boolean Plugin_071(byte function, struct EventStruct *event, String& string)
+boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -105,11 +105,11 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         pinMode(PIN_KAMSER_TX,OUTPUT);
 
         //read Kamstrup
-        byte sendmsg1[] = { 175,163,177 };            //   /#1 with even parity
+        uint8_t sendmsg1[] = { 175,163,177 };            //   /#1 with even parity
 
-        byte r  = 0;
-        byte to = 0;
-        byte i;
+        uint8_t r  = 0;
+        uint8_t to = 0;
+        uint8_t i;
         char message[255];
         int parityerrors;
 
@@ -136,7 +136,7 @@ boolean Plugin_071(byte function, struct EventStruct *event, String& string)
         {
           if (kamSer.available())
           {
-            // receive byte
+            // receive uint8_t
             r = kamSer.read();
             //serialPrintln(r);
             if (parity_check(r))

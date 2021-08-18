@@ -37,7 +37,7 @@ void I2C_wakeup(uint8_t i2caddr) {
 // **************************************************************************/
 // Writes an 8 bit value over I2C
 // **************************************************************************/
-bool I2C_write8(uint8_t i2caddr, byte value) {
+bool I2C_write8(uint8_t i2caddr, uint8_t value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)value);
   return Wire.endTransmission() == 0;
@@ -46,7 +46,7 @@ bool I2C_write8(uint8_t i2caddr, byte value) {
 // **************************************************************************/
 // Writes an 8 bit value over I2C to a register
 // **************************************************************************/
-bool I2C_write8_reg(uint8_t i2caddr, byte reg, byte value) {
+bool I2C_write8_reg(uint8_t i2caddr, uint8_t reg, uint8_t value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
   Wire.write((uint8_t)value);
@@ -56,7 +56,7 @@ bool I2C_write8_reg(uint8_t i2caddr, byte reg, byte value) {
 // **************************************************************************/
 // Writes an 16 bit value over I2C to a register
 // **************************************************************************/
-bool I2C_write16_reg(uint8_t i2caddr, byte reg, uint16_t value) {
+bool I2C_write16_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
   Wire.write((uint8_t)(value >> 8));
@@ -67,7 +67,7 @@ bool I2C_write16_reg(uint8_t i2caddr, byte reg, uint16_t value) {
 // **************************************************************************/
 // Writes an 16 bit value over I2C to a register
 // **************************************************************************/
-bool I2C_write16_LE_reg(uint8_t i2caddr, byte reg, uint16_t value) {
+bool I2C_write16_LE_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
   return I2C_write16_reg(i2caddr, reg, (value << 8) | (value >> 8));
 }
 
@@ -77,7 +77,7 @@ bool I2C_write16_LE_reg(uint8_t i2caddr, byte reg, uint16_t value) {
 uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
   uint8_t value;
 
-  byte count = Wire.requestFrom(i2caddr, (byte)1);
+  uint8_t count = Wire.requestFrom(i2caddr, (uint8_t)1);
 
   if (is_ok != NULL) {
     *is_ok = (count == 1);
@@ -92,7 +92,7 @@ uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
 // **************************************************************************/
 // Reads an 8 bit value from a register over I2C
 // **************************************************************************/
-uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool *is_ok) {
+uint8_t I2C_read8_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
   uint8_t value;
 
   Wire.beginTransmission(i2caddr);
@@ -111,7 +111,7 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool *is_ok) {
       *is_ok = false;
     }
   }
-  byte count = Wire.requestFrom(i2caddr, (byte)1);
+  uint8_t count = Wire.requestFrom(i2caddr, (uint8_t)1);
 
   if (is_ok != NULL) {
     *is_ok = (count == 1);
@@ -124,13 +124,13 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, byte reg, bool *is_ok) {
 // **************************************************************************/
 // Reads a 16 bit value starting at a given register over I2C
 // **************************************************************************/
-uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg) {
+uint16_t I2C_read16_reg(uint8_t i2caddr, uint8_t reg) {
   uint16_t value(0);
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
-  Wire.requestFrom(i2caddr, (byte)2);
+  Wire.requestFrom(i2caddr, (uint8_t)2);
   value = (Wire.read() << 8) | Wire.read();
 
   return value;
@@ -139,13 +139,13 @@ uint16_t I2C_read16_reg(uint8_t i2caddr, byte reg) {
 // **************************************************************************/
 // Reads a 24 bit value starting at a given register over I2C
 // **************************************************************************/
-int32_t I2C_read24_reg(uint8_t i2caddr, byte reg) {
+int32_t I2C_read24_reg(uint8_t i2caddr, uint8_t reg) {
   int32_t value;
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
-  Wire.requestFrom(i2caddr, (byte)3);
+  Wire.requestFrom(i2caddr, (uint8_t)3);
   value = (((int32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 
   return value;
@@ -154,13 +154,13 @@ int32_t I2C_read24_reg(uint8_t i2caddr, byte reg) {
 // **************************************************************************/
 // Reads a 32 bit value starting at a given register over I2C
 // **************************************************************************/
-int32_t I2C_read32_reg(uint8_t i2caddr, byte reg) {
+int32_t I2C_read32_reg(uint8_t i2caddr, uint8_t reg) {
   int32_t value;
 
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
   Wire.endTransmission(END_TRANSMISSION_FLAG);
-  Wire.requestFrom(i2caddr, (byte)4);
+  Wire.requestFrom(i2caddr, (uint8_t)4);
   value = (((int32_t)Wire.read()) << 24) | (((uint32_t)Wire.read()) << 16) | (Wire.read() << 8) | Wire.read();
 
   return value;
@@ -169,7 +169,7 @@ int32_t I2C_read32_reg(uint8_t i2caddr, byte reg) {
 // **************************************************************************/
 // Reads a 16 bit value starting at a given register over I2C
 // **************************************************************************/
-uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg) {
+uint16_t I2C_read16_LE_reg(uint8_t i2caddr, uint8_t reg) {
   uint16_t temp = I2C_read16_reg(i2caddr, reg);
 
   return (temp >> 8) | (temp << 8);
@@ -178,11 +178,11 @@ uint16_t I2C_read16_LE_reg(uint8_t i2caddr, byte reg) {
 // **************************************************************************/
 // Reads a signed 16 bit value starting at a given register over I2C
 // **************************************************************************/
-int16_t I2C_readS16_reg(uint8_t i2caddr, byte reg) {
+int16_t I2C_readS16_reg(uint8_t i2caddr, uint8_t reg) {
   return (int16_t)I2C_read16_reg(i2caddr, reg);
 }
 
-int16_t I2C_readS16_LE_reg(uint8_t i2caddr, byte reg) {
+int16_t I2C_readS16_LE_reg(uint8_t i2caddr, uint8_t reg) {
   return (int16_t)I2C_read16_LE_reg(i2caddr, reg);
 }
 

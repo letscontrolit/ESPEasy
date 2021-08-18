@@ -26,7 +26,7 @@ struct P112_data_struct : public PluginTaskData_base {
   // MeasurementStatus:
   // 0      : Not running
   // 1 - 18 : Running
-  byte MeasurementStatus = 0;
+  uint8_t MeasurementStatus = 0;
 };
 
 #endif // ifdef USES_P112

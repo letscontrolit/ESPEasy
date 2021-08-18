@@ -101,7 +101,7 @@ struct P075_data_struct : public PluginTaskData_base {
 // PlugIn starts here
 // *****************************************************************************************************
 
-boolean Plugin_075(byte function, struct EventStruct *event, String& string)
+boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 //  static boolean AdvHwSerial = false;                   // Web GUI checkbox flag; false = softserial mode, true = hardware UART serial.
@@ -167,7 +167,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
-//    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
+//    int datax = static_cast<int>(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
 //    String Data = "Debug. Plugin Enable State: ";
 //    Data += String(datax);
 //    addFormNote(Data);
@@ -177,7 +177,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
-        for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+        for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++) {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars-1);
         }
       }
@@ -205,7 +205,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           // FIXME TD-er: This is a huge object allocated on the Stack.
           char deviceTemplate[P75_Nlines][P75_Nchars];
           String error;
-          for (byte varNr = 0; varNr < P75_Nlines; varNr++)
+          for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++)
           {
             if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P75_Nchars)) {
               error += getCustomTaskSettingsError(varNr);
@@ -214,7 +214,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+          SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
         }
 
         if(getTaskDeviceName(event->TaskIndex).isEmpty()) {         // Check to see if user entered device name.
@@ -258,7 +258,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         String UcTmpString;
 
         // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
-        for (byte x = 0; x < P75_Nlines; x++) {
+        for (uint8_t x = 0; x < P75_Nlines; x++) {
           if (P075_data->displayLines[x].length()) {
             String tmpString = P075_data->displayLines[x];
             UcTmpString = P075_data->displayLines[x];

@@ -408,7 +408,7 @@ void Internal_GPIO_pulseHelper::updateStatisticalCounters(int par1) {
   pulseModeData.Step3OKcounter -= ISRdata.pulseTotalCounter - par1;
 }
 
-void Internal_GPIO_pulseHelper::setStatsLogLevel(byte logLevel) {
+void Internal_GPIO_pulseHelper::setStatsLogLevel(uint8_t logLevel) {
   pulseModeData.StatsLogLevel = logLevel;
 }
 
@@ -430,7 +430,7 @@ void Internal_GPIO_pulseHelper::resetStatsErrorVars() {
 /*********************************************************************************************\
 *  write statistic counters to logfile
 \*********************************************************************************************/
-void Internal_GPIO_pulseHelper::doStatisticLogging(byte logLevel)
+void Internal_GPIO_pulseHelper::doStatisticLogging(uint8_t logLevel)
 {
   if (loglevelActiveFor(logLevel)) {
     // Statistic to logfile. E.g: ... [123/1|111|100/5|80/3/4|40] [12243|3244]
@@ -455,7 +455,7 @@ void Internal_GPIO_pulseHelper::doStatisticLogging(byte logLevel)
 /*********************************************************************************************\
 *  write collected timing values to logfile
 \*********************************************************************************************/
-void Internal_GPIO_pulseHelper::doTimingLogging(byte logLevel)
+void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
 {
   if (loglevelActiveFor(logLevel)) {
     // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]

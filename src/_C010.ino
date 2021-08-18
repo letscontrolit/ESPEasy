@@ -57,7 +57,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       if (C010_DelayHandler == nullptr) {
         break;
       }
-      const byte valueCount = getValueCountForTask(event->TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       if (valueCount == 0) {
         break;
@@ -80,7 +80,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
         parseControllerVariables(pubname, event, false);
 
-        for (byte x = 0; x < valueCount; x++)
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
           String formattedValue = formatUserVar(event, x, isvalid);
@@ -141,7 +141,7 @@ bool do_process_c010_delay_queue(int controller_number, const C010_queue_element
   }
 
   C010_portUDP.write(
-    (uint8_t *)element.txt[element.valuesSent].c_str(),
+    reinterpret_cast<const uint8_t *>(element.txt[element.valuesSent].c_str()),
     element.txt[element.valuesSent].length());
   bool reply = C010_portUDP.endPacket();
 

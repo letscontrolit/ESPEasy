@@ -74,7 +74,7 @@
 
 // ************************************************************************************************
 
-boolean Plugin_079(byte function, struct EventStruct *event, String& string)
+boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success        = false;
   MOTOR_STATES motor_dir = MOTOR_STATES::MOTOR_FWD;
@@ -221,7 +221,7 @@ boolean Plugin_079(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE: {
 
-      byte   parse_error = false;
+      uint8_t   parse_error = false;
       String tmpString   = string;
       String ModeStr;
 

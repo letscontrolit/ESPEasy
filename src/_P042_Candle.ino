@@ -76,10 +76,10 @@ enum ColorType {
   ColorSelected
 };
 
-byte Candle_red = 0;
-byte Candle_green = 0;
-byte Candle_blue = 0;
-byte Candle_bright = 128;
+uint8_t Candle_red = 0;
+uint8_t Candle_green = 0;
+uint8_t Candle_blue = 0;
+uint8_t Candle_bright = 128;
 SimType Candle_type = TypeSimpleCandle;
 ColorType Candle_color = ColorDefault;
 
@@ -98,7 +98,7 @@ Adafruit_NeoPixel *Candle_pixels;
 #define PLUGIN_VALUENAME2_042 "Brightness"
 #define PLUGIN_VALUENAME3_042 "Type"
 
-boolean Plugin_042(byte function, struct EventStruct *event, String& string)
+boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -158,7 +158,7 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           options[6] = F("Strobe");
           options[7] = F("Color Fader");
 
-          byte choice = PCONFIG(4);
+          uint8_t choice = PCONFIG(4);
           if (choice > sizeof(options) - 1)
           {
             choice = 2;
@@ -440,9 +440,9 @@ boolean Plugin_042(byte function, struct EventStruct *event, String& string)
           if (!val_Color.isEmpty()) {
             long number = strtol( &val_Color[0], NULL, 16);
             // Split RGB to r, g, b values
-            byte r = number >> 16;
-            byte g = number >> 8 & 0xFF;
-            byte b = number & 0xFF;
+            uint8_t r = number >> 16;
+            uint8_t g = number >> 8 & 0xFF;
+            uint8_t b = number & 0xFF;
 
             PCONFIG(0) = r;   // R
             PCONFIG(1) = g;   // G
@@ -512,7 +512,7 @@ void type_Static_Light() {
 void type_Simple_Candle() {
   int r, g, b;
   if (Candle_color == ColorDefault) {
-    r = 226, g = 042, b =  35;   // Regular (orange) flame
+    r = 226, g = 42, b =  35;   // Regular (orange) flame
     //r = 158, g =   8, b = 148;   // Purple flame
     //r =  74, g = 150, b =  12;   // Green flame
   } else {
@@ -642,7 +642,7 @@ void type_ColorFader() {
     }
 
     // Calc HSV
-    // void RGBtoHSV(byte r, byte g, byte b, double hsv[3])
+    // void RGBtoHSV(uint8_t r, uint8_t g, uint8_t b, double hsv[3])
     RGBtoHSV(Candle_red, Candle_green, Candle_blue, hsv);
 
     // Calc RGB with new V
@@ -719,7 +719,7 @@ void HSVtoRGB(int hue, int sat, int val, int colors[3]) {
 }
 
 // Convert RGB Color to HSV Color
-void RGBtoHSV(byte r, byte g, byte b, double hsv[3]) {
+void RGBtoHSV(uint8_t r, uint8_t g, uint8_t b, double hsv[3]) {
     double rd = (double) r/255;
     double gd = (double) g/255;
     double bd = (double) b/255;

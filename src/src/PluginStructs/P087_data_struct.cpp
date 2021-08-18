@@ -160,7 +160,7 @@ void P087_data_struct::setMaxLength(uint16_t maxlenght) {
   max_length = maxlenght;
 }
 
-void P087_data_struct::setLine(byte varNr, const String& line) {
+void P087_data_struct::setLine(uint8_t varNr, const String& line) {
   if (varNr < P87_Nlines) {
     _lines[varNr] = line;
   }
@@ -247,7 +247,7 @@ static std::vector<capture_tuple> capture_vector;
 // called for each match
 void P087_data_struct::match_callback(const char *match, const unsigned int length, const MatchState& ms)
 {
-  for (byte i = 0; i < ms.level; i++)
+  for (uint8_t i = 0; i < ms.level; i++)
   {
     capture_tuple tuple;
     tuple.first  = i;

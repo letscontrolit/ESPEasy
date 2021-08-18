@@ -85,7 +85,7 @@ public:
 
   void setMaxLength(uint16_t maxlenght);
 
-  void setLine(byte          varNr,
+  void setLine(uint8_t          varNr,
                const String& line);
 
 

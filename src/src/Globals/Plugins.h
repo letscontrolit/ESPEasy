@@ -46,7 +46,7 @@
 extern int deviceCount;
 
 // Array of function pointers to call plugins.
-extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+extern boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
                                          struct EventStruct *,
                                          String&);
 
@@ -74,6 +74,11 @@ bool validTaskVarIndex(taskVarIndex_t index);
 bool          supportedPluginID(pluginID_t pluginID);
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
+
 
 
 /********************************************************************************************\
@@ -82,6 +87,9 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 deviceIndex_t getDeviceIndex(pluginID_t Number);
 
 String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
+#if USE_I2C_DEVICE_SCAN
+bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
+#endif // if USE_I2C_DEVICE_SCAN
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();
@@ -93,7 +101,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-bool PluginCall(byte Function, struct EventStruct *event, String& str);
+bool PluginCall(uint8_t Function, struct EventStruct *event, String& str);
 
 
 /*********************************************************************************************\

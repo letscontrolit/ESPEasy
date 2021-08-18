@@ -30,6 +30,7 @@ const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameter
     case ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION:        return  F("Full Queue Action");      
     case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:             return  F("Allow Expire");           
     case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:              return  F("De-duplicate");           
+    case ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME:    return  F("Use Local System Time");
     
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:              return  F("Check Reply");            
 
@@ -129,7 +130,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
   switch (varType) {
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:
     {
-      byte   choice = ControllerSettings.UseDNS;
+      uint8_t   choice = ControllerSettings.UseDNS;
       const __FlashStringHelper * options[2];
       options[0] = F("Use IP address");
       options[1] = F("Use Hostname");
@@ -206,6 +207,9 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:
       addFormCheckBox(displayName, internalName, ControllerSettings.deduplicate());
       break;
+    case ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME:
+      addFormCheckBox(displayName, internalName, ControllerSettings.useLocalSystemTime());
+      break;      
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:
     {
       const __FlashStringHelper * options[2];
@@ -286,7 +290,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
         IPAddress IP;
         resolveHostByName(ControllerSettings.HostName, IP, ControllerSettings.ClientTimeout);
 
-        for (byte x = 0; x < 4; x++) {
+        for (uint8_t x = 0; x < 4; x++) {
           ControllerSettings.IP[x] = IP[x];
         }
       }
@@ -333,10 +337,12 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_DEDUPLICATE:
       ControllerSettings.deduplicate(isFormItemChecked(internalName));
       break;
+    case ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME:
+      ControllerSettings.useLocalSystemTime(isFormItemChecked(internalName));
+      break;
     case ControllerSettingsStruct::CONTROLLER_CHECK_REPLY:
       ControllerSettings.MustCheckReply = getFormItemInt(internalName, ControllerSettings.MustCheckReply);
       break;
-
     case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:
       strncpy_webserver_arg(ControllerSettings.ClientID, internalName);
       break;

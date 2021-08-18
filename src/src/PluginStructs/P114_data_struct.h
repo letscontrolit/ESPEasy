@@ -39,6 +39,8 @@ public:
                    uint8_t integration_time,
                    bool    highDensity);
 
+  P114_data_struct() = delete;
+
   bool read_sensor(float& _UVA,
                    float& _UVB,
                    float& _UVIndex);

@@ -31,7 +31,7 @@ void handle_rules() {
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
-  const byte rulesSet = getFormItemInt(F("set"), 1);
+  const uint8_t rulesSet = getFormItemInt(F("set"), 1);
 
   # if defined(ESP8266)
   String fileName = F("rules");
@@ -66,21 +66,33 @@ void handle_rules() {
   html_table_header(F("Rules"));
 
   html_TR_TD();
-  addHtml(F("<form name = 'frmselect'>"));
+
+  // Need a separate script to only include the 'set' attribute and not also
+  // send the 'rules' as that will need a lot of memory on the ESP to process.
+  addHtml(F("<form id='rulesselect' name='rulesselect' method='get'>"));
   {
     // Place combo box in its own scope to release these arrays as soon as possible
-    byte   choice = rulesSet;
+    uint8_t   choice = rulesSet;
     String options[RULESETS_MAX];
     int    optionValues[RULESETS_MAX];
 
-    for (byte x = 0; x < RULESETS_MAX; x++)
+    for (uint8_t x = 0; x < RULESETS_MAX; x++)
     {
       options[x]      = F("Rules Set ");
       options[x]     += x + 1;
       optionValues[x] = x + 1;
     }
 
-    addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
+    addSelector_reloadOnChange(
+      F("set"), 
+      RULESETS_MAX, 
+      options, 
+      optionValues, 
+      NULL, 
+      choice, 
+      F("return rules_set_onchange(rulesselect)"), 
+      true,
+      F("wide"));
     addHelpButton(F("Tutorial_Rules"));
     addRTDHelpButton(F("Rules/Rules.html"));
   }

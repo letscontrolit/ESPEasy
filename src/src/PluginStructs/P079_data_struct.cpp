@@ -49,10 +49,10 @@ WemosMotor::WemosMotor(uint8_t address, uint8_t motor, uint32_t freq, uint8_t ST
 void WemosMotor::setfreq(uint32_t freq)
 {
   Wire.beginTransmission(_address);
-  Wire.write(((byte)(freq >> 24)) & (byte)0x0f);
-  Wire.write((byte)(freq >> 16));
-  Wire.write((byte)(freq >> 8));
-  Wire.write((byte)freq);
+  Wire.write(((uint8_t)(freq >> 24)) & (uint8_t)0x0f);
+  Wire.write((uint8_t)(freq >> 16));
+  Wire.write((uint8_t)(freq >> 8));
+  Wire.write((uint8_t)freq);
   Wire.endTransmission(); // stop transmitting
   delay(0);
 }
@@ -92,7 +92,7 @@ void WemosMotor::setmotor(uint8_t dir, float pwm_val)
   }
 
   Wire.beginTransmission(_address);
-  Wire.write(_motor | (byte)0x10); // CMD either 0x10 or 0x11
+  Wire.write(_motor | (uint8_t)0x10); // CMD either 0x10 or 0x11
   Wire.write(dir);
 
   // PWM in %
@@ -102,8 +102,8 @@ void WemosMotor::setmotor(uint8_t dir, float pwm_val)
     _pwm_val = 10000;
   }
 
-  Wire.write((byte)(_pwm_val >> 8));
-  Wire.write((byte)_pwm_val);
+  Wire.write((uint8_t)(_pwm_val >> 8));
+  Wire.write((uint8_t)_pwm_val);
   Wire.endTransmission(); // stop transmitting
 
   delay(0);
@@ -257,10 +257,10 @@ unsigned char LOLIN_I2C_MOTOR::sendData(unsigned char *data, unsigned char len)
     delay(50);
 
     if (data[0] == GET_SLAVE_STATUS) {
-      Wire.requestFrom((int)_address, 2);
+      Wire.requestFrom(static_cast<int>(_address), 2);
     }
     else {
-      Wire.requestFrom((int)_address, 1);
+      Wire.requestFrom(static_cast<int>(_address), 1);
     }
 
     i = 0;

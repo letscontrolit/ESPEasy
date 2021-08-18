@@ -59,13 +59,13 @@ void handle_csvval()
     if (validDeviceIndex(DeviceIndex))
     {
       LoadTaskSettings(taskNr);
-      const byte taskValCount = getValueCountForTask(taskNr);
+      const uint8_t taskValCount = getValueCountForTask(taskNr);
       uint16_t stringReserveSize = (valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24;
       htmlData.reserve(stringReserveSize);
 
       if (printHeader)
       {
-        for (byte x = 0; x < taskValCount; x++)
+        for (uint8_t x = 0; x < taskValCount; x++)
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
@@ -81,7 +81,7 @@ void handle_csvval()
         htmlData = "";
       }
 
-      for (byte x = 0; x < taskValCount; x++)
+      for (uint8_t x = 0; x < taskValCount; x++)
       {
         if ((valNr == INVALID_VALUE_NUM) || (valNr == x))
         {
@@ -156,6 +156,8 @@ void handle_json()
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
         LabelType::LOCAL_TIME,
+        LabelType::TIME_SOURCE,
+        LabelType::TIME_WANDER,
         LabelType::ISNTP,
         LabelType::UNIT_NR,
         LabelType::UNIT_NAME,
@@ -224,6 +226,7 @@ void handle_json()
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
         LabelType::WIFI_NR_EXTRA_SCANS,
         LabelType::WIFI_PERIODICAL_SCAN,
+        LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
 
 
@@ -335,7 +338,7 @@ void handle_json()
       unsigned long ttl_json = 60; // Default value
 
       // For simplicity, do the optional values first.
-      const byte valueCount = getValueCountForTask(TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
       if (valueCount != 0) {
         if ((taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
@@ -347,11 +350,11 @@ void handle_json()
         }
         addHtml(F("\"TaskValues\": [\n"));
 
-        for (byte x = 0; x < valueCount; x++)
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           addHtml('{');
           const String value = formatUserVarNoCheck(TaskIndex, x);
-          byte nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          uint8_t nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
 
           if (mustConsiderAsString(value)) {
             // Flag as not to treat as a float
@@ -526,7 +529,7 @@ void handle_buildinfo() {
   {
     json_open(true, F("notifications"));
 
-    for (byte x = 0; x < NPLUGIN_MAX; x++) {
+    for (uint8_t x = 0; x < NPLUGIN_MAX; x++) {
       if (validNPluginID(NPlugin_id[x])) {
         json_open();
         json_number(F("id"), String(x + 1));

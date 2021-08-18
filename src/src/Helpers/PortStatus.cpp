@@ -118,12 +118,12 @@ uint16_t getPortFromKey(uint32_t key) {
    set pin mode & state (info table)
 \*********************************************************************************************/
 /*
-   void setPinState(byte plugin, byte index, byte mode, uint16_t value)
+   void setPinState(uint8_t plugin, uint8_t index, uint8_t mode, uint16_t value)
    {
    // plugin number and index form a unique key
    // first check if this pin is already known
    bool reUse = false;
-   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+   for (uint8_t x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
       pinStates[x].mode = mode;
@@ -134,7 +134,7 @@ uint16_t getPortFromKey(uint32_t key) {
 
    if (!reUse)
    {
-    for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+    for (uint8_t x = 0; x < PINSTATE_TABLE_MAX; x++)
       if (pinStates[x].plugin == 0)
       {
         pinStates[x].plugin = plugin;
@@ -152,9 +152,9 @@ uint16_t getPortFromKey(uint32_t key) {
 \*********************************************************************************************/
 
 /*
-   bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value)
+   bool getPinState(uint8_t plugin, uint8_t index, uint8_t *mode, uint16_t *value)
    {
-   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+   for (uint8_t x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
  * mode = pinStates[x].mode;
@@ -169,9 +169,9 @@ uint16_t getPortFromKey(uint32_t key) {
    check if pin mode & state is known (info table)
 \*********************************************************************************************/
 /*
-   bool hasPinState(byte plugin, byte index)
+   bool hasPinState(uint8_t plugin, uint8_t index)
    {
-   for (byte x = 0; x < PINSTATE_TABLE_MAX; x++)
+   for (uint8_t x = 0; x < PINSTATE_TABLE_MAX; x++)
     if ((pinStates[x].plugin == plugin) && (pinStates[x].index == index))
     {
       return true;
@@ -191,7 +191,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   checkRAM(F("getPinStateJSON"));
   #endif
   printToWebJSON = true;
-  byte mode     = PIN_MODE_INPUT;
+  uint8_t mode     = PIN_MODE_INPUT;
   int16_t value = noSearchValue;
   bool    found = false;
 
@@ -233,7 +233,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   return "";
 }
 
-const __FlashStringHelper * getPinModeString(byte mode) {
+const __FlashStringHelper * getPinModeString(uint8_t mode) {
   switch (mode)
   {
     case PIN_MODE_UNDEFINED:    return F("undefined");

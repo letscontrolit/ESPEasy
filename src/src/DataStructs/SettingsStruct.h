@@ -5,6 +5,7 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
+#include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
 #include "../../ESPEasy_common.h"
 
@@ -39,6 +40,8 @@ enum class PinBootState {
   // FUNCTION_6 (only on ESP32)
 
 };
+
+
 
 
 /*********************************************************************************************\
@@ -109,6 +112,10 @@ class SettingsStruct_tmpl
   // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
   bool JSONBoolWithoutQuotes() const;
   void JSONBoolWithoutQuotes(bool value);
+  
+  // Enable timing statistics (may consume a few kB of RAM)
+  bool EnableTimingStats() const;
+  void EnableTimingStats(bool value);
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
@@ -117,6 +124,22 @@ class SettingsStruct_tmpl
 
   bool DoNotStartAP() const;
   void DoNotStartAP(bool value);
+
+  bool UseAlternativeDeepSleep() const;
+  void UseAlternativeDeepSleep(bool value);
+
+  bool UseLastWiFiFromRTC() const;
+  void UseLastWiFiFromRTC(bool value);
+
+  ExtTimeSource_e ExtTimeSource() const;
+  void ExtTimeSource(ExtTimeSource_e value);
+
+  bool UseNTP() const;
+  void UseNTP(bool value);
+
+  bool AllowTaskValueSetAllPlugins() const;
+  void AllowTaskValueSetAllPlugins(bool value);
+
 
   void validate();
 
@@ -159,6 +182,9 @@ class SettingsStruct_tmpl
   // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
 
+  // Return true if I2C settings are correct
+  bool isI2CEnabled() const;
+
   // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
   bool isEthernetPin(int8_t pin) const;
 
@@ -167,7 +193,7 @@ class SettingsStruct_tmpl
 
   // Access to TaskDevicePin1 ... TaskDevicePin3
   // @param pinnr 1 = TaskDevicePin1, ..., 3 = TaskDevicePin3
-  int8_t getTaskDevicePin(taskIndex_t taskIndex, byte pinnr) const;
+  int8_t getTaskDevicePin(taskIndex_t taskIndex, uint8_t pinnr) const;
 
   float getWiFi_TX_power() const;
   void setWiFi_TX_power(float dBm);
@@ -176,12 +202,12 @@ class SettingsStruct_tmpl
   unsigned long PID;
   int           Version;
   int16_t       Build;
-  byte          IP[4];
-  byte          Gateway[4];
-  byte          Subnet[4];
-  byte          DNS[4];
-  byte          IP_Octet;
-  byte          Unit;
+  uint8_t       IP[4];
+  uint8_t       Gateway[4];
+  uint8_t       Subnet[4];
+  uint8_t       DNS[4];
+  uint8_t       IP_Octet;
+  uint8_t       Unit;
   char          Name[26];
   char          NTPHost[64];
   // FIXME TD-er: Issue #2690
@@ -191,40 +217,40 @@ class SettingsStruct_tmpl
   int8_t        Pin_status_led;
   int8_t        Pin_sd_cs;
   int8_t        PinBootStates[17];  // Only use getPinBootState and setPinBootState as multiple pins are packed for ESP32
-  byte          Syslog_IP[4];
+  uint8_t       Syslog_IP[4];
   unsigned int  UDPPort;
-  byte          SyslogLevel;
-  byte          SerialLogLevel;
-  byte          WebLogLevel;
-  byte          SDLogLevel;
+  uint8_t       SyslogLevel;
+  uint8_t       SerialLogLevel;
+  uint8_t       WebLogLevel;
+  uint8_t       SDLogLevel;
   unsigned long BaudRate;
   unsigned long MessageDelay_unused;  // MQTT settings now moved to the controller settings.
-  byte          deepSleep_wakeTime;   // 0 = Sleep Disabled, else time awake from sleep in seconds
+  uint8_t       deepSleep_wakeTime;   // 0 = Sleep Disabled, else time awake from sleep in seconds
   boolean       CustomCSS;
   boolean       DST;
-  byte          WDI2CAddress;
+  uint8_t       WDI2CAddress;
   boolean       UseRules;
   boolean       UseSerial;
   boolean       UseSSDP;
-  boolean       UseNTP;
+  uint8_t       ExternalTimeSource;
   unsigned long WireClockStretchLimit;
   boolean       GlobalSync;
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag_unused;
-  byte          InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 
+  uint8_t       InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  byte          Protocol[CONTROLLER_MAX];
-  byte          Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
+  uint8_t       Protocol[CONTROLLER_MAX];
+  uint8_t       Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  byte          TaskDeviceNumber[N_TASKS]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
+  uint8_t       TaskDeviceNumber[N_TASKS]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
   unsigned int  OLD_TaskDeviceID[N_TASKS];  //UNUSED: this can be removed
   union {
     struct {
       int8_t        TaskDevicePin1[N_TASKS];
       int8_t        TaskDevicePin2[N_TASKS];
       int8_t        TaskDevicePin3[N_TASKS];
-      byte          TaskDevicePort[N_TASKS];
+      uint8_t       TaskDevicePort[N_TASKS];
     };
     int8_t        TaskDevicePin[4][N_TASKS];
   };
@@ -233,9 +259,9 @@ class SettingsStruct_tmpl
   boolean       TaskDevicePin1Inversed[N_TASKS];
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-  byte          TaskDeviceSendDataFlags[N_TASKS];
-  byte          OLD_TaskDeviceGlobalSync[N_TASKS];
-  byte          TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
+  uint8_t       TaskDeviceSendDataFlags[N_TASKS];
+  uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS];
+  uint8_t       TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
   unsigned long TaskDeviceTimer[N_TASKS];
   boolean       TaskDeviceEnabled[N_TASKS];
   boolean       ControllerEnabled[CONTROLLER_MAX];
@@ -250,7 +276,7 @@ class SettingsStruct_tmpl
   uint16_t      DST_End;
   boolean       UseRTOSMultitasking;
   int8_t        Pin_Reset;
-  byte          SyslogFacility;
+  uint8_t       SyslogFacility;
   uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
   boolean       MQTTUseUnitNameAsClientId_unused;
 
@@ -267,26 +293,26 @@ class SettingsStruct_tmpl
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
-  // Try to extend settings to make the checksum 4-byte aligned.
+  // Try to extend settings to make the checksum 4-uint8_t aligned.
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 //  uint8_t       md5[16];
-  uint8_t       ETH_Phy_Addr;
-  int8_t        ETH_Pin_mdc;
-  int8_t        ETH_Pin_mdio;
-  int8_t        ETH_Pin_power;
-  EthPhyType_t   ETH_Phy_Type;
-  EthClockMode_t ETH_Clock_Mode;
-  byte          ETH_IP[4];
-  byte          ETH_Gateway[4];
-  byte          ETH_Subnet[4];
-  byte          ETH_DNS[4];
+  uint8_t         ETH_Phy_Addr;
+  int8_t          ETH_Pin_mdc;
+  int8_t          ETH_Pin_mdio;
+  int8_t          ETH_Pin_power;
+  EthPhyType_t    ETH_Phy_Type;
+  EthClockMode_t  ETH_Clock_Mode;
+  uint8_t         ETH_IP[4];
+  uint8_t         ETH_Gateway[4];
+  uint8_t         ETH_Subnet[4];
+  uint8_t         ETH_DNS[4];
   NetworkMedium_t NetworkMedium;
-  int8_t        I2C_Multiplexer_Type;
-  int8_t        I2C_Multiplexer_Addr;
-  int8_t        I2C_Multiplexer_Channel[N_TASKS];
-  uint8_t       I2C_Flags[N_TASKS];
-  uint32_t      I2C_clockSpeed_Slow;
-  uint8_t       I2C_Multiplexer_ResetPin;
+  int8_t          I2C_Multiplexer_Type;
+  int8_t          I2C_Multiplexer_Addr;
+  int8_t          I2C_Multiplexer_Channel[N_TASKS];
+  uint8_t         I2C_Flags[N_TASKS];
+  uint32_t        I2C_clockSpeed_Slow;
+  uint8_t         I2C_Multiplexer_ResetPin;
 
   #ifdef ESP32
   int8_t        PinBootStates_ESP32[24]; // pins 17 ... 39

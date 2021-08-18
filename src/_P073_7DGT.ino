@@ -22,7 +22,7 @@
 //                     "7dfont,<font>"       (select the used font: 0/7DGT/Default = default, 1/Siekoo = Siekoo, 2/Siekoo_Upper = Siekoo with uppercase CHNORUX, 3/dSEG7 = dSEG7)
 //                                           Siekoo: https://www.fakoo.de/siekoo (uppercase CHNORUX is a local extension)
 //                                           dSEG7 : https://www.keshikan.net/fonts-e.html
-//                     "7dbin,[byte],..."    (show data binary formatted, bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
+//                     "7dbin,[uint8_t],..."    (show data binary formatted, bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
 //  - Clock-Blink     -- display is automatically updated with current time and blinking dot/lines
 //  - Clock-NoBlink   -- display is automatically updated with current time and steady dot/lines
 //  - Clock12-Blink   -- display is automatically updated with current time (12h clock) and blinking dot/lines
@@ -42,7 +42,7 @@
 //                         'Merged' fontdata for TM1637 by converting the data for MAX7219 (bits 0-6 are swapped around), to save a little space and maintanance burden.
 //                         Added 7dfont,<font> command for changing the font dynamically runtime. NB: The numbers digits are equal for all fonts!
 //                         Added Scroll Text option for scrolling texts longer then the display is wide
-//                         Added 7dbin,<byte>[,...] for displaying binary formatted data bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
+//                         Added 7dbin,<uint8_t>[,...] for displaying binary formatted data bits clock-wise from left to right, dot, top, right 2x, bottom, left 2x, center), scroll-enabled
 // 2021-01-10, tonhuisman: Added optional . as dot display (7dtext)
 //                         Added 7ddt,<temp1>,<temp2> dual temperature display
 //                         Added optional removal of degree symbol on temperature display
@@ -73,7 +73,7 @@
 #define P073_7DDT_COMMAND         // Enable 7ddt by default
 #define P073_EXTRA_FONTS          // Enable extra fonts
 #define P073_SCROLL_TEXT          // Enable scrolling of 7dtext by default
-#define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,byte,... command
+#define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,uint8_t,... command
 
 #ifndef PLUGIN_SET_TESTING
 // #define P073_DEBUG                // Leave out some debugging on demnand, activates extra log info in the debug
@@ -100,8 +100,8 @@ struct P073_data_struct : public PluginTaskData_base {
     ClearBuffer();
   }
 
-  void FillBufferWithTime(boolean sevendgt_now, byte sevendgt_hours,
-                          byte sevendgt_minutes, byte sevendgt_seconds,
+  void FillBufferWithTime(boolean sevendgt_now, uint8_t sevendgt_hours,
+                          uint8_t sevendgt_minutes, uint8_t sevendgt_seconds,
                           boolean flag12h) {
     ClearBuffer();
 
@@ -126,8 +126,8 @@ struct P073_data_struct : public PluginTaskData_base {
     showbuffer[5] = sevendgt_seconds % 10;
   }
 
-  void FillBufferWithDate(boolean sevendgt_now, byte sevendgt_day,
-                          byte sevendgt_month, int sevendgt_year) {
+  void FillBufferWithDate(boolean sevendgt_now, uint8_t sevendgt_day,
+                          uint8_t sevendgt_month, int sevendgt_year) {
     ClearBuffer();
     int sevendgt_year0 = sevendgt_year;
 
@@ -140,8 +140,8 @@ struct P073_data_struct : public PluginTaskData_base {
         sevendgt_year0 += 2000;
       }
     }
-    byte sevendgt_year1 = static_cast<uint8_t>(sevendgt_year0 / 100);
-    byte sevendgt_year2 = static_cast<uint8_t>(sevendgt_year0 % 100);
+    uint8_t sevendgt_year1 = static_cast<uint8_t>(sevendgt_year0 / 100);
+    uint8_t sevendgt_year2 = static_cast<uint8_t>(sevendgt_year0 % 100);
 
     showbuffer[0] = static_cast<uint8_t>(sevendgt_day / 10);
     showbuffer[1] = sevendgt_day % 10;
@@ -155,8 +155,8 @@ struct P073_data_struct : public PluginTaskData_base {
 
   void FillBufferWithNumber(const String& number) {
     ClearBuffer();
-    byte p073_numlenght = number.length();
-    byte p073_index     = 7;
+    uint8_t p073_numlenght = number.length();
+    uint8_t p073_index     = 7;
     dotpos = -1; // -1 means no dot to display
 
     for (int i = p073_numlenght - 1; i >= 0 && p073_index >= 0; --i) {
@@ -436,14 +436,14 @@ void LogBufferContent(String prefix) {
     }
   }
 
-  int      dotpos;
-  uint8_t  showbuffer[8];
+  int      dotpos = 0;
+  uint8_t  showbuffer[8] = {0};
   bool     showperiods[8];
-  byte     spidata[2];
+  uint8_t     spidata[2] = {0};
   uint8_t  pin1, pin2, pin3;
-  byte     displayModel;
-  byte     output;
-  byte     brightness;
+  uint8_t     displayModel;
+  uint8_t     output;
+  uint8_t     brightness;
   bool     timesep;
   bool     shift;
   bool     periods;
@@ -482,7 +482,7 @@ private:
 //   - pos 14    - triple lines "/"
 //   - pos 15    - underscore "_"
 //   - pos 16-41 - Letters from A to Z
-static const byte DefaultCharTable[42] PROGMEM = {
+static const uint8_t DefaultCharTable[42] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B01001001, B00001000, B01110111, B00011111,
@@ -530,7 +530,7 @@ static const byte DefaultCharTable[42] PROGMEM = {
 //   - pos 40    - uppercase U "U"                      B00111110
 //   - pos 41    - uppercase X "X"                      B00110111
 //   - pos 42-67 - Letters from A to Z Siekoo style
-static const byte SiekooCharTable[68] PROGMEM = {
+static const uint8_t SiekooCharTable[68] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B00100101, B00001000, B00010010, B01110100,
@@ -554,7 +554,7 @@ static const byte SiekooCharTable[68] PROGMEM = {
 //   - pos 14    - slash "/"                            
 //   - pos 15    - underscore "_"
 //   - pos 16-41 - Letters from A to Z dSEG7 style
-static const byte Dseg7CharTable[42] PROGMEM = {
+static const uint8_t Dseg7CharTable[42] PROGMEM = {
   B01111110, B00110000, B01101101, B01111001, B00110011, B01011011,
   B01011111, B01110000, B01111111, B01111011, B00000000, B00000001,
   B01100011, B00001001, B01001001, B00001000, B01110111, B00011111, /* AB */
@@ -576,12 +576,10 @@ uint8_t P073_mapCharToFontPosition(char character, uint8_t fontset) {
     case 2: // Siekoo with uppercase 'CHNORUX'
       if (fontset == 2 && chnorux.indexOf(character) > -1) {
         position = chnorux.indexOf(character) + 35;
-      } else if ((character >= '0') && (character <= '9')) {
+      } else if (isDigit(character)) {
         position = character - '0';
-      } else if ((character >= 'A') && (character <= 'Z')) {
-        position = character - 'A' + 42;
-      } else if ((character >= 'a') && (character <= 'z')) {
-        position = character - 'a' + 42;
+      } else if (isAlpha(character)) {
+        position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
       } else {
         uint8_t idx = specialChars.indexOf(character);
         if (idx > -1) {
@@ -592,12 +590,10 @@ uint8_t P073_mapCharToFontPosition(char character, uint8_t fontset) {
     case 3: // dSEG7 (same table size as 7Dgt)
     default: // Original fontset (7Dgt)
 #endif // P073_EXTRA_FONTS
-      if ((character >= '0') && (character <= '9')) {
+      if (isDigit(character)) {
         position = character - '0';
-      } else if ((character >= 'A') && (character <= 'Z')) {
-        position = character - 'A' + 16;
-      } else if ((character >= 'a') && (character <= 'z')) {
-        position = character - 'a' + 16;
+      } else if (isAlpha(character)) {
+        position = character - (isLowerCase(character) ? 'a' : 'A') + 16;
       } else {
         switch (character) {
           case ' ': position = 10; break;
@@ -624,7 +620,7 @@ uint8_t P073_mapMAX7219FontToTM1673Font(uint8_t character) {
   return newCharacter;
 }
 
-boolean Plugin_073(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -1573,10 +1569,10 @@ void tm1637_i2cAck(uint8_t clk_pin, uint8_t dio_pin) {
 }
 
 void tm1637_i2cWrite_ack(uint8_t clk_pin, uint8_t dio_pin,
-                         uint8_t bytesToPrint[], byte length) {
+                         uint8_t bytesToPrint[], uint8_t length) {
   tm1637_i2cStart(clk_pin, dio_pin);
 
-  for (byte i = 0; i < length; ++i) {
+  for (uint8_t i = 0; i < length; ++i) {
     tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint[i]);
   }
   tm1637_i2cStop(clk_pin, dio_pin);
@@ -1655,7 +1651,7 @@ uint8_t tm1637_separator(uint8_t value, bool sep) {
   return value;
 }
 
-byte tm1637_getFontChar(byte index, uint8_t fontset) {
+uint8_t tm1637_getFontChar(uint8_t index, uint8_t fontset) {
   #ifdef P073_EXTRA_FONTS
   switch (fontset) {
     case 1: // Siekoo
@@ -1741,7 +1737,7 @@ void tm1637_ShowTemp6(struct EventStruct *event, bool sep) {
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 7);
 }
 
-void tm1637_ShowTimeTemp4(struct EventStruct *event, bool sep, byte bufoffset) {
+void tm1637_ShowTimeTemp4(struct EventStruct *event, bool sep, uint8_t bufoffset) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1761,7 +1757,7 @@ void tm1637_ShowTimeTemp4(struct EventStruct *event, bool sep, byte bufoffset) {
   tm1637_i2cWrite_ack(clk_pin, dio_pin, bytesToPrint, 5);
 }
 
-void tm1637_SwapDigitInBuffer(struct EventStruct *event, byte startPos) {
+void tm1637_SwapDigitInBuffer(struct EventStruct *event, uint8_t startPos) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1796,7 +1792,7 @@ void tm1637_SwapDigitInBuffer(struct EventStruct *event, byte startPos) {
   }
 }
 
-void tm1637_ShowBuffer(struct EventStruct *event, byte firstPos, byte lastPos) {
+void tm1637_ShowBuffer(struct EventStruct *event, uint8_t firstPos, uint8_t lastPos) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1808,14 +1804,14 @@ void tm1637_ShowBuffer(struct EventStruct *event, byte firstPos, byte lastPos) {
 
   uint8_t bytesToPrint[8] = { 0 };
   bytesToPrint[0] = 0xC0;
-  byte length = 1;
+  uint8_t length = 1;
 
   if (P073_data->dotpos > -1) {
     P073_data->showperiods[P073_data->dotpos] = true;
   }
 
   for (int i = firstPos; i < lastPos; i++) {
-    byte p073_datashowpos1 = tm1637_separator(
+    uint8_t p073_datashowpos1 = tm1637_separator(
       tm1637_getFontChar(P073_data->showbuffer[i], P073_data->fontset), P073_data->showperiods[i]);
     bytesToPrint[length] = p073_datashowpos1;
     ++length;
@@ -1834,8 +1830,8 @@ void tm1637_ShowBuffer(struct EventStruct *event, byte firstPos, byte lastPos) {
 #define OP_DISPLAYTEST 15
 
 void max7219_spiTransfer(struct EventStruct *event, uint8_t din_pin,
-                         uint8_t clk_pin, uint8_t cs_pin, volatile byte opcode,
-                         volatile byte data) {
+                         uint8_t clk_pin, uint8_t cs_pin, volatile uint8_t opcode,
+                         volatile uint8_t data) {
   P073_data_struct *P073_data =
     static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1868,8 +1864,8 @@ void max7219_SetPowerBrightness(struct EventStruct *event, uint8_t din_pin,
 
 void max7219_SetDigit(struct EventStruct *event, uint8_t din_pin,
                       uint8_t clk_pin, uint8_t cs_pin, int dgtpos,
-                      byte dgtvalue, boolean showdot, bool binaryData = false) {
-  byte p073_tempvalue;
+                      uint8_t dgtvalue, boolean showdot, bool binaryData = false) {
+  uint8_t p073_tempvalue;
 
   #ifdef P073_EXTRA_FONTS
   switch (PCONFIG(4)) {
@@ -1957,7 +1953,7 @@ void max7219_ShowDate(struct EventStruct *event, uint8_t din_pin,
     return;
   }
 
-  byte dotflags[8] = { false, true, false, true, false, false, false, false };
+  uint8_t dotflags[8] = { false, true, false, true, false, false, false, false };
 
   for (int i = 0; i < 8; i++) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,

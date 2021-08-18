@@ -14,7 +14,7 @@
 # define PLUGIN_VALUENAME2_107 "Infra"
 # define PLUGIN_VALUENAME3_107 "UV"
 
-boolean Plugin_107(byte function, struct EventStruct *event, String& string)
+boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -47,6 +47,12 @@ boolean Plugin_107(byte function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_107));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_107));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_107));
+      break;
+    }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x60);
       break;
     }
 

@@ -32,8 +32,8 @@ struct command_case_data {
 
 };
 
-bool do_command_case(command_case_data& data, const String& cmd_test, command_function_fs pFunc, int nrArguments, EventValueSourceGroup::Enum group);
-bool do_command_case(command_case_data& data, const String& cmd_test, command_function pFunc, int nrArguments, EventValueSourceGroup::Enum group);
+bool do_command_case(command_case_data& data, const __FlashStringHelper * cmd_test, command_function_fs pFunc, int nrArguments, EventValueSourceGroup::Enum group);
+bool do_command_case(command_case_data& data, const __FlashStringHelper * cmd_test, command_function pFunc, int nrArguments, EventValueSourceGroup::Enum group);
 
 
 /*********************************************************************************************\

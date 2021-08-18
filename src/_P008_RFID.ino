@@ -24,10 +24,10 @@ No initial history available.
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
 
-volatile byte Plugin_008_bitCount = 0;     // Count the number of bits received.
+volatile uint8_t Plugin_008_bitCount = 0;     // Count the number of bits received.
 uint64_t Plugin_008_keyBuffer = 0;    // A 64-bit-long keyBuffer into which the number is stored.
-byte Plugin_008_timeoutCount = 0;
-byte Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
+uint8_t Plugin_008_timeoutCount = 0;
+uint8_t Plugin_008_WiegandSize = 26;          // size of a tag via wiegand (26-bits or 36-bits)
 
 boolean Plugin_008_init = false;
 
@@ -51,7 +51,7 @@ uint64_t castHexAsDec(uint64_t hexValue) {
   return result;
 }
 
-boolean Plugin_008(byte function, struct EventStruct *event, String& string)
+boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -206,7 +206,7 @@ boolean Plugin_008(byte function, struct EventStruct *event, String& string)
       }
       case PLUGIN_WEBFORM_LOAD:
         {
-          byte choice = PCONFIG(0);
+          uint8_t choice = PCONFIG(0);
           {
             const __FlashStringHelper * options[2];
             options[0] = F("26 Bits");

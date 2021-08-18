@@ -106,9 +106,9 @@ enum BMx_state {
 struct P028_data_struct : public PluginTaskData_base {
   P028_data_struct(uint8_t addr);
 
-  byte    get_config_settings() const;
+  uint8_t    get_config_settings() const;
 
-  byte    get_control_settings() const;
+  uint8_t    get_control_settings() const;
 
   String  getFullDeviceName() const;
 

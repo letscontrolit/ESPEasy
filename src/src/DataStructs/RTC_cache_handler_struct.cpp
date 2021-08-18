@@ -92,7 +92,7 @@ bool RTC_cache_handler_struct::peek(uint8_t *data, unsigned int size) {
 }
 
 // Write a single sample set to the buffer
-bool RTC_cache_handler_struct::write(uint8_t *data, unsigned int size) {
+bool RTC_cache_handler_struct::write(const uint8_t *data, unsigned int size) {
     #ifdef RTC_STRUCT_DEBUG
   rtc_debug_log(F("write RTC cache data"), size);
     #endif // ifdef RTC_STRUCT_DEBUG
@@ -249,12 +249,12 @@ bool RTC_cache_handler_struct::loadMetaData()
   // No need to load on ESP32, as the data is already allocated to the RTC memory by the compiler
 
   #ifdef ESP8266
-  if (!system_rtc_mem_read(RTC_BASE_CACHE, (byte *)&RTC_cache, sizeof(RTC_cache))) {
+  if (!system_rtc_mem_read(RTC_BASE_CACHE, reinterpret_cast<uint8_t *>(&RTC_cache), sizeof(RTC_cache))) {
     return false;
   }
   #endif
 
-  return RTC_cache.checksumMetadata == calc_CRC32((byte *)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
+  return RTC_cache.checksumMetadata == calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache) - sizeof(uint32_t));
 }
 
 bool RTC_cache_handler_struct::loadData()
@@ -263,7 +263,7 @@ bool RTC_cache_handler_struct::loadData()
 
   // No need to load on ESP32, as the data is already allocated to the RTC memory by the compiler
   #ifdef ESP8266
-  if (!system_rtc_mem_read(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), (byte *)&RTC_cache_data[0], RTC_CACHE_DATA_SIZE)) {
+  if (!system_rtc_mem_read(RTC_BASE_CACHE + (sizeof(RTC_cache) / 4), reinterpret_cast<uint8_t *>(&RTC_cache_data[0]), RTC_CACHE_DATA_SIZE)) {
     return false;
   }
   #endif
@@ -284,13 +284,13 @@ bool RTC_cache_handler_struct::saveRTCcache() {
 bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrBytes)
 {
   RTC_cache.checksumData     = getDataChecksum();
-  RTC_cache.checksumMetadata = calc_CRC32((byte *)&RTC_cache, sizeof(RTC_cache) - sizeof(uint32_t));
+  RTC_cache.checksumMetadata = calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache) - sizeof(uint32_t));
   #ifdef ESP32
   return true;
   #endif
 
   #ifdef ESP8266
-  if (!system_rtc_mem_write(RTC_BASE_CACHE, (byte *)&RTC_cache, sizeof(RTC_cache)) || !loadMetaData())
+  if (!system_rtc_mem_write(RTC_BASE_CACHE, reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache)) || !loadMetaData())
   {
         # ifdef RTC_STRUCT_DEBUG
     addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache metadata to RTC"));
@@ -302,7 +302,7 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
   if (nrBytes > 0) { // Check needed?
     const size_t address = RTC_BASE_CACHE + ((sizeof(RTC_cache) + startOffset) / 4);
 
-    if (!system_rtc_mem_write(address, (byte *)&RTC_cache_data[startOffset], nrBytes))
+    if (!system_rtc_mem_write(address, reinterpret_cast<const uint8_t *>(&RTC_cache_data[startOffset]), nrBytes))
     {
           # ifdef RTC_STRUCT_DEBUG
       addLog(LOG_LEVEL_ERROR, F("RTC  : Error while writing cache data to RTC"));
@@ -329,7 +329,7 @@ uint32_t RTC_cache_handler_struct::getDataChecksum() {
   */
 
   // Only compute the checksum over the number of samples stored.
-  return calc_CRC32((byte *)&RTC_cache_data[0], /*dataLength*/ RTC_CACHE_DATA_SIZE);
+  return calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache_data[0]), /*dataLength*/ RTC_CACHE_DATA_SIZE);
 }
 
 void RTC_cache_handler_struct::initRTCcache_data() {

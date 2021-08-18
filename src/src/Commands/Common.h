@@ -22,7 +22,7 @@ bool   IsNumeric(const char *source);
 String Command_GetORSetIP(struct EventStruct *event,
                           const String      & targetDescription,
                           const char         *Line,
-                          byte               *IP,
+                          uint8_t               *IP,
                           const IPAddress&    dhcpIP,
                           int                 arg);
 

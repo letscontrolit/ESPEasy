@@ -28,7 +28,7 @@ String Command_WD_Read(EventStruct *event, const char* Line)
   Wire.endTransmission();
   if ( Wire.requestFrom(static_cast<uint8_t>(event->Par1), static_cast<uint8_t>(1)) == 1 )
   {
-    byte value = Wire.read();
+    uint8_t value = Wire.read();
     serialPrintln();
     String result = F("I2C Read address ");
     result += formatToHex(event->Par1);

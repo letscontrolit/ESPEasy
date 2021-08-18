@@ -114,7 +114,7 @@ struct C018_data_struct {
     return myLora->command_finished();
   }
 
-  bool txUncnfBytes(const byte *data, uint8_t size, uint8_t port) {
+  bool txUncnfBytes(const uint8_t *data, uint8_t size, uint8_t port) {
     bool res = myLora->txBytes(data, size, port) != RN2xx3_datatypes::TX_return_type::TX_FAIL;
 
     C018_logError(F("txUncnfBytes()"));
@@ -356,7 +356,9 @@ private:
   }
 
   void triggerAutobaud() {
-    if ((C018_easySerial == nullptr) || (myLora == nullptr)) {}
+    if ((C018_easySerial == nullptr) || (myLora == nullptr)) {
+      return;
+    }
     int retries = 2;
 
     while (retries > 0 && !autobaud_success) {
@@ -572,7 +574,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         if (!customConfig) {
           break;
         }
-        LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
+        LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C018_ConfigStruct));
         customConfig->validate();
         baudrate      = customConfig->baudrate;
         rxpin         = customConfig->rxpin;
@@ -727,7 +729,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         customConfig->stackVersion  = getFormItemInt(F("ttnstack"), customConfig->stackVersion);
         customConfig->adr           = isFormItemChecked(F("adr"));
         serialHelper_webformSave(customConfig->serialPort, customConfig->rxpin, customConfig->txpin);
-        SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
+        SaveCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(customConfig.get()), sizeof(C018_ConfigStruct));
       }
       break;
     }
@@ -852,7 +854,7 @@ bool C018_init(struct EventStruct *event) {
   if (!customConfig) {
     return false;
   }
-  LoadCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C018_ConfigStruct));
+  LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C018_ConfigStruct));
   customConfig->validate();
 
   if (!C018_data->init(customConfig->serialPort, customConfig->rxpin, customConfig->txpin, customConfig->baudrate,
@@ -896,7 +898,7 @@ bool C018_init(struct EventStruct *event) {
     return false;
   }
 
-  if (!C018_data->txUncnf("ESPeasy (TTN)", Port)) {
+  if (!C018_data->txUncnf(F("ESPeasy (TTN)"), Port)) {
     return false;
   }
   return true;

@@ -112,7 +112,7 @@ struct P074_data_struct : public PluginTaskData_base {
   bool startIntegrationNeeded = false;
 };
 
-boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -145,11 +145,16 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { TSL2591_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues,
-                         TSL2591_ADDR); // Only for display I2C address
+      const int i2cAddressValues[] = { TSL2591_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues,
+                           TSL2591_ADDR); // Only for display I2C address
+      } else {
+        success = (event->Par1 == TSL2591_ADDR);
+      }
       break;
     }
 
@@ -247,16 +252,16 @@ boolean Plugin_074(byte function, struct EventStruct *event, String& string) {
       if (nullptr != P074_data) {
         uint32_t fullLuminosity;
         if (P074_data->getFullLuminosity(fullLuminosity)) {
-          // TSL2591_FULLSPECTRUM: Reads two byte value from channel 0 (visible + infrared)
+          // TSL2591_FULLSPECTRUM: Reads two uint8_t value from channel 0 (visible + infrared)
           const uint16_t full = (fullLuminosity & 0xFFFF);
 
-          // TSL2591_INFRARED: Reads two byte value from channel 1 (infrared)
+          // TSL2591_INFRARED: Reads two uint8_t value from channel 1 (infrared)
           const uint16_t ir =  (fullLuminosity >> 16);
 
           // TSL2591_VISIBLE: Reads all and subtracts out just the visible!
           const uint16_t visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
 
-          const uint16_t lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+          const float lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
 
           UserVar[event->BaseVarIndex + 0] = lux;
           UserVar[event->BaseVarIndex + 1] = full;

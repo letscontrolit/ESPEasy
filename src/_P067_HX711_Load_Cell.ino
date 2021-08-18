@@ -32,10 +32,10 @@
 #define BIT_POS_CALIB_CHAN_A      5
 #define BIT_POS_CALIB_CHAN_B      6
 
-std::map<byte, int32_t> Plugin_067_OversamplingValueChanA;
-std::map<byte, int16_t> Plugin_067_OversamplingCountChanA;
-std::map<byte, int32_t> Plugin_067_OversamplingValueChanB;
-std::map<byte, int16_t> Plugin_067_OversamplingCountChanB;
+std::map<uint8_t, int32_t> Plugin_067_OversamplingValueChanA;
+std::map<uint8_t, int16_t> Plugin_067_OversamplingCountChanA;
+std::map<uint8_t, int32_t> Plugin_067_OversamplingValueChanB;
+std::map<uint8_t, int16_t> Plugin_067_OversamplingCountChanB;
 
 enum {modeAoff, modeA64, modeA128};
 enum {modeBoff, modeB32};
@@ -97,7 +97,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
       nextChannel = chanB32;
   }
 
-  for (byte i = 0; i < 24; i++)
+  for (uint8_t i = 0; i < 24; i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -108,7 +108,7 @@ int32_t readHX711(int16_t pinSCL, int16_t pinDOUT, int16_t config0, uint8_t *cha
     mask >>= 1;
   }
 
-  for (byte i = 0; i < (nextChannel + 1); i++)
+  for (uint8_t i = 0; i < (nextChannel + 1); i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -140,7 +140,7 @@ void int2float(int16_t valInt0, int16_t valInt1, float *valFloat)
   *valFloat = offset;
 }
 
-boolean Plugin_067(byte function, struct EventStruct *event, String& string)
+boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -394,7 +394,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
           if (Plugin_067_OversamplingCountChanA[event->TaskIndex] > 0)
           {
-            UserVar[event->BaseVarIndex + 2] = (float)Plugin_067_OversamplingValueChanA[event->TaskIndex] / Plugin_067_OversamplingCountChanA[event->TaskIndex];
+            UserVar[event->BaseVarIndex + 2] = static_cast<float>(Plugin_067_OversamplingValueChanA[event->TaskIndex]) / Plugin_067_OversamplingCountChanA[event->TaskIndex];
 
             Plugin_067_OversamplingValueChanA[event->TaskIndex] = 0;
             Plugin_067_OversamplingCountChanA[event->TaskIndex] = 0;
@@ -412,7 +412,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
               float out2 = PCONFIG_FLOAT(1);
               if (adc1 != adc2)
               {
-                float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+                const float normalized = static_cast<float>(UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
                 UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
                 log += F(" = ");
@@ -434,7 +434,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
 
           if (Plugin_067_OversamplingCountChanB[event->TaskIndex] > 0)
           {
-            UserVar[event->BaseVarIndex + 3] = (float)Plugin_067_OversamplingValueChanB[event->TaskIndex] / Plugin_067_OversamplingCountChanB[event->TaskIndex];
+            UserVar[event->BaseVarIndex + 3] = static_cast<float>(Plugin_067_OversamplingValueChanB[event->TaskIndex]) / Plugin_067_OversamplingCountChanB[event->TaskIndex];
 
             Plugin_067_OversamplingValueChanB[event->TaskIndex] = 0;
             Plugin_067_OversamplingCountChanB[event->TaskIndex] = 0;
@@ -452,7 +452,7 @@ boolean Plugin_067(byte function, struct EventStruct *event, String& string)
               float out2 = PCONFIG_FLOAT(3);
               if (adc1 != adc2)
               {
-                float normalized = (float)(UserVar[event->BaseVarIndex + 1] - adc1) / (float)(adc2 - adc1);
+                float normalized = (UserVar[event->BaseVarIndex + 1] - adc1) / static_cast<float>(adc2 - adc1);
                 UserVar[event->BaseVarIndex + 1] = normalized * (out2 - out1) + out1;
 
                 log += F(" = ");

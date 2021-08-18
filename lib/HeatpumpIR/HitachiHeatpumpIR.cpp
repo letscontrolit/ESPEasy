@@ -125,7 +125,7 @@ void HitachiHeatpumpIR::sendHitachi(IRSender& IR, uint8_t powerMode, uint8_t ope
 
   //Checksum calculation
   int checksum = 1086;
-  for (byte i = 0; i < 27; i++) {
+  for (uint8_t i = 0; i < 27; i++) {
     checksum -= hitachiTemplate[i];
   }
   hitachiTemplate[27] = checksum;

@@ -9,8 +9,8 @@
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 
-typedef byte    nprotocolIndex_t;
-typedef byte    notifierIndex_t;
+typedef uint8_t    nprotocolIndex_t;
+typedef uint8_t    notifierIndex_t;
 typedef uint8_t npluginID_t;
 
 extern nprotocolIndex_t INVALID_NPROTOCOL_INDEX;
@@ -28,7 +28,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 extern int notificationCount;
 
 
-byte             NPluginCall(NPlugin::Function   Function,
+uint8_t             NPluginCall(NPlugin::Function   Function,
                              struct EventStruct *event);
 
 bool             validNProtocolIndex(nprotocolIndex_t index);

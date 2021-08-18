@@ -5,7 +5,7 @@
 
 #define INPUT_BUFFER_SIZE          128
 
-extern byte SerialInByte;
+extern uint8_t SerialInByte;
 extern int  SerialInByteCounter;
 extern char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 

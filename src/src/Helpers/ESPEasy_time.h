@@ -21,7 +21,7 @@ static void breakTime(unsigned long timeInput, struct tm& tm);
 // This way the unit can do things based on local time even when NTP servers may not respond.
 // Do not use this when booting from deep sleep.
 // Only call this once during boot.
-void restoreLastKnownUnixTime(unsigned long lastSysTime, byte deepSleepState);
+void restoreFromRTC();
 
 void setExternalTimeSource(double time, timeSource_t source);
 
@@ -40,10 +40,9 @@ bool systemTimePresent() const;
 bool getNtpTime(double& unixTime_d);
 
 
-
 /********************************************************************************************\
-   Date/Time string formatters
- \*********************************************************************************************/
+     Date/Time string formatters
+   \*********************************************************************************************/
 
 public:
 
@@ -98,31 +97,31 @@ int year() const
 }
 
 // Get current month
-byte month() const 
+uint8_t month() const 
 {
   return tm.tm_mon + 1; // tm_mon starts at 0
 }
 
 // Get current day of the month
-byte day() const 
+uint8_t day() const 
 {
   return tm.tm_mday;
 }
 
 // Get current hour
-byte hour() const 
+uint8_t hour() const 
 {
   return tm.tm_hour;
 }
 
 // Get current minute
-byte minute() const 
+uint8_t minute() const 
 {
   return tm.tm_min;
 }
 
 // Get current second
-byte second() const 
+uint8_t second() const 
 {
   return tm.tm_sec;
 }
@@ -146,48 +145,50 @@ String weekday_str() const;
 
 public:
 
-// Compute the offset in seconds of the substring +/-<nn>[smh]
-static int getSecOffset(const String& format) ;
-String getSunriseTimeString(char delimiter) const;
-String getSunsetTimeString(char delimiter) const;
-String getSunriseTimeString(char delimiter, int secOffset) const;
-String getSunsetTimeString(char delimiter, int secOffset) const;
-
+  // Compute the offset in seconds of the substring +/-<nn>[smh]
+  static int getSecOffset(const String& format);
+  String     getSunriseTimeString(char delimiter) const;
+  String     getSunsetTimeString(char delimiter) const;
+  String     getSunriseTimeString(char delimiter,
+                                  int  secOffset) const;
+  String     getSunsetTimeString(char delimiter,
+                                 int  secOffset) const;
 
 private:
 
-static float sunDeclination(int doy);
-static float diurnalArc(float dec, float lat);
-static float equationOfTime(int doy);
-static int dayOfYear(int year, int month, int day);
+  static float sunDeclination(int doy);
+  static float diurnalArc(float dec,
+                          float lat);
+  static float equationOfTime(int doy);
+  static int   dayOfYear(int year,
+                         int month,
+                         int day);
 
-void calcSunRiseAndSet();
-struct tm getSunRise(int secOffset) const;
-struct tm getSunSet(int secOffset) const;
+  void      calcSunRiseAndSet();
+  struct tm getSunRise(int secOffset) const;
+  struct tm getSunSet(int secOffset) const;
 
-
-
-
-
-
+  bool ExtRTC_get(uint32_t &unixtime);
+  bool ExtRTC_set(uint32_t unixtime);
 
 public:
 
-struct tm tm;
-uint32_t  syncInterval = 3600;       // time sync will be attempted after this many seconds
-double    sysTime = 0.0;             // Use high resolution double to get better sync between nodes when using NTP
-uint32_t  prevMillis = 0;
-uint32_t  nextSyncTime = 0;
-double    externalTimeSource = -1.0; // Used to set time from a source other than NTP.
-struct tm tsRise, tsSet;
-struct tm sunRise;
-struct tm sunSet;
-timeSource_t timeSource = No_time_source;
+  struct tm tm;
+  uint32_t syncInterval = 3600; // time sync will be attempted after this many seconds
+  double sysTime = 0.0;         // Use high resolution double to get better sync between nodes when using NTP
+  uint32_t prevMillis = 0;
+  uint32_t nextSyncTime = 0;
+  uint32_t lastSyncTime = 0;
+  uint32_t lastNTPSyncTime = 0;
+  double externalUnixTime_d = -1.0; // Used to set time from a source other than NTP.
+  struct tm tsRise, tsSet;
+  struct tm sunRise;
+  struct tm sunSet;
+  timeSource_t timeSource = timeSource_t::No_time_source;
+  float timeWander = 0.0f;  // Clock instability in msec/second
+  uint32_t lastTimeWanderCalculation = 0;
 
-byte PrevMinutes = 0;
-
-
-
+  uint8_t PrevMinutes = 0;
 };
 
 

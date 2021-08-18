@@ -161,7 +161,7 @@ public:
    * This method expects a raw byte array as first parameter.
    * The second parameter is the count of the bytes to send.
    */
-  RN2xx3_datatypes::TX_return_type txBytes(const byte *,
+  RN2xx3_datatypes::TX_return_type txBytes(const uint8_t *,
                                            uint8_t size,
                                            uint8_t port = 1);
 

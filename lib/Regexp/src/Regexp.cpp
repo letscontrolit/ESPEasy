@@ -257,10 +257,9 @@ PATTERNS
 
 // for throwing errors
 static jmp_buf regexp_error_return;
-typedef unsigned char byte;
 
 // error codes raised during regexp processing
-static byte error (const char err)
+static uint8_t error (const char err)
 {
   // does not return
   longjmp (regexp_error_return, err);

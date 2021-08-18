@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 struct EventValueSourceGroup {
-  enum class Enum : byte {
+  enum class Enum : uint8_t {
     RESTRICTED,
     ALL
   };
@@ -13,7 +13,7 @@ struct EventValueSourceGroup {
 
 struct EventValueSource {
   // Keep the values as they can be used by other/older builds to communicate with ESPEasy
-  enum class Enum : byte {
+  enum class Enum : uint8_t {
     VALUE_SOURCE_NOT_SET      = 0,
     VALUE_SOURCE_SYSTEM       = 1,
     VALUE_SOURCE_SERIAL       = 2,

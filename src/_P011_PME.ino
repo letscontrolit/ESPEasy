@@ -16,7 +16,7 @@
 
 #define PLUGIN_011_I2C_ADDRESS 0x7f
 
-boolean Plugin_011(byte function, struct EventStruct *event, String& string)
+boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -49,9 +49,15 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x7f);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choice     = PCONFIG(0);
+      uint8_t   choice     = PCONFIG(0);
       const __FlashStringHelper * options[2] = { F("Digital"), F("Analog") };
       addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
 
@@ -63,6 +69,12 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = getFormItemInt(F("p011"));
       success    = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      success = true;
       break;
     }
 
@@ -222,8 +234,8 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
           }
           else
           {
-            byte port = event->Par2; // port 0-13 is digital, ports 20-27 are mapped to A0-A7
-            byte type = 0;           // digital
+            uint8_t port = event->Par2; // port 0-13 is digital, ports 20-27 are mapped to A0-A7
+            uint8_t type = 0;           // digital
 
             if (port > 13)
             {
@@ -266,7 +278,7 @@ boolean Plugin_011(byte function, struct EventStruct *event, String& string)
 // ********************************************************************************
 // PME read
 // ********************************************************************************
-int Plugin_011_Read(byte Par1, byte Par2)
+int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
 {
   int value       = -1;
   uint8_t address = PLUGIN_011_I2C_ADDRESS;
@@ -285,11 +297,11 @@ int Plugin_011_Read(byte Par1, byte Par2)
   Wire.endTransmission();
   delay(1); // remote unit needs some time for conversion...
   Wire.requestFrom(address, (uint8_t)0x4);
-  byte buffer[4];
+  uint8_t buffer[4];
 
   if (Wire.available() == 4)
   {
-    for (byte x = 0; x < 4; x++) {
+    for (uint8_t x = 0; x < 4; x++) {
       buffer[x] = Wire.read();
     }
     value = buffer[0] + 256 * buffer[1];
@@ -300,7 +312,7 @@ int Plugin_011_Read(byte Par1, byte Par2)
 // ********************************************************************************
 // PME write
 // ********************************************************************************
-void Plugin_011_Write(byte Par1, byte Par2)
+void Plugin_011_Write(uint8_t Par1, uint8_t Par2)
 {
   uint8_t address = 0x7f;
 

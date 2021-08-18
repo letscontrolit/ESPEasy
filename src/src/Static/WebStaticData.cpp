@@ -7,7 +7,7 @@
 String generate_external_URL(const String& fname) {
     String url;
     url.reserve(80 + fname.length());
-    url = F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20201227/static/");
+    url = F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20210503/static/");
     url += fname;
     return url;
 }

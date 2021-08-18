@@ -78,7 +78,7 @@
 #define P099_TOUCH_Z_INVALID  255
 
 
-boolean Plugin_099(byte function, struct EventStruct *event, String& string)
+boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -163,7 +163,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Screen Height (px) (y)"), F("p099_height"), height_, 1, 65535);
 
       {
-        byte choice2 = P099_CONFIG_ROTATION;
+        uint8_t choice2 = P099_CONFIG_ROTATION;
         const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") }; // Avoid unicode
         int optionValues2[4] = { 0, 1, 2, 3 }; // Rotation similar to the TFT ILI9341 rotation
         addFormSelector(F("Rotation"), F("p099_rotate"), 4, options2, optionValues2, choice2);
@@ -175,11 +175,11 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       
       addFormSubHeader(F("Touch configuration"));
 
-      byte treshold = P099_CONFIG_TRESHOLD;
+      uint8_t treshold = P099_CONFIG_TRESHOLD;
       addFormNumericBox(F("Touch minimum pressure"), F("p099_treshold"), treshold, 0, 255);
 
       # define P099_EVENTS_OPTIONS 6
-      byte choice3 = 0;
+      uint8_t choice3 = 0;
       bitWrite(choice3, P099_FLAGS_SEND_XY,         bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY));
       bitWrite(choice3, P099_FLAGS_SEND_Z,          bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z));
       bitWrite(choice3, P099_FLAGS_SEND_OBJECTNAME, bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_OBJECTNAME));
@@ -243,7 +243,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
 
         {
           if (P099_CONFIG_OBJECTCOUNT > P099_MaxObjectCount) P099_CONFIG_OBJECTCOUNT = P099_MaxObjectCount;
-          byte choice5 = P099_CONFIG_OBJECTCOUNT;
+          uint8_t choice5 = P099_CONFIG_OBJECTCOUNT;
           if (choice5 == 0) { // Uninitialized, so use default
             choice5 = P099_CONFIG_OBJECTCOUNT = P099_INIT_OBJECTCOUNT;
           }
@@ -292,7 +292,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
           html_end_table();
           addFormNote(F("Start objectname with '_' to ignore/disable the object (temporarily)."));
 
-          byte debounce = P099_CONFIG_DEBOUNCE_MS;
+          uint8_t debounce = P099_CONFIG_DEBOUNCE_MS;
           addFormNumericBox(F("Debounce delay for On/Off buttons"), F("p099_debounce"), debounce, 0, 255);
           addUnit(F("0-255 msec."));
         }
@@ -364,7 +364,7 @@ boolean Plugin_099(byte function, struct EventStruct *event, String& string)
       log += sizeof(P099_data->StoredSettings);
       addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_099_DEBUG
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P099_data->StoredSettings), sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P099_data->StoredSettings)), sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
       delete P099_data;
 
       success = true;

@@ -57,10 +57,10 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
       LoadTaskSettings(event->TaskIndex);
 
       // Collect the values at the same run, to make sure all are from the same sample
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
       C012_queue_element element(event, valueCount);
 
-      for (byte x = 0; x < valueCount; x++)
+      for (uint8_t x = 0; x < valueCount; x++)
       {
         bool   isvalid;
         String formattedValue = formatUserVar(event, x, isvalid);

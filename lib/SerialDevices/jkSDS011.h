@@ -60,7 +60,7 @@ public:
   int GetWorkingPeriod();
 
 private:
-  void SendCommand(byte byte1, byte byte2, byte byte3);
+  void SendCommand(uint8_t byte1, uint8_t byte2, uint8_t byte3);
   void ParseCommandReply();
 
 //  SensorSerial _serial;

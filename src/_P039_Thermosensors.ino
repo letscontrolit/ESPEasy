@@ -66,8 +66,8 @@
 // #endif
 
 
-#define MAX31865_RD_ADDRESS(n)   (MAX31865_READ_ADDR_BASE + n)
-#define MAX31865_WR_ADDRESS(n)   (MAX31865_WRITE_ADDR_BASE + n)
+#define MAX31865_RD_ADDRESS(n)   (MAX31865_READ_ADDR_BASE + (n))
+#define MAX31865_WR_ADDRESS(n)   (MAX31865_WRITE_ADDR_BASE + (n))
 
 # define PLUGIN_039
 # define PLUGIN_ID_039         39
@@ -233,7 +233,7 @@
 #define LM7x_CONV_RDY               0x02u
 
 
-boolean Plugin_039(byte function, struct EventStruct *event, String& string)
+boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -417,7 +417,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         addFormSubHeader(F("Sensor Family Selection"));
       }
 
-      const byte family = P039_FAM_TYPE;
+      const uint8_t family = P039_FAM_TYPE;
       {
         const __FlashStringHelper * Foptions[2] = {F("Thermocouple"), F("RTD")};
         const int FoptionValues[2] = {P039_TC, P039_RTD};
@@ -425,7 +425,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
         addFormNote(F("Set sensor family of connected sensor - thermocouple or RTD."));
       }
 
-      const byte choice = P039_MAX_TYPE;
+      const uint8_t choice = P039_MAX_TYPE;
 
       if (family == P039_TC){
 
@@ -578,7 +578,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
 
 
       // Get the MAX Type (6675 / 31855 / 31856)
-      byte MaxType = P039_MAX_TYPE;
+      uint8_t MaxType = P039_MAX_TYPE;
 
       float Plugin_039_Celsius = NAN;
 
@@ -651,7 +651,7 @@ boolean Plugin_039(byte function, struct EventStruct *event, String& string)
       uint8_t CS_pin_no = get_SPI_CS_Pin(event);
 
       // Get the MAX Type (6675 / 31855 / 31856)
-      byte MaxType = P039_MAX_TYPE;
+      uint8_t MaxType = P039_MAX_TYPE;
 
       switch (MaxType) 
       {
@@ -1027,7 +1027,7 @@ float readMax31856(struct EventStruct *event)
   // "transfer" 0x0 starting at address 0x00 and read the all registers from the Chip
   transfer_n_ByteSPI(CS_pin_no, (MAX31856_NO_REG + 1), &messageBuffer[0]);
 
-  // transfer data from messageBuffer and get rid of initial address byte
+  // transfer data from messageBuffer and get rid of initial address uint8_t
   for (uint8_t i = 0u; i < MAX31856_NO_REG; ++i) {
     registers[i] = messageBuffer[i+1];
   }
@@ -1189,6 +1189,9 @@ float readMax31856(struct EventStruct *event)
 float readMax31865(struct EventStruct *event)
 {
   P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
+  if (P039_data == nullptr) {
+    return NAN;
+  }
 
   uint8_t registers[MAX31865_NO_REG] = {0};
   uint16_t rawValue = 0u;
@@ -1262,12 +1265,12 @@ float readMax31865(struct EventStruct *event)
   //activate BIAS short before read, to reduce power consumption
   change8BitRegister(CS_pin_no, (MAX31865_READ_ADDR_BASE + MAX31865_CONFIG),(MAX31865_WRITE_ADDR_BASE + MAX31865_CONFIG), MAX31865_SET_VBIAS_ON, P039_SET );
 
-  // save current timer for next calculation
-  P039_data->timer = millis();
-  
   // start time to follow up on BIAS activation before starting the conversion
   // and start conversion sequence via TIMER API
   if(nullptr != P039_data){
+    // save current timer for next calculation
+    P039_data->timer = millis();
+
     // set next state to MAX31865_BIAS_ON_STATE
 
     Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);

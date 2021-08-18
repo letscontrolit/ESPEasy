@@ -17,7 +17,7 @@
 #define PLUGIN_VALUENAME3_028 "Pressure"
 
 
-boolean Plugin_028(byte function, struct EventStruct *event, String& string)
+boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -67,10 +67,15 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
-      addFormSelectorI2C(F("i2c_addr"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
+      const int i2cAddressValues[] = { 0x76, 0x77 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 

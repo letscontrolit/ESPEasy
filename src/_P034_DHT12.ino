@@ -15,7 +15,7 @@
 
 #define DHT12_I2C_ADDRESS      0x5C // I2C address for the sensor
 
-boolean Plugin_034(byte function, struct EventStruct *event, String& string)
+boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -50,14 +50,26 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == DHT12_I2C_ADDRESS);
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
-      byte dht_dat[5];
+      uint8_t dht_dat[5];
 
-      // byte dht_in;
-      byte i;
+      // uint8_t dht_in;
+      uint8_t i;
 
-      // byte Retry = 0;
+      // uint8_t Retry = 0;
       boolean error = false;
 
       Wire.beginTransmission(DHT12_I2C_ADDRESS);         // start transmission to device
@@ -76,7 +88,7 @@ boolean Plugin_034(byte function, struct EventStruct *event, String& string)
       if (!error)
       {
         // Checksum calculation is a Rollover Checksum by design!
-        byte dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
+        uint8_t dht_check_sum = dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]; // check check_sum
 
         if (dht_dat[4] == dht_check_sum)
         {

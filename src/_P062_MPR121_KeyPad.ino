@@ -35,7 +35,7 @@
 #define P062_DEFAULT_TOUCH_TRESHOLD   12 // Defaults got from MPR_121 source
 #define P062_DEFAULT_RELEASE_TRESHOLD 6
 
-boolean Plugin_062(byte function, struct EventStruct *event, String& string)
+boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -70,12 +70,15 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
-
-      int optionValues[4] = { 0x5A, 0x5B, 0x5C, 0x5D };
-      addFormSelectorI2C(F("i2c_addr"), 4, optionValues, addr);
+      const int i2cAddressValues[] = { 0x5A, 0x5B, 0x5C, 0x5D };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(4, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -161,9 +164,8 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
           if (tbUseCalibration) {
             addFormCheckBox(F("Clear calibrationdata"), F("p062_clear_calibrate"), false);
           }
-        } else {
-          delete P062_data;
         }
+        delete P062_data;
       }
       success = true;
       break;
@@ -205,7 +207,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
         log += sizeof(P062_data->StoredSettings);
         addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_062_DEBUG
-        SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P062_data->StoredSettings), sizeof(P062_data->StoredSettings));
+        SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P062_data->StoredSettings)), sizeof(P062_data->StoredSettings));
         if (!canCalibrate) {
           delete P062_data;
         } else {
@@ -269,7 +271,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
 
         if (P062_data->readKey(key))
         {
-          UserVar[event->BaseVarIndex] = (float)key;
+          UserVar[event->BaseVarIndex] = key;
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -290,7 +292,7 @@ boolean Plugin_062(byte function, struct EventStruct *event, String& string)
               uint16_t colMask = 0x01;
               log.reserve(55);
 
-              for (byte col = 0; col < P062_MaxTouchObjects; col++)
+              for (uint8_t col = 0; col < P062_MaxTouchObjects; col++)
               {
                 if (key & colMask) // this key pressed?
                 {

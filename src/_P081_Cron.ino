@@ -80,7 +80,7 @@ String P081_getCronExpr(taskIndex_t taskIndex)
   char expression[PLUGIN_081_EXPRESSION_SIZE + 1];
 
   ZERO_FILL(expression);
-  LoadCustomTaskSettings(taskIndex, (byte *)&expression, PLUGIN_081_EXPRESSION_SIZE);
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&expression), PLUGIN_081_EXPRESSION_SIZE);
   String res(expression);
   res.trim();
   return res;
@@ -114,7 +114,7 @@ time_t P081_computeNextCronTime(taskIndex_t taskIndex, time_t last)
   return CRON_INVALID_INSTANT;
 }
 
-time_t P081_getCronExecTime(taskIndex_t taskIndex, byte varNr)
+time_t P081_getCronExecTime(taskIndex_t taskIndex, uint8_t varNr)
 {
   return static_cast<time_t>(UserVar.getUint32(taskIndex, varNr));
 }
@@ -155,7 +155,7 @@ void P081_check_or_init(struct EventStruct *event)
   }
 }
 
-boolean Plugin_081(byte function, struct EventStruct *event, String& string)
+boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -222,7 +222,7 @@ boolean Plugin_081(byte function, struct EventStruct *event, String& string)
         char expression_c[PLUGIN_081_EXPRESSION_SIZE];
         ZERO_FILL(expression_c);
         safe_strncpy(expression_c, expression, PLUGIN_081_EXPRESSION_SIZE);
-        log = SaveCustomTaskSettings(event->TaskIndex, (byte *)&expression_c, PLUGIN_081_EXPRESSION_SIZE);
+        log = SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&expression_c), PLUGIN_081_EXPRESSION_SIZE);
       }
 
       if (log.length() > 0)
@@ -378,7 +378,7 @@ void PrintCronExp(struct cron_expr_t e) {
 #endif // if PLUGIN_081_DEBUG
 
 
-String P081_formatExecTime(taskIndex_t taskIndex, byte varNr) {
+String P081_formatExecTime(taskIndex_t taskIndex, uint8_t varNr) {
   time_t exec_time = P081_getCronExecTime(taskIndex, varNr);
 
   if (exec_time != CRON_INVALID_INSTANT) {

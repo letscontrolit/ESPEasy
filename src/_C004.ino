@@ -107,7 +107,7 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     postDataStr += element.txt[0]; // FIXME TD-er: Is this correct?
     // See: https://nl.mathworks.com/help/thingspeak/writedata.html
   } else {
-    for (byte x = 0; x < element.valueCount; x++)
+    for (uint8_t x = 0; x < element.valueCount; x++)
     {
       postDataStr += F("&field");
       postDataStr += element.idx + x;

@@ -26,7 +26,7 @@
 
 uint8_t Plugin_005_DHT_Pin;
 
-boolean Plugin_005(byte function, struct EventStruct *event, String& string)
+boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -82,6 +82,12 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
       {
         PCONFIG(0) = getFormItemInt(F("p005_dhttype"));
 
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
         success = true;
         break;
       }
@@ -144,9 +150,9 @@ boolean P005_waitState(int state)
 * Perform the actual reading + interpreting of data.
 \*********************************************************************************************/
 bool P005_do_plugin_read(struct EventStruct *event) {
-  byte i;
+  uint8_t i;
 
-  byte Par3 = PCONFIG(0);
+  uint8_t Par3 = PCONFIG(0);
   Plugin_005_DHT_Pin = CONFIG_PIN1;
 
   pinMode(Plugin_005_DHT_Pin, OUTPUT);
@@ -181,7 +187,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
 
   bool readingAborted = false;
-  byte dht_dat[5];
+  uint8_t dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
   {
       int data = Plugin_005_read_dht_dat();
@@ -196,7 +202,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
     return false;
 
   // Checksum calculation is a Rollover Checksum by design!
-  byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
+  uint8_t dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
   if (dht_dat[4] != dht_check_sum)
   {
       P005_log(event, P005_error_checksum_error);
@@ -242,8 +248,8 @@ bool P005_do_plugin_read(struct EventStruct *event) {
 \*********************************************************************************************/
 int Plugin_005_read_dht_dat(void)
 {
-  byte i = 0;
-  byte result = 0;
+  uint8_t i = 0;
+  uint8_t result = 0;
   for (i = 0; i < 8; i++)
   {
     if (!P005_waitState(1))  return -1;

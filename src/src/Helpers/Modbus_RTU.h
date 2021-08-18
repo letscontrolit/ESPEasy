@@ -54,13 +54,13 @@ struct ModbusRTU_struct  {
             const int16_t serial_rx,
             const int16_t serial_tx,
             int16_t       baudrate,
-            byte          address);
+            uint8_t          address);
 
   bool init(const ESPEasySerialPort port,
             const int16_t serial_rx,
             const int16_t serial_tx,
             int16_t       baudrate,
-            byte          address,
+            uint8_t          address,
             int8_t        dere_pin);
 
   bool isInitialized() const;
@@ -73,57 +73,57 @@ struct ModbusRTU_struct  {
 
   uint16_t getModbusTimeout() const;
 
-  String   getDevice_description(byte slaveAddress);
+  String   getDevice_description(uint8_t slaveAddress);
 
   // Read from RAM or EEPROM
-  void     buildRead_RAM_EEPROM(byte  slaveAddress,
-                                byte  functionCode,
+  void     buildRead_RAM_EEPROM(uint8_t  slaveAddress,
+                                uint8_t  functionCode,
                                 short startAddress,
-                                byte  number_bytes);
+                                uint8_t  number_bytes);
 
   // Write to the Special Control Register (SCR)
-  void buildWriteCommandRegister(byte slaveAddress,
-                                 byte value);
+  void buildWriteCommandRegister(uint8_t slaveAddress,
+                                 uint8_t value);
 
-  void buildWriteMult16bRegister(byte     slaveAddress,
+  void buildWriteMult16bRegister(uint8_t     slaveAddress,
                                  uint16_t startAddress,
                                  uint16_t value);
 
-  void buildFrame(byte  slaveAddress,
-                  byte  functionCode,
+  void buildFrame(uint8_t  slaveAddress,
+                  uint8_t  functionCode,
                   short startAddress,
                   short parameter);
 
-  void build_modbus_MEI_frame(byte slaveAddress,
-                              byte device_id,
-                              byte object_id);
+  void build_modbus_MEI_frame(uint8_t slaveAddress,
+                              uint8_t device_id,
+                              uint8_t object_id);
 
-  String MEI_objectid_to_name(byte object_id);
+  String MEI_objectid_to_name(uint8_t object_id);
 
   String parse_modbus_MEI_response(unsigned int& object_value_int,
-                                   byte        & next_object_id,
+                                   uint8_t        & next_object_id,
                                    bool        & more_follows,
-                                   byte        & conformity_level);
+                                   uint8_t        & conformity_level);
 
-  void     logModbusException(byte value);
+  void     logModbusException(uint8_t value);
 
   /*
-     String log_buffer(byte *buffer, int length) {
+     String log_buffer(uint8_t *buffer, int length) {
       String log;
       log.reserve(3 * length + 5);
       for (int i = 0; i < length; ++i) {
         String hexvalue(buffer[i], HEX);
         hexvalue.toUpperCase();
         log += hexvalue;
-        log += F(" ");
+        log += ' ';
       }
-      log += F("(");
+      log += '(';
       log += length;
-      log += F(")");
+      log += ')';
       return log;
      }
    */
-  byte     processCommand();
+  uint8_t     processCommand();
 
   uint32_t read_32b_InputRegister(short address);
 
@@ -132,10 +132,10 @@ struct ModbusRTU_struct  {
   float    read_float_HoldingRegister(short address);
 
   int      readInputRegister(short address,
-                             byte& errorcode);
+                             uint8_t& errorcode);
 
   int      readHoldingRegister(short address,
-                               byte& errorcode);
+                               uint8_t& errorcode);
 
   // Write to holding register.
   int writeSingleRegister(short address,
@@ -143,47 +143,47 @@ struct ModbusRTU_struct  {
 
   int writeSingleRegister(short address,
                           short value,
-                          byte& errorcode);
+                          uint8_t& errorcode);
 
   // Function 16 (0x10) "Write Multiple Registers" to write to a single holding register
   int  writeMultipleRegisters(short address,
                               short value);
 
-  byte modbus_get_MEI(byte          slaveAddress,
-                      byte          object_id,
+  uint8_t modbus_get_MEI(uint8_t          slaveAddress,
+                      uint8_t          object_id,
                       String      & result,
                       unsigned int& object_value_int,
-                      byte        & next_object_id,
+                      uint8_t        & next_object_id,
                       bool        & more_follows,
-                      byte        & conformity_level);
+                      uint8_t        & conformity_level);
 
-  void modbus_log_MEI(byte slaveAddress);
+  void modbus_log_MEI(uint8_t slaveAddress);
 
-  int  process_16b_register(byte  slaveAddress,
-                            byte  functionCode,
+  int  process_16b_register(uint8_t  slaveAddress,
+                            uint8_t  functionCode,
                             short startAddress,
                             short parameter,
-                            byte& errorcode);
+                            uint8_t& errorcode);
 
   // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
-  int preset_mult16b_register(byte     slaveAddress,
+  int preset_mult16b_register(uint8_t     slaveAddress,
                               uint16_t startAddress,
                               uint16_t value);
 
-  bool process_32b_register(byte      slaveAddress,
-                            byte      functionCode,
+  bool process_32b_register(uint8_t      slaveAddress,
+                            uint8_t      functionCode,
                             short     startAddress,
                             uint32_t& result);
 
-  int          writeSpecialCommandRegister(byte command);
+  int          writeSpecialCommandRegister(uint8_t command);
 
-  unsigned int read_RAM_EEPROM(byte  command,
-                               byte  startAddress,
-                               byte  nrBytes,
-                               byte& errorcode);
+  unsigned int read_RAM_EEPROM(uint8_t  command,
+                               uint8_t  startAddress,
+                               uint8_t  nrBytes,
+                               uint8_t& errorcode);
 
   // Compute the MODBUS RTU CRC
-  static unsigned int ModRTU_CRC(byte *buf,
+  static unsigned int ModRTU_CRC(uint8_t *buf,
                                  int   len);
 
   uint32_t            readTypeId();
@@ -202,11 +202,11 @@ private:
 
   void startRead();
 
-  byte     _sendframe[12]                   = { 0 };
-  byte     _sendframe_used                  = 0;
-  byte     _recv_buf[MODBUS_RECEIVE_BUFFER] = { 0 };
-  byte     _recv_buf_used                   = 0;
-  byte     _modbus_address                  = MODBUS_BROADCAST_ADDRESS;
+  uint8_t     _sendframe[12]                   = { 0 };
+  uint8_t     _sendframe_used                  = 0;
+  uint8_t     _recv_buf[MODBUS_RECEIVE_BUFFER] = { 0 };
+  uint8_t     _recv_buf_used                   = 0;
+  uint8_t     _modbus_address                  = MODBUS_BROADCAST_ADDRESS;
   int8_t   _dere_pin                        = -1;
   uint32_t _reads_pass                      = 0;
   uint32_t _reads_crc_failed                = 0;

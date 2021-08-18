@@ -10,7 +10,8 @@
 
 
 #ifdef ESP8266
-# include <esp8266_mutex.h>
+//# include <esp8266_mutex.h>
+// No longer used, see: https://github.com/letscontrolit/ESPEasy/issues/3693#issuecomment-868847669
 #endif // ifdef ESP8266
 
 #ifdef ESP32
@@ -26,26 +27,34 @@ struct ESPEasy_Mutex {
 
 #ifdef ESP8266
 
+  // ESP8266 doesn't have a proper mutex system.
+  // This is by no means a perfect implementation, but the assembly implementation was causing lots of issues with esp8266/Arduino 3.0.0
+  // See: https://github.com/letscontrolit/ESPEasy/issues/3693#issuecomment-868847669
   ESPEasy_Mutex() {
-    CreateMutux(&_mutex);
+    _mutex = 1;
   }
 
   // May cause deadlock, perhaps add a timeout?
   void lock() {
-    while (!GetMutex(&_mutex)) {}
+    while (_mutex == 0) {}
+    _mutex = 0;
   }
 
   bool try_lock() {
-    return GetMutex(&_mutex);
+    if (_mutex == 1) {
+      _mutex = 0;
+      return true;
+    }
+    return false;
   }
 
   void unlock() {
-    ReleaseMutex(&_mutex);
+    _mutex = 1;
   }
 
 private:
 
-  mutex_t _mutex = 0;
+volatile  uint32_t _mutex = 0;
 #endif // ifdef ESP8266
 
 #ifdef ESP32

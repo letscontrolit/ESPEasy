@@ -74,7 +74,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
       success = C008_DelayHandler->addToQueue(C008_queue_element(event, valueCount));
 
       if (success) {
@@ -87,7 +87,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         LoadTaskSettings(event->TaskIndex);
         parseControllerVariables(pubname, event, true);
 
-        for (byte x = 0; x < valueCount; x++)
+        for (uint8_t x = 0; x < valueCount; x++)
         {
           String tmppubname = pubname;
           bool   isvalid;

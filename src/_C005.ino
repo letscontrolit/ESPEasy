@@ -138,9 +138,9 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       LoadTaskSettings(event->TaskIndex);
       parseControllerVariables(pubname, event, false);
 
-      byte valueCount = getValueCountForTask(event->TaskIndex);
+      uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      for (byte x = 0; x < valueCount; x++)
+      for (uint8_t x = 0; x < valueCount; x++)
       {
         // MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
         if (ExtraTaskSettings.TaskDeviceValueNames[x][0] == 0) {

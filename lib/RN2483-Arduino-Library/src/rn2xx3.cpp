@@ -43,7 +43,7 @@ bool rn2xx3::autobaud()
     {
       delay(1000);
     }
-    _rn2xx3_handler._serial.write((byte)0x00);
+    _rn2xx3_handler._serial.write((uint8_t)0x00);
     _rn2xx3_handler._serial.write(0x55);
     _rn2xx3_handler._serial.println();
 
@@ -127,7 +127,7 @@ RN2xx3_datatypes::TX_return_type rn2xx3::tx(const String& data, uint8_t port)
   return txUncnf(data, port); // we are unsure which mode we're in. Better not to wait for acks.
 }
 
-RN2xx3_datatypes::TX_return_type rn2xx3::txBytes(const byte *data, uint8_t size, uint8_t port)
+RN2xx3_datatypes::TX_return_type rn2xx3::txBytes(const uint8_t *data, uint8_t size, uint8_t port)
 {
   const String dataToTx = rn2xx3_helper::base16encode(data, size);
   return txCommand(F("mac tx uncnf "), dataToTx, false, port);

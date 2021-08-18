@@ -23,16 +23,16 @@ Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
 }
 
 /*
-Web_StreamingBuffer Web_StreamingBuffer::operator=(String& a)                 {
+Web_StreamingBuffer& Web_StreamingBuffer::operator=(String& a)                 {
   flush(); return addString(a);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator=(const String& a)           {
+Web_StreamingBuffer& Web_StreamingBuffer::operator=(const String& a)           {
   flush(); return addString(a);
 }
 */
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(char a)                   {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(char a)                   {
   if (CHUNKED_BUFFER_SIZE > (this->buf.length() + 1)) {
     this->buf += a;
     return *this;
@@ -40,35 +40,35 @@ Web_StreamingBuffer Web_StreamingBuffer::operator+=(char a)                   {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(long unsigned int a)     {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(long unsigned int a)     {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(float a)                  {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(float a)                  {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(int a)                    {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(int a)                    {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(uint32_t a)               {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(uint32_t a)               {
   return addString(String(a));
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(const String& a)          {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const String& a)          {
   return addString(a);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(PGM_P str) {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(PGM_P str) {
   return addFlashString(str);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::operator+=(const __FlashStringHelper* str) {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const __FlashStringHelper* str) {
   return addFlashString((PGM_P)str);
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
+Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   ++flashStringCalls;
 
   if (!str) { return *this; // return if the pointer is void
@@ -81,7 +81,7 @@ Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
   flashStringData += length;
 
   // FIXME TD-er: Not sure what happens, but streaming large flash chunks does cause allocation issues.
-  const bool stream_P = ESP.getFreeHeap() > 5000 && length < CHUNKED_BUFFER_SIZE;
+  const bool stream_P = ESP.getFreeHeap() > 4000 && length < (2 * CHUNKED_BUFFER_SIZE);
 
   if (stream_P && ((this->buf.length() + length) > CHUNKED_BUFFER_SIZE)) {
     // Do not copy to the internal buffer, but stream immediately.
@@ -108,7 +108,7 @@ Web_StreamingBuffer Web_StreamingBuffer::addFlashString(PGM_P str) {
   return *this;
 }
 
-Web_StreamingBuffer Web_StreamingBuffer::addString(const String& a) {
+Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
   if (lowMemorySkip) { return *this; }
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
 
@@ -151,18 +151,25 @@ void Web_StreamingBuffer::checkFull() {
 }
 
 void Web_StreamingBuffer::startStream() {
-  startStream(false, EMPTY_STRING);
+  startStream(false, F("text/html"), F(""));
 }
 
 void Web_StreamingBuffer::startStream(const String& origin) {
-  startStream(false, origin);
+  startStream(false, F("text/html"), origin);
 }
+
+void Web_StreamingBuffer::startStream(const String& content_type, const String& origin) {
+  startStream(false, content_type, origin);
+}
+
 
 void Web_StreamingBuffer::startJsonStream() {
-  startStream(true, "*");
+  startStream(true, F("application/json"), F("*"));
 }
 
-void Web_StreamingBuffer::startStream(bool json, const String& origin) {
+void Web_StreamingBuffer::startStream(bool allowOriginAll, 
+                                      const String& content_type, 
+                                      const String& origin) {
   maxCoreUsage = maxServerUsage = 0;
   initialRam   = ESP.getFreeHeap();
   beforeTXRam  = initialRam;
@@ -172,13 +179,13 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
-    web_server.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
+    web_server.send(200, F("text/plain"), F("Low memory. Cannot display webpage :-("));
       #if defined(ESP8266)
     tcpCleanup();
       #endif // if defined(ESP8266)
     return;
   } else {
-    sendHeaderBlocking(json, origin);
+    sendHeaderBlocking(allowOriginAll, content_type, origin);
   }
 }
 
@@ -282,7 +289,9 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   delay(0);
 }
 
-void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
+void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll, 
+                                             const String& content_type, 
+                                             const String& origin) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
@@ -295,10 +304,10 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   web_server.sendHeader(F("Cache-Control"),     F("no-cache"));
   web_server.sendHeader(F("Transfer-Encoding"), F("chunked"));
 
-  if (json) {
+  if (allowOriginAll) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), "*");
   }
-  web_server.send(200, json ? F("application/json") : F("text/html"), EMPTY_STRING);
+  web_server.send(200, content_type, EMPTY_STRING);
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   unsigned int timeout          = 0;
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -313,7 +322,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   if (origin.length() > 0) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
-  web_server.send(200, json ? F("application/json") : F("text/html"), EMPTY_STRING);
+  web_server.send(200, content_type, EMPTY_STRING);
 
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&

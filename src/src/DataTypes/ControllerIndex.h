@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-typedef byte    controllerIndex_t;
+typedef uint8_t    controllerIndex_t;
 
 extern controllerIndex_t INVALID_CONTROLLER_INDEX;
 

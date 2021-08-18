@@ -25,7 +25,7 @@
 // 1=Comfortable
 // 2=Dry
 // 3=Wet
-String humStatDomoticz(struct EventStruct *event, byte rel_index) {
+String humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
   userVarIndex_t userVarIndex = event->BaseVarIndex + rel_index;
 
   if (validTaskVarIndex(rel_index) && validUserVarIndex(userVarIndex)) {
@@ -62,7 +62,7 @@ int mapVccToDomoticz() {
 }
 
 // Format including trailing semi colon
-String formatUserVarDomoticz(struct EventStruct *event, byte rel_index) {
+String formatUserVarDomoticz(struct EventStruct *event, uint8_t rel_index) {
   String text = formatUserVarNoCheck(event, rel_index);
 
   text += ';';
@@ -169,7 +169,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("Domoticz Controller: Not yet implemented sensor type: ");
-        log += static_cast<byte>(event->sensorType);
+        log += static_cast<uint8_t>(event->sensorType);
         log += F(" idx: ");
         log += event->idx;
         addLog(LOG_LEVEL_ERROR, log);
@@ -191,7 +191,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F(" Domoticz: Sensortype: ");
-      log += static_cast<byte>(event->sensorType);
+      log += static_cast<uint8_t>(event->sensorType);
       log += F(" idx: ");
       log += event->idx;
       log += F(" values: ");
@@ -303,7 +303,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("nvalue"), F("0"));
         json += ',';
-        json += to_json_object_value(F("svalue"), formatDomoticzSensorType(event));
+        json += to_json_object_value(F("svalue"), formatDomoticzSensorType(event), true);
         break;
     }
     json += '}';

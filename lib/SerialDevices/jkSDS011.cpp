@@ -47,7 +47,7 @@ CjkSDS011::~CjkSDS011() {
   delete _serial;
 }
 
-void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
+void CjkSDS011::SendCommand(uint8_t byte1, uint8_t byte2, uint8_t byte3) {
   _command[0] = 0xAA; // Head
   _command[1] = 0xB4; // Command ID
   _command[2] = byte1; // Data Byte 1
@@ -66,8 +66,8 @@ void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
   _command[15] = 0xFF; // Device ID byte 1, FF: All sensor response
   _command[16] = 0xFF; // Device ID byte 2, FF: All sensor response
 
-  byte checksum = 0;
-  for (byte i=2; i< 17; ++i) {
+  uint8_t checksum = 0;
+  for (uint8_t i=2; i< 17; ++i) {
     checksum += _command[i];
   }
   _command[17] = checksum; // Checksum
@@ -79,7 +79,7 @@ void CjkSDS011::SendCommand(byte byte1, byte byte2, byte byte3) {
 }
 
 void CjkSDS011::SetSleepMode(bool enabled) {
-  byte databyte3 = enabled ? 0 : 1;
+  uint8_t databyte3 = enabled ? 0 : 1;
   SendCommand(6, 1, databyte3);
 }
 
@@ -136,8 +136,8 @@ void CjkSDS011::Process()
 
     if (_data[0] == 0xAA && _data[9] == 0xAB)   // correct packet frame?
     {
-      byte checksum = 0;
-      for (byte i=2; i<= 7; i++)
+      uint8_t checksum = 0;
+      for (uint8_t i=2; i<= 7; i++)
         checksum += _data[i];
       if (checksum != _data[8])
         continue;

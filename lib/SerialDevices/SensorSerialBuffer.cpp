@@ -34,23 +34,23 @@ CSensorSerialBuffer::CSensorSerialBuffer()
 
 void CSensorSerialBuffer::Clear ()
 {
-  for (byte i=0; i<SERIALBUFFER_SIZE; i++)
+  for (uint8_t i=0; i<SERIALBUFFER_SIZE; i++)
     _buffer[i] = 0;
 }
 
-void CSensorSerialBuffer::AddData (byte b)
+void CSensorSerialBuffer::AddData (uint8_t b)
 {
   _buffer[_writeIndex] = b;
   _writeIndex++;
   _writeIndex &= SERIALBUFFER_MASK;
 }
 
-void CSensorSerialBuffer::SetPacketLength (byte len)
+void CSensorSerialBuffer::SetPacketLength (uint8_t len)
 {
   _packetLength = len;
 }
 
-byte& CSensorSerialBuffer::operator[] (byte x)
+uint8_t& CSensorSerialBuffer::operator[] (uint8_t x)
 {
   x += _writeIndex;
   x -= _packetLength;

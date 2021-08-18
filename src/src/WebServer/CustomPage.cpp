@@ -49,13 +49,11 @@ boolean handle_custom(String path) {
     return false;    // unknown file that does not exist...
   }
 
-  if (!isLoggedIn()) { return false; }
-
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
-    byte unit    = getFormItemInt(F("unit"));
-    byte btnunit = getFormItemInt(F("btnunit"));
+    uint8_t unit    = getFormItemInt(F("unit"));
+    uint8_t btnunit = getFormItemInt(F("btnunit"));
 
     if (!unit) { unit = btnunit; // unit element prevails, if not used then set to btnunit
     }
@@ -83,7 +81,7 @@ boolean handle_custom(String path) {
 
     // create unit selector dropdown
     addSelector_Head_reloadOnChange(F("unit"));
-    byte choice = Settings.Unit;
+    uint8_t choice = Settings.Unit;
 
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
@@ -103,11 +101,11 @@ boolean handle_custom(String path) {
     addSelector_Foot();
 
     // create <> navigation buttons
-    byte prev = Settings.Unit;
-    byte next = Settings.Unit;
+    uint8_t prev = Settings.Unit;
+    uint8_t next = Settings.Unit;
     NodesMap::iterator it;
 
-    for (byte x = Settings.Unit - 1; x > 0; x--) {
+    for (uint8_t x = Settings.Unit - 1; x > 0; x--) {
       it = Nodes.find(x);
 
       if (it != Nodes.end()) {
@@ -115,7 +113,7 @@ boolean handle_custom(String path) {
       }
     }
 
-    for (byte x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
+    for (uint8_t x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
       it = Nodes.find(x);
 
       if (it != Nodes.end()) {
@@ -179,9 +177,9 @@ boolean handle_custom(String path) {
             html_TR_TD();
             addHtml(ExtraTaskSettings.TaskDeviceName);
 
-            const byte valueCount = getValueCountForTask(x);
+            const uint8_t valueCount = getValueCountForTask(x);
 
-            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
               if ((varNr < valueCount) &&
                   (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))

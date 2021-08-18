@@ -125,7 +125,7 @@ struct P052_data_struct : public PluginTaskData_base {
 unsigned int _plugin_052_last_measurement = 0;
 
 
-const __FlashStringHelper * Plugin_052_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_052_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Empty") : F("");
     case 1:  return displayString ? F("Carbon Dioxide") : F("co2");
@@ -141,7 +141,7 @@ const __FlashStringHelper * Plugin_052_valuename(byte value_nr, bool displayStri
   return F("");
 }
 
-boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -167,10 +167,10 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P052_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_052_valuename(choice, false),
@@ -214,7 +214,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       PCONFIG(P052_SENSOR_TYPE_INDEX) = static_cast<int16_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
       PCONFIG(0) = 1;   // "CO2"
 
-      for (byte i = 1; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 1; i < VARS_PER_TASK; ++i) {
         PCONFIG(i) = 0; // "Empty"
       }
 
@@ -280,12 +280,12 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       {
         const __FlashStringHelper * options[P052_NR_OUTPUT_OPTIONS];
 
-        for (byte i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
+        for (uint8_t i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
           options[i] = Plugin_052_valuename(i, true);
         }
 
-        for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+        for (uint8_t i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
           sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P052_NR_OUTPUT_OPTIONS, options);
         }
       }
@@ -314,7 +314,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
           chksumStats += reads_nodata;
           addHtml(chksumStats);
 
-          byte errorcode = 0;
+          uint8_t errorcode = 0;
           int  value     = P052_data->modbus.readInputRegister(0x06, errorcode);
 
           if (errorcode == 0) {
@@ -338,7 +338,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         }
 
         {
-          byte errorcode     = 0;
+          uint8_t errorcode     = 0;
           //int  meas_mode     = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
           //bool has_meas_mode = errorcode == 0;
           int  period        = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
@@ -372,7 +372,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
       /*
          // ABC functionality disabled for now, due to a bug in the firmware.
          // See https://github.com/letscontrolit/ESPEasy/issues/759
-         byte choiceABCperiod = PCONFIG(4);
+         uint8_t choiceABCperiod = PCONFIG(4);
          const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
          addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
@@ -387,9 +387,9 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
     case PLUGIN_WEBFORM_SAVE: {
 
       // Save output selector parameters.
-      for (byte i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P052_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
+      for (uint8_t i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
       }
 
@@ -401,7 +401,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         uint16_t mode = getFormItemInt(F("p052_mode"), 65535);
 
         if (((mode == 0) || (mode == 1))) {
-          byte errorcode;
+          uint8_t errorcode;
           int  readVal = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
 
           if ((errorcode == 0) && (readVal != mode)) {
@@ -413,7 +413,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         uint16_t period = getFormItemInt(F("p052_period"), 0);
 
         if (period > 1) {
-          byte errorcode;
+          uint8_t errorcode;
           int  readVal = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
 
           if ((errorcode == 0) && (readVal != period)) {
@@ -425,7 +425,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         uint16_t samp_meas = getFormItemInt(F("p052_samp_meas"), 0);
 
         if ((samp_meas > 0) && (samp_meas <= 1024)) {
-          byte errorcode;
+          uint8_t errorcode;
           int  readVal = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
 
           if ((errorcode == 0) && (readVal != samp_meas)) {
@@ -474,7 +474,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
            // See https://github.com/letscontrolit/ESPEasy/issues/759
            const int periodInHours[9] = {0, 1, 12, (24*1), (24*2), (24*4), (24*7),
            (24*14), (24*30) };
-           byte choiceABCperiod = PCONFIG(1);
+           uint8_t choiceABCperiod = PCONFIG(1);
 
            Plugin_052_setABCperiod(periodInHours[choiceABCperiod]);
          */
@@ -506,7 +506,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
         String logPrefix;
 
         for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
-          byte  errorcode = 0;
+          uint8_t  errorcode = 0;
           float value     = 0;
 
           switch (PCONFIG(varnr)) {
@@ -608,7 +608,7 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    }
 
    bool Plugin_052_check_error_status() {
-   byte error_status = P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM,
+   uint8_t error_status = P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM,
                                                  P052_RAM_ADDR_ERROR_STATUS, 1);
    if (error_status == 0)
     return true;
@@ -661,9 +661,9 @@ boolean Plugin_052(byte function, struct EventStruct *event, String& string) {
    log += F("CO2: ");
    log += co2;
    log += F(" ppm Temp: ");
-   log += (float)temperature / 100.0f;
+   log += static_cast<float>(temperature) / 100.0f;
    log += F(" C Hum: ");
-   log += (float)humidity / 100.0f;
+   log += static_cast<float>(humidity) / 100.0f;
    log += F("%");
    if (!valid_measurement)
     log += F(" (old)");

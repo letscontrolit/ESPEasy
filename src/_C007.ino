@@ -57,7 +57,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
         addLog(LOG_LEVEL_ERROR, F("emoncms : No support for Sensor_VType::SENSOR_TYPE_STRING"));
         break;
       }
-      const byte valueCount = getValueCountForTask(event->TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       if ((valueCount == 0) || (valueCount > VARS_PER_TASK)) {
         addLog(LOG_LEVEL_ERROR, F("emoncms : Unknown sensortype or too many sensor values"));
@@ -98,7 +98,7 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   url += Settings.Unit;
   url += F("&json=");
 
-  for (byte i = 0; i < element.valueCount; ++i) {
+  for (uint8_t i = 0; i < element.valueCount; ++i) {
     url += (i == 0) ? '{' : ',';
     url += F("field");
     url += element.idx + i;

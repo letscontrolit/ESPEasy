@@ -9,7 +9,7 @@
 P012_data_struct::P012_data_struct(uint8_t addr,
                                    uint8_t lcd_size,
                                    uint8_t mode,
-                                   byte    timer) :
+                                   uint8_t    timer) :
   lcd(addr, 20, 4),
   Plugin_012_mode(mode),
   displayTimer(timer) {
@@ -38,7 +38,7 @@ P012_data_struct::P012_data_struct(uint8_t addr,
   createCustomChars();
 }
 
-void P012_data_struct::setBacklightTimer(byte timer) {
+void P012_data_struct::setBacklightTimer(uint8_t timer) {
   displayTimer = timer;
   lcd.backlight();
 }
@@ -54,13 +54,13 @@ void P012_data_struct::checkTimer() {
   }
 }
 
-void P012_data_struct::lcdWrite(const String& text, byte col, byte row) {
+void P012_data_struct::lcdWrite(const String& text, uint8_t col, uint8_t row) {
   // clear line before writing new string
   if (Plugin_012_mode == 2) {
     lcd.setCursor(col, row);
 
-    for (byte i = col; i < Plugin_012_cols; i++) {
-      lcd.print(" ");
+    for (uint8_t i = col; i < Plugin_012_cols; i++) {
+      lcd.print(' ');
     }
   }
 
@@ -69,7 +69,7 @@ void P012_data_struct::lcdWrite(const String& text, byte col, byte row) {
   if ((Plugin_012_mode == 1) || (Plugin_012_mode == 2)) {
     lcd.setCursor(col, row);
 
-    for (byte i = 0; i < Plugin_012_cols - col; i++) {
+    for (uint8_t i = 0; i < Plugin_012_cols - col; i++) {
       if (text[i]) {
         lcd.print(text[i]);
       }
@@ -80,7 +80,7 @@ void P012_data_struct::lcdWrite(const String& text, byte col, byte row) {
   else {
     // Fix Weird (native) lcd display behaviour that split long string into row 1,3,2,4, instead of 1,2,3,4
     bool stillProcessing = 1;
-    byte charCount       = 1;
+    uint8_t charCount       = 1;
 
     while (stillProcessing) {
       if (++col > Plugin_012_cols) { // have we printed 20 characters yet (+1 for the logic)
@@ -107,7 +107,7 @@ void P012_data_struct::lcdWrite(const String& text, byte col, byte row) {
 
 // Perform some specific changes for LCD display
 // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
-String P012_data_struct::P012_parseTemplate(String& tmpString, byte lineSize) {
+String P012_data_struct::P012_parseTemplate(String& tmpString, uint8_t lineSize) {
   String result            = parseTemplate_padded(tmpString, lineSize);
   const char degree[3]     = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
   const char degree_lcd[2] = { 0xdf, 0 };       // P012_LCD degree symbol

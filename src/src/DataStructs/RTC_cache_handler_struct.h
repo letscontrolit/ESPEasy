@@ -40,7 +40,7 @@ struct RTC_cache_handler_struct
                     unsigned int size);
 
   // Write a single sample set to the buffer
-  bool write(uint8_t     *data,
+  bool write(const uint8_t     *data,
              unsigned int size);
 
   // Mark all content as being processed and empty buffer.
@@ -91,7 +91,7 @@ private:
   size_t              peekfilenr  = 0;
   size_t              peekreadpos = 0;
 
-  byte storageLocation = CACHE_STORAGE_SPIFFS;
+  uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
   bool writeerror      = false;
 };
 

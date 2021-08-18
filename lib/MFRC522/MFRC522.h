@@ -28,7 +28,7 @@
 //
 // Version 0.0 (0x90)
 // Philips Semiconductors; Preliminary Specification Revision 2.0 - 01 August 2005; 16.1 self-test
-const byte MFRC522_firmware_referenceV0_0[] PROGMEM = {
+const uint8_t MFRC522_firmware_referenceV0_0[] PROGMEM = {
 	0x00, 0x87, 0x98, 0x0f, 0x49, 0xFF, 0x07, 0x19,
 	0xBF, 0x22, 0x30, 0x49, 0x59, 0x63, 0xAD, 0xCA,
 	0x7F, 0xE3, 0x4E, 0x03, 0x5C, 0x4E, 0x49, 0x50,
@@ -40,7 +40,7 @@ const byte MFRC522_firmware_referenceV0_0[] PROGMEM = {
 };
 // Version 1.0 (0x91)
 // NXP Semiconductors; Rev. 3.8 - 17 September 2014; 16.1.1 self-test
-const byte MFRC522_firmware_referenceV1_0[] PROGMEM = {
+const uint8_t MFRC522_firmware_referenceV1_0[] PROGMEM = {
 	0x00, 0xC6, 0x37, 0xD5, 0x32, 0xB7, 0x57, 0x5C,
 	0xC2, 0xD8, 0x7C, 0x4D, 0xD9, 0x70, 0xC7, 0x73,
 	0x10, 0xE6, 0xD2, 0xAA, 0x5E, 0xA1, 0x3E, 0x5A,
@@ -52,7 +52,7 @@ const byte MFRC522_firmware_referenceV1_0[] PROGMEM = {
 };
 // Version 2.0 (0x92)
 // NXP Semiconductors; Rev. 3.8 - 17 September 2014; 16.1.1 self-test
-const byte MFRC522_firmware_referenceV2_0[] PROGMEM = {
+const uint8_t MFRC522_firmware_referenceV2_0[] PROGMEM = {
 	0x00, 0xEB, 0x66, 0xBA, 0x57, 0xBF, 0x23, 0x95,
 	0xD0, 0xE3, 0x0D, 0x3D, 0x27, 0x89, 0x5C, 0xDE,
 	0x9D, 0x3B, 0xA7, 0x00, 0x21, 0x5B, 0x89, 0x82,
@@ -64,7 +64,7 @@ const byte MFRC522_firmware_referenceV2_0[] PROGMEM = {
 };
 // Clone
 // Fudan Semiconductor FM17522 (0x88)
-const byte FM17522_firmware_reference[] PROGMEM = {
+const uint8_t FM17522_firmware_reference[] PROGMEM = {
 	0x00, 0xD6, 0x78, 0x8C, 0xE2, 0xAA, 0x0C, 0x18,
 	0x2A, 0xB8, 0x7A, 0x7F, 0xD3, 0x6A, 0xCF, 0x0B,
 	0xB1, 0x37, 0x63, 0x4B, 0x69, 0xAE, 0x91, 0xC7,
@@ -78,13 +78,13 @@ const byte FM17522_firmware_reference[] PROGMEM = {
 class MFRC522 {
 public:
 	// Size of the MFRC522 FIFO
-	static constexpr byte FIFO_SIZE = 64;		// The FIFO is 64 bytes.
+	static constexpr uint8_t FIFO_SIZE = 64;		// The FIFO is 64 bytes.
 	// Default value for unused pin
 	static constexpr uint8_t UNUSED_PIN = UINT8_MAX;
 
 	// MFRC522 registers. Described in chapter 9 of the datasheet.
-	// When using SPI all addresses are shifted one bit left in the "SPI address byte" (section 8.1.2.3)
-	enum PCD_Register : byte {
+	// When using SPI all addresses are shifted one bit left in the "SPI address uint8_t" (section 8.1.2.3)
+	enum PCD_Register : uint8_t {
 		// Page 0: Command and status
 		//						  0x00			// reserved for future use
 		CommandReg				= 0x01 << 1,	// starts and stops command execution
@@ -95,7 +95,7 @@ public:
 		ErrorReg				= 0x06 << 1,	// error bits showing the error status of the last command executed 
 		Status1Reg				= 0x07 << 1,	// communication status bits
 		Status2Reg				= 0x08 << 1,	// receiver and transmitter status bits
-		FIFODataReg				= 0x09 << 1,	// input and output of 64 byte FIFO buffer
+		FIFODataReg				= 0x09 << 1,	// input and output of 64 uint8_t FIFO buffer
 		FIFOLevelReg			= 0x0A << 1,	// number of bytes stored in the FIFO buffer
 		WaterLevelReg			= 0x0B << 1,	// level for FIFO underflow and overflow warning
 		ControlReg				= 0x0C << 1,	// miscellaneous control registers
@@ -159,10 +159,10 @@ public:
 	};
 	
 	// MFRC522 commands. Described in chapter 10 of the datasheet.
-	enum PCD_Command : byte {
+	enum PCD_Command : uint8_t {
 		PCD_Idle				= 0x00,		// no action, cancels current command execution
 		PCD_Mem					= 0x01,		// stores 25 bytes into the internal buffer
-		PCD_GenerateRandomID	= 0x02,		// generates a 10-byte random ID number
+		PCD_GenerateRandomID	= 0x02,		// generates a 10-uint8_t random ID number
 		PCD_CalcCRC				= 0x03,		// activates the CRC coprocessor or performs a self-test
 		PCD_Transmit			= 0x04,		// transmits data from the FIFO buffer
 		PCD_NoCmdChange			= 0x07,		// no command change, can be used to modify the CommandReg register bits without affecting the command, for example, the PowerDown bit
@@ -174,7 +174,7 @@ public:
 	
 	// MFRC522 RxGain[2:0] masks, defines the receiver's signal voltage gain factor (on the PCD).
 	// Described in 9.3.3.6 / table 98 of the datasheet at http://www.nxp.com/documents/data_sheet/MFRC522.pdf
-	enum PCD_RxGain : byte {
+	enum PCD_RxGain : uint8_t {
 		RxGain_18dB				= 0x00 << 4,	// 000b - 18 dB, minimum
 		RxGain_23dB				= 0x01 << 4,	// 001b - 23 dB
 		RxGain_18dB_2			= 0x02 << 4,	// 010b - 18 dB, it seems 010b is a duplicate for 000b
@@ -189,7 +189,7 @@ public:
 	};
 	
 	// Commands sent to the PICC.
-	enum PICC_Command : byte {
+	enum PICC_Command : uint8_t {
 		// The commands used by the PCD to manage communication with several PICCs (ISO 14443-3, Type A, section 6.4)
 		PICC_CMD_REQA			= 0x26,		// REQuest command, Type A. Invites PICCs in state IDLE to go to READY and prepare for anticollision or selection. 7 bit frame.
 		PICC_CMD_WUPA			= 0x52,		// Wake-UP command, Type A. Invites PICCs in state IDLE and HALT to go to READY(*) and prepare for anticollision or selection. 7 bit frame.
@@ -204,15 +204,15 @@ public:
 		// The read/write commands can also be used for MIFARE Ultralight.
 		PICC_CMD_MF_AUTH_KEY_A	= 0x60,		// Perform authentication with Key A
 		PICC_CMD_MF_AUTH_KEY_B	= 0x61,		// Perform authentication with Key B
-		PICC_CMD_MF_READ		= 0x30,		// Reads one 16 byte block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
-		PICC_CMD_MF_WRITE		= 0xA0,		// Writes one 16 byte block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
+		PICC_CMD_MF_READ		= 0x30,		// Reads one 16 uint8_t block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
+		PICC_CMD_MF_WRITE		= 0xA0,		// Writes one 16 uint8_t block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
 		PICC_CMD_MF_DECREMENT	= 0xC0,		// Decrements the contents of a block and stores the result in the internal data register.
 		PICC_CMD_MF_INCREMENT	= 0xC1,		// Increments the contents of a block and stores the result in the internal data register.
 		PICC_CMD_MF_RESTORE		= 0xC2,		// Reads the contents of a block into the internal data register.
 		PICC_CMD_MF_TRANSFER	= 0xB0,		// Writes the contents of the internal data register to a block.
 		// The commands used for MIFARE Ultralight (from http://www.nxp.com/documents/data_sheet/MF0ICU1.pdf, Section 8.6)
 		// The PICC_CMD_MF_READ and PICC_CMD_MF_WRITE can also be used for MIFARE Ultralight.
-		PICC_CMD_UL_WRITE		= 0xA2		// Writes one 4 byte page to the PICC.
+		PICC_CMD_UL_WRITE		= 0xA2		// Writes one 4 uint8_t page to the PICC.
 	};
 	
 	// MIFARE constants that does not fit anywhere else
@@ -223,7 +223,7 @@ public:
 	
 	// PICC types we can detect. Remember to update PICC_GetTypeName() if you add more.
 	// last value set to 0xff, then compiler uses less ram, it seems some optimisations are triggered
-	enum PICC_Type : byte {
+	enum PICC_Type : uint8_t {
 		PICC_TYPE_UNKNOWN		,
 		PICC_TYPE_ISO_14443_4	,	// PICC compliant with ISO/IEC 14443-4 
 		PICC_TYPE_ISO_18092		, 	// PICC compliant with ISO/IEC 18092 (NFC)
@@ -239,7 +239,7 @@ public:
 	
 	// Return codes from the functions in this class. Remember to update GetStatusCodeName() if you add more.
 	// last value set to 0xff, then compiler uses less ram, it seems some optimisations are triggered
-	enum StatusCode : byte {
+	enum StatusCode : uint8_t {
 		STATUS_OK				,	// Success
 		STATUS_ERROR			,	// Error in communication
 		STATUS_COLLISION		,	// Collission detected
@@ -253,14 +253,14 @@ public:
 	
 	// A struct used for passing the UID of a PICC.
 	typedef struct {
-		byte		size;			// Number of bytes in the UID. 4, 7 or 10.
-		byte		uidByte[10];
-		byte		sak;			// The SAK (Select acknowledge) byte returned from the PICC after successful selection.
+		uint8_t		size;			// Number of bytes in the UID. 4, 7 or 10.
+		uint8_t		uidByte[10];
+		uint8_t		sak;			// The SAK (Select acknowledge) uint8_t returned from the PICC after successful selection.
 	} Uid;
 
 	// A struct used for passing a MIFARE Crypto1 key
 	typedef struct {
-		byte		keyByte[MF_KEY_SIZE];
+		uint8_t		keyByte[MF_KEY_SIZE];
 	} MIFARE_Key;
 	
 	// Member variables
@@ -270,31 +270,31 @@ public:
 	// Functions for setting up the Arduino
 	/////////////////////////////////////////////////////////////////////////////////////
 	MFRC522();
-	MFRC522(byte resetPowerDownPin);
-	MFRC522(byte chipSelectPin, byte resetPowerDownPin);
+	MFRC522(uint8_t resetPowerDownPin);
+	MFRC522(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Basic interface functions for communicating with the MFRC522
 	/////////////////////////////////////////////////////////////////////////////////////
-	void PCD_WriteRegister(PCD_Register reg, byte value);
-	void PCD_WriteRegister(PCD_Register reg, byte count, byte *values);
-	byte PCD_ReadRegister(PCD_Register reg);
-	void PCD_ReadRegister(PCD_Register reg, byte count, byte *values, byte rxAlign = 0);
-	void PCD_SetRegisterBitMask(PCD_Register reg, byte mask);
-	void PCD_ClearRegisterBitMask(PCD_Register reg, byte mask);
-	StatusCode PCD_CalculateCRC(byte *data, byte length, byte *result);
+	void PCD_WriteRegister(PCD_Register reg, uint8_t value);
+	void PCD_WriteRegister(PCD_Register reg, uint8_t count, uint8_t *values);
+	uint8_t PCD_ReadRegister(PCD_Register reg);
+	void PCD_ReadRegister(PCD_Register reg, uint8_t count, uint8_t *values, uint8_t rxAlign = 0);
+	void PCD_SetRegisterBitMask(PCD_Register reg, uint8_t mask);
+	void PCD_ClearRegisterBitMask(PCD_Register reg, uint8_t mask);
+	StatusCode PCD_CalculateCRC(uint8_t *data, uint8_t length, uint8_t *result);
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Functions for manipulating the MFRC522
 	/////////////////////////////////////////////////////////////////////////////////////
 	void PCD_Init();
-	void PCD_Init(byte resetPowerDownPin);
-	void PCD_Init(byte chipSelectPin, byte resetPowerDownPin);
+	void PCD_Init(uint8_t resetPowerDownPin);
+	void PCD_Init(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
 	void PCD_Reset();
 	void PCD_AntennaOn();
 	void PCD_AntennaOff();
-	byte PCD_GetAntennaGain();
-	void PCD_SetAntennaGain(byte mask);
+	uint8_t PCD_GetAntennaGain();
+	void PCD_SetAntennaGain(uint8_t mask);
 	bool PCD_PerformSelfTest();
 	
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -306,40 +306,40 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Functions for communicating with PICCs
 	/////////////////////////////////////////////////////////////////////////////////////
-	StatusCode PCD_TransceiveData(byte *sendData, byte sendLen, byte *backData, byte *backLen, byte *validBits = nullptr, byte rxAlign = 0, bool checkCRC = false);
-	StatusCode PCD_CommunicateWithPICC(byte command, byte waitIRq, byte *sendData, byte sendLen, byte *backData = nullptr, byte *backLen = nullptr, byte *validBits = nullptr, byte rxAlign = 0, bool checkCRC = false);
-	StatusCode PICC_RequestA(byte *bufferATQA, byte *bufferSize);
-	StatusCode PICC_WakeupA(byte *bufferATQA, byte *bufferSize);
-	StatusCode PICC_REQA_or_WUPA(byte command, byte *bufferATQA, byte *bufferSize);
-	virtual StatusCode PICC_Select(Uid *uid, byte validBits = 0);
+	StatusCode PCD_TransceiveData(uint8_t *sendData, uint8_t sendLen, uint8_t *backData, uint8_t *backLen, uint8_t *validBits = nullptr, uint8_t rxAlign = 0, bool checkCRC = false);
+	StatusCode PCD_CommunicateWithPICC(uint8_t command, uint8_t waitIRq, uint8_t *sendData, uint8_t sendLen, uint8_t *backData = nullptr, uint8_t *backLen = nullptr, uint8_t *validBits = nullptr, uint8_t rxAlign = 0, bool checkCRC = false);
+	StatusCode PICC_RequestA(uint8_t *bufferATQA, uint8_t *bufferSize);
+	StatusCode PICC_WakeupA(uint8_t *bufferATQA, uint8_t *bufferSize);
+	StatusCode PICC_REQA_or_WUPA(uint8_t command, uint8_t *bufferATQA, uint8_t *bufferSize);
+	virtual StatusCode PICC_Select(Uid *uid, uint8_t validBits = 0);
 	StatusCode PICC_HaltA();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Functions for communicating with MIFARE PICCs
 	/////////////////////////////////////////////////////////////////////////////////////
-	StatusCode PCD_Authenticate(byte command, byte blockAddr, MIFARE_Key *key, Uid *uid);
+	StatusCode PCD_Authenticate(uint8_t command, uint8_t blockAddr, MIFARE_Key *key, Uid *uid);
 	void PCD_StopCrypto1();
-	StatusCode MIFARE_Read(byte blockAddr, byte *buffer, byte *bufferSize);
-	StatusCode MIFARE_Write(byte blockAddr, byte *buffer, byte bufferSize);
-	StatusCode MIFARE_Ultralight_Write(byte page, byte *buffer, byte bufferSize);
-	StatusCode MIFARE_Decrement(byte blockAddr, int32_t delta);
-	StatusCode MIFARE_Increment(byte blockAddr, int32_t delta);
-	StatusCode MIFARE_Restore(byte blockAddr);
-	StatusCode MIFARE_Transfer(byte blockAddr);
-	StatusCode MIFARE_GetValue(byte blockAddr, int32_t *value);
-	StatusCode MIFARE_SetValue(byte blockAddr, int32_t value);
-	StatusCode PCD_NTAG216_AUTH(byte *passWord, byte pACK[]);
+	StatusCode MIFARE_Read(uint8_t blockAddr, uint8_t *buffer, uint8_t *bufferSize);
+	StatusCode MIFARE_Write(uint8_t blockAddr, uint8_t *buffer, uint8_t bufferSize);
+	StatusCode MIFARE_Ultralight_Write(uint8_t page, uint8_t *buffer, uint8_t bufferSize);
+	StatusCode MIFARE_Decrement(uint8_t blockAddr, int32_t delta);
+	StatusCode MIFARE_Increment(uint8_t blockAddr, int32_t delta);
+	StatusCode MIFARE_Restore(uint8_t blockAddr);
+	StatusCode MIFARE_Transfer(uint8_t blockAddr);
+	StatusCode MIFARE_GetValue(uint8_t blockAddr, int32_t *value);
+	StatusCode MIFARE_SetValue(uint8_t blockAddr, int32_t value);
+	StatusCode PCD_NTAG216_AUTH(uint8_t *passWord, uint8_t pACK[]);
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Support functions
 	/////////////////////////////////////////////////////////////////////////////////////
-	StatusCode PCD_MIFARE_Transceive(byte *sendData, byte sendLen, bool acceptTimeout = false);
+	StatusCode PCD_MIFARE_Transceive(uint8_t *sendData, uint8_t sendLen, bool acceptTimeout = false);
 	// old function used too much memory, now name moved to flash; if you need char, copy from flash to memory
-	//const char *GetStatusCodeName(byte code);
+	//const char *GetStatusCodeName(uint8_t code);
 	static const __FlashStringHelper *GetStatusCodeName(StatusCode code);
-	static PICC_Type PICC_GetType(byte sak);
+	static PICC_Type PICC_GetType(uint8_t sak);
 	// old function used too much memory, now name moved to flash; if you need char, copy from flash to memory
-	//const char *PICC_GetTypeName(byte type);
+	//const char *PICC_GetTypeName(uint8_t type);
 	static const __FlashStringHelper *PICC_GetTypeName(PICC_Type type);
 	
 	// Support functions for debuging
@@ -347,13 +347,13 @@ public:
 	void PICC_DumpToSerial(Uid *uid);
 	void PICC_DumpDetailsToSerial(Uid *uid);
 	void PICC_DumpMifareClassicToSerial(Uid *uid, PICC_Type piccType, MIFARE_Key *key);
-	void PICC_DumpMifareClassicSectorToSerial(Uid *uid, MIFARE_Key *key, byte sector);
+	void PICC_DumpMifareClassicSectorToSerial(Uid *uid, MIFARE_Key *key, uint8_t sector);
 	void PICC_DumpMifareUltralightToSerial();
 	
 	// Advanced functions for MIFARE
-	void MIFARE_SetAccessBits(byte *accessBitBuffer, byte g0, byte g1, byte g2, byte g3);
+	void MIFARE_SetAccessBits(uint8_t *accessBitBuffer, uint8_t g0, uint8_t g1, uint8_t g2, uint8_t g3);
 	bool MIFARE_OpenUidBackdoor(bool logErrors);
-	bool MIFARE_SetUid(byte *newUid, byte uidSize, bool logErrors);
+	bool MIFARE_SetUid(uint8_t *newUid, uint8_t uidSize, bool logErrors);
 	bool MIFARE_UnbrickUidSector(bool logErrors);
 	
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -363,9 +363,9 @@ public:
 	virtual bool PICC_ReadCardSerial();
 	
 protected:
-	byte _chipSelectPin;		// Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
-	byte _resetPowerDownPin;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
-	StatusCode MIFARE_TwoStepHelper(byte command, byte blockAddr, int32_t data);
+	uint8_t _chipSelectPin;		// Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
+	uint8_t _resetPowerDownPin;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
+	StatusCode MIFARE_TwoStepHelper(uint8_t command, uint8_t blockAddr, int32_t data);
 };
 
 #endif

@@ -46,7 +46,10 @@ public:
   volatile boolean ISR_AllBitsReceived = false;
   volatile uint16_t ISR_PulseCount = 0;   // number of received pulses
   volatile uint16_t ISR_PulseNumber = 0;  // max naumber of the received pulses
-  volatile uint16_t ISR_MinPulseWidth, ISR_MaxPulseWidth, ISR_MinDoublePulseWidth, ISR_MaxDoublePulseWidth = 0;
+  volatile uint16_t ISR_MinPulseWidth = 0;
+  volatile uint16_t ISR_MaxPulseWidth = 0;
+  volatile uint16_t ISR_MinDoublePulseWidth = 0;
+  volatile uint16_t ISR_MaxDoublePulseWidth = 0;
 
   // identification bytes for each DL bus device
   uint8_t DeviceBytes[2] = { 0 };

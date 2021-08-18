@@ -10,6 +10,7 @@
 #include "../WebServer/WebServer.h"
 
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/MQTT.h"
 #include "../Globals/SecuritySettings.h"
@@ -95,7 +96,7 @@ void handle_config() {
         IPAddress low, high;
         getSubnetRange(low, high);
 
-        for (byte i = 0; i < 4; ++i) {
+        for (uint8_t i = 0; i < 4; ++i) {
           SecuritySettings.AllowedIPrangeLow[i]  = low[i];
           SecuritySettings.AllowedIPrangeHigh[i] = high[i];
         }
@@ -131,6 +132,7 @@ void handle_config() {
   Settings.Name[25]             = 0;
   SecuritySettings.Password[25] = 0;
   addFormTextBox(F("Unit Name"), F("name"), Settings.Name, 25);
+  addFormNote(String(F("Hostname: ")) + NetworkCreateRFCCompliantHostname());
   addFormNumericBox(F("Unit Number"), F("unit"), Settings.Unit, 0, UNIT_NUMBER_MAX);
   addFormCheckBox(F("Append Unit Number to hostname"), F("appendunittohostname"), Settings.appendUnitToHostname());
   addFormPasswordBox(F("Admin Password"), F("password"), SecuritySettings.Password, 25);
@@ -164,10 +166,10 @@ void handle_config() {
   {
     IPAddress low, high;
     getIPallowedRange(low, high);
-    byte iplow[4];
-    byte iphigh[4];
+    uint8_t iplow[4];
+    uint8_t iphigh[4];
 
-    for (byte i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < 4; ++i) {
       iplow[i]  = low[i];
       iphigh[i] = high[i];
     }

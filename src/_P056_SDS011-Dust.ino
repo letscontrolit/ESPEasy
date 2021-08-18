@@ -25,7 +25,7 @@
 CjkSDS011 *Plugin_056_SDS = NULL;
 
 
-boolean Plugin_056(byte function, struct EventStruct *event, String& string)
+boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 {
   bool success = false;
 

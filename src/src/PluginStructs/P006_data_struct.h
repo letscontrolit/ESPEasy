@@ -19,8 +19,17 @@ struct P006_data_struct : public PluginTaskData_base {
   float    readTemperature(void);
 
   uint8_t  oversampling = BMP085_ULTRAHIGHRES;
-  int16_t  ac1, ac2, ac3, b1, b2, mb, mc, md = 0;
-  uint16_t ac4, ac5, ac6 = 0;
+  int16_t  ac1 = 0;
+  int16_t  ac2 = 0;
+  int16_t  ac3 = 0;
+  int16_t  b1 = 0;
+  int16_t  b2 = 0;
+  int16_t  mb = 0;
+  int16_t  mc = 0;
+  int16_t  md = 0;
+  uint16_t ac4 = 0;
+  uint16_t ac5 = 0;
+  uint16_t ac6 = 0;
 
   bool initialized = false;
 };

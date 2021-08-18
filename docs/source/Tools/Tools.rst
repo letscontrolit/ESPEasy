@@ -89,6 +89,135 @@ For the best performance the log level on all output directions should be set as
 Info
 ====
 
+The ``sysinfo`` page does show a lot of information about the system.
+
+* **Unit Number**: The assigned unit number of the node.
+* **Local Time**:	The local time as known by the node. This includes any set timezone and DST (Daylight Saving).
+* **Time Source**:	The origin of the current system time. (e.g. NTP / GPS / Manual set)
+* **Time Wander**:	Time drift of the crystal in msec/sec. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.
+* **Uptime**:	Current uptime of the node
+* **Load**:	CPU load in percent. ``LC`` is the number of calls to the ``loop()`` function per second.
+* **CPU Eco Mode**:	Whether the ECO mode is enabled or not.
+* **Boot**:	e.g. ``Manual Reboot (22)`` Stating the latest reboot reason and number of reboots since power on.
+* **Reset Reason**:	More extensive last reboot reason.
+* **Last Action before Reboot**:	Some indicator of the last action performed before the last reboot.
+* **SW WD count**:	Counter of the number of reboots triggered by the Software Watchdog. (not reliable at this moment)
+
+Memory
+------
+
+* **Free RAM**:	Amount of free heap memory. With statistics enabled, also showing the lowest amount of free heap and the function where this occured. Example: ``12112 (9592 - sendContentBlocking)``
+* **Heap Max Free Block**:	Largest continuous free block in heap memory.
+* **Heap Fragmentation**:	Amount of fragmentation of the heap memory. High fragmentation may lead to crashes or slow response of the node.
+* **Free Stack**:	Amount of free memory on the stack. With statistics enabled, also showing the lowest amount of free stack and the function where this occured. Example: ``3664 (848 - sendContentBlocking)``
+
+Network
+-------
+
+* **IP Config**:	Static or DHCP
+* **IP / Subnet**:	Example: ``192.168.10.58 / 255.255.255.0``
+* **Gateway**:	Example: ``192.168.10.254``
+* **Client IP**:	IP-address of the computer used to access the ESP. Example: ``192.168.10.135``
+* **DNS**:	Example: ``192.168.88.1 / (IP unset)``
+* **Allowed IP Range**:	Configured filter to allow access to the web interface only from a specific subnet, or ``All Allowed``
+* **Connected**:	Duration of the current network connection. Example: ``4h55m``
+* **Number Reconnects**:	Number of reconnects to a network since boot.
+
+WiFi
+----
+
+* **WiFi Connection**:	Description of the current connection speed and signal strength of the access point connected to. Example: ``802.11n (RSSI -41 dBm)``
+* **SSID**:	SSID of the WiFi network the node is connected to, plus its BSSID. Example: ``Lurch_2G (74:4D:28:FA:35:7D)``
+* **Channel**:	Current used WiFi channel.
+* **Encryption Type**:	Used WiFi encryption. Example: ``WPA/WPA2/PSK``
+* **Last Disconnect Reason**:	The reason of the last disconnect from the access point. Showing the numeric ID and a description. Example: ``(1) Unspecified``
+* **Configured SSID1**:	The first SSID of a WiFi network stored in the settings.
+* **Configured SSID2**:	The second SSID of a WiFi network stored in the settings.
+* **STA MAC**:	MAC address of the station WiFi interface of the ESPEasy node. Example: ``2C:3A:E8:39:14:07``
+* **AP MAC**:	MAC address of the access point WiFi interface of the ESPEasy node. Example: ``2E:3A:E8:39:14:07``
+
+WiFi Settings
+-------------
+
+All these values are described in great detail in the Advanced section, where the WiFi settings can be configured.
+
+* **Force WiFi B/G**:	Shows whether the ESPEasy node is forced into 802.11b/g mode.
+* **Restart WiFi Lost Conn**:	Shows whether the ESPEasy node is configured to restart the WiFi radio when connection is lost. When reporting false (the default), the WiFi radio is not restarted, but it just retries to connect to WiFi.
+* **Force WiFi No Sleep**:	``true`` indicates the WiFi radio is not allowed to enter low power mode to conserve energy.
+* **Periodical send Gratuitous ARP**:	``true`` indicates the ESPEasy node will send Gratuitous ARP packets to improve reachability from the network to the node.
+* **Connection Failure Threshold**:	Counter indicating the number of failed connection attempts needed to perform a reboot.
+* **Max WiFi TX Power**:	The set maximum TX power in dBm.
+* **Current WiFi TX Power**:	The current active TX power in dBm
+* **WiFi Sensitivity Margin**:	The set WiFi Sensitivity Margin
+* **Send With Max TX Power**:	``true`` indicates the WiFi TX power will not be changed and thus is sending at maximum TX power for the active WiFi mode (802.11 b/g/n)
+* **Extra WiFi scan loops**:	The set number of extra scans of all channels when a WiFi scan is needed.
+* **Use Last Connected AP from RTC**:	``false`` means the ESPEasy node needs to scan at reboot and cannot reuse the last used connection before the reboot.
+
+Firmware
+--------
+
+* **Build**:  Showing the internal build number. Example: ``20114 - Mega``
+* **System Libraries**:  Showing the used core library version. Example: ``ESP82xx Core 2843a5ac, NONOS SDK 2.2.2-dev(38a443e), LWIP: 2.1.2 PUYA support``
+* **Git Build**: Showing the GIT branch or tag information with SHA of the last commit. 	Example: ``feature/randomize_NTP_interval_569442e``
+* **Plugin Count**: 	Number of plugins included in the build. 
+* **Build Origin**:	Indication whether it is "self built" or an official build.
+* **Build Time**:  Date and time when the running version of ESPEasy was built. Example: ``Aug 11 2021 14:00:44``
+* **Binary Filename**: The filename of the installed ESPEasy build.  Example: ``ESP_Easy_mega_20210811_custom_ESP8266_4M1M``
+* **Build Platform**:	The platform used to build the installed ESPEasy build. Example: ``Windows-10-10.0.19041-SP0``
+* **Git HEAD**: The Git branch + SHA of the last commit used to build the installed ESPEasy build.	Example: ``feature/randomize_NTP_interval_569442e``
+
+System Status
+-------------
+
+Showing the current active log level per log destination.
+N.B. The web log will switch to ``None`` when the log is not fetched from the web log page, regardless of the actual setting.
+
+* **Syslog Log Level**:	None
+* **Serial Log Level**:	Info
+* **Web Log Level**:	None
+
+Network Services
+----------------
+
+Showing checkboxes when a service is started with success.
+
+* **Network Connected**:	✔
+* **NTP Initialized**:	✔
+* **MQTT Client Connected**:	✔
+
+ESP Board
+---------
+
+Showing detected chip and used board definition.
+
+* **ESP Chip ID**:	Unique chip ID, showin in decimal and hexadecimal notation. Example: ``3740679 (0x391407)``
+* **ESP Chip Frequency**:	Set CPU clock frequency. Example: ``80 MHz``
+* **ESP Chip Model**:	Detected or configured CPU platform. Example: ``ESP8266``
+* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1`
+* **ESP Board Name**:	Used board definition. Example: ``PLATFORMIO_ESP12E``
+
+Storage
+-------
+
+Showing detailed information about the flash chip and used file system.
+
+* **Flash Chip ID**:  Detected flash chip vendor ID and flash model. Example: ``Vendor: 0x20 Device: 0x4016``
+* **Flash Chip Real Size**:	The detected real size of the flash chip. Example: ``4096 kB``
+* **Flash IDE Size**:	Defined size in the build project. (may be less than the detected real size) Example: ``4096 kB``
+* **Flash IDE Speed**:	Configured frequency of the flash chip. Example: ``40 MHz``
+* **Flash IDE Mode**:	Configured access mode to the flash chip. Example: ``DOUT``
+* **Flash Writes**:	Number of writes to the flash of the current day and since the last power cycle boot. Example: ``16 daily / 37 boot``
+* **Sketch Size**:	Size of the current ESPEasy build + the amount of free space for an OTA update.  Example: ``844 kB (2224 kB free)``
+* **Max. OTA Sketch Size**:	Example: Maximum size of an ESPEasy build that can be flashed using OTA. ``1019 kB (1044464 bytes)``
+* **OTA possible**:	``true`` indicates it is possible to update the firmware via OTA.
+* **OTA 2-step Needed**:	``false`` indicates a user does not need to perform an OTA update via the 2-step OTA process. ``true`` means it is only possible to perform an OTA update via the 2-step OTA update process.
+* **SPIFFS Size**:	Example: Total size + free space of the current file system. Example: ``934 kB (792 kB free)``
+* **Page size**:	The size of a page on the flash chip. Example: ``256``
+* **Block size**:	Smallest size of consequitive pages that can be erased. Example: ``8192``
+* **Number of blocks**:	Total number of blocks occupied by the file system. Example: ``116``
+* **Maximum open files**:	Configured maximum number of simultaneous open files. Example: ``5``
+* **Maximum path length**:	Maximum length of file name + path. Example: ``32``
+
 Advanced
 ========
 
@@ -100,11 +229,26 @@ Rules Settings
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
 
-NTP Settings
-------------
+Time Source
+-----------
 
 * Use NTP - Check to  query an NTP server for proper system time.
 * NTP Hostname - When left empty, a random host from pool.ntp.org will be used. (when NTP is enabled)
+* External Time Source - Set of supported external RTC chips which can keep the time while the ESP is not powered (e.g. deep sleep)
+
+External Time Source is added on 2021-07-21.
+
+Supported RTC chips:
+
+* `DS1307 <https://datasheets.maximintegrated.com/en/ds/DS1307.pdf>`_
+* `DS3231  <https://datasheets.maximintegrated.com/en/ds/DS3231.pdf>`_
+* `PCF8523  <https://www.nxp.com/docs/en/data-sheet/PCF8523.pdf>`_
+* `PCF8563  <https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf>`_
+
+Most modules sold with one of these RTC chips also have a battery socket to keep track of time while the rest is not powered.
+This allows ESPEasy to know the correct date and time after been powered off for a while, or deep sleep, without the need for working network to query a NTP server.
+
+N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
 
 DST Settings
 ------------
@@ -194,6 +338,34 @@ JSON bool output without quotes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ESPEasy JSON output has always used quoted bool values, ``"true"`` and ``"false"``, that are in fact string values. According to JSON standards, bool values should be ``true`` and ``false``, so this setting selects what type of bool values will be emitted. As existing functionality is to be left unaltered/backward compatible as much as possible, by default this setting is unchecked.
+
+Allow TaskValueSet on all plugins
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-08-06
+
+The command TaskValueSet was never intended to be used on any other then a 'dummy' task.
+However it appeared there are some use cases where it may be useful to use TaskValueSet on other types of tasks.
+
+To use it on other then a 'dummy' task, this option must be checked.
+
+Default: unchecked
+
+
+
+Deep Sleep Alternative
+^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-06-07
+
+On some ESP8266 boards deep sleep does consume quite a lot compared to the stated 20 uA by Espressif.
+For those boards it may be beneficial to use alternative code to set the WiFi radio in such a mode that allows the ESP to really enter deep sleep.
+However, on older boards like the ESP12E or ESP12F, this alternative code prevents the ESP to wake up at all.
+
+This option is only available for ESP82xx boards.
+
+Default: disabled.
+
 
 Use SSDP
 ^^^^^^^^
@@ -433,8 +605,56 @@ Also it is yet unknown if it does have a negative impact on overall WiFi perform
 During a scan the node is listening on a different channel, so it may not respond to requests sent to it for roughly a 1.6 seconds.
 
 
+Use Last Connected AP from RTC
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-06-20
+
+The last used (stable) connection is stored in RTC memory.
+This will survive a reboot (and deep sleep) as long as the unit remains powered.
+
+On WiFi reconnect, the stored last active connection is tried first.
+This can reduce the time needed to reconnect on a reboot, or when waking from deep sleep.
+
+Side effect is that if a node cannot see the stronger configured AP when connecting, it may never try to connect to the stronger AP as on reconnect the last used is tried first.
+
+Especially on mesh networks this appears to cause a lot of instability, therefore this is now made an optional feature.
+
+This is no new functionality, as it was present before and also enabled by default.
+
+New default value since 2021-06-20: unchecked
+
+
+
 Show JSON
 =========
+
+Show Metrics
+============
+
+Shows various system metrics and device values in prometheus format
+
+- `Prometheus monitoring system and time series database <https://prometheus.io/>`_
+
+Metrics are exposed on the prometheus standard /metrics url
+
+System metrics exposed are:
+
+* uptime
+* CPU load
+* RAM free
+* Stack free 
+* Wifi Strength
+* WIfi connection time
+* Wifi reconnection count (since boot)
+
+In Addition, device values are exposed.  
+
+This allows easy connection via prometheus to grafana for graphing, as in the screenshot below:
+
+.. image:: images/PrometheusGrafana.png
+
+
 
 Timing Stats
 ============

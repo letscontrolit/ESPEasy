@@ -23,7 +23,7 @@
 #define PLUGIN_VALUENAME3_112 "State"
 #define AS7265X_ADDR 0x49
 
-boolean Plugin_112(byte function, struct EventStruct *event, String& string)
+boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -61,10 +61,15 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { AS7265X_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, AS7265X_ADDR);
+      const int i2cAddressValues[1] = { AS7265X_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, AS7265X_ADDR);
+      } else {
+        success = (event->Par1 == AS7265X_ADDR);
+      }
       break;
     }
 
@@ -86,7 +91,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choiceMode = PCONFIG_LONG(0);
+      uint8_t   choiceMode = PCONFIG_LONG(0);
       {
         // sensor.setGain(AS7265X_GAIN_1X);  //Default
         // sensor.setGain(AS7265X_GAIN_37X); //This is 3.7x
@@ -104,7 +109,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         optionValuesMode[3] = AS7265X_GAIN_64X;
         addFormSelector(F("Gain"), F("p112_Gain"), 4, optionsMode, optionValuesMode, choiceMode);
       }
-      byte   choiceMode2 = PCONFIG_LONG(1);
+      uint8_t   choiceMode2 = PCONFIG_LONG(1);
       {
         // Integration cycles from 0 (2.78ms) to 255 (711ms)
         // sensor.setIntegrationCycles(49); //Default: 50*2.8ms = 140ms per reading
@@ -130,7 +135,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       addFormSubHeader(F("LED settings"));
       addFormCheckBox(F("Blue"), F("p112_BlueStatusLED"), PCONFIG(0));
       addHtml(F(" Status LED On"));
-      byte   choiceMode3 = PCONFIG(1);
+      uint8_t   choiceMode3 = PCONFIG(1);
       {
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_1MA);
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_2MA);
@@ -151,7 +156,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       addHtml(F(" Current Limit"));
       addFormNote(F("Activate Status LEDs only for debugging purpose."));
 
-      byte   choiceMode4 = PCONFIG(2);
+      uint8_t   choiceMode4 = PCONFIG(2);
       {
         // White LED has max forward current of 120mA
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_WHITE); //Default
@@ -172,7 +177,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
       }
       addHtml(F(" Current Limit"));
 
-      byte   choiceMode5 = PCONFIG(3);
+      uint8_t   choiceMode5 = PCONFIG(3);
       {
         // IR LED has max forward current of 65mA 
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_IR);    //Default
@@ -190,7 +195,7 @@ boolean Plugin_112(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("IR"), F("p112_IRLEDCurrentLimit"), 3, optionsMode5, optionValuesMode5, choiceMode5);
       }
 
-      byte   choiceMode6 = PCONFIG(4);
+      uint8_t   choiceMode6 = PCONFIG(4);
       {
         // UV LED has max forward current of 30mA so do not set the drive current higher
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_12_5MA, AS7265x_LED_UV);    //Default

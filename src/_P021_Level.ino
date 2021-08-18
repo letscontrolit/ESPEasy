@@ -12,10 +12,10 @@
 #define PLUGIN_NAME_021       "Regulator - Level Control"
 #define PLUGIN_VALUENAME1_021 "Output"
 
-boolean Plugin_021(byte function, struct EventStruct *event, String& string)
+boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
-  static byte switchstate[TASKS_MAX];
+  static uint8_t switchstate[TASKS_MAX];
 
   switch (function)
   {
@@ -121,9 +121,9 @@ boolean Plugin_021(byte function, struct EventStruct *event, String& string)
       {
         // we're checking a var from another task, so calculate that basevar
         taskIndex_t TaskIndex = PCONFIG(0);
-        byte BaseVarIndex = TaskIndex * VARS_PER_TASK + PCONFIG(1);
+        uint8_t BaseVarIndex = TaskIndex * VARS_PER_TASK + PCONFIG(1);
         float value = UserVar[BaseVarIndex];
-        byte state = switchstate[event->TaskIndex];
+        uint8_t state = switchstate[event->TaskIndex];
         // compare with threshold value
         float valueLowThreshold = PCONFIG_FLOAT(0) - (PCONFIG_FLOAT(1) / 2);
         float valueHighThreshold = PCONFIG_FLOAT(0) + (PCONFIG_FLOAT(1) / 2);

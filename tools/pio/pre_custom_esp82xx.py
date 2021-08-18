@@ -32,6 +32,7 @@ else:
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
     "-DUSES_P028",  # BME280
+    "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
@@ -49,12 +50,13 @@ else:
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
 
-#    "-DUSES_C016",  # Cache Controller
+    "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
 #    "-DFEATURE_MDNS",
 #    "-DFEATURE_SD",
+    "-DUSE_EXT_RTC",
     "-DFEATURE_I2CMULTIPLEXER",
     "-DUSE_TRIGONOMETRIC_FUNCTIONS_RULES",
 

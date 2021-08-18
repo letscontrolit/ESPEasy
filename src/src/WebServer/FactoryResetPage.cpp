@@ -5,6 +5,7 @@
 
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/JSON.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"

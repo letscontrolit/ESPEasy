@@ -32,7 +32,7 @@
 
 int deviceCount = -1;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
                                   struct EventStruct *,
                                   String&);
 
@@ -84,6 +84,20 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
   return INVALID_DEVICE_INDEX;
 }
 
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
+  if (validTaskIndex(taskIndex)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+    if (validDeviceIndex(DeviceIndex)) {
+      return DeviceIndex_to_Plugin_id[DeviceIndex];
+    }
+  }
+  return INVALID_PLUGIN_ID;
+}
+
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
   if (pluginID != INVALID_PLUGIN_ID) {
@@ -126,6 +140,20 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   }
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
+
+#if USE_I2C_DEVICE_SCAN
+bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress) {
+  bool hasI2CAddress = false;
+
+  if (validDeviceIndex(deviceIndex)) {
+    String dummy;
+    struct EventStruct TempEvent;
+    TempEvent.Par1 = i2cAddress;
+    hasI2CAddress = Plugin_ptr[deviceIndex](PLUGIN_I2C_HAS_ADDRESS, &TempEvent, dummy);
+  }
+  return hasI2CAddress;
+}
+#endif // if USE_I2C_DEVICE_SCAN
 
 // ********************************************************************************
 // Device Sort routine, compare two array entries
@@ -255,7 +283,7 @@ void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) 
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
-bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
   bool retval = false;
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
@@ -308,7 +336,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEv
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-bool PluginCall(byte Function, struct EventStruct *event, String& str)
+bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 {
   struct EventStruct TempEvent;
 
@@ -615,6 +643,7 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
+    case PLUGIN_I2C_HAS_ADDRESS:
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:

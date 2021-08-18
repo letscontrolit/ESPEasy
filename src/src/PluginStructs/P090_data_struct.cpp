@@ -153,7 +153,7 @@ CCS811Core::status CCS811Core::multiWriteRegister(uint8_t offset, uint8_t *input
 
   while (i < length)           // send data bytes
   {
-    Wire.write(*inputPointer); // receive a byte as character
+    Wire.write(*inputPointer); // receive a uint8_t as character
     inputPointer++;
     i++;
   }
@@ -416,7 +416,7 @@ CCS811Core::status CCS811::setEnvironmentalData(float relativeHumidity, float te
   uint32_t rH   = relativeHumidity * 1000; // 42.348 becomes 42348
   uint32_t temp = temperature * 1000;      // 23.2 becomes 23200
 
-  byte envData[4];
+  uint8_t envData[4];
 
   //Split value into 7-bit integer and 9-bit fractional
 
@@ -464,21 +464,21 @@ CCS811Core::status CCS811::readNTC(void)
     return SENSOR_I2C_ERROR;
   }
 
-  vrefCounts = ((uint16_t)data[CSS811_NTC + 0] << 8) | data[CSS811_NTC + 1];
+  vrefCounts = (static_cast<uint16_t>(data[CSS811_NTC + 0]) << 8) | data[CSS811_NTC + 1];
 
   // Serial.print("vrefCounts: ");
   // Serial.println(vrefCounts);
-  ntcCounts = ((uint16_t)data[CSS811_NTC + 2] << 8) | data[CSS811_NTC + 3];
+  ntcCounts = (static_cast<uint16_t>(data[CSS811_NTC + 2]) << 8) | data[CSS811_NTC + 3];
 
   // Serial.print("ntcCounts: ");
   // Serial.println(ntcCounts);
   // Serial.print("sum: ");
   // Serial.println(ntcCounts + vrefCounts);
-  resistance = ((float)ntcCounts * refResistance / (float)vrefCounts);
+  resistance = (static_cast<float>(ntcCounts) * refResistance / static_cast<float>(vrefCounts));
 
   // Code from Milan Malesevic and Zoran Stupic, 2011,
   // Modified by Max Mayfield,
-  _temperature = log((long)resistance);
+  _temperature = log(static_cast<long>(resistance));
   _temperature = 1  / (0.001129148f + (0.000234125f * _temperature) + (0.0000000876741f * _temperature * _temperature * _temperature));
   _temperature = _temperature - 273.15f; // Convert Kelvin to Celsius
 

@@ -61,7 +61,7 @@
 #include "src/DataStructs/ESPEasy_packed_raw_data.h"
 
 // Forward declaration of functions:
-const __FlashStringHelper * Plugin_085_valuename(byte value_nr, bool displayString);
+const __FlashStringHelper * Plugin_085_valuename(uint8_t value_nr, bool displayString);
 
 
 struct P085_data_struct : public PluginTaskData_base {
@@ -89,7 +89,7 @@ struct P085_data_struct : public PluginTaskData_base {
 
 unsigned int _plugin_085_last_measurement = 0;
 
-boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -114,10 +114,10 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P085_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_085_valuename(choice, false),
@@ -197,7 +197,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
 
         // Calibration data is stored in the AcuDC module, not in the settings of ESPeasy.
         {
-          byte errorcode = 0;
+          uint8_t errorcode = 0;
           int  value     = P085_data->modbus.readHoldingRegister(0x107, errorcode);
 
           if (errorcode == 0) {
@@ -261,8 +261,8 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
           options[i] = Plugin_085_valuename(i, true);
         }
 
-        for (byte i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+        for (uint8_t i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P085_QUERY1_CONFIG_POS;
           sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P085_NR_OUTPUT_OPTIONS, options);
         }
       }
@@ -278,9 +278,9 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
       }
 
       // Save output selector parameters.
-      for (byte i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
+      for (uint8_t i = 0; i < P085_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_085_valuename(choice, false));
       }
       P085_data_struct *P085_data =
@@ -376,9 +376,9 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
         // Matching JS code:
         // return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
         //   ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
-        for (byte i = 0; i < VARS_PER_TASK; ++i) {
-          const byte pconfigIndex = i + P085_QUERY1_CONFIG_POS;
-          const byte choice       = PCONFIG(pconfigIndex);
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+          const uint8_t pconfigIndex = i + P085_QUERY1_CONFIG_POS;
+          const uint8_t choice       = PCONFIG(pconfigIndex);
           string += LoRa_addInt(choice, PackedData_uint8);
           string += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
         }
@@ -395,7 +395,7 @@ boolean Plugin_085(byte function, struct EventStruct *event, String& string) {
   return success;
 }
 
-const __FlashStringHelper * Plugin_085_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_085_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P085_QUERY_V:      return displayString ? F("Voltage (V)") : F("V");
     case P085_QUERY_A:      return displayString ? F("Current (A)") : F("A");
@@ -410,7 +410,7 @@ const __FlashStringHelper * Plugin_085_valuename(byte value_nr, bool displayStri
   return F("");
 }
 
-int p085_storageValueToBaudrate(byte baudrate_setting) {
+int p085_storageValueToBaudrate(uint8_t baudrate_setting) {
   switch (baudrate_setting) {
     case 0:
       return 1200;
@@ -428,7 +428,7 @@ int p085_storageValueToBaudrate(byte baudrate_setting) {
   return 19200;
 }
 
-float p085_readValue(byte query, struct EventStruct *event) {
+float p085_readValue(uint8_t query, struct EventStruct *event) {
   P085_data_struct *P085_data =
     static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -466,7 +466,7 @@ float p085_readValue(byte query, struct EventStruct *event) {
   return 0.0f;
 }
 
-void p085_showValueLoadPage(byte query, struct EventStruct *event) {
+void p085_showValueLoadPage(uint8_t query, struct EventStruct *event) {
   addRowLabel(Plugin_085_valuename(query, true));
   addHtml(String(p085_readValue(query, event)));
 }

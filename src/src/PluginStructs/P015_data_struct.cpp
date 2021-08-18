@@ -12,7 +12,7 @@
 # define TSL2561_REG_DATA_1    0x0E
 
 
-P015_data_struct::P015_data_struct(byte i2caddr, unsigned int gain, byte integration) :
+P015_data_struct::P015_data_struct(uint8_t i2caddr, unsigned int gain, uint8_t integration) :
   _gain(gain),
   _i2cAddr(i2caddr),
   _integration(integration)
@@ -138,7 +138,7 @@ bool P015_data_struct::readByte(unsigned char address, unsigned char& value)
   // Read requested byte
   if (_error == 0)
   {
-    Wire.requestFrom(_i2cAddr, (byte)1);
+    Wire.requestFrom(_i2cAddr, (uint8_t)1);
 
     if (Wire.available() == 1)
     {
@@ -188,7 +188,7 @@ bool P015_data_struct::readUInt(unsigned char address, unsigned int& value)
   // Read two bytes (low and high)
   if (_error == 0)
   {
-    Wire.requestFrom(_i2cAddr, (byte)2);
+    Wire.requestFrom(_i2cAddr, (uint8_t)2);
 
     if (Wire.available() == 2)
     {

@@ -44,7 +44,7 @@ uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
   delayMicroseconds(10);
 
   pinMode(pinSDO, INPUT);
-  for (byte i = 0; i < 16; i++)
+  for (uint8_t i = 0; i < 16; i++)
   {
     digitalWrite(pinSCL, HIGH);
     delayMicroseconds(1);
@@ -59,7 +59,7 @@ uint16_t readTTP229(int16_t pinSCL, int16_t pinSDO)
 }
 
 
-boolean Plugin_063(byte function, struct EventStruct *event, String& string)
+boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -172,7 +172,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
           if (key && PCONFIG(1))
           {
             uint16_t colMask = 0x01;
-            for (byte col = 1; col <= 16; col++)
+            for (uint8_t col = 1; col <= 16; col++)
             {
               if (key & colMask)   // this key pressed?
               {
@@ -186,7 +186,7 @@ boolean Plugin_063(byte function, struct EventStruct *event, String& string)
           if (keyLast != key)
           {
             keyLast = key;
-            UserVar[event->BaseVarIndex] = (float)key;
+            UserVar[event->BaseVarIndex] = key;
             event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
             String log = F("Tkey : ");

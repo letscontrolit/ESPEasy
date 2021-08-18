@@ -64,12 +64,12 @@
 #define PLUGIN_001_LONGPRESS_BOTH                3
 
 
-boolean Plugin_001(byte function, struct EventStruct *event, String& string)
+boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static byte switchstate[TASKS_MAX];
-  // static byte outputstate[TASKS_MAX];
+  // static uint8_t switchstate[TASKS_MAX];
+  // static uint8_t outputstate[TASKS_MAX];
   // static int8_t PinMonitor[GPIO_MAX];
   // static int8_t PinMonitorState[GPIO_MAX];
 
@@ -126,7 +126,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper * options[2] = { F("Switch"),  F("Dimmer") };
         int optionValues[2]   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        const byte switchtype = P001_getSwitchType(event);
+        const uint8_t switchtype = P001_getSwitchType(event);
         addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
@@ -136,7 +136,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        byte   choice = PCONFIG(2);
+        uint8_t   choice = PCONFIG(2);
         const __FlashStringHelper * buttonOptions[3] = {F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
         int buttonOptionValues[3] =
         { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
@@ -156,7 +156,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        byte   choiceDC = PCONFIG(4);
+        uint8_t   choiceDC = PCONFIG(4);
         const __FlashStringHelper * buttonDC[4] = {
          F("Disabled"), 
          F("Active only on LOW (EVENT=3)"),
@@ -180,7 +180,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        byte   choiceLP = PCONFIG(5);
+        uint8_t   choiceLP = PCONFIG(5);
         const __FlashStringHelper * buttonLP[4] = {
           F("Disabled"),
           F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"),
@@ -341,7 +341,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
                 if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
                   const uint16_t port = getPortFromKey(it->first);
-                  byte state = Plugin_001_read_switch_state(port, it->second.mode);
+                  uint8_t state = Plugin_001_read_switch_state(port, it->second.mode);
                   if (it->second.state != state || it->second.forceMonitor) {
                     if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up
                        by 10xSEC function
@@ -368,7 +368,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       const portStatusStruct currentStatus = globalMapPortStatus[key];
 
       // if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-      byte state = GPIO_Read_Switch_State(event->Par1, currentStatus.mode);
+      uint8_t state = GPIO_Read_Switch_State(event->Par1, currentStatus.mode);
 
       if ((currentStatus.state != state) || (currentStatus.forceMonitor && currentStatus.monitor)) {
         if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
@@ -492,7 +492,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               // send if output needs to be changed
               if (currentOutputState != new_outputState || currentStatus.forceEvent)
               {
-                byte output_value;
+                uint8_t output_value;
                 currentStatus.output = new_outputState;
                 boolean sendState = new_outputState;
 
@@ -576,8 +576,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
             if (deltaLP >= (unsigned long)lround(PCONFIG_FLOAT(2)))
             {
-              byte output_value;
-              byte needToSendEvent = false;
+              uint8_t output_value;
+              uint8_t needToSendEvent = false;
 
               PCONFIG(6) = true;
 
@@ -635,7 +635,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
           } else {
             if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
-              const byte SAFE_BUTTON_EVENT = 4;
+              const uint8_t SAFE_BUTTON_EVENT = 4;
               // Reset SafeButton counter
               PCONFIG_LONG(3) = 0;
 
@@ -764,8 +764,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 }
 
 // TD-er: Needed to fix a mistake in earlier fixes.
-byte P001_getSwitchType(struct EventStruct *event) {
-  byte choice = PCONFIG(0);
+uint8_t P001_getSwitchType(struct EventStruct *event) {
+  uint8_t choice = PCONFIG(0);
 
   switch (choice) {
     case 2: // Old implementation for Dimmer

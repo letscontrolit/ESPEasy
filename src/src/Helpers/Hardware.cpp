@@ -165,7 +165,7 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.Pin_i2c_sda != -1 && Settings.Pin_i2c_scl != -1)
+  if (Settings.isI2CEnabled())
   {
     addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
     I2CSelectClockSpeed(false); // Set normal clock speed
@@ -198,14 +198,14 @@ void initI2C() {
     delay(500);
     Wire.beginTransmission(Settings.WDI2CAddress);
     Wire.write(0x83); // command to set pointer
-    Wire.write(17);   // pointer value to status byte
+    Wire.write(17);   // pointer value to status uint8_t
     Wire.endTransmission();
 
     Wire.requestFrom(Settings.WDI2CAddress, (uint8_t)1);
 
     if (Wire.available())
     {
-      byte status = Wire.read();
+      uint8_t status = Wire.read();
 
       if (status & 0x1)
       {
@@ -245,8 +245,8 @@ void I2CMultiplexerReset() {
 }
 
 // Shift the bit in the right position when selecting a single channel
-byte I2CMultiplexerShiftBit(uint8_t i) {
-  byte toWrite = 0;
+uint8_t I2CMultiplexerShiftBit(uint8_t i) {
+  uint8_t toWrite = 0;
 
   switch (Settings.I2C_Multiplexer_Type) {
     case I2C_MULTIPLEXER_TCA9543A: // TCA9543/6/8 addressing
@@ -272,7 +272,7 @@ void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) { return; }
   if (!I2CMultiplexerPortSelectedForTask(taskIndex)) { return; }
 
-  byte toWrite = 0;
+  uint8_t toWrite = 0;
 
   if (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
     uint8_t i = Settings.I2C_Multiplexer_Channel[taskIndex];
@@ -289,7 +289,7 @@ void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
 void I2CMultiplexerSelect(uint8_t i) {
   if (i > 7) { return; }
 
-  byte toWrite = I2CMultiplexerShiftBit(i);
+  uint8_t toWrite = I2CMultiplexerShiftBit(i);
   SetI2CMultiplexer(toWrite);
 }
 
@@ -297,7 +297,7 @@ void I2CMultiplexerOff() {
   SetI2CMultiplexer(0); // no channel selected
 }
 
-void SetI2CMultiplexer(byte toWrite) {
+void SetI2CMultiplexer(uint8_t toWrite) {
   if (isI2CMultiplexerEnabled()) {
     // FIXME TD-er: Must check to see if we can cache the value so only change it when needed.
     Wire.beginTransmission(Settings.I2C_Multiplexer_Addr);
@@ -307,7 +307,7 @@ void SetI2CMultiplexer(byte toWrite) {
   }
 }
 
-byte I2CMultiplexerMaxChannels() {
+uint8_t I2CMultiplexerMaxChannels() {
   uint channels = 0;
 
   switch (Settings.I2C_Multiplexer_Type) {
@@ -331,7 +331,7 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
 #endif // ifdef FEATURE_I2CMULTIPLEXER
 
 void checkResetFactoryPin() {
-  static byte factoryResetCounter = 0;
+  static uint8_t factoryResetCounter = 0;
 
   if (Settings.Pin_Reset == -1) {
     return;
@@ -681,7 +681,9 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-  uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+#if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+  const uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
+#endif
 
   // TD-er: This also checks for ESP8266/ESP8285/ESP32
   switch (model) {
@@ -780,7 +782,7 @@ void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings) {
   }
 }
 
-void addButtonRelayRule(byte buttonNumber, int relay_gpio) {
+void addButtonRelayRule(uint8_t buttonNumber, int relay_gpio) {
   Settings.UseRules = true;
   String fileName;
 
@@ -1060,7 +1062,7 @@ int touchPinToGpio(int touch_pin)
 void initAnalogWrite()
 {
   #if defined(ESP32)
-  for(byte x = 0; x < 16; x++) {
+  for(uint8_t x = 0; x < 16; x++) {
     ledcSetup(x, 0, 10); // Clear the channel
     ledChannelPin[x] = -1;
     ledChannelFreq[x] = 0;
@@ -1082,7 +1084,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
   // find existing channel if this pin has been used before
   int8_t ledChannel = -1;
   bool mustSetup = false;
-  for (byte x = 0; x < 16; x++) {
+  for (uint8_t x = 0; x < 16; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -1090,7 +1092,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
 
   if (ledChannel == -1)             // no channel set for this pin
   {
-    for (byte x = 0; x < 16; x++) { // find free channel
+    for (uint8_t x = 0; x < 16; x++) { // find free channel
       if (ledChannelPin[x] == -1)
       {
         if (!ledcRead(x)) {
@@ -1130,7 +1132,7 @@ void detachLedChannel(int pin)
 {
   int8_t ledChannel = -1;
 
-  for (byte x = 0; x < 16; x++) {
+  for (uint8_t x = 0; x < 16; x++) {
     if (ledChannelPin[x] == pin) {
       ledChannel = x;
     }
@@ -1177,7 +1179,7 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t frequency) {
 bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32_t& frequency, uint32_t& key)
 {
   // For now, we only support the internal GPIO pins.
-  byte   pluginID  = PLUGIN_GPIO;
+  uint8_t   pluginID  = PLUGIN_GPIO;
   if (!checkValidPortRange(pluginID, gpio)) {
     return false;
   }
@@ -1203,7 +1205,7 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
   if (fadeDuration_ms != 0)
   {
     const int32_t resolution_factor = (1 << 12);
-    const byte prev_mode  = tempStatus.mode;
+    const uint8_t prev_mode  = tempStatus.mode;
     int32_t   prev_value = tempStatus.getDutyCycle();
 
     // getPinState(pluginID, gpio, &prev_mode, &prev_value);

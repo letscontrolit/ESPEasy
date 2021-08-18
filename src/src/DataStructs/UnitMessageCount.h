@@ -11,10 +11,10 @@
 struct UnitMessageCount_t {
   UnitMessageCount_t() {}
 
-  UnitMessageCount_t(byte unitnr, byte messageCount) : unit(unitnr), count(messageCount) {}
+  UnitMessageCount_t(uint8_t unitnr, uint8_t messageCount) : unit(unitnr), count(messageCount) {}
 
-  byte unit  = 0; // Initialize to "not set"
-  byte count = 0;
+  uint8_t unit  = 0; // Initialize to "not set"
+  uint8_t count = 0;
 };
 
 struct UnitLastMessageCount_map {
@@ -24,7 +24,7 @@ struct UnitLastMessageCount_map {
 
 private:
 
-  std::map<byte, byte>_map;
+  std::map<uint8_t, uint8_t>_map;
 };
 
 #endif // ifndef DATASTRUCTS_UNITMESSAGECOUNT_H

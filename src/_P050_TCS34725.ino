@@ -34,7 +34,7 @@
 #define P050_OPTION_RGB_EVENTS
 // #endif
 
-boolean Plugin_050(byte function, struct EventStruct *event, String& string)
+boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -85,9 +85,16 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
       }
       break;
     }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x29);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte   choiceMode = PCONFIG(0);
+      uint8_t   choiceMode = PCONFIG(0);
       {
         const __FlashStringHelper * optionsMode[6];
         optionsMode[0] = F("2.4 ms");
@@ -106,7 +113,7 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
         addFormSelector(F("Integration Time"), F("p050_integrationTime"), 6, optionsMode, optionValuesMode, choiceMode);
       }
 
-      byte   choiceMode2 = PCONFIG(1);
+      uint8_t   choiceMode2 = PCONFIG(1);
       {
         const __FlashStringHelper * optionsMode2[4];
         optionsMode2[0] = F("1x");
@@ -316,9 +323,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             // Fall through
           case 4:
             if (t != 0) { // r/g/b (normalized to 0.00..255.00 (but avoid divide by 0)
-              UserVar[event->BaseVarIndex + 0] = (float)r / t * sRGBFactor;
-              UserVar[event->BaseVarIndex + 1] = (float)g / t * sRGBFactor;
-              UserVar[event->BaseVarIndex + 2] = (float)b / t * sRGBFactor;
+              UserVar[event->BaseVarIndex + 0] = static_cast<float>(r) / t * sRGBFactor;
+              UserVar[event->BaseVarIndex + 1] = static_cast<float>(g) / t * sRGBFactor;
+              UserVar[event->BaseVarIndex + 2] = static_cast<float>(b) / t * sRGBFactor;
             }
             break;
           case 3:
@@ -326,9 +333,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
             // Fall through
           case 5:
             if (t != 0) { // R/G/B normalized & transformed
-              float nr = (float)r / t * sRGBFactor;
-              float ng = (float)g / t * sRGBFactor;
-              float nb = (float)b / t * sRGBFactor;
+              const float nr = static_cast<float>(r) / t * sRGBFactor;
+              const float ng = static_cast<float>(g) / t * sRGBFactor;
+              const float nb = static_cast<float>(b) / t * sRGBFactor;
               P050_data->applyTransformation(nr, ng, nb,
                                              &UserVar[event->BaseVarIndex + 0],
                                              &UserVar[event->BaseVarIndex + 1],
@@ -396,9 +403,9 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
                   } else {
                     RuleEvent += F("NormSRGBtransformed=");
                   }
-                  nr = (float)r / t * sRGBFactor;
-                  ng = (float)g / t * sRGBFactor;
-                  nb = (float)b / t * sRGBFactor;
+                  nr = static_cast<float>(r) / t * sRGBFactor;
+                  ng = static_cast<float>(g) / t * sRGBFactor;
+                  nb = static_cast<float>(b) / t * sRGBFactor;
                   P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
                 }
                 RuleEvent += String(tr, 4);
@@ -416,11 +423,11 @@ boolean Plugin_050(byte function, struct EventStruct *event, String& string)
                 } else {
                   RuleEvent += F("NormSRGB=");
                 }
-                RuleEvent += String((float)r / t * sRGBFactor, 4);
+                RuleEvent += String(static_cast<float>(r) / t * sRGBFactor, 4);
                 RuleEvent += ',';
-                RuleEvent += String((float)g / t * sRGBFactor, 4);
+                RuleEvent += String(static_cast<float>(g) / t * sRGBFactor, 4);
                 RuleEvent += ',';
-                RuleEvent += String((float)b / t * sRGBFactor, 4);
+                RuleEvent += String(static_cast<float>(b) / t * sRGBFactor, 4);
                 break;
               default:
                 RuleEvent = EMPTY_STRING;

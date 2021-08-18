@@ -76,8 +76,8 @@ void handle_setup() {
     } else {    
   //    if (active_network_medium == NetworkMedium_t::WIFI)
   //    {
-        static byte status       = HANDLE_SETUP_SCAN_STAGE;
-        static byte refreshCount = 0;
+        static uint8_t status       = HANDLE_SETUP_SCAN_STAGE;
+        static uint8_t refreshCount = 0;
 
         String ssid              = webArg(F("ssid"));
         String other             = webArg(F("other"));
@@ -364,7 +364,7 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   html_end_table();
 }
 
-bool handle_setup_connectingStage(byte refreshCount) {
+bool handle_setup_connectingStage(uint8_t refreshCount) {
   if (refreshCount > 0)
   {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));

@@ -38,7 +38,7 @@
 #include "src/PluginStructs/P058_data_struct.h"
 
 
-boolean Plugin_058(byte function, struct EventStruct *event, String& string)
+boolean Plugin_058(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -73,12 +73,15 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
-
-      int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
-      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      const int i2cAddressValues[] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -98,7 +101,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address = PCONFIG(0);
+      uint8_t address = PCONFIG(0);
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P058_data_struct(address));
       P058_data_struct *P058_data =
@@ -120,7 +123,7 @@ boolean Plugin_058(byte function, struct EventStruct *event, String& string)
 
         if (P058_data->readKey(key))
         {
-          UserVar[event->BaseVarIndex] = (float)key;
+          UserVar[event->BaseVarIndex] = key;
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

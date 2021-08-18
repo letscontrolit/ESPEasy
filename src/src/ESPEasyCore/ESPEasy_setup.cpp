@@ -169,11 +169,6 @@ void ESPEasy_setup()
       lastMixedSchedulerId_beforereboot = RTC.lastMixedSchedulerId;
       readUserVarFromRTC();
 
-      if (RTC.deepSleepState != 1)
-      {
-        node_time.restoreLastKnownUnixTime(RTC.lastSysTime, RTC.deepSleepState);
-      }
-
       log += F(" #");
       log += RTC.bootCounter;
 
@@ -220,10 +215,12 @@ void ESPEasy_setup()
   logMemUsageAfter(F("LoadSettings()"));
   #endif
 
+  node_time.restoreFromRTC();
+
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 
   if ((RTC.bootFailedCount > 10) && (RTC.bootCounter > 10)) {
-    byte toDisable = RTC.bootFailedCount - 10;
+    uint8_t toDisable = RTC.bootFailedCount - 10;
     toDisable = disablePlugin(toDisable);
 
     if (toDisable != 0) {

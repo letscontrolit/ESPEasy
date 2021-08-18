@@ -58,7 +58,7 @@
 volatile unsigned long P082_pps_time = 0;
 void    Plugin_082_interrupt() ICACHE_RAM_ATTR;
 
-boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -83,9 +83,9 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P082_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+          const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
           P082_query choice       = static_cast<P082_query>(PCONFIG(pconfigIndex));
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
@@ -114,7 +114,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
-        byte varNr = VARS_PER_TASK;
+        uint8_t varNr = VARS_PER_TASK;
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"),     String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
                                        String(P082_data->gps->satellitesStats.nrSatsTracked()));
@@ -135,10 +135,10 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
     {
       P082_TIMEOUT  = P082_DEFAULT_FIX_TIMEOUT;
       P082_DISTANCE = P082_DISTANCE_DFLT;
-      P082_QUERY1   = static_cast<byte>(P082_QUERY1_DFLT);
-      P082_QUERY2   = static_cast<byte>(P082_QUERY2_DFLT);
-      P082_QUERY3   = static_cast<byte>(P082_QUERY3_DFLT);
-      P082_QUERY4   = static_cast<byte>(P082_QUERY4_DFLT);
+      P082_QUERY1   = static_cast<uint8_t>(P082_QUERY1_DFLT);
+      P082_QUERY2   = static_cast<uint8_t>(P082_QUERY2_DFLT);
+      P082_QUERY3   = static_cast<uint8_t>(P082_QUERY3_DFLT);
+      P082_QUERY4   = static_cast<uint8_t>(P082_QUERY4_DFLT);
 
       success = true;
       break;
@@ -193,14 +193,14 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        const __FlashStringHelper * options[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)];
+        const __FlashStringHelper * options[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)];
 
-        for (byte i = 0; i < static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
+        for (uint8_t i = 0; i < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++i) {
           options[i] = Plugin_082_valuename(static_cast<P082_query>(i), true);
         }
 
-        for (byte i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+        for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
           sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, static_cast<int>(P082_query::P082_NR_OUTPUT_OPTIONS), options);
         }
       }
@@ -222,7 +222,7 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
       // Save output selector parameters.
       for (int i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+        const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
         const P082_query choice = static_cast<P082_query>(PCONFIG(pconfigIndex));
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_082_valuename(choice, false));
       }
@@ -309,12 +309,12 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
           if (P082_data->gps->location.isUpdated()) {
             const float lng = P082_data->gps->location.lng();
             const float lat = P082_data->gps->location.lat();
-            P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_LONG), lng);
-            P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_LAT),  lat);
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_LONG), lng);
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_LAT),  lat);
 
-            P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_DISTANCE), P082_data->_distance);
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_DISTANCE), P082_data->_distance);
             const float dist_ref = P082_data->gps->distanceBetween(P082_LAT_REF, P082_LONG_REF,  lat, lng);
-            P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_DIST_REF), dist_ref);
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_DIST_REF), dist_ref);
 
 
             if (P082_DISTANCE > 0) {
@@ -326,24 +326,24 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
 
           if (P082_data->gps->altitude.isUpdated()) {
             // ToDo make unit selectable
-            P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_ALT), P082_data->gps->altitude.meters());
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_ALT), P082_data->gps->altitude.meters());
             success = true;
             addLog(LOG_LEVEL_DEBUG, F("GPS: Altitude update."));
           }
 
           if (P082_data->gps->speed.isUpdated()) {
             // ToDo make unit selectable
-            P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_SPD), P082_data->gps->speed.mps());
+            P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SPD), P082_data->gps->speed.mps());
             addLog(LOG_LEVEL_DEBUG, F("GPS: Speed update."));
             success = true;
           }
         }
-        P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_SATVIS),      P082_data->gps->satellitesStats.nrSatsVisible());
-        P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_SATUSE),      P082_data->gps->satellitesStats.nrSatsTracked());
-        P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_HDOP),        P082_data->gps->hdop.value() / 100.0f);
-        P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_FIXQ),        P082_data->gps->location.Quality());
-        P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_DB_MAX),      P082_data->gps->satellitesStats.getBestSNR());
-        P082_setOutputValue(event, static_cast<byte>(P082_query::P082_QUERY_CHKSUM_FAIL), P082_data->gps->failedChecksum());
+        P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SATVIS),      P082_data->gps->satellitesStats.nrSatsVisible());
+        P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SATUSE),      P082_data->gps->satellitesStats.nrSatsTracked());
+        P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_HDOP),        P082_data->gps->hdop.value() / 100.0f);
+        P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_FIXQ),        P082_data->gps->location.Quality());
+        P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_DB_MAX),      P082_data->gps->satellitesStats.getBestSNR());
+        P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_CHKSUM_FAIL), P082_data->gps->failedChecksum());
 
 
         if (curFixStatus) {
@@ -405,17 +405,17 @@ boolean Plugin_082(byte function, struct EventStruct *event, String& string) {
         // return decode(bytes, [header, latLng, latLng, altitude, uint16_1e2, hdop, uint8, uint8, uint24, uint24_1e1],
         //      ['header', 'latitude', 'longitude', 'altitude', 'speed', 'hdop', 'max_snr', 'sat_tracked', 'distance_total', 'distance_ref']);
         // altitude type: return +(int16(bytes) / 4 - 1000).toFixed(1);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_LAT)], PackedData_latLng);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_LONG)], PackedData_latLng);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_ALT)], PackedData_altitude);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_SPD)], PackedData_uint16_1e2);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_HDOP)], PackedData_hdop);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DB_MAX)], PackedData_uint8);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_SATUSE)], PackedData_uint8);
-        string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DISTANCE)] / 1000, PackedData_uint24_1e2); // Max 167772.16 km
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_LAT)], PackedData_latLng);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_LONG)], PackedData_latLng);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_ALT)], PackedData_altitude);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_SPD)], PackedData_uint16_1e2);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_HDOP)], PackedData_hdop);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DB_MAX)], PackedData_uint8);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_SATUSE)], PackedData_uint8);
+        string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DISTANCE)] / 1000, PackedData_uint24_1e2); // Max 167772.16 km
         event->Par1 = 8; 
         if (P082_referencePointSet(event)) {
-          string     += LoRa_addFloat(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DIST_REF)], PackedData_uint24_1e1); // Max 1677.7216 km
+          string     += LoRa_addFloat(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DIST_REF)], PackedData_uint24_1e1); // Max 1677.7216 km
           event->Par1 = 9; 
         }
 
@@ -433,7 +433,7 @@ bool P082_referencePointSet(struct EventStruct *event) {
         && (P082_LAT_REF < 0.1) && (P082_LAT_REF > -0.1) );
 }
 
-void P082_setOutputValue(struct EventStruct *event, byte outputType, float value) {
+void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float value) {
   P082_data_struct *P082_data =
     static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -441,12 +441,12 @@ void P082_setOutputValue(struct EventStruct *event, byte outputType, float value
     return;
   }
 
-  if (outputType < static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)) {
+  if (outputType < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)) {
     P082_data->_cache[outputType] = value;
   }
 
-  for (byte i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
-    const byte pconfigIndex = i + P082_QUERY1_CONFIG_POS;
+  for (uint8_t i = 0; i < P082_NR_OUTPUT_VALUES; ++i) {
+    const uint8_t pconfigIndex = i + P082_QUERY1_CONFIG_POS;
 
     if (PCONFIG(pconfigIndex) == outputType) {
       UserVar[event->BaseVarIndex + i] = value;
@@ -493,7 +493,7 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
 
   bool first = true;
 
-  for (byte i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
+  for (uint8_t i = 0; i < _GPS_MAX_ARRAY_LENGTH; ++i) {
     uint8_t id  = P082_data->gps->satellitesStats.id[i];
     uint8_t snr = P082_data->gps->satellitesStats.snr[i];
 
@@ -598,12 +598,12 @@ void P082_html_show_stats(struct EventStruct *event) {
   }
 
   addRowLabel(F("Distance Travelled"));
-  addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DISTANCE)]));
+  addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DISTANCE)]));
   addUnit(F("m"));
 
   if (P082_referencePointSet(event)) {
     addRowLabel(F("Distance from Ref. Point"));
-    addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<byte>(P082_query::P082_QUERY_DIST_REF)]));
+    addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DIST_REF)]));
     addUnit(F("m"));
   }
 
@@ -628,7 +628,7 @@ void P082_setSystemTime(struct EventStruct *event) {
 
   // Set the externalTimesource 10 seconds earlier to make sure no call is made
   // to NTP (if set)
-  if (node_time.nextSyncTime > (node_time.sysTime + 10)) {
+  if (node_time.nextSyncTime > (node_time.getUnixTime() + 10)) {
     return;
   }
 
@@ -643,8 +643,7 @@ void P082_setSystemTime(struct EventStruct *event) {
     // and the given offset in centisecond.
     double time = makeTime(dateTime);
     time += static_cast<double>(age) / 1000.0;
-    node_time.setExternalTimeSource(time, GPS_time_source);
-    node_time.initTime();
+    node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
   }
   P082_pps_time = 0;
 }

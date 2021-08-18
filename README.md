@@ -15,6 +15,15 @@ Introduction and wiki: https://www.letscontrolit.com/wiki/index.php/ESPEasy#Intr
 
 Check here to learn how to use this branch and help us improving ESPEasy: http://www.letscontrolit.com/wiki/index.php/ESPEasy#Source_code_development
 
+## Web based flasher (experimental)
+
+To make it easier to get started, one may flash a build directly to the ESP from your browser.
+Currently only Chrome and Edge are supported.
+
+See [this flash page](https://td-er.nl/ESPEasy/) to try the new web flash feature.
+
+The web flasher is using [ESP Web Tools](https://esphome.github.io/esp-web-tools/) made by the people behind ESPHome and Home Assistant.
+
 
 ## Binary releases
 

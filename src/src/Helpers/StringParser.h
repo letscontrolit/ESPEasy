@@ -14,10 +14,10 @@ String parseTemplate(String& tmpString,
                      bool    useURLencode);
 
 String parseTemplate_padded(String& tmpString,
-                            byte    minimal_lineSize);
+                            uint8_t    minimal_lineSize);
 
 String parseTemplate_padded(String& tmpString,
-                            byte    minimal_lineSize,
+                            uint8_t    minimal_lineSize,
                             bool    useURLencode);
 
 
@@ -29,7 +29,7 @@ String parseTemplate_padded(String& tmpString,
 // valueFormat="transformation#justification"
 void transformValue(
   String      & newString,
-  byte          lineSize,
+  uint8_t          lineSize,
   String        value,
   String      & valueFormat,
   const String& tmpString);
@@ -42,7 +42,7 @@ taskIndex_t findTaskIndexByName(const String& deviceName);
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName,
+uint8_t findDeviceValueIndexByName(const String& valueName,
                                 taskIndex_t   taskIndex);
 
 // Find positions of [...#...] in the given string.

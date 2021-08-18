@@ -157,7 +157,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
     serialPrint(String(pgm_read_byte(a), HEX));
     serialPrint(" ");
   }
-  serialPrintln("");
+  serialPrintln();
 }
 
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
@@ -187,7 +187,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
@@ -292,9 +292,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
     if (validDeviceIndex(DeviceIndex)) {
       LoadTaskSettings(TaskIndex);
-      const byte valueCount = getValueCountForTask(TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-      for (byte varNr = 0; varNr < valueCount; varNr++)
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         logger += node_time.getDateString('-');
         logger += ' ';
@@ -335,7 +335,7 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
@@ -370,7 +370,7 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   float cos_h, cos_1047_h;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
@@ -409,22 +409,22 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
 
 // Simple bitwise get/set functions
 
-uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
+uint8_t get8BitFromUL(uint32_t number, uint8_t bitnr) {
   return (number >> bitnr) & 0xFF;
 }
 
-void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+void set8BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   uint32_t mask     = (0xFFUL << bitnr);
   uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
 
-uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
+uint8_t get4BitFromUL(uint32_t number, uint8_t bitnr) {
   return (number >> bitnr) &  0x0F;
 }
 
-void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+void set4BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   uint32_t mask     = (0x0FUL << bitnr);
   uint32_t newvalue = ((value << bitnr) & mask);
 
@@ -442,6 +442,16 @@ int getLoopCountPerSec() {
 
 int getUptimeMinutes() {
   return wdcounter / 2;
+}
+
+/******************************************************************************
+ * scan an int array of specified size for a value
+ *****************************************************************************/
+bool intArrayContains(const int arraySize, const int array[], const int value){
+  for(int i = 0; i < arraySize; i++) {
+    if (array[i] == value) return true;
+  }
+  return false;
 }
 
 #ifndef BUILD_NO_RAM_TRACKER

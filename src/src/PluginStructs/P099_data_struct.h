@@ -52,23 +52,23 @@ struct P099_data_struct : public PluginTaskData_base
   void scaleRawToCalibrated(uint16_t &x, uint16_t &y);
 
   // This is initialized by calling init()
-  XPT2046_Touchscreen *touchscreen;
-  uint8_t  _address_ts_cs;
-  uint8_t  _rotation;
-  bool     _flipped;
-  uint8_t  _z_treshold;
-  bool     _send_xy;
-  bool     _send_z;
-  bool     _useCalibration;
-  uint16_t _ts_x_res;
-  uint16_t _ts_y_res;
+  XPT2046_Touchscreen *touchscreen = nullptr;
+  uint8_t  _address_ts_cs = 0;
+  uint8_t  _rotation = 0;
+  bool     _flipped = 0;
+  uint8_t  _z_treshold = 0;
+  bool     _send_xy = 0;
+  bool     _send_z = 0;
+  bool     _useCalibration = 0;
+  uint16_t _ts_x_res = 0;
+  uint16_t _ts_y_res = 0;
 
   // This is filled during checking of a touchobject
-  uint32_t SurfaceAreas[P099_MaxObjectCount];
+  uint32_t SurfaceAreas[P099_MaxObjectCount] = {0};
 
   // Counters for debouncing touch button
-  uint32_t TouchTimers[P099_MaxObjectCount];
-  bool     TouchStates[P099_MaxObjectCount];
+  uint32_t TouchTimers[P099_MaxObjectCount] = {0};
+  bool     TouchStates[P099_MaxObjectCount] = {0};
 
   // The settings structures
   // Lets define our own coordinate point
@@ -82,7 +82,7 @@ struct P099_data_struct : public PluginTaskData_base
   struct tP099_Touchobjects
   {
     char        objectname[P099_MaxObjectNameLength] = { 0 };
-    byte        flags = 0;
+    uint8_t        flags = 0;
     tP099_Point top_left;
     tP099_Point bottom_right;
   };

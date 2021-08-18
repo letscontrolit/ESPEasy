@@ -32,7 +32,7 @@
 # define P012_MODE        PCONFIG(3)
 # define P012_INVERSE_BTN PCONFIG(4)
 
-boolean Plugin_012(byte function, struct EventStruct *event, String& string)
+boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -65,33 +65,22 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = P012_I2C_ADDR;
-
-      // String options[16];
-      int optionValues[16];
-
-      for (byte x = 0; x < 16; x++)
-      {
-        if (x < 8) {
-          optionValues[x] = 0x20 + x;
-        }
-        else {
-          optionValues[x] = 0x30 + x;
-        }
-
-        // options[x] = F("0x");
-        // options[x] += String(optionValues[x], HEX);
+      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 16, i2cAddressValues, P012_I2C_ADDR);
+      } else {
+        success = intArrayContains(16, i2cAddressValues, event->Par1);
       }
-      addFormSelectorI2C(F("i2c_addr"), 16, optionValues, choice);
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        byte   choice2 = P012_SIZE;
+        uint8_t   choice2 = P012_SIZE;
         const __FlashStringHelper * options2[2];
         options2[0] = F("2 x 16");
         options2[1] = F("4 x 20");
@@ -103,7 +92,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
         String strings[P12_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P12_Nlines, P12_Nchars);
 
-        for (byte varNr = 0; varNr < P12_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P12_Nlines; varNr++)
         {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P12_Nchars);
         }
@@ -141,7 +130,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       char   deviceTemplate[P12_Nlines][P12_Nchars];
       String error;
 
-      for (byte varNr = 0; varNr < P12_Nlines; varNr++)
+      for (uint8_t varNr = 0; varNr < P12_Nlines; varNr++)
       {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P12_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
@@ -151,7 +140,7 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       success = true;
       break;
     }
@@ -209,9 +198,9 @@ boolean Plugin_012(byte function, struct EventStruct *event, String& string)
       if (nullptr != P012_data) {
         // FIXME TD-er: This is a huge stack allocated object.
         char deviceTemplate[P12_Nlines][P12_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
 
-        for (byte x = 0; x < P012_data->Plugin_012_rows; x++)
+        for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
         {
           String tmpString = deviceTemplate[x];
 

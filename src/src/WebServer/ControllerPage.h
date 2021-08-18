@@ -20,14 +20,14 @@ void handle_controllers();
 // Selected controller has changed.
 // Clear all Controller settings and load some defaults
 // ********************************************************************************
-void handle_controllers_clearLoadDefaults(byte controllerindex, ControllerSettingsStruct& ControllerSettings);
+void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings);
 
 // ********************************************************************************
 // Collect all submitted form data and store in the ControllerSettings
 // ********************************************************************************
-void handle_controllers_CopySubmittedSettings(byte controllerindex, ControllerSettingsStruct& ControllerSettings);
+void handle_controllers_CopySubmittedSettings(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings);
 
-void handle_controllers_CopySubmittedSettings_CPluginCall(byte controllerindex);
+void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerindex);
 
 // ********************************************************************************
 // Show table with all selected controllers

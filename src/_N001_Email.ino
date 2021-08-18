@@ -53,7 +53,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 		//     if (command == F("email"))
 		//     {
 		//       MakeNotificationSettings(NotificationSettings);
-		//       LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+		//       LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 		//       NPlugin_001_send(NotificationSettings.Domain, NotificationSettings.Receiver, NotificationSettings.Sender, NotificationSettings.Subject, NotificationSettings.Body, NotificationSettings.Server, NotificationSettings.Port);
 		//       success = true;
 		//     }
@@ -63,7 +63,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 		case NPlugin::Function::NPLUGIN_NOTIFY:
 		{
 			MakeNotificationSettings(NotificationSettings);
-			LoadNotificationSettings(event->NotificationIndex, (byte*)&NotificationSettings, sizeof(NotificationSettingsStruct));
+			LoadNotificationSettings(event->NotificationIndex, (uint8_t*)&NotificationSettings, sizeof(NotificationSettingsStruct));
 			NotificationSettings.validate();
 			String subject = NotificationSettings.Subject;
 			String body;

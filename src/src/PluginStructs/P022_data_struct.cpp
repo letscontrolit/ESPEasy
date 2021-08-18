@@ -41,7 +41,7 @@ bool P022_data_struct::p022_clear_init(uint8_t address) {
 // ********************************************************************************
 // PCA9685 config
 // ********************************************************************************
-void P022_data_struct::Plugin_022_writeRegister(int i2cAddress, int regAddress, byte data) {
+void P022_data_struct::Plugin_022_writeRegister(int i2cAddress, int regAddress, uint8_t data) {
   Wire.beginTransmission(i2cAddress);
   Wire.write(regAddress);
   Wire.write(data);
@@ -96,7 +96,7 @@ void P022_data_struct::Plugin_022_Frequency(int address, uint16_t freq)
 {
   int i2cAddress = address;
 
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)0x0);
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)0x0);
   freq *= 0.9;
 
   //  prescale = 25000000 / 4096;
@@ -107,11 +107,11 @@ void P022_data_struct::Plugin_022_Frequency(int address, uint16_t freq)
   uint8_t oldmode = Plugin_022_readRegister(i2cAddress, 0);
   uint8_t newmode = (oldmode & 0x7f) | 0x10;
 
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)newmode);
-  Plugin_022_writeRegister(i2cAddress, 0xfe,                     (byte)prescale); // prescale register
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)oldmode);
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)newmode);
+  Plugin_022_writeRegister(i2cAddress, 0xfe,                     (uint8_t)prescale); // prescale register
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)oldmode);
   delayMicroseconds(5000);
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)oldmode | 0xa1);
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)oldmode | 0xa1);
 }
 
 void P022_data_struct::Plugin_022_initialize(int address)
@@ -119,10 +119,10 @@ void P022_data_struct::Plugin_022_initialize(int address)
   int i2cAddress = address;
 
   // default mode is open drain output, drive leds connected to VCC
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)0x01);      // reset the device
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)0x01);      // reset the device
   delay(1);
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (byte)B10100000); // set up for auto increment
-  // Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (byte)0x10); // set to output
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)B10100000); // set up for auto increment
+  // Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (uint8_t)0x10); // set to output
   p022_set_init(address);
 }
 

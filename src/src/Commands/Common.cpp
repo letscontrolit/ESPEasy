@@ -18,7 +18,7 @@
 // Simple function to return "Ok", to avoid flash string duplication in the firmware.
 const __FlashStringHelper * return_command_success()
 {
-  return F("\nOk");
+  return F("\nOK");
 }
 
 const __FlashStringHelper * return_command_failed()
@@ -62,7 +62,7 @@ const __FlashStringHelper * return_see_serial(struct EventStruct *event)
 String Command_GetORSetIP(struct EventStruct *event,
                           const String      & targetDescription,
                           const char         *Line,
-                          byte               *IP,
+                          uint8_t               *IP,
                           const IPAddress   & dhcpIP,
                           int                 arg)
 {
@@ -120,7 +120,7 @@ String Command_GetORSetString(struct EventStruct *event,
         serialPrintln();
         return return_result(event, result);
       }
-      strcpy(target, TmpStr1.c_str());
+      safe_strncpy(target, TmpStr1, len);
     }
   }
 

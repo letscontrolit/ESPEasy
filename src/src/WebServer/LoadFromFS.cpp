@@ -29,9 +29,15 @@ bool loadFromFS(boolean spiffs, String path) {
   String dataType = F("text/plain");
   bool mustCheckCredentials = false;
 
+  const int questionmarkPos = path.indexOf('?');
+  if (questionmarkPos >= 0) {
+    path = path.substring(0, questionmarkPos);
+  }
+
   if (!path.startsWith(F("/"))) {
     path = String(F("/")) + path;
   }
+
 
   if (path.endsWith(F("/"))) { path += F("index.htm"); }
 
@@ -55,6 +61,9 @@ bool loadFromFS(boolean spiffs, String path) {
     return handle_custom(path); 
   }
 #endif
+  else {
+    mustCheckCredentials = true;
+  }
 
   if (mustCheckCredentials) {
     if (!isLoggedIn()) { return false; }

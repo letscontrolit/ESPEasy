@@ -79,7 +79,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 // Generic UDP message
 // ********************************************************************************
-void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
+void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -101,22 +101,22 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   infoReply.destTaskIndex   = destTaskIndex;
   infoReply.deviceNumber    = pluginID;
   LoadTaskSettings(infoReply.sourceTaskIndex);
-  strcpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex).c_str());
+  safe_strncpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex), sizeof(infoReply.taskName));
 
-  for (byte x = 0; x < VARS_PER_TASK; x++) {
-    strcpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x]);
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
+    safe_strncpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x], sizeof(infoReply.ValueNames[x]));
   }
 
   if (destUnit != 0)
   {
     infoReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (byte *)&infoReply, sizeof(C013_SensorInfoStruct));
+    C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
-        C013_sendUDP(it->first, (byte *)&infoReply, sizeof(C013_SensorInfoStruct));
+        C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
         delay(10);
       }
     }
@@ -124,7 +124,7 @@ void C013_SendUDPTaskInfo(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   delay(50);
 }
 
-void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskIndex)
+void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -135,7 +135,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   dataReply.sourceTaskIndex = sourceTaskIndex;
   dataReply.destTaskIndex   = destTaskIndex;
 
-  for (byte x = 0; x < VARS_PER_TASK; x++) {
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
     const userVarIndex_t userVarIndex = dataReply.sourceTaskIndex * VARS_PER_TASK + x;
 
     if (validUserVarIndex(userVarIndex)) {
@@ -146,13 +146,13 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
   if (destUnit != 0)
   {
     dataReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (byte *)&dataReply, sizeof(C013_SensorDataStruct));
+    C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
-        C013_sendUDP(it->first, (byte *)&dataReply, sizeof(C013_SensorDataStruct));
+        C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
         delay(10);
       }
     }
@@ -163,7 +163,7 @@ void C013_SendUDPTaskData(byte destUnit, byte sourceTaskIndex, byte destTaskInde
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void C013_sendUDP(byte unit, byte *data, byte size)
+void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -217,14 +217,15 @@ void C013_Receive(struct EventStruct *event) {
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    if ((event->Data[1] > 1) && (event->Data[1] < 6))
+    if ((event->Data != nullptr) &&
+        (event->Data[1] > 1) && (event->Data[1] < 6))
     {
       String log = (F("C013 : msg "));
 
-      for (byte x = 1; x < 6; x++)
+      for (uint8_t x = 1; x < 6; x++)
       {
         log += ' ';
-        log += (int)event->Data[x];
+        log += static_cast<int>(event->Data[x]);
       }
       addLog(LOG_LEVEL_DEBUG_MORE, log);
     }
@@ -245,7 +246,7 @@ void C013_Receive(struct EventStruct *event) {
 
       if (event->Par2 < count) { count = event->Par2; }
 
-      memcpy((byte *)&infoReply, (byte *)event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&infoReply), event->Data, count);
 
       if (infoReply.isValid()) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
@@ -263,7 +264,7 @@ void C013_Receive(struct EventStruct *event) {
           }
           safe_strncpy(ExtraTaskSettings.TaskDeviceName, infoReply.taskName, sizeof(infoReply.taskName));
 
-          for (byte x = 0; x < VARS_PER_TASK; x++) {
+          for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
             safe_strncpy(ExtraTaskSettings.TaskDeviceValueNames[x], infoReply.ValueNames[x], sizeof(infoReply.ValueNames[x]));
           }
           ExtraTaskSettings.TaskIndex = infoReply.destTaskIndex;
@@ -286,15 +287,15 @@ void C013_Receive(struct EventStruct *event) {
       int count = sizeof(C013_SensorDataStruct);
 
       if (event->Par2 < count) { count = event->Par2; }
-      memcpy((byte *)&dataReply, (byte *)event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&dataReply), event->Data, count);
 
       if (dataReply.isValid()) {
         // only if this task has a remote feed, update values
-        const byte remoteFeed = Settings.TaskDeviceDataFeed[dataReply.destTaskIndex];
+        const uint8_t remoteFeed = Settings.TaskDeviceDataFeed[dataReply.destTaskIndex];
 
         if ((remoteFeed != 0) && (remoteFeed == dataReply.sourceUnit))
         {
-          for (byte x = 0; x < VARS_PER_TASK; x++)
+          for (uint8_t x = 0; x < VARS_PER_TASK; x++)
           {
             UserVar[dataReply.destTaskIndex * VARS_PER_TASK + x] = dataReply.Values[x];
           }

@@ -14,7 +14,7 @@
  * Get data from Serial Interface
  \*********************************************************************************************/
 
-byte SerialInByte;
+uint8_t SerialInByte;
 int  SerialInByteCounter = 0;
 char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 

@@ -15,7 +15,7 @@
 
 const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const char *Line)
 {
-  for (byte x = 0; x < event->Par2; x++)
+  for (uint8_t x = 0; x < event->Par2; x++)
   {
     String eventName = "Test ";
     eventName += x;
@@ -62,7 +62,7 @@ const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, con
       portUDP.write(message.c_str(),            message.length());
       #endif // if defined(ESP8266)
       #if defined(ESP32)
-      portUDP.write((uint8_t *)message.c_str(), message.length());
+      portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
       #endif // if defined(ESP32)
       portUDP.endPacket();
       FeedSW_watchdog();

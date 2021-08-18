@@ -96,12 +96,12 @@ public:
   unsigned int MatchStart = 0;    // zero-relative offset of start of match
   unsigned int MatchLength = 0;   // length of match
 
-  int level;  /* total number of captures in array below (finished or unfinished) */
+  int level = 0;  /* total number of captures in array below (finished or unfinished) */
 
   // capture addresses and lengths
   struct {
-    const char *init;
-    int len;              // might be CAP_UNFINISHED or CAP_POSITION
+    const char *init = nullptr;
+    int len = 0;              // might be CAP_UNFINISHED or CAP_POSITION
   } capture[MAXCAPTURES];
 
   // add target string, null-terminated

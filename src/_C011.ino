@@ -90,10 +90,10 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         }
         addTableSeparator(F("HTTP Config"), 2, 3);
         {
-          byte   choice    = 0;
+          uint8_t   choice    = 0;
           const __FlashStringHelper * methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
-          for (byte i = 0; i < 5; i++)
+          for (uint8_t i = 0; i < 5; i++)
           {
             if (HttpMethod.equals(methods[i])) {
               choice = i;
@@ -132,10 +132,10 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
 
       if (customConfig) {
-        byte   choice    = 0;
+        uint8_t   choice    = 0;
         String methods[] = { F("GET"), F("POST"), F("PUT"), F("HEAD"), F("PATCH") };
 
-        for (byte i = 0; i < 5; i++)
+        for (uint8_t i = 0; i < 5; i++)
         {
           if (methods[i].equals(customConfig->HttpMethod)) {
             choice = i;
@@ -152,7 +152,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         strlcpy(customConfig->HttpHeader, httpheader.c_str(),          sizeof(customConfig->HttpHeader));
         strlcpy(customConfig->HttpBody,   httpbody.c_str(),            sizeof(customConfig->HttpBody));
         customConfig->zero_last();
-        SaveCustomControllerSettings(event->ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
+        SaveCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
       }
       break;
     }
@@ -216,7 +216,7 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
   if (!customConfig) {
     return false;
   }
-  LoadCustomControllerSettings(ControllerIndex, (byte *)customConfig.get(), sizeof(C011_ConfigStruct));
+  LoadCustomControllerSettings(ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
   HttpMethod = customConfig->HttpMethod;
   HttpUri    = customConfig->HttpUri;
@@ -276,11 +276,11 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 
 // parses the string and returns only the the number of name/values we want
 // according to the parameter numberOfValuesWanted
-void DeleteNotNeededValues(String& s, byte numberOfValuesWanted)
+void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted)
 {
   numberOfValuesWanted++;
 
-  for (byte i = 1; i < 5; i++)
+  for (uint8_t i = 1; i < 5; i++)
   {
     String startToken;
     startToken += '%';
@@ -338,7 +338,7 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
-  const byte valueCount = getValueCountForTask(event->TaskIndex);
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 

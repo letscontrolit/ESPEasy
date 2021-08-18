@@ -15,7 +15,7 @@
 # define P082_DEFAULT_FIX_TIMEOUT 2500 // TTL of fix status in ms since last update
 
 
-enum class P082_query : byte {
+enum class P082_query : uint8_t {
   P082_QUERY_LONG        = 0,
   P082_QUERY_LAT         = 1,
   P082_QUERY_ALT         = 2,
@@ -83,7 +83,7 @@ struct P082_data_struct : public PluginTaskData_base {
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)] = { 0 };
+  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)] = { 0 };
 };
 
 #endif // ifdef USES_P082

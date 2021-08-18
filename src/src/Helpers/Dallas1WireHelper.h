@@ -86,7 +86,7 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
 /*********************************************************************************************\
    Dallas Scan bus
 \*********************************************************************************************/
-byte   Dallas_scan(byte     getDeviceROM,
+uint8_t   Dallas_scan(uint8_t     getDeviceROM,
                    uint8_t *ROM,
                    int8_t   gpio_pin_rx,
                    int8_t   gpio_pin_tx);
@@ -108,7 +108,7 @@ bool Dallas_readTemp(const uint8_t ROM[8],
                      int8_t        gpio_pin_rx,
                      int8_t        gpio_pin_tx);
 
-bool Dallas_readiButton(const byte addr[8],
+bool Dallas_readiButton(const uint8_t addr[8],
                         int8_t     gpio_pin_rx,
                         int8_t     gpio_pin_tx);
 
@@ -121,7 +121,7 @@ bool Dallas_readCounter(const uint8_t ROM[8],
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-byte Dallas_getResolution(const uint8_t ROM[8],
+uint8_t Dallas_getResolution(const uint8_t ROM[8],
                           int8_t        gpio_pin_rx,
                           int8_t        gpio_pin_tx);
 
@@ -129,7 +129,7 @@ byte Dallas_getResolution(const uint8_t ROM[8],
 * Dallas Set Resolution
 \*********************************************************************************************/
 bool Dallas_setResolution(const uint8_t ROM[8],
-                          byte          res,
+                          uint8_t          res,
                           int8_t        gpio_pin_rx,
                           int8_t        gpio_pin_tx);
 

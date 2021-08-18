@@ -22,7 +22,7 @@
 #define PLUGIN_VALUENAME2_051 "Humidity"
 
 
-boolean Plugin_051(byte function, struct EventStruct *event, String& string)
+boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -57,6 +57,12 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x5c);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       success = true;
@@ -64,6 +70,12 @@ boolean Plugin_051(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE:
+    {
+      success = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
     {
       success = true;
       break;

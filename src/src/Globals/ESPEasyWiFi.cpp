@@ -1,0 +1,5 @@
+#include "../Globals/ESPEasyWiFi.h"
+
+#ifdef ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS
+ESPEasyWiFi_t ESPEasyWiFi;
+#endif // ifdef ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS

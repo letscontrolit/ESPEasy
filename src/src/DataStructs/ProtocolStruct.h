@@ -16,7 +16,7 @@ struct ProtocolStruct
   bool useExtendedCredentials() const;
 
   uint16_t defaultPort;
-  byte     Number;
+  uint8_t     Number;
   bool     usesMQTT       : 1;
   bool     usesAccount    : 1;
   bool     usesPassword   : 1;
@@ -32,6 +32,7 @@ struct ProtocolStruct
   bool     usesExtCreds   : 1;
   bool     needsNetwork   : 1;
   bool     allowsExpire   : 1;
+  bool     allowLocalSystemTime : 1;
 };
 
 typedef std::vector<ProtocolStruct> ProtocolVector;

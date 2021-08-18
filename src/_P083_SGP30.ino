@@ -24,7 +24,7 @@
 #define P083_ECO2_BASELINE (event->BaseVarIndex + 3)
 
 
-boolean Plugin_083(byte function, struct EventStruct *event, String& string)
+boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -56,6 +56,12 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_083));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_083));
+      break;
+    }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x58);
       break;
     }
 

@@ -19,7 +19,7 @@ bool validUserVar(struct EventStruct *event);
 \*********************************************************************************************/
 
 // handle MQTT messages
-void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length);
+void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int length);
 
 /*********************************************************************************************\
 * Disconnect from MQTT message broker

@@ -24,7 +24,7 @@
 
 #include <math.h> 
 
-boolean Plugin_066(byte function, struct EventStruct *event, String& string)
+boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -62,10 +62,15 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { VEML6040_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR); // Only for display I2C address
+      const int i2cAddressValues[] = { VEML6040_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, VEML6040_ADDR); // Only for display I2C address
+      } else {
+        success = (event->Par1 == VEML6040_ADDR);
+      }
       break;
     }
 
@@ -180,7 +185,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 
 // VEML6040 /////////////////////////////////////////////////////////////
 
-void VEML6040_setControlReg(byte data)
+void VEML6040_setControlReg(uint8_t data)
 {
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(0);    // command 0=control register
@@ -189,7 +194,7 @@ void VEML6040_setControlReg(byte data)
   Wire.endTransmission();
 }
 
-float VEML6040_GetValue(byte reg)
+float VEML6040_GetValue(uint8_t reg)
 {
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(reg);
@@ -200,12 +205,12 @@ float VEML6040_GetValue(byte reg)
   {
     uint16_t lsb = Wire.read();
     uint16_t msb = Wire.read();
-    return (float)((msb << 8) | lsb);
+    return static_cast<float>((msb << 8) | lsb);
   }
   return -1.0f;
 }
 
-void VEML6040_Init(byte it)
+void VEML6040_Init(uint8_t it)
 {
   VEML6040_setControlReg(it << 4); // IT=it, TRIG=0, AF=0, SD=0
 }
@@ -222,7 +227,7 @@ float Plugin_066_CalcCCT(float R, float G, float B)
   return CCT;
 }
 
-float Plugin_066_CalcAmbientLight(float G, byte it)
+float Plugin_066_CalcAmbientLight(float G, uint8_t it)
 {
   float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f };
 

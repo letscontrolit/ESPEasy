@@ -7,7 +7,7 @@
 
 #define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
-typedef byte taskIndex_t;
+typedef uint8_t taskIndex_t;
 typedef uint16_t userVarIndex_t;
 typedef uint16_t taskVarIndex_t;
 

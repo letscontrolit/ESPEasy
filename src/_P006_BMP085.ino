@@ -15,7 +15,7 @@
 #define PLUGIN_VALUENAME2_006 "Pressure"
 
 
-boolean Plugin_006(byte function, struct EventStruct *event, String& string)
+boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -47,6 +47,12 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_006));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_006));
+      break;
+    }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x77);
       break;
     }
 
@@ -86,7 +92,7 @@ boolean Plugin_006(byte function, struct EventStruct *event, String& string)
         {
           UserVar[event->BaseVarIndex] = P006_data->readTemperature();
           int   elev     = PCONFIG(1);
-          float pressure = (float)P006_data->readPressure() / 100.0f;
+          float pressure = static_cast<float>(P006_data->readPressure()) / 100.0f;
 
           if (elev != 0)
           {

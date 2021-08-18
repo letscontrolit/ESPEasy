@@ -25,40 +25,40 @@ void initLog();
 
 const __FlashStringHelper * getLogLevelDisplayString(int logLevel);
 
-const __FlashStringHelper * getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(uint8_t index, int& logLevel);
 
 void disableSerialLog();
 
-void setLogLevelFor(byte destination, byte logLevel);
+void setLogLevelFor(uint8_t destination, uint8_t logLevel);
 
 void updateLogLevelCache();
 
-bool loglevelActiveFor(byte logLevel);
+bool loglevelActiveFor(uint8_t logLevel);
 
-byte getSerialLogLevel();
+uint8_t getSerialLogLevel();
 
-byte getWebLogLevel();
+uint8_t getWebLogLevel();
 
-bool loglevelActiveFor(byte destination, byte logLevel);
+bool loglevelActiveFor(uint8_t destination, uint8_t logLevel);
 
 
-bool loglevelActive(byte logLevel, byte logLevelSettings);
+bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings);
 
 //#ifdef LIMIT_BUILD_SIZE
 // Macro does add to the build size, but does take more resources as the string may need resources to create
-void addLog(byte loglevel, const __FlashStringHelper *str);
-void addLog(byte logLevel, const char *line);
-void addLog(byte loglevel, const String& string);
+void addLog(uint8_t loglevel, const __FlashStringHelper *str);
+void addLog(uint8_t logLevel, const char *line);
+void addLog(uint8_t loglevel, const String& string);
 //#else
 // Do this in a template to prevent casting to String when not needed.
 //#define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
 //#endif
 
-void addToLog(byte loglevel, const __FlashStringHelper *str);
+void addToLog(uint8_t loglevel, const __FlashStringHelper *str);
 
-void addToLog(byte loglevel, const String& string);
+void addToLog(uint8_t loglevel, const String& string);
 
-void addToLog(byte logLevel, const char *line);
+void addToLog(uint8_t logLevel, const char *line);
 
 
 #endif 

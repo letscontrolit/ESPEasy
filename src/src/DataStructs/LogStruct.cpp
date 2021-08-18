@@ -5,7 +5,7 @@
 
 
 
-void LogStruct::add(const byte loglevel, const char *line) {
+void LogStruct::add(const uint8_t loglevel, const char *line) {
   write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
 
   if (write_idx == read_idx) {
@@ -44,7 +44,7 @@ bool LogStruct::get(String& output, const String& lineEnd) {
   return !isEmpty();
 }
 
-bool LogStruct::getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, byte& loglevel) {
+bool LogStruct::getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, uint8_t& loglevel) {
   lastReadTimeStamp = millis();
   logLinesAvailable = false;
 
