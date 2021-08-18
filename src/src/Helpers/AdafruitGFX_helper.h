@@ -104,65 +104,73 @@ enum class AdaGFXTextPrintMode : uint8_t {
   MAX                            // Keep as last
 };
 
+enum class AdaGFXColorDepth : uint16_t {
+  Monochrome   = 2u,    // Black & white
+  Duochrome    = 3u,    // Black, white & grey
+  Quadrochrome = 4u,    // Black, white, lightgrey & darkgrey
+  # ifdef ADAGFX_SUPPORT_7COLOR
+  Septochrome = 7u,     // Black, white, red, yellow, blue, green, orange
+  # endif // ifdef ADAGFX_SUPPORT_7COLOR
+  Octochrome   = 8u,    // 8 regular colors
+  Quintochrome = 16u,   // 16 colors
+  FullColor    = 65535u // 65535 colors (max. supported by RGB565)
+};
+
 // Some generic AdafruitGFX_helper support functions
 const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode);
 void                       AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                                                    uint8_t                    selectedIndex);
 void                       AdaGFXFormRotation(const __FlashStringHelper *id,
                                               uint8_t                    selectedIndex);
-String                     AdaGFXparseTemplate(String& tmpString,
-                                               uint8_t lineSize);
+void                       AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
+                                                       uint16_t                   foregroundColor,
+                                                       const __FlashStringHelper *backgroundId,
+                                                       uint16_t                   backgroundColor,
+                                                       AdaGFXColorDepth           colorDepth = AdaGFXColorDepth::FullColor);
+String   AdaGFXparseTemplate(String& tmpString,
+                             uint8_t lineSize);
+uint16_t AdaGFXparseColor(String         & s,
+                          AdaGFXColorDepth colorDepth = AdaGFXColorDepth::FullColor); // Parse either a color by name, 6 digit hex rrggbb
+                                                                                      // color, or 1..4 digit #rgb565 color (hex with #
+                                                                                      // prefix)
+String   AdaGFXcolorToString(uint16_t         color,
+                             AdaGFXColorDepth colorDepth = AdaGFXColorDepth::FullColor);
+# if ADAGFX_SUPPORT_7COLOR
+uint16_t AdaGFXrgb565ToColor7(uint16_t color); // Convert rgb565 color to 7-color
+# endif // if ADAGFX_SUPPORT_7COLOR
 
 class AdafruitGFX_helper {
 public:
-
-  enum class ColorDepth : uint16_t {
-    Monochrome   = 2u,    // Black & white
-    Duochrome    = 3u,    // Black, white & grey
-    Quadrochrome = 4u,    // Black, white, lightgrey & darkgrey
-    # ifdef ADAGFX_SUPPORT_7COLOR
-    Septochrome = 7u,     // Black, white, red, yellow, blue, green, orange
-    # endif // ifdef ADAGFX_SUPPORT_7COLOR
-    Octochrome   = 8u,    // 8 regular colors
-    Quintochrome = 16u,   // 16 colors
-    FullColor    = 65535u // 65535 colors (max. supported by RGB565)
-  };
 
   AdafruitGFX_helper(Adafruit_GFX       *display,
                      const String      & trigger,
                      uint16_t            res_x,
                      uint16_t            res_y,
-                     ColorDepth          colorDepth    = ColorDepth::FullColor,
+                     AdaGFXColorDepth    colorDepth    = AdaGFXColorDepth::FullColor,
                      AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
                      uint8_t             fontscaling   = 1,
                      uint16_t            fgcolor       = ADAGFX_WHITE,
                      uint16_t            bgcolor       = ADAGFX_BLACK,
                      bool                useValidation = true);
 
-  bool     processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
-  uint16_t parseColor(String& s);                // Parse either a color by name, 6 digit hex rrggbb color, or 1..4 digit #rgb565 color
-                                                 // (hex with # prefix)
+  bool processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
 
-  void     printText(const char    *string,
-                     int            X,
-                     int            Y,
-                     unsigned int   textSize = 0,
-                     unsigned short color    = ADAGFX_WHITE,
-                     unsigned short bkcolor  = ADAGFX_BLACK);
+  void printText(const char    *string,
+                 int            X,
+                 int            Y,
+                 unsigned int   textSize = 0,
+                 unsigned short color    = ADAGFX_WHITE,
+                 unsigned short bkcolor  = ADAGFX_BLACK);
   void calculateTextMetrics(uint8_t fontwidth,
                             uint8_t fontheight);
   void getTextMetrics(uint16_t& textcols,
                       uint16_t& textrows,
                       uint8_t & fontwidth,
                       uint8_t & fontheight);
-  void getCursorXY(int16_t& currentX,                         // Get last known (text)cursor position, recalculates to col/row if that
-                   int16_t& currentY);                        // setting is acive
+  void getCursorXY(int16_t& currentX,                     // Get last known (text)cursor position, recalculates to col/row if that
+                   int16_t& currentY);                    // setting is acive
 
-  # if ADAGFX_SUPPORT_7COLOR
-  uint16_t rgb565ToColor7(uint16_t color);                    // Convert rgb565 color to 7-color
-  # endif // if ADAGFX_SUPPORT_7COLOR
-
-  void     setP095TxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095 txtfull subcommands, uses offset -1
+  void setP095TxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095 txtfull subcommands, uses offset -1
     _p095_compensation = compensation;
   }
 
@@ -182,7 +190,7 @@ private:
   String _trigger;
   uint16_t _res_x;
   uint16_t _res_y;
-  ColorDepth _colorDepth;
+  AdaGFXColorDepth _colorDepth;
   AdaGFXTextPrintMode _textPrintMode;
   uint8_t _fontscaling;
   uint16_t _fgcolor;

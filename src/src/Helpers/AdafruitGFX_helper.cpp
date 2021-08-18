@@ -72,6 +72,24 @@ void AdaGFXFormRotation(const __FlashStringHelper *id,
   addFormSelector(F("Rotation"), id, 4, rotationOptions, rotationOptionValues, selectedIndex);
 }
 
+/*****************************************************************************************
+ * Show 2 input fields for Foreground and Background color, translated to known color names or hex with # prefix
+ ****************************************************************************************/
+void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
+                                 uint16_t                   foregroundColor,
+                                 const __FlashStringHelper *backgroundId,
+                                 uint16_t                   backgroundColor,
+                                 AdaGFXColorDepth           colorDepth) {
+  String color;
+
+  color = AdaGFXcolorToString(foregroundColor, colorDepth);
+  addFormTextBox(F("Foreground color"), foregroundId, color, 11);
+  color = AdaGFXcolorToString(backgroundColor, colorDepth);
+  addFormTextBox(F("Background color"), backgroundId, color, 11);
+  addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
+  addFormNote(F("NB: Colors stored as RGB565 value!"));
+}
+
 /****************************************************************************
  * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
  ***************************************************************************/
@@ -132,7 +150,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
                                        const String      & trigger,
                                        uint16_t            res_x,
                                        uint16_t            res_y,
-                                       ColorDepth          colorDepth,
+                                       AdaGFXColorDepth    colorDepth,
                                        AdaGFXTextPrintMode textPrintMode,
                                        uint8_t             fontscaling,
                                        uint16_t            fgcolor,
@@ -162,7 +180,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
 
   calculateTextMetrics(6, 10);                  // Defaults for built-in font
 
-  if (_display != nullptr) {
+  if (nullptr != _display) {
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
   }
 }
@@ -188,7 +206,7 @@ void AdafruitGFX_helper::getCursorXY(int16_t& currentX,
 bool AdafruitGFX_helper::processCommand(const String& string) {
   bool success = false;
 
-  if ((_display == nullptr) || _trigger.isEmpty()) { return success; }
+  if ((nullptr == _display) || _trigger.isEmpty()) { return success; }
 
   String cmd        = parseString(string, 1); // lower case
   String subcommand = parseString(string, 2);
@@ -257,13 +275,13 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
   {
-    _fgcolor = parseColor(sParams[0]);
+    _fgcolor = AdaGFXparseColor(sParams[0], _colorDepth);
 
     if (argCount == 1) {
       _bgcolor = _fgcolor; // Transparent background
       _display->setTextColor(_fgcolor);
     } else {               // argCount=2
-      _bgcolor = parseColor(sParams[1]);
+      _bgcolor = AdaGFXparseColor(sParams[1], _colorDepth);
       _display->setTextColor(_fgcolor, _bgcolor);
     }
   }
@@ -322,7 +340,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
-          uint16_t color = parseColor(sParams[3]);
+          uint16_t color = AdaGFXparseColor(sParams[3], _colorDepth);
           printText(sParams[4].c_str(),
                     nParams[0] - _p095_compensation,
                     nParams[1] - _p095_compensation,
@@ -344,8 +362,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                     nParams[0] - _p095_compensation,
                     nParams[1] - _p095_compensation,
                     nParams[2],
-                    parseColor(sParams[3]),
-                    parseColor(sParams[4]));
+                    AdaGFXparseColor(sParams[3], _colorDepth),
+                    AdaGFXparseColor(sParams[4], _colorDepth));
         }
         break;
       default:
@@ -356,7 +374,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   else if (subcommand.equals(F("clear")))
   {
     if (argCount >= 1) {
-      _display->fillScreen(parseColor(sParams[0]));
+      _display->fillScreen(AdaGFXparseColor(sParams[0], _colorDepth));
     } else {
       _display->fillScreen(_bgcolor);
     }
@@ -468,7 +486,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
+      _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
   else if (subcommand.equals(F("lh")) && (argCount == 3)) { // lh: Horizontal line
@@ -479,7 +497,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawFastHLine(0, nParams[0], nParams[1], parseColor(sParams[2]));
+      _display->drawFastHLine(0, nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
   else if (subcommand.equals(F("lv")) && (argCount == 3)) { // lv: Vertical line
@@ -490,7 +508,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawFastVLine(nParams[0], 0, nParams[1], parseColor(sParams[2]));
+      _display->drawFastVLine(nParams[0], 0, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
   else if (subcommand.equals(F("r")) && (argCount == 5)) { // r: Rectangle
@@ -502,7 +520,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
+      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
   else if (subcommand.equals(F("rf")) && (argCount == 6)) { // rf: Rectangled, filled
@@ -514,8 +532,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[5]));
-      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], parseColor(sParams[4]));
+      _display->fillRect(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
+      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
   else if (subcommand.equals(F("c")) && (argCount == 4)) { // c: Circle
@@ -527,7 +545,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
+      _display->drawCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
   else if (subcommand.equals(F("cf")) && (argCount == 5)) { // cf: Circle, filled
@@ -539,8 +557,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[4]));
-      _display->drawCircle(nParams[0], nParams[1], nParams[2], parseColor(sParams[3]));
+      _display->fillCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
+      _display->drawCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
   else if (subcommand.equals(F("t")) && (argCount == 7)) { // t: Triangle
@@ -553,7 +571,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
+      _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5],
+                             AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
   else if (subcommand.equals(F("tf")) && (argCount == 8)) { // tf: Triangle, filled
@@ -566,8 +585,20 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[7]));
-      _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5], parseColor(sParams[6]));
+      _display->fillTriangle(nParams[0],
+                             nParams[1],
+                             nParams[2],
+                             nParams[3],
+                             nParams[4],
+                             nParams[5],
+                             AdaGFXparseColor(sParams[7], _colorDepth));
+      _display->drawTriangle(nParams[0],
+                             nParams[1],
+                             nParams[2],
+                             nParams[3],
+                             nParams[4],
+                             nParams[5],
+                             AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
   else if (subcommand.equals(F("rr")) && (argCount == 6)) { // rr: Rounded rectangle
@@ -580,7 +611,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
+      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[5], _colorDepth));
     }
   }
   else if (subcommand.equals(F("rrf")) && (argCount == 7)) { // rrf: Rounded rectangle, filled
@@ -593,8 +624,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[6]));
-      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], parseColor(sParams[5]));
+      _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[6], _colorDepth));
+      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[5], _colorDepth));
     }
   }
   else if (subcommand.equals(F("px")) && (argCount == 3)) { // px: Pixel
@@ -605,7 +636,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawPixel(nParams[0], nParams[1], parseColor(sParams[2]));
+      _display->drawPixel(nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
   else if ((subcommand.equals(F("pxh")) || subcommand.equals(F("pxv"))) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert. incremented
@@ -617,7 +648,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->startWrite();
-      _display->writePixel(nParams[0], nParams[1], parseColor(sParams[2]));
+      _display->writePixel(nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
       loop = true;
       uint8_t h = 0;
       uint8_t v = 0;
@@ -638,7 +669,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             ) {
           loop = false;
         } else {
-          _display->writePixel(nParams[0] + h, nParams[1] + v, parseColor(color));
+          _display->writePixel(nParams[0] + h, nParams[1] + v, AdaGFXparseColor(color, _colorDepth));
 
           if (subcommand.equals(F("pxh"))) {
             h++;
@@ -718,20 +749,21 @@ uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
 }
 
 /****************************************************************************
- * parseColor: translate color name, rgb565 hex #rGgb or rgb hex #RRGGBB to an RGB565 value,
+ * AdaGFXparseColor: translate color name, rgb565 hex #rGgb or rgb hex #RRGGBB to an RGB565 value,
  * also applies color reduction to mono(2), duo(3), quadro(4), octo(8), quinto(16)-chrome colors
  ***************************************************************************/
 
 // Parse color string to RGB565 color
 // param [in] s : The color string (white, red, ...)
+// Param [in] colorDepth: The requiresed color depth, default: FullColor
 // return : color (default ADAGFX_WHITE)
-uint16_t AdafruitGFX_helper::parseColor(String& s) {
+uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
-  if ((_colorDepth == AdafruitGFX_helper::ColorDepth::Monochrome) ||
-      (_colorDepth == AdafruitGFX_helper::ColorDepth::Duochrome) ||
-      (_colorDepth == AdafruitGFX_helper::ColorDepth::Quadrochrome)) { // Only a limited set of colors is supported
+  if ((colorDepth == AdaGFXColorDepth::Monochrome) ||
+      (colorDepth == AdaGFXColorDepth::Duochrome) ||
+      (colorDepth == AdaGFXColorDepth::Quadrochrome)) { // Only a limited set of colors is supported
     if (s.equals(F("black")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK); }
 
     if (s.equals(F("white")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE); }
@@ -747,7 +779,7 @@ uint16_t AdafruitGFX_helper::parseColor(String& s) {
     // If we get this far, return the default
     return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE);
   # if ADAGFX_SUPPORT_7COLOR
-  } else if (_colorDepth == AdafruitGFX_helper::ColorDepth::Septochrome) {
+  } else if (colorDepth == AdaGFXColorDepth::Septochrome) {
     if (s.equals(F("black")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); }
 
     if (s.equals(F("white")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); }
@@ -823,24 +855,24 @@ uint16_t AdafruitGFX_helper::parseColor(String& s) {
     result = ADAGFX_WHITE;                          // fallback value
   } else {
     // Reduce colors?
-    switch (_colorDepth) {
-      case ColorDepth::Monochrome:
-      case ColorDepth::Duochrome:
-      case ColorDepth::Quadrochrome:
+    switch (colorDepth) {
+      case AdaGFXColorDepth::Monochrome:
+      case AdaGFXColorDepth::Duochrome:
+      case AdaGFXColorDepth::Quadrochrome:
         // Unsupported at this point, but compiler needs the cases because of the enum class
         break;
       # if ADAGFX_SUPPORT_7COLOR
-      case ColorDepth::Septochrome:
-        result = rgb565ToColor7(result); // Convert
+      case AdaGFXColorDepth::Septochrome:
+        result = AdaGFXrgb565ToColor7(result); // Convert
         break;
       # endif // if ADAGFX_SUPPORT_7COLOR
-      case ColorDepth::Octochrome:
+      case AdaGFXColorDepth::Octochrome:
         result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
         break;
-      case ColorDepth::Quintochrome:
+      case AdaGFXColorDepth::Quintochrome:
         result = color565((result >> 11 & 0x1F) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
         break;
-      case ColorDepth::FullColor:
+      case AdaGFXColorDepth::FullColor:
         // No color reduction
         break;
     }
@@ -848,13 +880,89 @@ uint16_t AdafruitGFX_helper::parseColor(String& s) {
   return result;
 }
 
+/*****************************************************************************************
+ * Convert an RGB565 color (number) to it's name or the #rgb565 hex string, based on depth
+ ****************************************************************************************/
+String AdaGFXcolorToString(uint16_t         color,
+                           AdaGFXColorDepth colorDepth) {
+  switch (colorDepth) {
+    case AdaGFXColorDepth::Monochrome:
+    case AdaGFXColorDepth::Duochrome:
+    case AdaGFXColorDepth::Quadrochrome:
+    {
+      switch (color) {
+        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK): return F("black");
+        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE): return F("white");
+        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_INVERSE): return F("inverse");
+        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_RED): return F("red");
+        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_DARK): return F("dark");
+        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_LIGHT): return F("light");
+        default:
+          break;
+      }
+      break;
+    }
+    # ifdef ADAGFX_SUPPORT_7COLOR
+    case AdaGFXColorDepth::Septochrome:
+    {
+      switch (color) {
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return F("black");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE): return F("white");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN): return F("green");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE): return F("blue");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED): return F("red");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_YELLOW): return F("yellow");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_ORANGE): return F("orange");
+        default:
+          break;
+      }
+      break;
+    }
+    # endif // ifdef ADAGFX_SUPPORT_7COLOR
+    case AdaGFXColorDepth::Octochrome:
+    case AdaGFXColorDepth::Quintochrome:
+    case AdaGFXColorDepth::FullColor:
+    {
+      switch (color) {
+        case ADAGFX_BLACK:  return F("black");
+        case ADAGFX_NAVY: return F("navy");
+        case ADAGFX_DARKGREEN: return F("darkgreen");
+        case ADAGFX_DARKCYAN: return F("darkcyan");
+        case ADAGFX_MAROON: return F("maroon");
+        case ADAGFX_PURPLE: return F("purple");
+        case ADAGFX_OLIVE: return F("olive");
+        case ADAGFX_LIGHTGREY: return F("lightgrey");
+        case ADAGFX_DARKGREY: return F("darkgrey");
+        case ADAGFX_BLUE: return F("blue");
+        case ADAGFX_GREEN: return F("green");
+        case ADAGFX_CYAN: return F("cyan");
+        case ADAGFX_RED: return F("red");
+        case ADAGFX_MAGENTA: return F("magenta");
+        case ADAGFX_YELLOW: return F("yellow");
+        case ADAGFX_WHITE: return F("white");
+        case ADAGFX_ORANGE: return F("orange");
+        case ADAGFX_GREENYELLOW: return F("greenyellow");
+        case ADAGFX_PINK: return F("pink");
+        default:
+          break;
+      }
+      break;
+    }
+  }
+  String result;
+  result  = '#';
+  result += String(color, HEX);
+  result.toUpperCase();
+  return result;
+}
+
 # if ADAGFX_SUPPORT_7COLOR
 
 /****************************************************************************
- * rgb565ToColor7: Convert a rgb565 color to the 7 colors supported by 7-color eInk displays
+ * AdaGFXrgb565ToColor7: Convert a rgb565 color to the 7 colors supported by 7-color eInk displays
  * Borrowed from https://github.com/ZinggJM/GxEPD2 color7() routine
  ***************************************************************************/
-uint16_t AdafruitGFX_helper::rgb565ToColor7(uint16_t color) {
+uint16_t AdaGFXrgb565ToColor7(uint16_t color) {
   uint16_t cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); // Default = white
 
   uint16_t red   = (color & 0xF800);
