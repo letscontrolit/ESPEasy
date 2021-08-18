@@ -43,14 +43,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = false;
-      # ifdef PLUGIN_USES_ADAFRUITGFX
-      Device[deviceCount].ValueCount = 2;
-      # else // ifdef PLUGIN_USES_ADAFRUITGFX
-      Device[deviceCount].ValueCount = 0;
-      # endif // ifdef PLUGIN_USES_ADAFRUITGFX
-      Device[deviceCount].SendDataOption = false;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].ValueCount         = 2;
+      Device[deviceCount].SendDataOption     = false;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       break;
     }
 
@@ -94,14 +90,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       P116_CONFIG_BACKLIGHT_PERCENT = 100; // Percentage backlight
 
       uint32_t lSettings = 0;
-      # ifdef P116_USE_ADA_GRAPHICS
 
       // Truncate exceeding message
       set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage));
-      # else // ifdef P116_USE_ADA_GRAPHICS
-      // Truncate exceeding message
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        1);
-      # endif // ifdef P116_USE_ADA_GRAPHICS
       set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   1);
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, 1); // Default trigger on st77xx
       P116_CONFIG_FLAGS = lSettings;
@@ -143,28 +134,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Layout"));
 
-      # ifdef P116_USE_ADA_GRAPHICS
       AdaGFXFormRotation(F("p116_rotate"), P116_CONFIG_FLAG_GET_ROTATION);
-      # else // ifdef P116_USE_ADA_GRAPHICS
-      {
-        const __FlashStringHelper *options5[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
-        const int optionValues5[]             = { 0, 1, 2, 3 };
-        addFormSelector(F("Rotation"), F("p116_rotate"), 4, options5, optionValues5, P116_CONFIG_FLAG_GET_ROTATION);
-      }
-      # endif // ifdef P116_USE_ADA_GRAPHICS
 
-      # ifdef P116_USE_ADA_GRAPHICS
       AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
-      # else // ifdef P116_USE_ADA_GRAPHICS
-      {
-        const __FlashStringHelper *options3[] = {
-          F("Continue to next line"),
-          F("Truncate exceeding message"),
-          F("Clear then truncate exceeding message") };
-        const int optionValues3[] = { 0, 1, 2 };
-        addFormSelector(F("Text print Mode"), F("p116_mode"), 3, options3, optionValues3, P116_CONFIG_FLAG_GET_MODE);
-      }
-      # endif // ifdef P116_USE_ADA_GRAPHICS
 
       addFormNumericBox(F("Font scaling"), F("p116_fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE, 1, 10);
       addUnit(F("1x..10x"));
@@ -172,7 +144,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Clear display on exit"), F("p116_clearOnExit"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT));
 
       {
-        const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum!
+        const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum (except MAX)!
           P116_CommandTrigger_toString(P116_CommandTrigger::tft),
           P116_CommandTrigger_toString(P116_CommandTrigger::st77xx),
           P116_CommandTrigger_toString(P116_CommandTrigger::st7735),
@@ -186,33 +158,22 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Write Command trigger"),
                         F("p116_commandtrigger"),
-                        4,
+                        static_cast<int>(P116_CommandTrigger::MAX),
                         commandTriggers,
                         commandTriggerOptions,
                         P116_CONFIG_FLAG_GET_CMD_TRIGGER);
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
-      # ifdef P116_USE_ADA_GRAPHICS
       addFormCheckBox(F("Text Coordinates in col/row"), F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
       addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp' and 'txtfull' subcommands."));
-      # endif // ifdef P116_USE_ADA_GRAPHICS
 
       addFormSubHeader(F("Content"));
 
-      # ifdef P116_USE_ADA_GRAPHICS
-      String color;
-      color  = '#';
-      color += String(P116_CONFIG_GET_COLOR_FOREGROUND, HEX);
-      color.toUpperCase();
-      addFormTextBox(F("Foreground color"), F("p116_foregroundcolor"), color, 11);
-      color  = '#';
-      color += String(P116_CONFIG_GET_COLOR_BACKGROUND, HEX);
-      color.toUpperCase();
-      addFormTextBox(F("Background color"), F("p116_backgroundcolor"), color, 11);
-      addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
-      addFormNote(F("NB: Colors stored as RGB565 value!"));
-      # endif // ifdef P116_USE_ADA_GRAPHICS
+      AdaGFXFormForeAndBackColors(F("p116_foregroundcolor"),
+                                  P116_CONFIG_GET_COLOR_FOREGROUND,
+                                  F("p116_backgroundcolor"),
+                                  P116_CONFIG_GET_COLOR_BACKGROUND);
 
       // Inverted state!
       addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
@@ -245,9 +206,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                                                        // reverse logic, default=checked!
       bitWrite(lSettings, P116_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("p116_buttonInverse"))); // Bit 1 buttonInverse
       bitWrite(lSettings, P116_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("p116_clearOnExit")));   // Bit 2 ClearOnExit
-      # ifdef P116_USE_ADA_GRAPHICS
       bitWrite(lSettings, P116_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p116_colrow")));        // Bit 3 Col/Row addressing
-      # endif // ifdef P116_USE_ADA_GRAPHICS
       set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        getFormItemInt(F("p116_mode")));            // Bit 4..7 Text print mode
       set4BitToUL(lSettings, P116_CONFIG_FLAG_ROTATION,    getFormItemInt(F("p116_rotate")));          // Bit 8..11 Rotation
       set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p116_fontscale")));       // Bit 12..15 Font scale
@@ -255,30 +214,16 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p116_commandtrigger")));  // Bit 20..23 Command trigger
       P116_CONFIG_FLAGS = lSettings;
 
-      # ifdef P116_USE_ADA_GRAPHICS
-      AdafruitGFX_helper *gfxHelper = new (std::nothrow) AdafruitGFX_helper(nullptr, // Mostly dummy values except color depth!
-                                                                            EMPTY_STRING,
-                                                                            12,
-                                                                            20,
-                                                                            AdafruitGFX_helper::ColorDepth::FullColor,
-                                                                            AdaGFXTextPrintMode::ContinueToNextLine);
+      String   color   = web_server.arg(F("p116_foregroundcolor"));
+      uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
 
-      if (gfxHelper != nullptr) {
-        String   color   = web_server.arg(F("p116_foregroundcolor"));
-        uint16_t fgcolor = ADAGFX_WHITE;          // Default to white when empty
-
-        if (!color.isEmpty()) {
-          fgcolor = gfxHelper->parseColor(color); // Reduce to rgb565
-        }
-        color = web_server.arg(F("p116_backgroundcolor"));
-        uint16_t bgcolor = gfxHelper->parseColor(color);
-
-        P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
-        delete gfxHelper;
+      if (!color.isEmpty()) {
+        fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
       }
-      # else // ifdef P116_USE_ADA_GRAPHICS
-      P116_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
-      # endif // ifdef P116_USE_ADA_GRAPHICS
+      color = web_server.arg(F("p116_backgroundcolor"));
+      uint16_t bgcolor = AdaGFXparseColor(color);
+
+      P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
 
       String strings[P116_Nlines];
       String error;

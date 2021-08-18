@@ -28,6 +28,7 @@ const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd)
     case P116_CommandTrigger::tft: return F("tft");
     case P116_CommandTrigger::st7735: return F("st7735");
     case P116_CommandTrigger::st7789: return F("st7789");
+    case P116_CommandTrigger::MAX: return F("None");
     case P116_CommandTrigger::st77xx: break;
   }
   return F("st77xx"); // Default command trigger
@@ -91,7 +92,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
 bool P116_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
-  if (st77xx == nullptr) {
+  if (nullptr == st77xx) {
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
     uint8_t initRoptions = 0xFF;
     int8_t  spi_MOSI_pin = -1;
@@ -140,7 +141,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
         }
 
-        if (st7735 != nullptr) {
+        if (nullptr != st7735) {
           st7735->initR(initRoptions); // initialize a ST7735s chip
           st77xx = st7735;             // pass pointer after initialization
         }
@@ -158,7 +159,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
         }
 
-        if (st7789 != nullptr) {
+        if (nullptr != st7789) {
           if (_device == ST77xx_type_e::ST7789vw_240x240) {
             st7789->init(240, 240, SPI_MODE2);
           }
@@ -182,7 +183,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       log += String(reinterpret_cast<ulong>(st77xx), HEX);
       log += ' ';
 
-      if (st77xx == nullptr) {
+      if (nullptr == st77xx) {
         log += F("in");
       }
       log += F("valid, device: ");
@@ -196,22 +197,20 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, F("ST77xx: No init?"));
   }
 
-  if (st77xx != nullptr) {
-    # ifdef P116_USE_ADA_GRAPHICS
+  if (nullptr != st77xx) {
     gfxHelper = new (std::nothrow) AdafruitGFX_helper(st77xx,
                                                       _commandTrigger,
                                                       _xpix,
                                                       _ypix,
-                                                      AdafruitGFX_helper::ColorDepth::FullColor,
+                                                      AdaGFXColorDepth::FullColor,
                                                       _textmode,
                                                       _fontscaling,
                                                       _fgcolor,
                                                       _bgcolor);
 
-    if (gfxHelper != nullptr) {
+    if (nullptr != gfxHelper) {
       gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
     }
-    # endif // ifdef P116_USE_ADA_GRAPHICS
     updateFontMetrics();
     st77xx->enableDisplay(true);              // Display on
     st77xx->setRotation(_rotation);           // Set rotation 0/1/2/3
@@ -234,13 +233,9 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
  * updateFontMetrics: recalculate x and y columns, based on font size and font scale
  ***************************************************************************/
 void P116_data_struct::updateFontMetrics() {
-  # ifdef P116_USE_ADA_GRAPHICS
-
-  if (gfxHelper != nullptr) {
+  if (nullptr != gfxHelper) {
     gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight);
-  } else
-  # endif // ifdef P116_USE_ADA_GRAPHICS
-  {
+  } else {
     _textcols = _xpix / (_fontwidth * _fontscaling);
     _textrows = _ypix / (_fontheight * _fontscaling);
   }
@@ -250,8 +245,8 @@ void P116_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P116_data_struct::plugin_exit(struct EventStruct *event) {
-  if ((st77xx != nullptr) && bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT)) {
-    st77xx->fillScreen(ST77XX_BLACK); // fill screen with black color
+  if ((nullptr != st77xx) && bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT)) {
+    st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
   }
   st7735 = nullptr;
@@ -264,50 +259,25 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P116_data_struct::plugin_read(struct EventStruct *event) {
-  if (st77xx != nullptr) {
+  if (nullptr != st77xx) {
     String strings[P116_Nlines];
     LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-    # ifdef P116_USE_ADA_GRAPHICS
     gfxHelper->setColumnRowMode(false); // Turn off column mode
-    # endif // ifdef P116_USE_ADA_GRAPHICS
 
     for (uint8_t x = 0; x < _textrows; x++) {
       String newString = AdaGFXparseTemplate(strings[x], _textcols);
 
       if (!newString.isEmpty()) {
-        # ifdef P116_USE_ADA_GRAPHICS
         gfxHelper->printText(newString.c_str(), 0, x * _fontheight * _fontscaling, _fontscaling, _fgcolor, _bgcolor);
-        # else // ifdef P116_USE_ADA_GRAPHICS
-
-        if ((_textmode != AdaGFXTextPrintMode::ContinueToNextLine) && (newString.length() > _textcols)) {
-          newString = newString.substring(0, _textcols - 1);
-        }
-
-        if (_textmode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
-          st77xx->setCursor(_leftMarginCompensation, (x * _fontheight * _fontscaling) + _topMarginCompensation);
-
-          for (uint16_t c = 0; c <= newString.length(); c++) {
-            st77xx->print(' ');
-          }
-        }
-        st77xx->setCursor(_leftMarginCompensation, (x * _fontheight * _fontscaling) + _topMarginCompensation);
-        st77xx->print(newString);
-
-        for (uint16_t c = newString.length(); c < _textcols && _textmode != AdaGFXTextPrintMode::ContinueToNextLine; c++) {
-          st77xx->print(' ');
-        }
         delay(0);
-        # endif // ifdef P116_USE_ADA_GRAPHICS
       }
     }
-    # ifdef P116_USE_ADA_GRAPHICS
     gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
     int16_t curX, curY;
     gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
     UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
     UserVar[event->BaseVarIndex + 1] = curY;
-    # endif // ifdef P116_USE_ADA_GRAPHICS
   }
   return false; // Always return false, so no attempt to send to Controllers or generate events is started
 }
@@ -316,7 +286,7 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P116_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if ((P116_CONFIG_BUTTON_PIN != -1) && (st77xx != nullptr)) {
+  if ((P116_CONFIG_BUTTON_PIN != -1) && (nullptr != st77xx)) {
     if (digitalRead(P116_CONFIG_BUTTON_PIN) == (bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON) ? 1 : 0)) { // Invert state
       displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
     }
@@ -331,7 +301,7 @@ bool P116_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if (_displayTimer > 0) {
     _displayTimer--;
 
-    if ((st77xx != nullptr) && (_displayTimer == 0)) {
+    if ((nullptr != st77xx) && (_displayTimer == 0)) {
       displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
     }
   }
@@ -345,7 +315,7 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if ((st77xx != nullptr) && cmd.equals(_commandTriggerCmd)) {
+  if ((nullptr != st77xx) && cmd.equals(_commandTriggerCmd)) {
     String arg1 = parseString(string, 2);
     success = true;
 
@@ -381,73 +351,19 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
     if (!bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE)) { // Wake display?
       displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
     }
-    # ifdef P116_USE_ADA_GRAPHICS
 
-    if (gfxHelper != nullptr) {
+    if (nullptr != gfxHelper) {
       String tmp = string;
       success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols)); // Hand it over after replacing variables
 
       if (success) {
-        updateFontMetrics();                                                   // Font may have changed
+        updateFontMetrics();                                                    // Font may have changed
         int16_t curX, curY;
-        gfxHelper->getCursorXY(curX, curY);                                    // Get current X and Y coordinates, and put into Values
+        gfxHelper->getCursorXY(curX, curY);                                     // Get current X and Y coordinates, and put into Values
         UserVar[event->BaseVarIndex]     = curX;
         UserVar[event->BaseVarIndex + 1] = curY;
       }
     }
-    # else // ifdef P116_USE_ADA_GRAPHICS
-    int colPos  = (event->Par2 - 1) + _leftMarginCompensation;
-    int rowPos  = ((event->Par1 - 1) * 10 * _fontscaling) + _topMarginCompensation;
-    String text = parseStringKeepCase(string, 4);
-    text = AdaGFXparseTemplate(text, _textcols);
-
-    // clear line before writing new string
-    if (_textmode == 2) {
-      st77xx->setCursor(colPos, rowPos);
-
-      for (uint8_t i = colPos; i < _textcols; i++) {
-        st77xx->print(" ");
-      }
-    }
-
-    // truncate message exceeding cols
-    st77xx->setCursor(colPos, rowPos);
-
-    if ((_textmode == 1) || (_textmode == 2)) {
-      st77xx->setCursor(colPos, rowPos);
-
-      for (uint8_t i = 0; i < _textcols - colPos; i++) {
-        if (text[i]) {
-          st77xx->print(text[i]);
-        }
-      }
-    }
-
-    // message exceeding cols will continue to next line
-    // FIXME: tonhuisman: this is probably outdated or not applicable
-    else {
-      bool stillProcessing = 1;
-      uint8_t charCount    = 1;
-
-      while (stillProcessing) {
-        if (++colPos > _textcols) {                           // have we printed 20 characters yet (+1 for the logic)
-          rowPos += (10 * _fontscaling);
-          st77xx->setCursor(_leftMarginCompensation, rowPos); // move cursor down
-          colPos = 1;
-        }
-
-        // dont print if "lower" than the lcd
-        if ((rowPos * _fontscaling) < _textrows * _fontscaling) {
-          st77xx->print(text[charCount - 1]);
-        }
-
-        if (!text[charCount]) { // no more chars to process?
-          stillProcessing = 0;
-        }
-        charCount += 1;
-      }
-    }
-    # endif // ifdef P116_USE_ADA_GRAPHICS
   }
   return success;
 }

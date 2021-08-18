@@ -4,19 +4,15 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P116
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
-# include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
-# include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
+# include <Adafruit_GFX.h>                              // include Adafruit graphics library
+# include <Adafruit_ST77xx.h>                           // include Adafruit ST77xx TFT library
+# include <Adafruit_ST7735.h>                           // include Adafruit ST7735 TFT library
+# include <Adafruit_ST7789.h>                           // include Adafruit ST7789 TFT library
 
-# include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper objecr
+# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
 
-# define P116_Nlines 24                     // The number of different lines which can be displayed
+# define P116_Nlines 24                                 // The number of different lines which can be displayed
 # define P116_Nchars 50
-
-# ifdef PLUGIN_USES_ADAFRUITGFX
-#  define P116_USE_ADA_GRAPHICS                         // Use AdaGFX_Helper for graphics support
-# endif // ifdef PLUGIN_USES_ADAFRUITGFX
 
 # define P116_CONFIG_BUTTON_PIN         PCONFIG(0)      // Pin for display-button
 # define P116_CONFIG_DISPLAY_TIMEOUT    PCONFIG(1)      // Time-out when display-button is enable
@@ -33,7 +29,7 @@
 # define P116_CONFIG_FLAG_MODE          4               // Flag-offset to store 4 bits for Mode, uses bits 4, 5, 6 and 7
 # define P116_CONFIG_FLAG_ROTATION      8               // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10 and 11
 # define P116_CONFIG_FLAG_FONTSCALE     12              // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
-# define P116_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 28 and 19
+# define P116_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
 # define P116_CONFIG_FLAG_CMD_TRIGGER   20              // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
 
 // Getters
@@ -44,9 +40,6 @@
 # define P116_CONFIG_FLAG_GET_CMD_TRIGGER   (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CMD_TRIGGER))
 # define P116_CONFIG_GET_COLOR_FOREGROUND   (P116_CONFIG_COLORS & 0xFFFF)
 # define P116_CONFIG_GET_COLOR_BACKGROUND   ((P116_CONFIG_COLORS >> 16) & 0xFFFF)
-
-# define P116_WRITE_PREFIX                        "tft"
-# define P116_WRITE_CMD_PREFIX P116_WRITE_PREFIX  "cmd" // results in "tftcmd"
 
 # ifdef ESP32
 
@@ -79,7 +72,8 @@ enum class P116_CommandTrigger : uint8_t {
   tft = 0u,
   st77xx,
   st7735,
-  st7789
+  st7789,
+  MAX // Keep as last item!
 };
 
 const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device);
@@ -113,14 +107,11 @@ private:
                     uint8_t displayTimeout);
   void updateFontMetrics();
 
-  Adafruit_ST77xx *st77xx = nullptr;
-  Adafruit_ST7735 *st7735 = nullptr;
-  Adafruit_ST7789 *st7789 = nullptr;
-
-  # ifdef P116_USE_ADA_GRAPHICS
+  Adafruit_ST77xx    *st77xx    = nullptr;
+  Adafruit_ST7735    *st7735    = nullptr;
+  Adafruit_ST7789    *st7789    = nullptr;
   AdafruitGFX_helper *gfxHelper = nullptr;
-  # endif // ifdef P116_USE_GRAPHICS
-  enum ST77xx_type_e _device;
+  enum ST77xx_type_e  _device;
 
   uint16_t _xpix;
   uint16_t _ypix;
