@@ -11,7 +11,7 @@ struct ControllerCache_struct {
   ~ControllerCache_struct();
 
   // Write a single sample set to the buffer
-  bool write(uint8_t     *data,
+  bool write(const uint8_t     *data,
              unsigned int size);
 
   // Read a single sample set, either from file or buffer.

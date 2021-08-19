@@ -71,6 +71,23 @@ void addSelector(const String& id,
                  #endif // ifdef ENABLE_TOOLTIPS
                  );
 
+void addSelector_reloadOnChange(
+                 const String& id,
+                 int           optionCount,
+                 const String  options[],
+                 const int     indices[],
+                 const String  attr[],
+                 int           selectedIndex,
+                 const String& onChangeCall,
+                 bool          enabled,
+                 const String& classname
+                 #ifdef        ENABLE_TOOLTIPS
+                 ,
+                 const String& tooltip = EMPTY_STRING
+                 #endif // ifdef ENABLE_TOOLTIPS
+                 );
+
+
 void addSelector_options(int                        optionCount,
                          const __FlashStringHelper *options[],
                          const int                  indices[],

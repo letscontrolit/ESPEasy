@@ -19,7 +19,6 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Log.h"
-#include "../WebServer/Login.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -47,6 +46,7 @@
 #include "../DataTypes/SettingsType.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/CPlugins.h"
@@ -350,7 +350,6 @@ void WebServerInit()
   web_server.on(F("/json"),            handle_json); // Also part of WEBSERVER_NEW_UI
   web_server.on(F("/csv"),             handle_csvval);
   web_server.on(F("/log"),             handle_log);
-  web_server.on(F("/login"),           handle_login);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifdef USES_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
@@ -972,42 +971,54 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   }
 }
 
+
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin)
 {
-  String www_username = F(DEFAULT_ADMIN_USERNAME);
-
   if (!clientIPallowed()) { return false; }
 
   if (SecuritySettings.Password[0] == 0) { return true; }
-
+  
   if (!mustProvideLogin) {
     return false;
   }
-  if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
-
-  // Basic Auth Method with Custom realm and Failure Response
-  // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
-  // Digest Auth Method with realm="Login Required" and empty Failure Response
-  // return server.requestAuthentication(DIGEST_AUTH);
-  // Digest Auth Method with Custom realm and empty Failure Response
-  // return server.requestAuthentication(DIGEST_AUTH, www_realm);
-  // Digest Auth Method with Custom realm and Failure Response
+  
   {
+    String www_username = F(DEFAULT_ADMIN_USERNAME);
+    if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
+
+    // Basic Auth Method with Custom realm and Failure Response
+    // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
+    // Digest Auth Method with realm="Login Required" and empty Failure Response
+    // return server.requestAuthentication(DIGEST_AUTH);
+    // Digest Auth Method with Custom realm and empty Failure Response
+    // return server.requestAuthentication(DIGEST_AUTH, www_realm);
+    // Digest Auth Method with Custom realm and Failure Response
+    {
 #ifdef CORE_PRE_2_5_0
 
-    // See https://github.com/esp8266/Arduino/issues/4717
-    HTTPAuthMethod mode = BASIC_AUTH;
+      // See https://github.com/esp8266/Arduino/issues/4717
+      HTTPAuthMethod mode = BASIC_AUTH;
 #else // ifdef CORE_PRE_2_5_0
-    HTTPAuthMethod mode = DIGEST_AUTH;
+      HTTPAuthMethod mode = DIGEST_AUTH;
 #endif // ifdef CORE_PRE_2_5_0
-    String message = F("Login Required (default user: ");
-    message += www_username;
-    message += ')';
-    web_server.requestAuthentication(mode, message.c_str());
-    return false;
+      String message = F("Login Required (default user: ");
+      message += www_username;
+      message += ')';
+      web_server.requestAuthentication(mode, message.c_str());
+
+      if (Settings.UseRules)
+      {
+        String event = F("Login#Failed");
+
+        // TD-er: Do not add to the eventQueue, but execute right now.
+        rulesProcessing(event);
+      }
+
+      return false;
+    }
   }
   return true;
 }

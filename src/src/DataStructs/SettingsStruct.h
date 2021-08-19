@@ -137,6 +137,9 @@ class SettingsStruct_tmpl
   bool UseNTP() const;
   void UseNTP(bool value);
 
+  bool AllowTaskValueSetAllPlugins() const;
+  void AllowTaskValueSetAllPlugins(bool value);
+
 
   void validate();
 
@@ -178,6 +181,9 @@ class SettingsStruct_tmpl
 
   // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
+
+  // Return true if I2C settings are correct
+  bool isI2CEnabled() const;
 
   // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
   bool isEthernetPin(int8_t pin) const;

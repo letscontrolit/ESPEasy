@@ -7,9 +7,16 @@ int calc_CRC16(const String& text) {
 
 int calc_CRC16(const char *ptr, int count)
 {
-  int crc = 0;
-  if (ptr != nullptr) {
-    while (--count >= 0)
+  int crc;
+
+  crc = 0;
+
+  while (--count >= 0)
+  {
+    crc = crc ^ static_cast<int>(*ptr++) << 8;
+    char i = 8;
+
+    do
     {
       crc = crc ^ (int)*ptr++ << 8;
       char i = 8;

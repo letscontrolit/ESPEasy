@@ -110,13 +110,13 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (destUnit != 0)
   {
     infoReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (uint8_t *)&infoReply, sizeof(C013_SensorInfoStruct));
+    C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
-        C013_sendUDP(it->first, (uint8_t *)&infoReply, sizeof(C013_SensorInfoStruct));
+        C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
         delay(10);
       }
     }
@@ -146,13 +146,13 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   if (destUnit != 0)
   {
     dataReply.destUnit = destUnit;
-    C013_sendUDP(destUnit, (uint8_t *)&dataReply, sizeof(C013_SensorDataStruct));
+    C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
     for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
-        C013_sendUDP(it->first, (uint8_t *)&dataReply, sizeof(C013_SensorDataStruct));
+        C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
         delay(10);
       }
     }
@@ -163,7 +163,7 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void C013_sendUDP(uint8_t unit, uint8_t *data, uint8_t size)
+void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -212,14 +212,15 @@ void C013_Receive(struct EventStruct *event) {
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    if ((event->Data[1] > 1) && (event->Data[1] < 6))
+    if ((event->Data != nullptr) &&
+        (event->Data[1] > 1) && (event->Data[1] < 6))
     {
       String log = (F("C013 : msg "));
 
       for (uint8_t x = 1; x < 6; x++)
       {
         log += ' ';
-        log += (int)event->Data[x];
+        log += static_cast<int>(event->Data[x]);
       }
       addLog(LOG_LEVEL_DEBUG_MORE, log);
     }
@@ -240,7 +241,7 @@ void C013_Receive(struct EventStruct *event) {
 
       if (event->Par2 < count) { count = event->Par2; }
 
-      memcpy((uint8_t *)&infoReply, (uint8_t *)event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&infoReply), event->Data, count);
 
       if (infoReply.isValid()) {
         // to prevent flash wear out (bugs in communication?) we can only write to an empty task
@@ -281,7 +282,7 @@ void C013_Receive(struct EventStruct *event) {
       int count = sizeof(C013_SensorDataStruct);
 
       if (event->Par2 < count) { count = event->Par2; }
-      memcpy((uint8_t *)&dataReply, (uint8_t *)event->Data, count);
+      memcpy(reinterpret_cast<uint8_t *>(&dataReply), event->Data, count);
 
       if (dataReply.isValid()) {
         // only if this task has a remote feed, update values

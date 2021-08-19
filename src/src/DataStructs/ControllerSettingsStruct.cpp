@@ -286,3 +286,13 @@ void ControllerSettingsStruct::deduplicate(bool value)
 {
   bitWrite(VariousFlags, 10, value);
 }
+
+bool ControllerSettingsStruct::useLocalSystemTime() const
+{
+  return bitRead(VariousFlags, 11);
+}
+
+void ControllerSettingsStruct::useLocalSystemTime(bool value)
+{
+  bitWrite(VariousFlags, 11, value);
+}

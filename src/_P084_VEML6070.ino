@@ -69,6 +69,12 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x38);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };

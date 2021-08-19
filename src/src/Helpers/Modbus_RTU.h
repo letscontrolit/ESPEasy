@@ -115,11 +115,11 @@ struct ModbusRTU_struct  {
         String hexvalue(buffer[i], HEX);
         hexvalue.toUpperCase();
         log += hexvalue;
-        log += F(" ");
+        log += ' ';
       }
-      log += F("(");
+      log += '(';
       log += length;
-      log += F(")");
+      log += ')';
       return log;
      }
    */
