@@ -278,7 +278,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       }
 
       addFormCheckBox(F("Text Coordinates in col/row"), F("p095_colrow"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
-      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp' and 'txtfull' subcommands."));
+      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
 
       addFormCheckBox(F("Use -1px offset for txp &amp; txtfull"),
                       F("p095_compat"),

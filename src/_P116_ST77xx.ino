@@ -166,7 +166,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       }
 
       addFormCheckBox(F("Text Coordinates in col/row"), F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp' and 'txtfull' subcommands."));
+      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
 
       addFormSubHeader(F("Content"));
 
