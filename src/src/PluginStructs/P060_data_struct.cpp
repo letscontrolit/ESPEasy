@@ -17,7 +17,7 @@ float P060_data_struct::getValue()
 
   if (OversamplingCount > 0)
   {
-    value             = (float)OversamplingValue / OversamplingCount;
+    value             = static_cast<float>(OversamplingValue) / OversamplingCount;
     OversamplingValue = 0;
     OversamplingCount = 0;
   } else {

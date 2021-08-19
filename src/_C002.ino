@@ -105,7 +105,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     mustSendEvent = true;
                     int pwmValue = UserVar[baseVar];
 
-                    switch ((int)nvalue)
+                    switch (static_cast<int>(nvalue))
                     {
                       case 0: // Off
                         pwmValue         = 0;
