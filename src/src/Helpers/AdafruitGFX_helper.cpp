@@ -317,7 +317,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (_columnRowMode) {
         _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
       } else {
-        _display->setCursor(nParams[0], nParams[1]);
+        _display->setCursor(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation);
       }
     }
   }
@@ -333,7 +333,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (_columnRowMode) {
         _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
       } else {
-        _display->setCursor(nParams[0], nParams[1]);
+        _display->setCursor(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation);
       }
       _display->println(parseStringToEndKeepCase(string, 5));                   // Print entire rest of provided line
     }
