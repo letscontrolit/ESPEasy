@@ -220,9 +220,6 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     else if (arg1.equals(F("on"))) {
       displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
     }
-    else if (arg1.equals(F("clear"))) {
-      tft->fillScreen(_bgcolor);
-    }
     else if (arg1.equals(F("clear")))
     {
       String arg2 = parseString(string, 3);
