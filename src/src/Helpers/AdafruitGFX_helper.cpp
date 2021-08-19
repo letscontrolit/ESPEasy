@@ -107,21 +107,45 @@ String AdaGFXparseTemplate(String& tmpString,
   char unicodePrefix = 0xc2;
 
   if (result.indexOf(unicodePrefix) != -1) {
-    const char degree[3]     = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
-    const char degree_tft[2] = { 0xf7, 0 };       // degree symbol
+    const char degree[3]     = { 0xc2, 0xb0, 0 };    // Unicode degree symbol
+    const char degree_tft[2] = { 0xf7, 0 };          // degree symbol
     result.replace(degree, degree_tft);
 
-    const char pound[3]      = { 0xc2, 0xa3, 0 }; // Unicode pound symbol
-    const char pound_eink[2] = { 0x9C, 0 };       // pound symbol
+    const char pound[3]      = { 0xc2, 0xa3, 0 };    // Unicode pound symbol
+    const char pound_eink[2] = { 0x9C, 0 };          // pound symbol
     result.replace(pound, pound_eink);
 
-    const char yen[3]      = { 0xc2, 0xa5, 0 };   // Unicode yen symbol
-    const char yen_eink[2] = { 0x9D, 0 };         // yen symbol
+    const char yen[3]      = { 0xc2, 0xa5, 0 };      // Unicode yen symbol
+    const char yen_eink[2] = { 0x9D, 0 };            // yen symbol
     result.replace(yen, yen_eink);
 
-    const char cent[3]      = { 0xc2, 0xa2, 0 };  // Unicode cent symbol
-    const char cent_eink[2] = { 0x9B, 0 };        // cent symbol
+    const char cent[3]      = { 0xc2, 0xa2, 0 };     // Unicode cent symbol
+    const char cent_eink[2] = { 0x9B, 0 };           // cent symbol
     result.replace(cent, cent_eink);
+
+    const char mu[3]       = { 0xc2, 0x85, 0 };      // Unicode mu/micro (µ) symbol
+    const char mu_ascii[2] = { 0xe5, 0 };            // mu/micro symbol
+    result.replace(mu, mu_ascii);
+
+    const char plusmin[3]       = { 0xc2, 0xb1, 0 }; // Unicode plusminus symbol
+    const char plusmin_ascii[2] = { 0xf0, 0 };       // plusminus symbol
+    result.replace(plusmin, plusmin_ascii);
+
+    const char laquo[3]       = { 0xc2, 0xab, 0 };   // Unicode left aquo symbol
+    const char laquo_ascii[2] = { 0xae, 0 };         // left aquo symbol
+    result.replace(laquo, laquo_ascii);
+
+    const char raquo[3]       = { 0xc2, 0xbb, 0 };   // Unicode right chevron symbol
+    const char raquo_ascii[2] = { 0xaf, 0 };         // right chevron symbol
+    result.replace(raquo, raquo_ascii);
+
+    const char half[3]       = { 0xc2, 0xbc, 0 };    // Unicode half 1/2 symbol
+    const char half_ascii[2] = { 0xab, 0 };          // half 1/2 symbol
+    result.replace(half, half_ascii);
+
+    const char quart[3]       = { 0xc2, 0xbc, 0 };   // Unicode quart 1/4 symbol
+    const char quart_ascii[2] = { 0xac, 0 };         // quart 1/4 symbol
+    result.replace(quart, quart_ascii);
   }
 
   unicodePrefix = 0xc3;
@@ -130,28 +154,32 @@ String AdaGFXparseTemplate(String& tmpString,
     // See: https://github.com/letscontrolit/ESPEasy/issues/2081
 
     const char umlautAE_uni[3] = { 0xc3, 0x84, 0 };  // Unicode Umlaute AE
-    const char umlautAE_tft[2] = { 0x8e, 0 };        // Umlaute
+    const char umlautAE_tft[2] = { 0x8e, 0 };        // Umlaute A
     result.replace(umlautAE_uni, umlautAE_tft);
 
     const char umlaut_ae_uni[3] = { 0xc3, 0xa4, 0 }; // Unicode Umlaute ae
-    const char umlautae_tft[2]  = { 0x84, 0 };       // Umlaute
+    const char umlautae_tft[2]  = { 0x84, 0 };       // Umlaute a
     result.replace(umlaut_ae_uni, umlautae_tft);
 
     const char umlautOE_uni[3] = { 0xc3, 0x96, 0 };  // Unicode Umlaute OE
-    const char umlautOE_tft[2] = { 0x99, 0 };        // Umlaute
+    const char umlautOE_tft[2] = { 0x99, 0 };        // Umlaute O
     result.replace(umlautOE_uni, umlautOE_tft);
 
     const char umlaut_oe_uni[3] = { 0xc3, 0xb6, 0 }; // Unicode Umlaute oe
-    const char umlautoe_tft[2]  = { 0x98, 0 };       // Umlaute
+    const char umlautoe_tft[2]  = { 0x94, 0 };       // Umlaute o
     result.replace(umlaut_oe_uni, umlautoe_tft);
 
     const char umlautUE_uni[3] = { 0xc3, 0x9c, 0 };  // Unicode Umlaute UE
-    const char umlautUE_tft[2] = { 0x9a, 0 };        // Umlaute
+    const char umlautUE_tft[2] = { 0x9a, 0 };        // Umlaute U
     result.replace(umlautUE_uni, umlautUE_tft);
 
     const char umlaut_ue_uni[3] = { 0xc3, 0xbc, 0 }; // Unicode Umlaute ue
-    const char umlautue_tft[2]  = { 0x81, 0 };       // Umlaute
+    const char umlautue_tft[2]  = { 0x81, 0 };       // Umlaute u
     result.replace(umlaut_ue_uni, umlautue_tft);
+
+    const char divide_uni[3]   = { 0xc3, 0xb7, 0 };  // Unicode divide symbol
+    const char divide_ascii[2] = { 0xf5, 0 };        // Divide symbol
+    result.replace(divide_uni, divide_ascii);
 
     //    const char umlaut_sz_uni[3] = {0xc3, 0x9f, 0}; // Unicode Umlaute sz
     //    const char umlaut_sz_tft[2] = {0xe2, 0}; // Umlaute
@@ -293,6 +321,23 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       }
     }
   }
+  else if (subcommand.equals(F("txz")) && (argCount >= 3)) // txz: Text at position
+  {
+    # if ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[0], nParams[1], _columnRowMode)) {
+      success = false;
+    } else
+    # endif // if ADAGFX_ARGUMENT_VALIDATION
+    {
+      if (_columnRowMode) {
+        _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
+      } else {
+        _display->setCursor(nParams[0], nParams[1]);
+      }
+      _display->println(parseStringToEndKeepCase(string, 5));                   // Print entire rest of provided line
+    }
+  }
   else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
   {
     _fgcolor = AdaGFXparseColor(sParams[0], _colorDepth);
@@ -407,6 +452,55 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setRotation(nParams[0]);
     }
   }
+  # if ADAGFX_USE_ASCIITABLE
+  else if (subcommand.equals(F("asciitable")))
+  {
+    String  line;
+    int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
+    uint8_t scale        = (argCount == 2 && nParams[1] > 0 && nParams[1] <= 10 ? nParams[1] : 2);
+    uint8_t currentScale = _fontscaling;
+
+    if (_fontscaling != scale) { // Set fontscaling
+      _fontscaling = scale;
+      _display->setTextSize(_fontscaling);
+      calculateTextMetrics(_fontwidth, _fontheight);
+    }
+    line.reserve(_textcols);
+    _display->setCursor(0, 0);
+    int16_t row     = 0;
+    bool    colMode = _columnRowMode;
+    _columnRowMode = true;
+
+    for (int16_t i = start; i <= 0xFF && row < _textrows; i++) {
+      if ((i % 4 == 0) && (line.length() > (_textcols - 8u))) { // 8 = 4x space + char
+        printText(line.c_str(), 0, row, _fontscaling, _fgcolor, _bgcolor);
+        line.clear();
+        row++;
+      }
+
+      if (line.isEmpty()) {
+        line += F("0x");
+
+        if (i < 0x10) { line += '0'; }
+        line += String(i, HEX);
+      }
+      line += ' ';
+      line += static_cast<char>(((i == 0x0A) || (i == 0x0D) ? 0x20 : i)); // Show a space instead of CR/LF
+    }
+
+    if (row < _textrows) {
+      printText(line.c_str(), 0, row, _fontscaling, _fgcolor, _bgcolor);
+    }
+
+    _columnRowMode = colMode;           // Restore
+
+    if (_fontscaling != currentScale) { // Restore if needed
+      _fontscaling = currentScale;
+      _display->setTextSize(_fontscaling);
+      calculateTextMetrics(_fontwidth, _fontheight);
+    }
+  }
+  # endif // if ADAGFX_USE_ASCIITABLE
   else if (subcommand.equals(F("font")) && (argCount == 1)) { // font: Change font
     # if ADAGFX_FONTS_INCLUDED
     sParams[0].toLowerCase();

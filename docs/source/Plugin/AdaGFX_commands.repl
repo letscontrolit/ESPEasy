@@ -36,6 +36,11 @@
     Set text position (move the cursor). Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
     "
     "
+    ``<trigger>,txz,<x>,<y>,<text>``
+    ","
+    Set text position (move the cursor) and print the text. Combines the ``txp`` and ``txt`` commands in 1. Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
+    "
+    "
     ``<trigger>,txc,<foreColor>[,<backgroundColor>]``
     ","
     Set text color (background is transparent if not provided, or the same as the foreground color).
@@ -46,8 +51,8 @@
         * Full color display: ``White``, ``Black``, ``Red``, ``Green``, ``Blue``, ``Yellow``, ``Orange``, ``Navy``, ``Darkgreen``, ``Cyan``, ``Darkcyan``, ``Maroon``, ``Purple``, ``Olive``, ``Magenta``, ``Lightgrey``, ``Darkgrey``, ``Pink`` and ``Greenyellow``.
         * 7-color (eInk) displays: ``White``, ``Black``, ``Red``, ``Green``, ``Blue``, ``Yellow`` and ``Orange``
         * Monochrome (eInk, 1 add. color, and 1 or 2-tone greyscale) displays: ``White``, ``Black``, ``Inverse``, ``Red``, ``Light`` and ``Dark``
-    * *#RGB565* A ``#`` prefixed, 1 to 4 digit, hex-coded color value in RGB565 format (5 bits red, 6 bits green, 5 bits blue) giving the max. number of 65535 colors. This is the value that is shown after the settings are saved.
-    * *#RRGGBB* A ``#`` prefixed, 6 digit, hex coded RGB color value. Will be transformed to an RGB565 value!
+    * *#RGB565* A ``#`` prefixed, 1 to 4 digit, hex-coded color value in RGB565 format (5 bits red, 6 bits green, 5 bits blue) giving the max. number of 65535 colors.
+    * *#RRGGBB* A ``#`` prefixed, 6 digit, hex coded RGB color value. Will be transformed to RGB565!
     "
     "
     ``<trigger>,txs,<size>``
@@ -62,15 +67,26 @@
     All options that have a default specified (size, foreColor, backColor) can be left out, but text is expected. ForeColor and BackColor use the last set Foreground and Background colors (that will by default be white and transparent if not provided).
     "
     "
+    ``<trigger>,asciitable[,<offset>,<fontscaling>]``
+    ","
+    Show an ascii table on the display, starting at position 0,0. Display is not cleared before drawing the table.
+    
+    ``offset`` is in steps of 32 characters (0x20), and by default starts at 0x80, showing the 'high ascii' characters for the current font. Applicable range is -4..3, allowing to view the entire supported character set. The CR (0x0D) and LF (0x0A) characters are replaced by a space to not disturb the table on screen.
+
+    ``fontscaling`` can be changed, from the default value 2, to enlarge the characters (possibly rendering less characters of the table, hence the offset can be applied). Does not change the current fontscaling setting.
+
+    This command is not available in builds that use the ``LIMIT_BUILD_SIZE`` compile-time option, as it is intended for debugging/development use.
+    "
+    "
     ``<trigger>,font,<fontname>``
     ","
-    Switch to font. Also applies font settings t recalculate the max. column and row settings.
+    Switch to font. Also applies font settings to recalculate the max. column and row settings.
 
     Depending on compile-time settings, none or multiple fonts are available.
     
-    * *default* The default 6 * 10 font
+    * *default* The default 6 * 10 font, includes most of the special characters like degrees centigrade and a few valuta symbols.
 
-    Enabled by default, but disabled in memory-challenged builds:
+    Enabled by default, but disabled in memory-challenged builds: (most extra fonts do *not* include special symbol characters)
 
     * *sevenseg24* A rather large 7-segment 21 * 48 font
     * *sevenseg18* A somewhat less large 7-segment 16 * 34 font
@@ -94,17 +110,17 @@
     "
     ``<trigger>,l,<x1>,<y1>,<x2>,<y2>,<color>``
     ","
-    Draw a simple line.
+    Draw a simple line between point x1,y1 and x2,y2, using the (required) color, 1 pixel wide.
     "
     "
     ``<trigger>,lh,<y>,<width>,<color>``
     ","
-    Draw an horizontal line (width = Line width in pixels (positive = right of first point, negative = point of first corner).
+    Draw a horizontal line (width = Line 'width' in pixels (positive = right of first point, negative = left of first point).
     "
     "
     ``<trigger>,lv,<x>,<height>,<color>``
     ","
-    Draw a vertical line (height= Line height in pixels (positive = below first point, negative = above first point).
+    Draw a vertical line (height= Line 'height' in pixels (positive = below first point, negative = above first point).
     "
     "
     ``<trigger>,r,<x>,<y>,<width>,<height>,<color>``
@@ -153,10 +169,10 @@
     "
     ``<trigger>,pxh,<x>,<y>,<color1>[,<color2>,...]``
     ","
-    Print a horizontal chain of colored pixels. Just supply as many colors as pixels that need to be painted.
+    Print a horizontal chain of colored pixels`(left to right, starting at position x,y). Just supply as many colors as pixels that need to be painted.
     "
     "
     ``<trigger>,pxv,<x>,<y>,<color1>[,<color2>,...]``
     ","
-    Print a vertical chain of colored pixels. Just supply as many colors as pixels that need to be painted.
+    Print a vertical chain of colored pixels (top to bottom, starting at position x,y). Just supply as many colors as pixels that need to be painted.
     "

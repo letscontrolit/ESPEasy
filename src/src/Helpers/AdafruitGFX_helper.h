@@ -18,6 +18,9 @@
 # ifndef ADAGFX_ARGUMENT_VALIDATION
 #  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
 # endif // ifndef ADAGFX_ARGUMENT_VALIDATION
+# ifndef ADAGFX_USE_ASCIITABLE
+#  define ADAGFX_USE_ASCIITABLE       1 // Enable 'asciitable' command (useful for debugging/development)
+# endif // ifndef ADAGFX_USE_ASCIITABLE
 # ifndef ADAGFX_SUPPORT_7COLOR
 #  define ADAGFX_SUPPORT_7COLOR       1 // Do we support 7-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_7COLOR
@@ -51,7 +54,10 @@
 #  ifdef ADAGFX_ARGUMENT_VALIDATION
 #   undef ADAGFX_ARGUMENT_VALIDATION
 #  endif // ifdef ADAGFX_ARGUMENT_VALIDATION
-# endif  // ifdef LIMIT_BUILD_SIZE
+#  ifdef ADAGFX_USE_ASCIITABLE
+#   undef ADAGFX_USE_ASCIITABLE
+#  endif // ifdef ADAGFX_USE_ASCIITABLE
+# endif // ifdef LIMIT_BUILD_SIZE
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
