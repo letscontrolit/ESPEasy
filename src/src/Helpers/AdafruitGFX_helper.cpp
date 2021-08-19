@@ -123,7 +123,7 @@ String AdaGFXparseTemplate(String& tmpString,
     const char cent_eink[2] = { 0x9B, 0 };           // cent symbol
     result.replace(cent, cent_eink);
 
-    const char mu[3]       = { 0xc2, 0x85, 0 };      // Unicode mu/micro (µ) symbol
+    const char mu[3]       = { 0xc2, 0xb5, 0 };      // Unicode mu/micro (µ) symbol
     const char mu_ascii[2] = { 0xe5, 0 };            // mu/micro symbol
     result.replace(mu, mu_ascii);
 
@@ -135,11 +135,11 @@ String AdaGFXparseTemplate(String& tmpString,
     const char laquo_ascii[2] = { 0xae, 0 };         // left aquo symbol
     result.replace(laquo, laquo_ascii);
 
-    const char raquo[3]       = { 0xc2, 0xbb, 0 };   // Unicode right chevron symbol
-    const char raquo_ascii[2] = { 0xaf, 0 };         // right chevron symbol
+    const char raquo[3]       = { 0xc2, 0xbb, 0 };   // Unicode right aquote symbol
+    const char raquo_ascii[2] = { 0xaf, 0 };         // right aquote symbol
     result.replace(raquo, raquo_ascii);
 
-    const char half[3]       = { 0xc2, 0xbc, 0 };    // Unicode half 1/2 symbol
+    const char half[3]       = { 0xc2, 0xbd, 0 };    // Unicode half 1/2 symbol
     const char half_ascii[2] = { 0xab, 0 };          // half 1/2 symbol
     result.replace(half, half_ascii);
 
