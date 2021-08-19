@@ -10,6 +10,8 @@
 #define PLUGIN_VALUENAME1_096 "EINK"
 #define PLUGIN_096_MAX_DISPLAY 1
 
+#define P096_USE_ADA_GRAPHICS
+
 /* README.MD
 
 ## INTRO
@@ -100,9 +102,14 @@ Examples:
 //plugin dependency
 #include <LOLIN_EPD.h>
 #include <Adafruit_GFX.h>
+#ifdef P096_USE_ADA_GRAPHICS
+#include "src/Helpers/AdafruitGFX_helper.h"
+#endif
 
+#ifndef P096_USE_ADA_GRAPHICS
 //declare functions for using default value parameters
 void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = EPD_WHITE, unsigned short bkcolor = EPD_BLACK);
+#endif
 
 //Define the default values for both ESP32/lolin32 and D1 Mini 
 #ifdef ESP32
@@ -139,8 +146,11 @@ struct Plugin_096_EPD_SettingStruct
 } EPD_Settings;
 
 //The display pointer
-LOLIN_IL3897 *eInkScreen = NULL;
+LOLIN_IL3897 *eInkScreen = nullptr;
 uint8_t plugin_096_sequence_in_progress = false;
+#ifdef P096_USE_ADA_GRAPHICS
+AdafruitGFX_helper *gfxHelper = nullptr;
+#endif
 
 boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -222,12 +232,16 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
         addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), EPD_Settings.address_epd_busy);
 
+        #ifdef P096_USE_ADA_GRAPHICS
+        AdaGFXFormRotation(F("p116_rotate"), PCONFIG(1));
+        #else
         {
           uint8_t choice2 = PCONFIG(1);
           const __FlashStringHelper * options2[4] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
           int optionValues2[4] = { 0, 1, 2, 3 };
           addFormSelector(F("Rotation"), F("p096_rotate"), 4, options2, optionValues2, choice2);
         }
+        #endif
 
         uint16_t width_ = PCONFIG(2);
         if(width_ == 0)
@@ -278,6 +292,23 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
         eInkScreen = new LOLIN_IL3897(EPD_Settings.width, EPD_Settings.height, EPD_Settings.address_epd_dc, EPD_Settings.address_epd_rst, EPD_Settings.address_epd_cs, EPD_Settings.address_epd_busy); //hardware SPI
         plugin_096_sequence_in_progress = false;
+        #ifdef P096_USE_ADA_GRAPHICS
+        if (nullptr != eInkScreen) {
+          gfxHelper = new (std::nothrow) AdafruitGFX_helper(eInkScreen,
+                                                            F("epd"),
+                                                            PCONFIG(2),
+                                                            PCONFIG(3),
+                                                            AdaGFXColorDepth::Monochrome,
+                                                            AdaGFXTextPrintMode::ContinueToNextLine,
+                                                            3,
+                                                            static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK),
+                                                            static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE));
+
+          if (nullptr != gfxHelper) {
+            // gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
+          }
+        }
+        #endif
         eInkScreen->begin();
         eInkScreen->clearBuffer();
 
@@ -373,6 +404,10 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
           }
           else if (command.equalsIgnoreCase(F("EPD")))
           {
+            #ifdef P096_USE_ADA_GRAPHICS
+            String tmp = string;
+            success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, PCONFIG(2) / 10)); // Hand it over after replacing variables
+            #else
 #ifndef BUILD_NO_DEBUG
             tmpString += "<br/> EPD  ";
 #endif
@@ -499,6 +534,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
             {
               success = false;
             }
+            #endif
           }
           else 
           {
@@ -532,6 +568,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 }
 
 
+#ifndef P096_USE_ADA_GRAPHICS
 //Print some text
 //param [in] string : The text to display
 //param [in] X : The left position (X)
@@ -551,6 +588,7 @@ void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSiz
   eInkScreen->println(fixString);
   eInkScreen->display();
 }
+#endif
 
 //Parse color string to color
 //param [in] colorString : The color string (white, red, ...)
@@ -577,6 +615,7 @@ unsigned short Plugin_096_ParseColor(const String & colorString)
   return EPD_WHITE;
 }
 
+#ifndef P096_USE_ADA_GRAPHICS
 //Fix text with handling special characters (degrees and main monetary symbols)
 //This is specific case for current AdafruitGfx standard fontused for eink screen
 //param [in/out] s : The string to fix
@@ -634,6 +673,6 @@ int Plugin_096_StringSplit(const String &s, char c, String op[], int limit)
   }  
   return count;
 }
-
+#endif
 
 #endif // USES_P096
