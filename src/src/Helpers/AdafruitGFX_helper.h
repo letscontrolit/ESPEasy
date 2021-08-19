@@ -27,6 +27,9 @@
 # ifndef ADAGFX_FONTS_INCLUDED
 #  define ADAGFX_FONTS_INCLUDED       1 // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
+# ifndef ADAGFX_PARSE_SUBCOMMAND
+#  define ADAGFX_PARSE_SUBCOMMAND     1 // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
+# endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 
 // #define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
 // #define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
@@ -57,7 +60,12 @@
 #  ifdef ADAGFX_USE_ASCIITABLE
 #   undef ADAGFX_USE_ASCIITABLE
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
-# endif // ifdef LIMIT_BUILD_SIZE
+# endif  // ifdef LIMIT_BUILD_SIZE
+
+# define ADAGFX_PARSE_PREFIX      F("{:") // Subcommand-trigger prefix and postfix strings
+# define ADAGFX_PARSE_PREFIX_LEN  2
+# define ADAGFX_PARSE_POSTFIX     F(":}") // Will be removed before the normal template parsing is done
+# define ADAGFX_PARSE_POSTFIX_LEN 2
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
@@ -111,16 +119,18 @@ enum class AdaGFXTextPrintMode : uint8_t {
 };
 
 enum class AdaGFXColorDepth : uint16_t {
-  Monochrome   = 2u,    // Black & white
-  Duochrome    = 3u,    // Black, white & grey
-  Quadrochrome = 4u,    // Black, white, lightgrey & darkgrey
+  Monochrome   = 2u,      // Black & white
+  Duochrome    = 3u,      // Black, white & grey
+  Quadrochrome = 4u,      // Black, white, lightgrey & darkgrey
   # ifdef ADAGFX_SUPPORT_7COLOR
-  Septochrome = 7u,     // Black, white, red, yellow, blue, green, orange
+  Septochrome = 7u,       // Black, white, red, yellow, blue, green, orange
   # endif // ifdef ADAGFX_SUPPORT_7COLOR
-  Octochrome   = 8u,    // 8 regular colors
-  Quintochrome = 16u,   // 16 colors
-  FullColor    = 65535u // 65535 colors (max. supported by RGB565)
+  Octochrome   = 8u,      // 8 regular colors
+  Quintochrome = 16u,     // 16 colors
+  FullColor    = 65535u   // 65535 colors (max. supported by RGB565)
 };
+
+class AdafruitGFX_helper; // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
 const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode);
@@ -133,8 +143,9 @@ void                       AdaGFXFormForeAndBackColors(const __FlashStringHelper
                                                        const __FlashStringHelper *backgroundId,
                                                        uint16_t                   backgroundColor,
                                                        AdaGFXColorDepth           colorDepth = AdaGFXColorDepth::FullColor);
-String   AdaGFXparseTemplate(String& tmpString,
-                             uint8_t lineSize);
+String   AdaGFXparseTemplate(String            & tmpString,
+                             uint8_t             lineSize,
+                             AdafruitGFX_helper *gfxHelper = nullptr);
 uint16_t AdaGFXparseColor(String         & s,
                           AdaGFXColorDepth colorDepth = AdaGFXColorDepth::FullColor); // Parse either a color by name, 6 digit hex rrggbb
                                                                                       // color, or 1..4 digit #rgb565 color (hex with #
@@ -172,7 +183,8 @@ public:
   void getTextMetrics(uint16_t& textcols,
                       uint16_t& textrows,
                       uint8_t & fontwidth,
-                      uint8_t & fontheight);
+                      uint8_t & fontheight,
+                      uint8_t & fontscaling);
   void getCursorXY(int16_t& currentX,                     // Get last known (text)cursor position, recalculates to col/row if that
                    int16_t& currentY);                    // setting is acive
 
@@ -182,6 +194,10 @@ public:
 
   void setColumnRowMode(bool state) { // When true, addressing for txp, txtfull commands is in columns/rows, default in pixels
     _columnRowMode = state;           // NOT compatible with _p095_compensation!
+  }
+
+  String getTrigger() {               // Returns the current trigger
+    return _trigger;
   }
 
 private:

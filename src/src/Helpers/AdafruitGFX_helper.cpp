@@ -93,35 +93,86 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
 /****************************************************************************
  * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
  ***************************************************************************/
-String AdaGFXparseTemplate(String& tmpString,
-                           uint8_t lineSize) {
+String AdaGFXparseTemplate(String            & tmpString,
+                           uint8_t             lineSize,
+                           AdafruitGFX_helper *gfxHelper) {
   // Änderung WDS: Tabelle vorerst Abgeschaltet !!!!
   // Perform some specific changes for LCD display
   // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
-  String result           = parseTemplate_padded(tmpString, lineSize);
-  const char euro[4]      = { 0xe2, 0x82, 0xac, 0 }; // Unicode euro symbol
-  const char euro_eink[2] = { 0xED, 0 };             // Euro symbol
+  # if ADAGFX_PARSE_SUBCOMMAND
 
-  result.replace(euro, euro_eink);
+  String result = tmpString;
+
+  if (nullptr != gfxHelper) {
+    String trigger = gfxHelper->getTrigger();
+
+    if (!trigger.isEmpty()) {
+      int16_t prefixTrigger  = result.indexOf(ADAGFX_PARSE_PREFIX);
+      int16_t postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX);
+
+      while ((prefixTrigger > -1) && (postfixTrigger > -1) && (postfixTrigger > prefixTrigger)) { // Might be valid
+        String subcommand = result.substring(prefixTrigger + ADAGFX_PARSE_POSTFIX_LEN, postfixTrigger);
+
+        if (!subcommand.isEmpty()) {
+          String command;
+          command.reserve(trigger.length() + 1 + subcommand.length());
+          command += trigger;
+          command += ',';
+          command += subcommand;
+
+          #  ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
+            log.reserve(command.length() + 20);
+            log  = F("AdaGFX: inline cmd: ");
+            log += command;
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          #  endif // ifndef BUILD_NO_DEBUG
+
+          if (gfxHelper->processCommand(command)) {   // Execute command and remove from result incl. pre/postfix
+            result.remove(prefixTrigger, (postfixTrigger - prefixTrigger) + ADAGFX_PARSE_POSTFIX_LEN);
+            prefixTrigger  = result.indexOf(ADAGFX_PARSE_PREFIX);
+            postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX);
+          } else { // If the command fails, exit further processing
+            prefixTrigger  = -1;
+            postfixTrigger = -1;
+          }
+        } else {
+          prefixTrigger  = -1;
+          postfixTrigger = -1;
+        }
+      }
+    }
+  }
+  result = parseTemplate_padded(result, lineSize);
+  # else // if ADAGFX_PARSE_SUBCOMMAND
+  String result = parseTemplate_padded(tmpString, lineSize);
+  # endif // if ADAGFX_PARSE_SUBCOMMAND
+
+  const char euro[4]       = { 0xe2, 0x82, 0xac, 0 }; // Unicode euro symbol
+  const char euro_ascii[2] = { 0xED, 0 };             // Euro symbol
+  result.replace(euro, euro_ascii);
 
   char unicodePrefix = 0xc2;
 
   if (result.indexOf(unicodePrefix) != -1) {
-    const char degree[3]     = { 0xc2, 0xb0, 0 };    // Unicode degree symbol
-    const char degree_tft[2] = { 0xf7, 0 };          // degree symbol
-    result.replace(degree, degree_tft);
+    const char degree[3]       = { 0xc2, 0xb0, 0 };  // Unicode degree symbol
+    const char degree_ascii[2] = { 0xf7, 0 };        // degree symbol
+    result.replace(degree, degree_ascii);
 
-    const char pound[3]      = { 0xc2, 0xa3, 0 };    // Unicode pound symbol
-    const char pound_eink[2] = { 0x9C, 0 };          // pound symbol
-    result.replace(pound, pound_eink);
+    const char pound[3]       = { 0xc2, 0xa3, 0 };   // Unicode pound symbol
+    const char pound_ascii[2] = { 0x9C, 0 };         // pound symbol
+    result.replace(pound, pound_ascii);
 
-    const char yen[3]      = { 0xc2, 0xa5, 0 };      // Unicode yen symbol
-    const char yen_eink[2] = { 0x9D, 0 };            // yen symbol
-    result.replace(yen, yen_eink);
+    const char yen[3]       = { 0xc2, 0xa5, 0 };     // Unicode yen symbol
+    const char yen_ascii[2] = { 0x9D, 0 };           // yen symbol
+    result.replace(yen, yen_ascii);
 
-    const char cent[3]      = { 0xc2, 0xa2, 0 };     // Unicode cent symbol
-    const char cent_eink[2] = { 0x9B, 0 };           // cent symbol
-    result.replace(cent, cent_eink);
+    const char cent[3]       = { 0xc2, 0xa2, 0 };    // Unicode cent symbol
+    const char cent_ascii[2] = { 0x9B, 0 };          // cent symbol
+    result.replace(cent, cent_ascii);
 
     const char mu[3]       = { 0xc2, 0xb5, 0 };      // Unicode mu/micro (µ) symbol
     const char mu_ascii[2] = { 0xe5, 0 };            // mu/micro symbol
@@ -146,6 +197,7 @@ String AdaGFXparseTemplate(String& tmpString,
     const char quart[3]       = { 0xc2, 0xbc, 0 };   // Unicode quart 1/4 symbol
     const char quart_ascii[2] = { 0xac, 0 };         // quart 1/4 symbol
     result.replace(quart, quart_ascii);
+    delay(0);
   }
 
   unicodePrefix = 0xc3;
@@ -153,39 +205,54 @@ String AdaGFXparseTemplate(String& tmpString,
   if (result.indexOf(unicodePrefix) != -1) {
     // See: https://github.com/letscontrolit/ESPEasy/issues/2081
 
-    const char umlautAE_uni[3] = { 0xc3, 0x84, 0 };  // Unicode Umlaute AE
-    const char umlautAE_tft[2] = { 0x8e, 0 };        // Umlaute A
-    result.replace(umlautAE_uni, umlautAE_tft);
+    const char umlautAE_uni[3]   = { 0xc3, 0x84, 0 };  // Unicode Umlaute AE
+    const char umlautAE_ascii[2] = { 0x8e, 0 };        // Umlaute A
+    result.replace(umlautAE_uni, umlautAE_ascii);
 
-    const char umlaut_ae_uni[3] = { 0xc3, 0xa4, 0 }; // Unicode Umlaute ae
-    const char umlautae_tft[2]  = { 0x84, 0 };       // Umlaute a
-    result.replace(umlaut_ae_uni, umlautae_tft);
+    const char umlaut_ae_uni[3]  = { 0xc3, 0xa4, 0 };  // Unicode Umlaute ae
+    const char umlautae_ascii[2] = { 0x84, 0 };        // Umlaute a
+    result.replace(umlaut_ae_uni, umlautae_ascii);
 
-    const char umlautOE_uni[3] = { 0xc3, 0x96, 0 };  // Unicode Umlaute OE
-    const char umlautOE_tft[2] = { 0x99, 0 };        // Umlaute O
-    result.replace(umlautOE_uni, umlautOE_tft);
+    const char umlautOE_uni[3]   = { 0xc3, 0x96, 0 };  // Unicode Umlaute OE
+    const char umlautOE_ascii[2] = { 0x99, 0 };        // Umlaute O
+    result.replace(umlautOE_uni, umlautOE_ascii);
 
-    const char umlaut_oe_uni[3] = { 0xc3, 0xb6, 0 }; // Unicode Umlaute oe
-    const char umlautoe_tft[2]  = { 0x94, 0 };       // Umlaute o
-    result.replace(umlaut_oe_uni, umlautoe_tft);
+    const char umlaut_oe_uni[3]  = { 0xc3, 0xb6, 0 };  // Unicode Umlaute oe
+    const char umlautoe_ascii[2] = { 0x94, 0 };        // Umlaute o
+    result.replace(umlaut_oe_uni, umlautoe_ascii);
 
-    const char umlautUE_uni[3] = { 0xc3, 0x9c, 0 };  // Unicode Umlaute UE
-    const char umlautUE_tft[2] = { 0x9a, 0 };        // Umlaute U
-    result.replace(umlautUE_uni, umlautUE_tft);
+    const char umlautUE_uni[3]   = { 0xc3, 0x9c, 0 };  // Unicode Umlaute UE
+    const char umlautUE_ascii[2] = { 0x9a, 0 };        // Umlaute U
+    result.replace(umlautUE_uni, umlautUE_ascii);
 
-    const char umlaut_ue_uni[3] = { 0xc3, 0xbc, 0 }; // Unicode Umlaute ue
-    const char umlautue_tft[2]  = { 0x81, 0 };       // Umlaute u
-    result.replace(umlaut_ue_uni, umlautue_tft);
+    const char umlaut_ue_uni[3]  = { 0xc3, 0xbc, 0 };  // Unicode Umlaute ue
+    const char umlautue_ascii[2] = { 0x81, 0 };        // Umlaute u
+    result.replace(umlaut_ue_uni, umlautue_ascii);
 
-    const char divide_uni[3]   = { 0xc3, 0xb7, 0 };  // Unicode divide symbol
-    const char divide_ascii[2] = { 0xf5, 0 };        // Divide symbol
+    const char divide_uni[3]   = { 0xc3, 0xb7, 0 };    // Unicode divide symbol
+    const char divide_ascii[2] = { 0xf5, 0 };          // Divide symbol
     result.replace(divide_uni, divide_ascii);
 
-    //    const char umlaut_sz_uni[3] = {0xc3, 0x9f, 0}; // Unicode Umlaute sz
-    //    const char umlaut_sz_tft[2] = {0xe2, 0}; // Umlaute
-    //    result.replace(umlaut_sz_uni, umlaut_sz_tft);
+    const char umlaut_sz_uni[3]   = { 0xc3, 0x9f, 0 }; // Unicode Umlaute sz
+    const char umlaut_sz_ascii[2] = { 0xe0, 0 };       // Umlaute
+    result.replace(umlaut_sz_uni, umlaut_sz_ascii);
     delay(0);
   }
+
+  for (uint16_t l = result.length(); l > 0 && isSpace(result[l - 1]); l--) { // Right-trim
+    result.remove(l - 1);
+  }
+  # ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    log.reserve(result.length() + 24);
+    log  = F("AdaGFX: parse result: '");
+    log += result;
+    log += '\'';
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  # endif // ifndef BUILD_NO_DEBUG
   return result;
 }
 
@@ -825,7 +892,7 @@ void AdafruitGFX_helper::printText(const char    *string,
   String newString = string;
 
   if ((_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) && (newString.length() > static_cast<unsigned int>(_textcols - _x))) {
-    newString = newString.substring(0, (_textcols - _x) - 1);
+    newString = newString.substring(0, _textcols - _x);
   }
 
   if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
@@ -1129,11 +1196,16 @@ uint16_t AdaGFXrgb565ToColor7(uint16_t color) {
 /****************************************************************************
  * getTextMetrics: Returns the metrics related to current font
  ***************************************************************************/
-void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols, uint16_t& textrows, uint8_t& fontwidth, uint8_t& fontheight) {
-  textcols   = _textcols;
-  textrows   = _textrows;
-  fontwidth  = _fontwidth;
-  fontheight = _fontheight;
+void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols,
+                                        uint16_t& textrows,
+                                        uint8_t & fontwidth,
+                                        uint8_t & fontheight,
+                                        uint8_t & fontscaling) {
+  textcols    = _textcols;
+  textrows    = _textrows;
+  fontwidth   = _fontwidth;
+  fontheight  = _fontheight;
+  fontscaling = _fontscaling;
 }
 
 /****************************************************************************

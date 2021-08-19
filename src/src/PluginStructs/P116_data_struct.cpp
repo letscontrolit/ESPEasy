@@ -234,7 +234,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
  ***************************************************************************/
 void P116_data_struct::updateFontMetrics() {
   if (nullptr != gfxHelper) {
-    gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight);
+    gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling);
   } else {
     _textcols = _xpix / (_fontwidth * _fontscaling);
     _textrows = _ypix / (_fontheight * _fontscaling);
@@ -265,13 +265,20 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
 
     gfxHelper->setColumnRowMode(false); // Turn off column mode
 
-    for (uint8_t x = 0; x < _textrows; x++) {
-      String newString = AdaGFXparseTemplate(strings[x], _textcols);
+    int yPos = 0;
+
+    for (uint8_t x = 0; x < _textrows && yPos < _ypix; x++) {
+      String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
+
+      # ifdef ADAGFX_PARSE_SUBCOMMAND
+      updateFontMetrics();
+      # endif // ifdef ADAGFX_PARSE_SUBCOMMAND
 
       if (!newString.isEmpty()) {
-        gfxHelper->printText(newString.c_str(), 0, x * _fontheight * _fontscaling, _fontscaling, _fgcolor, _bgcolor);
+        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
         delay(0);
       }
+      yPos += (_fontheight * _fontscaling);
     }
     gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
     int16_t curX, curY;
@@ -279,7 +286,8 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
     UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
     UserVar[event->BaseVarIndex + 1] = curY;
   }
-  return false; // Always return false, so no attempt to send to Controllers or generate events is started
+  return false;                                                                            // Always return false, so no attempt to send to
+                                                                                           // Controllers or generate events is started
 }
 
 /****************************************************************************
