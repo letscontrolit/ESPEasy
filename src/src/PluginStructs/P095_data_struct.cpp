@@ -162,14 +162,16 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
 
     int yPos = 0;
 
-    for (uint8_t x = 0; x < _textrows && yPos < _ypix; x++) {
+    for (uint8_t x = 0; x < P095_Nlines; x++) {
       String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
-      # ifdef ADAGFX_PARSE_SUBCOMMAND
+      # if ADAGFX_PARSE_SUBCOMMAND
       updateFontMetrics();
-      # endif // ifdef ADAGFX_PARSE_SUBCOMMAND
+      # endif // if ADAGFX_PARSE_SUBCOMMAND
 
-      gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+      if (yPos < _ypix) {
+        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+      }
       delay(0);
       yPos += (_fontheight * _fontscaling);
     }
