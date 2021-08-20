@@ -11,6 +11,9 @@
 #define PLUGIN_NAME_093       "Energy (Heat) - Mitsubishi Heat Pump [TESTING]"
 #define PLUGIN_VALUENAME1_093 "settings"
 
+#define P093_REQUEST_STATUS          PCONFIG(0)
+#define P093_REQUEST_STATUS_LABEL    PCONFIG_LABEL(0)
+
 #define PLUGIN_093_DEBUG
 
 /*
@@ -34,7 +37,7 @@ static const uint8_t INFOMODE[] = {
 };
 
 struct P093_data_struct : public PluginTaskData_base {
-  P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx) :
+  P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx, bool includeStatus) :
     _serial(new (std::nothrow) ESPeasySerial(port, serialRx, serialTx)),
     _state(NotConnected),
     _fastBaudRate(false),
@@ -44,7 +47,8 @@ struct P093_data_struct : public PluginTaskData_base {
     _statusUpdateTimeout(0),
     _tempMode(false),
     _wideVaneAdj(false),
-    _valuesInitialized(false) {
+    _valuesInitialized(false),
+    _includeStatus(includeStatus) {
 
     setState(Connecting);
   }
@@ -92,10 +96,12 @@ struct P093_data_struct : public PluginTaskData_base {
     result += map(_currentValues.vane, _mappings.vane);
     result += F("\",\"iSee\":");
     result += boolToString(_currentValues.iSee);
-    result += F(",\"operating\":");
-    result += boolToString(_currentValues.operating);
-    result += F(",\"compressorFrequency\":");
-    result += _currentValues.compressorFrequency;
+    if (_includeStatus) {
+      result += F(",\"operating\":");
+      result += boolToString(_currentValues.operating);
+      result += F(",\"compressorFrequency\":");
+      result += _currentValues.compressorFrequency;
+    }
     result += F(",\"temperature\":");
     result += toString(_currentValues.temperature, 1) + '}';
 
@@ -332,9 +338,10 @@ private:
         updateStatus();
         break;
 
-      case StatusUpdated:
+      case StatusUpdated: {
         responseReceived();
-        _infoModeIndex = (_infoModeIndex + 1) % sizeof(INFOMODE);
+        const int infoModeCount = _includeStatus ? sizeof(INFOMODE) : sizeof(INFOMODE) - 1;
+        _infoModeIndex = (_infoModeIndex + 1) % infoModeCount;
         if (_infoModeIndex != 0) {
           setState(UpdatingStatus);
         } else {
@@ -342,6 +349,7 @@ private:
           setState(ScheduleNextStatusUpdate);
         }
         break;
+      }
 
       case ScheduleNextStatusUpdate:
         _statusUpdateTimeout = millis() + 1000;
@@ -706,6 +714,7 @@ private:
   boolean _tempMode;
   boolean _wideVaneAdj;
   boolean _valuesInitialized;
+  boolean _includeStatus;
   WriteStatus _writeStatus;
   const Mappings _mappings;
 };
@@ -747,19 +756,27 @@ boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS: {
+        P093_REQUEST_STATUS = 0;
+        success = true;
+        break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
+      addFormCheckBox(F("Include AC status"), P093_REQUEST_STATUS_LABEL, P093_REQUEST_STATUS);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
+      P093_REQUEST_STATUS = isFormItemChecked(P093_REQUEST_STATUS_LABEL);
       success = true;
       break;
     }
 
     case PLUGIN_INIT: {
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2, P093_REQUEST_STATUS));
       success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }
