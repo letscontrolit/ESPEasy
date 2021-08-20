@@ -38,7 +38,7 @@ static const uint8_t INFOMODE[] = {
 
 struct P093_data_struct : public PluginTaskData_base {
   P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx, bool includeStatus) :
-    _serial(new (std::nothrow) ESPeasySerial(port, serialRx, serialTx)),
+    _serial(port, serialRx, serialTx),
     _state(NotConnected),
     _fastBaudRate(false),
     _readPos(0),
@@ -51,10 +51,6 @@ struct P093_data_struct : public PluginTaskData_base {
     _includeStatus(includeStatus) {
 
     setState(Connecting);
-  }
-
-  virtual ~P093_data_struct() {
-    delete _serial;
   }
 
   boolean sync() {
@@ -469,7 +465,7 @@ private:
   void connect() {
     addLog(LOG_LEVEL_DEBUG, String(F("M-AC: Connect ")) + getBaudRate());
 
-    _serial->begin(getBaudRate(), SERIAL_8E1);
+    _serial.begin(getBaudRate(), SERIAL_8E1);
     const uint8_t buffer[] = { 0xfc, 0x5a, 0x01, 0x30, 0x02, 0xca, 0x01, 0xa8 };
     sendPacket(buffer, sizeof(buffer));
   }
@@ -483,7 +479,7 @@ private:
     addLog(LOG_LEVEL_DEBUG_MORE, dumpOutgoingPacket(packet, size));
 #endif
 
-    _serial->write(packet, size);
+    _serial.write(packet, size);
     _writeTimeout = millis() + 2000;
   }
 
@@ -507,8 +503,8 @@ private:
 
     static const uint8_t DATA_LEN_INDEX = 4;
 
-    while(_serial->available() > 0) {
-      uint8_t value = _serial->read();
+    while(_serial.available() > 0) {
+      uint8_t value = _serial.read();
 
       if (_readPos == 0) {
         // Wait for start uint8_t.
@@ -701,7 +697,7 @@ private:
   #endif
 
 private:
-  ESPeasySerial* _serial;
+  ESPeasySerial _serial;
   State _state;
   boolean _fastBaudRate;
   uint8_t _readBuffer[READ_BUFFER_LEN];
