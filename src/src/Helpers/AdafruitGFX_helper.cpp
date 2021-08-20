@@ -108,7 +108,7 @@ String AdaGFXparseTemplate(String            & tmpString,
 
     if (!trigger.isEmpty()) {
       int16_t prefixTrigger  = result.indexOf(ADAGFX_PARSE_PREFIX);
-      int16_t postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX);
+      int16_t postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX, prefixTrigger + 1);
 
       while ((prefixTrigger > -1) && (postfixTrigger > -1) && (postfixTrigger > prefixTrigger)) { // Might be valid
         String subcommand = result.substring(prefixTrigger + ADAGFX_PARSE_POSTFIX_LEN, postfixTrigger);
@@ -122,22 +122,25 @@ String AdaGFXparseTemplate(String            & tmpString,
 
           #  ifndef BUILD_NO_DEBUG
 
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log;
             log.reserve(command.length() + 20);
             log  = F("AdaGFX: inline cmd: ");
             log += command;
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_DEBUG, log);
           }
           #  endif // ifndef BUILD_NO_DEBUG
 
           if (gfxHelper->processCommand(command)) {   // Execute command and remove from result incl. pre/postfix
             result.remove(prefixTrigger, (postfixTrigger - prefixTrigger) + ADAGFX_PARSE_POSTFIX_LEN);
             prefixTrigger  = result.indexOf(ADAGFX_PARSE_PREFIX);
-            postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX);
+            postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX, prefixTrigger + 1);
           } else { // If the command fails, exit further processing
             prefixTrigger  = -1;
             postfixTrigger = -1;
+            #  ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_DEBUG, F("AdaGFX: inline cmd: unknown"));
+            #  endif // ifndef BUILD_NO_DEBUG
           }
         } else {
           prefixTrigger  = -1;
@@ -915,7 +918,7 @@ void AdafruitGFX_helper::printText(const char    *string,
   }
   _display->print(newString);
 
-  for (uint16_t c = _x + newString.length() + 1; c < _textcols && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; c++) {
+  for (uint16_t c = _x + newString.length() + 1; c <= _textcols && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; c++) {
     _display->print(' ');
   }
 
@@ -1206,6 +1209,15 @@ void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols,
   fontwidth   = _fontwidth;
   fontheight  = _fontheight;
   fontscaling = _fontscaling;
+}
+
+/****************************************************************************
+ * getColors: Returns the current text colors
+ ***************************************************************************/
+void AdafruitGFX_helper::getColors(uint16_t& fgcolor,
+                                   uint16_t& bgcolor) {
+  fgcolor = _fgcolor;
+  bgcolor = _bgcolor;
 }
 
 /****************************************************************************

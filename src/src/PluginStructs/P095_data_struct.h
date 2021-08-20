@@ -10,7 +10,7 @@
 # include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
 
 # define P095_Nlines 24                                 // The number of different lines which can be displayed
-# define P095_Nchars 50
+# define P095_Nchars 60
 
 # define P095_CONFIG_ROTATION           PCONFIG(1)      // Rotation
 # define P095_CONFIG_BUTTON_PIN         PCONFIG(2)      // Pin for display-button
@@ -28,8 +28,6 @@
 # define P095_CONFIG_FLAG_CMD_TRIGGER   8               // Flag-offset to store 4 bits for Command trigger, uses bits 8, 9, 10 and 11
 # define P095_CONFIG_FLAG_FONTSCALE     12              // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
 # define P095_CONFIG_FLAG_MODE          16              // Flag-offset to store 4 bits for Mode, uses bits 16, 17, 18 and 19
-// # define P095_CONFIG_FLAG_ROTATION      8               // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10 and 11
-// # define P095_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 28 and 19
 
 // // Getters
 # define P095_CONFIG_GET_COLOR_FOREGROUND   (P095_CONFIG_COLORS & 0xFFFF)
@@ -37,9 +35,6 @@
 # define P095_CONFIG_FLAG_GET_CMD_TRIGGER   (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CMD_TRIGGER))
 # define P095_CONFIG_FLAG_GET_FONTSCALE     (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_FONTSCALE))
 # define P095_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_MODE))
-
-// # define P095_CONFIG_FLAG_GET_ROTATION      (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_ROTATION))
-// # define P095_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE))
 
 # ifdef ESP32
 

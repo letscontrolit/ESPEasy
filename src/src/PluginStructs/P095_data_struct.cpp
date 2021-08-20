@@ -131,6 +131,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
 void P095_data_struct::updateFontMetrics() {
   if (nullptr != gfxHelper) {
     gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling);
+    gfxHelper->getColors(_fgcolor, _bgcolor);
   } else {
     _textcols = _xpix / (_fontwidth * _fontscaling);
     _textrows = _ypix / (_fontheight * _fontscaling);
@@ -168,10 +169,8 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
       updateFontMetrics();
       # endif // ifdef ADAGFX_PARSE_SUBCOMMAND
 
-      if (!newString.isEmpty()) {
-        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
-        delay(0);
-      }
+      gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+      delay(0);
       yPos += (_fontheight * _fontscaling);
     }
     gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
@@ -290,12 +289,15 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
 
     if (nullptr != gfxHelper) {
       String tmp = string;
-      success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols)); // Hand it over after replacing variables
+
+      // Hand it over after replacing variables
+      success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
+
+      updateFontMetrics(); // Font or color may have changed
 
       if (success) {
-        updateFontMetrics();                                                    // Font may have changed
         int16_t curX, curY;
-        gfxHelper->getCursorXY(curX, curY);                                     // Get current X and Y coordinates, and put into Values
+        gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
         UserVar[event->BaseVarIndex]     = curX;
         UserVar[event->BaseVarIndex + 1] = curY;
       }

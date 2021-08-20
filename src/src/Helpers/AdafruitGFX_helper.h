@@ -62,10 +62,10 @@
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
 # endif  // ifdef LIMIT_BUILD_SIZE
 
-# define ADAGFX_PARSE_PREFIX      F("{:") // Subcommand-trigger prefix and postfix strings
-# define ADAGFX_PARSE_PREFIX_LEN  2
-# define ADAGFX_PARSE_POSTFIX     F(":}") // Will be removed before the normal template parsing is done
-# define ADAGFX_PARSE_POSTFIX_LEN 2
+# define ADAGFX_PARSE_PREFIX      F("~") // Subcommand-trigger prefix and postfix strings
+# define ADAGFX_PARSE_PREFIX_LEN  1
+# define ADAGFX_PARSE_POSTFIX     F("~") // Will be removed before the normal template parsing is done
+# define ADAGFX_PARSE_POSTFIX_LEN 1
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
@@ -185,6 +185,8 @@ public:
                       uint8_t & fontwidth,
                       uint8_t & fontheight,
                       uint8_t & fontscaling);
+  void getColors(uint16_t& fgcolor,
+                 uint16_t& bgcolor);
   void getCursorXY(int16_t& currentX,                     // Get last known (text)cursor position, recalculates to col/row if that
                    int16_t& currentY);                    // setting is acive
 
