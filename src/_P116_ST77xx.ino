@@ -129,7 +129,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280) };
-        addFormSelector(F("TFT display model"), F("p116_type"), 6, options4, optionValues4, P116_CONFIG_FLAG_GET_TYPE);
+        addFormSelector(F("TFT display model"), F("p116_type"), static_cast<int>(ST77xx_type_e::ST77xx_MAX), options4, optionValues4, P116_CONFIG_FLAG_GET_TYPE);
       }
 
       addFormSubHeader(F("Layout"));
@@ -165,6 +165,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
+      // Inverted state!
+      addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
+      addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+
       addFormCheckBox(F("Text Coordinates in col/row"), F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
       addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
 
@@ -175,20 +179,23 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                   F("p116_backgroundcolor"),
                                   P116_CONFIG_GET_COLOR_BACKGROUND);
 
-      // Inverted state!
-      addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
-      addFormNote(F("When checked, the display wakes up at receiving remote updates."));
-
       String strings[P116_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      String line; // Default reserved length is plenty
+      String   line; // Default reserved length is plenty
+      uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
 
       for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
         line  = F("Line ");
         line += (varNr + 1);
         addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
+        remain -= (strings[varNr].length() + 1);
       }
+      String remainStr;
+      remainStr.reserve(15);
+      remainStr  = F("Remaining: ");
+      remainStr += remain;
+      addUnit(remainStr);
 
       success = true;
       break;

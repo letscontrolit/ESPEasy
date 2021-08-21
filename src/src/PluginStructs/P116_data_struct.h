@@ -10,6 +10,7 @@
 # include <Adafruit_ST7789.h>                           // include Adafruit ST7789 TFT library
 
 # include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
+# include "../CustomBuild/StorageLayout.h"
 
 # define P116_Nlines 24                                 // The number of different lines which can be displayed
 # define P116_Nchars 60
