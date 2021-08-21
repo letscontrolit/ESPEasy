@@ -5,6 +5,8 @@
 
 #ifdef PLUGIN_USES_ADAFRUITGFX
 
+# define ADAGFX_LOG_LEVEL LOG_LEVEL_DEBUG
+
 /****************************************************************************
  * helper class and functions for displays that use Adafruit_GFX library
  ***************************************************************************/
@@ -98,7 +100,7 @@ enum class AdaGFXMonoDuoQuadColors: uint16_t {
   ADAGFXEPD_LIGHT                   ///< lighter color
 };
 
-# ifdef ADAGFX_SUPPORT_7COLOR
+# if ADAGFX_SUPPORT_7COLOR
 enum class AdaGFX7Colors: uint16_t {
   ADAGFX7C_BLACK,  ///< black color
   ADAGFX7C_WHITE,  ///< white color
@@ -108,7 +110,7 @@ enum class AdaGFX7Colors: uint16_t {
   ADAGFX7C_YELLOW, ///< yellow color
   ADAGFX7C_ORANGE  ///< orange color
 };
-# endif // ifdef ADAGFX_SUPPORT_7COLOR
+# endif // if ADAGFX_SUPPORT_7COLOR
 
 enum class AdaGFXTextPrintMode : uint8_t {
   ContinueToNextLine       = 0u,
@@ -118,13 +120,20 @@ enum class AdaGFXTextPrintMode : uint8_t {
   MAX                            // Keep as last
 };
 
+# if ADAGFX_SUPPORT_7COLOR
+#  define ADAGFX_COLORDEPTH_COUNT 7
+#  define ADAGFX_MONOCOLORS_COUNT 4
+# else // if ADAGFX_SUPPORT_7COLOR
+#  define ADAGFX_COLORDEPTH_COUNT 6
+#  define ADAGFX_MONOCOLORS_COUNT 3
+# endif // if ADAGFX_SUPPORT_7COLOR
 enum class AdaGFXColorDepth : uint16_t {
   Monochrome   = 2u,      // Black & white
-  Duochrome    = 3u,      // Black, white & grey
+  Duochrome    = 3u,      // Black, white & red (or yellow)
   Quadrochrome = 4u,      // Black, white, lightgrey & darkgrey
-  # ifdef ADAGFX_SUPPORT_7COLOR
+  # if ADAGFX_SUPPORT_7COLOR
   Septochrome = 7u,       // Black, white, red, yellow, blue, green, orange
-  # endif // ifdef ADAGFX_SUPPORT_7COLOR
+  # endif // if ADAGFX_SUPPORT_7COLOR
   Octochrome   = 8u,      // 8 regular colors
   Quintochrome = 16u,     // 16 colors
   FullColor    = 65535u   // 65535 colors (max. supported by RGB565)
@@ -134,6 +143,7 @@ class AdafruitGFX_helper; // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
 const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode);
+const __FlashStringHelper* getAdaGFXColorDepth(AdaGFXColorDepth colorDepth);
 void                       AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                                                    uint8_t                    selectedIndex);
 void                       AdaGFXFormRotation(const __FlashStringHelper *id,
@@ -187,10 +197,10 @@ public:
                       uint8_t & fontscaling);
   void getColors(uint16_t& fgcolor,
                  uint16_t& bgcolor);
-  void getCursorXY(int16_t& currentX,                     // Get last known (text)cursor position, recalculates to col/row if that
-                   int16_t& currentY);                    // setting is acive
+  void getCursorXY(int16_t& currentX,                 // Get last known (text)cursor position, recalculates to col/row if that
+                   int16_t& currentY);                // setting is acive
 
-  void setP095TxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095 txtfull subcommands, uses offset -1
+  void setTxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095/P096 txtfull subcommands, uses offset -1
     _p095_compensation = compensation;
   }
 

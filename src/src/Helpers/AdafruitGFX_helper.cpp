@@ -41,6 +41,24 @@ const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode) {
   return F("None");
 }
 
+/******************************************************************************************
+ * get the display text for a color depth enum value
+ *****************************************************************************************/
+const __FlashStringHelper* getAdaGFXColorDepth(AdaGFXColorDepth colorDepth) {
+  switch (colorDepth) {
+    case AdaGFXColorDepth::Monochrome: return F("Monochrome");
+    case AdaGFXColorDepth::Duochrome: return F("Monochrome + 1 color");
+    case AdaGFXColorDepth::Quadrochrome: return F("Monochrome + 2 grey levels");
+    # if ADAGFX_SUPPORT_7COLOR
+    case AdaGFXColorDepth::Septochrome: return F("eInk - 7 colors");
+    # endif // if ADAGFX_SUPPORT_7COLOR
+    case AdaGFXColorDepth::Octochrome: return F("TFT - 8 colors");
+    case AdaGFXColorDepth::Quintochrome: return F("TFT - 16 colors");
+    case AdaGFXColorDepth::FullColor: return F("Full color - 65535 colors");
+  }
+  return F("None");
+}
+
 /*****************************************************************************************
  * Show a selector for all available 'Text print mode' options, for use in PLUGIN_WEBFORM_LOAD
  ****************************************************************************************/
@@ -122,12 +140,12 @@ String AdaGFXparseTemplate(String            & tmpString,
 
           #  ifndef BUILD_NO_DEBUG
 
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
             String log;
             log.reserve(command.length() + 20);
             log  = F("AdaGFX: inline cmd: ");
             log += command;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLog(ADAGFX_LOG_LEVEL, log);
           }
           #  endif // ifndef BUILD_NO_DEBUG
 
@@ -139,7 +157,7 @@ String AdaGFXparseTemplate(String            & tmpString,
             prefixTrigger  = -1;
             postfixTrigger = -1;
             #  ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("AdaGFX: inline cmd: unknown"));
+            addLog(ADAGFX_LOG_LEVEL, F("AdaGFX: inline cmd: unknown"));
             #  endif // ifndef BUILD_NO_DEBUG
           }
         } else {
@@ -247,13 +265,13 @@ String AdaGFXparseTemplate(String            & tmpString,
   }
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
     log.reserve(result.length() + 24);
     log  = F("AdaGFX: parse result: '");
     log += result;
     log += '\'';
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
   return result;
@@ -281,7 +299,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   _trigger.toLowerCase(); // store trigger in lowercase
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
     log.reserve(65);
     log  = F("AdaGFX: Init, x: ");
@@ -292,7 +310,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
     log += static_cast<uint16_t>(colorDepth);
     log += F(", trigger: ");
     log += _trigger;
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -359,7 +377,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     log.reserve(90);
     log  = F("AdaGFX: command: ");
     log += _trigger;
@@ -367,7 +385,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     log += argCount;
     log += ':';
     log += string;
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -403,7 +421,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (_columnRowMode) {
         _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
       } else {
-        _display->setCursor(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation);
+        _display->setCursor(nParams[0], nParams[1]);
       }
       _display->println(parseStringToEndKeepCase(string, 5));                   // Print entire rest of provided line
     }
@@ -934,7 +952,7 @@ uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
 
 /****************************************************************************
  * AdaGFXparseColor: translate color name, rgb565 hex #rGgb or rgb hex #RRGGBB to an RGB565 value,
- * also applies color reduction to mono(2), duo(3), quadro(4), octo(8), quinto(16)-chrome colors
+ * also applies color reduction to mono(2), duo(3), quadro(4), septo(7), octo(8), quinto(16)-chrome colors
  ***************************************************************************/
 
 // Parse color string to RGB565 color
@@ -1035,8 +1053,12 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
     result = color565(number >> 16 & 0xFF, number >> 8 & 0xFF, number & 0xFF);
   }
 
-  if ((result == -1) || (result == ADAGFX_WHITE)) { // Default & don't convert white
-    result = ADAGFX_WHITE;                          // fallback value
+  if ((result == -1) || (result == ADAGFX_WHITE)) {                             // Default & don't convert white
+    if (colorDepth >= AdaGFXColorDepth::Septochrome) {
+      result = static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
+    } else {
+      result = ADAGFX_WHITE;                                                    // Color fallback value
+    }
   } else {
     // Reduce colors?
     switch (colorDepth) {
@@ -1232,7 +1254,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
 
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
     log.reserve(60);
     log = F("AdaGFX:");
@@ -1249,7 +1271,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
     log += _textcols;
     log += F(" rows: ");
     log += _textrows;
-    addLog(LOG_LEVEL_INFO, log);
+    addLog(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
@@ -1267,7 +1289,7 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
                                             bool colRowMode) {
   #  ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
 
     log.reserve(49);
@@ -1279,7 +1301,7 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
     log += Y;
     log += '/';
     log += (colRowMode ? _textrows : _res_y);
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLog(ADAGFX_LOG_LEVEL, log);
   }
   #  endif // ifndef BUILD_NO_DEBUG
 
