@@ -105,7 +105,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
 
     if (nullptr != gfxHelper) {
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
-      gfxHelper->setP095TxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
+      gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
     }
     updateFontMetrics();
     tft->setRotation(_rotation);           // Set rotation 0/1/2/3

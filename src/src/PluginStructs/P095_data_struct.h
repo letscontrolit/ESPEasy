@@ -8,6 +8,7 @@
 # include <Adafruit_ILI9341.h>                          // include Adafruit ILI9341 TFT library
 
 # include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
+# include "../CustomBuild/StorageLayout.h"
 
 # define P095_Nlines 24                                 // The number of different lines which can be displayed
 # define P095_Nchars 60
@@ -64,13 +65,13 @@ const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd)
 struct P095_data_struct : public PluginTaskData_base {
 public:
 
-  P095_data_struct(uint8_t  rotation,
-                   uint8_t  fontscaling,
+  P095_data_struct(uint8_t             rotation,
+                   uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
-                   uint8_t  displayTimer,
-                   String   commandTrigger,
-                   uint16_t fgcolor = ADAGFX_WHITE,
-                   uint16_t bgcolor = ADAGFX_BLACK);
+                   uint8_t             displayTimer,
+                   String              commandTrigger,
+                   uint16_t            fgcolor = ADAGFX_WHITE,
+                   uint16_t            bgcolor = ADAGFX_BLACK);
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

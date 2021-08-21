@@ -277,6 +277,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
+      // Inverted state!
+      addFormCheckBox(F("Wake display on receiving text"), F("p095_NoDisplay"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE));
+      addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+
       addFormCheckBox(F("Text Coordinates in col/row"), F("p095_colrow"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
       addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
 
@@ -287,8 +291,6 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Content"));
 
-      // # ifdef P095_USE_ADA_GRAPHICS
-
       if (P095_CONFIG_COLORS == 0) { // For migrating from older release task settings
         P095_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
       }
@@ -297,22 +299,23 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                                   F("p095_backgroundcolor"),
                                   P095_CONFIG_GET_COLOR_BACKGROUND);
 
-      // # endif // ifdef P095_USE_ADA_GRAPHICS
-
-      // Inverted state!
-      addFormCheckBox(F("Wake display on receiving text"), F("p095_NoDisplay"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE));
-      addFormNote(F("When checked, the display wakes up at receiving remote updates."));
-
       String strings[P095_Nlines];
       LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
-      String line; // Default reserved length is plenty
+      String   line; // Default reserved length is plenty
+      uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
 
       for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
         line  = F("Line ");
         line += (varNr + 1);
         addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P095_Nchars);
+        remain -= (strings[varNr].length() + 1);
       }
+      String remainStr;
+      remainStr.reserve(15);
+      remainStr  = F("Remaining: ");
+      remainStr += remain;
+      addUnit(remainStr);
 
       success = true;
       break;
@@ -335,7 +338,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P095_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("p095_buttonInverse"))); // Bit 1 buttonInverse
       bitWrite(lSettings, P095_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("p095_clearOnExit")));   // Bit 2 ClearOnExit
       bitWrite(lSettings, P095_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p095_colrow")));        // Bit 3 Col/Row addressing
-      bitWrite(lSettings, P095_CONFIG_FLAG_COMPAT_P095,   isFormItemChecked(F("p095_compat")));        // Bit 4 Compat_P095
+      bitWrite(lSettings, P095_CONFIG_FLAG_COMPAT_P095,   !isFormItemChecked(F("p095_compat")));       // Bit 4 Compat_P095 (inv)
       set4BitToUL(lSettings, P095_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p095_commandtrigger")));  // Bit 8..11 Command trigger
       set4BitToUL(lSettings, P095_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p095_fontscale")));       // Bit 12..15 Font scale
       set4BitToUL(lSettings, P095_CONFIG_FLAG_MODE,        getFormItemInt(F("p095_mode")));            // Bit 16..19 Text print mode
@@ -387,7 +390,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           success = P095_data->plugin_init(event); // Start the display
         }
       } else {
-        addLog(LOG_LEVEL_ERROR, F("ILKI9341: SPI not enabled, init cancelled."));
+        addLog(LOG_LEVEL_ERROR, F("ILI9341: SPI not enabled, init cancelled."));
       }
       break;
 
@@ -419,6 +422,16 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       // Plugin_095_printText(String(F("ESPEasy")).c_str(), 1, 1);
       // success = true;
       // break;
+    }
+
+    case PLUGIN_EXIT:
+    {
+      P095_data_struct *P095_data = static_cast<P095_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P095_data) {
+        success = P095_data->plugin_exit(event); // Stop the display
+      }
+      break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
