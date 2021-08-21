@@ -66,6 +66,10 @@ public:
   ~LOLIN_EPD();
   void begin(bool reset = true);
 
+	void virtual display();
+	void virtual clearBuffer();
+	void virtual deepSleep();
+
 protected:
   int8_t sid, ///< sid pin
       sclk,   ///< serial clock pin
@@ -107,5 +111,7 @@ private:
 };
 
 #include "LOLIN_IL3897.h"
+#include "LOLIN_UC8151D.h"
+#include "LOLIN_SSD1680.h"
 
 #endif

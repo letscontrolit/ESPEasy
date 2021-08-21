@@ -115,6 +115,21 @@ void LOLIN_EPD::begin(bool reset)
   }
 }
 
+/***************************************************************************
+ * Virtual methods, implemented empty
+ **************************************************************************/
+void LOLIN_EPD::display() {
+  // No action here
+}
+
+void LOLIN_EPD::clearBuffer() {
+  // No action here
+}
+
+void LOLIN_EPD::deepSleep() {
+  // No action here
+}
+
 /**************************************************************************/
 /*!
     @brief send an EPD command with no data
