@@ -11,6 +11,7 @@
 # include "../Helpers/Misc.h"
 
 # define P020_RX_WAIT              PCONFIG(4)
+# define P020_RX_BUFFER            PCONFIG(7)
 
 
 P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
@@ -161,7 +162,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   do {
     if (ser2netSerial->available()) {
-      if (serial_buffer.length() >= P020_DATAGRAM_MAX_SIZE) {
+      if (serial_buffer.length() > P020_RX_BUFFER) {
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
         ser2netSerial->read();
       }

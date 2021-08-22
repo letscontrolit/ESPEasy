@@ -35,6 +35,8 @@
 
 // #include <ArduinoJson.h>
 
+bool C016_allowLocalSystemTime = false;
+
 bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -45,16 +47,21 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       Protocol[++protocolCount].Number       = CPLUGIN_ID_016;
       Protocol[protocolCount].usesMQTT       = false;
-      Protocol[protocolCount].usesTemplate   = true;
+      Protocol[protocolCount].usesTemplate   = false;
       Protocol[protocolCount].usesAccount    = false;
       Protocol[protocolCount].usesPassword   = false;
+      Protocol[protocolCount].usesExtCreds   = false;
       Protocol[protocolCount].defaultPort    = 80;
       Protocol[protocolCount].usesID         = false;
       Protocol[protocolCount].usesHost       = false;
       Protocol[protocolCount].usesPort       = false;
+      Protocol[protocolCount].usesQueue      = false;
+      Protocol[protocolCount].usesCheckReply = false;
+      Protocol[protocolCount].usesTimeout    = false;
       Protocol[protocolCount].usesSampleSets = false;
       Protocol[protocolCount].needsNetwork   = false;
       Protocol[protocolCount].allowsExpire   = false;
+      Protocol[protocolCount].allowLocalSystemTime = true;
       break;
     }
 
@@ -66,6 +73,14 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_INIT:
     {
+      {
+        MakeControllerSettings(ControllerSettings);
+
+        if (AllocatedControllerSettings()) {
+          LoadControllerSettings(event->ControllerIndex, ControllerSettings);
+          C016_allowLocalSystemTime = ControllerSettings.useLocalSystemTime();
+        }
+      }
       success = init_c016_delay_queue(event->ControllerIndex);
       ControllerCache.init();
       break;
@@ -98,8 +113,11 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     {
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      C016_queue_element element(event, valueCount, node_time.getUnixTime());
-      success = ControllerCache.write((uint8_t *)&element, sizeof(element));
+      C016_queue_element element(
+        event, 
+        valueCount, 
+        C016_allowLocalSystemTime ? node_time.now() : node_time.getUnixTime());
+      success = ControllerCache.write(reinterpret_cast<const uint8_t *>(&element), sizeof(element));
 
       /*
               if (C016_DelayHandler == nullptr) {
