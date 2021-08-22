@@ -162,7 +162,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
       {
         if (sentScanCode != actScanCode) // any change to last sent data?
         {
-          UserVar[event->BaseVarIndex] = (float)actScanCode;
+          UserVar[event->BaseVarIndex] = actScanCode;
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           String log = F("KPad : ScanCode=0x");

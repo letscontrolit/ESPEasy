@@ -861,7 +861,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
         continue;
       }
       avg /= results.rawlen / 2;
-      float avgTms = (float)totTms / (results.rawlen / 2);
+      float avgTms = static_cast<float>(totTms) / (results.rawlen / 2);
 
       if ((avgTms <= bstMul) && (avg < bstAvg))
       {

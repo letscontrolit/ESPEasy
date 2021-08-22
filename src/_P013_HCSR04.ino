@@ -163,7 +163,7 @@ boolean Plugin_013(uint8_t function, struct EventStruct *event, String& string)
 
         int8_t Plugin_013_TRIG_Pin = CONFIG_PIN1;
         int8_t Plugin_013_IRQ_Pin = CONFIG_PIN2;
-        int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : (float)max_distance * 2.54f;
+        int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : static_cast<float>(max_distance) * 2.54f;
 
         // create sensor instance and add to std::map
         P_013_sensordefs.erase(event->TaskIndex);
@@ -309,7 +309,7 @@ float Plugin_013_read(taskIndex_t taskIndex)
   int16_t measuringUnit = Settings.TaskDevicePluginConfig[taskIndex][3];
   int16_t filterType = Settings.TaskDevicePluginConfig[taskIndex][4];
   int16_t filterSize = Settings.TaskDevicePluginConfig[taskIndex][5];
-  int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : (float)max_distance * 2.54f;
+  int16_t max_distance_cm = (measuringUnit == UNIT_CM) ? max_distance : static_cast<float>(max_distance) * 2.54f;
 
   unsigned int echoTime = 0;
 
