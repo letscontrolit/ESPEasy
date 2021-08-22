@@ -446,7 +446,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
+          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_data->DisplayLinesV1)), sizeof(P036_data->DisplayLinesV1));
 
           // Need to delete the allocated object here
           delete P036_data;
@@ -945,8 +945,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             const int strlen = strnlen_P(P036_data->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->DisplayLinesV1[LineNo - 1].Content));
             if (strlen > 0) {
-              const float fAvgPixPerChar = ((float)PixLength) / strlen;
-              const int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
+              const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
+              const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
               P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
@@ -972,7 +972,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
 
           if (UserVar[event->BaseVarIndex] == 1) {
-            uint8_t nextFrame = ceil(((float)LineNo) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
+            uint8_t nextFrame = ceil((static_cast<float>(LineNo)) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
                                                                                                      // 0-based
             P036_data->P036_JumpToPage(event, nextFrame);                                            //  Start to display the selected page,
             // function needs 65ms!

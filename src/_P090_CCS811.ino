@@ -122,7 +122,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         // read frequency
-        int frequencyChoice        = (int)P090_READ_INTERVAL;
+        int frequencyChoice        = P090_READ_INTERVAL;
         const __FlashStringHelper * frequencyOptions[3] = { F("1 second"), F("10 seconds"), F("60 seconds") };
         int    frequencyValues[3]  = { 1, 2, 3 };
         addFormSelector(F("Take reading every"), F("p090_read_frequency"), 3, frequencyOptions, frequencyValues, frequencyChoice);
