@@ -272,16 +272,15 @@ bool P037_data_struct::webform_load(
                  20,
                  false, false, EMPTY_STRING, EMPTY_STRING);
       html_TD();
-    } else {
+    } else
     # endif // ifdef P037_JSON_SUPPORT
-    String label = F("MQTT Topic ");
-    label += (varNr + 1);
-    id     = F("p037_template");
-    id    += (varNr + 1);
-    addFormTextBox(label, id, StoredSettings.deviceTemplate[varNr], 40);
-    # ifdef P037_JSON_SUPPORT
-  }
-    # endif // ifdef P037_JSON_SUPPORT
+    {
+      String label = F("MQTT Topic ");
+      label += (varNr + 1);
+      id     = F("p037_template");
+      id    += (varNr + 1);
+      addFormTextBox(label, id, StoredSettings.deviceTemplate[varNr], 40);
+    }
   }
   # ifdef P037_JSON_SUPPORT
 
@@ -593,14 +592,14 @@ bool P037_data_struct::webform_save(
   valueMap.reserve(sizeof(StoredSettings.valueMappings) / 2);
 
   String left, right;
-  bool firstError;
+  bool   firstError;
   # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
 
   // Mapping must be processed first, then Filtering, because they are parsed in that order
   # ifdef P037_MAPPING_SUPPORT
   firstError = true;
-  String operands = P037_OPERAND_LIST;
-  uint8_t mapNr   = 1;
+  String  operands = P037_OPERAND_LIST;
+  uint8_t mapNr    = 1;
   left.reserve(32);
   right.reserve(32);
 
@@ -642,7 +641,7 @@ bool P037_data_struct::webform_save(
   # ifdef P037_FILTER_SUPPORT
   String filters = P037_FILTER_LIST;
   firstError = true;
-  String filterMap;
+  String  filterMap;
   uint8_t filterNr = 1;
   filterMap.reserve(sizeof(StoredSettings.valueMappings) / 2);
 
@@ -856,12 +855,13 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
   bool result = true;
 
   if ((!key.isEmpty()) && (!value.isEmpty())) { // Ignore empty input(s)
-    String filters = P037_FILTER_LIST;
-    String valueData = value;
-    String fltKey, fltIndex, filterData;
-    double from, to, doubleValue;
-    int8_t rangeSeparator;
-    bool accept, matchTopicId = true;
+    String  filters = P037_FILTER_LIST;
+    String  valueData = value;
+    String  fltKey, fltIndex, filterData;
+    double  from, to, doubleValue;
+    int8_t  rangeSeparator;
+    bool    accept = true;
+    bool    matchTopicId = true;
     uint8_t fltFrom = 0, fltMax = _maxFilter;
     #  ifdef P037_FILTER_PER_TOPIC
 
