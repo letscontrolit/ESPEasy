@@ -257,10 +257,10 @@ unsigned char LOLIN_I2C_MOTOR::sendData(unsigned char *data, unsigned char len)
     delay(50);
 
     if (data[0] == GET_SLAVE_STATUS) {
-      Wire.requestFrom((int)_address, 2);
+      Wire.requestFrom(static_cast<int>(_address), 2);
     }
     else {
-      Wire.requestFrom((int)_address, 1);
+      Wire.requestFrom(static_cast<int>(_address), 1);
     }
 
     i = 0;

@@ -46,32 +46,32 @@ String Command_Subnet (struct EventStruct *event, const char* Line)
 #ifdef HAS_ETHERNET
 String Command_ETH_Phy_Addr (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("ETH_Phy_Addr:"), Line, (uint8_t*)&Settings.ETH_Phy_Addr,1);
+  return Command_GetORSetUint8_t(event, F("ETH_Phy_Addr:"), Line, reinterpret_cast<uint8_t*>(&Settings.ETH_Phy_Addr),1);
 }
 
 String Command_ETH_Pin_mdc (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdc:"), Line, (int8_t*)&Settings.ETH_Pin_mdc,1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdc:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdc),1);
 }
 
 String Command_ETH_Pin_mdio (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdio:"), Line, (int8_t*)&Settings.ETH_Pin_mdio,1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_mdio:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_mdio),1);
 }
 
 String Command_ETH_Pin_power (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Pin_power:"), Line, (int8_t*)&Settings.ETH_Pin_power,1);
+  return Command_GetORSetInt8_t(event, F("ETH_Pin_power:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Pin_power),1);
 }
 
 String Command_ETH_Phy_Type (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetInt8_t(event, F("ETH_Phy_Type:"), Line, (int8_t*)&Settings.ETH_Phy_Type,1);
+  return Command_GetORSetInt8_t(event, F("ETH_Phy_Type:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Phy_Type),1);
 }
 
 String Command_ETH_Clock_Mode (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("ETH_Clock_Mode:"), Line, (uint8_t*)&Settings.ETH_Clock_Mode,1);
+  return Command_GetORSetUint8_t(event, F("ETH_Clock_Mode:"), Line, reinterpret_cast<uint8_t*>(&Settings.ETH_Clock_Mode),1);
 }
 
 String Command_ETH_IP (struct EventStruct *event, const char* Line)
@@ -96,7 +96,7 @@ String Command_ETH_DNS (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Wifi_Mode (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("NetworkMedium:"), Line, (uint8_t*)&Settings.NetworkMedium,1);
+  return Command_GetORSetUint8_t(event, F("NetworkMedium:"), Line, reinterpret_cast<uint8_t*>(&Settings.NetworkMedium),1);
 }
 
 #endif

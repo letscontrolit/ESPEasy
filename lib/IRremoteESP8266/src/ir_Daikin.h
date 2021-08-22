@@ -43,6 +43,7 @@
 //   Brand: Daikin,  Model: M Series A/C (DAIKIN)
 //   Brand: Daikin,  Model: FTXM-M A/C (DAIKIN)
 //   Brand: Daikin,  Model: ARC466A33 remote (DAIKIN)
+//   Brand: Daikin,  Model: FTWX35AXV1 A/C (DAIKIN64)
 
 #ifndef IR_DAIKIN_H_
 #define IR_DAIKIN_H_
@@ -275,12 +276,18 @@ const uint16_t kDaikin2Sections = 2;
 const uint16_t kDaikin2Section1Length = 20;
 const uint16_t kDaikin2Section2Length = 19;
 const uint8_t kDaikin2Tolerance = 5;  // Extra percentage tolerance
-const uint8_t kDaikin2SwingVHigh = 0x1;
-const uint8_t kDaikin2SwingVLow = 0x6;
-const uint8_t kDaikin2SwingVSwing = 0xF;
-const uint8_t kDaikin2SwingVAuto = 0xE;
-const uint8_t kDaikin2SwingVBreeze = 0xC;
-const uint8_t kDaikin2SwingVCirculate = 0xD;
+const uint8_t kDaikin2SwingVHighest =     0x1;
+const uint8_t kDaikin2SwingVHigh =        0x2;
+const uint8_t kDaikin2SwingVUpperMiddle = 0x3;
+const uint8_t kDaikin2SwingVLowerMiddle = 0x4;
+const uint8_t kDaikin2SwingVLow =         0x5;
+const uint8_t kDaikin2SwingVLowest =      0x6;
+const uint8_t kDaikin2SwingVBreeze =      0xC;
+const uint8_t kDaikin2SwingVCirculate =   0xD;
+const uint8_t kDaikin2SwingVOff =         0xE;
+const uint8_t kDaikin2SwingVAuto =        0xF;  // A.k.a "Swing"
+const uint8_t kDaikin2SwingVSwing =  kDaikin2SwingVAuto;
+
 
 const uint8_t kDaikin2SwingHWide =     0xA3;
 const uint8_t kDaikin2SwingHLeftMax =  0xA8;
@@ -288,8 +295,9 @@ const uint8_t kDaikin2SwingHLeft =     0xA9;
 const uint8_t kDaikin2SwingHMiddle =   0xAA;
 const uint8_t kDaikin2SwingHRight =    0xAB;
 const uint8_t kDaikin2SwingHRightMax = 0xAC;
-const uint8_t kDaikin2SwingHAuto =     0xBE;
-const uint8_t kDaikin2SwingHSwing =    0xBF;
+const uint8_t kDaikin2SwingHAuto =     0xBE;  // A.k.a "Swing"
+const uint8_t kDaikin2SwingHOff =      0xBF;
+const uint8_t kDaikin2SwingHSwing =  kDaikin2SwingHAuto;
 
 const uint8_t kDaikin2MinCoolTemp = 18;  // Min temp (in C) when in Cool mode.
 
@@ -620,9 +628,10 @@ const uint8_t kDaikin64Overhead = 9;
 const int8_t  kDaikin64ToleranceDelta = 5;  // +5%
 
 const uint64_t kDaikin64KnownGoodState = 0x7C16161607204216;
-const uint8_t kDaikin64Dry =  0b001;
-const uint8_t kDaikin64Cool = 0b010;
-const uint8_t kDaikin64Fan =  0b100;
+const uint8_t kDaikin64Dry =  0b0001;
+const uint8_t kDaikin64Cool = 0b0010;
+const uint8_t kDaikin64Fan =  0b0100;
+const uint8_t kDaikin64Heat =  0b1000;
 const uint8_t kDaikin64FanAuto =  0b0001;
 const uint8_t kDaikin64FanLow =   0b1000;
 const uint8_t kDaikin64FanMed =   0b0100;

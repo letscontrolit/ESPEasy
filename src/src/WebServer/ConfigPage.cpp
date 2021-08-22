@@ -10,6 +10,7 @@
 #include "../WebServer/WebServer.h"
 
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/MQTT.h"
 #include "../Globals/SecuritySettings.h"
