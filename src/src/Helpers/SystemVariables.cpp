@@ -93,7 +93,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
       case CR:                value = '\r'; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
-      case IP4:               value = String( (int) NetworkLocalIP()[3] ); break; // 4th IP octet
+      case IP4:               value = String( static_cast<int>(NetworkLocalIP()[3]) ); break; // 4th IP octet
       case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
       case DNS:               value = getValue(LabelType::DNS); break;
       case DNS_1:             value = getValue(LabelType::DNS_1); break;

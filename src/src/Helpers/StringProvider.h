@@ -18,6 +18,7 @@ struct LabelType {
 
     LOCAL_TIME,
     TIME_SOURCE,
+    TIME_WANDER,
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400

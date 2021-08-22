@@ -162,9 +162,9 @@ boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
 
         if (elev)
         {
-          UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation((float)Plugin_030_readPressure(idx) / 100, elev);
+          UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation(static_cast<float>(Plugin_030_readPressure(idx)) / 100.0f, elev);
         } else {
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
+          UserVar[event->BaseVarIndex + 1] = static_cast<float>(Plugin_030_readPressure(idx)) / 100.0f;
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -315,7 +315,7 @@ float Plugin_030_readPressure(uint8_t idx) {
   var2 = (((int64_t)_bmp280_calib[idx].dig_P8) * p) >> 19;
 
   p = ((p + var1 + var2) >> 8) + (((int64_t)_bmp280_calib[idx].dig_P7) << 4);
-  return (float)p / 256;
+  return static_cast<float>(p) / 256.0f;
 }
 
 // **************************************************************************/

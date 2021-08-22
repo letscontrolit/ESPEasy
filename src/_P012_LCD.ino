@@ -140,7 +140,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       success = true;
       break;
     }
@@ -198,7 +198,7 @@ boolean Plugin_012(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P012_data) {
         // FIXME TD-er: This is a huge stack allocated object.
         char deviceTemplate[P12_Nlines][P12_Nchars];
-        LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
 
         for (uint8_t x = 0; x < P012_data->Plugin_012_rows; x++)
         {

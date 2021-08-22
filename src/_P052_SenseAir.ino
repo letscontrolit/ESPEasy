@@ -661,9 +661,9 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
    log += F("CO2: ");
    log += co2;
    log += F(" ppm Temp: ");
-   log += (float)temperature / 100.0f;
+   log += static_cast<float>(temperature) / 100.0f;
    log += F(" C Hum: ");
-   log += (float)humidity / 100.0f;
+   log += static_cast<float>(humidity) / 100.0f;
    log += F("%");
    if (!valid_measurement)
     log += F(" (old)");
