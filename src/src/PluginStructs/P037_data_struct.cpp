@@ -87,7 +87,7 @@ void P037_data_struct::parseMappings() {
     #  ifdef P037_MAPPING_SUPPORT
     String operands = P037_OPERAND_LIST; // Anticipate more operations
 
-    while (valueMap.length() > 0 && _maxIdx < P037_MAX_MAPPINGS * 3) {
+    while (!valueMap.isEmpty() && _maxIdx < P037_MAX_MAPPINGS * 3) {
       int16_t comma   = valueMap.indexOf(F(","));
       int16_t equals  = valueMap.indexOf(operands.substring(0, 1));
       int16_t percent = valueMap.indexOf(operands.substring(1, 2));
@@ -143,7 +143,7 @@ void P037_data_struct::parseMappings() {
     #   endif // ifdef P037_FILTER_PER_TOPIC
     String filters = P037_FILTER_LIST; // Anticipate more filters
 
-    while (filterMap.length() > 0 && _maxFilter < P037_MAX_FILTERS * 3) {
+    while (!filterMap.isEmpty() && _maxFilter < P037_MAX_FILTERS * 3) {
       int16_t comma  = filterMap.indexOf(F(","));
       int16_t equals = filterMap.indexOf(filters.substring(0, 1));
       int16_t dash   = filterMap.indexOf(filters.substring(1, 2));
@@ -171,7 +171,7 @@ void P037_data_struct::parseMappings() {
       _filter[_maxFilter + 2] = filterMap.substring(parse + 1, comma);
       _filter[_maxFilter + 2].replace(';', ',');
       #   ifdef P037_FILTER_PER_TOPIC
-      countFilters += (_filter[_maxFilter + 0].length() > 0 && _filter[_maxFilter + 2].length() > 0 ? 1 : 0);
+      countFilters += (!_filter[_maxFilter + 0].isEmpty() && !_filter[_maxFilter + 2].isEmpty() ? 1 : 0);
       #   endif // P037_FILTER_PER_TOPIC
       #   ifdef PLUGIN_037_DEBUG
 
@@ -610,7 +610,7 @@ bool P037_data_struct::webform_save(
     right = web_server.arg(getPluginCustomArgName(idx + 2));
     right.trim();
 
-    if ((!left.isEmpty()) || (!right.isEmpty())) {
+    if (!left.isEmpty() || !right.isEmpty()) {
       if (!valueMap.isEmpty()) {
         valueMap += ',';
       }
@@ -620,7 +620,7 @@ bool P037_data_struct::webform_save(
       valueMap += right;
     }
 
-    if (((left.isEmpty()) && (!right.isEmpty())) || ((!left.isEmpty()) && (right.isEmpty()))) {
+    if ((left.isEmpty() && !right.isEmpty()) || (!left.isEmpty() && right.isEmpty())) {
       if (firstError) {
         error     += F("Name and value should both be filled for mapping ");
         firstError = false;
@@ -652,7 +652,7 @@ bool P037_data_struct::webform_save(
     right = web_server.arg(getPluginCustomArgName(idx + 100 + 2));
     right.trim();
 
-    if ((!left.isEmpty()) || !right.isEmpty()
+    if (!left.isEmpty() || !right.isEmpty()
         #  ifdef P037_FILTER_PER_TOPIC
         || true // Store all filters and in the same order, including empty filters
         #  endif // ifdef P037_FILTER_PER_TOPIC
@@ -665,9 +665,8 @@ bool P037_data_struct::webform_save(
       filterMap += filters.substring(oper, oper + 1);
       filterMap += right;
     }
-    #  ifndef P037_FILTER_PER_TOPIC
 
-    if (((left.isEmpty()) && (!right.isEmpty())) || ((!left.isEmpty()) && (right.isEmpty()))) {
+    if ((left.isEmpty() && !right.isEmpty()) || (!left.isEmpty() && right.isEmpty())) {
       if (firstError) {
         error     += F("Name and value should both be filled for filter ");
         firstError = false;
@@ -676,7 +675,6 @@ bool P037_data_struct::webform_save(
       }
       error += filterNr;
     }
-    #  endif // ifndef P037_FILTER_PER_TOPIC
     filterNr++;
     delay(0); // leave some yield
   }
@@ -976,7 +974,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
                 if (validDoubleFromString(item, from) && compareDoubleValues('=', doubleValue, from)) {
                   accept = true;
                 }
-              } while (filterData.length() > 0 && !accept);
+              } while (!filterData.isEmpty() && !accept);
 
               #   ifdef PLUGIN_037_DEBUG
 
