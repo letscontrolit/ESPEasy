@@ -43,8 +43,8 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
     _UVA = UVData[0] / pow(2, IT - 1); // UVA light sensitivity increases linear with integration time
     _UVB = UVData[2] / pow(2, IT - 1); // UVB light sensitivity increases linear with integration time
 
-    // float UVASensitivity = 0.93/((float) (IT + 1)); // UVA light sensitivity increases with integration time
-    // float UVBSensitivity = 2.10/((float) (IT + 1)); // UVB light sensitivity increases with integration time
+    // float UVASensitivity = 0.93/(static_cast<float>(IT + 1)); // UVA light sensitivity increases with integration time
+    // float UVBSensitivity = 2.10/(static_cast<float>(IT + 1)); // UVB light sensitivity increases with integration time
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       log  = F("VEML6075: IT raw: 0x");
       log += String(IT + 1, HEX);

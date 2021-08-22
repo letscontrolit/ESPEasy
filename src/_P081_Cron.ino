@@ -80,7 +80,7 @@ String P081_getCronExpr(taskIndex_t taskIndex)
   char expression[PLUGIN_081_EXPRESSION_SIZE + 1];
 
   ZERO_FILL(expression);
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&expression, PLUGIN_081_EXPRESSION_SIZE);
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&expression), PLUGIN_081_EXPRESSION_SIZE);
   String res(expression);
   res.trim();
   return res;
@@ -222,7 +222,7 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
         char expression_c[PLUGIN_081_EXPRESSION_SIZE];
         ZERO_FILL(expression_c);
         safe_strncpy(expression_c, expression, PLUGIN_081_EXPRESSION_SIZE);
-        log = SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&expression_c, PLUGIN_081_EXPRESSION_SIZE);
+        log = SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&expression_c), PLUGIN_081_EXPRESSION_SIZE);
       }
 
       if (log.length() > 0)
