@@ -24,15 +24,15 @@
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
 
 # if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE) // Leave out the fancy stuff if available flash is tight
-  #  ifdef PLUGIN_037_DEBUG
-    #   undef PLUGIN_037_DEBUG
-  #  endif // ifdef PLUGIN_037_DEBUG
-  #  ifdef P037_MAPPING_SUPPORT
-    #   undef P037_MAPPING_SUPPORT
-  #  endif // ifdef P037_MAPPING_SUPPORT
-  #  if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
-    #   undef P037_FILTER_SUPPORT
-  #  endif // if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
+#  ifdef PLUGIN_037_DEBUG
+#   undef PLUGIN_037_DEBUG
+#  endif // ifdef PLUGIN_037_DEBUG
+#  ifdef P037_MAPPING_SUPPORT
+#   undef P037_MAPPING_SUPPORT
+#  endif // ifdef P037_MAPPING_SUPPORT
+#  if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
+#   undef P037_FILTER_SUPPORT
+#  endif // if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
 
 // #ifdef P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
@@ -46,9 +46,9 @@
                                                                        // (or filters if not 1:1 with topics is used)
 
 # if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK // Only 1 filter per topic
-  #  ifndef P037_FILTER_PER_TOPIC
-    #   define P037_FILTER_PER_TOPIC
-  #  endif // ifndef P037_FILTER_PER_TOPIC
+#  ifndef P037_FILTER_PER_TOPIC
+#   define P037_FILTER_PER_TOPIC
+#  endif // ifndef P037_FILTER_PER_TOPIC
 # endif // if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
 
 # define P037_OPERAND_COUNT 2
@@ -64,32 +64,32 @@ struct P037_data_struct : public PluginTaskData_base
   ~P037_data_struct();
 
   bool webform_load(
-  # ifdef P037_MAPPING_SUPPORT
+    # ifdef P037_MAPPING_SUPPORT
     bool mappingEnabled
-  # endif // ifdef P037_MAPPING_SUPPORT
-  # if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+    # endif // ifdef P037_MAPPING_SUPPORT
+    # if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
     ,
-  # endif // if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
-  # ifdef P037_FILTER_SUPPORT
+    # endif // if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+    # ifdef P037_FILTER_SUPPORT
     bool filterEnabled
-  # endif // ifdef P037_FILTER_SUPPORT
-  # if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+    # endif // ifdef P037_FILTER_SUPPORT
+    # if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
     ,
-  # endif // if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
-  # ifdef P037_JSON_SUPPORT
+    # endif // if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+    # ifdef P037_JSON_SUPPORT
     bool jsonEnabled
-  # endif // ifdef P037_JSON_SUPPORT
+    # endif // ifdef P037_JSON_SUPPORT
     );
   bool webform_save(
-  # ifdef P037_FILTER_SUPPORT
+    # ifdef P037_FILTER_SUPPORT
     bool filterEnabled
-  # endif // ifdef P037_FILTER_SUPPORT
-  # if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+    # endif // ifdef P037_FILTER_SUPPORT
+    # if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
     ,
-  # endif // if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
-  # ifdef P037_JSON_SUPPORT
+    # endif // if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+    # ifdef P037_JSON_SUPPORT
     bool jsonEnabled
-  # endif // ifdef P037_JSON_SUPPORT
+    # endif // ifdef P037_JSON_SUPPORT
     );
   # ifdef P037_MAPPING_SUPPORT
   String mapValue(const String& input,
@@ -116,20 +116,20 @@ struct P037_data_struct : public PluginTaskData_base
   // The settings structures
   // The stuff we want to save between settings
   struct tP037_StoredSettings_struct {
-    char deviceTemplate[VARS_PER_TASK][41];              // variable for saving the subscription topics, leave as first element for backward
-                                                         // compatibility
-    char jsonAttributes[VARS_PER_TASK][21];              // variable for saving the json attribute to use
-  # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
-  #  ifdef P037_FILTER_PER_TOPIC
-  #   define MAP_FILTER_SIZE (DAT_TASKS_CUSTOM_SIZE / 2) // Use half of available size
-  #  else // ifdef P037_FILTER_PER_TOPIC
-  #   define MAP_FILTER_SIZE DAT_TASKS_CUSTOM_SIZE       // Use entire space
-  #  endif // ifdef P037_FILTER_PER_TOPIC
+    char deviceTemplate[VARS_PER_TASK][41];                // variable for saving the subscription topics, leave as first element for
+                                                           // backward compatibility
+    char jsonAttributes[VARS_PER_TASK][21];                // variable for saving the json attribute to use
+    # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+    #  ifdef P037_FILTER_PER_TOPIC
+    #   define MAP_FILTER_SIZE (DAT_TASKS_CUSTOM_SIZE / 2) // Use half of available size
+    #  else // ifdef P037_FILTER_PER_TOPIC
+    #   define MAP_FILTER_SIZE DAT_TASKS_CUSTOM_SIZE       // Use entire space
+    #  endif // ifdef P037_FILTER_PER_TOPIC
 
     // All saved in a single string for most efficient storage
     char valueMappings[MAP_FILTER_SIZE - ((VARS_PER_TASK * 41) + (VARS_PER_TASK * 21))]; // name=num,name2=num,name3%num,... mappings + | +
                                                                                          // name=value,name2=value2,... Json filters
-  # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+    # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   };
 
   // Stored settings data:
