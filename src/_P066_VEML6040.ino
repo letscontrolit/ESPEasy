@@ -205,7 +205,7 @@ float VEML6040_GetValue(uint8_t reg)
   {
     uint16_t lsb = Wire.read();
     uint16_t msb = Wire.read();
-    return (float)((msb << 8) | lsb);
+    return static_cast<float>((msb << 8) | lsb);
   }
   return -1.0f;
 }

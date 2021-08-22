@@ -141,7 +141,7 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
   // addLog(LOG_LEVEL_INFO, String(F("ZBX: ")) + JSON_packet_content);
   // Send the packet
   client.write(packet_header,               sizeof(packet_header) - 1);
-  client.write((char *)&payload_len,        sizeof(payload_len));
+  client.write(reinterpret_cast<const char *>(&payload_len),        sizeof(payload_len));
   client.write(JSON_packet_content.c_str(), payload_len);
 
   client.stop();

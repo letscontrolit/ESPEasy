@@ -151,7 +151,7 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 
           if (adc1 != adc2)
           {
-            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+            const float normalized = (UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
             log += F(" = ");
