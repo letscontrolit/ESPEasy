@@ -9,6 +9,7 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
+# include "../Globals/MQTT.h"
 
 # include <ArduinoJson.h>
 
