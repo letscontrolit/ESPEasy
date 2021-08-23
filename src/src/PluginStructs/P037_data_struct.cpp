@@ -71,7 +71,7 @@ void P037_data_struct::parseMappings() {
 
     String  filterMap;
     String  valueMap = String(StoredSettings.valueMappings);
-    int16_t pipe     = valueMap.indexOf(F("|"));
+    int16_t pipe     = valueMap.indexOf('|');
 
     if (pipe > -1) {
       filterMap = valueMap.substring(pipe + 1);
@@ -88,7 +88,7 @@ void P037_data_struct::parseMappings() {
     String operands = P037_OPERAND_LIST; // Anticipate more operations
 
     while (!valueMap.isEmpty() && _maxIdx < P037_MAX_MAPPINGS * 3) {
-      int16_t comma   = valueMap.indexOf(F(","));
+      int16_t comma   = valueMap.indexOf(',');
       int16_t equals  = valueMap.indexOf(operands.substring(0, 1));
       int16_t percent = valueMap.indexOf(operands.substring(1, 2));
 
@@ -144,7 +144,7 @@ void P037_data_struct::parseMappings() {
     String filters = P037_FILTER_LIST; // Anticipate more filters
 
     while (!filterMap.isEmpty() && _maxFilter < P037_MAX_FILTERS * 3) {
-      int16_t comma  = filterMap.indexOf(F(","));
+      int16_t comma  = filterMap.indexOf(',');
       int16_t equals = filterMap.indexOf(filters.substring(0, 1));
       int16_t dash   = filterMap.indexOf(filters.substring(1, 2));
 
@@ -241,7 +241,7 @@ bool P037_data_struct::webform_load(
 
   if (jsonEnabled) {
     addRowLabel(F("MQTT Topic"));
-    html_table(F(""), false); // Sub-table
+    html_table(EMPTY_STRING, false); // Sub-table
     html_table_header(F("&nbsp;#&nbsp;"));
     html_table_header(F("Topic"),          500);
     html_table_header(F("JSON Attribute"), 200);
@@ -619,7 +619,8 @@ bool P037_data_struct::webform_save(
       valueMap += right;
     }
 
-    if ((left.isEmpty() && !right.isEmpty()) || (!left.isEmpty() && right.isEmpty())) {
+    if ((left.isEmpty() && !right.isEmpty()) ||
+        (!left.isEmpty() && right.isEmpty())) {
       if (firstError) {
         error     += F("Name and value should both be filled for mapping ");
         firstError = false;
@@ -665,7 +666,8 @@ bool P037_data_struct::webform_save(
       filterMap += right;
     }
 
-    if ((left.isEmpty() && !right.isEmpty()) || (!left.isEmpty() && right.isEmpty())) {
+    if ((left.isEmpty() && !right.isEmpty()) ||
+        (!left.isEmpty() && right.isEmpty())) {
       if (firstError) {
         error     += F("Name and value should both be filled for filter ");
         firstError = false;
@@ -811,10 +813,13 @@ String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
 
   result.reserve(32);
 
-  if (hasFilters() && (topicId > 0) && (topicId <= VARS_PER_TASK)) {
+  if (hasFilters() &&
+      (topicId > 0) &&
+      (topicId <= VARS_PER_TASK)) {
     uint8_t fltBase = (topicId - 1) * 3;
 
-    if ((!_filter[fltBase + 0].isEmpty()) && (!_filter[fltBase + 2].isEmpty())) {
+    if ((!_filter[fltBase + 0].isEmpty()) &&
+        (!_filter[fltBase + 2].isEmpty())) {
       result  = '/';
       result += _filter[fltBase + 0];
       result += '/';
@@ -854,7 +859,8 @@ void P037_data_struct::logFilterValue(const String& text, const String& key, con
 bool P037_data_struct::checkFilters(const String& key, const String& value, int8_t topicId) {
   bool result = true;
 
-  if ((!key.isEmpty()) && (!value.isEmpty())) { // Ignore empty input(s)
+  if ((!key.isEmpty()) &&
+      (!value.isEmpty())) { // Ignore empty input(s)
     String  filters = P037_FILTER_LIST;
     String  valueData = value;
     String  fltKey, fltIndex, filterData;
@@ -909,7 +915,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
           }
           case 1:                                       // - => range x-y (inside) or y-x (outside)
           {
-            rangeSeparator = filterData.indexOf(',');   // Semicolons are replace with comma during init
+            rangeSeparator = filterData.indexOf(',');   // Semicolons are replaced with comma during init
 
             if (rangeSeparator == -1) {
               rangeSeparator = filterData.indexOf('-'); // Fall-back test for dash
@@ -958,7 +964,8 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
             String item;
             rangeSeparator = filterData.indexOf(',');
 
-            if ((rangeSeparator > -1) && validDoubleFromString(valueData, doubleValue)) {
+            if ((rangeSeparator > -1) &&
+                validDoubleFromString(valueData, doubleValue)) {
               accept = false;
 
               do {
@@ -971,7 +978,8 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
                 if (rangeSeparator == -1) { rangeSeparator = filterData.length(); // Last value
                 }
 
-                if (validDoubleFromString(item, from) && compareDoubleValues('=', doubleValue, from)) {
+                if (validDoubleFromString(item, from) &&
+                    compareDoubleValues('=', doubleValue, from)) {
                   accept = true;
                 }
               } while (!filterData.isEmpty() && !accept);
@@ -1016,7 +1024,8 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
 bool P037_data_struct::parseJSONMessage(const String& message) {
   bool result = false;
 
-  if ((nullptr != root) && (message.length() > lastJsonMessageLength)) {
+  if ((nullptr != root) &&
+      (message.length() > lastJsonMessageLength)) {
     cleanupJSON();
   }
 

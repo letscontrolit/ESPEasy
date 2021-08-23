@@ -164,7 +164,7 @@ By configuring a MQTT Topic, the plugin will subscribe to that Topic so the MQTT
 
 Subscribing to high-trafic topics will cause quite some load on the ESP, so either use an ESP32 unit, or limit trafic by subscribing to more specific topics or use filtering to limit the number of accepted messages, and thus limit the number of events fired. F.e. subscribing to ``domoticz/out`` is such a high-trafic topic, when using Domoticz and an MQTT server. Filtering on the idx values that are of interest is then highly advised.
 
-Wildcard MQTT Topic subscriptions (using ``+`` or ``#``) can be used, but please be aware this may cause a high load because of a high number of topics accepted. NB: The ``#`` wildcard, when used, *must* be the last element in a topic (according to MQTT specifiacations).
+Wildcard MQTT Topic subscriptions (using ``+`` or ``#``) can be used, but please be aware this may cause a high load because of a high number of topics accepted. NB: The ``#`` wildcard, when used, *must* be the last element in a topic (according to MQTT specifications).
 
 Supported hardware
 ------------------

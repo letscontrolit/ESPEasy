@@ -463,9 +463,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
             bool numericPayload = true;   // Unless it's not
 
             if (!checkJson || (checkJson && (key.length() > 0))) {
-              float floatPayload;
+              double doublePayload;
 
-              if (!string2float(Payload, floatPayload)) {
+              if (!validDoubleFromString(Payload, doublePayload)) {
                 if (!checkJson && (P037_SEND_EVENTS == 0)) { // If we want all values as events, then no error logged and don't stop here
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     log  = F("IMPT : Bad Import MQTT Command ");
@@ -481,9 +481,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   break;
                 }
                 numericPayload = false;                                  // No, it isn't numeric
-                floatPayload   = NAN;                                    // Invalid value
+                doublePayload  = NAN;                                    // Invalid value
               }
-              UserVar[event->BaseVarIndex + x] = floatPayload;           // Save the new value
+              UserVar[event->BaseVarIndex + x] = doublePayload;          // Save the new value
 
               if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
                 String RuleEvent;
@@ -493,6 +493,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 RuleEvent += event->String1;
                 RuleEvent += '=';
                 RuleEvent += unparsedPayload;
+                RuleEvent.reserve(RuleEvent.length()); // Resize
                 eventQueue.addMove(std::move(RuleEvent));
               }
 
@@ -508,7 +509,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   log += ExtraTaskSettings.TaskDeviceValueNames[x];
                 }
                 log += F("] : ");
-                log += floatPayload;
+                log += doublePayload;
                 addLog(LOG_LEVEL_INFO, log);
               }
 
@@ -530,14 +531,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   bool hasSemicolon = unparsedPayload.indexOf(';') > -1;
 
                   if (numericPayload && !hasSemicolon) {
-                    RuleEvent += floatPayload;
+                    RuleEvent += doublePayload;
                   } else if (numericPayload && hasSemicolon) { // semicolon separated list, pass unparsed
                     RuleEvent += Payload;
                     RuleEvent += ',';
                     RuleEvent += unparsedPayload;
                   } else {
-                    RuleEvent += Payload; // Pass mapped result
+                    RuleEvent += Payload;                // Pass mapped result
                   }
+                  RuleEvent.reserve(RuleEvent.length()); // Resize
                   eventQueue.addMove(std::move(RuleEvent));
                 }
 
@@ -548,10 +550,11 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 RuleEvent += '=';
 
                 if (numericPayload) {
-                  RuleEvent += floatPayload;
+                  RuleEvent += doublePayload;
                 } else {
                   RuleEvent += Payload;
                 }
+                RuleEvent.reserve(RuleEvent.length()); // Resize
                 eventQueue.addMove(std::move(RuleEvent));
               }
               # ifdef P037_JSON_SUPPORT

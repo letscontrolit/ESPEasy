@@ -5,13 +5,10 @@
 #ifdef USES_P037
 
 # include "../CustomBuild/StorageLayout.h"
-# include "src/Globals/EventQueue.h"
-# include "src/Globals/MQTT.h"
-# include "src/Globals/CPlugins.h"
-# include "src/Globals/Plugins.h"
-# include "src/Helpers/ESPEasy_Storage.h"
-# include "src/Helpers/Misc.h"
-# include "src/Helpers/StringParser.h"
+# include "../Globals/EventQueue.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Misc.h"
+# include "../Helpers/StringParser.h"
 
 # include <ArduinoJson.h>
 
