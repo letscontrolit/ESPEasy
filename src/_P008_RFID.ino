@@ -48,10 +48,10 @@ uint64_t castHexAsDec(uint64_t hexValue) {
     digit = (hexValue & 0x0000000F);
 
     if (digit > 10) {
-      digit = 0; // Cast by dropping any non-decimal input
+      digit = 0;     // Cast by dropping any non-decimal input
     }
 
-    if (digit > 0) {             // Avoid 'expensive' pow operation if not used
+    if (digit > 0) { // Avoid 'expensive' pow operation if not used
       result += (digit * static_cast<uint64_t>(pow(10, i)));
     }
     hexValue >>= 4;
@@ -111,13 +111,9 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       pinMode(CONFIG_PIN1, INPUT_PULLUP);
       pinMode(CONFIG_PIN2, INPUT_PULLUP);
 
-      if (PCONFIG(4) == 1) { // Alternative decoding
-        attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt2, FALLING);
-        attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt1, FALLING);
-      } else {
-        attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
-        attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
-      }
+      attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
+      attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
+
       success = true;
       break;
     }
@@ -153,12 +149,10 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
             // read a tag
             Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1; // Strip leading and trailing parity bits from the keyBuffer
 
-            if (Plugin_008_WiegandSize == 26) {
-              Plugin_008_keyBuffer &= 0xFFFFFF;
-            }
-            else {
-              Plugin_008_keyBuffer &= 0xFFFFFFFF;
-            }
+            uint64_t keyMask = 0LL;
+            keyMask = (0x1 << (Plugin_008_WiegandSize - 2));  // Shift in 1 just past the number of remaining bits
+            keyMask--;                                        // Decrement by 1 to get 0xFFFFFFFFFFFF...
+            Plugin_008_keyBuffer &= keyMask;
           }
           else
           {
@@ -234,18 +228,9 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
-      uint8_t choice = PCONFIG(0);
-      {
-        const __FlashStringHelper *options[2];
-        options[0] = F("26 Bits");
-        options[1] = F("34 Bits");
-        int optionValues[2];
-        optionValues[0] = 26;
-        optionValues[1] = 34;
-        addFormSelector(F("Wiegand Type"), F("p008_type"), 2, options, optionValues, choice);
-      }
-      addFormCheckBox(F("Alternative decoding"), F("p008_alternative"), PCONFIG(4) == 1);
-      addFormNote(F("Enable to use an alternative decoding method."));
+      addFormNumericBox(F("Wiegand Type (bits)"), F("p008_type"), PCONFIG(0), 26, 64);
+      addUnit(F("26..64 bits"));
+      addFormNote(F("Select the number of bits to be received, f.e. 26, 34, 37."));
 
       addFormCheckBox(F("Present hex as decimal value"), F("p008_hexasdec"), PCONFIG(1) == 1);
       addFormNote(F("Useful only for numeric keypad input!"));
@@ -271,9 +256,17 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(1)      = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
       PCONFIG(2)      = isFormItemChecked(F("p008_autotagremoval")) ? 0 : 1; // Inverted logic!
       PCONFIG(3)      = isFormItemChecked(F("p008_sendreset")) ? 1 : 0;
-      PCONFIG(4)      = isFormItemChecked(F("p008_alternative")) ? 1 : 0;
       PCONFIG_LONG(0) = getFormItemInt(F("p008_removalvalue"));
       PCONFIG_LONG(1) = getFormItemInt(F("p008_removaltimeout"));
+
+      // uint64_t keyMask = 0LL;
+      // keyMask = (0x1 << (PCONFIG(0) - 2));
+      // keyMask--;
+      // String log = F("P008: testing keyMask = 0x");
+      // log += ull2String(keyMask, HEX);
+      // log += F(" bits: ");
+      // log += PCONFIG(0);
+      // addLog(LOG_LEVEL_INFO, log);
 
       success = true;
       break;
