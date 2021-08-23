@@ -92,8 +92,10 @@ struct P037_data_struct : public PluginTaskData_base
   # ifdef P037_MAPPING_SUPPORT
   String mapValue(const String& input,
                   const String& attribute);
+  #  ifdef PLUGIN_037_DEBUG
   void   logMapValue(const String& input,
                      const String& result);
+  #  endif // ifdef PLUGIN_037_DEBUG
   # endif // P037_MAPPING_SUPPORT
   # ifdef P037_FILTER_SUPPORT
   bool hasFilters();

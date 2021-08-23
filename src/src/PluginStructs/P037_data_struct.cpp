@@ -727,11 +727,12 @@ bool P037_data_struct::webform_save(
 } // webform_save
 
 # ifdef P037_MAPPING_SUPPORT
+#  ifdef PLUGIN_037_DEBUG
 void P037_data_struct::logMapValue(const String& input, const String& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String info;
     info.reserve(45);
-    info  = F("IMPT : MQTT 037 mapped value '");
+    info  = F("IMPT : MQTT mapped value '");
     info += input;
     info += F("' to '");
     info += result;
@@ -739,6 +740,8 @@ void P037_data_struct::logMapValue(const String& input, const String& result) {
     addLog(LOG_LEVEL_INFO, info);
   }
 } // logMapValue
+
+#  endif // ifdef PLUGIN_037_DEBUG
 
 /**
  * Map a string to a (numeric) value, unchanged if no mapping found
@@ -759,7 +762,9 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
           {
             if (!_mapping[idx + 2].isEmpty()) {
               result = _mapping[idx + 2];
+              #  ifdef PLUGIN_037_DEBUG
               logMapValue(input, result);
+              #  endif // ifdef PLUGIN_037_DEBUG
             }
             break;
           }
@@ -780,7 +785,9 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
                   decimals = decPart.length();             // Take the number of decimals to the output value
                 }
                 result = toString(resultDouble, decimals); // Percentage with same decimals as input
+                #  ifdef PLUGIN_037_DEBUG
                 logMapValue(input, result);
+                #  endif // ifdef PLUGIN_037_DEBUG
               }
             }
             break;

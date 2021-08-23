@@ -252,7 +252,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t x = 0; x < VARS_PER_TASK; x++)
       {
-        if (P037_data->deviceTemplate[x].length() == 0) { continue; // skip blank subscriptions
+        if (P037_data->deviceTemplate[x].length() == 0) {
+          continue; // skip blank subscriptions
         }
 
         // Now check if the incoming topic matches one of our subscriptions
@@ -351,14 +352,19 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         #  endif  // P037_JSON_SUPPORT
       }
 
-      if (matchedTopic && P037_data->hasFilters()) {   // Single log statement
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          log  = F("IMPT : MQTT 037 filter result: ");
+      if (matchedTopic && P037_data->hasFilters()) { // Single log statement
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Reduce standard logging
+          log  = F("IMPT : MQTT filter result: ");
           log += processData ? F("true") : F("false");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_DEBUG, log);
         }
       }
       # endif // P037_FILTER_SUPPORT
+
+      if (!processData) { // Nothing to do? then clean up
+        Payload.clear();
+        unparsedPayload.clear();
+      }
 
       // Get the Topic and see if it matches any of the subscriptions
       for (uint8_t x = 0; x < VARS_PER_TASK && processData; x++)
@@ -402,10 +408,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
             # ifdef P037_JSON_SUPPORT
 
             if (checkJson && (P037_data->iter != P037_data->doc.end())) {
-              String jsonAttribute = P037_data->StoredSettings.jsonAttributes[x];
-              jsonAttribute.replace(';', ',');
-              String jsonIndex = parseString(jsonAttribute, 2);
-              jsonAttribute = parseString(jsonAttribute, 1);
+              // String jsonAttribute = P037_data->StoredSettings.jsonAttributes[x];
+              // jsonAttribute.replace(';', ',');
+              String jsonIndex     = parseString(P037_data->StoredSettings.jsonAttributes[x], 2, ';');
+              String jsonAttribute = parseString(P037_data->StoredSettings.jsonAttributes[x], 1, ';');
               jsonAttribute.trim();
 
               if (jsonAttribute.length() > 0) {
@@ -415,12 +421,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 int8_t jIndex = jsonIndex.toInt();
 
                 if (jIndex > 1) {
-                  Payload.replace(';', ',');
-                  Payload = parseString(Payload, jIndex);
+                  // Payload.replace(';', ',');
+                  Payload = parseString(Payload, jIndex, ';');
                 }
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log  = F("IMPT : MQTT 037 fetched json attribute: ");
+                  log  = F("IMPT : MQTT fetched json attribute: ");
                   log += key;
                   log += F(" payload: ");
                   log += Payload;
