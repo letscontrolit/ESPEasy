@@ -1054,7 +1054,8 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
   }
 
   if ((result == -1) || (result == ADAGFX_WHITE)) {                             // Default & don't convert white
-    if (colorDepth >= AdaGFXColorDepth::Septochrome) {
+    if ((colorDepth >= AdaGFXColorDepth::Septochrome) &&
+        (colorDepth <= AdaGFXColorDepth::Quintochrome)) {
       result = static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
     } else {
       result = ADAGFX_WHITE;                                                    // Color fallback value
