@@ -270,14 +270,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # endif // P037_MAPPING_SUPPORT or P037_FILTER_SUPPORT or P037_JSON_SUPPORT
       # ifdef P037_JSON_SUPPORT
 
-      if (matchedTopic && P037_PARSE_JSON && (Payload.substring(0, 1) == F("{"))) { // With JSON enabled and rudimentary check for JSon
-                                                                                    // content
+      if (matchedTopic &&
+          P037_PARSE_JSON &&
+          Payload.startsWith(F("{"))) { // With JSON enabled and rudimentary check for JSon content
         #  ifdef PLUGIN_037_DEBUG
-        addLog(LOG_LEVEL_INFO, F("IMPT : MQTT 037 JSON data detected."));
+        addLog(LOG_LEVEL_INFO, F("IMPT : MQTT JSON data detected."));
         #  endif // ifdef PLUGIN_037_DEBUG
         checkJson = true;
       }
-      # endif    // P037_JSON_SUPPORT
+      # endif           // P037_JSON_SUPPORT
 
       if (!checkJson) { // Avoid storing any json in an extra copy in memory
         unparsedPayload = event->String2;
@@ -320,12 +321,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         // non-json filter check
         if (!checkJson && P037_data->hasFilters()) {   // See if we pass the filters
           key = P037_getMQTTLastTopicPart(event->String1);
-            #  ifdef P037_MAPPING_SUPPORT
+          #  ifdef P037_MAPPING_SUPPORT
 
           if (P037_APPLY_MAPPINGS) {
             Payload = P037_data->mapValue(Payload, key);
           }
-            #  endif // P037_MAPPING_SUPPORT
+          #  endif // P037_MAPPING_SUPPORT
           processData = P037_data->checkFilters(key, Payload, x + 1);   // Will return true unless key matches *and* Payload doesn't
         }
         #  ifdef P037_JSON_SUPPORT
@@ -394,7 +395,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 Payload = P037_data->mapValue(Payload, key);
               }
               #   endif // P037_MAPPING_SUPPORT
-              passFilter = P037_data->checkFilters(key, Payload, x + 1);   // Will return true unless key matches *and* Payload doesn't
+              passFilter = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
+
               ++P037_data->iter;
             } while (passFilter && P037_data->iter != P037_data->doc.end());
             P037_data->iter = P037_data->doc.begin();
@@ -408,8 +410,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
             # ifdef P037_JSON_SUPPORT
 
             if (checkJson && (P037_data->iter != P037_data->doc.end())) {
-              // String jsonAttribute = P037_data->StoredSettings.jsonAttributes[x];
-              // jsonAttribute.replace(';', ',');
               String jsonIndex     = parseString(P037_data->StoredSettings.jsonAttributes[x], 2, ';');
               String jsonAttribute = parseString(P037_data->StoredSettings.jsonAttributes[x], 1, ';');
               jsonAttribute.trim();
@@ -421,7 +421,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 int8_t jIndex = jsonIndex.toInt();
 
                 if (jIndex > 1) {
-                  // Payload.replace(';', ',');
                   Payload = parseString(Payload, jIndex, ';');
                 }
 

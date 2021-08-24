@@ -147,10 +147,21 @@ void P037_data_struct::parseMappings() {
       int16_t comma  = filterMap.indexOf(',');
       int16_t equals = filterMap.indexOf(filters.substring(0, 1));
       int16_t dash   = filterMap.indexOf(filters.substring(1, 2));
+      #   if P037_FILTER_COUNT >= 3
+      int16_t colon = filterMap.indexOf(filters.substring(2, 3));
+      #   endif // if P037_FILTER_COUNT >= 3
 
       if (comma == -1) {
         comma = filterMap.length(); // last value
       }
+
+      #   if P037_FILTER_COUNT >= 3
+
+      if (((equals == -1) && (colon > -1)) || ((equals > -1) && (colon > -1) && (colon < equals))) {
+        operandIndex = 2;
+        parse        = colon;
+      } else
+      #   endif // if P037_FILTER_COUNT >= 3
 
       if (((equals == -1) && (dash > -1)) || ((equals > -1) && (dash > -1) && (dash < equals))) {
         operandIndex = 1;
@@ -346,17 +357,19 @@ bool P037_data_struct::webform_load(
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    _filter[idx + 0],
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
       }
       {
         html_TD();
         filterIndex = filters.indexOf(_filter[idx + 1]);
-        addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex, false, true);
+        addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex);
         html_TD();
+        String values = _filter[idx + 2];
+        values.replace(',', ';'); // Restore ;
         addTextBox(getPluginCustomArgName(idx + 100 + 2),
-                   _filter[idx + 2],
+                   values,
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -384,18 +397,18 @@ bool P037_data_struct::webform_load(
         addHtmlInt(filterNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
-                   F(""),
+                   EMPTY_STRING,
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
       }
       {
         html_TD();
-        addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex, false, true);
+        addSelector(getPluginCustomArgName(idx + 100 + 1), P037_FILTER_COUNT, filterOptions, filterIndices, NULL, filterIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 2),
-                   F(""),
+                   EMPTY_STRING,
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
       }
@@ -468,17 +481,17 @@ bool P037_data_struct::webform_load(
         addTextBox(getPluginCustomArgName(idx + 0),
                    _mapping[idx + 0],
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
       }
       {
         html_TD();
         operandIndex = operands.indexOf(_mapping[idx + 1]);
-        addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex, false, true);
+        addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
                    _mapping[idx + 2],
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
         html_TD();
       }
       mapNr++;
@@ -504,18 +517,18 @@ bool P037_data_struct::webform_load(
         addHtmlInt(mapNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0),
-                   F(""),
+                   EMPTY_STRING,
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
       }
       {
         html_TD();
-        addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex, false, true);
+        addSelector(getPluginCustomArgName(idx + 1), P037_OPERAND_COUNT, operandOptions, operandIndices, NULL, operandIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
-                   F(""),
+                   EMPTY_STRING,
                    32,
-                   false, false, F("[^,|]{0,32}"), F(""));
+                   false, false, F("[^,|]{0,32}"), EMPTY_STRING);
         html_TD();
       }
       idx += 3;
@@ -830,7 +843,12 @@ String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
       result  = '/';
       result += _filter[fltBase + 0];
       result += '/';
-      result += _filter[fltBase + 2];
+
+      if (!_filterListItem.isEmpty()) {
+        result += _filterListItem;
+      } else {
+        result += _filter[fltBase + 2];
+      }
     }
   }
   return result;
@@ -904,6 +922,8 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
         switch (filterIndex) {
           case 0:                                // = => equals
           {
+            _filterListItem = EMPTY_STRING;
+
             if (filterData == valueData) {
               #  ifdef PLUGIN_037_DEBUG
               String match;
@@ -922,7 +942,8 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
           }
           case 1:                                       // - => range x-y (inside) or y-x (outside)
           {
-            rangeSeparator = filterData.indexOf(',');   // Semicolons are replaced with comma during init
+            _filterListItem = EMPTY_STRING;
+            rangeSeparator  = filterData.indexOf(',');  // Semicolons are replaced with comma during init
 
             if (rangeSeparator == -1) {
               rangeSeparator = filterData.indexOf('-'); // Fall-back test for dash
@@ -968,6 +989,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
           #  if P037_FILTER_COUNT >= 3
           case 2: // : => Match against a semicolon-separated list (semicolon is replaced by comma during initialization)
           {
+            _filterListItem = EMPTY_STRING;
             String item;
             rangeSeparator = filterData.indexOf(',');
 
@@ -982,12 +1004,14 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
                 filterData.trim();
                 rangeSeparator = filterData.indexOf(',');
 
-                if (rangeSeparator == -1) { rangeSeparator = filterData.length(); // Last value
+                if (rangeSeparator == -1) {
+                  rangeSeparator = filterData.length(); // Last value
                 }
 
                 if (validDoubleFromString(item, from) &&
                     compareDoubleValues('=', doubleValue, from)) {
-                  accept = true;
+                  accept          = true;
+                  _filterListItem = item;
                 }
               } while (!filterData.isEmpty() && !accept);
 
@@ -1032,13 +1056,26 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   bool result = false;
 
   if ((nullptr != root) &&
-      (message.length() > lastJsonMessageLength)) {
+      (message.length() * 1.5 > lastJsonMessageLength)) {
     cleanupJSON();
   }
 
+  if (message.length() * 1.5 > lastJsonMessageLength) {
+    lastJsonMessageLength = message.length() * 1.5;
+    #  ifdef PLUGIN_037_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log.reserve(35);
+      log  = F("IMPT : JSON buffer increased to ");
+      log += lastJsonMessageLength;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    #  endif // ifdef PLUGIN_037_DEBUG
+  }
+
   if (nullptr == root) {
-    lastJsonMessageLength = message.length();
-    root                  = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
+    root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
   }
 
   if (nullptr != root) {

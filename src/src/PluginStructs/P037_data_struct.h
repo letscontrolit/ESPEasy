@@ -96,7 +96,7 @@ struct P037_data_struct : public PluginTaskData_base
   void   logMapValue(const String& input,
                      const String& result);
   #  endif // ifdef PLUGIN_037_DEBUG
-  # endif // P037_MAPPING_SUPPORT
+  # endif  // P037_MAPPING_SUPPORT
   # ifdef P037_FILTER_SUPPORT
   bool hasFilters();
   bool checkFilters(const String& key,
@@ -162,10 +162,11 @@ private:
   std::map<uint8_t, String>  _filter;
   std::map<uint8_t, uint16_t>_filterIdx;
   int8_t                     _maxFilter = -1;
+  String                     _filterListItem;
   # endif // ifdef P037_FILTER_SUPPORT
   # ifdef P037_JSON_SUPPORT
   DynamicJsonDocument *root                  = nullptr;
-  uint16_t             lastJsonMessageLength = 0;
+  uint16_t             lastJsonMessageLength = 512;
   # endif // P037_JSON_SUPPORT
 };
 
