@@ -160,12 +160,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         }
 
         if (nullptr != st7789) {
-          if (_device == ST77xx_type_e::ST7789vw_240x240) {
-            st7789->init(240, 240, SPI_MODE2);
-          }
-          else if (_device == ST77xx_type_e::ST7789vw_240x280) {
-            st7789->init(240, 280, SPI_MODE2);
-          }
+          st7789->init(_xpix, _ypix, SPI_MODE2);
           st77xx = st7789;
         }
         break;
