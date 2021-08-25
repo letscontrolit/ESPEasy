@@ -45,9 +45,10 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    uint8_t             displayTimer,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
-                                   uint16_t            bgcolor)
+                                   uint16_t            bgcolor,
+                                   bool                textBackFill)
   : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _displayTimer(displayTimer),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor)
+  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
   switch (_device) {
     case ST77xx_type_e::ST7735s_128x128:
@@ -205,7 +206,9 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
                                                       _textmode,
                                                       _fontscaling,
                                                       _fgcolor,
-                                                      _bgcolor);
+                                                      _bgcolor,
+                                                      true,
+                                                      _textBackFill);
 
     if (nullptr != gfxHelper) {
       gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));

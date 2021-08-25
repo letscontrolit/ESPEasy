@@ -281,13 +281,11 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Wake display on receiving text"), F("p095_NoDisplay"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE));
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
-      addFormCheckBox(F("Text Coordinates in col/row"), F("p095_colrow"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
-      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
+      AdaGFXFormTextColRowMode(F("p095_colrow"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
 
-      addFormCheckBox(F("Use -1px offset for txp &amp; txtfull"),
-                      F("p095_compat"),
-                      !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095));
-      addFormNote(F("This is for compatibility with the original plugin implementation."));
+      AdaGFXFormOnePixelCompatibilityOption(F("p095_compat"), !bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095)); // Inverse
+
+      AdaGFXFormTextBackgroundFill(F("p095_backfill"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0);      // Inverse
 
       addFormSubHeader(F("Content"));
 
@@ -339,6 +337,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P095_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("p095_clearOnExit")));   // Bit 2 ClearOnExit
       bitWrite(lSettings, P095_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p095_colrow")));        // Bit 3 Col/Row addressing
       bitWrite(lSettings, P095_CONFIG_FLAG_COMPAT_P095,   !isFormItemChecked(F("p095_compat")));       // Bit 4 Compat_P095 (inv)
+      bitWrite(lSettings, P095_CONFIG_FLAG_BACK_FILL,     !isFormItemChecked(F("p095_backfill")));     // Bit 5 Back fill text (inv)
+
       set4BitToUL(lSettings, P095_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p095_commandtrigger")));  // Bit 8..11 Command trigger
       set4BitToUL(lSettings, P095_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p095_fontscale")));       // Bit 12..15 Font scale
       set4BitToUL(lSettings, P095_CONFIG_FLAG_MODE,        getFormItemInt(F("p095_mode")));            // Bit 16..19 Text print mode
@@ -383,7 +383,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                                                                P095_CommandTrigger_toString(static_cast<P095_CommandTrigger>(
                                                                                               P095_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P095_CONFIG_GET_COLOR_FOREGROUND,
-                                                               P095_CONFIG_GET_COLOR_BACKGROUND));
+                                                               P095_CONFIG_GET_COLOR_BACKGROUND,
+                                                               bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0));
         P095_data_struct *P095_data = static_cast<P095_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P095_data) {
@@ -393,35 +394,6 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_ERROR, F("ILI9341: SPI not enabled, init cancelled."));
       }
       break;
-
-      // TFT_Settings.address_tft_cs  = PIN(0);
-      // TFT_Settings.address_tft_dc  = PIN(1);
-      // TFT_Settings.address_tft_rst = PIN(2);
-      // TFT_Settings.rotation        = PCONFIG(1);
-
-      // tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
-      // # ifdef P095_USE_ADA_GRAPHICS
-      // gfxHelper = new (std::nothrow) AdafruitGFX_helper(tft,
-      //                                                   F("tft"),
-      //                                                   240,
-      //                                                   320,
-      //                                                   AdaGFXColorDepth::FullColor,
-      //                                                   AdaGFXTextPrintMode::ContinueToNextLine,
-      //                                                   1,
-      //                                                   ADAGFX_WHITE,
-      //                                                   ADAGFX_BLACK,
-      //                                                   false);
-
-      // if (gfxHelper != nullptr) {
-      //   gfxHelper->setP095TxtfullCompensation(1); // Set backward compatibility
-      // }
-      // # endif // ifdef P095_USE_ADA_GRAPHICS
-      // tft->begin();
-      // tft->setRotation(TFT_Settings.rotation);
-      // tft->fillScreen(ILI9341_WHITE);
-      // Plugin_095_printText(String(F("ESPEasy")).c_str(), 1, 1);
-      // success = true;
-      // break;
     }
 
     case PLUGIN_EXIT:

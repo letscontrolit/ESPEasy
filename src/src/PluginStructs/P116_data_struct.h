@@ -32,6 +32,7 @@
 # define P116_CONFIG_FLAG_FONTSCALE     12              // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
 # define P116_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
 # define P116_CONFIG_FLAG_CMD_TRIGGER   20              // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
+# define P116_CONFIG_FLAG_BACK_FILL     28              // Flag: Background fill when printing text
 
 // Getters
 # define P116_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_MODE))
@@ -90,8 +91,9 @@ public:
                    AdaGFXTextPrintMode textmode,
                    uint8_t             displayTimer,
                    String              commandTrigger,
-                   uint16_t            fgcolor = ADAGFX_WHITE,
-                   uint16_t            bgcolor = ADAGFX_BLACK);
+                   uint16_t            fgcolor      = ADAGFX_WHITE,
+                   uint16_t            bgcolor      = ADAGFX_BLACK,
+                   bool                textBackFill = true);
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
@@ -129,6 +131,7 @@ private:
   String              _commandTrigger;
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
+  bool                _textBackFill;
 
   String _commandTriggerCmd;
 

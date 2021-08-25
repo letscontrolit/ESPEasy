@@ -148,6 +148,12 @@ void                       AdaGFXFormTextPrintMode(const __FlashStringHelper *id
                                                    uint8_t                    selectedIndex);
 void                       AdaGFXFormRotation(const __FlashStringHelper *id,
                                               uint8_t                    selectedIndex);
+void                       AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
+                                                        uint8_t                    selectedIndex);
+void                       AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
+                                                    uint8_t                    selectedIndex);
+void                       AdaGFXFormOnePixelCompatibilityOption(const __FlashStringHelper *id,
+                                                                 uint8_t                    selectedIndex);
 void                       AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
                                                        uint16_t                   foregroundColor,
                                                        const __FlashStringHelper *backgroundId,
@@ -178,7 +184,8 @@ public:
                      uint8_t             fontscaling   = 1,
                      uint16_t            fgcolor       = ADAGFX_WHITE,
                      uint16_t            bgcolor       = ADAGFX_BLACK,
-                     bool                useValidation = true);
+                     bool                useValidation = true,
+                     bool                textBackFill  = false);
 
   bool processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
 
@@ -230,6 +237,7 @@ private:
   uint16_t _fgcolor;
   uint16_t _bgcolor;
   bool _useValidation;
+  bool _textBackFill;
   uint16_t _textcols;
   uint16_t _textrows;
   int16_t _lastX;

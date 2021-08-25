@@ -367,13 +367,11 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
-      addFormCheckBox(F("Text Coordinates in col/row"), F("p096_colrow"), bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
-      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
+      AdaGFXFormTextColRowMode(F("p096_colrow"), bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
 
-      addFormCheckBox(F("Use -1px offset for txp &amp; txtfull"),
-                      F("p096_compat"),
-                      !bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096));
-      addFormNote(F("This is for compatibility with the original plugin implementation."));
+      AdaGFXFormOnePixelCompatibilityOption(F("p096_compat"), !bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096)); // Inverse
+
+      AdaGFXFormTextBackgroundFill(F("p096_backfill"), bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_BACK_FILL) == 0);      // Inverse
 
       addFormSubHeader(F("Content"));
 
@@ -433,6 +431,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       bitWrite(lSettings, P096_CONFIG_FLAG_USE_COL_ROW, isFormItemChecked(F("p096_colrow")));         // Bit 3 Col/Row addressing
       bitWrite(lSettings, P096_CONFIG_FLAG_COMPAT_P096, !isFormItemChecked(F("p096_compat")));        // Bit 4 Compat_P096 (inv)
+      bitWrite(lSettings, P096_CONFIG_FLAG_BACK_FILL,   !isFormItemChecked(F("p096_backfill")));      // Bit 5 Back fill text (inv)
 
       set4BitToUL(lSettings, P096_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p096_commandtrigger"))); // Bit 8..11 Command trigger
       set4BitToUL(lSettings, P096_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p096_fontscale")));      // Bit 12..15 Font scale
@@ -443,7 +442,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       P096_CONFIG_FLAGS = lSettings;
 
       String   color   = web_server.arg(F("p096_foregroundcolor"));
-      uint16_t fgcolor = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK);                  // Default to white when empty
+      uint16_t fgcolor = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK);             // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH)); // Reduce to rgb565
@@ -484,7 +483,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P096_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P096_CONFIG_GET_COLOR_FOREGROUND,
                                                                P096_CONFIG_GET_COLOR_BACKGROUND,
-                                                               static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH))
+                                                               static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH),
+                                                               bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_BACK_FILL) == 0)
                            # else // if P096_USE_EXTENDED_SETTINGS
                            new (std::nothrow) P096_data_struct(static_cast<EPD_type_e>(P096_CONFIG_FLAG_GET_DISPLAYTYPE),
                                                                P096_CONFIG_WIDTH,

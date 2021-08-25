@@ -178,8 +178,9 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
-      addFormCheckBox(F("Text Coordinates in col/row"), F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-      addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
+      AdaGFXFormTextColRowMode(F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
+
+      AdaGFXFormTextBackgroundFill(F("p116_backfill"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0); // Inverse
 
       addFormSubHeader(F("Content"));
 
@@ -223,11 +224,14 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P116_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("p116_buttonInverse"))); // Bit 1 buttonInverse
       bitWrite(lSettings, P116_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("p116_clearOnExit")));   // Bit 2 ClearOnExit
       bitWrite(lSettings, P116_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p116_colrow")));        // Bit 3 Col/Row addressing
+
       set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        getFormItemInt(F("p116_mode")));            // Bit 4..7 Text print mode
       set4BitToUL(lSettings, P116_CONFIG_FLAG_ROTATION,    getFormItemInt(F("p116_rotate")));          // Bit 8..11 Rotation
       set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p116_fontscale")));       // Bit 12..15 Font scale
       set4BitToUL(lSettings, P116_CONFIG_FLAG_TYPE,        getFormItemInt(F("p116_type")));            // Bit 16..19 Hardwaretype
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p116_commandtrigger")));  // Bit 20..23 Command trigger
+
+      bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("p116_backfill")));         // Bit 28 Back fill text (inv)
       P116_CONFIG_FLAGS = lSettings;
 
       String   color   = web_server.arg(F("p116_foregroundcolor"));
@@ -270,7 +274,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                P116_CommandTrigger_toString(static_cast<P116_CommandTrigger>(
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P116_CONFIG_GET_COLOR_FOREGROUND,
-                                                               P116_CONFIG_GET_COLOR_BACKGROUND));
+                                                               P116_CONFIG_GET_COLOR_BACKGROUND,
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0));
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P116_data) {

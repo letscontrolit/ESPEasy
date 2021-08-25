@@ -47,13 +47,14 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   AdaGFXColorDepth    colorDepth)
+                                   AdaGFXColorDepth    colorDepth,
+                                   bool                textBackFill)
   : _display(display),
   # if !P096_USE_EXTENDED_SETTINGS
   _xpix(width), _ypix(height)
   # endif // if !P096_USE_EXTENDED_SETTINGS
-  _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth)
+  _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _commandTrigger(commandTrigger),
+  _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth), _textBackFill(textBackFill)
 {
   # if P096_USE_EXTENDED_SETTINGS
 
@@ -142,7 +143,9 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
                                                         _textmode,
                                                         _fontscaling,
                                                         _fgcolor,
-                                                        _bgcolor);
+                                                        _bgcolor,
+                                                        true,
+                                                        _textBackFill);
       #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {

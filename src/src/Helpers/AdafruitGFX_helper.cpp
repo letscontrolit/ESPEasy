@@ -91,6 +91,33 @@ void AdaGFXFormRotation(const __FlashStringHelper *id,
 }
 
 /*****************************************************************************************
+ * Show a checkbox & note to disable background-fill for text
+ ****************************************************************************************/
+void AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
+                                  uint8_t                    selectedIndex) {
+  addFormCheckBox(F("Background-fill for text"), id, selectedIndex);
+  addFormNote(F("Fill entire line-height with background color."));
+}
+
+/*****************************************************************************************
+ * Show a checkbox & note to enable col/row mode for txp, txz and txtfull subcommands
+ ****************************************************************************************/
+void AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
+                              uint8_t                    selectedIndex) {
+  addFormCheckBox(F("Text Coordinates in col/row"), id, selectedIndex);
+  addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
+}
+
+/*****************************************************************************************
+ * Show a checkbox & note to enable -1 px compatibility mode for txp and txtfull subcommands
+ ****************************************************************************************/
+void AdaGFXFormOnePixelCompatibilityOption(const __FlashStringHelper *id,
+                                           uint8_t                    selectedIndex) {
+  addFormCheckBox(F("Use -1px offset for txp &amp; txtfull"), id, selectedIndex);
+  addFormNote(F("This is for compatibility with the original plugin implementation."));
+}
+
+/*****************************************************************************************
  * Show 2 input fields for Foreground and Background color, translated to known color names or hex with # prefix
  ****************************************************************************************/
 void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
@@ -291,10 +318,11 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
                                        uint8_t             fontscaling,
                                        uint16_t            fgcolor,
                                        uint16_t            bgcolor,
-                                       bool                useValidation)
+                                       bool                useValidation,
+                                       bool                textBackFill)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _useValidation(useValidation)
+  _useValidation(useValidation), _textBackFill(textBackFill)
 {
   _trigger.toLowerCase(); // store trigger in lowercase
   # ifndef BUILD_NO_DEBUG
@@ -899,29 +927,42 @@ void AdafruitGFX_helper::printText(const char    *string,
                                    unsigned int   textSize,
                                    unsigned short color,
                                    unsigned short bkcolor) {
-  uint16_t _x = X / (_fontwidth * textSize); // We need this multiple times
-  uint16_t _y = Y / (_fontheight * textSize);
+  uint16_t _x = X;
+  uint16_t _y = Y;
+  uint16_t _w = 0;
+  uint8_t  _h = 0;
 
   if (_columnRowMode) {
-    _display->setCursor(_x, _y);
-  } else {
-    _display->setCursor(X, Y);
+    _x = X / (_fontwidth * textSize); // We need this multiple times
+    _y = Y / (_fontheight * textSize);
   }
+
+  if (_textBackFill && (color != bkcolor)) { // Draw extra lines above text
+    // Estimate used width
+    _w = _textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine ?
+         strlen(string) * _fontwidth * textSize :
+         (_textcols * _fontwidth * textSize) - _x;
+
+    do {
+      _display->drawLine(_x, _y, _x + _w, _y, bkcolor);
+      _h++;
+      _y++; // Shift down entire line
+    } while (_h < textSize);
+  }
+
+  _display->setCursor(_x, _y);
   _display->setTextColor(color, bkcolor);
   _display->setTextSize(textSize);
 
   String newString = string;
 
-  if ((_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) && (newString.length() > static_cast<unsigned int>(_textcols - _x))) {
-    newString = newString.substring(0, _textcols - _x);
+  if ((_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) &&
+      (newString.length() > static_cast<unsigned int>(_textcols - (_x / (_fontwidth * textSize))))) {
+    newString = newString.substring(0, _textcols - (_x / (_fontwidth * textSize)));
   }
 
   if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
-    if (_columnRowMode) {
-      _display->setCursor(_x, _y);
-    } else {
-      _display->setCursor(X, Y);
-    }
+    _display->setCursor(_x, _y);
 
     for (uint16_t c = 0; c < newString.length(); c++) {
       _display->print(' ');
@@ -929,15 +970,21 @@ void AdafruitGFX_helper::printText(const char    *string,
     delay(0);
   }
 
-  if (_columnRowMode) {
-    _display->setCursor(X * _fontwidth * textSize, Y * _fontheight * textSize);
-  } else {
-    _display->setCursor(X, Y);
-  }
+  _display->setCursor(_x, _y);
   _display->print(newString);
 
   for (uint16_t c = _x + newString.length() + 1; c <= _textcols && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; c++) {
     _display->print(' ');
+  }
+
+  if (_textBackFill && (color != bkcolor)) { // Draw extra lines below text
+    _y += ((_fontheight - 1) * textSize);
+    _h  = 0;
+
+    do {
+      _display->drawLine(_x, _y - _h, _x + _w, _y - _h, bkcolor);
+      _h++;
+    } while (_h <= textSize);
   }
 
   // _display->println(); // Leave cursor at next (new) line?

@@ -25,9 +25,10 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
                                    uint8_t             displayTimer,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
-                                   uint16_t            bgcolor)
+                                   uint16_t            bgcolor,
+                                   bool                textBackFill)
   : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _displayTimer(displayTimer),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor)
+  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
   _xpix = 240;
   _ypix = 320;
@@ -101,7 +102,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
                                                       _textmode,
                                                       _fontscaling,
                                                       _fgcolor,
-                                                      _bgcolor);
+                                                      _bgcolor,
+                                                      true,
+                                                      _textBackFill);
 
     if (nullptr != gfxHelper) {
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));

@@ -36,6 +36,7 @@
 // # define P096_CONFIG_FLAG_CLEAR_ON_EXIT 2               // Flag: Clear display on exit
 # define P096_CONFIG_FLAG_USE_COL_ROW   3  // Flag: Use Col/Row text addressing in commands
 # define P096_CONFIG_FLAG_COMPAT_P096   4  // Flag: Compatibility -1 offset like original P096
+# define P096_CONFIG_FLAG_BACK_FILL     5  // Flag: Background fill when printing text
 # define P096_CONFIG_FLAG_CMD_TRIGGER   8  // Flag-offset to store 4 bits for Command trigger, uses bits 8, 9, 10 and 11
 # define P096_CONFIG_FLAG_FONTSCALE     12 // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
 # define P096_CONFIG_FLAG_MODE          16 // Flag-offset to store 4 bits for Mode, uses bits 16, 17, 18 and 19
@@ -101,9 +102,10 @@ public:
                    uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
                    String              commandTrigger,
-                   uint16_t            fgcolor    = ADAGFX_WHITE,
-                   uint16_t            bgcolor    = ADAGFX_BLACK,
-                   AdaGFXColorDepth    colorDepth = AdaGFXColorDepth::Monochrome);
+                   uint16_t            fgcolor      = ADAGFX_WHITE,
+                   uint16_t            bgcolor      = ADAGFX_BLACK,
+                   AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
+                   bool                textBackFill = true);
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
@@ -142,6 +144,7 @@ private:
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   AdaGFXColorDepth    _colorDepth;
+  bool                _textBackFill;
 
   String _commandTriggerCmd;
 
