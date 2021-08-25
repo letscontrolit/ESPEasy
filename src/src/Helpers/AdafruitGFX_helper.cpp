@@ -47,13 +47,13 @@ const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode) {
 const __FlashStringHelper* getAdaGFXColorDepth(AdaGFXColorDepth colorDepth) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome: return F("Monochrome");
-    case AdaGFXColorDepth::Duochrome: return F("Monochrome + 1 color");
-    case AdaGFXColorDepth::Quadrochrome: return F("Monochrome + 2 grey levels");
+    case AdaGFXColorDepth::BlackWhiteRed: return F("Monochrome + 1 color");
+    case AdaGFXColorDepth::BlackWhite2Greyscales: return F("Monochrome + 2 grey levels");
     # if ADAGFX_SUPPORT_7COLOR
-    case AdaGFXColorDepth::Septochrome: return F("eInk - 7 colors");
+    case AdaGFXColorDepth::SevenColor: return F("eInk - 7 colors");
     # endif // if ADAGFX_SUPPORT_7COLOR
-    case AdaGFXColorDepth::Octochrome: return F("TFT - 8 colors");
-    case AdaGFXColorDepth::Quintochrome: return F("TFT - 16 colors");
+    case AdaGFXColorDepth::EightColor: return F("TFT - 8 colors");
+    case AdaGFXColorDepth::SixteenColor: return F("TFT - 16 colors");
     case AdaGFXColorDepth::FullColor: return F("Full color - 65535 colors");
   }
   return F("None");
@@ -964,24 +964,27 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
   int32_t result = -1; // No result yet
 
   if ((colorDepth == AdaGFXColorDepth::Monochrome) ||
-      (colorDepth == AdaGFXColorDepth::Duochrome) ||
-      (colorDepth == AdaGFXColorDepth::Quadrochrome)) { // Only a limited set of colors is supported
-    if (s.equals(F("black")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK); }
+      (colorDepth == AdaGFXColorDepth::BlackWhiteRed) ||
+      (colorDepth == AdaGFXColorDepth::BlackWhite2Greyscales)) { // Only a limited set of colors is supported
+    if (s.equals(F("black")))   { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); }
 
-    if (s.equals(F("white")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE); }
+    if (s.equals(F("white")))   { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE); }
 
-    if (s.equals(F("inverse"))) { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_INVERSE); }
+    if (s.equals(F("inverse"))) { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE); }
 
-    if (s.equals(F("red")))     { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_RED); }
+    if (s.equals(F("red")))     { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED); }
 
-    if (s.equals(F("dark")))    { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_DARK); }
+    // Synonym for red
+    if (s.equals(F("yellow")))  { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED); }
 
-    if (s.equals(F("light")))   { return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_LIGHT); }
+    if (s.equals(F("dark")))    { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK); }
+
+    if (s.equals(F("light")))   { return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT); }
 
     // If we get this far, return the default
-    return static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE);
+    return static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE);
   # if ADAGFX_SUPPORT_7COLOR
-  } else if (colorDepth == AdaGFXColorDepth::Septochrome) {
+  } else if (colorDepth == AdaGFXColorDepth::SevenColor) {
     if (s.equals(F("black")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); }
 
     if (s.equals(F("white")))  { result = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); }
@@ -1053,30 +1056,30 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
     result = color565(number >> 16 & 0xFF, number >> 8 & 0xFF, number & 0xFF);
   }
 
-  if ((result == -1) || (result == ADAGFX_WHITE)) {                             // Default & don't convert white
-    if ((colorDepth >= AdaGFXColorDepth::Septochrome) &&
-        (colorDepth <= AdaGFXColorDepth::Quintochrome)) {
-      result = static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
+  if ((result == -1) || (result == ADAGFX_WHITE)) {                                  // Default & don't convert white
+    if ((colorDepth >= AdaGFXColorDepth::SevenColor) &&
+        (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
+      result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
     } else {
-      result = ADAGFX_WHITE;                                                    // Color fallback value
+      result = ADAGFX_WHITE;                                                         // Color fallback value
     }
   } else {
     // Reduce colors?
     switch (colorDepth) {
       case AdaGFXColorDepth::Monochrome:
-      case AdaGFXColorDepth::Duochrome:
-      case AdaGFXColorDepth::Quadrochrome:
+      case AdaGFXColorDepth::BlackWhiteRed:
+      case AdaGFXColorDepth::BlackWhite2Greyscales:
         // Unsupported at this point, but compiler needs the cases because of the enum class
         break;
       # if ADAGFX_SUPPORT_7COLOR
-      case AdaGFXColorDepth::Septochrome:
+      case AdaGFXColorDepth::SevenColor:
         result = AdaGFXrgb565ToColor7(result); // Convert
         break;
       # endif // if ADAGFX_SUPPORT_7COLOR
-      case AdaGFXColorDepth::Octochrome:
+      case AdaGFXColorDepth::EightColor:
         result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
         break;
-      case AdaGFXColorDepth::Quintochrome:
+      case AdaGFXColorDepth::SixteenColor:
         result = color565((result >> 11 & 0x1F) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
         break;
       case AdaGFXColorDepth::FullColor:
@@ -1094,23 +1097,23 @@ String AdaGFXcolorToString(uint16_t         color,
                            AdaGFXColorDepth colorDepth) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome:
-    case AdaGFXColorDepth::Duochrome:
-    case AdaGFXColorDepth::Quadrochrome:
+    case AdaGFXColorDepth::BlackWhiteRed:
+    case AdaGFXColorDepth::BlackWhite2Greyscales:
     {
       switch (color) {
-        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK): return F("black");
-        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE): return F("white");
-        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_INVERSE): return F("inverse");
-        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_RED): return F("red");
-        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_DARK): return F("dark");
-        case static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_LIGHT): return F("light");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK): return F("black");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE): return F("white");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE): return F("inverse");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED): return F("red");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK): return F("dark");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT): return F("light");
         default:
           break;
       }
       break;
     }
     # ifdef ADAGFX_SUPPORT_7COLOR
-    case AdaGFXColorDepth::Septochrome:
+    case AdaGFXColorDepth::SevenColor:
     {
       switch (color) {
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return F("black");
@@ -1126,8 +1129,8 @@ String AdaGFXcolorToString(uint16_t         color,
       break;
     }
     # endif // ifdef ADAGFX_SUPPORT_7COLOR
-    case AdaGFXColorDepth::Octochrome:
-    case AdaGFXColorDepth::Quintochrome:
+    case AdaGFXColorDepth::EightColor:
+    case AdaGFXColorDepth::SixteenColor:
     case AdaGFXColorDepth::FullColor:
     {
       switch (color) {

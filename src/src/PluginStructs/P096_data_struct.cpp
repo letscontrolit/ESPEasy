@@ -303,7 +303,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
 
       eInkScreen->clearBuffer();
       const uint16_t fillColor =
-        (arg2.isEmpty() ? static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK)
+        (arg2.isEmpty() ? static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK)
         : AdaGFXparseColor(arg2, _colorDepth));
       eInkScreen->fillScreen(fillColor);
       plugin_096_sequence_in_progress = true;

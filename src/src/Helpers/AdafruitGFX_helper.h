@@ -91,7 +91,7 @@
 # define ADAGFX_GREENYELLOW  0xAFE5 ///< 173, 255,  41
 # define ADAGFX_PINK         0xFC18 ///< 255, 130, 198
 
-enum class AdaGFXMonoDuoQuadColors: uint16_t {
+enum class AdaGFXMonoRedGreyscaleColors: uint16_t {
   ADAGFXEPD_BLACK,                  ///< black color
   ADAGFXEPD_WHITE,                  ///< white color
   ADAGFXEPD_INVERSE,                ///< invert color
@@ -128,18 +128,18 @@ enum class AdaGFXTextPrintMode : uint8_t {
 #  define ADAGFX_MONOCOLORS_COUNT 3
 # endif // if ADAGFX_SUPPORT_7COLOR
 enum class AdaGFXColorDepth : uint16_t {
-  Monochrome   = 2u,      // Black & white
-  Duochrome    = 3u,      // Black, white & red (or yellow)
-  Quadrochrome = 4u,      // Black, white, lightgrey & darkgrey
+  Monochrome            = 2u, // Black & white
+  BlackWhiteRed         = 3u, // Black, white & red (or yellow)
+  BlackWhite2Greyscales = 4u, // Black, white, lightgrey & darkgrey
   # if ADAGFX_SUPPORT_7COLOR
-  Septochrome = 7u,       // Black, white, red, yellow, blue, green, orange
+  SevenColor = 7u,            // Black, white, red, yellow, blue, green, orange
   # endif // if ADAGFX_SUPPORT_7COLOR
-  Octochrome   = 8u,      // 8 regular colors
-  Quintochrome = 16u,     // 16 colors
-  FullColor    = 65535u   // 65535 colors (max. supported by RGB565)
+  EightColor   = 8u,          // 8 regular colors
+  SixteenColor = 16u,         // 16 colors
+  FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
 };
 
-class AdafruitGFX_helper; // Forward declaration
+class AdafruitGFX_helper;     // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
 const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode);

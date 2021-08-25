@@ -232,8 +232,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       PIN(3) = EPD_BUSY;
       # if P096_USE_EXTENDED_SETTINGS
 
-      P096_CONFIG_COLORS = static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK) | // Default to dark on white (paper) colors
-                           (static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE) << 16);
+      P096_CONFIG_COLORS = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK) | // Default to dark on white (paper) colors
+                           (static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE) << 16);
 
       uint32_t lSettings = 0;
       set4BitToUL(lSettings, P096_CONFIG_FLAG_COLORDEPTH, static_cast<uint8_t>(AdaGFXColorDepth::Monochrome)); // Bit 20..23 Color depth
@@ -308,18 +308,18 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *colorDepths[] = { // Be sure to use all options needed
           getAdaGFXColorDepth(AdaGFXColorDepth::Monochrome),
-          getAdaGFXColorDepth(AdaGFXColorDepth::Duochrome),
-          getAdaGFXColorDepth(AdaGFXColorDepth::Quadrochrome),
+          getAdaGFXColorDepth(AdaGFXColorDepth::BlackWhiteRed),
+          getAdaGFXColorDepth(AdaGFXColorDepth::BlackWhite2Greyscales),
           #  if ADAGFX_SUPPORT_7COLOR
-          getAdaGFXColorDepth(AdaGFXColorDepth::Septochrome)
+          getAdaGFXColorDepth(AdaGFXColorDepth::SevenColor)
           #  endif // if ADAGFX_SUPPORT_7COLOR
         };
         const int colorDepthOptions[] = {
           static_cast<int>(AdaGFXColorDepth::Monochrome),
-          static_cast<int>(AdaGFXColorDepth::Duochrome),
-          static_cast<int>(AdaGFXColorDepth::Quadrochrome),
+          static_cast<int>(AdaGFXColorDepth::BlackWhiteRed),
+          static_cast<int>(AdaGFXColorDepth::BlackWhite2Greyscales),
           #  if ADAGFX_SUPPORT_7COLOR
-          static_cast<int>(AdaGFXColorDepth::Septochrome)
+          static_cast<int>(AdaGFXColorDepth::SevenColor)
           #  endif // if ADAGFX_SUPPORT_7COLOR
         };
 
@@ -378,8 +378,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Content"));
 
       if (P096_CONFIG_COLORS == 0) { // For migrating from older release task settings
-        P096_CONFIG_COLORS = static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE) |
-                             (static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK) << 16);
+        P096_CONFIG_COLORS = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE) |
+                             (static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK) << 16);
       }
       AdaGFXFormForeAndBackColors(F("p096_foregroundcolor"),
                                   P096_CONFIG_GET_COLOR_FOREGROUND,
@@ -443,7 +443,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       P096_CONFIG_FLAGS = lSettings;
 
       String   color   = web_server.arg(F("p096_foregroundcolor"));
-      uint16_t fgcolor = static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK);                  // Default to white when empty
+      uint16_t fgcolor = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK);                  // Default to white when empty
 
       if (!color.isEmpty()) {
         fgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH)); // Reduce to rgb565
