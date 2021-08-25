@@ -169,7 +169,7 @@
     "
     ``<trigger>,pxh,<x>,<y>,<color1>[,<color2>,...]``
     ","
-    Print a horizontal chain of colored pixels`(left to right, starting at position x,y). Just supply as many colors as pixels that need to be painted.
+    Print a horizontal chain of colored pixels (left to right, starting at position x,y). Just supply as many colors as pixels that need to be painted.
     "
     "
     ``<trigger>,pxv,<x>,<y>,<color1>[,<color2>,...]``
