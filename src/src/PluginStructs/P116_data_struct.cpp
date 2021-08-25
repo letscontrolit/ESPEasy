@@ -15,6 +15,7 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
     case ST77xx_type_e::ST7789vw_240x320: return F("ST7789 240 x 320px");
     case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
+    case ST77xx_type_e::ST7789vw_240x135: return F("ST7789 240 x 135px");
     case ST77xx_type_e::ST77xx_MAX: break;
   }
   return F("Unsupported type!");
@@ -72,6 +73,10 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
     case ST77xx_type_e::ST7789vw_240x280:
       _xpix = 240;
       _ypix = 280;
+      break;
+    case ST77xx_type_e::ST7789vw_240x135:
+      _xpix = 240;
+      _ypix = 135;
       break;
     case ST77xx_type_e::ST77xx_MAX:
       break;
@@ -147,11 +152,10 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         }
         break;
       }
-      case ST77xx_type_e::ST7789vw_240x320: // ST7789vw 240x320
-      // fall through
+      case ST77xx_type_e::ST7789vw_240x320: // ST7789vw 240x320 fall through
       case ST77xx_type_e::ST7789vw_240x240: // ST7789vw 240x240
-      // fall through
       case ST77xx_type_e::ST7789vw_240x280: // ST7789vw 240x280
+      case ST77xx_type_e::ST7789vw_240x135: // ST7789vw 240x135
       {
         if (spi_MOSI_pin == -1) {
           st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), PIN(2));

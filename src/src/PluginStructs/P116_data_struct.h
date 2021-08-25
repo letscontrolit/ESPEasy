@@ -66,6 +66,7 @@ enum class ST77xx_type_e : uint8_t {
   ST7789vw_240x320,
   ST7789vw_240x240,
   ST7789vw_240x280,
+  ST7789vw_240x135,
   ST77xx_MAX // must be last value in enum
 };
 

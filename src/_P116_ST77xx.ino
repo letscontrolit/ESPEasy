@@ -121,15 +121,24 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
-          ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280) };
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x135)
+        };
         const int optionValues4[] = {
           static_cast<int>(ST77xx_type_e::ST7735s_128x128),
           static_cast<int>(ST77xx_type_e::ST7735s_128x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
-          static_cast<int>(ST77xx_type_e::ST7789vw_240x280) };
-        addFormSelector(F("TFT display model"), F("p116_type"), static_cast<int>(ST77xx_type_e::ST77xx_MAX), options4, optionValues4, P116_CONFIG_FLAG_GET_TYPE);
+          static_cast<int>(ST77xx_type_e::ST7789vw_240x280),
+          static_cast<int>(ST77xx_type_e::ST7789vw_240x135)
+        };
+        addFormSelector(F("TFT display model"),
+                        F("p116_type"),
+                        static_cast<int>(ST77xx_type_e::ST77xx_MAX),
+                        options4,
+                        optionValues4,
+                        P116_CONFIG_FLAG_GET_TYPE);
       }
 
       addFormSubHeader(F("Layout"));
