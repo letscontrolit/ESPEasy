@@ -209,9 +209,6 @@ void P096_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P096_data_struct::plugin_exit(struct EventStruct *event) {
-  if (nullptr != eInkScreen) {
-    delete eInkScreen;
-  }
   eInkScreen = nullptr;
   return true;
 }
