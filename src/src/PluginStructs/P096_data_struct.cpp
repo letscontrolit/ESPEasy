@@ -90,44 +90,17 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
 
   if (nullptr == eInkScreen) {
     addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
-    int8_t spi_MOSI_pin = -1;
-    int8_t spi_SCLK_pin = -1;
-    # if defined(ESP32)
-
-    switch (Settings.InitSPI) {
-      case 1: // VSPI
-        spi_MOSI_pin = 23;
-        spi_SCLK_pin = 18;
-        break;
-      case 2: // HSPI
-        // spi_MOSI_pin = 13;
-        // spi_SCLK_pin = 14;
-        break;
-    }
-    # endif // if defined(ESP32)
 
     switch (_display) {
       case EPD_type_e::EPD_IL3897:
-
-        if (spi_MOSI_pin == -1) {
-          eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));                             // HSPI
-        } else {
-          eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, spi_MOSI_pin, spi_SCLK_pin, PIN(1), PIN(2), PIN(0), PIN(3)); // VSPI
-        }
+        eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));  // HSPI
+        break;
       case EPD_type_e::EPD_UC8151D:
-
-        if (spi_MOSI_pin == -1) {
-          eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));                             // HSPI
-        } else {
-          eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, spi_MOSI_pin, spi_SCLK_pin, PIN(1), PIN(2), PIN(0), PIN(3)); // VSPI
-        }
+        eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        break;
       case EPD_type_e::EPD_SSD1680:
-
-        if (spi_MOSI_pin == -1) {
-          eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));                             // HSPI
-        } else {
-          eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, spi_MOSI_pin, spi_SCLK_pin, PIN(1), PIN(2), PIN(0), PIN(3)); // VSPI
-        }
+        eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        break;
       case EPD_type_e::EPD_MAX:
         break;
     }
@@ -171,21 +144,25 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       }
       log += F("valid, commands: ");
       log += _commandTrigger;
+      log += F(", display: ");
+      log += EPD_type_toString(static_cast<EPD_type_e>(_display));
       addLog(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
 
-    eInkScreen->begin(); // Start the device
-    eInkScreen->clearBuffer();
+    if (nullptr != eInkScreen) {
+      eInkScreen->begin(); // Start the device
+      eInkScreen->clearBuffer();
 
-    eInkScreen->setTextColor(_fgcolor);
-    eInkScreen->setTextSize(3);
-    eInkScreen->println("ESP Easy");
-    eInkScreen->setTextSize(2);
-    eInkScreen->println("eInk shield");
-    eInkScreen->display();
-    eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-    eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      eInkScreen->setTextColor(_fgcolor);
+      eInkScreen->setTextSize(3);
+      eInkScreen->println("ESP Easy");
+      eInkScreen->setTextSize(2);
+      eInkScreen->println("eInk shield");
+      eInkScreen->display();
+      eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+    }
 
     success = true;
   } else {
