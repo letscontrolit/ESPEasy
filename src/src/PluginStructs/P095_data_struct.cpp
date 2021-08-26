@@ -50,27 +50,8 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
 
   if (nullptr == tft) {
     addLog(LOG_LEVEL_INFO, F("ILI9341: Init start."));
-    int8_t spi_MOSI_pin = -1;
-    int8_t spi_SCLK_pin = -1;
-    # if defined(ESP32)
 
-    switch (Settings.InitSPI) {
-      case 1: // VSPI
-        spi_MOSI_pin = 23;
-        spi_SCLK_pin = 18;
-        break;
-      case 2: // HSPI
-        // spi_MOSI_pin = 13;
-        // spi_SCLK_pin = 14;
-        break;
-    }
-    # endif // if defined(ESP32)
-
-    if (spi_MOSI_pin == -1) {
-      tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2));
-    } else {
-      tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
-    }
+    tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2));
 
     # ifndef BUILD_NO_DEBUG
 
