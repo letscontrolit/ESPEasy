@@ -386,7 +386,7 @@ void AttemptWiFiConnect() {
   WiFiEventData.markWiFiTurnOn();
 
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
-    const WiFi_AP_Candidate& candidate = WiFi_AP_Candidates.getCurrent();
+    const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : Connecting ");
@@ -406,7 +406,7 @@ void AttemptWiFiConnect() {
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
-      if (candidate.allowQuickConnect()) {
+      if (candidate.allowQuickConnect() && !candidate.isHidden) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
@@ -477,7 +477,7 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      if (WiFi.RSSI() < 0 && NetworkLocalIP().isSet()) {
+      if (WiFi.RSSI() < 0 && WiFi.localIP().isSet()) {
         //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           if (!WiFiEventData.WiFiServicesInitialized()) {
@@ -599,6 +599,7 @@ void SetWiFiTXpower(float dBm) {
 }
 
 void SetWiFiTXpower(float dBm, float rssi) {
+  return;
   const WiFiMode_t cur_mode = WiFi.getMode();
   if (cur_mode == WIFI_OFF) {
     return;
