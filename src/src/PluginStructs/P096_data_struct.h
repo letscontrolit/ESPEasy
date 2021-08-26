@@ -9,6 +9,8 @@
 
 # define P096_USE_ADA_GRAPHICS                     // Use AdafruitGFX_helper
 
+// # define P096_SHOW_SPLASH                          // Enable to show initial splash (text)
+
 # ifndef P096_USE_EXTENDED_SETTINGS
 #  define P096_USE_EXTENDED_SETTINGS 1             // Allow more settings/options, made available by the AdaGFX helper
 # endif // ifndef P096_USE_EXTENDED_SETTINGS

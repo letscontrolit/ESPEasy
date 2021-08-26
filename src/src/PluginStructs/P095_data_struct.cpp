@@ -98,7 +98,12 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
     tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
     displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+    # ifdef P095_SHOW_SPLASH
+    tft->setTextSize(2);
     gfxHelper->printText(String(F("ESPEasy")).c_str(), 1, 1);
+    tft->setTextSize(_fontscaling);
+    tft->setCursor(0, 0); // move cursor to position (0, 0) pixel
+    # endif // ifdef P095_SHOW_SPLASH
 
 
     if (P095_CONFIG_BUTTON_PIN != -1) {
@@ -126,6 +131,8 @@ void P095_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P095_data_struct::plugin_exit(struct EventStruct *event) {
+  addLog(LOG_LEVEL_INFO, F("ILI9341: Exit."));
+
   if ((nullptr != tft) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     tft->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
@@ -142,31 +149,39 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
     String strings[P095_Nlines];
     LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
-    gfxHelper->setColumnRowMode(false); // Turn off column mode
+    bool hasContent = false;
 
-    int yPos = 0;
+    for (uint8_t x = 0; x < P095_Nlines && !hasContent; x++) {
+      hasContent = !strings[x].isEmpty();
+    }
 
-    for (uint8_t x = 0; x < P095_Nlines; x++) {
-      String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
+    if (hasContent) {
+      gfxHelper->setColumnRowMode(false); // Turn off column mode
+
+      int yPos = 0;
+
+      for (uint8_t x = 0; x < P095_Nlines; x++) {
+        String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
       # if ADAGFX_PARSE_SUBCOMMAND
-      updateFontMetrics();
+        updateFontMetrics();
       # endif // if ADAGFX_PARSE_SUBCOMMAND
 
-      if (yPos < _ypix) {
-        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        if (yPos < _ypix) {
+          gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        }
+        delay(0);
+        yPos += (_fontheight * _fontscaling);
       }
-      delay(0);
-      yPos += (_fontheight * _fontscaling);
+      gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
+      int16_t curX, curY;
+      gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
+      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
+      UserVar[event->BaseVarIndex + 1] = curY;
     }
-    gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
-    int16_t curX, curY;
-    gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-    UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-    UserVar[event->BaseVarIndex + 1] = curY;
   }
-  return false;                                                                            // Always return false, so no attempt to send to
-                                                                                           // Controllers or generate events is started
+  return false; // Always return false, so no attempt to send to
+                // Controllers or generate events is started
 }
 
 /****************************************************************************

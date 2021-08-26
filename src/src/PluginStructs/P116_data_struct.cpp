@@ -194,8 +194,15 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     st77xx->setRotation(_rotation);           // Set rotation 0/1/2/3
     st77xx->fillScreen(_bgcolor);             // fill screen with black color
     st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
-    st77xx->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
+    # ifdef P116_SHOW_SPLASH
     st77xx->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
+    st77xx->setTextSize(3);
+    st77xx->println("ESP Easy");
+    st77xx->setTextSize(2);
+    st77xx->println("ST77xx");
+    # endif // ifdef P116_SHOW_SPLASH
+    st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+    st77xx->setCursor(0, 0);           // move cursor to position (0, 0) pixel
 
     displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
 
@@ -224,6 +231,8 @@ void P116_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P116_data_struct::plugin_exit(struct EventStruct *event) {
+  addLog(LOG_LEVEL_INFO, F("ST77xx: Exit."));
+
   if ((nullptr != st77xx) && bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
@@ -242,31 +251,39 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
     String strings[P116_Nlines];
     LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-    gfxHelper->setColumnRowMode(false); // Turn off column mode
+    bool hasContent = false;
 
-    int yPos = 0;
+    for (uint8_t x = 0; x < P116_Nlines && !hasContent; x++) {
+      hasContent = !strings[x].isEmpty();
+    }
 
-    for (uint8_t x = 0; x < P116_Nlines; x++) {
-      String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
+    if (hasContent) {
+      gfxHelper->setColumnRowMode(false); // Turn off column mode
+
+      int yPos = 0;
+
+      for (uint8_t x = 0; x < P116_Nlines; x++) {
+        String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
       # if ADAGFX_PARSE_SUBCOMMAND
-      updateFontMetrics();
+        updateFontMetrics();
       # endif // if ADAGFX_PARSE_SUBCOMMAND
 
-      if (yPos < _ypix) {
-        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        if (yPos < _ypix) {
+          gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        }
+        delay(0);
+        yPos += (_fontheight * _fontscaling);
       }
-      delay(0);
-      yPos += (_fontheight * _fontscaling);
+      gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
+      int16_t curX, curY;
+      gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
+      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
+      UserVar[event->BaseVarIndex + 1] = curY;
     }
-    gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
-    int16_t curX, curY;
-    gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-    UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-    UserVar[event->BaseVarIndex + 1] = curY;
   }
-  return false;                                                                            // Always return false, so no attempt to send to
-                                                                                           // Controllers or generate events is started
+  return false; // Always return false, so no attempt to send to
+                // Controllers or generate events is started
 }
 
 /****************************************************************************

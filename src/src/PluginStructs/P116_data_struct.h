@@ -15,6 +15,8 @@
 # define P116_Nlines 24                                 // The number of different lines which can be displayed
 # define P116_Nchars 60
 
+// # define P116_SHOW_SPLASH                               // Enable to show splash (text)
+
 # define P116_CONFIG_BUTTON_PIN         PCONFIG(0)      // Pin for display-button
 # define P116_CONFIG_DISPLAY_TIMEOUT    PCONFIG(1)      // Time-out when display-button is enable
 # define P116_CONFIG_TYPE               PCONFIG(2)      // Type of device

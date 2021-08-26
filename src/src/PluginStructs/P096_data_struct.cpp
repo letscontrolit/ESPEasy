@@ -155,11 +155,13 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       eInkScreen->clearBuffer();
 
       eInkScreen->setTextColor(_fgcolor);
+      # ifdef P096_SHOW_SPLASH
       eInkScreen->setTextSize(3);
       eInkScreen->println("ESP Easy");
       eInkScreen->setTextSize(2);
       eInkScreen->println("eInk shield");
       eInkScreen->display();
+      # endif // ifdef P096_SHOW_SPLASH
       eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
       eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
     }
@@ -189,6 +191,7 @@ void P096_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P096_data_struct::plugin_exit(struct EventStruct *event) {
+  addLog(LOG_LEVEL_INFO, F("EPD  : Exit."));
   eInkScreen = nullptr;
   return true;
 }
@@ -203,37 +206,44 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
     String strings[P096_Nlines];
     LoadCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
 
-    gfxHelper->setColumnRowMode(false); // Turn off column mode
+    bool hasContent = false;
 
-    eInkScreen->clearBuffer();
+    for (uint8_t x = 0; x < P096_Nlines && !hasContent; x++) {
+      hasContent = !strings[x].isEmpty();
+    }
 
-    int yPos = 0;
+    if (hasContent) {
+      gfxHelper->setColumnRowMode(false); // Turn off column mode
 
-    for (uint8_t x = 0; x < P096_Nlines; x++) {
-      String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
+      eInkScreen->clearBuffer();
+
+      int yPos = 0;
+
+      for (uint8_t x = 0; x < P096_Nlines; x++) {
+        String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
       #  if ADAGFX_PARSE_SUBCOMMAND
-      updateFontMetrics();
+        updateFontMetrics();
       #  endif // if ADAGFX_PARSE_SUBCOMMAND
 
-      if (yPos < _ypix) {
-        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        if (yPos < _ypix) {
+          gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        }
+        delay(0);
+        yPos += (_fontheight * _fontscaling);
       }
-      delay(0);
-      yPos += (_fontheight * _fontscaling);
-    }
-    gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
-    int16_t curX, curY;
-    gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-    UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-    UserVar[event->BaseVarIndex + 1] = curY;
+      gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
+      int16_t curX, curY;
+      gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
+      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
+      UserVar[event->BaseVarIndex + 1] = curY;
 
-    eInkScreen->display();
-    eInkScreen->clearBuffer();
+      eInkScreen->display();
+      eInkScreen->clearBuffer();
+    }
   }
   # endif // if P096_USE_EXTENDED_SETTINGS
-  return false; // Always return false, so no attempt to send to
-                // Controllers or generate events is started
+  return false; // Always return false, so no attempt to send to Controllers or generate events is started
 }
 
 /****************************************************************************
