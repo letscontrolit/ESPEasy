@@ -11,6 +11,10 @@ int calc_CRC16(const char *ptr, int count)
 
   crc = 0;
 
+  if (ptr == nullptr) {
+    return crc;
+  }
+
   while (--count >= 0)
   {
     crc = crc ^ static_cast<int>(*ptr++) << 8;
@@ -18,19 +22,13 @@ int calc_CRC16(const char *ptr, int count)
 
     do
     {
-      crc = crc ^ (int)*ptr++ << 8;
-      char i = 8;
-
-      do
-      {
-        if (crc & 0x8000) {
-          crc = crc << 1 ^ 0x1021;
-        }
-        else {
-          crc = crc << 1;
-        }
-      } while(--i);
-    }
+      if (crc & 0x8000) {
+        crc = crc << 1 ^ 0x1021;
+      }
+      else {
+        crc = crc << 1;
+      }
+    } while(--i);
   }
   return crc;
 }

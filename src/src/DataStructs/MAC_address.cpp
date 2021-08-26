@@ -10,6 +10,14 @@ MAC_address::MAC_address(const uint8_t new_mac[6])
   memcpy(mac, new_mac, 6);
 }
 
+MAC_address& MAC_address::operator=(const MAC_address& other)
+{
+  for (int i = 0; i < 6; ++i) {
+    mac[i] = other.mac[i];
+  }
+  return *this;
+}
+
 bool MAC_address::set(const char *string)
 {
   unsigned u[6];
