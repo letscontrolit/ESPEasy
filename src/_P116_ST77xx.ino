@@ -122,7 +122,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
-          ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x135)
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw_135x240)
         };
         const int optionValues4[] = {
           static_cast<int>(ST77xx_type_e::ST7735s_128x128),
@@ -131,7 +131,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),
-          static_cast<int>(ST77xx_type_e::ST7789vw_240x135)
+          static_cast<int>(ST77xx_type_e::ST7789vw_135x240)
         };
         addFormSelector(F("TFT display model"),
                         F("p116_type"),
