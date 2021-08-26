@@ -380,7 +380,7 @@ void AttemptWiFiConnect() {
   WiFiEventData.markWiFiTurnOn();
 
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
-    const WiFi_AP_Candidate& candidate = WiFi_AP_Candidates.getCurrent();
+    const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : Connecting ");
@@ -400,7 +400,7 @@ void AttemptWiFiConnect() {
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
-      if (candidate.allowQuickConnect()) {
+      if (candidate.allowQuickConnect() && !candidate.isHidden) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
