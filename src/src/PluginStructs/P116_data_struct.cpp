@@ -101,24 +101,6 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
   if (nullptr == st77xx) {
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
     uint8_t initRoptions = 0xFF;
-    int8_t  spi_MOSI_pin = -1;
-    int8_t  spi_SCLK_pin = -1;
-    # if defined(ESP8266) || defined(ESP8285)
-
-    # endif // if defined(ESP8266) || defined(ESP8285)
-    # if defined(ESP32)
-
-    switch (Settings.InitSPI) {
-      case 1: // VSPI
-        spi_MOSI_pin = 23;
-        spi_SCLK_pin = 18;
-        break;
-      case 2: // HSPI
-        // spi_MOSI_pin = 13;
-        // spi_SCLK_pin = 14;
-        break;
-    }
-    # endif // if defined(ESP32)
 
     switch (_device) {
       case ST77xx_type_e::ST7735s_128x128:  // ST7735s 128x128
@@ -141,11 +123,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           initRoptions = INITR_MINI160x80; // 80x160px
         }
 
-        if (spi_MOSI_pin == -1) {
-          st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), PIN(2));
-        } else {
-          st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
-        }
+        st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), PIN(2));
 
         if (nullptr != st7735) {
           st7735->initR(initRoptions); // initialize a ST7735s chip
@@ -158,11 +136,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       case ST77xx_type_e::ST7789vw_240x280: // ST7789vw 240x280
       case ST77xx_type_e::ST7789vw_240x135: // ST7789vw 240x135
       {
-        if (spi_MOSI_pin == -1) {
-          st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), PIN(2));
-        } else {
-          st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), spi_MOSI_pin, spi_SCLK_pin, PIN(2));
-        }
+        st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), PIN(2));
 
         if (nullptr != st7789) {
           st7789->init(_xpix, _ypix, SPI_MODE2);
@@ -190,6 +164,8 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       log += ST77xx_type_toString(static_cast<ST77xx_type_e>(P116_CONFIG_FLAG_GET_TYPE));
       log += F(", commands: ");
       log += _commandTrigger;
+      log += F(", display: ");
+      log += ST77xx_type_toString(static_cast<ST77xx_type_e>(_device));
       addLog(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
