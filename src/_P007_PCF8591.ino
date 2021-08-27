@@ -168,8 +168,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
           if (Wire.available())
           {
-            Wire.read();                                             // Read older value first (stored in chip)
-            UserVar[event->BaseVarIndex + var] = (float)Wire.read(); // now read actual value and store into Value var
+            Wire.read();                                                           // Read older value first (stored in chip)
+            UserVar[event->BaseVarIndex + var] = static_cast<double>(Wire.read()); // now read actual value and store into Value var
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
