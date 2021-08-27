@@ -459,7 +459,7 @@ void addFormSelector_script(const String  & label,
                             )
 {
   addRowLabel_tr_id(label, id);
-  do_addSelector_Head(id, EMPTY_STRING, onChangeCall, false
+  do_addSelector_Head(id, F("wide"), onChangeCall, false
                       #ifdef ENABLE_TOOLTIPS
                       , tooltip
                       #endif // ifdef ENABLE_TOOLTIPS

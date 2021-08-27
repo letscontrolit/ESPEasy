@@ -289,6 +289,13 @@ String BuildFixes()
     // Disable periodical scanning as it does cause lots of strange issues.
     Settings.PeriodicalScanWiFi(false);
   }
+  if (Settings.Build < 20115) {
+    if (Settings.InitSPI != 3) { // User-defined SPI pins set to None
+      Settings.SPI_SCLK_pin = -1;
+      Settings.SPI_MISO_pin = -1;
+      Settings.SPI_MOSI_pin = -1;
+    }
+  }
 
   Settings.Build = BUILD;
   return SaveSettings();

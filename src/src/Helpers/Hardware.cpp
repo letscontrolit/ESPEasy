@@ -118,7 +118,7 @@ void hardwareInit()
   initI2C();
 
   // SPI Init
-  if (Settings.InitSPI > 0)
+  if (Settings.isSPI_valid())
   {
     SPI.setHwCs(false);
 
@@ -132,6 +132,11 @@ void hardwareInit()
       # define HSPI_SCLK   14
       # define HSPI_SS     15
       SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); // HSPI
+    } else if (Settings.InitSPI >= 3)
+    {
+      SPI.begin(Settings.SPI_SCLK_pin,
+                Settings.SPI_MISO_pin,
+                Settings.SPI_MOSI_pin); // User-defined SPI
     }
     else {
       SPI.begin();                                // VSPI

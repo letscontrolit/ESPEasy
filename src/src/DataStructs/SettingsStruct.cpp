@@ -540,7 +540,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   spi_gpios[0] = -1;
   spi_gpios[1] = -1;
   spi_gpios[2] = -1;
-  if (InitSPI > 0) {
+  if (isSPI_valid()) {
     # ifdef ESP32
     switch (InitSPI) {
       case 1:
@@ -553,6 +553,13 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
         spi_gpios[0] = 14; // HSPI_SCLK
         spi_gpios[1] = 12; // HSPI_MISO
         spi_gpios[2] = 13; // HSPI_MOSI
+        break;
+      }
+      case 3:
+      {
+        spi_gpios[0] = SPI_SCLK_pin;
+        spi_gpios[1] = SPI_MISO_pin;
+        spi_gpios[2] = SPI_MOSI_pin;
         break;
       }
       default:
@@ -577,6 +584,18 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
     }
   }
   return false;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
+  return !((InitSPI == 0) ||
+           ((InitSPI == 3) &&
+            ((SPI_SCLK_pin == -1) ||
+             (SPI_MISO_pin == -1) ||
+             (SPI_MOSI_pin == -1) ||
+             (SPI_SCLK_pin == SPI_MISO_pin) ||
+             (SPI_MISO_pin == SPI_MOSI_pin) ||
+             (SPI_MOSI_pin == SPI_SCLK_pin)))); // Checks
 }
 
 template<unsigned int N_TASKS>

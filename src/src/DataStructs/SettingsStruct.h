@@ -179,6 +179,9 @@ class SettingsStruct_tmpl
   // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t pin) const;
 
+  // Return true when SPI enabled and opt. user defined pins valid.
+  bool isSPI_valid() const;
+
   // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
 
@@ -320,6 +323,10 @@ class SettingsStruct_tmpl
   uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
   int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
   uint8_t       NumberExtraWiFiScans = 0;
+  int8_t        SPI_SCLK_pin = -1;
+  int8_t        SPI_MISO_pin = -1;
+  int8_t        SPI_MOSI_pin = -1;
+  int8_t        alignmentFiller0;  // Should be reused, just added to keep up with alignment
 };
 
 /*
