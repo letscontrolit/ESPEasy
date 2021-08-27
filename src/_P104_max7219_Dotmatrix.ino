@@ -147,45 +147,26 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      int8_t din_pin = -1;
-      int8_t clk_pin = -1;
+      int8_t spi_pins[3];
+      Settings.getSPI_pins(spi_pins);
       int    pinnr = -1;
       bool   input, output, warning;
-      # ifdef ESP32
-
-      switch (Settings.InitSPI) {
-        case 1:
-          din_pin = 23;
-          clk_pin = 19;
-          break;
-        case 2:
-          din_pin = 13;
-          clk_pin = 14;
-          break;
-      }
-      # else // ESP82xx
-
-      if (Settings.InitSPI == 1) {
-        din_pin = 13;
-        clk_pin = 14;
-      }
-      # endif // ifdef ESP32
       String note;
       note.reserve(72);
       note = F("SPI->MAX7219: MOSI");
 
-      if (din_pin != -1) {
+      if (spi_pins[2] != -1) {
         note += '(';
-        getGpioInfo(din_pin, pinnr, input, output, warning);
-        note += createGPIO_label(din_pin, pinnr, true, true, false);
+        getGpioInfo(spi_pins[2], pinnr, input, output, warning);
+        note += createGPIO_label(spi_pins[2], pinnr, true, true, false);
         note += ')';
       }
       note += F("->DIN, CLK");
 
-      if (clk_pin != -1) {
+      if (spi_pins[0] != -1) {
         note += '(';
-        getGpioInfo(clk_pin, pinnr, input, output, warning);
-        note += createGPIO_label(clk_pin, pinnr, true, true, false);
+        getGpioInfo(spi_pins[0], pinnr, input, output, warning);
+        note += createGPIO_label(spi_pins[0], pinnr, true, true, false);
         note += ')';
       }
       note += F("->CLK");

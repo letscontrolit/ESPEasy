@@ -33,10 +33,10 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    uint8_t                  _modules,
                                    uint8_t                  _zonesCount)
   : mod(_mod), taskIndex(_taskIndex), cs_pin(_cs_pin), modules(_modules), expectedZones(_zonesCount) {
-  if (Settings.InitSPI < 1) {
-    addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Required SPI not enabled. Initialization aborted!"));
-  } else {
+  if (Settings.isSPI_valid()) {
     P = new MD_Parola(mod, cs_pin, modules);
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Required SPI not enabled. Initialization aborted!"));
   }
 }
 
@@ -2032,49 +2032,49 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , F("Numeric, double height (1)")
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , F("Full, double height (2)")
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , F("Vertical (3)")
-    # endif // ifdef P104_USE_VERTICAL_FONT
+    # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , F("Extended ASCII (4)")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , F("Arabic (5)")
-    # endif // ifdef P104_USE_ARABIC_FONT
+    # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , F("Greek (6)")
-    # endif // ifdef P104_USE_GREEK_FONT
+    # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , F("Katakana (7)")
-    # endif // ifdef P104_USE_KATAKANA_FONT
+    # endif   // ifdef P104_USE_KATAKANA_FONT
     };
     const int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , P104_FULL_DOUBLEHEIGHT_FONT_ID
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , P104_VERTICAL_FONT_ID
-    # endif // ifdef P104_USE_VERTICAL_FONT
+    # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , P104_EXT_ASCII_FONT_ID
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , P104_ARABIC_FONT_ID
-    # endif // ifdef P104_USE_ARABIC_FONT
+    # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , P104_GREEK_FONT_ID
-    # endif // ifdef P104_USE_GREEK_FONT
+    # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , P104_KATAKANA_FONT_ID
-    # endif // ifdef P104_USE_KATAKANA_FONT
+    # endif   // ifdef P104_USE_KATAKANA_FONT
     };
 
     int layoutCount = 1;

@@ -18,21 +18,21 @@
 # include "../Helpers/StringParser.h"
 
 # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
-#  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT                // Enables double height numeric font for double-height time/date
+#  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font for double-height time/date
 # endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
-# define P104_USE_FULL_DOUBLEHEIGHT_FONT                    // Enables the use of a full (lower ascii only) set double height font
-# define P104_USE_VERTICAL_FONT                             // Enables the use of a vertical font
-# define P104_USE_EXT_ASCII_FONT                            // Enables the use of an extended ascii font
-# define P104_USE_ARABIC_FONT                               // Enables the use of a Arabic font (see usage in MD_Parola examples)
-# define P104_USE_GREEK_FONT                                // Enables the use of a Greek font (see usage in MD_Parola examples)
-# define P104_USE_KATAKANA_FONT                             // Enables the use of a Katakana font (see usage in MD_Parola examples)
-# define P104_USE_COMMANDS                                  // Enables the use of all commands, not just clear, txt, settxt and update
-# define P104_USE_DATETIME_OPTIONS                          // Enables extra date/time options
-# define P104_USE_BAR_GRAPH                                 // Enables the use of Bar-graph feature
-# define P104_USE_ZONE_ACTIONS                              // Enables the use of Actions per zone (New above/New below/Delete)
-# define P104_USE_ZONE_ORDERING                             // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
+# define P104_USE_FULL_DOUBLEHEIGHT_FONT     // Enables the use of a full (lower ascii only) set double height font
+# define P104_USE_VERTICAL_FONT              // Enables the use of a vertical font
+# define P104_USE_EXT_ASCII_FONT             // Enables the use of an extended ascii font
+# define P104_USE_ARABIC_FONT                // Enables the use of a Arabic font (see usage in MD_Parola examples)
+# define P104_USE_GREEK_FONT                 // Enables the use of a Greek font (see usage in MD_Parola examples)
+# define P104_USE_KATAKANA_FONT              // Enables the use of a Katakana font (see usage in MD_Parola examples)
+# define P104_USE_COMMANDS                   // Enables the use of all commands, not just clear, txt, settxt and update
+# define P104_USE_DATETIME_OPTIONS           // Enables extra date/time options
+# define P104_USE_BAR_GRAPH                  // Enables the use of Bar-graph feature
+# define P104_USE_ZONE_ACTIONS               // Enables the use of Actions per zone (New above/New below/Delete)
+# define P104_USE_ZONE_ORDERING              // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
 
-# define P104_ADD_SETTINGS_NOTES                            // Adds some notes on the Settings page
+# define P104_ADD_SETTINGS_NOTES             // Adds some notes on the Settings page
 
 // To make it fit in the ESP8266 display build
 # if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
@@ -99,6 +99,7 @@
 # define P104_USE_TOOLTIPS                   // Enable tooltips in UI
 
 # ifdef LIMIT_BUILD_SIZE
+
 // #  ifdef P104_DEBUG
 // #   undef P104_DEBUG
 // #  endif // ifdef P104_DEBUG
