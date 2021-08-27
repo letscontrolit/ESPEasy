@@ -64,11 +64,14 @@ public:
   LOLIN_EPD(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
 
   ~LOLIN_EPD();
-  void begin(bool reset = true);
+  virtual void begin(bool reset = true);
 
-	void virtual display();
-	void virtual clearBuffer();
-	void virtual deepSleep();
+	virtual void display();
+	virtual void clearBuffer();
+	virtual void deepSleep();
+	virtual void clearDisplay();
+
+	virtual void fillbuffer(const unsigned char *black_image, const unsigned char *red_image);
 
 protected:
   int8_t sid, ///< sid pin

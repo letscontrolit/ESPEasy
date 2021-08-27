@@ -130,6 +130,14 @@ void LOLIN_EPD::deepSleep() {
   // No action here
 }
 
+void LOLIN_EPD::clearDisplay() {
+  // No action here
+}
+
+void LOLIN_EPD::fillbuffer(const unsigned char *black_image, const unsigned char *red_image) {
+  // No action here
+}
+
 /**************************************************************************/
 /*!
     @brief send an EPD command with no data

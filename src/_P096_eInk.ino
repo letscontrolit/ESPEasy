@@ -448,7 +448,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         fgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH)); // Reduce to rgb565
       }
       color = web_server.arg(F("p096_backgroundcolor"));
-      uint16_t bgcolor = AdaGFXparseColor(color);
+      uint16_t bgcolor = AdaGFXparseColor(color, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
 
       P096_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
 
