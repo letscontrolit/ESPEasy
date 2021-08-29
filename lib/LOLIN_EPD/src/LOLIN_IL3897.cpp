@@ -222,16 +222,6 @@ LOLIN_IL3897::LOLIN_IL3897(int width, int height, int8_t DC, int8_t RST, int8_t 
 
 /**************************************************************************/
 /*!
-    @brief default destructor
-*/
-/**************************************************************************/
-LOLIN_IL3897::~LOLIN_IL3897() {
-  free(bw_buf);
-  free(red_buf);
-}
-
-/**************************************************************************/
-/*!
     @brief begin communication with and set up the display.
     @param reset if true the reset pin will be toggled.
 */
