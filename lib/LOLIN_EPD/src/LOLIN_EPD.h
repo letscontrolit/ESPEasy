@@ -63,7 +63,7 @@ public:
   LOLIN_EPD(int width, int height, int8_t SID, int8_t SCLK, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
   LOLIN_EPD(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
 
-  ~LOLIN_EPD();
+  virtual ~LOLIN_EPD();
   virtual void begin(bool reset = true);
 
 	virtual void display();

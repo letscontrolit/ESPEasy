@@ -59,6 +59,16 @@ LOLIN_SSD1680::LOLIN_SSD1680(int width, int height, int8_t DC, int8_t RST, int8_
 
 /**************************************************************************/
 /*!
+    @brief default destructor
+*/
+/**************************************************************************/
+LOLIN_SSD1680::~LOLIN_SSD1680() {
+  free(bw_buf);
+  free(red_buf);
+}
+
+/**************************************************************************/
+/*!
     @brief begin communication with and set up the display.
     @param reset if true the reset pin will be toggled.
 */
