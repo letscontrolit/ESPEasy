@@ -83,9 +83,6 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
       break;
   }
 
-  if (_rotation & 0x01) {
-    std::swap(_xpix, _ypix);
-  }
   updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
@@ -160,9 +157,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       if (nullptr == st77xx) {
         log += F("in");
       }
-      log += F("valid, device: ");
-      log += ST77xx_type_toString(static_cast<ST77xx_type_e>(P116_CONFIG_FLAG_GET_TYPE));
-      log += F(", commands: ");
+      log += F("valid, commands: ");
       log += _commandTrigger;
       log += F(", display: ");
       log += ST77xx_type_toString(static_cast<ST77xx_type_e>(_device));
@@ -186,25 +181,25 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
                                                       true,
                                                       _textBackFill);
 
-    if (nullptr != gfxHelper) {
-      gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
-    }
-    updateFontMetrics();
-    st77xx->enableDisplay(true);              // Display on
-    st77xx->setRotation(_rotation);           // Set rotation 0/1/2/3
+    displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+
+    gfxHelper->setRotation(_rotation);
     st77xx->fillScreen(_bgcolor);             // fill screen with black color
     st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+
     # ifdef P116_SHOW_SPLASH
-    st77xx->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
-    st77xx->setTextSize(3);
-    st77xx->println("ESP Easy");
-    st77xx->setTextSize(2);
-    st77xx->println("ST77xx");
+    uint16_t yPos = 0;
+    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
+    yPos += (3 * _fontheight);
+    gfxHelper->printText(String(F("ST77xx")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
+    delay(100); // Splash
     # endif // ifdef P116_SHOW_SPLASH
+
+    gfxHelper->setColumnRowMode(bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
     st77xx->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
     st77xx->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+    updateFontMetrics();
 
-    displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
 
     if (P116_CONFIG_BUTTON_PIN != -1) {
       pinMode(P116_CONFIG_BUTTON_PIN, INPUT_PULLUP);
@@ -237,9 +232,16 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
     st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
   }
+
+  if (nullptr != gfxHelper) { delete gfxHelper; }
+  gfxHelper = nullptr;
+
+  if (nullptr != st7735) { delete st7735; }
   st7735 = nullptr;
+
+  if (nullptr != st7789) { delete st7789; }
   st7789 = nullptr;
-  st77xx = nullptr;
+  st77xx = nullptr; // Only used as a proxy
   return true;
 }
 
@@ -265,9 +267,9 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
       for (uint8_t x = 0; x < P116_Nlines; x++) {
         String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
-      # if ADAGFX_PARSE_SUBCOMMAND
+        # if ADAGFX_PARSE_SUBCOMMAND
         updateFontMetrics();
-      # endif // if ADAGFX_PARSE_SUBCOMMAND
+        # endif // if ADAGFX_PARSE_SUBCOMMAND
 
         if (yPos < _ypix) {
           gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);

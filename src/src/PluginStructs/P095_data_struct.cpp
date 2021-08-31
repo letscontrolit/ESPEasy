@@ -33,9 +33,6 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
   _xpix = 240;
   _ypix = 320;
 
-  if (_rotation & 0x01) {
-    std::swap(_xpix, _ypix);
-  }
   updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
@@ -88,22 +85,24 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
                                                       _textBackFill);
 
     if (nullptr != gfxHelper) {
+      gfxHelper->setRotation(_rotation);
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW));
       gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
     }
     updateFontMetrics();
-    tft->setRotation(_rotation);           // Set rotation 0/1/2/3
     tft->fillScreen(_bgcolor);             // fill screen with black color
     tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
     tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
     tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
     displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
     # ifdef P095_SHOW_SPLASH
-    tft->setTextSize(2);
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 1, 1);
-    tft->setTextSize(_fontscaling);
-    tft->setCursor(0, 0); // move cursor to position (0, 0) pixel
+    uint16_t yPos = 0;
+    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
+    yPos += (3 * _fontheight);
+    gfxHelper->printText(String(F("ILI9341")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
+    delay(100); // Splash
     # endif // ifdef P095_SHOW_SPLASH
+    updateFontMetrics();
 
 
     if (P095_CONFIG_BUTTON_PIN != -1) {
@@ -136,6 +135,14 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
   if ((nullptr != tft) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     tft->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+  }
+
+  if (nullptr != gfxHelper) { delete gfxHelper; }
+  gfxHelper = nullptr;
+
+  if (nullptr != tft) {
+    // delete tft; // Library is not properly inherited so no destructor called
+    free(tft);  // Free up some memory without calling the destructor chain
   }
   tft = nullptr;
   return true;

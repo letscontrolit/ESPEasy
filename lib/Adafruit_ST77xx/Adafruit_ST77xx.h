@@ -96,9 +96,11 @@ public:
   Adafruit_ST77xx(uint16_t w, uint16_t h, SPIClass *spiClass, int8_t CS,
                   int8_t RS, int8_t RST = -1);
 #endif // end !ESP8266
+  virtual ~Adafruit_ST77xx();
+
+  virtual void setRotation(uint8_t r);
 
   void setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-  void setRotation(uint8_t r);
   void enableDisplay(boolean enable);
   void enableTearing(boolean enable);
   void enableSleep(boolean enable);

@@ -211,6 +211,8 @@ public:
     _p095_compensation = compensation;
   }
 
+  void setRotation(uint8_t m);     // Set the helper-rotation the same as the display object rotation
+
   void setColumnRowMode(bool state) { // When true, addressing for txp, txtfull commands is in columns/rows, default in pixels
     _columnRowMode = state;           // NOT compatible with _p095_compensation!
   }
@@ -246,6 +248,9 @@ private:
   uint8_t _fontheight        = 10;
   uint8_t _p095_compensation = 0;
   bool _columnRowMode        = false;
+
+  uint16_t _display_x;
+  uint16_t _display_y;
 };
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX
 

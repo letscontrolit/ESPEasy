@@ -4,10 +4,10 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P096
 
-# include <Adafruit_GFX.h>                         // include Adafruit graphics library
-# include <LOLIN_EPD.h>                            // include Adafruit Lolin eInk/ePaper library
+# include <Adafruit_GFX.h>     // include Adafruit graphics library
+# include <LOLIN_EPD.h>        // include Adafruit Lolin eInk/ePaper library
 
-# define P096_USE_ADA_GRAPHICS                     // Use AdafruitGFX_helper
+# define P096_USE_ADA_GRAPHICS // Use AdafruitGFX_helper
 
 // # define P096_SHOW_SPLASH                          // Enable to show initial splash (text)
 
@@ -126,8 +126,12 @@ private:
   //                   uint8_t displayTimeout);
   void updateFontMetrics();
 
-  LOLIN_EPD *eInkScreen                      = nullptr;
-  uint8_t    plugin_096_sequence_in_progress = false;
+  LOLIN_EPD     *eInkScreen = nullptr;
+  LOLIN_IL3897  *il3897     = nullptr;
+  LOLIN_UC8151D *uc8151d    = nullptr;
+  LOLIN_SSD1680 *ssd1680    = nullptr;
+
+  uint8_t plugin_096_sequence_in_progress = false;
 
   AdafruitGFX_helper *gfxHelper = nullptr;
 

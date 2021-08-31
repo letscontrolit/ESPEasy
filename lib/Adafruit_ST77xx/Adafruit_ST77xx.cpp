@@ -83,6 +83,15 @@ Adafruit_ST77xx::Adafruit_ST77xx(uint16_t w, uint16_t h, SPIClass *spiClass,
 
 /**************************************************************************/
 /*!
+    @brief default destructor
+*/
+/**************************************************************************/
+  Adafruit_ST77xx::~Adafruit_ST77xx(){
+    // No action needed here (yet).
+  }
+
+/**************************************************************************/
+/*!
     @brief  Companion code to the initiliazation tables. Reads and issues
             a series of LCD commands stored in PROGMEM byte array.
     @param  addr  Flash memory array with commands and data to send

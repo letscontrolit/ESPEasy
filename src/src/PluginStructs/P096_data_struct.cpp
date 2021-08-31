@@ -73,9 +73,6 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
   }
   # endif // if P096_USE_EXTENDED_SETTINGS
 
-  if (_rotation & 0x01) {
-    std::swap(_xpix, _ypix);
-  }
   updateFontMetrics();
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
@@ -122,6 +119,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {
+        gfxHelper->setRotation(_rotation);
         gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
         gfxHelper->setTxtfullCompensation(!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096) ? 0 : 1); // Inverted
       }
@@ -154,6 +152,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       eInkScreen->begin(); // Start the device
       eInkScreen->clearBuffer();
 
+      eInkScreen->setRotation(_rotation);
       eInkScreen->setTextColor(_fgcolor);
       # ifdef P096_SHOW_SPLASH
       eInkScreen->setTextSize(3);
@@ -192,7 +191,25 @@ void P096_data_struct::updateFontMetrics() {
  ***************************************************************************/
 bool P096_data_struct::plugin_exit(struct EventStruct *event) {
   addLog(LOG_LEVEL_INFO, F("EPD  : Exit."));
-  eInkScreen = nullptr;
+
+  # if P096_USE_EXTENDED_SETTINGS
+
+  if (nullptr != gfxHelper) { delete gfxHelper; }
+  gfxHelper = nullptr;
+
+  if (nullptr != il3897) { delete il3897; }
+  il3897 = nullptr;
+
+  if (nullptr != uc8151d) { delete uc8151d; }
+  uc8151d = nullptr;
+
+  if (nullptr != ssd1680) { delete ssd1680; }
+  ssd1680 = nullptr;
+  # else // if P096_USE_EXTENDED_SETTINGS
+
+  if (nullptr != eInkScreen) { delete eInkScreen; }
+  # endif // if P096_USE_EXTENDED_SETTINGS
+  eInkScreen = nullptr; // Is used as a proxy only
   return true;
 }
 

@@ -342,6 +342,9 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   }
   # endif // ifndef BUILD_NO_DEBUG
 
+  _display_x = res_x; // Store initial resolution
+  _display_y = res_y;
+
   calculateTextMetrics(6, 10);                  // Defaults for built-in font
 
   if (nullptr != _display) {
@@ -565,7 +568,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if ((nParams[0] < 0) || (nParams[0] > 3)) {
       success = false;
     } else {
-      _display->setRotation(nParams[0]);
+      setRotation(nParams[0]);
     }
   }
   # if ADAGFX_USE_ASCIITABLE
@@ -933,8 +936,8 @@ void AdafruitGFX_helper::printText(const char    *string,
   uint8_t  _h = 0;
 
   if (_columnRowMode) {
-    _x = X / (_fontwidth * textSize); // We need this multiple times
-    _y = Y / (_fontheight * textSize);
+    _x = X * (_fontwidth * textSize); // We need this multiple times
+    _y = Y * (_fontheight * textSize);
   }
 
   if (_textBackFill && (color != bkcolor)) { // Draw extra lines above text
@@ -1373,4 +1376,23 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
 
 # endif // if ADAGFX_ARGUMENT_VALIDATION
 
-#endif  // ifdef PLUGIN_USES_ADAFRUITGFX
+void AdafruitGFX_helper::setRotation(uint8_t m) {
+  uint8_t rotation = m & 3;
+
+  _display->setRotation(m); // Set rotation 0/1/2/3
+
+  switch (rotation) {
+    case 0:
+    case 2:
+      _res_x = _display_x;
+      _res_y = _display_y;
+      break;
+    case 1:
+    case 3:
+      _res_x = _display_y;
+      _res_y = _display_x;
+      break;
+  }
+}
+
+#endif // ifdef PLUGIN_USES_ADAFRUITGFX
