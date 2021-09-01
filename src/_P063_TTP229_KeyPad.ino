@@ -186,7 +186,7 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
           if (keyLast != key)
           {
             keyLast = key;
-            UserVar[event->BaseVarIndex] = (float)key;
+            UserVar[event->BaseVarIndex] = key;
             event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
             String log = F("Tkey : ");

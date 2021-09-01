@@ -15,7 +15,7 @@
 .. |P051_type| replace:: :cyan:`Environment`
 .. |P051_typename| replace:: :cyan:`Environment - AM2320`
 .. |P051_porttype| replace:: `.`
-.. |P051_status| replace:: :green:`NORMAL`
+.. |P051_status| replace:: :yellow:`TESTING`
 .. |P051_github| replace:: P051_AM2320.ino
 .. _P051_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P051_AM2320.ino
 .. |P051_usedby| replace:: `.`

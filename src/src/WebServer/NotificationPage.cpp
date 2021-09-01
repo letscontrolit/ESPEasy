@@ -81,7 +81,7 @@ void handle_notifications() {
     }
 
     // Save the settings.
-    addHtmlError(SaveNotificationSettings(notificationindex, (uint8_t *)&NotificationSettings, sizeof(NotificationSettingsStruct)));
+    addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
 
     if (web_server.hasArg(F("test"))) {
@@ -114,7 +114,7 @@ void handle_notifications() {
 
     for (uint8_t x = 0; x < NOTIFICATION_MAX; x++)
     {
-      LoadNotificationSettings(x, (uint8_t *)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      LoadNotificationSettings(x, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
       html_TR_TD();
       html_add_button_prefix();
@@ -174,7 +174,7 @@ void handle_notifications() {
     if (Settings.Notification[notificationindex])
     {
       MakeNotificationSettings(NotificationSettings);
-      LoadNotificationSettings(notificationindex, (uint8_t *)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
 
       nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
