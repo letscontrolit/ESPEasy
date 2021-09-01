@@ -76,6 +76,12 @@ bool P098_data_struct::loop()
   check_limit_switch(_config.limitA, limitA);
   check_limit_switch(_config.limitB, limitB);
 
+  if (check_encoder_timeout(_config.encoder)) {
+    stop();
+    state = P098_data_struct::State::StopLimitSw;  
+    return old_state == state;
+  }
+
   switch (state) {
     case P098_data_struct::State::Idle:
       return true;
@@ -200,6 +206,8 @@ void P098_data_struct::startMoving()
     state = P098_data_struct::State::RunRev;
     setPinState(_config.motorRev, 1);
   }
+  // Touch the timer, so it will not immediately timeout.
+  enc_lastChanged_us = getMicros64();
 }
 
 void P098_data_struct::checkLimit(volatile P098_limit_switch_state& switch_state)
@@ -285,6 +293,9 @@ void P098_data_struct::check_limit_switch(
   const P098_GPIO_config          & gpio_config,
   volatile P098_limit_switch_state& switch_state)
 {
+  if (gpio_config.gpio == -1) {
+    return;
+  }
   // State is changed first in ISR, but compared after values are copied.
   const int triggerpos          = switch_state.triggerpos;
   const uint64_t lastChanged_us = switch_state.lastChanged_us;
@@ -293,19 +304,55 @@ void P098_data_struct::check_limit_switch(
     if (lastChanged_us != 0) {
       const uint64_t timeSinceLastTrigger = getMicros64() - lastChanged_us;
 
-      if (timeSinceLastTrigger > gpio_config.debounceTime_us) {
-        if (!switch_state.switchposSet) {
-          switch_state.switchpos    = triggerpos;
-          switch_state.switchposSet = true;
-        }
-
-        // Perform an extra check here on the state as it may have changed in the ISR call
-        if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
-          switch_state.state = P098_limit_switch_state::State::High;
-        }
+      if (timeSinceLastTrigger > gpio_config.timer_us) {
+        mark_limit_switch_state(triggerpos, switch_state);
       }
     }
   }
+}
+
+void P098_data_struct::mark_limit_switch_state(
+    int triggerpos, 
+    volatile P098_limit_switch_state& switch_state)
+{
+  if (!switch_state.switchposSet) {
+    switch_state.switchpos    = triggerpos;
+    switch_state.switchposSet = true;
+  }
+
+  // Perform an extra check here on the state as it may have changed in the ISR call
+  if (switch_state.state == P098_limit_switch_state::State::TriggerWaitBounce) {
+    switch_state.state = P098_limit_switch_state::State::High;
+  }
+}
+
+bool P098_data_struct::check_encoder_timeout(const P098_GPIO_config & gpio_config)
+{
+  if (gpio_config.gpio == -1) {
+    return false;
+  }
+  if (enc_lastChanged_us == 0) {
+    return false;
+  }
+  const bool expired = usecPassedSince(enc_lastChanged_us) > _config.encoder.timer_us;
+  if (!expired) {
+    return false;
+  }
+  switch (state) {
+    case P098_data_struct::State::RunFwd:
+    {
+      mark_limit_switch_state(position, limitB);
+      break;
+    }
+    case P098_data_struct::State::RunRev:
+    {
+      mark_limit_switch_state(position, limitA);
+      break;
+    }
+    default:
+      return false;
+  }
+  return true;
 }
 
 void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
@@ -378,8 +425,10 @@ void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)
       --(self->position);
       break;
     default:
-      break;
+      interrupts(); // enable interrupts again.
+      return;
   }
+  self->enc_lastChanged_us = getMicros64();
   interrupts(); // enable interrupts again.
 }
 

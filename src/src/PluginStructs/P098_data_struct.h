@@ -22,10 +22,10 @@ struct P098_GPIO_config {
     return inverted ? !state : state;
   }
 
-  uint64_t debounceTime_us = 100000;
-  int      gpio            = -1;
-  bool     pullUp          = false;
-  bool     inverted        = false;
+  uint64_t timer_us = 100000;
+  int      gpio     = -1;
+  bool     pullUp   = false;
+  bool     inverted = false;
 };
 struct P098_config_struct {
   // Stored, so do not change values
@@ -132,6 +132,7 @@ private:
   volatile P098_limit_switch_state limitA;
   volatile P098_limit_switch_state limitB;
   volatile int                     position = 0;
+  volatile uint64_t                enc_lastChanged_us = 0;
   int                              pos_dest = 0;
 
   void        startMoving();
@@ -147,6 +148,12 @@ private:
   static void check_limit_switch(
     const P098_GPIO_config          & gpio_config,
     volatile P098_limit_switch_state& switch_state);
+
+  static void mark_limit_switch_state(
+    int triggerpos, 
+    volatile P098_limit_switch_state& switch_state);
+
+  bool check_encoder_timeout(const P098_GPIO_config & gpio_config);
 
   static void process_limit_switch(
     const P098_GPIO_config          & gpio_config,

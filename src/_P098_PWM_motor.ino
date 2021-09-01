@@ -27,6 +27,7 @@
 # endif // ifdef ESP32
 # define P098_LIMIT_SWA_DEBOUNCE PCONFIG(4)
 # define P098_LIMIT_SWB_DEBOUNCE PCONFIG(5)
+# define P098_ENC_TIMEOUT        PCONFIG(6)
 
 
 # define P098_FLAGBIT_LIM_A_PULLUP         0
@@ -130,6 +131,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       P098_LIMIT_SWB_GPIO     = -1;
       P098_LIMIT_SWA_DEBOUNCE = 100;
       P098_LIMIT_SWB_DEBOUNCE = 100;
+      P098_ENC_TIMEOUT        = 100;
       P098_MOTOR_CONTROL      = 0; // No PWM
       P098_PWM_FREQ           = 1000;
       # ifdef ESP32
@@ -181,6 +183,9 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
                        F("taskdevicepin3"),
                        Settings.TaskDevicePin3[event->TaskIndex]);
       addFormCheckBox(F("Encoder Pull-Up"), F("enc_pu"), bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP));
+      addFormNumericBox(F("Encoder Timeout"), F("enc_timeout"), P098_ENC_TIMEOUT, 0, 1000);
+      addUnit(F("ms"));
+
 
       # ifdef ESP32
       {
@@ -195,10 +200,10 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
                        formatGpioName_input_optional(F("Limit A")), 
                        F("limit_a"), 
                        P098_LIMIT_SWA_GPIO);
-      addFormNumericBox(F("Limit A Debounce"), F("limit_a_debounce"), P098_LIMIT_SWA_DEBOUNCE, 0, 1000);
-      addUnit(F("ms"));
       addFormCheckBox(F("Limit A Pull-Up"),  F("limit_a_pu"),  bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_PULLUP));
       addFormCheckBox(F("Limit A Inverted"), F("limit_a_inv"), bitRead(P098_FLAGS, P098_FLAGBIT_LIM_A_INVERTED));
+      addFormNumericBox(F("Limit A Debounce"), F("limit_a_debounce"), P098_LIMIT_SWA_DEBOUNCE, 0, 1000);
+      addUnit(F("ms"));
 
       addFormSeparator(2);
 
@@ -222,6 +227,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       Settings.TaskDevicePin1[event->TaskIndex] = getFormItemInt(F("taskdevicepin1"));
       Settings.TaskDevicePin2[event->TaskIndex] = getFormItemInt(F("taskdevicepin2"));
       Settings.TaskDevicePin3[event->TaskIndex] = getFormItemInt(F("taskdevicepin3"));
+
+      P098_ENC_TIMEOUT        = getFormItemInt(F("enc_timeout"));
 
       P098_LIMIT_SWA_GPIO     = getFormItemInt(F("limit_a"));
       P098_LIMIT_SWB_GPIO     = getFormItemInt(F("limit_b"));
@@ -260,10 +267,11 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       config.motorFwd.gpio          = CONFIG_PIN1;
       config.motorRev.gpio          = CONFIG_PIN2;
       config.encoder.gpio           = CONFIG_PIN3;
+      config.encoder.timer_us       = P098_ENC_TIMEOUT * 1000;
       config.limitA.gpio            = P098_LIMIT_SWA_GPIO;
       config.limitB.gpio            = P098_LIMIT_SWB_GPIO;
-      config.limitA.debounceTime_us = P098_LIMIT_SWA_DEBOUNCE * 1000;
-      config.limitB.debounceTime_us = P098_LIMIT_SWB_DEBOUNCE * 1000;
+      config.limitA.timer_us        = P098_LIMIT_SWA_DEBOUNCE * 1000;
+      config.limitB.timer_us        = P098_LIMIT_SWB_DEBOUNCE * 1000;
       # ifdef ESP32
       config.gpio_analogIn = P098_ANALOG_GPIO;
       # endif // ifdef ESP32
