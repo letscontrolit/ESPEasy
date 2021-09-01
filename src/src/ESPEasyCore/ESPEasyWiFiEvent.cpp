@@ -53,7 +53,11 @@ void setUseStaticIP(bool enabled) {
 
 static bool ignoreDisconnectEvent = false;
 
+#if ESP_IDF_VERSION_MAJOR > 3
+void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+#else
 void WiFiEvent(system_event_id_t event, system_event_info_t info) {
+#endif
   switch (event) {
     case SYSTEM_EVENT_WIFI_READY:
       // ESP32 WiFi ready
@@ -91,21 +95,35 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
 
     case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
+      #if ESP_IDF_VERSION_MAJOR > 3
+      WiFiEventData.setAuthMode(info.wifi_sta_authmode_change.new_mode);
+      #else
       WiFiEventData.setAuthMode(info.auth_change.new_mode);
+      #endif
       break;
 
     case SYSTEM_EVENT_STA_CONNECTED:
     {
       char ssid_copy[33] = { 0 }; // Ensure space for maximum len SSID (32) plus trailing 0
+      #if ESP_IDF_VERSION_MAJOR > 3
+      memcpy(ssid_copy, info.wifi_sta_connected.ssid, info.wifi_sta_connected.ssid_len);
+      ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
+      WiFiEventData.markConnected((const char*) ssid_copy, info.wifi_sta_connected.bssid, info.wifi_sta_connected.channel);
+      #else
       memcpy(ssid_copy, info.connected.ssid, info.connected.ssid_len);
       ssid_copy[32] = 0; // Potentially add 0-termination if none present earlier
       WiFiEventData.markConnected((const char*) ssid_copy, info.connected.bssid, info.connected.channel);
+      #endif
       break;
     }
     case SYSTEM_EVENT_STA_DISCONNECTED:
       if (!ignoreDisconnectEvent) {
         ignoreDisconnectEvent = true;
+        #if ESP_IDF_VERSION_MAJOR > 3
+        WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason));
+        #else
         WiFiEventData.markDisconnect(static_cast<WiFiDisconnectReason>(info.disconnected.reason));
+        #endif
         WiFi.persistent(false);
         WiFi.disconnect(true);
       }
@@ -115,10 +133,18 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       WiFiEventData.markGotIP();
       break;
     case SYSTEM_EVENT_AP_STACONNECTED:
+      #if ESP_IDF_VERSION_MAJOR > 3
+      WiFiEventData.markConnectedAPmode(info.wifi_ap_staconnected.mac);
+      #else
       WiFiEventData.markConnectedAPmode(info.sta_connected.mac);
+      #endif
       break;
     case SYSTEM_EVENT_AP_STADISCONNECTED:
+      #if ESP_IDF_VERSION_MAJOR > 3
+      WiFiEventData.markDisconnectedAPmode(info.wifi_ap_stadisconnected.mac);
+      #else
       WiFiEventData.markDisconnectedAPmode(info.sta_disconnected.mac);
+      #endif
       break;
     case SYSTEM_EVENT_SCAN_DONE:
       WiFiEventData.processedScanDone = false;

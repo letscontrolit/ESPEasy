@@ -157,7 +157,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
     serialPrint(String(pgm_read_byte(a), HEX));
     serialPrint(" ");
   }
-  serialPrintln("");
+  serialPrintln();
 }
 
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
@@ -187,7 +187,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
@@ -335,7 +335,7 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
@@ -370,7 +370,7 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   float cos_h, cos_1047_h;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
@@ -442,6 +442,16 @@ int getLoopCountPerSec() {
 
 int getUptimeMinutes() {
   return wdcounter / 2;
+}
+
+/******************************************************************************
+ * scan an int array of specified size for a value
+ *****************************************************************************/
+bool intArrayContains(const int arraySize, const int array[], const int value){
+  for(int i = 0; i < arraySize; i++) {
+    if (array[i] == value) return true;
+  }
+  return false;
 }
 
 #ifndef BUILD_NO_RAM_TRACKER

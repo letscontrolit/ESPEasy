@@ -19,6 +19,8 @@ public:
     SUBNET,
     GATEWAY,
     DNS,
+    DNS_1,
+    DNS_2,
     CLIENTIP,
     ISMQTT,
     ISMQTTIMP,

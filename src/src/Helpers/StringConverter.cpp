@@ -126,6 +126,8 @@ unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
 
   if (nr_decimals > inputLength) {
     nr_decimals = inputLength;
+  } else if (input_c.startsWith(F("0x"))) { // strtoul handles that prefix nicely
+    nr_decimals += 2;
   }
   String tmp = input_c.substring(0, nr_decimals);
 
@@ -138,6 +140,33 @@ unsigned long hexToUL(const String& input_c) {
 
 unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
   return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
+}
+
+// Convert max. 16 hex decimals to unsigned long long (aka uint64_t)
+unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
+  size_t nr_decimals = nrHexDecimals;
+
+  if (nr_decimals > 16) {
+    nr_decimals = 16;
+  }
+  size_t inputLength = input_c.length();
+
+  if (nr_decimals > inputLength) {
+    nr_decimals = inputLength;
+  } else if (input_c.startsWith(F("0x"))) { // strtoull handles that prefix nicely
+    nr_decimals += 2;
+  }
+  String tmp = input_c.substring(0, nr_decimals);
+
+  return strtoull(tmp.c_str(), 0, 16);
+}
+
+unsigned long long hexToULL(const String& input_c) {
+  return hexToULL(input_c, input_c.length());
+}
+
+unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
+  return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
 String formatToHex(unsigned long value, const __FlashStringHelper * prefix) {
@@ -220,6 +249,48 @@ void removeExtraNewLine(String& line) {
 
 void addNewLine(String& line) {
   line += F("\r\n");
+}
+
+size_t UTF8_charLength(char firstByte) {
+  if (firstByte <= 0x7f) {
+    return 1;
+  }
+  // First Byte  Second Byte Third Byte  Fourth Byte
+  // [0x00,0x7F]         
+  // [0xC2,0xDF] [0x80,0xBF]     
+  // 0xE0        [0xA0,0xBF] [0x80,0xBF] 
+  // [0xE1,0xEC] [0x80,0xBF] [0x80,0xBF] 
+  // 0xED        [0x80,0x9F] [0x80,0xBF] 
+  // [0xEE,0xEF] [0x80,0xBF] [0x80,0xBF] 
+  // 0xF0        [0x90,0xBF] [0x80,0xBF] [0x80,0xBF]
+  // [0xF1,0xF3] [0x80,0xBF] [0x80,0xBF] [0x80,0xBF]
+  // 0xF4        [0x80,0x8F] [0x80,0xBF] [0x80,0xBF]
+  // See: https://lemire.me/blog/2018/05/09/how-quickly-can-you-check-that-a-string-is-valid-unicode-utf-8/
+
+  size_t charLength = 2;
+  if (firstByte > 0xEF) {
+    charLength = 4;
+  } else if (firstByte > 0xDF) {
+    charLength = 3;
+  }
+  return charLength;
+}
+
+void replaceUnicodeByChar(String& line, char replChar) {
+  size_t pos = 0;
+  while (pos < line.length()) {
+    const size_t charLength = UTF8_charLength(line[pos]);
+
+    if (charLength > 1) {
+      // Is unicode char in UTF-8 format
+      // Need to find how many characters we need to replace.
+      const size_t charsLeft = line.length() - pos;
+      if (charsLeft >= charLength) {
+        line.replace(line.substring(pos, pos + charLength), String(replChar));
+      }
+    }
+    ++pos;
+  }
 }
 
 /*********************************************************************************************\
@@ -383,20 +454,22 @@ String wrapIfContains(const String& value, char contains, char wrap) {
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
 String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value) 
+                            const __FlashStringHelper * value,
+                            bool wrapInQuotes) 
 {
-  return to_json_object_value(String(object), String(value));
+  return to_json_object_value(String(object), String(value), wrapInQuotes);
 }
 
 
 String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value) 
+                            const String& value,
+                            bool wrapInQuotes) 
 {
-  return to_json_object_value(String(object), value);
+  return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
 
-String to_json_object_value(const String& object, const String& value) {
+String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   String result;
   bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
@@ -409,7 +482,7 @@ String to_json_object_value(const String& object, const String& value) {
     result += F("\"\"");
     return result;
   }
-  if (!isBool && mustConsiderAsString(value)) {
+  if (wrapInQuotes || (!isBool && mustConsiderAsString(value))) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
@@ -624,7 +697,7 @@ void htmlStrongEscape(String& html)
 
   for (unsigned i = 0; i < html.length(); ++i)
   {
-    if (((html[i] >= 'a') && (html[i] <= 'z')) || ((html[i] >= 'A') && (html[i] <= 'Z')) || ((html[i] >= '0') && (html[i] <= '9')))
+    if (isAlphaNumeric(html[i]))
     {
       escaped += html[i];
     }
@@ -652,9 +725,7 @@ String URLEncode(const char *msg)
   encodedMsg.reserve(strlen(msg));
 
   while (*msg != '\0') {
-    if ((('a' <= *msg) && (*msg <= 'z'))
-        || (('A' <= *msg) && (*msg <= 'Z'))
-        || (('0' <= *msg) && (*msg <= '9'))
+    if (isAlphaNumeric(*msg)
         || ('-' == *msg) || ('_' == *msg)
         || ('.' == *msg) || ('~' == *msg)) {
       encodedMsg += *msg;

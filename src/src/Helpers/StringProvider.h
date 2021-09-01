@@ -17,6 +17,8 @@ struct LabelType {
     HOST_NAME,
 
     LOCAL_TIME,
+    TIME_SOURCE,
+    TIME_WANDER,
     UPTIME,
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
@@ -51,6 +53,7 @@ struct LabelType {
 
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
+    TASKVALUESET_ALL_PLUGINS,
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0

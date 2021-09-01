@@ -68,7 +68,7 @@ uint16_t CHT16K33::GetRow(uint8_t com)
     return 0;
 };
 
-void CHT16K33::SetDigit(uint8_t com, uint8_t c)
+void CHT16K33::SetDigit(uint8_t com, uint8_t c, bool setDot)
 {
   uint16_t value = 0;
 
@@ -114,6 +114,9 @@ void CHT16K33::SetDigit(uint8_t com, uint8_t c)
     case '-':
       value = 0x40;
       break;
+  }
+  if (setDot) {
+    value |= 0x80;  // Set the dot-bit
   }
 
   SetRow(com, value);

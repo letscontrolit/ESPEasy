@@ -50,6 +50,18 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x40);
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       uint8_t hdc1080_msb, hdc1080_lsb;

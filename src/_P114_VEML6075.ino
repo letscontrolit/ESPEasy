@@ -55,11 +55,16 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[2] = { 0x10, 0x11 };
-      addFormSelectorI2C(F("plugin_114_veml6075_i2c"), 2, optionValues, PCONFIG(0));
-      addFormNote(F("SDO Low=0x10, High=0x11"));
+      const int i2cAddressValues[2] = { 0x10, 0x11 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("plugin_114_veml6075_i2c"), 2, i2cAddressValues, PCONFIG(0));
+        addFormNote(F("SDO Low=0x10, High=0x11"));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 

@@ -28,7 +28,12 @@
 **********************************************************/
 int getDeepSleepMax()
 {
+  #ifdef ESP8266
   int dsmax = 4294; // About 71 minutes, limited by hardware
+  #endif // ifdef ESP8266
+  #ifdef ESP32
+  int dsmax = 281474976; // / 3600 (hour) / 24 (day) / 365 (year) = ~8 years. (max. 48 bits in microseconds)
+  #endif // ifdef ESp32
 
 #if defined(CORE_POST_2_5_0)
   dsmax = INT_MAX;
@@ -177,7 +182,10 @@ void deepSleepStart(int dsdelay)
     # endif // if defined(CORE_POST_2_5_0)
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  esp_sleep_enable_timer_wakeup((uint32_t)dsdelay * 1000000);
+  if ((dsdelay > getDeepSleepMax()) || (dsdelay < 0)) {
+    dsdelay = getDeepSleepMax(); // Max sleep time ~8 years! Reference: ESP32 technical reference manual, ULP Coprocessor, RTC Timer: https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf#ulp
+  }
+  esp_sleep_enable_timer_wakeup(static_cast<uint64_t>(dsdelay) * 1000000ULL); // max 48 bits used, value in microseconds: 0xFFFFFFFFFFFF (281474976710655 dec.) / 1000000 [usec](281474976 seconds) / 3600 (hours) / 24 (day) / 365 (year) = ~8
   esp_deep_sleep_start();
   #endif // if defined(ESP32)
 }

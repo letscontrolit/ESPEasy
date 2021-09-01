@@ -203,12 +203,23 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%isntp%``
      - 1
      - Indicates whether time was set
-     - yes
+     - Yes
    * - ``%ismqtt%``
      - 1
      - Indicates whether a configured MQTT broker is active
-     - yes
-
+     - Yes
+   * - ``%dns%``
+     - 10.0.0.1 / (IP unset)
+     - The configured Domain Name Server IP-addresses
+     -
+   * - ``%dns1%``
+     - 10.0.0.1
+     - The configured primary Domain Name Server IP-address
+     -
+   * - ``%dns2%``
+     - (IP unset)
+     - The configured secondary Domain Name Server IP-address
+     -
 
 Standard Conversions
 ^^^^^^^^^^^^^^^^^^^^
@@ -268,3 +279,87 @@ The conversion always outputs a string, but not all of these can be converted ba
      - Convert a (known) unit number to its IP Address. (Added: 2020/11/08)
 
        f_opt: for invalid IP: 0 = ``(IP unset)`` 1 = (empty string)  2 = ``0``
+
+
+Task Formulas
+^^^^^^^^^^^^^
+
+Most tasks support using formulas.
+These will be called when a task's ``PLUGIN_READ`` is called.
+
+The formula can perform basic calculations.
+In these calculations the new read value can be referred to via ``%value%``.
+It is also possible to refer to the previous value, from before ``PLUGIN_READ`` is called.
+This previous value can be referred to via ``%pvalue%``
+
+
+Examples
+--------
+
+.. note::
+ Use of "Standard Conversions" and referring other task values in formula was added on 2021-08-06
+
+
+Convert from Celsius to Fahrenheit
+""""""""""""""""""""""""""""""""""
+
+* Using a formula: ``(%value%*9/5)+32``
+* Using above mentioned "Standard Conversions": ``%c_c2f%(%value%)``
+
+
+Compute dew point
+"""""""""""""""""
+
+In formulas one may also refer to other task values.
+For example when using a BME280, which can measure temperature and humidity, it could be useful to output the dew point temperature instead of the actual temperature.
+
+For this conversion, ``%c_dew_th%`` can be used, but it does need 2 input values:
+
+* Temperature
+* Humidity
+
+Let's assume we have a task called "bme" which has a task value named "H" (humidity).
+To replace the measured temperature with the dew point, one may want to use the following conversion:
+
+.. code-block:: none
+
+   %c_dew_th%(%value%,[bme#H])
+
+Compute altitude based on air pressure
+""""""""""""""""""""""""""""""""""""""
+
+An ESPEasy node may receive sensor data from another remote node.
+For example a node may have 2 tasks:
+
+* "local" receiving the air pressure from a sensor
+* "remote" which has a task value  "P" which contains the remote air pressure.
+
+.. code-block:: none
+
+   %c_alt_pres_sea%(%value%,[remote#P])
+
+With this formula set at the "local" task which measures the air pressure, the unit of measure is converted from air pressure to altitude in meters, compared to the remote sensor.
+
+This "remote" task may be received via ESPEasy p2p or can be set by the ``TaskValueSet`` command in rules to a dummy task.
+
+
+
+Finite Impulse Response Filter
+""""""""""""""""""""""""""""""
+
+A Finate Impulse Response Filter (FIR) does only add a fraction of the change to the new value.
+This does dampen the effect of a sudden spike in the readings and just follows the trend of the measured value.
+
+It can also be used as a simple interpolate function for some values that may flip a number of times between 2 discrete values.
+For example most A/D converters may flip between 2 discrete levels, where this flipping may be regarded as a duty cycle corresponding to where the actual value may be between both discrete levels of the ADC.
+
+The factor used in an FIR is a trade-off between strength of filtering and adding a delay to the response time.
+
+Since formulas only can refer to one previous value, we can only make a FIR filter with order N = 2.
+
+An example with a weight of 0.25:
+
+.. code-block:: none
+
+   %pvalue% + (%value%-%pvalue%)/4
+
