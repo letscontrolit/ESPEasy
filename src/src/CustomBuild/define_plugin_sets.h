@@ -1131,6 +1131,9 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_TESTING_D
     #define USES_P093   // Mitsubishi Heat Pump
     #define USES_P094  // CUL Reader
+    #ifndef USES_P098
+      #define USES_P098   // PWM motor
+    #endif
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
 #endif
