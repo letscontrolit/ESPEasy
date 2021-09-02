@@ -152,6 +152,10 @@ bool ETHConnected() {
       }
       return false;
     } else {
+      if (EthEventData.last_eth_connect_attempt_moment.isSet() && 
+          EthEventData.last_eth_connect_attempt_moment.millisPassedSince() < 5000) {
+        return false;
+      }
       setNetworkMedium(NetworkMedium_t::WIFI);
     }
   }
