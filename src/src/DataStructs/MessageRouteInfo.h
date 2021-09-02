@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 #include <map>
+#include <vector>
 
 // For deduplication, some controllers may add a unit ID and current counter.
 // This count will wrap around, so it is just to detect if a message is received multiple times.

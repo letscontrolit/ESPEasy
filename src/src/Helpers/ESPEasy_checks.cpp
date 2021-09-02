@@ -88,11 +88,19 @@ void run_compiletime_checks() {
   check_size<NotificationSettingsStruct,            996u>();
   #endif
   check_size<ExtraTaskSettingsStruct,               472u>();
+  #ifdef ESP32_STAGE
+  check_size<EventStruct,                           116u>(); // Is not stored
+  #else
   check_size<EventStruct,                           96u>(); // Is not stored
+  #endif
 
   // LogStruct is mainly dependent on the number of lines.
   // Has to be round up to multiple of 4.
+  #ifdef ESP32_STAGE
+  const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  #else
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();

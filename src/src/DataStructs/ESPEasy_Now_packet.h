@@ -11,6 +11,7 @@
 
 # include <list>
 # include <map>
+# include <vector>
 class ESPEasy_Now_packet {
 public:
 

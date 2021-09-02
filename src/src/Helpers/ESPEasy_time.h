@@ -6,6 +6,7 @@
 #include "../DataTypes/ESPEasyTimeSource.h"
 
 
+#include <time.h>
 
 
 class ESPEasy_time {
