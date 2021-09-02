@@ -37,9 +37,10 @@
 # define P098_FLAGBIT_LIM_B_INVERTED       4
 # define P098_FLAGBIT_MOTOR_FWD_INVERTED   5
 # define P098_FLAGBIT_MOTOR_REV_INVERTED   6
+# define P098_FLAGBIT_PWM_SOFT_STARTSTOP   7
 
 
-boolean Plugin_098(byte function, struct EventStruct *event, String& string)
+boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -173,8 +174,10 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
         }
         addFormSelector(F("Motor Control"), F("p098_motor_contr"), P098_PWM_MODE_TYPES, options, optionValues, P098_MOTOR_CONTROL);
       }
-      addFormNumericBox(F("PWM Frequency"), F("p098_pwm_freq"), P098_PWM_FREQ, 1000, 100000);
+      addFormNumericBox(F("PWM Frequency"), F("p098_pwm_freq"), P098_PWM_FREQ, 50, 100000);
       addUnit(F("Hz"));
+      addFormCheckBox(F("PWM Soft Start/Stop"), F("pwm_soft_st"), bitRead(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP));
+
 
       addFormSubHeader(F("Feedback"));
 
@@ -247,6 +250,8 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
 
       if (isFormItemChecked(F("mot_rev_inv"))) { bitSet(P098_FLAGS, P098_FLAGBIT_MOTOR_REV_INVERTED); }
 
+      if (isFormItemChecked(F("pwm_soft_st"))) { bitSet(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP); }
+
       if (isFormItemChecked(F("enc_pu"))) { bitSet(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP); }
 
       if (isFormItemChecked(F("limit_a_pu"))) { bitSet(P098_FLAGS, P098_FLAGBIT_LIM_A_PULLUP); }
@@ -284,6 +289,7 @@ boolean Plugin_098(byte function, struct EventStruct *event, String& string)
       config.encoder.pullUp    = bitRead(P098_FLAGS, P098_FLAGBIT_ENC_IN_PULLUP);
 
       config.PWM_mode = static_cast<P098_config_struct::PWM_mode_type>(P098_MOTOR_CONTROL);
+      config.pwm_soft_startstop = bitRead(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP);
 
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P098_data_struct(config));

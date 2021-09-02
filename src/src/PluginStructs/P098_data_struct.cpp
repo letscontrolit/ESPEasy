@@ -6,6 +6,8 @@
 
 # include "../Commands/GPIO.h" // FIXME TD-er: Only needed till we can call GPIO commands from the ESPEasy core.
 
+# include "../Helpers/Hardware.h"
+
 # define GPIO_PLUGIN_ID  1
 
 
@@ -250,13 +252,13 @@ void P098_data_struct::checkPosition()
   }
 }
 
-void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, byte state)
+void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t state)
 {
   // FIXME TD-er: Must move this code to the ESPEasy core code.
-  byte mode = PIN_MODE_OUTPUT;
+  uint8_t mode = PIN_MODE_OUTPUT;
 
   state = state == 0 ? gpio_config.low() : gpio_config.high();
-  const uint32_t key = createKey(GPIO_PLUGIN_ID, gpio_config.gpio);
+  uint32_t key = createKey(GPIO_PLUGIN_ID, gpio_config.gpio);
 
   if (globalMapPortStatus[key].mode != PIN_MODE_OFFLINE)
   {
@@ -268,14 +270,41 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, byte sta
       state = -1;
     }
 
-    createAndSetPortStatus_Mode_State(key, mode, state);
-
-    if (mode == PIN_MODE_OUTPUT)  {
-      GPIO_Write(
-        GPIO_PLUGIN_ID,
-        gpio_config.gpio,
-        state,
-        mode);
+    switch (_config.PWM_mode) {
+      case P098_config_struct::PWM_mode_type::NoPWM:
+        if (mode == PIN_MODE_OUTPUT)  {
+          createAndSetPortStatus_Mode_State(key, mode, state);
+          GPIO_Write(
+            GPIO_PLUGIN_ID,
+            gpio_config.gpio,
+            state,
+            mode);
+        }
+        break;
+      case P098_config_struct::PWM_mode_type::PWM:
+      {
+        const uint32_t dutycycle = state == 0 ? 0 : 512;
+        const uint32_t fade_duration = _config.pwm_soft_startstop ? 
+              100 /* (_config.encoder.timer_us / 1000) */
+              : 0;
+        uint32_t frequency = _config.pwm_freq;
+        set_Gpio_PWM(
+          gpio_config.gpio,
+          dutycycle,
+          fade_duration,
+          frequency,
+          key);
+        if (state == 0) {
+          // Turn off PWM mode too
+          createAndSetPortStatus_Mode_State(key, PIN_MODE_OUTPUT, state);
+          GPIO_Write(
+            GPIO_PLUGIN_ID,
+            gpio_config.gpio,
+            state,
+            PIN_MODE_OUTPUT);
+        }
+      }
+      break;
     }
   }
 }

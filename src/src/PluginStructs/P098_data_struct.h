@@ -51,6 +51,7 @@ struct P098_config_struct {
   PWM_mode_type PWM_mode = PWM_mode_type::NoPWM;
 
   bool encoder_pu = false;
+  bool pwm_soft_startstop = false;
 };
 
 struct P098_limit_switch_state {
@@ -140,8 +141,8 @@ private:
   void        checkLimit(volatile P098_limit_switch_state& switch_state);
   void        checkPosition();
 
-  static void setPinState(const P098_GPIO_config& gpio_config,
-                          byte                    state);
+  void setPinState(const P098_GPIO_config& gpio_config,
+                          int8_t                  state);
 
   static bool setPinMode(const P098_GPIO_config& gpio_config);
 
