@@ -341,8 +341,12 @@ void handle_json()
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
       if (valueCount != 0) {
-        if ((taskInterval > 0) && Settings.TaskDeviceEnabled[TaskIndex]) {
-          ttl_json = taskInterval;
+        if (Settings.TaskDeviceEnabled[TaskIndex]) {
+          if (taskInterval == 0) {
+            ttl_json = 1;
+          } else {
+            ttl_json = taskInterval;
+          }
 
           if (ttl_json < lowest_ttl_json) {
             lowest_ttl_json = ttl_json;

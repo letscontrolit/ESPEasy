@@ -53,6 +53,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].DecimalsOnly       = false;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
