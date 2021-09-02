@@ -48,6 +48,8 @@ struct P098_config_struct {
 
   int gpio_analogIn = -1;
 
+  uint32_t pwm_duty_cycle = 1023;
+
   PWM_mode_type PWM_mode = PWM_mode_type::NoPWM;
 
   bool encoder_pu = false;
@@ -82,7 +84,8 @@ struct P098_data_struct : public PluginTaskData_base {
     RunFwd,
     RunRev,
     StopLimitSw,
-    StopPosReached
+    StopPosReached,
+    StopEncoderTimeout
   };
 
   P098_data_struct(const P098_config_struct& config);
@@ -135,6 +138,7 @@ private:
   volatile int                     position = 0;
   volatile uint64_t                enc_lastChanged_us = 0;
   int                              pos_dest = 0;
+  int                              pos_overshoot = 0;
 
   void        startMoving();
 

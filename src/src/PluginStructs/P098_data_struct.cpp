@@ -80,7 +80,7 @@ bool P098_data_struct::loop()
 
   if (check_encoder_timeout(_config.encoder)) {
     stop();
-    state = P098_data_struct::State::StopLimitSw;  
+    state = P098_data_struct::State::StopEncoderTimeout;  
     return old_state == state;
   }
 
@@ -97,6 +97,7 @@ bool P098_data_struct::loop()
       checkLimit(limitA);
       break;
     }
+    case P098_data_struct::State::StopEncoderTimeout:
     case P098_data_struct::State::StopLimitSw:
     case P098_data_struct::State::StopPosReached:
       // Still in a state that needs inspection
@@ -123,6 +124,7 @@ bool P098_data_struct::canRun()
       return true;
     case P098_data_struct::State::StopLimitSw:
     case P098_data_struct::State::StopPosReached:
+    case P098_data_struct::State::StopEncoderTimeout:
       // Still in a state that needs inspection
       return false;
   }
@@ -229,11 +231,11 @@ void P098_data_struct::checkPosition()
   switch (state) {
     case P098_data_struct::State::RunFwd:
 
-      mustStop = (position >= pos_dest);
+      mustStop = ((position + pos_overshoot) >= pos_dest);
       break;
     case P098_data_struct::State::RunRev:
 
-      mustStop = (position <= pos_dest);
+      mustStop = ((position - pos_overshoot) <= pos_dest);
       break;
     default:
       return;
@@ -241,6 +243,7 @@ void P098_data_struct::checkPosition()
 
   if (mustStop) {
     stop();
+    pos_overshoot = 0;
     state = P098_data_struct::State::StopPosReached;
 
     /*
@@ -283,7 +286,7 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t s
         break;
       case P098_config_struct::PWM_mode_type::PWM:
       {
-        const uint32_t dutycycle = state == 0 ? 0 : 512;
+        const uint32_t dutycycle = state == 0 ? 0 : _config.pwm_duty_cycle;
         const uint32_t fade_duration = _config.pwm_soft_startstop ? 
               100 /* (_config.encoder.timer_us / 1000) */
               : 0;

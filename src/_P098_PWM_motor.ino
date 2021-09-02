@@ -28,6 +28,7 @@
 # define P098_LIMIT_SWA_DEBOUNCE PCONFIG(4)
 # define P098_LIMIT_SWB_DEBOUNCE PCONFIG(5)
 # define P098_ENC_TIMEOUT        PCONFIG(6)
+# define P098_PWM_DUTY           PCONFIG(7)
 
 
 # define P098_FLAGBIT_LIM_A_PULLUP         0
@@ -58,6 +59,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOptional      = true;
       break;
     }
 
@@ -128,6 +130,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
      */
     case PLUGIN_SET_DEFAULTS:
     {
+      P098_FLAGS              = 0;
       P098_LIMIT_SWA_GPIO     = -1;
       P098_LIMIT_SWB_GPIO     = -1;
       P098_LIMIT_SWA_DEBOUNCE = 100;
@@ -135,6 +138,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       P098_ENC_TIMEOUT        = 100;
       P098_MOTOR_CONTROL      = 0; // No PWM
       P098_PWM_FREQ           = 1000;
+      P098_PWM_DUTY           = 1023;
       # ifdef ESP32
       P098_ANALOG_GPIO = -1;       // Analog feedback
       # endif // ifdef ESP32
@@ -176,6 +180,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
       }
       addFormNumericBox(F("PWM Frequency"), F("p098_pwm_freq"), P098_PWM_FREQ, 50, 100000);
       addUnit(F("Hz"));
+      addFormNumericBox(F("PWM Duty Cycle"), F("p098_pwm_duty"), P098_PWM_DUTY, 0, 1023);
       addFormCheckBox(F("PWM Soft Start/Stop"), F("pwm_soft_st"), bitRead(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP));
 
 
@@ -240,6 +245,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 
       P098_MOTOR_CONTROL = getFormItemInt(F("p098_motor_contr"));
       P098_PWM_FREQ      = getFormItemInt(F("p098_pwm_freq"));
+      P098_PWM_DUTY      = getFormItemInt(F("p098_pwm_duty"));
       # ifdef ESP32
       P098_ANALOG_GPIO = getFormItemInt(F("analogpin"));
       # endif // ifdef ESP32
@@ -290,7 +296,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 
       config.PWM_mode = static_cast<P098_config_struct::PWM_mode_type>(P098_MOTOR_CONTROL);
       config.pwm_soft_startstop = bitRead(P098_FLAGS, P098_FLAGBIT_PWM_SOFT_STARTSTOP);
-
+      config.pwm_duty_cycle     = P098_PWM_DUTY;
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P098_data_struct(config));
       P098_data_struct *P098_data =
@@ -325,6 +331,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
             break;
           case P098_data_struct::State::StopLimitSw:
           case P098_data_struct::State::StopPosReached:
+          case P098_data_struct::State::StopEncoderTimeout:
           {
             if (Settings.UseRules) {
               String RuleEvent = getTaskDeviceName(event->TaskIndex);
@@ -340,6 +347,9 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 
               if (P098_data->state == P098_data_struct::State::StopPosReached) {
                 eventQueue.addMove(String(RuleEvent + F("positionReached")));
+              }
+              if (P098_data->state == P098_data_struct::State::StopEncoderTimeout) {
+                eventQueue.addMove(String(RuleEvent + F("encoderTimeout")));
               }
             }
             P098_data->state = P098_data_struct::State::Idle;
