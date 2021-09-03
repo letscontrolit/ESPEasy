@@ -287,9 +287,6 @@ String AdaGFXparseTemplate(String            & tmpString,
     delay(0);
   }
 
-  for (uint16_t l = result.length(); l > 0 && isSpace(result[l - 1]); l--) { // Right-trim
-    result.remove(l - 1);
-  }
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
