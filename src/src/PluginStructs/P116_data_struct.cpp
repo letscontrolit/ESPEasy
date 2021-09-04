@@ -95,6 +95,10 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
 bool P116_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
+  ButtonState     = false; // button not touched
+  ButtonLastState = 0xFF;  // Last state checked (debouncing in progress)
+  DebounceCounter = 0;     // debounce counter
+
   if (nullptr == st77xx) {
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
     uint8_t initRoptions = 0xFF;
@@ -292,10 +296,9 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P116_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if ((P116_CONFIG_BUTTON_PIN != -1) && (nullptr != st77xx)) {
-    if (digitalRead(P116_CONFIG_BUTTON_PIN) == (bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON) ? 1 : 0)) { // Invert state
-      displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
-    }
+  if ((P116_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != st77xx)) {
+    displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+    markButtonStateProcessed();
   }
   return true;
 }
@@ -394,6 +397,33 @@ void P116_data_struct::displayOnOff(bool    state,
   }
   st77xx->enableDisplay(state);           // Display on
   _displayTimer = (state ? displayTimeout : 0);
+}
+
+/****************************************************************************
+ * registerButtonState: the button has been pressed, apply some debouncing
+ ***************************************************************************/
+void P116_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
+  if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
+    ButtonLastState = newButtonState;
+    DebounceCounter++;
+  } else {
+    ButtonLastState = 0xFF; // Reset
+    DebounceCounter = 0;
+    ButtonState     = false;
+  }
+
+  if ((ButtonLastState == newButtonState) &&
+      (DebounceCounter >= P116_DebounceTreshold)) {
+    ButtonState = true;
+  }
+}
+
+/****************************************************************************
+ * markButtonStateProcessed: reset the button state
+ ***************************************************************************/
+void P116_data_struct::markButtonStateProcessed() {
+  ButtonState     = false;
+  DebounceCounter = 0;
 }
 
 #endif // ifdef USES_P116

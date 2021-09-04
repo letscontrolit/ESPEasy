@@ -4,16 +4,17 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P116
 
-# include <Adafruit_GFX.h>                              // include Adafruit graphics library
-# include <Adafruit_ST77xx.h>                           // include Adafruit ST77xx TFT library
-# include <Adafruit_ST7735.h>                           // include Adafruit ST7735 TFT library
-# include <Adafruit_ST7789.h>                           // include Adafruit ST7789 TFT library
+# include <Adafruit_GFX.h>                  // include Adafruit graphics library
+# include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
+# include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
+# include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
 
-# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
+# include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
 
-# define P116_Nlines 24                                 // The number of different lines which can be displayed
-# define P116_Nchars 60
+# define P116_Nlines           24           // The number of different lines which can be displayed
+# define P116_Nchars           60
+# define P116_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
 
 // # define P116_SHOW_SPLASH                               // Enable to show splash (text)
 
@@ -105,6 +106,13 @@ public:
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);
 
+  void registerButtonState(uint8_t newButtonState,
+                           bool    bPin3Invers);
+  void markButtonStateProcessed();
+  bool getButtonState() {
+    return ButtonState;
+  }
+
 private:
 
   void displayOnOff(bool    state,
@@ -136,6 +144,11 @@ private:
   bool                _textBackFill;
 
   String _commandTriggerCmd;
+
+  // Display button
+  bool    ButtonState     = false;    // button not touched
+  uint8_t ButtonLastState = 0;        // Last state checked (debouncing in progress)
+  uint8_t DebounceCounter = 0;        // debounce counter
 
   int8_t _leftMarginCompensation = 0; // Not settable yet
   int8_t _topMarginCompensation  = 0;

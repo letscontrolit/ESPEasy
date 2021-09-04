@@ -297,6 +297,22 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Check more often for debouncing the button, when enabled
+    case PLUGIN_FIFTY_PER_SECOND:
+    {
+      if (P116_CONFIG_BUTTON_PIN != -1) {
+        P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr == P116_data) {
+          return success;
+        }
+
+        P116_data->registerButtonState(digitalRead(P116_CONFIG_BUTTON_PIN), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON));
+        success = true;
+      }
+      break;
+    }
+
     case PLUGIN_TEN_PER_SECOND:
     {
       P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
