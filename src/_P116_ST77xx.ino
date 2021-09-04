@@ -104,15 +104,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(formatGpioName_output_optional(F("Backlight ")), F("p116_backlight"), P116_CONFIG_BACKLIGHT_PIN);
-      addFormNumericBox(F("Backlight percentage"), F("p116_backpercentage"), P116_CONFIG_BACKLIGHT_PERCENT, 1, 100);
-      addUnit(F("1-100%"));
+      AdaGFXFormBacklight(F("p116_backlight"), P116_CONFIG_BACKLIGHT_PIN,
+                          F("p116_backpercentage"), P116_CONFIG_BACKLIGHT_PERCENT);
 
-      addFormPinSelect(F("Display button"), F("p116_button"), P116_CONFIG_BUTTON_PIN);
-
-      addFormCheckBox(F("Inversed Logic"), F("p116_buttonInverse"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON)); // Bit 1
-
-      addFormNumericBox(F("Display Timeout"), F("p116_timer"), P116_CONFIG_DISPLAY_TIMEOUT);
+      AdaGFXFormDisplayButton(F("p116_button"), P116_CONFIG_BUTTON_PIN,
+                              F("p116_buttonInverse"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERT_BUTTON),
+                              F("p116_timer"), P116_CONFIG_DISPLAY_TIMEOUT);
 
       {
         const __FlashStringHelper *options4[] = {
@@ -147,8 +144,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormTextPrintMode(F("p116_mode"), P116_CONFIG_FLAG_GET_MODE);
 
-      addFormNumericBox(F("Font scaling"), F("p116_fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE, 1, 10);
-      addUnit(F("1x..10x"));
+      AdaGFXFormFontScaling(F("p116_fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE);
 
       addFormCheckBox(F("Clear display on exit"), F("p116_clearOnExit"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT));
 

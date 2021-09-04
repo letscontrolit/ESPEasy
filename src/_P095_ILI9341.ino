@@ -237,16 +237,12 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_095));
       }
 
-      addFormPinSelect(formatGpioName_output_optional(F("Backlight ")), F("p095_backlight"), P095_CONFIG_BACKLIGHT_PIN);
-      addFormNumericBox(F("Backlight percentage"), F("p095_backpercentage"), P095_CONFIG_BACKLIGHT_PERCENT, 1, 100);
-      addUnit(F("1-100%"));
+      AdaGFXFormBacklight(F("p095_backlight"), P095_CONFIG_BACKLIGHT_PIN,
+                          F("p095_backpercentage"), P095_CONFIG_BACKLIGHT_PERCENT);
 
-      addFormPinSelect(F("Display button"), F("p095_button"), P095_CONFIG_BUTTON_PIN);
-
-      addFormCheckBox(F("Inversed Logic"), F("p095_buttonInverse"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON)); // Bit 1
-
-      addFormNumericBox(F("Display Timeout"), F("p095_timer"), P095_CONFIG_DISPLAY_TIMEOUT);
-
+      AdaGFXFormDisplayButton(F("p095_button"), P095_CONFIG_BUTTON_PIN,
+                              F("p095_buttonInverse"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON),
+                              F("p095_timer"), P095_CONFIG_DISPLAY_TIMEOUT);
 
       addFormSubHeader(F("Layout"));
 
@@ -254,8 +250,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormTextPrintMode(F("p095_mode"), P095_CONFIG_FLAG_GET_MODE);
 
-      addFormNumericBox(F("Font scaling"), F("p095_fontscale"), P095_CONFIG_FLAG_GET_FONTSCALE, 1, 10);
-      addUnit(F("1x..10x"));
+      AdaGFXFormFontScaling(F("p095_fontscale"), P095_CONFIG_FLAG_GET_FONTSCALE);
 
       addFormCheckBox(F("Clear display on exit"), F("p095_clearOnExit"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT));
 

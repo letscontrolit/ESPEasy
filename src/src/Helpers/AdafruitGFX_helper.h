@@ -159,6 +159,18 @@ void                       AdaGFXFormForeAndBackColors(const __FlashStringHelper
                                                        const __FlashStringHelper *backgroundId,
                                                        uint16_t                   backgroundColor,
                                                        AdaGFXColorDepth           colorDepth = AdaGFXColorDepth::FullColor);
+void AdaGFXFormBacklight(const __FlashStringHelper *backlightPinId,
+                         int8_t                     backlightPin,
+                         const __FlashStringHelper *backlightPercentageId,
+                         uint16_t                   backlightPercentage);
+void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
+                             int8_t                     buttonPin,
+                             const __FlashStringHelper *buttonInverseId,
+                             bool                       buttonInverse,
+                             const __FlashStringHelper *displayTimeoutId,
+                             int                        displayTimeout);
+void     AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
+                               uint8_t                    fontScaling);
 String   AdaGFXparseTemplate(String            & tmpString,
                              uint8_t             lineSize,
                              AdafruitGFX_helper *gfxHelper = nullptr);
@@ -211,7 +223,7 @@ public:
     _p095_compensation = compensation;
   }
 
-  void setRotation(uint8_t m);     // Set the helper-rotation the same as the display object rotation
+  void setRotation(uint8_t m);        // Set the helper-rotation the same as the display object rotation
 
   void setColumnRowMode(bool state) { // When true, addressing for txp, txtfull commands is in columns/rows, default in pixels
     _columnRowMode = state;           // NOT compatible with _p095_compensation!

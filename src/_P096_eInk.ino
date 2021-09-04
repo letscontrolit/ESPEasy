@@ -338,8 +338,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormTextPrintMode(F("p096_mode"), P096_CONFIG_FLAG_GET_MODE);
 
-      addFormNumericBox(F("Font scaling"), F("p096_fontscale"), P096_CONFIG_FLAG_GET_FONTSCALE, 1, 10);
-      addUnit(F("1x..10x"));
+      AdaGFXFormFontScaling(F("p096_fontscale"), P096_CONFIG_FLAG_GET_FONTSCALE);
 
       {
         const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum (except MAX)!

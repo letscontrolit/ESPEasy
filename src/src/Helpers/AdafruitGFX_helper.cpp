@@ -135,6 +135,45 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
   addFormNote(F("NB: Colors stored as RGB565 value!"));
 }
 
+/*****************************************************************************************
+ * Show a pin selector and percentage 1..100 for Backlight settings
+ ****************************************************************************************/
+void AdaGFXFormBacklight(const __FlashStringHelper *backlightPinId,
+                         int8_t                     backlightPin,
+                         const __FlashStringHelper *backlightPercentageId,
+                         uint16_t                   backlightPercentage) {
+  addFormPinSelect(formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
+
+  addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 1, 100);
+  addUnit(F("1-100%"));
+}
+
+/*****************************************************************************************
+ * Show pin selector, inverse option and timeout inputs for Displaybutton settings
+ ****************************************************************************************/
+void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
+                             int8_t                     buttonPin,
+                             const __FlashStringHelper *buttonInverseId,
+                             bool                       buttonInverse,
+                             const __FlashStringHelper *displayTimeoutId,
+                             int                        displayTimeout) {
+  addFormPinSelect(F("Display button"), buttonPinId, buttonPin);
+
+  addFormCheckBox(F("Inversed Logic"), buttonInverseId, buttonInverse);
+
+  addFormNumericBox(F("Display Timeout"), displayTimeoutId, displayTimeout);
+  addUnit(F("0 = off"));
+}
+
+/*****************************************************************************************
+ * Show a numeric input 1..10 for Font scaling setting
+ ****************************************************************************************/
+void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
+                           uint8_t                    fontScaling) {
+  addFormNumericBox(F("Font scaling"), fontScalingId, fontScaling, 1, 10);
+  addUnit(F("1x..10x"));
+}
+
 /****************************************************************************
  * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
  ***************************************************************************/
