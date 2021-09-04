@@ -99,7 +99,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     uint16_t yPos = 0;
     gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
     yPos += (3 * _fontheight);
-    gfxHelper->printText(String(F("ILI9341")).c_str(),  0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
+    gfxHelper->printText(String(F("ILI9341")).c_str(), 0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
     delay(100); // Splash
     # endif // ifdef P095_SHOW_SPLASH
     updateFontMetrics();
@@ -142,7 +142,7 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
 
   if (nullptr != tft) {
     // delete tft; // Library is not properly inherited so no destructor called
-    free(tft);  // Free up some memory without calling the destructor chain
+    free(tft); // Free up some memory without calling the destructor chain
   }
   tft = nullptr;
   return true;
@@ -195,10 +195,9 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if ((P095_CONFIG_BUTTON_PIN != -1) && (nullptr != tft)) {
-    if (digitalRead(P095_CONFIG_BUTTON_PIN) == (bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_INVERT_BUTTON) ? 1 : 0)) { // Invert state
-      displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
-    }
+  if ((P095_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != tft)) {
+    displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+    markButtonStateProcessed();
   }
   return true;
 }
@@ -336,6 +335,33 @@ void P095_data_struct::displayOnOff(bool    state,
     tft->sendCommand(ILI9341_DISPOFF);
   }
   _displayTimer = (state ? displayTimeout : 0);
+}
+
+/****************************************************************************
+ * registerButtonState: the button has been pressed, apply some debouncing
+ ***************************************************************************/
+void P095_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
+  if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
+    ButtonLastState = newButtonState;
+    DebounceCounter++;
+  } else {
+    ButtonLastState = 0xFF; // Reset
+    DebounceCounter = 0;
+    ButtonState     = false;
+  }
+
+  if ((ButtonLastState == newButtonState) &&
+      (DebounceCounter >= P095_DebounceTreshold)) {
+    ButtonState = true;
+  }
+}
+
+/****************************************************************************
+ * markButtonStateProcessed: reset the button state
+ ***************************************************************************/
+void P095_data_struct::markButtonStateProcessed() {
+  ButtonState     = false;
+  DebounceCounter = 0;
 }
 
 #endif // ifdef USES_P095
