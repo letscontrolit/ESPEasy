@@ -213,7 +213,9 @@ public:
                       uint16_t& textrows,
                       uint8_t & fontwidth,
                       uint8_t & fontheight,
-                      uint8_t & fontscaling);
+                      uint8_t & fontscaling,
+                      uint16_t& xpix,
+                      uint16_t& ypix);
   void getColors(uint16_t& fgcolor,
                  uint16_t& bgcolor);
   void getCursorXY(int16_t& currentX,                 // Get last known (text)cursor position, recalculates to col/row if that
@@ -256,7 +258,7 @@ private:
   uint16_t _textrows;
   int16_t _lastX;
   int16_t _lastY;
-  uint8_t _fontwidth         = 8; // Default font characteristics
+  uint8_t _fontwidth         = 6; // Default font characteristics
   uint8_t _fontheight        = 10;
   uint8_t _p095_compensation = 0;
   bool _columnRowMode        = false;

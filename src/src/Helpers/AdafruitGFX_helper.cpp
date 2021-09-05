@@ -381,9 +381,10 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   _display_x = res_x; // Store initial resolution
   _display_y = res_y;
 
-  calculateTextMetrics(6, 10);                  // Defaults for built-in font
+  if (_fontscaling < 1) { _fontscaling = 1; }
 
   if (nullptr != _display) {
+    _display->setTextSize(_fontscaling);
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
   }
 }
@@ -1315,12 +1316,16 @@ void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols,
                                         uint16_t& textrows,
                                         uint8_t & fontwidth,
                                         uint8_t & fontheight,
-                                        uint8_t & fontscaling) {
+                                        uint8_t & fontscaling,
+                                        uint16_t& xpix,
+                                        uint16_t& ypix) {
   textcols    = _textcols;
   textrows    = _textrows;
   fontwidth   = _fontwidth;
   fontheight  = _fontheight;
   fontscaling = _fontscaling;
+  xpix        = _res_x;
+  ypix        = _res_y;
 }
 
 /****************************************************************************
@@ -1429,6 +1434,7 @@ void AdafruitGFX_helper::setRotation(uint8_t m) {
       _res_y = _display_x;
       break;
   }
+  calculateTextMetrics(_fontwidth, _fontheight);
 }
 
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX

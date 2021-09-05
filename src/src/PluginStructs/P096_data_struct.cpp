@@ -178,7 +178,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
  ***************************************************************************/
 void P096_data_struct::updateFontMetrics() {
   if (nullptr != gfxHelper) {
-    gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling);
+    gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling, _xpix, _ypix);
     gfxHelper->getColors(_fgcolor, _bgcolor);
   } else {
     _textcols = _xpix / (_fontwidth * _fontscaling);
