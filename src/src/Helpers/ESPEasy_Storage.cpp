@@ -35,6 +35,8 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../WebServer/HardwarePage.h"
+
 #include "ESPEasy_checks.h"
 
 #ifdef ESP32
@@ -290,7 +292,7 @@ String BuildFixes()
     Settings.PeriodicalScanWiFi(false);
   }
   if (Settings.Build < 20115) {
-    if (Settings.InitSPI != 3) { // User-defined SPI pins set to None
+    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
       Settings.SPI_SCLK_pin = -1;
       Settings.SPI_MISO_pin = -1;
       Settings.SPI_MOSI_pin = -1;

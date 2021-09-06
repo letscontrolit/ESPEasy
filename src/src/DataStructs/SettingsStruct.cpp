@@ -5,6 +5,7 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../../ESPEasy_common.h"
+#include "../WebServer/HardwarePage.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -543,19 +544,19 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   if (isSPI_valid()) {
     # ifdef ESP32
     switch (InitSPI) {
-      case 1:
+      case static_cast<int>(SPI_Options_e::Vspi):
       {
         spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
         break;
       }
-      case 2:
+      case static_cast<int>(SPI_Options_e::Hspi):
       {
         spi_gpios[0] = 14; // HSPI_SCLK
         spi_gpios[1] = 12; // HSPI_MISO
         spi_gpios[2] = 13; // HSPI_MOSI
         break;
       }
-      case 3:
+      case static_cast<int>(SPI_Options_e::UserDefined):
       {
         spi_gpios[0] = SPI_SCLK_pin;
         spi_gpios[1] = SPI_MISO_pin;
@@ -588,8 +589,8 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
-  return !((InitSPI == 0) ||
-           ((InitSPI == 3) &&
+  return !((InitSPI == static_cast<int>(SPI_Options_e::None)) ||
+           ((InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) &&
             ((SPI_SCLK_pin == -1) ||
              (SPI_MISO_pin == -1) ||
              (SPI_MOSI_pin == -1) ||

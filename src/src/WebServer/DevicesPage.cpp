@@ -789,14 +789,19 @@ void format_SPI_port_description(int8_t spi_gpios[3])
   # ifdef ESP32
 
   switch (Settings.InitSPI) {
-    case 1:
+    case static_cast<int>(SPI_Options_e::Vspi):
     {
       addHtml(F("VSPI"));
       break;
     }
-    case 2:
+    case static_cast<int>(SPI_Options_e::Hspi):
     {
       addHtml(F("HSPI"));
+      break;
+    }
+    case static_cast<int>(SPI_Options_e::UserDefined):
+    {
+      addHtml(F("UserDefined")); // Might need to add GPIOs...
       break;
     }
   }
@@ -815,7 +820,7 @@ void format_I2C_pin_description()
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
 {
-  if (Settings.InitSPI > 0) {
+  if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
     for (int i = 0; i < 3; ++i) {
       const String pin_descr = formatGpioLabel(spi_gpios[i], false);
       switch (i) {
@@ -1009,7 +1014,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (((Device[DeviceIndex].Type == DEVICE_TYPE_SPI)
        || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI2)
        || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI3))
-      && (Settings.InitSPI == 0)) {
+      && (Settings.InitSPI == static_cast<int>(SPI_Options_e::None))) {
     addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
   }
 

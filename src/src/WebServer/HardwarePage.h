@@ -3,6 +3,13 @@
 
 #include "../WebServer/common.h"
 
+enum class SPI_Options_e {
+  None = 0,
+  Vspi,
+  Hspi,
+  UserDefined
+};
+
 #ifdef WEBSERVER_HARDWARE
 
 // ********************************************************************************

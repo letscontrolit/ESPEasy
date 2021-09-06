@@ -17,6 +17,8 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../WebServer/HardwarePage.h"
+
 //#include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
@@ -125,14 +127,14 @@ void hardwareInit()
     // MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
     #ifdef ESP32
 
-    if (Settings.InitSPI == 2)
+    if (Settings.InitSPI == static_cast<int>(SPI_Options_e::Hspi))
     {
       # define HSPI_MISO   12
       # define HSPI_MOSI   13
       # define HSPI_SCLK   14
       # define HSPI_SS     15
       SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); // HSPI
-    } else if (Settings.InitSPI >= 3)
+    } else if (Settings.InitSPI == static_cast<int>(SPI_Options_e::UserDefined))
     {
       SPI.begin(Settings.SPI_SCLK_pin,
                 Settings.SPI_MISO_pin,

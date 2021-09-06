@@ -30,6 +30,8 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Rules_calculate.h"
 
+#include "../WebServer/HardwarePage.h"
+
 
 #define PLUGIN_ID_MQTT_IMPORT         37
 
@@ -48,7 +50,7 @@ void sendData(struct EventStruct *event)
     createRuleEvents(event);
   }
 
-  if (Settings.UseValueLogger && (Settings.InitSPI > 0) && (Settings.Pin_sd_cs >= 0)) {
+  if (Settings.UseValueLogger && (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) && (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
 

@@ -50,8 +50,8 @@ void handle_hardware() {
     Settings.I2C_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset"));
 #endif
     #ifdef ESP32
-      Settings.InitSPI                = getFormItemInt(F("initspi"), 0);
-      if (Settings.InitSPI == 3) { // User-define SPI GPIO pins
+      Settings.InitSPI                = getFormItemInt(F("initspi"), static_cast<int>(SPI_Options_e::None));
+      if (Settings.InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) { // User-define SPI GPIO pins
         Settings.SPI_SCLK_pin         = getFormItemInt(F("spipinsclk"), -1);
         Settings.SPI_MISO_pin         = getFormItemInt(F("spipinmiso"), -1);
         Settings.SPI_MOSI_pin         = getFormItemInt(F("spipinmosi"), -1);
@@ -173,7 +173,13 @@ void handle_hardware() {
       F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), 
       F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13"),
       F("User-defined: CLK, MISO, MOSI GPIO-pins")};
-    addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, NULL, NULL, Settings.InitSPI, F("spiOptionChanged(this)"));
+    const int spi_index[] = {
+      static_cast<int>(SPI_Options_e::None),
+      static_cast<int>(SPI_Options_e::Vspi),
+      static_cast<int>(SPI_Options_e::Hspi),
+      static_cast<int>(SPI_Options_e::UserDefined)
+    };
+    addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, spi_index, NULL, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
@@ -182,7 +188,7 @@ void handle_hardware() {
     addFormNote(F("Changing SPI settings requires to press the hardware-reset button or power off-on!"));
   }
   #else //for ESP8266 we keep the existing UI
-  addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI>0);
+  addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI > static_cast<int>(SPI_Options_e::None));
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
