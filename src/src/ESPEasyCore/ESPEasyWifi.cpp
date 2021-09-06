@@ -467,7 +467,7 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      if (WiFi.RSSI() < 0 && NetworkLocalIP().isSet()) {
+      if (WiFi.RSSI() < 0 && WiFi.localIP().isSet()) {
         //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           return false;
@@ -481,7 +481,7 @@ bool checkAndResetWiFi() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
         return false;
       }
       break;
@@ -493,7 +493,7 @@ bool checkAndResetWiFi() {
       return false;
     //}
   }
-  if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+  if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
     return false;
   }
   #endif
