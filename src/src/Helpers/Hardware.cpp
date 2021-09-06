@@ -173,7 +173,6 @@ void initI2C() {
   }
   addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
   I2CSelectClockSpeed(false); // Set normal clock speed
-  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
 
   if (Settings.WireClockStretchLimit)
   {
@@ -226,8 +225,13 @@ void I2CSelectClockSpeed(bool setLowSpeed) {
     // No need to change the clock speed.
     return;
   }
-  lastI2CClockSpeed = newI2CClockSpeed;  
+  lastI2CClockSpeed = newI2CClockSpeed;
+  #ifdef ESP32
+  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, newI2CClockSpeed);
+  #else
+  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
   Wire.setClock(newI2CClockSpeed);
+  #endif
 }
 
 #ifdef FEATURE_I2CMULTIPLEXER
