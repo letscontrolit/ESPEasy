@@ -26,6 +26,9 @@
 #   include "src/Static/Fonts/unispace_italic12pt7b.h"
 #   include "src/Static/Fonts/whitrabt12pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#   include "src/Static/Fonts/AmerikaSans16pt7b.h"
+#  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
 /******************************************************************************************
@@ -667,45 +670,45 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
     if (sParams[0].equals(F("sevenseg24"))) {
       _display->setFont(&Seven_Segment24pt7b);
-      calculateTextMetrics(21, 48);
+      calculateTextMetrics(21, 48, 44);
     } else if (sParams[0].equals(F("sevenseg18"))) {
       _display->setFont(&Seven_Segment18pt7b);
-      calculateTextMetrics(16, 34);
+      calculateTextMetrics(16, 34, 30);
     } else if (sParams[0].equals(F("freesans"))) {
       _display->setFont(&FreeSans9pt7b);
-      calculateTextMetrics(10, 21);
+      calculateTextMetrics(10, 21, 17);
 
       // Extra 8pt fonts:
     #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
     } else if (sParams[0].equals(F("angelina8prop"))) { // Proportional font!
       _display->setFont(&angelina8pt7b);
-      calculateTextMetrics(6, 16);
+      calculateTextMetrics(6, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono8pt"))) {
       _display->setFont(&NovaMono8pt7b);
-      calculateTextMetrics(9, 16);
+      calculateTextMetrics(9, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
     } else if (sParams[0].equals(F("repetitionscrolling8pt"))) {
       _display->setFont(&RepetitionScrolling8pt7b);
-      calculateTextMetrics(9, 16);
+      calculateTextMetrics(9, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
     } else if (sParams[0].equals(F("unispace8pt"))) {
       _display->setFont(&unispace8pt7b);
-      calculateTextMetrics(12, 24);
+      calculateTextMetrics(12, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
     } else if (sParams[0].equals(F("unispaceitalic8pt"))) {
       _display->setFont(&unispace_italic8pt7b);
-      calculateTextMetrics(12, 24);
+      calculateTextMetrics(12, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
     } else if (sParams[0].equals(F("whiterabbit8pt"))) {
       _display->setFont(&whitrabt8pt7b);
-      calculateTextMetrics(12, 24);
+      calculateTextMetrics(12, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
       // Extra 12pt fonts:
@@ -713,34 +716,41 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     } else if (sParams[0].equals(F("angelina12prop"))) { // Proportional font!
       _display->setFont(&angelina12pt7b);
-      calculateTextMetrics(8, 24);
+      calculateTextMetrics(8, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono12pt"))) {
       _display->setFont(&NovaMono12pt7b);
-      calculateTextMetrics(13, 34);
+      calculateTextMetrics(13, 34, 30);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
     } else if (sParams[0].equals(F("repetitionscrolling12pt"))) {
       _display->setFont(&RepetitionScrolling12pt7b);
-      calculateTextMetrics(13, 24);
+      calculateTextMetrics(13, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
     } else if (sParams[0].equals(F("unispace12pt"))) {
       _display->setFont(&unispace12pt7b);
-      calculateTextMetrics(13, 18);
+      calculateTextMetrics(13, 18, 14);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
     } else if (sParams[0].equals(F("unispaceitalic12pt"))) {
       _display->setFont(&unispace_italic12pt7b);
-      calculateTextMetrics(13, 18);
+      calculateTextMetrics(13, 18, 14);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
-    } else if (sParams[0].equals(F("whiterabbir12pt"))) {
+    } else if (sParams[0].equals(F("whiterabbit12pt"))) {
       _display->setFont(&whitrabt12pt7b);
-      calculateTextMetrics(13, 18);
+      calculateTextMetrics(13, 18, 14);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+    #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+    } else if (sParams[0].equals(F("amerikasans16pt"))) {
+      _display->setFont(&AmerikaSans16pt7b);
+      calculateTextMetrics(16, 30, 26);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+    #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     } else if (sParams[0].equals(F("default"))) { // font,default is always available!
       _display->setFont();
       calculateTextMetrics(6, 10);
@@ -972,13 +982,13 @@ void AdafruitGFX_helper::printText(const char    *string,
                                    unsigned short color,
                                    unsigned short bkcolor) {
   uint16_t _x = X;
-  uint16_t _y = Y;
+  uint16_t _y = Y + _heightOffset;
   uint16_t _w = 0;
   uint8_t  _h = 0;
 
   if (_columnRowMode) {
     _x = X * (_fontwidth * textSize); // We need this multiple times
-    _y = Y * (_fontheight * textSize);
+    _y = Y * ((_fontheight + _heightOffset) * textSize);
   }
 
   if (_textBackFill && (color != bkcolor)) { // Draw extra lines above text
@@ -988,7 +998,7 @@ void AdafruitGFX_helper::printText(const char    *string,
          (_textcols * _fontwidth * textSize) - _x;
 
     do {
-      _display->drawLine(_x, _y, _x + _w, _y, bkcolor);
+      _display->drawLine(_x, _y, _x + _w - 1, _y, bkcolor);
       _h++;
       _y++; // Shift down entire line
     } while (_h < textSize);
@@ -1026,7 +1036,7 @@ void AdafruitGFX_helper::printText(const char    *string,
     _h  = 0;
 
     do {
-      _display->drawLine(_x, _y - _h, _x + _w, _y - _h, bkcolor);
+      _display->drawLine(_x, _y - _h, _x + _w - 1, _y - _h, bkcolor);
       _h++;
     } while (_h <= textSize);
   }
@@ -1345,11 +1355,13 @@ void AdafruitGFX_helper::getColors(uint16_t& fgcolor,
  * calculateTextMetrix: Recalculate the text mertics based on supplied font parameters
  ***************************************************************************/
 void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
-                                              uint8_t fontheight) {
-  _fontwidth  = fontwidth;
-  _fontheight = fontheight;
-  _textcols   = _res_x / (_fontwidth * _fontscaling);
-  _textrows   = _res_y / (_fontheight * _fontscaling);
+                                              uint8_t fontheight,
+                                              int8_t  heightOffset) {
+  _fontwidth    = fontwidth;
+  _fontheight   = fontheight;
+  _heightOffset = heightOffset;
+  _textcols     = _res_x / (_fontwidth * _fontscaling);
+  _textrows     = _res_y / ((_fontheight + _heightOffset) * _fontscaling);
 
   # ifndef BUILD_NO_DEBUG
 

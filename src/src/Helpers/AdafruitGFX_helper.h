@@ -33,8 +33,9 @@
 #  define ADAGFX_PARSE_SUBCOMMAND     1 // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 
-// #define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
-// #define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
+// # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
+// # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
+// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 1 extra 16pt fonts, should probably only be enabled in a private custom build, adds TODO: kB
 
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_8PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
@@ -52,6 +53,9 @@
 # define ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
 # define ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 
+// To enable/disable 16pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_16PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+
 # ifdef LIMIT_BUILD_SIZE
 #  ifdef ADAGFX_FONTS_INCLUDED
 #   undef ADAGFX_FONTS_INCLUDED
@@ -63,6 +67,18 @@
 #   undef ADAGFX_USE_ASCIITABLE
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
 # endif  // ifdef LIMIT_BUILD_SIZE
+
+# ifdef PLUGIN_SET_MAX                    // Include all fonts in MAX builds
+#  ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+# endif  // ifdef PLUGIN_SET_MAX
 
 # define ADAGFX_PARSE_PREFIX      F("~") // Subcommand-trigger prefix and postfix strings
 # define ADAGFX_PARSE_PREFIX_LEN  1
@@ -208,7 +224,8 @@ public:
                  unsigned short color    = ADAGFX_WHITE,
                  unsigned short bkcolor  = ADAGFX_BLACK);
   void calculateTextMetrics(uint8_t fontwidth,
-                            uint8_t fontheight);
+                            uint8_t fontheight,
+                            int8_t  heightOffset = 0);
   void getTextMetrics(uint16_t& textcols,
                       uint16_t& textrows,
                       uint8_t & fontwidth,
@@ -260,6 +277,7 @@ private:
   int16_t _lastY;
   uint8_t _fontwidth         = 6; // Default font characteristics
   uint8_t _fontheight        = 10;
+  int8_t _heightOffset       = 0;
   uint8_t _p095_compensation = 0;
   bool _columnRowMode        = false;
 
