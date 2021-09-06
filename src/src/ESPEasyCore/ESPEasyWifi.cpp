@@ -1108,6 +1108,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
 
   if (wifimode == WIFI_OFF) {
+    WifiDisconnect();
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
