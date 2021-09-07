@@ -1155,7 +1155,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 {
   const int nbars_filled = (rssi + 100) / 8;
   int nbars              = 5;
-  int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2;
+  int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2f;
 
   if (white_between_bar < 1) { white_between_bar = 1; }
   const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
@@ -1206,7 +1206,7 @@ void getConfig_dat_file_layout() {
 
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
-  float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
@@ -1239,7 +1239,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
     // Text labels
     float textXoffset = SVG_BAR_WIDTH + 2;
-    float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+    float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
     createSvgTextElement(formatHumanReadable(offset, 1024),   textXoffset, textYoffset);
     textXoffset = SVG_BAR_WIDTH + 60;
     createSvgTextElement(formatHumanReadable(max_size, 1024), textXoffset, textYoffset);
@@ -1258,7 +1258,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
-  float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   if (struct_size != 0) {
     String text = formatHumanReadable(struct_size, 1024);
@@ -1312,7 +1312,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
       createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       createSvgHorRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       float textXoffset = SVG_BAR_WIDTH + 2;
-      float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+      float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
       createSvgTextElement(formatHumanReadable(_mypart->size, 1024),          textXoffset, textYoffset);
       textXoffset = SVG_BAR_WIDTH + 60;
       createSvgTextElement(_mypart->label,                                    textXoffset, textYoffset);

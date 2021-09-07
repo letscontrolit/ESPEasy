@@ -640,7 +640,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
   if (dBm < 0) { 
     val = WIFI_POWER_MINUS_1dBm;
     dBm = -1;
-  } else if (dBm < 3.5) {
+  } else if (dBm < 3.5f) {
     val = WIFI_POWER_2dBm;
     dBm = 2;
   } else if (dBm < 6) {
@@ -661,18 +661,18 @@ void SetWiFiTXpower(float dBm, float rssi) {
   } else if (dBm < 16) {
     val = WIFI_POWER_15dBm;
     dBm = 15;
-  } else if (dBm < 17.75) {
+  } else if (dBm < 17.75f) {
     val = WIFI_POWER_17dBm;
     dBm = 17;
-  } else if (dBm < 18.75) {
+  } else if (dBm < 18.75f) {
     val = WIFI_POWER_18_5dBm;
     dBm = 18.5;
-  } else if (dBm < 19.25) {
+  } else if (dBm < 19.25f) {
     val = WIFI_POWER_19dBm;
     dBm = 19;
   } else {
     val = WIFI_POWER_19_5dBm;
-    dBm = 19.5;
+    dBm = 19.5f;
   }
   esp_wifi_set_max_tx_power(val);
   //esp_wifi_get_max_tx_power(&val);

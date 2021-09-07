@@ -58,7 +58,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
         portNames[x]  = 'A';
         portNames[x] += x;
       }
-      int optionValues[8] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
+      uint8_t optionValues[8] = { 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f };
       addFormSelectorI2C(F("plugin_007_i2c"), 8, optionValues, address);
       addFormSelector(F("Port"), F("plugin_007_port"), 4, portNames, portValues, port);
 
