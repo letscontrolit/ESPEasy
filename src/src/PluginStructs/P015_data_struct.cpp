@@ -374,7 +374,7 @@ void P015_data_struct::getLux(unsigned char gain,
   // Determine lux per datasheet equations:
   if (ratio < 0.5f)
   {
-    lux = 0.0304f * d0 - 0.062f * d0 * pow(ratio, 1.4);
+    lux = 0.0304f * d0 - 0.062f * d0 * powf(ratio, 1.4f);
   } else if (ratio < 0.61f)
   {
     lux = 0.0224f * d0 - 0.031f * d1;

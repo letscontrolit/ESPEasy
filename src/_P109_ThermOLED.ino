@@ -511,7 +511,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           if ((atempstr.length() > 0) && (Plugin_109_prev_temp != 99)) { // do not switch until the first temperature data arrives
             float atemp = atempstr.toFloat();
 
-            if (atemp != 0.0) {
+            if (atemp != 0.0f) {
               if ((UserVar[event->BaseVarIndex] > atemp) && (UserVar[event->BaseVarIndex + 1] < 1))
               {
                 P109_setHeater(F("1"));
