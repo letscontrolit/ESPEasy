@@ -28,6 +28,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::All;
       break;
@@ -72,7 +73,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        for (uint8_t x = 0; x < getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0))); x++)
+        for (uint8_t x = 0; x < getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0))); x++)
         {
           String log = F("Dummy: value ");
           log += x + 1;
