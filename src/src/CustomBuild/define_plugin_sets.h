@@ -1101,6 +1101,7 @@ To create/register a plugin, you have to :
     #define USES_P097   // Touch (ESP32)
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
+    #define USES_P105   // AHT10/20/21
 #endif
 
 #ifdef PLUGIN_SET_TESTING_B
@@ -1377,7 +1378,7 @@ To create/register a plugin, you have to :
     #define USES_P104   // Atlas EZO EC
   #endif
   #ifndef USES_P105
-    #define USES_P105   // Atlas EZO_ORP
+    #define USES_P105   // AHT10/20/21
   #endif
   #ifndef USES_P108
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -1401,7 +1402,7 @@ To create/register a plugin, you have to :
     #define USES_P114   // VEML6075 UVA/UVB sensor
   #endif
   #ifndef USES_P115
-    #define USES_P115   // 
+    #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
     #define USES_P116   // 

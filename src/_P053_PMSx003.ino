@@ -212,11 +212,11 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
     String log;
     log.reserve(45);
     log = F("PMSx003 : temp=");
-    log += static_cast<float>(data[13]) / 10.0;
+    log += static_cast<float>(data[13]) / 10.0f;
     log += F(", humi=");
-    log += static_cast<float>(data[14]) / 10.0;
+    log += static_cast<float>(data[14]) / 10.0f;
     log += F(", hcho=");
-    log += static_cast<float>(data[12]) / 1000.0;
+    log += static_cast<float>(data[12]) / 1000.0f;
     addLog(LOG_LEVEL_DEBUG, log);
   }
   #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -242,9 +242,9 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
       case PLUGIN_053_OUTPUT_THC:
       {
         UserVar[event->BaseVarIndex]     = data[4];
-        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[13]) / 10.0;   // TEMP
-        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[14]) / 10.0;   // HUMI
-        UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[12]) / 1000.0; // HCHO
+        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[13]) / 10.0f;   // TEMP
+        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[14]) / 10.0f;   // HUMI
+        UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[12]) / 1000.0f; // HCHO
         break;
       }
       case PLUGIN_053_OUTPUT_CNT:
@@ -268,11 +268,11 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
         case PLUGIN_053_OUTPUT_PART:
         {
           // Temperature
-          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
+          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0f);
           // Humidity
-          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0);
+          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0f);
           // Formaldebyde (HCHO)
-          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
+          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0f);
 
           if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
             // Particle count per 0.1 L > 1.0 micron
@@ -314,11 +314,11 @@ boolean Plugin_053_process_data(struct EventStruct *event) {
           // Particles > 10 um/m3
           Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
           // Temperature
-          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
+          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0f);
           // Humidity
-          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0);
+          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0f);
           // Formaldebyde (HCHO)
-          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
+          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0f);
           break;
         }
         default:
