@@ -154,7 +154,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           log += F(" / Dynamic Mode: ");
           log += PCONFIG(2);
           log += F(" / divisor: ");
-          log += String(pow(2, PCONFIG(1) - 1));
+          log += String(1 << (PCONFIG(1) - 1));
           log += F(" / UVA: ");
           log += UserVar[event->BaseVarIndex];
           log += F(" / UVB: ");
