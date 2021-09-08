@@ -1,6 +1,7 @@
 #include "Hardware.h"
 
 #include "../Commands/GPIO.h"
+#include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -127,21 +128,31 @@ void hardwareInit()
     // MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
     #ifdef ESP32
 
-    if (Settings.InitSPI == static_cast<int>(SPI_Options_e::Hspi))
-    {
-      # define HSPI_MISO   12
-      # define HSPI_MOSI   13
-      # define HSPI_SCLK   14
-      # define HSPI_SS     15
-      SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); // HSPI
-    } else if (Settings.InitSPI == static_cast<int>(SPI_Options_e::UserDefined))
-    {
-      SPI.begin(Settings.SPI_SCLK_pin,
-                Settings.SPI_MISO_pin,
-                Settings.SPI_MOSI_pin); // User-defined SPI
-    }
-    else {
-      SPI.begin();                                // VSPI
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(Settings.InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Hspi:
+      {
+        # define HSPI_MISO   12
+        # define HSPI_MOSI   13
+        # define HSPI_SCLK   14
+        # define HSPI_SS     15
+        SPI.begin(HSPI_SCLK, HSPI_MISO, HSPI_MOSI); // HSPI
+        break;
+      } 
+      case SPI_Options_e::UserDefined:
+      {
+        SPI.begin(Settings.SPI_SCLK_pin,
+                  Settings.SPI_MISO_pin,
+                  Settings.SPI_MOSI_pin); // User-defined SPI
+        break;
+      }
+      case SPI_Options_e::Vspi:
+      {
+        SPI.begin();                                // VSPI
+        break;
+      }
+      case SPI_Options_e::None:
+        break;
     }
     #else // ifdef ESP32
     SPI.begin();

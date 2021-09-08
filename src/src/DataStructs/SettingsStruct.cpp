@@ -4,6 +4,7 @@
 #include "../Globals/CPlugins.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/SPI_options.h"
 #include "../../ESPEasy_common.h"
 #include "../WebServer/HardwarePage.h"
 
@@ -543,26 +544,28 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   spi_gpios[2] = -1;
   if (isSPI_valid()) {
     # ifdef ESP32
-    switch (InitSPI) {
-      case static_cast<int>(SPI_Options_e::Vspi):
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Vspi:
       {
         spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
         break;
       }
-      case static_cast<int>(SPI_Options_e::Hspi):
+      case SPI_Options_e::Hspi:
       {
         spi_gpios[0] = 14; // HSPI_SCLK
         spi_gpios[1] = 12; // HSPI_MISO
         spi_gpios[2] = 13; // HSPI_MOSI
         break;
       }
-      case static_cast<int>(SPI_Options_e::UserDefined):
+      case SPI_Options_e::UserDefined:
       {
         spi_gpios[0] = SPI_SCLK_pin;
         spi_gpios[1] = SPI_MISO_pin;
         spi_gpios[2] = SPI_MOSI_pin;
         break;
       }
+      case SPI_Options_e::None:
       default:
       return false;
     }

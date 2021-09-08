@@ -11,6 +11,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"

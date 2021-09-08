@@ -6,6 +6,8 @@
 
 #include "../DataStructs/TimingStats.h"
 
+#include "../DataTypes/SPI_options.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"

@@ -169,10 +169,10 @@ void handle_hardware() {
     html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 3 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
                     false);
     const String spi_options[] = {
-      F("Disabled"), 
-      F("VSPI: CLK=GPIO-18, MISO=GPIO-19, MOSI=GPIO-23"), 
-      F("HSPI: CLK=GPIO-14, MISO=GPIO-12, MOSI=GPIO-13"),
-      F("User-defined: CLK, MISO, MOSI GPIO-pins")};
+      getSPI_optionToString(SPI_Options_e::None), 
+      getSPI_optionToString(SPI_Options_e::Vspi), 
+      getSPI_optionToString(SPI_Options_e::Hspi), 
+      getSPI_optionToString(SPI_Options_e::UserDefined)};
     const int spi_index[] = {
       static_cast<int>(SPI_Options_e::None),
       static_cast<int>(SPI_Options_e::Vspi),

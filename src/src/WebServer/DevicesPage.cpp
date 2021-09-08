@@ -787,24 +787,7 @@ void format_SPI_port_description(int8_t spi_gpios[3])
     return;
   }
   # ifdef ESP32
-
-  switch (Settings.InitSPI) {
-    case static_cast<int>(SPI_Options_e::Vspi):
-    {
-      addHtml(F("VSPI"));
-      break;
-    }
-    case static_cast<int>(SPI_Options_e::Hspi):
-    {
-      addHtml(F("HSPI"));
-      break;
-    }
-    case static_cast<int>(SPI_Options_e::UserDefined):
-    {
-      addHtml(F("UserDefined")); // Might need to add GPIOs...
-      break;
-    }
-  }
+  addHtml(getSPI_optionToShortString(static_cast<SPI_Options_e>(Settings.InitSPI)));
   # endif // ifdef ESP32
   # ifdef ESP8266
   addHtml(F("SPI"));
