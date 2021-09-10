@@ -6,7 +6,6 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/SPI_options.h"
 #include "../../ESPEasy_common.h"
-#include "../WebServer/HardwarePage.h"
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
