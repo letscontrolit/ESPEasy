@@ -109,8 +109,9 @@ private:
   uint16_t _ypix;
   uint16_t _textcols;
   uint16_t _textrows;
-  uint8_t  _fontwidth  = 6; // Default font characteristics
-  uint8_t  _fontheight = 10;
+  uint8_t  _fontwidth    = 6; // Default font characteristics
+  uint8_t  _fontheight   = 10;
+  uint8_t  _heightOffset = 0;
 
   uint8_t             _rotation;
   uint8_t             _fontscaling;

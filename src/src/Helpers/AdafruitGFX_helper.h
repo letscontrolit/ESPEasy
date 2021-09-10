@@ -33,14 +33,15 @@
 #  define ADAGFX_PARSE_SUBCOMMAND     1 // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 
-// # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 6 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~11,8 kB
+// # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 5 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~10,4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
-// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 1 extra 16pt fonts, should probably only be enabled in a private custom build, adds TODO: kB
+// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 2 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~7.7 kB
+// # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 1 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~4.3 kB
+// # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 
 // To enable/disable 8pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_8PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_8PT_ANGELINA // This font is proportinally spaced!
 # define ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-# define ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACE
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
 # define ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
@@ -54,7 +55,14 @@
 # define ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 
 // To enable/disable 16pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_16PT_INCLUDED is defined)
-# define ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+# define ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+
+// To enable/disable 18pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_18PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+
+// To enable/disable 20pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_20PT_INCLUDED is defined)
+# define ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
 
 # ifdef LIMIT_BUILD_SIZE
 #  ifdef ADAGFX_FONTS_INCLUDED
@@ -78,6 +86,12 @@
 #  ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // ifdef PLUGIN_SET_MAX
 
 # define ADAGFX_PARSE_PREFIX      F("~") // Subcommand-trigger prefix and postfix strings
@@ -231,6 +245,7 @@ public:
                       uint8_t & fontwidth,
                       uint8_t & fontheight,
                       uint8_t & fontscaling,
+                      uint8_t & heightOffset,
                       uint16_t& xpix,
                       uint16_t& ypix);
   void getColors(uint16_t& fgcolor,

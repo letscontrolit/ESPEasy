@@ -92,11 +92,10 @@
     * *sevenseg18* A somewhat less large 7-segment 16 * 34 font
     * *freesans* A sans-serif 10 * 21 font
 
-    Usually disabled fonts: (can be enabled in a Custom build)
+    Usually disabled fonts: (can be enabled in a Custom build, default included in the MAX builds)
 
     * *angelina8prop* A proportional, handwriting, 6 * 16 font
     * *novamono8pt* A modern 9 * 16 font
-    * *repetitionscrolling8pt* A modern 9 * 16 font
     * *unispace8pt* A modern 12 * 24 font
     * *unispaceitalic8pt* A modern italic (slanted) 12 * 24 font
     * *whiterabbit8pt* A modern 12 * 24 font
@@ -106,6 +105,10 @@
     * *unispace12pt* A modern 13 * 18 font
     * *unispaceitalic12pt* A modern italic (slanted) 13 * 18 font
     * *whiterabbit12pt* A modern 13 * 18 font
+    * *amerikasans16pt* A proportional 17 * 20 font
+    * *whiterabbit16pt* A modern 16 * 20 font
+    * *whiterabbit18pt* A modern 18 * 22 font
+    * *whiterabbit20pt* A modern 20 * 24 font
     "
     "
     ``<trigger>,l,<x1>,<y1>,<x2>,<y2>,<color>``

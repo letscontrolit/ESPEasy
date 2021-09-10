@@ -178,7 +178,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
  ***************************************************************************/
 void P096_data_struct::updateFontMetrics() {
   if (nullptr != gfxHelper) {
-    gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling, _xpix, _ypix);
+    gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling, _heightOffset, _xpix, _ypix);
     gfxHelper->getColors(_fgcolor, _bgcolor);
   } else {
     _textcols = _xpix / (_fontwidth * _fontscaling);
@@ -239,9 +239,9 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
       for (uint8_t x = 0; x < P096_Nlines; x++) {
         String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
 
-      #  if ADAGFX_PARSE_SUBCOMMAND
+        #  if ADAGFX_PARSE_SUBCOMMAND
         updateFontMetrics();
-      #  endif // if ADAGFX_PARSE_SUBCOMMAND
+        #  endif // if ADAGFX_PARSE_SUBCOMMAND
 
         if (yPos < _ypix) {
           gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);

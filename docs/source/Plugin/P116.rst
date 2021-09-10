@@ -71,7 +71,10 @@ ST7789 240 x 280 pixels (some have rounded corners, in that case corner-pixels a
 .. image:: P116_st7789_135x240.png
    :alt: ST7789 135 x 240 pixels
 
-ST7789 135 x 240 pixels
+.. image:: P116_st7789_135x240_ttgo.png
+   :alt: ST7789 135 x 240 pixels on LilyGo ESP32 module
+
+ST7789 135 x 240 pixels (separate and integrated modules)
 
 Connections
 ^^^^^^^^^^^^
@@ -100,6 +103,7 @@ Device
 ------
 
 .. image:: P116_DeviceConfiguration.png
+   :alt: Device configuration
 
 * **Name** A unique name should be entered here.
 
@@ -121,6 +125,7 @@ Actuator
 Available options:
 
 .. image:: P116_TFTDisplayModelOptions.png
+   :alt: TFT Display model options
 
 * *ST7735 128 x 128px* Allows about 12 lines of text in the smallest font scaling setting (the 13th line will be distorted, as the bottom 2 pixellines aren't available)
 * *ST7735 128 x 160px* Allows 16 lines of text in the smallest font scaling setting.
@@ -138,6 +143,7 @@ Layout
 Available options:
 
 .. image:: P116_RotationOptions.png
+   :alt: Rotation
 
 The available options rotate the display in a clock-wise direction.
 
@@ -146,6 +152,7 @@ The available options rotate the display in a clock-wise direction.
 Available options:
 
 .. image:: P116_TextPrintModeOptions.png
+   :alt: Text print mode
 
 * *Continue to next line* Simply 'prints' all text to the display, with automatic overflow to the next line(s) if the text doesn't fit on the current line.
 * *Truncate exceeding message* Display the provided message, but any excess at the right border of the display is discarded.
@@ -162,6 +169,7 @@ Default setting is *Truncate exceeding message*.
 Available options:
 
 .. image:: P116_WriteCommandTriggerOptions.png
+   :alt: Write-command trigger
 
 * *tft*
 * *st77xx*
@@ -205,6 +213,7 @@ The total combination of lines * input length can not exceed 1000 characters (si
 Example:
 
 .. image:: P116_SaveError.png
+   :alt: Save error
 
 * **Interval** By default, Interval will be set to 0. If set to a non-zero value, the pre-configured content will be updated automatically using that interval (seconds). Depending on the **Text print Mode** setting, content that may have been draw from rules or external commands, may be erased.
 

@@ -13,7 +13,6 @@
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #   include "src/Static/Fonts/angelina8pt7b.h"
 #   include "src/Static/Fonts/NovaMono8pt7b.h"
-#   include "src/Static/Fonts/RepetitionScrolling8pt7b.h"
 #   include "src/Static/Fonts/unispace8pt7b.h"
 #   include "src/Static/Fonts/unispace_italic8pt7b.h"
 #   include "src/Static/Fonts/whitrabt8pt7b.h"
@@ -28,7 +27,14 @@
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #   include "src/Static/Fonts/AmerikaSans16pt7b.h"
+#   include "src/Static/Fonts/whitrabt16pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+#  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#   include "src/Static/Fonts/whitrabt18pt7b.h"
+#  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+#  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#   include "src/Static/Fonts/whitrabt20pt7b.h"
+#  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
 /******************************************************************************************
@@ -518,7 +524,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
       _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight);
+      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
     } else {
       success = false;
     }
@@ -626,7 +632,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if (_fontscaling != scale) { // Set fontscaling
       _fontscaling = scale;
       _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight);
+      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
     }
     line.reserve(_textcols);
     _display->setCursor(0, 0);
@@ -660,7 +666,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if (_fontscaling != currentScale) { // Restore if needed
       _fontscaling = currentScale;
       _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight);
+      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
     }
   }
   # endif // if ADAGFX_USE_ASCIITABLE
@@ -670,13 +676,13 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
     if (sParams[0].equals(F("sevenseg24"))) {
       _display->setFont(&Seven_Segment24pt7b);
-      calculateTextMetrics(21, 48, 44);
+      calculateTextMetrics(21, 42, 35);
     } else if (sParams[0].equals(F("sevenseg18"))) {
       _display->setFont(&Seven_Segment18pt7b);
-      calculateTextMetrics(16, 34, 30);
+      calculateTextMetrics(16, 32, 25);
     } else if (sParams[0].equals(F("freesans"))) {
       _display->setFont(&FreeSans9pt7b);
-      calculateTextMetrics(10, 21, 17);
+      calculateTextMetrics(10, 16, 12);
 
       // Extra 8pt fonts:
     #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
@@ -690,25 +696,20 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&NovaMono8pt7b);
       calculateTextMetrics(9, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
-    #   ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
-    } else if (sParams[0].equals(F("repetitionscrolling8pt"))) {
-      _display->setFont(&RepetitionScrolling8pt7b);
-      calculateTextMetrics(9, 16, 12);
-    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_REPETITIONSCROLLiNG
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
     } else if (sParams[0].equals(F("unispace8pt"))) {
       _display->setFont(&unispace8pt7b);
-      calculateTextMetrics(12, 24, 20);
+      calculateTextMetrics(13, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACE
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
     } else if (sParams[0].equals(F("unispaceitalic8pt"))) {
       _display->setFont(&unispace_italic8pt7b);
-      calculateTextMetrics(12, 24, 20);
+      calculateTextMetrics(13, 24, 20);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
     } else if (sParams[0].equals(F("whiterabbit8pt"))) {
       _display->setFont(&whitrabt8pt7b);
-      calculateTextMetrics(12, 24, 20);
+      calculateTextMetrics(10, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
       // Extra 12pt fonts:
@@ -716,41 +717,60 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     } else if (sParams[0].equals(F("angelina12prop"))) { // Proportional font!
       _display->setFont(&angelina12pt7b);
-      calculateTextMetrics(8, 24, 20);
+      calculateTextMetrics(8, 22, 18);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono12pt"))) {
       _display->setFont(&NovaMono12pt7b);
-      calculateTextMetrics(13, 34, 30);
+      calculateTextMetrics(13, 26, 22);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
     } else if (sParams[0].equals(F("repetitionscrolling12pt"))) {
       _display->setFont(&RepetitionScrolling12pt7b);
-      calculateTextMetrics(13, 24, 20);
+      calculateTextMetrics(13, 22, 18);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_REPETITIONSCROLLiNG
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
     } else if (sParams[0].equals(F("unispace12pt"))) {
       _display->setFont(&unispace12pt7b);
-      calculateTextMetrics(13, 18, 14);
+      calculateTextMetrics(18, 30, 26);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACE
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
     } else if (sParams[0].equals(F("unispaceitalic12pt"))) {
       _display->setFont(&unispace_italic12pt7b);
-      calculateTextMetrics(13, 18, 14);
+      calculateTextMetrics(18, 30, 26);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
     } else if (sParams[0].equals(F("whiterabbit12pt"))) {
       _display->setFont(&whitrabt12pt7b);
-      calculateTextMetrics(13, 18, 14);
+      calculateTextMetrics(13, 20, 16);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
-    } else if (sParams[0].equals(F("amerikasans16pt"))) {
+    } else if (sParams[0].equals(F("amerikasans16pt"))) { // Proportional font!
       _display->setFont(&AmerikaSans16pt7b);
-      calculateTextMetrics(16, 30, 26);
+      calculateTextMetrics(17, 30, 26);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+    } else if (sParams[0].equals(F("whiterabbit16pt"))) {
+      _display->setFont(&whitrabt16pt7b);
+      calculateTextMetrics(18, 26, 22);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
+    #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
+    #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+    } else if (sParams[0].equals(F("whiterabbit18pt"))) {
+      _display->setFont(&whitrabt18pt7b);
+      calculateTextMetrics(21, 30, 26);
+      #   endif // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+    #  endif    // ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
+    #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+    #   ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+    } else if (sParams[0].equals(F("whiterabbit20pt"))) {
+      _display->setFont(&whitrabt20pt7b);
+      calculateTextMetrics(24, 32, 28);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
+    #  endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
     } else if (sParams[0].equals(F("default"))) { // font,default is always available!
       _display->setFont();
       calculateTextMetrics(6, 10);
@@ -759,7 +779,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     # else // if ADAGFX_FONTS_INCLUDED
     success = false;
-    # endif // if ADAGFX_FONTS_INCLUDED
+    # endif  // if ADAGFX_FONTS_INCLUDED
   }
   else if (subcommand.equals(F("l")) && (argCount == 5)) { // l: Line
     # if ADAGFX_ARGUMENT_VALIDATION
@@ -827,7 +847,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         invalidCoordinates(nParams[2], 0)) { // Also check radius
       success = false;
     } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
+    # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
@@ -839,7 +859,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         invalidCoordinates(nParams[2], 0)) { // Also check radius
       success = false;
     } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
+    # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->fillCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
       _display->drawCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
@@ -893,7 +913,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         invalidCoordinates(nParams[4],              0)) { // Also check radius
       success = false;
     } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
+    # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[5], _colorDepth));
     }
@@ -906,7 +926,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         invalidCoordinates(nParams[4],              0)) { // Also check radius
       success = false;
     } else
-    # endif // if ADAGFX_ARGUMENT_VALIDATION
+    # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[6], _colorDepth));
       _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[5], _colorDepth));
@@ -982,13 +1002,13 @@ void AdafruitGFX_helper::printText(const char    *string,
                                    unsigned short color,
                                    unsigned short bkcolor) {
   uint16_t _x = X;
-  uint16_t _y = Y + _heightOffset;
+  uint16_t _y = Y + (_heightOffset * textSize);
   uint16_t _w = 0;
   uint8_t  _h = 0;
 
   if (_columnRowMode) {
     _x = X * (_fontwidth * textSize); // We need this multiple times
-    _y = Y * ((_fontheight + _heightOffset) * textSize);
+    _y = (Y * (_fontheight * textSize))  + (_heightOffset * textSize);
   }
 
   if (_textBackFill && (color != bkcolor)) { // Draw extra lines above text
@@ -1176,7 +1196,7 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
       case AdaGFXColorDepth::SevenColor:
         result = AdaGFXrgb565ToColor7(result); // Convert
         break;
-      # endif // if ADAGFX_SUPPORT_7COLOR
+      # endif  // if ADAGFX_SUPPORT_7COLOR
       case AdaGFXColorDepth::EightColor:
         result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
         break;
@@ -1331,15 +1351,17 @@ void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols,
                                         uint8_t & fontwidth,
                                         uint8_t & fontheight,
                                         uint8_t & fontscaling,
+                                        uint8_t & heightOffset,
                                         uint16_t& xpix,
                                         uint16_t& ypix) {
-  textcols    = _textcols;
-  textrows    = _textrows;
-  fontwidth   = _fontwidth;
-  fontheight  = _fontheight;
-  fontscaling = _fontscaling;
-  xpix        = _res_x;
-  ypix        = _res_y;
+  textcols     = _textcols;
+  textrows     = _textrows;
+  fontwidth    = _fontwidth;
+  fontheight   = _fontheight;
+  fontscaling  = _fontscaling;
+  heightOffset = _heightOffset;
+  xpix         = _res_x;
+  ypix         = _res_y;
 }
 
 /****************************************************************************
@@ -1450,7 +1472,7 @@ void AdafruitGFX_helper::setRotation(uint8_t m) {
       _res_y = _display_x;
       break;
   }
-  calculateTextMetrics(_fontwidth, _fontheight);
+  calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
 }
 
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX
