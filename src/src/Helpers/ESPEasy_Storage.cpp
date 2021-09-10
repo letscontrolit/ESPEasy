@@ -37,8 +37,6 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../WebServer/HardwarePage.h"
-
 #include "ESPEasy_checks.h"
 
 #ifdef ESP32

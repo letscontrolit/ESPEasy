@@ -18,8 +18,6 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../WebServer/HardwarePage.h"
-
 //#include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32

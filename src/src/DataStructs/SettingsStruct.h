@@ -241,7 +241,7 @@ class SettingsStruct_tmpl
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag_unused;
-  uint8_t       InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 3 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
+  uint8_t       InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX];
   uint8_t       Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id

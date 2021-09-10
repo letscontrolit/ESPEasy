@@ -31,8 +31,6 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Rules_calculate.h"
 
-#include "../WebServer/HardwarePage.h"
-
 
 #define PLUGIN_ID_MQTT_IMPORT         37
 
