@@ -144,8 +144,8 @@ void CjkSDS011::Process()
 
       switch(_data[1]) {
         case 0xC0:     // SDS011 or SDS018?
-          _pm2_5 = (float)((_data[3] << 8) | _data[2]) * 0.1;
-          _pm10_ = (float)((_data[5] << 8) | _data[4]) * 0.1;
+          _pm2_5 = (float)((_data[3] << 8) | _data[2]) * 0.1f;
+          _pm10_ = (float)((_data[5] << 8) | _data[4]) * 0.1f;
           _available = true;
           break;
         case 0xCF:    // SDS198?

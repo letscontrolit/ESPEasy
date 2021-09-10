@@ -75,19 +75,21 @@
 .. |P104-Font-Katakana_typename| replace:: `Katakana font characters`
 
 
-.. |P105_name| replace:: :cyan:`Atlas Scientific EZO ORP`
+.. |P105_name| replace:: :cyan:`AHT10/20/21`
 .. |P105_type| replace:: :cyan:`Environment`
-.. |P105_typename| replace:: :cyan:`Environment - Atlas Scientific EZO ORP`
+.. |P105_typename| replace:: :cyan:`Environment - AHT10/20/21`
 .. |P105_porttype| replace:: `.`
-.. |P105_status| replace:: :yellow:`MAX`
-.. |P105_github| replace:: P105_Atlas_EZO_ORP.ino
-.. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_Atlas_EZO_ORP.ino
+.. |P105_status| replace:: :yellow:`TESTING A`
+.. |P105_github| replace:: P105_AHT.ino
+.. _P105_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P105_AHT.ino
 .. |P105_usedby| replace:: `.`
 .. |P105_shortinfo| replace:: `.`
-.. |P105_maintainer| replace:: TD-er
+.. |P105_maintainer| replace:: sakinit tonhuisman
 .. |P105_compileinfo| replace:: `.`
 .. |P105_usedlibraries| replace::  `.`
-.. |P105_datasheet| replace::  https://atlas-scientific.com/files/ORP_EZO_Datasheet.pdf
+.. |P105_datasheet| replace:: http://www.aosong.com/en/products-40.html
+.. |P105_datasheet2| replace:: http://www.aosong.com/en/products-32.html
+.. |P105_datasheet3| replace:: http://www.aosong.com/en/products-60.html
 
 
 .. |P106_name| replace:: :cyan:`BME680`
