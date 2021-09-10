@@ -166,7 +166,7 @@ void handle_hardware() {
   #ifdef ESP32
   {
     // Script to show GPIO pins for User-defined SPI GPIOs
-    html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 3 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
+    html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
                     false);
     const String spi_options[] = {
       getSPI_optionToString(SPI_Options_e::None), 
