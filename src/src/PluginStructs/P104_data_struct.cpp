@@ -33,7 +33,7 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    uint8_t                  _modules,
                                    uint8_t                  _zonesCount)
   : mod(_mod), taskIndex(_taskIndex), cs_pin(_cs_pin), modules(_modules), expectedZones(_zonesCount) {
-  if (Settings.isSPI_valid()) {
+  if (Settings.InitSPI > 0) { // FIXME tonhuisman: Replace by isSPI_valid() once merged from PR #3773
     P = new MD_Parola(mod, cs_pin, modules);
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Required SPI not enabled. Initialization aborted!"));
@@ -808,73 +808,75 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
  * Check if an animation is available in the current build
  *************************************************/
 bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
-  switch (animation) {
-    case static_cast<int>(textEffect_t::PA_NO_EFFECT):
+  textEffect_t selection = static_cast<textEffect_t>(animation);
+
+  switch (selection) {
+    case PA_NO_EFFECT:
     {
       return noneIsAllowed;
     }
-    case static_cast<int>(textEffect_t::PA_PRINT):
-    case static_cast<int>(textEffect_t::PA_SCROLL_UP):
-    case static_cast<int>(textEffect_t::PA_SCROLL_DOWN):
-    case static_cast<int>(textEffect_t::PA_SCROLL_LEFT):
-    case static_cast<int>(textEffect_t::PA_SCROLL_RIGHT):
+    case PA_PRINT:
+    case PA_SCROLL_UP:
+    case PA_SCROLL_DOWN:
+    case PA_SCROLL_LEFT:
+    case PA_SCROLL_RIGHT:
     {
       return true;
     }
     # if ENA_SPRITE
-    case static_cast<int>(textEffect_t::PA_SPRITE):
+    case PA_SPRITE:
     {
       return true;
     }
     # endif // ENA_SPRITE
     # if ENA_MISC
-    case static_cast<int>(textEffect_t::PA_SLICE):
-    case static_cast<int>(textEffect_t::PA_MESH):
-    case static_cast<int>(textEffect_t::PA_FADE):
-    case static_cast<int>(textEffect_t::PA_DISSOLVE):
-    case static_cast<int>(textEffect_t::PA_BLINDS):
-    case static_cast<int>(textEffect_t::PA_RANDOM):
+    case PA_SLICE:
+    case PA_MESH:
+    case PA_FADE:
+    case PA_DISSOLVE:
+    case PA_BLINDS:
+    case PA_RANDOM:
     {
       return true;
     }
     # endif // ENA_MISC
     # if ENA_WIPE
-    case static_cast<int>(textEffect_t::PA_WIPE):
-    case static_cast<int>(textEffect_t::PA_WIPE_CURSOR):
+    case PA_WIPE:
+    case PA_WIPE_CURSOR:
     {
       return true;
     }
     # endif // ENA_WIPE
     # if ENA_SCAN
-    case static_cast<int>(textEffect_t::PA_SCAN_HORIZ):
-    case static_cast<int>(textEffect_t::PA_SCAN_HORIZX):
-    case static_cast<int>(textEffect_t::PA_SCAN_VERT):
-    case static_cast<int>(textEffect_t::PA_SCAN_VERTX):
+    case PA_SCAN_HORIZ:
+    case PA_SCAN_HORIZX:
+    case PA_SCAN_VERT:
+    case PA_SCAN_VERTX:
     {
       return true;
     }
     # endif // ENA_SCAN
     # if ENA_OPNCLS
-    case static_cast<int>(textEffect_t::PA_OPENING):
-    case static_cast<int>(textEffect_t::PA_OPENING_CURSOR):
-    case static_cast<int>(textEffect_t::PA_CLOSING):
-    case static_cast<int>(textEffect_t::PA_CLOSING_CURSOR):
+    case PA_OPENING:
+    case PA_OPENING_CURSOR:
+    case PA_CLOSING:
+    case PA_CLOSING_CURSOR:
     {
       return true;
     }
     # endif // ENA_OPNCLS
     # if ENA_SCR_DIA
-    case static_cast<int>(textEffect_t::PA_SCROLL_UP_LEFT):
-    case static_cast<int>(textEffect_t::PA_SCROLL_UP_RIGHT):
-    case static_cast<int>(textEffect_t::PA_SCROLL_DOWN_LEFT):
-    case static_cast<int>(textEffect_t::PA_SCROLL_DOWN_RIGHT):
+    case PA_SCROLL_UP_LEFT:
+    case PA_SCROLL_UP_RIGHT:
+    case PA_SCROLL_DOWN_LEFT:
+    case PA_SCROLL_DOWN_RIGHT:
     {
       return true;
     }
     # endif // ENA_SCR_DIA
     # if ENA_GROW
-    case static_cast<int>(textEffect_t::PA_GROW_UP):
-    case static_cast<int>(textEffect_t::PA_GROW_DOWN):
+    case PA_GROW_UP:
+    case PA_GROW_DOWN:
     {
       return true;
     }
@@ -2162,7 +2164,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     {
       html_table(EMPTY_STRING); // Sub-table
       html_table_header(F("Zone #&nbsp;"));
-      html_table_header(F("Size"));
+      html_table_header(F("Modules"));
       html_table_header(F("Text"), 180);
       html_table_header(F("Content"));
       html_table_header(F("Alignment"));
@@ -2207,10 +2209,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         addHtml(F("&nbsp;"));
         addHtmlInt(zones[zone].zone);
 
-        html_TD(); // Size
+        html_TD(); // Modules
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SIZE), zones[zone].size, 1, P104_MAX_MODULES_PER_ZONE);
 
-        html_TD(); // text
+        html_TD(); // Text
         addTextBox(getPluginCustomArgName(index + P104_OFFSET_TEXT),
                    zones[zone].text,
                    P104_MAX_TEXT_LENGTH_PER_ZONE,
@@ -2241,22 +2243,24 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     true,
                     EMPTY_STRING);
 
-        html_TD(); // Animation In (without None by passing the second element index)
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN),
-                    animationCount - 1,
-                    &animationTypes[1],
-                    &animationOptions[1],
-                    NULL,
-                    zones[zone].animationIn,
-                    false,
-                    true,
-                    F("")
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Animation In")
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
+        {
+          html_TD(); // Animation In (without None by passing the second element index)
+          addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_IN),
+                      animationCount - 1,
+                      &animationTypes[1],
+                      &animationOptions[1],
+                      NULL,
+                      zones[zone].animationIn,
+                      false,
+                      true,
+                      F("")
+                      # ifdef P104_USE_TOOLTIPS
+                      , F("Animation In")
+                      # endif // ifdef P104_USE_TOOLTIPS
+                      );
+        }
 
-        html_TD(); // Speed In
+        html_TD();                   // Speed In
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_SPEED), zones[zone].speed, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
@@ -2293,33 +2297,34 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         if (currentRow == 0) {
           addHtml(F("(applied immediately!)"));
-          currentRow++;
         } else if (currentRow == 1) {
           addHtml(F("(Delete can't be undone!)"));
-          currentRow++;
         }
+        currentRow++;
         # endif // ifdef P104_USE_ZONE_ACTIONS
 
         // Split here
         html_TR_TD(); // Start new row
-        html_TD(4); // Start with some blank columns
+        html_TD(4);  // Start with some blank columns
 
-        html_TD();  // Animation Out
-        addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
-                    animationCount,
-                    animationTypes,
-                    animationOptions,
-                    NULL,
-                    zones[zone].animationOut,
-                    false,
-                    true,
-                    EMPTY_STRING
-                    # ifdef P104_USE_TOOLTIPS
-                    , F("Animation Out")
-                    # endif // ifdef P104_USE_TOOLTIPS
-                    );
+        {
+          html_TD(); // Animation Out
+          addSelector(getPluginCustomArgName(index + P104_OFFSET_ANIM_OUT),
+                      animationCount,
+                      animationTypes,
+                      animationOptions,
+                      NULL,
+                      zones[zone].animationOut,
+                      false,
+                      true,
+                      EMPTY_STRING
+                      # ifdef P104_USE_TOOLTIPS
+                      , F("Animation Out")
+                      # endif // ifdef P104_USE_TOOLTIPS
+                      );
+        }
 
-        html_TD(); // Pause after Animation In
+        html_TD();                   // Pause after Animation In
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_PAUSE), zones[zone].pause, 0, P104_MAX_SPEED_PAUSE_VALUE
                       # ifdef P104_USE_TOOLTIPS
                       , EMPTY_STRING // classname
