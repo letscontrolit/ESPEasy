@@ -7,7 +7,7 @@
         ","
         Clears a zone by number or the entire display. All ``<zone>`` arguments are the zone numbers as shown on the Device settings page.
 
-        Without a <zone> or All specified, the All action is executed.
+        Without a ``<zone>`` or ``All`` specified, the All action is executed.
         "
         "
         ``DotMatrix,update[,All|<zone>]``
