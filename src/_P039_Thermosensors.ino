@@ -1457,7 +1457,7 @@ float Plugin_039_convert_to_temperature(uint32_t l_rawvalue, float RTDnominal, f
   Z4 = 2 * RTD_B;
 
   temp = Z2 + (Z3 * Rt);
-  temp = (sqrt(temp) + Z1) / Z4;
+  temp = (sqrtf(temp) + Z1) / Z4;
 
   if (temp >= 0)
     return temp;

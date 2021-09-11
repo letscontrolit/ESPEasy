@@ -158,7 +158,7 @@ unsigned long ESPEasy_time::now() {
 
       if (statusNTPInitialized && time_offset < 1.0) {
         // Clock instability in msec/second
-        timeWander = ((time_offset * 1000000.0f) / timePassedSince(lastTimeWanderCalculation));
+        timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
       }
       lastTimeWanderCalculation = millis();
 
@@ -199,7 +199,7 @@ unsigned long ESPEasy_time::now() {
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0f);
+          log += String(time_offset * 1000.0);
           log += F(" msec. Wander: ");
           log += String(timeWander, 3);
           log += F(" msec/second");
@@ -277,7 +277,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0f;
+  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0;
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
