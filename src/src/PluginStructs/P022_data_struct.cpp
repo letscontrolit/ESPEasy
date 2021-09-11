@@ -97,7 +97,7 @@ void P022_data_struct::Plugin_022_Frequency(int address, uint16_t freq)
   int i2cAddress = address;
 
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)0x0);
-  freq *= 0.9;
+  freq *= 0.9f;
 
   //  prescale = 25000000 / 4096;
   uint16_t prescale = 6103;
