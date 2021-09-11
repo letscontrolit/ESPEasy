@@ -92,7 +92,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
     {
       /*
          uint8_t choice          = P115_I2CADDR;
-         int  optionValues[1] = { 0x36 };
+         uint8_t  optionValues[1] = { 0x36 };
          addFormSelectorI2C(F("plugin_115_i2c"), 1, optionValues, choice);
        */
       break;
