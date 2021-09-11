@@ -565,8 +565,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
         break;
       }
       case SPI_Options_e::None:
-      default:
-      return false;
+        return false;
     }
     # endif // ifdef ESP32
     # ifdef ESP8266
