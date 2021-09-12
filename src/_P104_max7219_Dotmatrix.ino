@@ -278,7 +278,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_EXIT: {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P104_data) {
+      if ((nullptr == P104_data) || (nullptr == P104_data->P)) {
         return success;
       }
 
@@ -305,7 +305,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_TEN_PER_SECOND: {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P104_data) {
+      if ((nullptr == P104_data) || (nullptr == P104_data->P)) {
         return success;
       }
 
@@ -318,7 +318,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_ONCE_A_SECOND: {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P104_data) {
+      if ((nullptr == P104_data) || (nullptr == P104_data->P)) {
         return success;
       }
 

@@ -346,12 +346,12 @@ struct P104_bargraph_struct {
   P104_bargraph_struct() = delete; // Not used, so leave out explicitly
   P104_bargraph_struct(uint8_t _graph) : graph(_graph) {}
 
-  double  value;
-  double  max;
-  double  min;
+  double  value = 0.0;
+  double  max   = 0.0;
+  double  min   = 0.0;
   uint8_t graph;
-  uint8_t barType;
-  uint8_t direction;
+  uint8_t barType   = 0u;
+  uint8_t direction = 0u;
 };
 # endif // ifdef P104_USE_BAR_GRAPH
 
@@ -362,6 +362,7 @@ struct P104_data_struct : public PluginTaskData_base {
                    int8_t                   _cs_pin,
                    uint8_t                  _modules,
                    uint8_t                  _zonesCount);
+  ~P104_data_struct();
 
   bool   begin();
   void   loadSettings();

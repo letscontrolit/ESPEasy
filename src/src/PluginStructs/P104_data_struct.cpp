@@ -33,10 +33,28 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    uint8_t                  _modules,
                                    uint8_t                  _zonesCount)
   : mod(_mod), taskIndex(_taskIndex), cs_pin(_cs_pin), modules(_modules), expectedZones(_zonesCount) {
-  if (Settings.InitSPI > 0) { // FIXME tonhuisman: Replace by isSPI_valid() once merged from PR #3773
-    P = new MD_Parola(mod, cs_pin, modules);
+  if (Settings.isSPI_valid()) {
+    P = new (std::nothrow) MD_Parola(mod, cs_pin, modules);
   } else {
     addLog(LOG_LEVEL_ERROR, F("DOTMATRIX: Required SPI not enabled. Initialization aborted!"));
+  }
+}
+
+/*******************************
+ * Destructor
+ ******************************/
+P104_data_struct::~P104_data_struct() {
+  # ifdef P104_USE_BAR_GRAPH
+
+  if (nullptr != pM) {
+    pM = nullptr; // Not created here, only reset
+  }
+  # endif // ifdef P104_USE_BAR_GRAPH
+
+  if (nullptr != P) {
+    // do not: delete P; // Warning: the MD_Parola object doesn't have a virtual destructor, and when changed,
+    // a reboot uccurs when the object is deleted here!
+    P = nullptr; // Reset only
   }
 }
 
@@ -50,7 +68,7 @@ bool P104_data_struct::begin() {
   }
 
   if ((P != nullptr) && (cs_pin > -1)) {
-    addLog(LOG_LEVEL_INFO, F("dotmatrix: P->begin() called"));
+    addLog(LOG_LEVEL_INFO, F("dotmatrix: begin() called"));
     P->begin(expectedZones);
     # ifdef P104_USE_BAR_GRAPH
     pM = P->getGraphicObject();
@@ -351,6 +369,8 @@ void P104_data_struct::configureZones() {
   }
   # endif // ifdef P104_DEBUG_DEV
 
+  if (nullptr == P) { return; }
+
   P->displayClear();
 
   for (auto it = zones.begin(); it != zones.end(); ++it) {
@@ -469,7 +489,7 @@ void P104_data_struct::configureZones() {
 void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                                           const P104_zone_struct& zstruct,
                                           const String          & text) {
-  if ((zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
+  if ((nullptr == P) || (zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
   sZoneInitial[zone] = text; // Keep the original string for future use
   sZoneBuffers[zone] = text; // We explicitly want a copy here so it can be modified by parseTemplate()
 
@@ -515,6 +535,8 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
  ********************************************/
 void P104_data_struct::updateZone(uint8_t                 zone,
                                   const P104_zone_struct& zstruct) {
+  if (nullptr == P) { return; }
+
   if (zone == 0) {
     for (auto it = zones.begin(); it != zones.end(); ++it) {
       if ((it->content == P104_CONTENT_TEXT) ||
@@ -615,7 +637,7 @@ void P104_data_struct::drawOneBarGraph(uint16_t lower,
 void P104_data_struct::displayBarGraph(uint8_t                 zone,
                                        const P104_zone_struct& zstruct,
                                        const String          & graph) {
-  if (graph.isEmpty()) { return; }
+  if ((nullptr == P) || (nullptr == pM) || graph.isEmpty()) { return; }
   sZoneInitial[zone] = graph; // Keep the original string for future use
 
   #  define NOT_A_COMMA 0x02  // Something else than a comma, or the parseString function will get confused
@@ -749,7 +771,9 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
         pixBottom = zstruct._lower - 1;
         zeroPoint = 0;
       } else {
-        if (definitelyLessThan(it->min, 0.0) && definitelyGreaterThan(it->max, 0.0)) { // Zero-point is used
+        if (definitelyLessThan(it->min, 0.0) &&
+            definitelyGreaterThan(it->max,           0.0) &&
+            definitelyGreaterThan(it->max - it->min, 0.01)) { // Zero-point is used
           zeroPoint = (it->min * -1.0) / ((it->max - it->min) / (1.0 * ((zstruct._upper + 1) - zstruct._lower)));
         } else {
           zeroPoint = 0;
@@ -897,7 +921,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("dotmatrix"))) { // main command: dotmatrix
+  if ((nullptr != P) && command.equals(F("dotmatrix"))) { // main command: dotmatrix
     String sub = parseString(string, 2);
 
     int zoneIndex;
@@ -1312,7 +1336,9 @@ uint8_t getDateTime(char           *psz,
 
 # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 void createHString(String& string) {
-  for (uint32_t i = 0; i < string.length(); i++) {
+  const uint16_t stringLen = string.length();
+
+  for (uint16_t i = 0; i < stringLen; i++) {
     string[i] |= 0x80; // use 'high' part of the font, by adding 0x80
   }
 }
@@ -1332,6 +1358,7 @@ void reverseStr(String& str) {
  * execute all PLUGIN_ONE_PER_SECOND tasks
  ***********************************************************************/
 bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
+  if (nullptr == P) { return false; }
   bool redisplay = false;
   bool success   = false;
 
@@ -1424,6 +1451,7 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
  * restart a zone if the repeat delay (if any) has passed
  **************************************************/
 void P104_data_struct::checkRepeatTimer(uint8_t z) {
+  if (nullptr == P) { return; }
   bool handled = false;
 
   for (auto it = zones.begin(); it != zones.end() && !handled; ++it) {
@@ -1608,16 +1636,13 @@ bool P104_data_struct::saveSettings() {
   }
 
   uint16_t bufferSize;
-  char    *settingsBuffer;
-
-  settingsBuffer = new char[P104_SETTINGS_BUFFER_V2 + 2](); // include 0..size usage, always store in V2 settings format, zero initialized
   int saveOffset = 0;
 
-  numDevices = 0;                                           // Count the number of connected display units
+  numDevices = 0;                      // Count the number of connected display units
 
-  bufferSize = P104_CONFIG_VERSION_V2;                      // Save special marker that we're using V2 settings
+  bufferSize = P104_CONFIG_VERSION_V2; // Save special marker that we're using V2 settings
   // This write is counting
-  SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
+  error      += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
   saveOffset += sizeof(bufferSize);
 
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
@@ -1671,23 +1696,23 @@ bool P104_data_struct::saveSettings() {
         if (RTC.flashDayCounter > 0) {
           RTC.flashDayCounter--;
         }
-        SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
+        error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
+                            taskIndex,
+                            (uint8_t *)&bufferSize,
+                            sizeof(bufferSize),
+                            saveOffset);
         saveOffset += sizeof(bufferSize);
 
-        // If copy succeeds, then store the actual buffer
-        if (safe_strncpy(settingsBuffer, zbuffer.c_str(), bufferSize + 1)) {
-          // As we write in parts, only count as single write.
-          if (RTC.flashDayCounter > 0) {
-            RTC.flashDayCounter--;
-          }
-          SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)settingsBuffer, bufferSize, saveOffset);
-          saveOffset += bufferSize;
-        } else {
-          error.reserve(42);
-          error += F("Moving settings to config buffer failed.\n");
-          addLog(LOG_LEVEL_ERROR, error);
-          addLog(LOG_LEVEL_ERROR, zbuffer);
+        // As we write in parts, only count as single write.
+        if (RTC.flashDayCounter > 0) {
+          RTC.flashDayCounter--;
         }
+        error += SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
+                            taskIndex,
+                            (uint8_t *)zbuffer.c_str(),
+                            bufferSize,
+                            saveOffset);
+        saveOffset += bufferSize;
 
         # ifdef P104_DEBUG_DEV
 
@@ -1715,8 +1740,6 @@ bool P104_data_struct::saveSettings() {
 
     // This write is counting
     SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), saveOffset);
-
-    delete[] settingsBuffer;
 
     if (numDevices > 255) {
       error += F("More than 255 modules configured (");
