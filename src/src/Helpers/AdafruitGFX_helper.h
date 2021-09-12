@@ -34,8 +34,8 @@
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 5 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~10,4 kB
-# define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
-# define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 2 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~7.7 kB
+// # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
+// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 2 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~7.7 kB
 // # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 1 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~4.3 kB
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 
