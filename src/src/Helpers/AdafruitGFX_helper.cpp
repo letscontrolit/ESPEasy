@@ -399,6 +399,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   if (nullptr != _display) {
     _display->setTextSize(_fontscaling);
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
+    _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
   }
 }
 
@@ -524,7 +525,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
       _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
+      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
     } else {
       success = false;
     }
@@ -605,7 +606,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         break;
     }
   }
-  else if (subcommand.equals(F("clear")))
+  else if (subcommand.equals(F("clear"))) // Clear display
   {
     if (argCount >= 1) {
       _display->fillScreen(AdaGFXparseColor(sParams[0], _colorDepth));
@@ -613,7 +614,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->fillScreen(_bgcolor);
     }
   }
-  else if (subcommand.equals(F("rot")) && (argCount == 1))
+  else if (subcommand.equals(F("rot")) && (argCount == 1)) // Rotation
   {
     if ((nParams[0] < 0) || (nParams[0] > 3)) {
       success = false;
@@ -621,8 +622,17 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       setRotation(nParams[0]);
     }
   }
+  else if (subcommand.equals(F("tpm")) && (argCount == 1)) // Text Print Mode
+  {
+    if ((nParams[0] < 0) || (nParams[0] >= static_cast<int>(AdaGFXTextPrintMode::MAX))) {
+      success = false;
+    } else {
+      _textPrintMode = static_cast<AdaGFXTextPrintMode>(nParams[0]);
+      _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+    }
+  }
   # if ADAGFX_USE_ASCIITABLE
-  else if (subcommand.equals(F("asciitable")))
+  else if (subcommand.equals(F("asciitable"))) // Show ASCII table
   {
     String  line;
     int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
@@ -632,7 +642,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if (_fontscaling != scale) { // Set fontscaling
       _fontscaling = scale;
       _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
+      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
     }
     line.reserve(_textcols);
     _display->setCursor(0, 0);
@@ -666,7 +676,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     if (_fontscaling != currentScale) { // Restore if needed
       _fontscaling = currentScale;
       _display->setTextSize(_fontscaling);
-      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
+      calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
     }
   }
   # endif // if ADAGFX_USE_ASCIITABLE
@@ -689,7 +699,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
     } else if (sParams[0].equals(F("angelina8prop"))) { // Proportional font!
       _display->setFont(&angelina8pt7b);
-      calculateTextMetrics(6, 16, 12);
+      calculateTextMetrics(6, 16, 12, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_8PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono8pt"))) {
@@ -717,7 +727,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     } else if (sParams[0].equals(F("angelina12prop"))) { // Proportional font!
       _display->setFont(&angelina12pt7b);
-      calculateTextMetrics(8, 22, 18);
+      calculateTextMetrics(8, 22, 18, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ANGELINA
     #   ifdef ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
     } else if (sParams[0].equals(F("novamono12pt"))) {
@@ -749,7 +759,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
     } else if (sParams[0].equals(F("amerikasans16pt"))) { // Proportional font!
       _display->setFont(&AmerikaSans16pt7b);
-      calculateTextMetrics(17, 30, 26);
+      calculateTextMetrics(17, 30, 26, true);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
     } else if (sParams[0].equals(F("whiterabbit16pt"))) {
@@ -1001,10 +1011,12 @@ void AdafruitGFX_helper::printText(const char    *string,
                                    unsigned int   textSize,
                                    unsigned short color,
                                    unsigned short bkcolor) {
-  uint16_t _x = X;
-  uint16_t _y = Y + (_heightOffset * textSize);
+  int16_t  _x = X;
+  int16_t  _y = Y + (_heightOffset * textSize);
   uint16_t _w = 0;
   uint8_t  _h = 0;
+  int16_t  x1, y1;
+  uint16_t w0, w1, h1;
 
   if (_columnRowMode) {
     _x = X * (_fontwidth * textSize); // We need this multiple times
@@ -1030,15 +1042,36 @@ void AdafruitGFX_helper::printText(const char    *string,
 
   String newString = string;
 
-  if ((_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) &&
-      (newString.length() > static_cast<unsigned int>(_textcols - (_x / (_fontwidth * textSize))))) {
-    newString = newString.substring(0, _textcols - (_x / (_fontwidth * textSize)));
+  if (_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) {
+    if (_isProportional) {                                              // Proportional font. This is rather slow!
+      _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1);   // Count length
+
+      while ((newString.length() > 0) && ((_x + w1) > _res_x)) {
+        newString.remove(newString.length() - 1);                       // Cut last character off
+        _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1); // Re-count length
+      }
+    }
+    else {                                                              // Fixed width font
+      if (newString.length() > static_cast<uint16_t>(_textcols - (_x / (_fontwidth * textSize)))) {
+        newString = newString.substring(0, _textcols - (_x / (_fontwidth * textSize)));
+      }
+    }
+  }
+
+  w1 = 0;
+
+  if (_isProportional) {
+    _display->getTextBounds(F(" "), _x, _y, &x1, &y1, &w1, &h1);
   }
 
   if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
     _display->setCursor(_x, _y);
+    w0 = 0;
+    uint16_t w2 = 0;
 
-    for (uint16_t c = 0; c < newString.length(); c++) {
+    _display->getTextBounds(newString, _x, _y, &x1, &y1, &w2, &h1); // Count length in pixels
+
+    for (; (w0 < w2); w0 += w1) {                                   // Clear previously used text with spaces
       _display->print(' ');
     }
     delay(0);
@@ -1047,7 +1080,9 @@ void AdafruitGFX_helper::printText(const char    *string,
   _display->setCursor(_x, _y);
   _display->print(newString);
 
-  for (uint16_t c = _x + newString.length() + 1; c <= _textcols && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; c++) {
+  _display->getTextBounds(newString, _x, _y, &x1, &y1, &w0, &h1); // Count length in pixels
+
+  for (; ((_x + w0) < _res_x) && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; w0 += w1) {
     _display->print(' ');
   }
 
@@ -1060,8 +1095,6 @@ void AdafruitGFX_helper::printText(const char    *string,
       _h++;
     } while (_h <= textSize);
   }
-
-  // _display->println(); // Leave cursor at next (new) line?
 }
 
 /****************************************************************************
@@ -1374,16 +1407,18 @@ void AdafruitGFX_helper::getColors(uint16_t& fgcolor,
 }
 
 /****************************************************************************
- * calculateTextMetrix: Recalculate the text mertics based on supplied font parameters
+ * calculateTextMetrics: Recalculate the text mertics based on supplied font parameters
  ***************************************************************************/
 void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
                                               uint8_t fontheight,
-                                              int8_t  heightOffset) {
-  _fontwidth    = fontwidth;
-  _fontheight   = fontheight;
-  _heightOffset = heightOffset;
-  _textcols     = _res_x / (_fontwidth * _fontscaling);
-  _textrows     = _res_y / ((_fontheight + _heightOffset) * _fontscaling);
+                                              int8_t  heightOffset,
+                                              bool    isProportional) {
+  _fontwidth      = fontwidth;
+  _fontheight     = fontheight;
+  _heightOffset   = heightOffset;
+  _isProportional = isProportional;
+  _textcols       = _res_x / (_fontwidth * _fontscaling);
+  _textrows       = _res_y / ((_fontheight + _heightOffset) * _fontscaling);
 
   # ifndef BUILD_NO_DEBUG
 
@@ -1472,7 +1507,7 @@ void AdafruitGFX_helper::setRotation(uint8_t m) {
       _res_y = _display_x;
       break;
   }
-  calculateTextMetrics(_fontwidth, _fontheight, _heightOffset);
+  calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
 }
 
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX

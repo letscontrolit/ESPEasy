@@ -34,8 +34,8 @@
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 5 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~10,4 kB
-// # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
-// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 2 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~7.7 kB
+# define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
+# define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 2 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~7.7 kB
 // # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 1 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~4.3 kB
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 
@@ -239,7 +239,8 @@ public:
                  unsigned short bkcolor  = ADAGFX_BLACK);
   void calculateTextMetrics(uint8_t fontwidth,
                             uint8_t fontheight,
-                            int8_t  heightOffset = 0);
+                            int8_t  heightOffset   = 0,
+                            bool    isProportional = false);
   void getTextMetrics(uint16_t& textcols,
                       uint16_t& textrows,
                       uint8_t & fontwidth,
@@ -293,6 +294,7 @@ private:
   uint8_t _fontwidth         = 6; // Default font characteristics
   uint8_t _fontheight        = 10;
   int8_t _heightOffset       = 0;
+  bool _isProportional       = false;
   uint8_t _p095_compensation = 0;
   bool _columnRowMode        = false;
 
