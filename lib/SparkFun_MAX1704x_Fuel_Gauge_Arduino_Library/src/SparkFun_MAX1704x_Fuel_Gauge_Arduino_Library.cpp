@@ -114,7 +114,7 @@ float SFE_MAX1704X::getVoltage()
     // 2.5mV on the MAX17044
     vCell = (vCell) >> 4; // Align the 12 bits
 
-    float divider = 4096.0 / _full_scale;
+    float divider = 4096.0f / _full_scale;
 
     return (((float)vCell) / divider);
   }
@@ -124,7 +124,7 @@ float SFE_MAX1704X::getVoltage()
     // i.e. 78.125uV per LSB on the MAX17048
     // i.e. 156.25uV per LSB on the MAX17049
 
-    float divider = 65536.0 / _full_scale;
+    float divider = 65536.0f / _full_scale;
 
     return (((float)vCell) / divider);
   }
@@ -136,7 +136,7 @@ float SFE_MAX1704X::getSOC()
   float percent;
   soc = read16(MAX17043_SOC);
   percent = (float)((soc & 0xFF00) >> 8);
-  percent += ((float)(soc & 0x00FF)) / 256.0;
+  percent += ((float)(soc & 0x00FF)) / 256.0f;
 
   return percent;
 }
@@ -184,7 +184,7 @@ uint8_t SFE_MAX1704X::setResetVoltage(uint8_t threshold)
 uint8_t SFE_MAX1704X::setResetVoltage(float threshold)
 {
   // 7 bits. LSb = 40mV
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 5.08) / 0.04);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 5.08f) / 0.04f);
   return setResetVoltage(thresh);
 }
 
@@ -243,11 +243,11 @@ float SFE_MAX1704X::getChangeRate(void)
     {
       _debugPort->println(F("getChangeRate: not supported on this device"));
     }
-    return (0.0);
+    return (0.0f);
   }
 
   int16_t changeRate = read16(MAX17048_CRATE);
-  float changerate_f = changeRate * 0.208;
+  float changerate_f = changeRate * 0.208f;
   return (changerate_f);
 }
 
@@ -613,7 +613,7 @@ uint8_t SFE_MAX1704X::setVALRTMax(uint8_t threshold)
 }
 uint8_t SFE_MAX1704X::setVALRTMax(float threshold)
 {
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 5.1) / 0.02);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 5.1f) / 0.02f);
   return setVALRTMax(thresh);
 }
 
@@ -651,7 +651,7 @@ uint8_t SFE_MAX1704X::setVALRTMin(uint8_t threshold)
 }
 uint8_t SFE_MAX1704X::setVALRTMin(float threshold)
 {
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 5.1) / 0.02);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 5.1f) / 0.02f);
   return setVALRTMin(thresh);
 }
 
@@ -721,7 +721,7 @@ uint8_t SFE_MAX1704X::setHIBRTActThr(uint8_t threshold)
 uint8_t SFE_MAX1704X::setHIBRTActThr(float threshold)
 {
   // LSb = 1.25mV
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 0.31875) / 0.00125);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 0.31875f) / 0.00125f);
   return setHIBRTActThr(thresh);
 }
 
@@ -760,7 +760,7 @@ uint8_t SFE_MAX1704X::setHIBRTHibThr(uint8_t threshold)
 uint8_t SFE_MAX1704X::setHIBRTHibThr(float threshold)
 {
   // LSb = 0.208%/hr
-  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0, 53.04) / 0.208);
+  uint8_t thresh = (uint8_t)(constrain(threshold, 0.0f, 53.04f) / 0.208f);
   return setHIBRTHibThr(thresh);
 }
 

@@ -80,9 +80,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[PCA9685_NUMS_ADDRESS];
+      uint8_t optionValues[PCA9685_NUMS_ADDRESS];
 
-      for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; i++)
       {
         optionValues[i] = PCA9685_ADDRESS + i;
       }
