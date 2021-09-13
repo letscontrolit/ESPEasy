@@ -429,8 +429,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 }
 
 bool P082_referencePointSet(struct EventStruct *event) {
-  return ! ((P082_LONG_REF < 0.1) && (P082_LONG_REF > -0.1) 
-        && (P082_LAT_REF < 0.1) && (P082_LAT_REF > -0.1) );
+  return ! ((P082_LONG_REF < 0.1f) && (P082_LONG_REF > -0.1f) 
+        && (P082_LAT_REF < 0.1f) && (P082_LAT_REF > -0.1f) );
 }
 
 void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float value) {

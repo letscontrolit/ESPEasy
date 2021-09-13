@@ -328,14 +328,14 @@ float Plugin_030_readAltitude(float seaLevel)
 {
   float atmospheric = Plugin_030_readPressure(bmp280_i2caddr & 0x01) / 100.0F;
 
-  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
+  return 44330.0f * (1.0f - powf(atmospheric / seaLevel, 0.1903f));
 }
 
 // **************************************************************************/
 // MSL pressure formula
 // **************************************************************************/
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
-  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
+  return atmospheric / powf(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // USES_P030

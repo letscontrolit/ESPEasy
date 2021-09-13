@@ -375,7 +375,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     if (DSTemp == 0x550) { // power-on reset value
       return false;
     }
-    *value = (float(DSTemp) * 0.0625);
+    *value = (float(DSTemp) * 0.0625f);
   }
   else if (ROM[0] == 0x10)       // DS1820 DS18S20
   {
@@ -385,7 +385,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     DSTemp = (ScratchPad[1] << 11) | ScratchPad[0] << 3;
     DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
              (((ScratchPad[7] - ScratchPad[6]) << 7) / ScratchPad[7]);
-    *value = float(DSTemp) * 0.0078125;
+    *value = float(DSTemp) * 0.0078125f;
   }
   return true;
 }

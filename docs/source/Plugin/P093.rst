@@ -26,13 +26,8 @@ Plugin is based on `Arduino library to control Mitsubishi Heat Pumps <https://gi
 Supported hardware
 ------------------
 
-Plugin should support all Mitsubishi heat pump units with a CN105 connector:
-
-* `P-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_P-Series_Controls-Compatibility-Chart.pdf>`_,
-* `M-Series <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/2018-01_M-Series_Controls-Compatibility-Chart.pdf>`_,
-* `CITY MULTI <https://www.mitsubishicomfort.com/sites/default/themes/mitsubishicomfort/pdf/Controller_Compatibility_Chart_2017-12_CITY_MULTI.pdf>`_.
-
-Open issue, where users can report models they are using - `list <https://github.com/SwiCago/HeatPump/issues/13>`_.
+Plugin should support all Mitsubishi heat pump units with a CN105 connector- git issue, where users can report models they are 
+using - `list <https://github.com/SwiCago/HeatPump/issues/13>`_.
 
 How to connect
 ~~~~~~~~~~~~~~
@@ -77,7 +72,7 @@ The Mitsubishi Heatpump plugin can be added as simple as selecting it from the l
 
 Once we hit submit, the plugin will start sending messages through controller, i.e. MQTT with payload:
 
-``{"roomTemperature":23.0,"wideVane":"|","power":"OFF","mode":"AUTO","fan":"QUIET","vane":"AUTO","iSee":false,"temperature":24.0}``
+``{"roomTemperature":25.5,"wideVane":"|","power":"OFF","mode":"COOL","fan":"AUTO","vane":"AUTO","iSee":true,"operating":true,"compressorFrequency":5,"temperature":24.0}``
 
 Message is send every time a change is detected (i.e. one changes settings using IR remote control) and every X seconds, as set in the settings (60 seconds in above screenshot).
 
@@ -101,11 +96,17 @@ Special thanks
 
 * to SwiCago and other maintainers and contributors of the *Arduino library to control Mitsubishi Heat Pumps* from https://github.com/SwiCago/HeatPump/,
 * to Chris Davis for his great `blog <https://chrdavis.github.io/hacking-a-mitsubishi-heat-pump-Part-1/>`_,
-* to Hadley from New Zealand for his *hacking* https://nicegear.co.nz/blog/hacking-a-mitsubishi-heat-pump-air-conditioner/,
+* to Hadley from New Zealand for his *hacking*.
 * and all others that contributed on this subject.
 
 Change log
 ----------
+
+.. versionchanged:: 2021/08/03
+  ...
+
+  |added|
+  Status of operating and compressor frequency.
 
 .. versionadded:: 2020/03/07
   ...
