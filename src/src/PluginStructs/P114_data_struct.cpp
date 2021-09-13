@@ -38,10 +38,10 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
     // Calculate the UV Index, valid in open air not behind glass!
     UVAComp  = (UVData[0] - UVData[1]) - ACoef * (UVData[3] - UVData[1]) - BCoef * (UVData[4] - UVData[1]);
     UVBComp  = (UVData[2] - UVData[1]) - CCoef * (UVData[3] - UVData[1]) - DCoef * (UVData[4] - UVData[1]);
-    _UVIndex = ((UVBComp * UVBresponsivity) +  (UVAComp * UVAresponsivity)) / 2.;
+    _UVIndex = ((UVBComp * UVBresponsivity) +  (UVAComp * UVAresponsivity)) / 2.0f;
 
-    _UVA = UVData[0] / pow(2, IT - 1); // UVA light sensitivity increases linear with integration time
-    _UVB = UVData[2] / pow(2, IT - 1); // UVB light sensitivity increases linear with integration time
+    _UVA = static_cast<float>(UVData[0]) / static_cast<float>(1 << (IT - 1)); // UVA light sensitivity increases linear with integration time
+    _UVB = static_cast<float>(UVData[2]) / static_cast<float>(1 << (IT - 1)); // UVB light sensitivity increases linear with integration time
 
     // float UVASensitivity = 0.93/(static_cast<float>(IT + 1)); // UVA light sensitivity increases with integration time
     // float UVBSensitivity = 2.10/(static_cast<float>(IT + 1)); // UVB light sensitivity increases with integration time
