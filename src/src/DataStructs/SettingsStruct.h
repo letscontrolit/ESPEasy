@@ -179,6 +179,9 @@ class SettingsStruct_tmpl
   // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t pin) const;
 
+  // Return true when SPI enabled and opt. user defined pins valid.
+  bool isSPI_valid() const;
+
   // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
 
@@ -238,7 +241,7 @@ class SettingsStruct_tmpl
   unsigned long ConnectionFailuresThreshold;
   int16_t       TimeZone;
   boolean       MQTTRetainFlag_unused;
-  uint8_t       InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 
+  uint8_t       InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX];
   uint8_t       Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
@@ -320,6 +323,9 @@ class SettingsStruct_tmpl
   uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
   int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.
   uint8_t       NumberExtraWiFiScans = 0;
+  int8_t        SPI_SCLK_pin = -1;
+  int8_t        SPI_MISO_pin = -1;
+  int8_t        SPI_MOSI_pin = -1;
   int8_t        ForceESPEasyNOWchannel = 0;
 };
 

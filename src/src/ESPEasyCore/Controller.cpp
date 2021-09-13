@@ -11,6 +11,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
@@ -50,7 +51,7 @@ void sendData(struct EventStruct *event)
     createRuleEvents(event);
   }
 
-  if (Settings.UseValueLogger && (Settings.InitSPI > 0) && (Settings.Pin_sd_cs >= 0)) {
+  if (Settings.UseValueLogger && (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) && (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
 
