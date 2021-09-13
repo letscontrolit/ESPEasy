@@ -39,8 +39,8 @@
 .. |P093_type| replace:: :cyan:`Energy (Heat)`
 .. |P093_typename| replace:: :cyan:`Energy (Heat) - Mitsubishi Heat Pump`
 .. |P093_status| replace:: :yellow:`ENERGY, TESTING D`
-.. |P093_github| replace:: P093_MitsubishiAC.ino
-.. _P093_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P093_MitsubishiAC.ino
+.. |P093_github| replace:: P093_MitsubishiHP.ino
+.. _P093_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P093_MitsubishiHP.ino
 .. |P093_usedby| replace:: `.`
 .. |P093_shortinfo| replace:: `Should support all Mitsubishi heatpump units with a CN105 connector`
 .. |P093_maintainer| replace:: `crnjan`

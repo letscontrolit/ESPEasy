@@ -256,7 +256,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     hlwMultipliers[0] = getFormItemFloat(F("p076_currmult"));
     hlwMultipliers[1] = getFormItemFloat(F("p076_voltmult"));
     hlwMultipliers[2] = getFormItemFloat(F("p076_powmult"));
-    if (hlwMultipliers[0] > 1.0f && hlwMultipliers[1] > 1.0f && hlwMultipliers[2] > 1.0f) {
+    if (hlwMultipliers[0] > 1.0 && hlwMultipliers[1] > 1.0 && hlwMultipliers[2] > 1.0) {
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                              sizeof(hlwMultipliers));
       if (PLUGIN_076_DEBUG) {
@@ -455,7 +455,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
           Plugin_076_hlw->expectedVoltage(CalibVolt);
           changed = true;
         }
-        if (CalibCurr > 0.0f) {
+        if (CalibCurr > 0.0) {
           Plugin_076_hlw->expectedCurrent(CalibCurr);
           changed = true;
         }
@@ -519,16 +519,16 @@ bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& v
   double hlwMultipliers[3];
   LoadCustomTaskSettings(TaskIndex, reinterpret_cast<uint8_t *>(&hlwMultipliers),
                          sizeof(hlwMultipliers));
-  if (hlwMultipliers[0] > 1.0f) {
+  if (hlwMultipliers[0] > 1.0) {
     current = hlwMultipliers[0];
   }
-  if (hlwMultipliers[1] > 1.0f) {
+  if (hlwMultipliers[1] > 1.0) {
     voltage = hlwMultipliers[1];
   }
-  if (hlwMultipliers[2] > 1.0f) {
+  if (hlwMultipliers[2] > 1.0) {
     power = hlwMultipliers[2];
   }
-  return (current > 1.0f) && (voltage > 1.0f) && (power > 1.0f);
+  return (current > 1.0) && (voltage > 1.0) && (power > 1.0);
 }
 
 void Plugin076_Reset(taskIndex_t TaskIndex) {

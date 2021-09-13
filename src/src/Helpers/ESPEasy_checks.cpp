@@ -71,10 +71,10 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (288 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (292 + 84 * TASKS_MAX);
   #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
