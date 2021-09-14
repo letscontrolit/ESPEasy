@@ -256,40 +256,30 @@ boolean Plugin_013(uint8_t function, struct EventStruct *event, String& string)
       {
         int16_t operatingMode = PCONFIG(0);
         int16_t threshold = PCONFIG(1);
-
-        if (operatingMode == OPMODE_STATE)
-        {
+    
+        if (operatingMode == OPMODE_STATE){
           uint8_t state = 0;
           float value = Plugin_013_read(event->TaskIndex);
-          if (value != NO_ECHO)
-          {
-            if (value < threshold)
-              state = 1;
-            if (state != switchstate[event->TaskIndex])
-            {
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("ULTRASONIC : TaskNr: ");
-                log += event->TaskIndex +1;
-                log += F(" state: ");
-                log += state;
-                addLog(LOG_LEVEL_INFO,log);
-              }
-              switchstate[event->TaskIndex] = state;
-              UserVar[event->BaseVarIndex] = state;
-              event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
-              sendData(event);
-            }
-          }
-          else {
+          if ( (value != NO_ECHO) && (value < threshold) )
+            state = 1;
+          if (state != switchstate[event->TaskIndex]){
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("ULTRASONIC : TaskNr: ");
               log += event->TaskIndex +1;
-              log += F(" Error: ");
-              log += Plugin_013_getErrorStatusString(event->TaskIndex);
+              if (value != NO_ECHO){
+                log += F(" state: ");
+                log += state;
+              }else {
+                log += F(" Error: ");
+                log += Plugin_013_getErrorStatusString(event->TaskIndex);
+              }
               addLog(LOG_LEVEL_INFO,log);
             }
+            switchstate[event->TaskIndex] = state;
+            UserVar[event->BaseVarIndex] = state;
+            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
+            sendData(event);
           }
-
         }
         success = true;
         break;
