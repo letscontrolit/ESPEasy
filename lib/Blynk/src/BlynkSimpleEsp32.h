@@ -1,30 +1,26 @@
 /**
- * @file       BlynkSimpleEsp8266.h
+ * @file       BlynkSimpleEsp32.h
  * @author     Volodymyr Shymanskyy
  * @license    This project is released under the MIT License (MIT)
  * @copyright  Copyright (c) 2015 Volodymyr Shymanskyy
- * @date       Jan 2015
+ * @date       Oct 2016
  * @brief
  *
  */
 
-#ifndef BlynkSimpleEsp8266_h
-#define BlynkSimpleEsp8266_h
+#ifndef BlynkSimpleEsp32_h
+#define BlynkSimpleEsp32_h
 
-#ifndef ESP8266
-#error This code is intended to run on the ESP8266 platform! Please check your Tools->Board setting.
+#ifndef ESP32
+#error This code is intended to run on the ESP32 platform! Please check your Tools->Board setting.
 #endif
 
-#include <version.h>
-
-#if ESP_SDK_VERSION_NUMBER < 0x020200
-#error Please update your ESP8266 Arduino Core
-#endif
+#define BLYNK_SEND_ATOMIC
 
 #include <BlynkApiArduino.h>
 #include <Blynk/BlynkProtocol.h>
 #include <Adapters/BlynkArduinoClient.h>
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 
 class BlynkWifi
     : public BlynkProtocol<BlynkArduinoClient>
@@ -52,7 +48,6 @@ public:
         Base::begin(auth,handleInterruptCallback);
         this->conn.begin(ip, port);
     }
-
 
 };
 
