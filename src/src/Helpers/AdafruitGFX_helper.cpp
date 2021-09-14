@@ -1060,9 +1060,7 @@ void AdafruitGFX_helper::printText(const char    *string,
 
   w1 = 0;
 
-  if (_isProportional) {
-    _display->getTextBounds(F(" "), _x, _y, &x1, &y1, &w1, &h1);
-  }
+  _display->getTextBounds(F(" "), _x, _y, &x1, &y1, &w1, &h1);
 
   if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
     _display->setCursor(_x, _y);
