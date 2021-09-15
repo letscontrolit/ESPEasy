@@ -11,6 +11,26 @@
 #ifndef BlynkApi_h
 #define BlynkApi_h
 
+// back-compat
+
+#ifdef BOARD_FIRMWARE_TYPE
+    #define BLYNK_FIRMWARE_TYPE         BOARD_FIRMWARE_TYPE
+#endif
+
+#ifdef BOARD_FIRMWARE_VERSION
+    #define BLYNK_FIRMWARE_VERSION      BOARD_FIRMWARE_VERSION
+#endif
+
+#ifdef BOARD_TEMPLATE_ID
+    #define BLYNK_TEMPLATE_ID           BOARD_TEMPLATE_ID
+#endif
+
+// end of back-compat
+
+#if !defined(BLYNK_FIRMWARE_TYPE) && defined(BLYNK_TEMPLATE_ID)
+    #define BLYNK_FIRMWARE_TYPE         BLYNK_TEMPLATE_ID
+#endif
+
 #include <Blynk/BlynkConfig.h>
 #include <Blynk/BlynkDebug.h>
 #include <Blynk/BlynkParam.h>
@@ -111,6 +131,26 @@ public:
         virtualWriteBinary(pin, param.getBuffer(), param.getLength());
     }
 
+    void callWriteHandler(int pin, const BlynkParam& param) {
+        BlynkReq req = { (uint8_t)pin };
+        WidgetWriteHandler handler = GetWriteHandler(pin);
+        if (handler && (handler != BlynkWidgetWrite)) {
+            handler(req, param);
+        } else {
+            BlynkWidgetWriteDefault(req, param);
+        }
+    }
+
+    void callReadHandler(int pin) {
+        BlynkReq req = { (uint8_t)pin };
+        WidgetReadHandler handler = GetReadHandler(pin);
+        if (handler && (handler != BlynkWidgetRead)) {
+            handler(req);
+        } else {
+            BlynkWidgetReadDefault(req);
+        }
+    }
+
     /**
      * Requests Server to re-send current values for all widgets.
      */
@@ -144,75 +184,64 @@ public:
         static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_HARDWARE_SYNC, 0, cmd.getBuffer(), cmd.getLength()-1);
     }
 
-    /**
-     * Tweets a message
-     *
-     * @param msg Text of the message
-     */
+
+    // Please use Blynk.logEvent("event", "Description")
     template<typename T>
+    BLYNK_DEPRECATED
     void tweet(const T& msg) {
+#if defined(BLYNK_TEMPLATE_ID)
+        logEvent("notify", msg);
+#else
         char mem[BLYNK_MAX_SENDBYTES];
         BlynkParam cmd(mem, 0, sizeof(mem));
         cmd.add(msg);
         static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_TWEET, 0, cmd.getBuffer(), cmd.getLength()-1);
+#endif
     }
 
-    /**
-     * Sends a push notification to the App
-     *
-     * @param msg Text of the message
-     */
+    // Please use Blynk.logEvent("event", "Description")
     template<typename T>
+    BLYNK_DEPRECATED
     void notify(const T& msg) {
+#if defined(BLYNK_TEMPLATE_ID)
+        logEvent("notify", msg);
+#else
         char mem[BLYNK_MAX_SENDBYTES];
         BlynkParam cmd(mem, 0, sizeof(mem));
         cmd.add(msg);
         static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_NOTIFY, 0, cmd.getBuffer(), cmd.getLength()-1);
+#endif
     }
 
-    /**
-     * Sends an SMS
-     *
-     * @param msg Text of the message
-     */
-    template<typename T>
-    void sms(const T& msg) {
-        char mem[BLYNK_MAX_SENDBYTES];
-        BlynkParam cmd(mem, 0, sizeof(mem));
-        cmd.add(msg);
-        static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_SMS, 0, cmd.getBuffer(), cmd.getLength()-1);
-    }
-
-    /**
-     * Sends an email message
-     *
-     * @param email   Email to send to
-     * @param subject Subject of message
-     * @param msg     Text of the message
-     */
+    // Please use Blynk.logEvent("event", "Description")
     template <typename T1, typename T2>
+    BLYNK_DEPRECATED
     void email(const char* email, const T1& subject, const T2& msg) {
+#if defined(BLYNK_TEMPLATE_ID)
+        logEvent("notify", msg);
+#else
         char mem[BLYNK_MAX_SENDBYTES];
         BlynkParam cmd(mem, 0, sizeof(mem));
         cmd.add(email);
         cmd.add(subject);
         cmd.add(msg);
         static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_EMAIL, 0, cmd.getBuffer(), cmd.getLength()-1);
+#endif
     }
 
-    /**
-     * Sends an email message
-     *
-     * @param subject Subject of message
-     * @param msg     Text of the message
-     */
+    // Please use Blynk.logEvent("event", "Description")
     template <typename T1, typename T2>
+    BLYNK_DEPRECATED
     void email(const T1& subject, const T2& msg) {
+#if defined(BLYNK_TEMPLATE_ID)
+        logEvent("notify", msg);
+#else
         char mem[BLYNK_MAX_SENDBYTES];
         BlynkParam cmd(mem, 0, sizeof(mem));
         cmd.add(subject);
         cmd.add(msg);
         static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_EMAIL, 0, cmd.getBuffer(), cmd.getLength()-1);
+#endif
     }
 
     /**
@@ -267,6 +296,14 @@ public:
         cmd.add(event_name);
         cmd.add(description);
         static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_EVENT_LOG, 0, cmd.getBuffer(), cmd.getLength()-1);
+    }
+
+    template <typename NAME>
+    void clearEvent(const NAME& event_name) {
+        char mem[BLYNK_MAX_SENDBYTES];
+        BlynkParam cmd(mem, 0, sizeof(mem));
+        cmd.add(event_name);
+        static_cast<Proto*>(this)->sendCmd(BLYNK_CMD_EVENT_CLEAR, 0, cmd.getBuffer(), cmd.getLength()-1);
     }
 
 #if defined(BLYNK_EXPERIMENTAL)
