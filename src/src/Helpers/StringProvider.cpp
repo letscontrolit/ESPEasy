@@ -253,7 +253,7 @@ String getValue(LabelType::Enum label) {
     #ifdef ESP32_ENABLE_PSRAM
     case LabelType::PSRAM_SIZE:             return String(ESP.getPsramSize());
     case LabelType::PSRAM_FREE:             return String(ESP.getFreePsram());
-    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreeHeap());
+    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreePsram());
     case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(ESP.getMaxAllocPsram());
     #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
