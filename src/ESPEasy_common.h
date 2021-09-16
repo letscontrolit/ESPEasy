@@ -101,7 +101,13 @@ namespace std
   // Temp fix for a missing core_version.h within ESP Arduino core. Wait until they actually have different releases
   #define ARDUINO_ESP8266_RELEASE "2_4_0"
 
-  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+  #ifdef ESP32S2
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S2_STD
+  #elif defined(ESP32C3)
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32C3_STD
+  #else
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+  #endif
   #if ESP_IDF_VERSION_MAJOR < 3
     #define ICACHE_RAM_ATTR IRAM_ATTR
   #endif
