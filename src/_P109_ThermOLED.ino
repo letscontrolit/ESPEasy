@@ -233,7 +233,8 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         argName  = F("Plugin_109_template");
         argName += varNr + 1;
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]));
+        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
