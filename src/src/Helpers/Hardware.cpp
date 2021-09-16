@@ -200,6 +200,9 @@ void initI2C() {
       #if defined(ESP8266)
     Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
       #endif // if defined(ESP8266)
+      #ifdef ESP32S2
+    Wire.setTimeOut(Settings.WireClockStretchLimit);
+      #endif
   }
 
 #ifdef FEATURE_I2CMULTIPLEXER
