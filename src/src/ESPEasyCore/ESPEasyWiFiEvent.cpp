@@ -169,7 +169,11 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
     case ARDUINO_EVENT_ETH_STOP:
       addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
       break;
+    #if ESP_IDF_VERSION_MAJOR > 3
+    case ARDUINO_EVENT_ETH_GOT_IP6:
+    #else
     case ARDUINO_EVENT_GOT_IP6:
+    #endif
       addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
       break;
 #endif //HAS_ETHERNET
