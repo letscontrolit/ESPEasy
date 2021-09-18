@@ -45,7 +45,9 @@ PlatformIO does use a PowerShell script to activate the Python virtual environme
 
 Default Windows security settings prevent execution of a PowerShell script.
 
-Enter in the PowerShell terminal window in VScode::
+Enter in the PowerShell terminal window in VScode:
+
+.. code-block:: none
 
     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
 
@@ -204,7 +206,9 @@ To get the ESPEasy sources on your computer for compilation and making modificat
 
 Open a Command prompt (Windows) or Terminal session (MacOS or Linux), and ``cd`` to a folder where the ESPEasy project can/should be a subfolder of.
 
-Then type this command to create the clone::
+Then type this command to create the clone:
+
+.. code-block:: none
 
     git clone https://github.com/[your_github_handle]/ESPEasy.git
 
@@ -220,7 +224,9 @@ Completed:
 .. image:: Github_clone_completed.png
     :alt: Github clone completed
 
-To be able to bring your changes as a 'pull request' (git terminology, often referred to as a 'PR') to the ESPEasy repository, a connection has to be made from your local clone to the 'upstream' (git terminology) repository, being the original ESPEasy repo. This command needs to be issued **only once** after cloning the repository into a folder on your computer, and should be executed from the ``ESPEasy`` folder that was just created::
+To be able to bring your changes as a 'pull request' (git terminology, often referred to as a 'PR') to the ESPEasy repository, a connection has to be made from your local clone to the 'upstream' (git terminology) repository, being the original ESPEasy repo. This command needs to be issued **only once** after cloning the repository into a folder on your computer, and should be executed from the ``ESPEasy`` folder that was just created:
+
+.. code-block:: none
 
     git remote add upstream https://github.com/letscontrolit/ESPEasy
 
@@ -267,11 +273,15 @@ This expects the currently selected 'branch' (git terminology) to be ``mega``, a
 .. image:: VSCode_statusbar_mega.png
     :alt: VSCode statusbar current branch mega
 
-The desired branch can be selected by clicking the currently selecte branch name as shown in the status bar, or by typing this command from a VSCode terminal window::
+The desired branch can be selected by clicking the currently selecte branch name as shown in the status bar, or by typing this command from a VSCode terminal window:
+
+.. code-block:: none
 
     git checkout mega
 
-The update is 'pulled' (git terminology) by getting the latest from the ``upstream`` source (we defined that source after the initial clone), by opening a terminal window in VSCode and issuing this command::
+The update is 'pulled' (git terminology) by getting the latest from the ``upstream`` source (we defined that source after the initial clone), by opening a terminal window in VSCode and issuing this command:
+
+.. code-block:: none
 
     git pull upstream mega
 
@@ -279,7 +289,9 @@ The update is 'pulled' (git terminology) by getting the latest from the ``upstre
 
 Depending on the time passed since the last update, some files will be updated from the git pull command.
 
-To update your fork on Github, these changes should be 'pushed' (git terminology) by using the command::
+To update your fork on Github, these changes should be 'pushed' (git terminology) by using the command:
+
+.. code-block:: none
 
     git push
 
@@ -303,7 +315,9 @@ A new branch is created either by clicking on the 'mega' branch name and selecti
 .. image:: VSCode_statusbar_new_branch.png
     :alt: VSCode statusbar with new branch name
 
-As an alternative, a new branch can also be created using command-line commands::
+As an alternative, a new branch can also be created using command-line commands:
+
+.. code-block:: none
 
     git branch feature/how-to-guide-for-new-developers
     git checkout feature/how-to-guide-for-new-developers
