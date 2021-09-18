@@ -369,6 +369,6 @@ When opening the https://github.com/letscontrolit/ESPEasy page, a message is sho
 .. image:: Github_start_new_pull_request.png
     :alt: Github start new pull rquest
 
-After clicking the Compare and pull request button, a descrption for the PR can be given, and the pull request created.
+After clicking the 'Compare and pull request' button, a descrption for the PR can be given, and the pull request created.
 
-Now, more changes can be made to files, then staged and commited, after which they can be pushed to Github, and these changes will be automatically added to the PR.
+Now, more changes can be made to files, then staged and committed, after which these can be pushed to Github, and the changes will be automatically added to the PR.
