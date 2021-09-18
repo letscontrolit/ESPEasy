@@ -364,5 +364,11 @@ After clicking that button, you have to select the source the changes should be 
 
 Now that the Publish Changes is done, the pull request can be created. We have to switch to the ESPEasy repository to complete that task. The Github website will show the options for that, assuming you are still logged in to your Github account from that browser:
 
+When opening the https://github.com/letscontrolit/ESPEasy page, a message is shown that you have commited something to your forked repository, that can be pull-requested into the ESPEasy repository:
 
+.. image:: Github_start_new_pull_request.png
+    :alt: Github start new pull rquest
 
+After clicking the Compare and pull request button, a descrption for the PR can be given, and the pull request created.
+
+Now, more changes can be made to files, then staged and commited, after which they can be pushed to Github, and these changes will be automatically added to the PR.
