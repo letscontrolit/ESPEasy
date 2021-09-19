@@ -206,6 +206,12 @@ void handle_advanced() {
   addHtml(F(" (decimal)"));
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit); // TODO define limits
+  #ifdef ESP8266
+  addUnit(F("usec"));
+  #endif
+  #ifdef ESP32
+  addUnit(F("1/80 usec"));
+  #endif
   #if defined(FEATURE_ARDUINO_OTA)
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif // if defined(FEATURE_ARDUINO_OTA)

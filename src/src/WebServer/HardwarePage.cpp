@@ -6,6 +6,8 @@
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../CustomBuild/ESPEasyLimits.h"
+
 #include "../DataStructs/DeviceStruct.h"
 
 #include "../Globals/Settings.h"
@@ -78,10 +80,7 @@ void handle_hardware() {
       if (Settings.UseSerial && ((gpio == 1) || (gpio == 3))) {
         // do not add the pin state select for these pins.
       } else {
-        int  pinnr = -1;
-        bool input, output, warning;
-
-        if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+        if (validGpio(gpio)) {
           String int_pinlabel = "p";
           int_pinlabel       += gpio;
           Settings.setPinBootState(gpio, static_cast<PinBootState>(getFormItemInt(int_pinlabel)));
