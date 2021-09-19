@@ -167,14 +167,33 @@ void handle_json()
         LabelType::RESET_REASON,
         LabelType::CPU_ECO_MODE,
 
-        #ifdef CORE_POST_2_5_0
-        LabelType::HEAP_MAX_FREE_BLOCK,
-        LabelType::HEAP_FRAGMENTATION,
-        #endif // ifdef CORE_POST_2_5_0
+    #if defined(CORE_POST_2_5_0) || defined(ESP32)
+      #ifndef LIMIT_BUILD_SIZE
+        LabelType::HEAP_MAX_FREE_BLOCK, // 7654
+      #endif
+    #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+    #if defined(CORE_POST_2_5_0)
+      #ifndef LIMIT_BUILD_SIZE
+        LabelType::HEAP_FRAGMENTATION,  // 12
+      #endif
+    #endif // if defined(CORE_POST_2_5_0)
         LabelType::FREE_MEM,
       #ifdef USE_SECOND_HEAP
         LabelType::FREE_HEAP_IRAM,
       #endif
+        LabelType::FREE_STACK,
+
+    #ifdef ESP32
+        LabelType::HEAP_SIZE,
+        LabelType::HEAP_MIN_FREE,
+        #ifdef ESP32_ENABLE_PSRAM
+        LabelType::PSRAM_SIZE,
+        LabelType::PSRAM_FREE,
+        LabelType::PSRAM_MIN_FREE,
+        LabelType::PSRAM_MAX_FREE_BLOCK,
+        #endif // ESP32_ENABLE_PSRAM
+    #endif // ifdef ESP32
+
         LabelType::SUNRISE,
         LabelType::SUNSET,
         LabelType::TIMEZONE_OFFSET,

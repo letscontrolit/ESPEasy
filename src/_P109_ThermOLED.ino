@@ -233,7 +233,8 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         argName  = F("Plugin_109_template");
         argName += varNr + 1;
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]));
+        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
@@ -279,17 +280,17 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       logstr += Settings.TaskDevicePin3[event->TaskIndex];
       addLog(LOG_LEVEL_INFO, logstr);
 
-      if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
       }
 
-      if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin2[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
       }
 
-      if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin3[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
       }
@@ -356,7 +357,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       unsigned long current_time;
 
       if (Plugin_109_init) {
-        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin1[event->TaskIndex]))
           {
@@ -388,7 +389,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin2[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin2[event->TaskIndex]))
           {
@@ -420,7 +421,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin3[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
           {

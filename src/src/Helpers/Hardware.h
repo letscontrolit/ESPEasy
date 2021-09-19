@@ -113,6 +113,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown);
 
+bool validGpio(int gpio);
+
 
 #ifdef ESP32
 

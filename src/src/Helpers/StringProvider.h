@@ -37,10 +37,14 @@ struct LabelType {
     FREE_HEAP_IRAM,
 #endif
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
     HEAP_MAX_FREE_BLOCK, // 7654
+  #endif
 #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     HEAP_FRAGMENTATION,  // 12
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 
 #ifdef ESP32
