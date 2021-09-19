@@ -251,7 +251,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         success = true;
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
 
-        if (pps_pin != -1) {
+        if (validGpio(pps_pin)) {
           //          pinMode(pps_pin, INPUT_PULLUP);
           attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
         }
@@ -264,7 +264,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_EXIT: {
       const int16_t pps_pin = CONFIG_PIN3;
 
-      if (pps_pin != -1) {
+      if (validGpio(pps_pin)) {
         detachInterrupt(pps_pin);
       }
       success = true;
