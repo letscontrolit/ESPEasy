@@ -138,7 +138,7 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
       // Called to show the I2C parameters in the web interface (only called for I2C devices)
       uint8_t choice = Pxxx_I2C_ADDR; // define to get the stored I2C address (e.g. PCONFIG(1))
 
-      int optionValues[16];
+      uint8_t optionValues[16];
 
       for (uint8_t x = 0; x < 16; x++)
       {

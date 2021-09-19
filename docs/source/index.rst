@@ -11,6 +11,7 @@ Welcome to ESP Easy's documentation!
    :caption: Table of Contents
 
    ESPEasy/AboutUs.rst
+   ESPEasy/ESPchips.rst
    ESPEasy/FunctionBlocks.rst
    Config/Config.rst
    Controller/_Controller.rst

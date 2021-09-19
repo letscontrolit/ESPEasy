@@ -7,6 +7,7 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/ESPEasyFileType.h"
+#include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -292,6 +293,13 @@ String BuildFixes()
     }
     // Disable periodical scanning as it does cause lots of strange issues.
     Settings.PeriodicalScanWiFi(false);
+  }
+  if (Settings.Build < 20115) {
+    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
+      Settings.SPI_SCLK_pin = -1;
+      Settings.SPI_MISO_pin = -1;
+      Settings.SPI_MOSI_pin = -1;
+    }
   }
 
   Settings.Build = BUILD;
