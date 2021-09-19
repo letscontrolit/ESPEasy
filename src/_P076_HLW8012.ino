@@ -375,7 +375,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     const uint8_t CF1_PIN = CONFIG_PIN2;
     const uint8_t SEL_PIN = CONFIG_PIN1;
 
-    if (CF_PIN != -1 && CF1_PIN != -1 && SEL_PIN != -1) {
+    if (validGpio(CF_PIN) && validGpio(CF1_PIN) && validGpio(SEL_PIN)) {
       Plugin_076_hlw = new (std::nothrow) HLW8012;
       if (Plugin_076_hlw) {
         uint8_t currentRead = PCONFIG(4);

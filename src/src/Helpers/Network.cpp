@@ -20,7 +20,7 @@ void statusLED(bool traffic)
   static int gnStatusValueCurrent = -1;
   static long int gnLastUpdate    = millis();
 
-  if (Settings.Pin_status_led == -1) {
+  if (!validGpio(Settings.Pin_status_led)) {
     return;
   }
 
