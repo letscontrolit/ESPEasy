@@ -26,7 +26,13 @@
   # define BUILD_NOTES                 " - Mega"
 #endif // if defined(ESP8266)
 #if defined(ESP32)
-  # define BUILD_NOTES                 " - Mega32"
+  #if defined(ESP32S2)
+    # define BUILD_NOTES                 " - Mega32-s2"
+  #elif defined(ESP32C2)
+    # define BUILD_NOTES                 " - Mega32-c3"
+  #else
+    # define BUILD_NOTES                 " - Mega32"
+  #endif
 #endif // if defined(ESP32)
 #endif
 

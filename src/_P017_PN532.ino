@@ -228,7 +228,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 boolean Plugin_017_Init(int8_t resetPin)
 {
-  if (resetPin != -1)
+  if (validGpio(resetPin))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("PN532: Reset on pin: ");
