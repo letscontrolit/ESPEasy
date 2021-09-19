@@ -82,18 +82,35 @@ void run_compiletime_checks() {
   check_size<NotificationSettingsStruct,            996u>();
   #endif
   check_size<ExtraTaskSettingsStruct,               472u>();
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  check_size<EventStruct,                           116u>(); // Is not stored
+  #else
   check_size<EventStruct,                           96u>(); // Is not stored
+  #endif
+
 
   // LogStruct is mainly dependent on the number of lines.
   // Has to be round up to multiple of 4.
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  #else
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  check_size<NodeStruct,                            32u>();
+  #else
   check_size<NodeStruct,                            28u>();
+  #endif
+
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
