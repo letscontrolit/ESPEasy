@@ -250,7 +250,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
-      if ((CONFIG_PIN1 >= 0) && (CONFIG_PIN1 <= PIN_D_MAX))
+      if (validGpio(CONFIG_PIN1))
       {
         portStatusStruct newStatus;
         const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
@@ -411,7 +411,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
       const String monitorEventString = F("GPIO");
 
-      if ((CONFIG_PIN1 >= 0) && (CONFIG_PIN1 <= PIN_D_MAX))
+      if (validGpio(CONFIG_PIN1))
       {
         const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
         // WARNING operator [],creates an entry in map if key doesn't exist:
