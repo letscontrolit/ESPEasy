@@ -55,8 +55,6 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static int8_t switchstate[TASKS_MAX];
-
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
@@ -85,6 +83,13 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_019));
+      break;
+    }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+      success = intArrayContains(8, i2cAddressValues, event->Par1);
       break;
     }
 
@@ -349,6 +354,10 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
           // Reset SafeButton counter
           PCONFIG_LONG(3) = 0;
 
+          // @giig1967g-20210804: reset timer for long press
+          PCONFIG_LONG(2) = millis();
+          PCONFIG(6)      = false;
+
           const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
 
           if (debounceTime >= (unsigned long)lround(PCONFIG_FLOAT(0))) // de-bounce check
@@ -502,8 +511,8 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
               log += tempUserVar;
               addLog(LOG_LEVEL_INFO, log);
             }
-            // send task event
-            sendData(event);
+            // send task event: DO NOT SEND TASK EVENT
+            //sendData(event);
             // send monitor event
             if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, SAFE_BUTTON_EVENT);
 

@@ -81,7 +81,7 @@ struct P077_data_struct : public PluginTaskData_base {
     //  if (energy_power_on) {  // Powered on
 
     if (adjustment & 0x40) { // Voltage valid
-      energy_voltage = (float)(PCONFIG(0) * CSE_UREF) / (float)voltage_cycle;
+      energy_voltage = static_cast<float>(PCONFIG(0) * CSE_UREF) / static_cast<float>(voltage_cycle);
     }
     if (adjustment & 0x10) {        // Power valid
       if ((header & 0xF2) == 0xF2) { // Power cycle exceeds range
@@ -91,7 +91,7 @@ struct P077_data_struct : public PluginTaskData_base {
           power_cycle_first = power_cycle; // Skip first incomplete power_cycle
         if (power_cycle_first != power_cycle) {
           power_cycle_first = -1;
-          energy_power = (float)(PCONFIG(2) * CSE_PREF) / (float)power_cycle;
+          energy_power = static_cast<float>(PCONFIG(2) * CSE_PREF) / static_cast<float>(power_cycle);
         } else {
           energy_power = 0;
         }
@@ -104,7 +104,7 @@ struct P077_data_struct : public PluginTaskData_base {
       if (0 == energy_power) {
         energy_current = 0;
       } else {
-        energy_current = (float)PCONFIG(1) / (float)current_cycle;
+        energy_current = static_cast<float>(PCONFIG(1)) / static_cast<float>(current_cycle);
       }
     }
 

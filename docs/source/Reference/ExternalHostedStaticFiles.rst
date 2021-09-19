@@ -26,7 +26,7 @@ The files are located `here <https://github.com/letscontrolit/ESPEasy/tree/mega/
 These are the file names used to check if the file exists on the local file system.
 They are sorted with the most important files on top.
 
-* ``espeasy_default.css``  Without this file the web UI does look rather unusable and horrible.
+* ``espeasy_default.css``  Without this file the web UI does look rather unusable and horrible. Make sure to rename the file to ``esp.css`` when saving to the ESP's file system.
 * ``rules_save.js`` JavaScript to actually perform saving the rules. Rules cannot be saved without this file.
 * ``update_sensor_values_device_page.js`` JavaScript to perform value updates of tasks on the "Devices" tab.
 * ``fetch_and_parse_log.js`` JavaScript to fetch new logs on the web based log viewer.
