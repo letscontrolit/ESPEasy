@@ -7,8 +7,6 @@
 
 #include <time.h>
 
-#include <time.h>
-
 class ESPEasy_time {
 public:
 
