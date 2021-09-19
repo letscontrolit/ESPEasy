@@ -2,6 +2,7 @@
 
 #ifdef HAS_ETHERNET
 
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
