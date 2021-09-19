@@ -21,10 +21,13 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef ESP32
+#include <WiFiGeneric.h>
+#endif
+
 // FIXME TD-er: Cleanup of WiFi code
 #ifdef ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS
 bool ESPEasyWiFi_t::begin() {
-
   return true;
 }
 
@@ -749,6 +752,13 @@ void WifiDisconnect()
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
+  {
+    const IPAddress ip;
+    const IPAddress gw;
+    const IPAddress subnet;
+    const IPAddress dns;
+    WiFi.config(ip, gw, subnet, dns);
+  }
   #endif
   #ifdef ESP8266
   // Only call disconnect when STA is active
