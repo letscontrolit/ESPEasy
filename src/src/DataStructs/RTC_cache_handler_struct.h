@@ -7,6 +7,7 @@
 #include "../../ESPEasy_common.h"
 
 #include <FS.h>
+#include <vector>
 
 
 // Locations where to store the cached data
@@ -40,7 +41,7 @@ struct RTC_cache_handler_struct
                     unsigned int size);
 
   // Write a single sample set to the buffer
-  bool write(uint8_t     *data,
+  bool write(const uint8_t     *data,
              unsigned int size);
 
   // Mark all content as being processed and empty buffer.

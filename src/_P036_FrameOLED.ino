@@ -170,12 +170,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int     optionValues[2];
-      optionValues[0] = 0x3C;
-      optionValues[1] = 0x3D;
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, P036_ADR);
+      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P036_ADR);
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -443,7 +446,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
+          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_data->DisplayLinesV1)), sizeof(P036_data->DisplayLinesV1));
 
           // Need to delete the allocated object here
           delete P036_data;
@@ -512,7 +515,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
       #endif
 
-      if (CONFIG_PIN3 != -1) // Button related setup
+      if (validGpio(CONFIG_PIN3)) // Button related setup
       {
 
 #ifdef INPUT_PULLDOWN
@@ -567,7 +570,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         P036_data->registerButtonState(digitalRead(CONFIG_PIN3), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE)); // Bit 16
       }
@@ -593,7 +596,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       P036_data->bAlternativHeader = (++P036_data->HeaderCount > (Settings.TaskDeviceTimer[event->TaskIndex] * 5)); // change header after half of display time
 
-      if ((CONFIG_PIN3 != -1) && P036_data->ButtonState)
+      if ((validGpio(CONFIG_PIN3)) && P036_data->ButtonState)
       {
         if (bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON) && (UserVar[event->BaseVarIndex] == 1)) { // Bit 19 When display already on, switch to next page when enabled
           if (P036_data->ScrollingPages.Scrolling == 0) {               // page scrolling not running -> switch to next page is allowed
@@ -942,8 +945,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             const int strlen = strnlen_P(P036_data->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->DisplayLinesV1[LineNo - 1].Content));
             if (strlen > 0) {
-              const float fAvgPixPerChar = ((float)PixLength) / strlen;
-              const int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
+              const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
+              const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
               P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
@@ -969,7 +972,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
 
           if (UserVar[event->BaseVarIndex] == 1) {
-            uint8_t nextFrame = ceil(((float)LineNo) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
+            uint8_t nextFrame = ceil((static_cast<float>(LineNo)) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
                                                                                                      // 0-based
             P036_data->P036_JumpToPage(event, nextFrame);                                            //  Start to display the selected page,
             // function needs 65ms!

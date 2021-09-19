@@ -59,14 +59,20 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_110));
         break;
       }
+
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
       {
-        uint8_t choice = PCONFIG(0);
-        int optionValues[2] = { 0x29, 0x30 };
-        addFormSelectorI2C(F("plugin_110_vl53l0x_i2c"), 2, optionValues, choice);
-        addFormNote(F("SDO Low=0x29, High=0x30"));
+        const uint8_t i2cAddressValues[] = { 0x29, 0x30 };
+        if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+          addFormSelectorI2C(F("plugin_110_vl53l0x_i2c"), 2, i2cAddressValues, PCONFIG(0));
+          addFormNote(F("SDO Low=0x29, High=0x30"));
+        } else {
+          success = intArrayContains(2, i2cAddressValues, event->Par1);
+        }
         break;
       }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         unsigned int choiceMode2 = PCONFIG(1);

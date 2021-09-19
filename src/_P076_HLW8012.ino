@@ -256,8 +256,8 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     hlwMultipliers[0] = getFormItemFloat(F("p076_currmult"));
     hlwMultipliers[1] = getFormItemFloat(F("p076_voltmult"));
     hlwMultipliers[2] = getFormItemFloat(F("p076_powmult"));
-    if (hlwMultipliers[0] > 1.0f && hlwMultipliers[1] > 1.0f && hlwMultipliers[2] > 1.0f) {
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&hlwMultipliers,
+    if (hlwMultipliers[0] > 1.0 && hlwMultipliers[1] > 1.0 && hlwMultipliers[2] > 1.0) {
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                              sizeof(hlwMultipliers));
       if (PLUGIN_076_DEBUG) {
         addLog(LOG_LEVEL_INFO, F("P076: Saved Calibration from Config Page"));
@@ -375,7 +375,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     const uint8_t CF1_PIN = CONFIG_PIN2;
     const uint8_t SEL_PIN = CONFIG_PIN1;
 
-    if (CF_PIN != -1 && CF1_PIN != -1 && SEL_PIN != -1) {
+    if (validGpio(CF_PIN) && validGpio(CF1_PIN) && validGpio(SEL_PIN)) {
       Plugin_076_hlw = new (std::nothrow) HLW8012;
       if (Plugin_076_hlw) {
         uint8_t currentRead = PCONFIG(4);
@@ -455,7 +455,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
           Plugin_076_hlw->expectedVoltage(CalibVolt);
           changed = true;
         }
-        if (CalibCurr > 0.0f) {
+        if (CalibCurr > 0.0) {
           Plugin_076_hlw->expectedCurrent(CalibCurr);
           changed = true;
         }
@@ -491,7 +491,7 @@ void Plugin076_SaveMultipliers() {
   if (StoredTaskIndex < 0) return; // Not yet initialized.
   double hlwMultipliers[3];
   if (Plugin076_ReadMultipliers(hlwMultipliers[0], hlwMultipliers[1], hlwMultipliers[2])) {
-    SaveCustomTaskSettings(StoredTaskIndex, (uint8_t *)&hlwMultipliers,
+    SaveCustomTaskSettings(StoredTaskIndex, reinterpret_cast<const uint8_t *>(&hlwMultipliers),
                            sizeof(hlwMultipliers));
   }
 }
@@ -517,18 +517,18 @@ bool Plugin076_LoadMultipliers(taskIndex_t TaskIndex, double& current, double& v
     return false;
   }
   double hlwMultipliers[3];
-  LoadCustomTaskSettings(TaskIndex, (uint8_t *)&hlwMultipliers,
+  LoadCustomTaskSettings(TaskIndex, reinterpret_cast<uint8_t *>(&hlwMultipliers),
                          sizeof(hlwMultipliers));
-  if (hlwMultipliers[0] > 1.0f) {
+  if (hlwMultipliers[0] > 1.0) {
     current = hlwMultipliers[0];
   }
-  if (hlwMultipliers[1] > 1.0f) {
+  if (hlwMultipliers[1] > 1.0) {
     voltage = hlwMultipliers[1];
   }
-  if (hlwMultipliers[2] > 1.0f) {
+  if (hlwMultipliers[2] > 1.0) {
     power = hlwMultipliers[2];
   }
-  return (current > 1.0f) && (voltage > 1.0f) && (power > 1.0f);
+  return (current > 1.0) && (voltage > 1.0) && (power > 1.0);
 }
 
 void Plugin076_Reset(taskIndex_t TaskIndex) {

@@ -331,7 +331,7 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
   addPinSelect(PinSelectPurpose::I2C, id, choice);
 }
 
-void addFormSelectorI2C(const String& id, int addressCount, const int addresses[], int selectedIndex
+void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addresses[], int selectedIndex
                         #ifdef ENABLE_TOOLTIPS
                         , const String& tooltip
                         #endif // ifdef ENABLE_TOOLTIPS
@@ -459,7 +459,7 @@ void addFormSelector_script(const String  & label,
                             )
 {
   addRowLabel_tr_id(label, id);
-  do_addSelector_Head(id, EMPTY_STRING, onChangeCall, false
+  do_addSelector_Head(id, F("wide"), onChangeCall, false
                       #ifdef ENABLE_TOOLTIPS
                       , tooltip
                       #endif // ifdef ENABLE_TOOLTIPS
