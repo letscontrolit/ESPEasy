@@ -11,6 +11,9 @@
 #define PLUGIN_NAME_093       "Energy (Heat) - Mitsubishi Heat Pump [TESTING]"
 #define PLUGIN_VALUENAME1_093 "settings"
 
+#define P093_REQUEST_STATUS          PCONFIG(0)
+#define P093_REQUEST_STATUS_LABEL    PCONFIG_LABEL(0)
+
 #define PLUGIN_093_DEBUG
 
 /*
@@ -29,12 +32,13 @@ static const uint8_t READ_BUFFER_LEN = 32;
 
 static const uint8_t INFOMODE[] = {
   0x02, // request a settings packet
-  0x03  // request the current room temp
+  0x03, // request the current room temp
+  0x06  // request status
 };
 
 struct P093_data_struct : public PluginTaskData_base {
-  P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx) :
-    _serial(new (std::nothrow) ESPeasySerial(port, serialRx, serialTx)),
+  P093_data_struct(const ESPEasySerialPort port, const int16_t serialRx, const int16_t serialTx, bool includeStatus) :
+    _serial(port, serialRx, serialTx),
     _state(NotConnected),
     _fastBaudRate(false),
     _readPos(0),
@@ -43,13 +47,10 @@ struct P093_data_struct : public PluginTaskData_base {
     _statusUpdateTimeout(0),
     _tempMode(false),
     _wideVaneAdj(false),
-    _valuesInitialized(false) {
+    _valuesInitialized(false),
+    _includeStatus(includeStatus) {
 
     setState(Connecting);
-  }
-
-  virtual ~P093_data_struct() {
-    delete _serial;
   }
 
   boolean sync() {
@@ -91,6 +92,12 @@ struct P093_data_struct : public PluginTaskData_base {
     result += map(_currentValues.vane, _mappings.vane);
     result += F("\",\"iSee\":");
     result += boolToString(_currentValues.iSee);
+    if (_includeStatus) {
+      result += F(",\"operating\":");
+      result += boolToString(_currentValues.operating);
+      result += F(",\"compressorFrequency\":");
+      result += _currentValues.compressorFrequency;
+    }
     result += F(",\"temperature\":");
     result += toString(_currentValues.temperature, 1) + '}';
 
@@ -220,6 +227,8 @@ private:
     uint8_t vane;
     uint8_t wideVane;
     float roomTemperature;
+    boolean operating;
+    uint8_t compressorFrequency;
 
     Values() :
       power(0),
@@ -229,7 +238,9 @@ private:
       fan(0),
       vane(0),
       wideVane(0),
-      roomTemperature(0) {
+      roomTemperature(0),
+      operating(false),
+      compressorFrequency(0) {
     }
 
     boolean operator!=(const Values& rhs) const {
@@ -240,7 +251,9 @@ private:
         vane != rhs.vane ||
         wideVane != rhs.wideVane ||
         iSee != rhs.iSee ||
-        roomTemperature != rhs.roomTemperature;
+        roomTemperature != rhs.roomTemperature ||
+        operating != rhs.operating ||
+        compressorFrequency != rhs.compressorFrequency;
     }
   };
 
@@ -321,9 +334,10 @@ private:
         updateStatus();
         break;
 
-      case StatusUpdated:
+      case StatusUpdated: {
         responseReceived();
-        _infoModeIndex = (_infoModeIndex + 1) % sizeof(INFOMODE);
+        const int infoModeCount = _includeStatus ? sizeof(INFOMODE) : sizeof(INFOMODE) - 1;
+        _infoModeIndex = (_infoModeIndex + 1) % infoModeCount;
         if (_infoModeIndex != 0) {
           setState(UpdatingStatus);
         } else {
@@ -331,6 +345,7 @@ private:
           setState(ScheduleNextStatusUpdate);
         }
         break;
+      }
 
       case ScheduleNextStatusUpdate:
         _statusUpdateTimeout = millis() + 1000;
@@ -450,7 +465,7 @@ private:
   void connect() {
     addLog(LOG_LEVEL_DEBUG, String(F("M-AC: Connect ")) + getBaudRate());
 
-    _serial->begin(getBaudRate(), SERIAL_8E1);
+    _serial.begin(getBaudRate(), SERIAL_8E1);
     const uint8_t buffer[] = { 0xfc, 0x5a, 0x01, 0x30, 0x02, 0xca, 0x01, 0xa8 };
     sendPacket(buffer, sizeof(buffer));
   }
@@ -464,7 +479,7 @@ private:
     addLog(LOG_LEVEL_DEBUG_MORE, dumpOutgoingPacket(packet, size));
 #endif
 
-    _serial->write(packet, size);
+    _serial.write(packet, size);
     _writeTimeout = millis() + 2000;
   }
 
@@ -488,8 +503,8 @@ private:
 
     static const uint8_t DATA_LEN_INDEX = 4;
 
-    while(_serial->available() > 0) {
-      uint8_t value = _serial->read();
+    while(_serial.available() > 0) {
+      uint8_t value = _serial.read();
 
       if (_readPos == 0) {
         // Wait for start uint8_t.
@@ -569,6 +584,14 @@ private:
           } else {
             _currentValues.roomTemperature = data[3] + 10;
           }
+          return true;
+        }
+        break;
+
+      case 0x06:
+        if (length > 4) {
+          _currentValues.operating = data[4];
+          _currentValues.compressorFrequency = data[3];
           return true;
         }
         break;
@@ -674,7 +697,7 @@ private:
   #endif
 
 private:
-  ESPeasySerial* _serial;
+  ESPeasySerial _serial;
   State _state;
   boolean _fastBaudRate;
   uint8_t _readBuffer[READ_BUFFER_LEN];
@@ -687,6 +710,7 @@ private:
   boolean _tempMode;
   boolean _wideVaneAdj;
   boolean _valuesInitialized;
+  boolean _includeStatus;
   WriteStatus _writeStatus;
   const Mappings _mappings;
 };
@@ -728,19 +752,27 @@ boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS: {
+        P093_REQUEST_STATUS = 0;
+        success = true;
+        break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
+      addFormCheckBox(F("Include AC status"), P093_REQUEST_STATUS_LABEL, P093_REQUEST_STATUS);
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
+      P093_REQUEST_STATUS = isFormItemChecked(P093_REQUEST_STATUS_LABEL);
       success = true;
       break;
     }
 
     case PLUGIN_INIT: {
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P093_data_struct(port, CONFIG_PIN1, CONFIG_PIN2, P093_REQUEST_STATUS));
       success = getPluginTaskData(event->TaskIndex) != nullptr;
       break;
     }

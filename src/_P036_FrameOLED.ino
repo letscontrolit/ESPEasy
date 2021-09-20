@@ -173,7 +173,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x3c, 0x3d };
+      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P036_ADR);
       } else {
@@ -515,7 +515,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
       #endif
 
-      if (CONFIG_PIN3 != -1) // Button related setup
+      if (validGpio(CONFIG_PIN3)) // Button related setup
       {
 
 #ifdef INPUT_PULLDOWN
@@ -570,7 +570,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         P036_data->registerButtonState(digitalRead(CONFIG_PIN3), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE)); // Bit 16
       }
@@ -596,7 +596,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       P036_data->bAlternativHeader = (++P036_data->HeaderCount > (Settings.TaskDeviceTimer[event->TaskIndex] * 5)); // change header after half of display time
 
-      if ((CONFIG_PIN3 != -1) && P036_data->ButtonState)
+      if ((validGpio(CONFIG_PIN3)) && P036_data->ButtonState)
       {
         if (bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON) && (UserVar[event->BaseVarIndex] == 1)) { // Bit 19 When display already on, switch to next page when enabled
           if (P036_data->ScrollingPages.Scrolling == 0) {               // page scrolling not running -> switch to next page is allowed

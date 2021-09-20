@@ -21,10 +21,13 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef ESP32
+#include <WiFiGeneric.h>
+#endif
+
 // FIXME TD-er: Cleanup of WiFi code
 #ifdef ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS
 bool ESPEasyWiFi_t::begin() {
-
   return true;
 }
 
@@ -613,7 +616,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
   if (dBm < 0) { 
     val = WIFI_POWER_MINUS_1dBm;
     dBm = -1;
-  } else if (dBm < 3.5) {
+  } else if (dBm < 3.5f) {
     val = WIFI_POWER_2dBm;
     dBm = 2;
   } else if (dBm < 6) {
@@ -634,18 +637,18 @@ void SetWiFiTXpower(float dBm, float rssi) {
   } else if (dBm < 16) {
     val = WIFI_POWER_15dBm;
     dBm = 15;
-  } else if (dBm < 17.75) {
+  } else if (dBm < 17.75f) {
     val = WIFI_POWER_17dBm;
     dBm = 17;
-  } else if (dBm < 18.75) {
+  } else if (dBm < 18.75f) {
     val = WIFI_POWER_18_5dBm;
     dBm = 18.5;
-  } else if (dBm < 19.25) {
+  } else if (dBm < 19.25f) {
     val = WIFI_POWER_19dBm;
     dBm = 19;
   } else {
     val = WIFI_POWER_19_5dBm;
-    dBm = 19.5;
+    dBm = 19.5f;
   }
   esp_wifi_set_max_tx_power(val);
   //esp_wifi_get_max_tx_power(&val);
@@ -749,6 +752,13 @@ void WifiDisconnect()
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
+  {
+    const IPAddress ip;
+    const IPAddress gw;
+    const IPAddress subnet;
+    const IPAddress dns;
+    WiFi.config(ip, gw, subnet, dns);
+  }
   #endif
   #ifdef ESP8266
   // Only call disconnect when STA is active
@@ -1105,6 +1115,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
 
   if (wifimode == WIFI_OFF) {
+    WifiDisconnect();
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
