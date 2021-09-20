@@ -228,8 +228,11 @@ Extended Sysinfo message (13 + 28 = 41 bytes):
 The node type is defined as:
 
 *  1 = "ESP Easy"
+*  5 = "Rpi Easy"
 * 17 = "ESP Easy Mega"
 * 33 = "ESP Easy 32"
+* 34 = "ESP Easy 32-S2"
+* 35 = "ESP Easy 32-C3"
 * 65 = "Arduino Easy"
 * 81 = "Nano Easy"
 
