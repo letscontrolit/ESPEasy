@@ -269,7 +269,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
 
         if (!Candle_pixels || GPIO_Set == false)
         {
-          GPIO_Set = CONFIG_PIN1 > -1;
+          GPIO_Set = validGpio(CONFIG_PIN1);
           if (Candle_pixels) {
             delete Candle_pixels;
           }

@@ -409,7 +409,7 @@ void VL53L0X::readMulti(uint8_t reg, uint8_t * dst, uint8_t count)
 // Defaults to 0.25 MCPS as initialized by the ST API and this library.
 bool VL53L0X::setSignalRateLimit(float limit_Mcps)
 {
-  if (limit_Mcps < 0 || limit_Mcps > 511.99) { return false; }
+  if (limit_Mcps < 0 || limit_Mcps > 511.99f) { return false; }
 
   // Q9.7 fixed point format (9 integer bits, 7 fractional bits)
   writeReg16Bit(FINAL_RANGE_CONFIG_MIN_COUNT_RATE_RTN_LIMIT, limit_Mcps * (1 << 7));

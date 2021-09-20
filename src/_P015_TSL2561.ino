@@ -68,7 +68,7 @@ boolean Plugin_015(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { TSL2561_ADDR, TSL2561_ADDR_1, TSL2561_ADDR_0 };
+      const uint8_t i2cAddressValues[] = { TSL2561_ADDR, TSL2561_ADDR_1, TSL2561_ADDR_0 };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 3, i2cAddressValues, P015_I2C_ADDR);
       } else {
