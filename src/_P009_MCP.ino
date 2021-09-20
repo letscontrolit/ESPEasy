@@ -481,10 +481,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += tempUserVar;
               addLog(LOG_LEVEL_INFO, log);
             }
-
-            // send task event
-            sendData(event);
-
+            // send task event: DO NOT SEND TASK EVENT
+            //sendData(event);
             // send monitor event
             if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, 4); }
 

@@ -307,7 +307,7 @@ struct C018_data_struct {
 
       if (rn2xx3_handler::RN_state::must_perform_init == state) {
         if (myLora->get_busy_count() > 10) {
-          if (_resetPin != -1) {
+          if (validGpio(_resetPin)) {
             pinMode(_resetPin, OUTPUT);
             digitalWrite(_resetPin, LOW);
             delay(50);
@@ -363,7 +363,7 @@ private:
 
     while (retries > 0 && !autobaud_success) {
       if (retries == 1) {
-        if (_resetPin != -1) {
+        if (validGpio(_resetPin)) {
           pinMode(_resetPin, OUTPUT);
           digitalWrite(_resetPin, LOW);
           delay(50);
@@ -663,7 +663,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(C018_data->sysver());
 
         addRowLabel(F("Voltage"));
-        addHtml(String(static_cast<float>(C018_data->getVbat()) / 1000.0, 3));
+        addHtml(String(static_cast<float>(C018_data->getVbat()) / 1000.0f, 3));
 
         addRowLabel(F("Dev Addr"));
         addHtml(C018_data->getDevaddr());
@@ -921,7 +921,7 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
     success = C018_data->txHexBytes(element.packed, ControllerSettings.Port);
 
     if (success) {
-      if (airtime_ms > 0.0) {
+      if (airtime_ms > 0.0f) {
         ADD_TIMER_STAT(C018_AIR_TIME, static_cast<unsigned long>(airtime_ms * 1000));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
