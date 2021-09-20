@@ -185,7 +185,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
         P023_data->sendStrXY("ESP Easy ", 0, 0);
 
-        if (CONFIG_PIN3 != -1) {
+        if (validGpio(CONFIG_PIN3)) {
           pinMode(CONFIG_PIN3, INPUT_PULLUP);
         }
         success = true;
@@ -195,7 +195,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         if (!digitalRead(CONFIG_PIN3))
         {

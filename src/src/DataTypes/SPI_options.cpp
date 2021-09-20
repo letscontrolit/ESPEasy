@@ -12,6 +12,7 @@ const __FlashStringHelper* getSPI_optionToString(SPI_Options_e option) {
     case SPI_Options_e::UserDefined:
       return F("User-defined: CLK, MISO, MOSI GPIO-pins");
   }
+  return F("Unknown");
 }
 
 const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option) {
@@ -25,6 +26,7 @@ const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option) {
     case SPI_Options_e::UserDefined:
       return F("User-defined SPI");
   }
+  return F("Unknown");
 }
 
 #endif // ifdef ESP32
