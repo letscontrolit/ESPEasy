@@ -162,7 +162,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   do {
     if (ser2netSerial->available()) {
-      if (serial_buffer.length() > P020_RX_BUFFER) {
+      if (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER)) {
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
         ser2netSerial->read();
       }

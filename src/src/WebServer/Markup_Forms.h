@@ -207,7 +207,7 @@ void addFormPinSelectI2C(const String& label,
 
 void addFormSelectorI2C(const String& id,
                         int           addressCount,
-                        const int     addresses[],
+                        const uint8_t addresses[],
                         int           selectedIndex
                         #ifdef ENABLE_TOOLTIPS
                         ,

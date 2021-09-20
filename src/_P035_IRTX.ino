@@ -99,7 +99,7 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
     case PLUGIN_INIT:
       {
         int irPin = CONFIG_PIN1;
-        if (Plugin_035_irSender == 0 && irPin != -1)
+        if (Plugin_035_irSender == 0 && validGpio(irPin))
         {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
@@ -117,7 +117,7 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
         }
 
 #ifdef P016_P035_Extended_AC
-        if (Plugin_035_commonAc == nullptr && irPin != -1)
+        if (Plugin_035_commonAc == nullptr && validGpio(irPin))
         {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
