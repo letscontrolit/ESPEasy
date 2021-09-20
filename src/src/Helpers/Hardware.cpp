@@ -1,6 +1,7 @@
 #include "Hardware.h"
 
 #include "../Commands/GPIO.h"
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -18,6 +19,7 @@
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
 
+
 //#include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
@@ -33,7 +35,7 @@ void hardwareInit()
   // set GPIO pins state if not set to default
   bool hasPullUp, hasPullDown;
 
-  for (int gpio = 0; gpio <= PIN_D_MAX; ++gpio) {
+  for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
     const bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
     if (!serialPinConflict) {
       const uint32_t key = createKey(1, gpio);
@@ -183,30 +185,33 @@ void initI2C() {
   // configure hardware pins according to eeprom settings.
   if (Settings.isI2CEnabled())
   {
-    addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
-    I2CSelectClockSpeed(false); // Set normal clock speed
-    Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+    return;
+  }
+  addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
+  I2CSelectClockSpeed(false); // Set normal clock speed
 
-    if (Settings.WireClockStretchLimit)
-    {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("INIT : I2C custom clockstretchlimit:");
-        log += Settings.WireClockStretchLimit;
-        addLog(LOG_LEVEL_INFO, log);
-      }
-        #if defined(ESP8266)
-      Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
-        #endif // if defined(ESP8266)
+  if (Settings.WireClockStretchLimit)
+  {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("INIT : I2C custom clockstretchlimit:");
+      log += Settings.WireClockStretchLimit;
+      addLog(LOG_LEVEL_INFO, log);
     }
+      #if defined(ESP8266)
+    Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
+      #endif // if defined(ESP8266)
+      #ifdef ESP32S2
+    Wire.setTimeOut(Settings.WireClockStretchLimit);
+      #endif
+  }
 
 #ifdef FEATURE_I2CMULTIPLEXER
 
-    if (Settings.I2C_Multiplexer_ResetPin != -1) { // Initialize Reset pin to High if configured
-      pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
-      digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
-    }
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+  if (validGpio(Settings.I2C_Multiplexer_ResetPin)) { // Initialize Reset pin to High if configured
+    pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
+    digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
   }
+#endif // ifdef FEATURE_I2CMULTIPLEXER
 
   // I2C Watchdog boot status check
   if (Settings.WDI2CAddress != 0)
@@ -239,8 +244,13 @@ void I2CSelectClockSpeed(bool setLowSpeed) {
     // No need to change the clock speed.
     return;
   }
-  lastI2CClockSpeed = newI2CClockSpeed;  
+  lastI2CClockSpeed = newI2CClockSpeed;
+  #ifdef ESP32
+  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, newI2CClockSpeed);
+  #else
+  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
   Wire.setClock(newI2CClockSpeed);
+  #endif
 }
 
 #ifdef FEATURE_I2CMULTIPLEXER
@@ -397,7 +407,9 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
 
     switch (adc) {
       case 0:
+      #ifndef ESP32S2
         value = hallRead();
+      #endif
         break;
       case 1:
         canread = true;
@@ -512,6 +524,9 @@ uint8_t getChipCores() {
 
 const __FlashStringHelper * getChipModel() {
 #ifdef ESP32
+  #ifdef ESP32S2
+    return F("ESP32S2");
+  #else
   {
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
     uint32_t pkg_ver = chip_ver & 0x7;
@@ -530,6 +545,7 @@ const __FlashStringHelper * getChipModel() {
         break;
     }
   }
+  #endif
 #elif defined(ESP8285)
   return F("ESP8285");
 #elif defined(ESP8266)
@@ -581,18 +597,28 @@ void readBootCause() {
   switch (rtc_get_reset_reason(0)) {
     case NO_MEAN:           break;
     case POWERON_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+    #ifndef ESP32S2
     case SW_RESET:          lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
     case OWDT_RESET:        lastBootCause = BOOT_CAUSE_SW_WATCHDOG; break;
+    #endif
     case DEEPSLEEP_RESET:   lastBootCause = BOOT_CAUSE_DEEP_SLEEP; break;
+    #ifndef ESP32S2
     case SDIO_RESET:        lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break;
+    #endif
     case TG0WDT_SYS_RESET: 
     case TG1WDT_SYS_RESET:
+    #ifndef ESP32S2
     case RTCWDT_SYS_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
-    case INTRUSION_RESET: 
-    case TGWDT_CPU_RESET: 
-    case SW_CPU_RESET:      lastBootCause = BOOT_CAUSE_SOFT_RESTART; break; // Both call to ESP.reset() and on exception crash
+    #endif
+    #ifndef ESP32S2
+    case SW_CPU_RESET:
+    case TGWDT_CPU_RESET:
+    #endif
+    case INTRUSION_RESET:   lastBootCause = BOOT_CAUSE_SOFT_RESTART; break; // Both call to ESP.reset() and on exception crash
     case RTCWDT_CPU_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    #ifndef ESP32S2
     case EXT_CPU_RESET:     lastBootCause = BOOT_CAUSE_MANUAL_REBOOT; break; // reset button or cold boot, only for core 1
+    #endif
     case RTCWDT_BROWN_OUT_RESET: lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break;
     case RTCWDT_RTC_RESET:  lastBootCause = BOOT_CAUSE_COLD_BOOT; break;
   }
@@ -827,10 +853,85 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings) {
 #ifdef ESP32
 
 // ********************************************************************************
-// Get info of a specific GPIO pin.
+// Get info of a specific GPIO pin
 // ********************************************************************************
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
   pinnr = -1; // ESP32 does not label the pins, they just use the GPIO number.
+
+#ifdef ESP32S2
+
+  // Input GPIOs:  0-21, 26, 33-46
+  // Output GPIOs: 0-21, 26, 33-45
+  input  = gpio <= 46;
+  output = gpio <= 45;
+
+  if ((gpio < 0) || ((gpio > 21) && (gpio < 26)) || ((gpio > 26) && (gpio < 33))) {
+    input  = false;
+    output = false;
+  }
+
+  if (gpio == 26) {
+    // Pin shared with the flash memory and/or PSRAM.
+    // Cannot be used as regular GPIO
+    input = false;
+    output = false;
+    warning = true;
+  }
+
+  if ((gpio > 26) && (gpio < 33)) {
+    // SPIHD, SPIWP, SPICS0, SPICLK, SPIQ, SPID pins of ESP32-S2FH2 and ESP32-S2FH4 
+    // are connected to embedded flash and not recommended for other uses.
+    warning = true;
+  }
+
+
+  if ((input == false) && (output == false)) {
+    return false;
+  }
+
+  if (gpio == 45) {
+    // VDD_SPI can work as the power supply for the external device at either
+    // 1.8 V (when GPIO45 is 1 during boot), or
+    // 3.3 V (when GPIO45 is 0 and at default state during boot). 
+    warning = true;    
+  }
+
+  // GPIO 0  State during boot determines boot mode.
+  warning = gpio == 0;
+
+
+  if (gpio == 46) {
+    // Part of the boot strapping pins.
+    warning = true;
+  }
+
+/*
+  # ifdef HAS_ETHERNET
+
+  // Check pins used for RMII Ethernet PHY
+  if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
+    switch (gpio) {
+      case 0:
+      case 21:
+      case 19:
+      case 22:
+      case 25:
+      case 26:
+      case 27:
+        warning = true;
+        break;
+    }
+
+
+    // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
+  }
+
+
+  # endif // ifdef HAS_ETHERNET
+
+*/
+#else
+  // ESP32 classic
 
   // Input GPIOs:  0-19, 21-23, 25-27, 32-39
   // Output GPIOs: 0-19, 21-23, 25-27, 32-33
@@ -899,6 +1000,8 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
 
   # endif // ifdef HAS_ETHERNET
+
+#endif
   return true;
 }
 
@@ -913,6 +1016,14 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
     return false;
   }
+
+#ifdef ESP32S2
+  if (gpio <= 45) {
+    hasPullUp = true;
+    hasPullDown = true;
+  }
+#else
+  // ESP32 classic
   if (gpio >= 34) {
     // For GPIO 34 .. 39, no pull-up nor pull-down.
   } else if (gpio == 12) {
@@ -923,9 +1034,10 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
     hasPullUp = true;
     hasPullDown = true;
   }
+
+#endif
   return true;
 }
-
 #endif
 
 #ifdef ESP8266
@@ -996,11 +1108,7 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   hasPullDown = false;
   hasPullUp = false;
 
-  int pinnr;
-  bool input;
-  bool output;
-  bool warning;
-  if (!getGpioInfo(gpio, pinnr, input, output, warning)) {
+  if (!validGpio(gpio)) {
     return false;
   }
   if (gpio == 16) {
@@ -1012,6 +1120,15 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
 }
 
 #endif
+
+bool validGpio(int gpio) {
+  if (gpio < 0 || gpio > MAX_GPIO) return false;
+  int pinnr;
+  bool input;
+  bool output;
+  bool warning;
+  return getGpioInfo(gpio, pinnr, input, output, warning);
+}
 
 
 #ifdef ESP32
@@ -1025,6 +1142,33 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 {
   t = -1;
 
+#ifdef ESP32S2
+  switch (gpio_pin) {
+    case 1 : adc = 1; ch = 0; t = 1; break;
+    case 2 : adc = 1; ch = 1; t = 2; break;
+    case 3 : adc = 1; ch = 2; t = 3; break;
+    case 4 : adc = 1; ch = 3; t = 4; break;
+    case 5 : adc = 1; ch = 4; t = 5; break;
+    case 6 : adc = 1; ch = 5; t = 6; break;
+    case 7 : adc = 1; ch = 6; t = 7; break;
+    case 8 : adc = 1; ch = 7; t = 8; break;
+    case 9 : adc = 1; ch = 8; t = 9; break;
+    case 10 : adc = 1; ch = 9; t = 10; break;
+    case 11 : adc = 2; ch = 0; t = 11; break;
+    case 12 : adc = 2; ch = 1; t = 12; break;
+    case 13 : adc = 2; ch = 2; t = 13; break;
+    case 14 : adc = 2; ch = 3; t = 14; break;
+    case 15 : adc = 2; ch = 4;  break;
+    case 16 : adc = 2; ch = 5;  break;
+    case 17 : adc = 2; ch = 6;  break;
+    case 18 : adc = 2; ch = 7;  break;
+    case 19 : adc = 2; ch = 8;  break;
+    case 20 : adc = 2; ch = 9;  break;
+    default:
+      return false;
+  }
+#else
+  // Classic ESP32
   switch (gpio_pin) {
     case -1: adc = 0; break; // Hall effect Sensor
     case 36: adc = 1; ch = 0; break;
@@ -1048,11 +1192,33 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
     default:
       return false;
   }
+#endif
   return true;
 }
 
 int touchPinToGpio(int touch_pin)
 {
+#ifdef ESP32S2
+  switch (touch_pin) {
+    case 1: return T1;
+    case 2: return T2;
+    case 3: return T3;
+    case 4: return T4;
+    case 5: return T5;
+    case 6: return T6;
+    case 7: return T7;
+    case 8: return T8;
+    case 9: return T9;
+    case 10: return T10;
+    case 11: return T11;
+    case 12: return T12;
+    case 13: return T13;
+    case 14: return T14;
+    default:
+      break;
+  }
+#else
+ // ESP32 classic
   switch (touch_pin) {
     case 0: return T0;
     case 1: return T1;
@@ -1067,6 +1233,7 @@ int touchPinToGpio(int touch_pin)
     default:
       break;
   }
+#endif
   return -1;
 }
 
