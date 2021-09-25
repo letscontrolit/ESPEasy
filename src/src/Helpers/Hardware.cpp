@@ -259,14 +259,12 @@ void I2CSelectClockSpeed(uint32_t clockFreq) {
   I2CBegin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, clockFreq);
 }
 
-void I2CForceResetBus_swap_pins() {
+void I2CForceResetBus_swap_pins(uint8_t address) {
   // As a final work-around, we temporary swap SDA and SCL, perform a scan and return pin order.
   I2CBegin(Settings.Pin_i2c_scl, Settings.Pin_i2c_sda, 100000);
-  for (uint8_t address = 1; address <= 127; address++) {
-    Wire.beginTransmission(address);
-    Wire.endTransmission();
-    delay(1);
-  }
+  Wire.beginTransmission(address);
+  Wire.endTransmission();
+  delay(1);
   // Now we switch back to the correct pins
   I2CSelectClockSpeed(100000);
 }

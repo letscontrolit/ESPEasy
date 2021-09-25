@@ -162,9 +162,9 @@ bool I2C_read_words(uint8_t i2caddr, I2Cdata_words& data) {
 // **************************************************************************/
 // Wake up I2C device
 // **************************************************************************/
-void I2C_wakeup(uint8_t i2caddr) {
+unsigned char I2C_wakeup(uint8_t i2caddr) {
   Wire.beginTransmission(i2caddr);
-  Wire.endTransmission();
+  return Wire.endTransmission();
 }
 
 // **************************************************************************/

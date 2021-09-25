@@ -20,6 +20,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasyStatistics.h"
