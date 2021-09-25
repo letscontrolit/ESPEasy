@@ -135,6 +135,7 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
 
   ControllerSettings.reset();
   ControllerSettings.Port = Protocol[ProtocolIndex].defaultPort;
+  ControllerSettings.TLStype(TLS_types::NoTLS);
 
   // Load some templates from the controller.
   struct EventStruct TempEvent;
@@ -301,7 +302,6 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addHtmlError(F("Out of memory, cannot load page"));
       } else {
         LoadControllerSettings(controllerindex, ControllerSettings);
-
         if (!Protocol[ProtocolIndex].Custom)
         {
           if (Protocol[ProtocolIndex].usesHost) {
@@ -319,6 +319,12 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           if (Protocol[ProtocolIndex].usesPort) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
           }
+          #ifdef USES_MQTT
+          if (Protocol[ProtocolIndex].usesMQTT && Protocol[ProtocolIndex].usesTLS) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE);
+            addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
+          }
+          #endif
 
           if (Protocol[ProtocolIndex].usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);

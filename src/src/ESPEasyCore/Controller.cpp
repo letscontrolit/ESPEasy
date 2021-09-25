@@ -173,7 +173,6 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
   MakeControllerSettings(ControllerSettings);
-
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
     return false;
@@ -192,13 +191,73 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
+
+  uint16_t mqttPort = ControllerSettings.Port;
+
+#ifdef USE_MQTT_TLS
+  mqtt_tls_last_errorstr = EMPTY_STRING;
+  mqtt_tls_last_error = 0;
+  const TLS_types TLS_type = ControllerSettings.TLStype();
+  switch(TLS_type) {
+    case TLS_types::NoTLS:
+    {
+      mqtt.setTimeout(ControllerSettings.ClientTimeout);
+      MQTTclient.setClient(mqtt);
+      break;
+    }
+    case TLS_types::TLS_PSK:
+    {
+      //mqtt_tls.setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
+      break;
+    }
+    case TLS_types::TLS_CA_CERT:
+    {
+      #ifdef ESP32
+      mqtt_tls.setCACert(mqtt_rootCA);
+      #endif
+      #ifdef ESP8266
+      mqtt_X509List.append(mqtt_rootCA);
+      mqtt_tls.setTrustAnchors(&mqtt_X509List);
+      #endif
+      break;
+    }
+    /*
+    case TLS_types::TLS_CA_CLI_CERT:
+    {
+      //mqtt_tls.setCertificate(const char *client_ca);
+      break;
+    }
+    */
+    case TLS_types::TLS_insecure:
+    {
+      mqtt_tls.setInsecure();
+      break;
+    }
+  }
+  if (TLS_type != TLS_types::NoTLS) {
+    mqtt_tls.setTimeout(ControllerSettings.ClientTimeout);
+    #ifdef ESP8266
+    mqtt_tls.setBufferSizes(1024,1024);
+    #endif
+    MQTTclient.setClient(mqtt_tls);
+    if (mqttPort == 1883) {
+      mqttPort = 8883;
+    }
+  } else {
+    if (mqttPort == 8883) {
+      mqttPort = 1883;
+    }
+  }
+
+#else
   mqtt.setTimeout(ControllerSettings.ClientTimeout);
   MQTTclient.setClient(mqtt);
+#endif
 
   if (ControllerSettings.UseDNS) {
-    MQTTclient.setServer(ControllerSettings.getHost().c_str(), ControllerSettings.Port);
+    MQTTclient.setServer(ControllerSettings.getHost().c_str(), mqttPort);
   } else {
-    MQTTclient.setServer(ControllerSettings.getIP(), ControllerSettings.Port);
+    MQTTclient.setServer(ControllerSettings.getIP(), mqttPort);
   }
   MQTTclient.setCallback(incoming_mqtt_callback);
 
@@ -211,6 +270,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   uint8_t willQos              = 0;
   bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
   bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
+
+  mqtt_last_connect_attempt.setNow();
 
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
 
@@ -240,8 +301,31 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   uint8_t controller_number = Settings.Protocol[controller_idx];
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
+  #ifdef USE_MQTT_TLS
+  {
+    char buf[128] = {0};
+    #ifdef ESP8266
+    mqtt_tls_last_error = mqtt_tls.getLastSSLError(buf,128);
+    #endif
+    #ifdef ESP32
+    mqtt_tls_last_error = mqtt_tls.lastError(buf,128);
+    #endif
+    mqtt_tls_last_errorstr = buf;
+  }
+  #endif
+
 
   if (!MQTTresult) {
+    #ifdef USE_MQTT_TLS
+    if ((mqtt_tls_last_error != 0) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("MQTT : TLS error code: ");
+      log += mqtt_tls_last_error;
+      log += ' ';
+      log += mqtt_tls_last_errorstr;
+      addLog(LOG_LEVEL_ERROR, log);
+    }
+    #endif
+
     MQTTclient.disconnect();
     updateMQTTclient_connected();
     return false;
@@ -354,6 +438,10 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
     if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
+      if (mqtt_last_connect_attempt.isSet() && mqtt_last_connect_attempt.millisPassedSince() < 5000) {
+        return false;
+      }
+
       if (MQTTclient_should_reconnect) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
       }
