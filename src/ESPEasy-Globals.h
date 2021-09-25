@@ -93,10 +93,6 @@ extern float vcc;
 #endif
 
 
-extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
-
-
-
 
 extern bool shouldReboot;
 extern bool firstLoop;
