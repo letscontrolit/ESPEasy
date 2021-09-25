@@ -286,7 +286,6 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
   return (WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
 }
 
-
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (candidates.size() > 1) {
     // Do not mess with the current candidates order if > 1 present

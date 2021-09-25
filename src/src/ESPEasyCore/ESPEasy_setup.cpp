@@ -224,6 +224,14 @@ void ESPEasy_setup()
   logMemUsageAfter(F("LoadSettings()"));
   #endif
 
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("hardwareInit"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+  hardwareInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("hardwareInit()"));
+  #endif
+
   node_time.restoreFromRTC();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
@@ -309,14 +317,6 @@ void ESPEasy_setup()
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("hardwareInit"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-  hardwareInit();
-  #ifndef BUILD_NO_RAM_TRACKER
-  logMemUsageAfter(F("hardwareInit()"));
-  #endif
 
 
   timermqtt_interval      = 250; // Interval for checking MQTT

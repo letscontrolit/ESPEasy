@@ -497,7 +497,7 @@ bool checkAndResetWiFi() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
         return false;
       }
       break;
@@ -509,7 +509,7 @@ bool checkAndResetWiFi() {
       return false;
     //}
   }
-  if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+  if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
     return false;
   }
   #endif

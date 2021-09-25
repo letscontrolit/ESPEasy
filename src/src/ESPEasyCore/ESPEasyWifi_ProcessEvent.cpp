@@ -251,7 +251,7 @@ void processDisconnect() {
   }
 
 
-  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
   }
@@ -262,8 +262,8 @@ void processDisconnect() {
   }
   #endif
 
+  WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
-    WifiDisconnect(); // Needed or else node may not reconnect reliably.
     delay(100);
     setWifiMode(WIFI_OFF);
     initWiFi();
