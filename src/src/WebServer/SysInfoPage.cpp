@@ -525,8 +525,10 @@ void handle_sysinfo_SystemStatus() {
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
     # endif // ifdef FEATURE_SD
 
-  addRowLabelValue(LabelType::I2C_BUS_STATE);
-  addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
+  if (Settings.EnableClearHangingI2Cbus()) {
+    addRowLabelValue(LabelType::I2C_BUS_STATE);
+    addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
+  }
 }
 
 void handle_sysinfo_NetworkServices() {

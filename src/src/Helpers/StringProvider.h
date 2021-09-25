@@ -58,6 +58,7 @@ struct LabelType {
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
     TASKVALUESET_ALL_PLUGINS,
+    ENABLE_CLEAR_HUNG_I2C_BUS,
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0

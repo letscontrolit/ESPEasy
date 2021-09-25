@@ -88,6 +88,7 @@ void ESPEasy_loop()
     sendSysInfoUDP(1);
   }
 
+  if (Settings.EnableClearHangingI2Cbus())
   {
     // Check I2C bus to see if it needs to be cleared.
     // See: http://www.forward.com.au/pfod/ArduinoProgramming/I2C_ClearBus/index.html
