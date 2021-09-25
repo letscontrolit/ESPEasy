@@ -239,7 +239,7 @@ void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
 #endif
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
+    I2CSelectLowClockSpeed(); // Set to slow
   }
 }
 
@@ -256,7 +256,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 #endif
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(false);  // Reset
+    I2CSelectHighClockSpeed();  // Reset
   }
 }
 
