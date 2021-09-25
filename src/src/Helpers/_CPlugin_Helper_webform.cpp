@@ -20,7 +20,8 @@ const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameter
     case ControllerSettingsStruct::CONTROLLER_USE_DNS:                  return  F("Locate Controller");      
     case ControllerSettingsStruct::CONTROLLER_HOSTNAME:                 return  F("Controller Hostname");    
     case ControllerSettingsStruct::CONTROLLER_IP:                       return  F("Controller IP");          
-    case ControllerSettingsStruct::CONTROLLER_PORT:                     return  F("Controller Port");        
+    case ControllerSettingsStruct::CONTROLLER_PORT:                     return  F("Controller Port");      
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:                 return  F("Use TLS");      
     case ControllerSettingsStruct::CONTROLLER_USER:                     return  F("Controller User");        
     case ControllerSettingsStruct::CONTROLLER_PASS:                     return  F("Controller Password");    
 
@@ -151,6 +152,28 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_PORT:
     {
       addFormNumericBox(displayName, internalName, ControllerSettings.Port, 1, 65535);
+      break;
+    }
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
+    {
+      #ifdef USE_MQTT_TLS
+      const int choice = static_cast<int>(ControllerSettings.TLStype());
+      #define NR_MQTT_TLS_TYPES 3
+      const __FlashStringHelper * options[NR_MQTT_TLS_TYPES] = {
+       toString(TLS_types::NoTLS),
+//       toString(TLS_types::TLS_PSK),
+//       toString(TLS_types::TLS_CA_CERT),
+       toString(TLS_types::TLS_insecure)
+      };
+      const int indices[NR_MQTT_TLS_TYPES] = {
+        static_cast<int>(TLS_types::NoTLS),
+//        static_cast<int>(TLS_types::TLS_PSK),
+//        static_cast<int>(TLS_types::TLS_CA_CERT),
+        static_cast<int>(TLS_types::TLS_insecure)
+      };
+      addFormSelector(displayName, internalName, NR_MQTT_TLS_TYPES, options, indices, choice, true);
+      #undef NR_MQTT_TLS_TYPES
+      #endif
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_USER:
@@ -309,6 +332,16 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_PORT:
       ControllerSettings.Port = getFormItemInt(internalName, ControllerSettings.Port);
       break;
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
+    {
+      #ifdef USE_MQTT_TLS
+      const int current = static_cast<int>(ControllerSettings.TLStype());
+      const TLS_types tls_type = static_cast<TLS_types>(getFormItemInt(internalName, current));
+      ControllerSettings.TLStype(tls_type);
+      #endif
+      break;
+    }
+
     case ControllerSettingsStruct::CONTROLLER_USER:
       setControllerUser(controllerindex, ControllerSettings, webArg(internalName));
       break;

@@ -9,6 +9,7 @@
 #include <new> // for std::nothrow
 
 #include "../../ESPEasy_common.h"
+#include "../DataTypes/TLS_types.h"
 #include "../Globals/Plugins.h"
 
 class IPAddress;
@@ -63,6 +64,7 @@ struct ControllerSettingsStruct
     CONTROLLER_HOSTNAME,
     CONTROLLER_IP,
     CONTROLLER_PORT,
+    CONTROLLER_MQTT_TLS_TYPE,
     CONTROLLER_USER,
     CONTROLLER_PASS,
     CONTROLLER_MIN_SEND_INTERVAL,
@@ -145,6 +147,10 @@ struct ControllerSettingsStruct
 
   bool      useLocalSystemTime() const;
   void      useLocalSystemTime(bool value);
+
+
+  TLS_types TLStype() const;
+  void      TLStype(TLS_types tls_type);
   
 
   boolean      UseDNS;

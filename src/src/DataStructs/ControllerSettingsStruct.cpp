@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -13,6 +14,7 @@
 #include <WString.h>
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
+
 
 ControllerSettingsStruct::ControllerSettingsStruct()
 {
@@ -75,6 +77,29 @@ void ControllerSettingsStruct::validate() {
   ZERO_TERMINATE(MQTTLwtTopic);
   ZERO_TERMINATE(LWTMessageConnect);
   ZERO_TERMINATE(LWTMessageDisconnect);
+
+  #ifdef USES_MQTT
+    #ifdef USE_MQTT_TLS
+    if (TLStype() == TLS_types::NoTLS) {
+      if (Port == 8883) {
+        Port = 1883;
+        addLog(LOG_LEVEL_ERROR, F("Not using TLS, but port set to secure 8883. Use port 1883 instead"));
+      }
+    } else {
+      if (Port == 1883) {
+        Port = 8883;
+        addLog(LOG_LEVEL_ERROR, F("Using TLS, but port set to insecure port 1883. Use port 8883 instead"));
+      }
+    }
+    #else
+    if (Port == 8883) {
+      // No TLS support, so when switching builds, make sure it can still work.
+      Port = 1883;
+      addLog(LOG_LEVEL_ERROR, F("Not using TLS, but port set to secure 8883. Use port 1883 instead"));
+    }
+    #endif
+  #endif
+
 }
 
 IPAddress ControllerSettingsStruct::getIP() const {
@@ -285,4 +310,19 @@ bool ControllerSettingsStruct::useLocalSystemTime() const
 void ControllerSettingsStruct::useLocalSystemTime(bool value)
 {
   bitWrite(VariousFlags, 11, value);
+}
+
+TLS_types ControllerSettingsStruct::TLStype() const
+{
+  // Store it in bits 12, 13, 14
+  const TLS_types tls_type = static_cast<TLS_types>((VariousFlags >> 12) & 0x7);
+  return tls_type;
+}
+
+void  ControllerSettingsStruct::TLStype(TLS_types tls_type)
+{
+  const uint32_t mask = ~(0x7);
+  VariousFlags &= mask; // Clear the bits
+  const uint32_t tls_type_val = static_cast<uint32_t>(tls_type) << 12;
+  VariousFlags |= tls_type_val;
 }
