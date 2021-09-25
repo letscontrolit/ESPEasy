@@ -53,13 +53,15 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t choice = PCONFIG(0);
-
-      /*String options[2] = { F("3C"), F("3D") };*/
-      int optionValues[2] = { 0x3C, 0x3D };
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
+      const uint8_t i2cAddressValues[] = { 0x3C, 0x3D };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -128,7 +130,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       success = true;
       break;
     }
@@ -183,7 +185,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
         P023_data->sendStrXY("ESP Easy ", 0, 0);
 
-        if (CONFIG_PIN3 != -1) {
+        if (validGpio(CONFIG_PIN3)) {
           pinMode(CONFIG_PIN3, INPUT_PULLUP);
         }
         success = true;
@@ -193,7 +195,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         if (!digitalRead(CONFIG_PIN3))
         {

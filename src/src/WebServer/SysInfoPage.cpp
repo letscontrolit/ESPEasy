@@ -287,6 +287,9 @@ void handle_sysinfo_basicInfo() {
   if (node_time.systemTimePresent())
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
+    addRowLabelValue(LabelType::TIME_SOURCE);
+    addRowLabelValue(LabelType::TIME_WANDER);
+    addUnit(F("msec/sec"));
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -350,12 +353,16 @@ void handle_sysinfo_memory() {
     addHtml(html);
   }
 # if defined(CORE_POST_2_5_0) || defined(ESP32)
+ #  ifndef LIMIT_BUILD_SIZE
   addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
-# endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+ #  endif // ifndef LIMIT_BUILD_SIZE
+# endif   // if defined(CORE_POST_2_5_0) || defined(ESP32)
 # if defined(CORE_POST_2_5_0)
+  #  ifndef LIMIT_BUILD_SIZE
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
   addHtml('%');
-# endif // ifdef CORE_POST_2_5_0
+  #  endif // ifndef LIMIT_BUILD_SIZE
+# endif // if defined(CORE_POST_2_5_0)
 
 
   addRowLabel(LabelType::FREE_STACK);

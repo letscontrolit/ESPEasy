@@ -157,7 +157,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
     serialPrint(String(pgm_read_byte(a), HEX));
     serialPrint(" ");
   }
-  serialPrintln("");
+  serialPrintln();
 }
 
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
@@ -187,7 +187,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
@@ -335,7 +335,7 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
@@ -343,18 +343,18 @@ void HSV2RGB(float H, float S, float I, int rgb[3]) {
 
   // Math! Thanks in part to Kyle Miller.
   if (H < 2.09439f) {
-    r = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
-    g = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    r = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+    g = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
     b = 255 * I / 3 * (1 - S);
   } else if (H < 4.188787f) {
     H = H - 2.09439f;
-    g = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
-    b = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    g = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+    b = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
     r = 255 * I / 3 * (1 - S);
   } else {
     H = H - 4.188787f;
-    b = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
-    r = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    b = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+    r = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
     g = 255 * I / 3 * (1 - S);
   }
   rgb[0] = r;
@@ -370,31 +370,31 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   float cos_h, cos_1047_h;
 
   H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
   S = S / 100;
   S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
   I = I / 100;
   I = I > 0 ? (I < 1 ? I : 1) : 0;
 
   if (H < 2.09439f) {
-    cos_h      = cos(H);
-    cos_1047_h = cos(1.047196667f - H);
+    cos_h      = cosf(H);
+    cos_1047_h = cosf(1.047196667f - H);
     r          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
     g          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
     b          = 0;
     w          = 255 * (1 - S) * I;
   } else if (H < 4.188787f) {
     H          = H - 2.09439f;
-    cos_h      = cos(H);
-    cos_1047_h = cos(1.047196667f - H);
+    cos_h      = cosf(H);
+    cos_1047_h = cosf(1.047196667f - H);
     g          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
     b          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
     r          = 0;
     w          = 255 * (1 - S) * I;
   } else {
     H          = H - 4.188787f;
-    cos_h      = cos(H);
-    cos_1047_h = cos(1.047196667f - H);
+    cos_h      = cosf(H);
+    cos_1047_h = cosf(1.047196667f - H);
     b          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
     r          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
     g          = 0;
@@ -443,6 +443,24 @@ int getLoopCountPerSec() {
 int getUptimeMinutes() {
   return wdcounter / 2;
 }
+
+/******************************************************************************
+ * scan an int array of specified size for a value
+ *****************************************************************************/
+bool intArrayContains(const int arraySize, const int array[], const int& value){
+  for(int i = 0; i < arraySize; i++) {
+    if (array[i] == value) return true;
+  }
+  return false;
+}
+
+bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t& value) {
+  for(int i = 0; i < arraySize; i++) {
+    if (array[i] == value) return true;
+  }
+  return false;
+}
+
 
 #ifndef BUILD_NO_RAM_TRACKER
 void logMemUsageAfter(const __FlashStringHelper * function, int value) {

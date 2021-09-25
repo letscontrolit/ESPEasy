@@ -4,6 +4,7 @@
 #include "../Globals/CPlugins.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/SPI_options.h"
 #include "../../ESPEasy_common.h"
 
 template<unsigned int N_TASKS>
@@ -181,16 +182,6 @@ void SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes(bool value) {
 }
 
 template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::EnableTimingStats() const {
-  return bitRead(VariousBits1, 17);
-}
-
-template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
-  bitWrite(VariousBits1, 17, value);
-}
-
-template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const {
   if (validTaskIndex(taskIndex)) {
     return bitRead(TaskDeviceSendDataFlags[taskIndex], 0);
@@ -236,6 +227,50 @@ void SettingsStruct_tmpl<N_TASKS>::UseLastWiFiFromRTC(bool value) {
   bitWrite(VariousBits1, 19, value);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableTimingStats() const {
+  return bitRead(VariousBits1, 20);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableTimingStats(bool value) {
+  bitWrite(VariousBits1, 20, value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins() const {
+  return bitRead(VariousBits1, 21);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins(bool value) {
+  bitWrite(VariousBits1, 21, value);
+}
+
+template<unsigned int N_TASKS>
+ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
+  return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::ExtTimeSource(ExtTimeSource_e value) {
+  uint8_t newValue = static_cast<uint8_t>(value) << 1;
+  if (UseNTP()) {
+    newValue += 1;
+  }
+  ExternalTimeSource = newValue;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::UseNTP() const {
+  return bitRead(ExternalTimeSource, 0);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::UseNTP(bool value) {
+  bitWrite(ExternalTimeSource, 0, value);
+}
+
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::validate() {
@@ -275,7 +310,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearNetworkSettings() {
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTimeSettings() {
-  UseNTP = false;
+  ExternalTimeSource = 0;
   ZERO_FILL(NTPHost);
   TimeZone  = 0;
   DST       = false;
@@ -506,23 +541,31 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   spi_gpios[0] = -1;
   spi_gpios[1] = -1;
   spi_gpios[2] = -1;
-  if (InitSPI > 0) {
+  if (isSPI_valid()) {
     # ifdef ESP32
-    switch (InitSPI) {
-      case 1:
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Vspi:
       {
         spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
         break;
       }
-      case 2:
+      case SPI_Options_e::Hspi:
       {
         spi_gpios[0] = 14; // HSPI_SCLK
         spi_gpios[1] = 12; // HSPI_MISO
         spi_gpios[2] = 13; // HSPI_MOSI
         break;
       }
-      default:
-      return false;
+      case SPI_Options_e::UserDefined:
+      {
+        spi_gpios[0] = SPI_SCLK_pin;
+        spi_gpios[1] = SPI_MISO_pin;
+        spi_gpios[2] = SPI_MOSI_pin;
+        break;
+      }
+      case SPI_Options_e::None:
+        return false;
     }
     # endif // ifdef ESP32
     # ifdef ESP8266
@@ -546,9 +589,29 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
+  return !((InitSPI == static_cast<int>(SPI_Options_e::None)) ||
+           ((InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) &&
+            ((SPI_SCLK_pin == -1) ||
+             (SPI_MISO_pin == -1) ||
+             (SPI_MOSI_pin == -1) ||
+             (SPI_SCLK_pin == SPI_MISO_pin) ||
+             (SPI_MISO_pin == SPI_MOSI_pin) ||
+             (SPI_MOSI_pin == SPI_SCLK_pin)))); // Checks
+}
+
+template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
   if (pin < 0) return false;
   return Pin_i2c_sda == pin || Pin_i2c_scl == pin;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
+  return (Pin_i2c_sda != -1) &&
+         (Pin_i2c_scl != -1) &&
+         (I2C_clockSpeed > 0) &&
+         (I2C_clockSpeed_Slow > 0);
 }
 
 template<unsigned int N_TASKS>

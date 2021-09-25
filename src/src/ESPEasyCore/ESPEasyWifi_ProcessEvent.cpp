@@ -96,6 +96,14 @@ void handle_unprocessedNetworkEvents()
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
+        if (WiFiEventData.wifiConnectInProgress) {
+          if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
+            WiFiEventData.last_wifi_connect_attempt_moment.clear();
+          }
+          if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
+            WiFiEventData.wifiConnectInProgress = false;
+          }
+        }
         delay(10);
       }
 
@@ -206,7 +214,7 @@ void handle_unprocessedNetworkEvents()
 // ********************************************************************************
 void processDisconnect() {
   if (WiFiEventData.processingDisconnect.isSet()) {
-    if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000) {
+    if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
       WiFiEventData.processingDisconnect.clear();
     }
   }
@@ -238,13 +246,13 @@ void processDisconnect() {
   }
 
 
-  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
+  bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
   }
 
+  WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
-    WifiDisconnect(); // Needed or else node may not reconnect reliably.
     delay(100);
     setWifiMode(WIFI_OFF);
     initWiFi();
@@ -524,6 +532,8 @@ void processScanDone() {
   }
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
+
+  NetworkConnectRelaxed();
 }
 
 

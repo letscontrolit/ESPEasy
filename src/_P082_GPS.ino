@@ -251,7 +251,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
         success = true;
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
 
-        if (pps_pin != -1) {
+        if (validGpio(pps_pin)) {
           //          pinMode(pps_pin, INPUT_PULLUP);
           attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
         }
@@ -264,7 +264,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_EXIT: {
       const int16_t pps_pin = CONFIG_PIN3;
 
-      if (pps_pin != -1) {
+      if (validGpio(pps_pin)) {
         detachInterrupt(pps_pin);
       }
       success = true;
@@ -429,8 +429,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 }
 
 bool P082_referencePointSet(struct EventStruct *event) {
-  return ! ((P082_LONG_REF < 0.1) && (P082_LONG_REF > -0.1) 
-        && (P082_LAT_REF < 0.1) && (P082_LAT_REF > -0.1) );
+  return ! ((P082_LONG_REF < 0.1f) && (P082_LONG_REF > -0.1f) 
+        && (P082_LAT_REF < 0.1f) && (P082_LAT_REF > -0.1f) );
 }
 
 void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float value) {
@@ -628,7 +628,7 @@ void P082_setSystemTime(struct EventStruct *event) {
 
   // Set the externalTimesource 10 seconds earlier to make sure no call is made
   // to NTP (if set)
-  if (node_time.nextSyncTime > (node_time.sysTime + 10)) {
+  if (node_time.nextSyncTime > (node_time.getUnixTime() + 10)) {
     return;
   }
 
@@ -643,8 +643,7 @@ void P082_setSystemTime(struct EventStruct *event) {
     // and the given offset in centisecond.
     double time = makeTime(dateTime);
     time += static_cast<double>(age) / 1000.0;
-    node_time.setExternalTimeSource(time, GPS_time_source);
-    node_time.initTime();
+    node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
   }
   P082_pps_time = 0;
 }

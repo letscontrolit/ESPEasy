@@ -303,7 +303,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("nvalue"), F("0"));
         json += ',';
-        json += to_json_object_value(F("svalue"), formatDomoticzSensorType(event));
+        json += to_json_object_value(F("svalue"), formatDomoticzSensorType(event), true);
         break;
     }
     json += '}';

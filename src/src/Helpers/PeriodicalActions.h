@@ -32,7 +32,7 @@ void runEach30Seconds();
 #ifdef USES_MQTT
 
 void scheduleNextMQTTdelayQueue();
-void schedule_all_tasks_using_MQTT_controller();
+void schedule_all_MQTTimport_tasks();
 
 void processMQTTdelayQueue();
 

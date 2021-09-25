@@ -101,15 +101,17 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      uint8_t addr = PCONFIG(0);
-
-      int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
-      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      const uint8_t i2cAddressValues[] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
       break;
     }
-
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -180,17 +182,21 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
       {
         String text = parseStringToEnd(string, 2);
 
-        if (text.length() > 0) {
+        if (!text.isEmpty()) {
           uint8_t seg = 0;
+          uint8_t txt = 0; // Separate indexers for text and segments
+          bool    setDot;
 
           P057_data->ledMatrix.ClearRowBuffer();
 
-          while (text[seg] && seg < 8)
+          while (txt < text.length() && text[txt] && seg < 8)
           {
-            // uint16_t value = 0;
-            char c = text[seg];
-            P057_data->ledMatrix.SetDigit(seg, c);
+            setDot = (txt < text.length() - 1 && text[txt + 1] == '.');
+            char c = text[txt];
+            P057_data->ledMatrix.SetDigit(seg, c, setDot);
             seg++;
+            txt++;
+            if (setDot) { txt++; } // extra increment to skip past the dot
           }
           P057_data->ledMatrix.TransmitRowBuffer();
           success = true;

@@ -121,6 +121,12 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       if (P047_SENSOR_SLEEP) {
@@ -168,9 +174,9 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       // 2 s delay ...we need this delay, otherwise we get only the last reading...
       delayBackground(2000);
 
-      float temperature = ((float)Plugin_047_readTemperature(P047_I2C_ADDR)) / 10;
-      float moisture    = ((float)Plugin_047_readMoisture(P047_I2C_ADDR));
-      float light       = ((float)Plugin_047_readLight(P047_I2C_ADDR));
+      const float temperature = Plugin_047_readTemperature(P047_I2C_ADDR) / 10.0f;
+      const float moisture    = Plugin_047_readMoisture(P047_I2C_ADDR);
+      const float light       = Plugin_047_readLight(P047_I2C_ADDR);
 
       if ((temperature > 100) || (temperature < -40) || (moisture > 800) || (moisture < 1) || (light > 65535) || (light < 0)) {
         addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));

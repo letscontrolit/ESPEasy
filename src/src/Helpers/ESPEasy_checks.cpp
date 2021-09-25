@@ -71,10 +71,10 @@ void run_compiletime_checks() {
   check_size<CRCStruct,                             204u>();
   check_size<SecurityStruct,                        593u>();
   #ifdef ESP32
-  const unsigned int SettingsStructSize = (312 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (316 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  const unsigned int SettingsStructSize = (288 + 84 * TASKS_MAX);
+  const unsigned int SettingsStructSize = (292 + 84 * TASKS_MAX);
   #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
@@ -82,18 +82,35 @@ void run_compiletime_checks() {
   check_size<NotificationSettingsStruct,            996u>();
   #endif
   check_size<ExtraTaskSettingsStruct,               472u>();
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  check_size<EventStruct,                           116u>(); // Is not stored
+  #else
   check_size<EventStruct,                           96u>(); // Is not stored
+  #endif
+
 
   // LogStruct is mainly dependent on the number of lines.
   // Has to be round up to multiple of 4.
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  #else
   const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
+  #if ESP_IDF_VERSION_MAJOR > 3
+  // String class has increased with 4 bytes
+  check_size<NodeStruct,                            32u>();
+  #else
   check_size<NodeStruct,                            28u>();
+  #endif
+
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
@@ -113,8 +130,30 @@ void run_compiletime_checks() {
   #endif
 
   // Check for alignment issues at compile time
-  static_assert(256u == offsetof(SecurityStruct, ControllerUser), "");
-  static_assert((256 + (CONTROLLER_MAX * 26))  == offsetof(SecurityStruct, ControllerPassword), "");
+  {
+    const unsigned int ControllerUser_offset = 256u;
+    static_assert(ControllerUser_offset == offsetof(SecurityStruct, ControllerUser), "");
+
+    const unsigned int ControllerPassword_offset = 256u + (CONTROLLER_MAX * 26);
+    static_assert(ControllerPassword_offset == offsetof(SecurityStruct, ControllerPassword), "");
+
+    const unsigned int Password_offset = ControllerPassword_offset + (CONTROLLER_MAX * 64);
+    static_assert(Password_offset == offsetof(SecurityStruct, Password), "");
+
+    const unsigned int AllowedIPrangeLow_offset = Password_offset + 26;
+    static_assert(AllowedIPrangeLow_offset == offsetof(SecurityStruct, AllowedIPrangeLow), "");
+
+    const unsigned int IPblockLevel_offset = AllowedIPrangeLow_offset + 8;
+    static_assert(IPblockLevel_offset == offsetof(SecurityStruct, IPblockLevel), "");
+
+    const unsigned int ProgmemMd5_offset = IPblockLevel_offset + 1;
+    static_assert(ProgmemMd5_offset == offsetof(SecurityStruct, ProgmemMd5), "");
+
+    const unsigned int md5_offset = ProgmemMd5_offset + 16;
+    static_assert(md5_offset == offsetof(SecurityStruct, md5), "");
+  }
+
+
   static_assert(192u == offsetof(SettingsStruct, Protocol), "");
   static_assert(195u == offsetof(SettingsStruct, Notification), "CONTROLLER_MAX has changed?");
   static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber), "NOTIFICATION_MAX has changed?");

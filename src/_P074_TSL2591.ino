@@ -145,11 +145,16 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { TSL2591_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues,
-                         TSL2591_ADDR); // Only for display I2C address
+      const uint8_t i2cAddressValues[] = { TSL2591_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues,
+                           TSL2591_ADDR); // Only for display I2C address
+      } else {
+        success = (event->Par1 == TSL2591_ADDR);
+      }
       break;
     }
 
@@ -256,7 +261,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
           // TSL2591_VISIBLE: Reads all and subtracts out just the visible!
           const uint16_t visible =  ( (fullLuminosity & 0xFFFF) - (fullLuminosity >> 16));
 
-          const uint16_t lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
+          const float lux     = P074_data->tsl.calculateLuxf(full, ir); // get LUX
 
           UserVar[event->BaseVarIndex + 0] = lux;
           UserVar[event->BaseVarIndex + 1] = full;

@@ -95,24 +95,40 @@ namespace std
 
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image
   #define MAX_SKETCH_SIZE 1044464   // 1020 kB - 16 bytes
-  #define PIN_D_MAX        16
 #endif
 #if defined(ESP32)
 
   // Temp fix for a missing core_version.h within ESP Arduino core. Wait until they actually have different releases
   #define ARDUINO_ESP8266_RELEASE "2_4_0"
 
-  #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
-  #define ICACHE_RAM_ATTR IRAM_ATTR
+  #ifdef ESP32S2
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32S2_STD
+  #elif defined(ESP32C3)
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32C3_STD
+  #else
+    #define NODE_TYPE_ID                        NODE_TYPE_ID_ESP_EASY32_STD
+  #endif
+  #if ESP_IDF_VERSION_MAJOR < 3
+    #define ICACHE_RAM_ATTR IRAM_ATTR
+  #endif
   #define FILE_CONFIG       "/config.dat"
   #define FILE_SECURITY     "/security.dat"
   #define FILE_NOTIFICATION "/notification.dat"
   #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
-  #include <rom/rtc.h>
-  #include "esp_wifi.h" // Needed to call ESP-IDF functions like esp_wifi_....
-  #define PIN_D_MAX        39
+
+  #ifdef ESP32S2
+    #include <esp32s2/rom/rtc.h>
+  #else
+   #if ESP_IDF_VERSION_MAJOR > 3
+    #include <esp32/rom/rtc.h>
+   #else
+    #include <rom/rtc.h>
+   #endif
+  #endif
+  
+  #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
   #ifdef PLUGIN_BUILD_MAX_ESP32
   #define MAX_SKETCH_SIZE 4194304   // 0x400000 look at partitions in csv file
   #else // PLUGIN_BUILD_MAX_ESP32

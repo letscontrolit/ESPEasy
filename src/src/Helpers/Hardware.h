@@ -24,7 +24,10 @@ void hardwareInit();
 
 void initI2C();
 
-void I2CSelectClockSpeed(bool setLowSpeed);
+void I2CSelectHighClockSpeed();
+void I2CSelectLowClockSpeed();
+void I2CSelect_Max100kHz_ClockSpeed();
+void I2CSelectClockSpeed(uint32_t clockFreq);
 
 #ifdef FEATURE_I2CMULTIPLEXER
 bool isI2CMultiplexerEnabled();
@@ -112,6 +115,8 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning);
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown);
+
+bool validGpio(int gpio);
 
 
 #ifdef ESP32

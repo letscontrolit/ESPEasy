@@ -43,6 +43,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::HOST_NAME:              return F("Hostname");
 
     case LabelType::LOCAL_TIME:             return F("Local Time");
+    case LabelType::TIME_SOURCE:            return F("Time Source");
+    case LabelType::TIME_WANDER:            return F("Time Wander");
     case LabelType::UPTIME:                 return F("Uptime");
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
@@ -58,10 +60,14 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return F("Heap Max Free Block");
+  #endif
 #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_FRAGMENTATION:     return F("Heap Fragmentation");
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 
 #ifdef ESP32
@@ -77,7 +83,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::JSON_BOOL_QUOTES:       return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:  return F("Collect Timing Statistics");
-
+    case LabelType::TASKVALUESET_ALL_PLUGINS:  return F("Allow TaskValueSet on all plugins");
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -213,6 +219,8 @@ String getValue(LabelType::Enum label) {
 
 
     case LabelType::LOCAL_TIME:             return node_time.getDateTimeString('-', ':', ' ');
+    case LabelType::TIME_SOURCE:            return toString(node_time.timeSource);
+    case LabelType::TIME_WANDER:            return String(node_time.timeWander, 3);
     case LabelType::UPTIME:                 return String(getUptimeMinutes());
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
@@ -228,13 +236,19 @@ String getValue(LabelType::Enum label) {
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 #if  defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxAllocHeap());
+  #endif
 #endif // if  defined(ESP32)
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation());
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 #ifdef ESP32
     case LabelType::HEAP_SIZE:              return String(ESP.getHeapSize());
@@ -242,7 +256,7 @@ String getValue(LabelType::Enum label) {
     #ifdef ESP32_ENABLE_PSRAM
     case LabelType::PSRAM_SIZE:             return String(ESP.getPsramSize());
     case LabelType::PSRAM_FREE:             return String(ESP.getFreePsram());
-    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreeHeap());
+    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreePsram());
     case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(ESP.getMaxAllocPsram());
     #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
@@ -250,6 +264,7 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::JSON_BOOL_QUOTES:       return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:  return jsonBool(Settings.EnableTimingStats());
+    case LabelType::TASKVALUESET_ALL_PLUGINS:  return jsonBool(Settings.AllowTaskValueSetAllPlugins());
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -311,7 +326,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSTEM_LIBRARIES:       return getSystemLibraryString();
     case LabelType::PLUGIN_COUNT:           return String(deviceCount + 1);
     case LabelType::PLUGIN_DESCRIPTION:     return getPluginDescriptionString();
-    case LabelType::BUILD_TIME:             return String(get_build_date()) + F(" ") + get_build_time();
+    case LabelType::BUILD_TIME:             return String(get_build_date()) + ' ' + get_build_time();
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
@@ -365,7 +380,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::SUNSET_S:               return String(node_time.sunSet.tm_hour * 3600 + node_time.sunSet.tm_min * 60 + node_time.sunSet.tm_sec);
     case LabelType::SUNRISE_M:              return String(node_time.sunRise.tm_hour * 60 + node_time.sunRise.tm_min);
     case LabelType::SUNSET_M:               return String(node_time.sunSet.tm_hour * 60 + node_time.sunSet.tm_min);
-    case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP);
+    case LabelType::ISNTP:                  return jsonBool(Settings.UseNTP());
     case LabelType::UPTIME_MS:              return ull2String(getMicros64() / 1000);
     case LabelType::TIMEZONE_OFFSET:        return String(Settings.TimeZone);
     case LabelType::LATITUDE:               return String(Settings.Latitude);

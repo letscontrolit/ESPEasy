@@ -57,6 +57,16 @@ unsigned long hexToUL(const String& input_c,
                       size_t        startpos,
                       size_t        nrHexDecimals);
 
+// Convert max. 16 hex decimals to unsigned long long
+unsigned long long hexToULL(const String& input_c,
+                            size_t        nrHexDecimals); 
+
+unsigned long long hexToULL(const String& input_c);
+
+unsigned long long hexToULL(const String& input_c,
+                            size_t        startpos,
+                            size_t        nrHexDecimals);
+
 String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix);
 
@@ -82,6 +92,10 @@ const __FlashStringHelper * boolToString(bool value);
 void   removeExtraNewLine(String& line);
 
 void   addNewLine(String& line);
+
+size_t UTF8_charLength(char firstByte);
+
+void   replaceUnicodeByChar(String& line, char replChar);
 
 /*********************************************************************************************\
    Format a value to the set number of decimals
@@ -126,13 +140,16 @@ String wrapIfContains(const String& value,
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
 String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value);
+                            const __FlashStringHelper * value,
+                            bool wrapInQuotes = false);
 
 String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value);
+                            const String& value,
+                            bool wrapInQuotes = false);
 
 String to_json_object_value(const String& object,
-                            const String& value);
+                            const String& value,
+                            bool wrapInQuotes = false);
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
