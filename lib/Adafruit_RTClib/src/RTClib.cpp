@@ -809,7 +809,7 @@ static uint8_t bin2bcd(uint8_t val) { return val + 6 * (val / 10); }
 
 boolean RTC_DS1307::begin(TwoWire *wireInstance) {
   RTCWireBus = wireInstance;
-  RTCWireBus->begin();
+  //RTCWireBus->begin();
   RTCWireBus->beginTransmission(DS1307_ADDRESS);
   if (RTCWireBus->endTransmission() == 0)
     return true;
@@ -1054,7 +1054,7 @@ DateTime RTC_Micros::now() {
 
 boolean RTC_PCF8523::begin(TwoWire *wireInstance) {
   RTCWireBus = wireInstance;
-  RTCWireBus->begin();
+  //RTCWireBus->begin();
   RTCWireBus->beginTransmission(PCF8523_ADDRESS);
   if (RTCWireBus->endTransmission() == 0)
     return true;
@@ -1403,7 +1403,7 @@ void RTC_PCF8523::calibrate(Pcf8523OffsetMode mode, int8_t offset) {
 
 boolean RTC_PCF8563::begin(TwoWire *wireInstance) {
   RTCWireBus = wireInstance;
-  RTCWireBus->begin();
+  //RTCWireBus->begin();
   RTCWireBus->beginTransmission(PCF8563_ADDRESS);
   if (RTCWireBus->endTransmission() == 0)
     return true;
@@ -1565,7 +1565,7 @@ static uint8_t dowToDS3231(uint8_t d) { return d == 0 ? 7 : d; }
 
 boolean RTC_DS3231::begin(TwoWire *wireInstance) {
   RTCWireBus = wireInstance;
-  RTCWireBus->begin();
+  //RTCWireBus->begin();
   RTCWireBus->beginTransmission(DS3231_ADDRESS);
   if (RTCWireBus->endTransmission() == 0)
     return true;
