@@ -170,6 +170,8 @@ Linux
 For Linux, you may need to install 99-platformio-udev.rules to make PlatformIO upload tools work in vscode.
 
 
+.. highlight::sh
+
 Starter guide for setting up local development of ESPEasy
 =========================================================
 
@@ -189,6 +191,8 @@ The usual Github flow or way of working is described nicely on this page: `Under
 
 Fork the ESPEasy repository
 ---------------------------
+
+ESPEasy uses the 'Fork and Pull' development method. This is probably the most used method for open source projects. This involves creating a copy (the fork) of the project, and request to incorporate changes into the original project by means of pull requests.
 
 `Reasons for forking <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_ Quote: "A fork is a copy of a repository. Forking a repository allows you to freely experiment with changes without affecting the original project."
 
@@ -211,15 +215,19 @@ NB: PlatformIO is often shortened to PIO.
 Clone your forked repository to your computer
 ---------------------------------------------
 
+To get the ESPEasy sources on your computer for compilation and making modifications, a 'clone' has to be made, using the ``git clone`` command
+
 `Cloning a repository <https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository>`_ Quote: "You can clone your repository to create a local copy on your computer and sync between the two locations."
 
-To get the ESPEasy sources on your computer for compilation and making modifications, a 'clone' has to be made, using the ``git clone`` command
+.. note::
+
+    If available, a clone can of course also be made using GUI tools like `Github Desktop <https://desktop.github.com/>`_, `GitKraken <https://www.gitkraken.com/>`_, `SourceTree <https://www.sourcetreeapp.com/>`_ or `TortoiseGIT <https://tortoisegit.org/>`_, etc., but, as the ``git`` command-line tools have been installed as part of setting up the development environment, that is used in the steps here.
 
 Open a Command prompt (Windows) or Terminal session (MacOS or Linux), and ``cd`` to a folder where the ESPEasy project can/should be a subfolder of.
 
 Then type this command to create the clone:
 
-.. code-block:: none
+.. code-block::
 
     git clone https://github.com/[your_github_handle]/ESPEasy.git
 
@@ -235,13 +243,13 @@ Completed:
 .. image:: Github_clone_completed.png
     :alt: Github clone completed
 
-To be able to get the latest changes from the original project into your local copy, and to bring your changes as a 'pull request' (git terminology, often referred to as a 'PR', further explained below) to the ESPEasy repository, a connection has to be made from your local clone to the 'upstream' (git terminology) repository. This command needs to be issued **only once** after cloning the repository into a folder on your computer, and should be executed from the ``ESPEasy`` folder that was just created:
+To be able to get the latest changes from the original project into your local copy, and to bring your changes as a 'pull request' (git terminology, often referred to as a 'PR', further explained below) to the ESPEasy repository, a connection has to be made from your local clone to the 'upstream' source (git terminology, pointer to the repository the fork was taken from). This command needs to be issued **only once** after cloning the repository into a folder on your computer, and should be executed from the ``ESPEasy`` folder that was just created:
 
-.. code-block:: none
+.. code-block::
 
     git remote add upstream https://github.com/letscontrolit/ESPEasy
 
-Now this Command prompt / terminal can be closed.
+Now this Command prompt / terminal (or GUI tool) can be closed.
 
 Open the folder with ESPEasy project
 ------------------------------------
@@ -277,9 +285,9 @@ The first build will take some extra time, as PIO needs to first install some of
 Create a new branch
 -------------------
 
-As shown above, the git workflow starts by creating a new branch to do the development work in. This will record all changes to the sourcecode you make, and can be put in as a pull request for ESPEasy.
+As shown above, the git workflow starts by creating a new branch to do the development work in. This will record all changes to the sourcecode you make, and can be put in as a pull request (explained below) for ESPEasy.
 
-A new branch is created either by clicking on the 'mega' branch name and selecting the option 'Create new branch...' from the list presented. Then a new braanch name should be typed. Naming does have some conventions. New features are often named like 'feature/purpose-of-the-feature', and bugfixes are usually named like 'bugfix/what-is-to-be-fixed'. For the addition of this documentation, I've created a branch named 'feature/how-to-guide-for-new-developers':
+A new branch is created by clicking on the 'mega' branch name and selecting the option 'Create new branch...' from the list presented. Then a new braanch name should be typed. Branch naming does use some conventions. New features are often named like 'feature/purpose-of-the-feature', and bugfixes are usually named like 'bugfix/what-is-to-be-fixed'. For the addition of this documentation, I've created a branch named 'feature/how-to-guide-for-new-developers':
 
 .. image:: VSCode_create_branch.png
     :alt: VSCode create branch
@@ -292,7 +300,7 @@ A new branch is created either by clicking on the 'mega' branch name and selecti
 
 As an alternative, a new branch can also be created using command-line commands, you can type these after opening a Terminal in VSCode:
 
-.. code-block:: none
+.. code-block::
 
     git checkout -b feature/how-to-guide-for-new-developers
 
@@ -301,13 +309,13 @@ The nett result of this command is the same as from using the UI flow shown abov
 Change code of ESPEasy
 ----------------------
 
-To improve or extend an existing plugin or other code of ESPEasy, after creating a new branch for it, open the source file and modify code the as needed. Then compile and see if it all is according to the requirements of the compiler.
+To improve or extend an existing plugin or other code of ESPEasy, after creating a new branch for it, open the source file and modify code the as needed. Then compile and see if it all is according to the requirements of the compiler. Errors (showing as red text messages) will abort the compilation process, warnings, yellow messages, allow to continue, but should be resolved as much as possible before committing the code.
 
-Testing is done by uploading the result to an ESPEasy unit, testing the changed functionality to ensure no errors or undesired behavior remain in the code.
+Testing is done by uploading the generated .bin file to an ESPEasy unit, testing the changed functionality to ensure no errors or undesired behavior remain in the code.
 
 This uploading can be done in 2 ways:
 
-* *Use the Upload feature of PIO*: If the ESP unit is connected to the computer via USB and the serial chip of the unit is recognized by the OS, the Upload option can be selected to compile the sources (only what was changed since the last compilation) and start the upload procedure. After uploading the ESP will restart
+* *Use the Upload feature of PIO*: If the ESP unit is connected to the computer via USB and the serial chip of the unit is recognized by the OS, the Upload option can be selected to compile the sources (only what was changed since the last compilation) and start the upload procedure. After uploading the ESP will restart.
 * *Use the Update Firmware option of ESPEasy*: On the Tools tab of ESPEasy, there is a button Update Firmware available (on units that have enough free Flash space) so a new .bin file can be uploaded. The latest successful compiled file can be found in the ``build_output/bin`` subfolder of your ``ESPEasy`` folder.
 
 Writing documentation
@@ -317,7 +325,7 @@ Updating, or adding if it does not yet exist, the documentation is a useful acti
 
 The documentation is created in the reStructuredText format, using mostly a ``.rst`` extension, and can be built locally by installing the sphinx tool. This can be installed manually by opening a Terminal window in VSCode (an already open Terminal can also be used) and issuing these commands:
 
-.. code-block:: none
+.. code-block::
 
     cd docs
     pip install -r requirements.txt
@@ -334,13 +342,17 @@ Building the documentation into html files, for reviewing locally, can be done b
 
 On Windows:
 
-.. code-block:: none
+.. highlight::bat
+
+.. code-block::
 
     .\make.bat html
 
 On Linux or MacOS:
 
-.. code-block:: none
+.. highlight::sh
+
+.. code-block::
 
     make html
 
@@ -360,7 +372,7 @@ Especially for new plugins, it is highly recommended to write documentation, as 
 Commit and create a pull request
 --------------------------------
 
-After changing and testing sourcecode, using builds uploaded to an actual ESP unit, the time has come to present the changed code to ESPEasy to be included in the regular build. This is called a 'pull request', and is explained in this Github documentation `About pull requests <https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>`_ Quote: "Pull requests let you tell others about changes you've pushed to a branch in a repository on GitHub."
+After changing and testing your changed source code, using builds uploaded to an actual ESP unit, the time has come to present the changed code to ESPEasy to be included in the regular build. This is called a 'pull request', and is explained in this Github documentation `About pull requests <https://docs.github.com/en/github/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests>`_ Quote: "Pull requests let you tell others about changes you've pushed to a branch in a repository on GitHub."
 
 To make changes available for others they have to be 'staged' and 'committed' (git terminology) before it can be uploaded (pushed) to the repository. This stage and commit is a 2 step process, and easiest done from the VSCode UI. First select the GitLens plugin, and select the files that need to be staged and committed:
 
@@ -376,7 +388,7 @@ Clicking the marked check button, or using the Ctrl-Enter key combination, will 
 
 After the commit is completed, more commits can be added, if desired. It is good practice to commit separate functional changes in separate commits. That will make the review process, as explained in the Github flow documentation, easier.
 
-To have the commit(s) to be presented as a pull request they must be published, and the easiest way to accomplish that is to use the Publish Changes button in VSCode:
+To have the commit(s) to be presented as a pull request, they must be published, and the easiest way to accomplish that is to use the Publish Changes button in VSCode:
 
 .. image:: VSCode_Publish_changes.png
     :alt: VSCode publish change button
@@ -402,7 +414,7 @@ If needed, or requested during the review process, more changes can be made to f
 Regular maintenance of your fork
 --------------------------------
 
-If you have forked ESPEasy before (or some time ago), and want to start (new) work on the code, it is required to update your fork with the latest state of affairs of ESPEasy, to avoid surprises after submitting a PR.
+If you have forked ESPEasy before (or some time ago), and want to start (new) work on the code, it is required to update your fork with the latest state of affairs of ESPEasy, to avoid surprises, or difficulties when trying to merge, after submitting a PR.
 
 This expects the currently selected 'branch' to be ``mega``, as is visible in the VSCode statusbar:
 
@@ -411,27 +423,27 @@ This expects the currently selected 'branch' to be ``mega``, as is visible in th
 
 The desired branch can be selected by clicking the currently selected branch name as shown in the VSCode status bar, or by typing this command from a VSCode terminal window:
 
-.. code-block:: none
+.. code-block::
 
     git checkout mega
 
 The update is 'pulled' (git terminology) by getting the latest from the ``upstream`` source (we defined that source after the initial clone), by opening a terminal window in VSCode and issuing this command:
 
-.. code-block:: none
+.. code-block::
 
     git pull upstream mega
 
-(NB: The current development branch of ESPEasy is called ``mega`` where other Github repos often use ``master``. ESPEasy *does* have a ``master`` branch, but it isn't actively maintained.)
+(NB: The current development branch of ESPEasy is called ``mega`` where other Github repos often use ``master``, or ``main``. ESPEasy *does* have a ``master`` branch, but it currently isn't actively maintained. The name of the 'main' branch of any repository can be chosen freely, the ``master`` or ``main`` name is just used by convention.)
 
 Depending on the time passed since the last update, some files will be updated from the git pull command.
 
-To update your fork on Github, these changes should be 'pushed' (git terminology) by using the command:
+To update your fork on Github, these changes should be 'pushed' (git terminology) to your fork by using the command:
 
-.. code-block:: none
+.. code-block::
 
     git push
 
 If this is the first time you try to push any changes to your repository, VSCode, or actually the GitLens plugin, will ask for your Github credentials, and will switch back and forth a few times between your webbrowser and VSCode to complete the authentication process. This is as intended.
 
-Updating your fork this way should be done at least every time you start new work, and can be done more often if desired. If kept up to date you will avoid starting with an out-dated state of the repository.
+Updating your fork this way should be done at least every time before you start new work, and can be done more often if desired. If kept up to date you will avoid starting with an out-dated state of the repository.
 
