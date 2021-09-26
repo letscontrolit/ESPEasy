@@ -120,7 +120,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
       if (board_type == UNKNOWN)
       {
-        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC' or 'DO', check your i2c address? </span>"));
+        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH', 'ORP', 'EC' or 'DO', check your i2c address? </span>"));
       }
       addRowLabel(F("Board version"));
       addHtml(version);
@@ -134,7 +134,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addHtml(F("<span style='color:red;'>Unable to send command to device</span>"));
       if (board_type == UNKNOWN)
       {
-        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH' or 'ORP' or 'EC' or 'DO', check your i2c address?</span>"));
+        addHtml(F("<span style='color:red'>  WARNING : Board type should be 'pH', 'ORP', 'EC' or 'DO', check your i2c address? </span>"));
       }
       success = false;
       break;
@@ -273,15 +273,15 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addFormSubHeader(F("EC Calibration"));
       addCreateDryCalibration();
       addCreate3PointCalibration(board_type, event, I2Cchoice, F("&micro;S"), 0.0, 500000.0, 0, 1.0);
+      break;
     }
 
     case DO:
     {
       addFormSubHeader(F("DO Calibration"));
       addDOCalibration(I2Cchoice);
+      break;
     }
-    
-    break;
     }
 
     // Clear calibration
@@ -351,7 +351,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       _P103_send_I2C_command(I2Cchoice, probeType, setProbeTypeCmd);
     }
 
-    String cmd(F("Cal"));
+    String cmd(F("Cal,"));
     bool triggerCalibrate = false;
 
     PCONFIG_FLOAT(1) = getFormItemFloat(F("Plugin_103_ref_cal_single"));
@@ -360,32 +360,32 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
     if (isFormItemChecked(F("Plugin_103_enable_cal_clear")))
     {
-      cmd += F(",clear");
+      cmd += F("clear");
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_dry")))
     {
-      cmd += F(",dry");
+      cmd += F("dry");
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_single")))
     {
       if (board_type == PH)
       {
-        cmd += F(",mid,");
+        cmd += F("mid,");
       }
       cmd += PCONFIG_FLOAT(1);
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_L")))
     {
-      cmd += F(",low,");
+      cmd += F("low,");
       cmd += PCONFIG_FLOAT(2);
       triggerCalibrate = true;
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_H")))
     {
-      cmd += F(",high,");
+      cmd += F("high,");
       cmd += PCONFIG_FLOAT(3);
       triggerCalibrate = true;
     }
@@ -395,9 +395,10 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
     }
     else if (isFormItemChecked(F("Plugin_103_enable_cal_0")))
     {
-      cmd += F(",0");
+      cmd += F("0");
       triggerCalibrate = true;
     }
+
 
     if (triggerCalibrate)
     {
@@ -637,7 +638,6 @@ int addDOCalibration(uint8_t I2Cchoice)
 
   return nb_calibration_points;
 }
-
 
 void addCreateDryCalibration()
 {
