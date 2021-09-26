@@ -110,13 +110,7 @@ void run_compiletime_checks() {
   check_size<NotificationStruct,                    3u>();
   #endif
 
-  #if ESP_IDF_VERSION_MAJOR > 3
-  // String class has increased with 4 bytes
-  check_size<NodeStruct,                            60u>();
-  #else
   check_size<NodeStruct,                            56u>();
-  #endif
-
 
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
