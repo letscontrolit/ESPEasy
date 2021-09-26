@@ -1375,7 +1375,7 @@ public:
    * Release allocated memory and does the necessary to clean up once the object is
    * no longer required.
    */
-  ~MD_Parola(void);
+  virtual ~MD_Parola(void);
 
   // --------------------------------------------------------------
 

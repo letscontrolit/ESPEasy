@@ -67,6 +67,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2021-09    tonhuisman: Minor improvements, attempts to fix stack failures
 // 2021-08-08 tonhuisman: Reworked loading & saving the settings from A huge fixed size pre-allocated block to dynamic allocation
 //                        and saving/loading per zone. That should sove the numerous stack related crashes.
 // 2021-08-07 tonhuisman: Review feedback: several small improvements and corrections

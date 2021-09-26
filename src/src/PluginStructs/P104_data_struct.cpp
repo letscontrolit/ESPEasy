@@ -52,9 +52,10 @@ P104_data_struct::~P104_data_struct() {
   # endif // ifdef P104_USE_BAR_GRAPH
 
   if (nullptr != P) {
+    P->~MD_Parola(); // Call destructor directly, as delete of the object fails miserably
     // do not: delete P; // Warning: the MD_Parola object doesn't have a virtual destructor, and when changed,
     // a reboot uccurs when the object is deleted here!
-    P = nullptr; // Reset only
+    P = nullptr;     // Reset only
   }
 }
 
@@ -68,7 +69,9 @@ bool P104_data_struct::begin() {
   }
 
   if ((P != nullptr) && (cs_pin > -1)) {
+    # ifdef P104_DEBUG
     addLog(LOG_LEVEL_INFO, F("dotmatrix: begin() called"));
+    # endif // ifdef P104_DEBUG
     P->begin(expectedZones);
     # ifdef P104_USE_BAR_GRAPH
     pM = P->getGraphicObject();
@@ -94,9 +97,9 @@ bool P104_data_struct::begin() {
    - uint16_t : size of the next blob holding all settings
    - char[x]  : Blob with settings, with csv-like strings, using P104_FIELD_SEP and P104_ZONE_SEP separators
    Version 2:
-   - uint16_t : marker with cpntent P104_CONFIG_VERSION_V2
-   - uint16_t : size of next blob holding 1 zone settings
-   - char[y]  : Blob holding 1 zone settings, with csv like string, using P104_FIELD_SEP separators
+   - uint16_t : marker with content P104_CONFIG_VERSION_V2
+   - uint16_t : size of next blob holding 1 zone settings string
+   - char[y]  : Blob holding 1 zone settings string, with csv like string, using P104_FIELD_SEP separators
    - uint16_t : next size, if 0 then no more blobs
    - char[x]  : Blob
    - ...
@@ -120,7 +123,7 @@ void P104_data_struct::loadSettings() {
 
     if (!settingsVersionV2) {
       reservedBuffer = bufferSize + 1;              // just add 1 for storing a string-terminator
-      addLog(LOG_LEVEL_INFO, F("DOTMATRIX: Reading Settings V1, will be stored as Settings V2."));
+      addLog(LOG_LEVEL_INFO, F("dotmatrix: Reading Settings V1, will be stored as Settings V2."));
     } else {
       reservedBuffer = P104_SETTINGS_BUFFER_V2 + 1; // just add 1 for storing a string-terminator
     }
@@ -128,13 +131,11 @@ void P104_data_struct::loadSettings() {
     settingsBuffer = new char[reservedBuffer]();    // Allocate buffer and reset to all zeroes
     loadOffset    += sizeof(bufferSize);
 
-    if (!settingsVersionV2) {
-      structDataSize = bufferSize;
-    } else {
+    if (settingsVersionV2) {
       LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)&bufferSize, sizeof(bufferSize), loadOffset);
-      structDataSize = bufferSize;
-      loadOffset    += sizeof(bufferSize); // Skip the size
+      loadOffset += sizeof(bufferSize); // Skip the size
     }
+    structDataSize = bufferSize;
     # ifdef P104_DEBUG_DEV
     String log;
 
@@ -183,8 +184,7 @@ void P104_data_struct::loadSettings() {
         zones.clear();
       }
       zones.reserve(P104_MAX_ZONES);
-      zonesInitialized = false;
-      numDevices       = 0;
+      numDevices = 0;
 
       String   tmp;
       String   fld;
@@ -295,12 +295,15 @@ void P104_data_struct::loadSettings() {
         }
         zoneIndex++;
 
+        # ifdef P104_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          log  = F("DOTMATRIX: parsed zone: ");
+          log  = F("dotmatrix: parsed zone: ");
           log += zoneIndex;
           addLog(LOG_LEVEL_INFO, log);
         }
+        # endif // ifdef P104_DEBUG
       }
 
       buffer.clear();        // Free some memory
@@ -333,7 +336,6 @@ void P104_data_struct::loadSettings() {
       zoneIndex++;
       delay(0);
     }
-    zonesInitialized = true;
     # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -351,8 +353,9 @@ void P104_data_struct::loadSettings() {
  * configureZones: initialize Zones setup
  ***************************************************/
 void P104_data_struct::configureZones() {
-  if (!zonesInitialized) {
+  if (!initialized) {
     loadSettings();
+    initialized = true;
   }
 
   uint8_t currentZone = 0;
@@ -384,10 +387,6 @@ void P104_data_struct::configureZones() {
       zoneOffset += it->size;
 
       switch (it->font) {
-        case P104_DEFAULT_FONT_ID: {
-          P->setFont(currentZone, nullptr); // default font
-          break;
-        }
         # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         case P104_DOUBLE_HEIGHT_FONT_ID: {
           P->setFont(currentZone, numeric7SegDouble);
@@ -433,7 +432,14 @@ void P104_data_struct::configureZones() {
         }
         # endif // ifdef P104_USE_KATAKANA_FONT
 
-          // Extend here with more fonts if/when available
+        // Extend above this comment with more fonts if/when available,
+        // case P104_DEFAULT_FONT_ID: and default: clauses should be the last options.
+        // This should also make sure the default font is set if a no longer available font was selected
+        case P104_DEFAULT_FONT_ID:
+        default: {
+          P->setFont(currentZone, nullptr); // default font
+          break;
+        }
       }
 
       // Special Effects
@@ -456,6 +462,8 @@ void P104_data_struct::configureZones() {
       }
       # endif // ifdef P104_DEBUG_DEV
 
+      delay(0);
+
       // Content == text && text != ""
       if (((it->content == P104_CONTENT_TEXT) ||
            (it->content == P104_CONTENT_TEXT_REV))
@@ -476,6 +484,7 @@ void P104_data_struct::configureZones() {
         it->_repeatTimer = millis();
       }
       currentZone++;
+      delay(0);
     }
   }
 
@@ -539,14 +548,16 @@ void P104_data_struct::updateZone(uint8_t                 zone,
 
   if (zone == 0) {
     for (auto it = zones.begin(); it != zones.end(); ++it) {
-      if ((it->content == P104_CONTENT_TEXT) ||
-          (it->content == P104_CONTENT_TEXT_REV)) {
+      if ((it->zone > 0) &&
+          ((it->content == P104_CONTENT_TEXT) ||
+           (it->content == P104_CONTENT_TEXT_REV))) {
         displayOneZoneText(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed text
         P->displayReset(it->zone - 1);
       }
       # ifdef P104_USE_BAR_GRAPH
 
-      if (it->content == P104_CONTENT_BAR_GRAPH) {
+      if ((it->zone > 0) &&
+          (it->content == P104_CONTENT_BAR_GRAPH)) {
         displayBarGraph(it->zone - 1, *it, sZoneInitial[it->zone - 1]); // Re-send last displayed bar graph
       }
       # endif // ifdef P104_USE_BAR_GRAPH
@@ -563,14 +574,16 @@ void P104_data_struct::updateZone(uint8_t                 zone,
       }
     }
   } else {
-    if ((zstruct.content == P104_CONTENT_TEXT) ||
-        (zstruct.content == P104_CONTENT_TEXT_REV)) {
+    if ((zstruct.zone > 0) &&
+        ((zstruct.content == P104_CONTENT_TEXT) ||
+         (zstruct.content == P104_CONTENT_TEXT_REV))) {
       displayOneZoneText(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed text
       P->displayReset(zstruct.zone - 1);
     }
     # ifdef P104_USE_BAR_GRAPH
 
-    if (zstruct.content == P104_CONTENT_BAR_GRAPH) {
+    if ((zstruct.zone > 0) &&
+        (zstruct.content == P104_CONTENT_BAR_GRAPH)) {
       displayBarGraph(zstruct.zone - 1, zstruct, sZoneInitial[zstruct.zone - 1]); // Re-send last displayed bar graph
     }
     # endif // ifdef P104_USE_BAR_GRAPH
@@ -2057,49 +2070,49 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , F("Numeric, double height (1)")
-    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , F("Full, double height (2)")
-    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , F("Vertical (3)")
-    # endif   // ifdef P104_USE_VERTICAL_FONT
+    # endif // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , F("Extended ASCII (4)")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , F("Arabic (5)")
-    # endif   // ifdef P104_USE_ARABIC_FONT
+    # endif // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , F("Greek (6)")
-    # endif   // ifdef P104_USE_GREEK_FONT
+    # endif // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , F("Katakana (7)")
-    # endif   // ifdef P104_USE_KATAKANA_FONT
+    # endif // ifdef P104_USE_KATAKANA_FONT
     };
     const int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
-    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , P104_FULL_DOUBLEHEIGHT_FONT_ID
-    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , P104_VERTICAL_FONT_ID
-    # endif   // ifdef P104_USE_VERTICAL_FONT
+    # endif // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , P104_EXT_ASCII_FONT_ID
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , P104_ARABIC_FONT_ID
-    # endif   // ifdef P104_USE_ARABIC_FONT
+    # endif // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , P104_GREEK_FONT_ID
-    # endif   // ifdef P104_USE_GREEK_FONT
+    # endif // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , P104_KATAKANA_FONT_ID
-    # endif   // ifdef P104_USE_KATAKANA_FONT
+    # endif // ifdef P104_USE_KATAKANA_FONT
     };
 
     int layoutCount = 1;

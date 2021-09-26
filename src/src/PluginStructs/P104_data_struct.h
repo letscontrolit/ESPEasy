@@ -4,7 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P104
 
-# define P104_DEBUG // Log some extra (tech) data, also useful during development
+// # define P104_DEBUG // Log some extra (tech) data, also useful during development
 // # define P104_DEBUG_DEV // Log some extra development info
 
 # include "../CustomBuild/StorageLayout.h"
@@ -426,16 +426,15 @@ private:
   int8_t                   cs_pin;
   uint8_t                  modules;
 
-  uint16_t numDevices       = 0u;
-  uint8_t  zoneOrder        = 0u;
-  int8_t   expectedZones    = -1;
-  int8_t   previousZones    = -1;
-  bool     initialized      = false;
-  bool     zonesInitialized = false;
-  bool     flasher          = false; // seconds passing flasher
+  uint16_t numDevices    = 0u;
+  uint8_t  zoneOrder     = 0u;
+  int8_t   expectedZones = -1;
+  int8_t   previousZones = -1;
+  bool     initialized   = false;
+  bool     flasher       = false; // seconds passing flasher
 
   // time/date stuff
-  char szTimeL[P104_MAX_MESG];       // dd-mm-yyyy hh:mm:ss\0
+  char szTimeL[P104_MAX_MESG];    // dd-mm-yyyy hh:mm:ss\0
   char szTimeH[P104_MAX_MESG];
 };
 
