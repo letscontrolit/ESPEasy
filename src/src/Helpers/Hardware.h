@@ -24,7 +24,10 @@ void hardwareInit();
 
 void initI2C();
 
-void I2CSelectClockSpeed(bool setLowSpeed);
+void I2CSelectHighClockSpeed();
+void I2CSelectLowClockSpeed();
+void I2CSelect_Max100kHz_ClockSpeed();
+void I2CSelectClockSpeed(uint32_t clockFreq);
 
 #ifdef FEATURE_I2CMULTIPLEXER
 bool isI2CMultiplexerEnabled();

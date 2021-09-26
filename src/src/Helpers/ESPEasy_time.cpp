@@ -11,6 +11,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
@@ -723,6 +724,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
     case ExtTimeSource_e::DS1307:
       {
         #ifdef USE_EXT_RTC
+        I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -815,6 +817,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     case ExtTimeSource_e::DS1307:
       {
         #ifdef USE_EXT_RTC
+        I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
