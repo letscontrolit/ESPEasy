@@ -1368,7 +1368,13 @@ To create/register a plugin, you have to :
     #define USES_P102   // PZEM004Tv3
   #endif
   #ifndef USES_P103
-    #define USES_P103   // Atlas EZO pH, ORP, EC, DO
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   //
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // AHT10/20/21
   #endif
   #ifndef USES_P104
     #define USES_P104   //
