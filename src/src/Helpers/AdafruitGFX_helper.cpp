@@ -1062,6 +1062,8 @@ void AdafruitGFX_helper::printText(const char    *string,
 
   _display->getTextBounds(F(" "), _x, _y, &x1, &y1, &w1, &h1);
 
+  if (w1 == 0) { w1 = _fontwidth; } // Some fonts seem to have a 0-wide space, this is an endless loop protection
+
   if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
     _display->setCursor(_x, _y);
     w0 = 0;
