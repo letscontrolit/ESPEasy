@@ -1141,7 +1141,6 @@ To create/register a plugin, you have to :
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
     //#define USES_P099   // XPT2046 Touchscreen
-    #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
     #define USES_P105   // AHT10/20/21
 #endif
 
@@ -1150,7 +1149,7 @@ To create/register a plugin, you have to :
 
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
-    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO)
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -1428,7 +1427,13 @@ To create/register a plugin, you have to :
     #define USES_P102   // PZEM004Tv3
   #endif
   #ifndef USES_P103
-    #define USES_P103   // Atlas EZO pH, ORP, EC, DO
+    #define USES_P103   // Atlas EZO pH
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   // Atlas EZO EC
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // AHT10/20/21
   #endif
   #ifndef USES_P108
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
