@@ -113,7 +113,7 @@ void handle_i2cscanner_json() {
 
   int  nDevices = 0;
 
-  I2CSelectClockSpeed(true);    // Always scan in low speed to also find old/slow devices
+  I2CSelect_Max100kHz_ClockSpeed();    // Always scan in low speed to also find old/slow devices
 #ifdef FEATURE_I2CMULTIPLEXER
   i2c_addresses_t mainBusDevices;
   mainBusDevices.resize(128);
@@ -135,7 +135,7 @@ void handle_i2cscanner_json() {
     I2CMultiplexerOff();
   }
 #endif
-  I2CSelectClockSpeed(false); // Reset bus to standard speed
+  I2CSelectHighClockSpeed(); // Reset bus to standard speed
   
   json_close(true);
   TXBuffer.endStream();
@@ -200,6 +200,8 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("MAX1704x");
       break;
     case 0x38:
+      result =  F("PCF8574A,AHT10/20/21");
+      break;
     case 0x3A:
     case 0x3B:
     case 0x3E:
@@ -207,7 +209,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("PCF8574A");
       break;
     case 0x39:
-      result +=  F("PCF8574A,TSL2561,APDS9960");
+      result =  F("PCF8574A,TSL2561,APDS9960,AHT10");
       break;
     case 0x3C:
     case 0x3D:
@@ -387,7 +389,7 @@ void handle_i2cscanner() {
 
   if (Settings.isI2CEnabled()) {
     int  nDevices = 0;
-    I2CSelectClockSpeed(true);  // Scan bus using low speed
+    I2CSelect_Max100kHz_ClockSpeed();  // Scan bus using low speed
     #ifdef FEATURE_I2CMULTIPLEXER
     i2c_addresses_t mainBusDevices;
     mainBusDevices.resize(128);
@@ -409,7 +411,7 @@ void handle_i2cscanner() {
       I2CMultiplexerOff();
     }
     #endif
-    I2CSelectClockSpeed(false);   // By default the bus is in standard speed
+    I2CSelectHighClockSpeed();   // By default the bus is in standard speed
 
     if (nDevices == 0) {
       addHtml(F("<TR>No I2C devices found"));

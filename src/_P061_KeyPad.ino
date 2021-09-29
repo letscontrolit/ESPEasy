@@ -100,7 +100,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F };
+      const uint8_t i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), (PCONFIG(1) == 0) ? 8 : 16, i2cAddressValues, PCONFIG(0));
 
@@ -162,7 +162,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
       {
         if (sentScanCode != actScanCode) // any change to last sent data?
         {
-          UserVar[event->BaseVarIndex] = (float)actScanCode;
+          UserVar[event->BaseVarIndex] = actScanCode;
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
           String log = F("KPad : ScanCode=0x");

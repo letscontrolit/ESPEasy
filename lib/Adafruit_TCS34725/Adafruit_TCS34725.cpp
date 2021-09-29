@@ -486,7 +486,7 @@ uint16_t Adafruit_TCS34725::calculateLux(uint16_t r, uint16_t g, uint16_t b)
  *  @return ATIME value
  */
 uint8_t Adafruit_TCS34725::calculateIntegrationConstant(float it_msec) {
-  int atime = 258.59 - it_msec / 2.475;
+  int atime = 258.59f - it_msec / 2.475f;
   atime = atime < 0 ? 0 : atime;
   atime = atime > 255 ? 255 : atime;
   return (uint8_t) atime;
@@ -501,7 +501,7 @@ uint8_t Adafruit_TCS34725::calculateIntegrationConstant(float it_msec) {
 float Adafruit_TCS34725::calculateIntegrationTime(uint8_t atime) {
   /* equation according to datasheet is 2.4 * (256 - atime), but that seems to be inaccurate
    */
-  return 2.475 * (258.59 - atime);
+  return 2.475f * (258.59f - atime);
 }
 
 /*!

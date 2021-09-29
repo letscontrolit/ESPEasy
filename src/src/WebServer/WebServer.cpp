@@ -19,7 +19,6 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Log.h"
-#include "../WebServer/Login.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -47,6 +46,7 @@
 #include "../DataTypes/SettingsType.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 
 #include "../Globals/CPlugins.h"
@@ -347,7 +347,6 @@ void WebServerInit()
   web_server.on(F("/json"),            handle_json); // Also part of WEBSERVER_NEW_UI
   web_server.on(F("/csv"),             handle_csvval);
   web_server.on(F("/log"),             handle_log);
-  web_server.on(F("/login"),           handle_login);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
 #ifdef USES_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
@@ -969,42 +968,54 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   }
 }
 
+
 // ********************************************************************************
 // Login state check
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin)
 {
-  String www_username = F(DEFAULT_ADMIN_USERNAME);
-
   if (!clientIPallowed()) { return false; }
 
   if (SecuritySettings.Password[0] == 0) { return true; }
-
+  
   if (!mustProvideLogin) {
     return false;
   }
-  if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
-
-  // Basic Auth Method with Custom realm and Failure Response
-  // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
-  // Digest Auth Method with realm="Login Required" and empty Failure Response
-  // return server.requestAuthentication(DIGEST_AUTH);
-  // Digest Auth Method with Custom realm and empty Failure Response
-  // return server.requestAuthentication(DIGEST_AUTH, www_realm);
-  // Digest Auth Method with Custom realm and Failure Response
+  
   {
+    String www_username = F(DEFAULT_ADMIN_USERNAME);
+    if (!web_server.authenticate(www_username.c_str(), SecuritySettings.Password))
+
+    // Basic Auth Method with Custom realm and Failure Response
+    // return server.requestAuthentication(BASIC_AUTH, www_realm, authFailResponse);
+    // Digest Auth Method with realm="Login Required" and empty Failure Response
+    // return server.requestAuthentication(DIGEST_AUTH);
+    // Digest Auth Method with Custom realm and empty Failure Response
+    // return server.requestAuthentication(DIGEST_AUTH, www_realm);
+    // Digest Auth Method with Custom realm and Failure Response
+    {
 #ifdef CORE_PRE_2_5_0
 
-    // See https://github.com/esp8266/Arduino/issues/4717
-    HTTPAuthMethod mode = BASIC_AUTH;
+      // See https://github.com/esp8266/Arduino/issues/4717
+      HTTPAuthMethod mode = BASIC_AUTH;
 #else // ifdef CORE_PRE_2_5_0
-    HTTPAuthMethod mode = DIGEST_AUTH;
+      HTTPAuthMethod mode = DIGEST_AUTH;
 #endif // ifdef CORE_PRE_2_5_0
-    String message = F("Login Required (default user: ");
-    message += www_username;
-    message += ')';
-    web_server.requestAuthentication(mode, message.c_str());
-    return false;
+      String message = F("Login Required (default user: ");
+      message += www_username;
+      message += ')';
+      web_server.requestAuthentication(mode, message.c_str());
+
+      if (Settings.UseRules)
+      {
+        String event = F("Login#Failed");
+
+        // TD-er: Do not add to the eventQueue, but execute right now.
+        rulesProcessing(event);
+      }
+
+      return false;
+    }
   }
   return true;
 }
@@ -1141,7 +1152,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
 {
   const int nbars_filled = (rssi + 100) / 8;
   int nbars              = 5;
-  int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2;
+  int white_between_bar  = (static_cast<float>(width_pixels) / nbars) * 0.2f;
 
   if (white_between_bar < 1) { white_between_bar = 1; }
   const int barWidth   = (width_pixels - (nbars - 1) * white_between_bar) / nbars;
@@ -1192,7 +1203,7 @@ void getConfig_dat_file_layout() {
 
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
-  float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   createSvgTextElement(SettingsType::getSettingsFileName(SettingsType::Enum::TaskSettings_Type), textXoffset, textYoffset);
   addHtml(F("</svg>\n"));
@@ -1225,7 +1236,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
     // Text labels
     float textXoffset = SVG_BAR_WIDTH + 2;
-    float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+    float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
     createSvgTextElement(formatHumanReadable(offset, 1024),   textXoffset, textYoffset);
     textXoffset = SVG_BAR_WIDTH + 60;
     createSvgTextElement(formatHumanReadable(max_size, 1024), textXoffset, textYoffset);
@@ -1244,7 +1255,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
   // Text labels
   float textXoffset = SVG_BAR_WIDTH + 2;
-  float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+  float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   if (struct_size != 0) {
     String text = formatHumanReadable(struct_size, 1024);
@@ -1298,7 +1309,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
       createSvgHorRectPath(0xcdcdcd,       0,                yOffset, realSize,      SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       createSvgHorRectPath(partitionColor, _mypart->address, yOffset, _mypart->size, SVG_BAR_HEIGHT - 2, realSize, SVG_BAR_WIDTH);
       float textXoffset = SVG_BAR_WIDTH + 2;
-      float textYoffset = yOffset + 0.9 * SVG_BAR_HEIGHT;
+      float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
       createSvgTextElement(formatHumanReadable(_mypart->size, 1024),          textXoffset, textYoffset);
       textXoffset = SVG_BAR_WIDTH + 60;
       createSvgTextElement(_mypart->label,                                    textXoffset, textYoffset);

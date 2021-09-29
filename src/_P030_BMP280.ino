@@ -105,7 +105,7 @@ boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x76, 0x77 };
+      const uint8_t i2cAddressValues[] = { 0x76, 0x77 };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
         addFormNote(F("SDO Low=0x76, High=0x77"));
@@ -162,9 +162,9 @@ boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
 
         if (elev)
         {
-          UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation((float)Plugin_030_readPressure(idx) / 100, elev);
+          UserVar[event->BaseVarIndex + 1] = Plugin_030_pressureElevation(static_cast<float>(Plugin_030_readPressure(idx)) / 100.0f, elev);
         } else {
-          UserVar[event->BaseVarIndex + 1] = ((float)Plugin_030_readPressure(idx)) / 100;
+          UserVar[event->BaseVarIndex + 1] = static_cast<float>(Plugin_030_readPressure(idx)) / 100.0f;
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -315,7 +315,7 @@ float Plugin_030_readPressure(uint8_t idx) {
   var2 = (((int64_t)_bmp280_calib[idx].dig_P8) * p) >> 19;
 
   p = ((p + var1 + var2) >> 8) + (((int64_t)_bmp280_calib[idx].dig_P7) << 4);
-  return (float)p / 256;
+  return static_cast<float>(p) / 256.0f;
 }
 
 // **************************************************************************/
@@ -328,14 +328,14 @@ float Plugin_030_readAltitude(float seaLevel)
 {
   float atmospheric = Plugin_030_readPressure(bmp280_i2caddr & 0x01) / 100.0F;
 
-  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
+  return 44330.0f * (1.0f - powf(atmospheric / seaLevel, 0.1903f));
 }
 
 // **************************************************************************/
 // MSL pressure formula
 // **************************************************************************/
 float Plugin_030_pressureElevation(float atmospheric, int altitude) {
-  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
+  return atmospheric / powf(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // USES_P030

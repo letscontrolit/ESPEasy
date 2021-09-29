@@ -2,6 +2,7 @@
 
 #ifdef HAS_ETHERNET
 
+#include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -150,6 +151,10 @@ bool ETHConnected() {
       }
       return false;
     } else {
+      if (EthEventData.last_eth_connect_attempt_moment.isSet() && 
+          EthEventData.last_eth_connect_attempt_moment.millisPassedSince() < 5000) {
+        return false;
+      }
       setNetworkMedium(NetworkMedium_t::WIFI);
     }
   }

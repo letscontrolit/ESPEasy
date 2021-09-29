@@ -106,8 +106,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
     # ifdef CPLUGIN_015_SSL
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
-      char thumbprint[60];
-      LoadCustomControllerSettings(event->ControllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
+      char thumbprint[60] = {0};
+      LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(&thumbprint), sizeof(thumbprint));
 
       if (strlen(thumbprint) != 59) {
         strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
@@ -142,13 +142,13 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         _C015_LastConnectAttempt[event->ControllerIndex] = 0;
 
           # ifdef CPLUGIN_015_SSL
-        char   thumbprint[60];
+        char   thumbprint[60] = {0};
         String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
 
         if (!safe_strncpy(thumbprint, webArg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
           addHtmlError(error);
         }
-        SaveCustomControllerSettings(event->ControllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
+        SaveCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(&thumbprint), sizeof(thumbprint));
           # endif // ifdef CPLUGIN_015_SSL
       }
       break;
@@ -286,8 +286,8 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     _C015_LastConnectAttempt[controllerIndex] = millis();
 
     # ifdef CPLUGIN_015_SSL
-    char thumbprint[60];
-    LoadCustomControllerSettings(controllerIndex, (uint8_t *)&thumbprint, sizeof(thumbprint));
+    char thumbprint[60] = {0};
+    LoadCustomControllerSettings(controllerIndex, reinterpret_cast<uint8_t *>(&thumbprint), sizeof(thumbprint));
 
     if (strlen(thumbprint) != 59) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {

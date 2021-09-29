@@ -160,7 +160,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x3c, 0x3d };
+      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("plugin_109_adr"), 2, i2cAddressValues, PCONFIG(0));
       } else {
@@ -179,7 +179,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       const int                  optionValues1[] = { 1, 2 };
       addFormSelector(F("Rotation"), F("plugin_109_rotate"), 2, options1, optionValues1, PCONFIG(1));
 
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       for (byte varNr = 0; varNr < P109_Nlines; varNr++)
       {
@@ -233,10 +233,11 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         argName  = F("Plugin_109_template");
         argName += varNr + 1;
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]));
+        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       success = true;
       break;
@@ -247,7 +248,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       P109_lastWiFiState = P109_WIFI_STATE_UNSET;
 
       // Load the custom settings from flash
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&P109_deviceTemplate, sizeof(P109_deviceTemplate));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
       //      Init the display and turn it on
       if (P109_display)
@@ -279,17 +280,17 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       logstr += Settings.TaskDevicePin3[event->TaskIndex];
       addLog(LOG_LEVEL_INFO, logstr);
 
-      if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
       }
 
-      if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin2[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
       }
 
-      if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin3[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
       }
@@ -300,7 +301,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
       if (f)
       {
-        f.read(((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16);
+        f.read(reinterpret_cast<uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
         f.close();
       }
       Plugin_109_lastsavetime = millis();
@@ -356,7 +357,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       unsigned long current_time;
 
       if (Plugin_109_init) {
-        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin1[event->TaskIndex]))
           {
@@ -388,7 +389,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin2[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin2[event->TaskIndex]))
           {
@@ -420,7 +421,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin3[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
           {
@@ -484,7 +485,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
 
             if (f)
             {
-              f.write(((uint8_t *)&UserVar[event->BaseVarIndex] + 0), 16);
+              f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
               f.close();
               flashCount();
             }
@@ -511,13 +512,13 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           if ((atempstr.length() > 0) && (Plugin_109_prev_temp != 99)) { // do not switch until the first temperature data arrives
             float atemp = atempstr.toFloat();
 
-            if (atemp != 0.0) {
+            if (atemp != 0.0f) {
               if ((UserVar[event->BaseVarIndex] > atemp) && (UserVar[event->BaseVarIndex + 1] < 1))
               {
                 P109_setHeater(F("1"));
                 Plugin_109_changed = 1;
-              } else if (((((float)atemp - (float)Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0]) >=
-                           (float)UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
+              } else if ((((static_cast<float>(atemp) - static_cast<float>(Settings.TaskDevicePluginConfigFloat[event->TaskIndex][0])) >=
+                           UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
                 P109_setHeater(F("0"));
                 Plugin_109_changed = 1;
               } else {
@@ -758,9 +759,9 @@ void P109_display_timeout() {
   if (UserVar[Plugin_109_varindex + 2] == 2) {
     if (Plugin_109_prev_timeout >= (UserVar[Plugin_109_varindex + 3] + 60)) {
       float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60;
-      String thour     = toString(((int)(timeinmin / 60)), 0);
+      String thour     = toString((static_cast<int>(timeinmin / 60)), 0);
       thour += F(":");
-      String thour2 = toString(((int)timeinmin % 60), 0);
+      String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
 
       if (thour2.length() < 2) {
         thour += "0" + thour2;

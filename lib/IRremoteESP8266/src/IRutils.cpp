@@ -67,6 +67,18 @@ String uint64ToString(uint64_t input, uint8_t base) {
   return result;
 }
 
+/// Convert a int64_t (signed long long) to a string.
+/// Arduino String/toInt/Serial.print() can't handle printing 64 bit values.
+/// @param[in] input The value to print
+/// @param[in] base The output base.
+/// @returns A String representation of the integer.
+String int64ToString(int64_t input, uint8_t base) {
+  if (input < 0) {
+    return "-" + uint64ToString(-input, base);
+  }
+  return uint64ToString(input, base);
+}
+
 #ifdef ARDUINO
 /// Print a uint64_t/unsigned long long to the Serial port
 /// Serial.print() can't handle printing long longs. (uint64_t)
@@ -145,6 +157,7 @@ bool hasACState(const decode_type_t protocol) {
     case GREE:
     case HAIER_AC:
     case HAIER_AC_YRW02:
+    case HAIER_AC176:
     case HITACHI_AC:
     case HITACHI_AC1:
     case HITACHI_AC2:
@@ -165,6 +178,7 @@ bool hasACState(const decode_type_t protocol) {
     case SANYO_AC:
     case SHARP_AC:
     case TCL112AC:
+    case TEKNOPOINT:
     case TOSHIBA_AC:
     case TROTEC:
     case VOLTAS:
@@ -494,6 +508,19 @@ namespace irutils {
     return addLabeledString(uint64ToString(value), label, precomma);
   }
 
+  /// Create a String with a colon separated labeled Integer suitable for
+  /// Humans.
+  /// e.g. "Foo: 23"
+  /// @param[in] value The value to come after the label.
+  /// @param[in] label The label to precede the value.
+  /// @param[in] precomma Should the output string start with ", " or not?
+  /// @return The resulting String.
+  String addSignedIntToString(const int16_t value, const String label,
+                              const bool precomma) {
+    return addLabeledString(int64ToString(value), label, precomma);
+  }
+
+
   /// Generate the model string for a given Protocol/Model pair.
   /// @param[in] protocol The IR protocol.
   /// @param[in] model The model number for that protocol.
@@ -507,6 +534,7 @@ namespace irutils {
           case fujitsu_ac_remote_model_t::ARREB1E: return F("ARREB1E");
           case fujitsu_ac_remote_model_t::ARJW2: return F("ARJW2");
           case fujitsu_ac_remote_model_t::ARRY4: return F("ARRY4");
+          case fujitsu_ac_remote_model_t::ARREW4E: return F("ARREW4E");
           default: return kUnknownStr;
         }
         break;
@@ -538,6 +566,7 @@ namespace irutils {
         switch (model) {
           case sharp_ac_remote_model_t::A907: return F("A907");
           case sharp_ac_remote_model_t::A705: return F("A705");
+          case sharp_ac_remote_model_t::A903: return F("A903");
           default: return kUnknownStr;
         }
         break;
@@ -593,6 +622,22 @@ namespace irutils {
   String addTempToString(const uint16_t degrees, const bool celsius,
                          const bool precomma) {
     String result = addIntToString(degrees, kTempStr, precomma);
+    result += celsius ? 'C' : 'F';
+    return result;
+  }
+
+  /// Create a String of human output for a given temperature.
+  /// e.g. "Temp: 25.5C"
+  /// @param[in] degrees The temperature in degrees.
+  /// @param[in] celsius Is the temp Celsius or Fahrenheit.
+  ///  true is C, false is F
+  /// @param[in] precomma Should the output string start with ", " or not?
+  /// @return The resulting String.
+  String addTempFloatToString(const float degrees, const bool celsius,
+                              const bool precomma) {
+    String result = addIntToString(degrees, kTempStr, precomma);
+    // Is it a half degree?
+    if (((uint16_t)(2 * degrees)) & 1) result += F(".5");
     result += celsius ? 'C' : 'F';
     return result;
   }
@@ -654,19 +699,138 @@ namespace irutils {
   /// @param[in] automatic The numeric value for Auto speed.
   /// @param[in] quiet The numeric value for Quiet speed.
   /// @param[in] medium The numeric value for Medium speed.
+  /// @param[in] maximum The numeric value for Highest speed. (if > high)
   /// @return The resulting String.
   String addFanToString(const uint8_t speed, const uint8_t high,
                         const uint8_t low, const uint8_t automatic,
-                        const uint8_t quiet, const uint8_t medium) {
+                        const uint8_t quiet, const uint8_t medium,
+                        const uint8_t maximum) {
     String result = addIntToString(speed, kFanStr);
     result += kSpaceLBraceStr;
-    if (speed == high) result += kHighStr;
-    else if (speed == low) result += kLowStr;
+    if (speed == high)           result += kHighStr;
+    else if (speed == low)       result += kLowStr;
     else if (speed == automatic) result += kAutoStr;
-    else if (speed == quiet) result += kQuietStr;
-    else if (speed == medium) result += kMediumStr;
+    else if (speed == quiet)     result += kQuietStr;
+    else if (speed == medium)    result += kMediumStr;
+    else if (speed == maximum)   result += kMaximumStr;
     else
-     result += kUnknownStr;
+      result += kUnknownStr;
+    return result + ')';
+  }
+
+  /// Create a String of human output for the given horizontal swing setting.
+  /// e.g. "Swing(H): 0 (Auto)"
+  /// @param[in] position The numeric position of the swing to display.
+  /// @param[in] automatic The numeric value for Auto position.
+  /// @param[in] maxleft The numeric value for most left position.
+  /// @param[in] left The numeric value for Left position.
+  /// @param[in] middle The numeric value for Middle position.
+  /// @param[in] right The numeric value for Right position.
+  /// @param[in] maxright The numeric value for most right position.
+  /// @param[in] off The numeric value for Off position.
+  /// @param[in] leftright The numeric value for "left right" position.
+  /// @param[in] rightleft The numeric value for "right left" position.
+  /// @param[in] threed The numeric value for 3D setting.
+  /// @param[in] wide The numeric value for Wide position.
+  /// @return The resulting String.
+  String addSwingHToString(const uint8_t position, const uint8_t automatic,
+                           const uint8_t maxleft, const uint8_t left,
+                           const uint8_t middle,
+                           const uint8_t right, const uint8_t maxright,
+                           const uint8_t off,
+                           const uint8_t leftright, const uint8_t rightleft,
+                           const uint8_t threed, const uint8_t wide) {
+    String result = addIntToString(position, kSwingHStr);
+    result += kSpaceLBraceStr;
+    if (position == automatic) {
+      result += kAutoStr;
+    } else if (position == left) {
+      result += kLeftStr;
+    } else if (position == middle) {
+      result += kMiddleStr;
+    } else if (position == right) {
+      result += kRightStr;
+    } else if (position == maxleft) {
+      result += kMaxLeftStr;
+    } else if (position == maxright) {
+      result += kMaxRightStr;
+    } else if (position == off) {
+      result += kOffStr;
+    } else if (position == leftright) {
+      result += kLeftStr;
+      result += ' ';
+      result += kRightStr;
+    } else if (position == rightleft) {
+      result += kRightStr;
+      result += ' ';
+      result += kLeftStr;
+    } else if (position == threed) {
+      result += k3DStr;
+    } else if (position == wide) {
+      result += kWideStr;
+    } else {
+      result += kUnknownStr;
+    }
+    return result + ')';
+  }
+
+  /// Create a String of human output for the given vertical swing setting.
+  /// e.g. "Swing(V): 0 (Auto)"
+  /// @param[in] position The numeric position of the swing to display.
+  /// @param[in] automatic The numeric value for Auto position.
+  /// @param[in] highest The numeric value for Highest position.
+  /// @param[in] high The numeric value for High position.
+  /// @param[in] uppermiddle The numeric value for Upper Middle position.
+  /// @param[in] middle The numeric value for Middle position.
+  /// @param[in] lowermiddle The numeric value for Lower Middle position.
+  /// @param[in] low The numeric value for Low position.
+  /// @param[in] lowest The numeric value for Low position.
+  /// @param[in] off The numeric value for Off position.
+  /// @param[in] swing The numeric value for Swing setting.
+  /// @param[in] breeze The numeric value for Breeze setting.
+  /// @param[in] circulate The numeric value for Circulate setting.
+  /// @return The resulting String.
+  String addSwingVToString(const uint8_t position, const uint8_t automatic,
+                           const uint8_t highest, const uint8_t high,
+                           const uint8_t uppermiddle,
+                           const uint8_t middle,
+                           const uint8_t lowermiddle,
+                           const uint8_t low, const uint8_t lowest,
+                           const uint8_t off, const uint8_t swing,
+                           const uint8_t breeze, const uint8_t circulate) {
+    String result = addIntToString(position, kSwingVStr);
+    result += kSpaceLBraceStr;
+    if (position == automatic) {
+      result += kAutoStr;
+    } else if (position == highest) {
+      result += kHighestStr;
+    } else if (position == high) {
+      result += kHighStr;
+    } else if (position == middle) {
+      result += kMiddleStr;
+    } else if (position == low) {
+      result += kLowStr;
+    } else if (position == lowest) {
+      result += kLowestStr;
+    } else if (position == off) {
+      result += kOffStr;
+    } else if (position == uppermiddle) {
+      result += kUpperStr;
+      result += ' ';
+      result += kMiddleStr;
+    } else if (position == lowermiddle) {
+      result += kLowerStr;
+      result += ' ';
+      result += kMiddleStr;
+    } else if (position == swing) {
+      result += kSwingStr;
+    } else if (position == breeze) {
+      result += kBreezeStr;
+    } else if (position == circulate) {
+      result += kCirculateStr;
+    } else {
+      result += kUnknownStr;
+    }
     return result + ')';
   }
 

@@ -80,9 +80,9 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 
 	serialPrintln(F("System Info"));
 	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
-	serialPrint(F("  Build         : ")); serialPrintln(String((int)BUILD));
+	serialPrint(F("  Build         : ")); serialPrintln(String(static_cast<int>(BUILD)));
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
-	serialPrint(F("  Unit          : ")); serialPrintln(String((int)Settings.Unit));
+	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));
 	serialPrint(F("  WifiSSID      : ")); serialPrintln(SecuritySettings.WifiSSID);
 	serialPrint(F("  WifiKey       : ")); serialPrintln(SecuritySettings.WifiKey);
 	serialPrint(F("  WifiSSID2     : ")); serialPrintln(SecuritySettings.WifiSSID2);

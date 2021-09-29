@@ -65,7 +65,7 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { VEML6040_ADDR };
+      const uint8_t i2cAddressValues[] = { VEML6040_ADDR };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, VEML6040_ADDR); // Only for display I2C address
       } else {
@@ -145,9 +145,9 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
         }
         case 2:
         {
-          UserVar[event->BaseVarIndex + 0] = pow(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 1] = pow(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 2] = pow(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 0] = powf(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 1] = powf(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 2] = powf(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f;
           UserVar[event->BaseVarIndex + 3] = W;
           break;
         }
@@ -205,7 +205,7 @@ float VEML6040_GetValue(uint8_t reg)
   {
     uint16_t lsb = Wire.read();
     uint16_t msb = Wire.read();
-    return (float)((msb << 8) | lsb);
+    return static_cast<float>((msb << 8) | lsb);
   }
   return -1.0f;
 }
@@ -222,7 +222,7 @@ float Plugin_066_CalcCCT(float R, float G, float B)
   }
 
   float CCTi = (R - B) / G + 0.5f;
-  float CCT  = 4278.6f * pow(CCTi, -1.2455f);
+  float CCT  = 4278.6f * powf(CCTi, -1.2455f);
 
   return CCT;
 }
