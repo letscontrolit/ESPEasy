@@ -94,7 +94,9 @@ String        getPluginNameFromPluginID(pluginID_t pluginID);
 void          sortDeviceIndexArray();
 
 
-void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+// Prepare I2C bus for next call to task
+// Return false if task is I2C, but I2C bus is not ready
+bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 /*********************************************************************************************\
