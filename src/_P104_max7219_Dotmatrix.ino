@@ -43,6 +43,7 @@
 // pause,<zone>,<pause>         : Set the Pause of the zone, determining the delay in millis after Animation In is completed before
 //                                Animation Out starts
 // font,<zone>,<font ID>        : Set the font for the zone. The font ID is visible in the UI in the Font selection combobox.
+// inverted,<zone>,<inv.option> : Set the content display to normal (0), light on dar3k, or inverted (1), dark on light background.
 // layout,<zone>,<layout ID>    : Set the Layout type if a double-height font is included (upper(1) or lower(2) part) else only Default (0)
 //                                is available
 // specialeffect,<zone>,<effect>: Set the Special Effects field, 0 = None, 1 = Flip Up/Done, 2 = Flip Left/Right, 3 = Flip u/d & l/r
@@ -67,6 +68,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2021-10-03 tonhuisman: Add Inverted option per zone
 // 2021-09    tonhuisman: Minor improvements, attempts to fix stack failures
 // 2021-08-08 tonhuisman: Reworked loading & saving the settings from A huge fixed size pre-allocated block to dynamic allocation
 //                        and saving/loading per zone. That should sove the numerous stack related crashes.

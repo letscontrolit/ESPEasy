@@ -103,6 +103,16 @@
         Will cause a reconfiguration of all zones.
         "
         "
+        ``DotMatrix,inverted,<zone>,<invertedstate>``
+        ","
+        Set the Inverted state for the indicated zone.
+
+        0. Normal, light content on dark background
+        1. Inverted, dark content on light background
+
+        Will cause a reconfiguration of all zones.
+        "
+        "
         ``DotMatrix,specialeffect,<zone>,<specialeffect_id>``
         ","
         Set the Special effect for the indicated zone.

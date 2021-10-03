@@ -260,6 +260,22 @@ Available options:
 
 .. spacer
 
+* **Inverted** With the Inverted option the text or bargraph on the display is either light on a dark background (Normal) or black on a light background (Inverted).
+
+.. warning::
+
+   When using the Inverted option, the displays in the zone use **much** more power, so selecting the correct power supply is very important!
+
+Available options:
+
+.. image:: P104_ZoneInvertedOptions.png
+   :alt: Zone inverted options
+
+* *Normal* Light content on dark background
+* *Inverted* Dark content on light background
+
+.. spacer
+
 * **Special Effects** These effects can be used to turn a display 'upside down', in left/right 'mirror-image' or both.
 
 Available options:

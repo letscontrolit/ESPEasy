@@ -52,10 +52,10 @@ P104_data_struct::~P104_data_struct() {
   # endif // ifdef P104_USE_BAR_GRAPH
 
   if (nullptr != P) {
-    P->~MD_Parola(); // Call destructor directly, as delete of the object fails miserably
+    // P->~MD_Parola(); // Call destructor directly, as delete of the object fails miserably
     // do not: delete P; // Warning: the MD_Parola object doesn't have a virtual destructor, and when changed,
     // a reboot uccurs when the object is deleted here!
-    P = nullptr;     // Reset only
+    P = nullptr; // Reset only
   }
 }
 
@@ -269,6 +269,10 @@ void P104_data_struct::loadSettings() {
           zones[zoneIndex].repeatDelay = tmp_int;
         }
 
+        if (validIntFromString(parseString(tmp, 1 + P104_OFFSET_INVERTED, P104_FIELD_SEP), tmp_int)) {
+          zones[zoneIndex].inverted = tmp_int;
+        }
+
         delay(0);
 
         numDevices += zones[zoneIndex].size + zones[zoneIndex].offset;
@@ -442,6 +446,9 @@ void P104_data_struct::configureZones() {
         }
       }
 
+      // Inverted
+      P->setInvert(currentZone, it->inverted);
+
       // Special Effects
       P->setZoneEffect(currentZone, (it->specialEffect & P104_SPECIAL_EFFECT_UP_DOWN) == P104_SPECIAL_EFFECT_UP_DOWN,       PA_FLIP_UD);
       P->setZoneEffect(currentZone, (it->specialEffect & P104_SPECIAL_EFFECT_LEFT_RIGHT) == P104_SPECIAL_EFFECT_LEFT_RIGHT, PA_FLIP_LR);
@@ -499,7 +506,9 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                                           const P104_zone_struct& zstruct,
                                           const String          & text) {
   if ((nullptr == P) || (zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
+  sZoneInitial[zone].reserve(text.length());
   sZoneInitial[zone] = text; // Keep the original string for future use
+  sZoneBuffers[zone].reserve(text.length());
   sZoneBuffers[zone] = text; // We explicitly want a copy here so it can be modified by parseTemplate()
 
   sZoneBuffers[zone] = parseTemplate(sZoneBuffers[zone]);
@@ -1084,6 +1093,15 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
             break;
           }
 
+          if (sub.equals(F("inverted")) && // subcommand: inverted,<zone>,<invertedstate> (disable/enable)
+              (value4 >= 0) &&
+              (value4 <= 1)) {
+            reconfigure  = (it->inverted != value4);
+            it->inverted = value4;
+            success      = true;
+            break;
+          }
+
           #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
 
           if (sub.equals(F("layout")) && // subcommand: layout,<zone>,<layout> (0..2), only when double-height font is available
@@ -1138,7 +1156,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
           # else // ifdef P104_USE_COMMANDS
           {
             String validCommands = F(
-              "|size|content|alignment|anim.in|speed|anim.out|pause|font|layout|specialeffect|offset|brightness|repeat|");
+              "|size|content|alignment|anim.in|speed|anim.out|pause|font|inverted|layout|specialeffect|offset|brightness|repeat|");
             String testSub = '|';
             testSub += sub;
             testSub += '|';
@@ -1612,6 +1630,7 @@ bool P104_data_struct::saveSettings() {
       zones[zoneIndex].layout        = getFormItemIntCustomArgName(index + P104_OFFSET_LAYOUT);
       zones[zoneIndex].specialEffect = getFormItemIntCustomArgName(index + P104_OFFSET_SPEC_EFFECT);
       zones[zoneIndex].offset        = getFormItemIntCustomArgName(index + P104_OFFSET_OFFSET);
+      zones[zoneIndex].inverted      = getFormItemIntCustomArgName(index + P104_OFFSET_INVERTED);
 
       if (zones[zoneIndex].size != 0) { // for newly added zone, use defaults
         zones[zoneIndex].brightness  = getFormItemIntCustomArgName(index + P104_OFFSET_BRIGHTNESS);
@@ -1691,8 +1710,10 @@ bool P104_data_struct::saveSettings() {
       zbuffer += P104_FIELD_SEP;    // 1
       zbuffer += it->repeatDelay;   // 4
       zbuffer += P104_FIELD_SEP;    // 1
+      zbuffer += it->inverted;      // 1
+      zbuffer += P104_FIELD_SEP;    // 1
 
-      // 45 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only required length is
+      // 47 total + (max) 100 characters for it->text requires a buffer of ~150 (P104_SETTINGS_BUFFER_V2), but only the required length is
       // stored with the length prefixed
 
       numDevices += (it->size != 0 ? it->size : 1) + it->offset;                                // Count corrected for newly added zones
@@ -2070,49 +2091,49 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Default (0)")
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , F("Numeric, double height (1)")
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , F("Full, double height (2)")
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , F("Vertical (3)")
-    # endif // ifdef P104_USE_VERTICAL_FONT
+    # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , F("Extended ASCII (4)")
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , F("Arabic (5)")
-    # endif // ifdef P104_USE_ARABIC_FONT
+    # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , F("Greek (6)")
-    # endif // ifdef P104_USE_GREEK_FONT
+    # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , F("Katakana (7)")
-    # endif // ifdef P104_USE_KATAKANA_FONT
+    # endif   // ifdef P104_USE_KATAKANA_FONT
     };
     const int fontOptions[] = {
       P104_DEFAULT_FONT_ID
     # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
       , P104_DOUBLE_HEIGHT_FONT_ID
-    # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
       , P104_FULL_DOUBLEHEIGHT_FONT_ID
-    # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
+    # endif   // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
     # ifdef P104_USE_VERTICAL_FONT
       , P104_VERTICAL_FONT_ID
-    # endif // ifdef P104_USE_VERTICAL_FONT
+    # endif   // ifdef P104_USE_VERTICAL_FONT
     # ifdef P104_USE_EXT_ASCII_FONT
       , P104_EXT_ASCII_FONT_ID
       # endif // ifdef P104_USE_EXT_ASCII_FONT
     # ifdef P104_USE_ARABIC_FONT
       , P104_ARABIC_FONT_ID
-    # endif // ifdef P104_USE_ARABIC_FONT
+    # endif   // ifdef P104_USE_ARABIC_FONT
     # ifdef P104_USE_GREEK_FONT
       , P104_GREEK_FONT_ID
-    # endif // ifdef P104_USE_GREEK_FONT
+    # endif   // ifdef P104_USE_GREEK_FONT
     # ifdef P104_USE_KATAKANA_FONT
       , P104_KATAKANA_FONT_ID
-    # endif // ifdef P104_USE_KATAKANA_FONT
+    # endif   // ifdef P104_USE_KATAKANA_FONT
     };
 
     int layoutCount = 1;
@@ -2151,11 +2172,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     const __FlashStringHelper *contentTypes[] = {
       F("Text"),
       F("Text reverse"),
-      F("Clock (4 mod.)"),
-      F("Clock sec (6 mod.)"),
-      F("Date (4 mod.)"),
-      F("Date yr (6/7 mod.)"),
-      F("Date/time (9/13 mod.)")
+      F("Clock (4 mod)"),
+      F("Clock sec (6 mod)"),
+      F("Date (4 mod)"),
+      F("Date yr (6/7 mod)"),
+      F("Date/time (9/13 mod)")
       # ifdef P104_USE_BAR_GRAPH
       , F("Bar graph")
       # endif // ifdef P104_USE_BAR_GRAPH
@@ -2171,6 +2192,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       # ifdef P104_USE_BAR_GRAPH
       , P104_CONTENT_BAR_GRAPH
       # endif // ifdef P104_USE_BAR_GRAPH
+    };
+    const __FlashStringHelper *invertedTypes[3] = {
+      F("Normal"),
+      F("Inverted")
+    };
+    const int invertedOptions[] = {
+      0,
+      1
     };
     # ifdef P104_USE_ZONE_ACTIONS
     uint8_t actionCount = 0;
@@ -2204,10 +2233,10 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       html_table_header(F("Text"), 180);
       html_table_header(F("Content"));
       html_table_header(F("Alignment"));
-      html_table_header(F("Animation In/Out")); // 1st and 2nd row title
-      html_table_header(F("Speed/Pause"));      // 1st and 2nd row title
-      html_table_header(F("Font/Layout"));      // 1st and 2nd row title
-      html_table_header(F("Special Effects"));
+      html_table_header(F("Animation In/Out"));               // 1st and 2nd row title
+      html_table_header(F("Speed/Pause"));                    // 1st and 2nd row title
+      html_table_header(F("Font/Layout"));                    // 1st and 2nd row title
+      html_table_header(F("Inverted/ Special&nbsp;Effects")); // 1st and 2nd row title
       html_table_header(F("Offset"));
       html_table_header(F("Brightness"));
       html_table_header(F("Repeat (sec)"));
@@ -2319,7 +2348,22 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     # endif // ifdef P104_USE_TOOLTIPS
                     );
 
-        html_TD(4); // Fill columns
+        html_TD(); // Inverted
+        addSelector(getPluginCustomArgName(index + P104_OFFSET_INVERTED),
+                    2,
+                    invertedTypes,
+                    invertedOptions,
+                    NULL,
+                    zones[zone].inverted,
+                    false,
+                    true,
+                    EMPTY_STRING
+                    # ifdef P104_USE_TOOLTIPS
+                    , F("Inverted") // title
+                    # endif // ifdef P104_USE_TOOLTIPS
+                    );
+
+        html_TD(3); // Fill columns
         # ifdef P104_USE_ZONE_ACTIONS
 
         html_TD();  // Spacer
@@ -2392,7 +2436,11 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     zones[zone].specialEffect,
                     false,
                     true,
-                    EMPTY_STRING);
+                    EMPTY_STRING
+                    # ifdef P104_USE_TOOLTIPS
+                    , F("Special Effects") // title
+                    # endif // ifdef P104_USE_TOOLTIPS
+                    );
 
         html_TD(); // Offset
         addNumericBox(getPluginCustomArgName(index + P104_OFFSET_OFFSET), zones[zone].offset, 0, 254);
@@ -2445,7 +2493,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
   }
   addFormNote(F("- 'Animation In' or 'Animation Out' and 'Special Effects' marked with <b>*</b> should <b>not</b> be combined in a Zone."));
   #  if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
-  addFormNote(F("- 'Layout' 'Double upper' and 'Double lower' are only supported for 'Content' types 'Clock' and 'Date'."));
+  addFormNote(F("- 'Layout' 'Double upper' and 'Double lower' are only supported for numeric 'Content' types like 'Clock' and 'Date'."));
   #  endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) && !defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   # endif    // ifdef P104_ADD_SETTINGS_NOTES
 

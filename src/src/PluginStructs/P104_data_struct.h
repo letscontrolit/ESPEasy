@@ -169,9 +169,10 @@
 # define P104_OFFSET_OFFSET       11u
 # define P104_OFFSET_BRIGHTNESS   12u
 # define P104_OFFSET_REPEATDELAY  13u
-# define P104_OFFSET_ACTION       14u
+# define P104_OFFSET_INVERTED     14u
+# define P104_OFFSET_ACTION       15u // Should be the last settings option, after all the settings that are stored
 
-# define P104_OFFSET_COUNT        15u // Highest P104_OFFSET_* defined + 1
+# define P104_OFFSET_COUNT        16u // Highest P104_OFFSET_* defined + 1
 
 # define P104_CONFIG_ZONE_COUNT   PCONFIG(0)
 # define P104_CONFIG_TOTAL_UNITS  PCONFIG(1)
@@ -318,6 +319,7 @@ struct P104_zone_struct {
     offset        = 0u;
     brightness    = -1;
     repeatDelay   = -1;
+    inverted      = 0u;
   }
 
   String   text;
@@ -334,6 +336,7 @@ struct P104_zone_struct {
   uint8_t  specialEffect;
   uint8_t  offset;
   int8_t   brightness;
+  int8_t   inverted;
   int8_t   _lastChecked = -1;
   # ifdef P104_USE_BAR_GRAPH
   uint16_t _lower, _upper; // lower and upper pixel numbers
