@@ -227,6 +227,14 @@ void ESPEasy_setup()
   logMemUsageAfter(F("LoadSettings()"));
   #endif
 
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("hardwareInit"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+  hardwareInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("hardwareInit()"));
+  #endif
+
   node_time.restoreFromRTC();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
@@ -247,7 +255,8 @@ void ESPEasy_setup()
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
-  setNetworkMedium(Settings.NetworkMedium);
+  // Do not call setNetworkMedium here as that may try to clean up settings.
+  active_network_medium = Settings.NetworkMedium;
   #endif // ifdef HAS_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
@@ -311,14 +320,6 @@ void ESPEasy_setup()
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("hardwareInit"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-  hardwareInit();
-  #ifndef BUILD_NO_RAM_TRACKER
-  logMemUsageAfter(F("hardwareInit()"));
-  #endif
 
 
   timermqtt_interval      = 250; // Interval for checking MQTT

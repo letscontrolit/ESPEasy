@@ -20,6 +20,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasyStatistics.h"
@@ -529,6 +530,11 @@ void handle_sysinfo_SystemStatus() {
     # ifdef FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
     # endif // ifdef FEATURE_SD
+
+  if (Settings.EnableClearHangingI2Cbus()) {
+    addRowLabelValue(LabelType::I2C_BUS_STATE);
+    addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
+  }
 }
 
 void handle_sysinfo_NetworkServices() {
