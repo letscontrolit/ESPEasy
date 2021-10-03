@@ -28,6 +28,8 @@ void I2CSelectHighClockSpeed();
 void I2CSelectLowClockSpeed();
 void I2CSelect_Max100kHz_ClockSpeed();
 void I2CSelectClockSpeed(uint32_t clockFreq);
+void I2CForceResetBus_swap_pins(uint8_t address);
+void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq);
 
 #ifdef FEATURE_I2CMULTIPLEXER
 bool isI2CMultiplexerEnabled();
