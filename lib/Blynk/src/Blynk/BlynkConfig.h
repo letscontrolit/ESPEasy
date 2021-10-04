@@ -16,8 +16,12 @@
 /***************************************************
  * Change these settings to match your need
  ***************************************************/
-
+#ifdef BLYNK_TEMPLATE_ID
+#define BLYNK_DEFAULT_DOMAIN     "blynk.cloud"
+#else
 #define BLYNK_DEFAULT_DOMAIN     "blynk-cloud.com"
+#endif
+
 #define BLYNK_DEFAULT_PORT       80
 #define BLYNK_DEFAULT_PORT_SSL   443
 
@@ -25,7 +29,9 @@
  * Professional settings
  ***************************************************/
 // Library version.
-#define BLYNK_VERSION        "0.6.1"
+#define BLYNK_VERSION        "1.0.1"
+
+#define BLYNK_NEW_LIBRARY
 
 // Heartbeat period in seconds.
 #ifndef BLYNK_HEARTBEAT
@@ -52,14 +58,8 @@
 #define BLYNK_MAX_SENDBYTES  128
 #endif
 
-// Uncomment to use Let's Encrypt Root CA
-//#define BLYNK_SSL_USE_LETSENCRYPT
-
 // Uncomment to disable built-in analog and digital operations.
 //#define BLYNK_NO_BUILTIN
-
-// Uncomment to disable providing info about device to the server.
-//#define BLYNK_NO_INFO
 
 // Uncomment to enable debug prints.
 //#define BLYNK_DEBUG

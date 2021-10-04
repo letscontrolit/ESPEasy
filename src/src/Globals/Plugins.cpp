@@ -19,6 +19,7 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -225,12 +226,15 @@ void sortDeviceIndexArray() {
 // when addressing a task
 // ********************************************************************************
 
-void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
+bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
-    return;
+    return false;
   }
   if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
-    return;
+    return true; // No I2C task, so consider all-OK
+  }
+  if (I2C_state != I2C_bus_state::OK) {
+    return false; // Bus state is not OK, so do not consider task runnable
   }
 #ifdef FEATURE_I2CMULTIPLEXER
   I2CMultiplexerSelectByTaskIndex(taskIndex);
@@ -239,8 +243,9 @@ void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
 #endif
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
+    I2CSelectLowClockSpeed(); // Set to slow
   }
+  return true;
 }
 
 
@@ -256,7 +261,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 #endif
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(false);  // Reset
+    I2CSelectHighClockSpeed();  // Reset
   }
 }
 
@@ -297,7 +302,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           TempEvent->OriginTaskIndex = event->TaskIndex;
         }
 
-        prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
+        if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
+          return false;
+        }
         switch (Function) {
           case PLUGIN_WRITE:          // First set
           case PLUGIN_REQUEST:
@@ -369,24 +376,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               // FIXME TD-er: Also resize DeviceIndex_to_Plugin_id ?
             }
           }
-          // FIXME TD-er: This is not correct as we don't have a taskIndex here when addressing a plugin
-          /*
-          taskIndex_t  taskIndex = INVALID_TASK_INDEX;
-          if (Function != PLUGIN_DEVICE_ADD && Device[x].Type == DEVICE_TYPE_I2C) {
-            unsigned int varNr;
-            validTaskVars(event, taskIndex, varNr);
-            prepare_I2C_by_taskIndex(taskIndex, x);
-          }
-          */
           START_TIMER;
           Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x, Function);
-          /*
-          // FIXME TD-er: This is not correct as we don't have a taskIndex here when addressing a plugin
-          if (Function != PLUGIN_DEVICE_ADD) {
-            post_I2C_by_taskIndex(taskIndex, x);
-          }
-          */
           delay(0); // SMY: call delay(0) unconditionally
         }
       }
@@ -404,19 +396,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
           const deviceIndex_t DeviceIndex = it->second.x;
           if (validDeviceIndex(DeviceIndex))  {
-            // FIXME TD-er: This is not correct, as the event is NULL for calls to PLUGIN_MONITOR
-            /*
-            taskIndex_t  taskIndex = INVALID_TASK_INDEX;
-            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
-              unsigned int varNr;  
-              validTaskVars(event, taskIndex, varNr);
-              prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
-            }
-            */
             START_TIMER;
             Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
             STOP_TIMER_TASK(DeviceIndex, Function);
-            // post_I2C_by_taskIndex(taskIndex, DeviceIndex);
           }
         }
       }
@@ -600,7 +582,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           checkRAM(descr, String(Function));
           #endif
         }
-        prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
+        if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
+          return false;
+        }
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
