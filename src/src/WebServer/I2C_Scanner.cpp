@@ -325,7 +325,8 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       error = Wire.endTransmission();
       delay(1);
 
-      if (error == 0)
+      switch (error) {
+        case 0:
       {
         html_TR_TD();
 #ifdef FEATURE_I2CMULTIPLEXER
@@ -350,12 +351,26 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
           addHtml(description);
         }
         nDevices++;
+        break;
       }
-      else if (error == 4)
+      case 2: // NACK on transmit address, thus not found 
+        break;
+      case 3: 
       {
         html_TR_TD();
-        addHtml(F("Unknown error at address "));
+        addHtml(F("NACK on transmit data to address "));
         addHtml(formatToHex(address));
+        break;
+      }
+      case 4:
+      {
+        html_TR_TD();
+        addHtml(F("SDA low at address "));
+        addHtml(formatToHex(address));
+        I2CForceResetBus_swap_pins(address);
+        addHtml(F(" Reset bus attempted"));
+        break;
+      }
       }
 #ifdef FEATURE_I2CMULTIPLEXER
     }
