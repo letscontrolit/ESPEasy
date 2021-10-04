@@ -32,14 +32,24 @@
 # define CPLUGIN_015_RECONNECT_INTERVAL 60000
 
 # ifdef CPLUGIN_015_SSL
+  #ifdef ESP8266
   #  include <BlynkSimpleEsp8266_SSL.h>
+  #endif
+  #ifdef ESP32
+  #  include <BlynkSimpleEsp32_SSL.h>
+  #endif
   #  define CPLUGIN_NAME_015       "Blynk SSL [TESTING]"
 
 // Current official blynk server thumbprint
   #  define CPLUGIN_015_DEFAULT_THUMBPRINT "FD C0 7D 8D 47 97 F7 E3 07 05 D3 4E E3 BB 8E 3D C0 EA BE 1C"
   #  define C015_LOG_PREFIX "BL (ssl): "
 # else // ifdef CPLUGIN_015_SSL
+ #ifdef ESP8266
  #  include <BlynkSimpleEsp8266.h>
+ #endif
+ #ifdef ESP32
+ #  include <BlynkSimpleEsp32.h>
+ #endif
  #  define CPLUGIN_NAME_015       "Blynk [TESTING]"
  #  define C015_LOG_PREFIX "BL: "
 # endif // ifdef CPLUGIN_015_SSL

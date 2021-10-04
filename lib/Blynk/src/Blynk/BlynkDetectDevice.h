@@ -88,6 +88,7 @@
             #define BLYNK_INFO_DEVICE  "LaunchPad MSP430"
             #define BLYNK_INFO_CPU     "MSP430"
             #define BLYNK_NO_FLOAT
+            #define BLYNK_NO_LONGLONG
         #elif defined(ENERGIA_ARCH_MSP432)
             #define BLYNK_INFO_DEVICE  "LaunchPad MSP432"
             #define BLYNK_INFO_CPU     "MSP432"
@@ -224,6 +225,14 @@
         #if defined(ARDUINO_ARCH_SAMD) || defined(ESP32) || defined(ESP8266)
             #define BLYNK_USE_128_VPINS
             #define BLYNK_BUFFERS_SIZE 1024
+        #endif
+
+        #if defined(ARDUINO_ARCH_AVR)
+            #define BLYNK_USE_INTERNAL_ATOLL
+        #endif
+
+        #if defined(ARDUINO_ARCH_SAMD)
+            #define BLYNK_USE_INTERNAL_DTOSTRF
         #endif
 
         /* Arduino AVR */
@@ -389,6 +398,12 @@
         #define BLYNK_BUFFERS_SIZE 1024
         #elif defined(ARDUINO_WILDFIRE_V4)
         #define BLYNK_INFO_DEVICE  "Wildfire V4"
+        #define BLYNK_USE_128_VPINS
+        #define BLYNK_BUFFERS_SIZE 1024
+
+         /* Seeed studio */
+        #elif defined(SEEED_WIO_TERMINAL)
+        #define BLYNK_INFO_DEVICE "Seeed Wio Terminal"
         #define BLYNK_USE_128_VPINS
         #define BLYNK_BUFFERS_SIZE 1024
 
