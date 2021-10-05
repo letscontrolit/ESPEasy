@@ -140,8 +140,10 @@ String getResetReasonString() {
   #ifdef ESP32
   String reason = F("CPU0: ");
   reason += getResetReasonString(0);
-  reason += F(" CPU1: ");
-  reason += getResetReasonString(1);
+  if (getChipCores() > 1) { // Only report if we really have more than 1 core
+    reason += F(" CPU1: ");
+    reason += getResetReasonString(1);
+  }
   return reason;
   #else // ifdef ESP32
   return ESP.getResetReason();
