@@ -1,8 +1,6 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P011
 
-#include "ESPEasy-Globals.h" // For dummyString
-
 
 // #######################################################################################################
 // #################################### Plugin 011: Pro Mini Extender ####################################
@@ -228,6 +226,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         {
           success = true;
           const uint32_t key = createKey(PLUGIN_ID_011, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
+          String dummyString;
 
           if (!existPortStatus(key)) {                                // tempStatus.mode == PIN_MODE_OUTPUT) // has been set as output
             SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummyString, 0);

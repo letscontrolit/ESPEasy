@@ -248,6 +248,18 @@ void SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins(bool value) {
 }
 
 template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableClearHangingI2Cbus() const {
+  return bitRead(VariousBits1, 22);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableClearHangingI2Cbus(bool value) {
+  bitWrite(VariousBits1, 22, value);
+}
+
+
+
+template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);
 }

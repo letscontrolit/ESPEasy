@@ -200,7 +200,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("MAX1704x");
       break;
     case 0x38:
-      result =  F("PCF8574A,AHT10/20/21");
+      result +=  F("PCF8574A,AHT10/20/21");
       break;
     case 0x3A:
     case 0x3B:
@@ -209,7 +209,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("PCF8574A");
       break;
     case 0x39:
-      result =  F("PCF8574A,TSL2561,APDS9960,AHT10");
+      result +=  F("PCF8574A,TSL2561,APDS9960,AHT10");
       break;
     case 0x3C:
     case 0x3D:
@@ -325,7 +325,8 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       error = Wire.endTransmission();
       delay(1);
 
-      if (error == 0)
+      switch (error) {
+        case 0:
       {
         html_TR_TD();
 #ifdef FEATURE_I2CMULTIPLEXER
@@ -350,12 +351,26 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
           addHtml(description);
         }
         nDevices++;
+        break;
       }
-      else if (error == 4)
+      case 2: // NACK on transmit address, thus not found 
+        break;
+      case 3: 
       {
         html_TR_TD();
-        addHtml(F("Unknown error at address "));
+        addHtml(F("NACK on transmit data to address "));
         addHtml(formatToHex(address));
+        break;
+      }
+      case 4:
+      {
+        html_TR_TD();
+        addHtml(F("SDA low at address "));
+        addHtml(formatToHex(address));
+        I2CForceResetBus_swap_pins(address);
+        addHtml(F(" Reset bus attempted"));
+        break;
+      }
       }
 #ifdef FEATURE_I2CMULTIPLEXER
     }
