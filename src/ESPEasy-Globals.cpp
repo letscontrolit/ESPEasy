@@ -26,10 +26,6 @@ float vcc = -1.0f;
 #endif
 
 
-String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
-
-
-
 
 
 
