@@ -56,6 +56,10 @@ Supported hardware
 
 PN532 based NFC RFID reader connected via I2C on address 0x24.
 
+.. warning::
+
+  This device needs the ``I2C ClockStretchLimit`` (Tools/Advanced page) be set to ``2000`` (msec) to work as intended.
+
 |P017_usedby|
 
 .. Commands available
