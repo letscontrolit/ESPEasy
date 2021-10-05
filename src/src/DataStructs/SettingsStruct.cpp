@@ -4,6 +4,7 @@
 #include "../Globals/CPlugins.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/SPI_options.h"
 #include "../../ESPEasy_common.h"
 
 template<unsigned int N_TASKS>
@@ -245,6 +246,18 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::AllowTaskValueSetAllPlugins(bool value) {
   bitWrite(VariousBits1, 21, value);
 }
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableClearHangingI2Cbus() const {
+  return bitRead(VariousBits1, 22);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableClearHangingI2Cbus(bool value) {
+  bitWrite(VariousBits1, 22, value);
+}
+
+
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
@@ -540,23 +553,31 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
   spi_gpios[0] = -1;
   spi_gpios[1] = -1;
   spi_gpios[2] = -1;
-  if (InitSPI > 0) {
+  if (isSPI_valid()) {
     # ifdef ESP32
-    switch (InitSPI) {
-      case 1:
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    switch (SPI_selection) {
+      case SPI_Options_e::Vspi:
       {
         spi_gpios[0] = 18; spi_gpios[1] = 19; spi_gpios[2] = 23;
         break;
       }
-      case 2:
+      case SPI_Options_e::Hspi:
       {
         spi_gpios[0] = 14; // HSPI_SCLK
         spi_gpios[1] = 12; // HSPI_MISO
         spi_gpios[2] = 13; // HSPI_MOSI
         break;
       }
-      default:
-      return false;
+      case SPI_Options_e::UserDefined:
+      {
+        spi_gpios[0] = SPI_SCLK_pin;
+        spi_gpios[1] = SPI_MISO_pin;
+        spi_gpios[2] = SPI_MOSI_pin;
+        break;
+      }
+      case SPI_Options_e::None:
+        return false;
     }
     # endif // ifdef ESP32
     # ifdef ESP8266
@@ -577,6 +598,18 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
     }
   }
   return false;
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
+  return !((InitSPI == static_cast<int>(SPI_Options_e::None)) ||
+           ((InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) &&
+            ((SPI_SCLK_pin == -1) ||
+             (SPI_MISO_pin == -1) ||
+             (SPI_MOSI_pin == -1) ||
+             (SPI_SCLK_pin == SPI_MISO_pin) ||
+             (SPI_MISO_pin == SPI_MOSI_pin) ||
+             (SPI_MOSI_pin == SPI_SCLK_pin)))); // Checks
 }
 
 template<unsigned int N_TASKS>

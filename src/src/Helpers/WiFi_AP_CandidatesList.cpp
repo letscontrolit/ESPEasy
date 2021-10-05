@@ -36,11 +36,12 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     while (!done) {
       if (get_SSID_key(index, ssid, key)) {
         known.emplace_back(index, ssid, key);
-        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || 
-            index == WIFI_CUSTOM_SUPPORT_KEY_INDEX) {
-          known.back().lowPriority = true;
-        } else if (index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
-          known.back().isEmergencyFallback = true;
+        if (SettingsIndexMatchCustomCredentials(index)) {
+          if (SettingsIndexMatchEmergencyFallback(index)) {
+            known.back().isEmergencyFallback = true;
+          } else {
+            known.back().lowPriority = true;
+          }
         }
         ++index;
       } else {
@@ -189,10 +190,18 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   }
 
   if (mustPop) {
-    known_it = known.begin();
-    if (!candidates.empty()) {
-      candidates.pop_front();
+    if (currentCandidate.isHidden) {
+      // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
+      for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->isHidden; ) {
+        cand_it = candidates.erase(cand_it);
+      }
+    } else {
+      if (!candidates.empty()) {
+        candidates.pop_front();
+      }
     }
+
+    known_it = known.begin();
   }
   return currentCandidate.usable();
 }
@@ -258,8 +267,14 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchCustomCredentials(uint8_t index)
 {
   return (WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == index ||
           WIFI_CUSTOM_SUPPORT_KEY_INDEX        == index ||
-          WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
+          SettingsIndexMatchEmergencyFallback(index));
 }
+
+bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
+{
+  return (WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
+}
+
 
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (candidates.size() > 1) {
