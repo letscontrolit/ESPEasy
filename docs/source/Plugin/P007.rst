@@ -24,7 +24,7 @@ Used libraries: |P007_usedlibraries|
 Introduction
 ------------
 
-The PCF8591 is an Analog to Digital converter, connected via an I2C bus. The plugin supports to read 1 input, if more inputs need to be read, extra Tasks can be defined, addressing the extra inputs.
+The PCF8591 is an Analog to Digital converter, connected via an I2C bus. The plugin supports to read from 1 up to 4 input values. If desired, multiple Tasks *can* be defined, addressing other, or duplicate, inputs.
 
 Supported hardware
 ------------------
@@ -45,38 +45,60 @@ Configuration
 
 .. image:: P007_DeviceConfiguration.png
 
-**Name** A unique name should be entered here.
+* **Name** A unique name should be entered here.
 
-**Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 I2C Options 
 ^^^^^^^^^^^^
 
 The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
 
-**I2C Address**: The address the device is using. There are a number of addresses the module can use, and they can usually be set at the board using jumper pins.
+* **I2C Address**: The address the device is using. There are a number of addresses the module can use, and they can usually be set at the board using jumper pins.
 
 The available options:
 
 .. image:: P007_I2CAddressOptions.png
 
-**Port** As there are multiple Ports available on each board, the desired Port can be selected here.
+* **Port** As there are multiple Ports available on each board, the desired Port can be selected here.
 
 Available options:
 
 .. image:: P007_PortOptions.png
+
+* **Force Slow I2C Speed** Should be **enabled**, as by PCF8591 chip specification, the I2C bus clock should be **max. 100 kHz**. This is the default **Slow device Clock Speed** I2C setting for ESPEasy (see Hardware tab). When using the default I2C Clock Speed of 400 kHz, readings will be unreliable, *especially* when reading multiple values in 1 task.
+
+Output Configuration
+^^^^^^^^^^^^^^^^^^^^
+
+* **Number Output Values** As this device supports 4 Analog inputs, the number of measurements handled by this task can be configured.
+
+Available options:
+
+.. image:: P007_NumberOutputValuesOptions.png
+
+The names should speak for themselves.
+
+When selecting f.e. the Quad option and saving the settings, the number of output values is changed to 4, resulting in these Values:
+
+.. image:: P007_OutputValuesQuad.png
+
+.. note::
+   If Port is set to A1, A2 or A3, then the value measured from the selected **Port** will be stored in the first Values field, and any next field(s) consecutively. If **Number Output Values** is larger than the remaining number of Ports, then the remaining Values will be set to 0!
+
+   For any 'excess' values, events *will* be generated!
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
 This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
+* **Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
 
 Values
 ^^^^^^
 
-The name for the value is initially set to a default name, but can be changed if desired. Also, a formula can be entered to re-calculate the value before display/sending to a controller, and the number of decimals can be changed, for Temperature, usually 1 decimal is enough to be displayed (value will be rounded).
+The name for the value(s) is initially set to a default name, but can be changed if desired. Also, a formula can be entered to re-calculate a value before display/sending to a controller, and the number of decimals can be changed, for a Temperature, usually 1 decimal is enough to be displayed (value will be rounded).
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
@@ -93,6 +115,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added|
+  2021-08-06 Selection of 1 to 4 input values to be read.
 
   |added|
   2021-08-03 Replaced single Port inputfield with separate I2CAddress and Port selections.
