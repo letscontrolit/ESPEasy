@@ -33,8 +33,10 @@
 //  - "7don"      -- turn ON the display
 //  - "7doff"     -- turn OFF the display
 //  - "7db,<0-15> -- set brightness to specific value between 0 and 15
+//  - "7output,<0-5> -- select display output mode, 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",3:"Clock 12h - Blink",4:"Clock 12h - No Blink",5:"Date"
 //
 // History
+// 2021-10-05, tonhuisman: Add 7output command for changing the Display Output setting. Not saved, unless the save command is also sent.
 // 2021-02-13, tonhuisman: Fixed self-introduced bug of conversion from MAX7219 to TM1637 bit mapping, removed now unused TM1637 character maps, moved some logging to DEBUG level
 // 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CHNORUX, dSEG7 fonts. Default/7Dgt comes with these special characters: " -^=/_
 //                         Siekoo comes _without_ AOU with umlauts and Eszett characters, has many extra special characters "%@.,;:+*#!?'\"<>\\()|", and optional uppercase "CHNORUX",
@@ -1006,6 +1008,17 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
         P073_data->brightness = event->Par1;
         p073_displayon        = true;
         p073_validcmd         = true;
+      }
+    } else if (cmd.equals(F("7output"))) {
+      if ((event->Par1 >= 0) && (event->Par1 < 6)) { // 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",3:"Clock 12h - Blink",4:"Clock 12h - No Blink",5:"Date"
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("7DGT : Display output=");
+          log += event->Par1;
+          addLog(LOG_LEVEL_INFO, log);
+        }
+        P073_data->output = event->Par1;
+        p073_displayon    = true;
+        p073_validcmd     = true;
       }
     }
 
