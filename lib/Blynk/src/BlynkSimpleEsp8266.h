@@ -35,26 +35,6 @@ public:
         : Base(transp)
     {}
 
-    // void connectWiFi(const char* ssid, const char* pass)
-    // {
-    //     BLYNK_LOG2(BLYNK_F("Connecting to "), ssid);
-    //     WiFi.mode(WIFI_STA);
-    //     if (WiFi.status() != WL_CONNECTED) {
-    //         if (pass && strlen(pass)) {
-    //             WiFi.begin(ssid, pass);
-    //         } else {
-    //             WiFi.begin(ssid);
-    //         }
-    //     }
-    //     while (WiFi.status() != WL_CONNECTED) {
-    //         BlynkDelay(500);
-    //     }
-    //     BLYNK_LOG1(BLYNK_F("Connected to WiFi"));
-
-    //     IPAddress myip = WiFi.localIP();
-    //     BLYNK_LOG_IP("IP: ", myip);
-    // }
-
     void config(const char* auth,
                 void(*handleInterruptCallback)(void),
                 const char* domain = BLYNK_DEFAULT_DOMAIN,
@@ -73,27 +53,6 @@ public:
         this->conn.begin(ip, port);
     }
 
-    // void begin(const char* auth,
-    //            const char* ssid,
-    //            const char* pass,
-    //            const char* domain = BLYNK_DEFAULT_DOMAIN,
-    //            uint16_t    port   = BLYNK_DEFAULT_PORT)
-    // {
-    //     connectWiFi(ssid, pass);
-    //     config(auth, domain, port);
-    //     while(this->connect() != true) {}
-    // }
-
-    // void begin(const char* auth,
-    //            const char* ssid,
-    //            const char* pass,
-    //            IPAddress   ip,
-    //            uint16_t    port   = BLYNK_DEFAULT_PORT)
-    // {
-    //     connectWiFi(ssid, pass);
-    //     config(auth, ip, port);
-    //     while(this->connect() != true) {}
-    // }
 
 };
 
