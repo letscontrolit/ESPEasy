@@ -1,4 +1,235 @@
 -------------------------------------------------
+Changes in release mega-20211005 (since mega-20210802)
+-------------------------------------------------
+
+Release date: di  5 okt 2021 15:25:22 CEST
+
+Boris Krivonog (5):
+      Added support for operating and compressor frequency.
+      Fixed json output.
+      Fixed link to source, removed links to obsoleted urls, added simple changelog ...
+      Make AC status additional info configurable.
+      Make sure ESPeasy serial can be allocated if P093 data struct was allocated (embed it).
+
+Max Prokhorov (1):
+      [Build] Revert to platformio/toolchain-xtensa for the esp8266
+
+Michael Schröder (1):
+      P051 (AM2320) is TESTING not NORMAL
+
+Plebs (3):
+      Fixed #3736
+      Updated plugin documentation
+      patch for Safe Button and FHEM (#3739)
+
+TD-er (92):
+      [ESP32-S2] Add experimental support for ESP32-S2
+      [ESP32-S2] Further make ESP32-S2 compile (no WiFi yet)
+      [ESP32-S2] Add reset reasons
+      [I2C] Add recovery to an I2C bus that hangs.
+      [Cleanup] Uncrustify C014 Homie
+      [Cleanup] C014 Log entries using F()
+      [C014] Cleanup calls to CPlugin_014_sendMQTTdevice not using F()
+      [C014] Cleanup calls to CPlugin_014_sendMQTTnode not using F()
+      [ESP32-S2] Make it compile against esp32-2.0.0-pre
+      [ESP32-S2] Add missing includes
+      [ESP32-S2] Changed struct sizes for esp32-2.0.0-pre
+      [ESP32-S2] Compute LogStruct size for new String size
+      [ESP32-S2] Add GPIO definitions for ESP32-S2
+      ESPEasySerial to 2.0.6 to support ESP32-S2
+      [PIO] Force ESPEasySerial to update to @ 2.0.6
+      [ESP32-S2] Fix build warnings + set ESPEasySerial lib to 2.0.6 for ESP32
+      [ESP32-S2] Add touch pins to ESP32Touch plugin + check valid GPIO I2C
+      [ESP32-S2] Use proper WiFi event ids for IDF > 3
+      [Cleanup] Check for validGpio using new function
+      [Cleanup] Include ESPEasyLimits.h where MAX_GPIO is used
+      [TaskValueSet] Allow TaskValueSet on non-Dummy tasks (setting)
+      [Hostname] Make generated hostname RFC952 compliant (#3723)
+      [Cleanup] Use Arduino isDigit and isAlphaNumeric functions
+      [Docs] Document  "Allow TaskValueSet on all plugins" checkbox
+      [Formula] Use correct nr of decimals in formula (#3721)
+      [Formula] Allow using standard conversions and task values in formula
+      [Formula] Add more documentation for formulas + examples
+      [docs] Fix wrong topic length in docs.
+      [Cleanup] Replace single character flash strings
+      Fix setting month + century bit RTC lib
+      Add 'client' to http.begin call
+      [Cache Controller] Allow to save sample time in local time
+      [RTC lib] Makecentury bit unambiguous in C++ terms
+      [Cache Controller] Update dump.htm to not check for valid timestamp
+      [docs] Update Cache Controller docs to mention different time exports
+      [Scheduler] Convert defines into SchedulerTimerType_e enum class
+      [MQTT] Fix duplicate call task PLUGIN_READ at MQTT connect
+      [Uncrustify] Scheduler.cpp/.h
+      [Scheduler] Rename SchedulerTimerType_e to what it is calling
+      [NTP] Use random interval for NTP sync interval
+      [docs] Add documentation on on the time wander info
+      [docs] Describe all fields on the sysinfo page.
+      [Web Login] Fix file access with password set (#3759 )
+      [Web UI] Fix handling rules switching
+      [Web UI] Do not POST rules parameters to save memory
+      [Dashboard] Do not check for loggedIn() on dashboard.esp
+      Accidentally removed extra check in isLoggedIn()
+      Fix missing include in ConfigPage.cpp
+      [I2C] Use 8 bit for I2C address selection
+      [Build] Add  -fno-strict-aliasing as build flag make builds more stable
+      [Cleanup] Replace reinterpret_cast + fix compiler warning.
+      [Casts] Change C-style (uint8_t*) casts into reinterpret_cast
+      [Casts] Change C-style casts (int) and (float) into static_casts
+      [Docs] Update README.md about newer build sets
+      [Cleanup] Change some short strings to just a char.
+      Add custom_ESP8266_2M256 PlatformIO build env
+      [DMX512] Fix memory leak when exiting P054 DMX512 task
+      [ESP32 ETH] Fix not getting DNS from DHCP at boot
+      [ESP32] Switch to PlatformIO ESP32 core 3.3.2
+      [ESP32-S2] Switch platform packages for ESP32s2 to improve build success
+      [ESP32-s2] Suppress SDK info/debug logs on Serial0
+      [ESP32-s2] Fix crash when scanning I2C bus
+      [WiFi] Only set WiFi initialised when connected & got IP
+      [WiFi] Clear IP config on disconnect
+      [WiFi] Only set WiFi initialised when connected & got IP
+      [WiFi] Only check WiFi connection timeouts if they are started.
+      [WiFi] Try connect to hidden SSID without explicit BSSID + channel
+      [ESP32] Force SDK log level to NONE
+      [ESP32] Allow to compile using staging branch ESP32
+      [Cleanup] Prevent float to double promotion
+      [P013 sr04] Hangs on HI in state mode when NO_ECHO
+      [Cleanup] Uncrustify _P013_HCSR04.ino
+      [Blynk] Add ESP32 support for Blynk
+      [Blynk] ESPEasy patched files Blynk lib 1.0.1
+      [Blynk] Update to library v 1.0.1
+      [Docs] Add note to rename the CSS file to esp.css
+      [ESP32-S2] Use latest ESP32 core 2.0.0 + IDF4.4 + I2C fix
+      [ESP32-S2] Mark ESP32-s2 and ESP32-c3 as ESPEasy platforms
+      [PSRAM] Add preliminary support for PSRAM
+      [ESP32 IDF4.x] Fix build issue with ESP32 IDF 4.x
+      [P109 ThermOLED] Fix array bound error
+      Fix build error on limited build size builds
+      [Cleanup] Clean up of double includes + pio.ini description
+      [NeoPixel] Update to latest Adafruit Neopixel library
+      [Docs] Add some description of ESP82xx/ESP32/ESP32-S2
+      [I2C] Fix switching low/high clock + fix PCF8563 ext. RTC
+      [Cleanup] Get rid of global dummyString
+      [I2C] Make clearing hung I2C bus optional
+      [I2C] Do not run I2C tasks when bus is in error.
+      [I2C] Clarify error on I2C scan
+      [I2C] Only perform reset I2C bus during scan when enabled by user
+      [I2C] Document the new feature to clear a stuck I2C bus.
+
+Ton Huisman (95):
+      [P065] Add mode and repeat commands From [a request in the forum](https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=8521) - mode,<0..3> to set playback mode: 0=Repeat, 1=Folder repeat, 2=Single repeat, 3=Random - repeat,<0/1> enable/disable repeat play 0=Off, 1=On
+      [P065] Uncrustify and some minor source adjustments
+      [P065] Reviewer corrections
+      [P065] Minor optimization
+      [P065] Add documentation (partly migrated from the wiki)
+      [P065] Add commands to command reference
+      [P065] Add commands to command reference (cleanup)
+      [P016] Correct hex value conversions to unsigned
+      [P016] Revert a few invalid comments
+      [P016] Small optimizations
+      [P016] Apply suggestions and some more optimizations
+      [P016] Add type in logging, more optimizations
+      [P016] hexToUL doesn't seem to work with a char array
+      [P016] Fixed zero termination of char array
+      [P016] Update changelog
+      [StringConverter] Fix hexToUL to accept 0x prefix
+      [P016] Add support for 64 bit IR codes, incl. settings conversion, update settings UI
+      [P016] Small code optimizations
+      [P016] Update library enum definition
+      [P016] Disable debug log for BUILD_NO_DEBUG and some cleanup
+      [P016] Revert BUILD_NO_DEBUG dependency
+      [P016] Updated documentation
+      [P016] Match UI with documentation :-)
+      [P016] Update logging for memory analysis
+      [Markup] Introduce delay(0) during addSelector_options for longer option lists
+      [P016] Refactor using vectors instead of arrays, load/save settings in chunks
+      [P016] Refactored settings conversion into constructor and other improvements
+      [P016] Reformatted source (uncrustify)
+      [P105] Move AHT10 plugin from PlayGround
+      [P105] Check for other I2C devices and show warning on device settings
+      [P105] Complete the documentation
+      [P105] Update Custom-sample.h plugin comment
+      [P105] Add AHT10 to I2C scanner
+      [P105] Replaced code by the 'other' AHT plugin from Playground, updated documentation, some other doc. fixes
+      [P105] Code improvements, based on feedback
+      [P105] Update I2C Scanner to include AHT20/AHT21
+      [P105] Small code improvement
+      [P008] Add 'Alternative decoding' option
+      [P008] Format code using Uncrustify
+      [P008] Format code minor improvement
+      [I2C Scanner] Show available device(s) for detected addresses
+      [I2C Scanner] Fix typo (swapped lines)
+      [P105] Small improvements
+      [P007] Add easier I2C Address and port selection options
+      [P007] Correct off-by-1 error for Port setting
+      [P019] PCF8574 Add easier I2C Address and port selection options
+      [P007] Add documentation
+      [P019] Add documentation
+      [P019] Avoid unneeded flash-string
+      [P007] Avoid unneeded flash-string
+      [I2C Scanner] Reworked to minimize use of Strings
+      [P103] Moved I2C address setting to designed plugin event
+      [P109] Moved I2C address setting to designed plugin event, cleanup to use macros where appropriate
+      [I2C Scanner] Restore leaving most of feature out of OTA builds
+      [P009] MCP23017 Add easier I2C Address and port selection options
+      [P009] Add documentation
+      [I2C Scanner] Show proper message if no I2C pins configured
+      [P009] Correct off-by-1 error for Port setting (copy/paste error)
+      [I2C Scanner] Adjust errormessage, refactor checks into isI2CEnabled()
+      [P103] Remove unsupported devices from I2C selection list
+      [P103] Fix silly typo :-(
+      [P108] DDS238 Fix 2-complement values (#3662)
+      [IRremoteESP8266] Update library to 2.7.19 (from 2.7.13)
+      [P016] Fix memory allocation issues
+      [IRremoteESP8266] Remove unneeded library files
+      [P016] Remove unneeded #define, update change history
+      [P108] Code improvements
+      [I2C Scanner] Move refactored check into Settings struct
+      [P065] Adjust documentation on mode command not always working as advertised
+      [I2C Scanner] Also check I2C Low Speed (is used by scanner)
+      [P007] PCF8591 Allow multiple output values in task
+      [P007] Updated documentation
+      [P009] Code optimizations, remove duplicate
+      [RTClib] (Bugfix) Write month correctly to DS3231 (#3749)
+      [P105] Fix I2Cscanner merge issue
+      [P033] Dummy device - make Interval optional
+      [P033] Remove default Interval
+      [P033] Migrate documentation from Wiki and update
+      [P008] Reverted previous mod. Changed to allow 26..64 bits receive format. Updated documentation
+      [SPI][ESP32] User-defined GPIO pins for SCLK, MISO and MOSI
+      [P007] Cast measured value to double instead of float, update docs with Slow I2C Clock requirement
+      [SPI][ESP32] Use enum for SPI options
+      [P105] Correct type error
+      [SPI][ESP32] Refactor use of enum for SPI options
+      [SPI][ESP32] Make SPI options explicit
+      [SPI][ESP32] Small cleanup, remove unneeded includes
+      [SPI][ESP32] Remove unneeded include
+      [SPI][ESP32] Remove redundant 'default'
+      [P019] Fix compilation error (type)
+      [P009] Fix compilation error (type)
+      [P007] Remove unneeded cast
+      [PinSelect] Bugfix missing last GPIO in Touch and Hall Effect selector (ESP32)
+      [P017] Add warning for I2C Clockstretching to documentation
+      [ESP32S2] Only show CPU0 reboot reason on single-core ESP32 S2
+      [I2C Scanner] Fix device descriptions for 0x38 and 0x39 addresses
+
+immiimmi (9):
+      p20 fixed for esp8266; the pin will be resetted only if requested in the menu
+      P020 bigger buffer needed
+      Update _P020_Ser2Net.ino
+      Update _P020_Ser2Net.ino
+      Update P020_data_struct.h
+      Update P020_data_struct.cpp
+      Update _P020_Ser2Net.ino
+      Update _P020_Ser2Net.ino
+      Update _P020_Ser2Net.ino
+
+stefan (2):
+      Exclude not needed parts for USES_MQTT and WEBSERVER_METRICS
+      Cleanup webserver_metrics
+
+
+-------------------------------------------------
 Changes in release mega-20210802 (since mega-20210503)
 -------------------------------------------------
 
