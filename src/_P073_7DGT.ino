@@ -36,6 +36,7 @@
 //  - "7output,<0-5> -- select display output mode, 0:"Manual",1:"Clock 24h - Blink",2:"Clock 24h - No Blink",3:"Clock 12h - Blink",4:"Clock 12h - No Blink",5:"Date"
 //
 // History
+// 2021-10-06, tonhuisman: Store via commands changed output, font and brightness setting in settings variables, but not save them yet.
 // 2021-10-05, tonhuisman: Add 7output command for changing the Display Output setting. Not saved, unless the save command is also sent.
 // 2021-02-13, tonhuisman: Fixed self-introduced bug of conversion from MAX7219 to TM1637 bit mapping, removed now unused TM1637 character maps, moved some logging to DEBUG level
 // 2021-01-30, tonhuisman: Added font support for 7Dgt (default), Siekoo, Siekoo with uppercase CHNORUX, dSEG7 fonts. Default/7Dgt comes with these special characters: " -^=/_
@@ -1006,6 +1007,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
           addLog(LOG_LEVEL_INFO, log);
         }
         P073_data->brightness = event->Par1;
+        PCONFIG(2)            = event->Par1;
         p073_displayon        = true;
         p073_validcmd         = true;
       }
@@ -1017,6 +1019,7 @@ bool p073_plugin_write(struct EventStruct *event, const String& string) {
           addLog(LOG_LEVEL_INFO, log);
         }
         P073_data->output = event->Par1;
+        PCONFIG(1)        = event->Par1;
         p073_displayon    = true;
         p073_validcmd     = true;
       }
@@ -1437,6 +1440,9 @@ bool p073_plugin_write_7dfont(struct EventStruct *event, const String& text) {
       fontNr = 3;
     } else if (!validIntFromString(text, fontNr)) {
       fontNr = -1; // reset if invalid
+    }
+    if (fontNr >= 0) {
+      PCONFIG(4) = fontNr;
     }
     #ifdef P073_DEBUG
     String info = F("P037 7dfont,");
