@@ -930,7 +930,6 @@ void addADC_PinSelect(AdcPinSelectPurpose purpose, const String& id,  int choice
       purpose == AdcPinSelectPurpose::ADC_Touch_Optional ? F("- None -") : formatGpioName_ADC(gpio),
       gpio,
       choice == gpio);
-    ++i;
   }
 
   while (i <= MAX_GPIO && gpio <= MAX_GPIO) {

@@ -252,7 +252,8 @@ void ESPEasy_setup()
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
-  setNetworkMedium(Settings.NetworkMedium);
+  // Do not call setNetworkMedium here as that may try to clean up settings.
+  active_network_medium = Settings.NetworkMedium;
   #endif // ifdef HAS_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
