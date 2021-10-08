@@ -60,10 +60,14 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return F("Heap Max Free Block");
+  #endif
 #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_FRAGMENTATION:     return F("Heap Fragmentation");
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 
 #ifdef ESP32
@@ -80,6 +84,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:       return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:  return F("Collect Timing Statistics");
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return F("Allow TaskValueSet on all plugins");
+    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return F("Try clear I2C bus when stuck");
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -136,6 +141,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
+
+    case LabelType::I2C_BUS_STATE:          return F("I2C Bus State");
+    case LabelType::I2C_BUS_CLEARED_COUNT:  return F("I2C bus cleared count");
 
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
@@ -229,13 +237,19 @@ String getValue(LabelType::Enum label) {
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 #if  defined(ESP32)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxAllocHeap());
+  #endif
 #endif // if  defined(ESP32)
 #if defined(CORE_POST_2_5_0)
+  #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_FRAGMENTATION:     return String(ESP.getHeapFragmentation());
+  #endif
 #endif // if defined(CORE_POST_2_5_0)
 #ifdef ESP32
     case LabelType::HEAP_SIZE:              return String(ESP.getHeapSize());
@@ -243,7 +257,7 @@ String getValue(LabelType::Enum label) {
     #ifdef ESP32_ENABLE_PSRAM
     case LabelType::PSRAM_SIZE:             return String(ESP.getPsramSize());
     case LabelType::PSRAM_FREE:             return String(ESP.getFreePsram());
-    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreeHeap());
+    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreePsram());
     case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(ESP.getMaxAllocPsram());
     #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
@@ -252,6 +266,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:       return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:  return jsonBool(Settings.EnableTimingStats());
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return jsonBool(Settings.AllowTaskValueSetAllPlugins());
+    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return jsonBool(Settings.EnableClearHangingI2Cbus());
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -317,6 +332,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
+    case LabelType::I2C_BUS_STATE:          return toString(I2C_state);
+    case LabelType::I2C_BUS_CLEARED_COUNT:  return String(I2C_bus_cleared_count);
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());
