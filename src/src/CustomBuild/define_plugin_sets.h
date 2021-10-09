@@ -1437,9 +1437,7 @@ To create/register a plugin, you have to :
 
   // Controllers
   #ifndef USES_C015
-    #ifndef ESP32
-      #define USES_C015   // Blynk (?doesn't compile on ESP32?)
-    #endif
+    #define USES_C015   // Blynk
   #endif
   #ifndef USES_C016
     #define USES_C016   // Cache controller
