@@ -83,7 +83,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
-      event->Par1 = PCONFIG(1) == PLUGIN_053_OUTPUT_PART ? 3 : 4;
+      event->Par1 = PLUGIN_053_OUTPUT_SELECTOR == PLUGIN_053_OUTPUT_PART ? 3 : 4;
       success     = true;
       break;
     }
@@ -130,7 +130,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
           PMSx003_TYPE_ST
         };
-        addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PCONFIG(0));
+        addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
       }
       {
         addFormSubHeader(F("Output"));
@@ -140,7 +140,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
         };
         int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC, PLUGIN_053_OUTPUT_CNT };
-        addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PCONFIG(1), true);
+        addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
         addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
 
         const __FlashStringHelper *eventOptions[] = {
@@ -149,7 +149,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L")
         };
         int eventOptionValues[] = { PLUGIN_053_EVENT_NONE, PLUGIN_053_EVENT_PARTICLES, PLUGIN_053_EVENT_PARTCOUNT };
-        addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues, PCONFIG(2));
+        addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues, PLUGIN_053_EVENT_OUT_SELECTOR);
         addFormNote(F(
                       "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm10, taskname#cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
@@ -160,14 +160,14 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE: {
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      PCONFIG(0) = getFormItemInt(F("p053_model"));
-      PCONFIG(1) = getFormItemInt(F("p053_output"));
+      PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
+      PLUGIN_053_OUTPUT_SELECTOR = getFormItemInt(F("p053_output"));
 
-      if (((PCONFIG(0) == PMSx003_TYPE) && (PCONFIG(1) == PLUGIN_053_OUTPUT_THC))
-          || (PCONFIG(0) == PMS3003_TYPE)) { // Base models only support particle values, no use in setting other output values
-        PCONFIG(1) = PLUGIN_053_OUTPUT_PART;
+      if (((PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_TYPE) && (PLUGIN_053_OUTPUT_SELECTOR == PLUGIN_053_OUTPUT_THC))
+          || (PLUGIN_053_SENSOR_MODEL_SELECTOR == PMS3003_TYPE)) { // Base models only support particle values, no use in setting other output values
+        PLUGIN_053_OUTPUT_SELECTOR = PLUGIN_053_OUTPUT_PART;
       }
-      PCONFIG(2) = getFormItemInt(F("P053_events"));
+      PLUGIN_053_EVENT_OUT_SELECTOR = getFormItemInt(F("P053_events"));
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
       break;
@@ -183,7 +183,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       uint8_t Plugin_053_sensortype = 0;
 
         # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Plugin_053_sensortype = PCONFIG(0);
+      Plugin_053_sensortype = PLUGIN_053_SENSOR_MODEL_SELECTOR;
         # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P053_data_struct(rxPin, txPin, port, resetPin, Plugin_053_sensortype));

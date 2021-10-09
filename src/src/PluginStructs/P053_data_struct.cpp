@@ -9,7 +9,6 @@ P053_data_struct::P053_data_struct(
   int8_t                  resetPin,
   uint8_t                 sensortype)
   : Plugin_053_sensortype(sensortype) {
-
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(25);
@@ -24,10 +23,10 @@ P053_data_struct::P053_data_struct(
 
 
   // Hardware serial is RX on 3 and TX on 1
-  if ((rxPin == 3) && (txPin == 1)) {
-    addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
+  if (port == ESPEasySerialPort::software) {
+    addLog(LOG_LEVEL_INFO, F("PMSx003 : using software serial"));
   } else {
-    addLog(LOG_LEVEL_INFO, F("PMSx003: using software serial"));
+    addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
   }
   easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
 
@@ -132,7 +131,7 @@ bool P053_data_struct::packetAvailable()
   return true;
 }
 
-void P053_data_struct::sendEvent(const String& baseEvent, const String& name, double value) {
+void P053_data_struct::sendEvent(const String& baseEvent, const __FlashStringHelper *name, float value) {
   String valueEvent;
 
   valueEvent.reserve(32);
@@ -184,6 +183,8 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     SerialRead16(&data[i], &checksum);
   }
 
+# ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
     String log;
     log.reserve(87);
@@ -202,7 +203,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PCONFIG(0) != PMS3003_TYPE)) { // 'Count' values not available on PMS2003/PMS3003 models
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PLUGIN_053_SENSOR_MODEL_SELECTOR != PMS3003_TYPE)) { // 'Count' values not available on PMS2003/PMS3003 models
                                                                             // (handled as 1 model in code)
     String log;
     log.reserve(96);
@@ -221,9 +222,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PCONFIG(0) == PMSx003_TYPE_ST)) { // Values only available on PMS5003ST
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_TYPE_ST)) { // Values only available on PMS5003ST
     String log;
     log.reserve(45);
     log  = F("PMSx003 : temp=");
@@ -234,7 +235,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     log += static_cast<float>(data[12]) / 1000.0f;
     addLog(LOG_LEVEL_DEBUG, log);
   }
-  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+# endif    // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
   SerialRead16(&checksum2, nullptr);
@@ -243,121 +246,124 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   if (checksum == checksum2)
   {
     // Data is checked and good, fill in output
-    # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-
-    switch (PCONFIG(1)) {
-      case PLUGIN_053_OUTPUT_PART:
-      {
-    # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
     UserVar[event->BaseVarIndex]     = data[3];
     UserVar[event->BaseVarIndex + 1] = data[4];
     UserVar[event->BaseVarIndex + 2] = data[5];
-    # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    UserVar[event->BaseVarIndex + 3] = 0.0;
-    break;
-  }
-  case PLUGIN_053_OUTPUT_THC:
-  {
-    UserVar[event->BaseVarIndex]     = data[4];
-    UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[13]) / 10.0f;   // TEMP
-    UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[14]) / 10.0f;   // HUMI
-    UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[12]) / 1000.0f; // HCHO
-    break;
-  }
-  case PLUGIN_053_OUTPUT_CNT:
-  {
-    UserVar[event->BaseVarIndex]     = data[8];
-    UserVar[event->BaseVarIndex + 1] = data[9];
-    UserVar[event->BaseVarIndex + 2] = data[10];
-    UserVar[event->BaseVarIndex + 3] = data[11];
-    break;
-  }
-  default:
-    break;                                                                   // Ignore invalid options
-}
+    # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-if (Settings.UseRules && (PCONFIG(2) > 0) && (PCONFIG(0) != PMS3003_TYPE)) { // Events not applicable to PMS2003 & PMS3003 models
-  String baseEvent;
-  baseEvent.reserve(21);
-  baseEvent  = getTaskDeviceName(event->TaskIndex);
-  baseEvent += '#';
 
-  switch (PCONFIG(1)) {
-    case PLUGIN_053_OUTPUT_PART:
-    {
-      // Temperature
-      sendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0f);
-
-      // Humidity
-      sendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0f);
-
-      // Formaldebyde (HCHO)
-      sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0f);
-
-      if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
-        // Particle count per 0.1 L > 1.0 micron
-        sendEvent(baseEvent, F("cnt1.0"), data[8]);
-
-        // Particle count per 0.1 L > 2.5 micron
-        sendEvent(baseEvent, F("cnt2.5"), data[9]);
-
-        // Particle count per 0.1 L > 5 micron
-        sendEvent(baseEvent, F("cnt5"),   data[10]);
-
-        // Particle count per 0.1 L > 10 micron
-        sendEvent(baseEvent, F("cnt10"),  data[11]);
+    switch (PLUGIN_053_OUTPUT_SELECTOR) {
+      case PLUGIN_053_OUTPUT_PART:
+      {
+        UserVar[event->BaseVarIndex]     = data[3];
+        UserVar[event->BaseVarIndex + 1] = data[4];
+        UserVar[event->BaseVarIndex + 2] = data[5];
+        UserVar[event->BaseVarIndex + 3] = 0.0;
         break;
       }
-    }
-    case PLUGIN_053_OUTPUT_THC:
-    {
-      // Particles > 1.0 um/m3
-      sendEvent(baseEvent, F("pm1.0"), data[3]);
-
-      // Particles > 10 um/m3
-      sendEvent(baseEvent, F("pm10"),  data[5]);
-
-      if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
-        // Particle count per 0.1 L > 1.0 micron
-        sendEvent(baseEvent, F("cnt1.0"), data[8]);
-
-        // Particle count per 0.1 L > 2.5 micron
-        sendEvent(baseEvent, F("cnt2.5"), data[9]);
-
-        // Particle count per 0.1 L > 5 micron
-        sendEvent(baseEvent, F("cnt5"),   data[10]);
-
-        // Particle count per 0.1 L > 10 micron
-        sendEvent(baseEvent, F("cnt10"),  data[11]);
+      case PLUGIN_053_OUTPUT_THC:
+      {
+        UserVar[event->BaseVarIndex]     = data[4];
+        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[13]) / 10.0f;   // TEMP
+        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[14]) / 10.0f;   // HUMI
+        UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[12]) / 1000.0f; // HCHO
+        break;
       }
-      break;
+      case PLUGIN_053_OUTPUT_CNT:
+      {
+        UserVar[event->BaseVarIndex]     = data[8];
+        UserVar[event->BaseVarIndex + 1] = data[9];
+        UserVar[event->BaseVarIndex + 2] = data[10];
+        UserVar[event->BaseVarIndex + 3] = data[11];
+        break;
+      }
+      default:
+        break;                                                                   // Ignore invalid options
     }
-    case PLUGIN_053_OUTPUT_CNT:
-    {
-      // Particles > 1.0 um/m3
-      sendEvent(baseEvent, F("pm1.0"), data[3]);
 
-      // Particles > 2.5 um/m3
-      sendEvent(baseEvent, F("pm2.5"), data[4]);
+    if (Settings.UseRules && (PLUGIN_053_EVENT_OUT_SELECTOR > 0) && (PLUGIN_053_SENSOR_MODEL_SELECTOR != PMS3003_TYPE)) { // Events not applicable to PMS2003 & PMS3003 models
+      String baseEvent;
+      baseEvent.reserve(21);
+      baseEvent  = getTaskDeviceName(event->TaskIndex);
+      baseEvent += '#';
 
-      // Particles > 10 um/m3
-      sendEvent(baseEvent, F("pm10"),  data[5]);
+      switch (PLUGIN_053_OUTPUT_SELECTOR) {
+        case PLUGIN_053_OUTPUT_PART:
+        {
+          // Temperature
+          sendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0f);
 
-      // Temperature
-      sendEvent(baseEvent, F("Temp"),  static_cast<float>(data[13]) / 10.0f);
+          // Humidity
+          sendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0f);
 
-      // Humidity
-      sendEvent(baseEvent, F("Humi"),  static_cast<float>(data[14]) / 10.0f);
+          // Formaldebyde (HCHO)
+          sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0f);
 
-      // Formaldebyde (HCHO)
-      sendEvent(baseEvent, F("HCHO"),  static_cast<float>(data[12]) / 1000.0f);
-      break;
+          if (PLUGIN_053_EVENT_OUT_SELECTOR == PLUGIN_053_OUTPUT_CNT) {
+            // Particle count per 0.1 L > 1.0 micron
+            sendEvent(baseEvent, F("cnt1.0"), data[8]);
+
+            // Particle count per 0.1 L > 2.5 micron
+            sendEvent(baseEvent, F("cnt2.5"), data[9]);
+
+            // Particle count per 0.1 L > 5 micron
+            sendEvent(baseEvent, F("cnt5"),   data[10]);
+
+            // Particle count per 0.1 L > 10 micron
+            sendEvent(baseEvent, F("cnt10"),  data[11]);
+            break;
+          }
+        }
+        case PLUGIN_053_OUTPUT_THC:
+        {
+          // Particles > 1.0 um/m3
+          sendEvent(baseEvent, F("pm1.0"), data[3]);
+
+          // Particles > 10 um/m3
+          sendEvent(baseEvent, F("pm10"),  data[5]);
+
+          if (PLUGIN_053_EVENT_OUT_SELECTOR == PLUGIN_053_OUTPUT_CNT) {
+            // Particle count per 0.1 L > 1.0 micron
+            sendEvent(baseEvent, F("cnt1.0"), data[8]);
+
+            // Particle count per 0.1 L > 2.5 micron
+            sendEvent(baseEvent, F("cnt2.5"), data[9]);
+
+            // Particle count per 0.1 L > 5 micron
+            sendEvent(baseEvent, F("cnt5"),   data[10]);
+
+            // Particle count per 0.1 L > 10 micron
+            sendEvent(baseEvent, F("cnt10"),  data[11]);
+          }
+          break;
+        }
+        case PLUGIN_053_OUTPUT_CNT:
+        {
+          // Particles > 1.0 um/m3
+          sendEvent(baseEvent, F("pm1.0"), data[3]);
+
+          // Particles > 2.5 um/m3
+          sendEvent(baseEvent, F("pm2.5"), data[4]);
+
+          // Particles > 10 um/m3
+          sendEvent(baseEvent, F("pm10"),  data[5]);
+
+          // Temperature
+          sendEvent(baseEvent, F("Temp"),  static_cast<float>(data[13]) / 10.0f);
+
+          // Humidity
+          sendEvent(baseEvent, F("Humi"),  static_cast<float>(data[14]) / 10.0f);
+
+          // Formaldebyde (HCHO)
+          sendEvent(baseEvent, F("HCHO"),  static_cast<float>(data[12]) / 1000.0f);
+          break;
+        }
+        default:
+          break;
+      }
     }
-    default:
-      break;
-  }
-}
-    # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    # endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
     values_received = true;
     return true;
   }
