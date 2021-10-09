@@ -106,7 +106,7 @@
 .. |P088_type| replace:: :cyan:`Energy (Heat)`
 .. |P088_typename| replace:: :cyan:`Energy (Heat) - HeatpumpIR`
 .. |P088_porttype| replace:: `.`
-.. |P088_status| replace:: :yellow:`TESTING, IRext`
+.. |P088_status| replace:: :yellow:`IRext`
 .. |P088_github| replace:: P088_HeatpumpIR.ino
 .. _P088_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P088_HeatpumpIR.ino
 .. |P088_usedby| replace:: `.`
