@@ -53,3 +53,4 @@ build_output/
 **/__tmpfile.cpp
 
 src/_Custom.h
+platformio.ini
