@@ -80,7 +80,7 @@
 .. |P016_type| replace:: :cyan:`Communication`
 .. |P016_typename| replace:: :cyan:`Communication - TSOP4838`
 .. |P016_porttype| replace:: `.`
-.. |P016_status| replace:: :green:`NORMAL`
+.. |P016_status| replace:: :yellow:`IR`
 .. |P016_github| replace:: P016_IR.ino
 .. _P016_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P016_IR.ino
 .. |P016_usedby| replace:: `.`
