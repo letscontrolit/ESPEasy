@@ -2,13 +2,27 @@
 
 #ifdef USES_P053
 
+const __FlashStringHelper* toString(PMSx003_type sensorType) {
+  switch (sensorType) {
+    case PMSx003_type::PMS1003_5003_7003: return F("PMS1003 / PMS5003 / PMS7003");
+    # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    case PMSx003_type::PMS2003_3003: return F("PMS2003 / PMS3003");
+    case PMSx003_type::PMS5003_S:    return F("PMS5003S");
+    case PMSx003_type::PMS5003_T:    return F("PMS5003T");
+    case PMSx003_type::PMS5003_ST:   return F("PMS5003ST");
+    # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  }
+  return F("Unknown");
+}
+
 P053_data_struct::P053_data_struct(
   int8_t                  rxPin,
   int8_t                  txPin,
   const ESPEasySerialPort port,
   int8_t                  resetPin,
-  uint8_t                 sensortype)
+  PMSx003_type            sensortype)
   : Plugin_053_sensortype(sensortype) {
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(25);
@@ -20,6 +34,7 @@ P053_data_struct::P053_data_struct(
     log += resetPin;
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 
 
   // Hardware serial is RX on 3 and TX on 1
@@ -62,16 +77,14 @@ bool P053_data_struct::initialized() const
 // Read 2 bytes from serial and make an uint16 of it. Additionally calculate
 // checksum for PMSx003. Assumption is that there is data available, otherwise
 // this function is blocking.
-void P053_data_struct::SerialRead16(uint16_t *value, uint16_t *checksum)
+void P053_data_struct::SerialRead16(uint16_t &value, uint16_t *checksum)
 {
-  uint8_t data_high, data_low;
-
   if (!initialized()) { return; }
-  data_high = easySerial->read();
-  data_low  = easySerial->read();
+  const uint8_t data_high = easySerial->read();
+  const uint8_t data_low  = easySerial->read();
 
-  *value  = data_low;
-  *value |= (data_high << 8);
+  value  = data_low;
+  value |= (data_high << 8);
 
   if (checksum != nullptr)
   {
@@ -79,17 +92,16 @@ void P053_data_struct::SerialRead16(uint16_t *value, uint16_t *checksum)
     *checksum += data_low;
   }
 
-# if 0
-
+#ifdef P053_LOW_LEVEL_DEBUG
   // Low-level logging to see data from sensor
   String log = F("PMSx003 : uint8_t high=0x");
   log += String(data_high, HEX);
   log += F(" uint8_t low=0x");
   log += String(data_low, HEX);
   log += F(" result=0x");
-  log += String(*value, HEX);
+  log += String(value, HEX);
   addLog(LOG_LEVEL_INFO, log);
-# endif // if 0
+#endif
 }
 
 void P053_data_struct::SerialFlush() {
@@ -98,14 +110,14 @@ void P053_data_struct::SerialFlush() {
   }
 }
 
-uint8_t P053_data_struct::packetSize(uint8_t sensorType) {
-  switch (sensorType) {
-    case PMSx003_TYPE:    return PMSx003_SIZE;
+uint8_t P053_data_struct::packetSize() const {
+  switch (Plugin_053_sensortype) {
+    case PMSx003_type::PMS1003_5003_7003:    return PMS1003_5003_7003_SIZE;
     # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    case PMSx003_TYPE_S:  return PMSx003S_SIZE;
-    case PMSx003_TYPE_T:  return PMSx003T_SIZE;
-    case PMSx003_TYPE_ST: return PMSx003ST_SIZE;
-    case PMS3003_TYPE:    return PMS3003_SIZE;
+    case PMSx003_type::PMS5003_S:    return PMS5003_S_SIZE;
+    case PMSx003_type::PMS5003_T:    return PMS5003_T_SIZE;
+    case PMSx003_type::PMS5003_ST:   return PMS5003_ST_SIZE;
+    case PMSx003_type::PMS2003_3003: return PMS2003_3003_SIZE;
     # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   }
   return 0u;
@@ -125,7 +137,8 @@ bool P053_data_struct::packetAvailable()
       // empty.
     }
 
-    if (easySerial->available() < packetSize(Plugin_053_sensortype)) { return false; // Not enough yet for a complete packet
+    if (easySerial->available() < packetSize()) {
+      return false; // Not enough yet for a complete packet
     }
   }
   return true;
@@ -149,16 +162,16 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t framelength   = 0;
   uint16_t packet_header = 0;
 
-  SerialRead16(&packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
+  SerialRead16(packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
 
   if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
     // Not the start of the packet, stop reading.
     return false;
   }
 
-  SerialRead16(&framelength, &checksum);
+  SerialRead16(framelength, &checksum);
 
-  if (framelength != (packetSize(Plugin_053_sensortype) - 4)) {
+  if (framelength != (packetSize() - 4)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
       log.reserve(34);
@@ -172,15 +185,17 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint8_t frameData = 0;
 
   switch (Plugin_053_sensortype) {
-    case PMSx003_TYPE:    frameData = 13; break; // PMS1003/PMS5003/PMS7003
-    case PMS3003_TYPE:    frameData =  9; break; // PMS2003/PMS3003
-    case PMSx003_TYPE_ST: frameData = 17; break; // PMS5003ST
+    case PMSx003_type::PMS1003_5003_7003: frameData = 13; break; // PMS1003/PMS5003/PMS7003
+    # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    case PMSx003_type::PMS2003_3003:      frameData =  9; break; // PMS2003/PMS3003
+    case PMSx003_type::PMS5003_ST:        frameData = 17; break; // PMS5003ST
+    # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
     default: break;
   }
-  uint16_t data[17] = { 0 };                     // uint8_t data_low, data_high;
+  uint16_t data[17] = { 0 }; // uint8_t data_low, data_high;
 
   for (uint8_t i = 0; i < frameData; i++) {
-    SerialRead16(&data[i], &checksum);
+    SerialRead16(data[i], &checksum);
   }
 
 # ifndef BUILD_NO_DEBUG
@@ -203,8 +218,12 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PLUGIN_053_SENSOR_MODEL_SELECTOR != PMS3003_TYPE)) { // 'Count' values not available on PMS2003/PMS3003 models
-                                                                            // (handled as 1 model in code)
+#  ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)
+      && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) { // 'Count' values not available on
+    // PMS2003/PMS3003 models
+    // (handled as 1 model in code)
     String log;
     log.reserve(96);
     log  = F("PMSx003 : count/0.1L : 0.3um=");
@@ -222,9 +241,10 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  #  ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #   ifdef PLUGIN_053_ENABLE_S_AND_T
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_TYPE_ST)) { // Values only available on PMS5003ST
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)
+      && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)) { // Values only available on PMS5003ST
     String log;
     log.reserve(45);
     log  = F("PMSx003 : temp=");
@@ -235,12 +255,13 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     log += static_cast<float>(data[12]) / 1000.0f;
     addLog(LOG_LEVEL_DEBUG, log);
   }
+  #   endif // ifdef PLUGIN_053_ENABLE_S_AND_T
   #  endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-# endif    // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
-  SerialRead16(&checksum2, nullptr);
+  SerialRead16(checksum2, nullptr);
   SerialFlush(); // Make sure no data is lost due to full buffer.
 
   if (checksum == checksum2)
@@ -279,10 +300,12 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         break;
       }
       default:
-        break;                                                                   // Ignore invalid options
+        break; // Ignore invalid options
     }
 
-    if (Settings.UseRules && (PLUGIN_053_EVENT_OUT_SELECTOR > 0) && (PLUGIN_053_SENSOR_MODEL_SELECTOR != PMS3003_TYPE)) { // Events not applicable to PMS2003 & PMS3003 models
+    if (Settings.UseRules && (PLUGIN_053_EVENT_OUT_SELECTOR > 0)
+        && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) {
+      // Events not applicable to PMS2003 & PMS3003 models
       String baseEvent;
       baseEvent.reserve(21);
       baseEvent  = getTaskDeviceName(event->TaskIndex);
