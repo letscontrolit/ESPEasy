@@ -73,10 +73,9 @@ For development of ESPeasy, a number of extensions has to be installed in VS-Cod
 * Arduino for Visual Studio Code (by Microsoft)
 * Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
-Optional:
+Optional, but highly recommended:
 
 * Bookmarks (by Alessandro Fragnani)
-* Bracket Pair Colorizer 2 (by CoenraadS)
 * GitLens - Git supercharged (by Eric Amodio)
 * Todo Tree (by Gruntfuggly)
 * All Autocomplete (by Atishay Jain)
@@ -101,7 +100,7 @@ To do so:
 
 The first time (after installing uncrustify) it must be confirmed to use Uncrustify as formatter and using the default suggested config file.
 
-After setting it as the default formatter, the hotkey Ctrl-Shift-F (Cmd-Shift-F on MacOS) can be used to format the entire document.
+After setting it as the default formatter, the hotkey Alt-Shift-F (Cmd-Shift-F on MacOS) can be used to format the entire document.
 
 
 Load a project using PlatformIO
@@ -135,7 +134,8 @@ For example:
 * ..._ESP8266_4Mnn -> ESP8266 has external flash, which can vary in size from 512 kB to 16 MB, with nn configured as filesystem.
 * ..._ESP8285_1M -> ESP8285 has the flash internal, so is always 1 MB.
 * ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
-* ..._ESP32_16M2M -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (2MB LittleFS)
+* ..._ESP32_16M2M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (2MB LittleFS)
+* ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
 
 Make a custom build using PlatformIO
 ------------------------------------
@@ -172,10 +172,27 @@ For Linux, you may need to install 99-platformio-udev.rules to make PlatformIO u
 
 .. highlight::sh
 
-Starter guide for setting up local development of ESPEasy
-=========================================================
+Starter guide for (local) development on ESPEasy
+================================================
 
 For those with less development experience, or less experience in using Github, this chapter is intended as a **How To** guide to get started with development on ESPEasy.
+
+It tries to help setting up Visual Studio Code (VSCode) with the PlatformIO development environment and additional VSCode plugins that aid in easier working on code and documentation.
+
+The global steps described here are:
+
+- Creating a private copy on Github
+- Getting VSCode and PlatformIO set up
+- Getting the source code from Github onto your system
+- Compiling the source code
+- Creating a branch to make your changes
+- Modify the source code, compile & test
+- Add a plugin (optional), compile & test
+- Write documentation on the changes you made
+- Commit your code and create a pull request on Github to publish your changes to the world
+- Regular maintenance of your fork (housekeeping)
+
+Let's get started!
 
 Github account
 --------------
@@ -287,7 +304,7 @@ Create a new branch
 
 As shown above, the git workflow starts by creating a new branch to do the development work in. This will record all changes to the sourcecode you make, and can be put in as a pull request (explained below) for ESPEasy.
 
-A new branch is created by clicking on the 'mega' branch name and selecting the option 'Create new branch...' from the list presented. Then a new braanch name should be typed. Branch naming does use some conventions. New features are often named like 'feature/purpose-of-the-feature', and bugfixes are usually named like 'bugfix/what-is-to-be-fixed'. For the addition of this documentation, I've created a branch named 'feature/how-to-guide-for-new-developers':
+A new branch is created by clicking on the 'mega' branch name (lower left in the status bar of VSCode) and selecting the option 'Create new branch...' from the list presented at the mille-top of the VSCode window. Then a new braanch name should be typed. Branch naming does use some conventions. New features are often named like 'feature/purpose-of-the-feature', and bugfixes are usually named like 'bugfix/what-is-to-be-fixed'. For the addition of this documentation, I've created a branch named 'feature/how-to-guide-for-new-developers':
 
 .. image:: VSCode_create_branch.png
     :alt: VSCode create branch
@@ -317,6 +334,15 @@ This uploading can be done in 2 ways:
 
 * *Use the Upload feature of PIO*: If the ESP unit is connected to the computer via USB and the serial chip of the unit is recognized by the OS, the Upload option can be selected to compile the sources (only what was changed since the last compilation) and start the upload procedure. After uploading the ESP will restart.
 * *Use the Update Firmware option of ESPEasy*: On the Tools tab of ESPEasy, there is a button Update Firmware available (on units that have enough free Flash space) so a new .bin file can be uploaded. The latest successful compiled file can be found in the ``build_output/bin`` subfolder of your ``ESPEasy`` folder.
+
+Add a plugin to ESPEasy
+-----------------------
+
+Instead of just changing an existing plugin or some other feature of ESPEasy, also, new plugins can be added. Plugins can be created from scratch, starting with the template ``_Pxxx_PluginTemplate.ino`` that includes instructions what each section is supposed to do, take a proposed plugin from the ESPEasyPlayground repository at https://github.com/letscontrolit/ESPEasyPluginPlayground, or from other sources (some plugins are in personal Github repositories, but never submitted to the ESPEasyPluginPlayground).
+
+It requires sufficient testing, and analysis of the runtime behavior, of that piece of code, before it should be submitted for a pull request.
+
+Especially for new plugins, it is highly recommended to write documentation, as explained in the next paragraph.
 
 Writing documentation
 ---------------------
@@ -358,16 +384,7 @@ On Linux or MacOS:
 
 The resulting output can be found in this folder with the ESPEasy folder: ``docs/build/html`` and can be viewed by opening the file ``index.html`` in a browser. Then the normal navigation within the documentation is available.
 
-TODO: Add documentation about the structure of the documentation.
-
-Add a plugin to ESPEasy
------------------------
-
-Instead of just changing an existing plugin or some other feature of ESPEasy, also, new plugins can be added. Plugins can be taken from the ESPEasyPlayground repository at https://github.com/letscontrolit/ESPEasyPluginPlayground, or from other sources.
-
-It requires sufficient testing, and analysis of the runtime behavior, of that piece of code, before it should be submitted for a pull request.
-
-Especially for new plugins, it is highly recommended to write documentation, as explained in the previous paragraph.
+TODO: Add documentation about the (file) structure of the documentation.
 
 Commit and create a pull request
 --------------------------------
