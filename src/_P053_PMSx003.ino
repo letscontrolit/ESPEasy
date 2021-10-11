@@ -37,7 +37,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       Device[++deviceCount].Number           = PLUGIN_ID_053;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
@@ -104,6 +104,8 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_LOAD: {
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("rstpin"), PLUGIN_053_RST_PIN);
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("PWR set")), F("pwrpin"), PLUGIN_053_PWR_PIN);
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
@@ -160,6 +162,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
+      int rstPin, pwrPin = -1;
+      update_whenset_FormItemInt(F("rstpin"), rstPin);
+      update_whenset_FormItemInt(F("pwrpin"), pwrPin);
+      PLUGIN_053_RST_PIN = rstPin;
+      PLUGIN_053_PWR_PIN = pwrPin;
+
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));

@@ -56,6 +56,9 @@ const __FlashStringHelper* toString(PMSx003_type sensorType);
 # define PLUGIN_053_OUTPUT_SELECTOR       PCONFIG(1)
 # define PLUGIN_053_EVENT_OUT_SELECTOR    PCONFIG(2)
 
+# define PLUGIN_053_RST_PIN               Settings.TaskDevicePin3[event->TaskIndex]
+# define PLUGIN_053_PWR_PIN               PCONFIG(3)
+
 // Helper define to make code a bit more readable.
 # define GET_PLUGIN_053_SENSOR_MODEL_SELECTOR static_cast<PMSx003_type>(PLUGIN_053_SENSOR_MODEL_SELECTOR)
 
