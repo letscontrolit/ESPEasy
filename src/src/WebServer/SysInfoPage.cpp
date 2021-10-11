@@ -20,6 +20,7 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasyStatistics.h"
@@ -288,6 +289,8 @@ void handle_sysinfo_basicInfo() {
   {
     addRowLabelValue(LabelType::LOCAL_TIME);
     addRowLabelValue(LabelType::TIME_SOURCE);
+    addRowLabelValue(LabelType::TIME_WANDER);
+    addUnit(F("msec/sec"));
   }
 
   addRowLabel(LabelType::UPTIME);
@@ -351,12 +354,16 @@ void handle_sysinfo_memory() {
     addHtml(html);
   }
 # if defined(CORE_POST_2_5_0) || defined(ESP32)
+ #  ifndef LIMIT_BUILD_SIZE
   addRowLabelValue(LabelType::HEAP_MAX_FREE_BLOCK);
-# endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+ #  endif // ifndef LIMIT_BUILD_SIZE
+# endif   // if defined(CORE_POST_2_5_0) || defined(ESP32)
 # if defined(CORE_POST_2_5_0)
+  #  ifndef LIMIT_BUILD_SIZE
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
   addHtml('%');
-# endif // ifdef CORE_POST_2_5_0
+  #  endif // ifndef LIMIT_BUILD_SIZE
+# endif // if defined(CORE_POST_2_5_0)
 
 
   addRowLabel(LabelType::FREE_STACK);
@@ -518,6 +525,11 @@ void handle_sysinfo_SystemStatus() {
     # ifdef FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
     # endif // ifdef FEATURE_SD
+
+  if (Settings.EnableClearHangingI2Cbus()) {
+    addRowLabelValue(LabelType::I2C_BUS_STATE);
+    addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
+  }
 }
 
 void handle_sysinfo_NetworkServices() {

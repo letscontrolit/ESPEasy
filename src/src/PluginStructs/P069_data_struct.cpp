@@ -75,7 +75,7 @@ float P069_data_struct::getTemperatureInDegrees() const
   }
 
   // Real value can be calculated with sensor resolution
-  real_result = (float)value * LM75A_DEGREES_RESOLUTION;
+  real_result = static_cast<float>(value) * LM75A_DEGREES_RESOLUTION;
 
   return real_result;
 }

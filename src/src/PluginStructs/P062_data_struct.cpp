@@ -103,7 +103,7 @@ void P062_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
   log += sizeof(StoredSettings);
   addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_062_DEBUG
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(StoredSettings), sizeof(StoredSettings));
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 }
 
 /**

@@ -137,7 +137,7 @@ NB: Only acceptable channel checkboxes (0-7/0-3/0-1) will be shown, depending on
 SPI Interface
 -------------
 
-When using devices that are connected via the SPI interface (`Wikipedia: SPI <https://en.wikipedia.org/wiki/Serial_Peripheral_Interface>`_), the interface must be initialized during boot. This can be enabled here. For ESP32 there is the option to select either the Hardware SPI (HSPI) interface or the Virtual SPI (VSPI) interface (software controlled).
+When using devices that are connected via the SPI interface (`Wikipedia: SPI <https://en.wikipedia.org/wiki/Serial_Peripheral_Interface>`_), the interface must be initialized during boot. This can be enabled here. For ESP32 there is the option to select the HSPI (often called Hardware SPI) interface, the VSPI (often called Virtual SPI) interface, or select User-defined GPIO pins for the ``SCLK``, ``MISO`` and ``MOSI`` signals.
 
 The common SPI pins are shown here.
 
@@ -151,11 +151,30 @@ Other SPI pins to be used are device specific, and need to be configured from th
 
 .. image:: Hardware_SPIInterfaceESP32.png
 
-*For ESP32, select the desired interface:*
+*For ESP32, select the desired configuration:*
 
 .. image:: Hardware_SPIInterfaceESP32_Select.png
 
-NB: When using the VSPI interface and also the I2C interface is used, another pin has to be selected for I2C GPIO -> SCL, as its configuration is fixed for the VSPI setting.
+NB: When using the VSPI configuration and also the I2C interface is used, another pin has to be selected for I2C GPIO -> SCL, as its configuration is fixed for the VSPI setting.
+
+When selecting the *User-defined* options, 3 extra input fields are displayed, where the ``SCLK``, ``MISO`` and ``MOSI`` GPIO pins have to be selected. Nearly all pins can be used, but for the output signals ``SCLK`` and ``MOSI`` **no** *input-only* pins should be selected!
+
+.. image:: Hardware_SPIInterfaceESP32_UserDefined.png
+
+.. warning::
+    When changing the setting for **Init SPI**, or changing any of the User-defined GPIO pins, the ESP32 unit needs a hardware reset. This can be achieved by pressing the reset button (when available, sometimes labelled ``EN`` or ``RST``), or by completely removing the power for ~30 seconds. Also take into account here that units with a backup battery (f.e. some LilyGo and Waveshare ESP32 models) may keep power on the unit, so specific measures may have to be taken!
+
+NB: When selecting the *User-defined* option, **all 3 GPIO pins should be set**, or an error message will be displayed when the page is saved, and the SPI interface will not be enabled at the next boot.
+
+.. image:: Hardware_SPIpinsError.png
+
+-------
+SD Card
+-------
+
+When the compile-time option for SD-card support is enabled, the ``CS`` pin for the SD-card interface can be configured here. For the SD-card interface to work, **Init SPI** should also be enabled.
+
+.. image:: Hardware_SDCard.png
 
 --------
 Ethernet

@@ -11,6 +11,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
@@ -19,11 +20,11 @@
 
 #include <time.h>
 
+#ifdef USE_EXT_RTC
 #include <RTClib.h>
+#endif
 
 
-
-#define DS1307_CTRL_ID 0x68
 
 
 ESPEasy_time::ESPEasy_time() {
@@ -154,12 +155,43 @@ unsigned long ESPEasy_time::now() {
       }
     }
     if (updatedTime) {
+      const double time_offset = unixTime_d - sysTime - (timePassedSince(prevMillis) / 1000.0);
+
+      if (statusNTPInitialized && time_offset < 1.0) {
+        // Clock instability in msec/second
+        timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
+      }
+      lastTimeWanderCalculation = millis();
+
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
       timeSynced = true;
 
-      const double time_offset = unixTime_d - sysTime;
       sysTime = unixTime_d;
       ExtRTC_set(sysTime);
+      {
+        const unsigned long abs_time_offset_ms = std::abs(time_offset) * 1000;
+
+        if (timeSource == timeSource_t::NTP_time_source) {
+          // May need to lessen the load on the NTP servers, randomize the sync interval
+          if (abs_time_offset_ms < 1000) {
+            // offset is less than 1 second, so we consider it a regular time sync.
+            if (abs_time_offset_ms < 100) {
+              // Good clock stability, use 5 - 6 hour interval
+              syncInterval = random(18000, 21600);
+            } else {
+              // Dynamic interval between 30 minutes ... 5 hours.
+              syncInterval = 1800000 / abs_time_offset_ms;
+            }
+          } else {
+            syncInterval = 3600;
+          }
+          if (syncInterval <= 3600) {
+            syncInterval = random(3600, 4000);
+          }
+        } else {
+          syncInterval = 3600;
+        }
+      }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log         = F("Time set to ");
@@ -168,9 +200,9 @@ unsigned long ESPEasy_time::now() {
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0f);
+          log += String(time_offset * 1000.0);
           log += F(" msec. Wander: ");
-          log += String((time_offset * 1000.0f) / syncInterval);
+          log += String(timeWander, 3);
           log += F(" msec/second");
           log += F(" Source: ");
           log += toString(timeSource);
@@ -246,7 +278,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0f;
+  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0;
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
@@ -271,7 +303,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     log += Settings.NTPHost;
 
     // When single set host fails, retry again in 20 seconds
-    nextSyncTime = sysTime + 20;
+    nextSyncTime = sysTime + random(20, 60);
   } else  {
     // Have to do a lookup each time, since the NTP pool always returns another IP
     String ntpServerName = String(random(0, 3));
@@ -280,7 +312,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     log += ntpServerName;
 
     // When pool host fails, retry can be much sooner
-    nextSyncTime = sysTime + 5;
+    nextSyncTime = sysTime + random(5, 20);
     useNTPpool = true;
   }
 
@@ -658,10 +690,10 @@ void ESPEasy_time::calcSunRiseAndSet() {
   float rise = 12 - da - eqt;
   float set  = 12 + da - eqt;
 
-  tsRise.tm_hour = (int)rise;
-  tsRise.tm_min  = (rise - (int)rise) * 60.0f;
-  tsSet.tm_hour  = (int)set;
-  tsSet.tm_min   = (set - (int)set) * 60.0f;
+  tsRise.tm_hour = rise;
+  tsRise.tm_min  = (rise - static_cast<int>(rise)) * 60.0f;
+  tsSet.tm_hour  = set;
+  tsSet.tm_min   = (set - static_cast<int>(set)) * 60.0f;
   tsRise.tm_mday = tsSet.tm_mday = tm.tm_mday;
   tsRise.tm_mon  = tsSet.tm_mon = tm.tm_mon;
   tsRise.tm_year = tsSet.tm_year = tm.tm_year;
@@ -691,6 +723,8 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
       return false;
     case ExtTimeSource_e::DS1307:
       {
+        #ifdef USE_EXT_RTC
+        I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -702,10 +736,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
     case ExtTimeSource_e::DS3231:
       {
+        #ifdef USE_EXT_RTC
         RTC_DS3231 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -717,11 +753,13 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
       
     case ExtTimeSource_e::PCF8523:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8523 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -733,10 +771,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
     case ExtTimeSource_e::PCF8563:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8563 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -748,6 +788,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
         }
         unixtime = rtc.now().unixtime();
         timeRead = true;
+        #endif
         break;
       }
 
@@ -775,41 +816,50 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
       return false;
     case ExtTimeSource_e::DS1307:
       {
+        #ifdef USE_EXT_RTC
+        I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           timeAdjusted = true;
         }
+        #endif
         break;
       }
     case ExtTimeSource_e::DS3231:
       {
+        #ifdef USE_EXT_RTC
         RTC_DS3231 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           timeAdjusted = true;
         }
+        #endif
         break;
       }
       
     case ExtTimeSource_e::PCF8523:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8523 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           rtc.start();
           timeAdjusted = true;
         }
+        #endif
         break;
       }
     case ExtTimeSource_e::PCF8563:
       {
+        #ifdef USE_EXT_RTC
         RTC_PCF8563 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           rtc.start();
           timeAdjusted = true;
         }
+        #endif
         break;
       }
   }

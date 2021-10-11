@@ -212,8 +212,9 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-  # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin = "P";
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        String plugin;
+        plugin += 'P';
 
         if (pluginID < 10) { plugin += '0'; }
 
@@ -221,7 +222,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
-  # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,
@@ -786,19 +787,7 @@ void format_SPI_port_description(int8_t spi_gpios[3])
     return;
   }
   # ifdef ESP32
-
-  switch (Settings.InitSPI) {
-    case 1:
-    {
-      addHtml(F("VSPI"));
-      break;
-    }
-    case 2:
-    {
-      addHtml(F("HSPI"));
-      break;
-    }
-  }
+  addHtml(getSPI_optionToShortString(static_cast<SPI_Options_e>(Settings.InitSPI)));
   # endif // ifdef ESP32
   # ifdef ESP8266
   addHtml(F("SPI"));
@@ -814,7 +803,7 @@ void format_I2C_pin_description()
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
 {
-  if (Settings.InitSPI > 0) {
+  if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
     for (int i = 0; i < 3; ++i) {
       const String pin_descr = formatGpioLabel(spi_gpios[i], false);
       switch (i) {
@@ -1008,14 +997,12 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (((Device[DeviceIndex].Type == DEVICE_TYPE_SPI)
        || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI2)
        || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI3))
-      && (Settings.InitSPI == 0)) {
+      && (Settings.InitSPI == static_cast<int>(SPI_Options_e::None))) {
     addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
   }
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      && ((Settings.Pin_i2c_sda == -1)
-          || (Settings.Pin_i2c_scl == -1)
-          || (Settings.I2C_clockSpeed == 0))) {
+      && !Settings.isI2CEnabled()) {
     addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
   }
 

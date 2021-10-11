@@ -364,7 +364,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       log += sizeof(P099_data->StoredSettings);
       addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_099_DEBUG
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P099_data->StoredSettings), sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P099_data->StoredSettings)), sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
       delete P099_data;
 
       success = true;
