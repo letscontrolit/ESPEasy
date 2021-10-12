@@ -150,12 +150,14 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *outputOptions[] = {
           toString(PMSx003_output_selection::Particles_ug_m3),
           toString(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
+          toString(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
           toString(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
         int outputOptionValues[] = {
           static_cast<int>(PMSx003_output_selection::Particles_ug_m3),
           static_cast<int>(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
-        addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
+        addFormSelector(F("Output values"), F("p053_output"), 4, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
         addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
       }
       {

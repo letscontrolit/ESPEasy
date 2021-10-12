@@ -48,7 +48,8 @@ const __FlashStringHelper* toString(PMSx003_type sensorType);
 enum class PMSx003_output_selection {
   Particles_ug_m3                          = 0, // Particles pm1.0/pm2.5/pm10
   PM2_5_TempHum_Formaldehyde               = 1, // pm2.5/Temp/Hum/HCHO
-  ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10 = 2  // cnt1.0/cnt2.5/cnt10
+  ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10 = 2, // cnt1.0/cnt2.5/cnt5.0/cnt10
+  ParticlesCount_100ml_cnt0_3__cnt_2_5     = 3  // cnt0.3/cnt0.5/cnt1.0/cnt2.5
 };
 
 const __FlashStringHelper* toString(PMSx003_output_selection selection);
