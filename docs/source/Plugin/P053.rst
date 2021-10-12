@@ -34,6 +34,61 @@ Measurement information is transmitted over a serial interface.
 
 In opposition to the GP2Y10 this sensors have an own microprocessor that does reading and differing into the PM1.0, PM2.5 and PM10 sizes. The values can be read directly from the serial interface.
 
+Units of Measure
+----------------
+
+Dust Particles
+^^^^^^^^^^^^^^
+
+All supported Plantower modules can measure the concentration of dust particles, binned per size of the particle.
+
+The measured values are either in counts per 0.1 liter, or in µg/m3.
+
+The counts per 0.1 liter can be specified in a larger number of bins.
+
+Temperature/Humidity
+^^^^^^^^^^^^^^^^^^^^
+
+Plantower sensors with ``T`` or ``ST`` in their model name, can also measure temperature and humidity.
+
+It is likely that the modules capable of measuring the humidity can also compensate for the humidity when calculating the concentration in µg/m3.
+However, so far it is unclear whether those sensors actually do compensate for this.
+
+
+Formaldehyde
+^^^^^^^^^^^^
+
+Plantower sensors with ``S`` or ``ST`` in their model name, can also measure Formaldehyde.
+
+When comparing concentration levels, one may encounter concentrations in ppm or µg/m3.
+
+To compare these, use as conversion factor:  1 ppm = 1.25 mg/m3
+
+The Plantower sensors report the concentration in mg/m3.
+
+
+The information below on Formaldehyde is an excerpt of the online found documents, written by `WHO Regional  Office  for Europe,  Copenhagen,  Denmark,  2001 <https://www.euro.who.int/__data/assets/pdf_file/0014/123062/AQG2ndEd_5_8Formaldehyde.pdf>`_
+
+Formaldehyde  is  the  most common aldehyde in the environment. The natural background concentration is < 1 µg/m3  with a mean of about 0.5 µg/m3.
+
+In urban environments, outdoor air concentrations are more variable and depend on local conditions; 
+annual averages are usually  between 1 and 20 µg/m3. 
+
+Short-term peaks,  e.g.  in heavy  traffic or during  severe inversions, can  range  up  to  100  µg/m3. 
+The levels of formaldehyde in indoor air are often higher than those in outdoor air. 
+Major sources of formaldehyde in some dwellings  are off-gassing  of urea–formaldehyde foam  insulation, particle  board and formaldehyde-based resins. 
+In  the early  1980s, mean levels of 490 µg/m3 were  measured  in  mobile homes, with individual measurements as high  as several mg/m3  in new mobile homes. 
+Now formaldehyde levels in mobile homes are typically  around 100 µg/m3  or less.  
+Mean  levels  in conventional homes with no urea–formaldehyde foam insulation range from 25 to 60 µg/m3
+
+Formaldehyde has been shown to be toxic in higher concentrations.
+Concentration was more important than dose (concentration × length of exposure)  in  determining  the  cytotoxic  effects of  formaldehyde.
+
+At concentrations above 0.1 ppm (125 µg/m3) in air formaldehyde can irritate the eyes and mucous membranes.
+Formaldehyde inhaled at this concentration may cause headaches, a burning sensation in the throat, and difficulty breathing, and can trigger or aggravate asthma symptoms.
+
+
+
 Supported hardware
 ------------------
 
@@ -74,6 +129,10 @@ Hardware
 The PMSx003 sensor is easy to connect. Just connect it as shown in the schematic:
 
 The resistors are "pull-up" resistors to give a defined "high" level of 3.3V. The capacitor covers the high current consumption of the laser pulses avoiding influence to the power supply of the circuit.
+
+Plantower does mention in the datasheet that these pins can also be left unconnected, which suggests there is an internal pull-up resistor present in the sensors.
+
+Due to the need for a pull-up resistor, these pins cannot be connected to a GPIO pin on the ESP which must be low during boot. (e.g. GPIO 15 on ESP8266)
 
 .. image:: P053_PMSx003_Schematics.jpg
 
@@ -238,21 +297,34 @@ References:
 
 .. .. |P053_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P053_commands.repl
+(added: 2021-10-12)
 
-.. Events
-.. ~~~~~~
+.. include:: P053_commands.repl
 
-.. .. include:: P053_events.repl
+Events
+~~~~~~
+
+A task running the PMSx003 can be configured to output a number of values as standard task values.
+However the sensor outputs more values than can be used as ESPEasy task values.
+
+To overcome this limitation, one can set what other measured values can be useful to have as an event for processing in the rules.
+
+Which of the  following events may be sent, depends on this setting and also whether the sensor is capable of measuring the described unit of measure.
+For example, temperature and humidity can only be measured on ``PMS5003T`` and ``PMS5003ST``.
+
+.. include:: P053_events.repl
 
 Change log
 ----------
 
 .. versionchanged:: 2.0
   ...
+
+  |added|
+  2021-10-12 Cleanup + Add commands to reset/sleep/wake and check for duplicate messages.
 
   |added|
   2021-07-22 Add support for PMS2003, PMS3003, PMS5003ST (with extra output values and optional events).

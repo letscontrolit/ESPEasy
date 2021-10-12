@@ -39,8 +39,9 @@ P053_data_struct::P053_data_struct(
   int8_t                  txPin,
   const ESPEasySerialPort port,
   int8_t                  resetPin,
+  int8_t                  pwrPin,
   PMSx003_type            sensortype)
-  : _sensortype(sensortype) {
+  : _sensortype(sensortype), _resetPin(resetPin), _pwrPin(pwrPin) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -51,7 +52,7 @@ P053_data_struct::P053_data_struct(
     log += ' ';
     log += txPin;
     log += ' ';
-    log += resetPin;
+    log += _resetPin;
     addLog(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
@@ -69,15 +70,13 @@ P053_data_struct::P053_data_struct(
     _easySerial->begin(9600);
     _easySerial->flush();
 
-    if (resetPin >= 0) { // Reset if pin is configured
-      // Toggle 'reset' to assure we start reading header
-      addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
-      pinMode(resetPin, OUTPUT);
-      digitalWrite(resetPin, LOW);
-      delay(250);
-      digitalWrite(resetPin, HIGH);
-      pinMode(resetPin, INPUT_PULLUP);
-    }
+    wakeSensor();
+
+    resetSensor();
+
+    // Make sure to set the mode to active reading mode.
+    // This is the default, but not sure if passive mode can be set persistant.
+    setActiveReadingMode();
   }
 }
 
@@ -262,17 +261,17 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     String log;
     log.reserve(96);
     log  = F("PMSx003 : count/0.1L : 0.3um=");
-    log += data[PMS_PM0_3_100ml_normal];
+    log += data[PMS_cnt0_3_100ml];
     log += F(", 0.5um=");
-    log += data[PMS_PM0_5_100ml_normal];
+    log += data[PMS_cnt0_5_100ml];
     log += F(", 1.0um=");
-    log += data[PMS_PM1_0_100ml_normal];
+    log += data[PMS_cnt1_0_100ml];
     log += F(", 2.5um=");
-    log += data[PMS_PM2_5_100ml_normal];
+    log += data[PMS_cnt2_5_100ml];
     log += F(", 5.0um=");
-    log += data[PMS_PM5_0_100ml_normal];
+    log += data[PMS_cnt5_0_100ml];
     log += F(", 10um=");
-    log += data[PMS_PM10_0_100ml_normal];
+    log += data[PMS_cnt10_0_100ml];
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
@@ -342,10 +341,10 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       }
       case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
       {
-        UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_100ml_normal];
-        UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_100ml_normal];
-        UserVar[event->BaseVarIndex + 2] = data[PMS_PM5_0_100ml_normal];
-        UserVar[event->BaseVarIndex + 3] = data[PMS_PM10_0_100ml_normal];
+        UserVar[event->BaseVarIndex]     = data[PMS_cnt1_0_100ml];
+        UserVar[event->BaseVarIndex + 1] = data[PMS_cnt2_5_100ml];
+        UserVar[event->BaseVarIndex + 2] = data[PMS_cnt5_0_100ml];
+        UserVar[event->BaseVarIndex + 3] = data[PMS_cnt10_0_100ml];
         break;
       }
       default:
@@ -374,22 +373,28 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           }
 
           if (hasFormaldehyde()) {
-            // Formaldebyde (HCHO)
+            // Formaldehyde (HCHO)
             sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f);
           }
 
           if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
+            // Particle count per 0.1 L > 0.3 micron
+            sendEvent(baseEvent, F("cnt0.3"), data[PMS_cnt0_3_100ml]);
+
+            // Particle count per 0.1 L > 0.5 micron
+            sendEvent(baseEvent, F("cnt0.5"), data[PMS_cnt0_5_100ml]);
+
             // Particle count per 0.1 L > 1.0 micron
-            sendEvent(baseEvent, F("cnt1.0"), data[PMS_PM1_0_100ml_normal]);
+            sendEvent(baseEvent, F("cnt1.0"), data[PMS_cnt1_0_100ml]);
 
             // Particle count per 0.1 L > 2.5 micron
-            sendEvent(baseEvent, F("cnt2.5"), data[PMS_PM2_5_100ml_normal]);
+            sendEvent(baseEvent, F("cnt2.5"), data[PMS_cnt2_5_100ml]);
 
             // Particle count per 0.1 L > 5 micron
-            sendEvent(baseEvent, F("cnt5"),   data[PMS_PM5_0_100ml_normal]);
+            sendEvent(baseEvent, F("cnt5"),   data[PMS_cnt5_0_100ml]);
 
             // Particle count per 0.1 L > 10 micron
-            sendEvent(baseEvent, F("cnt10"),  data[PMS_PM10_0_100ml_normal]);
+            sendEvent(baseEvent, F("cnt10"),  data[PMS_cnt10_0_100ml]);
             break;
           }
         }
@@ -402,17 +407,23 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           sendEvent(baseEvent, F("pm10"),  data[PMS_PM10_0_ug_m3_normal]);
 
           if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
+            // Particle count per 0.1 L > 0.3 micron
+            sendEvent(baseEvent, F("cnt0.3"), data[PMS_cnt0_3_100ml]);
+
+            // Particle count per 0.1 L > 0.5 micron
+            sendEvent(baseEvent, F("cnt0.5"), data[PMS_cnt0_5_100ml]);
+
             // Particle count per 0.1 L > 1.0 micron
-            sendEvent(baseEvent, F("cnt1.0"), data[PMS_PM1_0_100ml_normal]);
+            sendEvent(baseEvent, F("cnt1.0"), data[PMS_cnt1_0_100ml]);
 
             // Particle count per 0.1 L > 2.5 micron
-            sendEvent(baseEvent, F("cnt2.5"), data[PMS_PM2_5_100ml_normal]);
+            sendEvent(baseEvent, F("cnt2.5"), data[PMS_cnt2_5_100ml]);
 
             // Particle count per 0.1 L > 5 micron
-            sendEvent(baseEvent, F("cnt5"),   data[PMS_PM5_0_100ml_normal]);
+            sendEvent(baseEvent, F("cnt5"),   data[PMS_cnt5_0_100ml]);
 
             // Particle count per 0.1 L > 10 micron
-            sendEvent(baseEvent, F("cnt10"),  data[PMS_PM10_0_100ml_normal]);
+            sendEvent(baseEvent, F("cnt10"),  data[PMS_cnt10_0_100ml]);
           }
           break;
         }
@@ -436,7 +447,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           }
 
           if (hasFormaldehyde()) {
-            // Formaldebyde (HCHO)
+            // Formaldehyde (HCHO)
             sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f);
           }
           break;
@@ -457,6 +468,78 @@ bool P053_data_struct::checkAndClearValuesReceived() {
 
   _values_received = false;
   return ret;
+}
+
+bool P053_data_struct::resetSensor() {
+  if (_resetPin >= 0) { // Reset if pin is configured
+    // Toggle 'reset' to assure we start reading header
+    addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
+    pinMode(_resetPin, OUTPUT);
+    digitalWrite(_resetPin, LOW);
+    delay(250);
+    digitalWrite(_resetPin, HIGH);
+    pinMode(_resetPin, INPUT_PULLUP);
+    return true;
+  }
+  return false;
+}
+
+bool P053_data_struct::wakeSensor() {
+  if (!initialized()) {
+    return false;
+  }
+
+  if (_pwrPin >= 0) {
+    // Make sure the sensor is "on"
+    addLog(LOG_LEVEL_INFO, F("PMSx003: Set PWR_SET high"));
+    pinMode(_pwrPin, OUTPUT);
+    digitalWrite(_pwrPin, HIGH);
+    pinMode(_pwrPin, INPUT_PULLUP);
+  } else {
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x01, 0x01, 0x74 };
+    _easySerial->write(command, 7);
+  }
+  return true;
+}
+
+bool P053_data_struct::sleepSensor() {
+  if (!initialized()) {
+    return false;
+  }
+
+  if (_pwrPin >= 0) {
+    // Put the sensor to sleep
+    addLog(LOG_LEVEL_INFO, F("PMSx003: Set PWR_SET low"));
+    pinMode(_pwrPin, OUTPUT);
+    digitalWrite(_pwrPin, LOW);
+  } else {
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x00, 0x01, 0x73 };
+    _easySerial->write(command, 7);
+  }
+  return true;
+}
+
+void P053_data_struct::setActiveReadingMode() {
+  if (initialized()) {
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE1, 0x00, 0x01, 0x01, 0x71 };
+    _easySerial->write(command, 7);
+    _activeReadingModeEnabled = true;
+  }
+}
+
+void P053_data_struct::setPassiveReadingMode() {
+  if (initialized()) {
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE1, 0x00, 0x00, 0x01, 0x70 };
+    _easySerial->write(command, 7);
+    _activeReadingModeEnabled = false;
+  }
+}
+
+void P053_data_struct::requestData() {
+  if (initialized() && !_activeReadingModeEnabled) {
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE2, 0x00, 0x00, 0x01, 0x71 };
+    _easySerial->write(command, 7);
+  }
 }
 
 #endif // ifdef USES_P053

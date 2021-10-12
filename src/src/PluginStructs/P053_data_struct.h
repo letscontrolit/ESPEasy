@@ -68,7 +68,7 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PLUGIN_053_OUTPUT_SELECTOR       PCONFIG(1)
 # define PLUGIN_053_EVENT_OUT_SELECTOR    PCONFIG(2)
 
-# define PLUGIN_053_RST_PIN               Settings.TaskDevicePin3[event->TaskIndex]
+# define PLUGIN_053_RST_PIN               CONFIG_PIN3
 # define PLUGIN_053_PWR_PIN               PCONFIG(3)
 
 // Helper defines to make code a bit more readable.
@@ -85,12 +85,12 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PMS_PM1_0_ug_m3_normal    3
 # define PMS_PM2_5_ug_m3_normal    4
 # define PMS_PM10_0_ug_m3_normal   5
-# define PMS_PM0_3_100ml_normal    6
-# define PMS_PM0_5_100ml_normal    7
-# define PMS_PM1_0_100ml_normal    8
-# define PMS_PM2_5_100ml_normal    9
-# define PMS_PM5_0_100ml_normal    10
-# define PMS_PM10_0_100ml_normal   11
+# define PMS_cnt0_3_100ml          6
+# define PMS_cnt0_5_100ml          7
+# define PMS_cnt1_0_100ml          8
+# define PMS_cnt2_5_100ml          9
+# define PMS_cnt5_0_100ml          10
+# define PMS_cnt10_0_100ml         11
 
 # define PMS_Formaldehyde_mg_m3    12
 # define PMS_Temp_C                13
@@ -105,6 +105,7 @@ public:
                    int8_t                  txPin,
                    const ESPEasySerialPort port,
                    int8_t                  resetPin,
+                   int8_t                  pwrPin,
                    PMSx003_type            sensortype);
 
   P053_data_struct() = delete;
@@ -141,12 +142,25 @@ public:
 
   bool checkAndClearValuesReceived();
 
+  bool resetSensor();
+
+  bool wakeSensor();
+  bool sleepSensor();
+
+  void setActiveReadingMode();
+  void setPassiveReadingMode();
+
 private:
+
+  void requestData();
 
   ESPeasySerial     *_easySerial = nullptr;
   const PMSx003_type _sensortype;
-  uint16_t           _last_checksum   = 0; // To detect duplicate messages
-  bool               _values_received = false;
+  uint16_t           _last_checksum            = 0; // To detect duplicate messages
+  const int8_t       _resetPin                 = -1;
+  const int8_t       _pwrPin                   = -1;
+  bool               _values_received          = false;
+  bool               _activeReadingModeEnabled = true;
 };
 
 

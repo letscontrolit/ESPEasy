@@ -106,6 +106,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")),   F("rstpin"), PLUGIN_053_RST_PIN);
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("PWR set")), F("pwrpin"), PLUGIN_053_PWR_PIN);
+      addFormNote(F("RST and PWR_SET pins on sensor are pulled up internal in the sensor"));
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
@@ -172,10 +173,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       update_whenset_FormItemInt(F("pwrpin"), pwrPin);
       PLUGIN_053_RST_PIN = rstPin;
       PLUGIN_053_PWR_PIN = pwrPin;
+      success            = true;
 
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
+      PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("P053_events"));
 
       switch (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR) {
         case PMSx003_type::PMS1003_5003_7003:
@@ -192,9 +195,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           break;
       }
 
-      PLUGIN_053_EVENT_OUT_SELECTOR = getFormItemInt(F("P053_events"));
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      success = true;
       break;
     }
 
@@ -203,7 +204,8 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       int8_t rxPin                  = CONFIG_PIN1;
       int8_t txPin                  = CONFIG_PIN2;
       const  ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-      int8_t resetPin               = CONFIG_PIN3;
+      int8_t resetPin               = PLUGIN_053_RST_PIN;
+      int8_t pwrPin                 = PLUGIN_053_PWR_PIN;
 
       PMSx003_type Plugin_053_sensortype = PMSx003_type::PMS1003_5003_7003;
 
@@ -211,7 +213,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       Plugin_053_sensortype = GET_PLUGIN_053_SENSOR_MODEL_SELECTOR;
         # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P053_data_struct(rxPin, txPin, port, resetPin, Plugin_053_sensortype));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P053_data_struct(rxPin, txPin, port, resetPin, pwrPin, Plugin_053_sensortype));
       P053_data_struct *P053_data =
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -250,8 +252,28 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P053_data) && P053_data->initialized()) {
         // When new data is available, return true
         success = P053_data->checkAndClearValuesReceived();
-        break;
       }
+      break;
+    }
+    case PLUGIN_WRITE:
+    {
+      P053_data_struct *P053_data =
+        static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P053_data) && P053_data->initialized()) {
+        String command    = parseString(string, 1);
+        String subcommand = parseString(string, 2);
+        if (command == F("pmsx003")) {
+          if (subcommand == F("wake")) {
+            success = P053_data->wakeSensor();
+          } else if (subcommand == F("sleep")) {
+            success = P053_data->sleepSensor();
+          } else if (subcommand == F("reset")) {
+            success = P053_data->resetSensor();
+          }
+        }
+      }
+      break;
     }
   }
   return success;
