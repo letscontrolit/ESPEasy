@@ -5,7 +5,7 @@
 
 #ifdef USES_P053
 
-#define P053_LOW_LEVEL_DEBUG
+//# define P053_LOW_LEVEL_DEBUG
 
 
 # include <ESPeasySerial.h>
@@ -43,14 +43,26 @@ enum class PMSx003_type {
 
 const __FlashStringHelper* toString(PMSx003_type sensorType);
 
+// Selection data type to output as task values
+// Do not change values, as they are being stored
+enum class PMSx003_output_selection {
+  PLUGIN_053_OUTPUT_PART = 0, // Particles pm1.0/pm2.5/pm10
+  PLUGIN_053_OUTPUT_THC  = 1, // pm2.5/Temp/Hum/HCHO
+  PLUGIN_053_OUTPUT_CNT  = 2  // cnt1.0/cnt2.5/cnt10
+};
 
-# define PLUGIN_053_OUTPUT_PART 0     // Particles pm1.0/pm2.5/pm10
-# define PLUGIN_053_OUTPUT_THC  1     // pm2.5/Temp/Hum/HCHO
-# define PLUGIN_053_OUTPUT_CNT  2     // cnt1.0/cnt2.5/cnt10
+const __FlashStringHelper* toString(PMSx003_output_selection selection);
 
-# define PLUGIN_053_EVENT_NONE      0 // Events: None
-# define PLUGIN_053_EVENT_PARTICLES 1 // Particles/temp/humi/hcho
-# define PLUGIN_053_EVENT_PARTCOUNT 2 // also Particle count
+// Selection of data type to send as events, which are not selected as task value output.
+// Do not change values, as they are being stored
+enum class PMSx003_event_datatype {
+  PLUGIN_053_EVENT_NONE      = 0, // Events: None
+  PLUGIN_053_EVENT_PARTICLES = 1, // Particles/temp/humi/hcho
+  PLUGIN_053_EVENT_PARTCOUNT = 2  // also Particle count
+};
+
+const __FlashStringHelper* toString(PMSx003_event_datatype selection);
+
 
 # define PLUGIN_053_SENSOR_MODEL_SELECTOR PCONFIG(0)
 # define PLUGIN_053_OUTPUT_SELECTOR       PCONFIG(1)
@@ -59,11 +71,13 @@ const __FlashStringHelper* toString(PMSx003_type sensorType);
 # define PLUGIN_053_RST_PIN               Settings.TaskDevicePin3[event->TaskIndex]
 # define PLUGIN_053_PWR_PIN               PCONFIG(3)
 
-// Helper define to make code a bit more readable.
+// Helper defines to make code a bit more readable.
 # define GET_PLUGIN_053_SENSOR_MODEL_SELECTOR static_cast<PMSx003_type>(PLUGIN_053_SENSOR_MODEL_SELECTOR)
+# define GET_PLUGIN_053_OUTPUT_SELECTOR       static_cast<PMSx003_output_selection>(PLUGIN_053_OUTPUT_SELECTOR)
+# define GET_PLUGIN_053_EVENT_OUT_SELECTOR    static_cast<PMSx003_event_datatype>(PLUGIN_053_EVENT_OUT_SELECTOR)
 
 // Active mode transport protocol description
-// "factory" relates to "CF=1" in the datasheet.
+// "factory" relates to "CF=1" in the datasheet. (CF: Calibration Factory)
 // Datasheet Note: CF=1 should be used in the factory environment
 # define PMS_PM1_0_ug_m3_factory   0
 # define PMS_PM2_5_ug_m3_factory   1
@@ -84,9 +98,6 @@ const __FlashStringHelper* toString(PMSx003_type sensorType);
 # define PMS_FW_rev_error          16
 
 
-
-
-
 struct P053_data_struct : public PluginTaskData_base {
 public:
 
@@ -104,7 +115,7 @@ public:
 
 private:
 
-  void    SerialRead16(uint16_t &value,
+  void    SerialRead16(uint16_t& value,
                        uint16_t *checksum);
 
   void    SerialFlush();
@@ -132,8 +143,8 @@ public:
 
 private:
 
-  ESPeasySerial     *_easySerial            = nullptr;
-  bool               _values_received       = false;
+  ESPeasySerial     *_easySerial      = nullptr;
+  bool               _values_received = false;
   const PMSx003_type _sensortype;
 };
 

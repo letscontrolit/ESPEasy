@@ -15,6 +15,25 @@ const __FlashStringHelper* toString(PMSx003_type sensorType) {
   return F("Unknown");
 }
 
+const __FlashStringHelper* toString(PMSx003_output_selection selection) {
+  switch (selection) {
+    case PMSx003_output_selection::PLUGIN_053_OUTPUT_PART: return F("Particles &micro;g/m3: pm1.0, pm2.5, pm10");
+    case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:  return F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)");
+    case PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT:  return F(
+        "Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)");
+  }
+  return F("Unknown");
+}
+
+const __FlashStringHelper* toString(PMSx003_event_datatype selection) {
+  switch (selection) {
+    case PMSx003_event_datatype::PLUGIN_053_EVENT_NONE:       return F("None");
+    case PMSx003_event_datatype::PLUGIN_053_EVENT_PARTICLES:  return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
+    case PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT:  return F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L");
+  }
+  return F("Unknown");
+}
+
 P053_data_struct::P053_data_struct(
   int8_t                  rxPin,
   int8_t                  txPin,
@@ -22,7 +41,8 @@ P053_data_struct::P053_data_struct(
   int8_t                  resetPin,
   PMSx003_type            sensortype)
   : _sensortype(sensortype) {
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(25);
@@ -34,7 +54,7 @@ P053_data_struct::P053_data_struct(
     log += resetPin;
     addLog(LOG_LEVEL_DEBUG, log);
   }
-  #endif
+  # endif // ifndef BUILD_NO_DEBUG
 
 
   // Hardware serial is RX on 3 and TX on 1
@@ -77,7 +97,7 @@ bool P053_data_struct::initialized() const
 // Read 2 bytes from serial and make an uint16 of it. Additionally calculate
 // checksum for PMSx003. Assumption is that there is data available, otherwise
 // this function is blocking.
-void P053_data_struct::SerialRead16(uint16_t &value, uint16_t *checksum)
+void P053_data_struct::SerialRead16(uint16_t& value, uint16_t *checksum)
 {
   if (!initialized()) { return; }
   const uint8_t data_high = _easySerial->read();
@@ -92,7 +112,8 @@ void P053_data_struct::SerialRead16(uint16_t &value, uint16_t *checksum)
     *checksum += data_low;
   }
 
-#ifdef P053_LOW_LEVEL_DEBUG
+# ifdef P053_LOW_LEVEL_DEBUG
+
   // Low-level logging to see data from sensor
   String log = F("PMSx003 : uint8_t high=0x");
   log += String(data_high, HEX);
@@ -101,7 +122,7 @@ void P053_data_struct::SerialRead16(uint16_t &value, uint16_t *checksum)
   log += F(" result=0x");
   log += String(value, HEX);
   addLog(LOG_LEVEL_INFO, log);
-#endif
+# endif // ifdef P053_LOW_LEVEL_DEBUG
 }
 
 void P053_data_struct::SerialFlush() {
@@ -167,7 +188,6 @@ bool P053_data_struct::hasTempHum() const {
          _sensortype == PMSx003_type::PMS5003_ST;
 }
 
-
 bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t checksum = 0, checksum2 = 0;
   uint16_t framelength   = 0;
@@ -194,9 +214,10 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   }
 
   uint8_t frameData = packetSize();
+
   if (frameData > 0u) {
-    frameData /= 2; // Each value is 16 bits
-    frameData -= 3; // start markers, length, checksum
+    frameData /= 2;          // Each value is 16 bits
+    frameData -= 3;          // start markers, length, checksum
   }
   uint16_t data[17] = { 0 }; // uint8_t data_low, data_high;
 
@@ -262,9 +283,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
   #   endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-  #  endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  endif  // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-# endif // ifndef BUILD_NO_DEBUG
+# endif     // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
   SerialRead16(checksum2, nullptr);
@@ -280,8 +301,8 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 
-    switch (PLUGIN_053_OUTPUT_SELECTOR) {
-      case PLUGIN_053_OUTPUT_PART:
+    switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
+      case PMSx003_output_selection::PLUGIN_053_OUTPUT_PART:
       {
         UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
         UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
@@ -289,15 +310,15 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = 0.0;
         break;
       }
-      case PLUGIN_053_OUTPUT_THC:
+      case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:
       {
         UserVar[event->BaseVarIndex]     = data[PMS_PM2_5_ug_m3_normal];
-        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[PMS_Temp_C]) / 10.0f;   // TEMP
-        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[PMS_Hum_pct]) / 10.0f;   // HUMI
+        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[PMS_Temp_C]) / 10.0f;               // TEMP
+        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[PMS_Hum_pct]) / 10.0f;              // HUMI
         UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f; // HCHO
         break;
       }
-      case PLUGIN_053_OUTPUT_CNT:
+      case PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT:
       {
         UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_100ml_normal];
         UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_100ml_normal];
@@ -309,7 +330,8 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         break; // Ignore invalid options
     }
 
-    if (Settings.UseRules && (PLUGIN_053_EVENT_OUT_SELECTOR > 0)
+    if (Settings.UseRules
+        && (GET_PLUGIN_053_EVENT_OUT_SELECTOR != PMSx003_event_datatype::PLUGIN_053_EVENT_NONE)
         && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) {
       // Events not applicable to PMS2003 & PMS3003 models
       String baseEvent;
@@ -318,8 +340,8 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       baseEvent += '#';
 
       // Send out events for those values not present in the task output
-      switch (PLUGIN_053_OUTPUT_SELECTOR) {
-        case PLUGIN_053_OUTPUT_PART:
+      switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
+        case PMSx003_output_selection::PLUGIN_053_OUTPUT_PART:
         {
           if (hasTempHum()) {
             // Temperature
@@ -334,7 +356,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
             sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f);
           }
 
-          if (PLUGIN_053_EVENT_OUT_SELECTOR == PLUGIN_053_OUTPUT_CNT) {
+          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) {
             // Particle count per 0.1 L > 1.0 micron
             sendEvent(baseEvent, F("cnt1.0"), data[PMS_PM1_0_100ml_normal]);
 
@@ -349,7 +371,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
             break;
           }
         }
-        case PLUGIN_053_OUTPUT_THC:
+        case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:
         {
           // Particles > 1.0 um/m3
           sendEvent(baseEvent, F("pm1.0"), data[PMS_PM1_0_ug_m3_normal]);
@@ -357,7 +379,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           // Particles > 10 um/m3
           sendEvent(baseEvent, F("pm10"),  data[PMS_PM10_0_ug_m3_normal]);
 
-          if (PLUGIN_053_EVENT_OUT_SELECTOR == PLUGIN_053_OUTPUT_CNT) {
+          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) {
             // Particle count per 0.1 L > 1.0 micron
             sendEvent(baseEvent, F("cnt1.0"), data[PMS_PM1_0_100ml_normal]);
 
@@ -372,7 +394,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           }
           break;
         }
-        case PLUGIN_053_OUTPUT_CNT:
+        case PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT:
         {
           // Particles > 1.0 um/m3
           sendEvent(baseEvent, F("pm1.0"), data[PMS_PM1_0_ug_m3_normal]);

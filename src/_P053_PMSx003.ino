@@ -83,7 +83,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
-      event->Par1 = PLUGIN_053_OUTPUT_SELECTOR == PLUGIN_053_OUTPUT_PART ? 3 : 4;
+      event->Par1 = GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PLUGIN_053_OUTPUT_PART ? 3 : 4;
       success     = true;
       break;
     }
@@ -104,7 +104,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("rstpin"), PLUGIN_053_RST_PIN);
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")),   F("rstpin"), PLUGIN_053_RST_PIN);
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("PWR set")), F("pwrpin"), PLUGIN_053_PWR_PIN);
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
@@ -137,20 +137,25 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(F("Output"));
         const __FlashStringHelper *outputOptions[] = {
-          F("Particles &micro;g/m3: pm1.0, pm2.5, pm10"),
-          F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
-          F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
-        };
-        int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC, PLUGIN_053_OUTPUT_CNT };
+          toString(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART),
+          toString(PMSx003_output_selection::PLUGIN_053_OUTPUT_THC),
+          toString(PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT) };
+        int outputOptionValues[] = {
+          static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART),
+          static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_THC),
+          static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT) };
         addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
         addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
-
+      }
+      {
         const __FlashStringHelper *eventOptions[] = {
-          F("None"),
-          F("Particles &micro;g/m3 and Temp/Humi/HCHO"),
-          F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L")
-        };
-        int eventOptionValues[] = { PLUGIN_053_EVENT_NONE, PLUGIN_053_EVENT_PARTICLES, PLUGIN_053_EVENT_PARTCOUNT };
+          toString(PMSx003_event_datatype::PLUGIN_053_EVENT_NONE),
+          toString(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTICLES),
+          toString(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) };
+        int eventOptionValues[] = {
+          static_cast<int>(PMSx003_event_datatype::PLUGIN_053_EVENT_NONE),
+          static_cast<int>(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTICLES),
+          static_cast<int>(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) };
         addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
         addFormNote(F(
@@ -176,12 +181,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         case PMSx003_type::PMS1003_5003_7003:
 
           // Base models only support particle values, no use in setting other output values
-          if (PLUGIN_053_OUTPUT_SELECTOR == PLUGIN_053_OUTPUT_THC) {
-            PLUGIN_053_OUTPUT_SELECTOR = PLUGIN_053_OUTPUT_PART;
+          if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PLUGIN_053_OUTPUT_THC) {
+            PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART);
           }
           break;
         case PMSx003_type::PMS2003_3003:
-          PLUGIN_053_OUTPUT_SELECTOR = PLUGIN_053_OUTPUT_PART;
+          PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART);
           break;
         default:
           break;
@@ -229,9 +234,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P053_data) && P053_data->initialized()) {
         if (P053_data->packetAvailable()) {
           // Check if a complete packet is available in the UART FIFO.
-          #ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
-          #endif
+          # endif // ifndef BUILD_NO_DEBUG
           success = P053_data->processData(event);
         }
       }
