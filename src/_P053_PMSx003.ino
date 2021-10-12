@@ -229,7 +229,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P053_data) && P053_data->initialized()) {
         if (P053_data->packetAvailable()) {
           // Check if a complete packet is available in the UART FIFO.
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
+          #endif
           success = P053_data->processData(event);
         }
       }

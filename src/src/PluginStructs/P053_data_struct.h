@@ -62,6 +62,30 @@ const __FlashStringHelper* toString(PMSx003_type sensorType);
 // Helper define to make code a bit more readable.
 # define GET_PLUGIN_053_SENSOR_MODEL_SELECTOR static_cast<PMSx003_type>(PLUGIN_053_SENSOR_MODEL_SELECTOR)
 
+// Active mode transport protocol description
+// "factory" relates to "CF=1" in the datasheet.
+// Datasheet Note: CF=1 should be used in the factory environment
+# define PMS_PM1_0_ug_m3_factory   0
+# define PMS_PM2_5_ug_m3_factory   1
+# define PMS_PM10_0_ug_m3_factory  2
+# define PMS_PM1_0_ug_m3_normal    3
+# define PMS_PM2_5_ug_m3_normal    4
+# define PMS_PM10_0_ug_m3_normal   5
+# define PMS_PM0_3_100ml_normal    6
+# define PMS_PM0_5_100ml_normal    7
+# define PMS_PM1_0_100ml_normal    8
+# define PMS_PM2_5_100ml_normal    9
+# define PMS_PM5_0_100ml_normal    10
+# define PMS_PM10_0_100ml_normal   11
+
+# define PMS_Formaldehyde_mg_m3    12
+# define PMS_Temp_C                13
+# define PMS_Hum_pct               14
+# define PMS_FW_rev_error          16
+
+
+
+
 
 struct P053_data_struct : public PluginTaskData_base {
 public:
@@ -97,6 +121,9 @@ private:
                  const __FlashStringHelper *name,
                  float                      value);
 
+  bool hasFormaldehyde() const;
+  bool hasTempHum() const;
+
 public:
 
   bool processData(struct EventStruct *event);
@@ -105,9 +132,9 @@ public:
 
 private:
 
-  ESPeasySerial     *easySerial            = nullptr;
-  bool               values_received       = false;
-  const PMSx003_type Plugin_053_sensortype;
+  ESPeasySerial     *_easySerial            = nullptr;
+  bool               _values_received       = false;
+  const PMSx003_type _sensortype;
 };
 
 
