@@ -92,7 +92,6 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
       serialHelper_getGpioNames(event);
-      event->String3 = formatGpioName_output(F("Reset"));
       break;
     }
 
@@ -103,10 +102,21 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("RST: ");
+      string += formatGpioLabel(PLUGIN_053_RST_PIN, false);
+      string += event->String1; // newline
+      string += F("SET: ");
+      string += formatGpioLabel(PLUGIN_053_PWR_PIN, false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
-      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")),   F("rstpin"), PLUGIN_053_RST_PIN);
-      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("PWR set")), F("pwrpin"), PLUGIN_053_PWR_PIN);
-      addFormNote(F("RST and PWR_SET pins on sensor are pulled up internal in the sensor"));
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("RST")), F("rstpin"), PLUGIN_053_RST_PIN);
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("SET")), F("pwrpin"), PLUGIN_053_PWR_PIN);
+      addFormNote(F("RST and SET pins on sensor are pulled up internal in the sensor"));
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
@@ -159,8 +169,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_event_datatype::Event_All) };
         addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
-        addFormNote(F(
-                      "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm10, taskname#cnt1.0/cnt2.5/cnt5/cnt10)."));
+        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
@@ -263,6 +272,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P053_data) && P053_data->initialized()) {
         String command    = parseString(string, 1);
         String subcommand = parseString(string, 2);
+
         if (command == F("pmsx003")) {
           if (subcommand == F("wake")) {
             success = P053_data->wakeSensor();

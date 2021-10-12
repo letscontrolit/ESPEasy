@@ -65,6 +65,14 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Btn: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Use SH1106 controller"), F("p023_use_sh1106"), PCONFIG(5));
