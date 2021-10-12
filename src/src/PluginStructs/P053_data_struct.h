@@ -5,7 +5,7 @@
 
 #ifdef USES_P053
 
-//# define P053_LOW_LEVEL_DEBUG
+// # define P053_LOW_LEVEL_DEBUG
 
 
 # include <ESPeasySerial.h>
@@ -143,9 +143,10 @@ public:
 
 private:
 
-  ESPeasySerial     *_easySerial      = nullptr;
-  bool               _values_received = false;
+  ESPeasySerial     *_easySerial = nullptr;
   const PMSx003_type _sensortype;
+  uint16_t           _last_checksum   = 0; // To detect duplicate messages
+  bool               _values_received = false;
 };
 
 

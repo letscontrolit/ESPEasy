@@ -179,13 +179,21 @@ void P053_data_struct::sendEvent(const String& baseEvent, const __FlashStringHel
 }
 
 bool P053_data_struct::hasFormaldehyde() const {
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   return _sensortype == PMSx003_type::PMS5003_S ||
          _sensortype == PMSx003_type::PMS5003_ST;
+  # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  return false;
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 }
 
 bool P053_data_struct::hasTempHum() const {
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   return _sensortype == PMSx003_type::PMS5003_T ||
          _sensortype == PMSx003_type::PMS5003_ST;
+  # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  return false;
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 }
 
 bool P053_data_struct::processData(struct EventStruct *event) {
@@ -293,6 +301,20 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
   if (checksum == checksum2)
   {
+    if (checksum == _last_checksum) {
+      // Duplicate message
+      # ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
+        addLog(LOG_LEVEL_DEBUG, F("PMSx003 : Duplicate message"));
+      }
+      # endif // ifndef BUILD_NO_DEBUG
+      return false;
+    }
+
+    // Store new checksum, to help detect duplicates.
+    _last_checksum = checksum;
+
     // Data is checked and good, fill in output
     # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
     UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
@@ -307,7 +329,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
         UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
         UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
-        UserVar[event->BaseVarIndex + 3] = 0.0;
+        UserVar[event->BaseVarIndex + 3] = 0.0f;
         break;
       }
       case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:
