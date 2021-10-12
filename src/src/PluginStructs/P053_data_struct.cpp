@@ -17,9 +17,9 @@ const __FlashStringHelper* toString(PMSx003_type sensorType) {
 
 const __FlashStringHelper* toString(PMSx003_output_selection selection) {
   switch (selection) {
-    case PMSx003_output_selection::PLUGIN_053_OUTPUT_PART: return F("Particles &micro;g/m3: pm1.0, pm2.5, pm10");
-    case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:  return F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)");
-    case PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT:  return F(
+    case PMSx003_output_selection::Particles_ug_m3: return F("Particles &micro;g/m3: pm1.0, pm2.5, pm10");
+    case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:  return F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)");
+    case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:  return F(
         "Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)");
   }
   return F("Unknown");
@@ -27,9 +27,9 @@ const __FlashStringHelper* toString(PMSx003_output_selection selection) {
 
 const __FlashStringHelper* toString(PMSx003_event_datatype selection) {
   switch (selection) {
-    case PMSx003_event_datatype::PLUGIN_053_EVENT_NONE:       return F("None");
-    case PMSx003_event_datatype::PLUGIN_053_EVENT_PARTICLES:  return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
-    case PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT:  return F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L");
+    case PMSx003_event_datatype::Event_None:       return F("None");
+    case PMSx003_event_datatype::Event_Particles_TempHum_Formaldehyde:  return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
+    case PMSx003_event_datatype::Event_All:  return F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L");
   }
   return F("Unknown");
 }
@@ -324,7 +324,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
 
     switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
-      case PMSx003_output_selection::PLUGIN_053_OUTPUT_PART:
+      case PMSx003_output_selection::Particles_ug_m3:
       {
         UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
         UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
@@ -332,7 +332,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = 0.0f;
         break;
       }
-      case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:
+      case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
       {
         UserVar[event->BaseVarIndex]     = data[PMS_PM2_5_ug_m3_normal];
         UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[PMS_Temp_C]) / 10.0f;               // TEMP
@@ -340,7 +340,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f; // HCHO
         break;
       }
-      case PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT:
+      case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
       {
         UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_100ml_normal];
         UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_100ml_normal];
@@ -353,7 +353,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     }
 
     if (Settings.UseRules
-        && (GET_PLUGIN_053_EVENT_OUT_SELECTOR != PMSx003_event_datatype::PLUGIN_053_EVENT_NONE)
+        && (GET_PLUGIN_053_EVENT_OUT_SELECTOR != PMSx003_event_datatype::Event_None)
         && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) {
       // Events not applicable to PMS2003 & PMS3003 models
       String baseEvent;
@@ -363,7 +363,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
       // Send out events for those values not present in the task output
       switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
-        case PMSx003_output_selection::PLUGIN_053_OUTPUT_PART:
+        case PMSx003_output_selection::Particles_ug_m3:
         {
           if (hasTempHum()) {
             // Temperature
@@ -378,7 +378,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
             sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f);
           }
 
-          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) {
+          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
             // Particle count per 0.1 L > 1.0 micron
             sendEvent(baseEvent, F("cnt1.0"), data[PMS_PM1_0_100ml_normal]);
 
@@ -393,7 +393,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
             break;
           }
         }
-        case PMSx003_output_selection::PLUGIN_053_OUTPUT_THC:
+        case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
         {
           // Particles > 1.0 um/m3
           sendEvent(baseEvent, F("pm1.0"), data[PMS_PM1_0_ug_m3_normal]);
@@ -401,7 +401,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           // Particles > 10 um/m3
           sendEvent(baseEvent, F("pm10"),  data[PMS_PM10_0_ug_m3_normal]);
 
-          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) {
+          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
             // Particle count per 0.1 L > 1.0 micron
             sendEvent(baseEvent, F("cnt1.0"), data[PMS_PM1_0_100ml_normal]);
 
@@ -416,7 +416,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
           }
           break;
         }
-        case PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT:
+        case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
         {
           // Particles > 1.0 um/m3
           sendEvent(baseEvent, F("pm1.0"), data[PMS_PM1_0_ug_m3_normal]);

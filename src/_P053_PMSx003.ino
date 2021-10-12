@@ -83,7 +83,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
     # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
-      event->Par1 = GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PLUGIN_053_OUTPUT_PART ? 3 : 4;
+      event->Par1 = GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::Particles_ug_m3 ? 3 : 4;
       success     = true;
       break;
     }
@@ -137,25 +137,25 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(F("Output"));
         const __FlashStringHelper *outputOptions[] = {
-          toString(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART),
-          toString(PMSx003_output_selection::PLUGIN_053_OUTPUT_THC),
-          toString(PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT) };
+          toString(PMSx003_output_selection::Particles_ug_m3),
+          toString(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
+          toString(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
         int outputOptionValues[] = {
-          static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART),
-          static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_THC),
-          static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_CNT) };
+          static_cast<int>(PMSx003_output_selection::Particles_ug_m3),
+          static_cast<int>(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
         addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
         addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
       }
       {
         const __FlashStringHelper *eventOptions[] = {
-          toString(PMSx003_event_datatype::PLUGIN_053_EVENT_NONE),
-          toString(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTICLES),
-          toString(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) };
+          toString(PMSx003_event_datatype::Event_None),
+          toString(PMSx003_event_datatype::Event_Particles_TempHum_Formaldehyde),
+          toString(PMSx003_event_datatype::Event_All) };
         int eventOptionValues[] = {
-          static_cast<int>(PMSx003_event_datatype::PLUGIN_053_EVENT_NONE),
-          static_cast<int>(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTICLES),
-          static_cast<int>(PMSx003_event_datatype::PLUGIN_053_EVENT_PARTCOUNT) };
+          static_cast<int>(PMSx003_event_datatype::Event_None),
+          static_cast<int>(PMSx003_event_datatype::Event_Particles_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_event_datatype::Event_All) };
         addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
         addFormNote(F(
@@ -181,12 +181,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         case PMSx003_type::PMS1003_5003_7003:
 
           // Base models only support particle values, no use in setting other output values
-          if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PLUGIN_053_OUTPUT_THC) {
-            PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART);
+          if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PM2_5_TempHum_Formaldehyde) {
+            PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
           }
           break;
         case PMSx003_type::PMS2003_3003:
-          PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::PLUGIN_053_OUTPUT_PART);
+          PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
           break;
         default:
           break;

@@ -46,9 +46,9 @@ const __FlashStringHelper* toString(PMSx003_type sensorType);
 // Selection data type to output as task values
 // Do not change values, as they are being stored
 enum class PMSx003_output_selection {
-  PLUGIN_053_OUTPUT_PART = 0, // Particles pm1.0/pm2.5/pm10
-  PLUGIN_053_OUTPUT_THC  = 1, // pm2.5/Temp/Hum/HCHO
-  PLUGIN_053_OUTPUT_CNT  = 2  // cnt1.0/cnt2.5/cnt10
+  Particles_ug_m3                          = 0, // Particles pm1.0/pm2.5/pm10
+  PM2_5_TempHum_Formaldehyde               = 1, // pm2.5/Temp/Hum/HCHO
+  ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10 = 2  // cnt1.0/cnt2.5/cnt10
 };
 
 const __FlashStringHelper* toString(PMSx003_output_selection selection);
@@ -56,9 +56,9 @@ const __FlashStringHelper* toString(PMSx003_output_selection selection);
 // Selection of data type to send as events, which are not selected as task value output.
 // Do not change values, as they are being stored
 enum class PMSx003_event_datatype {
-  PLUGIN_053_EVENT_NONE      = 0, // Events: None
-  PLUGIN_053_EVENT_PARTICLES = 1, // Particles/temp/humi/hcho
-  PLUGIN_053_EVENT_PARTCOUNT = 2  // also Particle count
+  Event_None                           = 0, // Events: None
+  Event_Particles_TempHum_Formaldehyde = 1, // Particles/temp/humi/hcho
+  Event_All                            = 2  // also Particle count
 };
 
 const __FlashStringHelper* toString(PMSx003_event_datatype selection);
