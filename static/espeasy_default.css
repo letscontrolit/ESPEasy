@@ -415,7 +415,8 @@ table.multirow tr,
 table.normal td,
 table.normal tr {
 	padding: 4px;
-	background-color: #222
+	background-color: #222;
+	min-width: 104%
 }
 
 table.normal td {
@@ -462,6 +463,7 @@ table.multirow tr:nth-child(odd) {
 .menubar {
 	position: inherit;
 	top: 54px;
+	width: 100%;
 	background-color: transparent
 }
 a.menu {
@@ -474,7 +476,7 @@ a.menu {
 	border-radius: 4px 4px 0 0;
 	border-width: 4px 1px 1px;
 	color: #fff;
-	padding: 10px 13px 8px 13px;
+	padding: 10px 10px 8px 10px;
 	white-space: nowrap;
 	background-color: transparent
 }
@@ -553,10 +555,9 @@ section {
 		display: none;
 		background-color: transparent
 	}
-	.menu {
-		max-width: 35px
+	a.menu {
+		width: 12%
 	}
-	
 }
 @media screen and (max-width: 450px) {
 	table.normal {
