@@ -65,17 +65,47 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_053));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_053));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_053));
-        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-
-      for (uint8_t i = 0; i < 3; i++) {
-        ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0; // Set to former default
+      switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
+        case PMSx003_output_selection::Particles_ug_m3:
+        {
+          const uint8_t indices[] = {
+            PMS_PM1_0_ug_m3_normal,
+            PMS_PM2_5_ug_m3_normal,
+            PMS_PM10_0_ug_m3_normal };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 3);
+          break;
+        }
+        case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
+        {
+          const uint8_t indices[] = {
+            PMS_PM2_5_ug_m3_normal,
+            PMS_Temp_C,
+            PMS_Hum_pct,
+            PMS_Formaldehyde_mg_m3 };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4);
+          break;
+        }
+        case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
+        {
+          const uint8_t indices[] = {
+            PMS_cnt0_3_100ml,
+            PMS_cnt0_5_100ml,
+            PMS_cnt1_0_100ml,
+            PMS_cnt2_5_100ml };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4);
+          break;
+        }
+        case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
+        {
+          const uint8_t indices[] = {
+            PMS_cnt1_0_100ml,
+            PMS_cnt2_5_100ml,
+            PMS_cnt5_0_100ml,
+            PMS_cnt10_0_100ml };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4);
+          break;
+        }
       }
-
-      // 4th ValueName and decimals not (re)set on purpose
-        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
       break;
     }
@@ -152,26 +182,28 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           toString(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
           toString(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
           toString(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
-        int outputOptionValues[] = {
+        const int outputOptionValues[] = {
           static_cast<int>(PMSx003_output_selection::Particles_ug_m3),
           static_cast<int>(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
           static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
         addFormSelector(F("Output values"), F("p053_output"), 4, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
-        addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
+        addFormNote(F("Changing this reloads the page and updates task value names + nr decimals."));
       }
       {
         const __FlashStringHelper *eventOptions[] = {
           toString(PMSx003_event_datatype::Event_None),
-          toString(PMSx003_event_datatype::Event_Particles_TempHum_Formaldehyde),
+          toString(PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde),
+          toString(PMSx003_event_datatype::Event_All_count_bins),
           toString(PMSx003_event_datatype::Event_All) };
-        int eventOptionValues[] = {
+        const int eventOptionValues[] = {
           static_cast<int>(PMSx003_event_datatype::Event_None),
-          static_cast<int>(PMSx003_event_datatype::Event_Particles_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_event_datatype::Event_All_count_bins),
           static_cast<int>(PMSx003_event_datatype::Event_All) };
-        addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues,
+        addFormSelector(F("Events for non-output values"), F("p053_events"), 4, eventOptions, eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
-        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
+        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
@@ -187,9 +219,10 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       success            = true;
 
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      const int oldOutputSelector = PLUGIN_053_OUTPUT_SELECTOR;
       PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
-      PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("P053_events"));
+      PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("p053_events"));
 
       switch (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR) {
         case PMSx003_type::PMS1003_5003_7003:
@@ -204,6 +237,15 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           break;
         default:
           break;
+      }
+
+      if (oldOutputSelector != PLUGIN_053_OUTPUT_SELECTOR) {
+        struct EventStruct TempEvent(event->TaskIndex);
+        // Do not clear ExtraTaskSettings, leave formula fields in tact.
+        //ExtraTaskSettings.clear();
+        ExtraTaskSettings.TaskIndex = event->TaskIndex;
+        String dummy;
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
       }
 
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS

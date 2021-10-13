@@ -20,16 +20,6 @@
 # endif // if defined(SIZE_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS)
 
 
-# define PMSx003_SIG1 0x42
-# define PMSx003_SIG2 0x4d
-
-// Packet sizes
-# define PMS1003_5003_7003_SIZE 32
-# define PMS5003_S_SIZE         32
-# define PMS5003_T_SIZE         32
-# define PMS5003_ST_SIZE        40
-# define PMS2003_3003_SIZE      24
-
 // Do not change values, as they are being stored
 enum class PMSx003_type {
   PMS1003_5003_7003 = 0, // PMSx003 = PMS1003 / PMS5003 / PMS7003
@@ -57,9 +47,10 @@ const __FlashStringHelper* toString(PMSx003_output_selection selection);
 // Selection of data type to send as events, which are not selected as task value output.
 // Do not change values, as they are being stored
 enum class PMSx003_event_datatype {
-  Event_None                           = 0, // Events: None
-  Event_Particles_TempHum_Formaldehyde = 1, // Particles/temp/humi/hcho
-  Event_All                            = 2  // also Particle count
+  Event_None                      = 0, // Events: None
+  Event_PMxx_TempHum_Formaldehyde = 1, // PMxx/temp/humi/hcho
+  Event_All                       = 2, // also Particle count
+  Event_All_count_bins            = 3
 };
 
 const __FlashStringHelper* toString(PMSx003_event_datatype selection);
@@ -76,6 +67,17 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define GET_PLUGIN_053_SENSOR_MODEL_SELECTOR static_cast<PMSx003_type>(PLUGIN_053_SENSOR_MODEL_SELECTOR)
 # define GET_PLUGIN_053_OUTPUT_SELECTOR       static_cast<PMSx003_output_selection>(PLUGIN_053_OUTPUT_SELECTOR)
 # define GET_PLUGIN_053_EVENT_OUT_SELECTOR    static_cast<PMSx003_event_datatype>(PLUGIN_053_EVENT_OUT_SELECTOR)
+
+# define PMSx003_SIG1 0x42
+# define PMSx003_SIG2 0x4d
+
+// Packet sizes
+# define PMS1003_5003_7003_SIZE 32
+# define PMS5003_S_SIZE         32
+# define PMS5003_T_SIZE         32
+# define PMS5003_ST_SIZE        40
+# define PMS2003_3003_SIZE      24
+
 
 // Active mode transport protocol description
 // "factory" relates to "CF=1" in the datasheet. (CF: Calibration Factory)
@@ -97,6 +99,7 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PMS_Temp_C                13
 # define PMS_Hum_pct               14
 # define PMS_FW_rev_error          16
+# define PMS_RECEIVE_BUFFER_SIZE   ((PMS5003_ST_SIZE / 2) - 3)
 
 
 struct P053_data_struct : public PluginTaskData_base {
@@ -130,9 +133,9 @@ public:
 
 private:
 
-  void sendEvent(const String             & baseEvent,
-                 const __FlashStringHelper *name,
-                 float                      value);
+  void sendEvent(const String & baseEvent,
+                 uint8_t        index,
+                 const uint16_t data[]);
 
   bool hasFormaldehyde() const;
   bool hasTempHum() const;
@@ -153,10 +156,28 @@ public:
 
 private:
 
-  void requestData();
+  void  requestData();
+
+  float getValue(const uint16_t data[],
+                 uint8_t        index);
+
+  bool  getValue(const uint16_t data[],
+                 uint8_t        index,
+                 float        & value);
+
+public:
+
+  static const __FlashStringHelper* getEventString(uint8_t index);
+
+  static void                       setTaskValueNames(ExtraTaskSettingsStruct& settings,
+                                                      const uint8_t            indices[],
+                                                      uint8_t                  nrElements);
+
+private:
 
   ESPeasySerial     *_easySerial = nullptr;
   const PMSx003_type _sensortype;
+  uint32_t           _value_mask               = 0; // Keeping track of values already sent.
   uint16_t           _last_checksum            = 0; // To detect duplicate messages
   const int8_t       _resetPin                 = -1;
   const int8_t       _pwrPin                   = -1;

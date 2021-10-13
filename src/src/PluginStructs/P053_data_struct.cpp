@@ -19,7 +19,7 @@ const __FlashStringHelper* toString(PMSx003_output_selection selection) {
   switch (selection) {
     case PMSx003_output_selection::Particles_ug_m3: return F("Particles &micro;g/m3: pm1.0, pm2.5, pm10");
     case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:  return F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)");
-    case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:  
+    case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
       return F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)");
     case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
       return F("Particles count/0.1L: cnt0.3, cnt0.5, cnt1.0, cnt2.5 (PMS1003/5003(ST)/7003)");
@@ -30,8 +30,9 @@ const __FlashStringHelper* toString(PMSx003_output_selection selection) {
 const __FlashStringHelper* toString(PMSx003_event_datatype selection) {
   switch (selection) {
     case PMSx003_event_datatype::Event_None:       return F("None");
-    case PMSx003_event_datatype::Event_Particles_TempHum_Formaldehyde:  return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
+    case PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde:  return F("Particles &micro;g/m3 and Temp/Humi/HCHO");
     case PMSx003_event_datatype::Event_All:  return F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L");
+    case PMSx003_event_datatype::Event_All_count_bins: return F("Particles count/0.1L");
   }
   return F("Unknown");
 }
@@ -166,14 +167,21 @@ bool P053_data_struct::packetAvailable()
   return true;
 }
 
-void P053_data_struct::sendEvent(const String& baseEvent, const __FlashStringHelper *name, float value) {
+void P053_data_struct::sendEvent(const String & baseEvent,
+                                 uint8_t        index,
+                                 const uint16_t data[]) {
+  float value = 0.0f;
+
+  if (!getValue(data, index, value)) { return; }
+
+
   String valueEvent;
 
   valueEvent.reserve(32);
 
   // Temperature
   valueEvent  = baseEvent;
-  valueEvent += name;
+  valueEvent += getEventString(index);
   valueEvent += '=';
   valueEvent += value;
   eventQueue.addMove(std::move(valueEvent));
@@ -225,10 +233,10 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   uint8_t frameData = packetSize();
 
   if (frameData > 0u) {
-    frameData /= 2;          // Each value is 16 bits
-    frameData -= 3;          // start markers, length, checksum
+    frameData /= 2;                               // Each value is 16 bits
+    frameData -= 3;                               // start markers, length, checksum
   }
-  uint16_t data[17] = { 0 }; // uint8_t data_low, data_high;
+  uint16_t data[PMS_RECEIVE_BUFFER_SIZE] = { 0 }; // uint8_t data_low, data_high;
 
   for (uint8_t i = 0; i < frameData; i++) {
     SerialRead16(data[i], &checksum);
@@ -323,40 +331,39 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
     # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-    uint32_t value_mask = 0;
-
+    _value_mask = 0;
 
     switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
       case PMSx003_output_selection::Particles_ug_m3:
       {
-        UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
-        UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
-        UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
+        UserVar[event->BaseVarIndex]     = getValue(data, PMS_PM1_0_ug_m3_normal);
+        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_PM2_5_ug_m3_normal);
+        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_PM10_0_ug_m3_normal);
         UserVar[event->BaseVarIndex + 3] = 0.0f;
         break;
       }
       case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
       {
-        UserVar[event->BaseVarIndex]     = data[PMS_PM2_5_ug_m3_normal];
-        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[PMS_Temp_C]) / 10.0f;               // TEMP
-        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[PMS_Hum_pct]) / 10.0f;              // HUMI
-        UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f; // HCHO
+        UserVar[event->BaseVarIndex]     = getValue(data, PMS_PM2_5_ug_m3_normal);
+        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_Temp_C);
+        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_Hum_pct);
+        UserVar[event->BaseVarIndex + 3] = getValue(data, PMS_Formaldehyde_mg_m3);
         break;
       }
       case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
       {
-        UserVar[event->BaseVarIndex]     = data[PMS_cnt0_3_100ml];
-        UserVar[event->BaseVarIndex + 1] = data[PMS_cnt0_5_100ml];
-        UserVar[event->BaseVarIndex + 2] = data[PMS_cnt1_0_100ml];
-        UserVar[event->BaseVarIndex + 3] = data[PMS_cnt2_5_100ml];
+        UserVar[event->BaseVarIndex]     = getValue(data, PMS_cnt0_3_100ml);
+        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_cnt0_5_100ml);
+        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_cnt1_0_100ml);
+        UserVar[event->BaseVarIndex + 3] = getValue(data, PMS_cnt2_5_100ml);
         break;
       }
       case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
       {
-        UserVar[event->BaseVarIndex]     = data[PMS_cnt1_0_100ml];
-        UserVar[event->BaseVarIndex + 1] = data[PMS_cnt2_5_100ml];
-        UserVar[event->BaseVarIndex + 2] = data[PMS_cnt5_0_100ml];
-        UserVar[event->BaseVarIndex + 3] = data[PMS_cnt10_0_100ml];
+        UserVar[event->BaseVarIndex]     = getValue(data, PMS_cnt1_0_100ml);
+        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_cnt2_5_100ml);
+        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_cnt5_0_100ml);
+        UserVar[event->BaseVarIndex + 3] = getValue(data, PMS_cnt10_0_100ml);
         break;
       }
     }
@@ -370,103 +377,39 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       baseEvent  = getTaskDeviceName(event->TaskIndex);
       baseEvent += '#';
 
+
       // Send out events for those values not present in the task output
-      switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
-        case PMSx003_output_selection::Particles_ug_m3:
+      switch (GET_PLUGIN_053_EVENT_OUT_SELECTOR) {
+        case PMSx003_event_datatype::Event_All:
         {
-          if (hasTempHum()) {
-            // Temperature
-            sendEvent(baseEvent, F("Temp"), static_cast<float>(data[PMS_Temp_C]) / 10.0f);
-
-            // Humidity
-            sendEvent(baseEvent, F("Humi"), static_cast<float>(data[PMS_Hum_pct]) / 10.0f);
-          }
-
-          if (hasFormaldehyde()) {
-            // Formaldehyde (HCHO)
-            sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f);
-          }
-
-          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
-            // Particle count per 0.1 L > 0.3 micron
-            sendEvent(baseEvent, F("cnt0.3"), data[PMS_cnt0_3_100ml]);
-
-            // Particle count per 0.1 L > 0.5 micron
-            sendEvent(baseEvent, F("cnt0.5"), data[PMS_cnt0_5_100ml]);
-
-            // Particle count per 0.1 L > 1.0 micron
-            sendEvent(baseEvent, F("cnt1.0"), data[PMS_cnt1_0_100ml]);
-
-            // Particle count per 0.1 L > 2.5 micron
-            sendEvent(baseEvent, F("cnt2.5"), data[PMS_cnt2_5_100ml]);
-
-            // Particle count per 0.1 L > 5 micron
-            sendEvent(baseEvent, F("cnt5"),   data[PMS_cnt5_0_100ml]);
-
-            // Particle count per 0.1 L > 10 micron
-            sendEvent(baseEvent, F("cnt10"),  data[PMS_cnt10_0_100ml]);
-            break;
-          }
-        }
-        case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
-        {
-          // Particles > 1.0 um/m3
-          sendEvent(baseEvent, F("pm1.0"), data[PMS_PM1_0_ug_m3_normal]);
-
-          // Particles > 10 um/m3
-          sendEvent(baseEvent, F("pm10"),  data[PMS_PM10_0_ug_m3_normal]);
-
-          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
-            // Particle count per 0.1 L > 0.3 micron
-            sendEvent(baseEvent, F("cnt0.3"), data[PMS_cnt0_3_100ml]);
-
-            // Particle count per 0.1 L > 0.5 micron
-            sendEvent(baseEvent, F("cnt0.5"), data[PMS_cnt0_5_100ml]);
-
-            // Particle count per 0.1 L > 1.0 micron
-            sendEvent(baseEvent, F("cnt1.0"), data[PMS_cnt1_0_100ml]);
-
-            // Particle count per 0.1 L > 2.5 micron
-            sendEvent(baseEvent, F("cnt2.5"), data[PMS_cnt2_5_100ml]);
-
-            // Particle count per 0.1 L > 5 micron
-            sendEvent(baseEvent, F("cnt5"),   data[PMS_cnt5_0_100ml]);
-
-            // Particle count per 0.1 L > 10 micron
-            sendEvent(baseEvent, F("cnt10"),  data[PMS_cnt10_0_100ml]);
+          // Send all remaining
+          for (uint8_t i = PMS_PM1_0_ug_m3_normal; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
+            sendEvent(baseEvent, i, data);
           }
           break;
         }
-        case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
+        case PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde:
         {
-          // Particles > 1.0 um/m3
-          sendEvent(baseEvent, F("pm1.0"), data[PMS_PM1_0_ug_m3_normal]);
+          const uint8_t indices[] =
+          {
+            PMS_PM1_0_ug_m3_normal,
+            PMS_PM2_5_ug_m3_normal,
+            PMS_PM10_0_ug_m3_normal,
+            PMS_Temp_C,
+            PMS_Hum_pct,
+            PMS_Formaldehyde_mg_m3
+          };
 
-          // Particles > 2.5 um/m3
-          sendEvent(baseEvent, F("pm2.5"), data[PMS_PM2_5_ug_m3_normal]);
-
-          // Particles > 10 um/m3
-          sendEvent(baseEvent, F("pm10"),  data[PMS_PM10_0_ug_m3_normal]);
-
-          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_All) {
-            // Particle count per 0.1 L > 0.3 micron
-            sendEvent(baseEvent, F("cnt0.3"), data[PMS_cnt0_3_100ml]);
-
-            // Particle count per 0.1 L > 0.5 micron
-            sendEvent(baseEvent, F("cnt0.5"), data[PMS_cnt0_5_100ml]);
+          for (uint8_t i = 0; i < 6; ++i) {
+            sendEvent(baseEvent, indices[i], data);
           }
-
-          if (hasTempHum()) {
-            // Temperature
-            sendEvent(baseEvent, F("Temp"), static_cast<float>(data[PMS_Temp_C]) / 10.0f);
-
-            // Humidity
-            sendEvent(baseEvent, F("Humi"), static_cast<float>(data[PMS_Hum_pct]) / 10.0f);
-          }
-
-          if (hasFormaldehyde()) {
-            // Formaldehyde (HCHO)
-            sendEvent(baseEvent, F("HCHO"), static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f);
+          break;
+        }
+        case PMSx003_event_datatype::Event_All_count_bins:
+        {
+          // Thexe values are sequential, so just use a simple for loop.
+          for (uint8_t i = PMS_cnt0_3_100ml; i <= PMS_cnt10_0_100ml; ++i) {
+            sendEvent(baseEvent, i, data);
           }
           break;
         }
@@ -512,7 +455,8 @@ bool P053_data_struct::wakeSensor() {
     digitalWrite(_pwrPin, HIGH);
     pinMode(_pwrPin, INPUT_PULLUP);
   } else {
-    const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x01, 0x01, 0x74 };
+    const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x01, 0x01, 0x74
+    };
     _easySerial->write(command, 7);
   }
   return true;
@@ -555,6 +499,95 @@ void P053_data_struct::requestData() {
   if (initialized() && !_activeReadingModeEnabled) {
     const uint8_t command[7] = { 0x42, 0x4D, 0xE2, 0x00, 0x00, 0x01, 0x71 };
     _easySerial->write(command, 7);
+  }
+}
+
+float P053_data_struct::getValue(const uint16_t data[], uint8_t index) {
+  float value = 0.0f;
+
+  getValue(data, index, value);
+  return value;
+}
+
+bool P053_data_struct::getValue(const uint16_t data[], uint8_t index, float& value) {
+  if (bitRead(_value_mask, index) || (index >= PMS_RECEIVE_BUFFER_SIZE)) {
+    // Already read
+    return false;
+  }
+
+  switch (index) {
+    case PMS_PM1_0_ug_m3_factory:
+    case PMS_PM2_5_ug_m3_factory:
+    case PMS_PM10_0_ug_m3_factory:
+    case PMS_FW_rev_error:
+      return false;
+
+    case PMS_Temp_C:
+    case PMS_Hum_pct:
+
+      if (!hasTempHum()) { return false; }
+      value = static_cast<float>(data[index]) / 10.0f;
+      break;
+    case PMS_Formaldehyde_mg_m3:
+
+      if (!hasFormaldehyde()) { return false; }
+      value = static_cast<float>(data[index]) / 1000.0f;
+      break;
+    default:
+      value = static_cast<float>(data[index]);
+      break;
+  }
+  bitSet(_value_mask, index);
+  return true;
+}
+
+const __FlashStringHelper * P053_data_struct::getEventString(uint8_t index) {
+  switch (index) {
+    // case PMS_PM1_0_ug_m3_factory   : return F("");
+    // case PMS_PM2_5_ug_m3_factory   : return F("");
+    // case PMS_PM10_0_ug_m3_factory  : return F("");
+    case PMS_PM1_0_ug_m3_normal: return F("pm1.0");
+    case PMS_PM2_5_ug_m3_normal: return F("pm2.5");
+    case PMS_PM10_0_ug_m3_normal: return F("pm10");
+    case PMS_cnt0_3_100ml: return F("cnt0.3");
+    case PMS_cnt0_5_100ml: return F("cnt0.5");
+    case PMS_cnt1_0_100ml: return F("cnt1.0");
+    case PMS_cnt2_5_100ml: return F("cnt2.5");
+    case PMS_cnt5_0_100ml: return F("cnt5.0");
+    case PMS_cnt10_0_100ml: return F("cnt10");
+    case PMS_Formaldehyde_mg_m3: return F("HCHO");
+    case PMS_Temp_C: return F("Temp");
+    case PMS_Hum_pct: return F("Humi");
+
+      // case PMS_FW_rev_error          : return F("");
+  }
+  return F("Unknown");
+}
+
+void P053_data_struct::setTaskValueNames(ExtraTaskSettingsStruct& settings, const uint8_t indices[], uint8_t nrElements) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    settings.TaskDeviceValueDecimals[i] = 0;
+
+    if (i < nrElements) {
+      safe_strncpy(
+        settings.TaskDeviceValueNames[i],
+        P053_data_struct::getEventString(indices[i]),
+        sizeof(settings.TaskDeviceValueNames[i]));
+
+      switch (indices[i]) {
+        case PMS_Temp_C:
+        case PMS_Hum_pct:
+          settings.TaskDeviceValueDecimals[i] = 1;
+          break;
+        case PMS_Formaldehyde_mg_m3:
+          settings.TaskDeviceValueDecimals[i] = 3;
+          break;
+        default:
+          break;
+      }
+    } else {
+      ZERO_FILL(settings.TaskDeviceValueNames[i]);
+    }
   }
 }
 
