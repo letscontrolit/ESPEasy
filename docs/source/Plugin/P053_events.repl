@@ -67,14 +67,14 @@
 
    "
    "
-   ``foo#pm1.0`` Particles >= 1.0 micron.
+   ``foo#pm1.0`` Particles <= 1.0 micron.
 
-   ``foo#pm2.5`` Particles >= 2.5 micron.
+   ``foo#pm2.5`` Particles <= 2.5 micron.
 
-   ``foo#pm10`` Particles >= 5 micron.
+   ``foo#pm10`` Particles <= 5 micron.
 
    A task named ``foo`` may send an additional event for the measured particles of a specific size in ug/m^3.
-
+   
    ","
 
    .. code-block:: none
@@ -88,3 +88,5 @@
       endon
 
    "
+
+.. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
