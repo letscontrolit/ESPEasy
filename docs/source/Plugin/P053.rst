@@ -349,6 +349,35 @@ Lifetime Helper
 ^^^^^^^^^^^^^^^^
 
 The laser diode inside the PMSx003 has a lifetime of about 8000 h, nearly one year. With the actual plugin the sensor is powered permanently so we have to take some care about this.
+
+wake/sleep command
+""""""""""""""""""
+
+(Added: 2021-10-14)
+
+Using the ``pmsx003,sleep`` and ``pmsx003,wake`` commands can be used to reduce the energy consumption and extend the laser lifetime.
+
+Example rules:
+
+.. code-block:: none
+
+   On System#Boot do    //When the ESP boots, do
+     looptimerset,1,300  // Start loop timer 1, 300 sec interval
+   endon
+   
+   On Rules#Timer=1 do
+     timerSet,2,30 // Set timer 2 to put the sensor to sleep again
+     pmsx003,wake
+   endon
+   
+   On Rules#Timer=2 do
+     pmsx003,sleep
+   endon
+
+
+Toggle SET pin on PMSx003 module
+""""""""""""""""""""""""""""""""
+
 In the example setup, D0 (GPIO16) is connected to the ``SET`` input of the PMSx003. If it is pulled low the sensor sleeps.
 
 Some rules can be used to set the sensor up to sleep most of the time:
