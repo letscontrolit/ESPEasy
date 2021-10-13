@@ -231,9 +231,13 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PM2_5_TempHum_Formaldehyde) {
             PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
           }
+          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde) {
+            PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
+          }
           break;
         case PMSx003_type::PMS2003_3003:
           PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
+          PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
           break;
         default:
           break;
