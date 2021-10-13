@@ -24,7 +24,7 @@ h6 {
 
 .div_l,
 .menu {
-	float: left;
+	float: left
 }
 
 .closebtn,
@@ -389,7 +389,7 @@ textarea {
 }
 
 textarea:hover {
-	background-color: #2b2b2b;
+	background-color: #2b2b2b
 }
 
 table.multirow th,
@@ -400,7 +400,6 @@ table.normal th {
 	font-weight: 700;
 	padding: 6px;
 	align-content: center;
-	width: 0px;
 	text-align: center
 }
 
@@ -562,8 +561,6 @@ section {
 @media screen and (max-width: 450px) {
 	table.normal {
 		min-width: 300px;
-		/*width: 100%;
-		margin: auto*/
 	}
 	table.normal td {
 		display: table;
@@ -571,8 +568,10 @@ section {
 		width: 100%
 	}
 	/*table.normal td:nth-child(even) {
-		font-size: 10pt*/
-	
+		font-size: 10pt
+	}*/
+	table.normal th {
+		width: 0px
 	}
 	.button.link.wide {
 		display: inline-block;
