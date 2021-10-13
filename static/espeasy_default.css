@@ -7,7 +7,7 @@ h3 {
 
 h1,
 h6 {
-	color: #44607a
+	color: #dfdfdf
 }
 .showmenulabel {
     background-color: transparent;
@@ -452,7 +452,7 @@ table.multirow tr:nth-child(odd) {
 	right: 0;
 	top: 0;
 	z-index: 1;
-	background-color: #222
+	background-color: #44607a
 }
 
 .bodymenu {
@@ -466,7 +466,7 @@ table.multirow tr:nth-child(odd) {
 	background-color: transparent
 }
 a.menu {
-    height: 50px;
+    height: 46px;
     display: flex;
     align-items: center;
 }
@@ -481,8 +481,7 @@ a.menu {
 }
 
 .menu.active {
-	background-color: #444;
-	border-color: #44607a #2b2a2a  #2b2a2a ;
+	background-color: #222;
 	color: #fff;
     padding-left: 10px;
     padding-right: 10px;
