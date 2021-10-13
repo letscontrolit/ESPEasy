@@ -260,9 +260,12 @@ Select the option that shows the connected sensor model, to adjust the data retr
 Output
 ^^^^^^
 
-**Output values** With most **Sensor model** options, except the PMS2003 and PMS3003 models, extra output values are available. To choose which values are made available in the task, this combobox provides the available options
+Output values
+"""""""""""""
 
-.. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
+With most **Sensor model** options, except the PMS2003 and PMS3003 models, extra output values are available. To choose which values are made available in the task, this combobox provides the available options.
+
+.. note:: Changing this output selector will toggle a reload of the page. When the output selection has changed, the task value names will be reset to their (new) default names and the nr. of decimals will be set to proper values. (e.g. 1 decimal for temp/hum and 3 decimals for Formaldehyde)
 
 Available options:
 
@@ -270,39 +273,48 @@ Available options:
 
 *Particles µg/m3: pm1.0, pm2.5, pm10* The default output values, available for all supported sensors.
 
-- PM1.0 - Concentration of particles < 1 micron (µg/m3)
-- PM2.5 - Concentration of particles < 2.5 micron (µg/m3)
-- PM10 - Concentration of particles < 10 micron (µg/m3)
+- ``PM1.0`` - Concentration of particles < 1 micron (µg/m3)
+- ``PM2.5`` - Concentration of particles < 2.5 micron (µg/m3)
+- ``PM10`` - Concentration of particles < 10 micron (µg/m3)
 
 *(As shown in the overview screenshot above)*
 
 *Particles µg/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)* Particles > 2.5 micron (µg/m3) combined with other measurement values only supported by the PMS5003ST sensor.
 
-- PM2.5 - Concentration of particles < 2.5 micron (µg/m3)
-- Temp - Temperature
-- Humi - Humidity
-- HCHO - Formaldehyde concentration measurement (Formula: CH\ :sub:`2`\ O, or H-CHO)
+- ``PM2.5`` - Concentration of particles < 2.5 micron (µg/m3)
+- ``Temp`` - Temperature
+- ``Humi`` - Humidity
+- ``HCHO`` - Formaldehyde concentration measurement (Formula: CH\ :sub:`2`\ O, or H-CHO)
 
 .. image:: P053_OutputValues4.png
 
-*(Value names adjusted manually)*
+Two choices for particle counts in *count/0.1L* (PMS1003/5003(ST)/7003) :
 
-*Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)* Count of Particles per 0.1 L of air, available on the PMS1003, PMS5003, PMS5003ST and PMS7003 sensor models.
+- Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10
+- Particles count/0.1L: cnt0.3, cnt0.5, cnt1.0, cnt2.5
 
-- cnt0.3 - Count of particles > 0.3 micron per 0.1L of air
-- cnt0.5 - Count of particles > 0.5 micron per 0.1L of air
-- cnt1.0 - Count of particles > 1 micron per 0.1L of air
-- cnt2.5 - Count of particles > 2.5 micron per 0.1L of air
-- cnt5 - Count of particles > 5 micron per 0.1L of air
-- cnt10 - Count of particles > 10 micron per 0.1L of air
+With:
+
+- ``cnt0.3`` - Count of particles > 0.3 micron per 0.1L of air
+- ``cnt0.5`` - Count of particles > 0.5 micron per 0.1L of air
+- ``cnt1.0`` - Count of particles > 1 micron per 0.1L of air
+- ``cnt2.5`` - Count of particles > 2.5 micron per 0.1L of air
+- ``cnt5`` - Count of particles > 5 micron per 0.1L of air
+- ``cnt10`` - Count of particles > 10 micron per 0.1L of air
 
 .. image:: P053_OutputValuesCnt.png
 
-*(Value names adjusted manually)*
+.. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
 
-When changing this option, the page will be reloaded, to display the adjusted number of output values.
 
-**Events for non-output values** When an option other than **None** is selected, the **Output values** that are not directly available, will be sent via events.
+Events for non-output values
+""""""""""""""""""""""""""""
+
+When an option other than **None** is selected, the **Output values** that are not directly available, will be sent via events.
+If there is some overlap in selected output values and the extra event selector, only those values which were not already sent as regular task values, will be sent in extra events.
+
+.. note:: The "Single event with all values" option only combines the 4 selected task values in 1 event. Extra events will only contain 1 value per event.
+
 
 Available options:
 
