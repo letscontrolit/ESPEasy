@@ -7,9 +7,11 @@ h3 {
 
 h1,
 h6 {
-	color: #07D
+	color: #44607a
 }
-
+.showmenulabel {
+    background-color: transparent;
+}
 .checkmark:after,
 .dotmark:after {
 	content: ''
@@ -22,19 +24,20 @@ h6 {
 
 .div_l,
 .menu {
-	float: left
+	float: left;
 }
 
 .closebtn,
 .div_r {
 	float: right;
-	color: #fff
+	color: #dfdfdf
 }
 
 * {
 	box-sizing: border-box;
 	font-family: sans-serif;
 	font-size: 12pt;
+	color: #b3b3b3;
 	margin: 0;
 	padding: 0
 }
@@ -57,8 +60,8 @@ h2 {
 }
 
 h3 {
-	background-color: #EEE;
-	color: #444;
+	background-color: #1e1e1e;
+    color: #dfdfdf;
 	margin: 16px -4px 0;
 	padding: 4px
 }
@@ -78,7 +81,7 @@ xmp {
 }
 
 .button {
-	background-color: #07D;
+	background-color: #44607a;
 	border: none;
 	border-radius: 4px;
 	color: #FFF;
@@ -124,13 +127,13 @@ textarea {
 
 input:hover,
 select:hover {
-	background-color: #ccc
+	background-color: #8b8b8b
 }
 
 input,
 select,
 textarea {
-	background-color: #eee;
+	background-color: #444;
 	margin: 4px;
 	padding: 4px 8px
 }
@@ -138,7 +141,8 @@ textarea {
 input.wide,
 select.wide {
 	max-width: 500px;
-	width: 80%
+	width: 80%;
+	color: #dfdfdf
 }
 
 .widenumber {
@@ -175,7 +179,7 @@ select.wide {
 }
 
 .checkmark {
-	background-color: #eee;
+	background-color: #4444;
 	height: 25px;
 	left: 0;
 	position: absolute;
@@ -184,11 +188,11 @@ select.wide {
 }
 
 .container:hover input~.checkmark {
-	background-color: #ccc
+	background-color: #8b8b8b
 }
 
 .container input:checked~.checkmark {
-	background-color: #07D
+	background-color: #44607a
 }
 
 .checkmark:after {
@@ -282,7 +286,9 @@ textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
 	max-width: 1000px;
 	padding: 4px 8px;
-	width: 80%
+	width: 90%;
+	color: #dfdfdf;
+	background-color: #222
 }
 
 #toastmessage {
@@ -383,17 +389,18 @@ textarea {
 }
 
 textarea:hover {
-	background-color: #ccc
+	background-color: #2b2b2b;
 }
 
 table.multirow th,
 table.normal th {
 	background-color: #444;
 	border-color: #888;
-	color: #FFF;
+	color: #dfdfdf;
 	font-weight: 700;
 	padding: 6px;
 	align-content: center;
+	width: 0px;
 	text-align: center
 }
 
@@ -408,7 +415,8 @@ table.normal {
 table.multirow tr,
 table.normal td,
 table.normal tr {
-	padding: 4px
+	padding: 4px;
+	background-color: #222
 }
 
 table.normal td {
@@ -421,17 +429,13 @@ table.multirow td {
 	text-align: center
 }
 
-table.multirow tr:nth-child(even) {
-	background-color: #DEE6FF
-}
-
-.highlight td {
-	background-color: #dbff0075
+table.multirow tr:nth-child(odd) {
+	background-color: #2a2c2e
 }
 
 .apheader,
 .headermenu {
-	background-color: #F8F8F8;
+	background-color: #222;
 	padding: 8px 12px
 }
 
@@ -441,42 +445,54 @@ table.multirow tr:nth-child(even) {
 }
 
 .headermenu {
-	border-bottom: 1px solid #DDD;
-	height: 90px;
+	border-bottom: 1px solid #222;
+	height: 100px;
 	left: 0;
 	position: fixed;
 	right: 0;
 	top: 0;
-	z-index: 1
+	z-index: 1;
+	background-color: #222
 }
 
 .bodymenu {
-	margin-top: 96px
+	margin-top: 120px;
+	background-color: #222
 }
 
 .menubar {
 	position: inherit;
-	top: 55px
+	top: 54px;
+	background-color: transparent
 }
-
+a.menu {
+    height: 50px;
+    display: flex;
+    align-items: center;
+}
 .menu {
 	border: solid transparent;
 	border-radius: 4px 4px 0 0;
 	border-width: 4px 1px 1px;
-	color: #444;
-	padding: 4px 16px 8px;
-	white-space: nowrap
+	color: #fff;
+	padding: 10px 13px 8px 13px;
+	white-space: nowrap;
+	background-color: transparent
 }
 
 .menu.active {
-	background-color: #FFF;
-	border-color: #07D #DDD #FFF;
-	color: #000
+	background-color: #444;
+	border-color: #44607a #2b2a2a  #2b2a2a ;
+	color: #fff;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 8px
+
 }
 
 .menu:hover {
-	background: #DEF;
-	color: #000
+	background: #444;
+	color: #fff
 }
 
 .menu_button {
@@ -492,7 +508,7 @@ table.multirow tr:nth-child(even) {
 }
 
 .div_r {
-	background-color: #080;
+	background-color: #4a7a44;
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -534,12 +550,38 @@ section {
 	width: 100%
 }
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 750px) {
 	.showmenulabel {
-		display: none
+		display: none;
+		background-color: transparent
 	}
 	.menu {
-		max-width: 11vw;
-		max-width: 48px
+		max-width: 35px
+	}
+	
+}
+@media screen and (max-width: 450px) {
+	table.normal {
+		min-width: 300px;
+		/*width: 100%;
+		margin: auto*/
+	}
+	table.normal td {
+		display: table;
+		text-align: center;
+		width: 100%
+	}
+	/*table.normal td:nth-child(even) {
+		font-size: 10pt*/
+	
+	}
+	.button.link.wide {
+		display: inline-block;
+		text-align: center;
+		width: 50%
+	}
+	.container {
+		display: inline;
+		user-select: none
 	}
 }
