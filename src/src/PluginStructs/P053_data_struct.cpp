@@ -43,8 +43,12 @@ P053_data_struct::P053_data_struct(
   const ESPEasySerialPort port,
   int8_t                  resetPin,
   int8_t                  pwrPin,
-  PMSx003_type            sensortype)
-  : _sensortype(sensortype), _resetPin(resetPin), _pwrPin(pwrPin) {
+  PMSx003_type            sensortype,
+  uint32_t                avgWindowSize,
+  bool                    splitCntBins)
+  : _sensortype(sensortype), _avgWindowSize(avgWindowSize),
+  _resetPin(resetPin), _pwrPin(pwrPin),
+  _splitCntBins(splitCntBins) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -60,8 +64,6 @@ P053_data_struct::P053_data_struct(
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-
-  // Hardware serial is RX on 3 and TX on 1
   if (port == ESPEasySerialPort::software) {
     addLog(LOG_LEVEL_INFO, F("PMSx003 : using software serial"));
   } else {
@@ -85,7 +87,6 @@ P053_data_struct::P053_data_struct(
 
 P053_data_struct::~P053_data_struct() {
   if (_easySerial != nullptr) {
-    // Regardless the set pins, the software serial must be deleted.
     delete _easySerial;
     _easySerial = nullptr;
   }
@@ -533,10 +534,25 @@ bool P053_data_struct::getValue(const uint16_t data[], uint8_t index, float& val
       if (!hasFormaldehyde()) { return false; }
       value = static_cast<float>(data[index]) / 1000.0f;
       break;
+    case PMS_cnt0_3_100ml:
+    case PMS_cnt0_5_100ml:
+    case PMS_cnt1_0_100ml:
+    case PMS_cnt2_5_100ml:
+    case PMS_cnt5_0_100ml:
+      value = static_cast<float>(data[index]);
+
+      if (_splitCntBins) {
+        value -= static_cast<float>(data[index + 1]);
+
+        if (value < 0.0f) { value = 0.0f; }
+      }
+      break;
+
     default:
       value = static_cast<float>(data[index]);
       break;
   }
+
   bitSet(_value_mask, index);
   return true;
 }

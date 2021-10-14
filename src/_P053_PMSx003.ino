@@ -203,7 +203,18 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(PMSx003_event_datatype::Event_All) };
         addFormSelector(F("Events for non-output values"), F("p053_events"), 4, eventOptions, eventOptionValues,
                         PLUGIN_053_EVENT_OUT_SELECTOR);
-        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
+        addFormNote(F(
+                      "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
+      }
+      {
+        addFormSubHeader(F("Data Processing"));
+
+        addFormNumericBox(F("Averaging Window Size"), F("p053_avgsize"), PLUGIN_053_AVG_WINDOW_SIZE, 1, 255);
+        addFormNote(F("Typical sample duration: 2300 msec"));
+
+        addFormCheckBox(F("Split 'count/0.1L' Bins"), F("p053_split_bins"),
+                        bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT));
+        addFormNote(F("Subtract next bin counts to get counts per bin, not all greater than."));
       }
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
@@ -223,6 +234,13 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
       PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("p053_events"));
+      PLUGIN_053_AVG_WINDOW_SIZE       = getFormItemInt(F("p053_avgsize"));
+
+      if (isFormItemChecked(F("p053_split_bins"))) {
+        bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
+      } else {
+        bitClear(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
+      }
 
       switch (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR) {
         case PMSx003_type::PMS1003_5003_7003:
@@ -231,12 +249,13 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PM2_5_TempHum_Formaldehyde) {
             PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
           }
+
           if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde) {
             PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
           }
           break;
         case PMSx003_type::PMS2003_3003:
-          PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
+          PLUGIN_053_OUTPUT_SELECTOR    = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
           PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
           break;
         default:
@@ -245,8 +264,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
       if (oldOutputSelector != PLUGIN_053_OUTPUT_SELECTOR) {
         struct EventStruct TempEvent(event->TaskIndex);
+
         // Do not clear ExtraTaskSettings, leave formula fields in tact.
-        //ExtraTaskSettings.clear();
+        // ExtraTaskSettings.clear();
         ExtraTaskSettings.TaskIndex = event->TaskIndex;
         String dummy;
         PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
@@ -258,11 +278,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      int8_t rxPin                  = CONFIG_PIN1;
-      int8_t txPin                  = CONFIG_PIN2;
+      const int8_t rxPin            = CONFIG_PIN1;
+      const int8_t txPin            = CONFIG_PIN2;
       const  ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-      int8_t resetPin               = PLUGIN_053_RST_PIN;
-      int8_t pwrPin                 = PLUGIN_053_PWR_PIN;
 
       PMSx003_type Plugin_053_sensortype = PMSx003_type::PMS1003_5003_7003;
 
@@ -270,7 +288,16 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       Plugin_053_sensortype = GET_PLUGIN_053_SENSOR_MODEL_SELECTOR;
         # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P053_data_struct(rxPin, txPin, port, resetPin, pwrPin, Plugin_053_sensortype));
+      initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P053_data_struct(
+          rxPin, txPin, port,
+          PLUGIN_053_RST_PIN,
+          PLUGIN_053_PWR_PIN,
+          Plugin_053_sensortype,
+          PLUGIN_053_AVG_WINDOW_SIZE,
+          bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
+          ));
       P053_data_struct *P053_data =
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 

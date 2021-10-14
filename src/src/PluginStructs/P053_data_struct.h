@@ -63,6 +63,12 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PLUGIN_053_RST_PIN               CONFIG_PIN3
 # define PLUGIN_053_PWR_PIN               PCONFIG(3)
 
+# define PLUGIN_053_AVG_WINDOW_SIZE       PCONFIG_LONG(0)
+# define PLUGIN_053_DATA_PROCESSING_FLAGS PCONFIG(4)
+// Bits for data processing flags
+# define PLUGIN_053_SPLIT_CNT_BINS_BIT    0
+
+
 // Helper defines to make code a bit more readable.
 # define GET_PLUGIN_053_SENSOR_MODEL_SELECTOR static_cast<PMSx003_type>(PLUGIN_053_SENSOR_MODEL_SELECTOR)
 # define GET_PLUGIN_053_OUTPUT_SELECTOR       static_cast<PMSx003_output_selection>(PLUGIN_053_OUTPUT_SELECTOR)
@@ -110,7 +116,9 @@ public:
                    const ESPEasySerialPort port,
                    int8_t                  resetPin,
                    int8_t                  pwrPin,
-                   PMSx003_type            sensortype);
+                   PMSx003_type            sensortype,
+                   uint32_t                avgWindowSize,
+                   bool                    splitCntBins);
 
   P053_data_struct() = delete;
 
@@ -177,10 +185,12 @@ private:
 
   ESPeasySerial     *_easySerial = nullptr;
   const PMSx003_type _sensortype;
+  const uint32_t     _avgWindowSize            = 0;
   uint32_t           _value_mask               = 0; // Keeping track of values already sent.
   uint16_t           _last_checksum            = 0; // To detect duplicate messages
   const int8_t       _resetPin                 = -1;
   const int8_t       _pwrPin                   = -1;
+  const bool         _splitCntBins             = false;
   bool               _values_received          = false;
   bool               _activeReadingModeEnabled = true;
 };
