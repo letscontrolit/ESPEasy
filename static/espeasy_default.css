@@ -384,7 +384,7 @@ textarea {
 }
 
 textarea:hover {
-	background-color: #ccc
+	background-color: #eee
 }
 
 table.multirow th,
@@ -647,10 +647,7 @@ section {
 	.container input:checked~.checkmark {
 		background-color: #44607a
 	}
-	.container .checkmark:after {
-		border: solid #fff
-	}
-	
+
 	#toastmessage,
 	.dotmark,
 	.logviewer {
@@ -712,7 +709,7 @@ section {
 	}
 	
 	textarea:hover {
-		background-color: #2b2b2b
+		background-color: #222
 	}
 	
 	table.multirow th,
