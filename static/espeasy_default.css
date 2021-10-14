@@ -432,6 +432,9 @@ table.multirow td {
 table.multirow tr:nth-child(odd) {
 	background-color: #2a2c2e
 }
+.highlight td {
+	background-color: #553044
+}
 
 .apheader,
 .headermenu {
@@ -508,7 +511,7 @@ a.menu {
 }
 
 .div_r {
-	background-color: #4a7a44;
+	background-color: #447a58;
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -568,16 +571,13 @@ section {
 		text-align: center;
 		width: 100%
 	}
-	/*table.normal td:nth-child(even) {
-		font-size: 10pt
-	}*/
 	table.normal th {
-		width: 0px
+		width: 100% !important
 	}
 	.button.link.wide {
 		display: inline-block;
 		text-align: center;
-		width: 50%
+		width: 80%
 	}
 	.container {
 		display: inline;
