@@ -409,8 +409,7 @@ table.normal {
 table.multirow tr,
 table.normal td,
 table.normal tr {
-	padding: 4px;
-	min-width: 104%
+	padding: 4px
 }
 
 table.normal td {
