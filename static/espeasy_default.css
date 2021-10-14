@@ -139,6 +139,7 @@ input.wide,
 select.wide {
 	max-width: 500px;
 	width: 80%
+
 }
 
 .widenumber {
@@ -408,7 +409,8 @@ table.normal {
 table.multirow tr,
 table.normal td,
 table.normal tr {
-	padding: 4px
+	padding: 4px;
+	min-width: 104%
 }
 
 table.normal td {
@@ -442,7 +444,7 @@ table.multirow tr:nth-child(even) {
 
 .headermenu {
 	border-bottom: 1px solid #DDD;
-	height: 90px;
+	height: 100px;
 	left: 0;
 	position: fixed;
 	right: 0;
@@ -451,27 +453,35 @@ table.multirow tr:nth-child(even) {
 }
 
 .bodymenu {
-	margin-top: 96px
+	margin-top: 110px
 }
 
 .menubar {
 	position: inherit;
-	top: 55px
+	top: 55px;
+	width: 100%
 }
-
+a.menu {
+    height: 46px;
+    display: flex;
+    align-items: center;
+}
 .menu {
 	border: solid transparent;
 	border-radius: 4px 4px 0 0;
 	border-width: 4px 1px 1px;
 	color: #444;
-	padding: 4px 16px 8px;
+	padding: 10px 10px 8px 10px;
 	white-space: nowrap
 }
 
 .menu.active {
 	background-color: #FFF;
 	border-color: #07D #DDD #FFF;
-	color: #000
+	color: #000;
+	padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 8px
 }
 
 .menu:hover {
@@ -534,12 +544,34 @@ section {
 	width: 100%
 }
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 750px) {
 	.showmenulabel {
-		display: none
+		display: none;
+		background-color: transparent
 	}
-	.menu {
-		max-width: 11vw;
-		max-width: 48px
+	a.menu {
+		width: 12%
+	}
+}
+@media screen and (max-width: 450px) {
+	table.normal {
+		min-width: 300px;
+	}
+	table.normal td {
+		display: table;
+		text-align: center;
+		width: 100%
+	}
+	table.normal th {
+		width: 100% !important
+	}
+	.button.link.wide {
+		display: inline-block;
+		text-align: center;
+		width: 80%
+	}
+	.container {
+		display: inline;
+		user-select: none
 	}
 }
