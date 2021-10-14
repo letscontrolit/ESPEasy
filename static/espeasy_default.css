@@ -139,6 +139,7 @@ input.wide,
 select.wide {
 	max-width: 500px;
 	width: 80%
+
 }
 
 .widenumber {
@@ -408,7 +409,8 @@ table.normal {
 table.multirow tr,
 table.normal td,
 table.normal tr {
-	padding: 4px
+	padding: 4px;
+	min-width: 104%
 }
 
 table.normal td {
@@ -421,7 +423,7 @@ table.multirow td {
 	text-align: center
 }
 
-table.multirow tr:nth-child(even) {
+table.multirow tr:nth-child(odd) {
 	background-color: #DEE6FF
 }
 
@@ -442,7 +444,7 @@ table.multirow tr:nth-child(even) {
 
 .headermenu {
 	border-bottom: 1px solid #DDD;
-	height: 90px;
+	height: 100px;
 	left: 0;
 	position: fixed;
 	right: 0;
@@ -451,27 +453,35 @@ table.multirow tr:nth-child(even) {
 }
 
 .bodymenu {
-	margin-top: 96px
+	margin-top: 110px
 }
 
 .menubar {
 	position: inherit;
-	top: 55px
+	top: 55px;
+	width: 100%
 }
-
+a.menu {
+    height: 46px;
+    display: flex;
+    align-items: center;
+}
 .menu {
 	border: solid transparent;
 	border-radius: 4px 4px 0 0;
 	border-width: 4px 1px 1px;
 	color: #444;
-	padding: 4px 16px 8px;
+	padding: 10px 10px 8px 10px;
 	white-space: nowrap
 }
 
 .menu.active {
 	background-color: #FFF;
 	border-color: #07D #DDD #FFF;
-	color: #000
+	color: #000;
+	padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 8px
 }
 
 .menu:hover {
@@ -534,12 +544,269 @@ section {
 	width: 100%
 }
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 750px) {
 	.showmenulabel {
-		display: none
+		display: none;
+		background-color: transparent
+	}
+	a.menu {
+		width: 12%
+	}
+}
+@media screen and (max-width: 450px) {
+	table.normal {
+		min-width: 300px;
+	}
+	table.normal td {
+		display: table;
+		text-align: center;
+		width: 100%
+	}
+	table.normal th {
+		width: 100% !important
+	}
+	.button.link.wide {
+		display: inline-block;
+		text-align: center;
+		width: 80%
+	}
+	.container {
+		display: inline;
+		user-select: none
+	}
+}
+@media (prefers-color-scheme: dark) {
+
+	h1,
+	h6 {
+		color: #dfdfdf
+	}
+	.showmenulabel {
+		background-color: transparent
+	}
+	.closebtn,
+	.div_r {
+		color: #dfdfdf
+	}
+	* {
+		color: #b3b3b3
+	}
+	h2 {
+		background-color: #444;
+		color: #FFF
+	}
+	
+	h3 {
+		background-color: #1e1e1e;
+		color: #dfdfdf
+	}
+	.button {
+		background-color: #44607a;
+		color: #FFF
+	}
+	
+	.button.help,
+	.checkmark,
+	input,
+	select,
+	textarea {
+		border-color: gray
+	}
+	.button.link.red {
+		background-color: red
+	}
+	.button:hover {
+		background: #369
+	}
+	input:hover,
+	select:hover {
+		background-color: #8b8b8b
+	}
+	
+	input,
+	select,
+	textarea {
+		background-color: #444
+	}
+	
+	input.wide,
+	select.wide {
+		color: #dfdfdf
+	}
+	.checkmark.disabled {
+		background-color: grey
+	}
+	
+	.checkmark {
+		background-color: #4444
+	}
+	
+	.container:hover input~.checkmark {
+		background-color: #8b8b8b
+	}
+	
+	.container input:checked~.checkmark {
+		background-color: #44607a
+	}
+	.container .checkmark:after {
+		border: solid #fff
+	}
+	
+	#toastmessage,
+	.dotmark,
+	.logviewer {
+		border-color: gray
+	}
+	.dotmark {
+		background-color: #eee
+	}
+	
+	.container2:hover input~.dotmark {
+		background-color: #ccc
+	}
+	
+	.container2 input:checked~.dotmark {
+		background-color: #07D
+	}
+	.container2 .dotmark:after {
+		background: #fff
+	}
+	
+	.logviewer,
+	textarea {
+		color: #dfdfdf;
+		background-color: #222
+	}
+	
+	#toastmessage {
+		background-color: #07D;
+		color: #fff
+	}
+
+	.level_0 {
+		color: #F1F1F1
+	}
+	
+	.level_1 {
+		color: #FCFF95
+	}
+	
+	.level_2 {
+		color: #9DCEFE
+	}
+	
+	.level_3 {
+		color: #A4FC79
+	}
+	
+	.level_4 {
+		color: #F2AB39
+	}
+	
+	.level_9 {
+		color: #F50
+	}
+	
+	.logviewer {
+		background-color: #272727;
+		color: #F1F1F1
+	}
+	
+	textarea:hover {
+		background-color: #2b2b2b
+	}
+	
+	table.multirow th,
+	table.normal th {
+		background-color: #444;
+		border-color: #888;
+		color: #dfdfdf
+	}
+	
+	table.multirow,
+	table.normal {
+		color: #000
+	}
+	
+	table.multirow tr,
+	table.normal td,
+	table.normal tr {
+		background-color: #222
+	}
+	
+	table.multirow tr:nth-child(odd) {
+		background-color: #2a2c2e
+	}
+	
+	.highlight td {
+		background-color: #553044
+	}
+	
+	.apheader,
+	.headermenu {
+		background-color: #222
+	}
+	
+	.note {
+		color: #444
+	}
+	
+	.headermenu {
+		border-bottom: 1px solid #222;
+		background-color: #44607a
+	}
+	
+	.bodymenu {
+		background-color: #222
 	}
 	.menu {
-		max-width: 11vw;
-		max-width: 48px
+		color: #fff;
+		background-color: transparent
+	}
+	
+	.menu.active {
+		background-color: #222;
+		border-color: transparent;
+		color: #fff
+	}
+	
+	.menu:hover {
+		background: #444;
+		color: #fff
+	}
+
+	.on {
+		color: green
+	}
+	
+	.off {
+		color: red
+	}
+	
+	.div_r {
+		background-color: #30553d
+	}
+	
+	.alert,
+	.warning {
+		color: #fff
+	}
+	
+	.alert {
+		background-color: #f44336
+	}
+	
+	.warning {
+		background-color: #ffca17
+	}
+	
+	.closebtn:hover {
+		color: #000
+	}
+
+	@media screen and (max-width: 750px) {
+		.showmenulabel {
+			background-color: transparent
+		}
 	}
 }
