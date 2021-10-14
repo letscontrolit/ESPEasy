@@ -389,7 +389,7 @@ textarea {
 }
 
 textarea:hover {
-	background-color: #2b2b2b
+	background-color: #222
 }
 
 table.multirow th,
@@ -458,7 +458,7 @@ table.multirow tr:nth-child(odd) {
 }
 
 .bodymenu {
-	margin-top: 120px;
+	margin-top: 110px;
 	background-color: #222
 }
 
@@ -510,7 +510,7 @@ a.menu {
 }
 
 .div_r {
-	background-color: #447a58;
+	background-color: #30553d;
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
