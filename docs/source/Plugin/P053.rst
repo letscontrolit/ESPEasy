@@ -345,6 +345,39 @@ Example: (Sensor device using model PMS5003ST and Dummy device named ``Particles
 
 These events will *only* be generated when the **Rules** option is enabled on the Tools/Advanced page.
 
+Data Processing
+^^^^^^^^^^^^^^^
+
+(Added: 2021-10-14)
+
+The PMSx003 sensors may output samples quite often.
+Typically a sample is sent every 800 msec, with shorter intervals when the data does change a lot between readings.
+However, the sensor itself does not always have new data when a packet is sent by the sensor.
+These duplicate messages are detected and ignored.
+
+Oversampling
+""""""""""""
+
+By default, only the last sample is output by the task.
+But since the counted values may change quite a lot between samples, it is adviced to enable oversampling.
+With oversampling enabled, the reported values are averaged over the period between calls of ``PLUGIN_READ``.
+This may give a more stable output value to process.
+
+The default nr of decimals will be set to 1 when oversampling is enabled. (may require to switch the output values combo box)
+
+.. note:: When putting the sensor to sleep, any collected data in the averaging buffer is flushed by scheduling a ``PLUGIN_READ``. This will output the data to any connected controller and generate the appropriate events.
+   Any data still present in the buffer when waking the sensor is flushed, to make sure no old and new data is merged.
+
+Split 'count/0.1L' Bins
+"""""""""""""""""""""""
+
+The "count/0.1L" values are based on particles with at least the given size.
+Thus a ``cnt0.3`` value describes all particles with a size of at least 0.3 micron.
+
+In some use cases it can be useful to count only the particles of a specific size, like 0.3 ... 0.5 micron.
+When "Split 'count/0.1L' Bins" is checked, the recorded counted values will be split over single bins.
+
+
 Lifetime Helper
 ^^^^^^^^^^^^^^^^
 
