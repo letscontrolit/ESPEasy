@@ -38,17 +38,27 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection) {
 }
 
 P053_data_struct::P053_data_struct(
+  taskIndex_t             TaskIndex,
   int8_t                  rxPin,
   int8_t                  txPin,
   const ESPEasySerialPort port,
   int8_t                  resetPin,
   int8_t                  pwrPin,
-  PMSx003_type            sensortype,
-  uint32_t                avgWindowSize,
-  bool                    splitCntBins)
-  : _sensortype(sensortype), _avgWindowSize(avgWindowSize),
-  _resetPin(resetPin), _pwrPin(pwrPin),
-  _splitCntBins(splitCntBins) {
+  PMSx003_type            sensortype
+  # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
+  ,
+  bool                    oversample,
+  bool                    splitCntBins
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  )
+  : _taskIndex(TaskIndex),
+  _sensortype(sensortype),
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  _oversample(oversample),
+  _splitCntBins(splitCntBins),
+   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  _resetPin(resetPin), _pwrPin(pwrPin)
+{
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -83,6 +93,7 @@ P053_data_struct::P053_data_struct(
     // This is the default, but not sure if passive mode can be set persistant.
     setActiveReadingMode();
   }
+  clearReceivedData();
 }
 
 P053_data_struct::~P053_data_struct() {
@@ -168,43 +179,46 @@ bool P053_data_struct::packetAvailable()
   return true;
 }
 
-void P053_data_struct::sendEvent(const String & baseEvent,
-                                 uint8_t        index,
-                                 const uint16_t data[]) {
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+void P053_data_struct::sendEvent(const String& baseEvent,
+                                 uint8_t       index) {
   float value = 0.0f;
 
-  if (!getValue(data, index, value)) { return; }
+  if (!getValue(index, value)) { return; }
 
 
   String valueEvent;
 
   valueEvent.reserve(32);
+  const unsigned char nrDecimals = getNrDecimals(index, _oversample);
 
   // Temperature
   valueEvent  = baseEvent;
   valueEvent += getEventString(index);
   valueEvent += '=';
-  valueEvent += value;
+  valueEvent += toString(value, nrDecimals);
   eventQueue.addMove(std::move(valueEvent));
 }
 
 bool P053_data_struct::hasFormaldehyde() const {
-  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   return _sensortype == PMSx003_type::PMS5003_S ||
          _sensortype == PMSx003_type::PMS5003_ST;
-  # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   return false;
-  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 }
 
 bool P053_data_struct::hasTempHum() const {
-  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   return _sensortype == PMSx003_type::PMS5003_T ||
          _sensortype == PMSx003_type::PMS5003_ST;
-  # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   return false;
-  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 }
+
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 bool P053_data_struct::processData(struct EventStruct *event) {
   uint16_t checksum = 0, checksum2 = 0;
@@ -244,6 +258,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   }
 
 # ifndef BUILD_NO_DEBUG
+#  ifdef P053_LOW_LEVEL_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
     String log;
@@ -263,7 +278,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-#  ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+#   ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
       && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) { // 'Count' values not available on
@@ -286,7 +301,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  #   ifdef PLUGIN_053_ENABLE_S_AND_T
+  #    ifdef PLUGIN_053_ENABLE_S_AND_T
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
       && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)) { // Values only available on PMS5003ST
@@ -300,10 +315,10 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     log += static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f;
     addLog(LOG_LEVEL_DEBUG, log);
   }
-  #   endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-  #  endif  // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-
-# endif     // ifndef BUILD_NO_DEBUG
+  #    endif // ifdef PLUGIN_053_ENABLE_S_AND_T
+  #   endif  // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+#  endif     // ifdef P053_LOW_LEVEL_DEBUG
+# endif      // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
   SerialRead16(checksum2, nullptr);
@@ -322,112 +337,140 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       return false;
     }
 
-    // Store new checksum, to help detect duplicates.
-    _last_checksum = checksum;
+
+    # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
     // Data is checked and good, fill in output
-    # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
     UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
     UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
     UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
+    _values_received                 = 1;
     # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-    _value_mask = 0;
-
-    switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
-      case PMSx003_output_selection::Particles_ug_m3:
-      {
-        UserVar[event->BaseVarIndex]     = getValue(data, PMS_PM1_0_ug_m3_normal);
-        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_PM2_5_ug_m3_normal);
-        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_PM10_0_ug_m3_normal);
-        UserVar[event->BaseVarIndex + 3] = 0.0f;
-        break;
-      }
-      case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
-      {
-        UserVar[event->BaseVarIndex]     = getValue(data, PMS_PM2_5_ug_m3_normal);
-        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_Temp_C);
-        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_Hum_pct);
-        UserVar[event->BaseVarIndex + 3] = getValue(data, PMS_Formaldehyde_mg_m3);
-        break;
-      }
-      case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
-      {
-        UserVar[event->BaseVarIndex]     = getValue(data, PMS_cnt0_3_100ml);
-        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_cnt0_5_100ml);
-        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_cnt1_0_100ml);
-        UserVar[event->BaseVarIndex + 3] = getValue(data, PMS_cnt2_5_100ml);
-        break;
-      }
-      case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
-      {
-        UserVar[event->BaseVarIndex]     = getValue(data, PMS_cnt1_0_100ml);
-        UserVar[event->BaseVarIndex + 1] = getValue(data, PMS_cnt2_5_100ml);
-        UserVar[event->BaseVarIndex + 2] = getValue(data, PMS_cnt5_0_100ml);
-        UserVar[event->BaseVarIndex + 3] = getValue(data, PMS_cnt10_0_100ml);
-        break;
-      }
+    // Store in the averaging buffer to process later
+    if (!_oversample) {
+      clearReceivedData();
     }
 
-    if (Settings.UseRules
-        && (GET_PLUGIN_053_EVENT_OUT_SELECTOR != PMSx003_event_datatype::Event_None)
-        && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) {
-      // Events not applicable to PMS2003 & PMS3003 models
-      String baseEvent;
-      baseEvent.reserve(21);
-      baseEvent  = getTaskDeviceName(event->TaskIndex);
-      baseEvent += '#';
-
-
-      // Send out events for those values not present in the task output
-      switch (GET_PLUGIN_053_EVENT_OUT_SELECTOR) {
-        case PMSx003_event_datatype::Event_All:
-        {
-          // Send all remaining
-          for (uint8_t i = PMS_PM1_0_ug_m3_normal; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
-            sendEvent(baseEvent, i, data);
-          }
-          break;
-        }
-        case PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde:
-        {
-          const uint8_t indices[] =
-          {
-            PMS_PM1_0_ug_m3_normal,
-            PMS_PM2_5_ug_m3_normal,
-            PMS_PM10_0_ug_m3_normal,
-            PMS_Temp_C,
-            PMS_Hum_pct,
-            PMS_Formaldehyde_mg_m3
-          };
-
-          for (uint8_t i = 0; i < 6; ++i) {
-            sendEvent(baseEvent, indices[i], data);
-          }
-          break;
-        }
-        case PMSx003_event_datatype::Event_All_count_bins:
-        {
-          // Thexe values are sequential, so just use a simple for loop.
-          for (uint8_t i = PMS_cnt0_3_100ml; i <= PMS_cnt10_0_100ml; ++i) {
-            sendEvent(baseEvent, i, data);
-          }
-          break;
-        }
-      }
+    for (uint8_t i = 0; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
+      _data[i] += data[i];
     }
+    ++_values_received;
     # endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    _values_received = true;
+
+
+    // Store new checksum, to help detect duplicates.
+    _last_checksum = checksum;
+
     return true;
   }
   return false;
 }
 
-bool P053_data_struct::checkAndClearValuesReceived() {
-  const bool ret = _values_received;
+bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
+  if (_values_received == 0) { return false; }
 
-  _values_received = false;
-  return ret;
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  // Data is checked and good, fill in output
+
+  _value_mask = 0;
+
+  switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
+    case PMSx003_output_selection::Particles_ug_m3:
+    {
+      UserVar[event->BaseVarIndex]     = getValue(PMS_PM1_0_ug_m3_normal);
+      UserVar[event->BaseVarIndex + 1] = getValue(PMS_PM2_5_ug_m3_normal);
+      UserVar[event->BaseVarIndex + 2] = getValue(PMS_PM10_0_ug_m3_normal);
+      UserVar[event->BaseVarIndex + 3] = 0.0f;
+      break;
+    }
+    case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
+    {
+      UserVar[event->BaseVarIndex]     = getValue(PMS_PM2_5_ug_m3_normal);
+      UserVar[event->BaseVarIndex + 1] = getValue(PMS_Temp_C);
+      UserVar[event->BaseVarIndex + 2] = getValue(PMS_Hum_pct);
+      UserVar[event->BaseVarIndex + 3] = getValue(PMS_Formaldehyde_mg_m3);
+      break;
+    }
+    case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
+    {
+      UserVar[event->BaseVarIndex]     = getValue(PMS_cnt0_3_100ml);
+      UserVar[event->BaseVarIndex + 1] = getValue(PMS_cnt0_5_100ml);
+      UserVar[event->BaseVarIndex + 2] = getValue(PMS_cnt1_0_100ml);
+      UserVar[event->BaseVarIndex + 3] = getValue(PMS_cnt2_5_100ml);
+      break;
+    }
+    case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
+    {
+      UserVar[event->BaseVarIndex]     = getValue(PMS_cnt1_0_100ml);
+      UserVar[event->BaseVarIndex + 1] = getValue(PMS_cnt2_5_100ml);
+      UserVar[event->BaseVarIndex + 2] = getValue(PMS_cnt5_0_100ml);
+      UserVar[event->BaseVarIndex + 3] = getValue(PMS_cnt10_0_100ml);
+      break;
+    }
+  }
+
+  if (Settings.UseRules
+      && (GET_PLUGIN_053_EVENT_OUT_SELECTOR != PMSx003_event_datatype::Event_None)
+      && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) {
+    // Events not applicable to PMS2003 & PMS3003 models
+    String baseEvent;
+    baseEvent.reserve(21);
+    baseEvent  = getTaskDeviceName(event->TaskIndex);
+    baseEvent += '#';
+
+
+    // Send out events for those values not present in the task output
+    switch (GET_PLUGIN_053_EVENT_OUT_SELECTOR) {
+      case PMSx003_event_datatype::Event_All:
+      {
+        // Send all remaining
+        for (uint8_t i = PMS_PM1_0_ug_m3_normal; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
+          sendEvent(baseEvent, i);
+        }
+        break;
+      }
+      case PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde:
+      {
+        const uint8_t indices[] =
+        {
+          PMS_PM1_0_ug_m3_normal,
+          PMS_PM2_5_ug_m3_normal,
+          PMS_PM10_0_ug_m3_normal,
+          PMS_Temp_C,
+          PMS_Hum_pct,
+          PMS_Formaldehyde_mg_m3
+        };
+
+        for (uint8_t i = 0; i < 6; ++i) {
+          sendEvent(baseEvent, indices[i]);
+        }
+        break;
+      }
+      case PMSx003_event_datatype::Event_All_count_bins:
+      {
+        // Thexe values are sequential, so just use a simple for loop.
+        for (uint8_t i = PMS_cnt0_3_100ml; i <= PMS_cnt10_0_100ml; ++i) {
+          sendEvent(baseEvent, i);
+        }
+        break;
+      }
+    }
+  }
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  if (_oversample) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("PMSx003: Oversampling using ");
+      log += _values_received;
+      log += F(" samples");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+  }
+
+  clearReceivedData();
+  return true;
 }
 
 bool P053_data_struct::resetSensor() {
@@ -448,10 +491,10 @@ bool P053_data_struct::wakeSensor() {
   if (!initialized()) {
     return false;
   }
+  addLog(LOG_LEVEL_INFO, F("PMSx003: Wake sensor"));
 
   if (_pwrPin >= 0) {
     // Make sure the sensor is "on"
-    addLog(LOG_LEVEL_INFO, F("PMSx003: Set PWR_SET high"));
     pinMode(_pwrPin, OUTPUT);
     digitalWrite(_pwrPin, HIGH);
     pinMode(_pwrPin, INPUT_PULLUP);
@@ -460,6 +503,10 @@ bool P053_data_struct::wakeSensor() {
     };
     _easySerial->write(command, 7);
   }
+
+  // No idea how old this data is, so clear it.
+  // Otherwise oversampling may give weird results
+  clearReceivedData();
   return true;
 }
 
@@ -468,14 +515,20 @@ bool P053_data_struct::sleepSensor() {
     return false;
   }
 
+  // Put the sensor to sleep
+  addLog(LOG_LEVEL_INFO, F("PMSx003: Sleep sensor"));
+
   if (_pwrPin >= 0) {
-    // Put the sensor to sleep
-    addLog(LOG_LEVEL_INFO, F("PMSx003: Set PWR_SET low"));
     pinMode(_pwrPin, OUTPUT);
     digitalWrite(_pwrPin, LOW);
   } else {
     const uint8_t command[7] = { 0x42, 0x4D, 0xE4, 0x00, 0x00, 0x01, 0x73 };
     _easySerial->write(command, 7);
+  }
+
+  if (_values_received > 0) {
+    // Going to sleep, so flush whatever is read.
+    Scheduler.schedule_task_device_timer(_taskIndex, millis() + 10);
   }
   return true;
 }
@@ -503,14 +556,15 @@ void P053_data_struct::requestData() {
   }
 }
 
-float P053_data_struct::getValue(const uint16_t data[], uint8_t index) {
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+float P053_data_struct::getValue(uint8_t index) {
   float value = 0.0f;
 
-  getValue(data, index, value);
+  getValue(index, value);
   return value;
 }
 
-bool P053_data_struct::getValue(const uint16_t data[], uint8_t index, float& value) {
+bool P053_data_struct::getValue(uint8_t index, float& value) {
   if (bitRead(_value_mask, index) || (index >= PMS_RECEIVE_BUFFER_SIZE)) {
     // Already read
     return false;
@@ -521,40 +575,57 @@ bool P053_data_struct::getValue(const uint16_t data[], uint8_t index, float& val
     case PMS_PM2_5_ug_m3_factory:
     case PMS_PM10_0_ug_m3_factory:
     case PMS_FW_rev_error:
+    case PMS_Reserved:
       return false;
 
     case PMS_Temp_C:
     case PMS_Hum_pct:
 
       if (!hasTempHum()) { return false; }
-      value = static_cast<float>(data[index]) / 10.0f;
+      value = _data[index] / 10.0f;
       break;
     case PMS_Formaldehyde_mg_m3:
 
       if (!hasFormaldehyde()) { return false; }
-      value = static_cast<float>(data[index]) / 1000.0f;
+      value = _data[index] / 1000.0f;
       break;
     case PMS_cnt0_3_100ml:
     case PMS_cnt0_5_100ml:
     case PMS_cnt1_0_100ml:
     case PMS_cnt2_5_100ml:
     case PMS_cnt5_0_100ml:
-      value = static_cast<float>(data[index]);
+      value = _data[index];
 
       if (_splitCntBins) {
-        value -= static_cast<float>(data[index + 1]);
+        value -= _data[index + 1];
 
         if (value < 0.0f) { value = 0.0f; }
       }
       break;
 
     default:
-      value = static_cast<float>(data[index]);
+      value = _data[index];
       break;
+  }
+
+  if (_values_received > 1) {
+    value /= static_cast<float>(_values_received);
   }
 
   bitSet(_value_mask, index);
   return true;
+}
+
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+void P053_data_struct::clearReceivedData() {
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  for (uint8_t i = 0; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
+    _data[i] = 0.0f;
+  }
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  _values_received = 0;
 }
 
 const __FlashStringHelper * P053_data_struct::getEventString(uint8_t index) {
@@ -580,7 +651,8 @@ const __FlashStringHelper * P053_data_struct::getEventString(uint8_t index) {
   return F("Unknown");
 }
 
-void P053_data_struct::setTaskValueNames(ExtraTaskSettingsStruct& settings, const uint8_t indices[], uint8_t nrElements) {
+void P053_data_struct::setTaskValueNames(ExtraTaskSettingsStruct& settings, const uint8_t indices[], uint8_t nrElements,
+                                         bool oversample) {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     settings.TaskDeviceValueDecimals[i] = 0;
 
@@ -590,21 +662,24 @@ void P053_data_struct::setTaskValueNames(ExtraTaskSettingsStruct& settings, cons
         P053_data_struct::getEventString(indices[i]),
         sizeof(settings.TaskDeviceValueNames[i]));
 
-      switch (indices[i]) {
-        case PMS_Temp_C:
-        case PMS_Hum_pct:
-          settings.TaskDeviceValueDecimals[i] = 1;
-          break;
-        case PMS_Formaldehyde_mg_m3:
-          settings.TaskDeviceValueDecimals[i] = 3;
-          break;
-        default:
-          break;
-      }
+      settings.TaskDeviceValueDecimals[i] = getNrDecimals(indices[i], oversample);
     } else {
       ZERO_FILL(settings.TaskDeviceValueNames[i]);
     }
   }
+}
+
+unsigned char P053_data_struct::getNrDecimals(uint8_t index, bool oversample) {
+  switch (index) {
+    case PMS_Temp_C:
+    case PMS_Hum_pct:
+      return 1;
+    case PMS_Formaldehyde_mg_m3:
+      return 3;
+  }
+
+  if (oversample) { return 1; }
+  return 0;
 }
 
 #endif // ifdef USES_P053

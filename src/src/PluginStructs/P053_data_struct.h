@@ -11,6 +11,7 @@
 # include <ESPeasySerial.h>
 
 // Can be unset for memory-tight  builds to remove support for the PMSx003ST and PMS2003/PMS3003 sensor models
+// Difference in build size is roughly 4k
 # define PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 // #define PLUGIN_053_ENABLE_S_AND_T // Enable setting to support S and T types, in addition to bas PMSx003 and PMSx003ST
@@ -63,10 +64,11 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PLUGIN_053_RST_PIN               CONFIG_PIN3
 # define PLUGIN_053_PWR_PIN               PCONFIG(3)
 
-# define PLUGIN_053_AVG_WINDOW_SIZE       PCONFIG_LONG(0)
 # define PLUGIN_053_DATA_PROCESSING_FLAGS PCONFIG(4)
+
 // Bits for data processing flags
 # define PLUGIN_053_SPLIT_CNT_BINS_BIT    0
+# define PLUGIN_053_OVERSAMPLING_BIT      1
 
 
 // Helper defines to make code a bit more readable.
@@ -104,6 +106,7 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 # define PMS_Formaldehyde_mg_m3    12
 # define PMS_Temp_C                13
 # define PMS_Hum_pct               14
+# define PMS_Reserved              15
 # define PMS_FW_rev_error          16
 # define PMS_RECEIVE_BUFFER_SIZE   ((PMS5003_ST_SIZE / 2) - 3)
 
@@ -111,14 +114,20 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 struct P053_data_struct : public PluginTaskData_base {
 public:
 
-  P053_data_struct(int8_t                  rxPin,
-                   int8_t                  txPin,
-                   const ESPEasySerialPort port,
-                   int8_t                  resetPin,
-                   int8_t                  pwrPin,
-                   PMSx003_type            sensortype,
-                   uint32_t                avgWindowSize,
-                   bool                    splitCntBins);
+  P053_data_struct(
+    taskIndex_t             TaskIndex,
+    int8_t                  rxPin,
+    int8_t                  txPin,
+    const ESPEasySerialPort port,
+    int8_t                  resetPin,
+    int8_t                  pwrPin,
+    PMSx003_type            sensortype
+                   # ifdef  PLUGIN_053_ENABLE_EXTRA_SENSORS
+    ,
+    bool                    oversample,
+    bool                    splitCntBins
+                   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    );
 
   P053_data_struct() = delete;
 
@@ -141,18 +150,21 @@ public:
 
 private:
 
-  void sendEvent(const String & baseEvent,
-                 uint8_t        index,
-                 const uint16_t data[]);
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  void sendEvent(const String& baseEvent,
+                 uint8_t       index);
 
   bool hasFormaldehyde() const;
   bool hasTempHum() const;
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 public:
 
   bool processData(struct EventStruct *event);
 
-  bool checkAndClearValuesReceived();
+  // Check if there are values read.
+  // If so, also send out the events and clear the averaging buffer for new samples.
+  bool checkAndClearValuesReceived(struct EventStruct *event);
 
   bool resetSensor();
 
@@ -164,14 +176,17 @@ public:
 
 private:
 
-  void  requestData();
+  void requestData();
 
-  float getValue(const uint16_t data[],
-                 uint8_t        index);
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-  bool  getValue(const uint16_t data[],
-                 uint8_t        index,
-                 float        & value);
+  float getValue(uint8_t index);
+
+  bool  getValue(uint8_t index,
+                 float & value);
+
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  void clearReceivedData();
 
 public:
 
@@ -179,20 +194,28 @@ public:
 
   static void                       setTaskValueNames(ExtraTaskSettingsStruct& settings,
                                                       const uint8_t            indices[],
-                                                      uint8_t                  nrElements);
+                                                      uint8_t                  nrElements,
+                                                      bool                     oversample);
+
+  static unsigned char getNrDecimals(uint8_t index,
+                                     bool    oversample);
 
 private:
 
   ESPeasySerial     *_easySerial = nullptr;
+  const taskIndex_t  _taskIndex  = INVALID_TASK_INDEX;
   const PMSx003_type _sensortype;
-  const uint32_t     _avgWindowSize            = 0;
-  uint32_t           _value_mask               = 0; // Keeping track of values already sent.
-  uint16_t           _last_checksum            = 0; // To detect duplicate messages
-  const int8_t       _resetPin                 = -1;
-  const int8_t       _pwrPin                   = -1;
-  const bool         _splitCntBins             = false;
-  bool               _values_received          = false;
-  bool               _activeReadingModeEnabled = true;
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  float      _data[PMS_RECEIVE_BUFFER_SIZE] = { 0 };
+  const bool _oversample                    = false;
+  const bool _splitCntBins                  = false;
+  uint32_t   _value_mask                    = 0; // Keeping track of values already sent.
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  uint32_t     _values_received          = 0;
+  uint16_t     _last_checksum            = 0;    // To detect duplicate messages
+  const int8_t _resetPin                 = -1;
+  const int8_t _pwrPin                   = -1;
+  bool         _activeReadingModeEnabled = true;
 };
 
 

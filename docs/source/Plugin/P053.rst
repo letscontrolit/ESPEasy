@@ -363,6 +363,7 @@ Example rules:
 
    On System#Boot do    //When the ESP boots, do
      looptimerset,1,300  // Start loop timer 1, 300 sec interval
+     timerSet,2,30 // Set timer 2 to put the sensor to sleep again
    endon
    
    On Rules#Timer=1 do

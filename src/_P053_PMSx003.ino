@@ -65,6 +65,8 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      const bool oversample = bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
+
       switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
         case PMSx003_output_selection::Particles_ug_m3:
         {
@@ -72,7 +74,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
             PMS_PM1_0_ug_m3_normal,
             PMS_PM2_5_ug_m3_normal,
             PMS_PM10_0_ug_m3_normal };
-          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 3);
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 3, oversample);
           break;
         }
         case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
@@ -82,7 +84,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
             PMS_Temp_C,
             PMS_Hum_pct,
             PMS_Formaldehyde_mg_m3 };
-          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4);
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4, oversample);
           break;
         }
         case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
@@ -92,7 +94,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
             PMS_cnt0_5_100ml,
             PMS_cnt1_0_100ml,
             PMS_cnt2_5_100ml };
-          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4);
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4, oversample);
           break;
         }
         case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
@@ -102,7 +104,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
             PMS_cnt2_5_100ml,
             PMS_cnt5_0_100ml,
             PMS_cnt10_0_100ml };
-          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4);
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4, oversample);
           break;
         }
       }
@@ -209,8 +211,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       {
         addFormSubHeader(F("Data Processing"));
 
-        addFormNumericBox(F("Averaging Window Size"), F("p053_avgsize"), PLUGIN_053_AVG_WINDOW_SIZE, 1, 255);
-        addFormNote(F("Typical sample duration: 2300 msec"));
+        addFormCheckBox(F("Oversampling"), F("p053_oversample"),
+                        bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT));
+
 
         addFormCheckBox(F("Split 'count/0.1L' Bins"), F("p053_split_bins"),
                         bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT));
@@ -234,7 +237,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
       PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("p053_events"));
-      PLUGIN_053_AVG_WINDOW_SIZE       = getFormItemInt(F("p053_avgsize"));
+
+      if (isFormItemChecked(F("p053_oversample"))) {
+        bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
+      } else {
+        bitClear(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
+      }
 
       if (isFormItemChecked(F("p053_split_bins"))) {
         bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
@@ -291,20 +299,22 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(
         event->TaskIndex,
         new (std::nothrow) P053_data_struct(
+          event->TaskIndex,
           rxPin, txPin, port,
           PLUGIN_053_RST_PIN,
           PLUGIN_053_PWR_PIN,
-          Plugin_053_sensortype,
-          PLUGIN_053_AVG_WINDOW_SIZE,
-          bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
+          Plugin_053_sensortype
+          # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+          , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT)
+          , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
+          # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
           ));
       P053_data_struct *P053_data =
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P053_data) {
-        return success;
+      if (nullptr != P053_data) {
+        success = P053_data->initialized();
       }
-      success = P053_data->initialized();
 
       break;
     }
@@ -334,8 +344,8 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P053_data) && P053_data->initialized()) {
-        // When new data is available, return true
-        success = P053_data->checkAndClearValuesReceived();
+        // When new data is available, return true and send the events.
+        success = P053_data->checkAndClearValuesReceived(event);
       }
       break;
     }
