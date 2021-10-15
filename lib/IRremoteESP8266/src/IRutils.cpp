@@ -1,4 +1,4 @@
-// Copyright 2017 David Conran
+// Copyright 2017-2021 David Conran
 
 #include "IRutils.h"
 #ifndef UNIT_TEST
@@ -16,6 +16,27 @@
 #include "IRremoteESP8266.h"
 #include "IRsend.h"
 #include "IRtext.h"
+
+// On the ESP8266 platform we need to use a set of ..._P functions
+// to handle the strings stored in the flash address space.
+#ifndef STRCASECMP
+#if defined(ESP8266)
+#define STRCASECMP(LHS, RHS) \
+    strcasecmp_P(LHS, reinterpret_cast<const char*>(RHS))
+#else  // ESP8266
+#define STRCASECMP strcasecmp
+#endif  // ESP8266
+#endif  // STRCASECMP
+#ifndef STRLEN
+#if defined(ESP8266)
+#define STRLEN(PTR) strlen_P(PTR)
+#else  // ESP8266
+#define STRLEN(PTR) strlen(PTR)
+#endif  // ESP8266
+#endif  // STRLEN
+#ifndef FPSTR
+#define FPSTR(X) X
+#endif  // FPSTR
 
 /// Reverse the order of the requested least significant nr. of bits.
 /// @param[in] input Bit pattern/integer to reverse.
@@ -74,7 +95,7 @@ String uint64ToString(uint64_t input, uint8_t base) {
 /// @returns A String representation of the integer.
 String int64ToString(int64_t input, uint8_t base) {
   if (input < 0) {
-    return "-" + uint64ToString(-input, base);
+    return kDashStr + uint64ToString(-input, base);
   }
   return uint64ToString(input, base);
 }
@@ -93,21 +114,20 @@ void serialPrintUint64(uint64_t input, uint8_t base) {
 /// @param[in] str A C-style string containing a protocol name or number.
 /// @return A decode_type_t enum. (decode_type_t::UNKNOWN if no match.)
 decode_type_t strToDecodeType(const char * const str) {
-  const char *ptr = kAllProtocolNamesStr;
-  uint16_t length = strlen(ptr);
+  auto *ptr = reinterpret_cast<const char*>(kAllProtocolNamesStr);
+  uint16_t length = STRLEN(ptr);
   for (uint16_t i = 0; length; i++) {
-    if (!strcasecmp(str, ptr)) return (decode_type_t)i;
+    if (!STRCASECMP(str, ptr)) return (decode_type_t)i;
     ptr += length + 1;
-    length = strlen(ptr);
+    length = STRLEN(ptr);
   }
-
   // Handle integer values of the type by converting to a string and back again.
   decode_type_t result = strToDecodeType(
       typeToString((decode_type_t)atoi(str)).c_str());
   if (result > 0)
     return result;
-  else
-    return decode_type_t::UNKNOWN;
+
+  return decode_type_t::UNKNOWN;
 }
 
 /// Convert a protocol type (enum etc) to a human readable string.
@@ -116,16 +136,21 @@ decode_type_t strToDecodeType(const char * const str) {
 /// @return A String containing the protocol name. kUnknownStr if no match.
 String typeToString(const decode_type_t protocol, const bool isRepeat) {
   String result = "";
-  const char *ptr = kAllProtocolNamesStr;
+  result.reserve(30);  // Size of longest protocol name + " (Repeat)"
   if (protocol > kLastDecodeType || protocol == decode_type_t::UNKNOWN) {
     result = kUnknownStr;
   } else {
-    for (uint16_t i = 0; i <= protocol && strlen(ptr); i++) {
-      if (i == protocol) {
-        result = ptr;
-        break;
+    auto *ptr = reinterpret_cast<const char*>(kAllProtocolNamesStr);
+    if (protocol > kLastDecodeType || protocol == decode_type_t::UNKNOWN) {
+      result = kUnknownStr;
+    } else {
+      for (uint16_t i = 0; i <= protocol && STRLEN(ptr); i++) {
+        if (i == protocol) {
+          result = FPSTR(ptr);
+          break;
+        }
+        ptr += STRLEN(ptr) + 1;
       }
-      ptr += strlen(ptr) + 1;
     }
   }
   if (isRepeat) {
@@ -174,13 +199,16 @@ bool hasACState(const decode_type_t protocol) {
     case MWM:
     case NEOCLIMA:
     case PANASONIC_AC:
+    case RHOSS:
     case SAMSUNG_AC:
     case SANYO_AC:
+    case SANYO_AC88:
     case SHARP_AC:
     case TCL112AC:
     case TEKNOPOINT:
     case TOSHIBA_AC:
     case TROTEC:
+    case TROTEC_3550:
     case VOLTAS:
     case WHIRLPOOL_AC:
       return true;
@@ -209,12 +237,25 @@ uint16_t getCorrectedRawLength(const decode_results * const results) {
 /// @return A String containing the code-ified result.
 String resultToSourceCode(const decode_results * const results) {
   String output = "";
+  const uint16_t length = getCorrectedRawLength(results);
+  const bool hasState = hasACState(results->decode_type);
   // Reserve some space for the string to reduce heap fragmentation.
-  output.reserve(1536);  // 1.5KB should cover most cases.
+  // "uint16_t rawData[9999] = {};  // LONGEST_PROTOCOL\n" = ~55 chars.
+  // "NNNN,  " = ~7 chars on average per raw entry
+  // Protocols with a `state`:
+  //   "uint8_t state[NN] = {};\n" = ~25 chars
+  //   "0xNN, " = 6 chars per byte.
+  // Protocols without a `state`:
+  //   " DEADBEEFDEADBEEF\n"
+  //   "uint32_t address = 0xDEADBEEF;\n"
+  //   "uint32_t command = 0xDEADBEEF;\n"
+  //   "uint64_t data = 0xDEADBEEFDEADBEEF;" = ~116 chars max.
+  output.reserve(55 + (length * 7) + hasState ? 25 + (results->bits / 8) * 6
+                                              : 116);
   // Start declaration
   output += F("uint16_t ");  // variable type
   output += F("rawData[");   // array name
-  output += uint64ToString(getCorrectedRawLength(results), 10);
+  output += uint64ToString(length, 10);
   // array size
   output += F("] = {");  // Start declaration
 
@@ -242,13 +283,13 @@ String resultToSourceCode(const decode_results * const results) {
   output += F("  // ");
   output += typeToString(results->decode_type, results->repeat);
   // Only display the value if the decode type doesn't have an A/C state.
-  if (!hasACState(results->decode_type))
+  if (!hasState)
     output += ' ' + uint64ToString(results->value, 16);
   output += F("\n");
 
   // Now dump "known" codes
   if (results->decode_type != UNKNOWN) {
-    if (hasACState(results->decode_type)) {
+    if (hasState) {
 #if DECODE_AC
       uint16_t nbytes = results->bits / 8;
       output += F("uint8_t state[");
@@ -292,7 +333,9 @@ String resultToTimingInfo(const decode_results * const results) {
   String output = "";
   String value = "";
   // Reserve some space for the string to reduce heap fragmentation.
-  output.reserve(2048);  // 2KB should cover most cases.
+  // "Raw Timing[NNNN]:\n\n" = 19 chars
+  // "   +123456, " / "-123456, " = ~12 chars on avg per raw entry.
+  output.reserve(19 + 12 * results->rawlen);  // Should be less than this.
   value.reserve(6);  // Max value should be 2^17 = 131072
   output += F("Raw Timing[");
   output += uint64ToString(results->rawlen - 1, 10);
@@ -300,7 +343,7 @@ String resultToTimingInfo(const decode_results * const results) {
 
   for (uint16_t i = 1; i < results->rawlen; i++) {
     if (i % 2 == 0)
-      output += '-';  // even
+      output += kDashStr;  // even
     else
       output += F("   +");  // odd
     value = uint64ToString(results->rawbuf[i] * kRawTick);
@@ -341,7 +384,9 @@ String resultToHexidecimal(const decode_results * const result) {
 String resultToHumanReadableBasic(const decode_results * const results) {
   String output = "";
   // Reserve some space for the string to reduce heap fragmentation.
-  output.reserve(2 * kStateSizeMax + 50);  // Should cover most cases.
+  // "Protocol  : LONGEST_PROTOCOL_NAME (Repeat)\n"
+  // "Code      : 0x (NNNN Bits)\n" = 70 chars
+  output.reserve(2 * kStateSizeMax + 70);  // Should cover most cases.
   // Show Encoding standard
   output += kProtocolStr;
   output += F("  : ");
@@ -479,6 +524,8 @@ namespace irutils {
   String addLabeledString(const String value, const String label,
                           const bool precomma) {
     String result = "";
+    // ", " + ": " = 4 chars
+    result.reserve(4 + value.length() + label.length());
     if (precomma) result += kCommaSpaceStr;
     result += label;
     result += kColonSpaceStr;
@@ -493,7 +540,18 @@ namespace irutils {
   /// @return The resulting String.
   String addBoolToString(const bool value, const String label,
                          const bool precomma) {
-    return addLabeledString((value ? kOnStr : kOffStr), label, precomma);
+    return addLabeledString(value ? kOnStr : kOffStr, label, precomma);
+  }
+
+  /// Create a String with a colon separated toggle flag suitable for Humans.
+  /// e.g. "Light: Toggle", "Light: -"
+  /// @param[in] toggle The value of the toggle to come after the label.
+  /// @param[in] label The label to precede the value.
+  /// @param[in] precomma Should the output string start with ", " or not?
+  /// @return The resulting String.
+  String addToggleToString(const bool toggle, const String label,
+                           const bool precomma) {
+    return addLabeledString(toggle ? kToggleStr : kDashStr, label, precomma);
   }
 
   /// Create a String with a colon separated labeled Integer suitable for
@@ -529,69 +587,79 @@ namespace irutils {
     switch (protocol) {
       case decode_type_t::FUJITSU_AC:
         switch (model) {
-          case fujitsu_ac_remote_model_t::ARRAH2E: return F("ARRAH2E");
-          case fujitsu_ac_remote_model_t::ARDB1: return F("ARDB1");
-          case fujitsu_ac_remote_model_t::ARREB1E: return F("ARREB1E");
-          case fujitsu_ac_remote_model_t::ARJW2: return F("ARJW2");
-          case fujitsu_ac_remote_model_t::ARRY4: return F("ARRY4");
-          case fujitsu_ac_remote_model_t::ARREW4E: return F("ARREW4E");
-          default: return kUnknownStr;
+          case fujitsu_ac_remote_model_t::ARRAH2E: return kArrah2eStr;
+          case fujitsu_ac_remote_model_t::ARDB1:   return kArdb1Str;
+          case fujitsu_ac_remote_model_t::ARREB1E: return kArreb1eStr;
+          case fujitsu_ac_remote_model_t::ARJW2:   return kArjw2Str;
+          case fujitsu_ac_remote_model_t::ARRY4:   return kArry4Str;
+          case fujitsu_ac_remote_model_t::ARREW4E: return kArrew4eStr;
+          default:                                 return kUnknownStr;
         }
         break;
       case decode_type_t::GREE:
         switch (model) {
-          case gree_ac_remote_model_t::YAW1F: return F("YAW1F");
-          case gree_ac_remote_model_t::YBOFB: return F("YBOFB");
-          default: return kUnknownStr;
+          case gree_ac_remote_model_t::YAW1F: return kYaw1fStr;
+          case gree_ac_remote_model_t::YBOFB: return kYbofbStr;
+          default:                            return kUnknownStr;
         }
         break;
       case decode_type_t::HITACHI_AC1:
         switch (model) {
           case hitachi_ac1_remote_model_t::R_LT0541_HTA_A:
-            return F("R-LT0541-HTA-A");
+            return kRlt0541htaaStr;
           case hitachi_ac1_remote_model_t::R_LT0541_HTA_B:
-            return F("R-LT0541-HTA-B");
-          default: return kUnknownStr;
+            return kRlt0541htabStr;
+          default:
+            return kUnknownStr;
         }
         break;
       case decode_type_t::LG:
       case decode_type_t::LG2:
         switch (model) {
-          case lg_ac_remote_model_t::GE6711AR2853M: return F("GE6711AR2853M");
-          case lg_ac_remote_model_t::AKB75215403: return F("AKB75215403");
-          default: return kUnknownStr;
-        }
-        break;
-      case decode_type_t::SHARP_AC:
-        switch (model) {
-          case sharp_ac_remote_model_t::A907: return F("A907");
-          case sharp_ac_remote_model_t::A705: return F("A705");
-          case sharp_ac_remote_model_t::A903: return F("A903");
-          default: return kUnknownStr;
+          case lg_ac_remote_model_t::GE6711AR2853M: return kGe6711ar2853mStr;
+          case lg_ac_remote_model_t::AKB75215403:   return kAkb75215403Str;
+          case lg_ac_remote_model_t::AKB74955603:   return kAkb74955603Str;
+          case lg_ac_remote_model_t::AKB73757604:   return kAkb73757604Str;
+          default:                                  return kUnknownStr;
         }
         break;
       case decode_type_t::PANASONIC_AC:
         switch (model) {
-          case panasonic_ac_remote_model_t::kPanasonicLke: return F("LKE");
-          case panasonic_ac_remote_model_t::kPanasonicNke: return F("NKE");
-          case panasonic_ac_remote_model_t::kPanasonicDke: return F("DKE");
-          case panasonic_ac_remote_model_t::kPanasonicJke: return F("JKE");
-          case panasonic_ac_remote_model_t::kPanasonicCkp: return F("CKP");
-          case panasonic_ac_remote_model_t::kPanasonicRkr: return F("RKR");
-          default: return kUnknownStr;
+          case panasonic_ac_remote_model_t::kPanasonicLke: return kLkeStr;
+          case panasonic_ac_remote_model_t::kPanasonicNke: return kNkeStr;
+          case panasonic_ac_remote_model_t::kPanasonicDke: return kDkeStr;
+          case panasonic_ac_remote_model_t::kPanasonicJke: return kJkeStr;
+          case panasonic_ac_remote_model_t::kPanasonicCkp: return kCkpStr;
+          case panasonic_ac_remote_model_t::kPanasonicRkr: return kRkrStr;
+          default:                                         return kUnknownStr;
+        }
+        break;
+      case decode_type_t::SHARP_AC:
+        switch (model) {
+          case sharp_ac_remote_model_t::A907: return kA907Str;
+          case sharp_ac_remote_model_t::A705: return kA705Str;
+          case sharp_ac_remote_model_t::A903: return kA903Str;
+          default:                            return kUnknownStr;
+        }
+        break;
+      case decode_type_t::TCL112AC:
+        switch (model) {
+          case tcl_ac_remote_model_t::TAC09CHSD: return kTac09chsdStr;
+          case tcl_ac_remote_model_t::GZ055BE1:  return kGz055be1Str;
+          default:                               return kUnknownStr;
         }
         break;
       case decode_type_t::VOLTAS:
         switch (model) {
-          case voltas_ac_remote_model_t::kVoltas122LZF: return F("122LZF");
-          default: return kUnknownStr;
+          case voltas_ac_remote_model_t::kVoltas122LZF: return k122lzfStr;
+          default:                                      return kUnknownStr;
         }
         break;
       case decode_type_t::WHIRLPOOL_AC:
         switch (model) {
-          case whirlpool_ac_remote_model_t::DG11J13A: return F("DG11J13A");
-          case whirlpool_ac_remote_model_t::DG11J191: return F("DG11J191");
-          default: return kUnknownStr;
+          case whirlpool_ac_remote_model_t::DG11J13A: return kDg11j13aStr;
+          case whirlpool_ac_remote_model_t::DG11J191: return kDg11j191Str;
+          default:                                    return kUnknownStr;
         }
         break;
       default: return kUnknownStr;
@@ -606,7 +674,10 @@ namespace irutils {
   /// @return The resulting String.
   String addModelToString(const decode_type_t protocol, const int16_t model,
                           const bool precomma) {
-    String result = addIntToString(model, kModelStr, precomma);
+    String result = "";
+    // ", Model: NNN (BlahBlahEtc)" = ~40 chars for longest model name.
+    result.reserve(40);
+    result += addIntToString(model, kModelStr, precomma);
     result += kSpaceLBraceStr;
     result += modelToStr(protocol, model);
     return result + ')';
@@ -635,7 +706,9 @@ namespace irutils {
   /// @return The resulting String.
   String addTempFloatToString(const float degrees, const bool celsius,
                               const bool precomma) {
-    String result = addIntToString(degrees, kTempStr, precomma);
+    String result = "";
+    result.reserve(14);  // Assuming ", Temp: XXX.5F" is the largest.
+    result += addIntToString(degrees, kTempStr, precomma);
     // Is it a half degree?
     if (((uint16_t)(2 * degrees)) & 1) result += F(".5");
     result += celsius ? 'C' : 'F';
@@ -654,13 +727,15 @@ namespace irutils {
   String addModeToString(const uint8_t mode, const uint8_t automatic,
                          const uint8_t cool, const uint8_t heat,
                          const uint8_t dry, const uint8_t fan) {
-    String result = addIntToString(mode, kModeStr);
+    String result = "";
+    result.reserve(22);  // ", Mode: NNN (UNKNOWN)"
+    result += addIntToString(mode, kModeStr);
     result += kSpaceLBraceStr;
     if (mode == automatic) result += kAutoStr;
     else if (mode == cool) result += kCoolStr;
     else if (mode == heat) result += kHeatStr;
-    else if (mode == dry) result += kDryStr;
-    else if (mode == fan) result += kFanStr;
+    else if (mode == dry)  result += kDryStr;
+    else if (mode == fan)  result += kFanStr;
     else
       result += kUnknownStr;
     return result + ')';
@@ -676,7 +751,9 @@ namespace irutils {
   /// @return The resulting String.
   String addDayToString(const uint8_t day_of_week, const int8_t offset,
                         const bool precomma) {
-    String result = addIntToString(day_of_week, kDayStr, precomma);
+    String result = "";
+    result.reserve(19);  // ", Day: N (UNKNOWN)"
+    result += addIntToString(day_of_week, kDayStr, precomma);
     result += kSpaceLBraceStr;
     if ((uint8_t)(day_of_week + offset) < 7)
 #if UNIT_TEST
@@ -705,7 +782,9 @@ namespace irutils {
                         const uint8_t low, const uint8_t automatic,
                         const uint8_t quiet, const uint8_t medium,
                         const uint8_t maximum) {
-    String result = addIntToString(speed, kFanStr);
+    String result = "";
+    result.reserve(21);  // ", Fan: NNN (UNKNOWN)"
+    result += addIntToString(speed, kFanStr);
     result += kSpaceLBraceStr;
     if (speed == high)           result += kHighStr;
     else if (speed == low)       result += kLowStr;
@@ -740,7 +819,9 @@ namespace irutils {
                            const uint8_t off,
                            const uint8_t leftright, const uint8_t rightleft,
                            const uint8_t threed, const uint8_t wide) {
-    String result = addIntToString(position, kSwingHStr);
+    String result = "";
+    result.reserve(30);  // ", Swing(H): NNN (Left Right)"
+    result += addIntToString(position, kSwingHStr);
     result += kSpaceLBraceStr;
     if (position == automatic) {
       result += kAutoStr;
@@ -798,7 +879,9 @@ namespace irutils {
                            const uint8_t low, const uint8_t lowest,
                            const uint8_t off, const uint8_t swing,
                            const uint8_t breeze, const uint8_t circulate) {
-    String result = addIntToString(position, kSwingVStr);
+    String result = "";
+    result.reserve(31);  // ", Swing(V): NNN (Upper Middle)"
+    result += addIntToString(position, kSwingVStr);
     result += kSpaceLBraceStr;
     if (position == automatic) {
       result += kAutoStr;
@@ -880,6 +963,7 @@ namespace irutils {
     uint8_t seconds = totalseconds % 60;
 
     String result = "";
+    result.reserve(42);  // "99 Days, 23 Hours, 59 Minutes, 59 Seconds"
     if (days)
       result += uint64ToString(days) + ' ' + String((days > 1) ? kDaysStr
                                                                : kDayStr);
