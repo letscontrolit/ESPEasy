@@ -145,6 +145,20 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PLUGIN_053_RST_PIN = -1;
+      PLUGIN_053_PWR_PIN = -1;
+
+      PLUGIN_053_SENSOR_MODEL_SELECTOR = static_cast<int>(PMSx003_type::PMS1003_5003_7003);
+      PLUGIN_053_SEC_IGNORE_AFTER_WAKE = 0;
+
+      bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
+
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD: {
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("RST")), F("rstpin"), PLUGIN_053_RST_PIN);
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("SET")), F("pwrpin"), PLUGIN_053_PWR_PIN);
