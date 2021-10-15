@@ -44,19 +44,20 @@ P053_data_struct::P053_data_struct(
   const ESPEasySerialPort port,
   int8_t                  resetPin,
   int8_t                  pwrPin,
-  PMSx003_type            sensortype
-  # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
-  ,
-  bool                    oversample,
-  bool                    splitCntBins
-  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  PMSx003_type            sensortype,
+  uint32_t                delay_read_after_wakeup_ms
+# ifdef                   PLUGIN_053_ENABLE_EXTRA_SENSORS
+  , bool                  oversample
+  , bool                  splitCntBins
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   )
   : _taskIndex(TaskIndex),
   _sensortype(sensortype),
-  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _oversample(oversample),
   _splitCntBins(splitCntBins),
-   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
 {
   # ifndef BUILD_NO_DEBUG
@@ -70,6 +71,8 @@ P053_data_struct::P053_data_struct(
     log += txPin;
     log += ' ';
     log += _resetPin;
+    log += ' ';
+    log += _pwrPin;
     addLog(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
@@ -324,47 +327,54 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   SerialRead16(checksum2, nullptr);
   SerialFlush(); // Make sure no data is lost due to full buffer.
 
-  if (checksum == checksum2)
-  {
-    if (checksum == _last_checksum) {
-      // Duplicate message
+  if (checksum != checksum2) {
+    addLog(LOG_LEVEL_ERROR, F("PMSx003 : Checksum error"));
+    return false;
+  }
+
+  if (_last_wakeup_moment.isSet() && !_last_wakeup_moment.timeReached()) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("PMSx003 : Less than ");
+      log += _delay_read_after_wakeup_ms / 1000ul;
+      log += F(" sec since sensor wakeup => Ignoring sample");
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    return false;
+  }
+
+  if (checksum == _last_checksum) {
+    // Duplicate message
       # ifndef BUILD_NO_DEBUG
 
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
-        addLog(LOG_LEVEL_DEBUG, F("PMSx003 : Duplicate message"));
-      }
+    addLog(LOG_LEVEL_DEBUG, F("PMSx003 : Duplicate message"));
       # endif // ifndef BUILD_NO_DEBUG
-      return false;
-    }
-
-
+    return false;
+  }
     # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-    // Data is checked and good, fill in output
-    UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
-    UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
-    UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
-    _values_received                 = 1;
+  // Data is checked and good, fill in output
+  UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
+  UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
+  UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
+  _values_received                 = 1;
     # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-    // Store in the averaging buffer to process later
-    if (!_oversample) {
-      clearReceivedData();
-    }
+  // Store in the averaging buffer to process later
+  if (!_oversample) {
+    clearReceivedData();
+  }
 
-    for (uint8_t i = 0; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
-      _data[i] += data[i];
-    }
-    ++_values_received;
+  for (uint8_t i = 0; i < PMS_RECEIVE_BUFFER_SIZE; ++i) {
+    _data[i] += data[i];
+  }
+  ++_values_received;
     # endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 
-    // Store new checksum, to help detect duplicates.
-    _last_checksum = checksum;
+  // Store new checksum, to help detect duplicates.
+  _last_checksum = checksum;
 
-    return true;
-  }
-  return false;
+  return true;
 }
 
 bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
@@ -458,7 +468,6 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       }
     }
   }
-  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   if (_oversample) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -468,6 +477,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       addLog(LOG_LEVEL_INFO, log);
     }
   }
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   clearReceivedData();
   return true;
@@ -507,6 +517,12 @@ bool P053_data_struct::wakeSensor() {
   // No idea how old this data is, so clear it.
   // Otherwise oversampling may give weird results
   clearReceivedData();
+
+  if (_delay_read_after_wakeup_ms != 0) {
+    _last_wakeup_moment.setMillisFromNow(_delay_read_after_wakeup_ms);
+  } else {
+    _last_wakeup_moment.clear();
+  }
   return true;
 }
 

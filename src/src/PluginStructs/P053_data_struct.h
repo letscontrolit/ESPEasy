@@ -7,6 +7,7 @@
 
 // # define P053_LOW_LEVEL_DEBUG
 
+# include "../Helpers/LongTermTimer.h"
 
 # include <ESPeasySerial.h>
 
@@ -63,6 +64,8 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 
 # define PLUGIN_053_RST_PIN               CONFIG_PIN3
 # define PLUGIN_053_PWR_PIN               PCONFIG(3)
+
+# define PLUGIN_053_SEC_IGNORE_AFTER_WAKE PCONFIG(5)
 
 # define PLUGIN_053_DATA_PROCESSING_FLAGS PCONFIG(4)
 
@@ -121,12 +124,14 @@ public:
     const ESPEasySerialPort port,
     int8_t                  resetPin,
     int8_t                  pwrPin,
-    PMSx003_type            sensortype
-                   # ifdef  PLUGIN_053_ENABLE_EXTRA_SENSORS
+    PMSx003_type            sensortype,
+    uint32_t               delay_read_after_wakeup_ms
+# ifdef                     PLUGIN_053_ENABLE_EXTRA_SENSORS
     ,
-    bool                    oversample,
+    bool                    oversample
+    ,
     bool                    splitCntBins
-                   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
     );
 
   P053_data_struct() = delete;
@@ -206,16 +211,18 @@ private:
   const taskIndex_t  _taskIndex  = INVALID_TASK_INDEX;
   const PMSx003_type _sensortype;
   # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  float      _data[PMS_RECEIVE_BUFFER_SIZE] = { 0 };
   const bool _oversample                    = false;
   const bool _splitCntBins                  = false;
+  float      _data[PMS_RECEIVE_BUFFER_SIZE] = { 0 };
   uint32_t   _value_mask                    = 0; // Keeping track of values already sent.
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  uint32_t     _values_received          = 0;
-  uint16_t     _last_checksum            = 0;    // To detect duplicate messages
-  const int8_t _resetPin                 = -1;
-  const int8_t _pwrPin                   = -1;
-  bool         _activeReadingModeEnabled = true;
+  LongTermTimer  _last_wakeup_moment;
+  const uint32_t _delay_read_after_wakeup_ms = 0;
+  uint32_t       _values_received            = 0;
+  uint16_t       _last_checksum              = 0; // To detect duplicate messages
+  const int8_t   _resetPin                   = -1;
+  const int8_t   _pwrPin                     = -1;
+  bool           _activeReadingModeEnabled   = true;
 };
 
 

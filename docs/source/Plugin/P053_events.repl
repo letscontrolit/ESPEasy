@@ -90,3 +90,4 @@
    "
 
 .. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
+   Except when "Split count bins" is checked, then the "count/0.1L" values represent only a single bin.

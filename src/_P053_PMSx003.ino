@@ -177,8 +177,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         };
         addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
       }
+
+      addFormSubHeader(F("Output"));
       {
-        addFormSubHeader(F("Output"));
         const __FlashStringHelper *outputOptions[] = {
           toString(PMSx003_output_selection::Particles_ug_m3),
           toString(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
@@ -208,18 +209,24 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F(
                       "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
-      {
-        addFormSubHeader(F("Data Processing"));
+      # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
+      addFormSubHeader(F("Data Processing"));
+      {
+        addFormNumericBox(F("Sensor init time after wake"), F("p053_delay_wake"),
+                          PLUGIN_053_SEC_IGNORE_AFTER_WAKE, 0, 30);
+        addUnit(F("sec"));
+
+        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
         addFormCheckBox(F("Oversampling"), F("p053_oversample"),
                         bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT));
 
 
-        addFormCheckBox(F("Split 'count/0.1L' Bins"), F("p053_split_bins"),
+        addFormCheckBox(F("Split count bins"), F("p053_split_bins"),
                         bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT));
-        addFormNote(F("Subtract next bin counts to get counts per bin, not all greater than."));
+        addFormNote(F("Subtract next \"count/0.1L\" bin counts to get counts per bin, not a range of bins"));
+        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       }
-      # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       success = true;
       break;
     }
@@ -237,6 +244,7 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
       PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
       PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("p053_events"));
+      PLUGIN_053_SEC_IGNORE_AFTER_WAKE = getFormItemInt(F("p053_delay_wake"));
 
       if (isFormItemChecked(F("p053_oversample"))) {
         bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
@@ -303,7 +311,8 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
           rxPin, txPin, port,
           PLUGIN_053_RST_PIN,
           PLUGIN_053_PWR_PIN,
-          Plugin_053_sensortype
+          Plugin_053_sensortype,
+          PLUGIN_053_SEC_IGNORE_AFTER_WAKE * 1000u
           # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
           , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT)
           , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)

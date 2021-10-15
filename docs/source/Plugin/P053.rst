@@ -77,6 +77,8 @@ For example:
 * cnt2.5/100ml indicates the number of particles with diameter **beyond** 2.5 micrometres in 0.1 L of air. (datasheet Plantower PMS5003)
 
 .. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
+   Except when "Split count bins" is checked, then the "count/0.1L" values represent only a single bin.
+
 
 Effects of Humidity
 """""""""""""""""""
@@ -265,7 +267,7 @@ Output values
 
 With most **Sensor model** options, except the PMS2003 and PMS3003 models, extra output values are available. To choose which values are made available in the task, this combobox provides the available options.
 
-.. note:: Changing this output selector will toggle a reload of the page. When the output selection has changed, the task value names will be reset to their (new) default names and the nr. of decimals will be set to proper values. (e.g. 1 decimal for temp/hum and 3 decimals for Formaldehyde)
+.. note:: Changing this output selector will toggle a reload of the page. When the output selection has changed, the task value names will be reset to their (new) default names and the nr. of decimals will be set to proper values. (e.g. 1 decimal for temp/hum and 3 decimals for Formaldehyde) The nr of decimals will be set to at least 1 when oversampling is enabled.
 
 Available options:
 
@@ -305,6 +307,7 @@ With:
 .. image:: P053_OutputValuesCnt.png
 
 .. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
+   Except when "Split count bins" is checked, then the "count/0.1L" values represent only a single bin.
 
 
 Events for non-output values
@@ -355,6 +358,20 @@ Typically a sample is sent every 800 msec, with shorter intervals when the data 
 However, the sensor itself does not always have new data when a packet is sent by the sensor.
 These duplicate messages are detected and ignored.
 
+Sensor init time after wake
+"""""""""""""""""""""""""""
+
+The Plantower datasheet suggests to let the sensor run for at least 30 seconds after power on (or wake up) to get a reliable reading.
+
+When set to a value over 0 seconds, a timer will be set when the sensor is called to wakeup.
+During this period, any received sample will be ignored.
+
+If running the sensor at an interval to save energy consumption and extend the sensors lifetime, make sure the "active" duration is longer than this sensor init time.
+The sensor typically needs 2.3 seconds to complete a measurement.
+
+So a good duration for wake time is at least 35 - 40 seconds (oversampling enabled).
+
+
 Oversampling
 """"""""""""
 
@@ -368,14 +385,14 @@ The default nr of decimals will be set to 1 when oversampling is enabled. (may r
 .. note:: When putting the sensor to sleep, any collected data in the averaging buffer is flushed by scheduling a ``PLUGIN_READ``. This will output the data to any connected controller and generate the appropriate events.
    Any data still present in the buffer when waking the sensor is flushed, to make sure no old and new data is merged.
 
-Split 'count/0.1L' Bins
+Split count bins
 """""""""""""""""""""""
 
 The "count/0.1L" values are based on particles with at least the given size.
 Thus a ``cnt0.3`` value describes all particles with a size of at least 0.3 micron.
 
 In some use cases it can be useful to count only the particles of a specific size, like 0.3 ... 0.5 micron.
-When "Split 'count/0.1L' Bins" is checked, the recorded counted values will be split over single bins.
+When "Split count bins" is checked, the recorded counted values will be split over single bins.
 
 
 Lifetime Helper
