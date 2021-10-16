@@ -200,7 +200,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("MAX1704x");
       break;
     case 0x38:
-      result =  F("PCF8574A,AHT10/20/21");
+      result +=  F("PCF8574A,AHT10/20/21");
       break;
     case 0x3A:
     case 0x3B:
@@ -209,7 +209,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("PCF8574A");
       break;
     case 0x39:
-      result =  F("PCF8574A,TSL2561,APDS9960,AHT10");
+      result +=  F("PCF8574A,TSL2561,APDS9960,AHT10");
       break;
     case 0x3C:
     case 0x3D:
