@@ -55,11 +55,12 @@
 // See https://gathering.tweakers.net/forum/list_messages/1690945 for more information
 // code/idea was inspired by first release of code from 'Thinkpad'
 
+#ifdef USES_P118
+
 #include <SPI.h>
 #include "IthoCC1101.h"
 #include "IthoPacket.h"
 #include "_Plugin_Helper.h"
-#ifdef USES_P118
 
 //This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN__ExtraSettingsStruct
@@ -87,7 +88,7 @@ volatile bool PLUGIN_118_Int = false;
 
 #define PLUGIN_118
 #define PLUGIN_ID_118         118
-#define PLUGIN_NAME_118       "Itho ventilation remote"
+#define PLUGIN_NAME_118       "Remote - Itho ventilation"
 #define PLUGIN_VALUENAME1_118 "State"
 #define PLUGIN_VALUENAME2_118 "Timer"
 #define PLUGIN_VALUENAME3_118 "LastIDindex"
@@ -115,7 +116,8 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 			Device[deviceCount].FormulaOption = false;
 			Device[deviceCount].ValueCount = 3;
 			Device[deviceCount].SendDataOption = true;
-			Device[deviceCount].TimerOption = true;
+			Device[deviceCount].TimerOption = false;
+			Device[deviceCount].TimerOptional = true;
 			Device[deviceCount].GlobalSyncOption = true;
 		  break;
 		}
@@ -244,134 +246,149 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 	case PLUGIN_WRITE: {
 		String tmpString = string;
 		String cmd = parseString(tmpString, 1);
-		String param1 = parseString(tmpString, 2);
 			if (cmd.equalsIgnoreCase(F("STATE")))
 			{
-
-				if (param1.equalsIgnoreCase(F("1111")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoJoin);
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'join' to Itho unit"));
-					printWebString += F("Sent command for 'join' to Itho unit");
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("9999")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoLeave);
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'leave' to Itho unit"));
-					printWebString += F("Sent command for 'leave' to Itho unit");
-					success = true;
-				}
-			  if (param1.equalsIgnoreCase(F("0")))
+				switch(event->Par1) {
+					case 1111:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoJoin);
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'join' to Itho unit"));
+						printWebString += F("Sent command for 'join' to Itho unit");
+						success = true;
+						break;
+					}
+				 	case 9999:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoLeave);
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'leave' to Itho unit"));
+						printWebString += F("Sent command for 'leave' to Itho unit");
+						success = true;
+						break;
+					}
+			  	case 0:
 			    {
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoStandby);
-					PLUGIN_118_State=0;
-					PLUGIN_118_Timer=0;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'standby' to Itho unit"));
-					printWebString += F("Sent command for 'standby' to Itho unit");
-					success = true;
-				 }
-				if (param1.equalsIgnoreCase(F("1")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoLow);
-					PLUGIN_118_State=1;
-					PLUGIN_118_Timer=0;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'low speed' to Itho unit"));
-					printWebString += F("Sent command for 'low speed' to Itho unit");
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("2")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoMedium);
-					PLUGIN_118_State=2;
-					PLUGIN_118_Timer=0;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'medium speed' to Itho unit"));
-					printWebString += F("Sent command for 'medium speed' to Itho unit");
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("3")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoHigh);
-					PLUGIN_118_State=3;
-					PLUGIN_118_Timer=0;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'high speed' to Itho unit"));
-					printWebString += F("Sent command for 'high speed' to Itho unit");
-
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("4")))
-				{
-					noInterrupts();
-				  PLUGIN_118_rf.sendCommand(IthoFull);
-					PLUGIN_118_State=4;
-					PLUGIN_118_Timer=0;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'full speed' to Itho unit"));
-					printWebString += F("Sent command for 'full speed' to Itho unit");
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("13")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoTimer1);
-					PLUGIN_118_State=13;
-					PLUGIN_118_Timer=PLUGIN_118_Time1;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 1' to Itho unit"));
-					printWebString += F("Sent command for 'timer 1' to Itho unit");
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("23")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoTimer2);
-					PLUGIN_118_State=23;
-					PLUGIN_118_Timer=PLUGIN_118_Time2;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 2' to Itho unit"));
-					printWebString += F("Sent command for 'timer 2' to Itho unit");
-					success = true;
-				}
-				if (param1.equalsIgnoreCase(F("33")))
-				{
-					noInterrupts();
-					PLUGIN_118_rf.sendCommand(IthoTimer3);
-					PLUGIN_118_State=33;
-					PLUGIN_118_Timer=PLUGIN_118_Time3;
-					PLUGIN_118_LastIDindex = 0;
-					interrupts();
-					PLUGIN_118_rf.initReceive();
-					addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 3' to Itho unit"));
-					printWebString += F("Sent command for 'timer 3' to Itho unit");
-					success = true;
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoStandby);
+						PLUGIN_118_State=0;
+						PLUGIN_118_Timer=0;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'standby' to Itho unit"));
+						printWebString += F("Sent command for 'standby' to Itho unit");
+						success = true;
+						break;
+				 	}
+					case 1:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoLow);
+						PLUGIN_118_State=1;
+						PLUGIN_118_Timer=0;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'low speed' to Itho unit"));
+						printWebString += F("Sent command for 'low speed' to Itho unit");
+						success = true;
+						break;
+					}
+					case 2:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoMedium);
+						PLUGIN_118_State=2;
+						PLUGIN_118_Timer=0;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'medium speed' to Itho unit"));
+						printWebString += F("Sent command for 'medium speed' to Itho unit");
+						success = true;
+						break;
+					}
+					case 3:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoHigh);
+						PLUGIN_118_State=3;
+						PLUGIN_118_Timer=0;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'high speed' to Itho unit"));
+						printWebString += F("Sent command for 'high speed' to Itho unit");
+						success = true;
+						break;
+					}
+				 	case 4:
+					{
+						noInterrupts();
+					  PLUGIN_118_rf.sendCommand(IthoFull);
+						PLUGIN_118_State=4;
+						PLUGIN_118_Timer=0;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'full speed' to Itho unit"));
+						printWebString += F("Sent command for 'full speed' to Itho unit");
+						success = true;
+						break;
+					}
+					case 13:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoTimer1);
+						PLUGIN_118_State=13;
+						PLUGIN_118_Timer=PLUGIN_118_Time1;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 1' to Itho unit"));
+						printWebString += F("Sent command for 'timer 1' to Itho unit");
+						success = true;
+						break;
+					}
+					case 23:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoTimer2);
+						PLUGIN_118_State=23;
+						PLUGIN_118_Timer=PLUGIN_118_Time2;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 2' to Itho unit"));
+						printWebString += F("Sent command for 'timer 2' to Itho unit");
+						success = true;
+						break;
+					}
+					case 33:
+					{
+						noInterrupts();
+						PLUGIN_118_rf.sendCommand(IthoTimer3);
+						PLUGIN_118_State=33;
+						PLUGIN_118_Timer=PLUGIN_118_Time3;
+						PLUGIN_118_LastIDindex = 0;
+						interrupts();
+						PLUGIN_118_rf.initReceive();
+						addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 3' to Itho unit"));
+						printWebString += F("Sent command for 'timer 3' to Itho unit");
+						success = true;
+						break;
+					}
+					default:
+					{
+						addLog(LOG_LEVEL_INFO, F("Invalid command parameter"));
+						printWebString += F("Invalid command parameter");
+						success = true;
+					}
 				}
 			}
 	  break;
