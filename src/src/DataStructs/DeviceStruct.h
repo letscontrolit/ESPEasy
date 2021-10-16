@@ -71,6 +71,12 @@ struct __attribute__((__packed__)) DeviceStruct
 
   bool configurableDecimals() const;
 
+  bool isSerial() const;
+
+  bool isSPI() const;
+
+  bool isCustom() const;
+
   uint8_t               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   uint8_t               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING

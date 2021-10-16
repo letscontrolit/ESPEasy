@@ -165,9 +165,6 @@ void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSeria
 void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef, bool allowSoftwareSerial) {
   // Field for I2C addr & RX are shared
   // Field for channel and TX are shared
-  #ifndef DISABLE_SC16IS752_Serial
-  serialHelper_addI2CuartSelectors(rxPinDef, txPinDef);
-  #endif
   #ifdef ESP8266
 
   // Script to show GPIO pins for SoftwareSerial or I2C addresses for the I2C to UART bridge
@@ -243,7 +240,10 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
                          options, ids, NULL,
                          static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)),
                          F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+#ifndef DISABLE_SC16IS752_Serial
+  serialHelper_addI2CuartSelectors(rxPinDef, txPinDef);
+#endif
+
 #ifdef ESP8266
   if ((rxPinDef == 15) || (txPinDef == 15)) {
     addFormNote(F("GPIO-15 (D8) requires a Buffer Circuit (PNP transistor) or ESP boot may fail."));

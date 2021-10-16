@@ -639,19 +639,21 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       addTableSeparator(F("Serial Port Configuration"), 2, 3);
 
-      // Optional reset pin RN2xx3
-      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("taskdevicepin3"), resetpin);
+      // FIXME TD-er: Add port selector
+      serialHelper_webformLoad(ESPEasySerialPort::not_set, rxpin, txpin, true);
 
       // Show serial port selection
       addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_RX(false),                   F("taskdevicepin1"), rxpin);
       addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_TX(false),                   F("taskdevicepin2"), txpin);
 
-      // FIXME TD-er: Add port selector
-      serialHelper_webformLoad(ESPEasySerialPort::not_set, rxpin, txpin, true);
+      html_add_script(F("document.getElementById('serPort').onchange();"), false);
 
       addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), baudrate, 2400, 115200);
       addUnit(F("baud"));
       addFormNote(F("Module default baudrate: 57600 bps"));
+
+      // Optional reset pin RN2xx3
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("taskdevicepin3"), resetpin);
 
       addTableSeparator(F("Device Status"), 2, 3);
 
