@@ -1,0 +1,22 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``pmsx003,wake``
+
+        ","
+        Either pulls the ``PWR_SET`` pin high, or writes wake command to the sensor.
+        "
+        "
+        ``pmsx003,sleep``
+
+        ","
+        Either pulls the ``PWR_SET`` pin low, or writes sleep command to the sensor.
+        "
+        "
+        ``pmsx003,reset``
+
+        ","
+        If reset pin is set, the pin will be pulled down for 250 msec to reset the sensor.
+        "

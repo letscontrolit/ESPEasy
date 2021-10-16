@@ -183,12 +183,12 @@ void hardwareInit()
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (Settings.isI2CEnabled())
+  if (!Settings.isI2CEnabled())
   {
     return;
   }
   addLog(LOG_LEVEL_INFO, F("INIT : I2C"));
-  I2CSelectClockSpeed(false); // Set normal clock speed
+  I2CSelectHighClockSpeed(); // Set normal clock speed
 
   if (Settings.WireClockStretchLimit)
   {
@@ -237,19 +237,56 @@ void initI2C() {
   }
 }
 
-void I2CSelectClockSpeed(bool setLowSpeed) {
+void I2CSelectHighClockSpeed() {
+  I2CSelectClockSpeed(Settings.I2C_clockSpeed);
+}
+
+void I2CSelectLowClockSpeed() {
+  I2CSelectClockSpeed(Settings.I2C_clockSpeed_Slow);
+}
+
+void I2CSelect_Max100kHz_ClockSpeed() {
+  if (Settings.I2C_clockSpeed <= 100000) {
+    I2CSelectHighClockSpeed();
+  } else if (Settings.I2C_clockSpeed_Slow <= 100000) {
+    I2CSelectLowClockSpeed();
+  } else {
+    I2CSelectClockSpeed(100000);
+  }
+}
+
+void I2CSelectClockSpeed(uint32_t clockFreq) {
+  I2CBegin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, clockFreq);
+}
+
+void I2CForceResetBus_swap_pins(uint8_t address) {
+  if (!Settings.EnableClearHangingI2Cbus()) return;
+  // As a final work-around, we temporary swap SDA and SCL, perform a scan and return pin order.
+  I2CBegin(Settings.Pin_i2c_scl, Settings.Pin_i2c_sda, 100000);
+  Wire.beginTransmission(address);
+  Wire.endTransmission();
+  delay(1);
+  // Now we switch back to the correct pins
+  I2CSelectClockSpeed(100000);
+}
+
+void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
   static uint32_t lastI2CClockSpeed = 0;
-  const uint32_t newI2CClockSpeed = setLowSpeed ? Settings.I2C_clockSpeed_Slow : Settings.I2C_clockSpeed;
-  if (newI2CClockSpeed == lastI2CClockSpeed) {
+  static int8_t last_sda = -1;
+  static int8_t last_scl = -1;
+  if (clockFreq == lastI2CClockSpeed && sda == last_sda && scl == last_scl) {
     // No need to change the clock speed.
     return;
   }
-  lastI2CClockSpeed = newI2CClockSpeed;
+  lastI2CClockSpeed = clockFreq;
+  last_scl = scl;
+  last_sda = sda;
+
   #ifdef ESP32
-  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, newI2CClockSpeed);
+  Wire.begin(sda, scl, clockFreq);
   #else
-  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
-  Wire.setClock(newI2CClockSpeed);
+  Wire.begin(sda, scl);
+  Wire.setClock(clockFreq);
   #endif
 }
 
