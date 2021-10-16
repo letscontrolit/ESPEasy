@@ -256,16 +256,36 @@ void I2CSelect_Max100kHz_ClockSpeed() {
 }
 
 void I2CSelectClockSpeed(uint32_t clockFreq) {
+  I2CBegin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, clockFreq);
+}
+
+void I2CForceResetBus_swap_pins(uint8_t address) {
+  if (!Settings.EnableClearHangingI2Cbus()) return;
+  // As a final work-around, we temporary swap SDA and SCL, perform a scan and return pin order.
+  I2CBegin(Settings.Pin_i2c_scl, Settings.Pin_i2c_sda, 100000);
+  Wire.beginTransmission(address);
+  Wire.endTransmission();
+  delay(1);
+  // Now we switch back to the correct pins
+  I2CSelectClockSpeed(100000);
+}
+
+void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
   static uint32_t lastI2CClockSpeed = 0;
-  if (clockFreq == lastI2CClockSpeed) {
+  static int8_t last_sda = -1;
+  static int8_t last_scl = -1;
+  if (clockFreq == lastI2CClockSpeed && sda == last_sda && scl == last_scl) {
     // No need to change the clock speed.
     return;
   }
   lastI2CClockSpeed = clockFreq;
+  last_scl = scl;
+  last_sda = sda;
+
   #ifdef ESP32
-  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl, clockFreq);
+  Wire.begin(sda, scl, clockFreq);
   #else
-  Wire.begin(Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+  Wire.begin(sda, scl);
   Wire.setClock(clockFreq);
   #endif
 }

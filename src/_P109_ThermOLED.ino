@@ -169,6 +169,23 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Btn L: ");
+      string += formatGpioLabel(CONFIG_PIN1, false);
+      string += event->String1; // newline
+      string += F("Btn R: ");
+      string += formatGpioLabel(CONFIG_PIN2, false);
+      string += event->String1; // newline
+      string += F("Btn M: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      string += event->String1; // newline
+      string += F("Relay: ");
+      string += formatGpioLabel(PCONFIG(4), false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper* options5[]      = { F("SSD1306"), F("SH1106") };

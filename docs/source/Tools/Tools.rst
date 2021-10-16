@@ -193,7 +193,7 @@ Showing detected chip and used board definition.
 * **ESP Chip ID**:	Unique chip ID, showin in decimal and hexadecimal notation. Example: ``3740679 (0x391407)``
 * **ESP Chip Frequency**:	Set CPU clock frequency. Example: ``80 MHz``
 * **ESP Chip Model**:	Detected or configured CPU platform. Example: ``ESP8266``
-* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1`
+* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1``
 * **ESP Board Name**:	Used board definition. Example: ``PLATFORMIO_ESP12E``
 
 Storage
@@ -350,6 +350,29 @@ However it appeared there are some use cases where it may be useful to use TaskV
 To use it on other then a 'dummy' task, this option must be checked.
 
 Default: unchecked
+
+
+Try clear I2C bus when stuck
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2021-09-26
+
+Occasionally the I2C bus can become "stuck".
+This is quite hard to reproduce, as it is very likely this is caused by external noise.
+Another possible cause can be that the ESP rebooted in the middle of an I2C transaction.
+
+When this happens, the ESP cannot communicate with any I2C device on the bus, until a power cycle.
+In every occasion when a user reported this, it appeared the SDA line was held low by an I2C device.
+
+With this option checked to clear the I2C bus, the ESP will detect if the I2C bus is "stuck" and does make several attempts to clear the I2C bus without the need for a power cycle.
+
+As a last resort, the user may try to perform an I2C scan via the web interface, which will then perform an even more rigorous attempt to clear the bus.
+This will swap the SDA/SCL pins and tries to perform a scan and then restores the correct SDA/SCL assignment.
+
+If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on itself, please open an issue for this on GitHub.
+
+Default: unchecked
+
 
 
 

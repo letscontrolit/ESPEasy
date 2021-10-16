@@ -444,7 +444,9 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 #ifdef PLUGIN_BUILD_IR
-    #define PLUGIN_DESCR  "IR"
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
+      #define PLUGIN_DESCR  "IR"
+    #endif
     #define USES_P016      // IR
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
     #define USES_P035      // IRTX
@@ -452,7 +454,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
-    #ifndef PLUGIN_DESCR
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
     #define USES_P016      // IR
@@ -469,7 +471,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
-    #ifndef PLUGIN_DESCR
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
     #define USES_P035      // IRTX
@@ -703,7 +705,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MAX_ESP32
-    #define PLUGIN_DESCR  "MAX ESP32"
+    #ifndef PLUGIN_DESCR
+      #define PLUGIN_DESCR  "MAX ESP32"
+    #endif
     #ifndef ESP32
         #define ESP32
     #endif
@@ -1437,9 +1441,7 @@ To create/register a plugin, you have to :
 
   // Controllers
   #ifndef USES_C015
-    #ifndef ESP32
-      #define USES_C015   // Blynk (?doesn't compile on ESP32?)
-    #endif
+    #define USES_C015   // Blynk
   #endif
   #ifndef USES_C016
     #define USES_C016   // Cache controller
