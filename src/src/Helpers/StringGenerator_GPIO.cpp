@@ -26,7 +26,7 @@ String formatGpioLabel(int gpio, bool includeWarning) {
     }
     return createGPIO_label(gpio, pinnr, input, output, warning);
   }
-  return "-";
+  return F("-");
 }
 
 String formatGpioName(const String& label, gpio_direction direction, bool optional) {

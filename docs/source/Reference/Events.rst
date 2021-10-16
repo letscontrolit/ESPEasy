@@ -326,10 +326,10 @@ Besides the internal events there's also plugin specific events. These are liste
 .. .. include:: ../Plugin/P052_events.repl
 
 
-.. P053 :ref:`P053_page`
-.. ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+P053 :ref:`P053_page`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. .. include:: ../Plugin/P053_events.repl
+.. include:: ../Plugin/P053_events.repl
 
 
 .. P054 :ref:`P054_page`
