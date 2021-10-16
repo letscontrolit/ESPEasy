@@ -163,7 +163,7 @@ uint8_t P053_data_struct::packetSize() const {
 
 bool P053_data_struct::packetAvailable()
 {
-  if (_easySerial != nullptr) // Software serial
+  if (_easySerial != nullptr)
   {
     // When there is enough data in the buffer, search through the buffer to
     // find header (buffer may be out of sync)
@@ -350,14 +350,14 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       # endif // ifndef BUILD_NO_DEBUG
     return false;
   }
-    # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Data is checked and good, fill in output
   UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
   UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
   UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
   _values_received                 = 1;
-    # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Store in the averaging buffer to process later
   if (!_oversample) {
@@ -368,7 +368,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     _data[i] += data[i];
   }
   ++_values_received;
-    # endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 
   // Store new checksum, to help detect duplicates.
@@ -433,6 +433,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
 
     // Send out events for those values not present in the task output
     switch (GET_PLUGIN_053_EVENT_OUT_SELECTOR) {
+      case PMSx003_event_datatype::Event_None: break;
       case PMSx003_event_datatype::Event_All:
       {
         // Send all remaining
