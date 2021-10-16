@@ -130,6 +130,14 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Driver#8: ");
+      string += formatGpioLabel(static_cast<int>(Settings.TaskDevicePin[3][event->TaskIndex]), false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
       {
         //default values

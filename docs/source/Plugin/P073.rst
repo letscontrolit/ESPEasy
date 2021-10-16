@@ -176,6 +176,9 @@ Change log
   |added|
   ``7dbin`` command.
 
+  |added| 2021-10-05:
+  ``7output`` command.
+
 .. versionadded:: 1.0
   ...
 
