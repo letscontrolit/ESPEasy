@@ -115,7 +115,6 @@ void SetWiFiTXpower(float dBm, float rssi);
 float GetRSSIthreshold(float& maxTXpwr);
 WiFiConnectionProtocol getConnectionProtocol();
 void WifiDisconnect();
-void WiFiScanPeriodical();
 bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);
 void WifiScan();
