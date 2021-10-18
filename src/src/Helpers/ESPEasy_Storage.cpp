@@ -307,8 +307,8 @@ String BuildFixes()
       }
     }
     // Remove PeriodicalScanWiFi
-    // Was inverted value.
-    bitWrite(Settings.VariousBits1, 15, !false);
+    // Reset to default 0 for future use.
+    bitWrite(Settings.VariousBits1, 15, 0);
   }
   #endif
 
