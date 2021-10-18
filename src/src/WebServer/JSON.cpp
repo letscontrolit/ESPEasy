@@ -248,7 +248,6 @@ void handle_json()
         LabelType::WIFI_SENS_MARGIN,
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
         LabelType::WIFI_NR_EXTRA_SCANS,
-        LabelType::WIFI_PERIODICAL_SCAN,
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
 

@@ -813,19 +813,6 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WiFiScanPeriodical() {
-  WiFi_AP_Candidates.purge_expired();
-  if (!Settings.PeriodicalScanWiFi()) {
-    return;
-  }
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-
-  const bool async = true;
-  WifiScan(async);
-}
-
 bool WiFiScanAllowed() {
   if (WiFi_AP_Candidates.scanComplete() == WIFI_SCAN_RUNNING) {
     return false;

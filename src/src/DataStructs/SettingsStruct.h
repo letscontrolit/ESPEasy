@@ -105,10 +105,6 @@ class SettingsStruct_tmpl
   bool ApDontForceSetup() const;
   void ApDontForceSetup(bool value);
 
-  // Perform periodical WiFi scans so that in case of a WiFi disconnect a node may reconnect to a better AP
-  bool PeriodicalScanWiFi() const;
-  void PeriodicalScanWiFi(bool value);
-
   // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
   bool JSONBoolWithoutQuotes() const;
   void JSONBoolWithoutQuotes(bool value);

@@ -29,6 +29,7 @@
 #include "../Globals/Statistics.h"
 #include "../Globals/ESPEasy_now_handler.h"
 #include "../Globals/SendData_DuplicateChecker.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
@@ -235,7 +236,7 @@ void runEach30Seconds()
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
   }
-  WiFiScanPeriodical();
+  WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);
   refreshNodeList();
 
