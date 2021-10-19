@@ -9,6 +9,7 @@ chardet==4.0.0
 click==7.1.2
 colorama==0.4.3
 commonmark==0.9.1
+cryptography==35.0.0
 docutils==0.16
 idna==2.10
 imagesize==1.2.0
