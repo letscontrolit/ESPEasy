@@ -421,7 +421,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             }
             case (3):
             {
-              float uvindex = float((P046_data->Plugin_046_databuffer[17]) / 10);
+              float uvindex = static_cast<float>(P046_data->Plugin_046_databuffer[17]) / 10.0f;
               UserVar[event->BaseVarIndex] = uvindex;
               break;
             }
