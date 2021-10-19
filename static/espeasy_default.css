@@ -457,7 +457,7 @@ table.multirow tr:nth-child(odd) {
 
 .menubar {
 	position: inherit;
-	top: 55px;
+	top: 54px;
 	width: 100%
 }
 a.menu {
@@ -484,7 +484,7 @@ a.menu {
 }
 
 .menu:hover {
-	background: #DEF;
+	background: #0000003d;
 	color: #000
 }
 
@@ -767,7 +767,6 @@ section {
 	}
 	
 	.menu:hover {
-		background: #444;
 		color: #fff
 	}
 
