@@ -67,7 +67,7 @@
 .. |P035_type| replace:: :cyan:`Communication`
 .. |P035_typename| replace:: :cyan:`Communication - IR Transmit`
 .. |P035_porttype| replace:: `.`
-.. |P035_status| replace:: :green:`NORMAL`
+.. |P035_status| replace:: :yellow:`IR`
 .. |P035_github| replace:: P035_IRTX.ino
 .. _P035_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P035_IRTX.ino
 .. |P035_usedby| replace:: `.`

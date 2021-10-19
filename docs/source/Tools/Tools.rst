@@ -193,7 +193,7 @@ Showing detected chip and used board definition.
 * **ESP Chip ID**:	Unique chip ID, showin in decimal and hexadecimal notation. Example: ``3740679 (0x391407)``
 * **ESP Chip Frequency**:	Set CPU clock frequency. Example: ``80 MHz``
 * **ESP Chip Model**:	Detected or configured CPU platform. Example: ``ESP8266``
-* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1`
+* **ESP Chip Cores**:	Detected or configured number of CPU cores. Example: ``1``
 * **ESP Board Name**:	Used board definition. Example: ``PLATFORMIO_ESP12E``
 
 Storage
@@ -613,19 +613,7 @@ Periodical Scan WiFi
 ^^^^^^^^^^^^^^^^^^^^
 
 Added: 2021-04-16
-
-
-When checked, the ESP will perform an async scan (see previous setting too) every minute to keep the list of known APs up-to-date.
-This has several advantages:
-
-* More likely the best AP will be known when the node needs to reconnect.
-* No "sync" scan is needed to reconnect.
-* The node remains known among other network devices, so it remains more responsive (see also Gratuitous ARP setting)
-
-The drawback may be that overall the node may consume slightly more energy as it may not enter the low power state when "ECO" mode is enabled.
-Also it is yet unknown if it does have a negative impact on overall WiFi performance if a lot of nodes perform Periodical scans. ("a lot" meaning several tens of nodes in a small area)
-
-During a scan the node is listening on a different channel, so it may not respond to requests sent to it for roughly a 1.6 seconds.
+Removed: 2021-10-18
 
 
 Use Last Connected AP from RTC
