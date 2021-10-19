@@ -55,6 +55,38 @@
 
    "
    "
+   ``System#BootMode``
+   Added: 2021-10-18
+  
+   On ESP32 only.
+
+   Event is sent right before network connection is attempted.
+
+   On normal boots (GPIO-0 is high), the ESP32 can record the state of a number of pins and make these available after boot in the ``GPIO_STRAP_REG``.
+
+   ","
+
+   .. code-block:: none
+
+        on System#BootMode do
+          LogEntry,'Boot pins: GPIO-5: %eventvalue1%, GPIO-15: %eventvalue2%, GPIO-4: %eventvalue3%, GPIO-2: %eventvalue4%'
+        endon
+
+   The event values represent the state of these pins in the following order:
+
+   * GPIO-5: ``%eventvalue1%`` (internal pull-up, default: ``1``)
+   * GPIO-15: ``%eventvalue2%`` (internal pull-up, default: ``1``)
+   * GPIO-4: ``%eventvalue3%`` (internal pull-down, default: ``0``)
+   * GPIO-2: ``%eventvalue4%`` (internal pull-down, default: ``0``)
+
+   The standard BootMode event will be: ``System#BootMode=1,1,0,0``
+   
+   N.B. When pulling down GPIO-15 during boot, the ROM bootloader messages will be silenced.
+
+   N.B.2 Do not pull GPIO-2 high when GPIO-0 is low for programming mode.
+
+   "
+   "
    ``System#Boot``
    Triggered at boot time.
    ","
