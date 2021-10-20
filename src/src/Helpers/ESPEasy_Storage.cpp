@@ -294,8 +294,6 @@ String BuildFixes()
       }
     }
     #endif
-    // Disable periodical scanning as it does cause lots of strange issues.
-    Settings.PeriodicalScanWiFi(false);
   }
   if (Settings.Build < 20115) {
     if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
@@ -312,6 +310,9 @@ String BuildFixes()
         Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
       }
     }
+    // Remove PeriodicalScanWiFi
+    // Reset to default 0 for future use.
+    bitWrite(Settings.VariousBits1, 15, 0);
   }
   #endif
 

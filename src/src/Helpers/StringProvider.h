@@ -28,7 +28,6 @@ struct LabelType {
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
     WIFI_NR_EXTRA_SCANS,
-    WIFI_PERIODICAL_SCAN,
     WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876

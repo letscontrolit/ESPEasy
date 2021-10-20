@@ -21,9 +21,6 @@ uint32_t getCurrentFreeStack();
 
 uint32_t getFreeStackWatermark();
 
-// FIXME TD-er: Must check if these functions are also needed for ESP32.
-bool     canYield();
-
 #else // ifdef ESP32
 
 extern "C" {
@@ -34,8 +31,6 @@ extern cont_t *g_pcont;
 uint32_t getCurrentFreeStack();
 
 uint32_t getFreeStackWatermark();
-
-bool     canYield();
 
 bool     allocatedOnStack(const void *address);
 
