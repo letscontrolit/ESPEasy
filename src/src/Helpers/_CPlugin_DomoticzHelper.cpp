@@ -1,4 +1,4 @@
-#include "_CPlugin_DomoticzHelper.h"
+#include "../Helpers/_CPlugin_DomoticzHelper.h"
 
 #ifdef USES_DOMOTICZ
 

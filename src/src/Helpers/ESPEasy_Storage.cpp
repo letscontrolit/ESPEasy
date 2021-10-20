@@ -27,6 +27,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
@@ -37,7 +38,6 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
-#include "ESPEasy_checks.h"
 
 #ifdef ESP32
 #include <MD5Builder.h>
