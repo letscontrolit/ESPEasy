@@ -88,7 +88,7 @@ volatile bool PLUGIN_118_Int = false;
 
 #define PLUGIN_118
 #define PLUGIN_ID_118         118
-#define PLUGIN_NAME_118       "Remote - Itho ventilation"
+#define PLUGIN_NAME_118       "Communication - Itho ventilation"
 #define PLUGIN_VALUENAME1_118 "State"
 #define PLUGIN_VALUENAME2_118 "Timer"
 #define PLUGIN_VALUENAME3_118 "LastIDindex"
@@ -248,148 +248,118 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 		String cmd = parseString(tmpString, 1);
 			if (cmd.equalsIgnoreCase(F("STATE")))
 			{
+				noInterrupts();
 				switch(event->Par1) {
-					case 1111:
+					case 1111: //Join command
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoJoin);
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'join' to Itho unit"));
-						printWebString += F("Sent command for 'join' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'join' to Itho unit"));
 						success = true;
 						break;
 					}
-				 	case 9999:
+				 	case 9999: //Leave command
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoLeave);
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'leave' to Itho unit"));
-						printWebString += F("Sent command for 'leave' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'leave' to Itho unit"));
 						success = true;
 						break;
 					}
-			  	case 0:
+			  	case 0: //Off command
 			    {
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoStandby);
 						PLUGIN_118_State=0;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'standby' to Itho unit"));
-						printWebString += F("Sent command for 'standby' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'standby' to Itho unit"));
 						success = true;
 						break;
 				 	}
-					case 1:
+					case 1: //Fan low
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoLow);
 						PLUGIN_118_State=1;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'low speed' to Itho unit"));
-						printWebString += F("Sent command for 'low speed' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'low speed' to Itho unit"));
 						success = true;
 						break;
 					}
-					case 2:
+					case 2: //Fan medium
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoMedium);
 						PLUGIN_118_State=2;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'medium speed' to Itho unit"));
-						printWebString += F("Sent command for 'medium speed' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'medium speed' to Itho unit"));
 						success = true;
 						break;
 					}
-					case 3:
+					case 3: //Fan high
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoHigh);
 						PLUGIN_118_State=3;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'high speed' to Itho unit"));
-						printWebString += F("Sent command for 'high speed' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'high speed' to Itho unit"));
 						success = true;
 						break;
 					}
-				 	case 4:
+				 	case 4: //Fan full
 					{
-						noInterrupts();
 					  PLUGIN_118_rf.sendCommand(IthoFull);
 						PLUGIN_118_State=4;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'full speed' to Itho unit"));
-						printWebString += F("Sent command for 'full speed' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'full speed' to Itho unit"));
 						success = true;
 						break;
 					}
-					case 13:
+					case 13: //Timer1 - 10 min
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoTimer1);
 						PLUGIN_118_State=13;
 						PLUGIN_118_Timer=PLUGIN_118_Time1;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 1' to Itho unit"));
-						printWebString += F("Sent command for 'timer 1' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'timer 1' to Itho unit"));
 						success = true;
 						break;
 					}
-					case 23:
+					case 23: //Timer2 - 20 min
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoTimer2);
 						PLUGIN_118_State=23;
 						PLUGIN_118_Timer=PLUGIN_118_Time2;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
 						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 2' to Itho unit"));
-						printWebString += F("Sent command for 'timer 2' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'timer 2' to Itho unit"));
 						success = true;
 						break;
 					}
-					case 33:
+					case 33: //Timer3 - 30 min
 					{
-						noInterrupts();
 						PLUGIN_118_rf.sendCommand(IthoTimer3);
 						PLUGIN_118_State=33;
 						PLUGIN_118_Timer=PLUGIN_118_Time3;
 						PLUGIN_118_LastIDindex = 0;
-						interrupts();
-						PLUGIN_118_rf.initReceive();
-						addLog(LOG_LEVEL_INFO, F("Sent command for 'timer 3' to Itho unit"));
-						printWebString += F("Sent command for 'timer 3' to Itho unit");
+						PLUGIN_118_PluginWriteLog(F("Sent command for 'timer 3' to Itho unit"));
 						success = true;
 						break;
 					}
 					default:
 					{
-						addLog(LOG_LEVEL_INFO, F("Invalid command parameter"));
-						printWebString += F("Invalid command parameter");
+						PLUGIN_118_PluginWriteLog(F("Invalid command parameter"));
 						success = true;
 					}
 				}
+				interrupts();
 			}
 	  break;
 	}
@@ -561,5 +531,10 @@ void PLUGIN_118_Publishdata(struct EventStruct *event)
 		addLog(LOG_LEVEL_DEBUG, log);
 }
 
+void PLUGIN_118_PluginWriteLog(String log)
+{
+	addLog(LOG_LEVEL_INFO, log);
+	printWebString += log;
+}
 
 #endif // USES_P118
