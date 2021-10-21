@@ -100,3 +100,16 @@
         ","
         Set the brightness to the provided level.
         "
+        "
+        ``7output,<0..5>``
+
+        ","
+        Change the Display Output setting, available options:
+        
+        * 0 - Manual
+        * 1 - Clock 24h - Blink
+        * 2 - Clock 24h - No Blink
+        * 3 - Clock 12h - Blink
+        * 4 - Clock 12h - No Blink
+        * 5 - Date
+        "

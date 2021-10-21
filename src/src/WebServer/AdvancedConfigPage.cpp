@@ -99,7 +99,6 @@ void handle_advanced() {
     Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
     Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
-    Settings.PeriodicalScanWiFi(isFormItemChecked(LabelType::WIFI_PERIODICAL_SCAN));
     Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
@@ -275,7 +274,6 @@ void handle_advanced() {
     String note = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
     addFormNote(note);
   }
-  addFormCheckBox(LabelType::WIFI_PERIODICAL_SCAN, Settings.PeriodicalScanWiFi());
   addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
 

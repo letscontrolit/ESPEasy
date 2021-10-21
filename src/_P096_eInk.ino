@@ -245,6 +245,14 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("EPD BUSY: ");
+      string += formatGpioLabel(PIN(3), false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), PIN(3));

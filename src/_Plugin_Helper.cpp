@@ -81,6 +81,10 @@ String getPluginCustomArgName(int varNr) {
   return argName;
 }
 
+int getFormItemIntCustomArgName(int varNr) {
+  return getFormItemInt(getPluginCustomArgName(varNr));
+}
+
 // Helper function to create formatted custom values for display in the devices overview page.
 // When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
 // if the regular values should also be displayed.
@@ -136,12 +140,13 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   return found_taskIndex == taskIndex;
 }
 
-bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline)
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex,
+                                      const String& newline,
+                                      String& description)
 {
   struct EventStruct TempEvent(taskIndex);
   TempEvent.String1 = newline;
-  String dummy;
-  return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, dummy);
+  return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, description);
 }
 
 int getValueCountForTask(taskIndex_t taskIndex) {

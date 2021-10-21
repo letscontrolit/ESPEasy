@@ -54,6 +54,12 @@ Indicators (recommended settings)
 
   "XXXXXX", "N/A", "", "", ""
 
+Commands available
+~~~~~~~~~~~~~~~~~~
+
+.. include:: P053_commands.repl
+
+
 Where to buy
 ------------
 
