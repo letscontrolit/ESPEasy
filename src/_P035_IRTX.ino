@@ -395,7 +395,7 @@ bool handleRawRaw2Encoding(const String &cmd) {
       }
       else
       {
-        if ((c == '^' && i + 1 >= total) || idx >= sizeof(buf[0]) * P35_Ntimings)
+        if ((c == '^' && i + 1 >= total) || (idx + 2) >= sizeof(buf[0]) * P35_Ntimings)
         {
           delete[] buf;
           buf = nullptr;
