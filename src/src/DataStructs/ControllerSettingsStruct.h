@@ -148,7 +148,7 @@ struct ControllerSettingsStruct
   
 
   boolean      UseDNS;
-  uint8_t         IP[4];
+  uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];
   char         Publish[129];
@@ -178,6 +178,6 @@ typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_t
   ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
 // Check to see if MakeControllerSettings was successful
-#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)
+#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr ? true : false)
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H
