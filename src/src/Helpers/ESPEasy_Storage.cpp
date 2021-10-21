@@ -219,7 +219,7 @@ String BuildFixes()
     #ifdef USES_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
         LoadControllerSettings(controller_idx, ControllerSettings);
 

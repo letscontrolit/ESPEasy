@@ -505,7 +505,7 @@ void P104_data_struct::configureZones() {
 void P104_data_struct::displayOneZoneText(uint8_t                 zone,
                                           const P104_zone_struct& zstruct,
                                           const String          & text) {
-  if ((nullptr == P) || (zone < 0) || (zone > P104_MAX_ZONES)) { return; } // double check
+  if ((nullptr == P) || (zone < 0) || (zone >= P104_MAX_ZONES)) { return; } // double check
   sZoneInitial[zone].reserve(text.length());
   sZoneInitial[zone] = text; // Keep the original string for future use
   sZoneBuffers[zone].reserve(text.length());
