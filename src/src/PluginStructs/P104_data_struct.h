@@ -307,27 +307,27 @@ struct P104_zone_struct {
   P104_zone_struct(uint8_t _zone) :  text(F("\"\"")), zone(_zone) {}
 
   String   text;
-  int32_t  repeatDelay = -1;
-  uint32_t _repeatTimer;
-  uint16_t speed = 0u;
-  uint16_t pause = 0u;
+  int32_t  repeatDelay  = -1;
+  uint32_t _repeatTimer = 0u;
+  uint16_t speed        = 0u;
+  uint16_t pause        = 0u;
   uint8_t  zone;
-  uint8_t  size = 0u;
-  uint8_t  alignment = 0u;
-  uint8_t  animationIn = 1u; // Doesn't allow 'None'
-  uint8_t  animationOut = 0u;
-  uint8_t  font = 0u;
-  uint8_t  content = 0u;
-  uint8_t  layout = 0u;
+  uint8_t  size          = 0u;
+  uint8_t  alignment     = 0u;
+  uint8_t  animationIn   = 1u; // Doesn't allow 'None'
+  uint8_t  animationOut  = 0u;
+  uint8_t  font          = 0u;
+  uint8_t  content       = 0u;
+  uint8_t  layout        = 0u;
   uint8_t  specialEffect = 0u;
-  uint8_t  offset = 0u;
-  int8_t   brightness = -1;
-  int8_t   inverted = 0;
-  int8_t   _lastChecked = -1;
+  uint8_t  offset        = 0u;
+  int8_t   brightness    = -1;
+  int8_t   inverted      = 0;
+  int8_t   _lastChecked  = -1;
   # ifdef P104_USE_BAR_GRAPH
-  uint16_t _lower = 0u;
-  uint16_t _upper = 0u; // lower and upper pixel numbers
-  uint8_t  _startModule = 0u;   // starting module, end module is _startModule + size - 1
+  uint16_t _lower       = 0u;
+  uint16_t _upper       = 0u; // lower and upper pixel numbers
+  uint8_t  _startModule = 0u; // starting module, end module is _startModule + size - 1
   # endif // ifdef P104_USE_BAR_GRAPH
 };
 
@@ -421,10 +421,10 @@ private:
   int8_t   expectedZones = -1;
   int8_t   previousZones = -1;
   bool     initialized   = false;
-  bool     flasher       = false; // seconds passing flasher
+  bool     flasher       = false;      // seconds passing flasher
 
   // time/date stuff
-  char szTimeL[P104_MAX_MESG] = { 0 };    // dd-mm-yyyy hh:mm:ss\0
+  char szTimeL[P104_MAX_MESG] = { 0 }; // dd-mm-yyyy hh:mm:ss\0
   char szTimeH[P104_MAX_MESG] = { 0 };
 };
 

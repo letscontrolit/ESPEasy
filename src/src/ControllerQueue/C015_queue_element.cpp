@@ -33,6 +33,7 @@ C015_queue_element& C015_queue_element::operator=(C015_queue_element&& other) {
     txt[i]  = std::move(other.txt[i]);
     vPin[i] = other.vPin[i];
   }
+  return *this;
 }
 
 bool C015_queue_element::checkDone(bool succesfull) const {
