@@ -651,7 +651,7 @@ section {
 	#toastmessage,
 	.dotmark,
 	.logviewer {
-		border-color: gray
+		border-color: #00000085
 	}
 	.dotmark {
 		background-color: #eee
@@ -675,7 +675,7 @@ section {
 	}
 	
 	#toastmessage {
-		background-color: #07D;
+		background-color: #00000085;
 		color: #fff
 	}
 
