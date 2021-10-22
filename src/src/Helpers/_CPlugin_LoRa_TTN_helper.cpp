@@ -1,4 +1,4 @@
-#include "_CPlugin_LoRa_TTN_helper.h"
+#include "../Helpers/_CPlugin_LoRa_TTN_helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 

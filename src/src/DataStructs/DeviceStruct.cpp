@@ -1,4 +1,4 @@
-#include "DeviceStruct.h"
+#include "../DataStructs/DeviceStruct.h"
 
 DeviceStruct::DeviceStruct() :
   Number(0), Type(0), VType(Sensor_VType::SENSOR_TYPE_NONE), Ports(0), ValueCount(0),

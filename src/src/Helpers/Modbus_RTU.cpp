@@ -1,9 +1,9 @@
-#include "Modbus_RTU.h"
+#include "../Helpers/Modbus_RTU.h"
 
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "ESPEasy_time_calc.h"
-#include "StringConverter.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
