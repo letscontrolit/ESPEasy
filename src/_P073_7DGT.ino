@@ -292,7 +292,9 @@ struct P073_data_struct : public PluginTaskData_base {
 
         if ((i > 0) && (textToShow.charAt(i - 1) == '.')) { // Handle consecutive periods
           p++;
-          showperiods[p - 1] = true;                        // The period displays as a dot on the previous digit!
+          if ((p - 1) < 8) {
+            showperiods[p - 1] = true;                      // The period displays as a dot on the previous digit!
+          }
         }
       } else if (p < 8) {
         # ifdef P073_7DBIN_COMMAND
@@ -2045,8 +2047,12 @@ void max7219_ShowTemp(struct EventStruct *event, uint8_t din_pin,
   int alignRight = P073_data->rightAlignTempMAX7219 ? 0 : 1;
 
   for (int i = alignRight; i < 8; i++) {
-    max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,
-                     P073_data->showbuffer[(7 + alignRight) - i], P073_data->showperiods[(7 + alignRight) - i]);
+    const int bufIndex = (7 + alignRight) - i;
+    if (bufIndex < 8) {
+      max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,
+                      P073_data->showbuffer[bufIndex],
+                      P073_data->showperiods[bufIndex]);
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-#include "CompiletimeDefines.h"
+#include "../Helpers/CompiletimeDefines.h"
 
 // This file will be "patched" at compiletime by 
 // tools/pio/generate-compiletime-defines.py

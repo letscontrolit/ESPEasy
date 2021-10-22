@@ -9,7 +9,7 @@
 //#include "../Globals/CPlugins.h"
 #include "../Globals/NPlugins.h"
 //#include "../Globals/Plugins.h"
-#include "DeviceStruct.h"
+#include "../DataStructs/DeviceStruct.h"
 
 
 /*********************************************************************************************\

@@ -333,7 +333,7 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col)
 
   sendCommand(0xb0 + row);                              // set page address
   sendCommand(0x00 + ((8 * col + col_offset) & 0x0f));  // set low col address
-  sendCommand(0x10 + ((8 * col >> 4) & 0x0f));          // set high col address
+  sendCommand(0x10 + (((8 * col) >> 4) & 0x0f));          // set high col address
 }
 
 // Prints a string regardless the cursor position.
