@@ -1,4 +1,4 @@
-#include "ESPEasy_time.h"
+#include "../Helpers/ESPEasy_time.h"
 
 #include "../DataTypes/TimeSource.h"
 
@@ -16,7 +16,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <time.h>
 
@@ -146,7 +146,7 @@ unsigned long ESPEasy_time::now() {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
       } else {
-        uint32_t tmp_unixtime;
+        uint32_t tmp_unixtime = 0;;
         if (ExtRTC_get(tmp_unixtime)) {
           unixTime_d = tmp_unixtime;
           timeSource = timeSource_t::External_RTC_time_source;
@@ -717,7 +717,7 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
 
 bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 {
-  bool timeRead = false;
+  unixtime = 0;
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
@@ -735,7 +735,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -752,7 +751,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -770,7 +768,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -787,13 +784,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
 
   }
-  if (timeRead) {
+  if (unixtime != 0) {
     String log = F("ExtRTC: Read external time source: ");
     log += unixtime;
     addLog(LOG_LEVEL_INFO, log);

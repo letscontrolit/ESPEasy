@@ -56,10 +56,10 @@ private:
   bool    HD;
 
   uint16_t UVData[5] = { 0, 0, 0, 0, 0 }; // UVA, Dummy, UVB, UVComp1, UVComp2
-  float    UVAComp;
-  float    UVBComp;
+  float    UVAComp = 0.0f;
+  float    UVBComp = 0.0f;
 
-  bool initialised;
+  bool initialised = false;
 };
 #endif // ifdef USES_P114
 #endif // ifndef PLUGINSTRUCTS_P114_DATA_STRUCT_H

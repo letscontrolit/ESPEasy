@@ -366,7 +366,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
 // #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
-// #define USES_P104   //
+// #define USES_P104   // MAX7219 dotmatrix
 // #define USES_P105   // AHT10/20/21
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
