@@ -611,7 +611,7 @@ String IRCoolixAC::toString(void) const {
   result += addBoolToString(getZoneFollow(), kZoneFollowStr);
   result += addLabeledString(
       (getSensorTemp() == kCoolixSensorTempIgnoreCode)
-          ? kOffStr : uint64ToString(getSensorTemp()) + 'C', kSensorTempStr);
+          ? kOffStr : String(uint64ToString(getSensorTemp()) + 'C'), kSensorTempStr);
   return result;
 }
 

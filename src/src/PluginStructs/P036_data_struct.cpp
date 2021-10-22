@@ -1035,7 +1035,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
   int NFrames; // the number of frames
 
-  if (UserVar[event->BaseVarIndex] == 1) {
+  if (essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) {
     // Display is on.
     ScrollingPages.Scrolling = 1;                                                              // page scrolling running -> no
     // line scrolling allowed

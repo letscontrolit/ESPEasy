@@ -1,4 +1,4 @@
-#include "NodeStruct.h"
+#include "../DataStructs/NodeStruct.h"
 
 const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType) {
   switch (nodeType)

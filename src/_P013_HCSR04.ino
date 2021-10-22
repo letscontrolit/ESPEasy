@@ -249,7 +249,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
 
-          if (value == NO_ECHO)
+          if (essentiallyEqual(value, NO_ECHO))
           {
             log += F(" Error: ");
             log += Plugin_013_getErrorStatusString(event->TaskIndex);
@@ -271,7 +271,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         uint8_t state = 0;
         float   value = Plugin_013_read(event->TaskIndex);
 
-        if ((value != NO_ECHO) && (value < threshold)) {
+        if (!essentiallyEqual(value, NO_ECHO) && definitelyLessThan(value, threshold)) {
           state = 1;
         }
 

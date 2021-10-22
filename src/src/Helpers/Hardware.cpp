@@ -1,4 +1,4 @@
-#include "Hardware.h"
+#include "../Helpers/Hardware.h"
 
 #include "../Commands/GPIO.h"
 #include "../CustomBuild/ESPEasyLimits.h"
