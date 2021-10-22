@@ -63,7 +63,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
       String pubname;
       {
         // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
 
         if (!AllocatedControllerSettings()) {
           addLog(LOG_LEVEL_ERROR, F("C008 : Generic HTTP - Cannot send, out of RAM"));

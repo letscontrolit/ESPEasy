@@ -1,8 +1,8 @@
-#include "msecTimerHandlerStruct.h"
+#include "../Helpers/msecTimerHandlerStruct.h"
 
 #include <Arduino.h>
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 
 #define MAX_SCHEDULER_WAIT_TIME 5 // Max delay used in the scheduler for passing idle time.

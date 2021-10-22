@@ -27,6 +27,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
@@ -37,7 +38,6 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
-#include "ESPEasy_checks.h"
 
 #ifdef ESP32
 #include <MD5Builder.h>
@@ -219,7 +219,7 @@ String BuildFixes()
     #ifdef USES_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
         LoadControllerSettings(controller_idx, ControllerSettings);
 
@@ -290,8 +290,6 @@ String BuildFixes()
       }
     }
     #endif
-    // Disable periodical scanning as it does cause lots of strange issues.
-    Settings.PeriodicalScanWiFi(false);
   }
   if (Settings.Build < 20115) {
     if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
@@ -308,6 +306,9 @@ String BuildFixes()
         Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
       }
     }
+    // Remove PeriodicalScanWiFi
+    // Reset to default 0 for future use.
+    bitWrite(Settings.VariousBits1, 15, 0);
   }
   #endif
 
