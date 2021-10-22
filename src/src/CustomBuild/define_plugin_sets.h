@@ -444,7 +444,9 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 #ifdef PLUGIN_BUILD_IR
-    #define PLUGIN_DESCR  "IR"
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
+      #define PLUGIN_DESCR  "IR"
+    #endif
     #define USES_P016      // IR
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
     #define USES_P035      // IRTX
@@ -452,7 +454,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
-    #ifndef PLUGIN_DESCR
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
     #define USES_P016      // IR
@@ -469,7 +471,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
-    #ifndef PLUGIN_DESCR
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
     #define USES_P035      // IRTX
@@ -703,7 +705,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MAX_ESP32
-    #define PLUGIN_DESCR  "MAX ESP32"
+    #ifndef PLUGIN_DESCR
+      #define PLUGIN_DESCR  "MAX ESP32"
+    #endif
     #ifndef ESP32
         #define ESP32
     #endif
@@ -1108,7 +1112,7 @@ To create/register a plugin, you have to :
 
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
-    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO)
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -1173,6 +1177,9 @@ To create/register a plugin, you have to :
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
+   #if !defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
+    #define LIMIT_BUILD_SIZE // Redice buildsize on ESP8266 to fit in all Display plugins
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1209,9 +1216,11 @@ To create/register a plugin, you have to :
    #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
    #endif
+   #ifndef USES_P104
+    #define USES_P104   // MAX7219 dot matrix
+   #endif
    #ifndef USES_P109
-     // FIXME TD-er: Disabled for now, due to build size.
-     //#define USES_P109   // ThermoOLED
+    #define USES_P109   // ThermoOLED
    #endif
 #endif
 
@@ -1368,10 +1377,16 @@ To create/register a plugin, you have to :
     #define USES_P102   // PZEM004Tv3
   #endif
   #ifndef USES_P103
-    #define USES_P103   // Atlas EZO pH
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
   #endif
   #ifndef USES_P104
-    #define USES_P104   // Atlas EZO EC
+    #define USES_P104   //
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // AHT10/20/21
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   //
   #endif
   #ifndef USES_P105
     #define USES_P105   // AHT10/20/21
@@ -1433,9 +1448,7 @@ To create/register a plugin, you have to :
 
   // Controllers
   #ifndef USES_C015
-    #ifndef ESP32
-      #define USES_C015   // Blynk (?doesn't compile on ESP32?)
-    #endif
+    #define USES_C015   // Blynk
   #endif
   #ifndef USES_C016
     #define USES_C016   // Cache controller

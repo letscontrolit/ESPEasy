@@ -3,6 +3,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RuntimeData.h"
+#include "../Helpers/ESPEasy_math.h"
 
 #ifdef USES_C016
 
@@ -62,7 +63,7 @@ bool C016_queue_element::isDuplicate(const C016_queue_element& other) const {
   }
 
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (other.values[i] != values[i]) {
+    if (!essentiallyEqual(other.values[i] , values[i])) {
       return false;
     }
   }

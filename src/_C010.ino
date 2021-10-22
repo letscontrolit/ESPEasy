@@ -69,7 +69,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
       {
         String pubname;
         {
-          MakeControllerSettings(ControllerSettings);
+          MakeControllerSettings(ControllerSettings); //-V522
 
           if (!AllocatedControllerSettings()) {
             break;

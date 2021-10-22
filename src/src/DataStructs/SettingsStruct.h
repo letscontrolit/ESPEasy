@@ -105,10 +105,6 @@ class SettingsStruct_tmpl
   bool ApDontForceSetup() const;
   void ApDontForceSetup(bool value);
 
-  // Perform periodical WiFi scans so that in case of a WiFi disconnect a node may reconnect to a better AP
-  bool PeriodicalScanWiFi() const;
-  void PeriodicalScanWiFi(bool value);
-
   // When outputting JSON bools use quoted values (on, backward compatible) or use official JSON true/false unquoted
   bool JSONBoolWithoutQuotes() const;
   void JSONBoolWithoutQuotes(bool value);
@@ -116,6 +112,10 @@ class SettingsStruct_tmpl
   // Enable timing statistics (may consume a few kB of RAM)
   bool EnableTimingStats() const;
   void EnableTimingStats(bool value);
+
+  // Allow to actively reset I2C bus if it appears to be hanging.
+  bool EnableClearHangingI2Cbus() const;
+  void EnableClearHangingI2Cbus(bool value);
 
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
@@ -326,7 +326,7 @@ class SettingsStruct_tmpl
   int8_t        SPI_SCLK_pin = -1;
   int8_t        SPI_MISO_pin = -1;
   int8_t        SPI_MOSI_pin = -1;
-  int8_t        alignmentFiller0;  // Should be reused, just added to keep up with alignment
+  int8_t        alignmentFiller0 = 0;  // Should be reused, just added to keep up with alignment
 };
 
 /*

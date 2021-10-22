@@ -36,6 +36,11 @@
 # include "../Helpers/OTA.h"
 #endif // ifdef FEATURE_ARDUINO_OTA
 
+#ifdef ESP32
+#include <soc/boot_mode.h>
+#include <soc/gpio_reg.h>
+#endif
+
 
 #ifdef USE_RTOS_MULTITASKING
 void RTOS_TaskServers(void *parameter)
@@ -224,6 +229,14 @@ void ESPEasy_setup()
   logMemUsageAfter(F("LoadSettings()"));
   #endif
 
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("hardwareInit"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+  hardwareInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("hardwareInit()"));
+  #endif
+
   node_time.restoreFromRTC();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
@@ -244,7 +257,8 @@ void ESPEasy_setup()
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
-  setNetworkMedium(Settings.NetworkMedium);
+  // Do not call setNetworkMedium here as that may try to clean up settings.
+  active_network_medium = Settings.NetworkMedium;
   #endif // ifdef HAS_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
@@ -309,14 +323,6 @@ void ESPEasy_setup()
     Serial.setDebugOutput(true);
   }
 
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("hardwareInit"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-  hardwareInit();
-  #ifndef BUILD_NO_RAM_TRACKER
-  logMemUsageAfter(F("hardwareInit()"));
-  #endif
-
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
@@ -367,6 +373,24 @@ void ESPEasy_setup()
     String event = F("System#Wake");
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
+  #ifdef ESP32
+  if (Settings.UseRules)
+  {
+    const uint32_t gpio_strap =   GPIO_REG_READ(GPIO_STRAP_REG);
+//    BOOT_MODE_GET();
+
+    // Event values: GPIO-5, GPIO-15, GPIO-4, GPIO-2
+    String event = F("System#BootMode=");
+    event += bitRead(gpio_strap, 0); // GPIO-5
+    event += ',';
+    event += bitRead(gpio_strap, 1); // GPIO-15
+    event += ',';
+    event += bitRead(gpio_strap, 2); // GPIO-4
+    event += ',';
+    event += bitRead(gpio_strap, 3); // GPIO-2
+    rulesProcessing(event);
+  }
+  #endif
 
   NetworkConnectRelaxed();
   #ifndef BUILD_NO_RAM_TRACKER

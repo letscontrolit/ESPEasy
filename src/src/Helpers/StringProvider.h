@@ -28,7 +28,6 @@ struct LabelType {
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
     WIFI_NR_EXTRA_SCANS,
-    WIFI_PERIODICAL_SCAN,
     WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
@@ -58,6 +57,7 @@ struct LabelType {
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
     TASKVALUESET_ALL_PLUGINS,
+    ENABLE_CLEAR_HUNG_I2C_BUS,
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -113,6 +113,9 @@ struct LabelType {
     BUILD_PLATFORM,
     GIT_HEAD,
 
+
+    I2C_BUS_STATE,
+    I2C_BUS_CLEARED_COUNT,
 
     SYSLOG_LOG_LEVEL,
     SERIAL_LOG_LEVEL,

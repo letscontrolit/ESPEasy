@@ -122,8 +122,8 @@ private:
 
   uint8_t capture_index[P87_MAX_CAPTURE_INDEX] = { 0 };
 
-  bool capture_index_used[P87_MAX_CAPTURE_INDEX];
-  bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX];
+  bool capture_index_used[P87_MAX_CAPTURE_INDEX] = { 0 };
+  bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX] = { 0 };
   bool regex_empty = false;
 };
 

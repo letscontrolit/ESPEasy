@@ -27,6 +27,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
@@ -37,7 +38,6 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
-#include "ESPEasy_checks.h"
 
 #ifdef ESP32
 #include <MD5Builder.h>
@@ -219,7 +219,7 @@ String BuildFixes()
     #ifdef USES_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
         LoadControllerSettings(controller_idx, ControllerSettings);
 
@@ -282,14 +282,14 @@ String BuildFixes()
     Settings.NumberExtraWiFiScans = 0;
   }
   if (Settings.Build < 20114) {
+    #ifdef USES_P003
     // P003_Pulse was always using the pull-up, now it is a setting.
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
       if (Settings.TaskDeviceNumber[taskIndex] == 3) {
         Settings.TaskDevicePin1PullUp[taskIndex] = true;
       }
     }
-    // Disable periodical scanning as it does cause lots of strange issues.
-    Settings.PeriodicalScanWiFi(false);
+    #endif
   }
   if (Settings.Build < 20115) {
     if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
@@ -298,6 +298,20 @@ String BuildFixes()
       Settings.SPI_MOSI_pin = -1;
     }
   }
+  #ifdef USES_P053
+  if (Settings.Build < 20116) {
+    // Added PWR button, init to "-none-"
+    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+      if (Settings.TaskDeviceNumber[taskIndex] == 53) {
+        Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
+      }
+    }
+    // Remove PeriodicalScanWiFi
+    // Reset to default 0 for future use.
+    bitWrite(Settings.VariousBits1, 15, 0);
+  }
+  #endif
+
 
   Settings.Build = BUILD;
   return SaveSettings();
