@@ -6,7 +6,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 
-#include "Convert.h"
+#include "../Helpers/Convert.h"
 
 class IPAddress;
 

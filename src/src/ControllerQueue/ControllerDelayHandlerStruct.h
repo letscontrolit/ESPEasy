@@ -311,7 +311,7 @@ struct ControllerDelayHandlerStruct {
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
     if (element == nullptr) return;                                                                                       \
-    MakeControllerSettings(ControllerSettings);                                                                        \
+    MakeControllerSettings(ControllerSettings);                                                                         \
     bool ready = true;                                                                                                 \
     if (!AllocatedControllerSettings()) {                                                                              \
       ready = false;                                                                                                   \

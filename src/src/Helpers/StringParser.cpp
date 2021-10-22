@@ -1,5 +1,4 @@
-#include "StringParser.h"
-
+#include "../Helpers/StringParser.h"
 
 #include "../../_Plugin_Helper.h"
 
@@ -19,7 +18,6 @@
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
-#include "../Helpers/StringParser.h"
 
 #include <Arduino.h>
 
