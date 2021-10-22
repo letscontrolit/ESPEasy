@@ -1,4 +1,4 @@
-#include "Plugins.h"
+#include "../Globals/Plugins.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
 

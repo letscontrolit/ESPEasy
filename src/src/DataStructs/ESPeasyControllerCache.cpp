@@ -1,4 +1,4 @@
-#include "ESPEasyControllerCache.h"
+#include "../DataStructs/ESPEasyControllerCache.h"
 
 
 ControllerCache_struct::ControllerCache_struct() {}

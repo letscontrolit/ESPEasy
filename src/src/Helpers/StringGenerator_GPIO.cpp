@@ -1,4 +1,4 @@
-#include "StringGenerator_GPIO.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
