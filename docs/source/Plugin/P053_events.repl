@@ -1,0 +1,93 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``foo#Temp`` Measured temperature in degree Celsius.
+
+   ``foo#Humi`` Measured relative humidity in ``%``.
+
+   A task named ``foo`` running ``PMS5003T`` or ``PMS500ST`` sensor may send an additional event for the measured temperature and humidity.
+   ","
+
+   .. code-block:: none
+
+      on foo#Humi do
+        if %eventvalue1% > 90
+          GPIO,2,1 //LED on
+        else
+          GPIO,2,0 //LED off
+        endif
+      endon
+
+   "
+   "
+   ``foo#HCHO`` Measured Formaldehyde concentration (in mg/m^3)
+
+   A task named ``foo`` running ``PMS5003S`` or ``PMS500ST`` sensor may send an additional event for the measured Formaldehyde concentration.
+   ","
+
+   .. code-block:: none
+
+      on foo#HCHO do
+        if %eventvalue1% > 0.1
+          GPIO,2,1 //LED on
+        else
+          GPIO,2,0 //LED off
+        endif
+      endon
+
+   "
+   "
+   ``foo#cnt0.3`` Counted particles >= 0.3 micron.
+
+   ``foo#cnt0.5`` Counted particles >= 0.5 micron.
+
+   ``foo#cnt1.0`` Counted particles >= 1.0 micron.
+
+   ``foo#cnt2.5`` Counted particles >= 2.5 micron.
+
+   ``foo#cnt5`` Counted particles >= 5 micron.
+
+   ``foo#cnt10`` Counted particles >= 10 micron.
+
+   A task named ``foo`` may send an additional event for the counted number of particles per 0.1 liter (100 ml).
+
+   ","
+
+   .. code-block:: none
+
+      on foo#cnt1.0 do
+        if %eventvalue1% > 300
+          GPIO,2,1 //LED on
+        else
+          GPIO,2,0 //LED off
+        endif
+      endon
+
+   "
+   "
+   ``foo#pm1.0`` Particles <= 1.0 micron.
+
+   ``foo#pm2.5`` Particles <= 2.5 micron.
+
+   ``foo#pm10`` Particles <= 5 micron.
+
+   A task named ``foo`` may send an additional event for the measured particles of a specific size in ug/m^3.
+   
+   ","
+
+   .. code-block:: none
+
+      on foo#pm1.0 do
+        if %eventvalue1% > 300
+          GPIO,2,1 //LED on
+        else
+          GPIO,2,0 //LED off
+        endif
+      endon
+
+   "
+
+.. note:: ``PMxx`` values relate to particles **less than or equal** to said size, while count/100ml relates to  particles of **at least** said size.
+   Except when "Split count bins" is checked, then the "count/0.1L" values represent only a single bin.

@@ -71,7 +71,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
               url += event->idx;
               url += F("&switchcmd=");
 
-              if (UserVar[event->BaseVarIndex] == 0) {
+              if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
                 url += F("Off");
               } else {
                 if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) {

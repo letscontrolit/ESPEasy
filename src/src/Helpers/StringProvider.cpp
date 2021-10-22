@@ -1,4 +1,4 @@
-#include "StringProvider.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef HAS_ETHERNET
 # include "ETH.h"
@@ -54,7 +54,6 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return F("Send With Max TX Power");
     case LabelType::WIFI_NR_EXTRA_SCANS:    return F("Extra WiFi scan loops");
-    case LabelType::WIFI_PERIODICAL_SCAN:   return F("Periodical Scan WiFi");
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return F("Use Last Connected AP from RTC");
 
     case LabelType::FREE_MEM:               return F("Free RAM");
@@ -231,7 +230,6 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
-    case LabelType::WIFI_PERIODICAL_SCAN:   return jsonBool(Settings.PeriodicalScanWiFi());
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return jsonBool(Settings.UseLastWiFiFromRTC());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
