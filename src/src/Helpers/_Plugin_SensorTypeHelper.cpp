@@ -1,4 +1,4 @@
-#include "_Plugin_SensorTypeHelper.h"
+#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../DataStructs/DeviceStruct.h"

@@ -54,7 +54,7 @@ IRsend *Plugin_035_irSender = nullptr;
 
 #define from_32hex(c) ((((c) | ('A' ^ 'a')) - '0') % 39)
 
-#define P35_Ntimings 250 //Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
+#define P35_Ntimings 250u //Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
 
 boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
 {
@@ -385,7 +385,7 @@ bool handleRawRaw2Encoding(const String &cmd) {
       char c = IrRaw[i++];
       if (c == '*')
       {
-        if (i + 2 >= total || idx + (rep = from_32hex(IrRaw[i++])) * 2 > sizeof(buf[0]) * P35_Ntimings)
+        if (((i + 2) >= total) || (idx + (rep = from_32hex(IrRaw[i++])) * 2) > (sizeof(buf[0]) * P35_Ntimings))
         {
           delete[] buf;
           buf = nullptr;
@@ -395,7 +395,7 @@ bool handleRawRaw2Encoding(const String &cmd) {
       }
       else
       {
-        if ((c == '^' && i + 1 >= total) || idx >= sizeof(buf[0]) * P35_Ntimings)
+        if ((c == '^' && ((i + 1u) >= total)) || ((idx + 2u) >= (sizeof(buf[0]) * P35_Ntimings)))
         {
           delete[] buf;
           buf = nullptr;

@@ -75,7 +75,7 @@ jobs:
           key: ${{ runner.os }}-esp8266-${{ hashFiles('platformio*.ini') }}
       - name: Dependencies
         run: |
-          sudo apt install binutils
+          sudo apt install binutils build-essential libffi-dev python-dev libgit2-dev
           pip install -r requirements.txt
           platformio update
       - name: Build and archive

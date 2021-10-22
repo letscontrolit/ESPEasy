@@ -1128,7 +1128,7 @@ bool getGPIOPinStateValues(String& str) {
 
         case 'p':
           logPrefix = F("PCF");
-          success   = mcpgpio_plugin_range_helper(par1, par2, tempValue);
+          success   = pcfgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
           break;
       }
