@@ -265,7 +265,7 @@ void ResetFactory()
 #if DEFAULT_CONTROLLER
   {
     // Place in a scope to have its memory freed ASAP
-    MakeControllerSettings(ControllerSettings);
+    MakeControllerSettings(ControllerSettings); //-V522
 
     if (AllocatedControllerSettings()) {
       safe_strncpy(ControllerSettings.Subscribe,            F(DEFAULT_SUB),            sizeof(ControllerSettings.Subscribe));

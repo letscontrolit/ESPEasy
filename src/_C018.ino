@@ -837,7 +837,7 @@ bool C018_init(struct EventStruct *event) {
   }
   {
     // Allocate ControllerSettings object in a scope, so we can destruct it as soon as possible.
-    MakeControllerSettings(ControllerSettings);
+    MakeControllerSettings(ControllerSettings); //-V522
 
     if (!AllocatedControllerSettings()) {
       return false;

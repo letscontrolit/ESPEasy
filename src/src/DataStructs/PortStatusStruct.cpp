@@ -1,4 +1,4 @@
-#include "PortStatusStruct.h"
+#include "../DataStructs/PortStatusStruct.h"
 
 #include "../DataStructs/PinMode.h"
 

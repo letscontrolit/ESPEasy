@@ -28,6 +28,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
@@ -40,7 +41,6 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-#include "ESPEasy_checks.h"
 
 #ifdef ESP32
 #include <MD5Builder.h>
@@ -222,7 +222,7 @@ String BuildFixes()
     #ifdef USES_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
         LoadControllerSettings(controller_idx, ControllerSettings);
 

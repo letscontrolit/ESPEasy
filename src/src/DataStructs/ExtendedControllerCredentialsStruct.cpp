@@ -1,6 +1,4 @@
-#include "ExtendedControllerCredentialsStruct.h"
-
-
+#include "../DataStructs/ExtendedControllerCredentialsStruct.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 

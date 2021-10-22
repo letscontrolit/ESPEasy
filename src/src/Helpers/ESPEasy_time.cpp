@@ -1,4 +1,4 @@
-#include "ESPEasy_time.h"
+#include "../Helpers/ESPEasy_time.h"
 
 #include "../DataTypes/TimeSource.h"
 
@@ -17,7 +17,7 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <time.h>
 

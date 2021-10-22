@@ -1,4 +1,4 @@
-#include "EventQueue.h"
+#include "../DataStructs/EventQueue.h"
 
 void EventQueueStruct::add(const String& event)
 {

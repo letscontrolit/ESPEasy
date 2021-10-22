@@ -9,7 +9,7 @@
 ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
   if (!AllocatedControllerSettings()) {
     return false;
   }

@@ -1,4 +1,4 @@
-#include "NodeStruct.h"
+#include "../DataStructs/NodeStruct.h"
 
 #include "../../ESPEasy-Globals.h"
 #include "../Globals/SecuritySettings.h"

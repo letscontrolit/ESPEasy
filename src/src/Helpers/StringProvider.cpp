@@ -1,4 +1,4 @@
-#include "StringProvider.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef HAS_ETHERNET
 # include "ETH.h"

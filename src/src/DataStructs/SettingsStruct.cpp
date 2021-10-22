@@ -7,6 +7,9 @@
 #include "../DataTypes/SPI_options.h"
 #include "../../ESPEasy_common.h"
 
+#ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
+#define DATASTRUCTS_SETTINGSSTRUCT_CPP
+
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
   clearAll();
@@ -670,3 +673,4 @@ void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
   WiFi_TX_power = dBm * 4.0f;
 }
 
+#endif

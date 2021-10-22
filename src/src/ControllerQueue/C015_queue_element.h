@@ -27,6 +27,8 @@ public:
 
   C015_queue_element(const struct EventStruct *event, uint8_t value_count);
 
+  C015_queue_element& operator=(C015_queue_element&& other);
+
   bool   checkDone(bool succesfull) const;
 
   size_t getSize() const;
