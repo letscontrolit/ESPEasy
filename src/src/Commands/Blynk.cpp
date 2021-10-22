@@ -73,7 +73,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
 
   {
     // Place ControllerSettings in its own scope, as it is quite big.
-    MakeControllerSettings(ControllerSettings);
+    MakeControllerSettings(ControllerSettings); //-V522
     if (!AllocatedControllerSettings()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : Cannot run GET, out of RAM"));
       return false;
