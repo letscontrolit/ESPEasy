@@ -50,7 +50,7 @@ void handle_controllers() {
     bool mustCallCpluginSave = false;
     {
       // Place in a scope to free ControllerSettings memory ASAP
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Not enough free memory to save settings"));
       } else {
@@ -199,7 +199,7 @@ void handle_controllers_ShowAllControllersTable()
   html_table_header(F("Host"));
   html_table_header(F("Port"));
 
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
   if (AllocatedControllerSettings()) {
     for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
     {
@@ -297,7 +297,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   if (Settings.Protocol[controllerindex])
   { 
     {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Out of memory, cannot load page"));
       } else {

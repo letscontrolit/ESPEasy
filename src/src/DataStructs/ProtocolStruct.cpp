@@ -1,4 +1,4 @@
-#include "ProtocolStruct.h"
+#include "../DataStructs/ProtocolStruct.h"
 
 ProtocolStruct::ProtocolStruct() :
   defaultPort(0), Number(0), usesMQTT(false), usesAccount(false), usesPassword(false),

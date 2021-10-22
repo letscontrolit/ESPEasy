@@ -74,7 +74,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_INIT:
     {
       {
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
 
         if (AllocatedControllerSettings()) {
           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -124,7 +124,7 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
                 break;
               }
 
-              MakeControllerSettings(ControllerSettings);
+              MakeControllerSettings(ControllerSettings); //-V522
               LoadControllerSettings(event->ControllerIndex, ControllerSettings);
               success = C016_DelayHandler->addToQueue(std::move(element));
               Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C016_DELAY_QUEUE,

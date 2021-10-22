@@ -172,7 +172,8 @@ void MQTTDisconnect()
 bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
+
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
     return false;
@@ -403,7 +404,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     String LWTTopic, LWTMessageConnect;
     bool   willRetain = false;
     {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
@@ -626,7 +627,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     bool   mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));

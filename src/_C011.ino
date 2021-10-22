@@ -59,7 +59,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_INIT:
     {
       {
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
 
         if (AllocatedControllerSettings()) {
           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -114,7 +114,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       }
       {
         // Place in scope to delete ControllerSettings as soon as it is no longer needed
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
 
         if (!AllocatedControllerSettings()) {
           addHtmlError(F("Out of memory, cannot load page"));
