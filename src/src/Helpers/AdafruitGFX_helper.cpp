@@ -1210,9 +1210,12 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
     result = color565(number >> 16 & 0xFF, number >> 8 & 0xFF, number & 0xFF);
   }
 
-  if ((result == -1) || (result == ADAGFX_WHITE)) {                                  // Default & don't convert white
-    if ((colorDepth >= AdaGFXColorDepth::SevenColor) &&
-        (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
+  if ((result == -1) || (result == ADAGFX_WHITE)) { // Default & don't convert white
+    if (
+      # if ADAGFX_SUPPORT_7COLOR
+      (colorDepth >= AdaGFXColorDepth::SevenColor) &&
+      # endif // if ADAGFX_SUPPORT_7COLOR
+      (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
     } else {
       result = ADAGFX_WHITE;                                                         // Color fallback value
@@ -1266,7 +1269,7 @@ String AdaGFXcolorToString(uint16_t         color,
       }
       break;
     }
-    # ifdef ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_7COLOR
     case AdaGFXColorDepth::SevenColor:
     {
       switch (color) {
@@ -1282,7 +1285,7 @@ String AdaGFXcolorToString(uint16_t         color,
       }
       break;
     }
-    # endif // ifdef ADAGFX_SUPPORT_7COLOR
+    # endif // if ADAGFX_SUPPORT_7COLOR
     case AdaGFXColorDepth::EightColor:
     case AdaGFXColorDepth::SixteenColor:
     case AdaGFXColorDepth::FullColor:
