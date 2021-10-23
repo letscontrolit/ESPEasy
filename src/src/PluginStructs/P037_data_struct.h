@@ -37,10 +37,16 @@
 // #endif
 # endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
 
+# ifdef PLUGIN_DISPLAY_COLLECTION
+#  ifdef P037_FILTER_SUPPORT
+#   undef P037_FILTER_SUPPORT
+#  endif // ifdef P037_FILTER_SUPPORT
+# endif // ifdef PLUGIN_DISPLAY_COLLECTION
+
 # define P037_MAX_MAPPINGS  25
 # define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
-# define P037_EXTRA_VALUES  5 // The number of extra, empty, values to show when adding mappings
-                              // (or filters if not 1:1 with topics is used)
+# define P037_EXTRA_VALUES  5             // The number of extra, empty, values to show when adding mappings
+                                          // (or filters if not 1:1 with topics is used)
 
 // Only 1 filter per topic
 # if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
