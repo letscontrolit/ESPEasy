@@ -35,25 +35,33 @@
 // #ifdef P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
 // #endif
-# endif // ifdef LIMIT_BUILD_SIZE
+# endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
 
 # define P037_MAX_MAPPINGS  25
-# define P037_MAX_FILTERS   VARS_PER_TASK                              // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT
-                                                                       // topic
-# define P037_EXTRA_VALUES  5                                          // The number of extra, empty, values to show when adding mappings
-                                                                       // (or filters if not 1:1 with topics is used)
+# define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
+# define P037_EXTRA_VALUES  5 // The number of extra, empty, values to show when adding mappings
+                              // (or filters if not 1:1 with topics is used)
 
-# if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK // Only 1 filter per topic
+// Only 1 filter per topic
+# if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
 #  ifndef P037_FILTER_PER_TOPIC
 #   define P037_FILTER_PER_TOPIC
 #  endif // ifndef P037_FILTER_PER_TOPIC
-# endif // if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
+# endif  // if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
 
-# define P037_OPERAND_COUNT 2
-# define P037_OPERAND_LIST  F("=%")
+# define P037_ARRAY_SIZE      (P037_MAX_MAPPINGS + P037_MAX_FILTERS)  // Storage layout definitions
+# define P037_START_MAPPINGS  0
+# define P037_END_MAPPINGS    (P037_MAX_MAPPINGS - 1)
+# define P037_START_FILTERS   P037_MAX_MAPPINGS
+# define P037_END_FILTERS     (P037_MAX_MAPPINGS + P037_MAX_FILTERS - 1)
 
-# define P037_FILTER_COUNT  3
-# define P037_FILTER_LIST   F("=-:") // Length should at least match P037_FILTER_COUNT
+# define P037_OPERAND_COUNT   2
+# define P037_OPERAND_LIST    F("=%")
+
+# define P037_FILTER_COUNT    3
+# define P037_FILTER_LIST     F("=-:") // Length should at least match P037_FILTER_COUNT
+
+# define P037_VALUE_SEPARATOR '\x02'   // Separator outside of the normal ascii character values
 
 // Data structure
 struct P037_data_struct : public PluginTaskData_base
@@ -112,24 +120,15 @@ struct P037_data_struct : public PluginTaskData_base
                         const String& match);
   #  endif // PLUGIN_037_DEBUG
   # endif  // P037_FILTER_SUPPORT
+  String enquoteString(const String& input);
 
   // The settings structures
   // The stuff we want to save between settings
   struct tP037_StoredSettings_struct {
-    char deviceTemplate[VARS_PER_TASK][41];                // variable for saving the subscription topics, leave as first element for
-                                                           // backward compatibility
-    char jsonAttributes[VARS_PER_TASK][21];                // variable for saving the json attribute to use
-    # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
-    #  ifdef P037_FILTER_PER_TOPIC
-    #   define MAP_FILTER_SIZE (DAT_TASKS_CUSTOM_SIZE / 2) // Use half of available size
-    #  else // ifdef P037_FILTER_PER_TOPIC
-    #   define MAP_FILTER_SIZE DAT_TASKS_CUSTOM_SIZE       // Use entire space
-    #  endif // ifdef P037_FILTER_PER_TOPIC
-
-    // All saved in a single string for most efficient storage
-    char valueMappings[MAP_FILTER_SIZE - ((VARS_PER_TASK * 41) + (VARS_PER_TASK * 21))]; // name=num,name2=num,name3%num,... mappings + | +
-                                                                                         // name=value,name2=value2,... Json filters
-    # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+    char deviceTemplate[VARS_PER_TASK][41]; // variable for saving the subscription topics, leave as first element for
+                                            // backward compatibility
+    char jsonAttributes[VARS_PER_TASK][21]; // variable for saving the json attribute to use
+    char globalTopicPrefix[41];             // variable for saving the global topic prefix
   };
 
   // Stored settings data:
@@ -145,6 +144,9 @@ struct P037_data_struct : public PluginTaskData_base
   std::map<uint8_t, String>deviceTemplate;
   std::map<uint8_t, String>jsonAttributes;
 
+  String valueArray[P037_ARRAY_SIZE]; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
+                                      // P037_START_FILTERS..P037_END_FILTERS = filters
+
 private:
 
   // Private methods and vars
@@ -155,14 +157,11 @@ private:
   # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
   taskIndex_t _taskIndex = TASKS_MAX;
   # ifdef P037_MAPPING_SUPPORT
-  std::map<uint8_t, String>_mapping;
-  int8_t                   _maxIdx = -1;
+  int8_t _maxIdx = -1;
   # endif // ifdef P037_MAPPING_SUPPORT
   # ifdef P037_FILTER_SUPPORT
-  std::map<uint8_t, String>  _filter;
-  std::map<uint8_t, uint16_t>_filterIdx;
-  int8_t                     _maxFilter = -1;
-  String                     _filterListItem;
+  int8_t _maxFilter = -1;
+  String _filterListItem;
   # endif // ifdef P037_FILTER_SUPPORT
   # ifdef P037_JSON_SUPPORT
   DynamicJsonDocument *root                  = nullptr;
