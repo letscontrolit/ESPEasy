@@ -67,7 +67,7 @@ The JSON Attribute column, when used, can be used to specify what data element t
 
 When receiving multiple-value attributes, like ``"svalue":"28.1;17.8;2;1010.3;0"``, an index can be appended to the attribute like ``svalue;4`` to get the 4th value, in this example ``1010.3`` (1-based index).
 
-When receiving a JSON payload, an event is (in addition to the standard event when receiving a numeric value) generated for the received Attribute, or for all attributes if no specific attribute is configured.
+When receiving a JSON payload, an event can (in addition to the standard event when receiving a numeric value) be generated for the received Attribute, or for all attributes if no specific attribute is configured.
 
 The event for such attribute looks like ``<topic>#<attribute>=<attribute_value>``, for example, when, on MQTT Topic ``zigbee2mqtt/eria_dimswitch_1``, receiving this JSON payload: ``{"action":"on","linkquality":5}`` will generate these events: ``zigbee2mqtt/eria_dimswitch_1#action=on`` and ``zigbee2mqtt/eria_dimswitch_1#linkquality=5``. If Mappings are configured, then the value *after* applying the mappings will be used!
 
@@ -123,7 +123,7 @@ It is possible to reconfigure that to a higher number of filters, but then the f
 .. image:: P037_DeviceSetup_FilterEquals.png
   :alt: Device setup, filter, equals
 
-* **Range**: Value must be in a range of values. The range can be inclusive, f.e. ``2;5`` means the value can be between 2 and 5, including 2 or 5. The range can be made exclusive, by reversing the 'from' and 'to' values, f.e. ``5;2`` means the value must be less than or equal (``<=``) to 2 or greater than or equal (``>=``) to 5. Examples:
+* **Range**: Value must be in a range of values. The range can be inclusive, f.e. ``2;5`` means the value can be between 2 and 5, including 2 and 5. The range can be made exclusive, by reversing the 'from' and 'to' values, f.e. ``5;2`` means the value must be less than or equal (``<=``) to 2 or greater than or equal (``>=``) to 5. Examples:
 
 .. image:: P037_DeviceSetup_FilterRange.png
   :alt: Device setup, filter, range
@@ -188,10 +188,12 @@ Subscribing to high-trafic topics will cause quite some load on the ESP, so eith
 
 Wildcard MQTT Topic subscriptions (using ``+`` or ``#``) can be used, but please be aware this may cause a high load because of a high number of topics accepted. NB: The ``#`` wildcard, when used, *must* be the last element in a topic (according to MQTT specifications).
 
+For systems that use long topics, the extra input field **Prefix for all topics** is available. The contents of this field will prefixed to *all* topics (without any extra characters, so slashes should be included as required). This field is optional.
+
 Supported hardware
 ------------------
 
-No ESPEasy related hardware is needed, though a MQTT server, and a matching Controller configuration is required to be able to use this plugin, as it 'piggy-backs' on that connection to subscribe to, and receive, the topics.
+No ESPEasy related hardware is needed, though a MQTT server (local network or external), and a MQTT Controller configuration is required to be able to use this plugin, as it 'piggy-backs' on that connection to subscribe to, and receive, the topics.
 
 Useful links
 ------------
@@ -239,6 +241,9 @@ Change log
 
   |added|
   Generate (optional) events for non-numeric payloads
+
+  |added|
+  Prefix for all topics
 
 .. versionadded:: 1.0
   ...
