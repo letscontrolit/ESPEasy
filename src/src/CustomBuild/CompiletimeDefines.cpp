@@ -6,26 +6,24 @@
 //
 // This Python script will define the following defines:
 
-#ifndef SET_BUILD_BINARY_FILENAME
-# define SET_BUILD_BINARY_FILENAME "firmware.bin"
-#endif // ifndef SET_BUILD_BINARY_FILENAME
+//# define SET_BUILD_BINARY_FILENAME "firmware.bin"
 
-#ifndef SET_BUILD_PLATFORM
-# define SET_BUILD_PLATFORM "unknown"
-#endif // ifndef SET_BUILD_PLATFORM
+//# define SET_BUILD_PLATFORM "unknown"
 
-#ifndef SET_BUILD_GIT_HEAD
-# define SET_BUILD_GIT_HEAD ""
-#endif // ifndef SET_BUILD_GIT_HEAD
+//# define SET_BUILD_GIT_HEAD ""
 
 
 // End of defines being patched by the Python build script.
 
+// Need to add quotes around defines as the PIO build tools make it hard to include the string quotes.
+#define STRINGIFY(s) STRINGIFY1(s)
+#define STRINGIFY1(s) #s
+
 const __FlashStringHelper * get_binary_filename() {
- #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
-   return F("firmware.bin");
+ #ifndef SET_BUILD_BINARY_FILENAME
+   return F("firmware.bin")
  #else
-    return F(SET_BUILD_BINARY_FILENAME);
+    return F(STRINGIFY(SET_BUILD_BINARY_FILENAME));
  #endif
 }
 
@@ -48,17 +46,17 @@ const __FlashStringHelper * get_build_origin() {
 }
 
 const __FlashStringHelper * get_build_platform() {
- #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
+ #ifndef SET_BUILD_PLATFORM
     return F("");
   #else
-    return F(SET_BUILD_PLATFORM);
+    return F(STRINGIFY(SET_BUILD_PLATFORM));
  #endif
 }
 
 const __FlashStringHelper * get_git_head() {
- #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
-   return F("");
+ #ifndef SET_BUILD_GIT_HEAD
+    return F("");
  #else
-    return F(SET_BUILD_GIT_HEAD);
+    return F(STRINGIFY(SET_BUILD_GIT_HEAD));
  #endif
 }

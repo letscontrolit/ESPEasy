@@ -39,10 +39,7 @@ def deduct_flags_from_pioenv():
 # another level to have the string quoted in the .cpp file
 # somewhere along the line, another level is removed.
 def wrap_quotes(str_value):
-    if platform.system() == 'Windows':
-        return "\"\"\"{}\"\"\"".format(str_value)
-    else:
-        return '\'\"\"\"{}\"\"\"\''.format(str_value)
+    return str_value
 
 
 def gen_compiletime_defines(node):
@@ -78,6 +75,5 @@ print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
 print("\u001b[32m ------------------------------- \u001b[0m")
-
 
 env.AddBuildMiddleware(gen_compiletime_defines)
