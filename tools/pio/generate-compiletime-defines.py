@@ -34,14 +34,6 @@ def deduct_flags_from_pioenv():
     print("\u001b[33m File System:    \u001b[0m  {}".format(fs_str))
 
 
-# needed to wrap in a number of double quotes.
-# one level for adding it to the list of defines
-# another level to have the string quoted in the .cpp file
-# somewhere along the line, another level is removed.
-def wrap_quotes(str_value):
-    return str_value
-
-
 def gen_compiletime_defines(node):
     """
     `node.name` - a name of File System Node
@@ -60,9 +52,9 @@ def gen_compiletime_defines(node):
     return env.Object(
         node,
         CPPDEFINES=env["CPPDEFINES"]
-        + [("SET_BUILD_BINARY_FILENAME", wrap_quotes(create_binary_filename()))]
-        + [("SET_BUILD_PLATFORM", wrap_quotes(platform.platform()))]
-        + [("SET_BUILD_GIT_HEAD", wrap_quotes(get_git_description()))],
+        + [("SET_BUILD_BINARY_FILENAME", create_binary_filename())]
+        + [("SET_BUILD_PLATFORM", platform.platform())]
+        + [("SET_BUILD_GIT_HEAD", get_git_description())],
         CCFLAGS=env["CCFLAGS"]
     )
 
