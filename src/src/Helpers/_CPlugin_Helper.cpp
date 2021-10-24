@@ -2,7 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
-
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../DataStructs/SecurityStruct.h"
@@ -21,7 +21,6 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"

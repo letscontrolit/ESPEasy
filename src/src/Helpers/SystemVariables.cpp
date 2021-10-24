@@ -5,6 +5,8 @@
 
 #include "../../ESPEasy-Globals.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -21,7 +23,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
