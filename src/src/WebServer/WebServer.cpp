@@ -41,6 +41,8 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/SettingsType.h"
@@ -61,7 +63,6 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
-#include "../Helpers/CompiletimeDefines.h"
 
 #include "../Static/WebStaticData.h"
 
