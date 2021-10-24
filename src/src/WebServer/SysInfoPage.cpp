@@ -10,6 +10,8 @@
 
 #include "../Commands/Diagnostic.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../DataStructs/RTCStruct.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -22,7 +24,6 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
