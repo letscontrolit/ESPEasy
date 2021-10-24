@@ -7,6 +7,8 @@
 #include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #ifdef HAS_ETHERNET
@@ -22,7 +24,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
