@@ -1,4 +1,4 @@
-#include "../Helpers/CompiletimeDefines.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 
 // This file will be "patched" at compiletime by 
 // tools/pio/generate-compiletime-defines.py
@@ -22,7 +22,7 @@
 // End of defines being patched by the Python build script.
 
 const __FlashStringHelper * get_binary_filename() {
- #if !defined(CORE_POST_2_5_0) && !defined(ESP32) || defined(ESP32_STAGE)
+ #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
    return F("firmware.bin");
  #else
     return F(SET_BUILD_BINARY_FILENAME);
@@ -48,7 +48,7 @@ const __FlashStringHelper * get_build_origin() {
 }
 
 const __FlashStringHelper * get_build_platform() {
- #if !defined(CORE_POST_2_5_0) && !defined(ESP32) || defined(ESP32_STAGE)
+ #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
     return F("");
   #else
     return F(SET_BUILD_PLATFORM);
@@ -56,7 +56,7 @@ const __FlashStringHelper * get_build_platform() {
 }
 
 const __FlashStringHelper * get_git_head() {
- #if !defined(CORE_POST_2_5_0) && !defined(ESP32) || defined(ESP32_STAGE)
+ #if !defined(CORE_POST_2_5_0) && !defined(ESP32)
    return F("");
  #else
     return F(SET_BUILD_GIT_HEAD);
