@@ -62,10 +62,10 @@ def copy_to_build_output(sourcedir, variant, file_suffix):
         print("\u001b[33m copy to: \u001b[0m  {}".format(out_file))
         shutil.copy(full_in_file, out_file)
 
-        generate_webflash_json(variant, file_suffix)
+        generate_webflash_json_manifest(variant, file_suffix)
 
 
-def generate_webflash_json(variant, file_suffix):
+def generate_webflash_json_manifest(variant, file_suffix):
     chipFamily = 'NotSet'
     manifest_suff = ''
     add_improve = True
