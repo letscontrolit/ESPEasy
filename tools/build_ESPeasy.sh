@@ -218,10 +218,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-pip install -U platformio
-# suppress lots of messages when packages are already installed with the correct version.
-set -o pipefail; pip install -r ${SRC}/docs/requirements.txt | { grep -v "already satisfied" || :; }
-
 # fetch latest version from active branch
 cd ${SRC}
 git fetch --tags
@@ -280,12 +276,19 @@ fi
 if (( $BUILD_DOCS != 0 )); then
   # Build documentation
   cd ${SRC}/docs
+  set -o pipefail; pip install -r ${SRC}/requirements.txt | { grep -v "already satisfied" || :; }
   make html
 fi
 
+cd ${SRC}
+
+pip install -U platformio
+
+# suppress lots of messages when packages are already installed with the correct version.
+set -o pipefail; pip install -r ${SRC}/requirements.txt | { grep -v "already satisfied" || :; }
+
 # Update (and clean) all targets
 # N.B. clean does also install missing packages which must be installed before applying patches.
-cd ${SRC}
 platformio update
 platformio run --target clean
 # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
@@ -295,7 +298,6 @@ cd ${SRC}
 if [ -d "build_output/" ]; then
   rm -Rf build_output/*
 fi
-
 
 if (( $BUILD_ESP32 != 0 )); then
   # Must look into all possible env definitions.

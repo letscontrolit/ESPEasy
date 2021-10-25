@@ -79,7 +79,7 @@ def generate_webflash_json_manifest(variant, file_suffix):
                 chipFamily = 'ESP32'
                 manifest_suff = '-factory.manifest.json'
     else:
-        if ".bin" in file_suffix and ".gz" not in file_suffix:
+        if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
             chipFamily = 'ESP8266'
             manifest_suff = '.manifest.json'
             add_improve = False
