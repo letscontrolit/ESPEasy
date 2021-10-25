@@ -49,7 +49,7 @@ BUILD_ESP82XX=0
 # -l is for long options with double dash like --version
 # the comma separates different long options
 # -a is for long options with single dash like -version
-options=$(getopt -l "help,pull-request:,description:,tag:,src-dir:,docs,esp32,esp82xx" -o ":hp:d:t:s:" -a -- "$@")
+options=$(getopt -l "help,pull-request:,description:,tag:,src-dir:,docs,esp32,esp82xx,esp8266" -o ":hp:d:t:s:" -a -- "$@")
 
 # set --:
 # If no arguments follow this option, then the positional parameters are unset. Otherwise, the positional parameters 
@@ -86,6 +86,10 @@ case $1 in
   BUILD_ESP32=1
   ;;
 --esp82xx)
+  BUILD_ALL=0
+  BUILD_ESP82XX=1
+  ;;
+--esp8266)
   BUILD_ALL=0
   BUILD_ESP82XX=1
   ;;
