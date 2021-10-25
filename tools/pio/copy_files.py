@@ -84,9 +84,11 @@ def generate_webflash_json_manifest(variant, file_suffix):
             manifest_suff = '.manifest.json'
             add_improve = False
     if 'NotSet' not in chipFamily:
+        json_path = "{}json{}".format(OUTPUT_DIR, os.path.sep) 
+
         bin_file = "{}{}".format(variant, file_suffix)
         manifest_file = "{}{}".format(variant, manifest_suff)
-        out_file = "{}bin{}{}".format(OUTPUT_DIR, os.path.sep, manifest_file)
+        out_file = "{}{}".format(json_path, manifest_file)
 
         manifest = {}
         manifest['name'] = bin_file
@@ -115,7 +117,7 @@ def bin_elf_copy(source, target, env):
     if not os.path.isdir(OUTPUT_DIR):
         os.mkdir(OUTPUT_DIR)
 
-    for d in ['bin', 'debug']:
+    for d in ['bin', 'debug', 'json']:
         if not os.path.isdir("{}{}".format(OUTPUT_DIR, d)):
             os.mkdir("{}{}".format(OUTPUT_DIR, d))
 
