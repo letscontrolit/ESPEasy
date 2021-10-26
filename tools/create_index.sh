@@ -104,6 +104,10 @@ echo "  <optgroup label=\"ESP32-S2-4M\">"
 find . |grep ${BUILD}|grep manifest.json|grep -i esp32s2|grep _4M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
+echo "  <optgroup label=\"Hardware Specific\">"
+find . |grep ${BUILD}|grep manifest.json|grep -i hard_|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+
+echo "        </optgroup>"
 
 echo "      </select>
     </div>
