@@ -392,8 +392,8 @@ cd ${TMP_DIST}
 if (( $BUILD_ESP82XX != 0 )); then
   if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
 
-    source ${SRC}/tools/create_index.sh -d $DESCRIPTION > ${TMP_DIST}/webflasher_esp8266.html
-    echo "### Created webflasher_esp8266.html"
+    #source ${SRC}/tools/create_index.sh -d $DESCRIPTION > ${TMP_DIST}/webflasher_esp8266.html
+    #echo "### Created webflasher_esp8266.html"
 
     echo
     zip -qq ${SRC}/ESPEasy_ESP82xx_$DESCRIPTION.zip -r .
@@ -418,8 +418,8 @@ if (( $BUILD_ESP32 != 0 )); then
   cd ${TMP_DIST}
 
   if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
-    source ${SRC}/tools/create_index.sh -d $DESCRIPTION > ${TMP_DIST}/webflasher_esp32.html
-    echo "### Created webflasher_esp32.html"
+    #source ${SRC}/tools/create_index.sh -d $DESCRIPTION > ${TMP_DIST}/webflasher_esp32.html
+    #echo "### Created webflasher_esp32.html"
 
     echo
     zip -qq ${SRC}/ESPEasy_ESP32_$DESCRIPTION.zip -r .
