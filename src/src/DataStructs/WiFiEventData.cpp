@@ -1,4 +1,4 @@
-#include "WiFiEventData.h"
+#include "../DataStructs/WiFiEventData.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 

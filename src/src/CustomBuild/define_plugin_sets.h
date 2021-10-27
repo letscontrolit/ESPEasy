@@ -1112,7 +1112,7 @@ To create/register a plugin, you have to :
 
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
-    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO)
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -1177,6 +1177,9 @@ To create/register a plugin, you have to :
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
+   #if !defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
+    #define LIMIT_BUILD_SIZE // Redice buildsize on ESP8266 to fit in all Display plugins
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1213,9 +1216,11 @@ To create/register a plugin, you have to :
    #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
    #endif
+   #ifndef USES_P104
+    #define USES_P104   // MAX7219 dot matrix
+   #endif
    #ifndef USES_P109
-     // FIXME TD-er: Disabled for now, due to build size.
-     //#define USES_P109   // ThermoOLED
+    #define USES_P109   // ThermoOLED
    #endif
 #endif
 
@@ -1372,10 +1377,16 @@ To create/register a plugin, you have to :
     #define USES_P102   // PZEM004Tv3
   #endif
   #ifndef USES_P103
-    #define USES_P103   // Atlas EZO pH
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
   #endif
   #ifndef USES_P104
-    #define USES_P104   // Atlas EZO EC
+    #define USES_P104   //
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // AHT10/20/21
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   //
   #endif
   #ifndef USES_P105
     #define USES_P105   // AHT10/20/21
@@ -1414,10 +1425,10 @@ To create/register a plugin, you have to :
     #define USES_P118   // 
   #endif
   #ifndef USES_P119
-    #define USES_P119   // 
+    #define USES_P119   // ITG3205 Gyro
   #endif
   #ifndef USES_P120
-    #define USES_P120   // 
+    #define USES_P120   // ADXL345 Acceleration / Gravity
   #endif
   #ifndef USES_P121
     #define USES_P121   // 

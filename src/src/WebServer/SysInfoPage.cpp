@@ -10,6 +10,8 @@
 
 #include "../Commands/Diagnostic.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../DataStructs/RTCStruct.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -22,7 +24,6 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -490,7 +491,6 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
-  addRowLabelValue(LabelType::WIFI_PERIODICAL_SCAN);
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 
