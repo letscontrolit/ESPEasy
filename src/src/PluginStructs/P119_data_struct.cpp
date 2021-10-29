@@ -55,7 +55,7 @@ bool P119_data_struct::read_sensor() {
     if (_rawData) {
       itg3205->readGyroRaw();
     } else {
-      itg3205->GyroRead();
+      itg3205->readGyro();
     }
     _XA[_aUsed] = itg3205->g.x;
     _YA[_aUsed] = itg3205->g.y;
@@ -95,18 +95,20 @@ bool P119_data_struct::read_sensor() {
 // Average the measurements and return the results
 // **************************************************************************/
 bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
-  int _x = 0, _y = 0, _z = 0;
+  X = 0;
+  Y = 0;
+  Z = 0;
 
   if (_initialized) {
     for (uint8_t n = 0; n <= _aMax; n++) {
-      _x += _XA[n];
-      _y += _YA[n];
-      _z += _ZA[n];
+      X += _XA[n];
+      Y += _YA[n];
+      Z += _ZA[n];
     }
 
-    X = _x / _aMax; // Average available measurements
-    Y = _y / _aMax;
-    Z = _z / _aMax;
+    X /= _aMax; // Average available measurements
+    Y /= _aMax;
+    Z /= _aMax;
 
     # if PLUGIN_119_DEBUG
 

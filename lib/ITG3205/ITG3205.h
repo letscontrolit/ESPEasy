@@ -34,19 +34,19 @@ public:
 
   ITG3205(uint8_t _address) : address(_address) {}
 
-  typedef struct vector
+  typedef struct gyroVelocity
   {
-    int x, y, z, t;
-  } vector;
+    int x, y, z;
+  } gyroVelocity;
 
-  vector g; // gyro angular velocity readings
+  gyroVelocity g; // gyro angular velocity readings
 
   int offset[3];
 
   uint8_t readWhoAmI();
   void    calibrate();
   void    initGyro();
-  void    GyroRead();
+  void    readGyro();
   void    readGyroRaw();
 
   int8_t  WriteByte(int8_t i2c_address,

@@ -52,7 +52,7 @@ void ITG3205::readGyroRaw() {
   g.z = readShortI2C();
 }
 
-void ITG3205::GyroRead() {
+void ITG3205::readGyro() {
   Wire.beginTransmission(address);
   Wire.write(GYRO_XOUT_H);
   Wire.endTransmission();
