@@ -28,7 +28,7 @@ public:
                  int& Z);
 
   bool initialized() {
-    return _initialized;
+    return nullptr != itg3205;
   }
 
 private:
@@ -46,8 +46,6 @@ private:
   std::vector<int>_ZA;
   uint8_t         _aUsed = 0;
   uint8_t         _aMax  = 0;
-
-  bool _initialized = false;
 };
 
 #endif // ifdef USES_P119

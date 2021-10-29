@@ -19,7 +19,7 @@ P119_data_struct::P119_data_struct(uint8_t i2c_addr, bool rawData, uint8_t aSize
 // Destructor
 // **************************************************************************/
 P119_data_struct::~P119_data_struct() {
-  if (_initialized) {
+  if (nullptr != itg3205) {
     delete itg3205;
     itg3205 = nullptr;
   }
@@ -33,8 +33,8 @@ bool P119_data_struct::read_sensor() {
   String log;
   # endif // if PLUGIN_119_DEBUG
 
-  if (!_initialized) {
-    _initialized = init_sensor();
+  if (nullptr == itg3205) {
+    init_sensor();
 
     # if PLUGIN_119_DEBUG
 
@@ -43,7 +43,7 @@ bool P119_data_struct::read_sensor() {
       log  = F("ITG3205: i2caddress: 0x");
       log += String(_i2cAddress, HEX);
       log += F(", initialized: ");
-      log += String(_initialized ? F("true") : F("false"));
+      log += String(nullptr != itg3205 ? F("true") : F("false"));
       log += F(", ID=0x");
       log += String(itg3205->readWhoAmI(), HEX);
       addLog(LOG_LEVEL_DEBUG, log);
@@ -51,7 +51,7 @@ bool P119_data_struct::read_sensor() {
     # endif // if PLUGIN_119_DEBUG
   }
 
-  if (_initialized) {
+  if (nullptr != itg3205) {
     if (_rawData) {
       itg3205->readGyroRaw();
     } else {
@@ -99,7 +99,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
   Y = 0;
   Z = 0;
 
-  if (_initialized) {
+  if (nullptr != itg3205) {
     for (uint8_t n = 0; n <= _aMax; n++) {
       X += _XA[n];
       Y += _YA[n];
@@ -127,7 +127,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
     }
     # endif // if PLUGIN_119_DEBUG
   }
-  return _initialized;
+  return nullptr != itg3205;
 }
 
 // **************************************************************************/
