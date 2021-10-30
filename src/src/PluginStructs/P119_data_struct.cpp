@@ -19,7 +19,7 @@ P119_data_struct::P119_data_struct(uint8_t i2c_addr, bool rawData, uint8_t aSize
 // Destructor
 // **************************************************************************/
 P119_data_struct::~P119_data_struct() {
-  if (nullptr != itg3205) {
+  if (initialized()) {
     delete itg3205;
     itg3205 = nullptr;
   }
@@ -33,7 +33,7 @@ bool P119_data_struct::read_sensor() {
   String log;
   # endif // if PLUGIN_119_DEBUG
 
-  if (nullptr == itg3205) {
+  if (!initialized()) {
     init_sensor();
 
     # if PLUGIN_119_DEBUG
@@ -51,7 +51,7 @@ bool P119_data_struct::read_sensor() {
     # endif // if PLUGIN_119_DEBUG
   }
 
-  if (nullptr != itg3205) {
+  if (initialized()) {
     if (_rawData) {
       itg3205->readGyroRaw();
     } else {
@@ -99,7 +99,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
   Y = 0;
   Z = 0;
 
-  if (nullptr != itg3205) {
+  if (initialized()) {
     for (uint8_t n = 0; n <= _aMax; n++) {
       X += _XA[n];
       Y += _YA[n];
@@ -136,7 +136,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
 bool P119_data_struct::init_sensor() {
   itg3205 = new (std::nothrow) ITG3205(_i2cAddress);
 
-  if (nullptr != itg3205) {
+  if (initialized()) {
     addLog(LOG_LEVEL_INFO, F("ITG3205: Initializing Gyro..."));
     itg3205->initGyro();
     addLog(LOG_LEVEL_INFO, F("ITG3205: Calibrating Gyro..."));
