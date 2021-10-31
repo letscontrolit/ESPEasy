@@ -117,6 +117,7 @@ public:
   ADXL345(uint8_t i2c_addr);
   ADXL345(int CS);
   void powerOn();
+  void powerOff();
   int  getDevID();
   void readAccel(int *xyx);
   void readAccel(int *x,

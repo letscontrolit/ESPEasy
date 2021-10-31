@@ -64,6 +64,14 @@ void ADXL345::powerOn() {
   writeTo(ADXL345_POWER_CTL, 8);  // Measure
 }
 
+void ADXL345::powerOff() {
+  byte _b;
+
+  readFrom(ADXL345_POWER_CTL, 1, &_b);
+  _b &= ~(0b00001000); // Measure bit
+  writeTo(ADXL345_POWER_CTL, _b);
+}
+
 int ADXL345::getDevID() {
   byte _b;
 

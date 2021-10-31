@@ -20,6 +20,7 @@ SparkFunADXL345	KEYWORD1
 #######################################
 
 powerOn	KEYWORD2
+powerOff	KEYWORD2
 getDevID	KEYWORD2
 setActivityXYZ	KEYWORD2
 setActivityThreshold	KEYWORD2
