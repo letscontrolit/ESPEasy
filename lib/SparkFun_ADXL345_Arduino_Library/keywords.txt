@@ -1,0 +1,53 @@
+#######################################
+# Syntax Coloring Map For ADXL345
+#######################################
+
+#######################################
+# Library (KEYWORD1)
+#######################################
+
+ADXL345	KEYWORD1
+SparkFunADXL345	KEYWORD1
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+#Nothing here yet
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+powerOn	KEYWORD2
+setActivityXYZ	KEYWORD2
+setActivityThreshold	KEYWORD2
+setInactivityXYZ	KEYWORD2
+setInactivityThreshold	KEYWORD2
+setTimeInactivity	KEYWORD2
+setTapDetectionOnXYZ	KEYWORD2
+setTapThreshold	KEYWORD2
+setTapDuration	KEYWORD2
+setDoubleTapLatency	KEYWORD2
+setDoubleTapWindow	KEYWORD2
+setFreeFallThreshold	KEYWORD2
+setFreeFallDuration	KEYWORD2
+setImportantInterruptMapping	KEYWORD2
+InactivityINT	KEYWORD2
+ActivityINT	KEYWORD2
+FreeFallINT	KEYWORD2
+doubleTapINT	KEYWORD2
+singleTapINT	KEYWORD2
+readAccel	KEYWORD2
+triggered	KEYWORD2
+getInterruptSource	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+ADXL345_FREE_FALL	LITERAL1
+ADXL345_INACTIVITY	LITERAL1
+ADXL345_ACTIVITY	LITERAL1
+ADXL345_DOUBLE_TAP	LITERAL1
+ADXL345_SINGLE_TAP	LITERAL1
