@@ -145,7 +145,7 @@ void ADXL345::readFromI2C(byte address, int num, byte _buff[]) {
 
   //	Wire.beginTransmission(ADXL345_DEVICE);
   // Wire.reqeustFrom contains the beginTransmission and endTransmission in it.
-  Wire.requestFrom(ADXL345_DEVICE, num); // Request 6 Bytes
+  Wire.requestFrom(ADXL345_DEVICE, (uint8_t)num); // Request num Bytes
 
   int i = 0;
 
