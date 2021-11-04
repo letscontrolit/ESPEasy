@@ -246,6 +246,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         TFT_Settings.address_tft_dc = PIN(1);
         TFT_Settings.address_tft_rst = PIN(2);
         TFT_Settings.rotation = PCONFIG(1);
+        if (tft != nullptr) {
+          delete tft;
+          tft = nullptr;
+        }
 
         initPluginTaskData(event->TaskIndex, 
         new (std::nothrow) P095_data_struct(
@@ -263,6 +267,15 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         }
         break;
       }
+
+    case PLUGIN_EXIT:
+    {
+      if (tft != nullptr) {
+        delete tft;
+        tft = nullptr;
+      }
+      break;
+    }
 
     case PLUGIN_WRITE:
       {

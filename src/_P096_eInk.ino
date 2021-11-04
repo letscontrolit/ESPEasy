@@ -305,6 +305,15 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_EXIT:
+      {
+        if (eInkScreen != nullptr) {
+          delete eInkScreen;
+          eInkScreen = nullptr;
+        }
+        break;
+      }
+
     case PLUGIN_WRITE:
       {
 #ifndef BUILD_NO_DEBUG
