@@ -1023,6 +1023,135 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
   return LoadFromFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
+
+/********************************************************************************************\
+   Handle certificate files on the file system.
+   The content will be stripped from unusable character like quotes, spaces etc.
+ \*********************************************************************************************/
+static inline bool is_base64(char c) {
+  return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+bool cleanupCertificate(String & certificate, bool &changed)
+{
+  changed = false;
+  // "-----BEGIN CERTIFICATE-----" positions in dash_pos[0] and dash_pos[1]
+  // "-----END CERTIFICATE-----"   positions in dash_pos[2] and dash_pos[3]
+  int dash_pos[4] = { 0 };
+  int last_pos = 0;
+  for (int i = 0; i < 4 && last_pos != -1; ++i) {
+    dash_pos[i] = certificate.indexOf(F("-----"), last_pos);
+    last_pos = dash_pos[i] + 5;
+    addLog(LOG_LEVEL_INFO, String(F(" dash_pos: ")) + String(dash_pos[i]));
+  }
+  if (last_pos == -1) return false;
+
+  int read_pos = dash_pos[1] + 5; // next char after "-----BEGIN CERTIFICATE-----"
+  String newCert;
+  newCert.reserve((dash_pos[3] + 6) - dash_pos[0]);
+
+  // "-----BEGIN CERTIFICATE-----" 
+  newCert += certificate.substring(dash_pos[0], read_pos); 
+
+  char last_char = certificate[read_pos - 1];
+  for (; read_pos < dash_pos[2]; ++read_pos) {
+    const char c = certificate[read_pos];
+    if ((c == 'n' && last_char == '\\') || (c == '\n')) {
+      if (!newCert.endsWith(String('\n'))) {
+        newCert += '\n';
+      }
+    } else if (is_base64(c) || c == '=') {
+      newCert += c;
+    }
+    last_char = c;
+  }
+
+  // "-----END CERTIFICATE-----" 
+  newCert += certificate.substring(dash_pos[2], dash_pos[3] + 5);
+  newCert += '\n';
+
+  changed = !certificate.equals(newCert);
+  certificate = std::move(newCert);
+  return true;
+}
+
+
+String SaveCertificate(const String& fname, const String& certificate)
+{
+  return SaveToFile(fname.c_str(), 0, (const uint8_t *)certificate.c_str(), certificate.length() + 1);
+}
+
+String LoadCertificate(const String& fname, String& certificate)
+{
+  bool changed = false;
+  if (fileExists(fname)) {
+    fs::File f = tryOpenFile(fname, "r");
+    SPIFFS_CHECK(f, fname.c_str());
+    #ifndef BUILD_NO_DEBUG
+    String log = F("LoadCertificate: ");
+    log += fname;
+    #else
+    String log = F("LoadCertificate error");
+    #endif
+
+    certificate.clear();
+
+    if (!certificate.reserve(f.size())) {
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Out of memory");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      f.close();
+      return log;
+    }
+    bool done = false;
+    while (f.available() && !done) { 
+      const char c = (char)f.read(); 
+      if (c == '\0') {
+        done = true;
+      } else {
+        certificate += c;
+      }
+    }
+    f.close();
+
+    String analyse = F("Cleanup: Before: ");
+    analyse += certificate.length();
+    analyse += F(" After: ");
+
+    if (!cleanupCertificate(certificate, changed)) {
+      certificate.clear();
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Invalid certificate format");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      return log;
+    } else if (changed) {
+      //return SaveCertificate(fname, certificate);
+    }
+//    addLog(LOG_LEVEL_INFO, F("After"));
+//    addLog(LOG_LEVEL_INFO, certificate);
+    static int previousFree = FreeMem();
+    const int freemem = FreeMem();
+    
+    analyse += certificate.length();
+    analyse += changed ? F(" changed") : F(" same");
+    analyse += F(" free memory: ");
+    analyse += freemem;
+    analyse += F(" largest free block: ");
+    analyse += getMaxFreeBlock();
+
+    analyse += F(" Difference: ");
+    analyse += previousFree - freemem;
+
+    addLog(LOG_LEVEL_INFO, analyse);
+    previousFree = freemem;
+  }
+
+  return EMPTY_STRING;
+}
+
+
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
@@ -1271,7 +1400,7 @@ String LoadFromFile(const char *fname, String& data, int offset)
   String log = F("Load error");
   #endif
 
-  if (!f || offset < 0 || (offset >= f.size())) {
+  if (!f || offset < 0 || (offset >= static_cast<int>(f.size()))) {
     #ifndef BUILD_NO_DEBUG
     log += F(" ERROR, invalid position in file");
     #endif
