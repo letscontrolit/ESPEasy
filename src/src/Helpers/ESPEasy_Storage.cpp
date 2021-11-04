@@ -125,7 +125,7 @@ int fileSize(const String& fname) {
   const String patched_fname = patch_fname(fname);
   auto search = Cache.fileExistsMap.find(patched_fname);
   if (search != Cache.fileExistsMap.end()) {
-    return search->second >= 0;
+    return search->second;
   }
   int size = -1;
   if (ESPEASY_FS.exists(patched_fname)) {
