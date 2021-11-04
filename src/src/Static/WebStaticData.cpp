@@ -3,6 +3,7 @@
 #include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/LoadFromFS.h"
 
 String generate_external_URL(const String& fname) {
     String url;
@@ -28,13 +29,9 @@ void serve_CSS() {
     return;
     #endif
   }
-
-  addHtml(F("<link"));
-  addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("type"), F("text/css"));
-  addHtmlAttribute(F("href"), url);
-  addHtml('/');
-  addHtml('>');
+  addHtml(F("<style>"));
+  streamFromFS(url);
+  addHtml(F("</style>"));
 }
 
 void serve_favicon() {
@@ -112,10 +109,15 @@ void serve_JS(JSfiles_e JSfile) {
         html_add_script_end();
         return;
         #endif
+        addHtml(F("<script"));
+        addHtml(F(" defer"));
+        addHtmlAttribute(F("src"), url);
+        addHtml('>');
+        html_add_script_end();
+        return;
     }
-    addHtml(F("<script"));
-    addHtml(F(" defer"));
-    addHtmlAttribute(F("src"), url);
-    addHtml('>');
+    // Now stream the file directly from the file system.
+    html_add_script(false);
+    streamFromFS(url);
     html_add_script_end();
 }
