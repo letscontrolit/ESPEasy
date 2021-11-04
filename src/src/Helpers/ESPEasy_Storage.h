@@ -172,6 +172,13 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
 
+/********************************************************************************************\
+   Handle certificate files on the file system.
+   The content will be stripped from unusable character like quotes, spaces etc.
+ \*********************************************************************************************/
+String SaveCertificate(const String& fname, const String& certificate);
+String LoadCertificate(const String& fname, String& certificate);
+
 
 /********************************************************************************************\
    Init a file with zeros on file system
