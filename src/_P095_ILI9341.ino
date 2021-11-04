@@ -258,7 +258,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         if (nullptr != P095_data) {
           P095_data->tft.setRotation(TFT_Settings.rotation);
           P095_data->tft.fillScreen(ILI9341_WHITE);
-          P095_data->Plugin_095_printText(F("ESPEasy"), 1, 1);
+          P095_data->printText(F("ESPEasy"), 1, 1);
           success = true;
         }
         break;
@@ -309,7 +309,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
               else if(subcommand.equalsIgnoreCase(F("CLEAR")))
               {
                 arguments = arguments.substring(argIndex + 1);
-                P095_data->tft.fillScreen(P095_data->Plugin_095_ParseColor(arguments));
+                P095_data->tft.fillScreen(P095_data->ParseColor(arguments));
               }
               else if(subcommand.equalsIgnoreCase(F("INV")))
               {
@@ -334,7 +334,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
               arguments = arguments.substring(argIndex + 1);
               String sParams[8];
-              int argCount = P095_data->Plugin_095_StringSplit(arguments, ',', sParams, 8);
+              int argCount = P095_data->StringSplit(arguments, ',', sParams, 8);
 
               for(int a=0; a < argCount && a < 8; a++)
               {
@@ -355,9 +355,9 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
               else if(subcommand.equalsIgnoreCase(F("txc")) && (argCount == 1 || argCount == 2) )
               {
                 if(argCount == 1)
-                  P095_data->tft.setTextColor(P095_data->Plugin_095_ParseColor(sParams[0]));
+                  P095_data->tft.setTextColor(P095_data->ParseColor(sParams[0]));
                 else //argCount=2
-                  P095_data->tft.setTextColor(P095_data->Plugin_095_ParseColor(sParams[0]), P095_data->Plugin_095_ParseColor(sParams[1]));
+                  P095_data->tft.setTextColor(P095_data->ParseColor(sParams[0]), P095_data->ParseColor(sParams[1]));
               }
               else if(subcommand.equalsIgnoreCase(F("txs")) && argCount == 1)
               {
@@ -383,19 +383,19 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                 switch (argCount)
                 {
                 case 3: //single text
-                  P095_data->Plugin_095_printText(sParams[2], sParams[0].toInt() - 1,sParams[1].toInt() - 1);
+                  P095_data->printText(sParams[2], sParams[0].toInt() - 1,sParams[1].toInt() - 1);
                   break;
 
                 case 4: //text + size
-                  P095_data->Plugin_095_printText(sParams[3], sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());
+                  P095_data->printText(sParams[3], sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());
                   break;
 
                 case 5: //text + size + color
-                  P095_data->Plugin_095_printText(sParams[4], sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), P095_data->Plugin_095_ParseColor(sParams[3]));
+                  P095_data->printText(sParams[4], sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
                   break;
 
                 case 6: //text + size + color
-                  P095_data->Plugin_095_printText(sParams[5], sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), P095_data->Plugin_095_ParseColor(sParams[3]), P095_data->Plugin_095_ParseColor(sParams[4]));
+                  P095_data->printText(sParams[5], sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), P095_data->ParseColor(sParams[3]), P095_data->ParseColor(sParams[4]));
                   break;
                 default:
                   success = false;
@@ -404,55 +404,55 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
               }
               else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
               {
-                P095_data->tft.drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->Plugin_095_ParseColor(sParams[4]));
+                P095_data->tft.drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
               }
               else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
               {
-                P095_data->tft.drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), P095_data->Plugin_095_ParseColor(sParams[2]));
+                P095_data->tft.drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
               }
               else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
               {
-                P095_data->tft.drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), P095_data->Plugin_095_ParseColor(sParams[2]));
+                P095_data->tft.drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
               }
               else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
               {
-                P095_data->tft.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->Plugin_095_ParseColor(sParams[4]));
+                P095_data->tft.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
               }
               else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
               {
-                P095_data->tft.fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->Plugin_095_ParseColor(sParams[5]));
-                P095_data->tft.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->Plugin_095_ParseColor(sParams[4]));
+                P095_data->tft.fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[5]));
+                P095_data->tft.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
               }
               else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
               {
-                P095_data->tft.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->Plugin_095_ParseColor(sParams[3]));
+                P095_data->tft.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
               }
               else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
               {
-                P095_data->tft.fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->Plugin_095_ParseColor(sParams[4]));
-                P095_data->tft.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->Plugin_095_ParseColor(sParams[3]));
+                P095_data->tft.fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[4]));
+                P095_data->tft.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
               }
               else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
               {
-                P095_data->tft.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->Plugin_095_ParseColor(sParams[6]));
+                P095_data->tft.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[6]));
               }
               else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
               {
-                P095_data->tft.fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->Plugin_095_ParseColor(sParams[7]));
-                P095_data->tft.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->Plugin_095_ParseColor(sParams[6]));
+                P095_data->tft.fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[7]));
+                P095_data->tft.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[6]));
               }
               else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
               {
-                P095_data->tft.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->Plugin_095_ParseColor(sParams[5]));
+                P095_data->tft.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[5]));
               }
               else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
               {
-                P095_data->tft.fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->Plugin_095_ParseColor(sParams[6]));
-                P095_data->tft.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->Plugin_095_ParseColor(sParams[5]));
+                P095_data->tft.fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[6]));
+                P095_data->tft.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[5]));
               }
               else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
               {
-                P095_data->tft.drawPixel(sParams[0].toInt(), sParams[1].toInt(), P095_data->Plugin_095_ParseColor(sParams[2]));
+                P095_data->tft.drawPixel(sParams[0].toInt(), sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
               }
               else
               {

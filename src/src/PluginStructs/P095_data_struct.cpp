@@ -4,10 +4,10 @@
 
 
 P095_data_struct::P095_data_struct(int8_t _CS, int8_t _DC, int8_t _RST)
-                                   :
-                                   tft(_CS,  _DC, _RST) {
-                                      tft.begin();
-                                    }
+  : tft(_CS,  _DC, _RST) 
+  {
+    tft.begin();
+  }
 
 //Print some text
 //param [in] string : The text to display
@@ -16,7 +16,7 @@ P095_data_struct::P095_data_struct(int8_t _CS, int8_t _DC, int8_t _RST)
 //param [in] textSize : The text size (default 1)
 //param [in] color : The fore color (default ILI9341_WHITE)
 //param [in] bkcolor : The background color (default ILI9341_BLACK)
-void P095_data_struct::Plugin_095_printText(const String& string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
+void P095_data_struct::printText(const String& string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
 {
   tft.setCursor(X, Y);
   tft.setTextColor(color, bkcolor);
@@ -28,7 +28,7 @@ void P095_data_struct::Plugin_095_printText(const String& string, int X, int Y, 
 //Parse color string to ILI9341 color
 //param [in] s : The color string (white, red, ...)
 //return : color (default ILI9341_WHITE)
-unsigned short P095_data_struct::Plugin_095_ParseColor(String & s)
+unsigned short P095_data_struct::ParseColor(String & s)
 {
   if (s.equalsIgnoreCase(F("BLACK")))
     return ILI9341_BLACK;
@@ -88,7 +88,7 @@ unsigned short P095_data_struct::Plugin_095_ParseColor(String & s)
 //param [out] op : The resulting string array
 //param [in] limit : The maximum strings to find
 //return : The string count
-int P095_data_struct::Plugin_095_StringSplit(String &s, char c, String op[], int limit)
+int P095_data_struct::StringSplit(String &s, char c, String op[], int limit)
 {
   int count = 0;
   char * pch;
