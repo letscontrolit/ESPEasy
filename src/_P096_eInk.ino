@@ -285,20 +285,36 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         EPD_Settings.width = PCONFIG(2);
         EPD_Settings.height = PCONFIG(3);
 
-        eInkScreen = new LOLIN_IL3897(EPD_Settings.width, EPD_Settings.height, EPD_Settings.address_epd_dc, EPD_Settings.address_epd_rst, EPD_Settings.address_epd_cs, EPD_Settings.address_epd_busy); //hardware SPI
-        plugin_096_sequence_in_progress = false;
-        eInkScreen->begin();
-        eInkScreen->clearBuffer();
+        if (eInkScreen != nullptr) {
+          delete eInkScreen;
+          eInkScreen = nullptr;
+        }
 
-        eInkScreen->setTextColor(EPD_BLACK);
-        eInkScreen->setTextSize(3);
-        eInkScreen->println("ESP Easy");
-        eInkScreen->setTextSize(2);
-        eInkScreen->println("eInk shield");
-        eInkScreen->display();
-        delay(100);
-        
-        success = true;
+        eInkScreen = new (std::nothrow) LOLIN_IL3897(EPD_Settings.width, EPD_Settings.height, EPD_Settings.address_epd_dc, EPD_Settings.address_epd_rst, EPD_Settings.address_epd_cs, EPD_Settings.address_epd_busy); //hardware SPI
+        if (eInkScreen != nullptr) {
+          plugin_096_sequence_in_progress = false;
+          eInkScreen->begin();
+          eInkScreen->clearBuffer();
+
+          eInkScreen->setTextColor(EPD_BLACK);
+          eInkScreen->setTextSize(3);
+          eInkScreen->println("ESP Easy");
+          eInkScreen->setTextSize(2);
+          eInkScreen->println("eInk shield");
+          eInkScreen->display();
+          delay(100);
+          
+          success = true;
+        }
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (eInkScreen != nullptr) {
+          delete eInkScreen;
+          eInkScreen = nullptr;
+        }
         break;
       }
 

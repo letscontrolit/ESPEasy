@@ -14,6 +14,7 @@ class Modbus {
 public:
 
   Modbus(void);
+  ~Modbus();
   bool handle();
   bool begin(uint8_t                function,
              uint8_t                ModbusID,

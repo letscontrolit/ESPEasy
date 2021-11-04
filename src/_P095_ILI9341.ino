@@ -261,15 +261,30 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         TFT_Settings.address_tft_dc = PIN(1);
         TFT_Settings.address_tft_rst = PIN(2);
         TFT_Settings.rotation = PCONFIG(1);
+        if (tft != nullptr) {
+          delete tft;
+          tft = nullptr;
+        }
 
-        tft = new Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
-        tft->begin();
-        tft->setRotation(TFT_Settings.rotation);
-        tft->fillScreen(ILI9341_WHITE);
-        Plugin_095_printText("ESPEasy", 1, 1);
-        success = true;
+        tft = new (std::nothrow) Adafruit_ILI9341(TFT_Settings.address_tft_cs, TFT_Settings.address_tft_dc, TFT_Settings.address_tft_rst);
+        if (tft != nullptr) {
+          tft->begin();
+          tft->setRotation(TFT_Settings.rotation);
+          tft->fillScreen(ILI9341_WHITE);
+          Plugin_095_printText("ESPEasy", 1, 1);
+          success = true;
+        }
         break;
       }
+
+    case PLUGIN_EXIT:
+    {
+      if (tft != nullptr) {
+        delete tft;
+        tft = nullptr;
+      }
+      break;
+    }
 
     case PLUGIN_WRITE:
       {
