@@ -65,30 +65,17 @@ ESPEasy_sslclient_context::~ESPEasy_sslclient_context()
 
 void ESPEasy_sslclient_context::free_ca_cert()
 {
-//    if (ca_cert.p != nullptr) {
-    if (ca_cert_init) {
-        ca_cert_init = false;
-    }
-        mbedtls_x509_crt_free(&ca_cert);
-//    }
+    mbedtls_x509_crt_free(&ca_cert);
 }
 
 void ESPEasy_sslclient_context::free_client_cert()
 {
-    if (client_cert_init) {
-        client_cert_init = false;
-    }
-        mbedtls_x509_crt_free(&client_cert);
-//    }
+    mbedtls_x509_crt_free(&client_cert);
 }
 
 void ESPEasy_sslclient_context::free_client_key()
 {
-    if (client_key_init) {
-        client_key_init = false;
-    }
-     mbedtls_pk_free(&client_key);
-//    }
+    mbedtls_pk_free(&client_key);
 }
 
 
@@ -182,7 +169,6 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
     } else if (rootCABuff != NULL) {
         log_v("Loading CA cert");
         mbedtls_x509_crt_init(&ssl_client->ca_cert);
-        ssl_client->ca_cert_init = true;
         mbedtls_ssl_conf_authmode(&ssl_client->ssl_conf, MBEDTLS_SSL_VERIFY_REQUIRED);
         ret = mbedtls_x509_crt_parse(&ssl_client->ca_cert, (const unsigned char *)rootCABuff, strlen(rootCABuff) + 1);
         mbedtls_ssl_conf_ca_chain(&ssl_client->ssl_conf, &ssl_client->ca_cert, NULL);
@@ -234,7 +220,6 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
         log_v("Loading CRT cert");
 
         ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
-        ssl_client->client_cert_init = true;
         if (ret < 0) {
             // free the client_cert in the case parse failed, otherwise, the old client_cert still in the heap memory, that lead to "out of memory" crash.
             ssl_client->free_client_cert();
@@ -243,7 +228,6 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
 
         log_v("Loading private key");
         ret = mbedtls_pk_parse_key(&ssl_client->client_key, (const unsigned char *)cli_key, strlen(cli_key) + 1, NULL, 0);
-        ssl_client->client_key_init = true;
 
         if (ret != 0) {
             return handle_error(ret);
