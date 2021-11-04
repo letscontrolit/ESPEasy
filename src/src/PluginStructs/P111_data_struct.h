@@ -9,11 +9,12 @@
 struct P111_data_struct : public PluginTaskData_base {
 
   P111_data_struct(uint8_t csPin, uint8_t rstPin);
+  ~P111_data_struct();
   void init();
   uint8_t readCardStatus(unsigned long *key, bool *removedTag);
   String getCardName();
 
-  MFRC522 *mfrc522;
+  MFRC522 *mfrc522 = nullptr;
 
   uint8_t counter = 0;
 

@@ -279,9 +279,9 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
       if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 1) {
-        P109_display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        P109_display = new (std::nothrow) SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
       } else {
-        P109_display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        P109_display = new (std::nothrow) SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
       }
       P109_display->init(); // call to local override of init function
       P109_display->displayOn();
