@@ -91,7 +91,6 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
     String fileName = tmplName;
 
     fileName += F(".htm");
-    fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
     if (f) {

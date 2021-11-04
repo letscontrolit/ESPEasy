@@ -29,6 +29,8 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 
 bool fileExists(const String& fname);
 
+int fileSize(const String& fname);
+
 fs::File tryOpenFile(const String& fname, const String& mode);
 
 bool tryRenameFile(const String& fname_old, const String& fname_new);
@@ -197,6 +199,8 @@ String ClearInFile(const char *fname, int index, int datasize);
    Load data from config file on file system
  \*********************************************************************************************/
 String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int datasize);
+
+String LoadFromFile(const char *fname, String& data, int offset = 0);
 
 /********************************************************************************************\
    Wrapper functions to handle errors in accessing settings

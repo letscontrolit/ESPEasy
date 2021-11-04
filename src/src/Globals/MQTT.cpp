@@ -18,7 +18,7 @@ WiFiClientSecure mqtt_tls;
 BearSSL::WiFiClientSecure mqtt_tls;
 BearSSL::X509List mqtt_X509List;
 #  endif // ifdef ESP8266
-const char *mqtt_rootCA = nullptr;
+char *mqtt_rootCA = nullptr;
 # endif  // ifdef USE_MQTT_TLS
 
 PubSubClient MQTTclient(mqtt);

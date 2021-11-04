@@ -211,13 +211,28 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     }
     case TLS_types::TLS_CA_CERT:
     {
-      #ifdef ESP32
-      mqtt_tls.setCACert(mqtt_rootCA);
-      #endif
-      #ifdef ESP8266
-      mqtt_X509List.append(mqtt_rootCA);
-      mqtt_tls.setTrustAnchors(&mqtt_X509List);
-      #endif
+      const String certFile = ControllerSettings.getCertificateFilename();
+      const size_t size = fileSize(certFile);
+      if (size > 0) {
+        if (mqtt_rootCA != nullptr) {
+          free(mqtt_rootCA);
+        }
+        mqtt_rootCA = (char*)malloc(size + 1);
+        if (mqtt_rootCA != nullptr) {
+          LoadFromFile(certFile.c_str(), 0, (uint8_t*)mqtt_rootCA, size);
+          mqtt_rootCA[size] = '\0';
+        }
+      }
+
+      if (mqtt_rootCA != nullptr) {
+        #ifdef ESP32
+        mqtt_tls.setCACert(mqtt_rootCA);
+        #endif
+        #ifdef ESP8266
+        mqtt_X509List.append(mqtt_rootCA);
+        mqtt_tls.setTrustAnchors(&mqtt_X509List);
+        #endif
+      }
       break;
     }
     /*

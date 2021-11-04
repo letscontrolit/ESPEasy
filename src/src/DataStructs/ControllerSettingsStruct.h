@@ -151,6 +151,8 @@ struct ControllerSettingsStruct
 
   TLS_types TLStype() const;
   void      TLStype(TLS_types tls_type);
+
+  String    getCertificateFilename() const;
   
 
   boolean      UseDNS;
