@@ -192,6 +192,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       delete mqtt_tls;
       mqtt_tls = nullptr;
     }
+    mqtt_rootCA.clear();
     #endif
   }
   
@@ -213,12 +214,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     #ifdef ESP8266
     mqtt_tls = new BearSSL::WiFiClientSecure;
     #endif
+    mqtt_rootCA.clear();
 
     if (mqtt_tls == nullptr) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Could not create TLS client, out of memory"));
       return false;
-    } else {
-      mqtt_rootCA.clear();
     }
   }
   switch(TLS_type) {
@@ -236,12 +236,6 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     case TLS_types::TLS_CA_CERT:
     {
       mqtt_rootCA.clear();
-      bool certLoaded = false;
-      if (mqtt_rootCA.isEmpty()) {
-        LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
-        certLoaded = true;
-      }
-
       {
         static int previousFree = FreeMem();
         const int freemem = FreeMem();
@@ -258,16 +252,16 @@ bool MQTTConnect(controllerIndex_t controller_idx)
         previousFree = freemem;
       }
 
-      if (certLoaded) {
-        if (mqtt_rootCA.length() > 0) {
-          #ifdef ESP32
-          mqtt_tls->setCACert(mqtt_rootCA.c_str());
-          #endif
-          #ifdef ESP8266
-          mqtt_X509List.append(mqtt_rootCA.c_str());
-          mqtt_tls->setTrustAnchors(&mqtt_X509List);
-          #endif
-        }
+      if (mqtt_rootCA.isEmpty()) {
+        LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
+
+        #ifdef ESP32
+        mqtt_tls->setCACert(mqtt_rootCA.c_str());
+        #endif
+        #ifdef ESP8266
+        mqtt_X509List.append(mqtt_rootCA.c_str());
+        mqtt_tls->setTrustAnchors(&mqtt_X509List);
+        #endif
       }
       break;
     }
