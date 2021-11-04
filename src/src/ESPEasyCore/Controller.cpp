@@ -186,12 +186,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
     # ifdef USE_MQTT_TLS
-    /*
     if (mqtt_tls != nullptr) {
       delete mqtt_tls;
       mqtt_tls = nullptr;
     }
-    */
     #endif
   }
   
@@ -206,7 +204,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   mqtt_tls_last_errorstr = EMPTY_STRING;
   mqtt_tls_last_error = 0;
   const TLS_types TLS_type = ControllerSettings.TLStype();
-  if (TLS_type != TLS_types::NoTLS) {
+  if (TLS_type != TLS_types::NoTLS && nullptr == mqtt_tls) {
     #ifdef ESP32
     mqtt_tls = new ESPEasy_WiFiClientSecure;
     #endif
@@ -217,6 +215,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     if (mqtt_tls == nullptr) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Could not create TLS client, out of memory"));
       return false;
+    } else {
+      mqtt_rootCA.clear();
     }
   }
   switch(TLS_type) {
@@ -233,9 +233,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     }
     case TLS_types::TLS_CA_CERT:
     {
-//      mqtt_rootCA.clear();
-      if (mqtt_rootCA.isEmpty())
+      mqtt_rootCA.clear();
+      bool certLoaded = false;
+      if (mqtt_rootCA.isEmpty()) {
         LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
+        certLoaded = true;
+      }
 
       {
         static int previousFree = FreeMem();
@@ -253,15 +256,16 @@ bool MQTTConnect(controllerIndex_t controller_idx)
         previousFree = freemem;
       }
 
-      
-      if (mqtt_rootCA.length() > 0) {
-        #ifdef ESP32
-        mqtt_tls->setCACert(mqtt_rootCA.c_str());
-        #endif
-        #ifdef ESP8266
-        mqtt_X509List.append(mqtt_rootCA.c_str());
-        mqtt_tls->setTrustAnchors(&mqtt_X509List);
-        #endif
+      if (certLoaded) {
+        if (mqtt_rootCA.length() > 0) {
+          #ifdef ESP32
+          mqtt_tls->setCACert(mqtt_rootCA.c_str());
+          #endif
+          #ifdef ESP8266
+          mqtt_X509List.append(mqtt_rootCA.c_str());
+          mqtt_tls->setTrustAnchors(&mqtt_X509List);
+          #endif
+        }
       }
       break;
     }

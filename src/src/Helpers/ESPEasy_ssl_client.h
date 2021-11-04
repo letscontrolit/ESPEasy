@@ -22,7 +22,7 @@ typedef struct ESPEasy_sslclient_context {
     void free_client_cert();
     void free_client_key();
 
-    int socket = 0;
+    int socket = -1;
     mbedtls_ssl_context ssl_ctx;
     mbedtls_ssl_config ssl_conf;
 
@@ -32,10 +32,6 @@ typedef struct ESPEasy_sslclient_context {
     mbedtls_x509_crt ca_cert;
     mbedtls_x509_crt client_cert;
     mbedtls_pk_context client_key;
-
-    bool ca_cert_init = false;
-    bool client_cert_init = false;
-    bool client_key_init = false;
 
     unsigned long handshake_timeout = 120000;
 } ESPEasy_sslclient_context;

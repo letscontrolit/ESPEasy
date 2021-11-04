@@ -1115,10 +1115,6 @@ String LoadCertificate(const String& fname, String& certificate)
     }
     f.close();
 
-    String analyse = F("Cleanup: Before: ");
-    analyse += certificate.length();
-    analyse += F(" After: ");
-
     if (!cleanupCertificate(certificate, changed)) {
       certificate.clear();
       #ifndef BUILD_NO_DEBUG
@@ -1129,23 +1125,6 @@ String LoadCertificate(const String& fname, String& certificate)
     } else if (changed) {
       //return SaveCertificate(fname, certificate);
     }
-//    addLog(LOG_LEVEL_INFO, F("After"));
-//    addLog(LOG_LEVEL_INFO, certificate);
-    static int previousFree = FreeMem();
-    const int freemem = FreeMem();
-    
-    analyse += certificate.length();
-    analyse += changed ? F(" changed") : F(" same");
-    analyse += F(" free memory: ");
-    analyse += freemem;
-    analyse += F(" largest free block: ");
-    analyse += getMaxFreeBlock();
-
-    analyse += F(" Difference: ");
-    analyse += previousFree - freemem;
-
-    addLog(LOG_LEVEL_INFO, analyse);
-    previousFree = freemem;
   }
 
   return EMPTY_STRING;
