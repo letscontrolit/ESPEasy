@@ -25,6 +25,7 @@
 #include "../Globals/Protocol.h"
 
 #include "../Helpers/_CPlugin_Helper.h"
+#include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/PeriodicalActions.h"
@@ -184,6 +185,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   if (MQTTclient.connected()) {
     MQTTclient.disconnect();
+    # ifdef USE_MQTT_TLS
+    /*
+    if (mqtt_tls != nullptr) {
+      delete mqtt_tls;
+      mqtt_tls = nullptr;
+    }
+    */
+    #endif
   }
   
   updateMQTTclient_connected();
@@ -197,6 +206,19 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   mqtt_tls_last_errorstr = EMPTY_STRING;
   mqtt_tls_last_error = 0;
   const TLS_types TLS_type = ControllerSettings.TLStype();
+  if (TLS_type != TLS_types::NoTLS) {
+    #ifdef ESP32
+    mqtt_tls = new ESPEasy_WiFiClientSecure;
+    #endif
+    #ifdef ESP8266
+    mqtt_tls = new BearSSL::WiFiClientSecure;
+    #endif
+
+    if (mqtt_tls == nullptr) {
+      addLog(LOG_LEVEL_ERROR, F("MQTT : Could not create TLS client, out of memory"));
+      return false;
+    }
+  }
   switch(TLS_type) {
     case TLS_types::NoTLS:
     {
@@ -206,31 +228,39 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     }
     case TLS_types::TLS_PSK:
     {
-      //mqtt_tls.setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
+      //mqtt_tls->setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
       break;
     }
     case TLS_types::TLS_CA_CERT:
     {
-      const String certFile = ControllerSettings.getCertificateFilename();
-      const size_t size = fileSize(certFile);
-      if (size > 0) {
-        if (mqtt_rootCA != nullptr) {
-          free(mqtt_rootCA);
-        }
-        mqtt_rootCA = (char*)malloc(size + 1);
-        if (mqtt_rootCA != nullptr) {
-          LoadFromFile(certFile.c_str(), 0, (uint8_t*)mqtt_rootCA, size);
-          mqtt_rootCA[size] = '\0';
-        }
+//      mqtt_rootCA.clear();
+      if (mqtt_rootCA.isEmpty())
+        LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
+
+      {
+        static int previousFree = FreeMem();
+        const int freemem = FreeMem();
+        
+        String analyse = F(" free memory: ");
+        analyse += freemem;
+        analyse += F(" largest free block: ");
+        analyse += getMaxFreeBlock();
+
+        analyse += F(" Difference: ");
+        analyse += previousFree - freemem;
+
+        addLog(LOG_LEVEL_INFO, analyse);
+        previousFree = freemem;
       }
 
-      if (mqtt_rootCA != nullptr) {
+      
+      if (mqtt_rootCA.length() > 0) {
         #ifdef ESP32
-        mqtt_tls.setCACert(mqtt_rootCA);
+        mqtt_tls->setCACert(mqtt_rootCA.c_str());
         #endif
         #ifdef ESP8266
-        mqtt_X509List.append(mqtt_rootCA);
-        mqtt_tls.setTrustAnchors(&mqtt_X509List);
+        mqtt_X509List.append(mqtt_rootCA.c_str());
+        mqtt_tls->setTrustAnchors(&mqtt_X509List);
         #endif
       }
       break;
@@ -238,22 +268,22 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     /*
     case TLS_types::TLS_CA_CLI_CERT:
     {
-      //mqtt_tls.setCertificate(const char *client_ca);
+      //mqtt_tls->setCertificate(const char *client_ca);
       break;
     }
     */
     case TLS_types::TLS_insecure:
     {
-      mqtt_tls.setInsecure();
+      mqtt_tls->setInsecure();
       break;
     }
   }
   if (TLS_type != TLS_types::NoTLS) {
-    mqtt_tls.setTimeout(ControllerSettings.ClientTimeout);
+    mqtt_tls->setTimeout(ControllerSettings.ClientTimeout);
     #ifdef ESP8266
-    mqtt_tls.setBufferSizes(1024,1024);
+    mqtt_tls->setBufferSizes(1024,1024);
     #endif
-    MQTTclient.setClient(mqtt_tls);
+    MQTTclient.setClient(*mqtt_tls);
     if (mqttPort == 1883) {
       mqttPort = 8883;
     }
@@ -319,10 +349,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   {
     char buf[128] = {0};
     #ifdef ESP8266
-    mqtt_tls_last_error = mqtt_tls.getLastSSLError(buf,128);
+    mqtt_tls_last_error = mqtt_tls->getLastSSLError(buf,128);
     #endif
     #ifdef ESP32
-    mqtt_tls_last_error = mqtt_tls.lastError(buf,128);
+    mqtt_tls_last_error = mqtt_tls->lastError(buf,128);
     #endif
     mqtt_tls_last_errorstr = buf;
   }
@@ -341,6 +371,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     #endif
 
     MQTTclient.disconnect();
+    #ifdef USE_MQTT_TLS
+    mqtt_tls->stop();
+    #endif
+
     updateMQTTclient_connected();
     return false;
   }

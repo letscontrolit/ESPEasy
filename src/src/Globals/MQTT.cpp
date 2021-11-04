@@ -12,13 +12,13 @@ String  mqtt_tls_last_errorstr;
 int32_t mqtt_tls_last_error = 0;
 
 #  ifdef ESP32
-WiFiClientSecure mqtt_tls;
+ESPEasy_WiFiClientSecure* mqtt_tls;
 #  endif // ifdef ESP32
 #  ifdef ESP8266
-BearSSL::WiFiClientSecure mqtt_tls;
+BearSSL::WiFiClientSecure* mqtt_tls;
 BearSSL::X509List mqtt_X509List;
 #  endif // ifdef ESP8266
-char *mqtt_rootCA = nullptr;
+String mqtt_rootCA;
 # endif  // ifdef USE_MQTT_TLS
 
 PubSubClient MQTTclient(mqtt);
