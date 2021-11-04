@@ -28,7 +28,7 @@ extern BearSSL::X509List mqtt_X509List;
 
 #  endif // ifdef ESP8266
 
-extern const char *mqtt_rootCA;
+extern char *mqtt_rootCA;
 # endif  // ifdef USE_MQTT_TLS
 extern PubSubClient MQTTclient;
 extern bool MQTTclient_should_reconnect;

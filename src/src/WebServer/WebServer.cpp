@@ -129,14 +129,16 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
     String fileName = tmplName;
 
     fileName += F(".htm");
-    fs::File f = tryOpenFile(fileName, "r");
 
-    if (f) {
-      pageTemplate.reserve(f.size());
+    bool loadedFromFile = false;
 
-      while (f.available()) { pageTemplate += (char)f.read(); }
-      f.close();
-    } else {
+    if (fileExists(fileName)) {
+      String res = LoadFromFile(fileName.c_str(), pageTemplate);
+      if (res.isEmpty()) {
+        loadedFromFile = true;
+      }
+    }
+    if (!loadedFromFile) {
       // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
       getWebPageTemplateDefault(tmplName, pageTemplate);
     }

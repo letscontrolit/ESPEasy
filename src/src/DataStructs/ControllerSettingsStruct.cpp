@@ -314,15 +314,42 @@ void ControllerSettingsStruct::useLocalSystemTime(bool value)
 
 TLS_types ControllerSettingsStruct::TLStype() const
 {
-  // Store it in bits 12, 13, 14
-  const TLS_types tls_type = static_cast<TLS_types>((VariousFlags >> 12) & 0x7);
+  // Store it in bits 12, 13, 14, 15
+  const TLS_types tls_type = static_cast<TLS_types>((VariousFlags >> 12) & 0xF);
   return tls_type;
 }
 
 void  ControllerSettingsStruct::TLStype(TLS_types tls_type)
 {
-  const uint32_t mask = ~(0x7);
+  const uint32_t mask = ~(0xF);
   VariousFlags &= mask; // Clear the bits
   const uint32_t tls_type_val = static_cast<uint32_t>(tls_type) << 12;
   VariousFlags |= tls_type_val;
+}
+
+String ControllerSettingsStruct::getCertificateFilename() const
+{
+  String certFile = HostName;
+  if (certFile.isEmpty()) {
+    certFile = F("<HostName>");
+  }
+
+  switch (TLStype()) {
+    case TLS_types::NoTLS:
+    case TLS_types::TLS_insecure:
+      return EMPTY_STRING;
+    case TLS_types::TLS_PSK:
+      certFile += F(".psk");
+      break;
+    /*
+    case TLS_types::TLS_CA_CLI_CERT:
+      certFile += F(".caclicert");
+      break;
+    */
+    case TLS_types::TLS_CA_CERT:
+      certFile += F(".cacert");
+      break;
+  }
+  
+  return certFile;
 }

@@ -161,17 +161,31 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       const __FlashStringHelper * options[NR_MQTT_TLS_TYPES] = {
        toString(TLS_types::NoTLS),
 //       toString(TLS_types::TLS_PSK),
-//       toString(TLS_types::TLS_CA_CERT),
+       toString(TLS_types::TLS_CA_CERT),
        toString(TLS_types::TLS_insecure)
       };
       const int indices[NR_MQTT_TLS_TYPES] = {
         static_cast<int>(TLS_types::NoTLS),
 //        static_cast<int>(TLS_types::TLS_PSK),
-//        static_cast<int>(TLS_types::TLS_CA_CERT),
+        static_cast<int>(TLS_types::TLS_CA_CERT),
         static_cast<int>(TLS_types::TLS_insecure)
       };
       addFormSelector(displayName, internalName, NR_MQTT_TLS_TYPES, options, indices, choice, true);
       #undef NR_MQTT_TLS_TYPES
+      const String certFile = ControllerSettings.getCertificateFilename();
+      if (!certFile.isEmpty())
+      {
+        const String certFile = ControllerSettings.getCertificateFilename();
+        String note = F("Certificate or PSK must be stored on the filesystem in <tt>");
+        note += certFile;
+        note += F("</tt> ");
+        if (fileExists(certFile)) {
+          note += F("(File exists)");
+        } else {
+          note += F("(Not found)");
+        }
+        addFormNote(note);
+      }
       #endif
       break;
     }

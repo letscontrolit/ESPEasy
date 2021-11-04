@@ -5,9 +5,9 @@
 #include "../../ESPEasy_common.h"
 #include "../Globals/Plugins.h"
 
-typedef std::map<String, taskIndex_t>TaskIndexNameMap;
-typedef std::map<String, uint8_t>       TaskIndexValueNameMap;
-typedef std::map<String, bool>       FilePresenceMap;
+typedef std::map<String, taskIndex_t> TaskIndexNameMap;
+typedef std::map<String, uint8_t>     TaskIndexValueNameMap;
+typedef std::map<String, int>         FilePresenceMap; 
 
 struct Caches {
   void clearAllCaches();
@@ -18,7 +18,7 @@ struct Caches {
 
   TaskIndexNameMap      taskIndexName;
   TaskIndexValueNameMap taskIndexValueName;
-  FilePresenceMap       fileExistsMap;
+  FilePresenceMap       fileExistsMap;  // Filesize. -1 if not present
   bool                  activeTaskUseSerial0 = false;
 };
 

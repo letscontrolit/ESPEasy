@@ -118,14 +118,26 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 }
 
 bool fileExists(const String& fname) {
+  return (fileSize(fname) >= 0);
+}
+
+int fileSize(const String& fname) {
   const String patched_fname = patch_fname(fname);
   auto search = Cache.fileExistsMap.find(patched_fname);
   if (search != Cache.fileExistsMap.end()) {
-    return search->second;
+    return search->second >= 0;
   }
-  bool res = ESPEASY_FS.exists(patched_fname);
-  Cache.fileExistsMap[patched_fname] = res;
-  return res;
+  int size = -1;
+  if (ESPEASY_FS.exists(patched_fname)) {
+    size = 0;
+    fs::File f = ESPEASY_FS.open(patched_fname, "r");
+    if (f) {
+      size = f.size();
+      f.close();
+    }
+  }
+  Cache.fileExistsMap[patched_fname] = size;
+  return size;
 }
 
 fs::File tryOpenFile(const String& fname, const String& mode) {
@@ -1230,6 +1242,52 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
   SPIFFS_CHECK(f.read(memAddress, datasize), fname);
   f.close();
+
+  STOP_TIMER(LOADFILE_STATS);
+  delay(0);
+
+  return String();
+}
+
+String LoadFromFile(const char *fname, String& data, int offset)
+{
+  fs::File f = tryOpenFile(fname, "r");
+  SPIFFS_CHECK(f, fname);
+  #ifndef BUILD_NO_DEBUG
+  String log = F("LoadFromFile: ");
+  log += fname;
+  #else
+  String log = F("Load error");
+  #endif
+
+  if (!f || offset < 0 || (offset >= f.size())) {
+    #ifndef BUILD_NO_DEBUG
+    log += F(" ERROR, invalid position in file");
+    #endif
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
+  delay(0);
+  START_TIMER;
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("LoadFromFile"));
+  #endif
+  
+  SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
+  if (f) {
+    if (!data.reserve(f.size() - offset)) {
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Out of memory");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      f.close();
+      return log;
+    }
+
+    while (f.available()) { data += (char)f.read(); }
+    f.close();
+  }
+  
 
   STOP_TIMER(LOADFILE_STATS);
   delay(0);
