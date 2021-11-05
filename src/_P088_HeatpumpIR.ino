@@ -207,9 +207,10 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
     	{
         addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter deactivated"));
 
-        if (Plugin_088_irSender != NULL)
+        if (Plugin_088_irSender != nullptr)
         {
           delete Plugin_088_irSender;
+          Plugin_088_irSender = nullptr;
         }
 
     	  break;

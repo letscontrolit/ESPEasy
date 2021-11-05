@@ -232,7 +232,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // Hardware serial is RX on 3 and TX on 1
-        P102_PZEM_sensor = new PZEM004Tv30(port, rxPin, txPin);
+        P102_PZEM_sensor = new (std::nothrow) PZEM004Tv30(port, rxPin, txPin);
 
         // Sequence for changing PZEM address
         if (P102_PZEM_ADDR_SET == 1) // if address programming confirmed

@@ -11,9 +11,20 @@
 P111_data_struct::P111_data_struct(uint8_t csPin, uint8_t rstPin) : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
 {}
 
+P111_data_struct::~P111_data_struct() {
+  if (mfrc522 != nullptr) {
+    delete mfrc522;
+    mfrc522 = nullptr;
+  }
+}
+
 void P111_data_struct::init() {
-  if (mfrc522 == nullptr){
-    mfrc522 = new MFRC522 (_csPin, _rstPin);   // Instantiate a MFRC522
+  if (mfrc522 != nullptr) {
+    delete mfrc522;
+    mfrc522 = nullptr;
+  }
+  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin);   // Instantiate a MFRC522
+  if (mfrc522 != nullptr) {
     mfrc522->PCD_Init();  // Initialize MFRC522 reader
   }
 }
