@@ -96,13 +96,11 @@ void handle_unprocessedNetworkEvents()
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
-        if (WiFiEventData.wifiConnectInProgress) {
-          if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
-            WiFiEventData.last_wifi_connect_attempt_moment.clear();
-          }
-          if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
-            WiFiEventData.wifiConnectInProgress = false;
-          }
+        if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
+          WiFiEventData.last_wifi_connect_attempt_moment.clear();
+        }
+        if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
+          WiFiEventData.wifiConnectInProgress = false;
         }
         delay(10);
       }
@@ -246,6 +244,7 @@ void processDisconnect() {
   }
 
 
+  // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
   bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;

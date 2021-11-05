@@ -1,10 +1,12 @@
-#include "StringProvider.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef HAS_ETHERNET
 # include "ETH.h"
 #endif // ifdef HAS_ETHERNET
 
 #include "../../ESPEasy-Globals.h"
+
+#include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -20,7 +22,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"

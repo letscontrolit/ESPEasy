@@ -237,7 +237,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
   SerialRead16(framelength, &checksum);
 
-  if (framelength != (packetSize() - 4)) {
+  if ((framelength + 4) != packetSize()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
       log.reserve(34);

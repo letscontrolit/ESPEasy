@@ -1,7 +1,7 @@
-#include "NPlugins.h"
+#include "../Globals/NPlugins.h"
 
 #include "../DataStructs/NotificationStruct.h"
-#include "Settings.h"
+#include "../Globals/Settings.h"
 
 
 nprotocolIndex_t INVALID_NPROTOCOL_INDEX = NPLUGIN_MAX;
