@@ -1,8 +1,5 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P096
-
-#include "src/PluginStructs/P096_data_struct.h"
-
 //#######################################################################################################
 //#################################### Plugin 096: eInk display #################################
 //#######################################################################################################
@@ -100,6 +97,12 @@ Examples:
 
 */
 
+//plugin dependency
+#include <LOLIN_EPD.h>
+#include <Adafruit_GFX.h>
+
+//declare functions for using default value parameters
+void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSize = 1, unsigned short color = EPD_WHITE, unsigned short bkcolor = EPD_BLACK);
 
 //Define the default values for both ESP32/lolin32 and D1 Mini 
 #ifdef ESP32
@@ -135,6 +138,9 @@ struct Plugin_096_EPD_SettingStruct
   int height;
 } EPD_Settings;
 
+//The display pointer
+LOLIN_IL3897 *eInkScreen = NULL;
+uint8_t plugin_096_sequence_in_progress = false;
 
 boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -279,29 +285,20 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         EPD_Settings.width = PCONFIG(2);
         EPD_Settings.height = PCONFIG(3);
 
+        eInkScreen = new LOLIN_IL3897(EPD_Settings.width, EPD_Settings.height, EPD_Settings.address_epd_dc, EPD_Settings.address_epd_rst, EPD_Settings.address_epd_cs, EPD_Settings.address_epd_busy); //hardware SPI
+        plugin_096_sequence_in_progress = false;
+        eInkScreen->begin();
+        eInkScreen->clearBuffer();
 
-        initPluginTaskData(event->TaskIndex, 
-          new (std::nothrow) P096_data_struct(
-            EPD_Settings.width, 
-            EPD_Settings.height, 
-            EPD_Settings.address_epd_dc, 
-            EPD_Settings.address_epd_rst, 
-            EPD_Settings.address_epd_cs, 
-            EPD_Settings.address_epd_busy)); // hardware SPI
-        P096_data_struct *P096_data =
-          static_cast<P096_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P096_data) {
-          P096_data->eInkScreen.setTextColor(EPD_BLACK);
-          P096_data->eInkScreen.setTextSize(3);
-          P096_data->eInkScreen.println(F("ESP Easy"));
-          P096_data->eInkScreen.setTextSize(2);
-          P096_data->eInkScreen.println(F("eInk shield"));
-          P096_data->eInkScreen.display();
-          delay(100);
-          
-          success = true;
-        }
+        eInkScreen->setTextColor(EPD_BLACK);
+        eInkScreen->setTextSize(3);
+        eInkScreen->println("ESP Easy");
+        eInkScreen->setTextSize(2);
+        eInkScreen->println("eInk shield");
+        eInkScreen->display();
+        delay(100);
+        
+        success = true;
         break;
       }
 
@@ -315,232 +312,220 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         String command;
         String subcommand;
 
-        P096_data_struct *P096_data =
-          static_cast<P096_data_struct *>(getPluginTaskData(event->TaskIndex));
+        int argIndex = arguments.indexOf(',');
+        if (argIndex)
+        {
+          command = arguments.substring(0, argIndex);
+          arguments = arguments.substring(argIndex+1);
+          argIndex = arguments.indexOf(',');
+          subcommand = arguments.substring(0, argIndex);
+          success = true;
 
-        if (nullptr != P096_data) {
+#ifndef BUILD_NO_DEBUG
+          tmpString += "<br/> command= " + command;
+          tmpString += "<br/> arguments= " + arguments;
+          tmpString += "<br/> argIndex= " + String(argIndex);
+          tmpString += "<br/> subcommand= " + subcommand;
+#endif
 
-          int argIndex = arguments.indexOf(',');
-          if (argIndex)
+          if (command.equalsIgnoreCase(F("EPDCMD")))
           {
-            command = arguments.substring(0, argIndex);
-            arguments = arguments.substring(argIndex+1);
-            argIndex = arguments.indexOf(',');
-            subcommand = arguments.substring(0, argIndex);
-            success = true;
-
-  #ifndef BUILD_NO_DEBUG
-            tmpString += F("<br/> command= ");
-            tmpString += command;
-            tmpString += F("<br/> arguments= ");
-            tmpString += arguments;
-            tmpString += F("<br/> argIndex= ");
-            tmpString += String(argIndex);
-            tmpString += F("<br/> subcommand= ");
-            tmpString += subcommand;
-  #endif
-
-            if (command.equalsIgnoreCase(F("EPDCMD")))
+            if(subcommand.equalsIgnoreCase(F("CLEAR")))
             {
-              if(subcommand.equalsIgnoreCase(F("CLEAR")))
-              {
-                arguments = arguments.substring(argIndex + 1);
-                P096_data->eInkScreen.clearBuffer();
-                P096_data->eInkScreen.fillScreen(P096_data->ParseColor(arguments));
-                P096_data->eInkScreen.display();
-                P096_data->eInkScreen.clearBuffer();
-              } 
-              else if(subcommand.equalsIgnoreCase(F("DEEPSLEEP")))
-              {
-                P096_data->eInkScreen.deepSleep();
-              }        
-              else if(subcommand.equalsIgnoreCase(F("SEQ_START")))
-              {
-                P096_data->eInkScreen.clearBuffer();
-                P096_data->eInkScreen.fillScreen(P096_data->ParseColor(arguments));
-                P096_data->plugin_096_sequence_in_progress = true;
-              } 
-              else if(subcommand.equalsIgnoreCase(F("SEQ_END")))
-              {
-  #ifndef BUILD_NO_DEBUG
-                TimingStats s;
-                const unsigned statisticsTimerStart(micros());
-  #endif
-                P096_data->eInkScreen.display();
-                
-  #ifndef BUILD_NO_DEBUG
-                s.add(usecPassedSince(statisticsTimerStart));
-                tmpString += "<br/> Display timings = " + String(s.getAvg());
-  #endif              
-                P096_data->eInkScreen.clearBuffer();
-                P096_data->plugin_096_sequence_in_progress = false;
-              } 
-              else if(subcommand.equalsIgnoreCase(F("INV")))
-              {
-                arguments = arguments.substring(argIndex + 1);
-                P096_data->eInkScreen.invertDisplay(arguments.toInt() == 1);
-                P096_data->eInkScreen.display();
-              } 
-              else if(subcommand.equalsIgnoreCase(F("ROT")))
-              {
-                arguments = arguments.substring(argIndex + 1);
-                P096_data->eInkScreen.setRotation(arguments.toInt() % 4);
-                P096_data->eInkScreen.display();
-              } 
-              else 
-              {
-                success = false;
-              }
-            }
-            else if (command.equalsIgnoreCase(F("EPD")))
-            {
-  #ifndef BUILD_NO_DEBUG
-              tmpString += F("<br/> EPD  ");
-  #endif
               arguments = arguments.substring(argIndex + 1);
-              String sParams[8];
-              int argCount = P096_data->StringSplit(arguments, ',', sParams, 8);
-
-  #ifndef BUILD_NO_DEBUG
-              for(int a=0; a < argCount && a < 8; a++)
-              {
-                  tmpString += F("<br/> ARGS[");
-                  tmpString += a;
-                  tmpString += F("]=");
-                  tmpString += sParams[a];
-              }
-  #endif
-
-              if(P096_data->plugin_096_sequence_in_progress == false)
-              {
-                P096_data->eInkScreen.clearBuffer();
-                P096_data->eInkScreen.fillScreen(EPD_WHITE);
-              }
-
-              if(subcommand.equalsIgnoreCase(F("txt")))
-              {
-                P096_data->FixText(arguments);
-                P096_data->eInkScreen.println(arguments); //write all pending cars
-              }
-              else if(subcommand.equalsIgnoreCase(F("txz")))
-              {
-                P096_data->eInkScreen.setCursor(sParams[0].toInt(), sParams[1].toInt());
-                P096_data->FixText(sParams[2]);
-                P096_data->eInkScreen.println(sParams[2]); //write all pending cars
-              }
-              else if(subcommand.equalsIgnoreCase(F("txp")) && argCount == 2)
-              {
-                P096_data->eInkScreen.setCursor(sParams[0].toInt(), sParams[1].toInt());
-              }
-              else if(subcommand.equalsIgnoreCase(F("txc")) && (argCount == 1 || argCount == 2) )
-              {
-                if(argCount == 1)
-                  P096_data->eInkScreen.setTextColor(P096_data->ParseColor(sParams[0]));
-                else //argCount=2
-                  P096_data->eInkScreen.setTextColor(P096_data->ParseColor(sParams[0]), P096_data->ParseColor(sParams[1]));
-              }
-              else if(subcommand.equalsIgnoreCase(F("txs")) && argCount == 1)
-              {
-                P096_data->eInkScreen.setTextSize(sParams[0].toInt());
-              }
-              else if(subcommand.equalsIgnoreCase(F("txtfull")) && argCount >= 3 && argCount <= 6)
-              {
-                switch (argCount)
-                {
-                case 3: //single text
-                  P096_data->printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);  
-                  break;
-
-                case 4: //text + size
-                  P096_data->printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());  
-                  break;
-
-                case 5: //text + size + color
-                  P096_data->printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), P096_data->ParseColor(sParams[3]));  
-                  break;
-                
-                case 6: //text + size + color
-                  P096_data->printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), P096_data->ParseColor(sParams[3]), P096_data->ParseColor(sParams[4]));  
-                  break;
-                default:
-                  success = false;
-                  break;
-                }            
-              }
-              else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
-              {
-                P096_data->eInkScreen.drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P096_data->ParseColor(sParams[4]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
-              {
-                P096_data->eInkScreen.drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), P096_data->ParseColor(sParams[2]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
-              {
-                P096_data->eInkScreen.drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), P096_data->ParseColor(sParams[2]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
-              {
-                P096_data->eInkScreen.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P096_data->ParseColor(sParams[4]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
-              {
-                P096_data->eInkScreen.fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P096_data->ParseColor(sParams[5]));
-                P096_data->eInkScreen.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P096_data->ParseColor(sParams[4]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
-              {
-                P096_data->eInkScreen.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P096_data->ParseColor(sParams[3]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
-              {
-                P096_data->eInkScreen.fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P096_data->ParseColor(sParams[4]));
-                P096_data->eInkScreen.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P096_data->ParseColor(sParams[3]));
-              }
-              else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
-              {
-                P096_data->eInkScreen.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P096_data->ParseColor(sParams[6]));
-              }           
-              else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
-              {
-                P096_data->eInkScreen.fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P096_data->ParseColor(sParams[7]));
-                P096_data->eInkScreen.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P096_data->ParseColor(sParams[6]));
-              }           
-              else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
-              {
-                P096_data->eInkScreen.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P096_data->ParseColor(sParams[5]));
-              }          
-              else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
-              {
-                P096_data->eInkScreen.fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P096_data->ParseColor(sParams[6]));
-                P096_data->eInkScreen.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P096_data->ParseColor(sParams[5]));
-              } 
-              else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
-              {
-                P096_data->eInkScreen.drawPixel(sParams[0].toInt(), sParams[1].toInt(), P096_data->ParseColor(sParams[2]));
-              } 
-              else 
-              {
-                success = false;
-              }
-            }
+              eInkScreen->clearBuffer();
+              eInkScreen->fillScreen(Plugin_096_ParseColor(arguments));
+              eInkScreen->display();
+              eInkScreen->clearBuffer();
+            } 
+            else if(subcommand.equalsIgnoreCase(F("DEEPSLEEP")))
+            {
+              eInkScreen->deepSleep();
+            }        
+            else if(subcommand.equalsIgnoreCase(F("SEQ_START")))
+            {
+              eInkScreen->clearBuffer();
+              eInkScreen->fillScreen(Plugin_096_ParseColor(arguments));
+              plugin_096_sequence_in_progress = true;
+            } 
+            else if(subcommand.equalsIgnoreCase(F("SEQ_END")))
+            {
+#ifndef BUILD_NO_DEBUG
+              TimingStats s;
+              const unsigned statisticsTimerStart(micros());
+#endif
+              eInkScreen->display();
+              
+#ifndef BUILD_NO_DEBUG
+              s.add(usecPassedSince(statisticsTimerStart));
+              tmpString += "<br/> Display timings = " + String(s.getAvg());
+#endif              
+              eInkScreen->clearBuffer();
+              plugin_096_sequence_in_progress = false;
+            } 
+            else if(subcommand.equalsIgnoreCase(F("INV")))
+            {
+              arguments = arguments.substring(argIndex + 1);
+              eInkScreen->invertDisplay(arguments.toInt() == 1);
+              eInkScreen->display();
+            } 
+            else if(subcommand.equalsIgnoreCase(F("ROT")))
+            {
+              arguments = arguments.substring(argIndex + 1);
+              eInkScreen->setRotation(arguments.toInt() % 4);
+              eInkScreen->display();
+            } 
             else 
             {
               success = false;
             }
           }
-          else
+          else if (command.equalsIgnoreCase(F("EPD")))
           {
-            //invalid arguments
+#ifndef BUILD_NO_DEBUG
+            tmpString += "<br/> EPD  ";
+#endif
+            arguments = arguments.substring(argIndex + 1);
+            String sParams[8];
+            int argCount = Plugin_096_StringSplit(arguments, ',', sParams, 8);
+
+#ifndef BUILD_NO_DEBUG
+            for(int a=0; a < argCount && a < 8; a++)
+            {
+                tmpString += "<br/> ARGS[" + String(a) + "]=" + sParams[a];
+            }
+#endif
+
+            if(plugin_096_sequence_in_progress == false)
+            {
+              eInkScreen->clearBuffer();
+              eInkScreen->fillScreen(EPD_WHITE);
+            }
+
+            if(subcommand.equalsIgnoreCase(F("txt")))
+            {
+              Plugin_096_FixText(arguments);
+              eInkScreen->println(arguments); //write all pending cars
+            }
+            else if(subcommand.equalsIgnoreCase(F("txz")))
+            {
+              eInkScreen->setCursor(sParams[0].toInt(), sParams[1].toInt());
+              Plugin_096_FixText(sParams[2]);
+              eInkScreen->println(sParams[2]); //write all pending cars
+            }
+            else if(subcommand.equalsIgnoreCase(F("txp")) && argCount == 2)
+            {
+              eInkScreen->setCursor(sParams[0].toInt(), sParams[1].toInt());
+            }
+            else if(subcommand.equalsIgnoreCase(F("txc")) && (argCount == 1 || argCount == 2) )
+            {
+              if(argCount == 1)
+                eInkScreen->setTextColor(Plugin_096_ParseColor(sParams[0]));
+              else //argCount=2
+                eInkScreen->setTextColor(Plugin_096_ParseColor(sParams[0]), Plugin_096_ParseColor(sParams[1]));
+            }
+            else if(subcommand.equalsIgnoreCase(F("txs")) && argCount == 1)
+            {
+              eInkScreen->setTextSize(sParams[0].toInt());
+            }
+            else if(subcommand.equalsIgnoreCase(F("txtfull")) && argCount >= 3 && argCount <= 6)
+            {
+              switch (argCount)
+              {
+              case 3: //single text
+                Plugin_096_printText(sParams[2].c_str(), sParams[0].toInt() - 1,sParams[1].toInt() - 1);  
+                break;
+
+              case 4: //text + size
+                Plugin_096_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());  
+                break;
+
+              case 5: //text + size + color
+                Plugin_096_printText(sParams[4].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_096_ParseColor(sParams[3]));  
+                break;
+              
+              case 6: //text + size + color
+                Plugin_096_printText(sParams[5].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt(), Plugin_096_ParseColor(sParams[3]), Plugin_096_ParseColor(sParams[4]));  
+                break;
+              default:
+                success = false;
+                break;
+              }            
+            }
+            else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
+            {
+              eInkScreen->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_096_ParseColor(sParams[4]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
+            {
+              eInkScreen->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), Plugin_096_ParseColor(sParams[2]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
+            {
+              eInkScreen->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), Plugin_096_ParseColor(sParams[2]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
+            {
+              eInkScreen->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_096_ParseColor(sParams[4]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
+            {
+              eInkScreen->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_096_ParseColor(sParams[5]));
+              eInkScreen->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), Plugin_096_ParseColor(sParams[4]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
+            {
+              eInkScreen->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_096_ParseColor(sParams[3]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
+            {
+              eInkScreen->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_096_ParseColor(sParams[4]));
+              eInkScreen->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_096_ParseColor(sParams[3]));
+            }
+            else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
+            {
+              eInkScreen->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_096_ParseColor(sParams[6]));
+            }           
+            else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
+            {
+              eInkScreen->fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_096_ParseColor(sParams[7]));
+              eInkScreen->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), Plugin_096_ParseColor(sParams[6]));
+            }           
+            else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
+            {
+              eInkScreen->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_096_ParseColor(sParams[5]));
+            }          
+            else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
+            {
+              eInkScreen->fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_096_ParseColor(sParams[6]));
+              eInkScreen->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), Plugin_096_ParseColor(sParams[5]));
+            } 
+            else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
+            {
+              eInkScreen->drawPixel(sParams[0].toInt(), sParams[1].toInt(), Plugin_096_ParseColor(sParams[2]));
+            } 
+            else 
+            {
+              success = false;
+            }
+          }
+          else 
+          {
             success = false;
           }
-
-          //in case of command outside of sequence, then refresh screen
-          if(success && !P096_data->plugin_096_sequence_in_progress)
-          {
-            P096_data->eInkScreen.display();
-          }
         }
+        else
+        {
+          //invalid arguments
+          success = false;
+        }
+
+        //in case of command outside of sequence, then refresh screen
+        if(success && !plugin_096_sequence_in_progress)
+        {
+          eInkScreen->display();
+        }
+
 #ifndef BUILD_NO_DEBUG
         String log;
         log.reserve(110);                           // Prevent re-allocation
@@ -556,6 +541,108 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 }
 
 
+//Print some text
+//param [in] string : The text to display
+//param [in] X : The left position (X)
+//param [in] Y : The top position (Y)
+//param [in] textSize : The text size (default 1)
+//param [in] color : The fore color (default ILI9341_WHITE)
+//param [in] bkcolor : The background color (default ILI9341_BLACK)
+void Plugin_096_printText(const char *string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
+{
+  eInkScreen->clearBuffer();
+  eInkScreen->clearDisplay();
+  eInkScreen->setCursor(X, Y);
+  eInkScreen->setTextColor(color, bkcolor);
+  eInkScreen->setTextSize(textSize);
+  String fixString = string;
+  Plugin_096_FixText(fixString);
+  eInkScreen->println(fixString);
+  eInkScreen->display();
+}
+
+//Parse color string to color
+//param [in] colorString : The color string (white, red, ...)
+//return : color (default EPD_WHITE)
+unsigned short Plugin_096_ParseColor(const String & colorString)
+{
+  //copy to local var and ensure lowercase
+  //this optimise the next equlaity checks
+  String s = colorString;
+  s.toLowerCase();
+
+  if (s.equals(F("black")))
+    return EPD_BLACK;
+  if (s.equals(F("white")))
+    return EPD_WHITE;
+  if (s.equals(F("inverse")))
+    return EPD_INVERSE;
+  if (s.equals(F("red")))
+    return EPD_RED;
+  if (s.equals(F("dark")))
+    return EPD_DARK;
+  if (s.equals(F("light")))
+    return EPD_LIGHT;
+  return EPD_WHITE;
+}
+
+//Fix text with handling special characters (degrees and main monetary symbols)
+//This is specific case for current AdafruitGfx standard fontused for eink screen
+//param [in/out] s : The string to fix
+void Plugin_096_FixText(String & s)
+{
+  const char degree[3] = {0xc2, 0xb0, 0};  // Unicode degree symbol
+  const char degree_eink[2] = {0xf7, 0};  // eink degree symbol
+  s.replace(degree, degree_eink);
+  s.replace(F("{D}"), degree_eink);
+  s.replace(F("&deg;"), degree_eink);
+  
+  const char euro[4]  = { 0xe2, 0x82, 0xac, 0 }; // Unicode euro symbol
+  const char euro_eink[2] = {0xED, 0};  // eink degree symbol
+  s.replace(euro, euro_eink);
+  s.replace(F("{E}"), euro_eink);
+  s.replace(F("&euro;"), euro_eink);
+
+  const char pound[3] = { 0xc2, 0xa3, 0 };       // Unicode pound symbol
+  const char pound_eink[2] = {0x9C, 0};  // eink pound symbol
+  s.replace(pound, pound_eink);
+  s.replace(F("{P}"), pound_eink);
+  s.replace(F("&pound;"), pound_eink);
+
+  const char yen[3]   = { 0xc2, 0xa5, 0 };       // Unicode yen symbol
+  const char yen_eink[2] = {0x9D, 0};  // eink yen symbol
+  s.replace(yen, yen_eink);
+  s.replace(F("{Y}"), yen_eink);
+  s.replace(F("&yen;"), yen_eink);
+
+  const char cent[3]   = { 0xc2, 0xa2, 0 };       // Unicode yen symbol
+  const char cent_eink[2] = {0x9B, 0};  // eink cent symbol
+  s.replace(cent, cent_eink);
+  s.replace(F("{c}"), cent_eink);
+  s.replace(F("&cent;"), cent_eink);
+
+}
+
+//Split a string by delimiter
+//param [in] s : The input string
+//param [in] c : The delimiter
+//param [out] op : The resulting string array
+//param [in] limit : The maximum strings to find
+//return : The string count
+int Plugin_096_StringSplit(const String &s, char c, String op[], int limit)
+{
+  int count = 0;
+  char * pch;
+  String d = String(c);
+  pch = strtok ((char*)(s.c_str()),d.c_str());
+  while (pch != NULL && count < limit)
+  {
+    op[count] = String(pch);
+    count++;
+    pch = strtok (NULL, ",");
+  }  
+  return count;
+}
 
 
 #endif // USES_P096
