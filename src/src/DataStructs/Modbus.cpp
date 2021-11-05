@@ -8,13 +8,26 @@
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
   TXRXstate(MODBUS_IDLE), RXavailable(0), payLoad(0) {}
 
+Modbus::~Modbus() {
+  if (ModbusClient) {
+    ModbusClient->flush();
+    ModbusClient->stop();
+    delete (ModbusClient);
+    delay(1);
+    ModbusClient = nullptr;
+  }
+}
+
 bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister,  MODBUS_registerTypes_t type, char *IPaddress)
 {
   currentRegister = ModbusRegister;
   currentFunction = function;
   incomingValue   = type;
   resultReceived  = false;
-  ModbusClient    = new WiFiClient();
+  ModbusClient    = new (std::nothrow) WiFiClient();
+  if (ModbusClient == nullptr) {
+    return false;
+  }
   ModbusClient->setNoDelay(true);
   ModbusClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
   timeout = millis();
