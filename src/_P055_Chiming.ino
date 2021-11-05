@@ -62,35 +62,20 @@
 class CPlugin_055_Data
 {
 public:
-  long millisStateEnd;
-  long millisChimeTime;
-  long millisPauseTime;
+  long millisStateEnd = 0;
+  long millisChimeTime = 60;
+  long millisPauseTime = 400;
 
-  int pin[4];
-  uint8_t lowActive;
-  uint8_t chimeClock;
+  int pin[4] = {0};
+  uint8_t lowActive = false;
+  uint8_t chimeClock = true;
 
-  char FIFO[PLUGIN_055_FIFO_SIZE];
-  uint8_t FIFO_IndexR;
-  uint8_t FIFO_IndexW;
-
-  void Plugin_055_Data()
-  {
-    millisStateEnd = 0;
-    millisChimeTime = 60;
-    millisPauseTime = 400;
-
-    for (uint8_t i=0; i<4; i++)
-      pin[i] = -1;
-    lowActive = false;
-    chimeClock = true;
-
-    FIFO_IndexR = 0;
-    FIFO_IndexW = 0;
-  }
+  char FIFO[PLUGIN_055_FIFO_SIZE] = {0};
+  uint8_t FIFO_IndexR = 0;
+  uint8_t FIFO_IndexW = 0;
 };
 
-static CPlugin_055_Data* Plugin_055_Data = NULL;
+static CPlugin_055_Data* Plugin_055_Data = nullptr;
 
 
 boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
@@ -188,31 +173,42 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (!Plugin_055_Data)
-          Plugin_055_Data = new CPlugin_055_Data();
+          Plugin_055_Data = new (std::nothrow) CPlugin_055_Data();
 
-        Plugin_055_Data->lowActive = Settings.TaskDevicePin1Inversed[event->TaskIndex];
-        Plugin_055_Data->millisChimeTime = PCONFIG(0);
-        Plugin_055_Data->millisPauseTime = PCONFIG(1);
-        Plugin_055_Data->chimeClock = PCONFIG(2);
+        if (Plugin_055_Data != nullptr) {
+          Plugin_055_Data->lowActive = Settings.TaskDevicePin1Inversed[event->TaskIndex];
+          Plugin_055_Data->millisChimeTime = PCONFIG(0);
+          Plugin_055_Data->millisPauseTime = PCONFIG(1);
+          Plugin_055_Data->chimeClock = PCONFIG(2);
 
-        String log = F("Chime: GPIO: ");
-        for (uint8_t i=0; i<4; i++)
-        {
-          int pin = Settings.TaskDevicePin[i][event->TaskIndex];
-          Plugin_055_Data->pin[i] = pin;
-          if (pin >= 0)
+          String log = F("Chime: GPIO: ");
+          for (uint8_t i=0; i<4; i++)
           {
-            pinMode(pin, OUTPUT);
-            digitalWrite(pin, Plugin_055_Data->lowActive);
+            int pin = Settings.TaskDevicePin[i][event->TaskIndex];
+            Plugin_055_Data->pin[i] = pin;
+            if (pin >= 0)
+            {
+              pinMode(pin, OUTPUT);
+              digitalWrite(pin, Plugin_055_Data->lowActive);
+            }
+            log += pin;
+            log += ' ';
           }
-          log += pin;
-          log += ' ';
+          if (Plugin_055_Data->lowActive)
+            log += F("!");
+          addLog(LOG_LEVEL_INFO, log);
+          success = true;
         }
-        if (Plugin_055_Data->lowActive)
-          log += F("!");
-        addLog(LOG_LEVEL_INFO, log);
 
-        success = true;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_055_Data != nullptr) {
+          delete Plugin_055_Data;
+          Plugin_055_Data = nullptr;
+        }
         break;
       }
 

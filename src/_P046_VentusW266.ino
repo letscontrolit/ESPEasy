@@ -279,7 +279,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (!P046_data) {
-          P046_data = new P046_data_struct();
+          P046_data = new (std::nothrow) P046_data_struct();
         }
 
         uint8_t choice = PCONFIG(0);
