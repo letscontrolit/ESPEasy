@@ -283,6 +283,9 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       } else {
         P109_display = new (std::nothrow) SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
       }
+      if (P109_display == nullptr) {
+        break;
+      }
       P109_display->init(); // call to local override of init function
       P109_display->displayOn();
 
