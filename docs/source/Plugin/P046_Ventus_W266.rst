@@ -45,7 +45,7 @@ Specifications (indoor unit):
    .. code-block:: none
 
        [platformio]
-       env_default = hard_Ventus_W266
+       env_default = hard_Ventus_W266_1M
 
 The plugin can only **read** the sensors of the outdoor unit.
 
