@@ -99,21 +99,23 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
     case PLUGIN_INIT:
       {
         int irPin = CONFIG_PIN1;
-        if (Plugin_035_irSender == 0 && validGpio(irPin))
+        if (Plugin_035_irSender == nullptr && validGpio(irPin))
         {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
             addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
             addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
           }
-          Plugin_035_irSender = new IRsend(irPin);
-          Plugin_035_irSender->begin(); // Start the sender
+          Plugin_035_irSender = new (std::nothrow) IRsend(irPin);
+          if (Plugin_035_irSender != nullptr) {
+            Plugin_035_irSender->begin(); // Start the sender
+          }
         }
-        if (Plugin_035_irSender != 0 && irPin == -1)
+        if (Plugin_035_irSender != nullptr && irPin == -1)
         {
           addLog(LOG_LEVEL_INFO, F("INIT: IR TX Removed"));
           delete Plugin_035_irSender;
-          Plugin_035_irSender = 0;
+          Plugin_035_irSender = nullptr;
         }
 
 #ifdef P016_P035_Extended_AC
@@ -129,10 +131,26 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String &command)
         {
           addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
           delete Plugin_035_commonAc;
-          Plugin_035_commonAc = 0;
+          Plugin_035_commonAc = nullptr;
         }
 #endif
 
+        success = true;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_035_irSender != nullptr) {
+          delete Plugin_035_irSender;
+          Plugin_035_irSender = nullptr;
+        }
+        #ifdef P016_P035_Extended_AC
+        if (Plugin_035_commonAc != nullptr) {
+          delete Plugin_035_commonAc;
+          Plugin_035_commonAc = nullptr;
+        }
+        #endif
         success = true;
         break;
       }

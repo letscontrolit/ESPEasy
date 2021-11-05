@@ -31,7 +31,7 @@
 
 #include <Adafruit_NeoPixel.h>
 
-Adafruit_NeoPixel *Plugin_038_pixels;
+Adafruit_NeoPixel *Plugin_038_pixels = nullptr;
 
 #define PLUGIN_038
 #define PLUGIN_ID_038         38
@@ -94,22 +94,35 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_038_pixels)
+        if (Plugin_038_pixels == nullptr)
         {
           uint8_t striptype = PCONFIG(1);
           if (striptype == 1)
-            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+            Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           else if (striptype == 2)
-            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRBW + NEO_KHZ800);
+            Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRBW + NEO_KHZ800);
           else
-            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+            Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
 
-          Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
+          if (Plugin_038_pixels != nullptr) {
+            Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
+          }
         }
         MaxPixels = PCONFIG(0);
+        success = Plugin_038_pixels != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_038_pixels != nullptr) {
+          delete Plugin_038_pixels;
+          Plugin_038_pixels = nullptr;
+        }
         success = true;
         break;
       }
+
 
     case PLUGIN_WRITE:
       {
