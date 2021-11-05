@@ -273,10 +273,12 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           if (Candle_pixels) {
             delete Candle_pixels;
           }
-          Candle_pixels = new Adafruit_NeoPixel(NUM_PIXEL, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          SetPixelsBlack();
-          Candle_pixels->setBrightness(Candle_bright);
-          Candle_pixels->begin();
+          Candle_pixels = new (std::nothrow) Adafruit_NeoPixel(NUM_PIXEL, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+          if (Candle_pixels != nullptr) {
+            SetPixelsBlack();
+            Candle_pixels->setBrightness(Candle_bright);
+            Candle_pixels->begin();
+          }
 
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -287,7 +289,16 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           #endif
         }
 
-        success = true;
+        success = Candle_pixels != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Candle_pixels != nullptr) {
+          delete Candle_pixels;
+          Candle_pixels = nullptr;
+        }
         break;
       }
 
