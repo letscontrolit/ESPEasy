@@ -13,8 +13,8 @@
 # include <Adafruit_ILI9341.h>
 
 # ifdef PLUGIN_095_FONT_INCLUDED
-      #  include "../../static/Fonts/Seven_Segment24pt7b.h"
-      #  include "../../static/Fonts/Seven_Segment18pt7b.h"
+      #  include "../../Static/Fonts/Seven_Segment24pt7b.h"
+      #  include "../../Static/Fonts/Seven_Segment18pt7b.h"
       #  include <Fonts/FreeSans9pt7b.h> // included in Adafruit-GFX-Library
 # endif // ifdef PLUGIN_095_FONT_INCLUDED
 
