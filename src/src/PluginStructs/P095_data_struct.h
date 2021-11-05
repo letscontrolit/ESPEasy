@@ -41,11 +41,22 @@ public:
                  unsigned short color    = ILI9341_WHITE,
                  unsigned short bkcolor  = ILI9341_BLACK);
 
+  // Parse color string to ILI9341 color
+  // param [in] s : The color string (white, red, ...)
+  // return : color (default ILI9341_WHITE)
   unsigned short ParseColor(String& s);
-  int            StringSplit(String& s,
-                             char    c,
-                             String  op[],
-                             int     limit);
+
+  // Split a string by delimiter
+  // param [in] s : The input string
+  // param [in] c : The delimiter
+  // param [out] op : The resulting string array
+  // param [in] limit : The maximum strings to find
+  // return : The string count
+
+  int StringSplit(String& s,
+                  char    c,
+                  String  op[],
+                  int     limit);
 
   Adafruit_ILI9341 tft;
 };
