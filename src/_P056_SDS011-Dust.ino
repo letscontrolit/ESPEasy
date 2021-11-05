@@ -22,7 +22,7 @@
 #include "ESPEasy-Globals.h"
 
 
-CjkSDS011 *Plugin_056_SDS = NULL;
+CjkSDS011 *Plugin_056_SDS = nullptr;
 
 
 boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
@@ -105,12 +105,13 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (Plugin_056_SDS)
+        if (Plugin_056_SDS) {
           delete Plugin_056_SDS;
+        }
         const int16_t serial_rx = CONFIG_PIN1;
         const int16_t serial_tx = CONFIG_PIN2;
         const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-        Plugin_056_SDS = new CjkSDS011(port, serial_rx, serial_tx);
+        Plugin_056_SDS = new (std::nothrow) CjkSDS011(port, serial_rx, serial_tx);
         String log = F("SDS  : Init OK  ESP GPIO-pin RX:");
         log += serial_rx;
         log += F(" TX:");
@@ -124,6 +125,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
       {
         // //FIXME: if this plugin is used more than once at the same time, things go horribly wrong :)
+        // FIXME TD-er: Must implement plugin_data_struct for this
         //
         // if (Plugin_056_SDS)
         //   delete Plugin_056_SDS;

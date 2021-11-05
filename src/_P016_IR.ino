@@ -227,7 +227,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("INIT: IR RX"));
           addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
         }
-        irReceiver = new IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
+        irReceiver = new (std::nothrow) IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
         # ifdef PLUGIN_016_DEBUG
         addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver created"));
         # endif // PLUGIN_016_DEBUG
