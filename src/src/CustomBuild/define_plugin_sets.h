@@ -1425,10 +1425,10 @@ To create/register a plugin, you have to :
     #define USES_P118   // 
   #endif
   #ifndef USES_P119
-    #define USES_P119   // 
+    #define USES_P119   // ITG3205 Gyro
   #endif
   #ifndef USES_P120
-    #define USES_P120   // 
+    #define USES_P120   // ADXL345 Acceleration / Gravity
   #endif
   #ifndef USES_P121
     #define USES_P121   // 
