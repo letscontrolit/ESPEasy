@@ -8,7 +8,7 @@
 # include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
 # include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
 # include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
-# include <Adafruit_ST7796s_kbv.h>          // include Adafruit ST7796 TFT library
+# include <Adafruit_ST7796S_kbv.h>          // include Adafruit ST7796 TFT library
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
