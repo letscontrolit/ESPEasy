@@ -1,4 +1,4 @@
-#include "Arduino.h"
+#include <Arduino.h>
 
 #ifndef __ITG3205_H_
 # define __ITG3205_H_

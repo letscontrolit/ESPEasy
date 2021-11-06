@@ -1,4 +1,3 @@
-#include "config.h"
 
 #include <Wire.h>
 #include "ITG3205.h"
