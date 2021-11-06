@@ -21,12 +21,12 @@
 #include <WiFi.h>
 
 #ifndef MBEDTLS_KEY_EXCHANGE__SOME__PSK_ENABLED
-#  error "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
-#endif
+#  warning "Please configure IDF framework to include mbedTLS -> Enable pre-shared-key ciphersuites and activate at least one cipher"
+#else
 
 const char *ESPEasy_pers = "esp32-tls";
 
-static int _handle_error(int err, const char * file, int line)
+static int _handle_error(int err, const char * function, int line)
 {
     if(err == -30848){
         return err;
@@ -34,14 +34,15 @@ static int _handle_error(int err, const char * file, int line)
 #ifdef MBEDTLS_ERROR_C
     char error_buf[100];
     mbedtls_strerror(err, error_buf, 100);
-    log_e("[%s():%d]: (%d) %s", file, line, err, error_buf);
+    log_e("[%s():%d]: (%d) %s", function, line, err, error_buf);
 #else
-    log_e("[%s():%d]: code %d", file, line, err);
+    log_e("[%s():%d]: code %d", function, line, err);
 #endif
     return err;
 }
 
 #define handle_error(e) _handle_error(e, __FUNCTION__, __LINE__)
+
 
 ESPEasy_sslclient_context::ESPEasy_sslclient_context()
 {
@@ -116,30 +117,67 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
         return -1;
     }
 
+    fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
     struct sockaddr_in serv_addr;
     memset(&serv_addr, 0, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = srv;
     serv_addr.sin_port = htons(port);
 
-    if (lwip_connect(ssl_client->socket, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == 0) {
-        if(timeout <= 0){
-            timeout = 30000; // Milli seconds.
-        }
-        timeval so_timeout = { .tv_sec = timeout / 1000, .tv_usec = (timeout % 1000) * 1000 };
+    if(timeout <= 0){
+        timeout = 30000; // Milli seconds.
+    }
 
-#define ROE(x,msg) { if (((x)<0)) { log_e("LWIP Socket config of " msg " failed."); return -1; }}
-        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &so_timeout, sizeof(so_timeout)),"SO_RCVTIMEO");
-        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &so_timeout, sizeof(so_timeout)),"SO_SNDTIMEO");
+    fd_set fdset;
+    struct timeval tv;
+    FD_ZERO(&fdset);
+    FD_SET(ssl_client->socket, &fdset);
+    tv.tv_sec = timeout / 1000;
+    tv.tv_usec = (timeout % 1000) * 1000;
 
-        ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY");
-        ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
-    } else {
-        log_e("Connect to Server failed!");
+    int res = lwip_connect(ssl_client->socket, (struct sockaddr*)&serv_addr, sizeof(serv_addr));
+    if (res < 0 && errno != EINPROGRESS) {
+        log_e("connect on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+        close(ssl_client->socket);
         return -1;
     }
 
-    fcntl( ssl_client->socket, F_SETFL, fcntl( ssl_client->socket, F_GETFL, 0 ) | O_NONBLOCK );
+    res = select(ssl_client->socket + 1, nullptr, &fdset, nullptr, timeout<0 ? nullptr : &tv);
+    if (res < 0) {
+        log_e("select on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+        close(ssl_client->socket);
+        return -1;
+    } else if (res == 0) {
+        log_i("select returned due to timeout %d ms for fd %d", timeout, ssl_client->socket);
+        close(ssl_client->socket);
+        return -1;
+    } else {
+        int sockerr;
+        socklen_t len = (socklen_t)sizeof(int);
+        res = getsockopt(ssl_client->socket, SOL_SOCKET, SO_ERROR, &sockerr, &len);
+
+        if (res < 0) {
+            log_e("getsockopt on fd %d, errno: %d, \"%s\"", ssl_client->socket, errno, strerror(errno));
+            close(ssl_client->socket);
+            return -1;
+        }
+
+        if (sockerr != 0) {
+            log_e("socket error on fd %d, errno: %d, \"%s\"", ssl_client->socket, sockerr, strerror(sockerr));
+            close(ssl_client->socket);
+            return -1;
+        }
+    }
+
+
+#define ROE(x,msg) { if (((x)<0)) { log_e("LWIP Socket config of " msg " failed."); return -1; }}
+     ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)),"SO_RCVTIMEO");
+     ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv)),"SO_SNDTIMEO");
+
+     ROE(lwip_setsockopt(ssl_client->socket, IPPROTO_TCP, TCP_NODELAY, &enable, sizeof(enable)),"TCP_NODELAY");
+     ROE(lwip_setsockopt(ssl_client->socket, SOL_SOCKET, SO_KEEPALIVE, &enable, sizeof(enable)),"SO_KEEPALIVE");
+
+
 
     log_v("Seeding the random number generator");
     mbedtls_entropy_free(&ssl_client->entropy_ctx);
@@ -166,7 +204,7 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
             return handle_error(ret);
         }
     }
-    
+
     // MBEDTLS_SSL_VERIFY_REQUIRED if a CA certificate is defined on Arduino IDE and
     // MBEDTLS_SSL_VERIFY_NONE if not.
 
@@ -223,12 +261,11 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
         mbedtls_x509_crt_init(&ssl_client->client_cert);
         mbedtls_pk_init(&ssl_client->client_key);
 
-
         log_v("Loading CRT cert");
 
         ret = mbedtls_x509_crt_parse(&ssl_client->client_cert, (const unsigned char *)cli_cert, strlen(cli_cert) + 1);
         if (ret < 0) {
-            // free the client_cert in the case parse failed, otherwise, the old client_cert still in the heap memory, that lead to "out of memory" crash.
+        // free the client_cert in the case parse failed, otherwise, the old client_cert still in the heap memory, that lead to "out of memory" crash.
             ssl_client->free_client_cert();
             return handle_error(ret);
         }
@@ -275,9 +312,9 @@ int start_ssl_client(ESPEasy_sslclient_context *ssl_client, const char *host, ui
             ssl_client->free_ca_cert();
             ssl_client->free_client_cert();
             // ++++++++++ END ++++++++++
-            return -1;
+			return -1;
         }
-        vTaskDelay(2);//2 ticks
+	    vTaskDelay(2);//2 ticks
     }
 
 
@@ -351,16 +388,18 @@ int data_to_read(ESPEasy_sslclient_context *ssl_client)
     return res;
 }
 
-int send_ssl_data(ESPEasy_sslclient_context *ssl_client, const uint8_t *data, uint16_t len)
+int send_ssl_data(ESPEasy_sslclient_context *ssl_client, const uint8_t *data, size_t len)
 {
     log_v("Writing HTTP request with %d bytes...", len); //for low level debug
     int ret = -1;
 
-    if ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0){
-        log_v("Handling error %d", ret); //for low level debug
-        return handle_error(ret);
-    } else{
-        log_v("Returning with %d bytes written", ret); //for low level debug
+    while ((ret = mbedtls_ssl_write(&ssl_client->ssl_ctx, data, len)) <= 0) {
+        if (ret != MBEDTLS_ERR_SSL_WANT_READ && ret != MBEDTLS_ERR_SSL_WANT_WRITE && ret < 0) {
+            log_v("Handling error %d", ret); //for low level debug
+            return handle_error(ret);
+        }
+        //wait for space to become available
+        vTaskDelay(2);
     }
 
     return ret;
@@ -528,3 +567,4 @@ bool verify_ssl_dn(ESPEasy_sslclient_context *ssl_client, const char* domain_nam
 
     return false;
 }
+#endif
