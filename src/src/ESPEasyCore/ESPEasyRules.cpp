@@ -252,7 +252,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
           }
 
           // Prepare for new line
-          line = EMPTY_STRING;
+          line.clear();
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -752,7 +752,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 
   String eventTrigger;
 
-  action = EMPTY_STRING;
+  action.clear();
 
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
