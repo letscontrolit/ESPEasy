@@ -334,7 +334,7 @@ void P104_data_struct::loadSettings() {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
       if (zones[zoneIndex].text == F("\"\"")) { // Special case
-        zones[zoneIndex].text = EMPTY_STRING;
+        zones[zoneIndex].text.clear();
       }
 
       zoneIndex++;
@@ -1565,7 +1565,7 @@ String P104_data_struct::enquoteString(const String& input) {
  * saveSettings gather the zones data from the UI and store in customsettings
  **************************************/
 bool P104_data_struct::saveSettings() {
-  error = EMPTY_STRING; // Clear
+  error.clear(); // Clear
   String zbuffer;
 
   # ifdef P104_DEBUG_DEV
@@ -1680,7 +1680,7 @@ bool P104_data_struct::saveSettings() {
 
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
-      zbuffer = EMPTY_STRING;
+      zbuffer.clear();
 
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
       zbuffer += it->size;          // 2

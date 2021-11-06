@@ -401,7 +401,7 @@ struct P073_data_struct : public PluginTaskData_base {
   }
 
   void setTextToScroll(const String& text) {
-    _textToScroll = EMPTY_STRING;
+    _textToScroll.clear();
 
     if (text.length() > 0) {
       int bufToFill = getBufferLength(displayModel);

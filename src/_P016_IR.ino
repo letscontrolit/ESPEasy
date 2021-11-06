@@ -378,7 +378,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(P016_data->CommandLines[varNr].CodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode = EMPTY_STRING;
+            strCode.clear();
 
             if (P016_data->CommandLines[varNr].Code > 0) {
               strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
@@ -393,7 +393,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(P016_data->CommandLines[varNr].AlternativeCodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode = EMPTY_STRING;
+            strCode.clear();
 
             if (P016_data->CommandLines[varNr].AlternativeCode > 0) {
               strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
@@ -470,7 +470,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
             P016_data->CommandLines.push_back(tCommandLinesV2());
-            strError = EMPTY_STRING;
+            strError.clear();
 
             // Normal Code & flags
             P016_data->CommandLines[varNr].CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
@@ -754,7 +754,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (state.clock >= 0) {
             doc[F("clock")] = state.clock; // Nr. of mins past midnight to set the clock to. (< 0 means off.)
           }
-          output = EMPTY_STRING;
+          output.clear();
           serializeJson(doc, output);
           event->String2 = output;
 
