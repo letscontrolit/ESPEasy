@@ -1226,7 +1226,7 @@ To create/register a plugin, you have to :
      #define USES_P109   // ThermoOLED
    #endif
    #ifndef USES_P116
-     #define USES_P116   // ST7735/ST7789
+     #define USES_P116   // ST77xx
    #endif
 #endif
 
@@ -1422,7 +1422,7 @@ To create/register a plugin, you have to :
     #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-    #define USES_P116   // ST7735/ST7789
+    #define USES_P116   // ST77xx
   #endif
   #ifndef USES_P117
     #define USES_P117   // 

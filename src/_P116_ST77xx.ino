@@ -3,11 +3,13 @@
 #ifdef USES_P116
 
 // #######################################################################################################
-// #################### Plugin 116: ST7735/ST7789 TFT displays ###########################################
+// ########################### Plugin 116: ST77xx TFT displays ###########################################
 // #######################################################################################################
 
 
 // History:
+// 2021-11-06 tonhuisman: P116: Add support for ST7796s 320x480 displays
+//                        Changed name of plugin to 'Display - ST77xx TFT' (was 'Display - ST7735/ST7789 TFT')
 // 2021-08-16 tonhuisman: P116: Add default color settings
 // 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
 // 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
@@ -22,7 +24,7 @@
 
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
-# define PLUGIN_NAME_116       "Display - ST7735/ST7789 TFT [DEVELOPMENT]"
+# define PLUGIN_NAME_116       "Display - ST77xx TFT [DEVELOPMENT]"
 # define PLUGIN_VALUENAME1_116 "CursorX"
 # define PLUGIN_VALUENAME2_116 "CursorY"
 
@@ -119,7 +121,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
-          ST77xx_type_toString(ST77xx_type_e::ST7789vw_135x240)
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7796s_320x480)
         };
         const int optionValues4[] = {
           static_cast<int>(ST77xx_type_e::ST7735s_128x128),
@@ -128,7 +131,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),
-          static_cast<int>(ST77xx_type_e::ST7789vw_135x240)
+          static_cast<int>(ST77xx_type_e::ST7789vw_135x240),
+          static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
         addFormSelector(F("TFT display model"),
                         F("p116_type"),
@@ -153,13 +157,15 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           P116_CommandTrigger_toString(P116_CommandTrigger::tft),
           P116_CommandTrigger_toString(P116_CommandTrigger::st77xx),
           P116_CommandTrigger_toString(P116_CommandTrigger::st7735),
-          P116_CommandTrigger_toString(P116_CommandTrigger::st7789)
+          P116_CommandTrigger_toString(P116_CommandTrigger::st7789),
+          P116_CommandTrigger_toString(P116_CommandTrigger::st7796)
         };
         const int commandTriggerOptions[] = {
           static_cast<int>(P116_CommandTrigger::tft),
           static_cast<int>(P116_CommandTrigger::st77xx),
           static_cast<int>(P116_CommandTrigger::st7735),
-          static_cast<int>(P116_CommandTrigger::st7789)
+          static_cast<int>(P116_CommandTrigger::st7789),
+          static_cast<int>(P116_CommandTrigger::st7796)
         };
         addFormSelector(F("Write Command trigger"),
                         F("p116_commandtrigger"),

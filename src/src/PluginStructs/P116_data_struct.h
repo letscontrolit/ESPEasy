@@ -8,6 +8,7 @@
 # include <Adafruit_ST77xx.h>               // include Adafruit ST77xx TFT library
 # include <Adafruit_ST7735.h>               // include Adafruit ST7735 TFT library
 # include <Adafruit_ST7789.h>               // include Adafruit ST7789 TFT library
+# include <Adafruit_ST7796s_kbv.h>          // include Adafruit ST7796 TFT library
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
@@ -71,6 +72,7 @@ enum class ST77xx_type_e : uint8_t {
   ST7789vw_240x240,
   ST7789vw_240x280,
   ST7789vw_135x240,
+  ST7796s_320x480,
   ST77xx_MAX // must be last value in enum
 };
 
@@ -79,6 +81,7 @@ enum class P116_CommandTrigger : uint8_t {
   st77xx,
   st7735,
   st7789,
+  st7796,
   MAX // Keep as last item!
 };
 
@@ -121,11 +124,12 @@ private:
                     uint8_t displayTimeout);
   void updateFontMetrics();
 
-  Adafruit_ST77xx    *st77xx    = nullptr;
-  Adafruit_ST7735    *st7735    = nullptr;
-  Adafruit_ST7789    *st7789    = nullptr;
-  AdafruitGFX_helper *gfxHelper = nullptr;
-  enum ST77xx_type_e  _device;
+  Adafruit_ST77xx      *st77xx    = nullptr;
+  Adafruit_ST7735      *st7735    = nullptr;
+  Adafruit_ST7789      *st7789    = nullptr;
+  Adafruit_ST7796S_kbv *st7796    = nullptr;
+  AdafruitGFX_helper   *gfxHelper = nullptr;
+  enum ST77xx_type_e    _device;
 
   uint16_t _xpix;
   uint16_t _ypix;

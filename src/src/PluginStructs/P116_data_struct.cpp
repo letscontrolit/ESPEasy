@@ -16,6 +16,7 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
     case ST77xx_type_e::ST7789vw_240x240: return F("ST7789 240 x 240px");
     case ST77xx_type_e::ST7789vw_240x280: return F("ST7789 240 x 280px");
     case ST77xx_type_e::ST7789vw_135x240: return F("ST7789 135 x 240px");
+    case ST77xx_type_e::ST7796s_320x480: return F("ST7796 480 x 320px");
     case ST77xx_type_e::ST77xx_MAX: break;
   }
   return F("Unsupported type!");
@@ -29,6 +30,7 @@ const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd)
     case P116_CommandTrigger::tft: return F("tft");
     case P116_CommandTrigger::st7735: return F("st7735");
     case P116_CommandTrigger::st7789: return F("st7789");
+    case P116_CommandTrigger::st7796: return F("st7796");
     case P116_CommandTrigger::MAX: return F("None");
     case P116_CommandTrigger::st77xx: break;
   }
@@ -78,6 +80,10 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
     case ST77xx_type_e::ST7789vw_135x240:
       _xpix = 135;
       _ypix = 240;
+      break;
+    case ST77xx_type_e::ST7796s_320x480:
+      _xpix = 320;
+      _ypix = 480;
       break;
     case ST77xx_type_e::ST77xx_MAX:
       break;
@@ -142,6 +148,16 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         if (nullptr != st7789) {
           st7789->init(_xpix, _ypix, SPI_MODE2);
           st77xx = st7789;
+        }
+        break;
+      }
+      case ST77xx_type_e::ST7796s_320x480: // ST7789vw 135x240
+      {
+        st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(PIN(0), PIN(1), PIN(2));
+
+        if (nullptr != st7796) {
+          st7796->begin();
+          st77xx = st7796;
         }
         break;
       }
