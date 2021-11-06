@@ -17,6 +17,10 @@
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
+#ifdef USES_MQTT
+#include "../Globals/MQTT.h"
+#endif
+
 #include "../Helpers/_CPlugin_Helper_webform.h"
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -414,6 +418,35 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
         addHtmlError(F("Bug in CPlugin::Function::CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
     }
+    {
+        #ifdef USES_MQTT
+        if (Protocol[ProtocolIndex].usesMQTT) {
+          addFormSubHeader(F("Connection Info"));
+          addRowLabel(F("MQTT Client Connected"));
+          addEnabled(MQTTclient_connected);
+
+#ifdef USE_MQTT_TLS
+          if (Protocol[ProtocolIndex].usesTLS) {
+            addRowLabel(F("Last Error"));
+            addHtmlInt(mqtt_tls_last_error);
+            addHtml(F(": "));
+            addHtml(mqtt_tls_last_errorstr);
+
+            #ifdef ESP32
+            if (MQTTclient_connected) {
+              addRowLabel(F("Peer Certificate"));
+              String peerInfo = mqtt_tls->getPeerCertificateInfo();
+              peerInfo.replace(F("\n"), F("<br>"));
+              addTextBox(F("peer_cert"), peerInfo, peerInfo.length(), true);
+            }
+            #endif
+
+          }
+#endif
+        }
+        #endif
+    }
+
     // Separate enabled checkbox as it doesn't need to use the ControllerSettings.
     // So ControllerSettings object can be destructed before controller specific settings are loaded.
     addControllerEnabledForm(controllerindex);

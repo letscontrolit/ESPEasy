@@ -1,7 +1,7 @@
 /* Provide SSL/TLS functions to ESP32 with Arduino IDE
  * by Evandro Copercini - 2017 - Apache 2.0 License
  */
-
+#ifdef ESP32
 #ifndef ESPEASY_ARD_SSL_H
 #define ESPEASY_ARD_SSL_H
 #include <mbedtls/platform.h>
@@ -46,4 +46,5 @@ int get_ssl_receive(ESPEasy_sslclient_context *ssl_client, uint8_t *data, int le
 bool verify_ssl_fingerprint(ESPEasy_sslclient_context *ssl_client, const char* fp, const char* domain_name);
 bool verify_ssl_dn(ESPEasy_sslclient_context *ssl_client, const char* domain_name);
 bool get_peer_fingerprint(ESPEasy_sslclient_context *ssl_client, uint8_t sha256[32]);
+#endif
 #endif

@@ -8,6 +8,8 @@
 * Additions Copyright (C) 2017 Evandro Luis Copercini, Apache 2.0 License.
 */
 
+#ifdef ESP32
+
 #include <Arduino.h>
 #include <esp32-hal-log.h>
 #include <lwip/err.h>
@@ -567,4 +569,5 @@ bool verify_ssl_dn(ESPEasy_sslclient_context *ssl_client, const char* domain_nam
 
     return false;
 }
+#endif
 #endif
