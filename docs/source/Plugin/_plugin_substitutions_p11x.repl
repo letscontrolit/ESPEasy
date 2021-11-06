@@ -62,3 +62,16 @@
 .. |P115_maintainer| replace:: `TD-er`
 .. |P115_compileinfo| replace:: `.`
 .. |P115_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library`
+
+.. |P119_name| replace:: :cyan:`ITG3205`
+.. |P119_type| replace:: :cyan:`Gyro`
+.. |P119_typename| replace:: :cyan:`Gyro - ITG3205`
+.. |P119_porttype| replace:: `.`
+.. |P119_status| replace:: :yellow:`TESTING C`
+.. |P119_github| replace:: _P119_ITG3205_Gyro.ino
+.. _P119_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P119_ITG3205_Gyro.ino
+.. |P119_usedby| replace:: `.`
+.. |P119_shortinfo| replace:: `ITG3205 Gyro sensor`
+.. |P119_maintainer| replace:: `tonhuisman`
+.. |P119_compileinfo| replace:: `.`
+.. |P119_usedlibraries| replace:: `https://github.com/ikiselev/ITG3205`

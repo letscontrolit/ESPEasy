@@ -11,7 +11,7 @@
 .. |Plugin_Gases| replace:: :ref:`P049_page`, :ref:`P052_page`, :ref:`P083_page`, :ref:`P090_page`
 .. |Plugin_Generic| replace:: :ref:`P003_page`, :ref:`P026_page`, :ref:`P033_page`, :ref:`P037_page`, :ref:`P081_page`, :ref:`P100_page`
 .. |Plugin_Gesture| replace:: :ref:`P064_page`
-.. |Plugin_Gyro| replace:: :ref:`P045_page`
+.. |Plugin_Gyro| replace:: :ref:`P045_page`, :ref:`P119_page`
 .. |Plugin_Hardware| replace:: :ref:`P046_page`
 .. |Plugin_Keypad| replace:: :ref:`P058_page`, :ref:`P061_page`, :ref:`P062_page`, :ref:`P063_page`
 .. |Plugin_Light_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
