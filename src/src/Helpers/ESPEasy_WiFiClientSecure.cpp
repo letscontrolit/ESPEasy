@@ -41,6 +41,7 @@ ESPEasy_WiFiClientSecure::ESPEasy_WiFiClientSecure()
     _pskIdent = NULL;
     _psKey = NULL;
     next = NULL;
+    _alpn_protos = NULL;
 }
 
 
@@ -64,6 +65,7 @@ ESPEasy_WiFiClientSecure::ESPEasy_WiFiClientSecure(int sock)
     _pskIdent = NULL;
     _psKey = NULL;
     next = NULL;
+    _alpn_protos = NULL;
 }
 
 ESPEasy_WiFiClientSecure::~ESPEasy_WiFiClientSecure()
@@ -125,7 +127,7 @@ int ESPEasy_WiFiClientSecure::connect(const char *host, uint16_t port, const cha
     if(_timeout > 0){
         sslclient->handshake_timeout = _timeout;
     }
-    int ret = start_ssl_client(sslclient, host, port, _timeout, CA_cert, cert, private_key, NULL, NULL, _use_insecure);
+    int ret = start_ssl_client(sslclient, host, port, _timeout, CA_cert, cert, private_key, NULL, NULL, _use_insecure, _alpn_protos);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);
@@ -145,7 +147,7 @@ int ESPEasy_WiFiClientSecure::connect(const char *host, uint16_t port, const cha
     if(_timeout > 0){
         sslclient->handshake_timeout = _timeout;
     }
-    int ret = start_ssl_client(sslclient, host, port, _timeout, NULL, NULL, NULL, pskIdent, psKey, _use_insecure);
+    int ret = start_ssl_client(sslclient, host, port, _timeout, NULL, NULL, NULL, pskIdent, psKey, _use_insecure, _alpn_protos);
     _lastError = ret;
     if (ret < 0) {
         log_e("start_ssl_client: %d", ret);
@@ -338,4 +340,9 @@ int ESPEasy_WiFiClientSecure::lastError(char *buf, const size_t size)
 void ESPEasy_WiFiClientSecure::setHandshakeTimeout(unsigned long handshake_timeout)
 {
     sslclient->handshake_timeout = handshake_timeout * 1000;
+}
+
+void ESPEasy_WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
+{
+    _alpn_protos = alpn_protos;
 }
