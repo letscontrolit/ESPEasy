@@ -24,12 +24,13 @@ Used libraries: |P116_usedlibraries|
 Description
 -----------
 
-The ST7735 and ST7789 chip family drives color TFT displays in various resolutions, and usually supports 65535 colors (RGB565 coded).
+The ST7735, ST7789 and ST7706 chip families drive color TFT displays in various resolutions, and usually support 65535 colors (RGB565 coded).
 
 This plugin supports these display models:
 
 * **ST7735** with resolutions 128 x 128, 128 x 160 and 80 x 160 pixels
 * **ST7789** with resolutions 240 x 320, 240 x 240, 240 x 280 and 135 x 240 pixels
+* **ST7796** with resolution of 320 x 480 pixels.
 
 The plugin can be configured to show predefined text, a reservation for up to 24 lines is made, but only the lines that can fit on-screen will be shown, or via commands, sent via http or from rules, text or graphical elements like lines, rectangles, circles, pixels, etc., can be shown.
 
@@ -75,6 +76,14 @@ ST7789 240 x 280 pixels (some have rounded corners, in that case corner-pixels a
    :alt: ST7789 135 x 240 pixels on LilyGo ESP32 module
 
 ST7789 135 x 240 pixels (separate and integrated modules)
+
+.. image:: P116_st7796_320x480_wt32_sc01.png
+   :alt: ST7796 320 x 480 pixels on WT32 SC01 module
+
+.. image:: P116_wt32-sc01-back.png
+   :alt: ST7796 WT32 SC01 circuit board
+
+ST7796 320 x 480 pixels display on WT32 SC01 unit
 
 Connections
 ^^^^^^^^^^^^
@@ -134,6 +143,7 @@ Available options:
 * *ST7789 240 x 240px* Allows 24 lines of text in the smallest font scaling setting.
 * *ST7789 240 x 280px* Allows 28 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.
 * *ST7789 135 x 240px* Allows about 13 lines of text in the smallest font scaling setting (the 14th line may be distorted because of a lack of pixellines).
+* *ST7796 320 x 480px* Allows 32 or 48 lines of text in the smallest font scaling setting.
 
 Layout
 ^^^^^^^^
@@ -175,6 +185,7 @@ Available options:
 * *st77xx*
 * *st7735*
 * *st7789*
+* *st7796*
 
 The command is handled non-case sensitive. See below for available commands and subcommands.
 
@@ -240,7 +251,9 @@ Commands
 Change log
 ----------
 
-.. versionchanged:: 2.0
+.. versionadded:: 2.0
   ...
+
+  |added| 2021-11-06 Add support for ST7796 displays
 
   |added| 2021-08 Moved from an external forum to ESPEasy.
