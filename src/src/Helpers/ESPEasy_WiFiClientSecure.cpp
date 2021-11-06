@@ -17,6 +17,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#ifdef ESP32
 #include <lwip/sockets.h>
 #include <lwip/netdb.h>
 #include <errno.h>
@@ -346,3 +347,22 @@ void ESPEasy_WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
 {
     _alpn_protos = alpn_protos;
 }
+
+String ESPEasy_WiFiClientSecure::getPeerCertificateInfo()
+{
+    const mbedtls_x509_crt* peer = getPeerCertificate();
+    String res;
+    if (peer != nullptr) {
+        char buf[1024] = {0};
+        int l = mbedtls_x509_crt_info (buf, sizeof(buf), "", peer);
+        if (l > 0) {
+            if (res.reserve(l)) {
+                for (int i = 0; i < l; ++i) {
+                    res += buf[i];
+                }
+            }
+        }
+    }
+    return res;
+}
+#endif

@@ -21,6 +21,8 @@
   for memory leaks not yet present in the "older" core versions.
 */
 
+#ifdef ESP32
+
 #ifndef ESPEASY_WiFiClientSecure_h
 #define ESPEASY_WiFiClientSecure_h
 #include <Arduino.h>
@@ -78,6 +80,7 @@ public:
     bool verify(const char* fingerprint, const char* domain_name);
     void setHandshakeTimeout(unsigned long handshake_timeout);
     void setAlpnProtocols(const char **alpn_protos);
+    String getPeerCertificateInfo();
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
 
@@ -114,4 +117,5 @@ private:
     using Print::write;
 };
 
+#endif
 #endif

@@ -204,7 +204,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   uint16_t mqttPort = ControllerSettings.Port;
 
 #ifdef USE_MQTT_TLS
-  mqtt_tls_last_errorstr = EMPTY_STRING;
+  mqtt_tls_last_errorstr.clear();
   mqtt_tls_last_error = 0;
   const TLS_types TLS_type = ControllerSettings.TLStype();
   if (TLS_type != TLS_types::NoTLS && nullptr == mqtt_tls) {
@@ -279,6 +279,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     }
   }
   if (TLS_type != TLS_types::NoTLS) {
+    // Certificate expiry not enabled in Mbed TLS.
+//    mqtt_tls->setX509Time(node_time.getUnixTime());
     mqtt_tls->setTimeout(ControllerSettings.ClientTimeout);
     #ifdef ESP8266
     mqtt_tls->setBufferSizes(1024,1024);
@@ -382,6 +384,17 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   log += clientid;
   addLog(LOG_LEVEL_INFO, log);
+
+  #ifdef USE_MQTT_TLS
+  #ifdef ESP32
+  {
+    log = F("MQTT : Peer certificate info: ");
+    log += mqtt_tls->getPeerCertificateInfo();
+    addLog(LOG_LEVEL_INFO, log);
+    log.clear();
+  }
+  #endif
+  #endif
   String subscribeTo = ControllerSettings.Subscribe;
 
   parseSystemVariables(subscribeTo, false);
