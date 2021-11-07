@@ -419,9 +419,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
       }
     }
     {
-        #ifdef USES_MQTT
+#ifdef USES_MQTT
         if (Protocol[ProtocolIndex].usesMQTT) {
-          addFormSubHeader(F("Connection Info"));
+          addFormSubHeader(F("Connection Status"));
           addRowLabel(F("MQTT Client Connected"));
           addEnabled(MQTTclient_connected);
 
@@ -433,23 +433,46 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addHtml(mqtt_tls_last_errorstr);
 
             #ifdef ESP32
-            if (MQTTclient_connected) {
-              addRowLabel(F("Peer Certificate"));
-              String peerInfo = mqtt_tls->getPeerCertificateInfo();
-              peerInfo.replace(F("\n"), F("<br>"));
-              addTextBox(F("peer_cert"), peerInfo, peerInfo.length(), true);
+            if (MQTTclient_connected && mqtt_tls != nullptr) {
+              addFormSubHeader(F("Peer Certificate"));
+
+              {
+                addRowLabel(F("Certificate Info"));
+                addHtml(F("<textarea readonly rows='10' wrap='on'>"));
+                addHtml(mqtt_tls->getPeerCertificateInfo());
+                addHtml(F("</textarea>"));
+              }
+              {
+                uint8_t sha256_result[32] = {0};
+                if (mqtt_tls->getFingerprintSHA256(sha256_result)) {
+                  String fingerprint;
+                  fingerprint.reserve(64);
+                  for (size_t i = 0; i < 32; ++i) {
+                    fingerprint += String(sha256_result[i], HEX);
+                  }
+                  fingerprint.toLowerCase();
+                  addFormTextBox(F("Certificate Fingerprint"), 
+                                 F("fingerprint"),
+                                 fingerprint,
+                                 64,
+                                 true); // ReadOnly
+                }
+              }
+
+
             }
             #endif
 
           }
 #endif
         }
-        #endif
+#endif
     }
 
     // Separate enabled checkbox as it doesn't need to use the ControllerSettings.
     // So ControllerSettings object can be destructed before controller specific settings are loaded.
     addControllerEnabledForm(controllerindex);
+
   }
 
   addFormSeparator(2);
