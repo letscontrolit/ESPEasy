@@ -48,13 +48,14 @@ static int _handle_error(int err, const char * function, int line)
 
 ESPEasy_sslclient_context::ESPEasy_sslclient_context()
 {
-    memset(&ssl_ctx, 0, sizeof(ssl_ctx));
-    memset(&ssl_conf, 0, sizeof(ssl_conf));
-    memset(&drbg_ctx, 0, sizeof(drbg_ctx));
-    memset(&entropy_ctx, 0, sizeof(entropy_ctx));
-    memset(&ca_cert, 0, sizeof(ca_cert));
-    memset(&client_cert, 0, sizeof(client_cert));
-    memset(&client_key, 0, sizeof(client_key));
+    mbedtls_ssl_init(&ssl_ctx);
+    mbedtls_ssl_config_init(&ssl_conf);
+    mbedtls_ctr_drbg_init(&drbg_ctx);
+    
+    mbedtls_entropy_init(&entropy_ctx);
+    mbedtls_x509_crt_init(&ca_cert);
+    mbedtls_x509_crt_init(&client_cert);
+    mbedtls_pk_init(&client_key);
 }
 
 
