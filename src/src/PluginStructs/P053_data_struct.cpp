@@ -260,6 +260,14 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     SerialRead16(data[i], &checksum);
   }
 
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  if (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_T) {
+    data[PMS_Temp_C]  = data[PMS_T_Temp_C]; // Move data to the 'usual' location for Temp/Hum
+    data[PMS_Hum_pct] = data[PMS_T_Hum_pct];
+  }
+# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
 # ifndef BUILD_NO_DEBUG
 #  ifdef P053_LOW_LEVEL_DEBUG
 
@@ -307,15 +315,19 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   #    ifdef PLUGIN_053_ENABLE_S_AND_T
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
-      && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)) { // Values only available on PMS5003ST
+      && ((GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)
+          || (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_T))) { // Values only available on PMS5003ST & PMS5003T
     String log;
     log.reserve(45);
     log  = F("PMSx003 : temp=");
     log += static_cast<float>(data[PMS_Temp_C]) / 10.0f;
     log += F(", humi=");
     log += static_cast<float>(data[PMS_Hum_pct]) / 10.0f;
-    log += F(", hcho=");
-    log += static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f;
+
+    if (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST) {
+      log += F(", hcho=");
+      log += static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f;
+    }
     addLog(LOG_LEVEL_DEBUG, log);
   }
   #    endif // ifdef PLUGIN_053_ENABLE_S_AND_T

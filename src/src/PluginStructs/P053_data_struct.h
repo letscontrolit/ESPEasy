@@ -15,7 +15,8 @@
 // Difference in build size is roughly 4k
 # define PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-// #define PLUGIN_053_ENABLE_S_AND_T // Enable setting to support S and T types, in addition to bas PMSx003 and PMSx003ST
+// Enable setting to support S and T types, in addition to bas PMSx003 and PMSx003ST
+# define PLUGIN_053_ENABLE_S_AND_T
 
 # if !defined(PLUGIN_BUILD_CUSTOM) && defined(SIZE_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
 #  undef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -108,7 +109,9 @@ const __FlashStringHelper* toString(PMSx003_event_datatype selection);
 
 # define PMS_Formaldehyde_mg_m3    12
 # define PMS_Temp_C                13
+# define PMS_T_Temp_C              10
 # define PMS_Hum_pct               14
+# define PMS_T_Hum_pct             11
 # define PMS_Reserved              15
 # define PMS_FW_rev_error          16
 # define PMS_RECEIVE_BUFFER_SIZE   ((PMS5003_ST_SIZE / 2) - 3)
