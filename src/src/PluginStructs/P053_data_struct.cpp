@@ -46,17 +46,17 @@ P053_data_struct::P053_data_struct(
   int8_t                  pwrPin,
   PMSx003_type            sensortype,
   uint32_t                delay_read_after_wakeup_ms
-# ifdef                   PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
   , bool                  oversample
   , bool                  splitCntBins
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   )
   : _taskIndex(TaskIndex),
   _sensortype(sensortype),
-# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _oversample(oversample),
   _splitCntBins(splitCntBins),
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
 {
@@ -129,7 +129,7 @@ void P053_data_struct::SerialRead16(uint16_t& value, uint16_t *checksum)
     *checksum += data_low;
   }
 
-# ifdef P053_LOW_LEVEL_DEBUG
+  # ifdef P053_LOW_LEVEL_DEBUG
 
   // Low-level logging to see data from sensor
   String log = F("PMSx003 : uint8_t high=0x");
@@ -139,7 +139,7 @@ void P053_data_struct::SerialRead16(uint16_t& value, uint16_t *checksum)
   log += F(" result=0x");
   log += String(value, HEX);
   addLog(LOG_LEVEL_INFO, log);
-# endif // ifdef P053_LOW_LEVEL_DEBUG
+  # endif // ifdef P053_LOW_LEVEL_DEBUG
 }
 
 void P053_data_struct::SerialFlush() {
@@ -260,16 +260,16 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     SerialRead16(data[i], &checksum);
   }
 
-# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   if (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_T) {
     data[PMS_Temp_C]  = data[PMS_T_Temp_C]; // Move data to the 'usual' location for Temp/Hum
     data[PMS_Hum_pct] = data[PMS_T_Hum_pct];
   }
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-# ifndef BUILD_NO_DEBUG
-#  ifdef P053_LOW_LEVEL_DEBUG
+  # ifndef BUILD_NO_DEBUG
+  #  ifdef P053_LOW_LEVEL_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
     String log;
@@ -289,7 +289,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-#   ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #   ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
       && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) { // 'Count' values not available on
@@ -312,7 +312,6 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
-  #    ifdef PLUGIN_053_ENABLE_S_AND_T
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
       && ((GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)
@@ -330,10 +329,9 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
-  #    endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-  #   endif  // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-#  endif     // ifdef P053_LOW_LEVEL_DEBUG
-# endif      // ifndef BUILD_NO_DEBUG
+  #   endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  endif     // ifdef P053_LOW_LEVEL_DEBUG
+  # endif      // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
   SerialRead16(checksum2, nullptr);
@@ -362,14 +360,14 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       # endif // ifndef BUILD_NO_DEBUG
     return false;
   }
-# ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Data is checked and good, fill in output
   UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
   UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
   UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
   _values_received                 = 1;
-# else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Store in the averaging buffer to process later
   if (!_oversample) {
@@ -380,7 +378,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     _data[i] += data[i];
   }
   ++_values_received;
-# endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 
   // Store new checksum, to help detect duplicates.

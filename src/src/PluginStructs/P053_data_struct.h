@@ -15,9 +15,6 @@
 // Difference in build size is roughly 4k
 # define PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-// Enable setting to support S and T types, in addition to bas PMSx003 and PMSx003ST
-# define PLUGIN_053_ENABLE_S_AND_T
-
 # if !defined(PLUGIN_BUILD_CUSTOM) && defined(SIZE_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
 #  undef PLUGIN_053_ENABLE_EXTRA_SENSORS
 # endif // if defined(SIZE_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS)
@@ -128,13 +125,13 @@ public:
     int8_t                  resetPin,
     int8_t                  pwrPin,
     PMSx003_type            sensortype,
-    uint32_t               delay_read_after_wakeup_ms
-# ifdef                     PLUGIN_053_ENABLE_EXTRA_SENSORS
+    uint32_t                delay_read_after_wakeup_ms
+    # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
     ,
     bool                    oversample
     ,
     bool                    splitCntBins
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
     );
 
   P053_data_struct() = delete;
@@ -158,13 +155,13 @@ public:
 
 private:
 
-# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   void sendEvent(const String& baseEvent,
                  uint8_t       index);
 
   bool hasFormaldehyde() const;
   bool hasTempHum() const;
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 public:
 
@@ -186,14 +183,14 @@ private:
 
   void requestData();
 
-# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   float getValue(uint8_t index);
 
   bool  getValue(uint8_t index,
                  float & value);
 
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   void clearReceivedData();
 
 public:
