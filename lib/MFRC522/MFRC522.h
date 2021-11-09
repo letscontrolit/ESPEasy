@@ -272,6 +272,7 @@ public:
 	MFRC522();
 	MFRC522(uint8_t resetPowerDownPin);
 	MFRC522(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
+	virtual ~MFRC522() {};
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Basic interface functions for communicating with the MFRC522
