@@ -627,13 +627,17 @@ static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
 bool SSDP_begin() {
   _pending = false;
 
-  if (_server) {
+  if (_server != nullptr) {
     _server->unref();
+    // FIXME TD-er: Shouldn't this also call delete _server ?
 
-    _server = 0;
+    _server = nullptr; 
   }
 
-  _server = new UdpContext;
+  _server = new (std::nothrow) UdpContext;
+  if (_server == nullptr) {
+    return false;
+  }
   _server->ref();
 
   ip_addr_t ifaddr;

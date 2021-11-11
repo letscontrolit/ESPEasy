@@ -1,4 +1,147 @@
 -------------------------------------------------
+Changes in release mega-20211105 (since mega-20211005)
+-------------------------------------------------
+
+Release date: vr  5 nov 2021 11:10:12 CET
+
+Peter Kretz (4):
+      [P103 AtlasEZO] Added Dissolved Oxygen Sensor DO
+      Update platformio_esp32_envs.ini
+      Update _P103_Atlas_EZO_pH_ORP_EC.ino
+      Rename Plugin 103 : Atlas Scientific EZO pH ORP EC DO
+
+TD-er (58):
+      [P103] Perform manual merge of conflicting files
+      [P103] Perform manual merge of P103...ino
+      [PMSx003] Convert plugin into using multiple instances data_struct
+      [PMSx003] Uncrustify .ino file
+      [PMSx003] Cleanup naming of types and variables
+      [ESP32] Revert to PlatformIO platform 3.3.0 to fix web login
+      [PMSx003] Cleanup by turning sensor type into enum class
+      [PMSx003] Add pin selection for PWR Set pin
+      [Serial] Make serial selection more intuitive
+      [PMSx003] Use defines when interpreting received data
+      [PMSx003] Use enum class for event output selector
+      [PMSx003] Add check for duplicate messages
+      [PMSx003] Make output/event selector enums a bit more readable
+      [PMSx003] Add commands for reset/sleep/wake + document them
+      [Cleanup] Use PLUGIN_WEBFORM_SHOW_GPIO_DESCR to show all GPIO used
+      [PMSx003] Add output selection for counted small particles 0.3 ... 2.5 u
+      [PMSx003] Add explanation on particles measurement
+      [PMSx003] Simplify event generation + update task value names
+      [PMSx003] Update documentation
+      [PMSx003] Ignore incompatible event out selections
+      [ESPEasySerial] Fix issues on ESP32 with serial (restart serial)
+      [ESPEasySerial] Fix issues on ESP32 with serial (restart serial)
+      [PMSx003] Document new pmsx003,wake & pmsx003,wake commands
+      [ESPEasySerial] Include v2.0.7 in the ESPEasy libs dir too
+      [PMSx003] Add option to split counted data in bins
+      [PMSx003] Add oversampling to average readings
+      [PMSx003] Document new Data Processing features.
+      [PMSx003] Add sensor init time option after wake up sensor
+      [PMSx003] Add proper defaults when creating new task or loading old conf
+      [PMSx003] Make 1M builds fit again
+      [Cleanup] Remove PeriodicalScanWiFi
+      [Cleanup] Fix compile warning and failed build on ESP8266 beta builds
+      [ESP32] Update GPIO description docs & add event to get boot strap pins
+      Reset former PeriodicalScanWiFi bit to 0
+      [P046 Ventus] Fix UV only "binary" (#3073)
+      [P046 Ventus] Minor cleanup of strange float casts
+      [GPIO] Fix [Plugin#PCF#PinRange#x-y] (#3815)
+      [Build] Fix build on Windows for ESP32 Max LittleFS builds
+      [Build] Concat Globals .cpp files to help building in Windows
+      Fix missing lib_debs
+      [PVS Studio] Test using ESP32 max build + some suggested fixes
+      [PVS Studio] Fix issues reported by PVS Studio
+      [PVS Studio] Fix "dangerous" macros in IRremoteESP8266 library
+      [Python] Update Python packages due to Sphinx build error on Python 3.10
+      [PVS Studio] Fix some warnings made by PVS Studio.
+      [Python] Update Python packages + missing Ubuntu packages
+      [Build] Fix build fail due to warnings
+      [Build] Fix CompiletimeDefines
+      [Build] Fix quotes issue on compile time defines
+      [Build] Cleanup of Compile time defines scripts
+      [WiFi] Add note about minimal WPA key length
+      [WebFlasher] Generate manifest.json file per build
+      [Webflasher] Generate html page for web flasher
+      [Build] Add option "esp8266" to be the same as "esp82xx"
+      [build] Make sure Python requirements are installed
+      [Webflasher] Add groups in selection combobox
+      [Build] Include flash size on all PlatformIO envs
+      [Webflasher] Do not create index.html during build
+
+Ton Huisman (64):
+      [P104] New plugin: MAX7219 dot matrix display
+      [P104] Include plugin in Display builds
+      [P104] Fixed zone initialization and brightness setup
+      [P104] Code improvements
+      [Helpers] Add helper getFormItemIntCustomArgName(int)
+      [P104] Code improvements and optimizations
+      [P104] Implement Clock and Date content, clear on plugin exit
+      [P104] Use compiletime defines where appropriate
+      [P104] Get settings defaults right
+      [P104] Update MD_Parola library
+      [P104] Implement PLUGIN_WRITE commands, add fonts, many improvements
+      [P104] Fix issue with MD_Parola update
+      [P104] Revert addition to MD_Parola made earlier
+      [P104] Implement Repeat delay, add settxt command, edit active settings, update source doc, some source reorg.
+      [P104] Format source
+      [P104] Try to make build fit in ESP8266 display configuration
+      [P104] Try to make build fit in ESP8266 display configuration
+      [P104] Try to make build fit in ESP8266 display configuration
+      [P104] Try to make build fit in ESP8266 display configuration
+      [P104] Try to make build fit in ESP8266 display configuration
+      [P104] Added time/date configuration options
+      [P104] Adjust Custom-sample.h
+      [P104] Add Bar-graph support and bar/setbar commands
+      [P104] Add update command, bugfixes and improvements
+      [P104] Implement 'direction' and 'barType' options for Bar-graph, many bugfixes
+      [P104] Re-enble commands for 'display' build, many bugfixes
+      [P104] Add Actions column, add Zone order, many bugfixes and improvements
+      [P104] Bugfixes and minor improvements
+      [P104] Bugfixes and improvements
+      [P104] Allow up to 255 modules per zone.
+      [P104] Limit settxt and setbar commands to max. input length
+      [P104] Add 'p', comma and dash to num. double height font, some UI improvements
+      [P104] Add documentation for Max7219 Dot matrix display
+      [P104] Small optimizations, resolve some typos, documentation improvements
+      [P104] Documentation - Add font overviews
+      [P104] Bugfixes, add Text reverse option, update documentation
+      [P104] Small improvements, check modules count on save
+      [P104] Suggested small code optimizations
+      [P104] Reformatted source (uncrustify needed an update)
+      [P104] Fix compilation error after merge
+      [P104] Code optimizations
+      [P104] Bugfixes, optimizations and phase 1 of improvements
+      [P104] Reworked saving and loading settings resolving stack issues
+      [P104] Updates to documentation
+      [Build] Apply LIMIT_BUILD_SIZE for ESP8266 Display build to fit in more plugins
+      [P104] Reduce flashcounter on save, use LIMIT_BUILD_SIZE to fit in more features
+      [P104] Simplify SPI pin display, small formatting changes (uncrustify)
+      [P104] Add missing slash in numeric doubleheight font
+      [P104] Update and improve documentation
+      [P104] Code improvements and small optimizations
+      [P104] Code improvements as suggested in reviews (nullptr checks, unneeded array, destructor, comparison)
+      [P104] Minor improvements, memory handling
+      [P104] Add Inverted option (dark on light), incl. docs
+      [P073] Add 7output command
+      [P073] Store via commands changes settings but not save them yet
+      [P073] Reformat source (uncrustify and some manual adjustments)
+      [Build] Re-enable IR plugins in custom_IR builds
+      [Build] Enable IR plugins in MAX ESP32 builds
+      [Build] Enable Blynk controller in MAX ESP32 builds
+      [Docs] IR plugins are not in normal builds (for a long time)
+      [Docs] IR plugins are not in normal builds (for a long time)
+      [Docs] IR plugins are not in normal builds (for a long time)
+      [Docs] IR plugins are not in normal builds (for a long time)
+      [P119][P120] Register plugin IDs for ITG3205 and ADXL345
+
+jimmys01 (2):
+      [IR] Update IR library to the latest build
+      Fix String ambiguous conversions in the lib
+
+
+-------------------------------------------------
 Changes in release mega-20211005 (since mega-20210802)
 -------------------------------------------------
 

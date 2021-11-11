@@ -20,6 +20,7 @@ P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
 
 P020_Task::~P020_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
