@@ -252,6 +252,7 @@ void processDisconnect() {
 
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
+    WifiScan(false);
     delay(100);
     setWifiMode(WIFI_OFF);
     initWiFi();
@@ -259,8 +260,6 @@ void processDisconnect() {
     if (WiFiEventData.unprocessedWifiEvents()) {
       handle_unprocessedNetworkEvents();
     }
-
-    WifiScan(false);
   }
   logConnectionStatus();
   WiFiEventData.processedDisconnect = true;

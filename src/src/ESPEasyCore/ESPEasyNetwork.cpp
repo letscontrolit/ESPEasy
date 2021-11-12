@@ -222,10 +222,12 @@ String WifiSTAmacAddress() {
 
 void CheckRunningServices() {
   set_mDNS();
+  #ifdef ESP8266
   if (active_network_medium == NetworkMedium_t::WIFI) 
   {
     SetWiFiTXpower();
   }
+  #endif
 }
 
 #ifdef HAS_ETHERNET

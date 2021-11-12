@@ -252,8 +252,8 @@ void handle_advanced() {
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
 #ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
-#endif // ifdef ESP8266
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
+#endif
 #ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
 #endif // ifdef SUPPORT_ARP

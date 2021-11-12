@@ -121,14 +121,11 @@ bool ESPEasyWiFi_t::connectSTA() {
   }
   WiFiEventData.warnedNoValidWiFiSettings = false;
   setSTA(true);
-  char hostname[40];
-  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
-  wifi_station_set_hostname(hostname);
+  wifi_station_set_hostname(NetworkCreateRFCCompliantHostname().c_str());
 
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  WiFi.setHostname(hostname);
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
   setConnectionSpeed();
@@ -277,7 +274,9 @@ bool WiFiConnected() {
     STOP_TIMER(WIFI_ISCONNECTED_STATS);
     recursiveCall = false;
     // Only return true after some time since it got connected.
+    #ifdef ESP8266
     SetWiFiTXpower();
+    #endif
     return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
   }
 
@@ -285,6 +284,7 @@ bool WiFiConnected() {
     // Timer reached, so enable AP mode.
     if (!WifiIsAP(WiFi.getMode())) {
       if (!Settings.DoNotStartAP()) {
+        WifiScan(false);
         setAP(true);
       }
     }
@@ -397,10 +397,12 @@ void AttemptWiFiConnect() {
       RTC.clearLastWiFi();
       float tx_pwr = 0; // Will be set higher based on RSSI when needed.
       // FIXME TD-er: Must check WiFiEventData.wifi_connect_attempt to increase TX power
+      #ifdef ESP8266
       if (Settings.UseMaxTXpowerForSending()) {
         tx_pwr = Settings.getWiFi_TX_power();
       }
       SetWiFiTXpower(tx_pwr, candidate.rssi);
+      #endif
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
       if (candidate.allowQuickConnect() && !candidate.isHidden) {
@@ -414,11 +416,14 @@ void AttemptWiFiConnect() {
   } else {
     if (!wifiAPmodeActivelyUsed() || WiFiEventData.wifiSetupConnect) {
       if (!prepareWiFi()) {
-        return;
+        //return;
       }
-      // Maybe not scan async to give the ESP some slack in power consumption?
-      const bool async = false;
-      WifiScan(async);
+
+      if (WiFiScanAllowed()) {
+        // Maybe not scan async to give the ESP some slack in power consumption?
+        const bool async = false;
+        WifiScan(async);
+      }
     }
   }
 
@@ -440,6 +445,7 @@ bool prepareWiFi() {
 
     // No need to wait longer to start AP mode.
     if (!Settings.DoNotStartAP()) {
+      WifiScan(false);
       setAP(true);
     }
     return false;
@@ -447,14 +453,11 @@ bool prepareWiFi() {
   WiFiEventData.warnedNoValidWiFiSettings = false;
   setSTA(true);
 
-  char hostname[40];
-  safe_strncpy(hostname, NetworkCreateRFCCompliantHostname().c_str(), sizeof(hostname));
   #if defined(ESP8266)
-  wifi_station_set_hostname(hostname);
+  wifi_station_set_hostname(NetworkCreateRFCCompliantHostname().c_str());
 
   #endif // if defined(ESP8266)
   #if defined(ESP32)
-  WiFi.setHostname(hostname);
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   #endif // if defined(ESP32)
   setConnectionSpeed();
@@ -568,6 +571,7 @@ void initWiFi()
 // ********************************************************************************
 // Configure WiFi TX power
 // ********************************************************************************
+#ifdef ESP8266
 void SetWiFiTXpower() {
   SetWiFiTXpower(0.0f); // Just some minimal value, will be adjusted in SetWiFiTXpower
 }
@@ -693,6 +697,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
   }
   #endif
 }
+#endif
 
 float GetRSSIthreshold(float& maxTXpwr) {
   maxTXpwr = Settings.getWiFi_TX_power();
@@ -773,6 +778,9 @@ void WifiDisconnect()
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
+  if (!Settings.UseLastWiFiFromRTC()) {
+    RTC.clearLastWiFi();
+  }
   delay(1);
 }
 
@@ -842,6 +850,14 @@ void WifiScan(bool async, uint8_t channel) {
   if (!WiFiScanAllowed()) {
     return;
   }
+#ifdef ESP32
+  // TD-er: Don't run async scan on ESP32.
+  // Since IDF 4.4 it seems like the active channel may be messed up when running async scan
+  // Perform a disconnect after scanning.
+  // See: https://github.com/letscontrolit/ESPEasy/pull/3579#issuecomment-967021347
+  async = false;
+#endif
+
   START_TIMER;
   WiFiEventData.lastScanMoment.setNow();
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -866,7 +882,7 @@ void WifiScan(bool async, uint8_t channel) {
       FeedSW_watchdog();
     }
     --nrScans;
-    #ifdef ESP8266
+#ifdef ESP8266
     /*
     {
       static bool FIRST_SCAN = true;
@@ -891,24 +907,30 @@ void WifiScan(bool async, uint8_t channel) {
     }
     */
     WiFi.scanNetworks(async, show_hidden, channel);
-    #endif
-    #ifdef ESP32
+#endif
+#ifdef ESP32
     const bool passive = false;
     const uint32_t max_ms_per_chan = 300;
     WiFi.scanNetworks(async, show_hidden, passive, max_ms_per_chan /*, channel */);
-    #endif
+#endif
     if (!async) {
       FeedSW_watchdog();
       processScanDone();
     }
   }
   STOP_TIMER(async ? WIFI_SCAN_ASYNC : WIFI_SCAN_SYNC);
+
+#ifdef ESP32
+  RTC.clearLastWiFi();
+  WifiDisconnect();
+#endif
+
 }
 
 // ********************************************************************************
 // Scan all Wifi Access Points
 // ********************************************************************************
-void WifiScan()
+void WiFiScan_log_to_serial()
 {
   // Direct Serial is allowed here, since this function will only be called from serial input.
   serialPrintln(F("WIFI : SSID Scan start"));
@@ -977,7 +999,6 @@ void setAP(bool enable) {
     case WIFI_OFF:
 
       if (enable) { 
-        WifiScan(false);
         setWifiMode(WIFI_AP); 
       }
       break;
@@ -1073,15 +1094,17 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (cur_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
-
+  }
+  if (wifimode != WIFI_OFF) {
     #if defined(ESP32)
-    esp_wifi_set_ps(WIFI_PS_NONE);
+    // Needs to be set before calling WiFi.mode() on ESP32
+    WiFi.hostname(NetworkCreateRFCCompliantHostname());
     #endif
-    #ifdef ESP8266
 
+    #ifdef ESP8266
     // See: https://github.com/esp8266/Arduino/issues/6172#issuecomment-500457407
     WiFi.forceSleepWake(); // Make sure WiFi is really active.
-    #endif // ifdef ESP8266
+    #endif
     delay(100);
   }
 
@@ -1106,7 +1129,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
-    esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+//    esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
     #endif
     #ifdef ESP8266
     WiFi.forceSleepBegin();
@@ -1146,8 +1169,9 @@ void setWifiMode(WiFiMode_t wifimode) {
         #endif
       }
     }
-
+#ifdef ESP8266
     SetWiFiTXpower();
+#endif
     if (WifiIsSTA(wifimode)) {
       if (WiFi.getAutoConnect()) {
         WiFi.setAutoConnect(false); 
