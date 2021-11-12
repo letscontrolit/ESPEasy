@@ -43,7 +43,7 @@ bool P119_data_struct::read_sensor() {
       log  = F("ITG3205: i2caddress: 0x");
       log += String(_i2cAddress, HEX);
       log += F(", initialized: ");
-      log += String(nullptr != itg3205 ? F("true") : F("false"));
+      log += String(initialized() ? F("true") : F("false"));
       log += F(", ID=0x");
       log += String(itg3205->readWhoAmI(), HEX);
       addLog(LOG_LEVEL_DEBUG, log);
@@ -127,7 +127,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
     }
     # endif // if PLUGIN_119_DEBUG
   }
-  return nullptr != itg3205;
+  return initialized();
 }
 
 // **************************************************************************/
