@@ -40,31 +40,31 @@ bool P037_data_struct::loadSettings() {
   return false;
 }
 
-# if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+# if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
 /**
  * Parse the mappings and filters from the settings-string into arrays
  */
 void P037_data_struct::parseMappings() {
   if (
-    #  ifdef P037_MAPPING_SUPPORT
+    #  if P037_MAPPING_SUPPORT
     _maxIdx == -1
-    #  endif // ifdef P037_MAPPING_SUPPORT
-    #  if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+    #  endif // if P037_MAPPING_SUPPORT
+    #  if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
     ||
-    #  endif // if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
-    #  ifdef P037_FILTER_SUPPORT
+    #  endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+    #  if P037_FILTER_SUPPORT
     _maxFilter == -1
-    #  endif // ifdef P037_FILTER_SUPPORT
+    #  endif // if P037_FILTER_SUPPORT
     ) {
-    #  ifdef P037_MAPPING_SUPPORT
+    #  if P037_MAPPING_SUPPORT
     _maxIdx = 0;    // Initialize to empty
-    #  endif // ifdef P037_MAPPING_SUPPORT
-    #  ifdef P037_FILTER_SUPPORT
+    #  endif // if P037_MAPPING_SUPPORT
+    #  if P037_FILTER_SUPPORT
     _maxFilter = 0; // Initialize to empty
-    #  endif // ifdef P037_FILTER_SUPPORT
+    #  endif // if P037_FILTER_SUPPORT
 
-    #  ifdef P037_MAPPING_SUPPORT
+    #  if P037_MAPPING_SUPPORT
     int8_t idx = P037_MAX_MAPPINGS;
 
     for (uint8_t mappingOffset = P037_END_MAPPINGS; mappingOffset >= P037_START_MAPPINGS && _maxIdx == 0; mappingOffset--) {
@@ -73,9 +73,9 @@ void P037_data_struct::parseMappings() {
       }
       idx--;
     }
-    #  endif // ifdef P037_MAPPING_SUPPORT
+    #  endif // if P037_MAPPING_SUPPORT
 
-    #  ifdef P037_FILTER_SUPPORT
+    #  if P037_FILTER_SUPPORT
     idx = P037_MAX_FILTERS;
 
     for (uint8_t filterOffset = P037_END_FILTERS; filterOffset >= P037_START_FILTERS && _maxFilter == 0; filterOffset--) {
@@ -90,25 +90,25 @@ void P037_data_struct::parseMappings() {
       _maxFilter = VARS_PER_TASK;
     }
     #   endif // ifdef P037_FILTER_PER_TOPIC
-    #  endif // ifdef P037_FILTER_SUPPORT
+    #  endif // if P037_FILTER_SUPPORT
   }
 } // parseMappings
 
-# endif // P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
+# endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
 bool P037_data_struct::webform_load(
-  # ifdef P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT
   bool mappingEnabled
-  # endif // ifdef P037_MAPPING_SUPPORT
-  # if defined(P037_MAPPING_SUPPORT)&& defined(P037_FILTER_SUPPORT)
+  # endif // if P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
   ,
-  # endif // if defined(P037_MAPPING_SUPPORT)&& defined(P037_FILTER_SUPPORT)
-  # ifdef P037_FILTER_SUPPORT
+  # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+  # if P037_FILTER_SUPPORT
   bool filterEnabled
-  # endif // ifdef P037_FILTER_SUPPORT
-  # if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT))&& defined(P037_JSON_SUPPORT)
+  # endif // if P037_FILTER_SUPPORT
+  # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT)&& defined(P037_JSON_SUPPORT)
   ,
-  # endif // if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT))&& defined(P037_JSON_SUPPORT)
+  # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT)&& defined(P037_JSON_SUPPORT)
   # ifdef P037_JSON_SUPPORT
   bool jsonEnabled
   # endif // ifdef P037_JSON_SUPPORT
@@ -172,11 +172,11 @@ bool P037_data_struct::webform_load(
   }
   # endif // ifdef P037_JSON_SUPPORT
 
-  # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   parseMappings();
-  # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
-  # ifdef P037_FILTER_SUPPORT
+  # if P037_FILTER_SUPPORT
 
   if (filterEnabled) {
     addFormSubHeader(F("Name - value filters"));
@@ -307,9 +307,9 @@ bool P037_data_struct::webform_load(
     #  endif // ifndef P037_FILTER_PER_TOPIC
   }
 
-  # endif    // P037_FILTER_SUPPORT
+  # endif    // if P037_FILTER_SUPPORT
 
-  # ifdef P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT
 
   if (mappingEnabled) {
     addFormSubHeader(F("Name - value mappings"));
@@ -414,7 +414,7 @@ bool P037_data_struct::webform_load(
       addFormNote(moreMessage);
     }
   }
-  # endif // P037_MAPPING_SUPPORT
+  # endif // if P037_MAPPING_SUPPORT
 
   success = true;
   return success;
@@ -448,12 +448,12 @@ String P037_data_struct::enquoteString(const String& input) {
 }
 
 bool P037_data_struct::webform_save(
-  # ifdef P037_FILTER_SUPPORT
+  # if P037_FILTER_SUPPORT
   bool filterEnabled
-  # endif // ifdef P037_FILTER_SUPPORT
-  # if defined(P037_FILTER_SUPPORT)&& defined(P037_JSON_SUPPORT)
+  # endif // if P037_FILTER_SUPPORT
+  # if P037_FILTER_SUPPORT && defined(P037_JSON_SUPPORT)
   ,
-  # endif // if defined(P037_FILTER_SUPPORT)&& defined(P037_JSON_SUPPORT)
+  # endif // if P037_FILTER_SUPPORT && defined(P037_JSON_SUPPORT)
   # ifdef P037_JSON_SUPPORT
   bool jsonEnabled
   # endif // ifdef P037_JSON_SUPPORT
@@ -491,13 +491,13 @@ bool P037_data_struct::webform_save(
     error += F("Prefix for all topics");
   }
 
-  # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
   bool   firstError;
-  # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
   // Mappings are processed first
-  # ifdef P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT
   firstError = true;
   String  operands = P037_OPERAND_LIST;
   uint8_t mapNr    = 1;
@@ -540,9 +540,9 @@ bool P037_data_struct::webform_save(
   if (!firstError) {
     error += '\n';
   }
-  # endif // ifdef P037_MAPPING_SUPPORT
+  # endif // if P037_MAPPING_SUPPORT
 
-  # ifdef P037_FILTER_SUPPORT
+  # if P037_FILTER_SUPPORT
   String filters = P037_FILTER_LIST;
   firstError = true;
   uint8_t filterNr = 1;
@@ -589,7 +589,7 @@ bool P037_data_struct::webform_save(
     error += '\n';
   }
   #  endif // ifndef P037_FILTER_PER_TOPIC
-  # endif  // P037_FILTER_SUPPORT
+  # endif  // if P037_FILTER_SUPPORT
 
   error += SaveCustomTaskSettings(_taskIndex, (uint8_t *)&StoredSettings, sizeof(StoredSettings)); // Part 1
   error += SaveCustomTaskSettings(_taskIndex, valueArray,
@@ -598,19 +598,19 @@ bool P037_data_struct::webform_save(
   if (!error.isEmpty()) {
     addHtmlError(error);
   }
-  # ifdef P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT
   _maxIdx = -1; // Invalidate current mappings and filters
-  # endif // ifdef P037_MAPPING_SUPPORT
-  # ifdef P037_FILTER_SUPPORT
+  # endif // if P037_MAPPING_SUPPORT
+  # if P037_FILTER_SUPPORT
   _maxFilter = -1;
-  # endif // ifdef P037_FILTER_SUPPORT
+  # endif // if P037_FILTER_SUPPORT
 
   success = true;
 
   return success;
 } // webform_save
 
-# ifdef P037_MAPPING_SUPPORT
+# if P037_MAPPING_SUPPORT
 #  ifdef PLUGIN_037_DEBUG
 void P037_data_struct::logMapValue(const String& input, const String& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -693,9 +693,9 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
   return result;
 } // mapValue
 
-# endif // P037_MAPPING_SUPPORT
+# endif // if P037_MAPPING_SUPPORT
 
-# ifdef P037_FILTER_SUPPORT
+# if P037_FILTER_SUPPORT
 
 /**
  * do we have filter values?
@@ -931,7 +931,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
   return result;
 }
 
-# endif // P037_FILTER_SUPPORT
+# endif // if P037_FILTER_SUPPORT
 
 # ifdef P037_JSON_SUPPORT
 

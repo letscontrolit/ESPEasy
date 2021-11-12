@@ -38,7 +38,7 @@
 # define P037_APPLY_FILTERS   PCONFIG(3) // Apply filtering on data values
 # define P037_SEND_EVENTS     PCONFIG(4) // Send event for each received topic
 
-# if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT)
+# if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 String P037_getMQTTLastTopicPart(const String& topic) {
   const int16_t lastSlash = topic.lastIndexOf('/');
 
@@ -51,7 +51,7 @@ String P037_getMQTTLastTopicPart(const String& topic) {
   return result;
 }
 
-# endif // P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
+# endif // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 
 boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -92,32 +92,32 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Options"));
-      # if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+      # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
       int optionValuesNoYes[2]                   = { 0, 1 };
-      # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+      # endif // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
 
-      # ifdef P037_JSON_SUPPORT
+      # if P037_JSON_SUPPORT
       addFormSelector(F("Parse JSON messages"), F("p037_parse_json"),     2, optionsNoYes, optionValuesNoYes, P037_PARSE_JSON,     true);
-      # endif // ifdef P037_JSON_SUPPORT
-      # ifdef P037_FILTER_SUPPORT
+      # endif // if P037_JSON_SUPPORT
+      # if P037_FILTER_SUPPORT
       addFormSelector(F("Apply filters"),       F("p037_apply_filters"),  2, optionsNoYes, optionValuesNoYes, P037_APPLY_FILTERS,  true);
-      # endif // ifdef P037_FILTER_SUPPORT
-      # ifdef P037_MAPPING_SUPPORT
+      # endif // if P037_FILTER_SUPPORT
+      # if P037_MAPPING_SUPPORT
       addFormSelector(F("Apply mappings"),      F("p037_apply_mappings"), 2, optionsNoYes, optionValuesNoYes, P037_APPLY_MAPPINGS, true);
-      # endif // ifdef P037_MAPPING_SUPPORT
-      # if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+      # endif // if P037_MAPPING_SUPPORT
+      # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       #  if !defined(LIMIT_BUILD_SIZE)
       addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
       #  endif // if !defined(LIMIT_BUILD_SIZE)
-      # endif  // if defined(P037_MAPPING_SUPPORT) || defined(P037_JSON_SUPPORT) || defined(P037_FILTER_SUPPORT)
+      # endif  // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       addFormCheckBox(F("Generate events for accepted topics"),
                       F("p037_send_events"), P037_SEND_EVENTS);
       # if !defined(LIMIT_BUILD_SIZE)
       addFormNote(F("Event: &lt;TaskName&gt;#&lt;topic&gt;=&lt;payload&gt;"));
-      #  ifdef P037_JSON_SUPPORT
+      #  if P037_JSON_SUPPORT
       addFormNote(F("Events when JSON enabled and JSON payload: &lt;Topic&gt;#&lt;json-attribute&gt;=&lt;value&gt;"));
-      #  endif // ifdef P037_JSON_SUPPORT
+      #  endif // if P037_JSON_SUPPORT
       # endif  // if !defined(LIMIT_BUILD_SIZE)
 
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
@@ -126,21 +126,21 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
       success = P037_data->webform_load(
-        # ifdef P037_MAPPING_SUPPORT
+        # if P037_MAPPING_SUPPORT
         P037_APPLY_MAPPINGS
-        # endif // ifdef P037_MAPPING_SUPPORT
-        # if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+        # endif // if P037_MAPPING_SUPPORT
+        # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
         ,
-        # endif // if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
-        # ifdef P037_FILTER_SUPPORT
+        # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+        # if P037_FILTER_SUPPORT
         P037_APPLY_FILTERS
-        # endif // ifdef P037_FILTER_SUPPORT
-        # if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+        # endif // if P037_FILTER_SUPPORT
+        # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
         ,
-        # endif // if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
-        # ifdef P037_JSON_SUPPORT
+        # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
+        # if P037_JSON_SUPPORT
         P037_PARSE_JSON
-        # endif // ifdef P037_JSON_SUPPORT
+        # endif // if P037_JSON_SUPPORT
         );
       delete P037_data;
       break;
@@ -148,15 +148,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      # ifdef P037_JSON_SUPPORT
+      # if P037_JSON_SUPPORT
       P037_PARSE_JSON = getFormItemInt(F("p037_parse_json"));
-      # endif // ifdef P037_JSON_SUPPORT
-      # ifdef P037_MAPPING_SUPPORT
+      # endif // if P037_JSON_SUPPORT
+      # if P037_MAPPING_SUPPORT
       P037_APPLY_MAPPINGS = getFormItemInt(F("p037_apply_mappings"));
-      # endif // ifdef P037_MAPPING_SUPPORT
-      # ifdef P037_FILTER_SUPPORT
+      # endif // if P037_MAPPING_SUPPORT
+      # if P037_FILTER_SUPPORT
       P037_APPLY_FILTERS = getFormItemInt(F("p037_apply_filters"));
-      # endif // ifdef P037_FILTER_SUPPORT
+      # endif // if P037_FILTER_SUPPORT
       P037_SEND_EVENTS = isFormItemChecked(F("p037_send_events"));
 
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
@@ -165,15 +165,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
       success = P037_data->webform_save(
-        # ifdef P037_FILTER_SUPPORT
+        # if P037_FILTER_SUPPORT
         P037_APPLY_FILTERS
-        # endif // ifdef P037_FILTER_SUPPORT
-        # if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+        # endif // if P037_FILTER_SUPPORT
+        # if P037_FILTER_SUPPORT && P037_JSON_SUPPORT
         ,
-        # endif // if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
-        # ifdef P037_JSON_SUPPORT
+        # endif // if P037_FILTER_SUPPORT && P037_JSON_SUPPORT
+        # if P037_JSON_SUPPORT
         P037_PARSE_JSON
-        # endif // ifdef P037_JSON_SUPPORT
+        # endif // if P037_JSON_SUPPORT
         );
       delete P037_data;
 
@@ -263,12 +263,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       bool checkJson = false;
 
-      # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT) || defined(P037_JSON_SUPPORT)
-      bool processData = false;    // Don't do the for loop again if we're not going to match
+      String subscriptionTopicParsed;
+      # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT || P037_JSON_SUPPORT
+      bool processData = false;  // Don't do the for loop again if we're not going to match
       // As we can receive quite a lot of topics not intended for this plugin,
       // first do a quick check if the topic matches here, to try and avoid a bunch of unneeded mapping, filtering and logging
-      bool   matchedTopic = false; // Ignore by default
-      String subscriptionTopicParsed;
+      bool matchedTopic = false; // Ignore by default
       subscriptionTopicParsed.reserve(80);
 
       for (uint8_t x = 0; x < VARS_PER_TASK; x++)
@@ -288,10 +288,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           processData  = true; // Allow going into second for loop
         }
       }
-      # else // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT) || defined(P037_JSON_SUPPORT)
+      # else // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT || P037_JSON_SUPPORT
       bool processData = true;
-      # endif // P037_MAPPING_SUPPORT or P037_FILTER_SUPPORT or P037_JSON_SUPPORT
-      # ifdef P037_JSON_SUPPORT
+      # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT || P037_JSON_SUPPORT
+      # if P037_JSON_SUPPORT
 
       if (matchedTopic &&
           P037_PARSE_JSON &&
@@ -301,7 +301,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         #  endif // ifdef PLUGIN_037_DEBUG
         checkJson = true;
       }
-      # endif           // P037_JSON_SUPPORT
+      # endif           // if P037_JSON_SUPPORT
 
       if (!checkJson) { // Avoid storing any json in an extra copy in memory
         unparsedPayload = event->String2;
@@ -313,22 +313,22 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       bool   continueProcessing = false;
       String key;
 
-      # ifdef P037_MAPPING_SUPPORT
+      # if P037_MAPPING_SUPPORT
 
       if (matchedTopic && !checkJson && P037_APPLY_MAPPINGS) { // Apply mappings?
         key     = P037_getMQTTLastTopicPart(event->String1);
         Payload = P037_data->mapValue(Payload, key);
       }
-      # endif // P037_MAPPING_SUPPORT
+      # endif // if P037_MAPPING_SUPPORT
 
-      # ifdef P037_JSON_SUPPORT
+      # if P037_JSON_SUPPORT
 
       if (checkJson) {
         continueProcessing = P037_data->parseJSONMessage(event->String2);
       }
-      # endif // P037_JSON_SUPPORT
+      # endif // if P037_JSON_SUPPORT
 
-      # ifdef P037_FILTER_SUPPORT
+      # if P037_FILTER_SUPPORT
       #  ifdef P037_FILTER_PER_TOPIC
 
       for (uint8_t x = 0; x < VARS_PER_TASK && matchedTopic; x++) {
@@ -344,15 +344,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         // non-json filter check
         if (!checkJson && P037_data->hasFilters()) {   // See if we pass the filters
           key = P037_getMQTTLastTopicPart(event->String1);
-          #  ifdef P037_MAPPING_SUPPORT
+          #  if P037_MAPPING_SUPPORT
 
           if (P037_APPLY_MAPPINGS) {
             Payload = P037_data->mapValue(Payload, key);
           }
-          #  endif // P037_MAPPING_SUPPORT
+          #  endif // if P037_MAPPING_SUPPORT
           processData = P037_data->checkFilters(key, Payload, x + 1);   // Will return true unless key matches *and* Payload doesn't
         }
-        #  ifdef P037_JSON_SUPPORT
+        #  if P037_JSON_SUPPORT
 
         #   ifndef P037_FILTER_PER_TOPIC
 
@@ -361,18 +361,18 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           do {
             key     = P037_data->iter->key().c_str();
             Payload = P037_data->iter->value().as<String>();
-            #    ifdef P037_MAPPING_SUPPORT
+            #    if P037_MAPPING_SUPPORT
 
             if (P037_APPLY_MAPPINGS) {
               Payload = P037_data->mapValue(Payload, key);
             }
-            #    endif // P037_MAPPING_SUPPORT
+            #    endif // if P037_MAPPING_SUPPORT
             processData = P037_data->checkFilters(key, Payload, x + 1);   // Will return true unless key matches *and* Payload doesn't
             ++P037_data->iter;
           } while (processData && P037_data->iter != P037_data->doc.end());
         }
         #   endif // P037_FILTER_PER_TOPIC
-        #  endif  // P037_JSON_SUPPORT
+        #  endif  // if P037_JSON_SUPPORT
       }
 
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
@@ -381,7 +381,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         log += processData ? F("true") : F("false");
         addLog(LOG_LEVEL_DEBUG, log);
       }
-      # endif // P037_FILTER_SUPPORT
+      # endif // if P037_FILTER_SUPPORT
 
       if (!processData) { // Nothing to do? then clean up
         Payload.clear();
@@ -396,13 +396,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // Now check if the incoming topic matches one of our subscriptions
+        subscriptionTopicParsed.reserve(80);
         subscriptionTopicParsed = P037_data->StoredSettings.globalTopicPrefix;
         subscriptionTopicParsed.trim();
         subscriptionTopicParsed += P037_data->deviceTemplate[x];
         parseSystemVariables(subscriptionTopicParsed, false);
 
         if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
-          # ifdef P037_JSON_SUPPORT
+          # if P037_JSON_SUPPORT
           #  ifdef P037_FILTER_PER_TOPIC
 
           // json filter check
@@ -414,12 +415,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
             do {
               key     = P037_data->iter->key().c_str();
               Payload = P037_data->iter->value().as<String>();
-              #   ifdef P037_MAPPING_SUPPORT
+              #   if P037_MAPPING_SUPPORT
 
               if (P037_APPLY_MAPPINGS) {
                 Payload = P037_data->mapValue(Payload, key);
               }
-              #   endif // P037_MAPPING_SUPPORT
+              #   endif // if P037_MAPPING_SUPPORT
               passFilter = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
 
               ++P037_data->iter;
@@ -429,10 +430,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
           if (passFilter) // Watch it!
           #  endif // P037_FILTER_PER_TOPIC
-          # endif // P037_JSON_SUPPORT
+          # endif // if P037_JSON_SUPPORT
           {
             do {
-              # ifdef P037_JSON_SUPPORT
+              # if P037_JSON_SUPPORT
 
               if (checkJson && (P037_data->iter != P037_data->doc.end())) {
                 String jsonIndex     = parseString(P037_data->StoredSettings.jsonAttributes[x], 2, ';');
@@ -476,23 +477,23 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   log  = F("P037 json key: ");
                   log += key;
                   log += F(" payload: ");
-                  #   ifdef P037_MAPPING_SUPPORT
+                  #   if P037_MAPPING_SUPPORT
                   log += (P037_APPLY_MAPPINGS ? P037_data->mapValue(Payload, key) : Payload);
-                  #   else // ifdef P037_MAPPING_SUPPORT
+                  #   else // if P037_MAPPING_SUPPORT
                   log += Payload;
-                  #   endif // P037_MAPPING_SUPPORT
+                  #   endif // if P037_MAPPING_SUPPORT
                   addLog(LOG_LEVEL_INFO, log);
                 }
                 #  endif // ifdef PLUGIN_037_DEBUG
                 ++P037_data->iter;
               }
-              #  ifdef P037_MAPPING_SUPPORT
+              #  if P037_MAPPING_SUPPORT
 
               if (P037_APPLY_MAPPINGS) {
                 Payload = P037_data->mapValue(Payload, key);
               }
-              #  endif // P037_MAPPING_SUPPORT
-              # endif  // P037_JSON_SUPPORT
+              #  endif // if P037_MAPPING_SUPPORT
+              # endif  // if P037_JSON_SUPPORT
               bool numericPayload = true; // Unless it's not
 
               if (!checkJson || (checkJson && (!key.isEmpty()))) {
@@ -561,9 +562,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   if (checkJson) {
                     // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
                     RuleEvent = event->String1;
-                    # if defined(P037_FILTER_SUPPORT) && defined(P037_FILTER_PER_TOPIC)
+                    # if P037_FILTER_SUPPORT && defined(P037_FILTER_PER_TOPIC)
                     RuleEvent += P037_data->getFilterAsTopic(x + 1);
-                    # endif // if defined(P037_FILTER_SUPPORT) && defined(P037_FILTER_PER_TOPIC)
+                    # endif // if P037_FILTER_SUPPORT && defined(P037_FILTER_PER_TOPIC)
                     RuleEvent += '#';
                     RuleEvent += key;
                     RuleEvent += '=';
@@ -596,12 +597,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   RuleEvent.reserve(RuleEvent.length()); // Resize
                   eventQueue.addMove(std::move(RuleEvent));
                 }
-                # ifdef P037_JSON_SUPPORT
+                # if P037_JSON_SUPPORT
 
                 if (checkJson && (P037_data->iter == P037_data->doc.end())) {
                   continueProcessing = false;
                 }
-                # endif // P037_JSON_SUPPORT
+                # endif // if P037_JSON_SUPPORT
               }
             } while (continueProcessing);
           }
@@ -609,12 +610,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         }
       }
-      # ifdef P037_JSON_SUPPORT
+      # if P037_JSON_SUPPORT
 
       if (checkJson) {
         P037_data->cleanupJSON(); // Free/cleanup memory
       }
-      # endif // P037_JSON_SUPPORT
+      # endif // if P037_JSON_SUPPORT
 
       break;
     }

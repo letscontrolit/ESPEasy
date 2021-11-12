@@ -15,9 +15,17 @@
 
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
-# define P037_MAPPING_SUPPORT // Enable Value mapping support
-# define P037_FILTER_SUPPORT  // Enable filtering support
-# define P037_JSON_SUPPORT    // Enable Json support
+# ifdef PLUGIN_BUILD_CUSTOM
+#  ifndef P037_MAPPING_SUPPORT
+#   define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
+#  endif // ifndef P037_MAPPING_SUPPORT
+#  ifndef P037_FILTER_SUPPORT
+#   define P037_FILTER_SUPPORT  1 // Enable filtering support
+#  endif // ifndef P037_FILTER_SUPPORT
+#  ifdef P037_JSON_SUPPORT
+#   define P037_JSON_SUPPORT    1 // Enable Json support
+#  endif // ifdef P037_JSON_SUPPORT
+# endif // ifdef PLUGIN_BUILD_CUSTOM
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
 
@@ -25,35 +33,35 @@
 #  ifdef PLUGIN_037_DEBUG
 #   undef PLUGIN_037_DEBUG
 #  endif // ifdef PLUGIN_037_DEBUG
-#  ifdef P037_MAPPING_SUPPORT
+#  if P037_MAPPING_SUPPORT
 #   undef P037_MAPPING_SUPPORT
-#  endif // ifdef P037_MAPPING_SUPPORT
-#  if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
+#  endif // if P037_MAPPING_SUPPORT
+#  if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
 #   undef P037_FILTER_SUPPORT
-#  endif // if defined(FEATURE_ADC_VCC) && defined(P037_FILTER_SUPPORT)
+#  endif // if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
 
-// #ifdef P037_JSON_SUPPORT
+// #if P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
 // #endif
 # endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
 
 # ifdef PLUGIN_DISPLAY_COLLECTION
-#  ifdef P037_FILTER_SUPPORT
+#  if P037_FILTER_SUPPORT
 #   undef P037_FILTER_SUPPORT
-#  endif // ifdef P037_FILTER_SUPPORT
-# endif // ifdef PLUGIN_DISPLAY_COLLECTION
+#  endif // if P037_FILTER_SUPPORT
+# endif  // ifdef PLUGIN_DISPLAY_COLLECTION
 
 # define P037_MAX_MAPPINGS  25
 # define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
-# define P037_EXTRA_VALUES  5             // The number of extra, empty, values to show when adding mappings
-                                          // (or filters if not 1:1 with topics is used)
+# define P037_EXTRA_VALUES  5 // The number of extra, empty, values to show when adding mappings
+                              // (or filters if not 1:1 with topics is used)
 
 // Only 1 filter per topic
-# if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
+# if P037_FILTER_SUPPORT && P037_MAX_FILTERS == VARS_PER_TASK
 #  ifndef P037_FILTER_PER_TOPIC
 #   define P037_FILTER_PER_TOPIC
 #  endif // ifndef P037_FILTER_PER_TOPIC
-# endif  // if defined(P037_FILTER_SUPPORT) && P037_MAX_FILTERS == VARS_PER_TASK
+# endif  // if P037_FILTER_SUPPORT && P037_MAX_FILTERS == VARS_PER_TASK
 
 # define P037_ARRAY_SIZE      (P037_MAX_MAPPINGS + P037_MAX_FILTERS)  // Storage layout definitions
 # define P037_START_MAPPINGS  0
@@ -76,42 +84,42 @@ struct P037_data_struct : public PluginTaskData_base
   ~P037_data_struct();
 
   bool webform_load(
-    # ifdef P037_MAPPING_SUPPORT
+    # if P037_MAPPING_SUPPORT
     bool mappingEnabled
-    # endif // ifdef P037_MAPPING_SUPPORT
-    # if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
+    # endif // if P037_MAPPING_SUPPORT
+    # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
     ,
-    # endif // if defined(P037_MAPPING_SUPPORT) && defined(P037_FILTER_SUPPORT)
-    # ifdef P037_FILTER_SUPPORT
+    # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+    # if P037_FILTER_SUPPORT
     bool filterEnabled
-    # endif // ifdef P037_FILTER_SUPPORT
-    # if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
+    # endif // if P037_FILTER_SUPPORT
+    # if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
     ,
-    # endif // if (defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)) && defined(P037_JSON_SUPPORT)
-    # ifdef P037_JSON_SUPPORT
+    # endif // if (P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT) && P037_JSON_SUPPORT
+    # if P037_JSON_SUPPORT
     bool jsonEnabled
-    # endif // ifdef P037_JSON_SUPPORT
+    # endif // if P037_JSON_SUPPORT
     );
   bool webform_save(
-    # ifdef P037_FILTER_SUPPORT
+    # if P037_FILTER_SUPPORT
     bool filterEnabled
-    # endif // ifdef P037_FILTER_SUPPORT
-    # if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
+    # endif // if P037_FILTER_SUPPORT
+    # if P037_FILTER_SUPPORT && P037_JSON_SUPPORT
     ,
-    # endif // if defined(P037_FILTER_SUPPORT) && defined(P037_JSON_SUPPORT)
-    # ifdef P037_JSON_SUPPORT
+    # endif // if P037_FILTER_SUPPORT && P037_JSON_SUPPORT
+    # if P037_JSON_SUPPORT
     bool jsonEnabled
-    # endif // ifdef P037_JSON_SUPPORT
+    # endif // if P037_JSON_SUPPORT
     );
-  # ifdef P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT
   String mapValue(const String& input,
                   const String& attribute);
   #  ifdef PLUGIN_037_DEBUG
   void   logMapValue(const String& input,
                      const String& result);
   #  endif // ifdef PLUGIN_037_DEBUG
-  # endif  // P037_MAPPING_SUPPORT
-  # ifdef P037_FILTER_SUPPORT
+  # endif  // if P037_MAPPING_SUPPORT
+  # if P037_FILTER_SUPPORT
   bool hasFilters();
   bool checkFilters(const String& key,
                     const String& value,
@@ -125,7 +133,7 @@ struct P037_data_struct : public PluginTaskData_base
                         const String& value,
                         const String& match);
   #  endif // PLUGIN_037_DEBUG
-  # endif  // P037_FILTER_SUPPORT
+  # endif  // if P037_FILTER_SUPPORT
   String enquoteString(const String& input);
 
   // The settings structures
@@ -140,12 +148,12 @@ struct P037_data_struct : public PluginTaskData_base
   // Stored settings data:
   tP037_StoredSettings_struct StoredSettings;
 
-  # ifdef P037_JSON_SUPPORT
+  # if P037_JSON_SUPPORT
   bool parseJSONMessage(const String& message);
   void cleanupJSON();
   JsonObject           doc;
   JsonObject::iterator iter;
-  # endif // P037_JSON_SUPPORT
+  # endif // if P037_JSON_SUPPORT
 
   std::map<uint8_t, String>deviceTemplate;
   std::map<uint8_t, String>jsonAttributes;
@@ -158,21 +166,21 @@ private:
   // Private methods and vars
   bool loadSettings();
 
-  # if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   void parseMappings();
-  # endif // if defined(P037_MAPPING_SUPPORT) || defined(P037_FILTER_SUPPORT)
+  # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   taskIndex_t _taskIndex = TASKS_MAX;
-  # ifdef P037_MAPPING_SUPPORT
+  # if P037_MAPPING_SUPPORT
   int8_t _maxIdx = -1;
-  # endif // ifdef P037_MAPPING_SUPPORT
-  # ifdef P037_FILTER_SUPPORT
+  # endif // if P037_MAPPING_SUPPORT
+  # if P037_FILTER_SUPPORT
   int8_t _maxFilter = -1;
   String _filterListItem;
-  # endif // ifdef P037_FILTER_SUPPORT
-  # ifdef P037_JSON_SUPPORT
+  # endif // if P037_FILTER_SUPPORT
+  # if P037_JSON_SUPPORT
   DynamicJsonDocument *root                  = nullptr;
   uint16_t             lastJsonMessageLength = 512;
-  # endif // P037_JSON_SUPPORT
+  # endif // if P037_JSON_SUPPORT
 };
 
 #endif    // ifdef USED_P037
