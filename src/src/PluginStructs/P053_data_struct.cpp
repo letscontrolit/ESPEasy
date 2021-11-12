@@ -616,11 +616,14 @@ bool P053_data_struct::getValue(uint8_t index, float& value) {
       if (!hasFormaldehyde()) { return false; }
       value = _data[index] / 1000.0f;
       break;
+    case PMS_cnt5_0_100ml:
+    case PMS_cnt10_0_100ml: // this option was missing :-|
+
+      if (_sensortype == PMSx003_type::PMS5003_T) { return false; } // else: fall through
     case PMS_cnt0_3_100ml:
     case PMS_cnt0_5_100ml:
     case PMS_cnt1_0_100ml:
     case PMS_cnt2_5_100ml:
-    case PMS_cnt5_0_100ml:
       value = _data[index];
 
       if (_splitCntBins) {
