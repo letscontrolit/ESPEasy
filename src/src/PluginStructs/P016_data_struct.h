@@ -55,9 +55,6 @@ typedef struct {
 } tCommandLines;
 # endif // ifdef P16_SETTINGS_V1
 
-extern String uint64ToString(uint64_t input,
-                             uint8_t  base);
-
 struct P016_data_struct : public PluginTaskData_base {
 public:
 
