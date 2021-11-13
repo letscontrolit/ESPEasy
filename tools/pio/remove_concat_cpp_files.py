@@ -19,6 +19,7 @@ def clear_all_concat_cpp_files(source, target, env):
     print("\u001b[32m Remove temp concatenated files \u001b[0m")
     clear_concat_cpp_files('./src/src/Commands')
     clear_concat_cpp_files('./src/src/ControllerQueue')
+    clear_concat_cpp_files('./src/src/DataTypes')
     clear_concat_cpp_files('./src/src/Globals')
     clear_concat_cpp_files('./src/src/Helpers')
     clear_concat_cpp_files('./src/src/PluginStructs')

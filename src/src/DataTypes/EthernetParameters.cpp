@@ -1,4 +1,4 @@
-#include "EthernetParameters.h"
+#include "../DataTypes/EthernetParameters.h"
 
 bool isValid(EthClockMode_t clockMode) {
   switch (clockMode) {
