@@ -15,8 +15,8 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
-#include "IRremoteESP8266.h"
-#include "IRsend.h"
+#include "../src/IRremoteESP8266.h"
+#include "../src/IRsend.h"
 
 /// MagiQuest packet is both Wand ID and magnitude of swish and flick
 union magiquest {

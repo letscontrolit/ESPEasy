@@ -6,7 +6,7 @@
 
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
-#include "IRremoteESP8266.h"
+#include "../src/IRremoteESP8266.h"
 
 // Originally from https://github.com/shirriff/Arduino-IRremote/
 // Updated by markszabo (https://github.com/crankyoldgit/IRremoteESP8266) for

@@ -11,8 +11,8 @@
 #ifndef ARDUINO
 #include <string>
 #endif
-#include "IRremoteESP8266.h"
-#include "IRrecv.h"
+#include "../src/IRremoteESP8266.h"
+#include "../src/IRrecv.h"
 
 const uint8_t kNibbleSize = 4;
 const uint8_t kLowNibble = 0;

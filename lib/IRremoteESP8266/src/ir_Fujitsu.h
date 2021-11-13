@@ -42,11 +42,11 @@
 #ifdef ARDUINO
 #include <Arduino.h>
 #endif
-#include "IRrecv.h"
-#include "IRremoteESP8266.h"
-#include "IRsend.h"
+#include "../src/IRrecv.h"
+#include "../src/IRremoteESP8266.h"
+#include "../src/IRsend.h"
 #ifdef UNIT_TEST
-#include "IRsend_test.h"
+#include "../src/IRsend_test.h"
 #endif
 
 /// Native representation of a Fujitsu A/C message.

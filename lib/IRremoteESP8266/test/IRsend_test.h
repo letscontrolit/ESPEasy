@@ -8,9 +8,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "IRrecv.h"
-#include "IRsend.h"
-#include "IRtimer.h"
+#include "../src/IRrecv.h"
+#include "../src/IRsend.h"
+#include "../src/IRtimer.h"
 
 #define OUTPUT_BUF 10000U
 #define RAW_BUF 10000U

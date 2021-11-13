@@ -3,7 +3,7 @@
 #ifndef I18N_H_
 #define I18N_H_
 
-#include "IRremoteESP8266.h"
+#include "../src/IRremoteESP8266.h"
 
 // Load the appropriate locale header file.
 #ifndef _IR_LOCALE_

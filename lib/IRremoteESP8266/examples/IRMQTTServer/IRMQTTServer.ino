@@ -329,7 +329,7 @@
  * </security-hat>
  */
 
-#include "IRMQTTServer.h"
+#include "../src/IRMQTTServer.h"
 #include <Arduino.h>
 
 #include <ArduinoJson.h>

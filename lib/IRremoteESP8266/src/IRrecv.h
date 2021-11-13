@@ -12,7 +12,7 @@
 #include <stddef.h>
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
-#include "IRremoteESP8266.h"
+#include "../src/IRremoteESP8266.h"
 
 // Constants
 const uint16_t kHeader = 2;        // Usual nr. of header entries.
