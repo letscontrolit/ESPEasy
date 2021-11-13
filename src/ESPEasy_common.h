@@ -161,8 +161,13 @@ using namespace fs;
 
 #ifdef USE_LITTLEFS
   #ifdef ESP32
-    #include <LITTLEFS.h>
-    #define ESPEASY_FS LITTLEFS
+    #if ESP_IDF_VERSION_MAJOR >= 4
+      #include <LittleFS.h>
+      #define ESPEASY_FS LittleFS
+    #else
+      #include <LITTLEFS.h>
+      #define ESPEASY_FS LITTLEFS
+    #endif
   #else
     #include <LittleFS.h>
     #define ESPEASY_FS LittleFS
