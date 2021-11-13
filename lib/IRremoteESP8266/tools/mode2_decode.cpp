@@ -24,9 +24,9 @@ space 500000
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "IRsend.h"
-#include "IRsend_test.h"
-#include "IRutils.h"
+#include "../src/IRsend.h"
+#include "../src/IRsend_test.h"
+#include "../src/IRutils.h"
 
 const uint16_t kMaxGcCodeLength = 10000;
 

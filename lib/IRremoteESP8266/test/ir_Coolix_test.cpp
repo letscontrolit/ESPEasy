@@ -1,9 +1,9 @@
 // Copyright 2017-2018 David Conran
 
-#include "ir_Coolix.h"
-#include "IRac.h"
-#include "IRsend.h"
-#include "IRsend_test.h"
+#include "../src/ir_Coolix.h"
+#include "../src/IRac.h"
+#include "../src/IRsend.h"
+#include "../src/IRsend_test.h"
 #include "gtest/gtest.h"
 
 

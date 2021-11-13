@@ -23,10 +23,10 @@
 #ifndef UNIT_TEST
 #include <Arduino.h>
 #endif
-#include "IRremoteESP8266.h"
-#include "IRsend.h"
+#include "../src/IRremoteESP8266.h"
+#include "../src/IRsend.h"
 #ifdef UNIT_TEST
-#include "IRsend_test.h"
+#include "../src/IRsend_test.h"
 #endif
 
 /// Native representation of a Mitsubishi Heavy 152-bit A/C message.

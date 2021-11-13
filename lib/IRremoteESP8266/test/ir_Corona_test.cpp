@@ -1,11 +1,11 @@
 // Copyright 2020 Christian Nilsson
 
-#include "ir_Corona.h"
-#include "IRac.h"
-#include "IRrecv.h"
-#include "IRrecv_test.h"
-#include "IRsend.h"
-#include "IRsend_test.h"
+#include "../src/ir_Corona.h"
+#include "../src/IRac.h"
+#include "../src/IRrecv.h"
+#include "../src/IRrecv_test.h"
+#include "../src/IRsend.h"
+#include "../src/IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests for decodeCoronaAc().

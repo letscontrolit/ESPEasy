@@ -1,10 +1,10 @@
 // Copyright 2017 David Conran
 // Copyright 2018 Brett T. Warden
 
-#include "IRrecv.h"
-#include "IRrecv_test.h"
-#include "IRsend.h"
-#include "IRsend_test.h"
+#include "../src/IRrecv.h"
+#include "../src/IRrecv_test.h"
+#include "../src/IRsend.h"
+#include "../src/IRsend_test.h"
 #include "gtest/gtest.h"
 
 //   MM   MM WW   WW MM   MM

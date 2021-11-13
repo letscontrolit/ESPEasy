@@ -1,8 +1,8 @@
 // Copyright 2019 crankyoldgit (David Conran)
 
-#include "IRsend.h"
-#include "IRsend_test.h"
-#include "IRutils.h"
+#include "../src/IRsend.h"
+#include "../src/IRsend_test.h"
+#include "../src/IRutils.h"
 #include "gtest/gtest.h"
 
 

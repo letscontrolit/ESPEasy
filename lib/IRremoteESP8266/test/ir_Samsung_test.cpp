@@ -1,12 +1,12 @@
 // Copyright 2017-2020 David Conran
 
 #include <string>
-#include "ir_Samsung.h"
-#include "IRac.h"
-#include "IRrecv.h"
-#include "IRrecv_test.h"
-#include "IRsend.h"
-#include "IRsend_test.h"
+#include "../src/ir_Samsung.h"
+#include "../src/IRac.h"
+#include "../src/IRrecv.h"
+#include "../src/IRrecv_test.h"
+#include "../src/IRsend.h"
+#include "../src/IRsend_test.h"
 #include "gtest/gtest.h"
 
 

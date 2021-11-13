@@ -1,9 +1,9 @@
 // Copyright 2017,2019 David Conran
 
-#include "IRsend_test.h"
-#include "IRrecv_test.h"
-#include "IRsend.h"
-#include "IRutils.h"
+#include "../src/IRsend_test.h"
+#include "../src/IRrecv_test.h"
+#include "../src/IRsend.h"
+#include "../src/IRutils.h"
 #include "gtest/gtest.h"
 
 // Tests sendData().
