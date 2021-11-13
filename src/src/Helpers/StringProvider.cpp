@@ -50,10 +50,12 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return F("Load");
     case LabelType::LOOP_COUNT:             return F("Load LC");
     case LabelType::CPU_ECO_MODE:           return F("CPU Eco Mode");
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
     case LabelType::WIFI_TX_MAX_PWR:        return F("Max WiFi TX Power");
     case LabelType::WIFI_CUR_TX_PWR:        return F("Current WiFi TX Power");
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return F("Send With Max TX Power");
+#endif
     case LabelType::WIFI_NR_EXTRA_SCANS:    return F("Extra WiFi scan loops");
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return F("Use Last Connected AP from RTC");
 
@@ -226,10 +228,12 @@ String getValue(LabelType::Enum label) {
     case LabelType::LOAD_PCT:               return String(getCPUload());
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
     case LabelType::WIFI_TX_MAX_PWR:        return String(Settings.getWiFi_TX_power(), 2);
     case LabelType::WIFI_CUR_TX_PWR:        return String(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
+#endif
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return jsonBool(Settings.UseLastWiFiFromRTC());
 

@@ -239,10 +239,12 @@ void handle_json()
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
         LabelType::CONNECTION_FAIL_THRESH,
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
         LabelType::WIFI_TX_MAX_PWR,
         LabelType::WIFI_CUR_TX_PWR,
         LabelType::WIFI_SENS_MARGIN,
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
+#endif
         LabelType::WIFI_NR_EXTRA_SCANS,
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
