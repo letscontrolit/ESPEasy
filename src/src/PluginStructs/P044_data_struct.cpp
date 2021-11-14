@@ -19,6 +19,7 @@ P044_Task::P044_Task() {
 
 P044_Task::~P044_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P044_Task::serverActive(WiFiServer *server) {

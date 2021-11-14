@@ -30,6 +30,7 @@
 #include "ir_MitsubishiHeavy.h"
 #include "ir_Neoclima.h"
 #include "ir_Panasonic.h"
+#include "ir_Rhoss.h"
 #include "ir_Samsung.h"
 #include "ir_Sanyo.h"
 #include "ir_Sharp.h"
@@ -90,7 +91,8 @@ class IRac {
   static stdAc::swingh_t strToSwingH(
       const char *str, const stdAc::swingh_t def = stdAc::swingh_t::kOff);
   static String boolToString(const bool value);
-  static String opmodeToString(const stdAc::opmode_t mode);
+  static String opmodeToString(const stdAc::opmode_t mode,
+                               const bool ha = false);
   static String fanspeedToString(const stdAc::fanspeed_t speed);
   static String swingvToString(const stdAc::swingv_t swingv);
   static String swinghToString(const stdAc::swingh_t swingh);
@@ -255,12 +257,20 @@ void electra(IRElectraAc *ac,
              const bool filter, const int16_t sleep = -1,
              const int16_t clock = -1);
 #endif  // SEND_HAIER_AC
+#if SEND_HAIER_AC176
+  void haier176(IRHaierAC176 *ac,
+                const bool on, const stdAc::opmode_t mode,
+                const float degrees, const stdAc::fanspeed_t fan,
+                const stdAc::swingv_t swingv,
+                const bool turbo, const bool quiet, const bool filter,
+                const int16_t sleep = -1);
+#endif  // SEND_HAIER_AC176
 #if SEND_HAIER_AC_YRW02
   void haierYrwo2(IRHaierACYRW02 *ac,
                   const bool on, const stdAc::opmode_t mode,
                   const float degrees, const stdAc::fanspeed_t fan,
                   const stdAc::swingv_t swingv,
-                  const bool turbo, const bool filter,
+                  const bool turbo, const bool quiet, const bool filter,
                   const int16_t sleep = -1);
 #endif  // SEND_HAIER_AC_YRW02
 #if SEND_HITACHI_AC
@@ -307,7 +317,9 @@ void electra(IRElectraAc *ac,
 #if SEND_LG
   void lg(IRLgAc *ac, const lg_ac_remote_model_t model,
           const bool on, const stdAc::opmode_t mode,
-          const float degrees, const stdAc::fanspeed_t fan);
+          const float degrees, const stdAc::fanspeed_t fan,
+          const stdAc::swingv_t swingv, const stdAc::swingv_t swingv_prev,
+          const stdAc::swingh_t swingh, const bool light);
 #endif  // SEND_LG
 #if SEND_MIDEA
   void midea(IRMideaAC *ac,
@@ -376,6 +388,11 @@ void electra(IRElectraAc *ac,
                    const float degrees, const stdAc::fanspeed_t fan,
                    const stdAc::swingv_t swingv, const stdAc::swingh_t swingh);
 #endif  // SEND_PANASONIC_AC32
+#if SEND_RHOSS
+  void rhoss(IRRhossAc *ac,
+                const bool on, const stdAc::opmode_t mode, const float degrees,
+                const stdAc::fanspeed_t fan, const stdAc::swingv_t swing);
+#endif  // SEND_RHOSS
 #if SEND_SAMSUNG_AC
   void samsung(IRSamsungAc *ac,
                const bool on, const stdAc::opmode_t mode, const float degrees,
@@ -391,20 +408,29 @@ void electra(IRElectraAc *ac,
              const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv,
              const bool beep, const int16_t sleep = -1);
 #endif  // SEND_SANYO_AC
+#if SEND_SANYO_AC88
+  void sanyo88(IRSanyoAc88 *ac,
+                   const bool on, const stdAc::opmode_t mode,
+                   const float degrees, const stdAc::fanspeed_t fan,
+                   const stdAc::swingv_t swingv, const bool turbo,
+                   const bool filter,
+                   const int16_t sleep = -1, const int16_t clock = -1);
+#endif  // SEND_SANYO_AC88
 #if SEND_SHARP_AC
   void sharp(IRSharpAc *ac, const sharp_ac_remote_model_t model,
              const bool on, const bool prev_power, const stdAc::opmode_t mode,
              const float degrees, const stdAc::fanspeed_t fan,
-             const stdAc::swingv_t swingv, const bool turbo, const bool light,
+             const stdAc::swingv_t swingv, const stdAc::swingv_t swingv_prev,
+             const bool turbo, const bool light,
              const bool filter, const bool clean);
 #endif  // SEND_SHARP_AC
 #if SEND_TCL112AC
-  void tcl112(IRTcl112Ac *ac,
+  void tcl112(IRTcl112Ac *ac, const tcl_ac_remote_model_t model,
               const bool on, const stdAc::opmode_t mode, const float degrees,
               const stdAc::fanspeed_t fan,
               const stdAc::swingv_t swingv, const stdAc::swingh_t swingh,
-              const bool turbo, const bool light, const bool econo,
-              const bool filter);
+              const bool quiet, const bool turbo, const bool light,
+              const bool econo, const bool filter);
 #endif  // SEND_TCL112AC
 #if SEND_TECHNIBEL_AC
   void technibel(IRTechnibelAc *ac,
@@ -429,6 +455,12 @@ void electra(IRElectraAc *ac,
               const bool on, const stdAc::opmode_t mode, const float degrees,
               const stdAc::fanspeed_t fan, const int16_t sleep = -1);
 #endif  // SEND_TROTEC
+#if SEND_TROTEC_3550
+  void trotec3550(IRTrotec3550 *ac,
+                  const bool on, const stdAc::opmode_t mode,
+                  const bool celsius, const float degrees,
+                  const stdAc::fanspeed_t fan, const stdAc::swingv_t swingv);
+#endif  // SEND_TROTEC_3550
 #if SEND_TRUMA
   void truma(IRTrumaAc *ac,
               const bool on, const stdAc::opmode_t mode, const float degrees,

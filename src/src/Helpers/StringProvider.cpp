@@ -1,10 +1,12 @@
-#include "StringProvider.h"
+#include "../Helpers/StringProvider.h"
 
 #ifdef HAS_ETHERNET
 # include "ETH.h"
 #endif // ifdef HAS_ETHERNET
 
 #include "../../ESPEasy-Globals.h"
+
+#include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -20,7 +22,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
@@ -54,7 +55,6 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::WIFI_SENS_MARGIN:       return F("WiFi Sensitivity Margin");
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return F("Send With Max TX Power");
     case LabelType::WIFI_NR_EXTRA_SCANS:    return F("Extra WiFi scan loops");
-    case LabelType::WIFI_PERIODICAL_SCAN:   return F("Periodical Scan WiFi");
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return F("Use Last Connected AP from RTC");
 
     case LabelType::FREE_MEM:               return F("Free RAM");
@@ -84,6 +84,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:       return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:  return F("Collect Timing Statistics");
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return F("Allow TaskValueSet on all plugins");
+    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return F("Try clear I2C bus when stuck");
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -140,6 +141,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return F("Binary Filename");
     case LabelType::BUILD_PLATFORM:         return F("Build Platform");
     case LabelType::GIT_HEAD:               return F("Git HEAD");
+
+    case LabelType::I2C_BUS_STATE:          return F("I2C Bus State");
+    case LabelType::I2C_BUS_CLEARED_COUNT:  return F("I2C bus cleared count");
 
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
@@ -227,7 +231,6 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
-    case LabelType::WIFI_PERIODICAL_SCAN:   return jsonBool(Settings.PeriodicalScanWiFi());
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return jsonBool(Settings.UseLastWiFiFromRTC());
 
     case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
@@ -262,6 +265,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:       return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:  return jsonBool(Settings.EnableTimingStats());
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return jsonBool(Settings.AllowTaskValueSetAllPlugins());
+    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return jsonBool(Settings.EnableClearHangingI2Cbus());
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -327,6 +331,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::BINARY_FILENAME:        return get_binary_filename();
     case LabelType::BUILD_PLATFORM:         return get_build_platform();
     case LabelType::GIT_HEAD:               return get_git_head();
+    case LabelType::I2C_BUS_STATE:          return toString(I2C_state);
+    case LabelType::I2C_BUS_CLEARED_COUNT:  return String(I2C_bus_cleared_count);
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());

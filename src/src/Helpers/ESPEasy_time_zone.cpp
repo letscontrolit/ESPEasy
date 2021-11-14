@@ -1,11 +1,11 @@
-#include "ESPEasy_time_zone.h"
+#include "../Helpers/ESPEasy_time_zone.h"
 
 #include "../DataStructs/TimeChangeRule.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <time.h>
 

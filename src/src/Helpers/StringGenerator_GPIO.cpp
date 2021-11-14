@@ -1,4 +1,4 @@
-#include "StringGenerator_GPIO.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
@@ -26,7 +26,7 @@ String formatGpioLabel(int gpio, bool includeWarning) {
     }
     return createGPIO_label(gpio, pinnr, input, output, warning);
   }
-  return "-";
+  return F("-");
 }
 
 String formatGpioName(const String& label, gpio_direction direction, bool optional) {

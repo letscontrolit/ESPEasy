@@ -49,7 +49,7 @@ BUILD_ESP82XX=0
 # -l is for long options with double dash like --version
 # the comma separates different long options
 # -a is for long options with single dash like -version
-options=$(getopt -l "help,pull-request:,description:,tag:,src-dir:,docs,esp32,esp82xx" -o ":hp:d:t:s:" -a -- "$@")
+options=$(getopt -l "help,pull-request:,description:,tag:,src-dir:,docs,esp32,esp82xx,esp8266" -o ":hp:d:t:s:" -a -- "$@")
 
 # set --:
 # If no arguments follow this option, then the positional parameters are unset. Otherwise, the positional parameters 
@@ -86,6 +86,10 @@ case $1 in
   BUILD_ESP32=1
   ;;
 --esp82xx)
+  BUILD_ALL=0
+  BUILD_ESP82XX=1
+  ;;
+--esp8266)
   BUILD_ALL=0
   BUILD_ESP82XX=1
   ;;
@@ -214,10 +218,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-pip install -U platformio
-# suppress lots of messages when packages are already installed with the correct version.
-set -o pipefail; pip install -r ${SRC}/docs/requirements.txt | { grep -v "already satisfied" || :; }
-
 # fetch latest version from active branch
 cd ${SRC}
 git fetch --tags
@@ -276,12 +276,19 @@ fi
 if (( $BUILD_DOCS != 0 )); then
   # Build documentation
   cd ${SRC}/docs
+  set -o pipefail; pip install -r ${SRC}/requirements.txt | { grep -v "already satisfied" || :; }
   make html
 fi
 
+cd ${SRC}
+
+pip install -U platformio
+
+# suppress lots of messages when packages are already installed with the correct version.
+set -o pipefail; pip install -r ${SRC}/requirements.txt | { grep -v "already satisfied" || :; }
+
 # Update (and clean) all targets
 # N.B. clean does also install missing packages which must be installed before applying patches.
-cd ${SRC}
 platformio update
 platformio run --target clean
 # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
@@ -291,7 +298,6 @@ cd ${SRC}
 if [ -d "build_output/" ]; then
   rm -Rf build_output/*
 fi
-
 
 if (( $BUILD_ESP32 != 0 )); then
   # Must look into all possible env definitions.
@@ -385,6 +391,10 @@ cd ${TMP_DIST}
 
 if (( $BUILD_ESP82XX != 0 )); then
   if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+
+    #source ${SRC}/tools/create_index.sh -d $DESCRIPTION > ${TMP_DIST}/webflasher_esp8266.html
+    #echo "### Created webflasher_esp8266.html"
+
     echo
     zip -qq ${SRC}/ESPEasy_ESP82xx_$DESCRIPTION.zip -r .
     echo "### Created ${SRC}/ESPEasy_ESP82xx_$DESCRIPTION.zip"
@@ -408,6 +418,9 @@ if (( $BUILD_ESP32 != 0 )); then
   cd ${TMP_DIST}
 
   if [ "$(ls -A ${TMP_DIST}/bin/)"  ]; then
+    #source ${SRC}/tools/create_index.sh -d $DESCRIPTION > ${TMP_DIST}/webflasher_esp32.html
+    #echo "### Created webflasher_esp32.html"
+
     echo
     zip -qq ${SRC}/ESPEasy_ESP32_$DESCRIPTION.zip -r .
     echo "### Created ${SRC}/ESPEasy_ESP32_$DESCRIPTION.zip"

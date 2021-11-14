@@ -365,8 +365,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
-// #define USES_P103   // Atlas_EZO_pH_ORP_EC
-// #define USES_P104   // Atlas_EZO_EC
+// #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
+// #define USES_P104   // MAX7219 dotmatrix
 // #define USES_P105   // AHT10/20/21
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
@@ -377,6 +377,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P113   // VL53L1X ToF
 // #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P119   // ITG3205 Gyro
+// #define USES_P120   // ADXL345 Acceleration / Gravity
 
 
 // Special plugins needing IR library

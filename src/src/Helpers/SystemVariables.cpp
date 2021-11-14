@@ -1,9 +1,11 @@
-#include "SystemVariables.h"
+#include "../Helpers/SystemVariables.h"
 
 
 #include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
+
+#include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../DataStructs/TimingStats.h"
 
@@ -21,7 +23,6 @@
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
