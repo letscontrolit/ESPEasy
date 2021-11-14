@@ -121,6 +121,15 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_EXIT:
+    {
+      if (P065_easySerial != nullptr) {
+        delete P065_easySerial;
+        P065_easySerial = nullptr;
+      }
+      break;
+    }
+
     case PLUGIN_WRITE:
     {
       if (!P065_easySerial) {
