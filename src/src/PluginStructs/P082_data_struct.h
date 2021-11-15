@@ -34,8 +34,20 @@ enum class P082_query : uint8_t {
 const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
 
 
+enum class P082_PowerMode : uint8_t {
+  Max_Performance = 0,
+  Power_Save = 1,
+  Eco = 2
+};
+
+const __FlashStringHelper* toString(P082_PowerMode mode);
+
 
 struct P082_data_struct : public PluginTaskData_base {
+
+  // Enum is being stored, so don't change int values
+  
+
   P082_data_struct();
 
   ~P082_data_struct();
@@ -64,6 +76,19 @@ struct P082_data_struct : public PluginTaskData_base {
   bool getDateTime(struct tm& dateTime,
                    uint32_t & age,
                    bool     & pps_sync);
+
+  // Send command to GPS to put it in PMREQ backup mode (UBLOX only)
+  // @retval true when successful in sending command
+  bool powerDown();
+
+  // Send some characters to GPS to wake up
+  bool wakeUp();
+
+  bool setPowerMode(P082_PowerMode mode);
+
+private:
+  bool writeToGPS(const uint8_t* data, size_t size);
+public:
 
   TinyGPSPlus   *gps        = nullptr;
   ESPeasySerial *easySerial = nullptr;

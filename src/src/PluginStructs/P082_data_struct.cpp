@@ -27,10 +27,19 @@ const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displ
   return F("");
 }
 
+const __FlashStringHelper* toString(P082_PowerMode mode) {
+  switch (mode) {
+    case P082_PowerMode::Max_Performance: return F("Max Performance");
+    case P082_PowerMode::Power_Save:      return F("Power Save");
+    case P082_PowerMode::Eco:             return F("ECO");
+  }
+  return F("");
+}
 
 P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {}
 
 P082_data_struct::~P082_data_struct() {
+  powerDown();
   reset();
 }
 
@@ -56,6 +65,7 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
 
   if (easySerial != nullptr) {
     easySerial->begin(9600);
+    wakeUp();
   }
   return isInitialized();
 }
@@ -88,7 +98,7 @@ bool P082_data_struct::loop() {
         // Full sentence received
 # ifdef P082_SEND_GPS_TO_LOG
         _lastSentence    = _currentSentence;
-        _currentSentence = "";
+        _currentSentence.clear();
 # endif // ifdef P082_SEND_GPS_TO_LOG
         completeSentence = true;
       } else {
@@ -177,6 +187,50 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
     age += (gps->time.centisecond() * 10);
   }
   return true;
+}
+
+bool P082_data_struct::powerDown() {
+  const uint8_t UBLOX_GPSStandby[] = {0xB5, 0x62, 0x02, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x4D, 0x3B}; 
+  return writeToGPS(UBLOX_GPSStandby, sizeof(UBLOX_GPSStandby));
+}
+
+bool P082_data_struct::wakeUp() {
+  if (isInitialized()) {
+    if (easySerial->isTxEnabled()) {
+      easySerial->println();   // Send some character to wake it up.
+    }
+  }
+  return false;
+}
+
+bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
+  switch (mode) {
+    case P082_PowerMode::Max_Performance: 
+    {
+      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x00, 0x21, 0x91}; 
+      return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+    }
+    case P082_PowerMode::Power_Save:      
+    {
+      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x01, 0x22, 0x92}; 
+      return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+    }
+    case P082_PowerMode::Eco:             
+    {
+      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x04, 0x25, 0x95}; 
+      return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+    }
+  }
+  return false;
+}
+
+bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
+  if (isInitialized()) {
+    if (easySerial->isTxEnabled()) {
+      return size == easySerial->write(data, size);
+    }
+  }
+  return false;
 }
 
 #endif // ifdef USES_P082

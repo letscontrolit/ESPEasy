@@ -42,6 +42,7 @@
 # define P082_QUERY4         PCONFIG(6)
 # define P082_LONG_REF       PCONFIG_FLOAT(0)
 # define P082_LAT_REF        PCONFIG_FLOAT(1)
+# define P082_POWER_MODE     PCONFIG(7)
 
 # define P082_NR_OUTPUT_VALUES   VARS_PER_TASK
 # define P082_QUERY1_CONFIG_POS  3
@@ -164,6 +165,22 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       addFormNumericBox(F("Fix Timeout"), P082_TIMEOUT_LABEL, P082_TIMEOUT, 100, 10000);
       addUnit(F("ms"));
 
+      {
+        const __FlashStringHelper * options[3] = {
+          toString(P082_PowerMode::Max_Performance),
+          toString(P082_PowerMode::Power_Save),
+          toString(P082_PowerMode::Eco),
+        };
+        const int indices[3] = {
+          static_cast<int>(P082_PowerMode::Max_Performance),
+          static_cast<int>(P082_PowerMode::Power_Save),
+          static_cast<int>(P082_PowerMode::Eco),
+        };
+        addFormSelector(F("Power Mode"), F("pwrmode"), 3, options, indices, P082_POWER_MODE);
+        addFormNote(F("Ublox specific mode selector"));
+      }
+
+
       addFormSubHeader(F("Current Sensor Data"));
 
       P082_html_show_stats(event);
@@ -214,6 +231,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
+      P082_POWER_MODE = getFormItemInt(F("pwrmode"));
       P082_TIMEOUT  = getFormItemInt(P082_TIMEOUT_LABEL);
       P082_DISTANCE = getFormItemInt(P082_DISTANCE_LABEL);
 
@@ -255,6 +273,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           //          pinMode(pps_pin, INPUT_PULLUP);
           attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
         }
+        P082_data->setPowerMode(static_cast<P082_PowerMode>(P082_POWER_MODE));
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
@@ -277,7 +296,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P082_data) && P082_data->loop()) {
 # ifdef P082_SEND_GPS_TO_LOG
-        addLog(LOG_LEVEL_DEBUG, P082_data->_lastSentence);
+        if (P082_data->_lastSentence.substring(0,10).indexOf(F("TXT")) != -1) {
+          addLog(LOG_LEVEL_INFO, P082_data->_lastSentence);
+        } else {
+          addLog(LOG_LEVEL_DEBUG, P082_data->_lastSentence);
+        }
 # endif // ifdef P082_SEND_GPS_TO_LOG
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
         delay(0); // Processing a full sentence may take a while, run some
@@ -392,6 +415,32 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           }
         }
       }
+      break;
+    }
+    case PLUGIN_WRITE:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P082_data) && P082_data->isInitialized()) {
+        const String command    = parseString(string, 1);
+        const String subcommand = parseString(string, 2);
+
+        if (command.equals(F("gps"))) {
+          if (subcommand.equals(F("wake"))) {
+            success = P082_data->wakeUp();
+          } else if (subcommand.equals(F("sleep"))) {
+            success = P082_data->powerDown();
+          } else if (subcommand.equals(F("maxperf"))) {
+            success = P082_data->setPowerMode(P082_PowerMode::Max_Performance);
+          } else if (subcommand.equals(F("powersave"))) {
+            success = P082_data->setPowerMode(P082_PowerMode::Power_Save);
+          } else if (subcommand.equals(F("eco"))) {
+            success = P082_data->setPowerMode(P082_PowerMode::Eco);
+          }
+        }
+      }
+
       break;
     }
 # ifdef USES_PACKED_RAW_DATA

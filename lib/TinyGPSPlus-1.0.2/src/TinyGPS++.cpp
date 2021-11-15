@@ -71,6 +71,8 @@ bool TinyGPSPlus::encode(char c)
       {
         term[curTermOffset] = 0;
         isValidSentence = endOfTermHandler();
+      } else if (curSentenceType == GPS_SENTENCE_GPTXT) {
+        isValidSentence = endOfTermHandler();
       }
       ++curTermNumber;
       curTermOffset = 0;
@@ -231,6 +233,8 @@ bool TinyGPSPlus::endOfTermHandler()
           satellitesStats.commit();
         }
         hdop.commit();
+        break;
+      case GPS_SENTENCE_GPTXT:
         break;
       }
 
@@ -698,6 +702,10 @@ void TinyGPSPlus::parseSentenceType(const char *term)
   {
     curSentenceType = GPS_SENTENCE_GPGSV;
   }
+  else if (strcmp(&term[2], "TXT") == 0)
+  {
+    curSentenceType = GPS_SENTENCE_GPTXT;
+  }  
 }
 
 

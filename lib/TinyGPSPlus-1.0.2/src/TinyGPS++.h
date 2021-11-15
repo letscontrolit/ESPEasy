@@ -316,6 +316,8 @@ private:
     GPS_SENTENCE_GPGSA,  // GSA - GPS DOP and active satellites
     GPS_SENTENCE_GPGSV,  // GSV - Satellites in view
 
+    GPS_SENTENCE_GPTXT,  // Free format TXT field
+
     GPS_SENTENCE_OTHER};
 
   enum {
