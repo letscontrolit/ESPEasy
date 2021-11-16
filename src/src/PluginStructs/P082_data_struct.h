@@ -43,6 +43,21 @@ enum class P082_PowerMode : uint8_t {
 const __FlashStringHelper* toString(P082_PowerMode mode);
 
 
+enum class P082_DynamicModel : uint8_t {
+  Portable    = 0,
+  Stationary  = 2,
+  Pedestrian  = 3,
+  Automotive  = 4,
+  Sea         = 5,
+  Airborne_1g = 6, // airborne with <1g acceleration
+  Airborne_2g = 7, // airborne with <2g acceleration
+  Airborne_4g = 8, // airborne with <4g acceleration
+  Wrist       = 9, // Only recommended for wrist-worn applications. Receiver will filter out armmotion (just available for protocol version > 17).
+  Bike        = 10  // Used for applications with equivalent dynamics to those of a motor bike. Lowvertical acceleration assumed. (supported in protocol versions 19.2)
+};
+
+const __FlashStringHelper* toString(P082_DynamicModel model);
+
 struct P082_data_struct : public PluginTaskData_base {
 
   // Enum is being stored, so don't change int values
@@ -86,7 +101,19 @@ struct P082_data_struct : public PluginTaskData_base {
 
   bool setPowerMode(P082_PowerMode mode);
 
+  bool setDynamicModel(P082_DynamicModel model);
+
 private:
+  // Compute checksum
+  // Caller should offset the data pointer to the correct start where the CRC should start.
+  // @param size  The length over which the CRC should be computed
+  // @param CK_A, CK_B The 2 checksum bytes.
+  static void computeUbloxChecksum(const uint8_t* data, size_t size, uint8_t & CK_A, uint8_t & CK_B);
+
+  // Set checksum.
+  // First 2 bytes of the array are skipped
+  static void setUbloxChecksum(uint8_t* data, size_t size);
+
   bool writeToGPS(const uint8_t* data, size_t size);
 public:
 

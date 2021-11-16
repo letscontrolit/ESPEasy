@@ -43,6 +43,7 @@
 # define P082_LONG_REF       PCONFIG_FLOAT(0)
 # define P082_LAT_REF        PCONFIG_FLOAT(1)
 # define P082_POWER_MODE     PCONFIG(7)
+# define P082_DYNAMIC_MODEL PCONFIG_LONG(0)
 
 # define P082_NR_OUTPUT_VALUES   VARS_PER_TASK
 # define P082_QUERY1_CONFIG_POS  3
@@ -165,19 +166,48 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       addFormNumericBox(F("Fix Timeout"), P082_TIMEOUT_LABEL, P082_TIMEOUT, 100, 10000);
       addUnit(F("ms"));
 
+      addFormSubHeader(F("U-Blox specific"));
+
       {
         const __FlashStringHelper * options[3] = {
           toString(P082_PowerMode::Max_Performance),
           toString(P082_PowerMode::Power_Save),
-          toString(P082_PowerMode::Eco),
+          toString(P082_PowerMode::Eco)
         };
         const int indices[3] = {
           static_cast<int>(P082_PowerMode::Max_Performance),
           static_cast<int>(P082_PowerMode::Power_Save),
-          static_cast<int>(P082_PowerMode::Eco),
+          static_cast<int>(P082_PowerMode::Eco)
         };
-        addFormSelector(F("Power Mode"), F("pwrmode"), 3, options, indices, P082_POWER_MODE);
-        addFormNote(F("Ublox specific mode selector"));
+        addFormSelector(F("Power Mode"), F("pwrmode"), 3, options, indices, P082_DYNAMIC_MODEL);
+      }
+
+      {
+        const __FlashStringHelper * options[10] = {
+          toString(P082_DynamicModel::Portable),  
+          toString(P082_DynamicModel::Stationary),
+          toString(P082_DynamicModel::Pedestrian),
+          toString(P082_DynamicModel::Automotive),
+          toString(P082_DynamicModel::Sea),       
+          toString(P082_DynamicModel::Airborne_1g),
+          toString(P082_DynamicModel::Airborne_2g),
+          toString(P082_DynamicModel::Airborne_4g),
+          toString(P082_DynamicModel::Wrist),     
+          toString(P082_DynamicModel::Bike)
+        };
+        const int indices[10] = {
+          static_cast<int>(P082_DynamicModel::Portable),  
+          static_cast<int>(P082_DynamicModel::Stationary),
+          static_cast<int>(P082_DynamicModel::Pedestrian),
+          static_cast<int>(P082_DynamicModel::Automotive),
+          static_cast<int>(P082_DynamicModel::Sea),       
+          static_cast<int>(P082_DynamicModel::Airborne_1g),
+          static_cast<int>(P082_DynamicModel::Airborne_2g),
+          static_cast<int>(P082_DynamicModel::Airborne_4g),
+          static_cast<int>(P082_DynamicModel::Wrist),     
+          static_cast<int>(P082_DynamicModel::Bike)
+        };
+        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), 10, options, indices, P082_POWER_MODE);
       }
 
 
@@ -232,6 +262,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_WEBFORM_SAVE: {
       P082_POWER_MODE = getFormItemInt(F("pwrmode"));
+      P082_DYNAMIC_MODEL = getFormItemInt(F("dynmodel"));
       P082_TIMEOUT  = getFormItemInt(P082_TIMEOUT_LABEL);
       P082_DISTANCE = getFormItemInt(P082_DISTANCE_LABEL);
 
@@ -274,6 +305,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
         }
         P082_data->setPowerMode(static_cast<P082_PowerMode>(P082_POWER_MODE));
+        P082_data->setDynamicModel(static_cast<P082_DynamicModel>(P082_DYNAMIC_MODEL));        
       } else {
         clearPluginTaskData(event->TaskIndex);
       }

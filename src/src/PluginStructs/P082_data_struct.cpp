@@ -36,6 +36,22 @@ const __FlashStringHelper* toString(P082_PowerMode mode) {
   return F("");
 }
 
+const __FlashStringHelper* toString(P082_DynamicModel model) {
+  switch (model) {
+    case P082_DynamicModel::Portable:    return F("Portable");
+    case P082_DynamicModel::Stationary:  return F("Stationary");
+    case P082_DynamicModel::Pedestrian:  return F("Pedestrian");
+    case P082_DynamicModel::Automotive:  return F("Automotive");
+    case P082_DynamicModel::Sea:         return F("Sea");
+    case P082_DynamicModel::Airborne_1g: return F("Airborne_1g");
+    case P082_DynamicModel::Airborne_2g: return F("Airborne_2g");
+    case P082_DynamicModel::Airborne_4g: return F("Airborne_4g");
+    case P082_DynamicModel::Wrist:       return F("Wrist");
+    case P082_DynamicModel::Bike:        return F("Bike");
+  }
+  return F("");
+}
+
 P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {}
 
 P082_data_struct::~P082_data_struct() {
@@ -222,6 +238,51 @@ bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
     }
   }
   return false;
+}
+
+bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
+
+  const uint8_t dynModel = static_cast<uint8_t>(model);
+  if (dynModel == 1 || dynModel > 10) {
+    return false;
+  }
+
+  uint8_t UBLOX_command[] = {
+    0xB5, 0x62, // header
+    0x06, // class
+    0x24, // ID, UBX-CFG-NAV5
+    0x24, 0x00, // length
+    0x01, 0x00, // mask
+    dynModel, // dynModel
+    0x03, // fixMode auto 2D/3D
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+  setUbloxChecksum(UBLOX_command, sizeof(UBLOX_command));
+  return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+}
+
+void P082_data_struct::computeUbloxChecksum(const uint8_t* data, size_t size, uint8_t & CK_A, uint8_t & CK_B) {
+  CK_A = 0;
+  CK_B = 0;
+  for (size_t i = 0; i < size; ++i) {
+    CK_A = CK_A + data[i];
+    CK_B = CK_B + CK_A;
+  }
+}
+
+void P082_data_struct::setUbloxChecksum(uint8_t* data, size_t size) {
+  uint8_t CK_A;
+  uint8_t CK_B;
+  computeUbloxChecksum(data + 2, size - 4, CK_A, CK_B);
+  data[size - 2] = CK_A;
+  data[size - 1] = CK_B;
 }
 
 bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
