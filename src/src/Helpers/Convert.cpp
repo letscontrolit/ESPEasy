@@ -1,4 +1,4 @@
-#include "Convert.h"
+#include "../Helpers/Convert.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
@@ -168,7 +168,7 @@ String format_msec_duration(int64_t duration) {
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
 // Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
 float compute_dew_point_temp(float temperature, float humidity_percentage) {
-  return pow(humidity_percentage / 100.0f, 0.125f) *
+  return powf(humidity_percentage / 100.0f, 0.125f) *
          (112.0f + 0.9f*temperature) + 0.1f*temperature - 112.0f;
 }
 
@@ -176,7 +176,7 @@ float compute_dew_point_temp(float temperature, float humidity_percentage) {
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_relative_humidity.php
 // f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
 float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
-  return 100.0f * pow((112.0f - 0.1f * temperature + dew_temperature) /
+  return 100.0f * powf((112.0f - 0.1f * temperature + dew_temperature) /
                      (112.0f + 0.9f * temperature), 8);
 }
 
@@ -192,7 +192,7 @@ float pressureElevation(float atmospheric, float altitude) {
   // Note that using the equation from wikipedia can give bad results
   // at high altitude.  See this thread for more information:
   //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
-  return atmospheric / pow(1.0f - (altitude / 44330.0f), 5.255f);
+  return atmospheric / powf(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 float altitudeFromPressure(float atmospheric, float seaLevel)
@@ -203,7 +203,7 @@ float altitudeFromPressure(float atmospheric, float seaLevel)
   // Note that using the equation from wikipedia can give bad results
   // at high altitude.  See this thread for more information:
   //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
-  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
+  return 44330.0f * (1.0f - powf(atmospheric / seaLevel, 0.1903f));
 }
 
 

@@ -160,12 +160,29 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x3c, 0x3d };
+      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("plugin_109_adr"), 2, i2cAddressValues, PCONFIG(0));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Btn L: ");
+      string += formatGpioLabel(CONFIG_PIN1, false);
+      string += event->String1; // newline
+      string += F("Btn R: ");
+      string += formatGpioLabel(CONFIG_PIN2, false);
+      string += event->String1; // newline
+      string += F("Btn M: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      string += event->String1; // newline
+      string += F("Relay: ");
+      string += formatGpioLabel(PCONFIG(4), false);
+      success = true;
       break;
     }
 
@@ -233,7 +250,8 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         argName  = F("Plugin_109_template");
         argName += varNr + 1;
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]));
+        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<byte *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
@@ -261,9 +279,12 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       uint8_t OLED_address = Settings.TaskDevicePluginConfig[event->TaskIndex][0];
 
       if (Settings.TaskDevicePluginConfig[event->TaskIndex][2] == 1) {
-        P109_display = new SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        P109_display = new (std::nothrow) SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
       } else {
-        P109_display = new SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        P109_display = new (std::nothrow) SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+      }
+      if (P109_display == nullptr) {
+        break;
       }
       P109_display->init(); // call to local override of init function
       P109_display->displayOn();
@@ -279,17 +300,17 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       logstr += Settings.TaskDevicePin3[event->TaskIndex];
       addLog(LOG_LEVEL_INFO, logstr);
 
-      if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin1[event->TaskIndex], INPUT_PULLUP);
       }
 
-      if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin2[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin2[event->TaskIndex], INPUT_PULLUP);
       }
 
-      if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+      if (validGpio(Settings.TaskDevicePin3[event->TaskIndex]) )
       {
         pinMode(Settings.TaskDevicePin3[event->TaskIndex], INPUT_PULLUP);
       }
@@ -356,7 +377,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       unsigned long current_time;
 
       if (Plugin_109_init) {
-        if (Settings.TaskDevicePin1[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin1[event->TaskIndex]))
           {
@@ -388,7 +409,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (Settings.TaskDevicePin2[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin2[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin2[event->TaskIndex]))
           {
@@ -420,7 +441,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        if (Settings.TaskDevicePin3[event->TaskIndex] != -1)
+        if (validGpio(Settings.TaskDevicePin3[event->TaskIndex]) )
         {
           if (!digitalRead(Settings.TaskDevicePin3[event->TaskIndex]))
           {
@@ -511,7 +532,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
           if ((atempstr.length() > 0) && (Plugin_109_prev_temp != 99)) { // do not switch until the first temperature data arrives
             float atemp = atempstr.toFloat();
 
-            if (atemp != 0.0) {
+            if (atemp != 0.0f) {
               if ((UserVar[event->BaseVarIndex] > atemp) && (UserVar[event->BaseVarIndex + 1] < 1))
               {
                 P109_setHeater(F("1"));

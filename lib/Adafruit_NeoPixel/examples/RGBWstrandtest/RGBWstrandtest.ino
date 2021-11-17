@@ -1,263 +1,177 @@
+// NeoPixel test program showing use of the WHITE channel for RGBW
+// pixels only (won't look correct on regular RGB NeoPixel strips).
+
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
-  #include <avr/power.h>
+ #include <avr/power.h> // Required for 16 MHz Adafruit Trinket
 #endif
 
-#define PIN 6
+// Which pin on the Arduino is connected to the NeoPixels?
+// On a Trinket or Gemma we suggest changing this to 1:
+#define LED_PIN     6
 
-#define NUM_LEDS 60
+// How many NeoPixels are attached to the Arduino?
+#define LED_COUNT  60
 
-#define BRIGHTNESS 50
+// NeoPixel brightness, 0 (min) to 255 (max)
+#define BRIGHTNESS 50 // Set BRIGHTNESS to about 1/5 (max = 255)
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800);
-
-int gamma[] = {
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
-    1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
-    2,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  5,  5,  5,
-    5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  9,  9,  9, 10,
-   10, 10, 11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 15, 15, 16, 16,
-   17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 24, 24, 25,
-   25, 26, 27, 27, 28, 29, 29, 30, 31, 32, 32, 33, 34, 35, 35, 36,
-   37, 38, 39, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 50,
-   51, 52, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 66, 67, 68,
-   69, 70, 72, 73, 74, 75, 77, 78, 79, 81, 82, 83, 85, 86, 87, 89,
-   90, 92, 93, 95, 96, 98, 99,101,102,104,105,107,109,110,112,114,
-  115,117,119,120,122,124,126,127,129,131,133,135,137,138,140,142,
-  144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
-  177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
-  215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
-
+// Declare our NeoPixel strip object:
+Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRBW + NEO_KHZ800);
+// Argument 1 = Number of pixels in NeoPixel strip
+// Argument 2 = Arduino pin number (most are valid)
+// Argument 3 = Pixel type flags, add together as needed:
+//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
+//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
+//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
+//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
+//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 
 void setup() {
-  Serial.begin(115200);
-  // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
-  #if defined (__AVR_ATtiny85__)
-    if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
-  #endif
-  // End of trinket special code
+  // These lines are specifically to support the Adafruit Trinket 5V 16 MHz.
+  // Any other board, you can remove this part (but no harm leaving it):
+#if defined(__AVR_ATtiny85__) && (F_CPU == 16000000)
+  clock_prescale_set(clock_div_1);
+#endif
+  // END of Trinket-specific code.
+
+  strip.begin();           // INITIALIZE NeoPixel strip object (REQUIRED)
+  strip.show();            // Turn OFF all pixels ASAP
   strip.setBrightness(BRIGHTNESS);
-  strip.begin();
-  strip.show(); // Initialize all pixels to 'off'
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels:
-  colorWipe(strip.Color(255, 0, 0), 50); // Red
-  colorWipe(strip.Color(0, 255, 0), 50); // Green
-  colorWipe(strip.Color(0, 0, 255), 50); // Blue
-  colorWipe(strip.Color(0, 0, 0, 255), 50); // White
+  // Fill along the length of the strip in various colors...
+  colorWipe(strip.Color(255,   0,   0)     , 50); // Red
+  colorWipe(strip.Color(  0, 255,   0)     , 50); // Green
+  colorWipe(strip.Color(  0,   0, 255)     , 50); // Blue
+  colorWipe(strip.Color(  0,   0,   0, 255), 50); // True white (not RGB white)
 
-  whiteOverRainbow(20,75,5);  
+  whiteOverRainbow(75, 5);
 
-  pulseWhite(5); 
+  pulseWhite(5);
 
-  // fullWhite();
-  // delay(2000);
-
-  rainbowFade2White(3,3,1);
-
-
+  rainbowFade2White(3, 3, 1);
 }
 
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i<strip.numPixels(); i++) {
-    strip.setPixelColor(i, c);
-    strip.show();
-    delay(wait);
+// Fill strip pixels one after another with a color. Strip is NOT cleared
+// first; anything there will be covered pixel by pixel. Pass in color
+// (as a single 'packed' 32-bit value, which you can get by calling
+// strip.Color(red, green, blue) as shown in the loop() function above),
+// and a delay time (in milliseconds) between pixels.
+void colorWipe(uint32_t color, int wait) {
+  for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
+    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    strip.show();                          //  Update strip to match
+    delay(wait);                           //  Pause for a moment
+  }
+}
+
+void whiteOverRainbow(int whiteSpeed, int whiteLength) {
+
+  if(whiteLength >= strip.numPixels()) whiteLength = strip.numPixels() - 1;
+
+  int      head          = whiteLength - 1;
+  int      tail          = 0;
+  int      loops         = 3;
+  int      loopNum       = 0;
+  uint32_t lastTime      = millis();
+  uint32_t firstPixelHue = 0;
+
+  for(;;) { // Repeat forever (or until a 'break' or 'return')
+    for(int i=0; i<strip.numPixels(); i++) {  // For each pixel in strip...
+      if(((i >= tail) && (i <= head)) ||      //  If between head & tail...
+         ((tail > head) && ((i >= tail) || (i <= head)))) {
+        strip.setPixelColor(i, strip.Color(0, 0, 0, 255)); // Set white
+      } else {                                             // else set rainbow
+        int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
+        strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+      }
+    }
+
+    strip.show(); // Update strip with new contents
+    // There's no delay here, it just runs full-tilt until the timer and
+    // counter combination below runs out.
+
+    firstPixelHue += 40; // Advance just a little along the color wheel
+
+    if((millis() - lastTime) > whiteSpeed) { // Time to update head/tail?
+      if(++head >= strip.numPixels()) {      // Advance head, wrap around
+        head = 0;
+        if(++loopNum >= loops) return;
+      }
+      if(++tail >= strip.numPixels()) {      // Advance tail, wrap around
+        tail = 0;
+      }
+      lastTime = millis();                   // Save time of last movement
+    }
   }
 }
 
 void pulseWhite(uint8_t wait) {
-  for(int j = 0; j < 256 ; j++){
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-          strip.setPixelColor(i, strip.Color(0,0,0, gamma[j] ) );
-        }
-        delay(wait);
-        strip.show();
-      }
-
-  for(int j = 255; j >= 0 ; j--){
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-          strip.setPixelColor(i, strip.Color(0,0,0, gamma[j] ) );
-        }
-        delay(wait);
-        strip.show();
-      }
-}
-
-
-void rainbowFade2White(uint8_t wait, int rainbowLoops, int whiteLoops) {
-  float fadeMax = 100.0;
-  int fadeVal = 0;
-  uint32_t wheelVal;
-  int redVal, greenVal, blueVal;
-
-  for(int k = 0 ; k < rainbowLoops ; k ++){
-    
-    for(int j=0; j<256; j++) { // 5 cycles of all colors on wheel
-
-      for(int i=0; i< strip.numPixels(); i++) {
-
-        wheelVal = Wheel(((i * 256 / strip.numPixels()) + j) & 255);
-
-        redVal = red(wheelVal) * float(fadeVal/fadeMax);
-        greenVal = green(wheelVal) * float(fadeVal/fadeMax);
-        blueVal = blue(wheelVal) * float(fadeVal/fadeMax);
-
-        strip.setPixelColor( i, strip.Color( redVal, greenVal, blueVal ) );
-
-      }
-
-      //First loop, fade in!
-      if(k == 0 && fadeVal < fadeMax-1) {
-          fadeVal++;
-      }
-
-      //Last loop, fade out!
-      else if(k == rainbowLoops - 1 && j > 255 - fadeMax ){
-          fadeVal--;
-      }
-
-        strip.show();
-        delay(wait);
-    }
-  
+  for(int j=0; j<256; j++) { // Ramp up from 0 to 255
+    // Fill entire strip with white at gamma-corrected brightness level 'j':
+    strip.fill(strip.Color(0, 0, 0, strip.gamma8(j)));
+    strip.show();
+    delay(wait);
   }
 
-
-
-  delay(500);
-
-
-  for(int k = 0 ; k < whiteLoops ; k ++){
-
-    for(int j = 0; j < 256 ; j++){
-
-        for(uint16_t i=0; i < strip.numPixels(); i++) {
-            strip.setPixelColor(i, strip.Color(0,0,0, gamma[j] ) );
-          }
-          strip.show();
-        }
-
-        delay(2000);
-    for(int j = 255; j >= 0 ; j--){
-
-        for(uint16_t i=0; i < strip.numPixels(); i++) {
-            strip.setPixelColor(i, strip.Color(0,0,0, gamma[j] ) );
-          }
-          strip.show();
-        }
+  for(int j=255; j>=0; j--) { // Ramp down from 255 to 0
+    strip.fill(strip.Color(0, 0, 0, strip.gamma8(j)));
+    strip.show();
+    delay(wait);
   }
-
-  delay(500);
-
-
 }
 
-void whiteOverRainbow(uint8_t wait, uint8_t whiteSpeed, uint8_t whiteLength ) {
-  
-  if(whiteLength >= strip.numPixels()) whiteLength = strip.numPixels() - 1;
+void rainbowFade2White(int wait, int rainbowLoops, int whiteLoops) {
+  int fadeVal=0, fadeMax=100;
 
-  int head = whiteLength - 1;
-  int tail = 0;
+  // Hue of first pixel runs 'rainbowLoops' complete loops through the color
+  // wheel. Color wheel has a range of 65536 but it's OK if we roll over, so
+  // just count from 0 to rainbowLoops*65536, using steps of 256 so we
+  // advance around the wheel at a decent clip.
+  for(uint32_t firstPixelHue = 0; firstPixelHue < rainbowLoops*65536;
+    firstPixelHue += 256) {
 
-  int loops = 3;
-  int loopNum = 0;
+    for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
 
-  static unsigned long lastTime = 0;
+      // Offset pixel hue by an amount to make one full revolution of the
+      // color wheel (range of 65536) along the length of the strip
+      // (strip.numPixels() steps):
+      uint32_t pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
 
+      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
+      // optionally add saturation and value (brightness) (each 0 to 255).
+      // Here we're using just the three-argument variant, though the
+      // second value (saturation) is a constant 255.
+      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue, 255,
+        255 * fadeVal / fadeMax)));
+    }
 
-  while(true){
-    for(int j=0; j<256; j++) {
-      for(uint16_t i=0; i<strip.numPixels(); i++) {
-        if((i >= tail && i <= head) || (tail > head && i >= tail) || (tail > head && i <= head) ){
-          strip.setPixelColor(i, strip.Color(0,0,0, 255 ) );
-        }
-        else{
-          strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
-        }
-        
-      }
+    strip.show();
+    delay(wait);
 
-      if(millis() - lastTime > whiteSpeed) {
-        head++;
-        tail++;
-        if(head == strip.numPixels()){
-          loopNum++;
-        }
-        lastTime = millis();
-      }
-
-      if(loopNum == loops) return;
-    
-      head%=strip.numPixels();
-      tail%=strip.numPixels();
-        strip.show();
-        delay(wait);
+    if(firstPixelHue < 65536) {                              // First loop,
+      if(fadeVal < fadeMax) fadeVal++;                       // fade in
+    } else if(firstPixelHue >= ((rainbowLoops-1) * 65536)) { // Last loop,
+      if(fadeVal > 0) fadeVal--;                             // fade out
+    } else {
+      fadeVal = fadeMax; // Interim loop, make sure fade is at max
     }
   }
-  
-}
-void fullWhite() {
-  
-    for(uint16_t i=0; i<strip.numPixels(); i++) {
-        strip.setPixelColor(i, strip.Color(0,0,0, 255 ) );
-    }
+
+  for(int k=0; k<whiteLoops; k++) {
+    for(int j=0; j<256; j++) { // Ramp up 0 to 255
+      // Fill entire strip with white at gamma-corrected brightness level 'j':
+      strip.fill(strip.Color(0, 0, 0, strip.gamma8(j)));
       strip.show();
-}
-
-
-// Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(uint8_t wait) {
-  uint16_t i, j;
-
-  for(j=0; j<256 * 5; j++) { // 5 cycles of all colors on wheel
-    for(i=0; i< strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel(((i * 256 / strip.numPixels()) + j) & 255));
     }
-    strip.show();
-    delay(wait);
-  }
-}
-
-void rainbow(uint8_t wait) {
-  uint16_t i, j;
-
-  for(j=0; j<256; j++) {
-    for(i=0; i<strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel((i+j) & 255));
+    delay(1000); // Pause 1 second
+    for(int j=255; j>=0; j--) { // Ramp down 255 to 0
+      strip.fill(strip.Color(0, 0, 0, strip.gamma8(j)));
+      strip.show();
     }
-    strip.show();
-    delay(wait);
   }
-}
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
-    return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3,0);
-  }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3,0);
-  }
-  WheelPos -= 170;
-  return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0,0);
+  delay(500); // Pause 1/2 second
 }
-
-uint8_t red(uint32_t c) {
-  return (c >> 8);
-}
-uint8_t green(uint32_t c) {
-  return (c >> 16);
-}
-uint8_t blue(uint32_t c) {
-  return (c);
-}
-
-

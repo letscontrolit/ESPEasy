@@ -1,4 +1,4 @@
-#include "ESPEasy_time.h"
+#include "../Helpers/ESPEasy_time.h"
 
 #include "../DataTypes/TimeSource.h"
 
@@ -11,11 +11,12 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <time.h>
 
@@ -145,7 +146,7 @@ unsigned long ESPEasy_time::now() {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
       } else {
-        uint32_t tmp_unixtime;
+        uint32_t tmp_unixtime = 0;;
         if (ExtRTC_get(tmp_unixtime)) {
           unixTime_d = tmp_unixtime;
           timeSource = timeSource_t::External_RTC_time_source;
@@ -158,7 +159,7 @@ unsigned long ESPEasy_time::now() {
 
       if (statusNTPInitialized && time_offset < 1.0) {
         // Clock instability in msec/second
-        timeWander = ((time_offset * 1000000.0f) / timePassedSince(lastTimeWanderCalculation));
+        timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
       }
       lastTimeWanderCalculation = millis();
 
@@ -199,7 +200,7 @@ unsigned long ESPEasy_time::now() {
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0f);
+          log += String(time_offset * 1000.0);
           log += F(" msec. Wander: ");
           log += String(timeWander, 3);
           log += F(" msec/second");
@@ -277,7 +278,7 @@ bool ESPEasy_time::systemTimePresent() const {
     case timeSource_t::Manual_set:
       return true;
   }
-  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0f;
+  return nextSyncTime > 0 || Settings.UseNTP() || externalUnixTime_d > 0.0;
 }
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
@@ -716,13 +717,14 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
 
 bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 {
-  bool timeRead = false;
+  unixtime = 0;
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
     case ExtTimeSource_e::DS1307:
       {
         #ifdef USE_EXT_RTC
+        I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -733,7 +735,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -750,7 +751,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -768,7 +768,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -785,13 +784,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
 
   }
-  if (timeRead) {
+  if (unixtime != 0) {
     String log = F("ExtRTC: Read external time source: ");
     log += unixtime;
     addLog(LOG_LEVEL_INFO, log);
@@ -815,6 +813,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     case ExtTimeSource_e::DS1307:
       {
         #ifdef USE_EXT_RTC
+        I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));

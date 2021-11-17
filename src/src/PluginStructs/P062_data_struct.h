@@ -14,6 +14,7 @@ struct P062_data_struct : public PluginTaskData_base {
 public:
 
   P062_data_struct();
+  ~P062_data_struct();
   bool init(taskIndex_t taskIndex,
             uint8_t     i2c_addr,
             bool        scancode,

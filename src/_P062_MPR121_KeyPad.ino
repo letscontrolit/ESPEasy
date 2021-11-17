@@ -73,7 +73,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x5A, 0x5B, 0x5C, 0x5D };
+      const uint8_t i2cAddressValues[] = { 0x5A, 0x5B, 0x5C, 0x5D };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, PCONFIG(0));
       } else {
@@ -210,6 +210,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P062_data->StoredSettings)), sizeof(P062_data->StoredSettings));
         if (!canCalibrate) {
           delete P062_data;
+          P062_data = nullptr;
         } else {
           bool clearCalibration = isFormItemChecked(F("p062_clear_calibrate"));
           if (clearCalibration) {
@@ -232,11 +233,12 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
       P062_data_struct *P062_data = static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P062_data) {
-        success = true;
         if (!P062_data->init(event->TaskIndex, PCONFIG(0), PCONFIG(1), tbUseCalibration)) {
           clearPluginTaskData(event->TaskIndex);
           P062_data = nullptr;
         } else {
+          success = true;
+
           uint8_t touch_treshold   = PCONFIG(2);
           if(touch_treshold == 0) {
             touch_treshold = P062_DEFAULT_TOUCH_TRESHOLD; //default value

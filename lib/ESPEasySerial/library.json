@@ -1,10 +1,10 @@
 {
     "name": "ESPeasySerial",
-    "version": "2.0.5",
+    "version": "2.0.7",
     "keywords": [
       "serial", "io", "softwareserial", "hardwareserial"
     ],
-    "description": "Wrapper for SoftwareSerial, SC16IS752 I2C to UART bridge and HardwareSerial for ESP8266 and ESP32",
+    "description": "Wrapper for SoftwareSerial, SC16IS752 I2C to UART bridge and HardwareSerial for ESP8266 and ESP32/ESP32S2",
     "repository":
     {
         "type": "git",
@@ -27,6 +27,6 @@
     ],
     "frameworks": "arduino",
     "platforms": [
-      "espressif8266","espressif32"
+      "espressif8266","espressif32","espressif32s2"
     ]
 }

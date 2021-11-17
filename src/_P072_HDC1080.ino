@@ -83,7 +83,7 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       hdc1080_msb     = Wire.read();
       hdc1080_lsb     = Wire.read();
       hdc1080_rawtemp = hdc1080_msb << 8 | hdc1080_lsb;
-      hdc1080_temp    = (hdc1080_rawtemp / pow(2, 16)) * 165 - 40;
+      hdc1080_temp    = (static_cast<float>(hdc1080_rawtemp) / 65526.0f) * 165.0f - 40.0f;
 
       Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
       Wire.write(0x01);                            // sends HDC1080_HUMIDITY
@@ -93,7 +93,7 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       hdc1080_msb    = Wire.read();
       hdc1080_lsb    = Wire.read();
       hdc1080_rawhum = hdc1080_msb << 8 | hdc1080_lsb;
-      hdc1080_hum    = (hdc1080_rawhum / pow(2, 16)) * 100;
+      hdc1080_hum    = (static_cast<float>(hdc1080_rawhum) / 65536.0f) * 100.0f;
 
       UserVar[event->BaseVarIndex]     = hdc1080_temp;
       UserVar[event->BaseVarIndex + 1] = hdc1080_hum;

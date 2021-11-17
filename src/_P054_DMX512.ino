@@ -124,12 +124,23 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
         CONFIG_PIN1 = 2;   //TX1 fix to GPIO2 (D4) == onboard LED
         Plugin_054_DMXSize = PCONFIG(0);
 
-        if (Plugin_054_DMXBuffer)
+        if (Plugin_054_DMXBuffer) {
           delete [] Plugin_054_DMXBuffer;
-        Plugin_054_DMXBuffer = new uint8_t[Plugin_054_DMXSize];
-        memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
+        }
+        Plugin_054_DMXBuffer = new (std::nothrow) uint8_t[Plugin_054_DMXSize];
+        if (Plugin_054_DMXBuffer != nullptr) {
+          memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
+        }
 
-        success = true;
+        success = Plugin_054_DMXBuffer != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_054_DMXBuffer) {
+          delete [] Plugin_054_DMXBuffer;
+        }
         break;
       }
 

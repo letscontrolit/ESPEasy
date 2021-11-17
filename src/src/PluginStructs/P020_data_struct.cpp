@@ -20,6 +20,7 @@ P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
 
 P020_Task::~P020_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
@@ -162,7 +163,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   do {
     if (ser2netSerial->available()) {
-      if (serial_buffer.length() > P020_RX_BUFFER) {
+      if (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER)) {
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
         ser2netSerial->read();
       }

@@ -90,6 +90,13 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("RST: ");
+      string += formatGpioLabel(P020_RESET_TARGET_PIN, false);
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -193,7 +200,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (P020_RESET_TARGET_PIN != -1) {
+      if (validGpio(P020_RESET_TARGET_PIN)) {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log;
           log.reserve(38);

@@ -74,6 +74,14 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("RST: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      success = true;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
@@ -227,7 +235,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 boolean Plugin_017_Init(int8_t resetPin)
 {
-  if (resetPin != -1)
+  if (validGpio(resetPin))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("PN532: Reset on pin: ");

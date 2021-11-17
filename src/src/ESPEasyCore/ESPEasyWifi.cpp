@@ -21,10 +21,13 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef ESP32
+#include <WiFiGeneric.h>
+#endif
+
 // FIXME TD-er: Cleanup of WiFi code
 #ifdef ESPEASY_WIFI_CLEANUP_WORK_IN_PROGRESS
 bool ESPEasyWiFi_t::begin() {
-
   return true;
 }
 
@@ -380,7 +383,7 @@ void AttemptWiFiConnect() {
   WiFiEventData.markWiFiTurnOn();
 
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
-    const WiFi_AP_Candidate& candidate = WiFi_AP_Candidates.getCurrent();
+    const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WIFI : Connecting ");
@@ -400,7 +403,7 @@ void AttemptWiFiConnect() {
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
-      if (candidate.allowQuickConnect()) {
+      if (candidate.allowQuickConnect() && !candidate.isHidden) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str());
@@ -467,7 +470,7 @@ bool checkAndResetWiFi() {
 
   switch(status) {
     case STATION_GOT_IP:
-      if (WiFi.RSSI() < 0 && NetworkLocalIP().isSet()) {
+      if (WiFi.RSSI() < 0 && WiFi.localIP().isSet()) {
         //if (WiFi.channel() == WiFiEventData.usedChannel || WiFiEventData.usedChannel == 0) {
           // This is a valid status, no need to reset
           return false;
@@ -481,7 +484,7 @@ bool checkAndResetWiFi() {
       break;
     case STATION_IDLE:
     case STATION_CONNECTING:
-      if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+      if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
         return false;
       }
       break;
@@ -493,7 +496,7 @@ bool checkAndResetWiFi() {
       return false;
     //}
   }
-  if (!WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
+  if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && !WiFiEventData.last_wifi_connect_attempt_moment.timeoutReached(15000)) {
     return false;
   }
   #endif
@@ -613,7 +616,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
   if (dBm < 0) { 
     val = WIFI_POWER_MINUS_1dBm;
     dBm = -1;
-  } else if (dBm < 3.5) {
+  } else if (dBm < 3.5f) {
     val = WIFI_POWER_2dBm;
     dBm = 2;
   } else if (dBm < 6) {
@@ -634,18 +637,18 @@ void SetWiFiTXpower(float dBm, float rssi) {
   } else if (dBm < 16) {
     val = WIFI_POWER_15dBm;
     dBm = 15;
-  } else if (dBm < 17.75) {
+  } else if (dBm < 17.75f) {
     val = WIFI_POWER_17dBm;
     dBm = 17;
-  } else if (dBm < 18.75) {
+  } else if (dBm < 18.75f) {
     val = WIFI_POWER_18_5dBm;
     dBm = 18.5;
-  } else if (dBm < 19.25) {
+  } else if (dBm < 19.25f) {
     val = WIFI_POWER_19dBm;
     dBm = 19;
   } else {
     val = WIFI_POWER_19_5dBm;
-    dBm = 19.5;
+    dBm = 19.5f;
   }
   esp_wifi_set_max_tx_power(val);
   //esp_wifi_get_max_tx_power(&val);
@@ -749,6 +752,13 @@ void WifiDisconnect()
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
+  {
+    const IPAddress ip;
+    const IPAddress gw;
+    const IPAddress subnet;
+    const IPAddress dns;
+    WiFi.config(ip, gw, subnet, dns);
+  }
   #endif
   #ifdef ESP8266
   // Only call disconnect when STA is active
@@ -769,19 +779,6 @@ void WifiDisconnect()
 // ********************************************************************************
 // Scan WiFi network
 // ********************************************************************************
-void WiFiScanPeriodical() {
-  WiFi_AP_Candidates.purge_expired();
-  if (!Settings.PeriodicalScanWiFi()) {
-    return;
-  }
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return;
-  }
-
-  const bool async = true;
-  WifiScan(async);
-}
-
 bool WiFiScanAllowed() {
   if (WiFi_AP_Candidates.scanComplete() == WIFI_SCAN_RUNNING) {
     return false;
@@ -1105,6 +1102,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
 
   if (wifimode == WIFI_OFF) {
+    WifiDisconnect();
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)

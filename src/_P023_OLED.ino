@@ -56,12 +56,20 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const int i2cAddressValues[] = { 0x3C, 0x3D };
+      const uint8_t i2cAddressValues[] = { 0x3C, 0x3D };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Btn: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      success = true;
       break;
     }
 
@@ -98,7 +106,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
-      addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Display button")), F("taskdevicepin3"), CONFIG_PIN3);
 
       addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), PCONFIG(2));
 
@@ -185,7 +193,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
         P023_data->sendStrXY("ESP Easy ", 0, 0);
 
-        if (CONFIG_PIN3 != -1) {
+        if (validGpio(CONFIG_PIN3)) {
           pinMode(CONFIG_PIN3, INPUT_PULLUP);
         }
         success = true;
@@ -195,7 +203,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         if (!digitalRead(CONFIG_PIN3))
         {

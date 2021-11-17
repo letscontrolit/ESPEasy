@@ -11,6 +11,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
@@ -48,7 +49,7 @@ void sendData(struct EventStruct *event)
     createRuleEvents(event);
   }
 
-  if (Settings.UseValueLogger && (Settings.InitSPI > 0) && (Settings.Pin_sd_cs >= 0)) {
+  if (Settings.UseValueLogger && (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) && (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
 
@@ -171,7 +172,7 @@ void MQTTDisconnect()
 bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
 
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
@@ -318,7 +319,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     String LWTTopic, LWTMessageConnect;
     bool   willRetain = false;
     {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
@@ -537,7 +538,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     bool   mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));

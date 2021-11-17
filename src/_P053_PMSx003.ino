@@ -1,8 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P053
-//#######################################################################################################
-//#################################### Plugin 053: Plantower PMSx003 ####################################
-//#######################################################################################################
+
+// #######################################################################################################
+// #################################### Plugin 053: Plantower PMSx003 ####################################
+// #######################################################################################################
 //
 // http://www.aqmd.gov/docs/default-source/aq-spec/resources-page/plantower-pms5003-manual_v2-3.pdf?sfvrsn=2
 //
@@ -10,327 +11,22 @@
 // together with a laser, count the amount of particles. These sensors have an integrated microcontroller
 // that counts particles and transmits measurement data over the serial connection.
 
+# include "src/PluginStructs/P053_data_struct.h"
 
-#include <ESPeasySerial.h>
+# define PLUGIN_053
+# define PLUGIN_ID_053 53
+# define PLUGIN_NAME_053 "Dust - PMSx003"
+# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+#  ifdef PLUGIN_NAME_053
+#   undef PLUGIN_NAME_053
+#  endif // ifdef PLUGIN_NAME_053
+#  define PLUGIN_NAME_053 "Dust - PMSx003 / PMSx003ST" // 'upgrade' plugin-name
+# endif  // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+# define PLUGIN_VALUENAME1_053 "pm1.0"
+# define PLUGIN_VALUENAME2_053 "pm2.5"
+# define PLUGIN_VALUENAME3_053 "pm10"
+# define PLUGIN_VALUENAME4_053 "HCHO" // Is not set into the Values on purpose.
 
-#define PLUGIN_053_ENABLE_EXTRA_SENSORS // Can be unset for memory-tight builds to remove support for the PMSx003ST and PMS2003/PMS3003 sensor models
-// #define PLUGIN_053_ENABLE_S_AND_T // Enable setting to support S and T types, in addition to bas PMSx003 and PMSx003ST
-
-#if defined(SIZE_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
-#undef PLUGIN_053_ENABLE_EXTRA_SENSORS
-#endif
-
-#define PLUGIN_053
-#define PLUGIN_ID_053 53
-#define PLUGIN_NAME_053 "Dust - PMSx003"
-#ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-#ifdef PLUGIN_NAME_053
-#undef PLUGIN_NAME_053
-#endif
-#define PLUGIN_NAME_053 "Dust - PMSx003 / PMSx003ST" // 'upgrade' plugin-name
-#endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-#define PLUGIN_VALUENAME1_053 "pm1.0"
-#define PLUGIN_VALUENAME2_053 "pm2.5"
-#define PLUGIN_VALUENAME3_053 "pm10"
-#define PLUGIN_VALUENAME4_053 "HCHO"  // Is not set into the Values on purpose.
-#define PMSx003_SIG1 0x42
-#define PMSx003_SIG2 0x4d
-#define PMSx003_SIZE   32
-#define PMSx003S_SIZE  32
-#define PMSx003T_SIZE  32
-#define PMSx003ST_SIZE 40
-#define PMS3003_SIZE   24
-
-#define PMSx003_TYPE    0   // PMSx003 = PMS1003 / PMS5003 / PMS7003
-#define PMS3003_TYPE    1   // PMS2003/PMS3003
-#define PMSx003_TYPE_S  2   // PMS5003S // Not supported yet
-#define PMSx003_TYPE_T  3   // PMS5003T // Not supported yet
-#define PMSx003_TYPE_ST 4   // PMS5003ST
-
-#define PLUGIN_053_OUTPUT_PART 0 // Particles pm1.0/pm2.5/pm10
-#define PLUGIN_053_OUTPUT_THC  1 // pm2.5/Temp/Hum/HCHO
-#define PLUGIN_053_OUTPUT_CNT  2 // cnt1.0/cnt2.5/cnt10
-
-#define PLUGIN_053_EVENT_NONE      0 // Events: None
-#define PLUGIN_053_EVENT_PARTICLES 1 // Particles/temp/humi/hcho
-#define PLUGIN_053_EVENT_PARTCOUNT 2 // also Particle count
-
-ESPeasySerial *P053_easySerial = nullptr;
-boolean Plugin_053_init = false;
-boolean values_received = false;
-uint8_t Plugin_053_sensortype = PMSx003_TYPE;
-
-// Read 2 bytes from serial and make an uint16 of it. Additionally calculate
-// checksum for PMSx003. Assumption is that there is data available, otherwise
-// this function is blocking.
-void SerialRead16(uint16_t* value, uint16_t* checksum)
-{
-  uint8_t data_high, data_low;
-
-  // If P053_easySerial is initialized, we are using soft serial
-  if (P053_easySerial == nullptr) return;
-  data_high = P053_easySerial->read();
-  data_low = P053_easySerial->read();
-
-  *value = data_low;
-  *value |= (data_high << 8);
-
-  if (checksum != nullptr)
-  {
-    *checksum += data_high;
-    *checksum += data_low;
-  }
-
-#if 0
-  // Low-level logging to see data from sensor
-  String log = F("PMSx003 : uint8_t high=0x");
-  log += String(data_high,HEX);
-  log += F(" uint8_t low=0x");
-  log += String(data_low,HEX);
-  log += F(" result=0x");
-  log += String(*value,HEX);
-  addLog(LOG_LEVEL_INFO, log);
-#endif
-}
-
-void SerialFlush() {
-  if (P053_easySerial != nullptr) {
-    P053_easySerial->flush();
-  }
-}
-
-uint8_t P053_packetSize(uint8_t sensorType) {
-  switch(sensorType) {
-    case PMSx003_TYPE:    return PMSx003_SIZE;
-    #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    case PMSx003_TYPE_S:  return PMSx003S_SIZE;
-    case PMSx003_TYPE_T:  return PMSx003T_SIZE;
-    case PMSx003_TYPE_ST: return PMSx003ST_SIZE;
-    case PMS3003_TYPE:    return PMS3003_SIZE;
-    #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  }
-  return 0u;
-}
-
-boolean P053_PacketAvailable(void)
-{
-  if (P053_easySerial != nullptr) // Software serial
-  {
-    // When there is enough data in the buffer, search through the buffer to
-    // find header (buffer may be out of sync)
-    if (!P053_easySerial->available()) return false;
-    while ((P053_easySerial->peek() != PMSx003_SIG1) && P053_easySerial->available()) {
-      P053_easySerial->read(); // Read until the buffer starts with the first uint8_t of a message, or buffer empty.
-    }
-    if (P053_easySerial->available() < P053_packetSize(Plugin_053_sensortype)) return false; // Not enough yet for a complete packet
-  }
-  return true;
-}
-
-void Plugin_053_SendEvent(const String &baseEvent, const String &name, double value) {
-  String valueEvent;
-  valueEvent.reserve(32);
-  // Temperature
-  valueEvent  = baseEvent;
-  valueEvent += name;
-  valueEvent += '=';
-  valueEvent += value;
-  eventQueue.addMove(std::move(valueEvent));
-}
-
-boolean Plugin_053_process_data(struct EventStruct *event) {
-  uint16_t checksum = 0, checksum2 = 0;
-  uint16_t framelength = 0;
-  uint16_t packet_header = 0;
-  SerialRead16(&packet_header, &checksum); // read PMSx003_SIG1 + PMSx003_SIG2
-  if (packet_header != ((PMSx003_SIG1 << 8) | PMSx003_SIG2)) {
-    // Not the start of the packet, stop reading.
-    return false;
-  }
-
-  SerialRead16(&framelength, &checksum);
-  if (framelength != (P053_packetSize(Plugin_053_sensortype) - 4)) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log;
-      log.reserve(34);
-      log = F("PMSx003 : invalid framelength - ");
-      log += framelength;
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-    return false;
-  }
-
-  uint8_t frameData = 0;
-  switch (Plugin_053_sensortype) {
-    case PMSx003_TYPE:    frameData = 13; break; // PMS1003/PMS5003/PMS7003
-    case PMS3003_TYPE:    frameData =  9; break; // PMS2003/PMS3003
-    case PMSx003_TYPE_ST: frameData = 17; break; // PMS5003ST
-    default: break;
-  }
-  uint16_t data[17] = { 0 }; // uint8_t data_low, data_high;
-  for (uint8_t i = 0; i < frameData; i++)
-    SerialRead16(&data[i], &checksum);
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
-    String log;
-    log.reserve(87);
-    log = F("PMSx003 : pm1.0=");
-    log += data[0];
-    log += F(", pm2.5=");
-    log += data[1];
-    log += F(", pm10=");
-    log += data[2];
-    log += F(", pm1.0a=");
-    log += data[3];
-    log += F(", pm2.5a=");
-    log += data[4];
-    log += F(", pm10a=");
-    log += data[5];
-    addLog(LOG_LEVEL_DEBUG, log);
-  }
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PCONFIG(0) != PMS3003_TYPE)) { // 'Count' values not available on PMS2003/PMS3003 models (handled as 1 model in code) 
-    String log;
-    log.reserve(96);
-    log = F("PMSx003 : count/0.1L : 0.3um=");
-    log += data[6];
-    log += F(", 0.5um=");
-    log += data[7];
-    log += F(", 1.0um=");
-    log += data[8];
-    log += F(", 2.5um=");
-    log += data[9];
-    log += F(", 5.0um=");
-    log += data[10];
-    log += F(", 10um=");
-    log += data[11];
-    addLog(LOG_LEVEL_DEBUG, log);
-  }
-
-  #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG) && (PCONFIG(0) == PMSx003_TYPE_ST)) { // Values only available on PMS5003ST
-    String log;
-    log.reserve(45);
-    log = F("PMSx003 : temp=");
-    log += static_cast<float>(data[13]) / 10.0;
-    log += F(", humi=");
-    log += static_cast<float>(data[14]) / 10.0;
-    log += F(", hcho=");
-    log += static_cast<float>(data[12]) / 1000.0;
-    addLog(LOG_LEVEL_DEBUG, log);
-  }
-  #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-
-  // Compare checksums
-  SerialRead16(&checksum2, nullptr);
-  SerialFlush(); // Make sure no data is lost due to full buffer.
-  if (checksum == checksum2)
-  {
-    // Data is checked and good, fill in output
-    #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    switch(PCONFIG(1)) {
-      case PLUGIN_053_OUTPUT_PART:
-      {
-    #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        UserVar[event->BaseVarIndex]     = data[3];
-        UserVar[event->BaseVarIndex + 1] = data[4];
-        UserVar[event->BaseVarIndex + 2] = data[5];
-    #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        UserVar[event->BaseVarIndex + 3] = 0.0;
-        break;
-      }
-      case PLUGIN_053_OUTPUT_THC:
-      {
-        UserVar[event->BaseVarIndex]     = data[4];
-        UserVar[event->BaseVarIndex + 1] = static_cast<float>(data[13]) / 10.0;   // TEMP
-        UserVar[event->BaseVarIndex + 2] = static_cast<float>(data[14]) / 10.0;   // HUMI
-        UserVar[event->BaseVarIndex + 3] = static_cast<float>(data[12]) / 1000.0; // HCHO
-        break;
-      }
-      case PLUGIN_053_OUTPUT_CNT:
-      {
-        UserVar[event->BaseVarIndex]     = data[8];
-        UserVar[event->BaseVarIndex + 1] = data[9];
-        UserVar[event->BaseVarIndex + 2] = data[10];
-        UserVar[event->BaseVarIndex + 3] = data[11];
-        break;
-      }
-      default:
-        break; // Ignore invalid options
-    }
-    if (Settings.UseRules && PCONFIG(2) > 0 && PCONFIG(0) != PMS3003_TYPE) { // Events not applicable to PMS2003 & PMS3003 models
-      String baseEvent;
-      baseEvent.reserve(21);
-      baseEvent  = getTaskDeviceName(event->TaskIndex);
-      baseEvent += '#';
-
-      switch(PCONFIG(1)) {
-        case PLUGIN_053_OUTPUT_PART:
-        {
-          // Temperature
-          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
-          // Humidity
-          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0);
-          // Formaldebyde (HCHO)
-          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
-
-          if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
-            // Particle count per 0.1 L > 1.0 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt1.0"), data[8]);
-            // Particle count per 0.1 L > 2.5 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt2.5"), data[9]);
-            // Particle count per 0.1 L > 5 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt5"), data[10]);
-            // Particle count per 0.1 L > 10 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt10"), data[11]);
-          }
-          break;
-        }
-        case PLUGIN_053_OUTPUT_THC:
-        {
-          // Particles > 1.0 um/m3
-          Plugin_053_SendEvent(baseEvent, F("pm1.0"), data[3]);
-          // Particles > 10 um/m3
-          Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
-
-          if (PCONFIG(2) == PLUGIN_053_OUTPUT_CNT) {
-            // Particle count per 0.1 L > 1.0 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt1.0"), data[8]);
-            // Particle count per 0.1 L > 2.5 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt2.5"), data[9]);
-            // Particle count per 0.1 L > 5 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt5"), data[10]);
-            // Particle count per 0.1 L > 10 micron
-            Plugin_053_SendEvent(baseEvent, F("cnt10"), data[11]);
-          }
-          break;
-        }
-        case PLUGIN_053_OUTPUT_CNT:
-        {
-          // Particles > 1.0 um/m3
-          Plugin_053_SendEvent(baseEvent, F("pm1.0"), data[3]);
-          // Particles > 2.5 um/m3
-          Plugin_053_SendEvent(baseEvent, F("pm2.5"), data[4]);
-          // Particles > 10 um/m3
-          Plugin_053_SendEvent(baseEvent, F("pm10"), data[5]);
-          // Temperature
-          Plugin_053_SendEvent(baseEvent, F("Temp"), static_cast<float>(data[13]) / 10.0);
-          // Humidity
-          Plugin_053_SendEvent(baseEvent, F("Humi"), static_cast<float>(data[14]) / 10.0);
-          // Formaldebyde (HCHO)
-          Plugin_053_SendEvent(baseEvent, F("HCHO"), static_cast<float>(data[12]) / 1000.0);
-          break;
-        }
-        default:
-          break;
-      }
-    }
-    #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    values_received = true;
-    return true;
-  }
-  return false;
-}
 
 boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -339,226 +35,366 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_053;
-        Device[deviceCount].Type = DEVICE_TYPE_SERIAL_PLUS1;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 4;
-        #else
-        Device[deviceCount].FormulaOption = false;
-        Device[deviceCount].ValueCount = 3;
-        #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].GlobalSyncOption = true;
-        success = true;
-        break;
-      }
+    {
+      Device[++deviceCount].Number           = PLUGIN_ID_053;
+      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      Device[deviceCount].Ports              = 0;
+      Device[deviceCount].PullUpOption       = false;
+      Device[deviceCount].InverseLogicOption = false;
+        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      Device[deviceCount].FormulaOption = true;
+      Device[deviceCount].ValueCount    = 4;
+        # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      Device[deviceCount].FormulaOption = false;
+      Device[deviceCount].ValueCount    = 3;
+        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      Device[deviceCount].SendDataOption   = true;
+      Device[deviceCount].TimerOption      = true;
+      Device[deviceCount].GlobalSyncOption = true;
+      success                              = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_053);
-        success = true;
-        break;
-      }
+    {
+      string  = F(PLUGIN_NAME_053);
+      success = true;
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_053));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_053));
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_053));
-        #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        for (uint8_t i = 0; i < 3; i++) {
-          ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0; // Set to former default
-        }
-        // 4th ValueName and decimals not (re)set on purpose
-        #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        success = true;
-        break;
-      }
+    {
+      const bool oversample = bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
 
-    #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-    case PLUGIN_GET_DEVICEVALUECOUNT:
-      {
-        event->Par1 = PCONFIG(1) == PLUGIN_053_OUTPUT_PART ? 3 : 4;
-        success = true;
-        break;
+      switch (GET_PLUGIN_053_OUTPUT_SELECTOR) {
+        case PMSx003_output_selection::Particles_ug_m3:
+        {
+          const uint8_t indices[] = {
+            PMS_PM1_0_ug_m3_normal,
+            PMS_PM2_5_ug_m3_normal,
+            PMS_PM10_0_ug_m3_normal };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 3, oversample);
+          break;
+        }
+        case PMSx003_output_selection::PM2_5_TempHum_Formaldehyde:
+        {
+          const uint8_t indices[] = {
+            PMS_PM2_5_ug_m3_normal,
+            PMS_Temp_C,
+            PMS_Hum_pct,
+            PMS_Formaldehyde_mg_m3 };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4, oversample);
+          break;
+        }
+        case PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5:
+        {
+          const uint8_t indices[] = {
+            PMS_cnt0_3_100ml,
+            PMS_cnt0_5_100ml,
+            PMS_cnt1_0_100ml,
+            PMS_cnt2_5_100ml };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4, oversample);
+          break;
+        }
+        case PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10:
+        {
+          const uint8_t indices[] = {
+            PMS_cnt1_0_100ml,
+            PMS_cnt2_5_100ml,
+            PMS_cnt5_0_100ml,
+            PMS_cnt10_0_100ml };
+          P053_data_struct::setTaskValueNames(ExtraTaskSettings, indices, 4, oversample);
+          break;
+        }
       }
-    #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      success = true;
+      break;
+    }
+
+    # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::Particles_ug_m3 ? 3 : 4;
+      success     = true;
+      break;
+    }
+    # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
     case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        serialHelper_getGpioNames(event);
-        event->String3 = formatGpioName_output(F("Reset"));
-        break;
-      }
+    {
+      serialHelper_getGpioNames(event);
+      break;
+    }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
-      {
-        string += serialHelper_getSerialTypeLabel(event);
-        success = true;
-        break;
-      }
+    {
+      string += serialHelper_getSerialTypeLabel(event);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("RST: ");
+      string += formatGpioLabel(PLUGIN_053_RST_PIN, false);
+      string += event->String1; // newline
+      string += F("SET: ");
+      string += formatGpioLabel(PLUGIN_053_PWR_PIN, false);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PLUGIN_053_RST_PIN = -1;
+      PLUGIN_053_PWR_PIN = -1;
+
+      PLUGIN_053_SENSOR_MODEL_SELECTOR = static_cast<int>(PMSx003_type::PMS1003_5003_7003);
+      PLUGIN_053_SEC_IGNORE_AFTER_WAKE = 0;
+
+      bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD: {
-      #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("RST")), F("rstpin"), PLUGIN_053_RST_PIN);
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("SET")), F("pwrpin"), PLUGIN_053_PWR_PIN);
+      addFormNote(F("RST and SET pins on sensor are pulled up internal in the sensor"));
+      # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
-        #ifdef PLUGIN_053_ENABLE_S_AND_T
+        #  ifdef PLUGIN_053_ENABLE_S_AND_T
         int unitModelCount = 5;
-        #else
+        #  else // ifdef PLUGIN_053_ENABLE_S_AND_T
         int unitModelCount = 3;
-        #endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-        const __FlashStringHelper * unitModels[] = {
-          F("PMS1003 / PMS5003 / PMS7003"),
-          F("PMS2003 / PMS3003"),
-          #ifdef PLUGIN_053_ENABLE_S_AND_T
-          F("PMS5003S"),
-          F("PMS5003T"),
-          #endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-          F("PMS5003ST")
+        #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
+        const __FlashStringHelper *unitModels[] = {
+          toString(PMSx003_type::PMS1003_5003_7003),
+          toString(PMSx003_type::PMS2003_3003),
+          #  ifdef PLUGIN_053_ENABLE_S_AND_T
+          toString(PMSx003_type::PMS5003_S),
+          toString(PMSx003_type::PMS5003_T),
+          #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
+          toString(PMSx003_type::PMS5003_ST)
         };
-        int unitModelOptions[] = {
-          PMSx003_TYPE,
-          PMS3003_TYPE,
-          #ifdef PLUGIN_053_ENABLE_S_AND_T
-          PMSx003_TYPE_S,
-          PMSx003_TYPE_T,
-          #endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-          PMSx003_TYPE_ST
+        const int unitModelOptions[] = {
+          static_cast<int>(PMSx003_type::PMS1003_5003_7003),
+          static_cast<int>(PMSx003_type::PMS2003_3003),
+          #  ifdef PLUGIN_053_ENABLE_S_AND_T
+          static_cast<int>(PMSx003_type::PMS5003_S),
+          static_cast<int>(PMSx003_type::PMS5003_T),
+          #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
+          static_cast<int>(PMSx003_type::PMS5003_ST)
         };
-        addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PCONFIG(0));
+        addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
+      }
+
+      addFormSubHeader(F("Output"));
+      {
+        const __FlashStringHelper *outputOptions[] = {
+          toString(PMSx003_output_selection::Particles_ug_m3),
+          toString(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
+          toString(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
+          toString(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
+        const int outputOptionValues[] = {
+          static_cast<int>(PMSx003_output_selection::Particles_ug_m3),
+          static_cast<int>(PMSx003_output_selection::PM2_5_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt0_3__cnt_2_5),
+          static_cast<int>(PMSx003_output_selection::ParticlesCount_100ml_cnt1_0_cnt2_5_cnt10) };
+        addFormSelector(F("Output values"), F("p053_output"), 4, outputOptions, outputOptionValues, PLUGIN_053_OUTPUT_SELECTOR, true);
+        addFormNote(F("Changing this reloads the page and updates task value names + nr decimals."));
       }
       {
-        addFormSubHeader(F("Output"));
-        const __FlashStringHelper * outputOptions[] = {
-          F("Particles &micro;g/m3: pm1.0, pm2.5, pm10"),
-          F("Particles &micro;g/m3: pm2.5; Other: Temp, Humi, HCHO (PMS5003ST)"),
-          F("Particles count/0.1L: cnt1.0, cnt2.5, cnt5, cnt10 (PMS1003/5003(ST)/7003)")
-        };
-        int outputOptionValues[] = { PLUGIN_053_OUTPUT_PART, PLUGIN_053_OUTPUT_THC, PLUGIN_053_OUTPUT_CNT };
-        addFormSelector(F("Output values"), F("p053_output"), 3, outputOptions, outputOptionValues, PCONFIG(1), true);
-        addFormNote(F("Manually change 'Values' names and decimals accordingly! Changing this reloads the page."));
-
-        const __FlashStringHelper * eventOptions[] = {
-          F("None"),
-          F("Particles &micro;g/m3 and Temp/Humi/HCHO"),
-          F("Particles &micro;g/m3, Temp/Humi/HCHO and Particles count/0.1L")
-        };
-        int eventOptionValues[] = { PLUGIN_053_EVENT_NONE, PLUGIN_053_EVENT_PARTICLES, PLUGIN_053_EVENT_PARTCOUNT};
-        addFormSelector(F("Events for non-output values"), F("p053_events"), 3, eventOptions, eventOptionValues, PCONFIG(2));
-        addFormNote(F("Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm10, taskname#cnt1.0/cnt2.5/cnt5/cnt10)."));
+        const __FlashStringHelper *eventOptions[] = {
+          toString(PMSx003_event_datatype::Event_None),
+          toString(PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde),
+          toString(PMSx003_event_datatype::Event_All_count_bins),
+          toString(PMSx003_event_datatype::Event_All) };
+        const int eventOptionValues[] = {
+          static_cast<int>(PMSx003_event_datatype::Event_None),
+          static_cast<int>(PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde),
+          static_cast<int>(PMSx003_event_datatype::Event_All_count_bins),
+          static_cast<int>(PMSx003_event_datatype::Event_All) };
+        addFormSelector(F("Events for non-output values"), F("p053_events"), 4, eventOptions, eventOptionValues,
+                        PLUGIN_053_EVENT_OUT_SELECTOR);
+        addFormNote(F(
+                      "Only generates the 'missing' events, (taskname#temp/humi/hcho, taskname#pm1.0/pm2.5/pm10, taskname#cnt0.3/cnt0.5/cnt1.0/cnt2.5/cnt5/cnt10)."));
       }
-      #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+      addFormSubHeader(F("Data Processing"));
+      {
+        addFormNumericBox(F("Sensor init time after wake"), F("p053_delay_wake"),
+                          PLUGIN_053_SEC_IGNORE_AFTER_WAKE, 0, 30);
+        addUnit(F("sec"));
+
+        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+        addFormCheckBox(F("Oversampling"), F("p053_oversample"),
+                        bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT));
+
+
+        addFormCheckBox(F("Split count bins"), F("p053_split_bins"),
+                        bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT));
+        addFormNote(F("Subtract next \"count/0.1L\" bin counts to get counts per bin, not a range of bins"));
+        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      }
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      PCONFIG(0) = getFormItemInt(F("p053_model"));
-      PCONFIG(1) = getFormItemInt(F("p053_output"));
-      if ((PCONFIG(0) == PMSx003_TYPE && PCONFIG(1) == PLUGIN_053_OUTPUT_THC)
-         || PCONFIG(0) == PMS3003_TYPE) { // Base models only support particle values, no use in setting other output values
-        PCONFIG(1) = PLUGIN_053_OUTPUT_PART;
+      int rstPin, pwrPin = -1;
+      update_whenset_FormItemInt(F("rstpin"), rstPin);
+      update_whenset_FormItemInt(F("pwrpin"), pwrPin);
+      PLUGIN_053_RST_PIN = rstPin;
+      PLUGIN_053_PWR_PIN = pwrPin;
+      success            = true;
+
+      # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      const int oldOutputSelector = PLUGIN_053_OUTPUT_SELECTOR;
+      PLUGIN_053_SENSOR_MODEL_SELECTOR = getFormItemInt(F("p053_model"));
+      PLUGIN_053_OUTPUT_SELECTOR       = getFormItemInt(F("p053_output"));
+      PLUGIN_053_EVENT_OUT_SELECTOR    = getFormItemInt(F("p053_events"));
+      PLUGIN_053_SEC_IGNORE_AFTER_WAKE = getFormItemInt(F("p053_delay_wake"));
+
+      if (isFormItemChecked(F("p053_oversample"))) {
+        bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
+      } else {
+        bitClear(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT);
       }
-      PCONFIG(2) = getFormItemInt(F("P053_events"));
-      #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      success = true;
+
+      if (isFormItemChecked(F("p053_split_bins"))) {
+        bitSet(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
+      } else {
+        bitClear(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT);
+      }
+
+      switch (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR) {
+        case PMSx003_type::PMS1003_5003_7003:
+
+          // Base models only support particle values, no use in setting other output values
+          if (GET_PLUGIN_053_OUTPUT_SELECTOR == PMSx003_output_selection::PM2_5_TempHum_Formaldehyde) {
+            PLUGIN_053_OUTPUT_SELECTOR = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
+          }
+
+          if (GET_PLUGIN_053_EVENT_OUT_SELECTOR == PMSx003_event_datatype::Event_PMxx_TempHum_Formaldehyde) {
+            PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
+          }
+          break;
+        case PMSx003_type::PMS2003_3003:
+          PLUGIN_053_OUTPUT_SELECTOR    = static_cast<int>(PMSx003_output_selection::Particles_ug_m3);
+          PLUGIN_053_EVENT_OUT_SELECTOR = static_cast<int>(PMSx003_event_datatype::Event_None);
+          break;
+        default:
+          break;
+      }
+
+      if (oldOutputSelector != PLUGIN_053_OUTPUT_SELECTOR) {
+        struct EventStruct TempEvent(event->TaskIndex);
+
+        // Do not clear ExtraTaskSettings, leave formula fields in tact.
+        // ExtraTaskSettings.clear();
+        ExtraTaskSettings.TaskIndex = event->TaskIndex;
+        String dummy;
+        PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy);
+      }
+
+      # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       break;
     }
 
     case PLUGIN_INIT:
-      {
-        int rxPin = CONFIG_PIN1;
-        int txPin = CONFIG_PIN2;
-        const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
-        int resetPin = CONFIG_PIN3;
+    {
+      const int8_t rxPin            = CONFIG_PIN1;
+      const int8_t txPin            = CONFIG_PIN2;
+      const  ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
 
-        #ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-        Plugin_053_sensortype = PCONFIG(0);
-        #endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      PMSx003_type Plugin_053_sensortype = PMSx003_type::PMS1003_5003_7003;
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log;
-          log.reserve(25);
-          log = F("PMSx003 : config ");
-          log += rxPin;
-          log += ' ';
-          log += txPin;
-          log += ' ';
-          log += resetPin;
-          addLog(LOG_LEVEL_DEBUG, log);
-        }
+        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      Plugin_053_sensortype = GET_PLUGIN_053_SENSOR_MODEL_SELECTOR;
+        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-        if (P053_easySerial != nullptr) {
-          // Regardless the set pins, the software serial must be deleted.
-          delete P053_easySerial;
-          P053_easySerial = nullptr;
-        }
+      initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P053_data_struct(
+          event->TaskIndex,
+          rxPin, txPin, port,
+          PLUGIN_053_RST_PIN,
+          PLUGIN_053_PWR_PIN,
+          Plugin_053_sensortype,
+          PLUGIN_053_SEC_IGNORE_AFTER_WAKE * 1000u
+          # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+          , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_OVERSAMPLING_BIT)
+          , bitRead(PLUGIN_053_DATA_PROCESSING_FLAGS, PLUGIN_053_SPLIT_CNT_BINS_BIT)
+          # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+          ));
+      P053_data_struct *P053_data =
+        static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        // Hardware serial is RX on 3 and TX on 1
-        if (rxPin == 3 && txPin == 1) {
-          addLog(LOG_LEVEL_INFO, F("PMSx003 : using hardware serial"));
-        } else {
-          addLog(LOG_LEVEL_INFO, F("PMSx003: using software serial"));
-        }
-        P053_easySerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin, false, 96); // 96 Bytes buffer, enough for up to 3 packets.
-        if (P053_easySerial == nullptr) {
-          break;
-        }
-        P053_easySerial->begin(9600);
-        P053_easySerial->flush();
-
-        if (resetPin >= 0) { // Reset if pin is configured
-          // Toggle 'reset' to assure we start reading header
-          addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
-          pinMode(resetPin, OUTPUT);
-          digitalWrite(resetPin, LOW);
-          delay(250);
-          digitalWrite(resetPin, HIGH);
-          pinMode(resetPin, INPUT_PULLUP);
-        }
-
-        Plugin_053_init = true;
-        success = true;
-        break;
+      if (nullptr != P053_data) {
+        success = P053_data->initialized();
       }
 
-    case PLUGIN_EXIT:
-      {
-        if (P053_easySerial) {
-          delete P053_easySerial;
-          P053_easySerial=nullptr;
-        }
-        break;
-      }
+      break;
+    }
 
     // The update rate from the module is 200ms .. multiple seconds. Practise
     // shows that we need to read the buffer many times per seconds to stay in
     // sync.
     case PLUGIN_TEN_PER_SECOND:
-      {
-        if (Plugin_053_init && P053_PacketAvailable()) {
+    {
+      P053_data_struct *P053_data =
+        static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P053_data) && P053_data->initialized()) {
+        if (P053_data->packetAvailable()) {
           // Check if a complete packet is available in the UART FIFO.
-            addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
-            success = Plugin_053_process_data(event);
+          # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG_MORE, F("PMSx003 : Packet available"));
+          # endif // ifndef BUILD_NO_DEBUG
+          success = P053_data->processData(event);
         }
-        break;
       }
+      break;
+    }
     case PLUGIN_READ:
-      {
-        // When new data is available, return true
-        success = values_received;
-        values_received = false;
-        break;
+    {
+      P053_data_struct *P053_data =
+        static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P053_data) && P053_data->initialized()) {
+        // When new data is available, return true and send the events.
+        success = P053_data->checkAndClearValuesReceived(event);
       }
+      break;
+    }
+    case PLUGIN_WRITE:
+    {
+      P053_data_struct *P053_data =
+        static_cast<P053_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P053_data) && P053_data->initialized()) {
+        String command    = parseString(string, 1);
+        String subcommand = parseString(string, 2);
+
+        if (command == F("pmsx003")) {
+          if (subcommand == F("wake")) {
+            success = P053_data->wakeSensor();
+          } else if (subcommand == F("sleep")) {
+            success = P053_data->sleepSensor();
+          } else if (subcommand == F("reset")) {
+            success = P053_data->resetSensor();
+          }
+        }
+      }
+      break;
+    }
   }
   return success;
 }
+
 #endif // USES_P053
