@@ -34,6 +34,25 @@ const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd)
 }
 
 /****************************************************************************
+ * EPD_type_toResolution: X and Y resolution for the selected type
+ ***************************************************************************/
+void EPD_type_toResolution(EPD_type_e device, uint16_t& x, uint16_t& y) {
+  switch (device) {
+    case EPD_type_e::EPD_IL3897:
+    case EPD_type_e::EPD_SSD1680:
+      x = 250;
+      y = 122;
+      break;
+    case EPD_type_e::EPD_UC8151D:
+      x = 212;
+      y = 104;
+      break;
+    case EPD_type_e::EPD_MAX:
+      break;
+  }
+}
+
+/****************************************************************************
  * Constructor
  ***************************************************************************/
 P096_data_struct::P096_data_struct(EPD_type_e          display,
@@ -58,19 +77,7 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
 {
   # if P096_USE_EXTENDED_SETTINGS
 
-  switch (_display) {
-    case EPD_type_e::EPD_IL3897:
-    case EPD_type_e::EPD_SSD1680:
-      _xpix = 250;
-      _ypix = 122;
-      break;
-    case EPD_type_e::EPD_UC8151D:
-      _xpix = 212;
-      _ypix = 104;
-      break;
-    case EPD_type_e::EPD_MAX:
-      break;
-  }
+  EPD_type_toResolution(_display, _xpix, _ypix);
   # endif // if P096_USE_EXTENDED_SETTINGS
 
   updateFontMetrics();

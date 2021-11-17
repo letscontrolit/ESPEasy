@@ -315,11 +315,11 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       # if P096_USE_EXTENDED_SETTINGS
       {
         const __FlashStringHelper *colorDepths[] = { // Be sure to use all options needed
-          getAdaGFXColorDepth(AdaGFXColorDepth::Monochrome),
-          getAdaGFXColorDepth(AdaGFXColorDepth::BlackWhiteRed),
-          getAdaGFXColorDepth(AdaGFXColorDepth::BlackWhite2Greyscales),
+          toString(AdaGFXColorDepth::Monochrome),
+          toString(AdaGFXColorDepth::BlackWhiteRed),
+          toString(AdaGFXColorDepth::BlackWhite2Greyscales),
           #  if ADAGFX_SUPPORT_7COLOR
-          getAdaGFXColorDepth(AdaGFXColorDepth::SevenColor)
+          toString(AdaGFXColorDepth::SevenColor)
           #  endif // if ADAGFX_SUPPORT_7COLOR
         };
         const int colorDepthOptions[] = {
@@ -472,6 +472,25 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         addHtmlError(error);
       }
       # endif // if P096_USE_EXTENDED_SETTINGS
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DISPLAY_PARAMETERS:
+    {
+      # if P096_USE_EXTENDED_SETTINGS
+      uint16_t x, y;
+      EPD_type_toResolution(static_cast<EPD_type_e>(P096_CONFIG_FLAG_GET_DISPLAYTYPE), x, y);
+      event->Par1 = x;                                              // X-resolution in pixels
+      event->Par2 = y;                                              // Y-resolution in pixels
+      event->Par4 = P096_CONFIG_FLAG_GET_COLORDEPTH;                // Color depth
+      # else // if P096_USE_EXTENDED_SETTINGS
+      event->Par1 = P096_CONFIG_WIDTH;                              // X-resolution in pixels
+      event->Par2 = P096_CONFIG_HEIGHT;                             // Y-resolution in pixels
+      event->Par4 = static_cast<int>(AdaGFXColorDepth::Monochrome); // Color depth
+      # endif // if P096_USE_EXTENDED_SETTINGS
+      event->Par3 = P096_CONFIG_ROTATION;                           // Rotation (0..3: 0, 90, 180, 270 degrees)
 
       success = true;
       break;

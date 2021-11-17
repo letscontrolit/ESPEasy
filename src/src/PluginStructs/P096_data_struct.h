@@ -91,6 +91,9 @@ enum class P096_CommandTrigger : uint8_t {
 
 const __FlashStringHelper* EPD_type_toString(EPD_type_e device);
 const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd);
+void                       EPD_type_toResolution(EPD_type_e device,
+                                                 uint16_t & x,
+                                                 uint16_t & y);
 
 struct P096_data_struct : public PluginTaskData_base {
 public:
