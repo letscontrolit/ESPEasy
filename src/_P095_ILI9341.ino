@@ -19,6 +19,7 @@
 
 /**
  * Changelog:
+ * 2021-11-16 tonhuisman: Add support for PLUGIN_GET_DISPLAY_PARAMETERS, removed commented old source
  * 2021-08-17 tonhuisman: Reformatted source using Uncrustify, small cleanups
  * 2021-08-16 tonhuisman: Initial refactoring into the use of AdafruitGFX_helper
  * 2020-08-29 tonhuisman: Removed TS (Touchscreen) related stuff, XPT2046 will be a separate plugin
@@ -199,38 +200,11 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       P095_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
 
       break;
-
-      // uint8_t init = PCONFIG(0);
-
-      // // if already configured take it from settings, else use default values (only for pin values)
-      // if (init != 1)
-      // {
-      //   # ifdef ESP32
-
-      //   if (Settings.InitSPI == 2) { // When using ESP32 H(ardware-)SPI
-      //     TFT_Settings.address_tft_cs = TFT_CS_HSPI;
-      //   }
-      //   # endif // ifdef ESP32
-      //   PIN(0) = TFT_Settings.address_tft_cs;
-      //   PIN(1) = TFT_Settings.address_tft_dc;
-      //   PIN(2) = TFT_Settings.address_tft_rst;
-      // }
-      // break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      // uint8_t init = PCONFIG(0);
-
-      // // if already configured take it from settings, else use default values (only for pin values)
-      // if (init == 1)
-      // {
-      //   TFT_Settings.address_tft_cs  = PIN(0);
-      //   TFT_Settings.address_tft_dc  = PIN(1);
-      //   TFT_Settings.address_tft_rst = PIN(2);
-      // }
-
-      if (PCONFIG(0) < 2) {
+      if (P095_CONFIG_VERSION < 2) {
         P095_CONFIG_BUTTON_PIN    = -1;                                                   // No button connected
         P095_CONFIG_BACKLIGHT_PIN = P095_BACKLIGHT_PIN;
         strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_095)); // Values introduced in V2 settings
@@ -316,7 +290,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = 2; // mark config V2 as already saved (next time, will not convert 'invalid' values)
+      P095_CONFIG_VERSION = 2; // mark config V2 as already saved (next time, will not convert 'invalid' values)
       // PIN(0)..(2) are already set
 
       P095_CONFIG_ROTATION          = getFormItemInt(F("p095_rotate"));
@@ -362,6 +336,17 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DISPLAY_PARAMETERS:
+    {
+      event->Par1 = 240;                                           // X-resolution in pixels
+      event->Par2 = 320;                                           // Y-resolution in pixels
+      event->Par3 = P095_CONFIG_ROTATION;                          // Rotation (0..3: 0, 90, 180, 270 degrees)
+      event->Par4 = static_cast<int>(AdaGFXColorDepth::FullColor); // Color depth
 
       success = true;
       break;
@@ -456,277 +441,6 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
-
-      // case PLUGIN_WRITE:
-      // {
-      // String tmpString = string;
-      // String arguments = string;
-
-      // String command;
-      // String subcommand;
-
-      // int argIndex = arguments.indexOf(',');
-
-      // if (argIndex)
-      // {
-      //   command    = arguments.substring(0, argIndex);
-      //   arguments  = arguments.substring(argIndex + 1);
-      //   argIndex   = arguments.indexOf(',');
-      //   subcommand = arguments.substring(0, argIndex);
-      //   success    = true;
-
-      //   tmpString += "<br/> command= " + command;
-      //   tmpString += "<br/> arguments= " + arguments;
-      //   tmpString += "<br/> argIndex= " + argIndex;
-      //   tmpString += "<br/> subcommand= " + subcommand;
-
-
-      //   if (command.equalsIgnoreCase(F("TFTCMD")))
-      //   {
-      //     if (subcommand.equalsIgnoreCase(F("ON")))
-      //     {
-      //       tft->sendCommand(ILI9341_DISPON);
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("OFF")))
-      //     {
-      //       tft->sendCommand(ILI9341_DISPOFF);
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("CLEAR")))
-      //     {
-      //       arguments = arguments.substring(argIndex + 1);
-      //       tft->fillScreen(Plugin_095_ParseColor(arguments));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("INV")))
-      //     {
-      //       arguments = arguments.substring(argIndex + 1);
-      //       tft->invertDisplay(arguments.toInt() == 1);
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("ROT")))
-      //     {
-      //       ///control?cmd=tftcmd,rot,0
-      //       // not working to verify
-      //       arguments = arguments.substring(argIndex + 1);
-      //       tft->setRotation(arguments.toInt() % 4);
-      //     }
-      //     else
-      //     {
-      //       success = false;
-      //     }
-      //   }
-      //   else if (command.equalsIgnoreCase(F("TFT")))
-      //   {
-      //     # ifdef P095_USE_ADA_GRAPHICS
-      //     success = gfxHelper->processCommand(AdaGFXparseTemplate(string, 128)); // Hand it over after replacing variables
-      //     # else // ifdef P095_USE_ADA_GRAPHICS
-      //     tmpString += "<br/> TFT  ";
-
-      //     arguments = arguments.substring(argIndex + 1);
-      //     String sParams[8];
-      //     int    argCount = Plugin_095_StringSplit(arguments, ',', sParams, 8);
-
-      //     for (int a = 0; a < argCount && a < 8; a++)
-      //     {
-      //       tmpString += "<br/> ARGS[" + String(a) + "]=" + sParams[a];
-      //     }
-
-      //     if (subcommand.equalsIgnoreCase(F("txt")))
-      //     {
-      //       tft->println(arguments); // write all pending cars
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("txp")) && (argCount == 2))
-      //     {
-      //       tft->setCursor(sParams[0].toInt(), sParams[1].toInt());
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("txc")) && ((argCount == 1) || (argCount == 2)))
-      //     {
-      //       if (argCount == 1) {
-      //         tft->setTextColor(Plugin_095_ParseColor(sParams[0]));
-      //       }
-      //       else { // argCount=2
-      //         tft->setTextColor(Plugin_095_ParseColor(sParams[0]), Plugin_095_ParseColor(sParams[1]));
-      //       }
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("txs")) && (argCount == 1))
-      //     {
-      //       tft->setTextSize(sParams[0].toInt());
-      //     }
-      //     #  ifdef PLUGIN_095_FONT_INCLUDED
-      //     else if (subcommand.equalsIgnoreCase(F("font")) && (argCount == 1)) {
-      //       if (sParams[0].equalsIgnoreCase(F("SEVENSEG24"))) {
-      //         tft->setFont(&Seven_Segment24pt7b);
-      //       } else if (sParams[0].equalsIgnoreCase(F("SEVENSEG18"))) {
-      //         tft->setFont(&Seven_Segment18pt7b);
-      //       } else if (sParams[0].equalsIgnoreCase(F("FREESANS"))) {
-      //         tft->setFont(&FreeSans9pt7b);
-      //       } else if (sParams[0].equalsIgnoreCase(F("DEFAULT"))) {
-      //         tft->setFont();
-      //       } else {
-      //         success = false;
-      //       }
-      //     }
-      //     #  endif // ifdef PLUGIN_095_FONT_INCLUDED
-      //     else if (subcommand.equalsIgnoreCase(F("txtfull")) && (argCount >= 3) && (argCount <= 6))
-      //     {
-      //       switch (argCount)
-      //       {
-      //         case 3: // single text
-      //           Plugin_095_printText(sParams[2].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1);
-      //           break;
-
-      //         case 4: // text + size
-      //           Plugin_095_printText(sParams[3].c_str(), sParams[0].toInt() - 1, sParams[1].toInt() - 1, sParams[2].toInt());
-      //           break;
-
-      //         case 5: // text + size + color
-      //           Plugin_095_printText(sParams[4].c_str(),
-      //                                sParams[0].toInt() - 1,
-      //                                sParams[1].toInt() - 1,
-      //                                sParams[2].toInt(),
-      //                                Plugin_095_ParseColor(sParams[3]));
-      //           break;
-
-      //         case 6: // text + size + color
-      //           Plugin_095_printText(sParams[5].c_str(),
-      //                                sParams[0].toInt() - 1,
-      //                                sParams[1].toInt() - 1,
-      //                                sParams[2].toInt(),
-      //                                Plugin_095_ParseColor(sParams[3]),
-      //                                Plugin_095_ParseColor(sParams[4]));
-      //           break;
-      //         default:
-      //           success = false;
-      //           break;
-      //       }
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("l")) && (argCount == 5))
-      //     {
-      //       tft->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(),
-      // Plugin_095_ParseColor(sParams[4]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("lh")) && (argCount == 3))
-      //     {
-      //       tft->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("lv")) && (argCount == 3))
-      //     {
-      //       tft->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("r")) && (argCount == 5))
-      //     {
-      //       tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(),
-      // Plugin_095_ParseColor(sParams[4]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("rf")) && (argCount == 6))
-      //     {
-      //       tft->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(),
-      // Plugin_095_ParseColor(sParams[5]));
-      //       tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(),
-      // Plugin_095_ParseColor(sParams[4]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("c")) && (argCount == 4))
-      //     {
-      //       tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("cf")) && (argCount == 5))
-      //     {
-      //       tft->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[4]));
-      //       tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), Plugin_095_ParseColor(sParams[3]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("t")) && (argCount == 7))
-      //     {
-      //       tft->drawTriangle(sParams[0].toInt(),
-      //                         sParams[1].toInt(),
-      //                         sParams[2].toInt(),
-      //                         sParams[3].toInt(),
-      //                         sParams[4].toInt(),
-      //                         sParams[5].toInt(),
-      //                         Plugin_095_ParseColor(sParams[6]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("tf")) && (argCount == 8))
-      //     {
-      //       tft->fillTriangle(sParams[0].toInt(),
-      //                         sParams[1].toInt(),
-      //                         sParams[2].toInt(),
-      //                         sParams[3].toInt(),
-      //                         sParams[4].toInt(),
-      //                         sParams[5].toInt(),
-      //                         Plugin_095_ParseColor(sParams[7]));
-      //       tft->drawTriangle(sParams[0].toInt(),
-      //                         sParams[1].toInt(),
-      //                         sParams[2].toInt(),
-      //                         sParams[3].toInt(),
-      //                         sParams[4].toInt(),
-      //                         sParams[5].toInt(),
-      //                         Plugin_095_ParseColor(sParams[6]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("rr")) && (argCount == 6))
-      //     {
-      //       tft->drawRoundRect(sParams[0].toInt(),
-      //                          sParams[1].toInt(),
-      //                          sParams[2].toInt(),
-      //                          sParams[3].toInt(),
-      //                          sParams[4].toInt(),
-      //                          Plugin_095_ParseColor(sParams[5]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("rrf")) && (argCount == 7))
-      //     {
-      //       tft->fillRoundRect(sParams[0].toInt(),
-      //                          sParams[1].toInt(),
-      //                          sParams[2].toInt(),
-      //                          sParams[3].toInt(),
-      //                          sParams[4].toInt(),
-      //                          Plugin_095_ParseColor(sParams[6]));
-      //       tft->drawRoundRect(sParams[0].toInt(),
-      //                          sParams[1].toInt(),
-      //                          sParams[2].toInt(),
-      //                          sParams[3].toInt(),
-      //                          sParams[4].toInt(),
-      //                          Plugin_095_ParseColor(sParams[5]));
-      //     }
-      //     else if (subcommand.equalsIgnoreCase(F("px")) && (argCount == 3))
-      //     {
-      //       tft->drawPixel(sParams[0].toInt(), sParams[1].toInt(), Plugin_095_ParseColor(sParams[2]));
-      //     }
-      //     else
-      //     {
-      //       success = false;
-      //     }
-      //     # endif // ifdef P095_USE_ADA_GRAPHICS
-      //   }
-      //   else {
-      //     success = false;
-      //   }
-      // }
-      // else
-      // {
-      //   // invalid arguments
-      //   success = false;
-      // }
-
-      // if (!success)
-      // {
-      //   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      //     addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
-      //     String log2 = F("Parsed command = \"");
-      //     log2 += string;
-      //     log2 += F("\"");
-      //     addLog(LOG_LEVEL_INFO, log2);
-      //   }
-      // }
-      // else
-      // {
-      //   String log;
-      //   log.reserve(110);             // Prevent re-allocation
-      //   # ifdef P095_USE_ADA_GRAPHICS // TODO Restore original message!
-      //   log = F("P095-AdaGFX : WRITE = ");
-      //   # else // ifdef P095_USE_ADA_GRAPHICS
-      //   log = F("P095-ILI9341 : WRITE = ");
-      //   # endif // ifdef P095_USE_ADA_GRAPHICS
-      //   log += tmpString;
-      //   SendStatus(event, log); // Reply (echo) to sender. This will print message on browser.
-      // }
-      //   break;
-      // }
   }
 
 

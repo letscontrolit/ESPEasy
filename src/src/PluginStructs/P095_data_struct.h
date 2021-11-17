@@ -16,6 +16,7 @@
 
 // # define P095_SHOW_SPLASH                               // Enable to show initial splash (text)
 
+# define P095_CONFIG_VERSION            PCONFIG(0)      // Settings version
 # define P095_CONFIG_ROTATION           PCONFIG(1)      // Rotation
 # define P095_CONFIG_BUTTON_PIN         PCONFIG(2)      // Pin for display-button
 # define P095_CONFIG_DISPLAY_TIMEOUT    PCONFIG(3)      // Time-out when display-button is enable
