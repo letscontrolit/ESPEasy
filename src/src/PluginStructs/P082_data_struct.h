@@ -9,6 +9,7 @@
 
 #ifndef LIMIT_BUILD_SIZE
 # define P082_SEND_GPS_TO_LOG
+//# define P082_USE_U_BLOX_SPECIFIC // TD-er: Disabled for now, as it is not working reliable/predictable
 #endif
 
 # define P082_TIMESTAMP_AGE       1500
@@ -98,12 +99,14 @@ struct P082_data_struct : public PluginTaskData_base {
 
   // Send some characters to GPS to wake up
   bool wakeUp();
-
+#ifdef P082_USE_U_BLOX_SPECIFIC
   bool setPowerMode(P082_PowerMode mode);
 
   bool setDynamicModel(P082_DynamicModel model);
+#endif
 
 private:
+#ifdef P082_USE_U_BLOX_SPECIFIC
   // Compute checksum
   // Caller should offset the data pointer to the correct start where the CRC should start.
   // @param size  The length over which the CRC should be computed
@@ -113,6 +116,7 @@ private:
   // Set checksum.
   // First 2 bytes of the array are skipped
   static void setUbloxChecksum(uint8_t* data, size_t size);
+#endif
 
   bool writeToGPS(const uint8_t* data, size_t size);
 public:

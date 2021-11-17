@@ -30,6 +30,9 @@
 # define PLUGIN_VALUENAME4_082 "Speed"
 
 
+
+
+
 # define P082_TIMEOUT        PCONFIG(0)
 # define P082_TIMEOUT_LABEL  PCONFIG_LABEL(0)
 # define P082_BAUDRATE       PCONFIG(1)
@@ -42,8 +45,10 @@
 # define P082_QUERY4         PCONFIG(6)
 # define P082_LONG_REF       PCONFIG_FLOAT(0)
 # define P082_LAT_REF        PCONFIG_FLOAT(1)
+#ifdef P082_USE_U_BLOX_SPECIFIC
 # define P082_POWER_MODE     PCONFIG(7)
-# define P082_DYNAMIC_MODEL PCONFIG_LONG(0)
+# define P082_DYNAMIC_MODEL  PCONFIG_LONG(0)
+#endif // P082_USE_U_BLOX_SPECIFIC
 
 # define P082_NR_OUTPUT_VALUES   VARS_PER_TASK
 # define P082_QUERY1_CONFIG_POS  3
@@ -54,7 +59,6 @@
 # define P082_QUERY2_DFLT         P082_query::P082_QUERY_LAT
 # define P082_QUERY3_DFLT         P082_query::P082_QUERY_ALT
 # define P082_QUERY4_DFLT         P082_query::P082_QUERY_SPD
-
 
 // Must use volatile declared variable (which will end up in iRAM)
 volatile unsigned long P082_pps_time = 0;
@@ -166,6 +170,8 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       addFormNumericBox(F("Fix Timeout"), P082_TIMEOUT_LABEL, P082_TIMEOUT, 100, 10000);
       addUnit(F("ms"));
 
+#ifdef P082_USE_U_BLOX_SPECIFIC 
+
       addFormSubHeader(F("U-Blox specific"));
 
       {
@@ -179,7 +185,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_PowerMode::Power_Save),
           static_cast<int>(P082_PowerMode::Eco)
         };
-        addFormSelector(F("Power Mode"), F("pwrmode"), 3, options, indices, P082_DYNAMIC_MODEL);
+        addFormSelector(F("Power Mode"), F("pwrmode"), 3, options, indices, P082_POWER_MODE);
       }
 
       {
@@ -207,9 +213,9 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<int>(P082_DynamicModel::Wrist),     
           static_cast<int>(P082_DynamicModel::Bike)
         };
-        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), 10, options, indices, P082_POWER_MODE);
+        addFormSelector(F("Dynamic Platform Model"), F("dynmodel"), 10, options, indices, P082_DYNAMIC_MODEL);
       }
-
+#endif // P082_USE_U_BLOX_SPECIFIC 
 
       addFormSubHeader(F("Current Sensor Data"));
 
@@ -261,8 +267,10 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
+      #ifdef P082_USE_U_BLOX_SPECIFIC 
       P082_POWER_MODE = getFormItemInt(F("pwrmode"));
       P082_DYNAMIC_MODEL = getFormItemInt(F("dynmodel"));
+      #endif // P082_USE_U_BLOX_SPECIFIC 
       P082_TIMEOUT  = getFormItemInt(P082_TIMEOUT_LABEL);
       P082_DISTANCE = getFormItemInt(P082_DISTANCE_LABEL);
 
@@ -304,8 +312,10 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           //          pinMode(pps_pin, INPUT_PULLUP);
           attachInterrupt(pps_pin, Plugin_082_interrupt, RISING);
         }
+        #ifdef P082_USE_U_BLOX_SPECIFIC
         P082_data->setPowerMode(static_cast<P082_PowerMode>(P082_POWER_MODE));
         P082_data->setDynamicModel(static_cast<P082_DynamicModel>(P082_DYNAMIC_MODEL));        
+        #endif // P082_USE_U_BLOX_SPECIFIC
       } else {
         clearPluginTaskData(event->TaskIndex);
       }
@@ -463,13 +473,16 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
             success = P082_data->wakeUp();
           } else if (subcommand.equals(F("sleep"))) {
             success = P082_data->powerDown();
-          } else if (subcommand.equals(F("maxperf"))) {
+          } 
+#ifdef P082_USE_U_BLOX_SPECIFIC
+          else if (subcommand.equals(F("maxperf"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Max_Performance);
           } else if (subcommand.equals(F("powersave"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Power_Save);
           } else if (subcommand.equals(F("eco"))) {
             success = P082_data->setPowerMode(P082_PowerMode::Eco);
           }
+#endif // P082_USE_U_BLOX_SPECIFIC
         }
       }
 

@@ -102,24 +102,78 @@ bool P082_data_struct::loop() {
 
     while (available > 0 && timePassedSince(startLoop) < 10) {
       --available;
-      char c = easySerial->read();
+      int c = easySerial->read();
+      if (c >= 0) {
 # ifdef P082_SEND_GPS_TO_LOG
-      if (_currentSentence.length() <= 80) {
-        // No need to capture more than 80 bytes as a NMEA message is never that long.
-        _currentSentence += c;
-      }
+        if (_currentSentence.length() <= 80) {
+          // No need to capture more than 80 bytes as a NMEA message is never that long.
+          if (c != 0) {
+            _currentSentence += static_cast<char>(c);
+          }
+        }
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-      if (gps->encode(c)) {
-        // Full sentence received
+        if (c == 0x85) {
+          // Found possible start of u-blox message
+          unsigned long timeout = millis() + 200;
+          unsigned int bytesRead = 0;
+          bool done = false;
+          bool ack_nak_read = false;
+          while (!timeOutReached(timeout) && !done)
+          {
+            if (available == 0) {
+              available = easySerial->available();
+            } else {
+              const int c = easySerial->read();
+              if (c >= 0) {
+                switch (bytesRead) {
+                  case 0:
+                    if (c != 0x62) {
+                      done = true;
+                    }
+                    ++bytesRead;
+                    break;
+                  case 1:
+                    if (c != 0x05) {
+                      done = true;
+                    }
+                    ++bytesRead;
+                    break;
+                  case 2:
+                    if (c == 0x01) {
+                      ack_nak_read = true;
+                      addLog(LOG_LEVEL_INFO, F("GPS  : ACK-ACK"));
+                    } else if (c == 0x00) {
+                      ack_nak_read = true;
+                      addLog(LOG_LEVEL_ERROR, F("GPS  : ACK-NAK"));
+                    }
+                    done = true;
+                    break;
+                  default:
+                    done = true;                    
+                    break;
+                }
+              }
+            }
+          }
+          if (!done) {
+            addLog(LOG_LEVEL_ERROR, F("GPS  : Ack/Nack timeout"));
+          } else if (!ack_nak_read) {
+            addLog(LOG_LEVEL_ERROR, F("GPS  : Unexpected reply"));
+          }
+        }
+
+        if (gps->encode(c)) {
+          // Full sentence received
 # ifdef P082_SEND_GPS_TO_LOG
-        _lastSentence    = _currentSentence;
-        _currentSentence.clear();
+          _lastSentence    = _currentSentence;
+          _currentSentence.clear();
 # endif // ifdef P082_SEND_GPS_TO_LOG
-        completeSentence = true;
-      } else {
-        if (available == 0) {
-          available = easySerial->available();
+          completeSentence = true;
+        } else {
+          if (available == 0) {
+            available = easySerial->available();
+          }
         }
       }
     }
@@ -219,6 +273,7 @@ bool P082_data_struct::wakeUp() {
   return false;
 }
 
+#ifdef P082_USE_U_BLOX_SPECIFIC
 bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
   switch (mode) {
     case P082_PowerMode::Max_Performance: 
@@ -267,7 +322,9 @@ bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
   setUbloxChecksum(UBLOX_command, sizeof(UBLOX_command));
   return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
 }
+#endif
 
+#ifdef P082_USE_U_BLOX_SPECIFIC
 void P082_data_struct::computeUbloxChecksum(const uint8_t* data, size_t size, uint8_t & CK_A, uint8_t & CK_B) {
   CK_A = 0;
   CK_B = 0;
@@ -284,13 +341,19 @@ void P082_data_struct::setUbloxChecksum(uint8_t* data, size_t size) {
   data[size - 2] = CK_A;
   data[size - 1] = CK_B;
 }
+#endif
 
 bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
   if (isInitialized()) {
     if (easySerial->isTxEnabled()) {
-      return size == easySerial->write(data, size);
+      if (size != easySerial->write(data, size)) {
+        addLog(LOG_LEVEL_ERROR, F("GPS  : Written less bytes than expected"));
+        return false;
+      } 
+      return true;
     }
   }
+  addLog(LOG_LEVEL_ERROR, F("GPS  : Cannot send to GPS"));
   return false;
 }
 
