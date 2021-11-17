@@ -23,6 +23,48 @@ const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device) {
 }
 
 /****************************************************************************
+ * ST77xx_type_toResolution: X and Y resolution for the selected type
+ ***************************************************************************/
+void ST77xx_type_toResolution(ST77xx_type_e device, uint16_t& x, uint16_t& y) {
+  switch (device) {
+    case ST77xx_type_e::ST7735s_128x128:
+      x = 128;
+      y = 128;
+      break;
+    case ST77xx_type_e::ST7735s_128x160:
+      x = 128;
+      y = 160;
+      break;
+    case ST77xx_type_e::ST7735s_80x160:
+      x = 80;
+      y = 160;
+      break;
+    case ST77xx_type_e::ST7789vw_240x320:
+      x = 240;
+      y = 320;
+      break;
+    case ST77xx_type_e::ST7789vw_240x240:
+      x = 240;
+      y = 240;
+      break;
+    case ST77xx_type_e::ST7789vw_240x280:
+      x = 240;
+      y = 280;
+      break;
+    case ST77xx_type_e::ST7789vw_135x240:
+      x = 135;
+      y = 240;
+      break;
+    case ST77xx_type_e::ST7796s_320x480:
+      x = 320;
+      y = 480;
+      break;
+    case ST77xx_type_e::ST77xx_MAX:
+      break;
+  }
+}
+
+/****************************************************************************
  * P116_CommandTrigger_toString: return the command string selected
  ***************************************************************************/
 const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd) {
@@ -52,42 +94,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
   : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _displayTimer(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
-  switch (_device) {
-    case ST77xx_type_e::ST7735s_128x128:
-      _xpix = 128;
-      _ypix = 128;
-      break;
-    case ST77xx_type_e::ST7735s_128x160:
-      _xpix = 128;
-      _ypix = 160;
-      break;
-    case ST77xx_type_e::ST7735s_80x160:
-      _xpix = 80;
-      _ypix = 160;
-      break;
-    case ST77xx_type_e::ST7789vw_240x320:
-      _xpix = 240;
-      _ypix = 320;
-      break;
-    case ST77xx_type_e::ST7789vw_240x240:
-      _xpix = 240;
-      _ypix = 240;
-      break;
-    case ST77xx_type_e::ST7789vw_240x280:
-      _xpix = 240;
-      _ypix = 280;
-      break;
-    case ST77xx_type_e::ST7789vw_135x240:
-      _xpix = 135;
-      _ypix = 240;
-      break;
-    case ST77xx_type_e::ST7796s_320x480:
-      _xpix = 320;
-      _ypix = 480;
-      break;
-    case ST77xx_type_e::ST77xx_MAX:
-      break;
-  }
+  ST77xx_type_toResolution(_device, _xpix, _ypix);
 
   updateFontMetrics();
   _commandTrigger.toLowerCase();

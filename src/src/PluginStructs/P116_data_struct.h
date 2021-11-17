@@ -87,6 +87,9 @@ enum class P116_CommandTrigger : uint8_t {
 
 const __FlashStringHelper* ST77xx_type_toString(ST77xx_type_e device);
 const __FlashStringHelper* P116_CommandTrigger_toString(P116_CommandTrigger cmd);
+void                       ST77xx_type_toResolution(ST77xx_type_e device,
+                                                    uint16_t    & x,
+                                                    uint16_t    & y);
 
 struct P116_data_struct : public PluginTaskData_base {
 public:

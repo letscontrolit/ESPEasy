@@ -8,6 +8,9 @@
 
 
 // History:
+// 2021-11-16 tonhuisman: P116: Change state from Development to Testing
+// 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
+//                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
 // 2021-11-06 tonhuisman: P116: Add support for ST7796s 320x480 displays
 //                        Changed name of plugin to 'Display - ST77xx TFT' (was 'Display - ST7735/ST7789 TFT')
 // 2021-08-16 tonhuisman: P116: Add default color settings
@@ -24,7 +27,7 @@
 
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
-# define PLUGIN_NAME_116       "Display - ST77xx TFT [DEVELOPMENT]"
+# define PLUGIN_NAME_116       "Display - ST77xx TFT [TESTING]"
 # define PLUGIN_VALUENAME1_116 "CursorX"
 # define PLUGIN_VALUENAME2_116 "CursorY"
 
@@ -259,6 +262,20 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DISPLAY_PARAMETERS:
+    {
+      uint16_t x, y;
+      ST77xx_type_toResolution(static_cast<ST77xx_type_e>(P116_CONFIG_FLAG_GET_TYPE), x, y);
+
+      event->Par1 = x;                                             // X-resolution in pixels
+      event->Par2 = y;                                             // Y-resolution in pixels
+      event->Par3 = P116_CONFIG_FLAG_GET_ROTATION;                 // Rotation (0..3: 0, 90, 180, 270 degrees)
+      event->Par4 = static_cast<int>(AdaGFXColorDepth::FullColor); // Color depth
 
       success = true;
       break;
