@@ -172,8 +172,8 @@ enum class AdaGFXColorDepth : uint16_t {
 class AdafruitGFX_helper;     // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
-const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode);
-const __FlashStringHelper* getAdaGFXColorDepth(AdaGFXColorDepth colorDepth);
+const __FlashStringHelper* toString(AdaGFXTextPrintMode mode);
+const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth);
 void                       AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                                                    uint8_t                    selectedIndex);
 void                       AdaGFXFormRotation(const __FlashStringHelper *id,
@@ -205,11 +205,12 @@ String   AdaGFXparseTemplate(String            & tmpString,
                              uint8_t             lineSize,
                              AdafruitGFX_helper *gfxHelper = nullptr);
 uint16_t AdaGFXparseColor(String         & s,
-                          AdaGFXColorDepth colorDepth = AdaGFXColorDepth::FullColor); // Parse either a color by name, 6 digit hex rrggbb
-                                                                                      // color, or 1..4 digit #rgb565 color (hex with #
-                                                                                      // prefix)
-String   AdaGFXcolorToString(uint16_t         color,
-                             AdaGFXColorDepth colorDepth = AdaGFXColorDepth::FullColor);
+                          AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
+                          bool             emptyIsBlack = false); // Parse either a color by name, 6 digit hex rrggbb color, or 1..4 digit
+                                                                  // #rgb565 color (hex with # prefix)
+String AdaGFXcolorToString(uint16_t         color,
+                           AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
+                           bool             blackIsEmpty = false);
 # if ADAGFX_SUPPORT_7COLOR
 uint16_t AdaGFXrgb565ToColor7(uint16_t color); // Convert rgb565 color to 7-color
 # endif // if ADAGFX_SUPPORT_7COLOR

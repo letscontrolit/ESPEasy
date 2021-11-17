@@ -40,7 +40,7 @@
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
  *****************************************************************************************/
-const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode) {
+const __FlashStringHelper* toString(AdaGFXTextPrintMode mode) {
   switch (mode) {
     case AdaGFXTextPrintMode::ContinueToNextLine: return F("Continue to next line");
     case AdaGFXTextPrintMode::TruncateExceedingMessage: return F("Truncate exceeding message");
@@ -53,7 +53,7 @@ const __FlashStringHelper* getAdaGFXTextPrintMode(AdaGFXTextPrintMode mode) {
 /******************************************************************************************
  * get the display text for a color depth enum value
  *****************************************************************************************/
-const __FlashStringHelper* getAdaGFXColorDepth(AdaGFXColorDepth colorDepth) {
+const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome: return F("Monochrome");
     case AdaGFXColorDepth::BlackWhiteRed: return F("Monochrome + 1 color");
@@ -75,9 +75,9 @@ void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                              uint8_t                    selectedIndex) {
   const int textModeCount                             = static_cast<int>(AdaGFXTextPrintMode::MAX);
   const __FlashStringHelper *textModes[textModeCount] = { // Be sure to use all available modes from enum!
-    getAdaGFXTextPrintMode(AdaGFXTextPrintMode::ContinueToNextLine),
-    getAdaGFXTextPrintMode(AdaGFXTextPrintMode::TruncateExceedingMessage),
-    getAdaGFXTextPrintMode(AdaGFXTextPrintMode::ClearThenTruncate)
+    toString(AdaGFXTextPrintMode::ContinueToNextLine),
+    toString(AdaGFXTextPrintMode::TruncateExceedingMessage),
+    toString(AdaGFXTextPrintMode::ClearThenTruncate)
   };
   const int textModeOptions[textModeCount] = {
     static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
@@ -1112,8 +1112,9 @@ uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
 // Parse color string to RGB565 color
 // param [in] s : The color string (white, red, ...)
 // Param [in] colorDepth: The requiresed color depth, default: FullColor
+// param [in] defaultWhite: Return White color if empty, default: true
 // return : color (default ADAGFX_WHITE)
-uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
+uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBlack) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
@@ -1218,7 +1219,11 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
       (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
     } else {
-      result = ADAGFX_WHITE;                                                         // Color fallback value
+      if (emptyIsBlack) {
+        result = ADAGFX_BLACK;
+      } else {
+        result = ADAGFX_WHITE; // Color fallback value
+      }
     }
   } else {
     // Reduce colors?
@@ -1251,14 +1256,15 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth) {
  * Convert an RGB565 color (number) to it's name or the #rgb565 hex string, based on depth
  ****************************************************************************************/
 String AdaGFXcolorToString(uint16_t         color,
-                           AdaGFXColorDepth colorDepth) {
+                           AdaGFXColorDepth colorDepth,
+                           bool             blackIsEmpty) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome:
     case AdaGFXColorDepth::BlackWhiteRed:
     case AdaGFXColorDepth::BlackWhite2Greyscales:
     {
       switch (color) {
-        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK): return F("black");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK): return blackIsEmpty ? EMPTY_STRING : F("black");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE): return F("white");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE): return F("inverse");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED): return F("red");
@@ -1273,7 +1279,7 @@ String AdaGFXcolorToString(uint16_t         color,
     case AdaGFXColorDepth::SevenColor:
     {
       switch (color) {
-        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return F("black");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return blackIsEmpty ? EMPTY_STRING : F("black");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE): return F("white");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN): return F("green");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE): return F("blue");
@@ -1291,7 +1297,7 @@ String AdaGFXcolorToString(uint16_t         color,
     case AdaGFXColorDepth::FullColor:
     {
       switch (color) {
-        case ADAGFX_BLACK:  return F("black");
+        case ADAGFX_BLACK:  return blackIsEmpty ? EMPTY_STRING : F("black");
         case ADAGFX_NAVY: return F("navy");
         case ADAGFX_DARKGREEN: return F("darkgreen");
         case ADAGFX_DARKCYAN: return F("darkcyan");
