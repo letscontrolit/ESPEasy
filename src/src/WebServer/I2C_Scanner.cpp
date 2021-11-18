@@ -176,6 +176,9 @@ String getKnownI2Cdevice(uint8_t address) {
 
   switch (address)
   {
+    case 0x11:
+      result += F("I2C_MultiRelay");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
