@@ -71,6 +71,8 @@ bool TinyGPSPlus::encode(char c)
       {
         term[curTermOffset] = 0;
         isValidSentence = endOfTermHandler();
+      } else if (curSentenceType == GPS_SENTENCE_GPTXT) {
+        isValidSentence = endOfTermHandler();
       }
       ++curTermNumber;
       curTermOffset = 0;
@@ -203,6 +205,21 @@ bool TinyGPSPlus::endOfTermHandler()
            }
         }
         break;
+      case GPS_SENTENCE_GPGLL:
+        date.commit();
+        time.commit();
+        if (sentenceHasFix && date.valid && time.valid)
+        {
+           location.commit();
+           if (!(location.valid)) {
+              // one of them is invalid, so consider the entire sentence invalid
+              date.valid = false;
+              time.valid = false;
+              location.valid = false;
+              ++invalidDataCount;
+           }
+        }
+        break;
       case GPS_SENTENCE_GPGGA:
         time.commit();
         satellites.commit();
@@ -231,6 +248,8 @@ bool TinyGPSPlus::endOfTermHandler()
           satellitesStats.commit();
         }
         hdop.commit();
+        break;
+      case GPS_SENTENCE_GPTXT:
         break;
       }
 
@@ -266,25 +285,31 @@ bool TinyGPSPlus::endOfTermHandler()
     {
       case COMBINE(GPS_SENTENCE_GPRMC, 1): // Time in both sentences
       case COMBINE(GPS_SENTENCE_GPGGA, 1):
+      case COMBINE(GPS_SENTENCE_GPGLL, 5):
         time.setTime(term);
         break;
       case COMBINE(GPS_SENTENCE_GPRMC, 2): // GPRMC validity
+      case COMBINE(GPS_SENTENCE_GPGLL, 6):
         sentenceHasFix = term[0] == 'A';
         break;
       case COMBINE(GPS_SENTENCE_GPRMC, 3): // Latitude
       case COMBINE(GPS_SENTENCE_GPGGA, 2):
+      case COMBINE(GPS_SENTENCE_GPGLL, 1):
         location.setLatitude(term);
         break;
       case COMBINE(GPS_SENTENCE_GPRMC, 4): // N/S
       case COMBINE(GPS_SENTENCE_GPGGA, 3):
+      case COMBINE(GPS_SENTENCE_GPGLL, 2):
         location.rawNewLatData.negative = term[0] == 'S';
         break;
       case COMBINE(GPS_SENTENCE_GPRMC, 5): // Longitude
       case COMBINE(GPS_SENTENCE_GPGGA, 4):
+      case COMBINE(GPS_SENTENCE_GPGLL, 3):
         location.setLongitude(term);
         break;
       case COMBINE(GPS_SENTENCE_GPRMC, 6): // E/W
       case COMBINE(GPS_SENTENCE_GPGGA, 5):
+      case COMBINE(GPS_SENTENCE_GPGLL, 4):
         location.rawNewLngData.negative = term[0] == 'W';
         break;
       case COMBINE(GPS_SENTENCE_GPRMC, 7): // Speed (GPRMC)
@@ -698,6 +723,15 @@ void TinyGPSPlus::parseSentenceType(const char *term)
   {
     curSentenceType = GPS_SENTENCE_GPGSV;
   }
+  else if (strcmp(&term[2], "TXT") == 0)
+  {
+    curSentenceType = GPS_SENTENCE_GPTXT;
+  }  
+  else if (strcmp(&term[2], "GLL") == 0)
+  {
+    curSentenceType = GPS_SENTENCE_GPGLL;
+  }  
+  
 }
 
 
