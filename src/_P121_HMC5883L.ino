@@ -79,7 +79,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
   }
   case PLUGIN_WEBFORM_LOAD:
   {
-    addFormFloatNumberBox(F("DeclinationAngle"), F("plugin_121_HMC5883L_decl"), PCONFIG_FLOAT(0), -2.0f,2.0f ,5, 0.00001f);
+    addFormFloatNumberBox(F("DeclinationAngle"), F("plugin_121_HMC5883L_decl"), PCONFIG_FLOAT(0), -2.0f,2.0f ,2, 0.01f);
     addUnit(F("degree"));
     success = true;
     break;
@@ -116,7 +116,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
 
       if (!P121_data->initialized)
       {
-        addLog(LOG_LEVEL_ERROR, "Could not initialize HCM5883L");
+        addLog(LOG_LEVEL_ERROR, F("Could not initialize HCM5883L"));
         break;
       }
       sensors_event_t s_event;
@@ -128,7 +128,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
       float heading = atan2(s_event.magnetic.y, s_event.magnetic.x);
 
       const float decl = PCONFIG_FLOAT(0);
-      addLog(LOG_LEVEL_DEBUG, "Declination Degree:" + String(decl));
+      
       if (decl != 0)
       {
         heading += decl;
