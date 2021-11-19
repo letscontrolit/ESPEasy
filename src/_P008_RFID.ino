@@ -28,10 +28,9 @@
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
 
-volatile uint8_t Plugin_008_bitCount = 0;  // Count the number of bits received.
-uint64_t Plugin_008_keyBuffer        = 0;  // A 64-bit-long keyBuffer into which the number is stored.
-uint8_t  Plugin_008_timeoutCount     = 0;
-uint8_t  Plugin_008_WiegandSize      = 26; // size of a tag via wiegand (26-bits or 36-bits)
+volatile uint8_t Plugin_008_bitCount = 0u; // Count the number of bits received.
+uint64_t Plugin_008_keyBuffer        = 0u; // A 64-bit-long keyBuffer into which the number is stored.
+uint8_t  Plugin_008_timeoutCount     = 0u;
 
 boolean Plugin_008_init = false;
 
@@ -104,10 +103,17 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(0)      = 26;  // Minimal nr. of bits
+      PCONFIG_LONG(1) = 500; // Default time-out 500 mSec
+      break;
+    }
+
     case PLUGIN_INIT:
     {
-      Plugin_008_init        = true;
-      Plugin_008_WiegandSize = PCONFIG(0);
+      Plugin_008_init = true;
+
       pinMode(CONFIG_PIN1, INPUT_PULLUP);
       pinMode(CONFIG_PIN2, INPUT_PULLUP);
 
@@ -139,18 +145,19 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       {
         if (Plugin_008_bitCount > 0)
         {
+          uint64_t keyMask = 0ULL;
+
           if ((Plugin_008_bitCount % 4 == 0) && ((Plugin_008_keyBuffer & 0xF) == 11))
           {
             // a number of keys were pressed and finished by #
             Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 4; // Strip #
           }
-          else if (Plugin_008_bitCount == Plugin_008_WiegandSize)
+          else if (Plugin_008_bitCount == PCONFIG(0))
           {
             // read a tag
             Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1; // Strip leading and trailing parity bits from the keyBuffer
 
-            uint64_t keyMask = 0LL;
-            keyMask = (0x1 << (Plugin_008_WiegandSize - 2));  // Shift in 1 just past the number of remaining bits
+            keyMask = (static_cast<uint64_t>(0x1) << (PCONFIG(0) - 2));    // Shift in 1 just past the number of remaining bits
             keyMask--;                                        // Decrement by 1 to get 0xFFFFFFFFFFFF...
             Plugin_008_keyBuffer &= keyMask;
           }
@@ -168,15 +175,15 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
               }
 
               // reset after ~5 sec
-              Plugin_008_keyBuffer    = 0;
-              Plugin_008_bitCount     = 0;
-              Plugin_008_timeoutCount = 0;
+              Plugin_008_keyBuffer    = 0u;
+              Plugin_008_bitCount     = 0u;
+              Plugin_008_timeoutCount = 0u;
             }
             break;
           }
 
-          unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-          bool new_key          = false;
+          uint64_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
+          bool     new_key = false;
 
           if (PCONFIG(1) == 1) {
             Plugin_008_keyBuffer = castHexAsDec(Plugin_008_keyBuffer);
@@ -197,15 +204,19 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
               log += F("Old Tag: ");
             }
             log += (unsigned long)Plugin_008_keyBuffer;
+            log += F(", 0x");
+            log += ull2String(Plugin_008_keyBuffer, 16);
+            log += F(", mask: 0x");
+            log += ull2String(keyMask, 16);
             log += F(" Bits: ");
             log += Plugin_008_bitCount;
             addLog(LOG_LEVEL_INFO, log);
           }
 
           // reset everything
-          Plugin_008_keyBuffer    = 0;
-          Plugin_008_bitCount     = 0;
-          Plugin_008_timeoutCount = 0;
+          Plugin_008_keyBuffer    = 0u;
+          Plugin_008_bitCount     = 0u;
+          Plugin_008_timeoutCount = 0u;
 
           if (new_key) { sendData(event); }
           uint32_t resetTimer = PCONFIG_LONG(1);
@@ -213,15 +224,15 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
           if (resetTimer < 250) { resetTimer = 250; }
           Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, event->Par1);
 
-          //   String info = "";
-          //   uint64_t invalue = 0x1234;
-          //   uint64_t outvalue = castHexAsDec(invalue);
-          //   info.reserve(40);
-          //   info += F("Test castHexAsDec(");
-          //   info += (double)invalue;
-          //   info += F(") => ");
-          //   info += (double)outvalue;
-          //   addLog(LOG_LEVEL_INFO, info);
+          // String   info     = "";
+          // uint64_t invalue  = 0x1234;
+          // uint64_t outvalue = castHexAsDec(invalue);
+          // info.reserve(40);
+          // info += F("Test castHexAsDec(");
+          // info += (double)invalue;
+          // info += F(") => ");
+          // info += (double)outvalue;
+          // addLog(LOG_LEVEL_INFO, info);
         }
       }
       break;
@@ -260,7 +271,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG_LONG(1) = getFormItemInt(F("p008_removaltimeout"));
 
       // uint64_t keyMask = 0LL;
-      // keyMask = (0x1 << (PCONFIG(0) - 2));
+      // keyMask = (static_cast<uint64_t>(0x1) << (PCONFIG(0) - 2));
       // keyMask--;
       // String log = F("P008: testing keyMask = 0x");
       // log += ull2String(keyMask, HEX);
