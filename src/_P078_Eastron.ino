@@ -217,7 +217,6 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        Plugin_078_init = true;
         if (Plugin_078_SoftSerial != NULL) {
           delete Plugin_078_SoftSerial;
           Plugin_078_SoftSerial=NULL;
@@ -233,9 +232,10 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           delete Plugin_078_SDM;
           Plugin_078_SDM=NULL;
         }
-        Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
+        Plugin_078_SDM = new (std::nothrow) SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
         if (Plugin_078_SDM != nullptr) {
           Plugin_078_SDM->begin();
+          Plugin_078_init = true;
           success = true;
         }
         break;

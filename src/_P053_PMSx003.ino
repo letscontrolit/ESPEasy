@@ -42,13 +42,13 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
-        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       Device[deviceCount].FormulaOption = true;
       Device[deviceCount].ValueCount    = 4;
-        # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       Device[deviceCount].FormulaOption = false;
       Device[deviceCount].ValueCount    = 3;
-        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       Device[deviceCount].SendDataOption   = true;
       Device[deviceCount].TimerOption      = true;
       Device[deviceCount].GlobalSyncOption = true;
@@ -166,27 +166,19 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       {
         addFormSubHeader(F("Device"));
-        #  ifdef PLUGIN_053_ENABLE_S_AND_T
-        int unitModelCount = 5;
-        #  else // ifdef PLUGIN_053_ENABLE_S_AND_T
-        int unitModelCount = 3;
-        #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
+        int unitModelCount                      = 5;
         const __FlashStringHelper *unitModels[] = {
           toString(PMSx003_type::PMS1003_5003_7003),
           toString(PMSx003_type::PMS2003_3003),
-          #  ifdef PLUGIN_053_ENABLE_S_AND_T
           toString(PMSx003_type::PMS5003_S),
           toString(PMSx003_type::PMS5003_T),
-          #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
           toString(PMSx003_type::PMS5003_ST)
         };
         const int unitModelOptions[] = {
           static_cast<int>(PMSx003_type::PMS1003_5003_7003),
           static_cast<int>(PMSx003_type::PMS2003_3003),
-          #  ifdef PLUGIN_053_ENABLE_S_AND_T
           static_cast<int>(PMSx003_type::PMS5003_S),
           static_cast<int>(PMSx003_type::PMS5003_T),
-          #  endif // ifdef PLUGIN_053_ENABLE_S_AND_T
           static_cast<int>(PMSx003_type::PMS5003_ST)
         };
         addFormSelector(F("Sensor model"), F("p053_model"), unitModelCount, unitModels, unitModelOptions, PLUGIN_053_SENSOR_MODEL_SELECTOR);
@@ -314,9 +306,9 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
 
       PMSx003_type Plugin_053_sensortype = PMSx003_type::PMS1003_5003_7003;
 
-        # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
       Plugin_053_sensortype = GET_PLUGIN_053_SENSOR_MODEL_SELECTOR;
-        # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+      # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
       initPluginTaskData(
         event->TaskIndex,
