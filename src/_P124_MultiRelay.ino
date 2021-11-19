@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2021-11-19 tonhuisman: Add protection for single initialization of relays (per reset/boot/powercycle)
  * 2021-11-18 tonhuisman: Implement settings,
  *                        Implement write commands:
  *                        multirelay,on,<channel> (channel 1..8, max. accepted as configured)
@@ -23,6 +24,7 @@
 
 # include "./src/PluginStructs/P124_data_struct.h"
 
+static uint32_t P124_InitializedRelays = 0u;
 
 boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -91,6 +93,11 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       String label;
 
       if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS)) {
+        addFormCheckBox(F("Apply initial state always"),
+                        getPluginCustomArgName(P124_FLAGS_INIT_ALWAYS),
+                        bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_ALWAYS));
+        addFormNote(F("Disabled: Applied once per restart, Enabled: Applied on every plugin start, like on Submit of this page"));
+
         for (int i = 0; i < P124_CONFIG_RELAY_COUNT; i++) {
           label  = F("Relay ");
           label += i + 1;
@@ -107,6 +114,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_CONFIG_RELAY_COUNT = getFormItemInt(F("plugin_124_relays"));
       uint32_t lSettings = 0u;
       bitWrite(lSettings, P124_FLAGS_INIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_INIT_RELAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_INIT_ALWAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_INIT_ALWAYS)) == 1);
 
       if (lSettings != 0) {
         for (int i = 0; i < P124_CONFIG_RELAY_COUNT; i++) {
@@ -135,9 +143,12 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         log += P124_data->getFirmwareVersion();
         addLog(LOG_LEVEL_INFO, log);
 
-        if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS)) {
+        if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS) &&
+            (!bitRead(P124_InitializedRelays, event->TaskIndex) ||
+             bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_ALWAYS))) {
           P124_data->channelCtrl(P124_CONFIG_FLAGS & 0xFF);            // Set relays state
           UserVar[event->BaseVarIndex] = P124_data->getChannelState(); // Get relays state
+          bitSet(P124_InitializedRelays, event->TaskIndex);            // Update initialization status
         }
         success = true;
       } else {

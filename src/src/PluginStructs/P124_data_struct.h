@@ -12,6 +12,7 @@
 # define P124_CONFIG_FLAGS        PCONFIG_LONG(0)
 
 # define P124_FLAGS_INIT_RELAYS    8 // 0..7 hold the on/off state of each relay
+# define P124_FLAGS_INIT_ALWAYS    9 // Apply relay initialization on every plugin restart
 
 struct P124_data_struct : public PluginTaskData_base {
 public:
