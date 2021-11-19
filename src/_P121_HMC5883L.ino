@@ -1,7 +1,5 @@
 
 #include "_Plugin_Helper.h"
-#ifdef PLUGIN_BUILD_DEV //at the very beginning
-
 #ifdef USES_P121
 
 // #######################################################################################################
@@ -102,7 +100,6 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
 
     if (nullptr != P121_data)
     {
-      P121_data->initialized = false; // Force re-init just in case the address changed.
       P121_data->begin();
       success = P121_data->initialized;
     }
@@ -155,4 +152,3 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
   return success;
 }
 #endif // ifdef USES_P121
-#endif //at the very end
