@@ -7,6 +7,8 @@
 
 /*
    History:
+   2021-11-19 tonhuisman: Fix casting bug after adding > 34 bit support
+                          Fix swapped GPIO's to show same/expected results as other Wiegand readers
    2021-08-02 tonhuisman: Add checkbos for 'Alternative decoding', swapping the receving of the bits, resulting
            in little-endian versus big-endian output. This is supposed to give the same output as the
            official Wiegand RFID scanner.
@@ -117,8 +119,8 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       pinMode(CONFIG_PIN1, INPUT_PULLUP);
       pinMode(CONFIG_PIN2, INPUT_PULLUP);
 
-      attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
-      attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
+      attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt2, FALLING);
+      attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt1, FALLING);
 
       success = true;
       break;
