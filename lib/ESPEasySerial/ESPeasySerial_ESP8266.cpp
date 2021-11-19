@@ -375,15 +375,27 @@ void ESPeasySerial::setDebugOutput(bool enable) {
 }
 
 bool ESPeasySerial::isTxEnabled(void) {
-  if (!isValid() || isSWserial() || isI2Cserial()) {
+  if (!isValid()) {
     return false;
+  }
+  if (isI2Cserial()) {
+    return true;
+  }
+  if (isSWserial()) {
+    return _transmitPin != -1;
   }
   return getHW()->isTxEnabled();
 }
 
 bool ESPeasySerial::isRxEnabled(void) {
-  if (!isValid() || isSWserial() || isI2Cserial()) {
+  if (!isValid()) {
     return false;
+  }
+  if (isI2Cserial()) {
+    return true;
+  }
+  if (isSWserial()) {
+    return _receivePin != -1;
   }
   return getHW()->isRxEnabled();
 }
