@@ -1,0 +1,27 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``gps,sleep``
+
+        ","
+        Send u-blox specific command to put the GPS in backup mode.
+        This turns off all parts of the GPS, except for the last known satellite trajectories.
+
+        Use this to get a faster fix, compared to turning off the power to the GPS.
+
+        In order to send a command to the GPS, the GPS RX pin must be connected.
+        
+        "
+        "
+        ``gps,wake``
+
+        ","
+        Send just any character to the GPS to wake it from backup mode (see ``gps,sleep``)
+
+        This is u-blox specific.
+
+        In order to send a command to the GPS, the GPS RX pin must be connected.
+        
+        "

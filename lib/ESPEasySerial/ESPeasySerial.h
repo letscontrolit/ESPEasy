@@ -302,8 +302,12 @@ public:
                           size_t   size) override;
 
   void          setDebugOutput(bool);
+#endif
+
   bool          isTxEnabled(void);
   bool          isRxEnabled(void);
+
+#if defined(ESP8266)
   bool          hasRxError(void);
 
   void          startDetectBaudrate();
