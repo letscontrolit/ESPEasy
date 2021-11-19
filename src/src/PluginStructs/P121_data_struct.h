@@ -9,7 +9,7 @@
 
 struct P121_data_struct : public PluginTaskData_base
 {
-  bool begin(bool initSettings = true);
+  bool begin();
 
   Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
 
