@@ -7,6 +7,9 @@
 
 /*
    History:
+   2021-11-20 tonhuisman: Add optional switching of GPIO pins, new default will be 'swapped' existing settings stay unaltered
+                          to ensure that existing codes keep working.
+                          Apply casting by 'ull' postfix instead of explicit 'static_cast<uint64_t>(0x1)' where possible
    2021-11-19 tonhuisman: Fix casting bug after adding > 34 bit support
                           Fix swapped GPIO's to show same/expected results as other Wiegand readers
    2021-08-02 tonhuisman: Add checkbos for 'Alternative decoding', swapping the receving of the bits, resulting
@@ -30,8 +33,8 @@
 void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
 void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
 
-volatile uint8_t Plugin_008_bitCount = 0u; // Count the number of bits received.
-uint64_t Plugin_008_keyBuffer        = 0u; // A 64-bit-long keyBuffer into which the number is stored.
+volatile uint8_t Plugin_008_bitCount = 0u;   // Count the number of bits received.
+uint64_t Plugin_008_keyBuffer        = 0ull; // A 64-bit-long keyBuffer into which the number is stored.
 uint8_t  Plugin_008_timeoutCount     = 0u;
 
 boolean Plugin_008_init = false;
@@ -108,6 +111,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(0)      = 26;  // Minimal nr. of bits
+      PCONFIG(4)      = 1;   // Use swapped by default, unswapped = backward compatible
       PCONFIG_LONG(1) = 500; // Default time-out 500 mSec
       break;
     }
@@ -119,8 +123,13 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       pinMode(CONFIG_PIN1, INPUT_PULLUP);
       pinMode(CONFIG_PIN2, INPUT_PULLUP);
 
-      attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt2, FALLING);
-      attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt1, FALLING);
+      if (PCONFIG(4) == 0) { // Keep 'old' setting for backward compatibility
+        attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt1, FALLING);
+        attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt2, FALLING);
+      } else {
+        attachInterrupt(CONFIG_PIN1, Plugin_008_interrupt2, FALLING);
+        attachInterrupt(CONFIG_PIN2, Plugin_008_interrupt1, FALLING);
+      }
 
       success = true;
       break;
@@ -147,7 +156,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       {
         if (Plugin_008_bitCount > 0)
         {
-          uint64_t keyMask = 0ULL;
+          uint64_t keyMask = 0ull;
 
           if ((Plugin_008_bitCount % 4 == 0) && ((Plugin_008_keyBuffer & 0xF) == 11))
           {
@@ -159,7 +168,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
             // read a tag
             Plugin_008_keyBuffer = Plugin_008_keyBuffer >> 1; // Strip leading and trailing parity bits from the keyBuffer
 
-            keyMask = (static_cast<uint64_t>(0x1) << (PCONFIG(0) - 2));    // Shift in 1 just past the number of remaining bits
+            keyMask = (0x1ull << (PCONFIG(0) - 2));           // Shift in 1 just past the number of remaining bits
             keyMask--;                                        // Decrement by 1 to get 0xFFFFFFFFFFFF...
             Plugin_008_keyBuffer &= keyMask;
           }
@@ -177,7 +186,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
               }
 
               // reset after ~5 sec
-              Plugin_008_keyBuffer    = 0u;
+              Plugin_008_keyBuffer    = 0ull;
               Plugin_008_bitCount     = 0u;
               Plugin_008_timeoutCount = 0u;
             }
@@ -216,7 +225,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
           }
 
           // reset everything
-          Plugin_008_keyBuffer    = 0u;
+          Plugin_008_keyBuffer    = 0ull;
           Plugin_008_bitCount     = 0u;
           Plugin_008_timeoutCount = 0u;
 
@@ -241,6 +250,9 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormCheckBox(F("Enable backward compatibility mode"), F("p008_compatible"), PCONFIG(4) == 0);
+      addFormNote(F("Earlier versions of this plugin have used GPIO pins inverted, giving different Tag results."));
+
       addFormNumericBox(F("Wiegand Type (bits)"), F("p008_type"), PCONFIG(0), 26, 64);
       addUnit(F("26..64 bits"));
       addFormNote(F("Select the number of bits to be received, f.e. 26, 34, 37."));
@@ -269,11 +281,12 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(1)      = isFormItemChecked(F("p008_hexasdec")) ? 1 : 0;
       PCONFIG(2)      = isFormItemChecked(F("p008_autotagremoval")) ? 0 : 1; // Inverted logic!
       PCONFIG(3)      = isFormItemChecked(F("p008_sendreset")) ? 1 : 0;
+      PCONFIG(4)      = isFormItemChecked(F("p008_compatible")) ? 0 : 1;     // Inverted logic!
       PCONFIG_LONG(0) = getFormItemInt(F("p008_removalvalue"));
       PCONFIG_LONG(1) = getFormItemInt(F("p008_removaltimeout"));
 
       // uint64_t keyMask = 0LL;
-      // keyMask = (static_cast<uint64_t>(0x1) << (PCONFIG(0) - 2));
+      // keyMask = (0x1ull << (PCONFIG(0) - 2));
       // keyMask--;
       // String log = F("P008: testing keyMask = 0x");
       // log += ull2String(keyMask, HEX);
