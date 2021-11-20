@@ -83,7 +83,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     {
       html_TR_TD();
       html_TD();
-      addHtml(F("<span style=\"color:red\">Tools->Advanced->I2C ClockStretchLimit should be set to 20000</span>"));
+      addHtml(F("<span style=\"color:red\">Tools->Advanced->I2C ClockStretchLimit should be set in range 20 to 150 msec.</span>"));
       break;
     }
 
