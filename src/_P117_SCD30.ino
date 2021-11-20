@@ -27,7 +27,7 @@
 # define PLUGIN_VALUENAME3_117 "Temperature"
 # define PLUGIN_VALUENAME4_117 "CO2raw"
 
-# include "..\src\src\PluginStructs\P117_data_struct.h"
+# include "./src/PluginStructs/P117_data_struct.h"
 
 boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
 {
