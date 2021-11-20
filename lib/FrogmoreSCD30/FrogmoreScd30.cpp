@@ -531,7 +531,7 @@ int FrogmoreScd30::isDataAvailable(bool *pIsAvailable)
   return error;
 }
 
-int FrogmoreScd30::readMeasurement(
+uint32_t FrogmoreScd30::readMeasurement(
   uint16_t *pCO2_ppm,
   uint16_t *pCO2EAvg_ppm,
   float    *pTemperature,

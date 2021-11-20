@@ -12,7 +12,7 @@ P117_data_struct::P117_data_struct(uint16_t altitude, float temperatureOffset)
 // **************************************************************************/
 // Initialize sensor and read data from SCD30
 // **************************************************************************/
-int P117_data_struct::read_sensor(uint16_t *scd30_CO2, uint16_t *scd30_CO2EAvg, float *scd30_Temp, float *scd30_Humid) {
+uint32_t P117_data_struct::read_sensor(uint16_t *scd30_CO2, uint16_t *scd30_CO2EAvg, float *scd30_Temp, float *scd30_Humid) {
   if (!initialised) {
     initialised = init_sensor(); // Check id device is present
   }

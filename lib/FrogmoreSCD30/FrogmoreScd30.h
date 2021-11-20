@@ -55,33 +55,33 @@ public:
 
   //   int  clearI2CBus(void); // this is a HARD reset of the IC2 bus to restore communication, it will disrupt the bus
 
-  int getAltitudeCompensation(uint16_t *pHeight_meter);
-  int getAmbientPressure(uint16_t *pAirPressure_mbar);
-  int getCalibrationType(uint16_t *pIsAuto);
-  int getFirmwareVersion(uint8_t *pMajor,
-                         uint8_t *pMinor);
-  int getForcedRecalibrationFactor(uint16_t *pCo2_ppm);
-  int getMeasurementInterval(uint16_t *pTime_sec);
-  int getTemperatureOffset(float *pOffset_degC);
-  int getTemperatureOffset(uint16_t *pOffset_centiDegC);
+  int      getAltitudeCompensation(uint16_t *pHeight_meter);
+  int      getAmbientPressure(uint16_t *pAirPressure_mbar);
+  int      getCalibrationType(uint16_t *pIsAuto);
+  int      getFirmwareVersion(uint8_t *pMajor,
+                              uint8_t *pMinor);
+  int      getForcedRecalibrationFactor(uint16_t *pCo2_ppm);
+  int      getMeasurementInterval(uint16_t *pTime_sec);
+  int      getTemperatureOffset(float *pOffset_degC);
+  int      getTemperatureOffset(uint16_t *pOffset_centiDegC);
 
-  int setAltitudeCompensation(uint16_t height_meter);
-  int setAmbientPressure(uint16_t airPressure_mbar);
-  int setAutoSelfCalibration(void);
-  int setCalibrationType(bool isAuto);
-  int setForcedRecalibrationFactor(uint16_t co2_ppm);
-  int setManualCalibration(void);
-  int setMeasurementInterval(uint16_t time_sec);
-  int setTemperatureOffset(float offset_degC);
-  int setTemperatureOffset(uint16_t offset_centiDegC);
+  int      setAltitudeCompensation(uint16_t height_meter);
+  int      setAmbientPressure(uint16_t airPressure_mbar);
+  int      setAutoSelfCalibration(void);
+  int      setCalibrationType(bool isAuto);
+  int      setForcedRecalibrationFactor(uint16_t co2_ppm);
+  int      setManualCalibration(void);
+  int      setMeasurementInterval(uint16_t time_sec);
+  int      setTemperatureOffset(float offset_degC);
+  int      setTemperatureOffset(uint16_t offset_centiDegC);
 
-  int beginMeasuring(void);
-  int beginMeasuring(uint16_t airPressure_mbar); // also sets ambient pressure offset in mbar/hPascal
-  int isDataAvailable(bool *pIsAvailable);
-  int readMeasurement(uint16_t *pCO2_ppm,
-                      uint16_t *pCO2EAvg_ppm,
-                      float    *pTemperature,
-                      float    *pHumidity);
+  int      beginMeasuring(void);
+  int      beginMeasuring(uint16_t airPressure_mbar); // also sets ambient pressure offset in mbar/hPascal
+  int      isDataAvailable(bool *pIsAvailable);
+  uint32_t readMeasurement(uint16_t *pCO2_ppm,
+                           uint16_t *pCO2EAvg_ppm,
+                           float    *pTemperature,
+                           float    *pHumidity);
   int stopMeasuring(void);
 
 private:

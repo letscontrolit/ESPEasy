@@ -13,10 +13,10 @@ public:
 
   P117_data_struct() = delete;
 
-  int read_sensor(uint16_t *scd30_CO2,
-                  uint16_t *scd30_CO2EAvg,
-                  float    *scd30_Temp,
-                  float    *scd30_Humid);
+  uint32_t read_sensor(uint16_t *scd30_CO2,
+                       uint16_t *scd30_CO2EAvg,
+                       float    *scd30_Temp,
+                       float    *scd30_Humid);
   bool softReset();
   void getCalibrationType(uint16_t *abc) {
     if (initialised) {
