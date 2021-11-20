@@ -1252,19 +1252,36 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
   return result;
 }
 
+const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
+                                                        AdaGFXColorDepth colorDepth,
+                                                        bool             blackIsEmpty);
+
 /*****************************************************************************************
  * Convert an RGB565 color (number) to it's name or the #rgb565 hex string, based on depth
  ****************************************************************************************/
 String AdaGFXcolorToString(uint16_t         color,
                            AdaGFXColorDepth colorDepth,
                            bool             blackIsEmpty) {
+  String result = AdaGFXcolorToString_internal(color, colorDepth, blackIsEmpty);
+
+  if (result.equals(F("*"))) {
+    result  = '#';
+    result += String(color, HEX);
+    result.toUpperCase();
+  }
+  return result;
+}
+
+const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
+                                                        AdaGFXColorDepth colorDepth,
+                                                        bool             blackIsEmpty) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome:
     case AdaGFXColorDepth::BlackWhiteRed:
     case AdaGFXColorDepth::BlackWhite2Greyscales:
     {
       switch (color) {
-        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK): return blackIsEmpty ? EMPTY_STRING : F("black");
+        case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK): return blackIsEmpty ? F("") : F("black");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE): return F("white");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE): return F("inverse");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED): return F("red");
@@ -1279,7 +1296,7 @@ String AdaGFXcolorToString(uint16_t         color,
     case AdaGFXColorDepth::SevenColor:
     {
       switch (color) {
-        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return blackIsEmpty ? EMPTY_STRING : F("black");
+        case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return blackIsEmpty ? F("") : F("black");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE): return F("white");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN): return F("green");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE): return F("blue");
@@ -1297,7 +1314,7 @@ String AdaGFXcolorToString(uint16_t         color,
     case AdaGFXColorDepth::FullColor:
     {
       switch (color) {
-        case ADAGFX_BLACK:  return blackIsEmpty ? EMPTY_STRING : F("black");
+        case ADAGFX_BLACK:  return blackIsEmpty ? F("") : F("black");
         case ADAGFX_NAVY: return F("navy");
         case ADAGFX_DARKGREEN: return F("darkgreen");
         case ADAGFX_DARKCYAN: return F("darkcyan");
@@ -1322,11 +1339,7 @@ String AdaGFXcolorToString(uint16_t         color,
       break;
     }
   }
-  String result;
-  result  = '#';
-  result += String(color, HEX);
-  result.toUpperCase();
-  return result;
+  return F("*");
 }
 
 # if ADAGFX_SUPPORT_7COLOR
