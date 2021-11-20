@@ -62,3 +62,16 @@
 .. |P115_maintainer| replace:: `TD-er`
 .. |P115_compileinfo| replace:: `.`
 .. |P115_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library`
+
+.. |P117_name| replace:: :cyan:`SCD30`
+.. |P117_type| replace:: :cyan:`Gases`
+.. |P117_typename| replace:: :cyan:`Gases - SCD30 CO2, Humidity, Temperature`
+.. |P117_porttype| replace:: `.`
+.. |P117_status| replace:: :yellow:`TESTING D`
+.. |P117_github| replace:: _P117_SCD30.ino
+.. _P117_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P117_SCD30.ino
+.. |P117_usedby| replace:: `.`
+.. |P117_shortinfo| replace:: `SCD30 CO2 sensor`
+.. |P117_maintainer| replace:: `tonhuisman`
+.. |P117_compileinfo| replace:: `.`
+.. |P117_usedlibraries| replace:: `https://github.com/Frogmore42/Sonoff-Tasmota/tree/development/lib/FrogmoreScd30 (corrected local copy)`
