@@ -9,15 +9,21 @@
 // # define P124_DEBUG_LOG // Enable for some (extra) logging
 
 # define P124_CONFIG_RELAY_COUNT  PCONFIG(0)
+# define P124_CONFIG_I2C_ADDRESS  PCONFIG(7) // As P0 is already in use, pick the last of the range
 # define P124_CONFIG_FLAGS        PCONFIG_LONG(0)
 
-# define P124_FLAGS_INIT_RELAYS    8 // 0..7 hold the on/off state of each relay
-# define P124_FLAGS_INIT_ALWAYS    9 // Apply relay initialization on every plugin restart
+# define P124_FLAGS_INIT_OFFSET   0          // 0..7 hold the on/off state of each relay
+# define P124_FLAGS_INIT_RELAYS   8          // Initialize relays at startup
+# define P124_FLAGS_INIT_ALWAYS   9          // Apply relay initialization on every plugin restart
+# define P124_FLAGS_EXIT_RELAYS   10         // Initialize relays when the plugin is disabled
+# define P124_FLAGS_EXIT_OFFSET   16         // 16..23 hold the on/off exit-state of each relay
 
 struct P124_data_struct : public PluginTaskData_base {
 public:
 
-  P124_data_struct(uint8_t relayCount);
+  P124_data_struct(int8_t  i2c_address,
+                   uint8_t relayCount,
+                   bool    changeAddress = false);
 
   P124_data_struct() = delete;
   ~P124_data_struct();
@@ -40,6 +46,7 @@ private:
 
   Multi_Channel_Relay *relay = nullptr;
 
+  int8_t  _i2c_address;
   uint8_t _relayCount;
 };
 #endif // ifdef USES_P124
