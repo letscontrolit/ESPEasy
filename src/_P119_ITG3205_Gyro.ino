@@ -14,6 +14,7 @@
 
 /** Changelog:
  *
+ * 2021-11-22, tonhuisman: Moved from DEVELOPMENT to TESTING 'status'
  * 2021-10-28, tonhuisman: Tested reading (chip) temperature measurement, but it isn't useful, so removed again.
  * 2021-10-26, tonhuisman: Add averaging and frequency features
  * 2021-10-24, tonhuisman: Initial plugin created from template, using ITG3205 library https://github.com/ikiselev/ITG3205
@@ -25,7 +26,7 @@
 
 # define PLUGIN_119
 # define PLUGIN_ID_119          119 // plugin id
-# define PLUGIN_NAME_119        "Gyro - ITG3205 [DEVELOPMENT]"
+# define PLUGIN_NAME_119        "Gyro - ITG3205 [TESTING]"
 # define PLUGIN_VALUENAME1_119  "X"
 # define PLUGIN_VALUENAME2_119  "Y"
 # define PLUGIN_VALUENAME3_119  "Z"

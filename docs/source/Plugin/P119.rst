@@ -80,7 +80,7 @@ Change log
   ...
 
   |added|
-  Initial version.
+  2021-10-28 Initial version.
 
 
 
