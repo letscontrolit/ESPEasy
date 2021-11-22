@@ -96,9 +96,10 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         cmd += topicSplit[6].toInt(); // Par1
         cmd += ',';
 
-        if ((event->String2 == F("false")) || (event->String2 == F("true")))
+        if ((event->String2.equalsIgnoreCase(F("false"))) || 
+            (event->String2.equalsIgnoreCase(F("true"))))
         {
-          cmd += (event->String2 == F("true")) ? '1' : '0'; // Par2
+          cmd += (event->String2.equalsIgnoreCase(F("true"))) ? '1' : '0'; // Par2
         }
         else
         {

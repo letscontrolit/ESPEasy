@@ -85,7 +85,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         const int lastindex        = event->String1.lastIndexOf('/');
         const String lastPartTopic = event->String1.substring(lastindex + 1);
 
-        if (lastPartTopic == F("cmd")) {
+        if (lastPartTopic.equals(F("cmd"))) {
           // Example:
           // topic: ESP_Easy/Bathroom_pir_env/cmd
           // data: gpio,14,0
@@ -120,14 +120,14 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
         if (validTopic) {
           // in case of event, store to buffer and return...
-          String command = parseString(cmd, 1);
+          const String command = parseString(cmd, 1);
 
-          if ((command == F("event")) || (command == F("asyncevent"))) {
+          if ((command.equals(F("event"))) || (command.equals(F("asyncevent")))) {
             if (Settings.UseRules) {
               eventQueue.addMove(parseStringToEnd(cmd, 2));
             }
           } else {
-            ExecuteCommand(event->TaskIndex, EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str(), true, true, true);
+            ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
           }
         }
       }
