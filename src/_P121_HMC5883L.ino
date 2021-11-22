@@ -100,7 +100,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
 
     if (nullptr != P121_data)
     {
-      P121_data->begin();
+      P121_data->begin(event->TaskIndex);
       success = P121_data->initialized;
     }
     break;
@@ -112,7 +112,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
 
     if (nullptr != P121_data)
     {
-      P121_data->begin();
+      P121_data->begin(event->TaskIndex);
 
       if (!P121_data->initialized)
       {
