@@ -1,0 +1,12 @@
+.. |P120_name| replace:: :cyan:`ADXL345`
+.. |P120_type| replace:: :cyan:`Acceleration`
+.. |P120_typename| replace:: :cyan:`Acceleration - ADXL345 (I2C)`
+.. |P120_porttype| replace:: `.`
+.. |P120_status| replace:: :yellow:`TESTING D`
+.. |P120_github| replace:: P120_ADXL345.ino
+.. _P120_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P120_ADXL345.ino
+.. |P120_usedby| replace:: `.`
+.. |P120_shortinfo| replace:: `Acceleration X/Y/X sensor`
+.. |P120_maintainer| replace:: `tonhuisman`
+.. |P120_compileinfo| replace:: `.`
+.. |P120_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`

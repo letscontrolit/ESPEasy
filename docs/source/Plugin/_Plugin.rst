@@ -140,6 +140,7 @@ There are different released versions of ESP Easy:
    ":ref:`P113_page`","|P113_status|","P113"
    ":ref:`P114_page`","|P114_status|","P114"
    ":ref:`P115_page`","|P115_status|","P115"
+   ":ref:`P120_page`","|P120_status|","P120"
 
 
 Internal GPIO handling
@@ -153,6 +154,11 @@ Analog input
 ------------
 
 Plugins: |Plugin_Analog_input|
+
+Acceleration
+------------
+
+Plugins: |Plugin_Acceleration|
 
 Communication
 -------------
