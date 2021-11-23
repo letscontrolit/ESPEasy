@@ -12,6 +12,7 @@
 
 /** Changelog:
  *
+ * 2021-11-22, tonhuisman: Move from DEVELOPMENT to TESTING
  * 2021-11-02, tonhuisman: Add Axis offsets for calibration
  * 2021-11-01, tonhuisman: Add event processing (pseudo-interrupts), improve settings
  * 2021-10-31, tonhuisman: Add Single/Double-tap and Freefall detection
@@ -27,7 +28,7 @@
 
 # define PLUGIN_120
 # define PLUGIN_ID_120          120 // plugin id
-# define PLUGIN_NAME_120        "Accelerometer - ADXL345 (I2C) [DEVELOPMENT]"
+# define PLUGIN_NAME_120        "Accelerometer - ADXL345 (I2C) [TESTING]"
 # define PLUGIN_VALUENAME1_120  "X"
 # define PLUGIN_VALUENAME2_120  "Y"
 # define PLUGIN_VALUENAME3_120  "Z"
@@ -105,6 +106,12 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       set8BitToUL(flags, P120_FLAGS3_FREEFALL_TRESHOLD, P120_DEFAULT_FREEFALL_TRESHOLD);
       set8BitToUL(flags, P120_FLAGS3_FREEFALL_DURATION, P120_DEFAULT_FREEFALL_DURATION);
       P120_CONFIG_FLAGS3 = flags;
+
+      flags = 0ul;
+      set8BitToUL(flags, P120_FLAGS4_OFFSET_X, 0 + 0x80); // Offset 0 by default
+      set8BitToUL(flags, P120_FLAGS4_OFFSET_Y, 0 + 0x80);
+      set8BitToUL(flags, P120_FLAGS4_OFFSET_Z, 0 + 0x80);
+      P120_CONFIG_FLAGS4 = flags;
 
       // No decimals plausible, as the outputs from the sensor are of type int
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
@@ -200,13 +207,13 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
         addFormSubHeader(F("Axis calibration"));
         addFormNumericBox(F("X-Axis offset"), F("p120_offset_x"),
                           get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_X) - 0x80, -127, 127);
-        addUnit(F("-127..127"));
+        addUnit(F("-127..127 * 15.6 mg"));
         addFormNumericBox(F("Y-Axis offset"), F("p120_offset_y"),
                           get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_Y) - 0x80, -127, 127);
-        addUnit(F("-127..127"));
+        addUnit(F("-127..127 * 15.6 mg"));
         addFormNumericBox(F("Z-Axis offset"), F("p120_offset_z"),
                           get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_Z) - 0x80, -127, 127);
-        addUnit(F("-127..127"));
+        addUnit(F("-127..127 * 15.6 mg"));
       }
 
       // Data retrieval options
