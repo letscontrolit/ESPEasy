@@ -12,6 +12,7 @@
 //			svollebregt, 11-04-2020 - Minor changes to make code compatible with latest mega 20200410, removed SYNC1 option for now;
 //			better to change this value in the Itho-lib code and compile it yourself
 //			svollebreggt, 13-2-2021 - Now uses rewirtten library made by arjenhiemstra: https://github.com/arjenhiemstra/IthoEcoFanRFT
+//			svollebregt, 11-2021 - Code improvements
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -50,7 +51,7 @@
 // mosquitto_pub -t /Fan/cmd -m 'state 3'
 
 
-// This code needs the library made by 'supersjimmie': https://github.com/supersjimmie/IthoEcoFanRFT/tree/master/Master/Itho
+// This code needs the library made by 'arjenhiemstra': https://github.com/arjenhiemstra/IthoEcoFanRFT
 // A CC1101 868Mhz transmitter is needed
 // See https://gathering.tweakers.net/forum/list_messages/1690945 for more information
 // code/idea was inspired by first release of code from 'Thinkpad'
@@ -93,7 +94,7 @@ volatile bool PLUGIN_118_Int = false;
 #define PLUGIN_VALUENAME2_118 "Timer"
 #define PLUGIN_VALUENAME3_118 "LastIDindex"
 
-// Timer values for hardware timer in Fan
+// Timer values for hardware timer in Fan in seconds
 #define PLUGIN_118_Time1      10*60
 #define PLUGIN_118_Time2      20*60
 #define PLUGIN_118_Time3      30*60
@@ -142,7 +143,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 			break;
     }
 
-	case PLUGIN_SET_DEFAULTS:
+	case PLUGIN_SET_DEFAULTS: //Set defaults address to the one used in old versions of the library for backwards compatability
 		{
     	PCONFIG(0) = 1;
 			PCONFIG(1) = 10;
@@ -248,13 +249,13 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 		String cmd = parseString(tmpString, 1);
 			if (cmd.equalsIgnoreCase(F("STATE")))
 			{
-				noInterrupts();
+				//noInterrupts();
 				switch(event->Par1) {
 					case 1111: //Join command
 					{
 						PLUGIN_118_rf.sendCommand(IthoJoin);
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'join' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("join"));
 						success = true;
 						break;
 					}
@@ -262,7 +263,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 					{
 						PLUGIN_118_rf.sendCommand(IthoLeave);
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'leave' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("leave"));
 						success = true;
 						break;
 					}
@@ -273,7 +274,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'standby' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("standby"));
 						success = true;
 						break;
 				 	}
@@ -284,7 +285,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'low speed' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("low speed"));
 						success = true;
 						break;
 					}
@@ -295,7 +296,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'medium speed' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("medium speed"));
 						success = true;
 						break;
 					}
@@ -306,7 +307,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'high speed' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("high speed"));
 						success = true;
 						break;
 					}
@@ -317,7 +318,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'full speed' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("full speed"));
 						success = true;
 						break;
 					}
@@ -328,7 +329,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=PLUGIN_118_Time1;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'timer 1' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("timer 1"));
 						success = true;
 						break;
 					}
@@ -339,7 +340,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_Timer=PLUGIN_118_Time2;
 						PLUGIN_118_LastIDindex = 0;
 						PLUGIN_118_rf.initReceive();
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'timer 2' to Itho unit"));
+						PLUGIN_118_PluginWriteLog(F("timer 2"));
 						success = true;
 						break;
 					}
@@ -349,17 +350,18 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 						PLUGIN_118_State=33;
 						PLUGIN_118_Timer=PLUGIN_118_Time3;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_PluginWriteLog(F("Sent command for 'timer 3' to Itho unit"));
+						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_PluginWriteLog(F("timer 3"));
 						success = true;
 						break;
 					}
 					default:
 					{
-						PLUGIN_118_PluginWriteLog(F("Invalid command parameter"));
+						PLUGIN_118_PluginWriteLog(F("INVALID"));
 						success = true;
 					}
 				}
-				interrupts();
+				//interrupts();
 			}
 	  break;
 	}
@@ -370,11 +372,11 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
     addFormTextBox(F("Unit ID remote 1"), F("PLUGIN_118_ID1"), PLUGIN_118_ExtraSettings.ID1, 8);
     addFormTextBox(F("Unit ID remote 2"), F("PLUGIN_118_ID2"), PLUGIN_118_ExtraSettings.ID2, 8);
     addFormTextBox(F("Unit ID remote 3"), F("PLUGIN_118_ID3"), PLUGIN_118_ExtraSettings.ID3, 8);
-		addFormCheckBox(F("Enable RF receive log"), F("p118_log"), PCONFIG(0));
+		addFormCheckBox(F("Enable RF receive log"), F("p118_log"), PCONFIG(0)); //Makes RF logging optional to reduce clutter in the lof file in RF noisy environments
 		addFormNumericBox(F("Device ID byte 1"), F("p118_deviceid1"), PCONFIG(1), 0, 255);
 		addFormNumericBox(F("Device ID byte 2"), F("p118_deviceid2"), PCONFIG(2), 0, 255);
 		addFormNumericBox(F("Device ID byte 3"), F("p118_deviceid3"), PCONFIG(3), 0, 255);
-		addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). Defaults to 10,87,81 which corresponds to the old Itho code"));
+		addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). Defaults to 10,87,81 which corresponds to the old Itho library"));
     success = true;
     break;
   }
@@ -395,7 +397,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
     break;
   }
 	}
-return success;
+	return success;
 }
 
 ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
@@ -406,13 +408,13 @@ ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
 
 void PLUGIN_118_ITHOcheck()
 {
-	noInterrupts();
-	if(PLUGIN_118_Log){addLog(LOG_LEVEL_DEBUG, "RF signal received\n");}
+	if(PLUGIN_118_Log){addLog(LOG_LEVEL_DEBUG, "RF signal received");} //All logs statements contain if-statement to disable logging to reduce log clutter when many RF sources are present
 	if(PLUGIN_118_rf.checkForNewPacket())
 	{
+		noInterrupts(); //Do not disturb while fetching received command from buffer
 		IthoCommand cmd = PLUGIN_118_rf.getLastCommand();
 		String Id = PLUGIN_118_rf.getLastIDstr();
-
+		interrupts();
 		//Move check here to prevent function calling within ISR
 		byte index = 0;
 		if (Id == PLUGIN_118_ExtraSettings.ID1){
@@ -427,91 +429,89 @@ void PLUGIN_118_ITHOcheck()
 
 		//int index = PLUGIN_118_RFRemoteIndex(Id);
 		// IF id is know index should be >0
+		String log2 = "";
 		if (index>0)
 		{
 			if(PLUGIN_118_Log){
-				String log = F("Command received from remote-ID: ");
-			  log += Id;
-			  addLog(LOG_LEVEL_DEBUG, log);
+				log2 += F("Command received from remote-ID: ");
+			  log2 += Id;
+				log2 += F(", command: ");
+			  //addLog(LOG_LEVEL_DEBUG, log);
 			}
-			String log2 = "";
-			if(PLUGIN_118_Log){log2 += F("Command received=");}
 			switch (cmd)
 			{
 			 case IthoUnknown:
-				if(PLUGIN_118_Log){log2 += F("unknown\n");}
+				if(PLUGIN_118_Log){log2 += F("unknown");}
 				break;
 			 case IthoStandby:
 			 case DucoStandby:
-				if(PLUGIN_118_Log){log2 += F("standby\n");}
+				if(PLUGIN_118_Log){log2 += F("standby");}
 				PLUGIN_118_State = 0;
 				PLUGIN_118_Timer = 0;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoLow:
 			 case DucoLow:
-			  if(PLUGIN_118_Log){log2 += F("low\n");}
+			  if(PLUGIN_118_Log){log2 += F("low");}
 				PLUGIN_118_State = 1;
 				PLUGIN_118_Timer = 0;
 				PLUGIN_118_LastIDindex = index;
 			 break;
 			 case IthoMedium:
  			 case DucoMedium:
-				if(PLUGIN_118_Log){log2 += F("medium\n");}
+				if(PLUGIN_118_Log){log2 += F("medium");}
 				PLUGIN_118_State = 2;
 				PLUGIN_118_Timer = 0;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoHigh:
 			 case DucoHigh:
-				if(PLUGIN_118_Log){log2 += F("high\n");}
+				if(PLUGIN_118_Log){log2 += F("high");}
 				PLUGIN_118_State = 3;
 				PLUGIN_118_Timer = 0;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoFull:
-				if(PLUGIN_118_Log){log2 += F("full\n");}
+				if(PLUGIN_118_Log){log2 += F("full");}
 				PLUGIN_118_State = 4;
 				PLUGIN_118_Timer = 0;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoTimer1:
-				if(PLUGIN_118_Log){log2 += +F("timer1\n");}
+				if(PLUGIN_118_Log){log2 += +F("timer1");}
 				PLUGIN_118_State = 13;
 				PLUGIN_118_Timer = PLUGIN_118_Time1;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoTimer2:
-				if(PLUGIN_118_Log){log2 += F("timer2\n");}
+				if(PLUGIN_118_Log){log2 += F("timer2");}
 				PLUGIN_118_State = 23;
 				PLUGIN_118_Timer = PLUGIN_118_Time2;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoTimer3:
-				if(PLUGIN_118_Log){log2 += F("timer3\n");}
+				if(PLUGIN_118_Log){log2 += F("timer3");}
 				PLUGIN_118_State = 33;
 				PLUGIN_118_Timer = PLUGIN_118_Time3;
 				PLUGIN_118_LastIDindex = index;
 				break;
 			 case IthoJoin:
-				if(PLUGIN_118_Log){log2 += F("join\n");}
+				if(PLUGIN_118_Log){log2 += F("join");}
 				break;
 			 case IthoLeave:
-				if(PLUGIN_118_Log){log2 += F("leave\n");}
+				if(PLUGIN_118_Log){log2 += F("leave");}
 				break;
 			}
-			if(PLUGIN_118_Log){addLog(LOG_LEVEL_DEBUG, log2);}
 		}
 		else {
 			if(PLUGIN_118_Log){
-				String log = F("Device-ID:");
-				log += Id;
-				log += F(" IGNORED");
-				addLog(LOG_LEVEL_DEBUG, log);
+				log2 += F("Device-ID: ");
+				log2 += Id;
+				log2 += F(" IGNORED");
 			}
 		}
+		if(PLUGIN_118_Log){addLog(LOG_LEVEL_DEBUG, log2);}
 	}
-  interrupts();
 }
 
 void PLUGIN_118_Publishdata(struct EventStruct *event)
@@ -531,8 +531,10 @@ void PLUGIN_118_Publishdata(struct EventStruct *event)
 		addLog(LOG_LEVEL_DEBUG, log);
 }
 
-void PLUGIN_118_PluginWriteLog(String log)
+void PLUGIN_118_PluginWriteLog(String command)
 {
+	String log = F("Send Itho command for: ");
+	log += command;
 	addLog(LOG_LEVEL_INFO, log);
 	printWebString += log;
 }

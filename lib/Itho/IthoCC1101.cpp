@@ -373,6 +373,7 @@ bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]
 
 void IthoCC1101::sendCommand(IthoCommand command)
 {
+  noInterrupts(); //Moved from plugin here to reduce blocking code
   CC1101Packet outMessage;
   uint8_t maxTries = sendTries;
   uint8_t delaytime = 40;
@@ -411,8 +412,10 @@ void IthoCC1101::sendCommand(IthoCommand command)
     finishTransfer();
     delay(delaytime);
   }
+  interrupts(); //Moved from plugin here to reduce blocking code
   //initReceive(); SV - I call this from the ESPEasy plugin to prevent crashes
 }
+
 
 void IthoCC1101::createMessageStart(IthoPacket *itho, CC1101Packet *packet)
 {
