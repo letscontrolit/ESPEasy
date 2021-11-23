@@ -1137,6 +1137,7 @@ To create/register a plugin, you have to :
     #define USES_P094  // CUL Reader
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
+    #define USES_P120  // ADXL345
 #endif
 
 
