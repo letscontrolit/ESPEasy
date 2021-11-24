@@ -1,7 +1,7 @@
 Introduction
 ------------
 
-The Communication - TSOP4838 module can be used to receive IR remote control signals. 
+The Communication - IR Receive (TSOP4838) module can be used to receive IR remote control signals. 
 
 Connect a TSOP module, preferably a 38Khz one, preferably to GPIO with interrupt functionality.
 
@@ -24,7 +24,7 @@ Setup
 Task settings
 ~~~~~~~~~~~~~
 
-* **Device**: Communication - TSOP4838
+* **Device**: Communication - IR Receive (TSOP4838)
 * **Name**: Name of the task (example name **IR**).
 * **Enable**: Should the task be enabled or not
 
