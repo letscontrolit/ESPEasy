@@ -79,7 +79,7 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
   }
   case PLUGIN_WEBFORM_LOAD:
   {
-    addFormFloatNumberBox(F("DeclinationAngle"), F("plugin_121_HMC5883L_decl"), PCONFIG_FLOAT(0), -2.0f,2.0f ,2, 0.01f);
+    addFormFloatNumberBox(F("DeclinationAngle"), F("plugin_121_HMC5883L_decl"), PCONFIG_FLOAT(0), -2.0f,2.0f ,5, 0.00001f);
     addUnit(F("degree"));
     success = true;
     break;
