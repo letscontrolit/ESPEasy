@@ -22,21 +22,19 @@ bool P121_data_struct::begin(int taskid)
       #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG))
       {
-        addLog(LOG_LEVEL_DEBUG, F("------------------------------------"));
-        String log = F("Sensor:       ");
+        String log = F("HMC5883_U: Sensor:       ");
         log += F(sensor.name);
-        log += F("\nDriver Ver:   "); 
+        log += F(" Driver Ver:   "); 
         log += sensor.version;
-        log += F("\nUnique ID:    "); 
+        log += F(" Unique ID:    "); 
         log += sensor.sensor_id;
-        log += F("\nMax Value:    "); 
+        log += F(" Max Value:    "); 
         log += String(sensor.max_value);
-        log += F("\nMin Value:    ");
+        log += F(" Min Value:    ");
         log += String(sensor.min_value);
-        log += F("\nResolution:   "); 
+        log += F(" Resolution:   "); 
         log += String(sensor.resolution);
         addLog(LOG_LEVEL_DEBUG, log);
-        addLog(LOG_LEVEL_DEBUG, F("------------------------------------"));
       }
       #endif
     }
