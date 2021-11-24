@@ -1,0 +1,12 @@
+.. |P121_name| replace:: :cyan:`HCM5883L`
+.. |P121_type| replace:: :cyan:`Output`
+.. |P121_typename| replace:: :cyan:`Position - HMC5883L`
+.. |P121_porttype| replace:: `.`
+.. |P121_status| replace:: :yellow:`TESTING D`
+.. |P121_github| replace:: P121_HMC5883L.ino
+.. _P121_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P121_HMC5883L.ino
+.. |P121_usedby| replace:: `.`
+.. |P121_shortinfo| replace:: `Adafruit HMC5883L Breakout - Triple-Axis Magnetometer Compass Sensor`
+.. |P121_maintainer| replace:: `svn2208`
+.. |P121_compileinfo| replace:: `.`
+.. |P121_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_HMC5883_Unified (modified local copy)`
