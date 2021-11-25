@@ -349,6 +349,9 @@ String ControllerSettingsStruct::getCertificateFilename() const
     case TLS_types::TLS_CA_CERT:
       certFile += F(".cacert");
       break;
+    case TLS_types::TLS_FINGERPRINT:
+      certFile += F(".fp");
+      break;
   }
   
   return certFile;

@@ -1081,7 +1081,7 @@ String SaveCertificate(const String& fname, const String& certificate)
   return SaveToFile(fname.c_str(), 0, (const uint8_t *)certificate.c_str(), certificate.length() + 1);
 }
 
-String LoadCertificate(const String& fname, String& certificate)
+String LoadCertificate(const String& fname, String& certificate, bool cleanup)
 {
   bool changed = false;
   if (fileExists(fname)) {
@@ -1115,15 +1115,17 @@ String LoadCertificate(const String& fname, String& certificate)
     }
     f.close();
 
-    if (!cleanupCertificate(certificate, changed)) {
-      certificate.clear();
-      #ifndef BUILD_NO_DEBUG
-      log += F(" ERROR, Invalid certificate format");
-      #endif
-      addLog(LOG_LEVEL_ERROR, log);
-      return log;
-    } else if (changed) {
-      //return SaveCertificate(fname, certificate);
+    if (cleanup) {
+      if (!cleanupCertificate(certificate, changed)) {
+        certificate.clear();
+        #ifndef BUILD_NO_DEBUG
+        log += F(" ERROR, Invalid certificate format");
+        #endif
+        addLog(LOG_LEVEL_ERROR, log);
+        return log;
+      } else if (changed) {
+        //return SaveCertificate(fname, certificate);
+      }
     }
   }
 

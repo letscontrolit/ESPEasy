@@ -21,7 +21,8 @@ const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameter
     case ControllerSettingsStruct::CONTROLLER_HOSTNAME:                 return  F("Controller Hostname");    
     case ControllerSettingsStruct::CONTROLLER_IP:                       return  F("Controller IP");          
     case ControllerSettingsStruct::CONTROLLER_PORT:                     return  F("Controller Port");      
-    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:                 return  F("Use TLS");      
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:            return  F("Use TLS");
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT: return F("Store Fingerprint");
     case ControllerSettingsStruct::CONTROLLER_USER:                     return  F("Controller User");        
     case ControllerSettingsStruct::CONTROLLER_PASS:                     return  F("Controller Password");    
 
@@ -118,6 +119,26 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
   addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
+void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description) {
+  #ifdef USE_MQTT_TLS
+  const String certFile = ControllerSettings.getCertificateFilename();
+  if (!certFile.isEmpty())
+  {
+    const String certFile = ControllerSettings.getCertificateFilename();
+    String note = description;
+    note += F(" <tt>");
+    note += certFile;
+    note += F("</tt> ");
+    if (fileExists(certFile)) {
+      note += F("(File exists)");
+    } else {
+      note += F("(Not found)");
+    }
+    addFormNote(note);
+  }
+  #endif
+}
+
 void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType) {
   protocolIndex_t  ProtocolIndex  = getProtocolIndex_from_ControllerIndex(controllerindex);
   if (!validProtocolIndex(ProtocolIndex)) {
@@ -158,35 +179,33 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     {
       #ifdef USE_MQTT_TLS
       const int choice = static_cast<int>(ControllerSettings.TLStype());
-      #define NR_MQTT_TLS_TYPES 3
+      #define NR_MQTT_TLS_TYPES 4
       const __FlashStringHelper * options[NR_MQTT_TLS_TYPES] = {
        toString(TLS_types::NoTLS),
 //       toString(TLS_types::TLS_PSK),
        toString(TLS_types::TLS_CA_CERT),
+       toString(TLS_types::TLS_FINGERPRINT),
        toString(TLS_types::TLS_insecure)
       };
       const int indices[NR_MQTT_TLS_TYPES] = {
         static_cast<int>(TLS_types::NoTLS),
 //        static_cast<int>(TLS_types::TLS_PSK),
         static_cast<int>(TLS_types::TLS_CA_CERT),
+        static_cast<int>(TLS_types::TLS_FINGERPRINT),
         static_cast<int>(TLS_types::TLS_insecure)
       };
       addFormSelector(displayName, internalName, NR_MQTT_TLS_TYPES, options, indices, choice, true);
       #undef NR_MQTT_TLS_TYPES
-      const String certFile = ControllerSettings.getCertificateFilename();
-      if (!certFile.isEmpty())
-      {
-        const String certFile = ControllerSettings.getCertificateFilename();
-        String note = F("Certificate or PSK must be stored on the filesystem in <tt>");
-        note += certFile;
-        note += F("</tt> ");
-        if (fileExists(certFile)) {
-          note += F("(File exists)");
-        } else {
-          note += F("(Not found)");
-        }
-        addFormNote(note);
-      }
+      addCertificateFileNote(ControllerSettings, F("Certificate or PSK must be stored on the filesystem in"));
+      #endif
+      break;
+    }
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
+    {
+      #ifdef USE_MQTT_TLS
+      const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename());
+      addFormCheckBox(displayName, internalName, false, saveDisabled);
+      addCertificateFileNote(ControllerSettings, F("Store fingerprint in"));
       #endif
       break;
     }
@@ -355,6 +374,24 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       #endif
       break;
     }
+
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
+    {
+      #ifdef USE_MQTT_TLS
+      if (isFormItemChecked(internalName)) {
+        String fingerprint;
+        if (GetTLSfingerprint(fingerprint)) {
+          if (ControllerSettings.UseDNS) {
+            fingerprint += '\n';
+            fingerprint += ControllerSettings.getHost();
+          }
+          SaveCertificate(ControllerSettings.getCertificateFilename(), fingerprint);
+        }
+      }
+      #endif
+      break;
+    }
+
 
     case ControllerSettingsStruct::CONTROLLER_USER:
       setControllerUser(controllerindex, ControllerSettings, webArg(internalName));

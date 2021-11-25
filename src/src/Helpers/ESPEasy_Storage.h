@@ -177,7 +177,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
    The content will be stripped from unusable character like quotes, spaces etc.
  \*********************************************************************************************/
 String SaveCertificate(const String& fname, const String& certificate);
-String LoadCertificate(const String& fname, String& certificate);
+String LoadCertificate(const String& fname, String& certificate, bool cleanup = true);
 
 
 /********************************************************************************************\
