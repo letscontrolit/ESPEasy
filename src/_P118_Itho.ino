@@ -411,10 +411,9 @@ void PLUGIN_118_ITHOcheck()
 	if(PLUGIN_118_Log){addLog(LOG_LEVEL_DEBUG, "RF signal received");} //All logs statements contain if-statement to disable logging to reduce log clutter when many RF sources are present
 	if(PLUGIN_118_rf.checkForNewPacket())
 	{
-		noInterrupts(); //Do not disturb while fetching received command from buffer
 		IthoCommand cmd = PLUGIN_118_rf.getLastCommand();
 		String Id = PLUGIN_118_rf.getLastIDstr();
-		interrupts();
+
 		//Move check here to prevent function calling within ISR
 		byte index = 0;
 		if (Id == PLUGIN_118_ExtraSettings.ID1){

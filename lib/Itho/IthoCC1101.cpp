@@ -1,10 +1,10 @@
 /*
    Author: Klusjesman, supersjimmie, modified and reworked by arjenhiemstra
 */
-#define DEBUG 0
+//#define DEBUG 0
 
-#define BYTE_TO_BINARY_PATTERN "%c,%c,%c,%c,%c,%c,%c,%c,"
-#define BYTE_TO_BINARY(byte)  \
+//#define BYTE_TO_BINARY_PATTERN "%c,%c,%c,%c,%c,%c,%c,%c,"
+/*#define BYTE_TO_BINARY(byte)  \
   (byte & 0x80 ? '1' : '0'), \
   (byte & 0x40 ? '1' : '0'), \
   (byte & 0x20 ? '1' : '0'), \
@@ -12,7 +12,7 @@
   (byte & 0x08 ? '1' : '0'), \
   (byte & 0x04 ? '1' : '0'), \
   (byte & 0x02 ? '1' : '0'), \
-  (byte & 0x01 ? '1' : '0')
+  (byte & 0x01 ? '1' : '0')*/
 
 #include "IthoCC1101.h"
 #include <string.h>
@@ -373,7 +373,6 @@ bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]
 
 void IthoCC1101::sendCommand(IthoCommand command)
 {
-  noInterrupts(); //Moved from plugin here to reduce blocking code
   CC1101Packet outMessage;
   uint8_t maxTries = sendTries;
   uint8_t delaytime = 40;
@@ -412,7 +411,6 @@ void IthoCC1101::sendCommand(IthoCommand command)
     finishTransfer();
     delay(delaytime);
   }
-  interrupts(); //Moved from plugin here to reduce blocking code
   //initReceive(); SV - I call this from the ESPEasy plugin to prevent crashes
 }
 
