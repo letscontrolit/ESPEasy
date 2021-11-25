@@ -19,10 +19,11 @@
 #include "src/PluginStructs/P121_data_struct.h"
 #include <Adafruit_Sensor.h>
 #include <Adafruit_HMC5883_U.h>
+#include <math.h>
 
 #define PLUGIN_121
 #define PLUGIN_ID_121 121
-#define PLUGIN_NAME_121 "Environment - HCM5883L"
+#define PLUGIN_NAME_121 "Position - HCM5883L"
 #define PLUGIN_VALUENAME1_121 "x"
 #define PLUGIN_VALUENAME2_121 "y"
 #define PLUGIN_VALUENAME3_121 "z"
@@ -79,8 +80,8 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String &string)
   }
   case PLUGIN_WEBFORM_LOAD:
   {
-    addFormFloatNumberBox(F("DeclinationAngle"), F("plugin_121_HMC5883L_decl"), PCONFIG_FLOAT(0), -2.0f,2.0f ,2, 0.01f);
-    PCONFIG_FLOAT(1) = PCONFIG_FLOAT(0) * pi / 180.0; // convert from degree to radian
+    addFormFloatNumberBox(F("DeclinationAngle"), F("plugin_121_HMC5883L_decl"), PCONFIG_FLOAT(0), -180.0f,180.0f ,2, 0.01f);
+    PCONFIG_FLOAT(1) = PCONFIG_FLOAT(0) * M_PI / 180.0; // convert from degree to radian
     addUnit(F("degree"));
     success = true;
     break;
