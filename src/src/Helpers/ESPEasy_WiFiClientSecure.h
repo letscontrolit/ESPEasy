@@ -69,6 +69,7 @@ public:
     void stop();
     uint8_t connected();
     int lastError(char *buf, const size_t size);
+    void clearLastError() { _lastError = 0; }
     void setInsecure(); // Don't validate the chain, just accept whatever is given.  VERY INSECURE!
     void setPreSharedKey(const char *pskIdent, const char *psKey); // psKey in Hex
     void setCACert(const char *rootCA);

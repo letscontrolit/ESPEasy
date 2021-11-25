@@ -11,6 +11,7 @@ enum class TLS_types {
   TLS_PSK         = 1,  // Pre-Shared-Key
   TLS_CA_CERT     = 2,  // Validate server certificate against known CA
 //TLS_CA_CLI_CERT = 3,  // TLS_CA_CERT + supply client certificate for authentication
+  TLS_FINGERPRINT = 4,  // Use certificate fingerprint
   TLS_insecure    = 0xF // Set as last option, do not check supplied certificate. Ideal for man-in-the-middle attack.
 };
 

@@ -1041,11 +1041,21 @@ String getControllerSymbol(uint8_t index)
    return ret;
    }
  */
-void addSVG_param(const String& key, float value) {
+
+void addSVG_param(const __FlashStringHelper * key, int value) {
+  addHtml(' ');
+  addHtml(key);
+  addHtml('=');
+  addHtml('\"');
+  addHtmlInt(value);
+  addHtml('\"');
+}
+
+void addSVG_param(const __FlashStringHelper * key, float value) {
   addSVG_param(key, String(value, 2));
 }
 
-void addSVG_param(const String& key, const String& value) {
+void addSVG_param(const __FlashStringHelper * key, const String& value) {
   addHtml(' ');
   addHtml(key);
   addHtml('=');
@@ -1078,8 +1088,8 @@ void createSvgRect(const String& classname,
     addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#")));
     addSVG_param(F("stroke-width"), strokeWidth);
   }
-  addSVG_param("x",         xoffset);
-  addSVG_param("y",         yoffset);
+  addSVG_param(F("x"),      xoffset);
+  addSVG_param(F("y"),      yoffset);
   addSVG_param(F("width"),  width);
   addSVG_param(F("height"), height);
   addSVG_param(F("rx"),     rx);
@@ -1122,10 +1132,6 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
 
 #define SVG_BAR_HEIGHT 16
 #define SVG_BAR_WIDTH 400
-
-void write_SVG_image_header(int width, int height) {
-  write_SVG_image_header(width, height, false);
-}
 
 void write_SVG_image_header(int width, int height, bool useViewbox) {
   addHtml(F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""));
@@ -1261,7 +1267,9 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   if (struct_size != 0) {
-    String text = formatHumanReadable(struct_size, 1024);
+    String text;
+    text.reserve(32);
+    text = formatHumanReadable(struct_size, 1024);
     text += '/';
     text += formatHumanReadable(max_size, 1024);
     text += F(" per item");

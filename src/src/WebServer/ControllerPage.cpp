@@ -446,23 +446,22 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
                 addHtml(F("</textarea>"));
               }
               {
-                uint8_t sha256_result[32] = {0};
-                if (mqtt_tls->getFingerprintSHA256(sha256_result)) {
-                  String fingerprint;
-                  fingerprint.reserve(64);
-                  for (size_t i = 0; i < 32; ++i) {
-                    fingerprint += String(sha256_result[i], HEX);
-                  }
-                  fingerprint.toLowerCase();
+                String fingerprint;
+                if (GetTLSfingerprint(fingerprint)) {
                   addFormTextBox(F("Certificate Fingerprint"), 
                                  F("fingerprint"),
                                  fingerprint,
                                  64,
                                  true); // ReadOnly
+                  MakeControllerSettings(ControllerSettings); //-V522
+                  if (!AllocatedControllerSettings()) {
+                    addHtmlError(F("Out of memory, cannot load page"));
+                  } else {
+                    LoadControllerSettings(controllerindex, ControllerSettings);
+                    addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
+                  }
                 }
               }
-
-
             }
             #endif
 

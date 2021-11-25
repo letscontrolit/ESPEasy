@@ -217,7 +217,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     mqtt_rootCA.clear();
 
     if (mqtt_tls == nullptr) {
-      addLog(LOG_LEVEL_ERROR, F("MQTT : Could not create TLS client, out of memory"));
+      mqtt_tls_last_errorstr = F("MQTT : Could not create TLS client, out of memory");
+      addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
       return false;
     }
   }
@@ -254,6 +255,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
       if (mqtt_rootCA.isEmpty()) {
         LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
+        if (mqtt_rootCA.isEmpty()) {
+          // Fingerprint must be of some minimal length to continue.
+          mqtt_tls_last_errorstr = F("MQTT : No TLS root CA");
+          addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
+          return false;
+        }
 
         #ifdef ESP32
         mqtt_tls->setCACert(mqtt_rootCA.c_str());
@@ -272,8 +279,24 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       break;
     }
     */
+    case TLS_types::TLS_FINGERPRINT:
+    {
+      // Fingerprint is checked when making the connection.
+      mqtt_rootCA.clear();
+      mqtt_fingerprint.clear();
+      LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_fingerprint, false);
+      if (mqtt_fingerprint.length() < 32) {
+        // Fingerprint must be of some minimal length to continue.
+        mqtt_tls_last_errorstr = F("MQTT : Stored TLS fingerprint too small");
+        addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
+        return false;
+      }
+      mqtt_tls->setInsecure();
+      break;
+    }
     case TLS_types::TLS_insecure:
     {
+      mqtt_rootCA.clear();
       mqtt_tls->setInsecure();
       break;
     }
@@ -355,9 +378,41 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     #endif
     #ifdef ESP32
     mqtt_tls_last_error = mqtt_tls->lastError(buf,128);
+    mqtt_tls->clearLastError();
     #endif
     mqtt_tls_last_errorstr = buf;
   }
+  if (TLS_type == TLS_types::TLS_FINGERPRINT)
+  {
+    // Check fingerprint
+    if (MQTTresult) {
+      const int newlinepos = mqtt_fingerprint.indexOf('\n');
+      String fp;
+      String dn;
+      if (ControllerSettings.UseDNS) dn = ControllerSettings.getHost();
+      if (newlinepos == -1) {
+        fp = mqtt_fingerprint;
+      } else {
+        fp = mqtt_fingerprint.substring(0, newlinepos);
+        const int newlinepos2 = mqtt_fingerprint.indexOf('\n', newlinepos);
+        if (newlinepos2 == -1)
+          dn = mqtt_fingerprint.substring(newlinepos + 1);
+        else
+          dn = mqtt_fingerprint.substring(newlinepos + 1, newlinepos2);
+        dn.trim();
+
+      }
+      if (!mqtt_tls->verify(
+        fp.c_str(), 
+        dn.isEmpty() ? nullptr : dn.c_str())) 
+      {
+        mqtt_tls_last_errorstr += F("TLS Fingerprint does not match");
+        addLog(LOG_LEVEL_INFO, mqtt_fingerprint);
+        MQTTresult = false;
+      }
+    }
+  }
+
   #endif
 
 
@@ -714,6 +769,37 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     MQTTpublish(enabledMqttController, event->TaskIndex, pubname.c_str(), status.c_str(), mqtt_retainFlag);
   }
 }
+
+
+#ifdef USE_MQTT_TLS
+bool GetTLSfingerprint(String& fp) 
+{
+  #ifdef ESP32
+  if (MQTTclient_connected && mqtt_tls != nullptr) {
+    uint8_t sha256_result[32] = {0};
+    if (mqtt_tls->getFingerprintSHA256(sha256_result)) {
+      fp.reserve(64);
+      for (size_t i = 0; i < 32; ++i) {
+        const String tmp(sha256_result[i], HEX);
+        switch (tmp.length()) {
+          case 0:
+            fp += '0';
+          // fall through
+          case 1:
+            fp += '0';
+            break;
+        }
+        fp += tmp;
+      }
+      fp.toLowerCase();
+      return true;
+    }
+  }
+  #endif
+  return false;
+}
+
+#endif
 
 #endif // USES_MQTT
 

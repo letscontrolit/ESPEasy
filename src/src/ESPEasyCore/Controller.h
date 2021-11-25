@@ -69,6 +69,12 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
 * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(struct EventStruct *event, const String& status);
+
+#ifdef USE_MQTT_TLS
+bool GetTLSfingerprint(String& fp);
+
+#endif
+
 #endif //USES_MQTT
 
 

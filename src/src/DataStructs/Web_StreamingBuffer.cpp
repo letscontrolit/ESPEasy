@@ -11,8 +11,11 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 
 
-
+#ifdef ESP32
+#define CHUNKED_BUFFER_SIZE         1500
+#else 
 #define CHUNKED_BUFFER_SIZE          400
+#endif
 
 Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
