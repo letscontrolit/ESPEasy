@@ -53,7 +53,7 @@ The available settings here depend on the build used. At least the **Force Slow 
 Device Settings
 ^^^^^^^^^^^^^^^
 
-* **DeclinationAngle**: For getting the heading a correction value need to be entered. Determine the value at https://www.magnetic-declination.com/. If set to 0.00 the direction is slightly off. Example: Berlins magnetic declination is around 4°. The angle shall be entered in radians. 4° in rand = 0.06981317 => ~ 0.07.
+* **DeclinationAngle**: In degree. For getting the heading a correction value need to be entered. Determine the value at https://www.magnetic-declination.com/. If set to 0.00 the direction is slightly off.
 
 Values
 ^^^^^^
