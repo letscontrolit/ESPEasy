@@ -825,6 +825,77 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->drawFastVLine(nParams[0], 0, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
+  # if ADAGFX_ENABLE_EXTRA_CMDS
+  else if (subcommand.equals(F("lm")) && (argCount >= 5)) { // lm: Multi-line, multiple coordinates
+    uint16_t mcolor   = AdaGFXparseColor(sParams[0], _colorDepth);
+    bool     mloop    = true;
+    uint8_t  parCount = 0;
+    uint8_t  optCount = 0;
+    int  cx           = -1;
+    int  cy           = -1;
+    bool closeLine    = false;
+    #  ifndef BUILD_NO_DEBUG
+    String log;
+    log.reserve(40);
+    #  endif // ifndef BUILD_NO_DEBUG
+
+    while (mloop) {
+      sParams[optCount] = parseString(string, parCount + 4); // 0-offset + 1st and 2nd cmd-argument and 1 for color argument
+
+      if (!validIntFromString(sParams[optCount], nParams[optCount]) && !sParams[optCount].isEmpty()) {
+        mcolor = AdaGFXparseColor(sParams[optCount], _colorDepth); // Interpret as a color
+
+        if (optCount > 0) { optCount--; }
+      }
+      mloop     = !sParams[optCount].isEmpty();
+      closeLine = sParams[optCount].equals(F("c"));
+
+      if (mloop) { parCount++; optCount++; } // Next argument
+
+      if ((optCount == 4) || closeLine) { // 0..3 = 4th argument or close the line
+        #  if ADAGFX_ARGUMENT_VALIDATION
+
+        if (invalidCoordinates(nParams[0], nParams[1]) ||
+            invalidCoordinates(nParams[2], nParams[3])) {
+          success = false;
+          mloop   = false; // break out
+        } else
+        #  endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          if (closeLine) {
+            nParams[2] = cx;
+            nParams[3] = cy;
+            mloop      = false; // Exit after closing the line
+          }
+          #  ifndef BUILD_NO_DEBUG
+          log  = F("AdaGFX: cmd: lm x/y/x1/y1:");
+          log += nParams[0];
+          log += '/';
+          log += nParams[1];
+          log += '/';
+          log += nParams[2];
+          log += '/';
+          log += nParams[3];
+          log += F(" loop:");
+          log += mloop ? 'T' : 'f';
+          log += F(" color:");
+          log += AdaGFXcolorToString(mcolor, _colorDepth);
+          addLog(LOG_LEVEL_INFO, log);
+          #  endif // ifndef BUILD_NO_DEBUG
+          _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], mcolor);
+
+          if ((cx == -1) && (cy == -1)) {
+            cx = nParams[0];
+            cy = nParams[1];
+          }
+          nParams[0] = nParams[2]; // Move second set to first set
+          nParams[1] = nParams[3];
+          optCount   = 2;          // Get second set of arguments only
+        }
+      }
+    }
+  }
+  # endif // if ADAGFX_ENABLE_EXTRA_CMDS
   else if (subcommand.equals(F("r")) && (argCount == 5)) { // r: Rectangle
     # if ADAGFX_ARGUMENT_VALIDATION
 

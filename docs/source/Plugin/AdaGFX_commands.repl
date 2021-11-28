@@ -135,6 +135,17 @@
     Draw a vertical line (height= Line 'height' in pixels (positive = below first point, negative = above first point).
     "
     "
+    ``<trigger>,lm,<color>,<x1>,<y1>,<x2>,<y2>[,<colorN>][,<xN>,<yN>[,...]|c]``
+    ","
+    Draw a continuous multi-line between point x1,y1, x2,y2, x3,y3, etc. using the (required) color, 1 pixel wide. The segments of line are drawn straight.
+    
+    If the last y argument is missing, then the last x argument will be ignored.
+
+    If the argument value ``c`` is used, the multi-line is closed to the original starting coordinate, and drawing is stopped.
+
+    If ``<colorN>`` is used, then from the next segment that color will be used. Color can be changed multiple times if desired.
+    "
+    "
     ``<trigger>,r,<x>,<y>,<width>,<height>,<color>``
     ","
     Draw a rectangle.
