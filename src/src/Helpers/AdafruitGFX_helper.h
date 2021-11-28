@@ -33,7 +33,7 @@
 #  define ADAGFX_PARSE_SUBCOMMAND     1 // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 # ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#  define ADAGFX_ENABLE_EXTRA_CMDS    1 // Enable extra subcommands like lm (line-multi) and la (line-arc)
+#  define ADAGFX_ENABLE_EXTRA_CMDS    1 // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
 # endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 5 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~10,4 kB

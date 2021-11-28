@@ -826,7 +826,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # if ADAGFX_ENABLE_EXTRA_CMDS
-  else if (subcommand.equals(F("lm")) && (argCount >= 5)) { // lm: Multi-line, multiple coordinates
+  else if ((subcommand.equals(F("lm")) || subcommand.equals(F("lmr"))) && (argCount >= 5)) { // lm/lmr: Multi-line, multiple coordinates
     uint16_t mcolor   = AdaGFXparseColor(sParams[0], _colorDepth);
     bool     mloop    = true;
     uint8_t  parCount = 0;
@@ -834,6 +834,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     int  cx           = -1;
     int  cy           = -1;
     bool closeLine    = false;
+    bool relativeMode = subcommand.equals(F("lmr")); // Use Relative mode
     #  ifndef BUILD_NO_DEBUG
     String log;
     log.reserve(40);
@@ -853,6 +854,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (mloop) { parCount++; optCount++; } // Next argument
 
       if ((optCount == 4) || closeLine) { // 0..3 = 4th argument or close the line
+        if (relativeMode) {
+          nParams[2] += nParams[0];
+          nParams[3] += nParams[1];
+        }
         #  if ADAGFX_ARGUMENT_VALIDATION
 
         if (invalidCoordinates(nParams[0], nParams[1]) ||

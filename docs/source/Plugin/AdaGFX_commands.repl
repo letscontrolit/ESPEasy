@@ -146,6 +146,17 @@
     If ``<colorN>`` is used, then from the next segment that color will be used. Color can be changed multiple times if desired.
     "
     "
+    ``<trigger>,lmr,<color>,<x>,<y>,<dx1>,<dy1>[,<colorN>][,<dxN>,<dyN>[,...]|c]``
+    ","
+    Draw a continuous multi-line starting at point x,y, moving *relatively* using the delta-x (dx) and delta-y (dy) values, etc. using the (required) color, 1 pixel wide. The segments of line are drawn straight.
+    
+    If the last dy argument is missing, then the last dx argument will be ignored.
+
+    If the argument value ``c`` is used, the multi-line is closed to the original starting coordinate, and drawing is stopped.
+
+    If ``<colorN>`` is used, then from the next segment that color will be used. Color can be changed multiple times if desired.
+    "
+    "
     ``<trigger>,r,<x>,<y>,<width>,<height>,<color>``
     ","
     Draw a rectangle.
