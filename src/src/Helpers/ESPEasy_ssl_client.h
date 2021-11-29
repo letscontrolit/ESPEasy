@@ -46,5 +46,6 @@ int get_ssl_receive(ESPEasy_sslclient_context *ssl_client, uint8_t *data, int le
 bool verify_ssl_fingerprint(ESPEasy_sslclient_context *ssl_client, const char* fp, const char* domain_name);
 bool verify_ssl_dn(ESPEasy_sslclient_context *ssl_client, const char* domain_name);
 bool get_peer_fingerprint(ESPEasy_sslclient_context *ssl_client, uint8_t sha256[32]);
+
 #endif
 #endif

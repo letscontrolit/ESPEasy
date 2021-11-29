@@ -237,6 +237,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     case TLS_types::TLS_CA_CERT:
     {
       mqtt_rootCA.clear();
+      /*
       {
         static int previousFree = FreeMem();
         const int freemem = FreeMem();
@@ -252,6 +253,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
         addLog(LOG_LEVEL_INFO, analyse);
         previousFree = freemem;
       }
+      */
 
       if (mqtt_rootCA.isEmpty()) {
         LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
@@ -435,18 +437,23 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     updateMQTTclient_connected();
     return false;
   }
-  String log = F("MQTT : Connected to broker with client ID: ");
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+    String log = F("MQTT : Connected to broker with client ID: ");
 
-  log += clientid;
-  addLog(LOG_LEVEL_INFO, log);
+    log += clientid;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   #ifdef USE_MQTT_TLS
   #ifdef ESP32
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    log = F("MQTT : Peer certificate info: ");
+    String log = F("MQTT : Peer certificate info: ");
+    log += ControllerSettings.getHost();
+    log += ' ';
     log += mqtt_tls->getPeerCertificateInfo();
     addLog(LOG_LEVEL_INFO, log);
-    log.clear();
   }
   #endif
   #endif
@@ -454,9 +461,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
-  log  = F("Subscribed to: ");
-  log += subscribeTo;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  {
+    String log  = F("Subscribed to: ");
+    log += subscribeTo;
+    addLog(LOG_LEVEL_INFO, log);
+  }
 
   updateMQTTclient_connected();
   statusLED(true);
@@ -792,6 +802,19 @@ bool GetTLSfingerprint(String& fp)
         fp += tmp;
       }
       fp.toLowerCase();
+      return true;
+    }
+  }
+  #endif
+  return false;
+}
+
+bool GetTLS_Certificate(String& cert, bool caRoot)
+{
+  #ifdef ESP32
+  if (MQTTclient_connected && mqtt_tls != nullptr) {
+    String subject;
+    if (mqtt_tls->getPeerCertificate(cert, subject, caRoot) == 0) {
       return true;
     }
   }

@@ -27,7 +27,6 @@
 #include "../Helpers/StringConverter.h"
 
 
-
 // ********************************************************************************
 // Web Interface controller page
 // ********************************************************************************
@@ -437,34 +436,78 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
             #ifdef ESP32
             if (MQTTclient_connected && mqtt_tls != nullptr) {
-              addFormSubHeader(F("Peer Certificate"));
+              MakeControllerSettings(ControllerSettings); //-V522
+              if (!AllocatedControllerSettings()) {
+                addHtmlError(F("Out of memory, cannot load page"));
+              } else {
+                LoadControllerSettings(controllerindex, ControllerSettings);
 
-              {
-                addRowLabel(F("Certificate Info"));
-                addHtml(F("<textarea readonly rows='10' wrap='on'>"));
-                addHtml(mqtt_tls->getPeerCertificateInfo());
-                addHtml(F("</textarea>"));
-              }
-              {
-                String fingerprint;
-                if (GetTLSfingerprint(fingerprint)) {
-                  addFormTextBox(F("Certificate Fingerprint"), 
-                                 F("fingerprint"),
-                                 fingerprint,
-                                 64,
-                                 true); // ReadOnly
-                  MakeControllerSettings(ControllerSettings); //-V522
-                  if (!AllocatedControllerSettings()) {
-                    addHtmlError(F("Out of memory, cannot load page"));
-                  } else {
-                    LoadControllerSettings(controllerindex, ControllerSettings);
+                addFormSubHeader(F("Peer Certificate"));
+
+                {
+                  addRowLabel(F("Certificate Info"));
+                  addHtml(F("<textarea readonly rows='10' wrap='on'>"));
+                  addHtml(mqtt_tls->getPeerCertificateInfo());
+                  addHtml(F("</textarea>"));
+                }
+                {
+                  String fingerprint;
+                  if (GetTLSfingerprint(fingerprint)) {
+                    addFormTextBox(F("Certificate Fingerprint"), 
+                                  F("fingerprint"),
+                                  fingerprint,
+                                  64,
+                                  true); // ReadOnly
                     addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT);
+                  }
+                }
+                addFormSubHeader(F("Peer Certificate Chain"));
+                {
+                  // FIXME TD-er: Must wrap this in divs to be able to fold it by default.
+                  const mbedtls_x509_crt *chain;
+
+                  chain = mqtt_tls->getPeerCertificate();
+
+                  int error {0};
+                  while (chain != nullptr && error == 0) {
+                    /*
+                    const bool mustShow = !chain->ca_istrue || chain->next == nullptr;
+                    if (mustShow) {
+                      */
+                      String pem, subject;
+                      error = ESPEasy_WiFiClientSecure::cert_to_pem(chain, pem, subject);
+                      {
+                        String label;
+                        if (chain->ca_istrue) {
+                          label = F("CA ");
+                        }
+                        label += F("Certificate <tt>");
+                        label += subject;
+                        label += F("</tt>");
+                        addRowLabel(label);
+                      }
+                      if (error == 0) {
+                        addHtml(F("<textarea readonly rows='10' wrap='on'>"));
+                        addHtml(mqtt_tls->getPeerCertificateInfo(chain));
+                        addHtml(F("</textarea>"));
+
+                        addHtml(F("<textarea readonly rows='10' wrap='on'>"));
+                        addHtml(pem);
+                        addHtml(F("</textarea>"));
+                      } else {
+                        addHtmlInt(error);
+                      }
+                      if (chain->ca_istrue && chain->next == nullptr) {
+                        // Add checkbox to store CA cert
+                        addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT);
+                      }
+//                    }
+                    chain = chain->next;
                   }
                 }
               }
             }
             #endif
-
           }
 #endif
         }

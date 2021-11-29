@@ -73,6 +73,8 @@ void MQTTStatus(struct EventStruct *event, const String& status);
 #ifdef USE_MQTT_TLS
 bool GetTLSfingerprint(String& fp);
 
+bool GetTLS_Certificate(String& cert, bool caRoot);
+
 #endif
 
 #endif //USES_MQTT

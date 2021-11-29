@@ -66,6 +66,8 @@ struct ControllerSettingsStruct
     CONTROLLER_PORT,
     CONTROLLER_MQTT_TLS_TYPE,
     CONTROLLER_MQTT_TLS_STORE_FINGERPRINT,
+    CONTROLLER_MQTT_TLS_STORE_CERT,
+    CONTROLLER_MQTT_TLS_STORE_CACERT,
     CONTROLLER_USER,
     CONTROLLER_PASS,
     CONTROLLER_MIN_SEND_INTERVAL,
@@ -154,6 +156,7 @@ struct ControllerSettingsStruct
   void      TLStype(TLS_types tls_type);
 
   String    getCertificateFilename() const;
+  String    getCertificateFilename(TLS_types tls_type) const;
   
 
   boolean      UseDNS;
