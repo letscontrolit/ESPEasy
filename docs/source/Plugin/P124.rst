@@ -109,6 +109,9 @@ When changing the number of relays, the page will be submitted and the settings 
  
 .. note:: This will also be applied when Submitting the device settings page!
 
+* **Loop Channel/Get on read**: When enabled, will update the Channel and Get values with the selected channel and its current state (0=off, 1=on). The channel will be incremented each interval (read action).
+
+
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
@@ -117,7 +120,7 @@ The Data Acquisition, Send to Controller and Interval settings are standard avai
 Values
 ^^^^^^
 
-There is only 1 value available for this sensor, with the default name ``State``.
+The Values available for this sensor, are ``State``, holding the decimal value of the current channel_bitmap, ``Channel`` and ``Get``, showing the channel and its on/off state (1/0) of the last ``multirelay,get,<channel>`` command or when **Loop Channel/Get on read** is checked.
 
 Commands available
 ------------------

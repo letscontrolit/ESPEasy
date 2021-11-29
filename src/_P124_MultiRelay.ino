@@ -25,6 +25,8 @@
 # define PLUGIN_ID_124          124
 # define PLUGIN_NAME_124        "Output - I2C Multi Relay [TESTING]"
 # define PLUGIN_VALUENAME1_124  "State"
+# define PLUGIN_VALUENAME2_124  "Channel"
+# define PLUGIN_VALUENAME3_124  "Get"
 
 # include "./src/PluginStructs/P124_data_struct.h"
 
@@ -45,7 +47,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
+      Device[deviceCount].ValueCount         = 3;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].TimerOptional      = true;
@@ -62,6 +64,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_124));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_124));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_124));
       break;
     }
 
@@ -69,6 +73,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
     {
       P124_CONFIG_I2C_ADDRESS                      = 0x11; // Default I2C address
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0;    // No decimals needed
+      ExtraTaskSettings.TaskDeviceValueDecimals[1] = 0;    // No decimals needed
+      ExtraTaskSettings.TaskDeviceValueDecimals[2] = 0;    // No decimals needed
       break;
     }
 
@@ -136,6 +142,11 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         }
         addFormNote(F("ATTENTION: These Relay states will be set when the task is enabled and the settings are saved!"));
       }
+
+      addFormCheckBox(F("Loop Channel/Get on read"),
+                      getPluginCustomArgName(P124_FLAGS_LOOP_GET),
+                      bitRead(P124_CONFIG_FLAGS, P124_FLAGS_LOOP_GET));
+
       success = true;
       break;
     }
@@ -146,8 +157,9 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_CONFIG_I2C_ADDRESS = getFormItemInt(F("plugin_124_i2caddress"));
       uint32_t lSettings = 0u;
       bitWrite(lSettings, P124_FLAGS_INIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_INIT_RELAYS)) == 1);
-      bitWrite(lSettings, P124_FLAGS_INIT_ALWAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_INIT_ALWAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_INIT_ALWAYS, isFormItemChecked(getPluginCustomArgName(P124_FLAGS_INIT_ALWAYS)));
       bitWrite(lSettings, P124_FLAGS_EXIT_RELAYS, getFormItemInt(getPluginCustomArgName(P124_FLAGS_EXIT_RELAYS)) == 1);
+      bitWrite(lSettings, P124_FLAGS_LOOP_GET,    isFormItemChecked(getPluginCustomArgName(P124_FLAGS_LOOP_GET)));
 
       if (lSettings != 0) {
         for (int i = 0; i < P124_CONFIG_RELAY_COUNT; i++) { // INIT and EXIT states
@@ -197,6 +209,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = P124_data->getChannelState();                      // Get relays state
           bitSet(P124_InitializedRelays, event->TaskIndex);                                 // Update initialization status
         }
+        P124_data->setLoopState(bitRead(P124_CONFIG_FLAGS, P124_FLAGS_LOOP_GET));           // Loop state
         success = true;
       } else {
         addLog(LOG_LEVEL_ERROR, F("MultiRelay: Initialization error!"));
@@ -230,7 +243,14 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
       if (P124_data->isInitialized()) {
         UserVar[event->BaseVarIndex] = P124_data->getChannelState(); // Get relays state
-        success                      = true;
+
+        if (P124_data->isLoopEnabled()) {
+          uint8_t chan = P124_data->getNextLoop();
+          uint8_t data = P124_data->getChannelState() & (1 << (chan - 1));
+          UserVar[event->BaseVarIndex + 1] = chan;
+          UserVar[event->BaseVarIndex + 2] = (data ? 1 : 0);
+        }
+        success = true;
       }
       break;
     }
@@ -240,7 +260,7 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       P124_data_struct *P124_data = static_cast<P124_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P124_data) && P124_data->isInitialized()) {
-        uint8_t varNr = 1; // VARS_PER_TASK;
+        uint8_t varNr = 3; // VARS_PER_TASK;
         String  label = F("Relay state ");
         label += P124_CONFIG_RELAY_COUNT;
         label += F("..");
@@ -289,6 +309,16 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
           success = P124_data->turn_off_channel(event->Par2);
         } else if (subcommand.equals(F("set"))) {
           success = P124_data->channelCtrl(event->Par2);
+        } else if (subcommand.equals(F("get")) && (event->Par2 > 0) && (event->Par2 <= P124_CONFIG_RELAY_COUNT)) {
+          uint8_t data = P124_data->getChannelState() & (1 << (event->Par2 - 1));
+          UserVar[event->BaseVarIndex + 1] = event->Par2;
+          UserVar[event->BaseVarIndex + 2] = (data ? 1 : 0);
+
+          success = true;
+        } else if (subcommand.equals(F("loop")) && (event->Par2 >= 0) && (event->Par2 <= 1)) {
+          P124_data->setLoopState(event->Par2 == 1);
+
+          success = true;
         }
 
         if (success) {

@@ -77,4 +77,16 @@ bool P124_data_struct::turn_off_channel(uint8_t channel) {
   return false;
 }
 
+uint8_t P124_data_struct::getNextLoop() {
+  if (_loopEnabled) {
+    _getLoop++;
+
+    if (_getLoop > _relayCount) {
+      _getLoop = 1;
+    }
+    return _getLoop;
+  }
+  return 0;
+}
+
 #endif // ifdef USES_P124
