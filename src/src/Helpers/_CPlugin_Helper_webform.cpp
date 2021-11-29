@@ -23,6 +23,9 @@ const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameter
     case ControllerSettingsStruct::CONTROLLER_PORT:                     return  F("Controller Port");      
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:            return  F("Use TLS");
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT: return F("Store Fingerprint");
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT:      return F("Store Certificate");
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:    return F("Store CA Certificate");
+
     case ControllerSettingsStruct::CONTROLLER_USER:                     return  F("Controller User");        
     case ControllerSettingsStruct::CONTROLLER_PASS:                     return  F("Controller Password");    
 
@@ -119,12 +122,11 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
   addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
-void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description) {
+void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description, TLS_types tls_type) {
   #ifdef USE_MQTT_TLS
-  const String certFile = ControllerSettings.getCertificateFilename();
+  const String certFile = ControllerSettings.getCertificateFilename(tls_type);
   if (!certFile.isEmpty())
   {
-    const String certFile = ControllerSettings.getCertificateFilename();
     String note = description;
     note += F(" <tt>");
     note += certFile;
@@ -196,19 +198,38 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
       };
       addFormSelector(displayName, internalName, NR_MQTT_TLS_TYPES, options, indices, choice, true);
       #undef NR_MQTT_TLS_TYPES
-      addCertificateFileNote(ControllerSettings, F("Certificate or PSK must be stored on the filesystem in"));
+      addCertificateFileNote(ControllerSettings, F("Certificate or PSK must be stored on the filesystem in"), ControllerSettings.TLStype());
       #endif
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_FINGERPRINT:
     {
       #ifdef USE_MQTT_TLS
-      const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename());
+      const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT));
       addFormCheckBox(displayName, internalName, false, saveDisabled);
-      addCertificateFileNote(ControllerSettings, F("Store fingerprint in"));
+      addCertificateFileNote(ControllerSettings, F("Store fingerprint in"), TLS_types::TLS_FINGERPRINT);
       #endif
       break;
     }
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT: 
+      // fall through
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
+    {
+      #ifdef USE_MQTT_TLS
+      /*
+      const TLS_types tls_type =  (varType == ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT) ?
+         TLS_types::TLS_CA_CERT : TLS_types::TLS_CERT;
+      */
+      const bool saveDisabled = fileExists(ControllerSettings.getCertificateFilename(TLS_types::TLS_CA_CERT));
+      addFormCheckBox(displayName, internalName, false, saveDisabled);
+      if (saveDisabled) {
+        addUnit(F("File Exists"));
+      }
+      addCertificateFileNote(ControllerSettings, F("Store CA Certificate in"), TLS_types::TLS_CA_CERT);
+      #endif
+      break;
+    }
+
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
       const size_t fieldMaxLength =
@@ -385,13 +406,27 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
             fingerprint += '\n';
             fingerprint += ControllerSettings.getHost();
           }
-          SaveCertificate(ControllerSettings.getCertificateFilename(), fingerprint);
+          SaveCertificate(ControllerSettings.getCertificateFilename(TLS_types::TLS_FINGERPRINT), fingerprint);
         }
       }
       #endif
       break;
     }
 
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CERT:
+    // fall through
+    case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_STORE_CACERT:
+    {
+      #ifdef USE_MQTT_TLS
+      if (isFormItemChecked(internalName)) {
+        String cacert;
+        if (GetTLS_Certificate(cacert, true)) {
+          SaveCertificate(ControllerSettings.getCertificateFilename(TLS_types::TLS_CA_CERT), cacert);
+        }
+      }
+      #endif
+      break;
+    }
 
     case ControllerSettingsStruct::CONTROLLER_USER:
       setControllerUser(controllerindex, ControllerSettings, webArg(internalName));

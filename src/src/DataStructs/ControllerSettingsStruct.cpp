@@ -329,12 +329,17 @@ void  ControllerSettingsStruct::TLStype(TLS_types tls_type)
 
 String ControllerSettingsStruct::getCertificateFilename() const
 {
+  return getCertificateFilename(TLStype());
+}
+
+String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) const
+{
   String certFile = HostName;
   if (certFile.isEmpty()) {
     certFile = F("<HostName>");
   }
 
-  switch (TLStype()) {
+  switch (tls_type) {
     case TLS_types::NoTLS:
     case TLS_types::TLS_insecure:
       return EMPTY_STRING;
@@ -352,6 +357,11 @@ String ControllerSettingsStruct::getCertificateFilename() const
     case TLS_types::TLS_FINGERPRINT:
       certFile += F(".fp");
       break;
+  }
+
+  // Only use the last 29 bytes of the filename
+  if (certFile.length() > 28) {
+    certFile = certFile.substring(certFile.length() - 28);
   }
   
   return certFile;

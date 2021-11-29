@@ -1042,7 +1042,7 @@ bool cleanupCertificate(String & certificate, bool &changed)
   for (int i = 0; i < 4 && last_pos != -1; ++i) {
     dash_pos[i] = certificate.indexOf(F("-----"), last_pos);
     last_pos = dash_pos[i] + 5;
-    addLog(LOG_LEVEL_INFO, String(F(" dash_pos: ")) + String(dash_pos[i]));
+//    addLog(LOG_LEVEL_INFO, String(F(" dash_pos: ")) + String(dash_pos[i]));
   }
   if (last_pos == -1) return false;
 
@@ -1175,7 +1175,9 @@ String InitFile(SettingsType::SettingsFileEnum file_type)
  \*********************************************************************************************/
 String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize)
 {
-  return doSaveToFile(fname, index, memAddress, datasize, "r+");
+  return doSaveToFile(
+    fname, index, memAddress, datasize,
+    fileExists(fname) ? "r+" : "w+");
 }
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
@@ -1226,7 +1228,9 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (f) {
     clearAllCaches();
     SPIFFS_CHECK(f,                          fname);
-    SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    if (index > 0) {
+      SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    }
     const uint8_t *pointerToByteToSave = memAddress;
 
     for (int x = 0; x < datasize; x++)

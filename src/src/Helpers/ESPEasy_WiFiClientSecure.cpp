@@ -22,6 +22,9 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
+// FIXME TD-er: Feels wrong this needs to be included here to use mbedtls_pem_write_buffer
+#include <mbedtls/pem.h>
+
 #undef connect
 #undef write
 #undef read
@@ -348,9 +351,11 @@ void ESPEasy_WiFiClientSecure::setAlpnProtocols(const char **alpn_protos)
     _alpn_protos = alpn_protos;
 }
 
-String ESPEasy_WiFiClientSecure::getPeerCertificateInfo()
+String ESPEasy_WiFiClientSecure::getPeerCertificateInfo(const mbedtls_x509_crt* peer)
 {
-    const mbedtls_x509_crt* peer = getPeerCertificate();
+    if (peer == nullptr) {
+        peer = getPeerCertificate();
+    }
     String res;
     if (peer != nullptr) {
         char buf[1024] = {0};
@@ -364,5 +369,69 @@ String ESPEasy_WiFiClientSecure::getPeerCertificateInfo()
         }
     }
     return res;
+}
+
+int ESPEasy_WiFiClientSecure::getPeerCertificate(String& pem, String& subject, bool caRoot)
+{
+  const mbedtls_x509_crt *chain;
+
+  chain = getPeerCertificate();
+
+  int error {0};
+  bool done = false;
+  while (chain != nullptr && error == 0 && !done) {
+    if (!caRoot || (chain->ca_istrue && chain->next == nullptr)) {
+      done = true;
+      error = ESPEasy_WiFiClientSecure::cert_to_pem(chain, pem, subject);
+    }
+    chain = chain->next;
+  }
+  return error;
+}
+
+int ESPEasy_WiFiClientSecure::cert_to_pem(const mbedtls_x509_crt *crt, String& pem, String& subject)
+{
+  const String pem_begin_crt = F("-----BEGIN CERTIFICATE-----\n");
+  const String pem_end_crt   = F("-----END CERTIFICATE-----");
+  pem.clear();
+  subject.clear();
+
+  const mbedtls_asn1_named_data* common_name = &crt->subject;
+  while (common_name != nullptr) {
+    // While iterating through DN objects, check for CN object
+    if (!MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &common_name->oid))
+    {
+
+      subject.reserve(common_name->val.len);
+      const unsigned char* p = common_name->val.p;
+      for (auto i = 0; i < common_name->val.len; ++i, ++p) {
+        subject += static_cast<char>(*p);
+      }
+    }
+
+    // Fetch next DN object
+    common_name = common_name->next;
+  }
+
+  size_t written{};
+
+  const size_t buffer_size = 
+    pem_begin_crt.length() + 
+    pem_end_crt.length() + 
+    2* crt->raw.len;
+
+  std::vector<unsigned char> pem_buf;
+  pem_buf.resize(buffer_size);
+  int ret = mbedtls_pem_write_buffer(
+          pem_begin_crt.c_str(), pem_end_crt.c_str(), 
+          crt->raw.p, crt->raw.len,
+          &pem_buf[0], buffer_size, &written);
+  if (ret == 0) {
+      pem.reserve(written);
+      for (auto i = 0; i < written; ++i) {
+          pem += static_cast<char>(pem_buf[i]);
+      }
+  }
+  return ret;
 }
 #endif

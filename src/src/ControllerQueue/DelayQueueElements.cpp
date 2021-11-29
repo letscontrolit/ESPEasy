@@ -9,6 +9,9 @@
 ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
+  // Make sure the controller is re-connecting with the current settings.
+  MQTTDisconnect();
+  
   MakeControllerSettings(ControllerSettings); //-V522
   if (!AllocatedControllerSettings()) {
     return false;
@@ -34,6 +37,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
 
 void exit_mqtt_delay_queue() {
   if (MQTTDelayHandler != nullptr) {
+    MQTTDisconnect();
     delete MQTTDelayHandler;
     MQTTDelayHandler = nullptr;
   }

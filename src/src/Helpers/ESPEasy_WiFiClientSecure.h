@@ -81,9 +81,15 @@ public:
     bool verify(const char* fingerprint, const char* domain_name);
     void setHandshakeTimeout(unsigned long handshake_timeout);
     void setAlpnProtocols(const char **alpn_protos);
-    String getPeerCertificateInfo();
+    String getPeerCertificateInfo(const mbedtls_x509_crt* crt = nullptr);
     const mbedtls_x509_crt* getPeerCertificate() { return mbedtls_ssl_get_peer_cert(&sslclient->ssl_ctx); };
     bool getFingerprintSHA256(uint8_t sha256_result[32]) { return get_peer_fingerprint(sslclient, sha256_result); };
+
+    int getPeerCertificate(String& pem, String& subject, bool caRoot);
+
+    // See: https://stackoverflow.com/a/63730321/8708166
+    static int cert_to_pem(const mbedtls_x509_crt *crt, String& pem, String& subject);
+
 
     int setTimeout(uint32_t seconds){ return 0; }
 
