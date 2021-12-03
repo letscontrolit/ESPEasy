@@ -176,6 +176,10 @@ size_t streamFromFS(String path, bool htmlEscape) {
       available = 0;
     }
   }
+
+  while (f.available()) { 
+    addHtml((char)f.read()); 
+  }
   statusLED(true);
 
   f.close();
