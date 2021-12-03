@@ -430,7 +430,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                 RuleEvent += toString(static_cast<float>(b) / t * sRGBFactor, 4);
                 break;
               default:
-                RuleEvent = EMPTY_STRING;
+                RuleEvent.clear();
                 break;
               }
               if (!RuleEvent.isEmpty()) {
@@ -466,7 +466,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
               RuleEvent += c;
               break;
             default:
-              RuleEvent = EMPTY_STRING;
+              RuleEvent.clear();
               break;
             }
             if (!RuleEvent.isEmpty()) {
