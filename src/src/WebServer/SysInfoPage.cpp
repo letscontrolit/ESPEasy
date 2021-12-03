@@ -612,8 +612,8 @@ void handle_sysinfo_Storage() {
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
     addHtml(formatToHex(flashDevice));
   }
-  uint32_t realSize = getFlashRealSizeInBytes();
-  uint32_t ideSize  = ESP.getFlashChipSize();
+  const uint32_t realSize = getFlashRealSizeInBytes();
+  const uint32_t ideSize  = ESP.getFlashChipSize();
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
   addHtmlInt(realSize / 1024);
@@ -632,17 +632,14 @@ void handle_sysinfo_Storage() {
   FlashMode_t ideMode = ESP.getFlashChipMode();
   addRowLabel(LabelType::FLASH_IDE_MODE);
   {
-    String html;
-
     switch (ideMode) {
-      case FM_QIO:   html += F("QIO");  break;
-      case FM_QOUT:  html += F("QOUT"); break;
-      case FM_DIO:   html += F("DIO");  break;
-      case FM_DOUT:  html += F("DOUT"); break;
+      case FM_QIO:   addHtml(F("QIO"));  break;
+      case FM_QOUT:  addHtml(F("QOUT")); break;
+      case FM_DIO:   addHtml(F("DIO"));  break;
+      case FM_DOUT:  addHtml(F("DOUT")); break;
       default:
-        html += getUnknownString(); break;
+        addHtml(getUnknownString()); break;
     }
-    addHtml(html);
   }
   # endif // if defined(ESP8266)
 
