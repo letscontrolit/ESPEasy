@@ -32,9 +32,7 @@ void handleNotFound() {
   if (handle_rules_edit(web_server.uri())) { return; }
 #endif
 
-  if (loadFromFS(true, web_server.uri())) { return; }
-
-  if (loadFromFS(false, web_server.uri())) { return; }
+  if (loadFromFS(web_server.uri())) { return; }
   String message = F("URI: ");
   message += web_server.uri();
   message += F("\nMethod: ");
