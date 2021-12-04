@@ -2,11 +2,11 @@
 // Copyright 2019 kuchel77
 // Copyright 2018 denxhun
 
-#include "../src/ir_Mitsubishi.h"
-#include "../src/IRac.h"
-#include "../src/IRrecv_test.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
+#include "ir_Mitsubishi.h"
+#include "IRac.h"
+#include "IRrecv_test.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests for sendMitsubishi().

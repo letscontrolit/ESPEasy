@@ -1,9 +1,9 @@
 // Copyright 2017 David Conran
 
-#include "../src/ir_Magiquest.h"
-#include "../src/IRrecv.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
+#include "ir_Magiquest.h"
+#include "IRrecv.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests for encodeMagiQuest()

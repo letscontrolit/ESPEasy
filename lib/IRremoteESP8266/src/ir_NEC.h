@@ -19,7 +19,7 @@
 #define IR_NEC_H_
 
 #include <stdint.h>
-#include "../src/IRremoteESP8266.h"
+#include "IRremoteESP8266.h"
 
 // Constants
 const uint16_t kNecTick = 560;

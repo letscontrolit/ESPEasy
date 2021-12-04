@@ -1,12 +1,12 @@
 // Copyright 2018 David Conran
 
-#include "../src/ir_Hitachi.h"
-#include "../src/IRac.h"
-#include "../src/IRrecv.h"
-#include "../src/IRrecv_test.h"
-#include "../src/IRremoteESP8266.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
+#include "ir_Hitachi.h"
+#include "IRac.h"
+#include "IRrecv.h"
+#include "IRrecv_test.h"
+#include "IRremoteESP8266.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests for sendHitachiAC().

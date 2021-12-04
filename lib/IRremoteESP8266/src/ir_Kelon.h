@@ -17,12 +17,12 @@
 #define IR_KELON_H_
 
 #ifdef UNIT_TEST
-#include "../src/IRsend_test.h"
+#include "IRsend_test.h"
 #endif
 
-#include "../src/IRremoteESP8266.h"
-#include "../src/IRsend.h"
-#include "../src/IRutils.h"
+#include "IRremoteESP8266.h"
+#include "IRsend.h"
+#include "IRutils.h"
 
 union KelonProtocol {
   uint64_t raw;

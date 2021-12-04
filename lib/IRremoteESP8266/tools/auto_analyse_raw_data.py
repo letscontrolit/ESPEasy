@@ -647,9 +647,9 @@ def generate_code(defines, code, bits_str, name="", output=sys.stdout):
                f"/// @brief Support for {def_name} protocol\n\n"
                "// Supports:\n"
                f"//   Brand: {def_name},  Model: TODO add device and remote\n\n"
-               '#include "../src/IRrecv.h"\n'
-               '#include "../src/IRsend.h"\n'
-               '#include "../src/IRutils.h"\n\n'
+               '#include "IRrecv.h"\n'
+               '#include "IRsend.h"\n'
+               '#include "IRutils.h"\n\n'
                "// WARNING: This probably isn't directly usable."
                " It's a guide only.\n\n"
                "// See https://github.com/crankyoldgit/IRremoteESP8266/wiki/"
