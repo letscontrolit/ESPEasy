@@ -1103,7 +1103,7 @@ void AdafruitGFX_helper::printText(const char    *string,
     // Estimate used width
     _w = _textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine ?
          strlen(string) * _fontwidth * textSize :
-         (_textcols * _fontwidth * textSize) - _x;
+         ((_textcols + 1) * _fontwidth * textSize) - _x;
 
     do {
       _display->drawLine(_x, _y, _x + _w - 1, _y, bkcolor);
