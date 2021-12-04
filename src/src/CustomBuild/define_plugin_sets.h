@@ -447,9 +447,13 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
       #define PLUGIN_DESCR  "IR"
     #endif
-    #define USES_P016      // IR
+    #ifndef USES_P016    
+      #define USES_P016      // IR
+    #endif
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-    #define USES_P035      // IRTX
+    #ifndef USES_P035    
+      #define USES_P035      // IRTX
+    #endif
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 #endif
 
@@ -457,9 +461,13 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
-    #define USES_P016      // IR
+    #ifndef USES_P016    
+      #define USES_P016      // IR
+    #endif
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-    #define USES_P035      // IRTX
+    #ifndef USES_P035    
+      #define USES_P035      // IRTX
+    #endif
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
@@ -474,7 +482,9 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
-    #define USES_P035      // IRTX
+    #ifndef USES_P035    
+      #define USES_P035      // IRTX
+    #endif
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
@@ -601,7 +611,10 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_MAGICHOME_IR
     #define PLUGIN_SET_ONLY_LEDSTRIP
-    #define USES_P016      // IR
+    #ifndef USES_P016    
+      #define USES_P016      // IR
+    #endif
+
 #endif
 
 
