@@ -1,10 +1,10 @@
 // Copyright 2017 David Conran
-#include "../src/ir_Toshiba.h"
-#include "../src/IRac.h"
-#include "../src/IRrecv.h"
-#include "../src/IRrecv_test.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
+#include "ir_Toshiba.h"
+#include "IRac.h"
+#include "IRrecv.h"
+#include "IRrecv_test.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests for Toshiba A/C methods.

@@ -15,11 +15,11 @@
 #ifndef UNIT_TEST
 #include <Arduino.h>
 #endif
-#include "../src/IRremoteESP8266.h"
-#include "../src/IRsend.h"
-#include "../src/IRrecv.h"
+#include "IRremoteESP8266.h"
+#include "IRsend.h"
+#include "IRrecv.h"
 #ifdef UNIT_TEST
-#include "../src/IRsend_test.h"
+#include "IRsend_test.h"
 #endif
 
 /// Native representation of a TCL 112 A/C message.

@@ -1,13 +1,13 @@
 // Copyright 2017, 2018 David Conran
 
-#include "../src/ir_Panasonic.h"
-#include "../src/IRac.h"
-#include "../src/IRrecv.h"
-#include "../src/IRrecv_test.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
-#include "../src/IRtext.h"
-#include "../src/IRutils.h"
+#include "ir_Panasonic.h"
+#include "IRac.h"
+#include "IRrecv.h"
+#include "IRrecv_test.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
+#include "IRtext.h"
+#include "IRutils.h"
 #include "gtest/gtest.h"
 
 // Tests for encodePanasonic().

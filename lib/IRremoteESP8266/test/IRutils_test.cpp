@@ -1,11 +1,11 @@
 // Copyright 2017-2019 David Conran
 
-#include "../src/IRutils.h"
+#include "IRutils.h"
 #include <stdint.h>
-#include "../src/IRrecv.h"
-#include "../src/IRrecv_test.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
+#include "IRrecv.h"
+#include "IRrecv_test.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests reverseBits().

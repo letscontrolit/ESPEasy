@@ -32,13 +32,13 @@
 #ifndef UNIT_TEST
 #include <Arduino.h>
 #endif
-#include "../src/IRrecv.h"
-#include "../src/IRremoteESP8266.h"
-#include "../src/IRsend.h"
+#include "IRrecv.h"
+#include "IRremoteESP8266.h"
+#include "IRsend.h"
 #ifdef UNIT_TEST
-#include "../src/IRsend_test.h"
+#include "IRsend_test.h"
 #endif
-#include "../src/IRutils.h"
+#include "IRutils.h"
 
 /// Native representation of a Sharp A/C message.
 union SharpProtocol{

@@ -7,10 +7,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <string>
-#include "../src/IRac.h"
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
-#include "../src/IRutils.h"
+#include "IRac.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
+#include "IRutils.h"
 
 const uint16_t kMaxGcCodeLength = 10000;
 

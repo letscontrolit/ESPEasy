@@ -1,7 +1,7 @@
 // Copyright 2017 David Conran
 
-#include "../src/IRsend.h"
-#include "../src/IRsend_test.h"
+#include "IRsend.h"
+#include "IRsend_test.h"
 #include "gtest/gtest.h"
 
 // Tests for sendGlobalCache().
