@@ -88,6 +88,43 @@ void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
   addFormSelector(F("Text print Mode"), id, textModeCount, textModes, textModeOptions, selectedIndex);
 }
 
+void AdaGFXFormColorDepth(const __FlashStringHelper *id,
+                          uint16_t                   selectedIndex,
+                          bool                       enabled) {
+  # if ADAGFX_SUPPORT_7COLOR
+  const int colorDepthCount = 7 + 1;
+  # else // if ADAGFX_SUPPORT_7COLOR
+  const int colorDepthCount = 6 + 1;
+  # endif // if ADAGFX_SUPPORT_7COLOR
+  const __FlashStringHelper *colorDepths[colorDepthCount] = { // Be sure to use all available modes from enum!
+    toString(static_cast<AdaGFXColorDepth>(0)), // include None
+    toString(AdaGFXColorDepth::Monochrome),
+    toString(AdaGFXColorDepth::BlackWhiteRed),
+    toString(AdaGFXColorDepth::BlackWhite2Greyscales),
+    # if ADAGFX_SUPPORT_7COLOR
+    toString(AdaGFXColorDepth::SevenColor),
+    # endif // if ADAGFX_SUPPORT_7COLOR
+    toString(AdaGFXColorDepth::EightColor),
+    toString(AdaGFXColorDepth::SixteenColor),
+    toString(AdaGFXColorDepth::FullColor)
+  };
+  const int colorDepthOptions[colorDepthCount] = {
+    0,
+    static_cast<int>(AdaGFXColorDepth::Monochrome),
+    static_cast<int>(AdaGFXColorDepth::BlackWhiteRed),
+    static_cast<int>(AdaGFXColorDepth::BlackWhite2Greyscales),
+    # if ADAGFX_SUPPORT_7COLOR
+    static_cast<int>(AdaGFXColorDepth::SevenColor),
+    # endif // if ADAGFX_SUPPORT_7COLOR
+    static_cast<int>(AdaGFXColorDepth::EightColor),
+    static_cast<int>(AdaGFXColorDepth::SixteenColor),
+    static_cast<int>(AdaGFXColorDepth::FullColor)
+  };
+
+  addRowLabel_tr_id(F("Display Color-depth"), id);
+  addSelector(id, colorDepthCount, colorDepths, colorDepthOptions, NULL, selectedIndex, false, enabled);
+}
+
 /*****************************************************************************************
  * Show a selector for Rotation options, supported by Adafruit_GFX
  ****************************************************************************************/

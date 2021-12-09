@@ -99,8 +99,10 @@
 
 # define ADAGFX_PARSE_PREFIX      F("~") // Subcommand-trigger prefix and postfix strings
 # define ADAGFX_PARSE_PREFIX_LEN  1
-# define ADAGFX_PARSE_POSTFIX     F("~") // Will be removed before the normal template parsing is done
+# define ADAGFX_PARSE_POSTFIX     F("~")            // Will be removed before the normal template parsing is done
 # define ADAGFX_PARSE_POSTFIX_LEN 1
+
+# define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_write") // Universal command trigger
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
@@ -179,6 +181,9 @@ const __FlashStringHelper* toString(AdaGFXTextPrintMode mode);
 const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth);
 void                       AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                                                    uint8_t                    selectedIndex);
+void                       AdaGFXFormColorDepth(const __FlashStringHelper *id,
+                                                uint16_t                   selectedIndex,
+                                                bool                       enabled = true);
 void                       AdaGFXFormRotation(const __FlashStringHelper *id,
                                               uint8_t                    selectedIndex);
 void                       AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
@@ -270,6 +275,10 @@ public:
 
   String getTrigger() {               // Returns the current trigger
     return _trigger;
+  }
+
+  bool isAdaGFXTrigger(const String& trigger) {
+    return trigger.equalsIgnoreCase(ADAGFX_UNIVERSAL_TRIGGER);
   }
 
 private:
