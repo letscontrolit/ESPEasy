@@ -377,7 +377,8 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
       success = false;
     }
   }
-  else if (st77xx && cmd.equals(_commandTrigger)) {
+  else if (st77xx && (cmd.equals(_commandTrigger) ||
+                      (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
     success = true;
 
     if (!bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE)) { // Wake display?
