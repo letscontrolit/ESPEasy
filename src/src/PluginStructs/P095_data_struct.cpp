@@ -287,7 +287,8 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
       success = false;
     }
   }
-  else if (tft && cmd.equals(_commandTrigger)) {
+  else if (tft && (cmd.equals(_commandTrigger) ||
+                   (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
     success = true;
 
     if (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE)) { // Wake display?
