@@ -24,7 +24,7 @@ Used libraries: |P116_usedlibraries|
 Description
 -----------
 
-The ST7735, ST7789 and ST7706 chip families drive color TFT displays in various resolutions, and usually support 65535 colors (RGB565 coded).
+The ST7735, ST7789 and ST7796 chip families drive color TFT displays in various resolutions, and usually support 65535 colors (RGB565 coded).
 
 This plugin supports these display models:
 
