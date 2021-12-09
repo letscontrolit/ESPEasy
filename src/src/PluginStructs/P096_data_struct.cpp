@@ -366,7 +366,8 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       success = false;
     }
   }
-  else if (eInkScreen && cmd.equals(_commandTrigger)) {
+  else if (eInkScreen && (cmd.equals(_commandTrigger) ||
+                          (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
     success = true;
 
     // if (!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_NO_WAKE)) { // Wake display?
