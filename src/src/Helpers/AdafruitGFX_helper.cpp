@@ -1395,6 +1395,7 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
     {
       switch (color) {
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK): return blackIsEmpty ? F("") : F("black");
+        case ADAGFX_WHITE: // Fall through
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE): return F("white");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE): return F("inverse");
         case static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED): return F("red");
@@ -1410,6 +1411,7 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
     {
       switch (color) {
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK): return blackIsEmpty ? F("") : F("black");
+        case ADAGFX_WHITE: // Fall through
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE): return F("white");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN): return F("green");
         case static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE): return F("blue");
