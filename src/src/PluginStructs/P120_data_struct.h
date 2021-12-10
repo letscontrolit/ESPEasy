@@ -2,7 +2,7 @@
 #define PLUGINSTRUCTS_P120_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#ifdef USES_P120
+#if defined(USES_P120) || defined(USES_P125)
 
 # include "../Globals/EventQueue.h"
 
@@ -15,6 +15,7 @@
 // Make accessing specific parameters more readable in the code
 // # define P120_I2C_OR_SPI      PCONFIG(0)
 # define P120_I2C_ADDR                    PCONFIG(1) // Kept (1) from template
+# define P120_CS_PIN                      PIN(0)
 # define P120_AVERAGE_BUFFER              PCONFIG(2)
 # define P120_FREQUENCY                   PCONFIG(3)
 # define P120_FREQUENCY_10                0          // 10x per second
@@ -71,6 +72,8 @@ public:
 
   P120_data_struct(uint8_t i2c_addr,
                    uint8_t aSize);
+  P120_data_struct(int     cs_pin,
+                   uint8_t aSize);
   ~P120_data_struct();
 
   bool read_sensor(struct EventStruct *event);
@@ -83,8 +86,13 @@ public:
     return adxl345 != nullptr;
   }
 
+  bool plugin_webform_load(struct EventStruct *event);
+  bool plugin_webform_save(struct EventStruct *event);
+  bool plugin_set_defaults(struct EventStruct *event);
+
 private:
 
+  void initialization();
   bool init_sensor(struct EventStruct *event);
   void sensor_check_interrupt(struct EventStruct *event);
   void appendPayloadXYZ(struct EventStruct *event,
@@ -98,6 +106,7 @@ private:
   ADXL345 *adxl345 = nullptr;
 
   uint8_t _i2c_addr;
+  int     _cs_pin;
   uint8_t _aSize;
 
   std::vector<int>_XA;
@@ -110,7 +119,8 @@ private:
 
   bool activityTriggered   = false;
   bool inactivityTriggered = false;
+  bool i2c_mode            = false;
 };
 
-#endif // ifdef USES_P120
+#endif // if defined(USES_P120) || defined(USES_P125)
 #endif // ifndef PLUGINSTRUCTS_P120_DATA_STRUCT_H

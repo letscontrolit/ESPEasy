@@ -3,7 +3,7 @@
 #ifdef USES_P120
 
 // #######################################################################################################
-// ################################ Plugin 120: Accelerometer - ADXL345 ##################################
+// ############################## Plugin 120: Accelerometer - ADXL345 I2C ################################
 // #######################################################################################################
 
 /**
@@ -11,7 +11,7 @@
  */
 
 /** Changelog:
- *
+ * 2021-12-10, tonhuisman: Split functional parts into P120_data_struc to re-use for P125 ADXL345 SPI plugin
  * 2021-11-22, tonhuisman: Move from DEVELOPMENT to TESTING
  * 2021-11-02, tonhuisman: Add Axis offsets for calibration
  * 2021-11-01, tonhuisman: Add event processing (pseudo-interrupts), improve settings
@@ -84,206 +84,53 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P120_I2C_ADDR       = 0x53;                            // Default I2C Address
-      P120_AVERAGE_BUFFER = 10;                              // Average averaging ;-)
-      uint32_t flags = 0ul;
-      set2BitToUL(flags, P120_FLAGS1_RANGE, P120_RANGE_16G); // Default to 16g range for highest resolution
-      bitSet(flags, P120_FLAGS1_ACTIVITY_X);                 // Detect activity on all axes
-      bitSet(flags, P120_FLAGS1_ACTIVITY_Y);
-      bitSet(flags, P120_FLAGS1_ACTIVITY_Z);
-      set8BitToUL(flags, P120_FLAGS1_ACTIVITY_TRESHOLD,   P120_DEFAULT_ACTIVITY_TRESHOLD);
-      set8BitToUL(flags, P120_FLAGS1_INACTIVITY_TRESHOLD, P120_DEFAULT_INACTIVITY_TRESHOLD);
-      P120_CONFIG_FLAGS1 = flags;
+      P120_I2C_ADDR       = 0x53; // Default I2C Address
+      P120_AVERAGE_BUFFER = 10;   // Average averaging ;-)
 
-      flags = 0ul;
-      set8BitToUL(flags, P120_FLAGS2_TAP_TRESHOLD,    P120_DEFAULT_TAP_TRESHOLD);
-      set8BitToUL(flags, P120_FLAGS2_TAP_DURATION,    P120_DEFAULT_TAP_DURATION);
-      set8BitToUL(flags, P120_FLAGS2_DBL_TAP_LATENCY, P120_DEFAULT_DBL_TAP_LATENCY);
-      set8BitToUL(flags, P120_FLAGS2_DBL_TAP_WINDOW,  P120_DEFAULT_DBL_TAP_WINDOW);
-      P120_CONFIG_FLAGS2 = flags;
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
 
-      flags = 0ul;
-      set8BitToUL(flags, P120_FLAGS3_FREEFALL_TRESHOLD, P120_DEFAULT_FREEFALL_TRESHOLD);
-      set8BitToUL(flags, P120_FLAGS3_FREEFALL_DURATION, P120_DEFAULT_FREEFALL_DURATION);
-      P120_CONFIG_FLAGS3 = flags;
-
-      flags = 0ul;
-      set8BitToUL(flags, P120_FLAGS4_OFFSET_X, 0 + 0x80); // Offset 0 by default
-      set8BitToUL(flags, P120_FLAGS4_OFFSET_Y, 0 + 0x80);
-      set8BitToUL(flags, P120_FLAGS4_OFFSET_Z, 0 + 0x80);
-      P120_CONFIG_FLAGS4 = flags;
+      if (nullptr != P120_data) {
+        success = P120_data->plugin_set_defaults(event); // This shouldn't fail
+        delete P120_data;
+      }
 
       // No decimals plausible, as the outputs from the sensor are of type int
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
       }
 
-      success = true;
       break;
     }
 
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      // Range
-      {
-        const __FlashStringHelper *rangeOptions[] = {
-          F("2g"),
-          F("4g"),
-          F("8g"),
-          F("16g (default)") };
-        int rangeValues[] = { P120_RANGE_2G, P120_RANGE_4G, P120_RANGE_8G, P120_RANGE_16G };
-        addFormSelector(F("Range"), F("p120_range"), 4, rangeOptions, rangeValues,
-                        get2BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_RANGE));
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
+
+      if (nullptr != P120_data) {
+        success = P120_data->plugin_webform_load(event); // This shouldn't fail
+        delete P120_data;
       }
-
-      // Axis selection
-      {
-        addFormCheckBox(F("X-axis activity sensing"), F("p120_activity_x"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ACTIVITY_X) == 1);
-        addFormCheckBox(F("Y-axis activity sensing"), F("p120_activity_y"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ACTIVITY_Y) == 1);
-        addFormCheckBox(F("Z-axis activity sensing"), F("p120_activity_z"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_ACTIVITY_Z) == 1);
-        addFormNumericBox(F("Activity treshold"), F("p120_activity_treshold"),
-                          get8BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_ACTIVITY_TRESHOLD), 1, 255);
-        addUnit(F("1..255 * 62.5 mg"));
-        addFormNumericBox(F("In-activity treshold"), F("p120_inactivity_treshold"),
-                          get8BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_INACTIVITY_TRESHOLD), 1, 255);
-        addUnit(F("1..255 * 62.5 mg"));
-      }
-
-      // Activity logging and send events for (in)activity
-      {
-        addFormCheckBox(F("Enable (in)activity events"), F("p120_send_activity"),
-                        bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_SEND_ACTIVITY) == 1);
-        addFormCheckBox(F("Log sensor activity (INFO)"), F("p120_log_activity"),
-                        bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY) == 1);
-        addFormCheckBox(F("Events with raw measurements"), F("p120_raw_measurement"),
-                        bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_EVENT_RAW_VALUES) == 1);
-      }
-
-      // Tap detection
-      {
-        addFormSubHeader(F("Tap detection"));
-
-        addFormCheckBox(F("X-axis"), F("p120_tap_x"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_TAP_X) == 1);
-        addFormCheckBox(F("Y-axis"), F("p120_tap_y"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_TAP_Y) == 1);
-        addFormCheckBox(F("Z-axis"), F("p120_tap_z"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_TAP_Z) == 1);
-        addFormNote(F("Also enables taskname#Tapped event."));
-        addFormNumericBox(F("Tap treshold"), F("p120_tap_treshold"),
-                          get8BitFromUL(P120_CONFIG_FLAGS2, P120_FLAGS2_TAP_TRESHOLD), 1, 255);
-        addUnit(F("1..255 * 62.5 mg"));
-        addFormNumericBox(F("Tap duration"), F("p120_tap_duration"),
-                          get8BitFromUL(P120_CONFIG_FLAGS2, P120_FLAGS2_TAP_DURATION), 1, 255);
-        addUnit(F("1..255 * 625 &micro;s"));
-      }
-
-      // Double-tap detection
-      {
-        addFormCheckBox(F("Enable double-tap detection"), F("p120_dbl_tap"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_DBL_TAP) == 1);
-        addFormNote(F("Also enables taskname#DoubleTapped event."));
-        addFormNumericBox(F("Double-tap latency"), F("p120_dbl_tap_latency"),
-                          get8BitFromUL(P120_CONFIG_FLAGS2, P120_FLAGS2_DBL_TAP_LATENCY), 1, 255);
-        addUnit(F("1..255 * 1.25 ms"));
-        addFormNumericBox(F("Double-tap window"), F("p120_dbl_tap_window"),
-                          get8BitFromUL(P120_CONFIG_FLAGS2, P120_FLAGS2_DBL_TAP_WINDOW), 1, 255);
-        addUnit(F("1..255 * 1.25 ms"));
-      }
-
-      // Free-fall detection
-      {
-        addFormSubHeader(F("Free-fall detection"));
-
-        addFormCheckBox(F("Enable free-fall detection"), F("p120_free_fall"), bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_FREE_FALL) == 1);
-        addFormNote(F("Also enables taskname#FreeFall event."));
-        addFormNumericBox(F("Free-fall treshold"), F("p120_free_fall_treshold"),
-                          get8BitFromUL(P120_CONFIG_FLAGS3, P120_FLAGS3_FREEFALL_TRESHOLD), 1, 255);
-        addUnit(F("1..255 * 62.5 mg"));
-        addFormNumericBox(F("Free-fall duration"), F("p120_free_fall_duration"),
-                          get8BitFromUL(P120_CONFIG_FLAGS3, P120_FLAGS3_FREEFALL_DURATION), 1, 255);
-        addUnit(F("1..255 * 625 &micro;s"));
-      }
-
-      // Axis Offsets (calibration)
-      {
-        addFormSubHeader(F("Axis calibration"));
-        addFormNumericBox(F("X-Axis offset"), F("p120_offset_x"),
-                          get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_X) - 0x80, -127, 127);
-        addUnit(F("-127..127 * 15.6 mg"));
-        addFormNumericBox(F("Y-Axis offset"), F("p120_offset_y"),
-                          get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_Y) - 0x80, -127, 127);
-        addUnit(F("-127..127 * 15.6 mg"));
-        addFormNumericBox(F("Z-Axis offset"), F("p120_offset_z"),
-                          get8BitFromUL(P120_CONFIG_FLAGS4, P120_FLAGS4_OFFSET_Z) - 0x80, -127, 127);
-        addUnit(F("-127..127 * 15.6 mg"));
-      }
-
-      // Data retrieval options
-      {
-        addFormSubHeader(F("Data retrieval"));
-
-        addFormNumericBox(F("Averaging buffer size"), F("p120_average_buf"), P120_AVERAGE_BUFFER, 1, 100);
-        addUnit(F("1..100"));
-
-        const __FlashStringHelper *frequencyOptions[] = {
-          F("10x per second"),
-          F("50x per second") };
-        int frequencyValues[] = { P120_FREQUENCY_10, P120_FREQUENCY_50 };
-        addFormSelector(F("Measuring frequency"), F("p120_frequency"), 2, frequencyOptions, frequencyValues, P120_FREQUENCY);
-        addFormNote(F("Values X/Y/Z are updated 1x per second, Controller updates &amp; Value-events are based on 'Interval' setting."));
-      }
-
-      success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P120_I2C_ADDR = getFormItemInt(F("i2c_addr"));
-
-      // P120_RAW_DATA       = isFormItemChecked(F("p120_rawData")) ? 1 : 0;
+      P120_I2C_ADDR       = getFormItemInt(F("i2c_addr"));
       P120_AVERAGE_BUFFER = getFormItemInt(F("p120_average_buf"));
-      P120_FREQUENCY      = getFormItemInt(F("p120_frequency"));
-      uint32_t flags = 0ul;
-      set2BitToUL(flags, P120_FLAGS1_RANGE, getFormItemInt(F("p120_range")));
-      bitWrite(flags, P120_FLAGS1_ACTIVITY_X,       isFormItemChecked(F("p120_activity_x")));
-      bitWrite(flags, P120_FLAGS1_ACTIVITY_Y,       isFormItemChecked(F("p120_activity_y")));
-      bitWrite(flags, P120_FLAGS1_ACTIVITY_Z,       isFormItemChecked(F("p120_activity_z")));
-      bitWrite(flags, P120_FLAGS1_TAP_X,            isFormItemChecked(F("p120_tap_x")));
-      bitWrite(flags, P120_FLAGS1_TAP_Y,            isFormItemChecked(F("p120_tap_y")));
-      bitWrite(flags, P120_FLAGS1_TAP_Z,            isFormItemChecked(F("p120_tap_z")));
-      bitWrite(flags, P120_FLAGS1_DBL_TAP,          isFormItemChecked(F("p120_dbl_tap")));
-      bitWrite(flags, P120_FLAGS1_FREE_FALL,        isFormItemChecked(F("p120_free_fall")));
-      bitWrite(flags, P120_FLAGS1_SEND_ACTIVITY,    isFormItemChecked(F("p120_send_activity")));
-      bitWrite(flags, P120_FLAGS1_LOG_ACTIVITY,     isFormItemChecked(F("p120_log_activity")));
-      bitWrite(flags, P120_FLAGS1_EVENT_RAW_VALUES, isFormItemChecked(F("p120_raw_measurement")));
-      set8BitToUL(flags, P120_FLAGS1_ACTIVITY_TRESHOLD,   getFormItemInt(F("p120_activity_treshold")));
-      set8BitToUL(flags, P120_FLAGS1_INACTIVITY_TRESHOLD, getFormItemInt(F("p120_inactivity_treshold")));
-      P120_CONFIG_FLAGS1 = flags;
 
-      flags = 0ul;
-      set8BitToUL(flags, P120_FLAGS2_TAP_TRESHOLD,    getFormItemInt(F("p120_tap_treshold")));
-      set8BitToUL(flags, P120_FLAGS2_TAP_DURATION,    getFormItemInt(F("p120_tap_duration")));
-      set8BitToUL(flags, P120_FLAGS2_DBL_TAP_LATENCY, getFormItemInt(F("p120_dbl_tap_latency")));
-      set8BitToUL(flags, P120_FLAGS2_DBL_TAP_WINDOW,  getFormItemInt(F("p120_dbl_tap_window")));
-      P120_CONFIG_FLAGS2 = flags;
+      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER);
 
-      flags = 0ul;
-      set8BitToUL(flags, P120_FLAGS3_FREEFALL_TRESHOLD, getFormItemInt(F("p120_free_fall_treshold")));
-      set8BitToUL(flags, P120_FLAGS3_FREEFALL_DURATION, getFormItemInt(F("p120_free_fall_duration")));
-      P120_CONFIG_FLAGS3 = flags;
-
-      flags = 0ul;
-      set8BitToUL(flags, P120_FLAGS4_OFFSET_X, getFormItemInt(F("p120_offset_x")) + 0x80);
-      set8BitToUL(flags, P120_FLAGS4_OFFSET_Y, getFormItemInt(F("p120_offset_y")) + 0x80);
-      set8BitToUL(flags, P120_FLAGS4_OFFSET_Z, getFormItemInt(F("p120_offset_z")) + 0x80);
-      P120_CONFIG_FLAGS4 = flags;
-
-      success = true;
+      if (nullptr != P120_data) {
+        success = P120_data->plugin_webform_save(event); // This shouldn't fail
+        delete P120_data;
+      }
       break;
     }
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(P120_I2C_ADDR, P120_AVERAGE_BUFFER));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER));
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P120_data) {
