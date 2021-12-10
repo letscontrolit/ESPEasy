@@ -161,13 +161,6 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
 
       eInkScreen->setRotation(_rotation);
       eInkScreen->setTextColor(_fgcolor);
-      # ifdef P096_SHOW_SPLASH
-      eInkScreen->setTextSize(3);
-      eInkScreen->println("ESP Easy");
-      eInkScreen->setTextSize(2);
-      eInkScreen->println("eInk shield");
-      eInkScreen->display();
-      # endif // ifdef P096_SHOW_SPLASH
       eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
       eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
     }
@@ -204,18 +197,9 @@ bool P096_data_struct::plugin_exit(struct EventStruct *event) {
   if (nullptr != gfxHelper) { delete gfxHelper; }
   gfxHelper = nullptr;
 
-  if (nullptr != il3897) { delete il3897; }
-  il3897 = nullptr;
-
-  if (nullptr != uc8151d) { delete uc8151d; }
-  uc8151d = nullptr;
-
-  if (nullptr != ssd1680) { delete ssd1680; }
-  ssd1680 = nullptr;
-  # else // if P096_USE_EXTENDED_SETTINGS
+  # endif // if P096_USE_EXTENDED_SETTINGS
 
   if (nullptr != eInkScreen) { delete eInkScreen; }
-  # endif // if P096_USE_EXTENDED_SETTINGS
   eInkScreen = nullptr; // Is used as a proxy only
   return true;
 }

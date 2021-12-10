@@ -529,62 +529,6 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       } else {
         addLog(LOG_LEVEL_ERROR, F("EPD  : SPI not enabled, init cancelled."));
       }
-      break;
-
-      // uint8_t init = PCONFIG(0);
-
-      // // if already configured take it from settings, else use default values (only for pin values)
-      // if (init != 1)
-      // {
-      //   PIN(0) = EPD_Settings.address_epd_cs;
-      //   PIN(1) = EPD_Settings.address_epd_dc;
-      //   PIN(2) = EPD_Settings.address_epd_rst;
-      //   PIN(3) = EPD_Settings.address_epd_busy;
-      // }
-
-      // EPD_Settings.address_epd_cs   = PIN(0);
-      // EPD_Settings.address_epd_dc   = PIN(1);
-      // EPD_Settings.address_epd_rst  = PIN(2);
-      // EPD_Settings.address_epd_busy = PIN(3);
-      // EPD_Settings.rotation         = P096_CONFIG_ROTATION;
-      // EPD_Settings.width            = P096_CONFIG_WIDTH;
-      // EPD_Settings.height           = P096_CONFIG_HEIGHT;
-
-      // eInkScreen = new LOLIN_IL3897(EPD_Settings.width,
-      //                               EPD_Settings.height,
-      //                               EPD_Settings.address_epd_dc,
-      //                               EPD_Settings.address_epd_rst,
-      //                               EPD_Settings.address_epd_cs,
-      //                               EPD_Settings.address_epd_busy); // hardware SPI
-      // plugin_096_sequence_in_progress = false;
-      // # ifdef P096_USE_ADA_GRAPHICS
-
-      // if (nullptr != eInkScreen) {
-      //   gfxHelper = new (std::nothrow) AdafruitGFX_helper(eInkScreen,
-      //                                                     F("epd"),
-      //                                                     PCONFIG(2),
-      //                                                     PCONFIG(3),
-      //                                                     AdaGFXColorDepth::Monochrome,
-      //                                                     AdaGFXTextPrintMode::ContinueToNextLine,
-      //                                                     3,
-      //                                                     static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_BLACK),
-      //                                                     static_cast<uint16_t>(AdaGFXMonoDuoQuadColors::ADAGFXEPD_WHITE));
-
-      //   if (nullptr != gfxHelper) {
-      //     // gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
-      //   }
-      // }
-      // # endif // ifdef P096_USE_ADA_GRAPHICS
-      // eInkScreen->begin();
-      // eInkScreen->clearBuffer();
-
-      // eInkScreen->setTextColor(EPD_BLACK);
-      // eInkScreen->setTextSize(3);
-      // eInkScreen->println("ESP Easy");
-      // eInkScreen->setTextSize(2);
-      // eInkScreen->println("eInk shield");
-      // eInkScreen->display();
-      // delay(100);
 
       success = true;
       break;

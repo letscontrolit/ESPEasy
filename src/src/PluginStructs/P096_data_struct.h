@@ -4,32 +4,26 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P096
 
-# include <Adafruit_GFX.h>     // include Adafruit graphics library
-# include <LOLIN_EPD.h>        // include Adafruit Lolin eInk/ePaper library
+# include <Adafruit_GFX.h>                              // include Adafruit graphics library
+# include <LOLIN_EPD.h>                                 // include Adafruit Lolin eInk/ePaper library
 
-# define P096_USE_ADA_GRAPHICS // Use AdafruitGFX_helper
-
-// # define P096_SHOW_SPLASH                          // Enable to show initial splash (text)
+# define P096_USE_ADA_GRAPHICS                          // Use AdafruitGFX_helper
 
 # ifndef P096_USE_EXTENDED_SETTINGS
-#  define P096_USE_EXTENDED_SETTINGS 1             // Allow more settings/options, made available by the AdaGFX helper
+#  define P096_USE_EXTENDED_SETTINGS 1                  // Allow more settings/options, made available by the AdaGFX helper
 # endif // ifndef P096_USE_EXTENDED_SETTINGS
 
-# include "../Helpers/AdafruitGFX_helper.h"        // Use Adafruit graphics helper objecr
+# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
 # include "../CustomBuild/StorageLayout.h"
 
-# define P096_Nlines 24                            // The number of different lines which can be displayed
+# define P096_Nlines 24                                 // The number of different lines which can be displayed
 # define P096_Nchars 60
 
-# define P096_CONFIG_VERSION            PCONFIG(0) // Settings version
-# define P096_CONFIG_ROTATION           PCONFIG(1) // Rotation
-# define P096_CONFIG_WIDTH              PCONFIG(2) // Display width
-# define P096_CONFIG_HEIGHT             PCONFIG(3) // Display height
-// Extended setting definitions
-// # define P096_CONFIG_BUTTON_PIN         PCONFIG(4)      // Pin for display-button
-// # define P096_CONFIG_DISPLAY_TIMEOUT    PCONFIG(5)      // Time-out when display-button is enable
-// # define P096_CONFIG_BACKLIGHT_PIN      PCONFIG(6)      // Backlight pin
-// # define P096_CONFIG_BACKLIGHT_PERCENT  PCONFIG(7)      // Backlight percentage
+# define P096_CONFIG_VERSION            PCONFIG(0)      // Settings version
+# define P096_CONFIG_ROTATION           PCONFIG(1)      // Rotation
+# define P096_CONFIG_WIDTH              PCONFIG(2)      // Display width
+# define P096_CONFIG_HEIGHT             PCONFIG(3)      // Display height
+
 # define P096_CONFIG_COLORS             PCONFIG_LONG(3) // 2 Colors fit in 1 long
 
 # define P096_CONFIG_FLAGS              PCONFIG_LONG(0) // All flags, 32 bits available
@@ -61,14 +55,12 @@
   #  define P096_TFT_CS_HSPI   26 // when connected to Hardware-SPI GPIO-14 is already used
   #  define P096_TFT_DC        27
   #  define P096_TFT_RST       -1 // 33
-// #  define P096_BACKLIGHT_PIN -1 // 15 // D8
 # else // ifdef ESP32
 
 // Was: for D1 Mini with shield connection
   #  define P096_TFT_CS        D3 //  0   // D0
   #  define P096_TFT_DC        D2 //  4   // D8
   #  define P096_TFT_RST       -1 // D4 // -1
-// #  define P096_BACKLIGHT_PIN -1 // D6 // 15 // D8 -> Blocks Wemos
 # endif // ifdef ESP32
 
 enum class EPD_type_e : uint8_t {
@@ -118,25 +110,15 @@ public:
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
 
-  // bool plugin_ten_per_second(struct EventStruct *event);
-  // bool plugin_once_a_second(struct EventStruct *event);
-
 private:
 
-  // void displayOnOff(bool    state,
-  //                   int8_t  backlightPin,
-  //                   uint8_t backlightPercentage,
-  //                   uint8_t displayTimeout);
   void updateFontMetrics();
 
-  LOLIN_EPD     *eInkScreen = nullptr;
-  LOLIN_IL3897  *il3897     = nullptr;
-  LOLIN_UC8151D *uc8151d    = nullptr;
-  LOLIN_SSD1680 *ssd1680    = nullptr;
-
-  uint8_t plugin_096_sequence_in_progress = false;
+  LOLIN_EPD *eInkScreen = nullptr;
 
   AdafruitGFX_helper *gfxHelper = nullptr;
+
+  bool plugin_096_sequence_in_progress = false;
 
   EPD_type_e _display;
   uint16_t   _xpix;
