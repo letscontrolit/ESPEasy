@@ -373,7 +373,11 @@ bool check_rules_line_user_errors(String& line)
  \*********************************************************************************************/
 bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
 {
-  char openingBracket = closingIndex;
+  if (line.length() <= 1) {
+    // Not possible to have opening and closing bracket on a line this short.
+    return false;
+  }
+  char openingBracket = closingBracket;
 
   switch (closingBracket) {
     case ']': openingBracket = '['; break;
@@ -383,11 +387,15 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
       // unknown bracket type
       return false;
   }
-  closingIndex = line.indexOf(closingBracket);
+  // Closing bracket should not be found on the first position.
+  closingIndex = line.indexOf(closingBracket, 1);
 
-  if (closingIndex == -1) { return false; }
+  if (closingIndex == -1) { 
+    // not found
+    return false; 
+  }
 
-  for (int i = closingIndex; i >= 0; --i) {
+  for (int i = (closingIndex - 1); i >= 0; --i) {
     if (line[i] == openingBracket) {
       startIndex = i;
       return true;
@@ -552,8 +560,8 @@ void parse_string_commands(String& line) {
     String arg2        = parseStringKeepCase(fullCommand, 3, ':');
     String arg3        = parseStringKeepCase(fullCommand, 4, ':');
 
+    String replacement; // maybe just replace with empty to avoid looping?
     if (cmd_s_lower.length() > 0) {
-      String replacement; // maybe just replace with empty to avoid looping?
       //      addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + cmd_s_lower + " " + arg1 + " " + arg2 + " " + arg3);
 
       uint64_t iarg1, iarg2 = 0;
@@ -635,15 +643,14 @@ void parse_string_commands(String& line) {
         replacement.replace('}', static_cast<char>(0x03));
       }
 
-      // Replace the full command including opening and closing brackets.
-      line.replace(line.substring(startIndex, closingIndex + 1), replacement);
-
       /*
          if (replacement.length() > 0) {
          addLog(LOG_LEVEL_INFO, String(F("parse_string_commands cmd: ")) + fullCommand + String(F(" -> ")) + replacement);
          }
        */
     }
+    // Replace the full command including opening and closing brackets.
+    line.replace(line.substring(startIndex, closingIndex + 1), replacement);
   }
 
   // We now have to check if we did mask some parts and unmask them.
