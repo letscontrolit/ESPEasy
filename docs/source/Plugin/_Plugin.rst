@@ -141,6 +141,7 @@ There are different released versions of ESP Easy:
    ":ref:`P114_page`","|P114_status|","P114"
    ":ref:`P115_page`","|P115_status|","P115"
    ":ref:`P116_page`","|P116_status|","P116"
+   ":ref:`P117_page`","|P117_status|","P117"
 
 
 Internal GPIO handling
