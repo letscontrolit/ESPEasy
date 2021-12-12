@@ -373,7 +373,11 @@ bool check_rules_line_user_errors(String& line)
  \*********************************************************************************************/
 bool get_next_inner_bracket(const String& line, int& startIndex, int& closingIndex, char closingBracket)
 {
-  char openingBracket = closingIndex;
+  if (line.length() <= 1) {
+    // Not possible to have opening and closing bracket on a line this short.
+    return false;
+  }
+  char openingBracket = closingBracket;
 
   switch (closingBracket) {
     case ']': openingBracket = '['; break;
@@ -383,11 +387,15 @@ bool get_next_inner_bracket(const String& line, int& startIndex, int& closingInd
       // unknown bracket type
       return false;
   }
-  closingIndex = line.indexOf(closingBracket);
+  // Closing bracket should not be found on the first position.
+  closingIndex = line.indexOf(closingBracket, startIndex + 1);
 
-  if (closingIndex == -1) { return false; }
+  if (closingIndex == -1) { 
+    // not found
+    return false; 
+  }
 
-  for (int i = closingIndex; i >= 0; --i) {
+  for (int i = (closingIndex - 1); i > startIndex; --i) {
     if (line[i] == openingBracket) {
       startIndex = i;
       return true;
@@ -542,7 +550,8 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
 }
 
 void parse_string_commands(String& line) {
-  int startIndex, closingIndex;
+  int startIndex = 0;
+  int closingIndex;
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
