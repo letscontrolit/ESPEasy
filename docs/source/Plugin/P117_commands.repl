@@ -1,0 +1,31 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``scdgetabc``
+
+    ","
+
+    | Shows automatic calibration period in days, 0 = disable.
+
+    "
+    "
+
+    | ``scdgetalt``
+
+    ","
+
+    | Shows altitude compensation configuration in meters above sea level.
+
+    "
+    "
+
+    | ``scdgettmp``
+
+    ","
+
+    | Shows temperature offset in degrees C.
+
+    "
