@@ -1139,6 +1139,7 @@ To create/register a plugin, you have to :
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
     #define USES_P118  // Itho ventilation control
+    #define USES_P124  // I2C MultiRelay
 #endif
 
 
