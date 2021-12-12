@@ -26,6 +26,9 @@ P120_data_struct::P120_data_struct(
   initialization();
 }
 
+// **************************************************************************/
+// Common initialization
+// **************************************************************************/
 void P120_data_struct::initialization() {
   if (_aSize == 0) { _aSize = 1; }
   _XA.resize(_aSize, 0);
@@ -415,7 +418,7 @@ void P120_data_struct::send_task_event(struct EventStruct *event,
 }
 
 // *******************************************************************
-// Load the configuration interfaace
+// Load the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
   // Range
@@ -528,7 +531,7 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
 }
 
 // *******************************************************************
-// Save the configuration interfaace
+// Save the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
   P120_FREQUENCY = getFormItemInt(F("p120_frequency"));
@@ -572,7 +575,7 @@ bool P120_data_struct::plugin_webform_save(struct EventStruct *event) {
 }
 
 // *******************************************************************
-// Set defaultss for the configuration interfaace
+// Set defaultss for the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_set_defaults(struct EventStruct *event) {
   bool success = false;
