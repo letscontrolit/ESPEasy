@@ -10,3 +10,16 @@
 .. |P120_maintainer| replace:: `tonhuisman`
 .. |P120_compileinfo| replace:: `.`
 .. |P120_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
+
+.. |P124_name| replace:: :cyan:`MultiRelay`
+.. |P124_type| replace:: :cyan:`Output`
+.. |P124_typename| replace:: :cyan:`Output - I2C Multi Relay`
+.. |P124_porttype| replace:: `.`
+.. |P124_status| replace:: :yellow:`TESTING D`
+.. |P124_github| replace:: P124_MultiTelay.ino
+.. _P124_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P124_MyltiRelay.ino
+.. |P124_usedby| replace:: `.`
+.. |P124_shortinfo| replace:: `Seeed Studio I2C Multi Relay boards`
+.. |P124_maintainer| replace:: `tonhuisman`
+.. |P124_compileinfo| replace:: `.`
+.. |P124_usedlibraries| replace:: `https://github.com/Seeed-Studio/Multi_Channel_Relay_Arduino_Library (modified local copy)`
