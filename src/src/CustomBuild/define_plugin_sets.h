@@ -1137,6 +1137,7 @@ To create/register a plugin, you have to :
     #define USES_P094  // CUL Reader
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
+    #define USES_P117  // SCD30
     #define USES_P124  // I2C MultiRelay
 #endif
 
@@ -1420,7 +1421,7 @@ To create/register a plugin, you have to :
     #define USES_P116   // 
   #endif
   #ifndef USES_P117
-    #define USES_P117   // 
+    #define USES_P117   // SCD30
   #endif
   #ifndef USES_P118
     #define USES_P118   // 
