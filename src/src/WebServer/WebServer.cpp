@@ -235,32 +235,6 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
   }
 }
 
-size_t streamFile_htmlEscape(const String& fileName)
-{
-  fs::File f    = tryOpenFile(fileName, "r");
-  size_t   size = 0;
-
-  if (f)
-  {
-    while (f.available())
-    {
-      char c = (char)f.read();
-
-      String escaped;
-
-      if (htmlEscapeChar(c, escaped)) {
-        addHtml(escaped);
-      } else {
-        addHtml(c);
-      }
-      ++size;
-    }
-    f.close();
-  }
-  return size;
-}
-
-
 bool captivePortal() {
   const bool fromAP = web_server.client().localIP() == apIP;
   const bool hasWiFiCredentials = SecuritySettings.hasWiFiCredentials();

@@ -131,10 +131,12 @@ bool loadFromFS(String path) {
   return true;
 }
 
-bool streamFromFS(String path) {
+size_t streamFromFS(String path, bool htmlEscape) {
   // path is a deepcopy, since it will be changed here.
   path = fileFromUrl(path);
   statusLED(true);
+
+  size_t bytesStreamed = 0;
 
   fs::File f;
 
@@ -147,14 +149,35 @@ bool streamFromFS(String path) {
   #endif // ifdef FEATURE_SD
 
   if (!f) {
-    return false;
+    return bytesStreamed;
   }
 
-  while (f.available()) { 
-    addHtml((char)f.read()); 
+  int available = f.available();
+  String escaped;
+  while (available > 0) {
+    uint32_t chunksize = 64;
+    if (available < chunksize) {
+      chunksize = available;
+    }
+    uint8_t buf[64] = {0};
+    const size_t read = f.read(buf, chunksize);
+    if (read == chunksize) {
+      for (uint32_t i = 0; i < chunksize; ++i) {
+        const char c = (char)buf[i];
+        if (htmlEscape && htmlEscapeChar(c, escaped)) {
+          addHtml(escaped);
+        } else {
+          addHtml(c);
+        }
+      }
+      bytesStreamed += read;
+      available = f.available();
+    } else {
+      available = 0;
+    }
   }
   statusLED(true);
 
   f.close();
-  return true;
+  return bytesStreamed;
 }

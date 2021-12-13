@@ -25,6 +25,7 @@
 #ifdef ESP32
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
+#include <rom/spi_flash.h>
 #endif
 
 /********************************************************************************************\
@@ -480,21 +481,28 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
    Hardware information
  \*********************************************************************************************/
 uint32_t getFlashChipId() {
-  uint32_t flashChipId = 0;
+  // Cache since size does not change
+  static uint32_t flashChipId = 0;
+  if (flashChipId == 0) {
   #ifdef ESP32
-  //esp_flash_read_id(nullptr, &flashChipId);
+    flashChipId = g_rom_flashchip.device_id;
+//    esp_flash_read_id(nullptr, &flashChipId);
   #elif defined(ESP8266)
-  flashChipId = ESP.getFlashChipId();
+    flashChipId = ESP.getFlashChipId();
   #endif
+  }
   return flashChipId;
 }
 
 uint32_t getFlashRealSizeInBytes() {
+  // Cache since size does not change
+  static uint32_t res
   #if defined(ESP32)
-  return ESP.getFlashChipSize();
+  = ESP.getFlashChipSize();
   #else // if defined(ESP32)
-  return ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
+  = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
   #endif // if defined(ESP32)
+  return res;
 }
 
 
@@ -519,7 +527,8 @@ uint8_t getFlashChipVendorId() {
   return ESP.getFlashChipVendorId();
 #else // ifdef PUYA_SUPPORT
   # if defined(ESP8266)
-    uint32_t flashChipId = ESP.getFlashChipId();
+    // Cache since size does not change
+    static uint32_t flashChipId = ESP.getFlashChipId();
     return flashChipId & 0x000000ff;
   # elif defined(ESP32)
   
@@ -529,7 +538,7 @@ uint8_t getFlashChipVendorId() {
 }
 
 bool flashChipVendorPuya() {
-  uint8_t vendorId = getFlashChipVendorId();
+  const uint8_t vendorId = getFlashChipVendorId();
 
   return vendorId == 0x85; // 0x146085 PUYA
 }
@@ -598,6 +607,19 @@ uint8_t getChipRevision() {
   #endif
   return rev;
 }
+
+uint32_t getSketchSize() {
+  // Cache the value as this never changes during run time.
+  static uint32_t res = ESP.getSketchSize();
+  return res;
+}
+
+uint32_t getFreeSketchSpace() {
+  // Cache the value as this never changes during run time.
+  static uint32_t res = ESP.getFreeSketchSpace();
+  return res;
+}
+
 
 #ifdef ESP8266
 void readBootCause() {
