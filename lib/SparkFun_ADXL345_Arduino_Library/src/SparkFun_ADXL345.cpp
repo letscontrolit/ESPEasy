@@ -47,8 +47,9 @@ ADXL345::ADXL345(int CS) {
   gains[2] = 0.00349265;
   _CS      = CS;
   I2C      = false;
-  SPI.begin();
-  SPI.setDataMode(SPI_MODE3);
+  // tonhuisman: disabled as SPI is already initialized in ESPEasy core.
+  // SPI.begin();
+  // SPI.setDataMode(SPI_MODE3);
   pinMode(_CS, OUTPUT);
   digitalWrite(_CS, HIGH);
 }

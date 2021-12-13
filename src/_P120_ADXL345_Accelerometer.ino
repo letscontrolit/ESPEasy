@@ -133,9 +133,7 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P120_data_struct(static_cast<uint8_t>(P120_I2C_ADDR), P120_AVERAGE_BUFFER));
       P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P120_data) {
-        success = true;
-      }
+      success = nullptr != P120_data;
 
       break;
     }
