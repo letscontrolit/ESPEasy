@@ -23,8 +23,7 @@
 // ********************************************************************************
 // Web Interface custom page handler
 // ********************************************************************************
-boolean handle_custom(String path) {
-  // path is a deepcopy, since it will be changed.
+bool handle_custom(const String& path) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_custom"));
   #endif
@@ -33,7 +32,7 @@ boolean handle_custom(String path) {
 
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
   fs::File   dataFile      = tryOpenFile(path.c_str(), "r");
-  const bool dashboardPage = path.startsWith(F("dashboard"));
+  const bool dashboardPage = path.startsWith(F("dashboard")) || path.startsWith(F("/dashboard"));
 
   if (!dataFile && !dashboardPage) {
     return false;    // unknown file that does not exist...
@@ -137,14 +136,35 @@ boolean handle_custom(String path) {
 
   if (dataFile)
   {
-    String page;
-    page.reserve(dataFile.size());
-
-    while (dataFile.available()) {
-      page += ((char)dataFile.read());
+    // Read the file per line and serve per line to reduce amount of memory needed.
+    int available = dataFile.available();
+    String line;
+    line.reserve(128);
+    while (available > 0) {
+      uint32_t chunksize = 64;
+      if (available < chunksize) {
+        chunksize = available;
+      }
+      uint8_t buf[64] = {0};
+      const size_t read = dataFile.read(buf, chunksize);
+      if (read == chunksize) {
+        for (uint32_t i = 0; i < chunksize; ++i) {
+          const char c = (char)buf[i];
+          line += c;
+          if (c == '\n') {
+            addHtml(parseTemplate(line));
+            line.clear();
+            line.reserve(128);
+          }
+        }
+        available = dataFile.available();
+      } else {
+        available = 0;
+      }
     }
-
-    addHtml(parseTemplate(page));
+    if (!line.isEmpty()) {
+      addHtml(parseTemplate(line));
+    }
     dataFile.close();
   }
   else // if the requestef file does not exist, create a default action in case the page is named "dashboard*"

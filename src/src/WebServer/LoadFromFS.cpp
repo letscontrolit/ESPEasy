@@ -56,7 +56,7 @@ bool loadFromFS(String path) {
 
   statusLED(true);
 
-  String dataType             = F("text/plain");
+  const __FlashStringHelper* dataType = F("text/plain");
   bool   mustCheckCredentials = false;
 
   path = fileFromUrl(path);
