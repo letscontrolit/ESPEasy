@@ -2,7 +2,7 @@
 .. |P120_type| replace:: :cyan:`Acceleration`
 .. |P120_typename| replace:: :cyan:`Acceleration - ADXL345 (I2C)`
 .. |P120_porttype| replace:: `.`
-.. |P120_status| replace:: :yellow:`TESTING D`
+.. |P120_status| replace:: :yellow:`TESTING E`
 .. |P120_github| replace:: P120_ADXL345.ino
 .. _P120_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P120_ADXL345.ino
 .. |P120_usedby| replace:: `.`
