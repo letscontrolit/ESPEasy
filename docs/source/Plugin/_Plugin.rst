@@ -15,7 +15,7 @@ There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
 
-:yellow:`TESTING` (split into A/B/C/D sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 4 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
+:yellow:`TESTING` (split into A/B/C/D/E sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 5 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
 
 .. comment :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
 
