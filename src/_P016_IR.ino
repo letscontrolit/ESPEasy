@@ -38,7 +38,7 @@
 
 # define PLUGIN_016
 # define PLUGIN_ID_016 16
-# define PLUGIN_NAME_016 "Communication - TSOP4838"
+# define PLUGIN_NAME_016 "Communication - IR Receive (TSOP4838)"
 # define PLUGIN_VALUENAME1_016 "IR"
 # define P016_CMDINHIBIT       PCONFIG(1)
 # define P016_SETTINGS_VERSION PCONFIG(7) // 0 = V1, 2 = V2

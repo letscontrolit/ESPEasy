@@ -31,7 +31,9 @@ else:
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
     "-DUSES_P028",  # BME280
+    "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
+    "-DUSES_P038",  # Neopixel
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
     "-DUSES_P052",  # SenseAir

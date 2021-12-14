@@ -23,15 +23,216 @@ Maintainer: |P082_maintainer|
 
 Used libraries: |P082_usedlibraries|
 
+
+Description
+-----------
+
+Almost all GPS modules on the market have a serial (UART) interface and without any configuration they output standard NMEA sentences at 9600 baud.
+
+Some may differ in the quality of the GPS antenna and/or the generation of the used GPS receiver.
+
+This often results in improved sensitivity and thus less time needed to get a fix, or maintaining a fix.
+
+Controlling GPS Receiver
+------------------------
+
+A lot of GPS modules sold are based on u-blox modules, or at least they claim to use u-blox modules as there are lots of couterfeit modules on the market.
+
+Some (perfectly fine) modules are sold under a different name, but still use (real) u-blox modules.
+For example the BN-220 GPS modules are known to use u-blox modules and firmware from u-blox.
+These modules can thus be sent u-blox specific commands.
+
+Currently the only u-blox specific commands supported by this plugin are to put the module in "backup mode".
+This is essentially turning off the entire module, except for the memory content with the satellite information.
+
+See the commands section to manually control the GPS sleep mode.
+
+
+Time from GPS
+-------------
+
+A GPS receiver is an excellent time source.
+The main advantage is that the time reported by a GPS receiver does not experience time drift.
+
+Some GPS receivers have a pin labelled "PPS" which can be used to increase the accuracy even more.
+The accuracy can be at microseconds level when using the PPS pin.
+
+The internal time of ESPEasy will be set by the GPS task when the GPS receiver has a fix.
+
+
+
+
+Tips for best performance
+-------------------------
+
+Types of antennas
+^^^^^^^^^^^^^^^^^
+
+Most GPS modules are sold including a GPS antenna.
+Pay attention to the ones sold with an external and detachable GPS antenna as quite a few are sold with really bad antennas
+
+The size of the antenna is an important factor for the sensitivity.
+A rule of thumb is that bigger is better (up-to roughly 25x25 mm).
+But a lot of sellers on sites like Ali Express and others sell 25x25 ceramic antennas which perform really badly.
+Compared to these bad antennas, the often included small (12x6 mm) ceramic antenna does perform better.
+
+Modules fixed mounted to the ceramic antenna, like the BN220, do have a relatively small ceramic antenna of 18x18 mm, but these do perform quite good.
+
+Antenna Orientation
+^^^^^^^^^^^^^^^^^^^
+
+The best orientation is to point the antenna to the open sky.
+Thus with the plane of the (ceramic) antenna parallel to the ground.
+
+But for some use cases, a line of sight to the sky is more important than the orientation to the ground.
+
+Do not cover the antenna with metal.
+
+Starting from a "cold boot", it may take a while for the GPS receiver to get the first fix.
+If this takes longer than a few minutes, try taking the receiver outside, with as much non obstructed view to the sky as possible.
+
+
+Most GPS receivers do have a very small rechargable battery to keep the satellite trajectory information between runs.
+This may speed up the time to get a fix.
+However, those rechargable batteries take a long time to get charged (order of 50 hours) and they may sometimes be able to keep the data in the memory for about the same time.
+Thus when using the GPS for a short time and then disconnecting the power these batteries are quite useless.
+
+When used in low-power setups, it is best to turn the GPS into "backup mode" to keep the memory powered.
+Another option is to remove these batteries and connect an external power source to power the RAM of the GPS module.
+When desoldering these batteries, try to remove them as quickly as possible, as they often are not designed to handle heat very well.
+
+
+
+
+
+
+
+
+Configuration
+-------------
+
+Sensor
+^^^^^^
+
+Serial Port
+"""""""""""
+
+The configuration of the serial port is the same as with any other sensor using a serial port.
+Only the TX pin on the ESP, connected to the RX pin on the GPS is optional.
+It only needs to be connected if commands have to be sent to the GPS.
+
+The baud rate is not selectable for this plugin, as every plugin on the market does have a default setting of 9600 baud.
+
+PPS pin
+"""""""
+
+
+Current Sensor Data
+^^^^^^^^^^^^^^^^^^^
+
+
+
+Reference Point
+^^^^^^^^^^^^^^^
+
+
+Output Configuration
+^^^^^^^^^^^^^^^^^^^^
+
+Value N
+"""""""
+
+Each of the 4 task values can be set to a specific measurement value.
+
+* Longitude
+* Latitude
+* Altitude
+* Speed (m/s)
+* Satellites Visible
+* Satellites Tracked
+* HDOP - Horizontal Dilution Of Precision
+* Fix Quality
+* Max SNR in dBHz - Mainly used for diagnostics
+* Checksum Fail - Mainly used for diagnostics
+* Distance (ODO) - Trip distance in meters
+* Distance from Reference Point - See the Reference Point setting.
+
+Most units of measure are clear, but some may need a bit more explanation.
+
+**HDOP**
+
+The HDOP value is a standard indicator for the accuracy of the position.
+It is the standard deviation for the position (in the horizontal plane, there is also a VDOP, which we don't use)
+
+The deviation is multiplied with a factor to get the standard deviation in meters.
+This factor is usually around 5 - 10 meters, depending on the used GPS module.
+Just to simplify it, you can take roughly 7.5 meters.
+
+The HDOP is computed by the GPS module depending on the angle between tracked GPS satellites.
+Just to get an idea of the concept, try to pinpoint the crossing point of 2 circles you draw on a piece of paper.
+If the centers of those circles are relatively close to each other, in relation to the radius, then there is a large part of the 2 circles where they cross each other.
+If the angle between the 2 radii and the point where they cross is roughly 90 degree, it is very easy to see where they cross.
+
+The used computation is a bit more elaborate as the GPS may track upto 16 satellites and you may see some reflected signals, etc.
+But in principle it is just about how large the expected error is, related to the angle between the tracked satellites.
+
+**Satellites Visible/Tracked**
+
+A satellite must be "visible" to the GPS receiver, before it can be used to compute the location.
+If a satellite is actually used to determine the position, it is considered to be tracked.
+
+Whether a satellite is usable to track, depends on a number of factors, which may differ among brands and models of GPS receivers.
+
+For a 2D position fix, at least 3 satellites must be tracked.
+For a 3D position fix, at least 4 satellites must be tracked.
+
+If just the bare minimum of satellites is being tracked, the GPS receiver may loose its fix quite often.
+
+
+
+Distance Update Interval
+""""""""""""""""""""""""
+
+Normally a task may send new values every set "Interval", or when ``TaskRun`` is called from the rules.
+On mobile units, it may be useful to also trigger sending a new value every N travelled meters.
+This way, samples can be taken at a fixed distance, regardless the speed.
+
+If the unit is stationary, new values will still be sent every "Interval" number of seconds.
+
+Typical use case is when the unit is mounted in a car, it isn't that useful to get new samples at a very high rate.
+A useful setting of the "Interval" can be every 900 seconds (15 minutes) and 100 m travelled.
+New samples will be sent by whichever of these two comes first.
+
+This can also be useful to trigger a new reading of other sensors, to collect sensor data at a specific grid interval on the map.
+
+Some controllers, like the LoRaWAN (TTN) controller allow to couple a counter to a set of samples.
+This is called the "Sample Set Initiator".
+On every new sample sent to this controller from a specific task, a counter is incremented.
+This was designed specifically for this use case where a new sample from a task, like the GPS, may trigger a number of new samples from other tasks.
+These other samples will then be accompanied by the same sample set counter.
+
+Some packets of a controller like the LoRaWAN (TTN) controller, may get lost during transmission.
+This way the received samples can still be grouped together and if the travelled path is predictable these samples can even be tracked back to the most likely position where they may have been taken.
+
+
+Data Acquisition
+^^^^^^^^^^^^^^^^
+
+The GPS receiver yields more measurement values than the max. 4 that can be used in a task.
+When the GPS receiver is linked to the LoRaWAN (TTN) controller, all relevant received data will be transmitted.
+This allows for more information to be processed on the receiving end, compared to other controllers.
+
+
+
 Supported hardware
 ------------------
 
 |P082_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P082_commands.repl
+.. include:: P082_commands.repl
 
 Events
 ~~~~~~

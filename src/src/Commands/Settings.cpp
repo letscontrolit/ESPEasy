@@ -62,6 +62,20 @@ String Command_Settings_Password(struct EventStruct *event, const char* Line)
 				      );
 }
 
+String Command_Settings_Password_Clear(struct EventStruct *event, const char* Line)
+{
+	const String storedPassword = SecuritySettings.getPassword();
+	if (storedPassword.length() > 0) {
+		// There is a password set, so we must check it.
+		const String password = parseStringKeepCase(Line, 2);
+		if (!storedPassword.equals(password)) {
+			return return_command_failed();
+		}
+        ZERO_FILL(SecuritySettings.Password);
+	}
+	return return_command_success();
+}
+
 const __FlashStringHelper * Command_Settings_Save(struct EventStruct *event, const char* Line)
 {
 	SaveSettings();

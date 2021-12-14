@@ -314,6 +314,26 @@ int ESPeasySerial::baudRate(void) {
   return getHW()->baudRate();
 }
 
+bool ESPeasySerial::isTxEnabled(void) {
+  if (!isValid()) {
+    return false;
+  }
+  if (isI2Cserial()) {
+    return true;
+  }
+  return _transmitPin != -1;
+}
+
+bool ESPeasySerial::isRxEnabled(void) {
+  if (!isValid()) {
+    return false;
+  }
+  if (isI2Cserial()) {
+    return true;
+  }
+  return _receivePin != -1;
+}
+
 // Not supported in ESP32, since only HW serial is used.
 // Function included since it is used in some libraries.
 bool ESPeasySerial::listen() {
