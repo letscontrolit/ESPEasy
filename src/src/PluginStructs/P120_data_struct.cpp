@@ -421,6 +421,10 @@ void P120_data_struct::send_task_event(struct EventStruct *event,
 // Load the configuration interface
 // *******************************************************************
 bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
+  if (!i2c_mode) {
+    addFormSubHeader(F("Device Settings"));
+  }
+
   // Range
   {
     const __FlashStringHelper *rangeOptions[] = {

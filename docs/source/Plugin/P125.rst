@@ -1,25 +1,25 @@
 .. include:: ../Plugin/_plugin_substitutions_p12x.repl
-.. _P120_page:
+.. _P125_page:
 
-|P120_typename|
+|P125_typename|
 ==================================================
 
-|P120_shortinfo|
+|P125_shortinfo|
 
 Plugin details
 --------------
 
-Type: |P120_type|
+Type: |P125_type|
 
-Name: |P120_name|
+Name: |P125_name|
 
-Status: |P120_status|
+Status: |P125_status|
 
-GitHub: |P120_github|_
+GitHub: |P125_github|_
 
-Maintainer: |P120_maintainer|
+Maintainer: |P125_maintainer|
 
-Used libraries: |P120_usedlibraries|
+Used libraries: |P125_usedlibraries|
 
 Description
 -----------
@@ -31,19 +31,19 @@ This sensor is sometimes combined with an ITG3205 Gyro sensor and a HMC5883L mag
 Configuration
 -------------
 
-.. image:: P120_DeviceConfiguration.png
+.. image:: P125_DeviceConfiguration.png
   :alt: Device Configuration
 
 **Name** A unique name should be entered here.
 
 **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
 
-I2C Options 
-^^^^^^^^^^^^
+Sensor
+^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+**GPIO -> CS**: The GPIO pin that is to be used for controlling the ``CS`` signal of the board. Each SPI device should have its own CS pin, the other SPI signals can be shared among devices.
 
-**I2C Address**: The address the device is using. Some boards holding this chip offer an extra connection SD0 that can be used to select the address. The available addresses are ``0x53`` and ``0x1D`` (secondary).
+.. note:: Not all boards that claim to support SPI connections actually do. This may be caused by substandard production methods, or by ommitting parts to reduce cost. Usually, the same board also supports being connected via I2C, and that has worked reliably on all tests.
 
 .. include:: P120_P125_common.repl
 
@@ -51,12 +51,12 @@ The available settings here depend on the build used. At least the **Force Slow 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P120_commands.repl
+.. .. include:: P125_commands.repl
 
 .. Events
 .. ~~~~~~
 
-.. .. include:: P120_events.repl
+.. .. include:: P125_events.repl
 
 Change log
 ----------
@@ -65,7 +65,7 @@ Change log
   ...
 
   |added|
-  2021-10-30 Initial release version.
+  2021-12-14 Initial release version.
 
 
 

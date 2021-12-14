@@ -23,3 +23,17 @@
 .. |P124_maintainer| replace:: `tonhuisman`
 .. |P124_compileinfo| replace:: `.`
 .. |P124_usedlibraries| replace:: `https://github.com/Seeed-Studio/Multi_Channel_Relay_Arduino_Library (modified local copy)`
+
+.. |P125_name| replace:: :cyan:`ADXL345 SPI`
+.. |P125_type| replace:: :cyan:`Acceleration`
+.. |P125_typename| replace:: :cyan:`Acceleration - ADXL345 (SPI)`
+.. |P125_porttype| replace:: `.`
+.. |P125_status| replace:: :yellow:`TESTING E`
+.. |P125_github| replace:: P125_ADXL345_SPI.ino
+.. _P125_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P125_ADXL345_SPI.ino
+.. |P125_usedby| replace:: `.`
+.. |P125_shortinfo| replace:: `Acceleration X/Y/X sensor`
+.. |P125_maintainer| replace:: `tonhuisman`
+.. |P125_compileinfo| replace:: `.`
+.. |P125_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
+
