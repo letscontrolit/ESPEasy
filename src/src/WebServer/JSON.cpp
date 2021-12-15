@@ -416,6 +416,9 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
         stream_next_json_object_value(F("TaskDeviceNumber"), String(Settings.TaskDeviceNumber[TaskIndex]));
+        if (Settings.TaskDeviceNumber[TaskIndex]==1){
+          stream_next_json_object_value(F("TaskDeviceGPIO1"),  String(Settings.TaskDevicePin1[TaskIndex]));        
+        }
 #ifdef FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
