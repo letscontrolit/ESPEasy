@@ -70,7 +70,7 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
                                    bool                textBackFill)
   : _display(display),
   # if !P096_USE_EXTENDED_SETTINGS
-  _xpix(width), _ypix(height)
+  _xpix(width), _ypix(height),
   # endif // if !P096_USE_EXTENDED_SETTINGS
   _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _commandTrigger(commandTrigger),
   _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth), _textBackFill(textBackFill)
