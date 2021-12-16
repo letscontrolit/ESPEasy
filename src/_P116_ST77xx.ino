@@ -183,7 +183,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Wake display on receiving text"), F("p116_NoDisplay"), !bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE));
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
-      AdaGFXFormTextColRowMode(F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW));
+      AdaGFXFormTextColRowMode(F("p116_colrow"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_USE_COL_ROW) == 1);
 
       AdaGFXFormTextBackgroundFill(F("p116_backfill"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0); // Inverse
 

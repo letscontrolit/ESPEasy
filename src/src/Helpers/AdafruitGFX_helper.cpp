@@ -149,8 +149,8 @@ void AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
  * Show a checkbox & note to enable col/row mode for txp, txz and txtfull subcommands
  ****************************************************************************************/
 void AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
-                              uint8_t                    selectedIndex) {
-  addFormCheckBox(F("Text Coordinates in col/row"), id, selectedIndex);
+                              bool                       selectedState) {
+  addFormCheckBox(F("Text Coordinates in col/row"), id, selectedState);
   addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
 }
 

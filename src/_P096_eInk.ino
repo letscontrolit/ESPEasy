@@ -374,7 +374,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
-      AdaGFXFormTextColRowMode(F("p096_colrow"), bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
+      AdaGFXFormTextColRowMode(F("p096_colrow"), bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW) == 1);
 
       AdaGFXFormOnePixelCompatibilityOption(F("p096_compat"), !bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096)); // Inverse
 

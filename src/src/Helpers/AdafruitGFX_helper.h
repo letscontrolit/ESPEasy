@@ -189,7 +189,7 @@ void                       AdaGFXFormRotation(const __FlashStringHelper *id,
 void                       AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
                                                         uint8_t                    selectedIndex);
 void                       AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
-                                                    uint8_t                    selectedIndex);
+                                                    bool                       selectedState);
 void                       AdaGFXFormOnePixelCompatibilityOption(const __FlashStringHelper *id,
                                                                  uint8_t                    selectedIndex);
 void                       AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
