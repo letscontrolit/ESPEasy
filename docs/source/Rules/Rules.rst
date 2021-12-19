@@ -7,6 +7,10 @@ Introduction
 Along with ESP Easy R108, a new feature was enabled, named Rules.
 Rules can be used to create very simple flows to control devices on your ESP.
 
+.. note::
+   To assist writing rules, one may prefer to use an editor like Notepad++ which supports user defined languages to colorize the text.
+   See the ``Misc/Notepad++`` folder for a Notepad++ language definition which can be used to colorize rules.
+
 Enable Rules
 ------------
 
