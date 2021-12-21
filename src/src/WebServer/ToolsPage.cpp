@@ -139,9 +139,10 @@ void handle_tools() {
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
       addWideButton(F("update"), F("Update Firmware"), EMPTY_STRING, otaEnabled);
-      addHelpButton(F("EasyOTA"));
+      addHtml(F("</TD>"));
       html_TD();
-      addHtml(F("Load a new firmware "));
+      addHelpButton(F("EasyOTA"));
+      addHtml(F(" Load a new firmware "));
 
       if (otaEnabled) {
         if (use2step) {
