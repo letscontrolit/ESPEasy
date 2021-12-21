@@ -207,6 +207,14 @@
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
+/*
+ #######################################################################################################
+   External CSS and JS
+ #######################################################################################################
+ */
+
+#define WEBSERVER_USE_CDN_JS_CSS  //When set, the followig URL will be used as a prefix for CSS, JS and favicon files, else they will be directly included into the HTML
+#define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20210503/static/"
 
 /*
  #######################################################################################################
@@ -214,7 +222,7 @@
  #######################################################################################################
  */
 /*
-#define WEBPAGE_TEMPLATE_DEFAULT_HEADER "<header class='headermenu'><h1>ESP Easy Mega: {{title}}</h1><BR>"
+#define WEBPAGE_TEMPLATE_DEFAULT_HEADER "<header class='headermenu'><h1>ESP Easy Mega: <b>{{title}}</b></h1>"
 #define WEBPAGE_TEMPLATE_DEFAULT_FOOTER "<footer><br><h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community</h6></footer></body></html>"
 #define WEBPAGE_TEMPLATE_AP_HEADER      "<body><header class='apheader'><h1>Welcome to ESP Easy Mega AP</h1>"
 #define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON

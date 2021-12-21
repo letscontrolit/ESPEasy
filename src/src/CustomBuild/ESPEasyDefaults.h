@@ -326,6 +326,10 @@
 # define GITHUB_RELEASES_LINK_SUFFIX "</a>"
 #endif
 
+#ifndef CDN_JS_CSS_URL
+#define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20210503/static/"
+#endif
+
 
 
 
