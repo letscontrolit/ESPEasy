@@ -57,7 +57,7 @@ h3 {
 	background-color: #EEEEF3;
 	color: #446;
 	margin: 30px 0 5px 0;
-	border-bottom: 1px solid rgba(0,0,0,0.17);
+	border-bottom: 1px solid #ccc;
 	padding: 5px 10px
 }
 
@@ -582,7 +582,6 @@ header .build{
 		display: none
 	}
 	.menu {
-		max-width: 11vw;
 		max-width: 48px
 	}
 }
