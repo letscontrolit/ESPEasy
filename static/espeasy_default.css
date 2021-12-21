@@ -34,7 +34,7 @@ h6 {
 * {
 	box-sizing: border-box;
 	font-family: sans-serif;
-	font-size: 12pt;
+	/*font-size: 12pt;*/
 	margin: 0;
 	padding: 0
 }
@@ -42,6 +42,10 @@ h6 {
 h1 {
 	font-size: 16pt;
 	margin: 8px 0
+}
+h1 B{
+	float: right;
+	color: #000;
 }
 
 h2,
@@ -57,15 +61,17 @@ h2 {
 }
 
 h3 {
-	background-color: #EEE;
-	color: #444;
-	margin: 16px -4px 0;
-	padding: 4px
+	background-color: #EEEEF3;
+	color: #446;
+	margin: 30px 0 5px 0;
+	border-bottom: 1px solid rgba(0,0,0,0.17);
+	padding: 5px 10px
 }
 
 h6 {
 	font-size: 10pt
 }
+
 
 code,
 kbd,
@@ -91,7 +97,7 @@ xmp {
 input,
 select,
 textarea {
-	border-color: gray;
+	border-color: #aaa;
 	border-style: solid;
 	border-width: 1px
 }
@@ -108,6 +114,7 @@ textarea {
 
 .button.help {
 	border-radius: 50%;
+	background-color: #e9a300;
 	padding: 2px 4px
 }
 
@@ -124,13 +131,14 @@ textarea {
 
 input:hover,
 select:hover {
-	background-color: #ccc
+	background-color: #dde
 }
 
 input,
 select,
 textarea {
-	background-color: #eee;
+	font-size: 14px;
+	background-color: #f8f8f8;
 	margin: 4px;
 	padding: 4px 8px
 }
@@ -388,7 +396,7 @@ textarea:hover {
 
 table.multirow th,
 table.normal th {
-	background-color: #444;
+	background-color: #445;
 	border-color: #888;
 	color: #FFF;
 	font-weight: 700;
@@ -396,53 +404,66 @@ table.normal th {
 	align-content: center;
 	text-align: center
 }
-
+ 
 table.multirow,
 table.normal {
 	border-collapse: collapse;
 	color: #000;
 	min-width: 420px;
+	margin-bottom: 30px;
 	width: 100%
 }
 
 table.multirow tr,
 table.normal td,
 table.normal tr {
-	padding: 4px
+	padding: 4px 8px
 }
 
 table.normal td {
-	height: 30px
+ 	height: 35px
+
+}
+table.normal tr td:first-child{
+	white-space: nowrap;
 }
 
 table.multirow td {
-	height: 30px;
+	height: 35px;
 	padding: 4px;
+	border-color: #aaa;
 	text-align: center
 }
 
 table.multirow tr:nth-child(even) {
-	background-color: #DEE6FF
+	background-color: #F6F6FF
 }
 
 .highlight td {
 	background-color: #dbff0075
 }
 
-.apheader,
+.apheader{
+	background-color: #F8F8F8;	
+	padding: 8px 15px
+}
 .headermenu {
-	background-color: #F8F8F8;
-	padding: 8px 12px
+	background-color: #F8F8F8;	
+	padding: 8px 15px
 }
 
 .note {
-	color: #444;
+	color: #888;
+	font-size: 0.9em;
 	font-style: italic
+}
+BODY{
+	background-color: #F8F8F8;	
 }
 
 .headermenu {
-	border-bottom: 1px solid #DDD;
-	height: 90px;
+	border-bottom: 1px solid #ccc;
+	height: 97px;
 	left: 0;
 	position: fixed;
 	right: 0;
@@ -451,7 +472,7 @@ table.multirow tr:nth-child(even) {
 }
 
 .bodymenu {
-	margin-top: 96px
+	margin-top: 97px
 }
 
 .menubar {
@@ -460,27 +481,34 @@ table.multirow tr:nth-child(even) {
 }
 
 .menu {
+	line-height: 100%;
 	border: solid transparent;
-	border-radius: 4px 4px 0 0;
-	border-width: 4px 1px 1px;
-	color: #444;
-	padding: 4px 16px 8px;
+	border-radius: 6px 6px 0 0;
+	border-width: 1px;
+	color: #555;
+	padding: 13px 18px 3px;
+	min-height: 42px;
 	white-space: nowrap
 }
 
 .menu.active {
 	background-color: #FFF;
-	border-color: #07D #DDD #FFF;
+	border-color: #ccc #ccc #fff #ccc;
 	color: #000
 }
 
 .menu:hover {
+	border-color: #ddd #ddd #fff;
 	background: #DEF;
 	color: #000
 }
 
 .menu_button {
 	display: none
+}
+
+.showmenulabel{
+	margin-left: 7px;
 }
 
 .on {
@@ -492,9 +520,9 @@ table.multirow tr:nth-child(even) {
 }
 
 .div_r {
-	background-color: #080;
+	background-color: #0A0;
 	border-radius: 4px;
-	margin: 2px;
+	margin: 2px; 
 	padding: 1px 10px
 }
 
@@ -530,9 +558,35 @@ table.multirow tr:nth-child(even) {
 }
 
 section {
+	padding: 25px 15px 50px 15px;
+	background-color: #FFF;	
 	overflow-x: auto;
 	width: 100%
 }
+footer {
+	border-top: 1px solid rgba(0,0,0,0.15);
+	padding: 15px 15px;
+}
+footer B{
+	font-size: 14px;
+	font-weight: normal;	
+}
+header .build{
+	padding-top: 5px;
+}
+
+.build{
+	clear: both;
+	float: right;
+	font-size: 12px;
+	font-weight: normal;
+	color: #555;
+}
+.build A{
+	color: #555;
+	text-decoration: none;	
+}
+
 
 @media screen and (max-width: 960px) {
 	.showmenulabel {
