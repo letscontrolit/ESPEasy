@@ -320,11 +320,13 @@
 #endif
 
 #ifndef GITHUB_RELEASES_LINK_PREFIX
-# define GITHUB_RELEASES_LINK_PREFIX "<a href='https://github.com/letscontrolit/ESPEasy/releases' title='Click to show latest release on Github' target='_blank' style='font-size: 15px; text-decoration: none'>"
+# define GITHUB_RELEASES_LINK_PREFIX "<a href='https://github.com/letscontrolit/ESPEasy/releases' title='Click to show latest release on Github' target='_blank'>"
 #endif
 #ifndef GITHUB_RELEASES_LINK_SUFFIX
 # define GITHUB_RELEASES_LINK_SUFFIX "</a>"
 #endif
+
+
 
 
 /*
