@@ -496,12 +496,14 @@ uint32_t getFlashChipId() {
 
 uint32_t getFlashRealSizeInBytes() {
   // Cache since size does not change
-  static uint32_t res
-  #if defined(ESP32)
-  = ESP.getFlashChipSize();
-  #else // if defined(ESP32)
-  = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
-  #endif // if defined(ESP32)
+  static uint32_t res = 0;
+  if (res == 0) {
+    #if defined(ESP32)
+    res = ESP.getFlashChipSize();
+    #else // if defined(ESP32)
+    res = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
+    #endif // if defined(ESP32)
+  }
   return res;
 }
 
@@ -531,10 +533,9 @@ uint8_t getFlashChipVendorId() {
     static uint32_t flashChipId = ESP.getFlashChipId();
     return flashChipId & 0x000000ff;
   # elif defined(ESP32)
-  
+    return 0xFF; // Not an existing function for ESP32  
   # endif // if defined(ESP8266)
 #endif // ifdef PUYA_SUPPORT
-  return 0xFF; // Not an existing function for ESP32
 }
 
 bool flashChipVendorPuya() {
@@ -559,13 +560,17 @@ uint32_t getChipId() {
 }
 
 uint8_t getChipCores() {
-  uint8_t cores = 1;
-  #ifdef ESP32
+  #ifdef ESP8266
+  return 1;
+  #else
+  static uint8_t cores = 0;
+  if (cores == 0) {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
     cores = chip_info.cores;
-  #endif
+  }
   return cores;
+  #endif
 }
 
 const __FlashStringHelper * getChipModel() {
