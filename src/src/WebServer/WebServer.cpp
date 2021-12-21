@@ -550,11 +550,11 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
   {
     String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
+    tmp = F("<header class='headermenu'><h1>ESP Easy Mega <b>{{title}}</b>"
             #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
+            "<div class='build'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
             #endif // #if BUILD_IN_WEBHEADER
-            "</h1><BR>"
+            "</h1>"
             );
   #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
@@ -584,12 +584,10 @@ void getWebPageTemplateDefaultContentSection(String& tmpl) {
 void getWebPageTemplateDefaultFooter(String& tmpl) {
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   tmpl += F("<footer>"
-            "<br>"
-            "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
+            "<b>Powered by <a href='http://www.letscontrolit.com'>Let's Control It</a> community</b>"
             #if BUILD_IN_WEBFOOTER
-            "<div style='float: right'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{build}} {{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
+            "<div class='build'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{build}} {{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
             #endif // #if BUILD_IN_WEBFOOTER
-            "</h6>"
             "</footer>"
             "</body></html>"
             );
