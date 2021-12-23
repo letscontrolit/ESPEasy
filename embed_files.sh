@@ -58,7 +58,12 @@ function constFileName {
 	underscore="_"
 	echo $file$underscore$extension
 }
-
+function keepMinifiedFile {
+	file=$1
+	file=$( echo $file | sed -r 's/^(.*)\.(.*?)$/\1.min.\2/' )
+	cp /tmp/converter.temp $file
+	echo "  Keeps Minified file as: $file"
+}
 
 
 file_list=$(find . -type f)
@@ -83,6 +88,7 @@ for file in $file_list; do
 	elif [[ "$file" == *.html ]] || [[ "$file" == *.css ]]; then
 		echo "  HTML and CSS minify"
 		minify_html_css $file
+		keepMinifiedFile $file
 		ascii2hexCstyle $file >> $outputfile
 	elif [[ "$file" == *.svg ]]; then
 		echo "  SVG minify"
