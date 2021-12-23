@@ -37,7 +37,6 @@ void handle_tools() {
   addFormHeader(F("Tools"));
 
   addFormSubHeader(F("Command"));
-  html_TR_TD();
   addHtml(F("<TR><TD colspan='2'>"));
   addHtml(F("<input "));
   addHtmlAttribute(F("style"), F("width: 98%"));
@@ -46,11 +45,10 @@ void handle_tools() {
   addHtmlAttribute(F("value"), webrequest);
   addHtml('>');
 
-  html_TR_TD();
+  addHtml(F("<TR><TD colspan='2'>"));
   addSubmitButton();
   addHelpButton(F("ESPEasy_Command_Reference"));
   addRTDHelpButton(F("Reference/Command.html"));
-  html_TR_TD();
 
   if (printWebString.length() > 0)
   {
