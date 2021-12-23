@@ -388,17 +388,13 @@ table.normal th {
 	background-color: #445;
 	border-color: #888;
 	color: #FFF;
-	font-weight: 700;
 	padding: 6px;
-	align-content: center;
-	text-align: center
 }
  
 table.multirow,
 table.normal {
 	border-collapse: collapse;
 	color: #000;
-	min-width: 420px;
 	margin-bottom: 30px;
 	width: 100%
 }
@@ -475,7 +471,7 @@ BODY{
 	border-radius: 6px 6px 0 0;
 	border-width: 1px;
 	color: #555;
-	padding: 13px 18px 3px;
+	padding: 13px 12px 3px;
 	min-height: 42px;
 	white-space: nowrap
 }
@@ -578,11 +574,19 @@ header .build{
 }
 
 
-@media screen and (max-width: 960px) {
+@media screen and (max-width: 940px) {
 	.showmenulabel {
 		display: none
 	}
 	.menu {
-		max-width: 48px
+		padding-left: 10px;
+		padding-right: 10px
+	}
+	table.normal tr td:first-child{
+		white-space: normal;
+	}
+	section{
+		padding: 25px 5px 50px 5px;
+		font-size: 14px;
 	}
 }
