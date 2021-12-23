@@ -13,9 +13,14 @@ cd static
 outputfile="$(pwd)/data_h_temp"
 rm $outputfile
 
-function minify_html_css {
+function minify_html {
 	file=$1
 	post_To https://www.toptal.com/developers/html-minifier/raw $file
+}
+
+function minify_css {
+	file=$1
+	post_To https://www.toptal.com/developers/cssminifier/raw $file
 }
 
 function minify_js {
@@ -87,10 +92,14 @@ for file in $file_list; do
 		echo "  CSS already minified"
 		cat $file > /tmp/converter.temp
 		ascii2hexCstyle $file >> $outputfile
-	elif [[ "$file" == *.html ]] || [[ "$file" == *.css ]]; then
-		echo "  HTML and CSS minify"
-		minify_html_css $file
+	elif [[ "$file" == *.css ]]; then
+		echo "  CSS minify"
+		minify_css $file
 		keepMinifiedFile $file
+		ascii2hexCstyle $file >> $outputfile
+	elif [[ "$file" == *.html ]]; then
+		echo "  HTML minify"
+		minify_html $file
 		ascii2hexCstyle $file >> $outputfile
 	elif [[ "$file" == *.svg ]]; then
 		echo "  SVG minify"
