@@ -15,12 +15,12 @@ rm $outputfile
 
 function minify_html_css {
 	file=$1
-	post_To https://html-minifier.com/raw $file
+	post_To https://www.toptal.com/developers/html-minifier/raw $file
 }
 
 function minify_js {
 	file=$1
-	post_To https://javascript-minifier.com/raw $file
+	post_To https://www.toptal.com/developers/javascript-minifier/raw $file
 }
 
 function post_To {
