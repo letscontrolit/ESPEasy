@@ -86,12 +86,15 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    uint8_t             rotation,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
+                                   int8_t              backlightPin,
+                                   uint8_t             backlightPercentage,
                                    uint32_t            displayTimer,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
                                    bool                textBackFill)
-  : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _displayTimer(displayTimer),
+  : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
+  _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
   ST77xx_type_toResolution(_device, _xpix, _ypix);
@@ -208,7 +211,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
                                                       true,
                                                       _textBackFill);
 
-    displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+    displayOnOff(true);
 
     gfxHelper->setRotation(_rotation);
     st77xx->fillScreen(_bgcolor);             // fill screen with black color
@@ -257,7 +260,7 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
 
   if ((nullptr != st77xx) && bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
-    displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+    displayOnOff(false);
   }
 
   if (nullptr != gfxHelper) { delete gfxHelper; }
@@ -320,7 +323,7 @@ bool P116_data_struct::plugin_read(struct EventStruct *event) {
  ***************************************************************************/
 bool P116_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   if ((P116_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != st77xx)) {
-    displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+    displayOnOff(true);
     markButtonStateProcessed();
   }
   return true;
@@ -334,7 +337,7 @@ bool P116_data_struct::plugin_once_a_second(struct EventStruct *event) {
     _displayTimer--;
 
     if ((nullptr != st77xx) && (_displayTimer == 0)) {
-      displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(false);
     }
   }
   return true;
@@ -352,10 +355,10 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
     success = true;
 
     if (arg1.equals(F("off"))) {
-      displayOnOff(false, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(false);
     }
     else if (arg1.equals(F("on"))) {
-      displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(true);
     }
     else if (arg1.equals(F("clear"))) {
       st77xx->fillScreen(_bgcolor);
@@ -369,7 +372,7 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
           (nArg2 > 0) &&
           (nArg2 <= 100)) {
         P116_CONFIG_BACKLIGHT_PERCENT = nArg2; // Set but don't store
-        displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+        displayOnOff(true);
       } else {
         success = false;
       }
@@ -382,7 +385,7 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
     success = true;
 
     if (!bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_NO_WAKE)) { // Wake display?
-      displayOnOff(true, P116_CONFIG_BACKLIGHT_PIN, P116_CONFIG_BACKLIGHT_PERCENT, P116_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(true);
     }
 
     if (nullptr != gfxHelper) {
@@ -407,20 +410,17 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
-void P116_data_struct::displayOnOff(bool     state,
-                                    int8_t   backlightPin,
-                                    uint8_t  backlightPercentage,
-                                    uint32_t displayTimeout) {
-  if (backlightPin != -1) {
+void P116_data_struct::displayOnOff(bool state) {
+  if (_backlightPin != -1) {
     # if defined(ESP8266)
-    analogWrite(backlightPin, state ? ((1024 / 100) * backlightPercentage) : 0);
+    analogWrite(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0);
     # endif // if defined(ESP8266)
     # if defined(ESP32)
-    analogWriteESP32(backlightPin, state ? ((1024 / 100) * backlightPercentage) : 0, 0);
+    analogWriteESP32(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0, 0);
     # endif // if defined(ESP32)
   }
   st77xx->enableDisplay(state);           // Display on
-  _displayTimer = (state ? displayTimeout : 0);
+  _displayTimer = (state ? _displayTimeout : 0);
 }
 
 /****************************************************************************

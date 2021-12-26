@@ -289,6 +289,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                P116_CONFIG_FLAG_GET_ROTATION,
                                                                P116_CONFIG_FLAG_GET_FONTSCALE,
                                                                static_cast<AdaGFXTextPrintMode>(P116_CONFIG_FLAG_GET_MODE),
+                                                               P116_CONFIG_BACKLIGHT_PIN,
+                                                               P116_CONFIG_BACKLIGHT_PERCENT,
                                                                P116_CONFIG_DISPLAY_TIMEOUT,
                                                                P116_CommandTrigger_toString(static_cast<P116_CommandTrigger>(
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
