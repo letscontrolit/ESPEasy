@@ -359,6 +359,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                            new (std::nothrow) P095_data_struct(P095_CONFIG_ROTATION,
                                                                P095_CONFIG_FLAG_GET_FONTSCALE,
                                                                static_cast<AdaGFXTextPrintMode>(P095_CONFIG_FLAG_GET_MODE),
+                                                               P095_CONFIG_BACKLIGHT_PIN,
+                                                               P095_CONFIG_BACKLIGHT_PERCENT,
                                                                P095_CONFIG_DISPLAY_TIMEOUT,
                                                                P095_CommandTrigger_toString(static_cast<P095_CommandTrigger>(
                                                                                               P095_CONFIG_FLAG_GET_CMD_TRIGGER)),

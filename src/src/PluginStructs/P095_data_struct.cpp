@@ -22,12 +22,15 @@ const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd)
 P095_data_struct::P095_data_struct(uint8_t             rotation,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
+                                   int8_t              backlightPin,
+                                   uint8_t             backlightPercentage,
                                    uint32_t            displayTimer,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
                                    bool                textBackFill)
-  : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _displayTimer(displayTimer),
+  : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
+  _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
   _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
 {
   _xpix = 240;
@@ -94,7 +97,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
     tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
     tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
-    displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+    displayOnOff(true);
     # ifdef P095_SHOW_SPLASH
     uint16_t yPos = 0;
     gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
@@ -134,7 +137,7 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
 
   if ((nullptr != tft) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     tft->fillScreen(ADAGFX_BLACK); // fill screen with black color
-    displayOnOff(false, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+    displayOnOff(false);
   }
 
   if (nullptr != gfxHelper) { delete gfxHelper; }
@@ -196,7 +199,7 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
  ***************************************************************************/
 bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   if ((P095_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != tft)) {
-    displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+    displayOnOff(true);
     markButtonStateProcessed();
   }
   return true;
@@ -210,7 +213,7 @@ bool P095_data_struct::plugin_once_a_second(struct EventStruct *event) {
     _displayTimer--;
 
     if ((nullptr != tft) && (_displayTimer == 0)) {
-      displayOnOff(false, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(false);
     }
   }
   return true;
@@ -228,10 +231,10 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     success = true;
 
     if (arg1.equals(F("off"))) {
-      displayOnOff(false, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(false);
     }
     else if (arg1.equals(F("on"))) {
-      displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(true);
     }
     else if (arg1.equals(F("clear")))
     {
@@ -252,7 +255,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
           (nArg2 > 0) &&
           (nArg2 <= 100)) {
         P095_CONFIG_BACKLIGHT_PERCENT = nArg2; // Set but don't store
-        displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+        displayOnOff(true);
       } else {
         success = false;
       }
@@ -292,7 +295,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     success = true;
 
     if (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE)) { // Wake display?
-      displayOnOff(true, P095_CONFIG_BACKLIGHT_PIN, P095_CONFIG_BACKLIGHT_PERCENT, P095_CONFIG_DISPLAY_TIMEOUT);
+      displayOnOff(true);
     }
 
     if (nullptr != gfxHelper) {
@@ -317,16 +320,13 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
-void P095_data_struct::displayOnOff(bool     state,
-                                    int8_t   backlightPin,
-                                    uint8_t  backlightPercentage,
-                                    uint32_t displayTimeout) {
-  if (backlightPin != -1) {
+void P095_data_struct::displayOnOff(bool state) {
+  if (_backlightPin != -1) {
     # if defined(ESP8266)
-    analogWrite(backlightPin, state ? ((1024 / 100) * backlightPercentage) : 0);
+    analogWrite(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0);
     # endif // if defined(ESP8266)
     # if defined(ESP32)
-    analogWriteESP32(backlightPin, state ? ((1024 / 100) * backlightPercentage) : 0, 0);
+    analogWriteESP32(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0, 0);
     # endif // if defined(ESP32)
   }
 
@@ -335,7 +335,7 @@ void P095_data_struct::displayOnOff(bool     state,
   } else {
     tft->sendCommand(ILI9341_DISPOFF);
   }
-  _displayTimer = (state ? displayTimeout : 0);
+  _displayTimer = (state ? _displayTimeout : 0);
 }
 
 /****************************************************************************

@@ -73,6 +73,8 @@ public:
   P095_data_struct(uint8_t             rotation,
                    uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
+                   int8_t              backlightPin,
+                   uint8_t             backlightPercentage,
                    uint32_t            displayTimer,
                    String              commandTrigger,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
@@ -96,10 +98,7 @@ public:
 
 private:
 
-  void displayOnOff(bool     state,
-                    int8_t   backlightPin,
-                    uint8_t  backlightPercentage,
-                    uint32_t displayTimeout);
+  void displayOnOff(bool state);
   void updateFontMetrics();
 
   Adafruit_ILI9341 *tft = nullptr;
@@ -117,7 +116,10 @@ private:
   uint8_t             _rotation;
   uint8_t             _fontscaling;
   AdaGFXTextPrintMode _textmode;
+  int8_t              _backlightPin;
+  uint8_t             _backlightPercentage;
   uint32_t            _displayTimer;
+  uint32_t            _displayTimeout;
   String              _commandTrigger;
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
