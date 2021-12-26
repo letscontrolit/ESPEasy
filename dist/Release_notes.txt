@@ -1,4 +1,87 @@
 -------------------------------------------------
+Changes in release mega-20211224 (since mega-20211105)
+-------------------------------------------------
+
+Release date: vr 24 dec 2021 14:20:43 CET
+
+StefanNetzer (15):
+      Update _P043_ClkOutput.ino
+      add events
+      added TDs recommendations
+      cleanup
+      resync to GitHub
+      Update _P043_ClkOutput.ino
+      added PLUGIN_VALUENAME2_043
+      Update _P043_ClkOutput.ino
+      Update _P043_ClkOutput.ino
+      Update _P043_ClkOutput.ino
+      added output data type
+      replaced all by simple
+      restored
+      fixed link error
+      using output value definition from  P004
+
+TD-er (21):
+      [Cleanup] Fix lots of missing delete calls to free memory
+      [P095 ILI9341] Convert to use PluginDataStruct
+      [P095 ILI9341] Renamed functions in P095 plugin
+      [P096 E-ink] Convert to use PluginDataStruct
+      [Build] Fix case sensitive mixup in include path
+      [Build] Correct correct include path depth
+      [P095 P096] Convert to use PluginDataStruct
+      Revert changes to P095 and P096 Moved to PR #3835
+      [ThermoOLED] Check for successful allocation of display object
+      [Domoticz] Only incoming MQTT on tasks with controller linked (#3829)
+      [GPS] Add power save commands (Ublox specific)
+      [GPS] Add more U-blox specific features
+      [GPS] For now, disable U-blox specific settings
+      [GPS] Document GPS plugin
+      [Password] Add clearPassword command
+      [Doc] Add Notepad++ colourise ESPEasy Rules language
+      [dashboard] Fix crash on parsing empty command {} (#3873)
+      [dashboard] Fix parsing {} and leaving the braces when not a command
+      GCC 10.3 Bugfix 1 - Constant literal address fix
+      [ClearPassword] Fix typo in command
+      [PIO] Restore default envs
+
+Ton Huisman (25):
+      [Docs] Add How To for starting development on ESPEasy
+      [Docs] Add How To for starting development on ESPEasy
+      [Docs] How To fix some typos
+      [Docs] How To: fix some sphinx syntax issues
+      [Docs] Development guide restrucured and extended
+      [Docs] How To guide: textual improvements and additions
+      [Docs] How To: Extend the text and some corrections
+      [P111] Add virtual destructor to MFRC522 library to fix compiler warning
+      [P053] Fix support for PMS5003T
+      [P053] Remove unneeded #define, minor source formattings
+      [Build] Enable Dummy device and Neopixel on ESP32 Custom (script)
+      [P053] Leave out invalid event-values for PMS5003T
+      [P124] Add plugin Output - I2C Multi Relay
+      [P124] Add optional initialization 'protection'
+      [P117] Add SCD30 CO2, humidity and temperature sensor
+      [P117] Correct slash/backslash confusion/typo
+      [P117] Add to TEST_D set
+      [P117] Adjust ClockStrechLimit message
+      [P117] Add documentation
+      [P117] Fix compilation issue `error: narrowing conversion of '2415919104' from 'unsigned int' to 'int' [-Wnarrowing]`
+      [P124] Add configurable I2C addresses, add relay state on exit [P114] Add VEML6075 to I2C scanner
+      [P124] Add documentation
+      [P124] Include in TEST_D build, aad missed documentation file
+      [P016] Change plugin title Communication - IR Receive (TSOP4838)
+      [P124] Add get command and looping that, fix a small settings bug
+
+svollebregt (7):
+      Adding Itho library to main reposity
+      Revert "Adding Itho library to main reposity"
+      [P118] Adding Itho plugin to main reposity""
+      Update _P118_Itho.ino
+      Update _P118_Itho.ino
+      Further code improvements
+      Remove noInterrupts() and Itho library improvements
+
+
+-------------------------------------------------
 Changes in release mega-20211105 (since mega-20211005)
 -------------------------------------------------
 
