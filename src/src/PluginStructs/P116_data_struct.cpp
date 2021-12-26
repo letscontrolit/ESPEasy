@@ -86,7 +86,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    uint8_t             rotation,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
-                                   uint8_t             displayTimer,
+                                   uint32_t            displayTimer,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
@@ -407,10 +407,10 @@ bool P116_data_struct::plugin_write(struct EventStruct *event, const String& str
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
-void P116_data_struct::displayOnOff(bool    state,
-                                    int8_t  backlightPin,
-                                    uint8_t backlightPercentage,
-                                    uint8_t displayTimeout) {
+void P116_data_struct::displayOnOff(bool     state,
+                                    int8_t   backlightPin,
+                                    uint8_t  backlightPercentage,
+                                    uint32_t displayTimeout) {
   if (backlightPin != -1) {
     # if defined(ESP8266)
     analogWrite(backlightPin, state ? ((1024 / 100) * backlightPercentage) : 0);

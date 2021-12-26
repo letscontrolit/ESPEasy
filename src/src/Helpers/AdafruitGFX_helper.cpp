@@ -207,7 +207,7 @@ void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
 
   addFormCheckBox(F("Inversed Logic"), buttonInverseId, buttonInverse);
 
-  addFormNumericBox(F("Display Timeout"), displayTimeoutId, displayTimeout);
+  addFormNumericBox(F("Display Timeout"), displayTimeoutId, displayTimeout, 0);
   addUnit(F("0 = off"));
 }
 
