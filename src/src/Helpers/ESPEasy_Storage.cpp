@@ -1374,56 +1374,60 @@ size_t SpiffsUsedBytes() {
 }
 
 size_t SpiffsTotalBytes() {
-  size_t result = 1; // Do not output 0, this may be used in divisions.
-
-  #ifdef ESP32
-  result = ESPEASY_FS.totalBytes();
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-  fs::FSInfo fs_info;
-  ESPEASY_FS.info(fs_info);
-  result = fs_info.totalBytes;
-  #endif // ifdef ESP8266
+  static size_t result = 1; // Do not output 0, this may be used in divisions.
+  if (result == 1) {
+    #ifdef ESP32
+    result = ESPEASY_FS.totalBytes();
+    #endif // ifdef ESP32
+    #ifdef ESP8266
+    fs::FSInfo fs_info;
+    ESPEASY_FS.info(fs_info);
+    result = fs_info.totalBytes;
+    #endif // ifdef ESP8266
+  }
   return result;
 }
 
 size_t SpiffsBlocksize() {
-  size_t result = 8192; // Some default viable for most 1 MB file systems
-
-  #ifdef ESP32
-  result = 8192;        // Just assume 8k, since we cannot query it
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-  fs::FSInfo fs_info;
-  ESPEASY_FS.info(fs_info);
-  result = fs_info.blockSize;
-  #endif // ifdef ESP8266
+  static size_t result = 1;
+  if (result == 1) {
+    #ifdef ESP32
+    result = 8192;        // Just assume 8k, since we cannot query it
+    #endif // ifdef ESP32
+    #ifdef ESP8266
+    fs::FSInfo fs_info;
+    ESPEASY_FS.info(fs_info);
+    result = fs_info.blockSize;
+    #endif // ifdef ESP8266
+  }
   return result;
 }
 
 size_t SpiffsPagesize() {
-  size_t result = 256; // Most common
-
-  #ifdef ESP32
-  result = 256;        // Just assume 256, since we cannot query it
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-  fs::FSInfo fs_info;
-  ESPEASY_FS.info(fs_info);
-  result = fs_info.pageSize;
-  #endif // ifdef ESP8266
+  static size_t result = 1;
+  if (result == 1) {
+    #ifdef ESP32
+    result = 256;        // Just assume 256, since we cannot query it
+    #endif // ifdef ESP32
+    #ifdef ESP8266
+    fs::FSInfo fs_info;
+    ESPEASY_FS.info(fs_info);
+    result = fs_info.pageSize;
+    #endif // ifdef ESP8266
+  }
   return result;
 }
 
 size_t SpiffsFreeSpace() {
   int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
+  const size_t blocksize = SpiffsBlocksize();
 
-  if (freeSpace < static_cast<int>(2 * SpiffsBlocksize())) {
+  if (freeSpace < static_cast<int>(2 * blocksize)) {
     // Not enough free space left to store anything
     // There needs to be minimum of 2 free blocks.
     return 0;
   }
-  return freeSpace - 2 * SpiffsBlocksize();
+  return freeSpace - 2 * blocksize;
 }
 
 bool SpiffsFull() {
