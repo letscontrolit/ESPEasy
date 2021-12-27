@@ -82,6 +82,10 @@ const __FlashStringHelper * getChipModel();
 
 uint8_t getChipRevision();
 
+uint32_t getSketchSize();
+
+uint32_t getFreeSketchSpace();
+
 /********************************************************************************************\
    Boot information
  \*********************************************************************************************/
