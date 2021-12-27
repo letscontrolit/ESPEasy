@@ -1139,6 +1139,8 @@ To create/register a plugin, you have to :
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
+    #define USES_P118  // Itho ventilation control
+    #define USES_P124  // I2C MultiRelay
 #endif
 
 
@@ -1150,14 +1152,14 @@ To create/register a plugin, you have to :
    #ifndef USES_P027
      #define USES_P027   // INA219
    #endif
-   #ifndef USES_P076 
+   #ifndef USES_P076
      #define USES_P076   // HWL8012   in POW r1
    #endif
-   #ifndef USES_P077 
+   #ifndef USES_P077
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
      #define USES_P077	  // CSE7766   in POW R2
    #endif
-   #ifndef USES_P078 
+   #ifndef USES_P078
      #define USES_P078   // Eastron Modbus Energy meters
    #endif
    #ifndef USES_P085
@@ -1169,7 +1171,7 @@ To create/register a plugin, you have to :
    #ifndef USES_P102
      #define USES_P102   // PZEM-004Tv30
    #endif
-   #ifndef USES_P108 
+   #ifndef USES_P108
      #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
    #endif
    #ifndef USES_P115
@@ -1188,31 +1190,31 @@ To create/register a plugin, you have to :
    #ifndef USES_P023
     #define USES_P023   // OLED
    #endif
-   #ifndef USES_P036 
+   #ifndef USES_P036
     #define USES_P036   // FrameOLED
    #endif
-   #ifndef USES_P038 
+   #ifndef USES_P038
     #define USES_P038   // NeoPixel
    #endif
-   #ifndef USES_P041 
+   #ifndef USES_P041
     #define USES_P041   // NeoClock
    #endif
-   #ifndef USES_P042 
+   #ifndef USES_P042
     #define USES_P042   // Candle
    #endif
-   #ifndef USES_P057 
+   #ifndef USES_P057
     #define USES_P057   // HT16K33_LED
    #endif
-   #ifndef USES_P070 
+   #ifndef USES_P070
     #define USES_P070   // NeoPixel_Clock
    #endif
-   #ifndef USES_P075 
+   #ifndef USES_P075
     #define USES_P075   // Nextion
    #endif
-   #ifndef USES_P095 
+   #ifndef USES_P095
     #define USES_P095  // TFT ILI9341
    #endif
-   #ifndef USES_P096 
+   #ifndef USES_P096
     #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
    #endif
    #ifndef USES_P099
@@ -1292,7 +1294,7 @@ To create/register a plugin, you have to :
 	#define USES_P142	// RGB-Strip
 	#define USES_P143	// AnyonePresent
 	#define USES_P144	// RC-Switch-TX
-	#define USES_P145	// Itho
+	#define USES_P145	// Itho - P118 in the main repo.
 	#define USES_P149	// MHZ19
 	#define USES_P150	// SDM120C
 	#define USES_P151	// CISA
@@ -1419,13 +1421,13 @@ To create/register a plugin, you have to :
     #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-    #define USES_P116   // 
+    #define USES_P116   //
   #endif
   #ifndef USES_P117
     #define USES_P117   // SCD30
   #endif
   #ifndef USES_P118
-    #define USES_P118   // 
+    #define USES_P118   // Itho ventilation coontrol
   #endif
   #ifndef USES_P119
     #define USES_P119   // ITG3205 Gyro
@@ -1434,19 +1436,19 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 Acceleration / Gravity
   #endif
   #ifndef USES_P121
-    #define USES_P121   // 
+    #define USES_P121   //
   #endif
   #ifndef USES_P122
-    #define USES_P122   // 
+    #define USES_P122   //
   #endif
   #ifndef USES_P123
-    #define USES_P123   // 
+    #define USES_P123   //
   #endif
   #ifndef USES_P124
-    #define USES_P124   // 
+    #define USES_P124   //
   #endif
   #ifndef USES_P125
-    #define USES_P125   // 
+    #define USES_P125   //
   #endif
 
   // Controllers

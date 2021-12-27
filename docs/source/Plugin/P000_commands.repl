@@ -50,6 +50,14 @@
     See also ``AccessInfo``.
 
     ``ClearAccessBlock``"
+    
+    "
+    ClearPassword","
+    :red:`Internal`","
+    Clear the password of the unit.
+    See also ``Password``.
+
+    ``ClearPassword,<current password>``"
     "
     ClearRTCram","
     :red:`Internal`","
@@ -287,7 +295,8 @@
     "
     Password","
     :red:`Internal`","
-    Set the password of the unit
+    Set the password of the unit.
+    See also ``ClearPassword``.
 
     ``Password,<new password>``"
     "

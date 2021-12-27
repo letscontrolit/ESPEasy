@@ -84,3 +84,12 @@ bool SecurityStruct::hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot
   return false;
 }
 
+String SecurityStruct::getPassword() const {
+  String res;
+  const size_t passLength = strnlen(Password, sizeof(Password));
+  res.reserve(passLength);
+  for (size_t i = 0; i < passLength; ++i) {
+    res += Password[i];
+  }
+  return res;
+}
