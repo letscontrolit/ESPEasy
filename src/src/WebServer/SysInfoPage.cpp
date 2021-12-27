@@ -167,7 +167,7 @@ void handle_sysinfo_json() {
   json_open(false, F("storage"));
 
   # if defined(ESP8266)
-  uint32_t flashChipId = ESP.getFlashChipId();
+  uint32_t flashChipId = getFlashChipId();
 
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
@@ -205,8 +205,8 @@ void handle_sysinfo_json() {
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
-  json_number(F("sketch_size"),   String(ESP.getSketchSize() / 1024));
-  json_number(F("sketch_free"),   String(ESP.getFreeSketchSpace() / 1024));
+  json_number(F("sketch_size"),   String(getSketchSize() / 1024));
+  json_number(F("sketch_free"),   String(getFreeSketchSpace() / 1024));
 
   json_number(F("spiffs_size"),   String(SpiffsTotalBytes() / 1024));
   json_number(F("spiffs_free"),   String(SpiffsFreeSpace() / 1024));
@@ -662,9 +662,9 @@ void handle_sysinfo_Storage() {
     {
       String html;
       html.reserve(32);
-      html += ESP.getSketchSize() / 1024;
+      html += getSketchSize() / 1024;
       html += F(" kB (");
-      html += ESP.getFreeSketchSpace() / 1024;
+      html += getFreeSketchSpace() / 1024;
       html += F(" kB free)");
       addHtml(html);
     }
