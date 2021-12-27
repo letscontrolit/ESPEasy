@@ -1,0 +1,37 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 10, 40
+
+    "
+
+    | ``state``
+
+    ","
+
+    | Use the states in the table below to control the state of the fan. To pair the remote with the Itho fan use 1111 or 9999 are for join or leave, respectively.
+
+    "
+	
+Examples:
+
+* HTTP control: http://ip/control?cmd=STATE,1
+
+* MQTT conrol: mosquitto_pub -t /Fan/cmd -m 'state 1' Here 'Fan' is the name of the plugin
+
+Fan states
+^^^^^^^^^^
+
+.. csv-table::
+  :header: "State","Name", "Description"
+  :widths: 5, 5, 40
+
+  "0", "Standby", "Itho ventilation unit on standby (not supported on most models)"
+  "1", "Low", "Itho ventilation  to lowest speed"
+  "2", "Medium", "Itho ventilation  to medium speed"
+  "3", "High", "Itho ventilation  to high speed"
+  "4", "Full", "Itho ventilation  to full speed (same as high on most models)"
+  "13", "Timer1", "Itho to high speed with hardware timer (10 min)"
+  "23", "Timer2", "Itho to high speed with hardware timer (20 min)"
+  "33", "Timer3", "Itho to high speed with hardware timer (30 min)"
+  
+Two special states exist: 1111 for a join command and 9999 for a leave command, check the Itho manual on how to put your fain into pairing mode.

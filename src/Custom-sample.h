@@ -412,8 +412,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P113   // VL53L1X ToF
 // #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P117   // SCD30
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 Acceleration / Gravity
+// #define USES_P124   // I2C MultiRelay
 
 
 // Special plugins needing IR library

@@ -40,7 +40,6 @@ void sendHeadandTail(const String& tmplName,
 void   sendHeadandTail_stdtemplate(boolean Tail      = false,
                                    boolean rebooting = false);
 
-size_t streamFile_htmlEscape(const String& fileName);
 
 void   WebServerInit();
 
@@ -143,10 +142,13 @@ String  getControllerSymbol(uint8_t index);
 /*
    String getValueSymbol(uint8_t index);
  */
-void    addSVG_param(const String& key,
+void    addSVG_param(const __FlashStringHelper * key,
+                     int         value);
+
+void    addSVG_param(const __FlashStringHelper * key,
                      float         value);
 
-void    addSVG_param(const String& key,
+void    addSVG_param(const __FlashStringHelper * key,
                      const String& value);
 
 void    createSvgRect_noStroke(const __FlashStringHelper * classname,
@@ -181,12 +183,9 @@ void createSvgTextElement(const String& text,
                           float         textXoffset,
                           float         textYoffset);
 
-void write_SVG_image_header(int width,
-                            int height);
-
 void write_SVG_image_header(int  width,
                             int  height,
-                            bool useViewbox);
+                            bool useViewbox = false);
 
 /*
    void getESPeasyLogo(int width_pixels);
