@@ -56,12 +56,12 @@ class IthoCC1101 : protected CC1101
 
     //settings
     uint8_t sendTries;                            //number of times a command is send at one button press
-    
+
   //functions
   public:
-    IthoCC1101(uint8_t counter = 0, uint8_t sendTries = 3);   //set initial counter value
+    IthoCC1101(int8_t CSpin = SS, uint8_t counter = 0, uint8_t sendTries = 3);   //set initial counter value
     ~IthoCC1101();
-    
+
     //init
     void init() { CC1101::init(); initReceive(); }                    //init,reset CC1101
     void initReceive();

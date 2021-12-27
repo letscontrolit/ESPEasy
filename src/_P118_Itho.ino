@@ -70,7 +70,7 @@ struct PLUGIN__ExtraSettingsStruct
 	char ID3[9];
 } PLUGIN_118_ExtraSettings;
 
-IthoCC1101 PLUGIN_118_rf;
+IthoCC1101 *PLUGIN_118_rf = nullptr;
 
 // extra for interrupt handling
 bool PLUGIN_118_ITHOhasPacket = false;
@@ -109,7 +109,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 	case PLUGIN_DEVICE_ADD:
 		{
 			Device[++deviceCount].Number = PLUGIN_ID_118;
-			Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
+			Device[deviceCount].Type = DEVICE_TYPE_SPI2;
 			Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_TRIPLE;
 			Device[deviceCount].Ports = 0;
 			Device[deviceCount].PullUpOption = false;
@@ -140,11 +140,14 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 	case PLUGIN_GET_DEVICEGPIONAMES:
 	  {
 			event->String1 = formatGpioName_input(F("Interrupt pin (CC1101 GDO2)"));
+			event->String2 = formatGpioName_output(F("CS pin (CC1101 CSN)"));
 			break;
     }
 
 	case PLUGIN_SET_DEFAULTS: //Set defaults address to the one used in old versions of the library for backwards compatability
 		{
+			PIN(0) = -1; // Interrupt pin undefined by default
+			PIN(1) = 15; // CS pin use the previous default of SS/gpio 15
     	PCONFIG(0) = 1;
 			PCONFIG(1) = 10;
 			PCONFIG(2) = 87;
@@ -163,15 +166,18 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 			}
 			LoadCustomTaskSettings(event->TaskIndex, (byte*)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
 			addLog(LOG_LEVEL_INFO, F("Extra Settings PLUGIN_118 loaded"));
-			PLUGIN_118_rf.setDeviceID(PCONFIG(1), PCONFIG(2), PCONFIG(3)); //DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
-			PLUGIN_118_rf.init();
-			Plugin_118_IRQ_pin = Settings.TaskDevicePin1[event->TaskIndex];
-			pinMode(Plugin_118_IRQ_pin, INPUT);
-			attachInterrupt(Plugin_118_IRQ_pin, PLUGIN_118_ITHOinterrupt, FALLING);
-			addLog(LOG_LEVEL_INFO, F("CC1101 868Mhz transmitter initialized"));
-			PLUGIN_118_rf.initReceive();
-			PLUGIN_118_InitRunned=true;
-			success = true;
+			PLUGIN_118_rf = new (std::nothrow) IthoCC1101(PIN(1));
+			if (nullptr != PLUGIN_118_rf) {
+				PLUGIN_118_rf->setDeviceID(PCONFIG(1), PCONFIG(2), PCONFIG(3)); //DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
+				PLUGIN_118_rf->init();
+				Plugin_118_IRQ_pin = Settings.TaskDevicePin1[event->TaskIndex];
+				pinMode(Plugin_118_IRQ_pin, INPUT);
+				attachInterrupt(Plugin_118_IRQ_pin, PLUGIN_118_ITHOinterrupt, FALLING);
+				addLog(LOG_LEVEL_INFO, F("CC1101 868Mhz transmitter initialized"));
+				PLUGIN_118_rf->initReceive();
+				PLUGIN_118_InitRunned=true;
+				success = true;
+			}
 			break;
 		}
 
@@ -180,6 +186,10 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 		addLog(LOG_LEVEL_INFO, F("EXIT PLUGIN_118"));
 		//remove interupt when plugin is removed
 		detachInterrupt(Plugin_118_IRQ_pin);
+		if (nullptr != PLUGIN_118_rf) {
+			delete PLUGIN_118_rf;
+			PLUGIN_118_rf = nullptr;
+		}
 		success = true;
 		break;
 	}
@@ -253,104 +263,104 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 				switch(event->Par1) {
 					case 1111: //Join command
 					{
-						PLUGIN_118_rf.sendCommand(IthoJoin);
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->sendCommand(IthoJoin);
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("join"));
 						success = true;
 						break;
 					}
 				 	case 9999: //Leave command
 					{
-						PLUGIN_118_rf.sendCommand(IthoLeave);
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->sendCommand(IthoLeave);
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("leave"));
 						success = true;
 						break;
 					}
 			  	case 0: //Off command
 			    {
-						PLUGIN_118_rf.sendCommand(IthoStandby);
+						PLUGIN_118_rf->sendCommand(IthoStandby);
 						PLUGIN_118_State=0;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("standby"));
 						success = true;
 						break;
 				 	}
 					case 1: //Fan low
 					{
-						PLUGIN_118_rf.sendCommand(IthoLow);
+						PLUGIN_118_rf->sendCommand(IthoLow);
 						PLUGIN_118_State=1;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("low speed"));
 						success = true;
 						break;
 					}
 					case 2: //Fan medium
 					{
-						PLUGIN_118_rf.sendCommand(IthoMedium);
+						PLUGIN_118_rf->sendCommand(IthoMedium);
 						PLUGIN_118_State=2;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("medium speed"));
 						success = true;
 						break;
 					}
 					case 3: //Fan high
 					{
-						PLUGIN_118_rf.sendCommand(IthoHigh);
+						PLUGIN_118_rf->sendCommand(IthoHigh);
 						PLUGIN_118_State=3;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("high speed"));
 						success = true;
 						break;
 					}
 				 	case 4: //Fan full
 					{
-					  PLUGIN_118_rf.sendCommand(IthoFull);
+					  PLUGIN_118_rf->sendCommand(IthoFull);
 						PLUGIN_118_State=4;
 						PLUGIN_118_Timer=0;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("full speed"));
 						success = true;
 						break;
 					}
 					case 13: //Timer1 - 10 min
 					{
-						PLUGIN_118_rf.sendCommand(IthoTimer1);
+						PLUGIN_118_rf->sendCommand(IthoTimer1);
 						PLUGIN_118_State=13;
 						PLUGIN_118_Timer=PLUGIN_118_Time1;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("timer 1"));
 						success = true;
 						break;
 					}
 					case 23: //Timer2 - 20 min
 					{
-						PLUGIN_118_rf.sendCommand(IthoTimer2);
+						PLUGIN_118_rf->sendCommand(IthoTimer2);
 						PLUGIN_118_State=23;
 						PLUGIN_118_Timer=PLUGIN_118_Time2;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("timer 2"));
 						success = true;
 						break;
 					}
 					case 33: //Timer3 - 30 min
 					{
-						PLUGIN_118_rf.sendCommand(IthoTimer3);
+						PLUGIN_118_rf->sendCommand(IthoTimer3);
 						PLUGIN_118_State=33;
 						PLUGIN_118_Timer=PLUGIN_118_Time3;
 						PLUGIN_118_LastIDindex = 0;
-						PLUGIN_118_rf.initReceive();
+						PLUGIN_118_rf->initReceive();
 						PLUGIN_118_PluginWriteLog(F("timer 3"));
 						success = true;
 						break;
@@ -409,10 +419,10 @@ ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
 void PLUGIN_118_ITHOcheck()
 {
 	if(PLUGIN_118_Log){addLog(LOG_LEVEL_DEBUG, "RF signal received");} //All logs statements contain if-statement to disable logging to reduce log clutter when many RF sources are present
-	if(PLUGIN_118_rf.checkForNewPacket())
+	if(PLUGIN_118_rf->checkForNewPacket())
 	{
-		IthoCommand cmd = PLUGIN_118_rf.getLastCommand();
-		String Id = PLUGIN_118_rf.getLastIDstr();
+		IthoCommand cmd = PLUGIN_118_rf->getLastCommand();
+		String Id = PLUGIN_118_rf->getLastIDstr();
 
 		//Move check here to prevent function calling within ISR
 		byte index = 0;

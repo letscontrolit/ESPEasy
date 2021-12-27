@@ -40,7 +40,7 @@
 #define MDMCFG2 0x02 //16bit sync word / 16bit specific
 
 // default constructor
-IthoCC1101::IthoCC1101(uint8_t counter, uint8_t sendTries) : CC1101()
+IthoCC1101::IthoCC1101(int8_t CSpin, uint8_t counter, uint8_t sendTries) : CC1101(CSpin)
 {
   this->outIthoPacket.counter = counter;
   this->sendTries = sendTries;
@@ -629,14 +629,14 @@ uint8_t IthoCC1101::getCounter2(IthoPacket *itho, uint8_t len) {
 
 uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
 
-  uint8_t lenOutbuf = 0;
+  // uint8_t lenOutbuf = 0; // Inhinit unused code to avoid compiler warning
 
-  if ((itho->length * 20) % 8 == 0) { //inData len fits niecly in out buffer length
-    lenOutbuf = itho->length * 2.5;
-  }
-  else { //is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra, padding is done after encode
-    lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
-  }
+  // if ((itho->length * 20) % 8 == 0) { //inData len fits niecly in out buffer length
+  //   lenOutbuf = itho->length * 2.5;
+  // }
+  // else { //is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra, padding is done after encode
+  //   lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
+  // }
 
   uint8_t out_bytecounter = 14;   //index of Outbuf, start at offset 14, first part of the message is set manually
   uint8_t out_bitcounter = 0;     //bit position of current outbuf byte
@@ -645,7 +645,7 @@ uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
   uint8_t out_shift = 7;          //bit shift inData bit in position of outbuf byte
 
   //we need to zero the out buffer first cause we are using bitshifts
-  for (int i = out_bytecounter; i < sizeof(packet->data) / sizeof(packet->data[0]); i++) {
+  for (uint32_t i = out_bytecounter; i < sizeof(packet->data) / sizeof(packet->data[0]); i++) {
     packet->data[i] = 0;
   }
 
@@ -723,10 +723,10 @@ void IthoCC1101::messageDecode(CC1101Packet *packet, IthoPacket *itho) {
     itho->length++;
   }
 
-  for (int i = 0; i < sizeof(itho->dataDecoded) / sizeof(itho->dataDecoded[0]); i++) {
+  for (uint32_t i = 0; i < sizeof(itho->dataDecoded) / sizeof(itho->dataDecoded[0]); i++) {
     itho->dataDecoded[i] = 0;
   }
-  for (int i = 0; i < sizeof(itho->dataDecodedChk) / sizeof(itho->dataDecodedChk[0]); i++) {
+  for (uint32_t i = 0; i < sizeof(itho->dataDecodedChk) / sizeof(itho->dataDecodedChk[0]); i++) {
     itho->dataDecodedChk[i] = 0;
   }
 
