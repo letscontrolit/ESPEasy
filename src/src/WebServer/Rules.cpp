@@ -5,6 +5,7 @@
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -557,7 +558,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   size_t size = 0;
 
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
-  size = streamFile_htmlEscape(fileName);
+  size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
 
   html_TR_TD();
