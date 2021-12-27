@@ -7,7 +7,7 @@
 // ********************************************************************************
 // Web Interface custom page handler
 // ********************************************************************************
-boolean handle_custom(String path);
+bool handle_custom(const String& path);
 #endif
 
 #endif
