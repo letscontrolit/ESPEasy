@@ -176,6 +176,21 @@ String getKnownI2Cdevice(uint8_t address) {
 
   switch (address)
   {
+    case 0x10:
+      result += F("VEML6075");
+      break;
+    case 0x11:
+      result += F("VEML6075,I2C_MultiRelay");
+      break;
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x16:
+    case 0x17:
+    case 0x18:
+      result += F("I2C_MultiRelay");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
@@ -265,7 +280,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("Adafruit Motorshield v2,SI1145");
       break;
     case 0x61:
-      result += F("Atlas EZO DO");
+      result += F("Atlas EZO DO,SCD30");
       break;
     case 0x62:
       result += F("Atlas EZO ORP");

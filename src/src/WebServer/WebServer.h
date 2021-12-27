@@ -40,7 +40,6 @@ void sendHeadandTail(const String& tmplName,
 void   sendHeadandTail_stdtemplate(boolean Tail      = false,
                                    boolean rebooting = false);
 
-size_t streamFile_htmlEscape(const String& fileName);
 
 void   WebServerInit();
 
