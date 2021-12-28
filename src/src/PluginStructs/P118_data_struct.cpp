@@ -31,23 +31,22 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
                                                                     // multi itho control, 10,87,81 corresponds with old library
     PLUGIN_118_rf->init();
 
-    // Next is to connect the interrupt,
-    // then plugin_init_part2 is to be called (below)
+    attachInterruptArg(digitalPinToInterrupt(Plugin_118_IRQ_pin),
+                       reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
+                       this,
+                       FALLING);
+
+    PLUGIN_118_rf->initReceive();
+    PLUGIN_118_InitRunned = true;
+
     success = true;
   }
   return success;
 }
 
-void P118_data_struct::plugin_init_part2() {
-  if (nullptr != PLUGIN_118_rf) {
-    PLUGIN_118_rf->initReceive();
-    PLUGIN_118_InitRunned = true;
-  }
-}
-
 bool P118_data_struct::plugin_exit(struct EventStruct *event) {
   // remove interupt when plugin is removed
-  detachInterrupt(Plugin_118_IRQ_pin);
+  detachInterrupt(digitalPinToInterrupt(Plugin_118_IRQ_pin));
 
   if (nullptr != PLUGIN_118_rf) {
     delete PLUGIN_118_rf;
@@ -86,20 +85,11 @@ bool P118_data_struct::plugin_once_a_second(struct EventStruct *event) {
 }
 
 bool P118_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
-  // PLUGIN_118_Int = false; // reset flag
-  ITHOcheck();
+  if (PLUGIN_118_Int) {
+    ITHOcheck();
+    PLUGIN_118_Int = false; // reset flag
+  }
 
-  /*
-     unsigned long time_elapsed = millis() - PLUGIN_118_Int_time; //Disabled as it doesn't appear to be required
-     if (time_elapsed >= 10)
-     {
-          ITHOcheck();
-     }
-     else
-     {
-          delay(10-time_elapsed);
-          ITHOcheck();
-     }*/
   return true;
 }
 
@@ -384,6 +374,15 @@ void P118_data_struct::PluginWriteLog(const String& command) {
   log += command;
   addLog(LOG_LEVEL_INFO, log);
   printWebString += log;
+}
+
+// **************************************************************************/
+// Interrupt handler
+// **************************************************************************/
+void ICACHE_RAM_ATTR P118_data_struct::ISR_ithoCheck(P118_data_struct *self) {
+  noInterrupts(); // Disable interrupts
+  self->PLUGIN_118_Int = true;
+  interrupts();   // Re-enable interrupts
 }
 
 #endif // ifdef USES_P118

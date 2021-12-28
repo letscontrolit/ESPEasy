@@ -20,6 +20,7 @@
 //			tonhuisman, 27-12-2021 - Split into P118_data_struct to enable multiple instances, reduce memory footprint
 //								   - Allow 3 simultaneous instances, each using an interrupt and CS
 //								   - Remove unused code, reformat source using Uncrustify
+//			tonhuisman, 28-12-2021 - Move interrupt handling to Plugin_data_struct, lifting the limit on nr. of plugins
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -67,11 +68,6 @@
 
 #include "_Plugin_Helper.h"
 #include "./src/PluginStructs/P118_data_struct.h"
-
-// volatile for interrupt function
-volatile bool PLUGIN_118_Int[P118_INTERUPT_HANDLER_COUNT] = { false, false, false };
-int8_t PLUGIN_118_Task[P118_INTERUPT_HANDLER_COUNT];
-bool   PLUGIN_118_Task_Initialized = false;
 
 #define PLUGIN_118
 #define PLUGIN_ID_118         118
@@ -147,49 +143,8 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P118_data) {
         return success;
       }
-      success = P118_data->plugin_init(event); // Part 1
+      success = P118_data->plugin_init(event);
 
-      if (success) {
-        if (!PLUGIN_118_Task_Initialized) {
-          for (uint8_t i = 0; i < P118_INTERUPT_HANDLER_COUNT; i++) {
-            PLUGIN_118_Task[i] = -1;
-            PLUGIN_118_Int[i]  = false;
-          }
-          PLUGIN_118_Task_Initialized = true;
-        }
-        int8_t offset = -1;
-
-        for (uint8_t i = 0; i < P118_INTERUPT_HANDLER_COUNT && offset == -1; i++) {
-          if (PLUGIN_118_Task[i] == -1) { // Find a free spot
-            offset = i;
-          }
-        }
-
-        if (offset > -1) {
-          PLUGIN_118_Task[offset] = event->TaskIndex;
-          pinMode(PIN(0), INPUT);
-
-          switch (offset) { // Add more interrupt handlers when needed
-            case 0:
-              attachInterrupt(PIN(0), PLUGIN_118_ITHOinterrupt0, FALLING);
-              break;
-            case 1:
-              attachInterrupt(PIN(0), PLUGIN_118_ITHOinterrupt1, FALLING);
-              break;
-            case 2:
-              attachInterrupt(PIN(0), PLUGIN_118_ITHOinterrupt2, FALLING);
-              break;
-            default:
-              break;
-          }
-          P118_data->plugin_init_part2();        // Start the data flow
-          addLog(LOG_LEVEL_INFO, F("CC1101 868Mhz transmitter initialized"));
-        } else {
-          clearPluginTaskData(event->TaskIndex); // Destroy initialized data, init failed
-          addLog(LOG_LEVEL_ERROR, F("CC1101 initialization failed!"));
-          success = false;
-        }
-      }
       break;
     }
 
@@ -202,18 +157,6 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr == P118_data) {
         return success;
-      }
-      int8_t offset = -1;
-
-      for (uint8_t i = 0; i < P118_INTERUPT_HANDLER_COUNT && offset == -1; i++) {
-        if (PLUGIN_118_Task[i] == event->TaskIndex) {
-          offset = i;
-        }
-      }
-
-      // detach interupt when plugin is 'removed'
-      if (offset > -1) {
-        detachInterrupt(PIN(0));
       }
 
       success = P118_data->plugin_exit(event);
@@ -234,26 +177,13 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_FIFTY_PER_SECOND:
     {
-      int8_t offset = -1;
+      P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      // Find matching interrupt flag
-      for (uint8_t i = 0; i < P118_INTERUPT_HANDLER_COUNT && offset == -1; i++) {
-        if (PLUGIN_118_Task[i] == event->TaskIndex) {
-          offset = i;
-        }
+      if (nullptr == P118_data) {
+        return success;
       }
+      success = P118_data->plugin_fifty_per_second(event);
 
-      if ((offset > -1) && PLUGIN_118_Int[offset])
-      {
-        P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr == P118_data) {
-          return success;
-        }
-        success = P118_data->plugin_fifty_per_second(event);
-
-        PLUGIN_118_Int[offset] = false; // reset flag
-      }
       break;
     }
 
@@ -287,7 +217,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       addFormTextBox(F("Unit ID remote 1"), F("PLUGIN_118_ID1"), PLUGIN_118_ExtraSettings.ID1, 8);
       addFormTextBox(F("Unit ID remote 2"), F("PLUGIN_118_ID2"), PLUGIN_118_ExtraSettings.ID2, 8);
       addFormTextBox(F("Unit ID remote 3"), F("PLUGIN_118_ID3"), PLUGIN_118_ExtraSettings.ID3, 8);
-      addFormCheckBox(F("Enable RF receive log"), F("p118_log"), PCONFIG(0)); // Makes RF logging optional to reduce clutter in the lof file
+      addFormCheckBox(F("Enable RF receive log"), F("p118_log"), PCONFIG(0)); // Makes RF logging optional to reduce clutter in the log file
                                                                               // in RF noisy environments
       addFormNumericBox(F("Device ID byte 1"), F("p118_deviceid1"), PCONFIG(1), 0, 255);
       addFormNumericBox(F("Device ID byte 2"), F("p118_deviceid2"), PCONFIG(2), 0, 255);
@@ -316,18 +246,6 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt0() {
-  PLUGIN_118_Int[0] = true; // flag 0
-}
-
-ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt1() {
-  PLUGIN_118_Int[1] = true; // flag 1
-}
-
-ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt2() {
-  PLUGIN_118_Int[2] = true; // flag 2
 }
 
 #endif // USES_P118

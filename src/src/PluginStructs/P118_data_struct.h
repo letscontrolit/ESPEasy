@@ -10,9 +10,7 @@
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
-# define P118_DEBUG_LOG                // Enable for some (extra) logging
-
-# define P118_INTERUPT_HANDLER_COUNT 3 // This should only be changed if the Interrupt handlers are also adjusted
+// # define P118_DEBUG_LOG // Enable for some (extra) logging
 
 // Timer values for hardware timer in Fan in seconds
 # define PLUGIN_118_Time1      10 * 60
@@ -35,7 +33,6 @@ public:
   ~P118_data_struct();
 
   bool plugin_init(struct EventStruct *event);
-  void plugin_init_part2();
   bool plugin_exit(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);
@@ -66,6 +63,10 @@ private:
   bool   PLUGIN_118_Log            = false;
 
   PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
+
+  volatile bool PLUGIN_118_Int = false;
+
+  static void ISR_ithoCheck(P118_data_struct *self);
 };
 #endif // ifdef USES_P118
 #endif // ifndef PLUGINSTRUCTS_P118_DATA_STRUCT_H
