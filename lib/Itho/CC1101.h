@@ -168,7 +168,7 @@ class CC1101
 		
 	//functions
 	public:
-		CC1101(int8_t CSpin = SS);
+		CC1101(int8_t CSpin = PIN_SPI_SS);
 		~CC1101();
 	
 		//spi
@@ -195,7 +195,7 @@ class CC1101
 		void select(void);
 		void deselect(void);
 
-		int8_t _CSpin = SS;
+		int8_t _CSpin = PIN_SPI_SS;
 		
 	protected:
 		uint8_t readRegister(uint8_t address);

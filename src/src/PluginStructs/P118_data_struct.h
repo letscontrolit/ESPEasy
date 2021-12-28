@@ -20,7 +20,7 @@
 # define PLUGIN_118_Time3      30 * 60
 
 // This extra settings struct is needed because the default settingsstruct doesn't support strings
-struct PLUGIN__ExtraSettingsStruct {
+struct PLUGIN_118_ExtraSettingsStruct {
   char ID1[9];
   char ID2[9];
   char ID3[9];
@@ -65,7 +65,7 @@ private:
   bool   PLUGIN_118_InitRunned     = false;
   bool   PLUGIN_118_Log            = false;
 
-  PLUGIN__ExtraSettingsStruct PLUGIN_118_ExtraSettings;
+  PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
 };
 #endif // ifdef USES_P118
 #endif // ifndef PLUGINSTRUCTS_P118_DATA_STRUCT_H

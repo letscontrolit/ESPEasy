@@ -59,7 +59,7 @@ class IthoCC1101 : protected CC1101
 
   //functions
   public:
-    IthoCC1101(int8_t CSpin = SS, uint8_t counter = 0, uint8_t sendTries = 3);   //set initial counter value
+    IthoCC1101(int8_t CSpin = PIN_SPI_SS, uint8_t counter = 0, uint8_t sendTries = 3);   //set initial counter value
     ~IthoCC1101();
 
     //init

@@ -124,10 +124,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_SET_DEFAULTS: // Set defaults address to the one used in old versions of the library for backwards compatability
+    case PLUGIN_SET_DEFAULTS:  // Set defaults address to the one used in old versions of the library for backwards compatability
     {
-      PIN(0)     = -1;        // Interrupt pin undefined by default
-      PIN(1)     = 15;        // CS pin use the previous default of SS/gpio 15
+      PIN(0)     = -1;         // Interrupt pin undefined by default
+      PIN(1)     = PIN_SPI_SS; // CS pin use the previous default of PIN_SPI_SS/gpio 15
       PCONFIG(0) = 1;
       PCONFIG(1) = 10;
       PCONFIG(2) = 87;
@@ -236,7 +236,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     {
       int8_t offset = -1;
 
-	  // Find matching interrupt flag
+      // Find matching interrupt flag
       for (uint8_t i = 0; i < P118_INTERUPT_HANDLER_COUNT && offset == -1; i++) {
         if (PLUGIN_118_Task[i] == event->TaskIndex) {
           offset = i;
@@ -281,7 +281,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      PLUGIN__ExtraSettingsStruct PLUGIN_118_ExtraSettings;
+      PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
       addFormSubHeader(F("Remote RF Controls"));
       addFormTextBox(F("Unit ID remote 1"), F("PLUGIN_118_ID1"), PLUGIN_118_ExtraSettings.ID1, 8);
@@ -300,7 +300,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PLUGIN__ExtraSettingsStruct PLUGIN_118_ExtraSettings;
+      PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
       strcpy(PLUGIN_118_ExtraSettings.ID1, web_server.arg(F("PLUGIN_118_ID1")).c_str());
       strcpy(PLUGIN_118_ExtraSettings.ID2, web_server.arg(F("PLUGIN_118_ID2")).c_str());
       strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("PLUGIN_118_ID3")).c_str());
