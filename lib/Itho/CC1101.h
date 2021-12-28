@@ -9,6 +9,9 @@
 #include "CC1101Packet.h"
 #include <SPI.h>
 // On Arduino, SPI pins are predefined
+#ifndef PIN_SPI_SS
+#define PIN_SPI_SS   (15)
+#endif
 
 /*	Type of transfers */
 #define CC1101_WRITE_BURST						0x40
