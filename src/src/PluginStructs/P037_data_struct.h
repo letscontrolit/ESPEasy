@@ -22,9 +22,9 @@
 #  ifndef P037_FILTER_SUPPORT
 #   define P037_FILTER_SUPPORT  1 // Enable filtering support
 #  endif // ifndef P037_FILTER_SUPPORT
-#  ifdef P037_JSON_SUPPORT
+#  ifndef P037_JSON_SUPPORT
 #   define P037_JSON_SUPPORT    1 // Enable Json support
-#  endif // ifdef P037_JSON_SUPPORT
+#  endif // ifndef P037_JSON_SUPPORT
 # endif // ifdef PLUGIN_BUILD_CUSTOM
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE

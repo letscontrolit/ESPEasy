@@ -157,7 +157,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # if P037_FILTER_SUPPORT
       P037_APPLY_FILTERS = getFormItemInt(F("p037_apply_filters"));
       # endif // if P037_FILTER_SUPPORT
-      P037_SEND_EVENTS = isFormItemChecked(F("p037_send_events"));
+      P037_SEND_EVENTS = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
 
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
