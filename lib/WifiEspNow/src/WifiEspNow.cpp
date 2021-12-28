@@ -52,7 +52,10 @@ WifiEspNowClass::listPeers(WifiEspNowPeerInfo* peers, int maxPeers) const
         mac = esp_now_fetch_peer(false)) {
       uint8_t channel = static_cast<uint8_t>(esp_now_get_peer_channel(mac));
 #elif defined(ESP32)
+    // For IDF 4.4 make sure to zero peer
+    // See: https://github.com/espressif/arduino-esp32/issues/6029
     esp_now_peer_info_t peer;
+    memset(&peer, 0, sizeof(peer));
     for (esp_err_t e = esp_now_fetch_peer(true, &peer);
         e == ESP_OK;
         e = esp_now_fetch_peer(false, &peer)) {
@@ -97,7 +100,10 @@ bool
 WifiEspNowClass::addPeer(const uint8_t mac[6], int channel, const uint8_t key[WIFIESPNOW_KEYLEN], int netif)
 {
   if (!m_begin) return false;
+  // For IDF 4.4 make sure to zero peer
+  // See: https://github.com/espressif/arduino-esp32/issues/6029
   esp_now_peer_info_t pi;
+  memset(&pi, 0, sizeof(pi));
   if (esp_now_get_peer(mac, &pi) == ESP_OK) {
     if (pi.channel == static_cast<uint8_t>(channel)) {
       return true;
