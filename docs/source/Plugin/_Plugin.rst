@@ -142,6 +142,7 @@ There are different released versions of ESP Easy:
    ":ref:`P115_page`","|P115_status|","P115"
    ":ref:`P116_page`","|P116_status|","P116"
    ":ref:`P117_page`","|P117_status|","P117"
+   ":ref:`P118_page`","|P118_status|","P118"
    ":ref:`P124_page`","|P124_status|","P124"
 
 
