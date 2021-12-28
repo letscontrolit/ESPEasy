@@ -137,7 +137,7 @@ bool handle_custom(const String& path) {
   if (dataFile)
   {
     // Read the file per line and serve per line to reduce amount of memory needed.
-    int available = dataFile.available();
+    uint32_t available = dataFile.available();
     String line;
     line.reserve(128);
     while (available > 0) {

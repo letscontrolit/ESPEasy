@@ -152,7 +152,7 @@ size_t streamFromFS(String path, bool htmlEscape) {
     return bytesStreamed;
   }
 
-  int available = f.available();
+  uint32_t available = f.available();
   String escaped;
   while (available > 0) {
     uint32_t chunksize = 64;
