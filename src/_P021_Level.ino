@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 // Changelog:
+// 2021-12-29, tonhuisman: Add setting to enable/disable saving the settings when the Set Level value is changed using the config
+//                         command
 // 2021-12-28, tonhuisman: Avoid saving settings if no change on config command https://github.com/letscontrolit/ESPEasy/issues/3477,
 //                         cleanup source, prevent crashing when hysteresis is 0.0, run Uncrustify source formatter,
 //                         apply float/double math compare functions instead of regular comparisons
@@ -78,7 +80,8 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       addFormTextBox(F("Hysteresis"), F("p021_hyst"),     String(PCONFIG_FLOAT(1)), 8);
 
-      addFormCheckBox(F("Save 'Set Level' after change via <tt>config</tt> command"), F("p021_save_always"), PCONFIG(2) == 0); // inverted flag!
+      addFormCheckBox(F("Save 'Set Level' after change via <tt>config</tt> command"), F("p021_save_always"), PCONFIG(2) == 0); // inverted
+                                                                                                                               // flag!
       addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
 
       // we need to restore our original taskvalues!
