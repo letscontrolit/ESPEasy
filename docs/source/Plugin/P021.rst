@@ -58,8 +58,12 @@ Sensor
 
 There is 1 exception to the **Hysteresis**: If the Hysteresis is set to 0, the output state will turn on (1) if the measured value goes *below* Set Value, and the output state will turn off (0) if the measured value reaches ``Set Value + 1.0``.
 
+* **Save 'Set Level' after change via config command** Via the config command, the **Set Level** value can be changed. To avoid wearing out the flash memory of the device by too often saving these settings, the default is now off, for existing tasks (after upgrade of ESPEasy), the old behavior of saving after each change is still active. The user should decide if saving the setting is actually required, or if that can be attained by carefully planning a save command or via a manual save.
 
-The Data Acquisition and Send to Controller settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
+Data Acquisition
+^^^^^^^^^^^^^^^^
+
+This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
 
 Values
 ^^^^^^

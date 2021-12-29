@@ -59,6 +59,12 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(2) = 1; // Do not save
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addRowLabel(F("Check Task"));
@@ -72,7 +78,11 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
       addFormTextBox(F("Hysteresis"), F("p021_hyst"),     String(PCONFIG_FLOAT(1)), 8);
 
-      LoadTaskSettings(event->TaskIndex); // we need to restore our original taskvalues!
+      addFormCheckBox(F("Save 'Set Level' after change via <tt>config</tt> command"), F("p021_save_always"), PCONFIG(2) == 0); // inverted flag!
+      addFormNote(F("Saving settings too often can wear out the flash chip on your ESP!"));
+
+      // we need to restore our original taskvalues!
+      LoadTaskSettings(event->TaskIndex);
       success = true;
       break;
     }
@@ -81,6 +91,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       PCONFIG(0)       = getFormItemInt(F("p021_task"));
       PCONFIG(1)       = getFormItemInt(F("p021_value"));
+      PCONFIG(2)       = isFormItemChecked(F("p021_save_always")) ? 0 : 1; // inverted flag!
       PCONFIG_FLOAT(0) = getFormItemFloat(F("p021_setvalue"));
       PCONFIG_FLOAT(1) = getFormItemFloat(F("p021_hyst"));
 
@@ -92,15 +103,17 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command == F("setlevel"))
-      {
+      if (command == F("setlevel")) {
         String value  = parseString(string, 2);
         double result = 0.0;
 
         if (!isError(Calculate(value, result))) {
           if (!essentiallyEqual(static_cast<double>(PCONFIG_FLOAT(0)), result)) { // Save only if different
             PCONFIG_FLOAT(0) = result;
-            SaveSettings();
+
+            if (PCONFIG(2) == 0) {                                                // save only if explicitly enabled
+              SaveSettings();
+            }
           }
           success = true;
         }
