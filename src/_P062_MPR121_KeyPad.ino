@@ -94,7 +94,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         }
         addFormNumericBox(F("Touch treshold (1..255)"), F("p062_touch_treshold"), touch_treshold, 0, 255);
         String unit_ = F("Default: ");
-        unit_ += String(P062_DEFAULT_TOUCH_TRESHOLD);
+        unit_ += P062_DEFAULT_TOUCH_TRESHOLD;
         addUnit(unit_);
       }
 
@@ -105,8 +105,19 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         }
         addFormNumericBox(F("Release treshold (1..255)"), F("p062_release_treshold"), release_treshold, 0, 255);
         String unit_ = F("Default: ");
-        unit_ += String(P062_DEFAULT_RELEASE_TRESHOLD);
+        unit_ += P062_DEFAULT_RELEASE_TRESHOLD;
         addUnit(unit_);
+      }
+      {
+        const __FlashStringHelper* sensitivityOptions[] = {
+          F("Normal"),
+          F("Extra sensitive (behind 4-6mm glass cover)")
+        };
+        const int sensitivityValues[] = {
+          MPR212_NORMAL_SENSITIVITY,
+          MPR212_EXTRA_SENSITIVITY
+        };
+        addFormSelector(F("Panel sensitivity"),F("p062_panel_sensitivity"), 2, sensitivityOptions, sensitivityValues, PCONFIG(4));
       }
       {
         bool canCalibrate = true;
@@ -179,6 +190,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
 
       PCONFIG(2) = getFormItemInt(F("p062_touch_treshold"));
       PCONFIG(3) = getFormItemInt(F("p062_release_treshold"));
+      PCONFIG(4) = getFormItemInt(F("p062_panel_sensitivity"));
 
       uint32_t lSettings = 0;
       bool tbUseCalibration = getFormItemInt(F("p062_use_calibration")) == 1;
@@ -202,11 +214,11 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
           P062_data->StoredSettings.TouchObjects[objectNr].touch   = getFormItemInt(getPluginCustomArgName(objectNr + 100));
           P062_data->StoredSettings.TouchObjects[objectNr].release = getFormItemInt(getPluginCustomArgName(objectNr + 200));
         }
-#ifdef PLUGIN_062_DEBUG
+        #ifdef PLUGIN_062_DEBUG
         String log = F("p062_data save size: ");
         log += sizeof(P062_data->StoredSettings);
         addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_062_DEBUG
+        #endif // PLUGIN_062_DEBUG
         SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P062_data->StoredSettings)), sizeof(P062_data->StoredSettings));
         if (!canCalibrate) {
           delete P062_data;
@@ -215,9 +227,9 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
           bool clearCalibration = isFormItemChecked(F("p062_clear_calibrate"));
           if (clearCalibration) {
             P062_data->clearCalibrationData();
-#ifdef PLUGIN_062_DEBUG
+            #ifdef PLUGIN_062_DEBUG
             addLog(LOG_LEVEL_INFO, F("p062 clear calibration"));
-#endif // PLUGIN_062_DEBUG
+            #endif // PLUGIN_062_DEBUG
           }
         }
       }
@@ -233,7 +245,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
       P062_data_struct *P062_data = static_cast<P062_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P062_data) {
-        if (!P062_data->init(event->TaskIndex, PCONFIG(0), PCONFIG(1), tbUseCalibration)) {
+        if (!P062_data->init(event->TaskIndex, PCONFIG(0), PCONFIG(1), tbUseCalibration, PCONFIG(4))) {
           clearPluginTaskData(event->TaskIndex);
           P062_data = nullptr;
         } else {
