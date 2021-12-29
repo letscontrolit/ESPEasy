@@ -3,6 +3,7 @@
 #include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/LoadFromFS.h"
 
 String generate_external_URL(const String& fname) {
     String url;
@@ -14,27 +15,28 @@ String generate_external_URL(const String& fname) {
 
 
 void serve_CSS() {
-  String url = F("esp.css");  
-  if (!fileExists(url))
+  const String cssFile = F("esp.css");
+  if (fileExists(cssFile))
   {
-    #ifndef WEBSERVER_CSS
-    url = generate_external_URL(F("espeasy_default.css"));
-    #else
     addHtml(F("<style>"));
-
-    // Send CSS in chunks
-    TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
+    streamFromFS(cssFile);
     addHtml(F("</style>"));
     return;
-    #endif
   }
-
+  #ifndef WEBSERVER_CSS
   addHtml(F("<link"));
   addHtmlAttribute(F("rel"), F("stylesheet"));
   addHtmlAttribute(F("type"), F("text/css"));
-  addHtmlAttribute(F("href"), url);
+  addHtmlAttribute(F("href"), generate_external_URL(F("espeasy_default.css")));
   addHtml('/');
   addHtml('>');
+  #else
+  addHtml(F("<style>"));
+
+  // Send CSS in chunks
+  TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
+  addHtml(F("</style>"));
+  #endif
 }
 
 void serve_favicon() {
@@ -112,10 +114,15 @@ void serve_JS(JSfiles_e JSfile) {
         html_add_script_end();
         return;
         #endif
+        addHtml(F("<script"));
+        addHtml(F(" defer"));
+        addHtmlAttribute(F("src"), url);
+        addHtml('>');
+        html_add_script_end();
+        return;
     }
-    addHtml(F("<script"));
-    addHtml(F(" defer"));
-    addHtmlAttribute(F("src"), url);
-    addHtml('>');
+    // Now stream the file directly from the file system.
+    html_add_script(false);
+    streamFromFS(url);
     html_add_script_end();
 }
