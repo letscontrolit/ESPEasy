@@ -212,8 +212,9 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         deviceName = getPluginNameFromDeviceIndex(deviceIndex);
 
 
-  # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
-        String plugin = "P";
+        # if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        String plugin;
+        plugin += 'P';
 
         if (pluginID < 10) { plugin += '0'; }
 
@@ -221,7 +222,7 @@ void addDeviceSelect(const __FlashStringHelper * name,  int choice)
         plugin    += pluginID;
         plugin    += F(" - ");
         deviceName = plugin + deviceName;
-  # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
+        # endif // if defined(PLUGIN_BUILD_DEV) || defined(PLUGIN_SET_MAX)
 
         addSelector_Item(deviceName,
                          Device[deviceIndex].Number,
@@ -675,7 +676,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_CUSTOM0:
             {
               showpin1 = true;
-              if (pluginWebformShowGPIOdescription(x, F("<BR>")) || Device[DeviceIndex].Type == DEVICE_TYPE_CUSTOM0) {
+              String description;
+              if (pluginWebformShowGPIOdescription(x, F("<BR>"), description) || Device[DeviceIndex].Type == DEVICE_TYPE_CUSTOM0) {
+                addHtml(description);
                 showpin1 = false;
                 showpin2 = false;
                 showpin3 = false;
@@ -703,6 +706,14 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           {
             html_BR();
             GpioToHtml(Settings.getTaskDevicePin(x, 3));
+          }
+          // Allow for tasks to show their own specific GPIO pins.
+          if (!Device[DeviceIndex].isCustom()) {
+            String description;
+            if (pluginWebformShowGPIOdescription(x, F("<BR>"), description)) {
+              html_BR();
+              addHtml(description);
+            }
           }
         }
       }
@@ -786,19 +797,7 @@ void format_SPI_port_description(int8_t spi_gpios[3])
     return;
   }
   # ifdef ESP32
-
-  switch (Settings.InitSPI) {
-    case 1:
-    {
-      addHtml(F("VSPI"));
-      break;
-    }
-    case 2:
-    {
-      addHtml(F("HSPI"));
-      break;
-    }
-  }
+  addHtml(getSPI_optionToShortString(static_cast<SPI_Options_e>(Settings.InitSPI)));
   # endif // ifdef ESP32
   # ifdef ESP8266
   addHtml(F("SPI"));
@@ -814,7 +813,7 @@ void format_I2C_pin_description()
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
 {
-  if (Settings.InitSPI > 0) {
+  if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
     for (int i = 0; i < 3; ++i) {
       const String pin_descr = formatGpioLabel(spi_gpios[i], false);
       switch (i) {
@@ -872,6 +871,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
     addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);                 // ="taskdeviceenabled"
 
+    bool addPinConfig = false;
+
     // section: Sensor / Actuator
     if (!Device[DeviceIndex].Custom && (Settings.TaskDeviceDataFeed[taskIndex] == 0) &&
         ((Device[DeviceIndex].Ports != 0) ||
@@ -885,7 +886,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         addFormNumericBox(F("Port"), F("TDP"), Settings.TaskDevicePort[taskIndex]); // ="taskdeviceport"
       }
 
-      devicePage_show_pin_config(taskIndex, DeviceIndex);
+      addPinConfig = true;
     }
 
     switch (Device[DeviceIndex].Type) {
@@ -898,11 +899,21 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         addHtml(F("PLUGIN_USES_SERIAL not defined"));
         # endif // ifdef PLUGIN_USES_SERIAL
 
+        if (addPinConfig) {
+          devicePage_show_pin_config(taskIndex, DeviceIndex);
+          addPinConfig = false;
+        }
+
+        html_add_script(F("document.getElementById('serPort').onchange();"), false);
         break;
       }
 
       case DEVICE_TYPE_I2C:
       {
+        if (addPinConfig) {
+          devicePage_show_pin_config(taskIndex, DeviceIndex);
+          addPinConfig = false;
+        }
         devicePage_show_I2C_config(taskIndex);
 
         // FIXME TD-er: Why do we need this only for I2C devices?
@@ -911,6 +922,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       }
 
       default: break;
+    }
+
+    if (addPinConfig) {
+      devicePage_show_pin_config(taskIndex, DeviceIndex);
     }
 
     devicePage_show_output_data_type(taskIndex, DeviceIndex);
@@ -1008,14 +1023,12 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   if (((Device[DeviceIndex].Type == DEVICE_TYPE_SPI)
        || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI2)
        || (Device[DeviceIndex].Type == DEVICE_TYPE_SPI3))
-      && (Settings.InitSPI == 0)) {
+      && (Settings.InitSPI == static_cast<int>(SPI_Options_e::None))) {
     addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
   }
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      && ((Settings.Pin_i2c_sda == -1)
-          || (Settings.Pin_i2c_scl == -1)
-          || (Settings.I2C_clockSpeed == 0))) {
+      && !Settings.isI2CEnabled()) {
     addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
   }
 
@@ -1030,11 +1043,29 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     PluginCall(PLUGIN_GET_DEVICEGPIONAMES, &TempEvent, dummy);
 
     if (Device[DeviceIndex].usesTaskDevicePin(1)) {
-      addFormPinSelect(TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
+      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+      if (Device[DeviceIndex].isSerial()) 
+      {
+        // Pin1 = GPIO <--- TX
+        purpose = PinSelectPurpose::Generic_input;
+      } else if (Device[DeviceIndex].isSPI())
+      {
+        // All selectable SPI pins are output only
+        purpose = PinSelectPurpose::Generic_output;
+      }
+
+      addFormPinSelect(purpose, TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(2)) {
-      addFormPinSelect(TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
+      PinSelectPurpose purpose = PinSelectPurpose::Generic;
+      if (Device[DeviceIndex].isSerial() || Device[DeviceIndex].isSPI()) 
+      {
+        // Serial Pin2 = GPIO ---> RX
+        // SPI only needs output pins
+        purpose = PinSelectPurpose::Generic_output;
+      }
+      addFormPinSelect(purpose, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);    
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(3)) {

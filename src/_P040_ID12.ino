@@ -89,7 +89,7 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
                 }
 
                 // Do Ascii/Hex conversion:
-                if ((val >= '0') && (val <= '9')) {
+                if (isDigit(val)) {
                   val = val - '0';
                 }
                 else if ((val >= 'A') && (val <= 'F')) {

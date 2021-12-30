@@ -127,8 +127,8 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   last_measurement = current_time;
   state            = BMx_New_values;
   last_temp_val    = readTemperature();
-  last_press_val   = ((float)readPressure()) / 100.0f;
-  last_hum_val     = ((float)readHumidity());
+  last_press_val   = readPressure() / 100.0f;
+  last_hum_val     = readHumidity();
 
 
   String log;
@@ -355,7 +355,7 @@ float P028_data_struct::readPressure()
   var2 = var2 + (((int64_t)calib.dig_P4) << 35);
   var1 = ((var1 * var1 * (int64_t)calib.dig_P3) >> 8) +
          ((var1 * (int64_t)calib.dig_P2) << 12);
-  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)calib.dig_P1) >> 33;
+  var1 = ((((((int64_t)1) << 47) + var1)) * ((int64_t)calib.dig_P1)) >> 33;
 
   if (var1 == 0) {
     return 0; // avoid exception caused by division by zero
@@ -366,7 +366,7 @@ float P028_data_struct::readPressure()
   var2 = (((int64_t)calib.dig_P8) * p) >> 19;
 
   p = ((p + var1 + var2) >> 8) + (((int64_t)calib.dig_P7) << 4);
-  return (float)p / 256;
+  return static_cast<float>(p) / 256;
 }
 
 float P028_data_struct::readHumidity()

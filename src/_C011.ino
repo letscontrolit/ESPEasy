@@ -59,7 +59,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_INIT:
     {
       {
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
 
         if (AllocatedControllerSettings()) {
           LoadControllerSettings(event->ControllerIndex, ControllerSettings);
@@ -114,7 +114,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       }
       {
         // Place in scope to delete ControllerSettings as soon as it is no longer needed
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
 
         if (!AllocatedControllerSettings()) {
           addHtmlError(F("Out of memory, cannot load page"));
@@ -152,7 +152,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
         strlcpy(customConfig->HttpHeader, httpheader.c_str(),          sizeof(customConfig->HttpHeader));
         strlcpy(customConfig->HttpBody,   httpbody.c_str(),            sizeof(customConfig->HttpBody));
         customConfig->zero_last();
-        SaveCustomControllerSettings(event->ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C011_ConfigStruct));
+        SaveCustomControllerSettings(event->ControllerIndex, reinterpret_cast<const uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
       }
       break;
     }
@@ -216,7 +216,7 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
   if (!customConfig) {
     return false;
   }
-  LoadCustomControllerSettings(ControllerIndex, (uint8_t *)customConfig.get(), sizeof(C011_ConfigStruct));
+  LoadCustomControllerSettings(ControllerIndex, reinterpret_cast<uint8_t *>(customConfig.get()), sizeof(C011_ConfigStruct));
   customConfig->zero_last();
   HttpMethod = customConfig->HttpMethod;
   HttpUri    = customConfig->HttpUri;

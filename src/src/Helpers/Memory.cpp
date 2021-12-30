@@ -30,11 +30,6 @@ uint32_t getFreeStackWatermark() {
   return uxTaskGetStackHighWaterMark(NULL);
 }
 
-// FIXME TD-er: Must check if these functions are also needed for ESP32.
-bool canYield() {
-  return true;
-}
-
 #else // ifdef ESP32
 
 uint32_t getCurrentFreeStack() {
@@ -46,10 +41,6 @@ uint32_t getCurrentFreeStack() {
 
 uint32_t getFreeStackWatermark() {
   return cont_get_free_stack(g_pcont);
-}
-
-bool canYield() {
-  return cont_can_yield(g_pcont);
 }
 
 bool allocatedOnStack(const void *address) {

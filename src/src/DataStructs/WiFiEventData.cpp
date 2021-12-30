@@ -1,4 +1,4 @@
-#include "WiFiEventData.h"
+#include "../DataStructs/WiFiEventData.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -127,7 +127,7 @@ void WiFiEventData_t::setWiFiConnected() {
 }
 
 void WiFiEventData_t::setWiFiServicesInitialized() {
-  if (!unprocessedWifiEvents()) {
+  if (!unprocessedWifiEvents() && WiFiConnected() && WiFiGotIP()) {
     addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;

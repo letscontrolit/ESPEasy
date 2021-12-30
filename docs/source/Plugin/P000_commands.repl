@@ -50,6 +50,14 @@
     See also ``AccessInfo``.
 
     ``ClearAccessBlock``"
+    
+    "
+    ClearPassword","
+    :red:`Internal`","
+    Clear the password of the unit.
+    See also ``Password``.
+
+    ``ClearPassword,<current password>``"
     "
     ClearRTCram","
     :red:`Internal`","
@@ -101,8 +109,8 @@
     DeepSleep","
     :red:`Internal`","
     Switch the node to deep sleep.
-    Max sleep time depends on library version and differs from roughly 71 minutes to 3h46.
-    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. 
+    Max sleep time depends on library version and differs from roughly 71 minutes (4294 sec.) to 3h46 for ESP8266, and up to 8 years (281474976 sec.) on ESP32 (theoretically).
+    If you specify a Min sleep time of 0, you'll have to wake the device yourself by pulling RST to GND. If you specify a negative sleep time value, the maximum will be applied.
 
     ``DeepSleep,<sleep time in seconds>``"
     "
@@ -287,7 +295,8 @@
     "
     Password","
     :red:`Internal`","
-    Set the password of the unit
+    Set the password of the unit.
+    See also ``ClearPassword``.
 
     ``Password,<new password>``"
     "

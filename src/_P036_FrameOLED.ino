@@ -170,12 +170,23 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int     optionValues[2];
-      optionValues[0] = 0x3C;
-      optionValues[1] = 0x3D;
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, P036_ADR);
+      const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P036_ADR);
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Btn: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      success = true;
       break;
     }
 
@@ -239,7 +250,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
-      addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Display button")), F("taskdevicepin3"), CONFIG_PIN3);
 
       {
         uint8_t choice = uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
@@ -443,7 +454,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P036_data->DisplayLinesV1), sizeof(P036_data->DisplayLinesV1));
+          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_data->DisplayLinesV1)), sizeof(P036_data->DisplayLinesV1));
 
           // Need to delete the allocated object here
           delete P036_data;
@@ -512,7 +523,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
       #endif
 
-      if (CONFIG_PIN3 != -1) // Button related setup
+      if (validGpio(CONFIG_PIN3)) // Button related setup
       {
 
 #ifdef INPUT_PULLDOWN
@@ -567,7 +578,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         P036_data->registerButtonState(digitalRead(CONFIG_PIN3), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE)); // Bit 16
       }
@@ -585,7 +596,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->disableFrameChangeCnt)) {
+      if ((essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) && (P036_data->disableFrameChangeCnt)) {
         // display is on
         //  disableFrameChangeCnt==0 enables next page change after JumpToPage
         P036_data->disableFrameChangeCnt--;
@@ -593,9 +604,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       P036_data->bAlternativHeader = (++P036_data->HeaderCount > (Settings.TaskDeviceTimer[event->TaskIndex] * 5)); // change header after half of display time
 
-      if ((CONFIG_PIN3 != -1) && P036_data->ButtonState)
+      if ((validGpio(CONFIG_PIN3)) && P036_data->ButtonState)
       {
-        if (bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON) && (UserVar[event->BaseVarIndex] == 1)) { // Bit 19 When display already on, switch to next page when enabled
+        if (bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON) && (essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f))) { // Bit 19 When display already on, switch to next page when enabled
           if (P036_data->ScrollingPages.Scrolling == 0) {               // page scrolling not running -> switch to next page is allowed
             P036_data->P036_JumpToPage(event, 0xFF);                    //  Start to display the next page, function needs 65ms!
           }
@@ -632,7 +643,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         #ifdef P036_SEND_EVENTS
         uint8_t currentFrame = P036_data->currentFrameToDisplay;
         #endif
-        if ((UserVar[event->BaseVarIndex] == 1) && (P036_data->ScrollingPages.Scrolling == 0)) {
+        if ((essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) && (P036_data->ScrollingPages.Scrolling == 0)) {
           // Display is on.
           P036_data->display_scrolling_lines(); // line scrolling
         }
@@ -690,7 +701,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (UserVar[event->BaseVarIndex] == 1) {
+      if (essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) {
         // Display is on.
 
         P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // Bit15-8 HeaderContent
@@ -736,7 +747,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       #ifdef P036_SEND_EVENTS
       uint8_t currentFrame = P036_data->currentFrameToDisplay;
       #endif
-      if ((UserVar[event->BaseVarIndex] == 1) && P036_data->display_scroll_timer()) {     // page scrolling only when the display is on
+      if ((essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) && P036_data->display_scroll_timer()) {     // page scrolling only when the display is on
         Scheduler.setPluginTaskTimer(P36_PageScrollTimer, event->TaskIndex, event->Par1); // calls next page scrollng tick
       }
       #ifdef P036_SEND_EVENTS
@@ -859,7 +870,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
               P036_SendEvent(event, P036_EVENT_CONTRAST, 0);
-              if (UserVar[event->BaseVarIndex] == 0) {
+              if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
                 P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
               }
             }
@@ -873,7 +884,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
               P036_SendEvent(event, P036_EVENT_CONTRAST, 1);
-              if (UserVar[event->BaseVarIndex] == 0) {
+              if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
                 P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
               }
             }
@@ -887,7 +898,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             #ifdef P036_SEND_EVENTS
             if (sendEvents) {
               P036_SendEvent(event, P036_EVENT_CONTRAST, 2);
-              if (UserVar[event->BaseVarIndex] == 0) {
+              if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
                 P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
               }
             }
@@ -899,7 +910,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         {
           success = true;
 
-          if (UserVar[event->BaseVarIndex] == 0) {
+          if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
             // display was OFF, turn it ON
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1;           //  Save the fact that the display is now ON
@@ -942,8 +953,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             const int strlen = strnlen_P(P036_data->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->DisplayLinesV1[LineNo - 1].Content));
             if (strlen > 0) {
-              const float fAvgPixPerChar = ((float)PixLength) / strlen;
-              const int   iCharToRemove  = ceil(((float)(PixLength - 255)) / fAvgPixPerChar);
+              const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
+              const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
               P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
@@ -954,7 +965,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           #ifdef P036_SEND_EVENTS
           uint8_t currentFrame = P036_data->currentFrameToDisplay;
           #endif
-          if ((UserVar[event->BaseVarIndex] == 0) && !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)) { // Bit 18 NoDisplayOnReceivedText
+          if ((essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) && !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)) { // Bit 18 NoDisplayOnReceivedText
             // display was OFF, turn it ON
             P036_data->display->displayOn();
             UserVar[event->BaseVarIndex] = 1; //  Save the fact that the display is now ON
@@ -968,8 +979,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             #endif
           }
 
-          if (UserVar[event->BaseVarIndex] == 1) {
-            uint8_t nextFrame = ceil(((float)LineNo) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
+          if (essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) {
+            uint8_t nextFrame = ceil((static_cast<float>(LineNo)) / P036_data->ScrollingPages.linesPerFrame) - 1; // next frame shows the new content,
                                                                                                      // 0-based
             P036_data->P036_JumpToPage(event, nextFrame);                                            //  Start to display the selected page,
             // function needs 65ms!

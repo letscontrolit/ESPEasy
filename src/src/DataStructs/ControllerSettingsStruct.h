@@ -71,6 +71,7 @@ struct ControllerSettingsStruct
     CONTROLLER_FULL_QUEUE_ACTION,
     CONTROLLER_ALLOW_EXPIRE,
     CONTROLLER_DEDUPLICATE,
+    CONTROLLER_USE_LOCAL_SYSTEM_TIME,
     CONTROLLER_CHECK_REPLY,
     CONTROLLER_CLIENT_ID,
     CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT,
@@ -142,8 +143,12 @@ struct ControllerSettingsStruct
   bool      deduplicate() const;
   void      deduplicate(bool value);
 
+  bool      useLocalSystemTime() const;
+  void      useLocalSystemTime(bool value);
+  
+
   boolean      UseDNS;
-  uint8_t         IP[4];
+  uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];
   char         Publish[129];
@@ -173,6 +178,6 @@ typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_t
   ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
 // Check to see if MakeControllerSettings was successful
-#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)
+#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr ? true : false)
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

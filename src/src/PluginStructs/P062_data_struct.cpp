@@ -14,6 +14,13 @@ P062_data_struct::P062_data_struct() {
   clearCalibrationData(); // Reset
 }
 
+P062_data_struct::~P062_data_struct() {
+  if (keypad != nullptr) {
+    delete keypad;
+    keypad = nullptr;
+  }
+}
+
 bool P062_data_struct::init(taskIndex_t taskIndex,
                             uint8_t i2c_addr,
                             bool scancode,
@@ -26,7 +33,7 @@ bool P062_data_struct::init(taskIndex_t taskIndex,
   _keepCalibrationData = keepCalibrationData;
 
   if (!keypad) {
-    keypad = new Adafruit_MPR121();
+    keypad = new (std::nothrow) Adafruit_MPR121();
   }
   if (keypad) {
     keypad->begin(_i2c_addr);
@@ -103,7 +110,7 @@ void P062_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
   log += sizeof(StoredSettings);
   addLog(LOG_LEVEL_INFO, log);
 #endif // PLUGIN_062_DEBUG
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(StoredSettings), sizeof(StoredSettings));
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 }
 
 /**

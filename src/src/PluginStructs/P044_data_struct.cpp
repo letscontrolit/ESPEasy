@@ -19,6 +19,7 @@ P044_Task::P044_Task() {
 
 P044_Task::~P044_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P044_Task::serverActive(WiFiServer *server) {
@@ -191,7 +192,7 @@ unsigned int P044_Task::CRC16(const String& buf, int len)
        Returns false on a datagram start ('/'), end ('!') or invalid character
  */
 bool P044_Task::validP1char(char ch) {
-  if (((ch >= '0') && (ch <= '9')) || ((ch >= 'a') && (ch <= 'z')) || ((ch >= 'A') && (ch <= 'Z')))
+  if (isAlphaNumeric(ch))
   {
     return true;
   }

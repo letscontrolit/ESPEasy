@@ -1,5 +1,5 @@
 // Copyright 2009 Ken Shirriff
-// Copyright 2017-2019 David Conran
+// Copyright 2017-2021 David Conran
 // Copyright 2019 Mark Kuchel
 // Copyright 2018 Denes Varga
 
@@ -14,6 +14,8 @@
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/619
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/888
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/947
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1398
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1399
 /// @see https://github.com/kuchel77
 
 #include "ir_Mitsubishi.h"
@@ -87,7 +89,10 @@ using irutils::addFanToString;
 using irutils::addIntToString;
 using irutils::addLabeledString;
 using irutils::addModeToString;
+using irutils::addSwingHToString;
+using irutils::addSwingVToString;
 using irutils::addTempToString;
+using irutils::addTempFloatToString;
 using irutils::minsToString;
 
 #if SEND_MITSUBISHI
@@ -252,120 +257,49 @@ void IRsend::sendMitsubishiAC(const unsigned char data[], const uint16_t nbytes,
 bool IRrecv::decodeMitsubishiAC(decode_results *results, uint16_t offset,
                                 const uint16_t nbits,
                                 const bool strict) {
-  if (results->rawlen <= ((kMitsubishiACBits * 2) + 2) + offset) {
-    DPRINTLN("Shorter than shortest possibly expected.");
-    return false;  // Shorter than shortest possibly expected.
-  }
-  if (strict && nbits != kMitsubishiACBits) {
-    DPRINTLN("Request is out of spec.");
-    return false;  // Request is out of spec.
-  }
-  for (uint8_t i = 0; i < kMitsubishiACStateLength; i++) results->state[i] = 0;
-  bool failure = false;
-  uint8_t rep = 0;
-  do {
-    failure = false;
-    // Header:
-    //  Sometime happens that junk signals arrives before the real message
-    bool headerFound = false;
-    while (!headerFound &&
-           offset < (results->rawlen - (kMitsubishiACBits * 2 + 2))) {
-      headerFound =
-          matchMark(results->rawbuf[offset], kMitsubishiAcHdrMark) &&
-          matchSpace(results->rawbuf[offset + 1], kMitsubishiAcHdrSpace);
-      offset += 2;
-    }
-    if (!headerFound) {
-      DPRINTLN("Header mark not found.");
-      return false;
-    }
-    DPRINT("Header mark found at #");
-    DPRINTLN(offset - 2);
-    // Decode byte-by-byte:
-    match_result_t data_result;
-    for (uint8_t i = 0; i < kMitsubishiACStateLength && !failure; i++) {
-      results->state[i] = 0;
-      data_result =
-          matchData(&(results->rawbuf[offset]), 8, kMitsubishiAcBitMark,
-                    kMitsubishiAcOneSpace, kMitsubishiAcBitMark,
-                    kMitsubishiAcZeroSpace,
-                    _tolerance + kMitsubishiAcExtraTolerance, 0, false);
-      if (data_result.success == false) {
-        failure = true;
-        DPRINT("Byte decode failed at #");
-        DPRINTLN((uint16_t)i);
-      } else {
-        results->state[i] = data_result.data;
-        offset += data_result.used;
-        DPRINT((uint16_t)results->state[i]);
-        DPRINT(",");
+  // Compliance
+  if (strict && nbits != kMitsubishiACBits) return false;  // Out of spec.
+  // Do we need to look for a repeat?
+  const uint16_t expected_repeats = strict ? kMitsubishiACMinRepeat : kNoRepeat;
+  // Enough data?
+  if (results->rawlen <= (nbits * 2 + kHeader + kFooter) *
+                         (expected_repeats + 1) + offset - 1) return false;
+  uint16_t save[kStateSizeMax];
+  // Handle repeats if we need too.
+  for (uint16_t r = 0; r <= expected_repeats; r++) {
+    // Header + Data + Footer
+    uint16_t used = matchGeneric(results->rawbuf + offset, results->state,
+                                 results->rawlen - offset, nbits,
+                                 kMitsubishiAcHdrMark, kMitsubishiAcHdrSpace,
+                                 kMitsubishiAcBitMark, kMitsubishiAcOneSpace,
+                                 kMitsubishiAcBitMark, kMitsubishiAcZeroSpace,
+                                 kMitsubishiAcRptMark, kMitsubishiAcRptSpace,
+                                 r < expected_repeats,  // At least?
+                                 _tolerance + kMitsubishiAcExtraTolerance,
+                                 0, false);
+    if (!used) return false;  // No match.
+    offset += used;
+    if (r) {  // Is this a repeat?
+      // Repeats are expected to be exactly the same.
+      if (std::memcmp(save, results->state, nbits / 8) != 0) return false;
+    } else {  // It is the first message.
+      // Compliance
+      if (strict) {
+        // Data signature check.
+        static const uint8_t signature[5] = {0x23, 0xCB, 0x26, 0x01, 0x00};
+        if (std::memcmp(results->state, signature, 5) != 0) return false;
+        // Checksum verification.
+        if (!IRMitsubishiAC::validChecksum(results->state)) return false;
       }
-      DPRINTLN("");
+      // Save a copy of the state to compare with.
+      std::memcpy(save, results->state, nbits / 8);
     }
-    // HEADER validation:
-    if (failure || results->state[0] != 0x23 || results->state[1] != 0xCB ||
-        results->state[2] != 0x26 || results->state[3] != 0x01 ||
-        results->state[4] != 0x00) {
-      DPRINTLN("Header mismatch.");
-      failure = true;
-    } else {
-      // DATA part:
+  }
 
-      // FOOTER checksum:
-      if (!IRMitsubishiAC::validChecksum(results->state)) {
-        DPRINTLN("Checksum error.");
-        failure = true;
-      }
-    }
-    if (rep != kMitsubishiACMinRepeat && failure) {
-      bool repeatMarkFound = false;
-      while (!repeatMarkFound &&
-             offset < (results->rawlen - (kMitsubishiACBits * 2 + 4))) {
-        repeatMarkFound =
-            matchMark(results->rawbuf[offset], kMitsubishiAcRptMark) &&
-            matchSpace(results->rawbuf[offset + 1], kMitsubishiAcRptSpace);
-            offset += 2;
-      }
-      if (!repeatMarkFound) {
-        DPRINTLN("First attempt failure and repeat mark not found.");
-        return false;
-      }
-    }
-    rep++;
-    // Check if the repeat is correct if we need strict decode:
-    if (strict && !failure) {
-      DPRINTLN("Strict repeat check enabled.");
-      // Repeat mark and space:
-      if (!matchMark(results->rawbuf[offset++], kMitsubishiAcRptMark) ||
-          !matchSpace(results->rawbuf[offset++], kMitsubishiAcRptSpace)) {
-        DPRINTLN("Repeat mark error.");
-        return false;
-      }
-      // Header mark and space:
-      if (!matchMark(results->rawbuf[offset++], kMitsubishiAcHdrMark) ||
-          !matchSpace(results->rawbuf[offset++], kMitsubishiAcHdrSpace)) {
-        DPRINTLN("Repeat header error.");
-        return false;
-      }
-      // Payload:
-      for (uint8_t i = 0; i < kMitsubishiACStateLength; i++) {
-        data_result =
-            matchData(&(results->rawbuf[offset]), 8, kMitsubishiAcBitMark,
-                      kMitsubishiAcOneSpace, kMitsubishiAcBitMark,
-                      kMitsubishiAcZeroSpace,
-                      _tolerance + kMitsubishiAcExtraTolerance, 0, false);
-        if (data_result.success == false ||
-            data_result.data != results->state[i]) {
-          DPRINTLN("Repeat payload error.");
-          return false;
-        }
-        offset += data_result.used;
-      }
-    }  // strict repeat check
-  } while (failure && rep <= kMitsubishiACMinRepeat);
+  // Success.
   results->decode_type = MITSUBISHI_AC;
   results->bits = nbits;
-  return !failure;
+  return true;
 }
 #endif  // DECODE_MITSUBISHI_AC
 
@@ -455,16 +389,23 @@ bool IRMitsubishiAC::getPower(void) const {
 
 /// Set the temperature.
 /// @param[in] degrees The temperature in degrees celsius.
-void IRMitsubishiAC::setTemp(const uint8_t degrees) {
-  uint8_t temp = std::max(kMitsubishiAcMinTemp, degrees);
-  temp = std::min(kMitsubishiAcMaxTemp, temp);
-  _.Temp = temp - kMitsubishiAcMinTemp;
+/// @note The temperature resolution is 0.5 of a degree.
+void IRMitsubishiAC::setTemp(const float degrees) {
+  // Make sure we have desired temp in the correct range.
+  float celsius = std::max(degrees, kMitsubishiAcMinTemp);
+  celsius = std::min(celsius, kMitsubishiAcMaxTemp);
+  // Convert to integer nr. of half degrees.
+  uint8_t nrHalfDegrees = celsius * 2;
+  // Do we have a half degree celsius?
+  _.HalfDegree = nrHalfDegrees & 1;
+  _.Temp = static_cast<uint8_t>(nrHalfDegrees / 2 - kMitsubishiAcMinTemp);
 }
 
 /// Get the current temperature setting.
 /// @return The current setting for temp. in degrees celsius.
-uint8_t IRMitsubishiAC::getTemp(void) const {
-  return (_.Temp + kMitsubishiAcMinTemp);
+/// @note The temperature resolution is 0.5 of a degree.
+float IRMitsubishiAC::getTemp(void) const {
+  return _.Temp + kMitsubishiAcMinTemp + (_.HalfDegree ? 0.5 : 0);
 }
 
 /// Set the speed of the fan.
@@ -504,6 +445,7 @@ void IRMitsubishiAC::setMode(const uint8_t mode) {
     case kMitsubishiAcCool: _.raw[8] = 0b00110110; break;
     case kMitsubishiAcDry:  _.raw[8] = 0b00110010; break;
     case kMitsubishiAcHeat: _.raw[8] = 0b00110000; break;
+    case kMitsubishiAcFan:  _.raw[8] = 0b00110111; break;
     default:
       _.raw[8] = 0b00110000;
       _.Mode = kMitsubishiAcAuto;
@@ -513,6 +455,7 @@ void IRMitsubishiAC::setMode(const uint8_t mode) {
 }
 
 /// Set the requested vane (Vertical Swing) operation mode of the a/c unit.
+/// @note On some models, this represents the Right vertical vane.
 /// @param[in] position The position/mode to set the vane to.
 void IRMitsubishiAC::setVane(const uint8_t position) {
   uint8_t pos = std::min(position, kMitsubishiAcVaneAutoMove);  // bounds check
@@ -527,6 +470,7 @@ void IRMitsubishiAC::setWideVane(const uint8_t position) {
 }
 
 /// Get the Vane (Vertical Swing) mode of the A/C.
+/// @note On some models, this represents the Right vertical vane.
 /// @return The native position/mode setting.
 uint8_t IRMitsubishiAC::getVane(void) const {
   return _.Vane;
@@ -537,6 +481,16 @@ uint8_t IRMitsubishiAC::getVane(void) const {
 uint8_t IRMitsubishiAC::getWideVane(void) const {
   return _.WideVane;
 }
+
+/// Set the requested Left Vane (Vertical Swing) operation mode of the a/c unit.
+/// @param[in] position The position/mode to set the vane to.
+void IRMitsubishiAC::setVaneLeft(const uint8_t position) {
+  _.VaneLeft = std::min(position, kMitsubishiAcVaneAutoMove);  // bounds check
+}
+
+/// Get the Left Vane (Vertical Swing) mode of the A/C.
+/// @return The native position/mode setting.
+uint8_t IRMitsubishiAC::getVaneLeft(void) const { return _.VaneLeft; }
 
 /// Get the clock time of the A/C unit.
 /// @return Nr. of 10 minute increments past midnight.
@@ -600,6 +554,7 @@ uint8_t IRMitsubishiAC::convertMode(const stdAc::opmode_t mode) {
     case stdAc::opmode_t::kCool: return kMitsubishiAcCool;
     case stdAc::opmode_t::kHeat: return kMitsubishiAcHeat;
     case stdAc::opmode_t::kDry:  return kMitsubishiAcDry;
+    case stdAc::opmode_t::kFan:  return kMitsubishiAcFan;
     default:                     return kMitsubishiAcAuto;
   }
 }
@@ -622,14 +577,23 @@ uint8_t IRMitsubishiAC::convertFan(const stdAc::fanspeed_t speed) {
 /// Convert a stdAc::swingv_t enum into it's native setting.
 /// @param[in] position The enum to be converted.
 /// @return The native equivalent of the enum.
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1399
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/pull/1401
 uint8_t IRMitsubishiAC::convertSwingV(const stdAc::swingv_t position) {
   switch (position) {
-    case stdAc::swingv_t::kHighest: return kMitsubishiAcVaneAutoMove - 6;
-    case stdAc::swingv_t::kHigh:    return kMitsubishiAcVaneAutoMove - 5;
-    case stdAc::swingv_t::kMiddle:  return kMitsubishiAcVaneAutoMove - 4;
-    case stdAc::swingv_t::kLow:     return kMitsubishiAcVaneAutoMove - 3;
-    case stdAc::swingv_t::kLowest:  return kMitsubishiAcVaneAutoMove - 2;
-    case stdAc::swingv_t::kAuto:    return kMitsubishiAcVaneAutoMove;
+    case stdAc::swingv_t::kHighest: return kMitsubishiAcVaneHighest;
+    case stdAc::swingv_t::kHigh:    return kMitsubishiAcVaneHigh;
+    case stdAc::swingv_t::kMiddle:  return kMitsubishiAcVaneMiddle;
+    case stdAc::swingv_t::kLow:     return kMitsubishiAcVaneLow;
+    case stdAc::swingv_t::kLowest:  return kMitsubishiAcVaneLowest;
+    // These model Mitsubishi A/C have two automatic settings.
+    // 1. A typical up & down oscillation. (Native Swing)
+    // 2. The A/C determines where the best placement for the vanes, outside of
+    //    user control. (Native Auto)
+    // Native "Swing" is what we consider "Auto" in stdAc. (Case 1)
+    case stdAc::swingv_t::kAuto:    return kMitsubishiAcVaneSwing;
+    // Native "Auto" doesn't have a good match for this in stdAc. (Case 2)
+    // So we repurpose stdAc's "Off" (and anything else) to be Native Auto.
     default:                        return kMitsubishiAcVaneAuto;
   }
 }
@@ -639,14 +603,14 @@ uint8_t IRMitsubishiAC::convertSwingV(const stdAc::swingv_t position) {
 /// @return The native equivalent of the enum.
 uint8_t IRMitsubishiAC::convertSwingH(const stdAc::swingh_t position) {
   switch (position) {
-    case stdAc::swingh_t::kLeftMax:  return kMitsubishiAcWideVaneAuto - 7;
-    case stdAc::swingh_t::kLeft:     return kMitsubishiAcWideVaneAuto - 6;
-    case stdAc::swingh_t::kMiddle:   return kMitsubishiAcWideVaneAuto - 5;
-    case stdAc::swingh_t::kRight:    return kMitsubishiAcWideVaneAuto - 4;
-    case stdAc::swingh_t::kRightMax: return kMitsubishiAcWideVaneAuto - 3;
-    case stdAc::swingh_t::kWide:     return kMitsubishiAcWideVaneAuto - 2;
+    case stdAc::swingh_t::kLeftMax:  return kMitsubishiAcWideVaneLeftMax;
+    case stdAc::swingh_t::kLeft:     return kMitsubishiAcWideVaneLeft;
+    case stdAc::swingh_t::kMiddle:   return kMitsubishiAcWideVaneMiddle;
+    case stdAc::swingh_t::kRight:    return kMitsubishiAcWideVaneRight;
+    case stdAc::swingh_t::kRightMax: return kMitsubishiAcWideVaneRightMax;
+    case stdAc::swingh_t::kWide:     return kMitsubishiAcWideVaneWide;
     case stdAc::swingh_t::kAuto:     return kMitsubishiAcWideVaneAuto;
-    default:                         return kMitsubishiAcWideVaneAuto - 5;
+    default:                         return kMitsubishiAcWideVaneMiddle;
   }
 }
 
@@ -658,6 +622,7 @@ stdAc::opmode_t IRMitsubishiAC::toCommonMode(const uint8_t mode) {
     case kMitsubishiAcCool: return stdAc::opmode_t::kCool;
     case kMitsubishiAcHeat: return stdAc::opmode_t::kHeat;
     case kMitsubishiAcDry:  return stdAc::opmode_t::kDry;
+    case kMitsubishiAcFan:  return stdAc::opmode_t::kFan;
     default:                return stdAc::opmode_t::kAuto;
   }
 }
@@ -679,14 +644,24 @@ stdAc::fanspeed_t IRMitsubishiAC::toCommonFanSpeed(const uint8_t speed) {
 /// Convert a native vertical swing postion to it's common equivalent.
 /// @param[in] pos A native position to convert.
 /// @return The common vertical swing position.
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1399
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/pull/1401
 stdAc::swingv_t IRMitsubishiAC::toCommonSwingV(const uint8_t pos) {
   switch (pos) {
-    case 1:  return stdAc::swingv_t::kHighest;
-    case 2:  return stdAc::swingv_t::kHigh;
-    case 3:  return stdAc::swingv_t::kMiddle;
-    case 4:  return stdAc::swingv_t::kLow;
-    case 5:  return stdAc::swingv_t::kLowest;
-    default: return stdAc::swingv_t::kAuto;
+    case kMitsubishiAcVaneHighest: return stdAc::swingv_t::kHighest;
+    case kMitsubishiAcVaneHigh:    return stdAc::swingv_t::kHigh;
+    case kMitsubishiAcVaneMiddle:  return stdAc::swingv_t::kMiddle;
+    case kMitsubishiAcVaneLow:     return stdAc::swingv_t::kLow;
+    case kMitsubishiAcVaneLowest:  return stdAc::swingv_t::kLowest;
+    // These model Mitsubishi A/C have two automatic settings.
+    // 1. A typical up & down oscillation. (Native Swing)
+    // 2. The A/C determines where the best placement for the vanes, outside of
+    //    user control. (Native Auto)
+    // Native "Auto" doesn't have a good match for this in stdAc. (Case 2)
+    // So we repurpose stdAc's "Off" to be Native Auto.
+    case kMitsubishiAcVaneAuto:    return stdAc::swingv_t::kOff;
+    // Native "Swing" is what we consider "Auto" in stdAc. (Case 1)
+    default:                       return stdAc::swingv_t::kAuto;
   }
 }
 
@@ -695,13 +670,13 @@ stdAc::swingv_t IRMitsubishiAC::toCommonSwingV(const uint8_t pos) {
 /// @return The common horizontal swing position.
 stdAc::swingh_t IRMitsubishiAC::toCommonSwingH(const uint8_t pos) {
   switch (pos) {
-    case 1:  return stdAc::swingh_t::kLeftMax;
-    case 2:  return stdAc::swingh_t::kLeft;
-    case 3:  return stdAc::swingh_t::kMiddle;
-    case 4:  return stdAc::swingh_t::kRight;
-    case 5:  return stdAc::swingh_t::kRightMax;
-    case 6:  return stdAc::swingh_t::kWide;
-    default: return stdAc::swingh_t::kAuto;
+    case kMitsubishiAcWideVaneLeftMax:  return stdAc::swingh_t::kLeftMax;
+    case kMitsubishiAcWideVaneLeft:     return stdAc::swingh_t::kLeft;
+    case kMitsubishiAcWideVaneMiddle:   return stdAc::swingh_t::kMiddle;
+    case kMitsubishiAcWideVaneRight:    return stdAc::swingh_t::kRight;
+    case kMitsubishiAcWideVaneRightMax: return stdAc::swingh_t::kRightMax;
+    case kMitsubishiAcWideVaneWide:     return stdAc::swingh_t::kWide;
+    default:                            return stdAc::swingh_t::kAuto;
   }
 }
 
@@ -731,6 +706,16 @@ stdAc::state_t IRMitsubishiAC::toCommon(void) const {
   return result;
 }
 
+/// Change the Weekly Timer Enabled setting.
+/// @param[in] on true, the setting is on. false, the setting is off.
+void IRMitsubishiAC::setWeeklyTimerEnabled(const bool on) {
+  _.WeeklyTimer = on;
+}
+
+/// Get the value of the WeeklyTimer Enabled setting.
+/// @return true, the setting is on. false, the setting is off.
+bool IRMitsubishiAC::getWeeklyTimerEnabled(void) const { return _.WeeklyTimer; }
+
 /// Convert the internal state into a human readable string.
 /// @return A string containing the settings in human-readable form.
 String IRMitsubishiAC::toString(void) const {
@@ -739,34 +724,32 @@ String IRMitsubishiAC::toString(void) const {
   result += addBoolToString(_.Power, kPowerStr, false);
   result += addModeToString(_.Mode, kMitsubishiAcAuto, kMitsubishiAcCool,
                             kMitsubishiAcHeat, kMitsubishiAcDry,
-                            kMitsubishiAcAuto);
-  result += addTempToString(getTemp());
+                            kMitsubishiAcFan);
+  result += addTempFloatToString(getTemp());
   result += addFanToString(getFan(), kMitsubishiAcFanRealMax,
                            kMitsubishiAcFanRealMax - 3,
                            kMitsubishiAcFanAuto, kMitsubishiAcFanQuiet,
                            kMitsubishiAcFanRealMax - 2);
-  result += addIntToString(_.Vane, kSwingVStr);
-  result += kSpaceLBraceStr;
-  switch (_.Vane) {
-    case kMitsubishiAcVaneAuto:
-      result += kAutoStr;
-      break;
-    case kMitsubishiAcVaneAutoMove:
-      result += kAutoStr;
-      result += ' ';
-      result += kMoveStr;
-      break;
-    default:
-      result += kUnknownStr;
-  }
-  result += ')';
-  result += addIntToString(_.WideVane, kSwingHStr);
-  result += kSpaceLBraceStr;
-  switch (_.WideVane) {
-    case kMitsubishiAcWideVaneAuto: result += kAutoStr; break;
-    default:                        result += kUnknownStr;
-  }
-  result += ')';
+  result += addSwingVToString(_.Vane, kMitsubishiAcVaneAuto,
+                              kMitsubishiAcVaneHighest, kMitsubishiAcVaneHigh,
+                              kMitsubishiAcVaneAuto,  // Upper Middle unused.
+                              kMitsubishiAcVaneMiddle,
+                              kMitsubishiAcVaneAuto,  // Lower Middle unused.
+                              kMitsubishiAcVaneLow, kMitsubishiAcVaneLowest,
+                              kMitsubishiAcVaneAuto, kMitsubishiAcVaneSwing,
+                              // Below are unused.
+                              kMitsubishiAcVaneAuto, kMitsubishiAcVaneAuto);
+  result += addSwingHToString(_.WideVane, kMitsubishiAcWideVaneAuto,
+                              kMitsubishiAcWideVaneLeftMax,
+                              kMitsubishiAcWideVaneLeft,
+                              kMitsubishiAcWideVaneMiddle,
+                              kMitsubishiAcWideVaneRight,
+                              kMitsubishiAcWideVaneRightMax,
+                              kMitsubishiAcWideVaneAuto,  // Unused
+                              kMitsubishiAcWideVaneAuto,  // Unused
+                              kMitsubishiAcWideVaneAuto,  // Unused
+                              kMitsubishiAcWideVaneAuto,  // Unused
+                              kMitsubishiAcWideVaneWide);
   result += addLabeledString(minsToString(_.Clock * 10), kClockStr);
   result += addLabeledString(minsToString(_.StartClock * 10), kOnTimerStr);
   result += addLabeledString(minsToString(_.StopClock * 10), kOffTimerStr);
@@ -793,6 +776,7 @@ String IRMitsubishiAC::toString(void) const {
       result += _.Timer;
       result += ')';
   }
+  result += addBoolToString(_.WeeklyTimer, kWeeklyTimerStr);
   return result;
 }
 
@@ -1143,17 +1127,19 @@ String IRMitsubishi136::toString(void) const {
   result += addFanToString(_.Fan, kMitsubishi136FanMax,
                            kMitsubishi136FanLow,  kMitsubishi136FanMax,
                            kMitsubishi136FanQuiet, kMitsubishi136FanMed);
-  result += addIntToString(_.SwingV, kSwingVStr);
-  result += kSpaceLBraceStr;
-  switch (_.SwingV) {
-    case kMitsubishi136SwingVHighest: result += kHighestStr; break;
-    case kMitsubishi136SwingVHigh: result += kHighStr; break;
-    case kMitsubishi136SwingVLow: result += kLowStr; break;
-    case kMitsubishi136SwingVLowest: result += kLowestStr; break;
-    case kMitsubishi136SwingVAuto: result += kAutoStr; break;
-    default: result += kUnknownStr;
-  }
-  result += ')';
+  result += addSwingVToString(_.SwingV, kMitsubishi136SwingVAuto,
+                              kMitsubishi136SwingVHighest,
+                              kMitsubishi136SwingVHigh,
+                              kMitsubishi136SwingVAuto,  // Unused
+                              kMitsubishi136SwingVAuto,  // Unused
+                              kMitsubishi136SwingVAuto,  // Unused
+                              kMitsubishi136SwingVLow,
+                              kMitsubishi136SwingVLow,
+                              // Below are unused.
+                              kMitsubishi136SwingVAuto,
+                              kMitsubishi136SwingVAuto,
+                              kMitsubishi136SwingVAuto,
+                              kMitsubishi136SwingVAuto);
   result += addBoolToString(getQuiet(), kQuietStr);
   return result;
 }
@@ -1180,7 +1166,7 @@ void IRsend::sendMitsubishi112(const unsigned char data[],
 }
 #endif  // SEND_MITSUBISHI112
 
-#if DECODE_MITSUBISHI112 || DECODE_TCL112AC
+#if (DECODE_MITSUBISHI112 || DECODE_TCL112AC)
 /// Decode the supplied Mitsubishi/TCL 112-bit A/C message.
 ///   (MITSUBISHI112, TCL112AC)
 /// Status: STABLE / Reported as working.
@@ -1226,7 +1212,7 @@ bool IRrecv::decodeMitsubishi112(decode_results *results, uint16_t offset,
     gap = kMitsubishi112Gap;
   }
 #endif  // DECODE_MITSUBISHI112
-#if DECODE_TCL112AC
+#if (DECODE_TCL112AC || DECODE_TEKNOPOINT)
   if (typeguess == decode_type_t::UNKNOWN &&  // We didn't match Mitsubishi112
       matchMark(results->rawbuf[offset], kTcl112AcHdrMark,
                 kTcl112AcHdrMarkTolerance, 0)) {
@@ -1238,7 +1224,7 @@ bool IRrecv::decodeMitsubishi112(decode_results *results, uint16_t offset,
     gap = kTcl112AcGap;
     tolerance += kTcl112AcTolerance;
   }
-#endif  // DECODE_TCL112AC
+#endif  // (DECODE_TCL112AC || DECODE_TEKNOPOINT)
   if (typeguess == decode_type_t::UNKNOWN) return false;  // No header matched.
   offset++;
 
@@ -1608,31 +1594,30 @@ String IRMitsubishi112::toString(void) const {
   result += addFanToString(_.Fan, kMitsubishi112FanMax,
                            kMitsubishi112FanLow,  kMitsubishi112FanMax,
                            kMitsubishi112FanQuiet, kMitsubishi112FanMed);
-  result += addIntToString(_.SwingV, kSwingVStr);
-  result += kSpaceLBraceStr;
-  switch (_.SwingV) {
-    case kMitsubishi112SwingVHighest: result += kHighestStr; break;
-    case kMitsubishi112SwingVHigh:    result += kHighStr; break;
-    case kMitsubishi112SwingVMiddle:  result += kMiddleStr; break;
-    case kMitsubishi112SwingVLow:     result += kLowStr; break;
-    case kMitsubishi112SwingVLowest:  result += kLowestStr; break;
-    case kMitsubishi112SwingVAuto:    result += kAutoStr; break;
-    default:                          result += kUnknownStr;
-  }
-  result += ')';
-  result += addIntToString(_.SwingH, kSwingHStr);
-  result += kSpaceLBraceStr;
-  switch (_.SwingH) {
-    case kMitsubishi112SwingHLeftMax:  result += kLeftMaxStr; break;
-    case kMitsubishi112SwingHLeft:     result += kLeftStr; break;
-    case kMitsubishi112SwingHMiddle:   result += kMiddleStr; break;
-    case kMitsubishi112SwingHRight:    result += kRightStr; break;
-    case kMitsubishi112SwingHRightMax: result += kRightMaxStr; break;
-    case kMitsubishi112SwingHWide:     result += kWideStr; break;
-    case kMitsubishi112SwingHAuto:     result += kAutoStr; break;
-    default:                           result += kUnknownStr;
-  }
-  result += ')';
+  result += addSwingVToString(_.SwingV, kMitsubishi112SwingVAuto,
+                             kMitsubishi112SwingVHighest,
+                             kMitsubishi112SwingVHigh,
+                             kMitsubishi112SwingVAuto,  // Upper Middle unused.
+                             kMitsubishi112SwingVMiddle,
+                             kMitsubishi112SwingVAuto,  // Lower Middle unused.
+                             kMitsubishi112SwingVLow,
+                             kMitsubishi112SwingVLowest,
+                             // Below are unused.
+                             kMitsubishi112SwingVAuto,
+                             kMitsubishi112SwingVAuto,
+                             kMitsubishi112SwingVAuto,
+                             kMitsubishi112SwingVAuto);
+  result += addSwingHToString(_.SwingH, kMitsubishi112SwingHAuto,
+                              kMitsubishi112SwingHLeftMax,
+                              kMitsubishi112SwingHLeft,
+                              kMitsubishi112SwingHMiddle,
+                              kMitsubishi112SwingHRight,
+                              kMitsubishi112SwingHRightMax,
+                              kMitsubishi112SwingHAuto,  // Unused
+                              kMitsubishi112SwingHAuto,  // Unused
+                              kMitsubishi112SwingHAuto,  // Unused
+                              kMitsubishi112SwingHAuto,  // Unused
+                              kMitsubishi112SwingHWide);
   result += addBoolToString(getQuiet(), kQuietStr);
   return result;
 }

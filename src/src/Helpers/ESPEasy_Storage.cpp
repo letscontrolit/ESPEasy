@@ -6,6 +6,8 @@
 
 #include "../DataStructs/TimingStats.h"
 
+#include "../DataTypes/SPI_options.h"
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -25,6 +27,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
@@ -35,7 +38,6 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 
-#include "ESPEasy_checks.h"
 
 #ifdef ESP32
 #include <MD5Builder.h>
@@ -217,7 +219,7 @@ String BuildFixes()
     #ifdef USES_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (AllocatedControllerSettings()) {
         LoadControllerSettings(controller_idx, ControllerSettings);
 
@@ -280,15 +282,36 @@ String BuildFixes()
     Settings.NumberExtraWiFiScans = 0;
   }
   if (Settings.Build < 20114) {
+    #ifdef USES_P003
     // P003_Pulse was always using the pull-up, now it is a setting.
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
       if (Settings.TaskDeviceNumber[taskIndex] == 3) {
         Settings.TaskDevicePin1PullUp[taskIndex] = true;
       }
     }
-    // Disable periodical scanning as it does cause lots of strange issues.
-    Settings.PeriodicalScanWiFi(false);
+    #endif
   }
+  if (Settings.Build < 20115) {
+    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
+      Settings.SPI_SCLK_pin = -1;
+      Settings.SPI_MISO_pin = -1;
+      Settings.SPI_MOSI_pin = -1;
+    }
+  }
+  #ifdef USES_P053
+  if (Settings.Build < 20116) {
+    // Added PWR button, init to "-none-"
+    for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
+      if (Settings.TaskDeviceNumber[taskIndex] == 53) {
+        Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
+      }
+    }
+    // Remove PeriodicalScanWiFi
+    // Reset to default 0 for future use.
+    bitWrite(Settings.VariousBits1, 15, 0);
+  }
+  #endif
+
 
   Settings.Build = BUILD;
   return SaveSettings();
@@ -387,7 +410,7 @@ String SaveSettings()
       uint8_t    tmp_md5[16] = { 0 };
       memcpy( Settings.ProgmemMd5, CRCValues.runTimeMD5, 16);
       md5.begin();
-      md5.add((uint8_t *)&Settings, sizeof(Settings)-16);
+      md5.add(reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings)-16);
       md5.calculate();
       md5.getBytes(tmp_md5);
       if (memcmp(tmp_md5, Settings.md5, 16) != 0) {
@@ -395,7 +418,7 @@ String SaveSettings()
         memcpy(Settings.md5, tmp_md5, 16);
     */
     Settings.validate();
-    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (uint8_t *)&Settings, sizeof(Settings));
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
   }
 
   if (err.length()) {
@@ -420,14 +443,14 @@ String SaveSecuritySettings() {
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
   md5.begin();
-  md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings) - 16);
+  md5.add(reinterpret_cast<uint8_t *>(&SecuritySettings), static_cast<uint16_t>(sizeof(SecuritySettings) - 16));
   md5.calculate();
   md5.getBytes(tmp_md5);
 
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(SecuritySettings.md5, tmp_md5, 16);
-    err = SaveToFile((char *)FILE_SECURITY, 0, (uint8_t *)&SecuritySettings, sizeof(SecuritySettings));
+    err = SaveToFile((char *)FILE_SECURITY, 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
@@ -471,7 +494,7 @@ String LoadSettings()
   uint8_t calculatedMd5[16];
   MD5Builder md5;
 
-  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, (uint8_t *)&Settings, sizeof(SettingsStruct));
+  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&Settings), sizeof(SettingsStruct));
 
   if (err.length()) {
     return err;
@@ -483,7 +506,7 @@ String LoadSettings()
   /*
      if (Settings.StructSize > 16) {
       md5.begin();
-      md5.add((uint8_t *)&Settings, Settings.StructSize -16);
+      md5.add(reinterpret_cast<const uint8_t *>(&Settings), Settings.StructSize -16);
       md5.calculate();
       md5.getBytes(calculatedMd5);
      }
@@ -497,9 +520,9 @@ String LoadSettings()
      }
    */
 
-  err = LoadFromFile((char *)FILE_SECURITY, 0, (uint8_t *)&SecuritySettings, sizeof(SecurityStruct));
+  err = LoadFromFile((char *)FILE_SECURITY, 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
   md5.begin();
-  md5.add((uint8_t *)&SecuritySettings, sizeof(SecuritySettings) - 16);
+  md5.add(reinterpret_cast< uint8_t *>(&SecuritySettings), sizeof(SecuritySettings) - 16);
   md5.calculate();
   md5.getBytes(calculatedMd5);
 
@@ -609,7 +632,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
   if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
 
-  char buffer[bufferSize];
+  char buffer[bufferSize] = {0};
 
   String   result;
   uint32_t readPos       = 0;
@@ -623,7 +646,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
       result += LoadFromFile(settingsType,
                             index,
-                            (uint8_t *)&buffer,
+                            reinterpret_cast<uint8_t *>(&buffer),
                             readSize,
                             readPos);
 
@@ -764,7 +787,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   }
   String err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
                           TaskIndex,
-                          (uint8_t *)&ExtraTaskSettings,
+                          reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                           sizeof(struct ExtraTaskSettingsStruct));
 
   if (err.isEmpty()) {
@@ -791,7 +814,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   START_TIMER
   ExtraTaskSettings.clear();
-  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, (uint8_t *)&ExtraTaskSettings, sizeof(struct ExtraTaskSettingsStruct));
+  const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
   ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
@@ -823,7 +846,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize)
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomTaskSettings"));
@@ -903,7 +926,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #endif
   controller_settings.validate(); // Make sure the saved controller settings have proper values.
   return SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
-                    (uint8_t *)&controller_settings, sizeof(controller_settings));
+                    reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
 }
 
 /********************************************************************************************\
@@ -915,7 +938,7 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   #endif
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
-                 (uint8_t *)&controller_settings, sizeof(controller_settings));
+                 reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
   controller_settings.validate(); // Make sure the loaded controller settings have proper values.
   return result;
 }
@@ -936,7 +959,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 /********************************************************************************************\
    Save Custom Controller settings to file system
  \*********************************************************************************************/
-String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *memAddress, int datasize)
+String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uint8_t *memAddress, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomControllerSettings"));
@@ -958,7 +981,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
-String SaveNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize)
+String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveNotificationSettings"));
@@ -1271,11 +1294,11 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   return LoadFromFile(settingsType, index, memAddress, datasize, 0);
 }
 
-String SaveToFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize) {
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize) {
   return SaveToFile(settingsType, index, memAddress, datasize, 0);
 }
 
-String SaveToFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int posInBlock) {
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock) {
   bool read = false;
   int  offset, max_size;
 
@@ -1343,56 +1366,60 @@ size_t SpiffsUsedBytes() {
 }
 
 size_t SpiffsTotalBytes() {
-  size_t result = 1; // Do not output 0, this may be used in divisions.
-
-  #ifdef ESP32
-  result = ESPEASY_FS.totalBytes();
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-  fs::FSInfo fs_info;
-  ESPEASY_FS.info(fs_info);
-  result = fs_info.totalBytes;
-  #endif // ifdef ESP8266
+  static size_t result = 1; // Do not output 0, this may be used in divisions.
+  if (result == 1) {
+    #ifdef ESP32
+    result = ESPEASY_FS.totalBytes();
+    #endif // ifdef ESP32
+    #ifdef ESP8266
+    fs::FSInfo fs_info;
+    ESPEASY_FS.info(fs_info);
+    result = fs_info.totalBytes;
+    #endif // ifdef ESP8266
+  }
   return result;
 }
 
 size_t SpiffsBlocksize() {
-  size_t result = 8192; // Some default viable for most 1 MB file systems
-
-  #ifdef ESP32
-  result = 8192;        // Just assume 8k, since we cannot query it
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-  fs::FSInfo fs_info;
-  ESPEASY_FS.info(fs_info);
-  result = fs_info.blockSize;
-  #endif // ifdef ESP8266
+  static size_t result = 1;
+  if (result == 1) {
+    #ifdef ESP32
+    result = 8192;        // Just assume 8k, since we cannot query it
+    #endif // ifdef ESP32
+    #ifdef ESP8266
+    fs::FSInfo fs_info;
+    ESPEASY_FS.info(fs_info);
+    result = fs_info.blockSize;
+    #endif // ifdef ESP8266
+  }
   return result;
 }
 
 size_t SpiffsPagesize() {
-  size_t result = 256; // Most common
-
-  #ifdef ESP32
-  result = 256;        // Just assume 256, since we cannot query it
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-  fs::FSInfo fs_info;
-  ESPEASY_FS.info(fs_info);
-  result = fs_info.pageSize;
-  #endif // ifdef ESP8266
+  static size_t result = 1;
+  if (result == 1) {
+    #ifdef ESP32
+    result = 256;        // Just assume 256, since we cannot query it
+    #endif // ifdef ESP32
+    #ifdef ESP8266
+    fs::FSInfo fs_info;
+    ESPEASY_FS.info(fs_info);
+    result = fs_info.pageSize;
+    #endif // ifdef ESP8266
+  }
   return result;
 }
 
 size_t SpiffsFreeSpace() {
   int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
+  const size_t blocksize = SpiffsBlocksize();
 
-  if (freeSpace < static_cast<int>(2 * SpiffsBlocksize())) {
+  if (freeSpace < static_cast<int>(2 * blocksize)) {
     // Not enough free space left to store anything
     // There needs to be minimum of 2 free blocks.
     return 0;
   }
-  return freeSpace - 2 * SpiffsBlocksize();
+  return freeSpace - 2 * blocksize;
 }
 
 bool SpiffsFull() {

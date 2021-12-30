@@ -2,7 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
-
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../DataStructs/SecurityStruct.h"
@@ -21,7 +21,6 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
@@ -528,7 +527,7 @@ String send_via_http(const String& logIdentifier,
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
 #else
-  http.begin(host, port, uri);
+  http.begin(client, host, port, uri);
 #endif
   
   {

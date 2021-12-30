@@ -102,6 +102,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_SYSINFO
         #define WEBSERVER_SYSINFO
     #endif
+    #ifndef WEBSERVER_METRICS
+        #define WEBSERVER_METRICS
+    #endif
     #ifndef WEBSERVER_TOOLS
         #define WEBSERVER_TOOLS
     #endif
@@ -116,7 +119,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifndef USE_CUSTOM_H
+#ifndef PLUGIN_BUILD_CUSTOM
     #ifndef USES_SSDP
         #define USES_SSDP
     #endif
@@ -128,6 +131,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
+    #ifndef USE_EXT_RTC
+        #define USE_EXT_RTC
     #endif
 #endif
 
@@ -283,6 +289,7 @@ To create/register a plugin, you have to :
     #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
+    #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
 #endif
 
 #ifdef USES_FHEM
@@ -405,8 +412,18 @@ To create/register a plugin, you have to :
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
     #endif
+    #if USE_I2C_DEVICE_SCAN
+        #undef USE_I2C_DEVICE_SCAN
+        #define USE_I2C_DEVICE_SCAN     false   // turn feature off in OTA builds
+    #endif // if USE_I2C_DEVICE_SCAN
+    #ifdef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+        #undef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+    #endif
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
+    #endif
+    #ifdef USE_EXT_RTC
+        #undef USE_EXT_RTC
     #endif
 #endif
 
@@ -427,7 +444,9 @@ To create/register a plugin, you have to :
 // #define DECODE_TOSHIBA_AC      true
 // #define SEND_TOSHIBA_AC        true
 #ifdef PLUGIN_BUILD_IR
-    #define PLUGIN_DESCR  "IR"
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
+      #define PLUGIN_DESCR  "IR"
+    #endif
     #define USES_P016      // IR
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
     #define USES_P035      // IRTX
@@ -435,7 +454,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED
-    #ifndef PLUGIN_DESCR
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
     #define USES_P016      // IR
@@ -452,7 +471,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_IR_EXTENDED_NO_RX
-    #ifndef PLUGIN_DESCR
+    #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
     #define USES_P035      // IRTX
@@ -686,7 +705,9 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MAX_ESP32
-    #define PLUGIN_DESCR  "MAX ESP32"
+    #ifndef PLUGIN_DESCR
+      #define PLUGIN_DESCR  "MAX ESP32"
+    #endif
     #ifndef ESP32
         #define ESP32
     #endif
@@ -1083,6 +1104,7 @@ To create/register a plugin, you have to :
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
     //#define USES_P099   // XPT2046 Touchscreen
+    #define USES_P105   // AHT10/20/21
 #endif
 
 #ifdef PLUGIN_SET_TESTING_B
@@ -1090,7 +1112,7 @@ To create/register a plugin, you have to :
 
     #define USES_P100   // Pulse Counter - DS2423
     #define USES_P101   // Wake On Lan
-    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO)
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
     #define USES_P106   // BME680
     #define USES_P107   // SI1145 UV index
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -1115,6 +1137,9 @@ To create/register a plugin, you have to :
     #define USES_P094  // CUL Reader
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
+    #define USES_P117  // SCD30
+    #define USES_P118  // Itho ventilation control
+    #define USES_P124  // I2C MultiRelay
 #endif
 
 
@@ -1126,14 +1151,14 @@ To create/register a plugin, you have to :
    #ifndef USES_P027
      #define USES_P027   // INA219
    #endif
-   #ifndef USES_P076 
+   #ifndef USES_P076
      #define USES_P076   // HWL8012   in POW r1
    #endif
-   #ifndef USES_P077 
+   #ifndef USES_P077
      // Needs CSE7766 Energy sensor, via Serial RXD 4800 baud 8E1 (GPIO1), TXD (GPIO3)
      #define USES_P077	  // CSE7766   in POW R2
    #endif
-   #ifndef USES_P078 
+   #ifndef USES_P078
      #define USES_P078   // Eastron Modbus Energy meters
    #endif
    #ifndef USES_P085
@@ -1145,7 +1170,7 @@ To create/register a plugin, you have to :
    #ifndef USES_P102
      #define USES_P102   // PZEM-004Tv30
    #endif
-   #ifndef USES_P108 
+   #ifndef USES_P108
      #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
    #endif
    #ifndef USES_P115
@@ -1155,45 +1180,50 @@ To create/register a plugin, you have to :
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
+   #if !defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
+    #define LIMIT_BUILD_SIZE // Redice buildsize on ESP8266 to fit in all Display plugins
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
    #ifndef USES_P023
     #define USES_P023   // OLED
    #endif
-   #ifndef USES_P036 
+   #ifndef USES_P036
     #define USES_P036   // FrameOLED
    #endif
-   #ifndef USES_P038 
+   #ifndef USES_P038
     #define USES_P038   // NeoPixel
    #endif
-   #ifndef USES_P041 
+   #ifndef USES_P041
     #define USES_P041   // NeoClock
    #endif
-   #ifndef USES_P042 
+   #ifndef USES_P042
     #define USES_P042   // Candle
    #endif
-   #ifndef USES_P057 
+   #ifndef USES_P057
     #define USES_P057   // HT16K33_LED
    #endif
-   #ifndef USES_P070 
+   #ifndef USES_P070
     #define USES_P070   // NeoPixel_Clock
    #endif
-   #ifndef USES_P075 
+   #ifndef USES_P075
     #define USES_P075   // Nextion
    #endif
-   #ifndef USES_P095 
+   #ifndef USES_P095
     #define USES_P095  // TFT ILI9341
    #endif
-   #ifndef USES_P096 
+   #ifndef USES_P096
     #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
    #endif
    #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
    #endif
+   #ifndef USES_P104
+    #define USES_P104   // MAX7219 dot matrix
+   #endif
    #ifndef USES_P109
-     // FIXME TD-er: Disabled for now, due to build size.
-     //#define USES_P109   // ThermoOLED
+    #define USES_P109   // ThermoOLED
    #endif
 #endif
 
@@ -1262,7 +1292,7 @@ To create/register a plugin, you have to :
 	#define USES_P142	// RGB-Strip
 	#define USES_P143	// AnyonePresent
 	#define USES_P144	// RC-Switch-TX
-	#define USES_P145	// Itho
+	#define USES_P145	// Itho - P118 in the main repo.
 	#define USES_P149	// MHZ19
 	#define USES_P150	// SDM120C
 	#define USES_P151	// CISA
@@ -1350,13 +1380,19 @@ To create/register a plugin, you have to :
     #define USES_P102   // PZEM004Tv3
   #endif
   #ifndef USES_P103
-    #define USES_P103   // Atlas EZO pH
+    #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
   #endif
   #ifndef USES_P104
-    #define USES_P104   // Atlas EZO EC
+    #define USES_P104   //
   #endif
   #ifndef USES_P105
-    #define USES_P105   // Atlas EZO_ORP
+    #define USES_P105   // AHT10/20/21
+  #endif
+  #ifndef USES_P104
+    #define USES_P104   //
+  #endif
+  #ifndef USES_P105
+    #define USES_P105   // AHT10/20/21
   #endif
   #ifndef USES_P108
     #define USES_P108   // DDS238-x ZN MODBUS energy meter (was P224 in the Playground)
@@ -1380,44 +1416,42 @@ To create/register a plugin, you have to :
     #define USES_P114   // VEML6075 UVA/UVB sensor
   #endif
   #ifndef USES_P115
-    #define USES_P115   // 
+    #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-    #define USES_P116   // 
+    #define USES_P116   //
   #endif
   #ifndef USES_P117
-    #define USES_P117   // 
+    #define USES_P117   // SCD30
   #endif
   #ifndef USES_P118
-    #define USES_P118   // 
+    #define USES_P118   // Itho ventilation coontrol
   #endif
   #ifndef USES_P119
-    #define USES_P119   // 
+    #define USES_P119   // ITG3205 Gyro
   #endif
   #ifndef USES_P120
-    #define USES_P120   // 
+    #define USES_P120   // ADXL345 Acceleration / Gravity
   #endif
   #ifndef USES_P121
-    #define USES_P121   // 
+    #define USES_P121   //
   #endif
   #ifndef USES_P122
-    #define USES_P122   // 
+    #define USES_P122   //
   #endif
   #ifndef USES_P123
-    #define USES_P123   // 
+    #define USES_P123   //
   #endif
   #ifndef USES_P124
-    #define USES_P124   // 
+    #define USES_P124   //
   #endif
   #ifndef USES_P125
-    #define USES_P125   // 
+    #define USES_P125   //
   #endif
 
   // Controllers
   #ifndef USES_C015
-    #ifndef ESP32
-      #define USES_C015   // Blynk (?doesn't compile on ESP32?)
-    #endif
+    #define USES_C015   // Blynk
   #endif
   #ifndef USES_C016
     #define USES_C016   // Cache controller
@@ -1539,6 +1573,9 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
+  #ifdef USE_EXT_RTC
+    #undef USE_EXT_RTC
+  #endif
 #endif
 
 // Disable some diagnostic parts to make builds fit.
@@ -1603,7 +1640,7 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
-  #ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  #if defined(USE_TRIGONOMETRIC_FUNCTIONS_RULES) && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
   #ifdef USES_SSDP

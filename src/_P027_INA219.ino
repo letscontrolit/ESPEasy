@@ -53,10 +53,15 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int Plugin_27_i2c_addresses[4] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
-      addFormSelectorI2C(F("i2c_addr"), 4, Plugin_27_i2c_addresses, P027_I2C_ADDR);
+      const uint8_t i2cAddressValues[] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, P027_I2C_ADDR);
+      } else {
+        success = intArrayContains(4, i2cAddressValues, event->Par1);
+      }
       break;
     }
 

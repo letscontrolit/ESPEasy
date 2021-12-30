@@ -80,15 +80,26 @@ boolean Plugin_041(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_041_pixels)
+        if (Plugin_041_pixels == nullptr)
         {
-          Plugin_041_pixels = new Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
+          Plugin_041_pixels = new (std::nothrow) Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+          if (Plugin_041_pixels != nullptr) {
+            Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
+          }
         }
         Plugin_041_red = PCONFIG(0);
         Plugin_041_green = PCONFIG(1);
         Plugin_041_blue = PCONFIG(2);
-        success = true;
+        success = Plugin_041_pixels != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_041_pixels != nullptr) {
+          delete Plugin_041_pixels;
+          Plugin_041_pixels = nullptr;
+        }
         break;
       }
 

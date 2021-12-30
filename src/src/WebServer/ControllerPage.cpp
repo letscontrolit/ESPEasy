@@ -50,7 +50,7 @@ void handle_controllers() {
     bool mustCallCpluginSave = false;
     {
       // Place in a scope to free ControllerSettings memory ASAP
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Not enough free memory to save settings"));
       } else {
@@ -198,7 +198,7 @@ void handle_controllers_ShowAllControllersTable()
   html_table_header(F("Host"));
   html_table_header(F("Port"));
 
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
   if (AllocatedControllerSettings()) {
     for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
     {
@@ -296,7 +296,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   if (Settings.Protocol[controllerindex])
   { 
     {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Out of memory, cannot load page"));
       } else {
@@ -316,7 +316,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_IP);
             }
           }
-          addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+          if (Protocol[ProtocolIndex].usesPort) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PORT);
+          }
 
           if (Protocol[ProtocolIndex].usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);
@@ -341,6 +343,10 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           if (Protocol[ProtocolIndex].usesSampleSets) {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR);
           }
+          if (Protocol[ProtocolIndex].allowLocalSystemTime) {
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_USE_LOCAL_SYSTEM_TIME);
+          }
+
 
           if (Protocol[ProtocolIndex].useCredentials()) {
             addTableSeparator(F("Credentials"), 2, 3);

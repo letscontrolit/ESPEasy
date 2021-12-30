@@ -27,6 +27,7 @@
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
@@ -172,14 +173,6 @@ void runOncePerSecond()
 //  unsigned long elapsed = micros() - start;
 
 
-  if (SecuritySettings.Password[0] != 0)
-  {
-    if (WebLoggedIn)
-      WebLoggedInTimer++;
-    if (WebLoggedInTimer > 300)
-      WebLoggedIn = false;
-  }
-
   // I2C Watchdog feed
   if (Settings.WDI2CAddress != 0)
   {
@@ -229,7 +222,7 @@ void runEach30Seconds()
 //    log += WiFi.getListenInterval();
     addLog(LOG_LEVEL_INFO, log);
   }
-  WiFiScanPeriodical();
+  WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);
   refreshNodeList();
 
@@ -264,7 +257,7 @@ void scheduleNextMQTTdelayQueue() {
   }
 }
 
-void schedule_all_tasks_using_MQTT_controller() {
+void schedule_all_MQTTimport_tasks() {
   controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
 
   if (!validControllerIndex(ControllerIndex)) { return; }
@@ -278,15 +271,6 @@ void schedule_all_tasks_using_MQTT_controller() {
         event.Par1 = MQTTclient_connected ? 1 : 0;
         Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, std::move(event));
       }
-    }
-  }
-
-  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
-    if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
-        Settings.ControllerEnabled[ControllerIndex] &&
-        Settings.Protocol[ControllerIndex])
-    {
-      Scheduler.schedule_task_device_timer_at_init(task);
     }
   }
 }
@@ -340,7 +324,7 @@ void updateMQTTclient_connected() {
       MQTTclient_must_send_LWT_connected = false;
     } else {
       // Now schedule all tasks using the MQTT controller.
-      schedule_all_tasks_using_MQTT_controller();
+      schedule_all_MQTTimport_tasks();
     }
     if (Settings.UseRules) {
       if (MQTTclient_connected) {

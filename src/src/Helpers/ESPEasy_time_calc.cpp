@@ -1,4 +1,4 @@
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <Arduino.h>
 #include <limits.h>
@@ -175,7 +175,7 @@ unsigned long string2TimeLong(const String& str)
     {
       w = TmpStr1[x];
 
-      if (((w >= '0') && (w <= '9')) || (w == '*'))
+      if (isDigit(w) || (w == '*'))
       {
         a        = 0xffffffff  ^ (0xfUL << y); // create mask to clean nibble position y
         lngTime &= a;                          // maak nibble leeg

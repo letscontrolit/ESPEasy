@@ -6,6 +6,7 @@
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/621
 /// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1062
 /// @see http://elektrolab.wz.cz/katalog/samsung_protocol.pdf
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1538 (Checksum)
 
 // Supports:
 //   Brand: Samsung,  Model: UA55H6300 TV (SAMSUNG)
@@ -20,6 +21,8 @@
 //   Brand: Samsung,  Model: AR12KSFPEWQNET A/C (SAMSUNG_AC)
 //   Brand: Samsung,  Model: AR12HSSDBWKNEU A/C (SAMSUNG_AC)
 //   Brand: Samsung,  Model: AR12NXCXAWKXEU A/C (SAMSUNG_AC)
+//   Brand: Samsung,  Model: AR09HSFSBWKN A/C (SAMSUNG_AC)
+//   Brand: Samsung,  Model: DB93-14195A remote (SAMSUNG_AC)
 
 #ifndef IR_SAMSUNG_H_
 #define IR_SAMSUNG_H_
@@ -35,60 +38,133 @@
 #include "IRsend_test.h"
 #endif
 
-// Constants
+/// Native representation of a Samsung A/C message.
+union SamsungProtocol{
+  uint8_t raw[kSamsungAcExtendedStateLength];  ///< State in code form.
+  struct {
+    // Byte 0
+    uint8_t :8;
+    // Byte 1
+    uint8_t         :4;
+    uint8_t Quiet1  :1;
+    uint8_t Power1  :1;
+    uint8_t         :2;
+    // Byte 2~4
+    uint8_t pad0[3];
+    // Byte 5
+    uint8_t         :5;
+    uint8_t Quiet5  :1;
+    uint8_t         :2;
+    // Byte 6
+    uint8_t         :4;
+    uint8_t Power6  :2;
+    uint8_t         :2;
+    // Byte 7
+    uint8_t :8;
+    // Byte 8
+    uint8_t Powerful8 :8;
+    // Byte 9
+    uint8_t       :4;
+    uint8_t Swing :3;
+    uint8_t       :1;
+    // Byte 10
+    uint8_t             :1;
+    uint8_t Powerful10  :3;
+    uint8_t Display     :1;
+    uint8_t             :2;
+    uint8_t Clean10     :1;
+    // Byte 11
+    uint8_t Ion     :1;
+    uint8_t Clean11 :1;
+    uint8_t         :2;
+    uint8_t Temp    :4;
+    // Byte 12
+    uint8_t       :1;
+    uint8_t Fan   :3;
+    uint8_t Mode  :3;
+    uint8_t       :1;
+    // Byte 13
+    uint8_t       :1;
+    uint8_t Beep  :1;
+    uint8_t       :6;
+  };
+  struct {
+    // 1st Section
+    // Byte 0
+    uint8_t           :8;
+    // Byte 1
+    uint8_t           :4;
+    uint8_t Sum1Lower :4;
+    // Byte 2
+    uint8_t Sum1Upper :4;
+    uint8_t           :4;
+    // Byte 3
+    uint8_t           :8;
+    // Byte 4
+    uint8_t           :8;
+    // Byte 5
+    uint8_t           :8;
+    // Byte 6
+    uint8_t           :8;
+    // 2nd Section
+    // Byte 7
+    uint8_t           :8;
+    // Byte 8
+    uint8_t           :4;
+    uint8_t Sum2Lower :4;
+    // Byte 9
+    uint8_t Sum2Upper :4;
+    uint8_t           :4;
+    // Byte 10
+    uint8_t           :1;
+    uint8_t Breeze    :3;  // WindFree
+    uint8_t           :4;
+    // Byte 11
+    uint8_t           :8;
+    // Byte 12
+    uint8_t           :8;
+    // Byte 13
+    uint8_t           :8;
+    // 3rd Section
+    // Byte 14
+    uint8_t           :8;
+    // Byte 15
+    uint8_t           :4;
+    uint8_t Sum3Lower :4;
+    // Byte 16
+    uint8_t Sum3Upper :4;
+    uint8_t           :4;
+    // Byte 17
+    uint8_t           :8;
+    // Byte 18
+    uint8_t           :8;
+    // Byte 19
+    uint8_t           :8;
+    // Byte 20
+    uint8_t           :8;
+  };
+};
 
-// SamsungAc
-// Byte[1]
-// Checksum                                        0b11110000 ???
-const uint8_t kSamsungAcPower1Offset = 5;  // Mask 0b00100000
-const uint8_t kSamsungAcQuiet1Offset = 4;  // Mask 0b00010000
-// Byte[5]
-const uint8_t kSamsungAcQuiet5Offset = 5;
-// Byte[6]
-const uint8_t kSamsungAcPower6Offset = 4;  // Mask 0b00110000
-const uint8_t kSamsungAcPower6Size = 2;  // Bits
-// Byte[8]
-// Checksum                             0b11110000 ???
+// Constants
 const uint8_t kSamsungAcPowerfulMask8 = 0b01010000;
-// Byte[9]
-const uint8_t kSamsungAcSwingOffset = 4;  // Mask 0b01110000
-const uint8_t kSamsungAcSwingSize = 3;  // Bits
 const uint8_t kSamsungAcSwingMove =                0b010;
 const uint8_t kSamsungAcSwingStop =                0b111;
-// Byte[10]
-const uint8_t kSamsungAcPowerful10Offset = 1;  // Mask 0b00001110
-const uint8_t kSamsungAcPowerful10Size = 3;    // Mask 0b00001110
 const uint8_t kSamsungAcPowerful10On =                     0b011;
-// Breeze (aka. WindFree)
-const uint8_t kSamsungAcBreezeOffset = kSamsungAcPowerful10Offset;
-const uint8_t kSamsungAcBreezeSize = kSamsungAcPowerful10Size;
 const uint8_t kSamsungAcBreezeOn =                         0b101;
-const uint8_t kSamsungAcDisplayOffset = 4;     // Mask 0b00010000
-const uint8_t kSamsungAcClean10Offset = 7;     // Mask 0b10000000
-// Byte[11]
-const uint8_t kSamsungAcIonOffset = 0;      // Mask 0b00000001
-const uint8_t kSamsungAcClean11Offset = 1;  // Mask 0b00000010
-const uint8_t kSamsungAcMinTemp = 16;   // C   Mask 0b11110000
-const uint8_t kSamsungAcMaxTemp = 30;   // C   Mask 0b11110000
+const uint8_t kSamsungAcMinTemp  = 16;  // C   Mask 0b11110000
+const uint8_t kSamsungAcMaxTemp  = 30;  // C   Mask 0b11110000
 const uint8_t kSamsungAcAutoTemp = 25;  // C   Mask 0b11110000
-// Byte[12]
-const uint8_t kSamsungAcModeOffset = 4;  // Mask 0b01110000
 const uint8_t kSamsungAcAuto = 0;
 const uint8_t kSamsungAcCool = 1;
 const uint8_t kSamsungAcDry = 2;
 const uint8_t kSamsungAcFan = 3;
 const uint8_t kSamsungAcHeat = 4;
-const uint8_t kSamsungAcFanOffest = 1;   // Mask 0b00001110
-const uint8_t kSamsungAcFanSize = 3;  // Bits
 const uint8_t kSamsungAcFanAuto = 0;
 const uint8_t kSamsungAcFanLow = 2;
 const uint8_t kSamsungAcFanMed = 4;
 const uint8_t kSamsungAcFanHigh = 5;
 const uint8_t kSamsungAcFanAuto2 = 6;
 const uint8_t kSamsungAcFanTurbo = 7;
-// Byte[13]
-const uint8_t kSamsungAcBeepOffset = 1;  // Mask 0b00000010
-
 const uint16_t kSamsungAcSectionLength = 7;
 const uint64_t kSamsungAcPowerSection = 0x1D20F00000000;
 
@@ -116,42 +192,42 @@ class IRSamsungAc {
   void on(void);
   void off(void);
   void setPower(const bool on);
-  bool getPower(void);
+  bool getPower(void) const;
   void setTemp(const uint8_t temp);
-  uint8_t getTemp(void);
+  uint8_t getTemp(void) const;
   void setFan(const uint8_t speed);
-  uint8_t getFan(void);
+  uint8_t getFan(void) const;
   void setMode(const uint8_t mode);
-  uint8_t getMode(void);
+  uint8_t getMode(void) const;
   void setSwing(const bool on);
-  bool getSwing(void);
+  bool getSwing(void) const;
   void setBeep(const bool on);
-  bool getBeep(void);
+  bool getBeep(void) const;
   void setClean(const bool on);
-  bool getClean(void);
+  bool getClean(void) const;
   void setQuiet(const bool on);
-  bool getQuiet(void);
+  bool getQuiet(void) const;
   void setPowerful(const bool on);
-  bool getPowerful(void);
+  bool getPowerful(void) const;
   void setBreeze(const bool on);
-  bool getBreeze(void);
+  bool getBreeze(void) const;
   void setDisplay(const bool on);
-  bool getDisplay(void);
+  bool getDisplay(void) const;
   void setIon(const bool on);
-  bool getIon(void);
+  bool getIon(void) const;
   uint8_t* getRaw(void);
   void setRaw(const uint8_t new_code[],
               const uint16_t length = kSamsungAcStateLength);
+  static uint8_t calcSectionChecksum(const uint8_t *section);
+  static uint8_t getSectionChecksum(const uint8_t *section);
   static bool validChecksum(const uint8_t state[],
                             const uint16_t length = kSamsungAcStateLength);
-  static uint8_t calcChecksum(const uint8_t state[],
-                              const uint16_t length = kSamsungAcStateLength);
-  uint8_t convertMode(const stdAc::opmode_t mode);
-  uint8_t convertFan(const stdAc::fanspeed_t speed);
+  static uint8_t convertMode(const stdAc::opmode_t mode);
+  static uint8_t convertFan(const stdAc::fanspeed_t speed);
   static stdAc::opmode_t toCommonMode(const uint8_t mode);
   static stdAc::fanspeed_t toCommonFanSpeed(const uint8_t speed);
-  stdAc::state_t toCommon(void);
-  String toString(void);
+  stdAc::state_t toCommon(void) const;
+  String toString(void) const;
 #ifndef UNIT_TEST
 
  private:
@@ -161,10 +237,10 @@ class IRSamsungAc {
   IRsendTest _irsend;  ///< Instance of the testing IR send class
   /// @endcond
 #endif  // UNIT_TEST
-  uint8_t remote_state[kSamsungAcExtendedStateLength];  ///< State in code form.
+  SamsungProtocol _;
   bool _forcepower;  ///< Hack to know when we need to send a special power mesg
   bool _lastsentpowerstate;
-  void checksum(const uint16_t length = kSamsungAcStateLength);
+  void checksum(void);
 };
 
 #endif  // IR_SAMSUNG_H_

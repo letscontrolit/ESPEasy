@@ -155,6 +155,12 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
+    case PLUGIN_INIT:
+      {
+        success = true;
+        break;
+      }
+
     case PLUGIN_READ:
       {
         for (uint8_t x=0; x<PLUGIN_086_VALUE_MAX;x++)

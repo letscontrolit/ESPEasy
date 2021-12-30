@@ -11,6 +11,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
@@ -48,7 +49,7 @@ void sendData(struct EventStruct *event)
     createRuleEvents(event);
   }
 
-  if (Settings.UseValueLogger && (Settings.InitSPI > 0) && (Settings.Pin_sd_cs >= 0)) {
+  if (Settings.UseValueLogger && (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) && (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
 
@@ -171,7 +172,7 @@ void MQTTDisconnect()
 bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
 
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
@@ -318,7 +319,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     String LWTTopic, LWTMessageConnect;
     bool   willRetain = false;
     {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
@@ -537,7 +538,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     bool   mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));
@@ -603,12 +604,21 @@ void SensorSendTask(taskIndex_t TaskIndex)
     struct EventStruct TempEvent(TaskIndex);
     checkDeviceVTypeForTask(&TempEvent);
 
-    // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
 
-    float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
-
-    for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
-      preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
+    const uint8_t valueCount = getValueCountForTask(TaskIndex);
+    // Store the previous value, in case %pvalue% is used in the formula
+    String preValue[VARS_PER_TASK];
+    if (Device[DeviceIndex].FormulaOption) {
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+      {
+        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        {
+          const String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+          if (formula.indexOf(F("%pvalue%")) != -1) {
+            preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
+          }
+        }
+      }
     }
 
     if (Settings.TaskDeviceDataFeed[TaskIndex] == 0) // only read local connected sensorsfeeds
@@ -625,16 +635,18 @@ void SensorSendTask(taskIndex_t TaskIndex)
       if (Device[DeviceIndex].FormulaOption) {
         START_TIMER;
 
-        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {
+            // TD-er: Should we use the set nr of decimals here, or not round at all?
+            // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
-            formula.replace(F("%pvalue%"), String(preValue[varNr]));
-            formula.replace(F("%value%"),  String(UserVar[TempEvent.BaseVarIndex + varNr]));
+            formula.replace(F("%pvalue%"), preValue[varNr]);
+            formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
             double result = 0;
 
-            if (!isError(Calculate(formula, result))) {
+            if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
             }
           }

@@ -55,11 +55,16 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[2] = { 0x10, 0x11 };
-      addFormSelectorI2C(F("plugin_114_veml6075_i2c"), 2, optionValues, PCONFIG(0));
-      addFormNote(F("SDO Low=0x10, High=0x11"));
+      const uint8_t i2cAddressValues[2] = { 0x10, 0x11 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("plugin_114_veml6075_i2c"), 2, i2cAddressValues, PCONFIG(0));
+        addFormNote(F("SDO Low=0x10, High=0x11"));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -149,7 +154,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           log += F(" / Dynamic Mode: ");
           log += PCONFIG(2);
           log += F(" / divisor: ");
-          log += String(pow(2, PCONFIG(1) - 1));
+          log += String(1 << (PCONFIG(1) - 1));
           log += F(" / UVA: ");
           log += UserVar[event->BaseVarIndex];
           log += F(" / UVB: ");

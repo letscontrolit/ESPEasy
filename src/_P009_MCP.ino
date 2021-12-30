@@ -2,9 +2,9 @@
 #ifdef USES_P009
 
 
-#include "src/DataStructs/PinMode.h"
-#include "src/Commands/GPIO.h"
-#include "src/ESPEasyCore/ESPEasyGPIO.h"
+# include "src/DataStructs/PinMode.h"
+# include "src/Commands/GPIO.h"
+# include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################
 // #################################### Plugin 009: MCP23017 input #######################################
@@ -35,22 +35,22 @@
    3: safebutton counter (=0,1)
 \**************************************************/
 
-#define PLUGIN_009
-#define PLUGIN_ID_009         9
-#define PLUGIN_NAME_009       "Switch input - MCP23017"
-#define PLUGIN_VALUENAME1_009 "State"
-#define PLUGIN_009_DOUBLECLICK_MIN_INTERVAL 1000
-#define PLUGIN_009_DOUBLECLICK_MAX_INTERVAL 3000
-#define PLUGIN_009_LONGPRESS_MIN_INTERVAL 1000
-#define PLUGIN_009_LONGPRESS_MAX_INTERVAL 5000
-#define PLUGIN_009_DC_DISABLED 0
-#define PLUGIN_009_DC_LOW 1
-#define PLUGIN_009_DC_HIGH 2
-#define PLUGIN_009_DC_BOTH 3
-#define PLUGIN_009_LONGPRESS_DISABLED 0
-#define PLUGIN_009_LONGPRESS_LOW 1
-#define PLUGIN_009_LONGPRESS_HIGH 2
-#define PLUGIN_009_LONGPRESS_BOTH 3
+# define PLUGIN_009
+# define PLUGIN_ID_009         9
+# define PLUGIN_NAME_009       "Switch input - MCP23017"
+# define PLUGIN_VALUENAME1_009 "State"
+# define PLUGIN_009_DOUBLECLICK_MIN_INTERVAL 1000
+# define PLUGIN_009_DOUBLECLICK_MAX_INTERVAL 3000
+# define PLUGIN_009_LONGPRESS_MIN_INTERVAL 1000
+# define PLUGIN_009_LONGPRESS_MAX_INTERVAL 5000
+# define PLUGIN_009_DC_DISABLED 0
+# define PLUGIN_009_DC_LOW 1
+# define PLUGIN_009_DC_HIGH 2
+# define PLUGIN_009_DC_BOTH 3
+# define PLUGIN_009_LONGPRESS_DISABLED 0
+# define PLUGIN_009_LONGPRESS_LOW 1
+# define PLUGIN_009_LONGPRESS_HIGH 2
+# define PLUGIN_009_LONGPRESS_BOTH 3
 
 boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -65,7 +65,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       Device[++deviceCount].Number           = PLUGIN_ID_009;
       Device[deviceCount].Type               = DEVICE_TYPE_I2C;
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].Ports              = 16;
+      Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = true;
       Device[deviceCount].FormulaOption      = false;
@@ -89,12 +89,39 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
+    {
+      const uint8_t i2cAddressValues[] = { 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        String  portNames[16];
+        int     portValues[16];
+        uint8_t unit    = (CONFIG_PORT - 1) / 16;
+        uint8_t port    = CONFIG_PORT - (unit * 16);
+        uint8_t address = 0x20 + unit;
+
+        for (uint8_t x = 0; x < 16; x++) {
+          portValues[x] = x + 1;
+          portNames[x]  = 'P';
+          portNames[x] += (x < 8 ? 'A' : 'B');
+          portNames[x] += (x < 8 ? x : x - 8);
+        }
+        addFormSelectorI2C(F("p009_i2c"), 8, i2cAddressValues, address);
+        addFormSelector(F("Port"), F("p009_port"), 16, portNames, portValues, port);
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // @giig1967g: set current task value for taking actions after changes
       const uint32_t key = createKey(PLUGIN_ID_009, CONFIG_PORT);
 
       auto it = globalMapPortStatus.find(key);
+
       if (it != globalMapPortStatus.end()) {
         it->second.previousTask = event->TaskIndex;
       }
@@ -111,15 +138,14 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(1) = PLUGIN_009_DOUBLECLICK_MIN_INTERVAL;
       }
 
-      uint8_t   choiceDC = PCONFIG(4);
       {
-        const __FlashStringHelper * buttonDC[4];
+        const __FlashStringHelper *buttonDC[4];
         buttonDC[0] = F("Disabled");
         buttonDC[1] = F("Active only on LOW (EVENT=3)");
         buttonDC[2] = F("Active only on HIGH (EVENT=3)");
         buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
         int buttonDCValues[4] = { PLUGIN_009_DC_DISABLED, PLUGIN_009_DC_LOW, PLUGIN_009_DC_HIGH, PLUGIN_009_DC_BOTH };
-        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+        addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, PCONFIG(4));
       }
 
       addFormNumericBox(F("Doubleclick max. interval (ms)"),
@@ -133,10 +159,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG_FLOAT(2) = PLUGIN_009_LONGPRESS_MIN_INTERVAL;
       }
 
-      
+
       {
-        uint8_t   choiceLP = PCONFIG(5);
-        const __FlashStringHelper * buttonLP[4];
+        const __FlashStringHelper *buttonLP[4];
         buttonLP[0] = F("Disabled");
         buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
         buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
@@ -144,7 +169,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         int buttonLPValues[4] =
         { PLUGIN_009_LONGPRESS_DISABLED, PLUGIN_009_LONGPRESS_LOW, PLUGIN_009_LONGPRESS_HIGH, PLUGIN_009_LONGPRESS_BOTH };
-        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, choiceLP);
+        addFormSelector(F("Longpress event"), F("p009_lp"), 4, buttonLP, buttonLPValues, PCONFIG(5));
       }
 
       addFormNumericBox(F("Longpress min. interval (ms)"),
@@ -161,6 +186,10 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      uint8_t i2c  = getFormItemInt(F("p009_i2c"));
+      uint8_t port = getFormItemInt(F("p009_port"));
+      CONFIG_PORT = (((i2c - 0x20) << 4) + port);
+
       PCONFIG(0) = isFormItemChecked(F("p009_boot"));
 
       // @giig1967-20181022
@@ -202,11 +231,12 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
         // read and store current state to prevent switching at boot time
         // "state" could be -1, 0 or 1
-        newStatus.state                          = GPIO_MCP_Read(CONFIG_PORT);
+        newStatus.state = GPIO_MCP_Read(CONFIG_PORT);
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MCP INIT=");
           log += newStatus.state;
-          addLog(LOG_LEVEL_INFO,log);
+          addLog(LOG_LEVEL_INFO, log);
         }
         newStatus.output                         = newStatus.state;
         (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
@@ -258,12 +288,13 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_TEN_PER_SECOND:
-         {
-        const int8_t state = GPIO_MCP_Read(CONFIG_PORT);
-        const String monitorEventString = F("MCP");
-        /**************************************************************************\
-        20181022 - @giig1967g: new doubleclick logic is:
-        if there is a 'state' change, check debounce period.
+    {
+      const int8_t state              = GPIO_MCP_Read(CONFIG_PORT);
+      const String monitorEventString = F("MCP");
+
+      /**************************************************************************\
+         20181022 - @giig1967g: new doubleclick logic is:
+         if there is a 'state' change, check debounce period.
          Then if doubleclick interval exceeded, reset PCONFIG(7) to 0
          PCONFIG(7) contains the current status for doubleclick:
          0: start counting
@@ -314,15 +345,15 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
             }
 
             // just to simplify the reading of the code
-#define COUNTER PCONFIG(7)
-#define DC PCONFIG(4)
+# define COUNTER PCONFIG(7)
+# define DC PCONFIG(4)
 
             // check settings for doubleclick according to the settings
             if ((COUNTER != 0) || ((COUNTER == 0) && ((DC == 3) || ((DC == 1) && (state == 0)) || ((DC == 2) && (state == 1))))) {
               PCONFIG(7)++;
             }
-#undef DC
-#undef COUNTER
+# undef DC
+# undef COUNTER
 
             // switchstate[event->TaskIndex] = state;
             if ((currentStatus.mode == PIN_MODE_OFFLINE) ||
@@ -357,10 +388,12 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
+
             // send task event
             sendData(event);
+
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value); }
 
             // Reset forceEvent
             currentStatus.forceEvent = 0;
@@ -371,13 +404,13 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // just to simplify the reading of the code
-#define LP PCONFIG(5)
-#define FIRED PCONFIG(6)
+# define LP PCONFIG(5)
+# define FIRED PCONFIG(6)
 
         // check if LP is enabled and if LP has not fired yet
         else if (!FIRED && ((LP == 3) || ((LP == 1) && (state == 0)) || ((LP == 2) && (state == 1)))) {
-#undef LP
-#undef FIRED
+# undef LP
+# undef FIRED
 
           /**************************************************************************\
              20181022 - @giig1967g: new longpress logic is:
@@ -422,10 +455,12 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += output_value;
               addLog(LOG_LEVEL_INFO, log);
             }
+
             // send task event
             sendData(event);
+
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value); }
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -446,10 +481,10 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += tempUserVar;
               addLog(LOG_LEVEL_INFO, log);
             }
-            // send task event
-            sendData(event);
+            // send task event: DO NOT SEND TASK EVENT
+            //sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, 4);
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, 4); }
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = tempUserVar;
@@ -467,10 +502,12 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
           log += F(" is offline (EVENT= -1)");
           addLog(LOG_LEVEL_INFO, log);
         }
+
         // send task event
         sendData(event);
+
         // send monitor event
-        if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, -1);
+        if (currentStatus.monitor) { sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, -1); }
 
         savePortStatus(key, currentStatus);
       }
@@ -521,8 +558,8 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      //String log;
-      //String command = parseString(string, 1);
+      // String log;
+      // String command = parseString(string, 1);
 
       break;
     }
@@ -569,64 +606,66 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
 // ********************************************************************************
 // MCP23017 read
 // ********************************************************************************
-/*
-int8_t Plugin_009_Read(uint8_t Par1)
-{
-  int8_t state        = -1;
-  uint8_t unit           = (Par1 - 1) / 16;
-  uint8_t port           = Par1 - (unit * 16);
-  uint8_t address     = 0x20 + unit;
-  uint8_t IOBankValueReg = 0x12;
 
-  if (port > 8)
-  {
+/*
+   int8_t Plugin_009_Read(uint8_t Par1)
+   {
+   int8_t state        = -1;
+   uint8_t unit           = (Par1 - 1) / 16;
+   uint8_t port           = Par1 - (unit * 16);
+   uint8_t address     = 0x20 + unit;
+   uint8_t IOBankValueReg = 0x12;
+
+   if (port > 8)
+   {
     port = port - 8;
     IOBankValueReg++;
-  }
+   }
 
-  // get the current pin status
-  Wire.beginTransmission(address);
-  Wire.write(IOBankValueReg); // IO data register
-  Wire.endTransmission();
-  Wire.requestFrom(address, (uint8_t)0x1);
+   // get the current pin status
+   Wire.beginTransmission(address);
+   Wire.write(IOBankValueReg); // IO data register
+   Wire.endTransmission();
+   Wire.requestFrom(address, (uint8_t)0x1);
 
-  if (Wire.available())
-  {
+   if (Wire.available())
+   {
     state = ((Wire.read() & _BV(port - 1)) >> (port - 1));
-  }
-  return state;
-}
-*/
+   }
+   return state;
+   }
+ */
 
 // ********************************************************************************
 // MCP23017 write
 // ********************************************************************************
-/*
-boolean Plugin_009_Write(uint8_t Par1, uint8_t Par2)
-{
-  boolean success      = false;
-  uint8_t portvalue       = 0;
-  uint8_t unit            = (Par1 - 1) / 16;
-  uint8_t port            = Par1 - (unit * 16);
-  uint8_t address      = 0x20 + unit;
-  uint8_t IOBankConfigReg = 0;
-  uint8_t IOBankValueReg  = 0x12;
 
-  if (port > 8)
-  {
+/*
+   boolean Plugin_009_Write(uint8_t Par1, uint8_t Par2)
+   {
+   boolean success      = false;
+   uint8_t portvalue       = 0;
+   uint8_t unit            = (Par1 - 1) / 16;
+   uint8_t port            = Par1 - (unit * 16);
+   uint8_t address      = 0x20 + unit;
+   uint8_t IOBankConfigReg = 0;
+   uint8_t IOBankValueReg  = 0x12;
+
+   if (port > 8)
+   {
     port = port - 8;
     IOBankConfigReg++;
     IOBankValueReg++;
-  }
+   }
 
-  // turn this port into output, first read current config
-  Wire.beginTransmission(address);
-  Wire.write(IOBankConfigReg); // IO config register
-  Wire.endTransmission();
-  Wire.requestFrom(address, (uint8_t)0x1);
+   // turn this port into output, first read current config
+   Wire.beginTransmission(address);
+   Wire.write(IOBankConfigReg); // IO config register
+   Wire.endTransmission();
+   Wire.requestFrom(address, (uint8_t)0x1);
 
-  if (Wire.available())
-  {
+   if (Wire.available())
+   {
     portvalue  = Wire.read();
     portvalue &= ~(1 << (port - 1)); // change pin from (default) input to output
 
@@ -635,16 +674,16 @@ boolean Plugin_009_Write(uint8_t Par1, uint8_t Par2)
     Wire.write(IOBankConfigReg); // IO config register
     Wire.write(portvalue);
     Wire.endTransmission();
-  }
+   }
 
-  // get the current pin status
-  Wire.beginTransmission(address);
-  Wire.write(IOBankValueReg); // IO data register
-  Wire.endTransmission();
-  Wire.requestFrom(address, (uint8_t)0x1);
+   // get the current pin status
+   Wire.beginTransmission(address);
+   Wire.write(IOBankValueReg); // IO data register
+   Wire.endTransmission();
+   Wire.requestFrom(address, (uint8_t)0x1);
 
-  if (Wire.available())
-  {
+   if (Wire.available())
+   {
     portvalue = Wire.read();
 
     if (Par2 == 1) {
@@ -660,37 +699,39 @@ boolean Plugin_009_Write(uint8_t Par1, uint8_t Par2)
     Wire.write(portvalue);
     Wire.endTransmission();
     success = true;
-  }
-  return success;
-}
-*/
+   }
+   return success;
+   }
+ */
+
 // ********************************************************************************
 // MCP23017 config
 // ********************************************************************************
-/*
-void Plugin_009_Config(uint8_t Par1, uint8_t Par2)
-{
-  // boolean success = false;
-  uint8_t portvalue       = 0;
-  uint8_t unit            = (Par1 - 1) / 16;
-  uint8_t port            = Par1 - (unit * 16);
-  uint8_t address      = 0x20 + unit;
-  uint8_t IOBankConfigReg = 0xC;
 
-  if (port > 8)
-  {
+/*
+   void Plugin_009_Config(uint8_t Par1, uint8_t Par2)
+   {
+   // boolean success = false;
+   uint8_t portvalue       = 0;
+   uint8_t unit            = (Par1 - 1) / 16;
+   uint8_t port            = Par1 - (unit * 16);
+   uint8_t address      = 0x20 + unit;
+   uint8_t IOBankConfigReg = 0xC;
+
+   if (port > 8)
+   {
     port = port - 8;
     IOBankConfigReg++;
-  }
+   }
 
-  // turn this port pullup on
-  Wire.beginTransmission(address);
-  Wire.write(IOBankConfigReg);
-  Wire.endTransmission();
-  Wire.requestFrom(address, (uint8_t)0x1);
+   // turn this port pullup on
+   Wire.beginTransmission(address);
+   Wire.write(IOBankConfigReg);
+   Wire.endTransmission();
+   Wire.requestFrom(address, (uint8_t)0x1);
 
-  if (Wire.available())
-  {
+   if (Wire.available())
+   {
     portvalue = Wire.read();
 
     if (Par2 == 1) {
@@ -705,7 +746,7 @@ void Plugin_009_Config(uint8_t Par1, uint8_t Par2)
     Wire.write(IOBankConfigReg); // IO config register
     Wire.write(portvalue);
     Wire.endTransmission();
-  }
-}
-*/
+   }
+   }
+ */
 #endif // USES_P009

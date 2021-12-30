@@ -24,7 +24,12 @@ void hardwareInit();
 
 void initI2C();
 
-void I2CSelectClockSpeed(bool setLowSpeed);
+void I2CSelectHighClockSpeed();
+void I2CSelectLowClockSpeed();
+void I2CSelect_Max100kHz_ClockSpeed();
+void I2CSelectClockSpeed(uint32_t clockFreq);
+void I2CForceResetBus_swap_pins(uint8_t address);
+void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq);
 
 #ifdef FEATURE_I2CMULTIPLEXER
 bool isI2CMultiplexerEnabled();
@@ -77,6 +82,10 @@ const __FlashStringHelper * getChipModel();
 
 uint8_t getChipRevision();
 
+uint32_t getSketchSize();
+
+uint32_t getFreeSketchSpace();
+
 /********************************************************************************************\
    Boot information
  \*********************************************************************************************/
@@ -112,6 +121,8 @@ void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning);
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown);
+
+bool validGpio(int gpio);
 
 
 #ifdef ESP32

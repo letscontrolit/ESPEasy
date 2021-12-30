@@ -40,7 +40,7 @@ const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, cons
     bool mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot publish, out of RAM"));
         return F("MQTT : Cannot publish, out of RAM");
@@ -93,7 +93,7 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
       bool mqtt_retainFlag;
       {
         // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
         if (!AllocatedControllerSettings()) {
           addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot subscribe, out of RAM"));
           return F("MQTT : Cannot subscribe, out of RAM");

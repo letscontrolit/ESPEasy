@@ -1,9 +1,9 @@
-#include "Modbus_RTU.h"
+#include "../Helpers/Modbus_RTU.h"
 
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "ESPEasy_time_calc.h"
-#include "StringConverter.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
@@ -404,11 +404,11 @@ void ModbusRTU_struct::logModbusException(uint8_t value) {
       String hexvalue(buffer[i], HEX);
       hexvalue.toUpperCase();
       log += hexvalue;
-      log += F(" ");
+      log += ' ';
     }
-    log += F("(");
+    log += '(';
     log += length;
-    log += F(")");
+    log += ')';
     return log;
    }
  */

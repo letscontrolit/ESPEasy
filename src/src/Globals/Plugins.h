@@ -74,6 +74,11 @@ bool validTaskVarIndex(taskVarIndex_t index);
 bool          supportedPluginID(pluginID_t pluginID);
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
+
 
 
 /********************************************************************************************\
@@ -82,12 +87,17 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 deviceIndex_t getDeviceIndex(pluginID_t Number);
 
 String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
+#if USE_I2C_DEVICE_SCAN
+bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
+#endif // if USE_I2C_DEVICE_SCAN
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();
 
 
-void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+// Prepare I2C bus for next call to task
+// Return false if task is I2C, but I2C bus is not ready
+bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 /*********************************************************************************************\

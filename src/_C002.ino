@@ -82,7 +82,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         if (deserializeDomoticzJson(event->String2, idx, nvalue, nvaluealt, svalue1, switchtype)) {
           for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
             // We need the index of the controller we are: 0...CONTROLLER_MAX
-            if (Settings.TaskDeviceEnabled[x] && (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
+            if (Settings.TaskDeviceEnabled[x] && 
+                Settings.TaskDeviceSendData[ControllerID][x] && 
+                (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {
               String action;
               bool   mustSendEvent = false;
@@ -105,7 +107,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                     mustSendEvent = true;
                     int pwmValue = UserVar[baseVar];
 
-                    switch ((int)nvalue)
+                    switch (static_cast<int>(nvalue))
                     {
                       case 0: // Off
                         pwmValue         = 0;

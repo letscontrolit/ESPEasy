@@ -80,9 +80,9 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[PCA9685_NUMS_ADDRESS];
+      uint8_t optionValues[PCA9685_NUMS_ADDRESS];
 
-      for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; i++)
       {
         optionValues[i] = PCA9685_ADDRESS + i;
       }
@@ -334,6 +334,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           success = true;
+          String dummyString;
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);

@@ -11,8 +11,11 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 
 
-
-#define CHUNKED_BUFFER_SIZE          400
+#ifdef ESP8266
+#define CHUNKED_BUFFER_SIZE         512
+#else 
+#define CHUNKED_BUFFER_SIZE         1360
+#endif
 
 Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
@@ -151,18 +154,25 @@ void Web_StreamingBuffer::checkFull() {
 }
 
 void Web_StreamingBuffer::startStream() {
-  startStream(false, EMPTY_STRING);
+  startStream(false, F("text/html"), F(""));
 }
 
 void Web_StreamingBuffer::startStream(const String& origin) {
-  startStream(false, origin);
+  startStream(false, F("text/html"), origin);
 }
+
+void Web_StreamingBuffer::startStream(const String& content_type, const String& origin) {
+  startStream(false, content_type, origin);
+}
+
 
 void Web_StreamingBuffer::startJsonStream() {
-  startStream(true, "*");
+  startStream(true, F("application/json"), F("*"));
 }
 
-void Web_StreamingBuffer::startStream(bool json, const String& origin) {
+void Web_StreamingBuffer::startStream(bool allowOriginAll, 
+                                      const String& content_type, 
+                                      const String& origin) {
   maxCoreUsage = maxServerUsage = 0;
   initialRam   = ESP.getFreeHeap();
   beforeTXRam  = initialRam;
@@ -172,13 +182,13 @@ void Web_StreamingBuffer::startStream(bool json, const String& origin) {
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
-    web_server.send(200, "text/plain", "Low memory. Cannot display webpage :-(");
+    web_server.send(200, F("text/plain"), F("Low memory. Cannot display webpage :-("));
       #if defined(ESP8266)
     tcpCleanup();
       #endif // if defined(ESP8266)
     return;
   } else {
-    sendHeaderBlocking(json, origin);
+    sendHeaderBlocking(allowOriginAll, content_type, origin);
   }
 }
 
@@ -282,7 +292,9 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   delay(0);
 }
 
-void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
+void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll, 
+                                             const String& content_type, 
+                                             const String& origin) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendHeaderBlocking"));
   #endif
@@ -295,10 +307,10 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   web_server.sendHeader(F("Cache-Control"),     F("no-cache"));
   web_server.sendHeader(F("Transfer-Encoding"), F("chunked"));
 
-  if (json) {
+  if (allowOriginAll) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), "*");
   }
-  web_server.send(200, json ? F("application/json") : F("text/html"), EMPTY_STRING);
+  web_server.send(200, content_type, EMPTY_STRING);
 #else // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   unsigned int timeout          = 0;
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -313,7 +325,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool json, const String& origin) {
   if (origin.length() > 0) {
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
-  web_server.send(200, json ? F("application/json") : F("text/html"), EMPTY_STRING);
+  web_server.send(200, content_type, EMPTY_STRING);
 
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&

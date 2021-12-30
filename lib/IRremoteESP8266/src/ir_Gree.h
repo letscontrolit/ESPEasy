@@ -3,6 +3,7 @@
 /// @file
 /// @brief Support for Gree A/C protocols.
 /// @see https://github.com/ToniA/arduino-heatpumpir/blob/master/GreeHeatpumpIR.h
+/// @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1508
 
 // Supports:
 //   Brand: Ultimate,  Model: Heat Pump
@@ -13,6 +14,15 @@
 //   Brand: Green,  Model: YBOFB2 remote
 //   Brand: Gree,  Model: YAA1FBF remote
 //   Brand: Gree,  Model: YB1F2F remote
+//   Brand: Gree,  Model: YAN1F1 remote
+//   Brand: Gree,  Model: VIR09HP115V1AH A/C
+//   Brand: Gree,  Model: VIR12HP230V1AH A/C
+//   Brand: Amana,  Model: PBC093G00CC A/C
+//   Brand: Amana,  Model: YX1FF remote
+//   Brand: Cooper & Hunter,  Model: YB1F2 remote
+//   Brand: Cooper & Hunter,  Model: CH-S09FTXG A/C
+//   Brand: Vaillant,  Model: YACIFB remote
+//   Brand: Vaillant,  Model: VAI5-035WNI A/C
 
 #ifndef IR_GREE_H_
 #define IR_GREE_H_

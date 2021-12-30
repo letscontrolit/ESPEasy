@@ -102,6 +102,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
+#define USE_I2C_DEVICE_SCAN                     true
 
 #define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
 
@@ -169,6 +170,8 @@
 #define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
 
 #define USES_SSDP
+
+#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
 
 // #define USE_SETTINGS_ARCHIVE
@@ -362,16 +365,22 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
-// #define USES_P103   // Atlas_EZO_pH
-// #define USES_P104   // Atlas_EZO_EC
-// #define USES_P105   // Atlas_EZO_ORP
+// #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
+// #define USES_P104   // MAX7219 dotmatrix
+// #define USES_P105   // AHT10/20/21
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
+// #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
+// #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P117   // SCD30
+// #define USES_P119   // ITG3205 Gyro
+// #define USES_P120   // ADXL345 Acceleration / Gravity
+// #define USES_P124   // I2C MultiRelay
 
 
 // Special plugins needing IR library

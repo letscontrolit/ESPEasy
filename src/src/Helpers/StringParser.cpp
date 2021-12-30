@@ -1,5 +1,4 @@
-#include "StringParser.h"
-
+#include "../Helpers/StringParser.h"
 
 #include "../../_Plugin_Helper.h"
 
@@ -19,7 +18,6 @@
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
-#include "../Helpers/StringParser.h"
 
 #include <Arduino.h>
 
@@ -347,22 +345,22 @@ void transformValue(
 
                 if (isDigit(tempValueFormat[1]))
                 {
-                  x = (int)tempValueFormat[1] - '0';
+                  x = static_cast<int>(tempValueFormat[1]) - '0';
                 }
                 break;
               case 3: // D.y
 
                 if ((tempValueFormat[1] == '.') && isDigit(tempValueFormat[2]))
                 {
-                  y = (int)tempValueFormat[2] - '0';
+                  y = static_cast<int>(tempValueFormat[2]) - '0';
                 }
                 break;
               case 4: // Dx.y
 
                 if (isDigit(tempValueFormat[1]) && (tempValueFormat[2] == '.') && isDigit(tempValueFormat[3]))
                 {
-                  x = (int)tempValueFormat[1] - '0';
-                  y = (int)tempValueFormat[3] - '0';
+                  x = static_cast<int>(tempValueFormat[1]) - '0';
+                  y = static_cast<int>(tempValueFormat[3]) - '0';
                 }
                 break;
               case 1:  // D
@@ -383,10 +381,10 @@ void transformValue(
             break;
           }
           case 'F': // FLOOR (round down)
-            value = (int)floorf(valFloat);
+            value = static_cast<int>(floorf(valFloat));
             break;
           case 'E': // CEILING (round up)
-            value = (int)ceilf(valFloat);
+            value = static_cast<int>(ceilf(valFloat));
             break;
           default:
             value = F("ERR");
@@ -436,7 +434,7 @@ void transformValue(
               {
                 if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(0, (int)valueJust[1] - '0');
+                  value = value.substring(0, static_cast<int>(valueJust[1]) - '0');
                 }
               }
               break;
@@ -446,7 +444,7 @@ void transformValue(
               {
                 if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(std::max(0, (int)value.length() - ((int)valueJust[1] - '0')));
+                  value = value.substring(std::max(0, static_cast<int>(value.length()) - (static_cast<int>(valueJust[1]) - '0')));
                 }
               }
               break;
@@ -456,8 +454,8 @@ void transformValue(
               {
                 if (isDigit(valueJust[1]) && (valueJust[2] == '.') && isDigit(valueJust[3]) && (valueJust[1] > '0') && (valueJust[3] > '0'))
                 {
-                  value = value.substring(std::min((int)value.length(), (int)valueJust[1] - '0' - 1),
-                                          (int)valueJust[1] - '0' - 1 + (int)valueJust[3] - '0');
+                  value = value.substring(std::min(static_cast<int>(value.length()), static_cast<int>(valueJust[1]) - '0' - 1),
+                                          static_cast<int>(valueJust[1]) - '0' - 1 + static_cast<int>(valueJust[3]) - '0');
                 }
                 else
                 {

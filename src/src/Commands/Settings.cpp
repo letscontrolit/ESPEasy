@@ -62,6 +62,20 @@ String Command_Settings_Password(struct EventStruct *event, const char* Line)
 				      );
 }
 
+String Command_Settings_Password_Clear(struct EventStruct *event, const char* Line)
+{
+	const String storedPassword = SecuritySettings.getPassword();
+	if (storedPassword.length() > 0) {
+		// There is a password set, so we must check it.
+		const String password = parseStringKeepCase(Line, 2);
+		if (!storedPassword.equals(password)) {
+			return return_command_failed();
+		}
+        ZERO_FILL(SecuritySettings.Password);
+	}
+	return return_command_success();
+}
+
 const __FlashStringHelper * Command_Settings_Save(struct EventStruct *event, const char* Line)
 {
 	SaveSettings();
@@ -80,9 +94,9 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 
 	serialPrintln(F("System Info"));
 	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
-	serialPrint(F("  Build         : ")); serialPrintln(String((int)BUILD));
+	serialPrint(F("  Build         : ")); serialPrintln(String(static_cast<int>(BUILD)));
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
-	serialPrint(F("  Unit          : ")); serialPrintln(String((int)Settings.Unit));
+	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));
 	serialPrint(F("  WifiSSID      : ")); serialPrintln(SecuritySettings.WifiSSID);
 	serialPrint(F("  WifiKey       : ")); serialPrintln(SecuritySettings.WifiKey);
 	serialPrint(F("  WifiSSID2     : ")); serialPrintln(SecuritySettings.WifiSSID2);

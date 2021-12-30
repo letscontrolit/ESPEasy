@@ -81,6 +81,10 @@ public:
 
     void sendCmd(uint8_t cmd, uint16_t id = 0, const void* data = NULL, size_t length = 0, const void* data2 = NULL, size_t length2 = 0);
 
+    void sendResponse(BlynkStatus rsp, uint16_t id = 0) {
+        sendCmd(BLYNK_CMD_RESPONSE, id, NULL, rsp);
+    }
+
     void printBanner() {
 #if defined(BLYNK_NO_FANCY_LOGO)
         BLYNK_LOG1(BLYNK_F("Blynk v" BLYNK_VERSION " on " BLYNK_INFO_DEVICE));
@@ -111,6 +115,9 @@ protected:
         this->handleInterruptCallback = handleInterruptCb;
         this->authkey = auth;
         lastHeartbeat = lastActivityIn = lastActivityOut = (BlynkMillis() - 5000UL);
+#if !defined(BLYNK_NO_DEFAULT_BANNER)
+        printBanner();
+#endif
     }
 
     bool processInput(void);
@@ -308,7 +315,7 @@ bool BlynkProtocol<Transp>::processInput(void)
 #ifdef BLYNK_USE_DIRECT_CONNECT
         if (strncmp(authkey, (char*)inputBuffer, 32)) {
             BLYNK_LOG1(BLYNK_F("Invalid token"));
-            sendCmd(BLYNK_CMD_RESPONSE, hdr.msg_id, NULL, BLYNK_INVALID_TOKEN);
+            sendResponse(BLYNK_INVALID_TOKEN, hdr.msg_id);
             break;
         }
 #endif
@@ -324,22 +331,25 @@ bool BlynkProtocol<Transp>::processInput(void)
             BLYNK_RUN_YIELD();
             BlynkOnConnected();
         }
-        sendCmd(BLYNK_CMD_RESPONSE, hdr.msg_id, NULL, BLYNK_SUCCESS);
+        sendResponse(BLYNK_SUCCESS, hdr.msg_id);
     } break;
     case BLYNK_CMD_PING: {
-        sendCmd(BLYNK_CMD_RESPONSE, hdr.msg_id, NULL, BLYNK_SUCCESS);
+        sendResponse(BLYNK_SUCCESS, hdr.msg_id);
     } break;
     case BLYNK_CMD_REDIRECT: {
         if (!redir_serv) {
-             redir_serv = (char*)malloc(32);
+             redir_serv = (char*)malloc(64);
         }
         BlynkParam param(inputBuffer, hdr.length);
-        uint16_t redir_port = BLYNK_DEFAULT_PORT; // TODO: Fixit
+        uint16_t redir_port = BLYNK_DEFAULT_PORT;
 
         BlynkParam::iterator it = param.begin();
         if (it >= param.end())
             return false;
-        strncpy(redir_serv, it.asStr(), 32);
+
+        strncpy(redir_serv, it.asStr(), 64);
+        redir_serv[63] = '\0';
+
         if (++it < param.end())
             redir_port = it.asLong();
         BLYNK_LOG4(BLYNK_F("Redirecting to "), redir_serv, ':', redir_port);
@@ -369,15 +379,21 @@ bool BlynkProtocol<Transp>::processInput(void)
         unsigned length = hdr.length - (start - (char*)inputBuffer);
         BlynkParam param2(start, length);
 
+        msgIdOutOverride = hdr.msg_id;
         switch (cmd32) {
         case BLYNK_INT_RTC:  BlynkWidgetWriteInternalPinRTC(req, param2);    break;
+        case BLYNK_INT_UTC:  BlynkWidgetWriteInternalPinUTC(req, param2);    break;
         case BLYNK_INT_OTA:  BlynkWidgetWriteInternalPinOTA(req, param2);    break;
         case BLYNK_INT_ACON: BlynkWidgetWriteInternalPinACON(req, param2);   break;
         case BLYNK_INT_ADIS: BlynkWidgetWriteInternalPinADIS(req, param2);   break;
+        case BLYNK_INT_META: BlynkWidgetWriteInternalPinMETA(req, param2);   break;
+        case BLYNK_INT_VFS:  BlynkWidgetWriteInternalPinVFS(req, param2);    break;
+        case BLYNK_INT_DBG:  BlynkWidgetWriteInternalPinDBG(req, param2);    break;
 #ifdef BLYNK_DEBUG
         default:             BLYNK_LOG2(BLYNK_F("Invalid internal cmd:"), param.asStr());
 #endif
         }
+        msgIdOutOverride = 0;
     } break;
     case BLYNK_CMD_DEBUG_PRINT: {
         if (hdr.length) {

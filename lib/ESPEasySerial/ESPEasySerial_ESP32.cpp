@@ -1,11 +1,71 @@
 #include <ESPeasySerial.h>
 
+
 // ****************************************
 // ESP32 implementation wrapper
 // Only support HW serial on Serial 0 .. 2
 // ****************************************
 
 #ifdef ESP32
+
+// Temporary work-around for bug in ESP32 code, where the pin matrix is not cleaned up between calling end() and begin()
+// Work-around is to keep track of the last used pins for a serial port,
+// as it is likely that a node will always use the same pins most of the time.
+// If not, a reboot may be OK to fix it.
+// Another idea is to swap pins among UART ports.
+// e.g. use the same pins on Serial1 if it was used on Serial2 before.
+
+// PR to fix it: https://github.com/espressif/arduino-esp32/pull/5385
+// See: https://github.com/espressif/arduino-esp32/issues/3878
+
+
+static int receivePin0 = -1;
+static int transmitPin0 = -1;
+static int receivePin1 = -1;
+static int transmitPin1 = -1;
+static int receivePin2 = -1;
+static int transmitPin2 = -1;
+
+bool pinsChanged(ESPEasySerialPort port, 
+                 int receivePin, 
+                 int transmitPin) 
+{
+  switch (port) {
+    case  ESPEasySerialPort::serial0: return receivePin != receivePin0 || transmitPin != transmitPin0;
+    case  ESPEasySerialPort::serial1: return receivePin != receivePin1 || transmitPin != transmitPin1;
+    #ifndef ESP32S2
+    case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
+    #endif
+  }
+  return false;
+}
+
+void setPinsCache(ESPEasySerialPort port, 
+                 int receivePin, 
+                 int transmitPin) 
+{
+  switch (port) {
+    case  ESPEasySerialPort::serial0: 
+      receivePin0  = receivePin;
+      transmitPin0 = transmitPin;
+      break;
+    case  ESPEasySerialPort::serial1:
+      receivePin1  = receivePin;
+      transmitPin1 = transmitPin;
+      break;
+
+    #ifndef ESP32S2
+    case  ESPEasySerialPort::serial2:
+      receivePin2  = receivePin;
+      transmitPin2 = transmitPin;
+      break;
+
+    #endif
+  }
+}
+
+// End of messy work-around.
+
 ESPeasySerial::ESPeasySerial(
   ESPEasySerialPort port, 
   int receivePin, 
@@ -17,7 +77,9 @@ ESPeasySerial::ESPeasySerial(
   switch (port) {
     case  ESPEasySerialPort::serial0:
     case  ESPEasySerialPort::serial1:
+    #ifndef ESP32S2
     case  ESPEasySerialPort::serial2:
+    #endif
       _serialtype = port;
       break;
     default:
@@ -56,7 +118,7 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
 
   if (txPin != -1) { _transmitPin = txPin; }
 
-  if (invert) { _inverse_logic = true; }
+  _inverse_logic = invert;
 
   if (!isValid()) {
     _baud = 0;
@@ -78,7 +140,10 @@ void ESPeasySerial::begin(unsigned long baud, uint32_t config
       // Timeout added for 1.0.1
       // See: https://github.com/espressif/arduino-esp32/commit/233d31bed22211e8c85f82bcf2492977604bbc78
       // getHW()->begin(baud, config, _receivePin, _transmitPin, invert, timeout_ms);
-      getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+      if (pinsChanged(_serialtype, _receivePin, _transmitPin)) {
+        setPinsCache(_serialtype, _receivePin, _transmitPin);  
+        getHW()->begin(baud, config, _receivePin, _transmitPin, _inverse_logic);
+      }
     }
   }
 }
@@ -87,12 +152,15 @@ void ESPeasySerial::end() {
   if (!isValid()) {
     return;
   }
+  flush();
   if (isI2Cserial()) {
 #ifndef DISABLE_SC16IS752_Serial
     _i2cserial->end();
 #endif
   } else {
-    getHW()->end();
+    // Work-around to fix proper detach RX pin for older ESP32 core versions
+    // For now do not call end()
+    //getHW()->end();
   }
 }
 
@@ -100,7 +168,10 @@ HardwareSerial * ESPeasySerial::getHW() {
   switch (_serialtype) {
     case ESPEasySerialPort::serial0: return &Serial;
     case ESPEasySerialPort::serial1: return &Serial1;
-    case ESPEasySerialPort::serial2: return &Serial2;
+    case ESPEasySerialPort::serial2: 
+    #ifndef ESP32S2
+      return &Serial2;
+    #endif
 
     default: break;
   }
@@ -111,7 +182,10 @@ const HardwareSerial * ESPeasySerial::getHW() const {
   switch (_serialtype) {
     case ESPEasySerialPort::serial0: return &Serial;
     case ESPEasySerialPort::serial1: return &Serial1;
-    case ESPEasySerialPort::serial2: return &Serial2;
+    case ESPEasySerialPort::serial2: 
+    #ifndef ESP32S2
+      return &Serial2;
+    #endif
     default: break;
   }
   return nullptr;
@@ -120,10 +194,14 @@ const HardwareSerial * ESPeasySerial::getHW() const {
 bool ESPeasySerial::isValid() const {
   switch (_serialtype) {
     case ESPEasySerialPort::serial0:
-    case ESPEasySerialPort::serial2:
-      return true;
     case ESPEasySerialPort::serial1:
-      return _transmitPin != -1 && _receivePin != -1;
+      return true;
+    case ESPEasySerialPort::serial2:
+      #ifdef ESP32S2
+      return false;
+      #else
+      return true;
+      #endif
     case ESPEasySerialPort::sc16is752:
     #ifndef DISABLE_SC16IS752_Serial
       return _i2cserial != nullptr;
@@ -182,7 +260,7 @@ size_t ESPeasySerial::write(const uint8_t *buffer, size_t size) {
 
 size_t ESPeasySerial::write(const char *buffer) {
   if (!buffer) { return 0; }
-  return write(buffer, strlen(buffer));
+  return write(buffer, strlen_P(buffer));
 }
 
 int ESPeasySerial::read(void) {
@@ -221,8 +299,9 @@ void ESPeasySerial::flush(void) {
 #ifndef DISABLE_SC16IS752_Serial
     _i2cserial->flush();
 #endif
+  } else {
+    getHW()->flush();
   }
-  getHW()->flush();
 }
 
 int ESPeasySerial::baudRate(void) {
@@ -233,6 +312,26 @@ int ESPeasySerial::baudRate(void) {
     return _baud;
   }
   return getHW()->baudRate();
+}
+
+bool ESPeasySerial::isTxEnabled(void) {
+  if (!isValid()) {
+    return false;
+  }
+  if (isI2Cserial()) {
+    return true;
+  }
+  return _transmitPin != -1;
+}
+
+bool ESPeasySerial::isRxEnabled(void) {
+  if (!isValid()) {
+    return false;
+  }
+  if (isI2Cserial()) {
+    return true;
+  }
+  return _receivePin != -1;
 }
 
 // Not supported in ESP32, since only HW serial is used.
