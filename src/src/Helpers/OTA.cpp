@@ -5,6 +5,7 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
