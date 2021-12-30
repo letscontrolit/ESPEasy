@@ -25,10 +25,10 @@
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
 
-#define BUILD_GIT           "Auxillary Build: "  __DATE__ " "  __TIME__
+#define BUILD_GIT           "My Build: "  __DATE__ " "  __TIME__
 
 
-#define DEFAULT_NAME        "AirMQ"                        // Enter your device friendly name
+#define DEFAULT_NAME        "ФшкЬЙ"                        // Enter your device friendly name
 #define UNIT                0                                        // Unit Number
 #define DEFAULT_DELAY       60                                       // Sleep Delay in seconds
 
@@ -50,7 +50,7 @@
 #define DEFAULT_SUBNET                       "255.255.255.0"         // Enter your Subnet
 #define DEFAULT_IPRANGE_LOW                  "0.0.0.0"               // Allowed IP range to access webserver
 #define DEFAULT_IPRANGE_HIGH                 "255.255.255.255"       // Allowed IP range to access webserver
-#define DEFAULT_IP_BLOCK_LEVEL               0                       // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2:
+#define DEFAULT_IP_BLOCK_LEVEL               1                       // 0: ALL_ALLOWED  1: LOCAL_SUBNET_ALLOWED  2:
 // ONLY_IP_RANGE_ALLOWED
 #define DEFAULT_ADMIN_USERNAME               "admin"
 #define DEFAULT_ADMIN_PASS                   ""
@@ -67,26 +67,27 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
-#define DEFAULT_AP_DONT_FORCE_SETUP            false  // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+#define DEFAULT_AP_DONT_FORCE_SETUP          false // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+#define DEFAULT_DONT_ALLOW_START_AP          false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
 
 // --- Default Controller ------------------------------------------------------------------------------
-#define DEFAULT_CONTROLLER   true                                          // true or false enabled or disabled, set 1st controller
+#define DEFAULT_CONTROLLER   false                                          // true or false enabled or disabled, set 1st controller
                                                                             // defaults
 #define DEFAULT_CONTROLLER_ENABLED true                                     // Enable default controller by default
-#define DEFAULT_CONTROLLER_USER    " "                                       // Default controller user
-#define DEFAULT_CONTROLLER_PASS    " "                                       // Default controller Password
+#define DEFAULT_CONTROLLER_USER    ""                                       // Default controller user
+#define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
 
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
 #define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
-#define DEFAULT_SUB         "%mac_int%/#"                                   // Enter your sub
+#define DEFAULT_SUB         "sensors/espeasy/%sysname%/#"                   // Enter your sub
 #define DEFAULT_SERVER      "192.168.0.8"                                   // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
 #define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
 
-#define DEFAULT_PORT        1883                                            // Enter your Server port value
+#define DEFAULT_PORT        8080                                            // Enter your Server port value
 
-#define DEFAULT_PROTOCOL    5                                               // Protocol used for controller communications
+#define DEFAULT_PROTOCOL    0                                               // Protocol used for controller communications
                                                                             //   0 = Stand-alone (no controller set)
                                                                             //   1 = Domoticz HTTP
                                                                             //   2 = Domoticz MQTT
@@ -101,6 +102,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
+#define USE_I2C_DEVICE_SCAN                     true
 
 #define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
 
@@ -118,24 +120,24 @@
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
-#define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   1
+#define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   0
 
-#define DEFAULT_USE_NTP                         true              // (true|false) Use NTP Server
-#define DEFAULT_NTP_HOST                        "by.pool.ntp.org"     // NTP Server Hostname
+#define DEFAULT_USE_NTP                         true             // (true|false) Use NTP Server
+#define DEFAULT_NTP_HOST                        "by.pool.ntp.org"                // NTP Server Hostname
 #define DEFAULT_TIME_ZONE                       180                 // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         false             // (true|false) Use Daily Time Saving
 
-#define DEFAULT_LATITUDE                        54.0f              // Default Latitude  
-#define DEFAULT_LONGITUDE                       27.0f              // Default Longitude
+#define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
+#define DEFAULT_LONGITUDE                       0.0f              // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL                0                 // Serial Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL                    0                 // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false             // (true|false) Enable Logging to the SD card
 
-#define DEFAULT_USE_SERIAL                      false             // (true|false) Enable Logging to the Serial Port
+#define DEFAULT_USE_SERIAL                      true              // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
 #define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
@@ -168,6 +170,8 @@
 #define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
 
 #define USES_SSDP
+
+#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
 
 // #define USE_SETTINGS_ARCHIVE
@@ -273,7 +277,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P019   // PCF8574
 
 // #define USES_P020   // Ser2Net
- #define USES_P021   // Level
+// #define USES_P021   // Level
 // #define USES_P022   // PCA9685
  #define USES_P023   // OLED
 // #define USES_P024   // MLX90614
@@ -309,7 +313,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #define USES_P053   // PMSx003
 // #define USES_P054   // DMX512
 // #define USES_P055   // Chiming
- #define USES_P056   // SDS011-Dust
+// #define USES_P056   // SDS011-Dust
 // #define USES_P057   // HT16K33_LED
 // #define USES_P058   // HT16K33_KeyPad
 // #define USES_P059   // Encoder
@@ -330,7 +334,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #define USES_P072   // HDC1080
 // #define USES_P073   // 7DG
 // #define USES_P074   // TSL2561
- #define USES_P075   // Nextion
+// #define USES_P075   // Nextion
 // #define USES_P076   // HWL8012   in POW r1
 // #define USES_P077   // CSE7766   in POW R2
 // #define USES_P078   // Eastron Modbus Energy meters
@@ -338,14 +342,14 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P080   // iButton Sensor  DS1990A
 // #define USES_P081   // Cron
- #define USES_P082   // GPS
+// #define USES_P082   // GPS
 // #define USES_P083   // SGP30
 // #define USES_P084   // VEML6070
 // #define USES_P085   // AcuDC24x
 // #define USES_P086   // Receiving values according Homie convention. Works together with C014 Homie controller
 // #define USES_P087   // Serial Proxy
 // #define USES_P088   // HeatpumpIR
- #define USES_P089   // Ping
+// #define USES_P089   // Ping
 
  #define USES_P090   // CCS811
 // #define USES_P091   // SerSwitch
@@ -361,15 +365,20 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
-// #define USES_P103   // Atlas_EZO_pH
-// #define USES_P104   // Atlas_EZO_EC
-// #define USES_P105   // Atlas_EZO_ORP
- #define USES_P106   // BME680
+// #define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
+// #define USES_P104   // MAX7219 dotmatrix
+// #define USES_P105   // AHT10/20/21
+// #define USES_P106   // BME680
 // #define USES_P107   // Si1145
+// #define USES_P109   // ThermoOLED
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
+// #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
+// #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P119   // ITG3205 Gyro
+// #define USES_P120   // ADXL345 Acceleration / Gravity
 
 
 // Special plugins needing IR library
@@ -405,9 +414,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C013   // ESPEasy P2P network
 // #define USES_C014   // homie 3 & 4dev MQTT
 // #define USES_C015   // Blynk
-#define USES_C016   // Cache controller
+ #define USES_C016   // Cache controller
 // #define USES_C017   // Zabbix
- #define USES_C018   // TTN/RN2483
+// #define USES_C018   // TTN/RN2483
 
 
 /*
