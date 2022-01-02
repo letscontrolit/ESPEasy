@@ -744,7 +744,7 @@ void P109_display_current_temp() {
 
   if (atempstr.length() > 0) {
     float atemp = atempstr.toFloat();
-    atemp = (round(atemp * 10)) / 10.0;
+    atemp = (round(atemp * 10)) / 10.0f;
 
     if (Plugin_109_prev_temp != atemp) {
       P109_display->setColor(BLACK);
@@ -760,7 +760,7 @@ void P109_display_current_temp() {
 
 void P109_display_setpoint_temp(byte force) {
   if (UserVar[Plugin_109_varindex + 2] == 1) {
-    float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0;
+    float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
 
     if ((Plugin_109_prev_setpoint != stemp) || (force == 1)) {
       P109_display->setColor(BLACK);
@@ -875,7 +875,7 @@ void P109_display_page() {
 }
 
 void P109_setSetpoint(String sptemp) {
-  float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0;
+  float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
 
   if ((sptemp.charAt(0) == '+') || (sptemp.charAt(0) == 'p'))  {
     stemp = stemp + sptemp.substring(1).toFloat();

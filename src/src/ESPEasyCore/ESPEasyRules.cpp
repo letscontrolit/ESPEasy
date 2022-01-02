@@ -522,8 +522,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
 }
 
 bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, double& result) {
-  double farg1;
-  float  farg2, farg3 = 0.0f;
+  double farg1, farg2, farg3 = 0.0f;
 
   if (!validDoubleFromString(arg1, farg1)) {
     return false;
@@ -532,9 +531,9 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
   if (cmd_s_lower.equals(F("constrain"))) {
     // Contrain a value X to be within range of A to B
     // Syntax like {constrain:x:a:b} to constrain x in range a...b
-    if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
+    if (validDoubleFromString(arg2, farg2) && validDoubleFromString(arg3, farg3)) {
       if (farg2 > farg3) {
-        const float tmp = farg2;
+        const double tmp = farg2;
         farg2 = farg3;
         farg3 = tmp;
       }
