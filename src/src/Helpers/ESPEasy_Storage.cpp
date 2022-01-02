@@ -330,19 +330,19 @@ void fileSystemCheck()
   checkRAM(F("fileSystemCheck"));
   #endif
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
-
+#if defined(ESP32) && defined(USE_LITTLEFS)
+  if (getPartionCount(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS) != 0 
+      && ESPEASY_FS.begin())
+#else
   if (ESPEASY_FS.begin())
+#endif
   {
     clearAllCaches();
-    #if defined(ESP8266)
-    fs::FSInfo fs_info;
-    ESPEASY_FS.info(fs_info);
-
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FS   : Mount successful, used ");
-      log = log + fs_info.usedBytes;
-      log = log + F(" bytes of ");
-      log = log + fs_info.totalBytes;
+      log += SpiffsUsedBytes();
+      log += F(" bytes of ");
+      log += SpiffsTotalBytes();
       addLog(LOG_LEVEL_INFO, log);
     }
 
@@ -352,25 +352,60 @@ void fileSystemCheck()
     while (retries > 0 && GarbageCollection()) {
       --retries;
     }
-    #endif // if defined(ESP8266)
 
     fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), "r");
-
-    if (!f)
-    {
+    if (f) { 
+      f.close(); 
+    } else {
       ResetFactory();
     }
-
-    if (f) { f.close(); }
   }
   else
   {
-    String log = F("FS   : Mount failed");
+    const __FlashStringHelper * log = F("FS   : Mount failed");
     serialPrintln(log);
     addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
 }
+
+bool FS_format() {
+  #ifdef USE_LITTLEFS
+    #ifdef ESP32
+    disableCore1WDT();
+    const bool res = ESPEASY_FS.begin(true);
+    ESPEASY_FS.end();
+    enableCore1WDT();
+    return res;
+    #else
+    return ESPEASY_FS.format();
+    #endif
+  #else
+  return ESPEASY_FS.format();
+  #endif
+}
+
+#ifdef ESP32
+
+# include <esp_partition.h>
+
+int getPartionCount(uint8_t pType, uint8_t pSubType) {
+  esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
+  esp_partition_subtype_t subtype          = static_cast<esp_partition_subtype_t>(pSubType);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, subtype, NULL);
+  int nrPartitions                         = 0;
+
+  if (_mypartiterator) {
+    do {
+      ++nrPartitions;
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+  }
+  esp_partition_iterator_release(_mypartiterator);
+  return nrPartitions;
+}
+
+
+#endif
 
 /********************************************************************************************\
    Garbage collection
@@ -1568,7 +1603,13 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
       case ESP_PARTITION_SUBTYPE_DATA_COREDUMP: return F("COREDUMP");
       case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: return F("ESPHTTPD");
       case ESP_PARTITION_SUBTYPE_DATA_FAT:      return F("FAT");
-      case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:   return F("SPIFFS");
+      case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:   
+        #ifdef USE_LITTLEFS
+        return F("LittleFS");
+        #else
+        return F("SPIFFS");
+        #endif
+      case 0x99: return F("EEPROM"); // Not defined in esp_partition_subtype_t
       default: break;
     }
   }
