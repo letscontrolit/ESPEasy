@@ -1455,7 +1455,7 @@ To create/register a plugin, you have to :
     #define USES_P127   //
   #endif
   #ifndef USES_P128
-    #define USES_P128   // NeoPixelBusFX, (not yet working on 'plain' ESP32)
+    #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
     #define USES_P129   //

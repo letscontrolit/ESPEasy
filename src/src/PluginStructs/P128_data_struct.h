@@ -2198,6 +2198,192 @@ const uint8_t PROGMEM ftv_gamma8[] = {
   0X21, 0X86, 0X19, 0X04, 0X29, 0X66, 0X29, 0X45, 0X19, 0X25, 0X21, 0X25,
   0X20, 0XE4, 0X21, 0XA6, 0X29, 0XE7, 0X32, 0X28 };
 
+# include <NeoPixelBrightnessBus.h>
+# include "../../ESPEasy-Globals.h"
+
+# define SPEED_MAX 50
+# define ARRAYSIZE 300 // Max LED Count
+
+// Choose your color order below:
+
+# define GRB // should be standard - SK6812(grb), WS2811, and WS2812
+// # define GRBW  //This is used for SK6812rgbw pixels that have the separate white led in them.
+// # define RGB   //some older pixels
+// # define RGBW  //A four element color in the order of Red, Green, Blue, and then White. A common four element format.
+// # define BRG   //A three element color in the order of Blue, Red, and then Green.
+// # define RBG   //A three element color in the order of Red, Blue, and then Green.
+
+# define NEOPIXEL_LIB NeoPixelBrightnessBus   // Neopixel library type
+# if defined(ESP32)
+#  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod (should also work on ESP32S2)
+# endif // if defined(ESP32)
+# if defined(ESP8266)
+#  define METHOD NeoEsp8266Uart1800KbpsMethod // GPIO2 - use NeoEsp8266Uart0800KbpsMethod for GPIO1(TX)
+# endif  // if defined(ESP32)
+
+# if defined GRB
+  #  define FEATURE NeoGrbFeature
+# elif defined GRBW
+  #  define FEATURE NeoGrbwFeature
+# elif defined RGB
+  #  define FEATURE NeoRgbFeature
+# elif defined RGBW
+  #  define FEATURE NeoRgbwFeature
+# elif defined BRG
+  #  define FEATURE NeoBrgFeature
+# elif defined RBG
+  #  define FEATURE NeoRbgFeature
+# else // if defined GRB
+  #  define FEATURE NeoGrbFeature
+# endif // if defined GRB
+
+# define  numPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
+
+const float pi = 3.1415926535897932384626433832795;
+
+enum P128_modetype {
+  Off, On, Fade, ColorFade, Rainbow, Kitt, Comet,
+  Theatre, Scan, Dualscan, Twinkle, TwinkleFade, Sparkle, Fire,
+  FireFlicker, Wipe, Dualwipe,  FakeTV, SimpleClock
+};
+
+struct P128_data_struct : public PluginTaskData_base {
+public:
+
+  P128_data_struct(int8_t   _gpioPin,
+                   uint16_t _pixelCount);
+
+  P128_data_struct() = delete;
+  ~P128_data_struct();
+
+  bool plugin_fifty_per_second(struct EventStruct *event);
+  bool plugin_read(struct EventStruct *event);
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
+
+private:
+
+  NEOPIXEL_LIB<FEATURE, METHOD> *Plugin_128_pixels = nullptr;
+
+  int8_t gpioPin;
+
+  uint16_t pos,
+           color,
+           r_pixel,
+           startpixel,
+           endpixel,
+           difference,
+           fps = 50,
+           colorcount;
+
+# if defined(RGBW) || defined(GRBW)
+  RgbwColor rgb_target[ARRAYSIZE],
+            rgb_old[ARRAYSIZE],
+            rgb, rrggbb,
+            rgb_tick_b = HtmlColor(0x505050),
+            rgb_tick_s = HtmlColor(0x101010),
+            rgb_m      = HtmlColor(0x00FF00),
+            rgb_h      = HtmlColor(0x0000FF),
+            rgb_s      = HtmlColor(0xFF0000);
+# else // if defined(RGBW) || defined(GRBW)
+  RgbColor rgb_target[ARRAYSIZE],
+           rgb_old[ARRAYSIZE],
+           rgb, rrggbb,
+           rgb_tick_b = HtmlColor(0x505050),
+           rgb_tick_s = HtmlColor(0x101010),
+           rgb_m      = HtmlColor(0x00FF00),
+           rgb_h      = HtmlColor(0x0000FF),
+           rgb_s      = HtmlColor(0xFF0000);
+# endif // if defined(RGBW) || defined(GRBW)
+
+  int16_t fadedelay = 20;
+
+  uint16_t pixelCount = ARRAYSIZE;
+
+  int8_t defaultspeed  = 25,
+         rainbowspeed  = 1,
+         speed         = 25,
+         count         = 1,
+         rev_intensity = 3;
+
+  uint32_t _counter_mode_step = 0,
+           fadetime           = 1000,
+           ftv_holdTime,
+           pixelNum;
+
+  uint16_t ftv_pr = 0, ftv_pg = 0, ftv_pb = 0; // Prev R, G, B;
+  uint32_t ftv_totalTime, ftv_fadeTime, ftv_startTime, ftv_elapsed;
+  uint16_t ftv_nr, ftv_ng, ftv_nb, ftv_r, ftv_g, ftv_b, ftv_i, ftv_frac;
+  uint8_t  ftv_hi, ftv_lo, ftv_r8, ftv_g8, ftv_b8;
+
+  String colorStr,
+         backgroundcolorStr;
+
+  bool gReverseDirection = false;
+  bool rgb_s_off         = false;
+  bool fadeIn            = false;
+
+  byte cooling    = 50,
+       sparking   = 120,
+       brightness = 31;
+
+  unsigned long counter20ms = 0,
+                starttime[ARRAYSIZE],
+                starttimerb,
+                maxtime = 0;
+
+  P128_modetype mode     = P128_modetype::Off,
+                savemode = P128_modetype::Off,
+                lastmode = P128_modetype::Off;
+
+  void     fade(void);
+  void     colorfade(void);
+  void     wipe(void);
+  void     dualwipe(void);
+  void     faketv(void);
+  void     rainbow(void);
+  uint32_t Wheel(uint8_t pos);
+  void     kitt(void);
+  void     comet(void);
+  void     theatre(void);
+  void     scan(void);
+  void     dualscan(void);
+  void     twinkle(void);
+  void     twinklefade(void);
+  void     sparkle(void);
+
+  // Fire
+  unsigned long fireTimer;
+  RgbColor      leds[ARRAYSIZE];
+  void fire(void);
+
+  /// random number seed
+  uint16_t rand16seed; // = RAND16_SEED;
+  uint8_t  random8();
+  uint8_t  random8(uint8_t lim);
+  uint8_t  random8(uint8_t min,
+                   uint8_t lim);
+  uint8_t  qsub8(uint8_t i,
+                 uint8_t j);
+  uint8_t  qadd8(uint8_t i,
+                 uint8_t j);
+  uint8_t  scale8_video(uint8_t i,
+                        uint8_t scale);
+  void     Fire2012(void);
+  void     fire_flicker();
+  void     Plugin_128_simpleclock();
+  uint32_t rgbStr2Num(String rgbStr);
+  void     hex2rgb(String hexcolor);
+  void     hex2rrggbb(String hexcolor);
+  void     hex2rgb_pixel(String hexcolor);
+  void     NeoPixelSendStatus(struct EventStruct *eventSource);
+
+  const char *modeName[19] = {
+    "off",         "on",         "fade",           "colorfade",     "rainbow",           "kitt",       "comet",
+    "theatre",     "scan",       "dualscan",       "twinkle",       "twinklefade",       "sparkle",    "fire",
+    "fireflicker", "wipe",       "dualwipe",       "faketv",        "simpleclock"
+  };
+};
 #endif // ifdef USES_P128
 
 #endif // ifndef PLUGINSTRUCTS_P128_DATA_STRUCT_H
