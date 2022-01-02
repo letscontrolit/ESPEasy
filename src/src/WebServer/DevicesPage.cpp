@@ -1283,10 +1283,11 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       html_TR_TD();
       addHtmlInt(varNr + 1);
       html_TD();
-      String id = F("TDVN"); // ="taskdevicevaluename"
-      id += (varNr + 1);
-      addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
-
+      {
+        String id = F("TDVN"); // ="taskdevicevaluename"
+        id += (varNr + 1);
+        addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
+      }
       if (Device[DeviceIndex].FormulaOption)
       {
         html_TD();
