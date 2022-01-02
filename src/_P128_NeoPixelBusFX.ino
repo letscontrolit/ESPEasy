@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-02, tonhuisman Fixed ESP32 related issues (conditional compilation, wrong stripe type)
+//                        Add configuration for ESP32 GPIO pin
 // 2022-01-01, tonhuisman On request migrated from https://github.com/djcysmic/NeopixelBusFX to ESPEasy (that is an
 //                        extension from plugin _P124_NeoPixelBusFX.ini on the ESPEasyPluginPlayground)
 //                        - Adjusted to work combined with FastLED library (random8() issues)
@@ -110,7 +112,7 @@
 # include <NeoPixelBrightnessBus.h>
 
 # define SPEED_MAX 50
-# define ARRAYSIZE 300      // Max LED Count
+# define ARRAYSIZE 300 // Max LED Count
 
 // Choose your color order below:
 
@@ -121,15 +123,13 @@
 // # define BRG   //A three element color in the order of Blue, Red, and then Green.
 // # define RBG   //A three element color in the order of Red, Blue, and then Green.
 
-# define NEOPIXEL_LIB NeoPixelBrightnessBus // Neopixel library type
-# ifdef ESP32
-#  define METHOD DotStarEsp32DmaHspiMethod  // HSPI MOSI - use DotStarEsp32DmaHspiMethod (should also work on ESP32S2)
-# elif ESP8266
-#  ifdef METHOD
-#   undef METHOD
-#  endif // ifdef METHOD
+# define NEOPIXEL_LIB NeoPixelBrightnessBus   // Neopixel library type
+# if defined(ESP32)
+#  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod (should also work on ESP32S2)
+# endif // if defined(ESP32)
+# if defined(ESP8266)
 #  define METHOD NeoEsp8266Uart1800KbpsMethod // GPIO2 - use NeoEsp8266Uart0800KbpsMethod for GPIO1(TX)
-# endif  // ifdef ESP32
+# endif  // if defined(ESP32)
 
 # if defined GRB
   #  define FEATURE NeoGrbFeature
@@ -248,8 +248,13 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_128;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
+      Device[++deviceCount].Number = PLUGIN_ID_128;
+      # if defined(ESP32)
+      Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
+      # endif // if defined(ESP32)
+      # if defined(ESP8266)
+      Device[deviceCount].Type = DEVICE_TYPE_DUMMY;
+      # endif // if defined(ESP8266)
       Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Custom             = true;
       Device[deviceCount].Ports              = 0;
@@ -280,16 +285,25 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # ifdef ESP32
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PIN(0) = -1; // None
+      break;
+    }
+    # endif // ifdef ESP32
+
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormSubHeader(F("Actuator"));
+      # ifdef ESP8266
       addRowLabel(F(""));
-      String message = F("<span style=\"color:red\">Please connect stripe to ");
+      addHtml(F("<span style=\"color:red\">Please connect stripe to GPIO2!</span>"));
+      # endif // ifdef ESP8266
       # ifdef ESP32
-      message += F("HSPI MOSI!</span>");
-      # elif ESP8266
-      message += F("GPIO2!</span>");
+      addRowLabel(formatGpioName_output("Stripe data"));
+      addPinSelect(PinSelectPurpose::Generic_output, F("taskdevicepin1"), PIN(0));
       # endif // ifdef ESP32
-      addHtml(message);
       addFormNumericBox(F("Led Count"), F("plugin_128_leds"), PCONFIG(0), 1, 999);
       success = true;
       break;
@@ -299,7 +313,9 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = getFormItemInt(F("plugin_128_leds"));
 
-      // Settings.TaskDevicePin1[event->TaskIndex] = getFormItemInt(F("taskdevicepin1"));
+      # ifdef ESP32
+      PIN(0) = getFormItemInt(F("taskdevicepin1"));
+      # endif // ifdef ESP32
 
       success = true;
       break;
@@ -309,10 +325,11 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     {
       if (!Plugin_128_pixels) {
         # ifdef ESP8266
-        Plugin_128_pixels = new NEOPIXEL_LIB<FEATURE, METHOD>(PCONFIG(0));
+        Plugin_128_pixels = new NEOPIXEL_LIB<FEATURE, METHOD>(min(static_cast<uint16_t>(PCONFIG(0)), static_cast<uint16_t>(ARRAYSIZE)));
         # endif // ifdef ESP8266
         # ifdef ESP32
-        Plugin_128_pixels = new NEOPIXEL_LIB<FEATURE, METHOD>(PCONFIG(0));
+        Plugin_128_pixels = new NEOPIXEL_LIB<FEATURE, METHOD>(min(static_cast<uint16_t>(PCONFIG(0)), static_cast<uint16_t>(ARRAYSIZE)),
+                                                              PIN(0));
         # endif // ifdef ESP32
         Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
       }
