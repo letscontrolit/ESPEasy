@@ -22,7 +22,9 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   LoadCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
+  # ifdef P118_DEBUG_LOG
   addLog(LOG_LEVEL_INFO, F("Extra Settings PLUGIN_118 loaded"));
+  # endif // ifdef P118_DEBUG_LOG
 
   PLUGIN_118_rf = new (std::nothrow) IthoCC1101(PIN(1));
 
@@ -70,7 +72,9 @@ bool P118_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if  ((PLUGIN_118_OldState != PLUGIN_118_State) || ((PLUGIN_118_Timer > 0) && (PLUGIN_118_Timer % 2 == 0)) ||
        (PLUGIN_118_OldLastIDindex != PLUGIN_118_LastIDindex) || PLUGIN_118_InitRunned)
   {
+    # ifdef P118_DEBUG_LOG
     addLog(LOG_LEVEL_DEBUG, F("UPDATE by PLUGIN_ONCE_A_SECOND"));
+    # endif // ifdef P118_DEBUG_LOG
     PublishData(event);
     sendData(event);
 
@@ -95,7 +99,9 @@ bool P118_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
 bool P118_data_struct::plugin_read(struct EventStruct *event) {
   // This ensures that even when Values are not changing, data is send at the configured interval for aquisition
+  # ifdef P118_DEBUG_LOG
   addLog(LOG_LEVEL_DEBUG, F("UPDATE by PLUGIN_READ"));
+  # endif // ifdef P118_DEBUG_LOG
   PublishData(event);
 
   // sendData(event); //SV - Added to send status every xx secnds as set within plugin
@@ -109,7 +115,6 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
 
   if (cmd.equalsIgnoreCase(F("STATE")))
   {
-    // noInterrupts();
     switch (event->Par1) {
       case 1111: // Join command
       {
@@ -218,12 +223,8 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
       default:
       {
         PluginWriteLog(F("INVALID"));
-
-        // success = true;
       }
     }
-
-    // interrupts();
   }
   return success;
 }
@@ -252,13 +253,13 @@ void P118_data_struct::ITHOcheck() {
 
     // int index = PLUGIN_118_RFRemoteIndex(Id);
     // IF id is know index should be >0
-    String log2 = "";
+    String log;
 
     if (index > 0) {
       if (PLUGIN_118_Log) {
-        log2 += F("Command received from remote-ID: ");
-        log2 += Id;
-        log2 += F(", command: ");
+        log += F("Command received from remote-ID: ");
+        log += Id;
+        log += F(", command: ");
 
         // addLog(LOG_LEVEL_DEBUG, log);
       }
@@ -266,12 +267,12 @@ void P118_data_struct::ITHOcheck() {
       switch (cmd) {
         case IthoUnknown:
 
-          if (PLUGIN_118_Log) { log2 += F("unknown"); }
+          if (PLUGIN_118_Log) { log += F("unknown"); }
           break;
         case IthoStandby:
         case DucoStandby:
 
-          if (PLUGIN_118_Log) { log2 += F("standby"); }
+          if (PLUGIN_118_Log) { log += F("standby"); }
           PLUGIN_118_State       = 0;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
@@ -279,7 +280,7 @@ void P118_data_struct::ITHOcheck() {
         case IthoLow:
         case DucoLow:
 
-          if (PLUGIN_118_Log) { log2 += F("low"); }
+          if (PLUGIN_118_Log) { log += F("low"); }
           PLUGIN_118_State       = 1;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
@@ -287,7 +288,7 @@ void P118_data_struct::ITHOcheck() {
         case IthoMedium:
         case DucoMedium:
 
-          if (PLUGIN_118_Log) { log2 += F("medium"); }
+          if (PLUGIN_118_Log) { log += F("medium"); }
           PLUGIN_118_State       = 2;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
@@ -295,57 +296,59 @@ void P118_data_struct::ITHOcheck() {
         case IthoHigh:
         case DucoHigh:
 
-          if (PLUGIN_118_Log) { log2 += F("high"); }
+          if (PLUGIN_118_Log) { log += F("high"); }
           PLUGIN_118_State       = 3;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoFull:
 
-          if (PLUGIN_118_Log) { log2 += F("full"); }
+          if (PLUGIN_118_Log) { log += F("full"); }
           PLUGIN_118_State       = 4;
           PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoTimer1:
 
-          if (PLUGIN_118_Log) { log2 += +F("timer1"); }
+          if (PLUGIN_118_Log) { log += +F("timer1"); }
           PLUGIN_118_State       = 13;
           PLUGIN_118_Timer       = PLUGIN_118_Time1;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoTimer2:
 
-          if (PLUGIN_118_Log) { log2 += F("timer2"); }
+          if (PLUGIN_118_Log) { log += F("timer2"); }
           PLUGIN_118_State       = 23;
           PLUGIN_118_Timer       = PLUGIN_118_Time2;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoTimer3:
 
-          if (PLUGIN_118_Log) { log2 += F("timer3"); }
+          if (PLUGIN_118_Log) { log += F("timer3"); }
           PLUGIN_118_State       = 33;
           PLUGIN_118_Timer       = PLUGIN_118_Time3;
           PLUGIN_118_LastIDindex = index;
           break;
         case IthoJoin:
 
-          if (PLUGIN_118_Log) { log2 += F("join"); }
+          if (PLUGIN_118_Log) { log += F("join"); }
           break;
         case IthoLeave:
 
-          if (PLUGIN_118_Log) { log2 += F("leave"); }
+          if (PLUGIN_118_Log) { log += F("leave"); }
           break;
       }
     } else {
       if (PLUGIN_118_Log) {
-        log2 += F("Device-ID: ");
-        log2 += Id;
-        log2 += F(" IGNORED");
+        log += F("Device-ID: ");
+        log += Id;
+        log += F(" IGNORED");
       }
     }
 
-    if (PLUGIN_118_Log) { addLog(LOG_LEVEL_DEBUG, log2); }
+    if (PLUGIN_118_Log) {
+      addLog(LOG_LEVEL_DEBUG, log);
+    }
   }
 }
 
@@ -380,9 +383,7 @@ void P118_data_struct::PluginWriteLog(const String& command) {
 // Interrupt handler
 // **************************************************************************/
 void ICACHE_RAM_ATTR P118_data_struct::ISR_ithoCheck(P118_data_struct *self) {
-  noInterrupts(); // Disable interrupts
   self->PLUGIN_118_Int = true;
-  interrupts();   // Re-enable interrupts
 }
 
 #endif // ifdef USES_P118

@@ -21,6 +21,7 @@
 //								   - Allow 3 simultaneous instances, each using an interrupt and CS
 //								   - Remove unused code, reformat source using Uncrustify
 //			tonhuisman, 28-12-2021 - Move interrupt handling to Plugin_data_struct, lifting the limit on nr. of plugins
+//      tonhuisman, 03-01-2022 - Review source after structural-crash report, fix interrupt handler
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 

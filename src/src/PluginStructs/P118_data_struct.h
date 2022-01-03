@@ -10,7 +10,7 @@
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
-// # define P118_DEBUG_LOG // Enable for some (extra) logging
+# define P118_DEBUG_LOG // Enable for some (extra) logging
 
 // Timer values for hardware timer in Fan in seconds
 # define PLUGIN_118_Time1      10 * 60
