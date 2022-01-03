@@ -11,6 +11,8 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
 
+#include "../../ESPEasy_common.h"
+
 
 
 #ifdef USES_C016

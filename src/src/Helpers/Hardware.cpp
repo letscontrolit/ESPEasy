@@ -485,7 +485,12 @@ uint32_t getFlashChipId() {
   static uint32_t flashChipId = 0;
   if (flashChipId == 0) {
   #ifdef ESP32
-    flashChipId = g_rom_flashchip.device_id;
+    uint32_t tmp = g_rom_flashchip.device_id;
+    for (int i = 0; i < 3; ++i) {
+      flashChipId = flashChipId << 8;
+      flashChipId |= (tmp & 0xFF);
+      tmp = tmp >> 8;
+    }
 //    esp_flash_read_id(nullptr, &flashChipId);
   #elif defined(ESP8266)
     flashChipId = ESP.getFlashChipId();
@@ -499,7 +504,7 @@ uint32_t getFlashRealSizeInBytes() {
   static uint32_t res = 0;
   if (res == 0) {
     #if defined(ESP32)
-    res = ESP.getFlashChipSize();
+    res = (1 << ((getFlashChipId() >> 16) & 0xFF));
     #else // if defined(ESP32)
     res = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
     #endif // if defined(ESP32)
@@ -507,6 +512,9 @@ uint32_t getFlashRealSizeInBytes() {
   return res;
 }
 
+uint32_t getFlashChipSpeed() {
+  return ESP.getFlashChipSpeed();
+}
 
 bool puyaSupport() {
   bool supported = false;

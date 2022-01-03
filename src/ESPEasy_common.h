@@ -140,23 +140,7 @@ namespace std
   #endif
   
   #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
-  #ifdef PLUGIN_BUILD_MAX_ESP32
-  #define MAX_SKETCH_SIZE 4194304   // 0x400000 look at partitions in csv file
-  #else // PLUGIN_BUILD_MAX_ESP32
-  #define MAX_SKETCH_SIZE 1900544   // 0x1d0000 look at partitions in csv file
-  #endif // PLUGIN_BUILD_MAX_ESP32
 #endif
-
-#include <WiFiUdp.h>
-#include <Wire.h>
-#include <SPI.h>
-#include <FS.h>
-#ifdef FEATURE_SD
-#include <SD.h>
-#else
-using namespace fs;
-#endif
-#include <base64.h>
 
 
 #ifdef USE_LITTLEFS
@@ -178,6 +162,19 @@ using namespace fs;
   #endif
   #define ESPEASY_FS SPIFFS
 #endif
+
+
+#include <WiFiUdp.h>
+#include <Wire.h>
+#include <SPI.h>
+#include <FS.h>
+#ifdef FEATURE_SD
+#include <SD.h>
+#else
+using namespace fs;
+#endif
+#include <base64.h>
+
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
 #include "src/CustomBuild/ESPEasy_buildinfo.h"

@@ -146,9 +146,9 @@ bool handle_custom(const String& path) {
         chunksize = available;
       }
       uint8_t buf[64] = {0};
-      const size_t read = dataFile.read(buf, chunksize);
+      const int read = dataFile.read(buf, chunksize);
       if (read == chunksize) {
-        for (uint32_t i = 0; i < chunksize; ++i) {
+        for (int32_t i = 0; i < chunksize; ++i) {
           const char c = (char)buf[i];
           line += c;
           if (c == '\n') {

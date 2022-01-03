@@ -67,6 +67,8 @@ uint32_t getFlashChipId();
 
 uint32_t getFlashRealSizeInBytes();
 
+uint32_t getFlashChipSpeed();
+
 bool    puyaSupport();
 
 uint8_t getFlashChipVendorId();
