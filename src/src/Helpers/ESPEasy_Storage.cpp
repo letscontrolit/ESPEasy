@@ -368,10 +368,8 @@ void fileSystemCheck()
 bool FS_format() {
   #ifdef USE_LITTLEFS
     #ifdef ESP32
-    disableCore1WDT();
     const bool res = ESPEASY_FS.begin(true);
     ESPEASY_FS.end();
-    enableCore1WDT();
     return res;
     #else
     return ESPEASY_FS.format();

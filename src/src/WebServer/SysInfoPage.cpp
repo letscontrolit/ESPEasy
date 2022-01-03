@@ -188,7 +188,6 @@ void handle_sysinfo_json() {
   json_number(F("ide_size"),  String(ESP.getFlashChipSize() / 1024));
 
   // Please check what is supported for the ESP32
-  # if defined(ESP8266)
   json_number(F("flash_speed"), String(ESP.getFlashChipSpeed() / 1000000));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
@@ -201,7 +200,6 @@ void handle_sysinfo_json() {
     default:
       json_prop(F("mode"), getUnknownString()); break;
   }
-  # endif // if defined(ESP8266)
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
@@ -624,6 +622,10 @@ void handle_sysinfo_Storage() {
   addRowLabel(LabelType::FLASH_IDE_SIZE);
   addHtmlInt(ideSize / 1024);
   addHtml(F(" kB"));
+
+  addRowLabel(LabelType::FLASH_CHIP_SPEED);
+  addHtmlInt(getFlashChipSpeed() / 1000000);
+  addHtml(F(" MHz"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)

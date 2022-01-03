@@ -164,6 +164,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::FLASH_CHIP_ID:          return F("Flash Chip ID");
     case LabelType::FLASH_CHIP_REAL_SIZE:   return F("Flash Chip Real Size");
+    case LabelType::FLASH_CHIP_SPEED:       return F("Flash Chip Speed");
     case LabelType::FLASH_IDE_SIZE:         return F("Flash IDE Size");
     case LabelType::FLASH_IDE_SPEED:        return F("Flash IDE Speed");
     case LabelType::FLASH_IDE_MODE:         return F("Flash IDE Mode");
@@ -353,6 +354,7 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::FLASH_CHIP_ID:          break;
     case LabelType::FLASH_CHIP_REAL_SIZE:   break;
+    case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed());
     case LabelType::FLASH_IDE_SIZE:         break;
     case LabelType::FLASH_IDE_SPEED:        break;
     case LabelType::FLASH_IDE_MODE:         break;

@@ -5,6 +5,7 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
@@ -29,7 +30,9 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
   if (maxSketchSize > MAX_SKETCH_SIZE) { maxSketchSize = MAX_SKETCH_SIZE; }
   return otaPossible;
 #elif defined(ESP32)
-  maxSketchSize = MAX_SKETCH_SIZE;
+  // ESP32 writes an OTA image to the "other" app partition.
+  // Thus what is reported as "free" sketch space is the size of the not used app partition.
+  maxSketchSize = getFreeSketchSpace();
   use2step      = false;
   return true;
 #else // if defined(ESP8266)
