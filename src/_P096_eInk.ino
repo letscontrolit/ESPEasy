@@ -111,8 +111,8 @@ Examples:
   #define EPD_BUSY -1 // can set to -1 to not use a pin (will wait a fixed delay)
 #else
   //for D1 Mini with shield connection
-  #define EPD_CS D0
-  #define EPD_DC D8
+  #define EPD_CS 16   // D0
+  #define EPD_DC 15   // D8
   #define EPD_RST -1  // can set to -1 and share with microcontroller Reset!
   #define EPD_BUSY -1 // can set to -1 to not use a pin (will wait a fixed delay)
 #endif
