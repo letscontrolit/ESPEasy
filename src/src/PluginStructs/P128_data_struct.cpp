@@ -3,11 +3,9 @@
 
 # include "../PluginStructs/P128_data_struct.h"
 
-// TODO: implementation code
-
-//***************************************************************/
-// 
-//***************************************************************/
+// ***************************************************************/
+// Constructor
+// ***************************************************************/
 P128_data_struct::P128_data_struct(int8_t   _gpioPin,
                                    uint16_t _pixelCount)
   : gpioPin(_gpioPin), pixelCount(_pixelCount) {
@@ -25,9 +23,9 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
   // pixelCount = _pixelCount;
 }
 
-//***************************************************************/
+// ***************************************************************/
 // Destructor
-//***************************************************************/
+// ***************************************************************/
 P128_data_struct::~P128_data_struct() {
   if (Plugin_128_pixels) {
     delete Plugin_128_pixels;
@@ -35,19 +33,19 @@ P128_data_struct::~P128_data_struct() {
   }
 }
 
-bool P128_data_struct::plugin_read(struct EventStruct *event)             {
+bool P128_data_struct::plugin_read(struct EventStruct *event) {
   // there is no need to read them, just use current values
-  UserVar[event->BaseVarIndex]     = mode;
-  UserVar[event->BaseVarIndex + 1] = savemode;
+  UserVar[event->BaseVarIndex]     = static_cast<int>(mode);
+  UserVar[event->BaseVarIndex + 1] = static_cast<int>(savemode);
   UserVar[event->BaseVarIndex + 2] = fadetime;
   UserVar[event->BaseVarIndex + 3] = fadedelay;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log  = F("Lights: mode: ");
-    log += modeName[mode];
+    log += P128_modeType_toString(mode);
     log += F(" lastmode: ");
-    log += modeName[savemode];
+    log += P128_modeType_toString(savemode);
     log += F(" fadetime: ");
     log += (int)UserVar[event->BaseVarIndex + 2];
     log += F(" fadedelay: ");
@@ -61,44 +59,55 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
   bool success = false;
 
-  String log     = "";
+  String log;
   String command = parseString(string, 1);
 
   if ((command == F("neopixelfx")) || (command == F("nfx"))) {
     success = true;
     String subCommand = parseString(string, 2);
 
+    String  str3  = parseString(string, 3);
+    int32_t str3i = str3.toInt();
+    String  str4  = parseString(string, 4);
+    int32_t str4i = str4.toInt();
+    String  str5  = parseString(string, 5);
+    int32_t str5i = str5.toInt();
+    String  str6  = parseString(string, 6);
+    int32_t str6i = str6.toInt();
+    String  str7  = parseString(string, 7);
+    int32_t str7i = str7.toInt();
+
     if (subCommand == F("fadetime")) {
-      fadetime = parseString(string, 3).toInt();
+      fadetime = str3i;
     }
 
     else if (subCommand == F("fadedelay")) {
-      fadedelay = parseString(string, 3).toInt();
+      fadedelay = str3i;
     }
 
     else if (subCommand == F("speed")) {
-      defaultspeed = parseString(string, 3).toInt();
+      defaultspeed = str3i;
       speed        = defaultspeed;
     }
 
     else if (subCommand == F("bgcolor")) {
-      hex2rrggbb(parseString(string, 3));
+      hex2rrggbb(str3);
     }
 
     else if (subCommand == F("count")) {
-      count = parseString(string, 3).toInt();
+      count = str3i;
     }
 
     else if ((subCommand == F("on")) || (subCommand == F("off"))) {
       fadetime  = 1000;
       fadedelay = 0;
 
-      fadetime = (parseString(string, 3) == "")
+      fadetime = str3.isEmpty()
           ? fadetime
-          : parseString(string, 3).toInt();
-      fadedelay = (parseString(string, 4) == "")
+          : str3i;
+      fadedelay = str4.isEmpty()
           ? fadedelay
-          : parseString(string, 4).toInt();
+          : str4i;
 
       for (int pixel = 0; pixel < pixelCount; pixel++) {
         r_pixel = (fadedelay < 0)
@@ -107,75 +116,75 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
         starttime[r_pixel] = counter20ms + (pixel * abs(fadedelay) / 20);
 
-        if ((subCommand == F("on")) && (mode == Off)) { // switch on
+        if ((subCommand == F("on")) && (mode == P128_modetype::Off)) { // switch on
           rgb_target[pixel] = rgb_old[pixel];
           rgb_old[pixel]    = Plugin_128_pixels->GetPixelColor(pixel);
-        } else if (subCommand == F("off")) {            // switch off
+        } else if (subCommand == F("off")) {                           // switch off
           rgb_old[pixel]    = Plugin_128_pixels->GetPixelColor(pixel);
           rgb_target[pixel] = RgbColor(0);
         }
       }
 
-      if ((subCommand == F("on")) && (mode == Off)) { // switch on
-        mode = (savemode == On) ? Fade : savemode;
-      } else if (subCommand == F("off")) {            // switch off
+      if ((subCommand == F("on")) && (mode == P128_modetype::Off)) { // switch on
+        mode = (savemode == P128_modetype::On) ? P128_modetype::Fade : savemode;
+      } else if (subCommand == F("off")) {                           // switch off
         savemode = mode;
-        mode     = Fade;
+        mode     = P128_modetype::Fade;
       }
 
       maxtime = starttime[r_pixel] + (fadetime / 20);
     }
 
     else if (subCommand == F("dim")) {
-      Plugin_128_pixels->SetBrightness(parseString(string, 3).toInt());
+      Plugin_128_pixels->SetBrightness(str3i);
     }
 
     else if (subCommand == F("line")) {
-      mode = On;
+      mode = P128_modetype::On;
 
-      hex2rgb(parseString(string, 5));
+      hex2rgb(str5);
 
-      for (int i = 0; i <= (parseString(string, 4).toInt() - parseString(string, 3).toInt() + pixelCount) % pixelCount; i++) {
-        Plugin_128_pixels->SetPixelColor((i + parseString(string, 3).toInt() - 1) % pixelCount, rgb);
+      for (int i = 0; i <= (str4i - str3i + pixelCount) % pixelCount; i++) {
+        Plugin_128_pixels->SetPixelColor((i + str3i - 1) % pixelCount, rgb);
       }
     }
 
     else if (subCommand == F("tick")) {
-      mode = On;
+      mode = P128_modetype::On;
 
-      hex2rgb(parseString(string, 4));
+      hex2rgb(str4);
 
       //          for (int i = 0; i < pixelCount ; i = i + (pixelCount / parseString(string, 3).toInt())) {
-      for (int i = 0; i < parseString(string, 3).toInt(); i++) {
-        Plugin_128_pixels->SetPixelColor(i * pixelCount / parseString(string, 3).toInt(), rgb);
+      for (int i = 0; i < str3i; i++) {
+        Plugin_128_pixels->SetPixelColor(i * pixelCount / str3i, rgb);
       }
     }
 
     else if (subCommand == F("one")) {
-      mode = On;
+      mode = P128_modetype::On;
 
-      uint16_t pixnum = parseString(string, 3).toInt() - 1;
-      hex2rgb(parseString(string, 4));
+      uint16_t pixnum = str3i - 1;
+      hex2rgb(str4);
 
       Plugin_128_pixels->SetPixelColor(pixnum, rgb);
     }
 
     else if ((subCommand == F("fade")) || (subCommand == F("all")) || (subCommand == F("rgb"))) {
-      mode = Fade;
+      mode = P128_modetype::Fade;
 
       if ((subCommand == F("all")) || (subCommand == F("rgb"))) {
         fadedelay = 0;
       }
 
-      hex2rgb(parseString(string, 3));
-      hex2rgb_pixel(parseString(string, 3));
+      hex2rgb(str3);
+      hex2rgb_pixel(str3);
 
-      fadetime = (parseString(string, 4) == "")
+      fadetime = str4.isEmpty()
           ? fadetime
-          : parseString(string, 4).toInt();
-      fadedelay = (parseString(string, 5) == "")
+          : str4i;
+      fadedelay = str5.isEmpty()
           ? fadedelay
-          : parseString(string, 5).toInt();
+          : str5i;
 
       for (int pixel = 0; pixel < pixelCount; pixel++) {
         r_pixel = (fadedelay < 0)
@@ -190,28 +199,22 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     }
 
     else if (subCommand == F("hsv")) {
-      mode      = Fade;
+      mode      = P128_modetype::Fade;
       fadedelay = 0;
       rgb       =
-        RgbColor(HsbColor(parseString(string, 3).toFloat() / 360, parseString(string, 4).toFloat() / 100,
-                          parseString(string, 5).toFloat() / 100));
+        RgbColor(HsbColor(str3.toFloat() / 360, str4.toFloat() / 100,
+                          str5.toFloat() / 100));
 
-      colorStr               = "";
-      rgb.R < 16 ? colorStr  = "0" : "";
-      colorStr              += formatToHex(rgb.R, {});
-      rgb.G < 16 ? colorStr += "0" : "";
-      colorStr              += formatToHex(rgb.G, {});
-      rgb.B < 16 ? colorStr += "0" : "";
-      colorStr              += formatToHex(rgb.B, {});
+      rgb2colorStr();
 
       hex2rgb_pixel(colorStr);
 
-      fadetime = (parseString(string, 6) == "")
+      fadetime = str6.isEmpty()
           ? fadetime
-          : parseString(string, 6).toInt();
-      fadedelay = (parseString(string, 7) == "")
+          : str6i;
+      fadedelay = str7.isEmpty()
           ? fadedelay
-          : parseString(string, 7).toInt();
+          : str7i;
 
       for (int pixel = 0; pixel < pixelCount; pixel++) {
         r_pixel = (fadedelay < 0)
@@ -226,113 +229,101 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     }
 
     else if (subCommand == F("hsvone")) {
-      mode = On;
+      mode = P128_modetype::On;
       rgb  =
-        RgbColor(HsbColor(parseString(string, 4).toFloat() / 360, parseString(string, 5).toFloat() / 100,
-                          parseString(string, 6).toFloat() / 100));
+        RgbColor(HsbColor(str4.toFloat() / 360, str5.toFloat() / 100,
+                          str6.toFloat() / 100));
 
-      colorStr               = "";
-      rgb.R < 16 ? colorStr  = "0" : "";
-      colorStr              += formatToHex(rgb.R, {});
-      rgb.G < 16 ? colorStr += "0" : "";
-      colorStr              += formatToHex(rgb.G, {});
-      rgb.B < 16 ? colorStr += "0" : "";
-      colorStr              += formatToHex(rgb.B, {});
+      rgb2colorStr();
 
       hex2rgb(colorStr);
-      uint16_t pixnum = parseString(string, 3).toInt() - 1;
+      uint16_t pixnum = str3i - 1;
       Plugin_128_pixels->SetPixelColor(pixnum, rgb);
     }
 
     else if (subCommand == F("hsvline")) {
-      mode = On;
+      mode = P128_modetype::On;
 
       rgb =
-        RgbColor(HsbColor(parseString(string, 5).toFloat() / 360, parseString(string, 6).toFloat() / 100,
-                          parseString(string, 7).toFloat() / 100));
+        RgbColor(HsbColor(str5.toFloat() / 360, str6.toFloat() / 100,
+                          str7.toFloat() / 100));
 
-      colorStr               = "";
-      rgb.R < 16 ? colorStr  = "0" : "";
-      colorStr              += formatToHex(rgb.R, {});
-      rgb.G < 16 ? colorStr += "0" : "";
-      colorStr              += formatToHex(rgb.G, {});
-      rgb.B < 16 ? colorStr += "0" : "";
-      colorStr              += formatToHex(rgb.B, {});
+      rgb2colorStr();
 
       hex2rgb(colorStr);
 
-      for (int i = 0; i <= (parseString(string, 4).toInt() - parseString(string, 3).toInt() + pixelCount) % pixelCount; i++) {
-        Plugin_128_pixels->SetPixelColor((i + parseString(string, 3).toInt() - 1) % pixelCount, rgb);
+      for (int i = 0; i <= (str4i - str3i + pixelCount) % pixelCount; i++) {
+        Plugin_128_pixels->SetPixelColor((i + str3i - 1) % pixelCount, rgb);
       }
     }
 
     else if (subCommand == F("rainbow")) {
-      fadeIn      = (mode == Off) ? true : false;
-      mode        = Rainbow;
+      fadeIn      = (mode == P128_modetype::Off) ? true : false;
+      mode        = P128_modetype::Rainbow;
       starttimerb = counter20ms;
 
-      rainbowspeed = (parseString(string, 3) == "")
+      rainbowspeed = str3.isEmpty()
           ? speed
-          : parseString(string, 3).toInt();
+          : str3i;
 
-      fadetime = (parseString(string, 4) == "")
+      fadetime = str4.isEmpty()
           ? fadetime
-          : parseString(string, 4).toInt();
+          : str4i;
     }
 
     else if (subCommand == F("colorfade")) {
-      mode = ColorFade;
+      mode = P128_modetype::ColorFade;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") { hex2rrggbb(parseString(string, 4)); }
+      if (!str4.isEmpty()) { hex2rrggbb(str4); }
 
-      startpixel = (parseString(string, 5) == "")
+      startpixel = str5.isEmpty()
           ? 0
-          : parseString(string, 5).toInt() - 1;
-      endpixel = (parseString(string, 6) == "")
+          : str5i - 1;
+      endpixel = str6.isEmpty()
           ? pixelCount - 1
-          : parseString(string, 6).toInt() - 1;
+          : str6i - 1;
     }
 
     else if (subCommand == F("kitt")) {
-      mode = Kitt;
+      mode = P128_modetype::Kitt;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      speed = (parseString(string, 4) == "")
+      speed = str4.isEmpty()
           ? defaultspeed
-          : parseString(string, 4).toInt();
+          : str4i;
     }
 
     else if (subCommand == F("comet")) {
-      mode = Comet;
+      mode = P128_modetype::Comet;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      speed = (parseString(string, 4) == "")
+      speed = str4.isEmpty()
           ? defaultspeed
-          : parseString(string, 4).toInt();
+          : str4i;
     }
 
     else if (subCommand == F("theatre")) {
-      mode = Theatre;
+      mode = P128_modetype::Theatre;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") { hex2rrggbb(parseString(string, 4)); }
+      if (!str4.isEmpty()) { hex2rrggbb(str4); }
 
-      count = (parseString(string, 5) == "")
+      count = str5.isEmpty()
           ? count
-          : parseString(string, 5).toInt();
+          : str5i;
 
-      speed = (parseString(string, 6) == "")
+      speed = str6.isEmpty()
           ? defaultspeed
-          : parseString(string, 6).toInt();
+          : str6i;
 
       for (int i = 0; i < pixelCount; i++) {
         if ((i / count) % 2 == 0) {
@@ -344,233 +335,233 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     }
 
     else if (subCommand == F("scan")) {
-      mode = Scan;
+      mode = P128_modetype::Scan;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") { hex2rrggbb(parseString(string, 4)); }
+      if (!str4.isEmpty()) { hex2rrggbb(str4); }
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("dualscan")) {
-      mode = Dualscan;
+      mode = P128_modetype::Dualscan;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") { hex2rrggbb(parseString(string, 4)); }
+      if (!str4.isEmpty()) { hex2rrggbb(str4); }
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("twinkle")) {
-      mode = Twinkle;
+      mode = P128_modetype::Twinkle;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") { hex2rrggbb(parseString(string, 4)); }
+      if (!str4.isEmpty()) { hex2rrggbb(str4); }
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("twinklefade")) {
-      mode = TwinkleFade;
+      mode = P128_modetype::TwinkleFade;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      count = (parseString(string, 4) == "")
+      count = str4.isEmpty()
           ? count
-          : parseString(string, 4).toInt();
+          : str4i;
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("sparkle")) {
-      mode = Sparkle;
+      mode = P128_modetype::Sparkle;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
-      hex2rrggbb(parseString(string, 4));
+      hex2rgb(str3);
+      hex2rrggbb(str4);
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("wipe")) {
-      mode = Wipe;
+      mode = P128_modetype::Wipe;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") {
-        hex2rrggbb(parseString(string, 4));
+      if (!str4.isEmpty()) {
+        hex2rrggbb(str4);
       } else {
         hex2rrggbb("000000");
       }
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("dualwipe")) {
-      mode = Dualwipe;
+      mode = P128_modetype::Dualwipe;
 
       _counter_mode_step = 0;
 
-      hex2rgb(parseString(string, 3));
+      hex2rgb(str3);
 
-      if (parseString(string, 4) != "") {
-        hex2rrggbb(parseString(string, 4));
+      if (!str4.isEmpty()) {
+        hex2rrggbb(str4);
       } else {
         hex2rrggbb("000000");
       }
 
-      speed = (parseString(string, 5) == "")
+      speed = str5.isEmpty()
           ? defaultspeed
-          : parseString(string, 5).toInt();
+          : str5i;
     }
 
     else if (subCommand == F("faketv")) {
-      mode               = FakeTV;
+      mode               = P128_modetype::FakeTV;
       _counter_mode_step = 0;
 
       randomSeed(analogRead(A0));
       pixelNum = random(numPixels); // Begin at random point
 
-      startpixel = (parseString(string, 3) == "")
+      startpixel = str3.isEmpty()
           ? 0
-          : parseString(string, 3).toInt() - 1;
-      endpixel = (parseString(string, 4) == "")
+          : str3i - 1;
+      endpixel = str4.isEmpty()
           ? pixelCount
-          : parseString(string, 4).toInt();
+          : str4i;
     }
 
     else if (subCommand == F("fire")) {
-      mode = Fire;
+      mode = P128_modetype::Fire;
 
-      fps = (parseString(string, 3) == "")
+      fps = str3.isEmpty()
           ? fps
-          : parseString(string, 3).toInt();
+          : str3i;
 
       fps = (fps == 0 || fps > 50) ? 50 : fps;
 
-      brightness = (parseString(string, 4) == "")
+      brightness = str4.isEmpty()
           ? brightness
-          : parseString(string, 4).toFloat();
-      cooling = (parseString(string, 5) == "")
+          : str4.toFloat();
+      cooling = str5.isEmpty()
           ? cooling
-          : parseString(string, 5).toFloat();
-      sparking = (parseString(string, 6) == "")
+          : str5.toFloat();
+      sparking = str6.isEmpty()
           ? sparking
-          : parseString(string, 6).toFloat();
+          : str6.toFloat();
     }
 
     else if (subCommand == F("fireflicker")) {
-      mode = FireFlicker;
+      mode = P128_modetype::FireFlicker;
 
-      rev_intensity = (parseString(string, 3) == "")
+      rev_intensity = str3.isEmpty()
           ? rev_intensity
-          : parseString(string, 3).toInt();
+          : str3i;
 
-      speed = (parseString(string, 4) == "")
+      speed = str4.isEmpty()
           ? defaultspeed
-          : parseString(string, 4).toInt();
+          : str4i;
     }
 
     else if (subCommand == F("simpleclock")) {
-      mode = SimpleClock;
+      mode = P128_modetype::SimpleClock;
 
-          # if defined(RGBW) || defined(GRBW)
+      # if defined(RGBW) || defined(GRBW)
 
-      if (parseString(string, 3) != "") {
-        if (parseString(string, 3).length() <= 6) {
+      if (!str3.isEmpty()) {
+        if (str3.length() <= 6) {
           rgb_tick_s =
-            RgbwColor(rgbStr2Num(parseString(string, 3)) >> 16, rgbStr2Num(parseString(string, 3)) >> 8,
-                      rgbStr2Num(parseString(string, 3)));
+            RgbwColor(rgbStr2Num(str3) >> 16, rgbStr2Num(str3) >> 8,
+                      rgbStr2Num(str3));
         } else {
           rgb_tick_s =
-            RgbwColor(rgbStr2Num(parseString(string, 3)) >> 24,
-                      rgbStr2Num(parseString(string, 3)) >> 16,
-                      rgbStr2Num(parseString(string, 3)) >> 8,
-                      rgbStr2Num(parseString(string, 3)));
+            RgbwColor(rgbStr2Num(str3) >> 24,
+                      rgbStr2Num(str3) >> 16,
+                      rgbStr2Num(str3) >> 8,
+                      rgbStr2Num(str3));
         }
       }
 
-      if (parseString(string, 4) != "") {
-        if (parseString(string, 4).length() <= 6) {
+      if (!str4.isEmpty()) {
+        if (str4.length() <= 6) {
           rgb_tick_b =
-            RgbwColor(rgbStr2Num(parseString(string, 4)) >> 16, rgbStr2Num(parseString(string, 4)) >> 8,
-                      rgbStr2Num(parseString(string, 4)));
+            RgbwColor(rgbStr2Num(str4) >> 16, rgbStr2Num(str4) >> 8,
+                      rgbStr2Num(str4));
         } else {
           rgb_tick_b =
-            RgbwColor(rgbStr2Num(parseString(string, 4)) >> 24,
-                      rgbStr2Num(parseString(string, 4)) >> 16,
-                      rgbStr2Num(parseString(string, 4)) >> 8,
-                      rgbStr2Num(parseString(string, 4)));
+            RgbwColor(rgbStr2Num(str4) >> 24,
+                      rgbStr2Num(str4) >> 16,
+                      rgbStr2Num(str4) >> 8,
+                      rgbStr2Num(str4));
         }
       }
 
-      if (parseString(string, 5) != "") {
-        if (parseString(string, 5).length() <= 6) {
+      if (!str5.isEmpty()) {
+        if (str5.length() <= 6) {
           rgb_h =
-            RgbwColor(rgbStr2Num(parseString(string, 5)) >> 16, rgbStr2Num(parseString(string, 5)) >> 8,
-                      rgbStr2Num(parseString(string, 5)));
+            RgbwColor(rgbStr2Num(str5) >> 16, rgbStr2Num(str5) >> 8,
+                      rgbStr2Num(str5));
         } else {
           rgb_h =
-            RgbwColor(rgbStr2Num(parseString(string, 5)) >> 24,
-                      rgbStr2Num(parseString(string, 5)) >> 16,
-                      rgbStr2Num(parseString(string, 5)) >> 8,
-                      rgbStr2Num(parseString(string, 5)));
+            RgbwColor(rgbStr2Num(str5) >> 24,
+                      rgbStr2Num(str5) >> 16,
+                      rgbStr2Num(str5) >> 8,
+                      rgbStr2Num(str5));
         }
       }
 
-      if (parseString(string, 6) != "") {
-        if (parseString(string, 6).length() <= 6) {
+      if (!str6.isEmpty()) {
+        if (str6.length() <= 6) {
           rgb_m =
-            RgbwColor(rgbStr2Num(parseString(string, 6)) >> 16, rgbStr2Num(parseString(string, 6)) >> 8,
-                      rgbStr2Num(parseString(string, 6)));
+            RgbwColor(rgbStr2Num(str6) >> 16, rgbStr2Num(str6) >> 8,
+                      rgbStr2Num(str6));
         } else {
           rgb_m =
-            RgbwColor(rgbStr2Num(parseString(string, 6)) >> 24,
-                      rgbStr2Num(parseString(string, 6)) >> 16,
-                      rgbStr2Num(parseString(string, 6)) >> 8,
-                      rgbStr2Num(parseString(string, 6)));
+            RgbwColor(rgbStr2Num(str6) >> 24,
+                      rgbStr2Num(str6) >> 16,
+                      rgbStr2Num(str6) >> 8,
+                      rgbStr2Num(str6));
         }
       }
 
-      if (parseString(string, 7) != "") {
-        if (parseString(string, 7) == "off") {
+      if (!str7.isEmpty()) {
+        if (str7 == F("off")) {
           rgb_s_off = true;
-        } else if (parseString(string, 7).length() <= 6) {
+        } else if (str7.length() <= 6) {
           rgb_s_off = false;
           rgb_s     =
-            RgbwColor(rgbStr2Num(parseString(string, 7)) >> 16, rgbStr2Num(parseString(string, 7)) >> 8,
-                      rgbStr2Num(parseString(string, 7)));
+            RgbwColor(rgbStr2Num(str7) >> 16, rgbStr2Num(str7) >> 8,
+                      rgbStr2Num(str7));
         } else {
           rgb_s_off = false;
           rgb_s     =
-            RgbwColor(rgbStr2Num(parseString(string, 7)) >> 24,
-                      rgbStr2Num(parseString(string, 7)) >> 16,
-                      rgbStr2Num(parseString(string, 7)) >> 8,
-                      rgbStr2Num(parseString(string, 7)));
+            RgbwColor(rgbStr2Num(str7) >> 24,
+                      rgbStr2Num(str7) >> 16,
+                      rgbStr2Num(str7) >> 8,
+                      rgbStr2Num(str7));
         }
       }
 
@@ -578,39 +569,39 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
         hex2rrggbb(parseString(string, 8));
       }
 
-          # else // if defined(RGBW) || defined(GRBW)
+      # else // if defined(RGBW) || defined(GRBW)
 
-      rgb_tick_s = (parseString(string, 3) == "")
+      rgb_tick_s = str3.isEmpty()
           ? rgb_tick_s
-          : RgbColor(rgbStr2Num(parseString(string, 3)) >> 16, rgbStr2Num(parseString(string, 3)) >> 8, rgbStr2Num(parseString(string, 3)));
-      rgb_tick_b = (parseString(string, 4) == "")
+          : RgbColor(rgbStr2Num(str3) >> 16, rgbStr2Num(str3) >> 8, rgbStr2Num(str3));
+      rgb_tick_b = str4.isEmpty()
           ? rgb_tick_b
-          : RgbColor(rgbStr2Num(parseString(string, 4)) >> 16, rgbStr2Num(parseString(string, 4)) >> 8, rgbStr2Num(parseString(string, 4)));
-      rgb_h = (parseString(string, 5) == "")
+          : RgbColor(rgbStr2Num(str4) >> 16, rgbStr2Num(str4) >> 8, rgbStr2Num(str4));
+      rgb_h = str5.isEmpty()
           ? rgb_h
-          : RgbColor(rgbStr2Num(parseString(string, 5)) >> 16, rgbStr2Num(parseString(string, 5)) >> 8, rgbStr2Num(parseString(string, 5)));
-      rgb_m = (parseString(string, 6) == "")
+          : RgbColor(rgbStr2Num(str5) >> 16, rgbStr2Num(str5) >> 8, rgbStr2Num(str5));
+      rgb_m = str6.isEmpty()
           ? rgb_m
-          : RgbColor(rgbStr2Num(parseString(string, 6)) >> 16, rgbStr2Num(parseString(string, 6)) >> 8, rgbStr2Num(parseString(string, 6)));
+          : RgbColor(rgbStr2Num(str6) >> 16, rgbStr2Num(str6) >> 8, rgbStr2Num(str6));
 
-      if (parseString(string, 7) != "") {
-        if (parseString(string, 7) == "off") {
+      if (!str7.isEmpty()) {
+        if (str7 == F("off")) {
           rgb_s_off = true;
         } else {
           rgb_s_off = false;
           rgb_s     =
-            RgbColor(rgbStr2Num(parseString(string, 7)) >> 16, rgbStr2Num(parseString(string, 7)) >> 8,
-                     rgbStr2Num(parseString(string, 7)));
+            RgbColor(rgbStr2Num(str7) >> 16, rgbStr2Num(str7) >> 8,
+                     rgbStr2Num(str7));
         }
       }
 
       if (parseString(string, 8) != "") { hex2rrggbb(parseString(string, 8)); }
 
-          # endif // if defined(RGBW) || defined(GRBW)
+      # endif // if defined(RGBW) || defined(GRBW)
     }
 
     else if (subCommand == F("stop")) {
-      mode = On;
+      mode = P128_modetype::On;
     }
 
     else if (subCommand == F("statusrequest")) {}
@@ -653,7 +644,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     NeoPixelSendStatus(event);
   }                                                                            // command neopixel
 
-  if (speed == 0) { mode = On;                                                 // speed = 0 = stop mode
+  if (speed == 0) { mode = P128_modetype::On;                                  // speed = 0 = stop mode
   }
   speed    = (speed > SPEED_MAX || speed < -SPEED_MAX) ? defaultspeed : speed; // avoid invalid values
   fadetime = (fadetime <= 0) ? 20 : fadetime;
@@ -661,76 +652,86 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
   return success;
 }
 
+void P128_data_struct::rgb2colorStr() {
+  colorStr.clear();
+  rgb.R < 16 ? colorStr  = F("0") : F("");
+  colorStr              += formatToHex(rgb.R, {});
+  rgb.G < 16 ? colorStr += F("0") : F("");
+  colorStr              += formatToHex(rgb.G, {});
+  rgb.B < 16 ? colorStr += F("0") : F("");
+  colorStr              += formatToHex(rgb.B, {});
+}
+
 bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   counter20ms++;
   lastmode = mode;
 
   switch (mode) {
-    case Fade:
+    case P128_modetype::Fade:
       fade();
       break;
 
-    case ColorFade:
+    case P128_modetype::ColorFade:
       colorfade();
       break;
 
-    case Rainbow:
+    case P128_modetype::Rainbow:
       rainbow();
       break;
 
-    case Kitt:
+    case P128_modetype::Kitt:
       kitt();
       break;
 
-    case Comet:
+    case P128_modetype::Comet:
       comet();
       break;
 
-    case Theatre:
+    case P128_modetype::Theatre:
       theatre();
       break;
 
-    case Scan:
+    case P128_modetype::Scan:
       scan();
       break;
 
-    case Dualscan:
+    case P128_modetype::Dualscan:
       dualscan();
       break;
 
-    case Twinkle:
+    case P128_modetype::Twinkle:
       twinkle();
       break;
 
-    case TwinkleFade:
+    case P128_modetype::TwinkleFade:
       twinklefade();
       break;
 
-    case Sparkle:
+    case P128_modetype::Sparkle:
       sparkle();
       break;
 
-    case Fire:
+    case P128_modetype::Fire:
       fire();
       break;
 
-    case FireFlicker:
+    case P128_modetype::FireFlicker:
       fire_flicker();
       break;
 
-    case Wipe:
+    case P128_modetype::Wipe:
       wipe();
       break;
 
-    case Dualwipe:
+    case P128_modetype::Dualwipe:
       dualwipe();
       break;
 
-    case FakeTV:
+    case P128_modetype::FakeTV:
       faketv();
       break;
 
-    case SimpleClock:
+    case P128_modetype::SimpleClock:
       Plugin_128_simpleclock();
       break;
 
@@ -741,9 +742,9 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   Plugin_128_pixels->Show();
 
   if (mode != lastmode) {
-    String log = "";
+    String log;
     log  = F("NeoPixelBus: Mode Change: ");
-    log += modeName[mode];
+    log += P128_modeType_toString(mode);
     addLog(LOG_LEVEL_INFO, log);
     NeoPixelSendStatus(event);
   }
@@ -768,9 +769,9 @@ void P128_data_struct::fade(void) {
     # endif // if defined(RGBW) || defined(GRBW)
 
     if ((counter20ms > maxtime) && (Plugin_128_pixels->GetPixelColor(pixel).CalculateBrightness() == 0)) {
-      mode = Off;
+      mode = P128_modetype::Off;
     } else if (counter20ms > maxtime) {
-      mode = On;
+      mode = P128_modetype::On;
     }
 
     Plugin_128_pixels->SetPixelColor(pixel, updatedColor);
@@ -800,7 +801,7 @@ void P128_data_struct::colorfade(void) {
 
     Plugin_128_pixels->SetPixelColor((i + startpixel) % pixelCount, updatedColor);
   }
-  mode = On;
+  mode = P128_modetype::On;
 }
 
 void P128_data_struct::wipe(void) {
@@ -815,7 +816,7 @@ void P128_data_struct::wipe(void) {
       if (_counter_mode_step > 0) { Plugin_128_pixels->SetPixelColor(pixelCount - _counter_mode_step, rgb); }
     }
 
-    if (_counter_mode_step == pixelCount) { mode = On; }
+    if (_counter_mode_step == pixelCount) { mode = P128_modetype::On; }
     _counter_mode_step++;
   }
 }
@@ -845,7 +846,7 @@ void P128_data_struct::dualwipe(void) {
     }
 
     if (_counter_mode_step >= pixelCount / 2) {
-      mode = On;
+      mode = P128_modetype::On;
       Plugin_128_pixels->SetPixelColor(_counter_mode_step - 1, rgb);
     }
     _counter_mode_step++;
@@ -936,7 +937,7 @@ void P128_data_struct::rainbow(void) {
     uint8_t b1 = (Wheel(((i * 256 / pixelCount) + counter20ms * rainbowspeed / 10) & 255));
     Plugin_128_pixels->SetPixelColor(i, RgbColor(r1, g1, b1));
   }
-  mode = (rainbowspeed == 0) ? On : Rainbow;
+  mode = (rainbowspeed == 0) ? P128_modetype::On : P128_modetype::Rainbow;
 }
 
 /*
@@ -1387,36 +1388,41 @@ uint32_t P128_data_struct::rgbStr2Num(String rgbStr) {
 
 void P128_data_struct::hex2rgb(String hexcolor) {
   colorStr = hexcolor;
+  uint32_t hcolorui = rgbStr2Num(hexcolor);
+
   # if defined(RGBW) || defined(GRBW)
   hexcolor.length() <= 6
-    ? rgb = RgbColor(rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor))
-    : rgb = RgbwColor(rgbStr2Num(hexcolor) >> 24, rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor));
+    ? rgb = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui)
+    : rgb = RgbwColor(hcolorui >> 24, hcolorui >> 16, hcolorui >> 8, hcolorui);
   # else // if defined(RGBW) || defined(GRBW)
-  rgb = RgbColor(rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor));
+  rgb = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
   # endif // if defined(RGBW) || defined(GRBW)
 }
 
 void P128_data_struct::hex2rrggbb(String hexcolor) {
   backgroundcolorStr = hexcolor;
+  uint32_t hcolorui = rgbStr2Num(hexcolor);
+
   # if defined(RGBW) || defined(GRBW)
   hexcolor.length() <= 6
-    ? rrggbb = RgbColor(rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor))
-    : rrggbb = RgbwColor(rgbStr2Num(hexcolor) >> 24, rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor));
+    ? rrggbb = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui)
+    : rrggbb = RgbwColor(hcolorui >> 24, hcolorui >> 16, hcolorui >> 8, hcolorui);
   # else // if defined(RGBW) || defined(GRBW)
-  rrggbb = RgbColor(rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor));
+  rrggbb = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
   # endif // if defined(RGBW) || defined(GRBW)
 }
 
 void P128_data_struct::hex2rgb_pixel(String hexcolor) {
   colorStr = hexcolor;
+  uint32_t hcolorui = rgbStr2Num(hexcolor);
 
   for (int i = 0; i < pixelCount; i++) {
     # if defined(RGBW) || defined(GRBW)
     hexcolor.length() <= 6
-      ? rgb_target[i] = RgbColor(rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor))
-      : rgb_target[i] = RgbwColor(rgbStr2Num(hexcolor) >> 24, rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor));
+      ? rgb_target[i] = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui)
+      : rgb_target[i] = RgbwColor(hcolorui >> 24, hcolorui >> 16, hcolorui >> 8, hcolorui);
     # else // if defined(RGBW) || defined(GRBW)
-    rgb_target[i] = RgbColor(rgbStr2Num(hexcolor) >> 16, rgbStr2Num(hexcolor) >> 8, rgbStr2Num(hexcolor));
+    rgb_target[i] = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
     # endif // if defined(RGBW) || defined(GRBW)
   }
 }
@@ -1432,39 +1438,67 @@ void P128_data_struct::NeoPixelSendStatus(struct EventStruct *eventSource) {
 
   String json;
 
+  json.reserve(285); // Awfully long string :-|
+
   printToWebJSON = true;
 
-  json += F("{\n");
-  json += F("\"plugin\": \"128");
-  json += F("\",\n\"mode\": \"");
-  json += modeName[mode];
-  json += F("\",\n\"lastmode\": \"");
-  json += modeName[savemode];
-  json += F("\",\n\"fadetime\": \"");
-  json += fadetime;
-  json += F("\",\n\"fadedelay\": \"");
-  json += fadedelay;
-  json += F("\",\n\"dim\": \"");
-  json += Plugin_128_pixels->GetBrightness();
-  json += F("\",\n\"rgb\": \"");
-  json += colorStr;
-  json += F("\",\n\"hue\": \"");
-  json += toString((HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)).H * 360), 0);
-  json += F("\",\n\"saturation\": \"");
-  json += toString((HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)).S * 100), 0);
-  json += F("\",\n\"brightness\": \"");
-  json += toString((HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)).B * 100), 0);
-  json += F("\",\n\"bgcolor\": \"");
-  json += backgroundcolorStr;
-  json += F("\",\n\"count\": \"");
-  json += count;
-  json += F("\",\n\"speed\": \"");
-  json += speed;
-  json += F("\",\n\"pixelcount\": \"");
-  json += pixelCount;
-  json += F("\"\n}\n");
-  SendStatus(eventSource, json); // send http response to controller (JSON format)
+  json += F("{\n");                                                       // 2
+  json += F("\"plugin\": \"128");                                         // 14
+  json += F("\",\n\"mode\": \"");                                         // 12
+  json += P128_modeType_toString(mode);                                   // 2-11
+  json += F("\",\n\"lastmode\": \"");                                     // 16
+  json += P128_modeType_toString(savemode);                               // 2-11
+  json += F("\",\n\"fadetime\": \"");                                     // 16
+  json += fadetime;                                                       // 1-5
+  json += F("\",\n\"fadedelay\": \"");                                    // 16
+  json += fadedelay;                                                      // 1-5
+  json += F("\",\n\"dim\": \"");                                          // 9
+  json += Plugin_128_pixels->GetBrightness();                             // 1-3
+  json += F("\",\n\"rgb\": \"");                                          // 9
+  json += colorStr;                                                       // 6-8
+  json += F("\",\n\"hue\": \"");                                          // 9
+  json += toString((HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)).H * 360), 0); // 8?
+  json += F("\",\n\"saturation\": \"");                                   // 18
+  json += toString((HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)).S * 100), 0); // 8?
+  json += F("\",\n\"brightness\": \"");                                   // 18
+  json += toString((HsbColor(RgbColor(rgb.R, rgb.G, rgb.B)).B * 100), 0); // 8?
+  json += F("\",\n\"bgcolor\": \"");                                      // 15
+  json += backgroundcolorStr;                                             // 6-8
+  json += F("\",\n\"count\": \"");                                        // 13
+  json += count;                                                          // 1-3
+  json += F("\",\n\"speed\": \"");                                        // 13
+  json += speed;                                                          // 1-2
+  json += F("\",\n\"pixelcount\": \"");                                   // 18
+  json += pixelCount;                                                     // 1-3
+  json += F("\"\n}\n");                                                   // 4
+  SendStatus(eventSource, json);                                          // send http response to controller (JSON format)
   printToWeb = false;
+}
+
+const __FlashStringHelper * P128_data_struct::P128_modeType_toString(P128_modetype modeType) {
+  switch (modeType) {
+    case P128_modetype::Off: return F("off");
+    case P128_modetype::On: return F("on");
+    case P128_modetype::Fade: return F("fade");
+    case P128_modetype::ColorFade: return F("colorfade");
+    case P128_modetype::Rainbow: return F("rainbow");
+    case P128_modetype::Kitt: return F("kitt");
+    case P128_modetype::Comet: return F("comet");
+    case P128_modetype::Theatre: return F("theatre");
+    case P128_modetype::Scan: return F("scan");
+    case P128_modetype::Dualscan: return F("dualscan");
+    case P128_modetype::Twinkle: return F("twinkle");
+    case P128_modetype::TwinkleFade: return F("twinklefade");
+    case P128_modetype::Sparkle: return F("sparkle");
+    case P128_modetype::Fire: return F("fire");
+    case P128_modetype::FireFlicker: return F("fireflicker");
+    case P128_modetype::Wipe: return F("wipe");
+    case P128_modetype::Dualwipe: return F("dualwipe");
+    case P128_modetype::FakeTV: return F("faketv");
+
+      // case P128_modetype::SimpleClock: return F("simpleclock");
+  }
+  return F("*unknown*");
 }
 
 #endif // ifdef USES_P128

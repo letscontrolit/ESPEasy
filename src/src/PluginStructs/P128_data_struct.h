@@ -2215,11 +2215,11 @@ const uint8_t PROGMEM ftv_gamma8[] = {
 
 # define NEOPIXEL_LIB NeoPixelBrightnessBus   // Neopixel library type
 # if defined(ESP32)
-#  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod (should also work on ESP32S2)
+#  define METHOD NeoEsp32Rmt1800KbpsMethod    // RMT, user selected pin - use NeoEsp32RmtMethod
 # endif // if defined(ESP32)
 # if defined(ESP8266)
 #  define METHOD NeoEsp8266Uart1800KbpsMethod // GPIO2 - use NeoEsp8266Uart0800KbpsMethod for GPIO1(TX)
-# endif  // if defined(ESP32)
+# endif // if defined(ESP8266)
 
 # if defined GRB
   #  define FEATURE NeoGrbFeature
@@ -2241,7 +2241,7 @@ const uint8_t PROGMEM ftv_gamma8[] = {
 
 const float pi = 3.1415926535897932384626433832795;
 
-enum P128_modetype {
+enum class P128_modetype {
   Off, On, Fade, ColorFade, Rainbow, Kitt, Comet,
   Theatre, Scan, Dualscan, Twinkle, TwinkleFade, Sparkle, Fire,
   FireFlicker, Wipe, Dualwipe,  FakeTV, SimpleClock
@@ -2267,14 +2267,14 @@ private:
 
   int8_t gpioPin;
 
-  uint16_t pos,
-           color,
-           r_pixel,
-           startpixel,
-           endpixel,
-           difference,
-           fps = 50,
-           colorcount;
+  uint16_t pos        = 0,
+           color      = 0,
+           r_pixel    = 0,
+           startpixel = 0,
+           endpixel   = 0,
+           difference = 0,
+           fps        = 50,
+           colorcount = 0;
 
 # if defined(RGBW) || defined(GRBW)
   RgbwColor rgb_target[ARRAYSIZE],
@@ -2307,14 +2307,14 @@ private:
          rev_intensity = 3;
 
   uint32_t _counter_mode_step = 0,
-           fadetime           = 1000,
-           ftv_holdTime,
-           pixelNum;
+           fadetime           = 1000u,
+           ftv_holdTime       = 0,
+           pixelNum           = 0;
 
   uint16_t ftv_pr = 0, ftv_pg = 0, ftv_pb = 0; // Prev R, G, B;
-  uint32_t ftv_totalTime, ftv_fadeTime, ftv_startTime, ftv_elapsed;
-  uint16_t ftv_nr, ftv_ng, ftv_nb, ftv_r, ftv_g, ftv_b, ftv_i, ftv_frac;
-  uint8_t  ftv_hi, ftv_lo, ftv_r8, ftv_g8, ftv_b8;
+  uint32_t ftv_totalTime = 0, ftv_fadeTime = 0, ftv_startTime = 0, ftv_elapsed = 0;
+  uint16_t ftv_nr = 0, ftv_ng = 0, ftv_nb = 0, ftv_r = 0, ftv_g = 0, ftv_b = 0, ftv_i = 0, ftv_frac = 0;
+  uint8_t  ftv_hi = 0, ftv_lo = 0, ftv_r8 = 0, ftv_g8 = 0, ftv_b8 = 0;
 
   String colorStr,
          backgroundcolorStr;
@@ -2329,12 +2329,14 @@ private:
 
   unsigned long counter20ms = 0,
                 starttime[ARRAYSIZE],
-                starttimerb,
-                maxtime = 0;
+                starttimerb = 0,
+                maxtime     = 0;
 
   P128_modetype mode     = P128_modetype::Off,
                 savemode = P128_modetype::Off,
                 lastmode = P128_modetype::Off;
+
+  void     rgb2colorStr();
 
   void     fade(void);
   void     colorfade(void);
@@ -2353,12 +2355,14 @@ private:
   void     sparkle(void);
 
   // Fire
-  unsigned long fireTimer;
+  unsigned long fireTimer = 0;
   RgbColor      leds[ARRAYSIZE];
-  void fire(void);
+  void                       fire(void);
+
+  const __FlashStringHelper* P128_modeType_toString(P128_modetype modeType);
 
   /// random number seed
-  uint16_t rand16seed; // = RAND16_SEED;
+  uint16_t rand16seed; // = RAND16_SEED; // leave uninitialized
   uint8_t  random8();
   uint8_t  random8(uint8_t lim);
   uint8_t  random8(uint8_t min,
@@ -2377,12 +2381,6 @@ private:
   void     hex2rrggbb(String hexcolor);
   void     hex2rgb_pixel(String hexcolor);
   void     NeoPixelSendStatus(struct EventStruct *eventSource);
-
-  const char *modeName[19] = {
-    "off",         "on",         "fade",           "colorfade",     "rainbow",           "kitt",       "comet",
-    "theatre",     "scan",       "dualscan",       "twinkle",       "twinklefade",       "sparkle",    "fire",
-    "fireflicker", "wipe",       "dualwipe",       "faketv",        "simpleclock"
-  };
 };
 #endif // ifdef USES_P128
 

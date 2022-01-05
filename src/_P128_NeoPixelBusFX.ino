@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-04, tonhuisman Code optimizations, reduce calls to parseString and rgbStr2Num, string handling
+//                        Ensure no instance is still running when PLUGIN_INIT is called, as it will cause RMT issues
+// 2022-01-03, tonhuisman Code optimizations, struct variable initialization
 // 2022-01-02, tonhuisman Move all code to Plugin_data_struct, with minor modifications (initialization, *char[] size)
 // 2022-01-02, tonhuisman Fixed ESP32 related issues (conditional compilation, wrong stripe type)
 //                        Add configuration for ESP32 GPIO pin
@@ -202,8 +205,14 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P128_data_struct(PIN(0), PCONFIG(0)));
+      // *Ensure* there is no currently running process, if so, just clear it out neatly
+      P128_data_struct *P128_clear = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P128_clear) {
+        clearPluginTaskData(event->TaskIndex);
+      }
+
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), PCONFIG(0)));
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P128_data) {
