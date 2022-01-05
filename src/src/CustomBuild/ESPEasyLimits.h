@@ -84,8 +84,8 @@
       # endif // ifdef PLUGIN_BUILD_MAX_ESP32
     # else // ifdef ESP32
       #  define DEVICES_MAX                      60
-    # endif // ifdef ESP32
-  #endif // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+    # endif
+  #endif
 #endif
 
 #ifndef PLUGIN_MAX
