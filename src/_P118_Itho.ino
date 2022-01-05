@@ -56,13 +56,15 @@
 // See https://gathering.tweakers.net/forum/list_messages/1690945 for more information
 // code/idea was inspired by first release of code from 'Thinkpad'
 
-#ifdef USES_P118
+#include "_Plugin_Helper.h"
+
+#ifdef USES_P118_disabled
 
 #include <SPI.h>
 #include "IthoCC1101.h"
 #include "IthoPacket.h"
-#include "_Plugin_Helper.h"
 
+void PLUGIN_118_ITHOinterrupt() ICACHE_RAM_ATTR;
 //This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN__ExtraSettingsStruct
 {	char ID1[9];
@@ -400,8 +402,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 	return success;
 }
 
-ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
-{
+void PLUGIN_118_ITHOinterrupt() {
 	PLUGIN_118_Int = true; //flag
 	//PLUGIN_118_Int_time = millis(); //used to register time since interrupt, to make sure we don't read within 10 ms as the RX buffer needs some time to get ready. Update: Disabled as it appear not necessary
 }
