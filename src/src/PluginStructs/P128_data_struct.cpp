@@ -1495,8 +1495,7 @@ const __FlashStringHelper * P128_data_struct::P128_modeType_toString(P128_modety
     case P128_modetype::Wipe: return F("wipe");
     case P128_modetype::Dualwipe: return F("dualwipe");
     case P128_modetype::FakeTV: return F("faketv");
-
-      // case P128_modetype::SimpleClock: return F("simpleclock");
+    case P128_modetype::SimpleClock: return F("simpleclock");
   }
   return F("*unknown*");
 }
