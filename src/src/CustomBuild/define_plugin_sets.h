@@ -1461,6 +1461,36 @@ To create/register a plugin, you have to :
   #ifndef USES_P125
     #define USES_P125   //
   #endif
+  #ifndef USES_P126
+    #define USES_P126   //
+  #endif
+  #ifndef USES_P127
+    #define USES_P127   //
+  #endif
+  #ifndef USES_P128
+    #define USES_P128   //
+  #endif
+  #ifndef USES_P129
+    #define USES_P129   //
+  #endif
+  #ifndef USES_P130
+    #define USES_P130   //
+  #endif
+  #ifndef USES_P131
+    #define USES_P131   //
+  #endif
+  #ifndef USES_P132
+    #define USES_P132   //
+  #endif
+  #ifndef USES_P133
+    #define USES_P133   //
+  #endif
+  #ifndef USES_P134
+    #define USES_P134   //
+  #endif
+  #ifndef USES_P135
+    #define USES_P135   //
+  #endif
 
   // Controllers
   #ifndef USES_C015
