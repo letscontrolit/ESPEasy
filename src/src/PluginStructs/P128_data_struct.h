@@ -2239,8 +2239,6 @@ const uint8_t PROGMEM ftv_gamma8[] = {
 
 # define  numPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
 
-const float pi = 3.1415926535897932384626433832795;
-
 enum class P128_modetype {
   Off, On, Fade, ColorFade, Rainbow, Kitt, Comet,
   Theatre, Scan, Dualscan, Twinkle, TwinkleFade, Sparkle, Fire,
@@ -2377,9 +2375,9 @@ private:
   void     fire_flicker();
   void     Plugin_128_simpleclock();
   uint32_t rgbStr2Num(String rgbStr);
-  void     hex2rgb(String hexcolor);
-  void     hex2rrggbb(String hexcolor);
-  void     hex2rgb_pixel(String hexcolor);
+  void     hex2rgb(const String& hexcolor);
+  void     hex2rrggbb(const String& hexcolor);
+  void     hex2rgb_pixel(const String& hexcolor);
   void     NeoPixelSendStatus(struct EventStruct *eventSource);
 };
 #endif // ifdef USES_P128

@@ -202,8 +202,8 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       mode      = P128_modetype::Fade;
       fadedelay = 0;
       rgb       =
-        RgbColor(HsbColor(str3.toFloat() / 360, str4.toFloat() / 100,
-                          str5.toFloat() / 100));
+        RgbColor(HsbColor(str3.toFloat() / 360.0f, str4.toFloat() / 100.0f,
+                          str5.toFloat() / 100.0f));
 
       rgb2colorStr();
 
@@ -231,8 +231,8 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     else if (subCommand == F("hsvone")) {
       mode = P128_modetype::On;
       rgb  =
-        RgbColor(HsbColor(str4.toFloat() / 360, str5.toFloat() / 100,
-                          str6.toFloat() / 100));
+        RgbColor(HsbColor(str4.toFloat() / 360.0f, str5.toFloat() / 100.0f,
+                          str6.toFloat() / 100.0f));
 
       rgb2colorStr();
 
@@ -245,8 +245,8 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       mode = P128_modetype::On;
 
       rgb =
-        RgbColor(HsbColor(str5.toFloat() / 360, str6.toFloat() / 100,
-                          str7.toFloat() / 100));
+        RgbColor(HsbColor(str5.toFloat() / 360.0f, str6.toFloat() / 100.0f,
+                          str7.toFloat() / 100.0f));
 
       rgb2colorStr();
 
@@ -492,58 +492,66 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       # if defined(RGBW) || defined(GRBW)
 
       if (!str3.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str3);
+
         if (str3.length() <= 6) {
           rgb_tick_s =
-            RgbwColor(rgbStr2Num(str3) >> 16, rgbStr2Num(str3) >> 8,
-                      rgbStr2Num(str3));
+            RgbwColor(hcolorui >> 16, hcolorui >> 8,
+                      hcolorui);
         } else {
           rgb_tick_s =
-            RgbwColor(rgbStr2Num(str3) >> 24,
-                      rgbStr2Num(str3) >> 16,
-                      rgbStr2Num(str3) >> 8,
-                      rgbStr2Num(str3));
+            RgbwColor(hcolorui >> 24,
+                      hcolorui >> 16,
+                      hcolorui >> 8,
+                      hcolorui);
         }
       }
 
       if (!str4.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str4);
+
         if (str4.length() <= 6) {
           rgb_tick_b =
-            RgbwColor(rgbStr2Num(str4) >> 16, rgbStr2Num(str4) >> 8,
-                      rgbStr2Num(str4));
+            RgbwColor(hcolorui >> 16, hcolorui >> 8,
+                      hcolorui);
         } else {
           rgb_tick_b =
-            RgbwColor(rgbStr2Num(str4) >> 24,
-                      rgbStr2Num(str4) >> 16,
-                      rgbStr2Num(str4) >> 8,
-                      rgbStr2Num(str4));
+            RgbwColor(hcolorui >> 24,
+                      hcolorui >> 16,
+                      hcolorui >> 8,
+                      hcolorui);
         }
       }
 
       if (!str5.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str5);
+
         if (str5.length() <= 6) {
           rgb_h =
-            RgbwColor(rgbStr2Num(str5) >> 16, rgbStr2Num(str5) >> 8,
-                      rgbStr2Num(str5));
+            RgbwColor(hcolorui >> 16, hcolorui >> 8,
+                      hcolorui);
         } else {
           rgb_h =
-            RgbwColor(rgbStr2Num(str5) >> 24,
-                      rgbStr2Num(str5) >> 16,
-                      rgbStr2Num(str5) >> 8,
-                      rgbStr2Num(str5));
+            RgbwColor(hcolorui >> 24,
+                      hcolorui >> 16,
+                      hcolorui >> 8,
+                      hcolorui);
         }
       }
 
       if (!str6.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str6);
+
         if (str6.length() <= 6) {
           rgb_m =
-            RgbwColor(rgbStr2Num(str6) >> 16, rgbStr2Num(str6) >> 8,
-                      rgbStr2Num(str6));
+            RgbwColor(hcolorui >> 16, hcolorui >> 8,
+                      hcolorui);
         } else {
           rgb_m =
-            RgbwColor(rgbStr2Num(str6) >> 24,
-                      rgbStr2Num(str6) >> 16,
-                      rgbStr2Num(str6) >> 8,
-                      rgbStr2Num(str6));
+            RgbwColor(hcolorui >> 24,
+                      hcolorui >> 16,
+                      hcolorui >> 8,
+                      hcolorui);
         }
       }
 
@@ -551,53 +559,61 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
         if (str7 == F("off")) {
           rgb_s_off = true;
         } else if (str7.length() <= 6) {
+          const uint32_t hcolorui = rgbStr2Num(str7);
           rgb_s_off = false;
           rgb_s     =
-            RgbwColor(rgbStr2Num(str7) >> 16, rgbStr2Num(str7) >> 8,
-                      rgbStr2Num(str7));
+            RgbwColor(hcolorui >> 16, hcolorui >> 8,
+                      hcolorui);
         } else {
+          const uint32_t hcolorui = rgbStr2Num(str7);
           rgb_s_off = false;
           rgb_s     =
-            RgbwColor(rgbStr2Num(str7) >> 24,
-                      rgbStr2Num(str7) >> 16,
-                      rgbStr2Num(str7) >> 8,
-                      rgbStr2Num(str7));
+            RgbwColor(hcolorui >> 24,
+                      hcolorui >> 16,
+                      hcolorui >> 8,
+                      hcolorui);
         }
-      }
-
-      if (parseString(string, 8) != "") {
-        hex2rrggbb(parseString(string, 8));
       }
 
       # else // if defined(RGBW) || defined(GRBW)
 
-      rgb_tick_s = str3.isEmpty()
-          ? rgb_tick_s
-          : RgbColor(rgbStr2Num(str3) >> 16, rgbStr2Num(str3) >> 8, rgbStr2Num(str3));
-      rgb_tick_b = str4.isEmpty()
-          ? rgb_tick_b
-          : RgbColor(rgbStr2Num(str4) >> 16, rgbStr2Num(str4) >> 8, rgbStr2Num(str4));
-      rgb_h = str5.isEmpty()
-          ? rgb_h
-          : RgbColor(rgbStr2Num(str5) >> 16, rgbStr2Num(str5) >> 8, rgbStr2Num(str5));
-      rgb_m = str6.isEmpty()
-          ? rgb_m
-          : RgbColor(rgbStr2Num(str6) >> 16, rgbStr2Num(str6) >> 8, rgbStr2Num(str6));
+      if (!str3.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str3);
+        rgb_tick_s = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
+      }
+
+      if (!str4.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str4);
+        rgb_tick_b = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
+      }
+
+      if (!str5.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str5);
+        rgb_h =  RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
+      }
+
+      if (!str6.isEmpty()) {
+        const uint32_t hcolorui = rgbStr2Num(str6);
+        rgb_m = RgbColor(hcolorui >> 16, hcolorui >> 8, hcolorui);
+      }
 
       if (!str7.isEmpty()) {
         if (str7 == F("off")) {
           rgb_s_off = true;
         } else {
+          const uint32_t hcolorui = rgbStr2Num(str7);
           rgb_s_off = false;
           rgb_s     =
-            RgbColor(rgbStr2Num(str7) >> 16, rgbStr2Num(str7) >> 8,
-                     rgbStr2Num(str7));
+            RgbColor(hcolorui >> 16, hcolorui >> 8,
+                     hcolorui);
         }
       }
 
-      if (parseString(string, 8) != "") { hex2rrggbb(parseString(string, 8)); }
-
       # endif // if defined(RGBW) || defined(GRBW)
+
+      if (!parseString(string, 8).isEmpty()) {
+        hex2rrggbb(parseString(string, 8));
+      }
     }
 
     else if (subCommand == F("stop")) {
@@ -642,24 +658,35 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       printToWeb = false;
     }
     NeoPixelSendStatus(event);
-  }                                                                            // command neopixel
+  }                           // command neopixel
 
-  if (speed == 0) { mode = P128_modetype::On;                                  // speed = 0 = stop mode
+  if (speed == 0) {
+    mode = P128_modetype::On; // speed = 0 = stop mode
   }
-  speed    = (speed > SPEED_MAX || speed < -SPEED_MAX) ? defaultspeed : speed; // avoid invalid values
-  fadetime = (fadetime <= 0) ? 20 : fadetime;
+
+  // avoid invalid values
+  if ((speed > SPEED_MAX) || (speed < -SPEED_MAX)) {
+    speed = defaultspeed;
+  }
+
+  if (fadetime <= 0) {
+    fadetime = 20;
+  }
 
   return success;
 }
 
 void P128_data_struct::rgb2colorStr() {
   colorStr.clear();
-  rgb.R < 16 ? colorStr  = F("0") : F("");
-  colorStr              += formatToHex(rgb.R, {});
-  rgb.G < 16 ? colorStr += F("0") : F("");
-  colorStr              += formatToHex(rgb.G, {});
-  rgb.B < 16 ? colorStr += F("0") : F("");
-  colorStr              += formatToHex(rgb.B, {});
+
+  if (rgb.R < 16) { colorStr += '0'; }
+  colorStr += formatToHex(rgb.R, {});
+
+  if (rgb.G < 16) { colorStr += '0'; }
+  colorStr += formatToHex(rgb.G, {});
+
+  if (rgb.B < 16) { colorStr += '0'; }
+  colorStr += formatToHex(rgb.B, {});
 }
 
 bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
@@ -742,10 +769,12 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   Plugin_128_pixels->Show();
 
   if (mode != lastmode) {
-    String log;
-    log  = F("NeoPixelBus: Mode Change: ");
-    log += P128_modeType_toString(mode);
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log  = F("NeoPixelBus: Mode Change: ");
+      log += P128_modeType_toString(mode);
+      addLog(LOG_LEVEL_INFO, log);
+    }
     NeoPixelSendStatus(event);
   }
   return true;
@@ -1381,14 +1410,14 @@ void P128_data_struct::Plugin_128_simpleclock() {
 }
 
 uint32_t P128_data_struct::rgbStr2Num(String rgbStr) {
-  uint32_t rgbDec = (int)strtoul(&rgbStr[0], NULL, 16);
+  uint32_t rgbDec = static_cast<uint32_t>(strtoul(&rgbStr[0], NULL, 16));
 
   return rgbDec;
 }
 
-void P128_data_struct::hex2rgb(String hexcolor) {
+void P128_data_struct::hex2rgb(const String& hexcolor) {
   colorStr = hexcolor;
-  uint32_t hcolorui = rgbStr2Num(hexcolor);
+  const uint32_t hcolorui = rgbStr2Num(hexcolor);
 
   # if defined(RGBW) || defined(GRBW)
   hexcolor.length() <= 6
@@ -1399,9 +1428,9 @@ void P128_data_struct::hex2rgb(String hexcolor) {
   # endif // if defined(RGBW) || defined(GRBW)
 }
 
-void P128_data_struct::hex2rrggbb(String hexcolor) {
+void P128_data_struct::hex2rrggbb(const String& hexcolor) {
   backgroundcolorStr = hexcolor;
-  uint32_t hcolorui = rgbStr2Num(hexcolor);
+  const uint32_t hcolorui = rgbStr2Num(hexcolor);
 
   # if defined(RGBW) || defined(GRBW)
   hexcolor.length() <= 6
@@ -1412,9 +1441,9 @@ void P128_data_struct::hex2rrggbb(String hexcolor) {
   # endif // if defined(RGBW) || defined(GRBW)
 }
 
-void P128_data_struct::hex2rgb_pixel(String hexcolor) {
+void P128_data_struct::hex2rgb_pixel(const String& hexcolor) {
   colorStr = hexcolor;
-  uint32_t hcolorui = rgbStr2Num(hexcolor);
+  const uint32_t hcolorui = rgbStr2Num(hexcolor);
 
   for (int i = 0; i < pixelCount; i++) {
     # if defined(RGBW) || defined(GRBW)

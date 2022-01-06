@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-05, tonhuisman Code optimizations and review feedback
 // 2022-01-04, tonhuisman Code optimizations, reduce calls to parseString and rgbStr2Num, string handling
 //                        Ensure no instance is still running when PLUGIN_INIT is called, as it will cause RMT issues
 // 2022-01-03, tonhuisman Code optimizations, struct variable initialization
@@ -14,7 +15,7 @@
 // 2022-01-02, tonhuisman Fixed ESP32 related issues (conditional compilation, wrong stripe type)
 //                        Add configuration for ESP32 GPIO pin
 // 2022-01-01, tonhuisman On request migrated from https://github.com/djcysmic/NeopixelBusFX to ESPEasy (that is an
-//                        extension from plugin _P124_NeoPixelBusFX.ini on the ESPEasyPluginPlayground)
+//                        extension from plugin _P124_NeoPixelBusFX.ino on the ESPEasyPluginPlayground)
 //                        - Adjusted to work combined with FastLED library (random8() issues)
 //                        - Moved firetv.h data to P128_data_struct.h
 //                        - Use PCONFIG(0) macro where applicable
@@ -186,7 +187,9 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(formatGpioName_output("Stripe data"));
       addPinSelect(PinSelectPurpose::Generic_output, F("taskdevicepin1"), PIN(0));
       # endif // ifdef ESP32
+
       addFormNumericBox(F("Led Count"), F("plugin_128_leds"), PCONFIG(0), 1, 999);
+
       success = true;
       break;
     }
