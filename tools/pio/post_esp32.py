@@ -6,7 +6,8 @@
 # Original implementation: Bartłomiej Zimoń (@uzi18)
 # Maintainer: Gijs Noorlander (@TD-er)
 #
-# Special thanks to @Jason2866 for helping debug flashing to >4MB flash
+# Special thanks to @Jason2866 (Tasmota) for helping debug flashing to >4MB flash
+# Thanks @jesserockz (esphome) for adapting to use esptool.py with merge_bin
 #
 # Typical layout of the generated file:
 #    Offset | File
@@ -16,93 +17,51 @@
 # - 0x10000 | ~\ESPEasy\.pio\build\<env name>/<built binary>.bin
 
 Import("env")
-import os
 
-def decode_flash_size_speed(byte_value):
-    speed = byte_value[0] & 0x0f
-    size = int((byte_value[0] & 0xf0) / 16)
+import subprocess
+import sys
 
-    # As defined in esp_image_spi_freq_t
-    spi_speed = {
-      0: "40",
-      1: "26",
-      2: "20",
-      0xf: "80"
-    }
-    speed_mhz = spi_speed.get(speed, "??")
-    size_mb = str(1<<size)
+from os.path import expanduser, join
 
-    return "0x{} ({}MB, {}MHz)".format(byte_value.hex(), size_mb, speed_mhz)
+home = expanduser("~")
+esptoolpath = join(home, ".platformio", "packages", "tool-esptoolpy")
+sys.path.append(esptoolpath)
+import esptool
 
-
-def esp32_create_factory_bin(source, target, env):
-    print("Generating factory bin for genuine esp units")
-
-    #offset = 0x1000
-    offset = 0x0
-    flash_page_size = 256
+def esp32_create_combined_bin(source, target, env):
+    print("Generating combined binary for serial flashing")
 
     # The offset from begin of the file where the app0 partition starts
     # This is defined in the partition .csv file
-    sketch_partition_start = 0x10000
-    
-    new_file_name = env.subst("$BUILD_DIR/${PROGNAME}-factory.bin")
-    sections = env.subst(env.get('FLASH_EXTRA_IMAGES'))
-    new_file = open(new_file_name,"wb")
-    new_file.truncate() # Make sure no left over data is present from a previous build
+    app_offset = 0x10000
 
+    new_file_name = env.subst("$BUILD_DIR/${PROGNAME}.factory.bin")
+    sections = env.subst(env.get("FLASH_EXTRA_IMAGES"))
     firmware_name = env.subst("$BUILD_DIR/${PROGNAME}.bin")
+    chip = env.get("BOARD_MCU")
+    flash_size = env.BoardConfig().get("upload.flash_size")
+    cmd = [
+        "--chip",
+        chip,
+        "merge_bin",
+        "-o",
+        new_file_name,
+        "--flash_size",
+        flash_size,
+    ]
 
-    # fill the file with 0xFF binary data to reflect 'erased and not yet written' data.
-    # Make sure to use exactly the size that normally would be erased
-    new_file.seek(0)
-    total_size = sketch_partition_start + os.path.getsize(firmware_name)
-    total_size = total_size - (total_size % flash_page_size) + flash_page_size
-
-    new_file.write(bytes([0xff] * total_size))
-
-    print("    {} | {}".format("Offset", "File"))
+    print("    Offset | File")
     for section in sections:
-      sect_adr,sect_file = section.split(" ",1)
-      print(" -  {} | {}".format(sect_adr,sect_file))
-      source = open(sect_file,"rb")
-      new_file.seek(int(sect_adr,0)-offset)
-      new_file.write(source.read())
-      if "bootloader" in sect_file:
-        # Need to patch the bootloader to match the flash size
-        flash_size = env.BoardConfig().get("upload.flash_size")
+        sect_adr, sect_file = section.split(" ", 1)
+        print(f" -  {sect_adr} | {sect_file}")
+        cmd += [sect_adr, sect_file]
 
-        # See esp_image_header_t for struct definition
-        spi_speed_size_byte_offset = 3
-        source.seek(spi_speed_size_byte_offset)
-        spi_speed_size_byte = source.read(1)
-        new_spi_speed_size_byte = spi_speed_size_byte[0] & 0x0f
+    print(f" - {hex(app_offset)} | {firmware_name}")
+    cmd += [hex(app_offset), firmware_name]
 
-        # As defined in esp_image_flash_size_t
-        spi_size = {
-          "1MB": 0x00,
-          "2MB": 0x10,
-          "4MB": 0x20,
-          "8MB": 0x30,
-          "16MB": 0x40
-        }
-        new_spi_speed_size_byte |= spi_size.get(flash_size, spi_speed_size_byte[0] & 0xf0)
+    print('Using esptool.py arguments: %s' % ' '.join(cmd))
 
-        if new_spi_speed_size_byte != spi_speed_size_byte:
-          new_byte = bytes([new_spi_speed_size_byte])
-          print("           | Patch flash size in bootloader: {} -> {}".format(decode_flash_size_speed(spi_speed_size_byte), decode_flash_size_speed(new_byte)))
-          new_file.seek(int(sect_adr,0)-offset + spi_speed_size_byte_offset)
-          new_file.write(new_byte)
+    esptool.main(cmd)
 
-      source.close()
 
-    
-    firmware_start = sketch_partition_start-offset
-    firmware = open(firmware_name,"rb")
-    print(" - {} | {}".format(hex(firmware_start),firmware_name))
-    new_file.seek(firmware_start)
-    new_file.write(firmware.read())
-    new_file.close()
-    firmware.close()
-
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", esp32_create_factory_bin)
+env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", esp32_create_combined_bin)
