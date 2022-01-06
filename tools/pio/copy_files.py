@@ -71,14 +71,14 @@ def generate_webflash_json_manifest(variant, file_suffix):
     manifest_suff = ''
     add_improve = True
 
-    if "-factory.bin" in file_suffix:
+    if ".factory.bin" in file_suffix:
         if 'ESP32s2' in variant:
             chipFamily = 'ESP32-S2'
-            manifest_suff = '-factory.manifest.json'
+            manifest_suff = '.factory.manifest.json'
         else:
             if 'ESP32' in variant:
                 chipFamily = 'ESP32'
-                manifest_suff = '-factory.manifest.json'
+                manifest_suff = '.factory.manifest.json'
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
             chipFamily = 'ESP8266'
@@ -122,7 +122,7 @@ def bin_elf_copy(source, target, env):
         if not os.path.isdir("{}{}".format(OUTPUT_DIR, d)):
             os.mkdir("{}{}".format(OUTPUT_DIR, d))
 
-    for suff in [".elf", ".bin", ".bin.gz", "-factory.bin", ".env.txt"]:
+    for suff in [".elf", ".bin", ".bin.gz", ".factory.bin", ".env.txt"]:
         copy_to_build_output(split_path[0], variant, suff)
 
     import datetime

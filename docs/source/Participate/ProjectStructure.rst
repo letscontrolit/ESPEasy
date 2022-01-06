@@ -189,12 +189,12 @@ There are several builds for ESP32:
 Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build, f.e.:
 
 * ``test_D_ESP32_4M316k.bin`` Use for OTA upgrades.
-* ``test_D_ESP32_4M316k-factory.bin`` Use on clean nodes as initial inistall.
+* ``test_D_ESP32_4M316k.factory.bin`` Use on clean nodes as initial inistall.
 
-The binary with ``-factory`` in the name must be flashed on a new node, via the serial interface of the board.
+The binary with ``.factory`` in the name must be flashed on a new node, via the serial interface of the board.
 This flash must be started at address 0.
 
-The binary without ``-factory`` can be used for OTA updates. (OTA for ESP32 is added in May 2020)
+The binary without ``.factory`` can be used for OTA updates. (OTA for ESP32 is added in May 2020)
 
 
 Blank Images
