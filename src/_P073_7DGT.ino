@@ -91,7 +91,7 @@
 
 # ifndef PLUGIN_SET_TESTING
 
-// #define P073_DEBUG                // Leave out some debugging on demnand, activates extra log info in the debug
+// #  define P073_DEBUG        // Leave out some debugging on demand, activates extra log info in the debug
 # else // ifndef PLUGIN_SET_TESTING
 #  undef P073_7DDT_COMMAND  // Optionally activate if .bin file space is really problematic, to remove the 7ddt command
 #  undef P073_EXTRA_FONTS   // Optionally activate if .bin file space is really problematic, to remove the font selection and 7dfont command
@@ -292,8 +292,9 @@ struct P073_data_struct : public PluginTaskData_base {
 
         if ((i > 0) && (textToShow.charAt(i - 1) == '.')) { // Handle consecutive periods
           p++;
+
           if ((p - 1) < 8) {
-            showperiods[p - 1] = true;                      // The period displays as a dot on the previous digit!
+            showperiods[p - 1] = true; // The period displays as a dot on the previous digit!
           }
         }
       } else if (p < 8) {
@@ -1138,7 +1139,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& text) {
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON: {
       if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
-        P073_data->FillBufferWithNumber(String(int(event->Par1)));
+        P073_data->FillBufferWithNumber(String(round(event->Par1)));
       }
       else {
         P073_data->FillBufferWithDash();
@@ -1215,7 +1216,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
       }
       else {
         if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
-          p073_temptemp    = int(p073_temptemp * 10);
+          p073_temptemp    = round(p073_temptemp * 10.0);
           p073_tempflagdot = true;
         }
         P073_data->FillBufferWithTemp(p073_temptemp);
@@ -1233,7 +1234,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
       }
       else {
         if ((p073_temptemp < 100) && (p073_temptemp > -10)) {
-          p073_temptemp    = int(p073_temptemp * 10);
+          p073_temptemp    = round(p073_temptemp * 10.0);
           p073_tempflagdot = true;
         }
         P073_data->FillBufferWithTemp(p073_temptemp);
@@ -1246,8 +1247,14 @@ bool p073_plugin_write_7dt(struct EventStruct *event, const String& text) {
       break;
     }
     case P073_MAX7219_8DGT: {
-      p073_temptemp = int(p073_temptemp * 10);
+      p073_temptemp = round(p073_temptemp * 10.);
       P073_data->FillBufferWithTemp(p073_temptemp);
+
+      # ifdef P073_DEBUG
+      String log = F("7DGT : 7dt preprocessed =");
+      log += p073_temptemp;
+      addLog(LOG_LEVEL_INFO, log);
+      # endif // ifdef P073_DEBUG
 
       max7219_ShowTemp(event, P073_data->pin1, P073_data->pin2, P073_data->pin3, P073_data->hideDegree ? 6 : 5, -1);
       break;
@@ -1315,7 +1322,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event, const String& text) {
       }
       else {
         if ((p073_lefttemp < 100.0 * hideFactor) && (p073_lefttemp > -10.0 * hideFactor)) {
-          p073_lefttemp = int(p073_lefttemp * 10.0);
+          p073_lefttemp = round(p073_lefttemp * 10.0);
           firstDot      = P073_data->hideDegree ? 2 : 1;
           firstDecimals = true;
         }
@@ -1326,19 +1333,19 @@ bool p073_plugin_write_7ddt(struct EventStruct *event, const String& text) {
       }
       else {
         if ((p073_righttemp < 100.0 * hideFactor) && (p073_righttemp > -10.0 * hideFactor)) {
-          p073_righttemp = int(p073_righttemp * 10.0);
+          p073_righttemp = round(p073_righttemp * 10.0);
           secondDot      = P073_data->hideDegree ? 6 : 5;
           secondDecimals = true;
         }
       }
 
-      // #ifdef P073_DEBUG
-      // String log = F("7DGT : preprocessed 1st=");
-      // log += p073_lefttemp;
-      // log += F(" 2nd=");
-      // log += p073_righttemp;
-      // addLog(LOG_LEVEL_INFO, log);
-      // #endif
+      #  ifdef P073_DEBUG
+      String log = F("7DGT : 7ddt preprocessed 1st=");
+      log += p073_lefttemp;
+      log += F(" 2nd=");
+      log += p073_righttemp;
+      addLog(LOG_LEVEL_INFO, log);
+      #  endif // ifdef P073_DEBUG
 
       P073_data->FillBufferWithDualTemp(p073_lefttemp, firstDecimals, p073_righttemp, secondDecimals);
 
@@ -2048,10 +2055,11 @@ void max7219_ShowTemp(struct EventStruct *event, uint8_t din_pin,
 
   for (int i = alignRight; i < 8; i++) {
     const int bufIndex = (7 + alignRight) - i;
+
     if (bufIndex < 8) {
       max7219_SetDigit(event, din_pin, clk_pin, cs_pin, i,
-                      P073_data->showbuffer[bufIndex],
-                      P073_data->showperiods[bufIndex]);
+                       P073_data->showbuffer[bufIndex],
+                       P073_data->showperiods[bufIndex]);
     }
   }
 }
