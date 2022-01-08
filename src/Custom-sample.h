@@ -381,6 +381,13 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
+// #define USES_P128   // NeoPixelBusFX
+// #define P128_USES_GRB  // Default
+// #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
+// #define P128_USES_RGB
+// #define P128_USES_RGBW
+// #define P128_USES_BRG
+// #define P128_USES_RBG
 
 
 // Special plugins needing IR library

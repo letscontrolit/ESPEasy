@@ -2207,8 +2207,23 @@ const uint8_t PROGMEM ftv_gamma8[] = {
 # define ARRAYSIZE 300 // Max LED Count
 
 // Choose your color order below:
+# if defined(P128_USES_GRB)
+#  define GRB
+# elif defined(P128_USES_GRBW)
+#  define GRBW
+# elif defined(P128_USES_RGB)
+#  define RGB
+# elif defined(P128_USES_RGBW)
+#  define RGBW
+# elif defined(P128_USES_BRG)
+#  define BRG
+# elif defined(P128_USES_RBG)
+#  define RBG
+# else // if defined(P128_USES_GRB)
+#  define GRB // Default
+# endif // if defined(P128_USES_GRB)
 
-# define GRB // should be standard - SK6812(grb), WS2811, and WS2812
+// # define GRB // should be standard - SK6812(grb), WS2811, and WS2812
 // # define GRBW  //This is used for SK6812rgbw pixels that have the separate white led in them.
 // # define RGB   //some older pixels
 // # define RGBW  //A four element color in the order of Red, Green, Blue, and then White. A common four element format.
