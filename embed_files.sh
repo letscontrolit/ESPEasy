@@ -13,14 +13,19 @@ cd static
 outputfile="$(pwd)/data_h_temp"
 rm $outputfile
 
-function minify_html_css {
+function minify_html {
 	file=$1
-	post_To https://html-minifier.com/raw $file
+	post_To https://www.toptal.com/developers/html-minifier/raw $file
+}
+
+function minify_css {
+	file=$1
+	post_To https://www.toptal.com/developers/cssminifier/raw $file
 }
 
 function minify_js {
 	file=$1
-	post_To https://javascript-minifier.com/raw $file
+	post_To https://www.toptal.com/developers/javascript-minifier/raw $file
 }
 
 function post_To {
@@ -50,6 +55,8 @@ function ascii2hexCstyle {
 	result=$(cat /tmp/converter.temp | hexdump -ve '1/1 "0x%.2x,"')
 	result=$(echo $result | sed 's/,$//')
 	echo "const char DATA_${file_name}[] PROGMEM = {$result,0};"
+	echo
+	echo
 }
 
 function constFileName {
@@ -58,7 +65,12 @@ function constFileName {
 	underscore="_"
 	echo $file$underscore$extension
 }
-
+function keepMinifiedFile {
+	file=$1
+	file=$( echo $file | sed -r 's/^(.*)\.(.*?)$/\1.min.\2/' )
+	cp /tmp/converter.temp $file
+	echo "  Keeps Minified file as: $file"
+}
 
 
 file_list=$(find . -type f)
@@ -80,9 +92,14 @@ for file in $file_list; do
 		echo "  CSS already minified"
 		cat $file > /tmp/converter.temp
 		ascii2hexCstyle $file >> $outputfile
-	elif [[ "$file" == *.html ]] || [[ "$file" == *.css ]]; then
-		echo "  HTML and CSS minify"
-		minify_html_css $file
+	elif [[ "$file" == *.css ]]; then
+		echo "  CSS minify"
+		minify_css $file
+		keepMinifiedFile $file
+		ascii2hexCstyle $file >> $outputfile
+	elif [[ "$file" == *.html ]]; then
+		echo "  HTML minify"
+		minify_html $file
 		ascii2hexCstyle $file >> $outputfile
 	elif [[ "$file" == *.svg ]]; then
 		echo "  SVG minify"
