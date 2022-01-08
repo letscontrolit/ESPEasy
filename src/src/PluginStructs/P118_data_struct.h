@@ -66,7 +66,7 @@ private:
 
   volatile bool PLUGIN_118_Int = false;
 
-  static void ISR_ithoCheck(P118_data_struct *self);
+  static void ISR_ithoCheck(P118_data_struct *self) ICACHE_RAM_ATTR;
 };
 #endif // ifdef USES_P118
 #endif // ifndef PLUGINSTRUCTS_P118_DATA_STRUCT_H

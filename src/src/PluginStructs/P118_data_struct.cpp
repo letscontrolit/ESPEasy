@@ -382,7 +382,7 @@ void P118_data_struct::PluginWriteLog(const String& command) {
 // **************************************************************************/
 // Interrupt handler
 // **************************************************************************/
-void ICACHE_RAM_ATTR P118_data_struct::ISR_ithoCheck(P118_data_struct *self) {
+void P118_data_struct::ISR_ithoCheck(P118_data_struct *self) {
   self->PLUGIN_118_Int = true;
 }
 
