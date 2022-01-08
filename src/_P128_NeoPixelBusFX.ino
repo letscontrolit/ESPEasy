@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-08, tonhuisman Small UI fixes while writing documentation.
+// 2022-01-06, tonhuisman Move from Development to Testing
 // 2022-01-05, tonhuisman Code optimizations and review feedback
 // 2022-01-04, tonhuisman Code optimizations, reduce calls to parseString and rgbStr2Num, string handling
 //                        Ensure no instance is still running when PLUGIN_INIT is called, as it will cause RMT issues
@@ -117,7 +119,7 @@
 
 # define PLUGIN_128
 # define PLUGIN_ID_128         128
-# define PLUGIN_NAME_128       "Output - NeoPixel (BusFX) [DEVELOPMENT]"
+# define PLUGIN_NAME_128       "Output - NeoPixel (BusFX) [TESTING]"
 # define PLUGIN_VALUENAME1_128 "Mode"
 # define PLUGIN_VALUENAME2_128 "Lastmode"
 # define PLUGIN_VALUENAME3_128 "Fadetime"
@@ -179,16 +181,16 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Actuator"));
+
+      addRowLabel(formatGpioName_output("Stripe data"));
       # ifdef ESP8266
-      addRowLabel(F(""));
       addHtml(F("<span style=\"color:red\">Please connect stripe to GPIO2!</span>"));
       # endif // ifdef ESP8266
       # ifdef ESP32
-      addRowLabel(formatGpioName_output("Stripe data"));
       addPinSelect(PinSelectPurpose::Generic_output, F("taskdevicepin1"), PIN(0));
       # endif // ifdef ESP32
 
-      addFormNumericBox(F("Led Count"), F("plugin_128_leds"), PCONFIG(0), 1, 999);
+      addFormNumericBox(F("Led Count"), F("plugin_128_leds"), P128_CONFIG_LED_COUNT, 1, 999);
 
       success = true;
       break;
@@ -196,7 +198,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0) = getFormItemInt(F("plugin_128_leds"));
+      P128_CONFIG_LED_COUNT = getFormItemInt(F("plugin_128_leds"));
 
       # ifdef ESP32
       PIN(0) = getFormItemInt(F("taskdevicepin1"));
@@ -215,7 +217,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
         clearPluginTaskData(event->TaskIndex);
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), PCONFIG(0)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT));
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P128_data) {

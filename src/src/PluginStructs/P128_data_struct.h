@@ -2201,6 +2201,8 @@ const uint8_t PROGMEM ftv_gamma8[] = {
 # include <NeoPixelBrightnessBus.h>
 # include "../../ESPEasy-Globals.h"
 
+# define P128_CONFIG_LED_COUNT  PCONFIG(0)
+
 # define SPEED_MAX 50
 # define ARRAYSIZE 300 // Max LED Count
 
