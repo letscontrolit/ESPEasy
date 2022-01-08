@@ -10,3 +10,16 @@
 .. |P124_maintainer| replace:: `tonhuisman`
 .. |P124_compileinfo| replace:: `.`
 .. |P124_usedlibraries| replace:: `https://github.com/Seeed-Studio/Multi_Channel_Relay_Arduino_Library (modified local copy)`
+
+.. |P128_name| replace:: :cyan:`NeoPixel (BusFX)`
+.. |P128_type| replace:: :cyan:`Output`
+.. |P128_typename| replace:: :cyan:`Output - NeoPixel (BusFX)`
+.. |P128_porttype| replace:: `.`
+.. |P128_status| replace:: :yellow:`MAX`
+.. |P128_github| replace:: P128_NeoPixelBusFX.ino
+.. _P128_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P128_NeoPixelBusFX.ino
+.. |P128_usedby| replace:: `.`
+.. |P128_shortinfo| replace:: `NeoPixel special effects library BusFX`
+.. |P128_maintainer| replace:: `tonhuisman`
+.. |P128_compileinfo| replace:: `.`
+.. |P128_usedlibraries| replace:: `https://github.com/Makuna/NeoPixelBus and https://github.com/djcysmic/NeopixelBusFX (forked from ESPEasyPluginPlayground)`
