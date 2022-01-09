@@ -1,0 +1,93 @@
+Device Settings
+^^^^^^^^^^^^^^^^
+
+* **Range**: The range determines the sensitivity and accuracy of the sensor, and the default is set to 16G as then the measuring resolution is 13 bit, while in lower ranges the resolution is 10 bit.
+
+.. image:: P120_RangeOptions.png
+  :alt: Range options
+
+* **X/Y/Z-axis activity sensing**: These 3 settings determine if sensing for that axis is to be used or not. If an axis is disabled, then the resulting Value will be 0.
+
+* **Activity treshold**: The minimum of movement required to include the activity in measurement. When setting too low, the sensor will be very instable, and cause many events. The treshold is configurable in steps of 62.5 milligram.
+
+* **In-activity treshold**: If the movement goes below this treshold, then measuring is stopped, and an In-activity event will be generated (if enabled).
+
+* **Enable (in)activity events**: When enabled will generate an event for each enabled axis if activity or in-activity state changes.
+
+.. .. comment
+
+* **Log sensor activity (INFO)**: When enabled will log any activity or in-activity that is detected. The log is output at INFO level, so that level, or a more detailed level like DEBUG, must be enabled to be visible.
+
+* **Events with raw measurements**: When enabled wil, instead of a corrected, calculated and averaged measurement, output the raw measured value from the sensor. This is normally only used for debugging or testing purposes.
+
+Tap detection
+^^^^^^^^^^^^^
+
+* **X/Y/Z-axis**: When enabled will detect single-tap activity for the axis enabled. Be aware that even if the sensor is tapped in a clean X, Y or Z direction, still the other directions will most likely also be triggered. Enabling one of these axis will enable generation of a ``taskname#Tapped`` event, with 3 arguments for all 3 axis, providing the last measured X/Y/Z activity, or 0 when that axis activity is disabled.
+
+* **Tap treshold**: The minimum acceleration required to cause a tap detected. Again this is measured in 62.5 milligram increments.
+
+* **Tap duration**: The minimum duration of a tap to be recognized as such. Configurable in 625 microsecond increments.
+
+* **Enable double-tap detection**: If Single-tap detection is enabled for any of the axis, then Double-tap can be detected as well. This will be generated as a ``taskname#DoubleTap`` event. Once a Double-tap is detected, no single-tap event will be generated for the same movement.
+
+* **Double-tap latency**: The amount of time that has to pass between the 2 taps of a double-tap action. Configurable in 1.25 millisecond steps.
+
+* **Double-tap window**: The maximum time that may pass before the second of taps is to be registered as a double-tap. Configurable in 1.25 millisecond steps.
+
+Free-fall detection
+^^^^^^^^^^^^^^^^^^^
+
+* **Enable free-fall detection**: The sensor is able to detect if it is falling (free-fall), and can generate an event ``taskname#FreeFall`` if it does. To enable that feature this checkbox should be checked.
+
+* **Free-fall treshold**: To avoid false triggers, the treshold can be set before a movement is detected as free-fall. This can be set in 62.5 milligram increments.
+
+* **Free-fall duration**: The minimum time the sensor is falling before a free-fall event is generated can be configured in 625 microsecond increments.
+
+Axis calibration
+^^^^^^^^^^^^^^^^
+
+* **X/Y/Z-axis offset**: Corrective values can be set to calibrate the sensor once it is mounted in its intended location. These values are similar to the measured values as presented. Available calibration range is -127 to 127.
+
+Calibration procedure
+^^^^^^^^^^^^^^^^^^^^^
+
+To calibrate the sensor in its intended position follow these steps:
+
+* Reset all calibration settings to 0.
+* Enable all axis that need to be calibrated in the **Device settings** section.
+* Set the **Averaging buffer size** to 10, and the **Measuring frequency** to 10x per second.
+* Uncheck **Events with raw measurements**. This setting should be left unchecked when expecting calibrated measurements using the sensor.
+* Set the **Interval** to 5 seconds.
+* Save the settings using the Submit button.
+* Place the sensor in its intended position.
+* Enable the sensor, if that wasn't already set (can be done using the settings page or by sending a ``TaskEnable,taskname`` command).
+* Wait for at least 30 seconds to stabilize the measurements.
+* Take note of the values for the X, Y and Z axis values, as presented on the **Devices** overview page.
+* For each axis to be calibrated, enter the X, or Y value(s) *multiplied by* **-1** into the X- and Y-axis calibration fields.
+
+  * The Z-axis value has a default deviation of -256 so that has to be used as the reference point. Add 256 to the noted Z-axis value to get the required Z-axis calibration value.
+
+* Restore any of the settings changed above to their original state.
+* Save the settings using the Submit button.
+* Validate that the measured values are now 0 with the sensor in its intended position.
+
+NB: Instead of calibrating to 0 it is also possible to calibrate a defined offset, if that better fits the intended solution.
+
+Data retrieval
+^^^^^^^^^^^^^^
+
+* **Averaging buffer size**: The number of measurements that will be averaged before presenting it as **Values**. When set to 1, there is effectively no averaging.
+
+* **Measuring frequency**: The plugin supports 2 measuring frequencies, 10x per second or 50x per second. When using 50x per second, it will stabilize the measurements if the **Averaging buffer size** is also increased, f.e. to 50 or 100. This may increase the load on the ESP unit somewhat.
+
+Data Acquisition
+^^^^^^^^^^^^^^^^
+
+This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+
+Values
+^^^^^^
+
+There are 3 values available for this sensor, with default names as provided. The number of decimals is by default set to 0, as no decimals are provided from the measurement.
+
