@@ -235,7 +235,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_TESTING
-    #if !defined(PLUGIN_BUILD_TESTING_B) && !defined(PLUGIN_BUILD_TESTING_C) && !defined(PLUGIN_BUILD_TESTING_D)
+    #if !defined(PLUGIN_BUILD_TESTING_B) && !defined(PLUGIN_BUILD_TESTING_C) && !defined(PLUGIN_BUILD_TESTING_D) && !defined(PLUGIN_BUILD_TESTING_E)
       #define PLUGIN_DESCR  "TEST_A"
       #define PLUGIN_SET_TESTING_A
     #endif
@@ -267,6 +267,15 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "TEST_D"
     #define PLUGIN_SET_TESTING
     #define PLUGIN_SET_TESTING_D
+    #define CONTROLLER_SET_TESTING
+    #define NOTIFIER_SET_TESTING
+    #define PLUGIN_BUILD_NORMAL     // add stable
+#endif
+
+#ifdef PLUGIN_BUILD_TESTING_E
+    #define PLUGIN_DESCR  "TEST_E"
+    #define PLUGIN_SET_TESTING
+    #define PLUGIN_SET_TESTING_E
     #define CONTROLLER_SET_TESTING
     #define NOTIFIER_SET_TESTING
     #define PLUGIN_BUILD_NORMAL     // add stable
@@ -623,7 +632,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_TEST_ESP32
-    #if !defined(PLUGIN_SET_TEST_B_ESP32) && !defined(PLUGIN_SET_TEST_C_ESP32) && !defined(PLUGIN_SET_TEST_D_ESP32)
+    #if !defined(PLUGIN_SET_TEST_B_ESP32) && !defined(PLUGIN_SET_TEST_C_ESP32) && !defined(PLUGIN_SET_TEST_D_ESP32) && !defined(PLUGIN_SET_TEST_E_ESP32)
       #define PLUGIN_DESCR  "TEST_A ESP32"
       #define  PLUGIN_SET_TESTING_A
     #endif
@@ -696,6 +705,26 @@ To create/register a plugin, you have to :
 
     #define  PLUGIN_SET_TESTING
     #define  PLUGIN_SET_TESTING_D
+    #define  CONTROLLER_SET_STABLE
+    #define  NOTIFIER_SET_STABLE
+    #define  PLUGIN_SET_STABLE     // add stable
+    // See also PLUGIN_SET_TEST_ESP32 section at end,
+    // where incompatible plugins will be disabled.
+    // TODO : Check compatibility of plugins for ESP32 board.
+#endif
+
+#ifdef PLUGIN_SET_TEST_E_ESP32
+    #define PLUGIN_DESCR  "TEST_E ESP32"
+    #ifndef ESP32
+        #define ESP32
+    #endif
+    #ifdef ESP8266
+        #undef ESP8266
+    #endif
+//    #define PLUGIN_SET_ONLY_SWITCH
+
+    #define  PLUGIN_SET_TESTING
+    #define  PLUGIN_SET_TESTING_E
     #define  CONTROLLER_SET_STABLE
     #define  NOTIFIER_SET_STABLE
     #define  PLUGIN_SET_STABLE     // add stable
@@ -845,6 +874,9 @@ To create/register a plugin, you have to :
     #ifdef PLUGIN_SET_TESTING_D
         #undef PLUGIN_SET_TESTING_D
     #endif
+    #ifdef PLUGIN_SET_TESTING_E
+        #undef PLUGIN_SET_TESTING_E
+    #endif
     #ifdef PLUGIN_SET_EXPERIMENTAL
         #undef PLUGIN_SET_EXPERIMENTAL
     #endif
@@ -937,6 +969,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef PLUGIN_SET_TESTING_D
         #define PLUGIN_SET_TESTING_D
+    #endif
+    #ifndef PLUGIN_SET_TESTING_E
+        #define PLUGIN_SET_TESTING_E
     #endif
     // #ifndef PLUGIN_SET_EXPERIMENTAL
     //     #define PLUGIN_SET_EXPERIMENTAL
@@ -1131,6 +1166,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
+    #define USES_P119   // ITG3205 Gyro
 #endif
 
 #ifdef PLUGIN_SET_TESTING_D
@@ -1144,6 +1180,11 @@ To create/register a plugin, you have to :
     #define USES_P117  // SCD30
     #define USES_P118  // Itho ventilation control
     #define USES_P124  // I2C MultiRelay
+#endif
+
+#ifdef PLUGIN_SET_TESTING_E
+    #define USES_P120  // ADXL345 I2C
+    // #define USES_P125  // ADXL345 SPI
 #endif
 
 
@@ -1452,6 +1493,36 @@ To create/register a plugin, you have to :
   #ifndef USES_P125
     #define USES_P125   //
   #endif
+  #ifndef USES_P126
+    #define USES_P126   //
+  #endif
+  #ifndef USES_P127
+    #define USES_P127   //
+  #endif
+  #ifndef USES_P128
+    #define USES_P128   //
+  #endif
+  #ifndef USES_P129
+    #define USES_P129   //
+  #endif
+  #ifndef USES_P130
+    #define USES_P130   //
+  #endif
+  #ifndef USES_P131
+    #define USES_P131   //
+  #endif
+  #ifndef USES_P132
+    #define USES_P132   //
+  #endif
+  #ifndef USES_P133
+    #define USES_P133   //
+  #endif
+  #ifndef USES_P134
+    #define USES_P134   //
+  #endif
+  #ifndef USES_P135
+    #define USES_P135   //
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -1751,7 +1822,7 @@ To create/register a plugin, you have to :
 #endif
 
 // Here we can re-enable specific features in the TESTING sets as we have created some space there by splitting them up
-#if defined(TESTING_USE_RTTTL) && (defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D))
+#if defined(TESTING_USE_RTTTL) && (defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D) || defined(PLUGIN_SET_TESTING_E))
   #ifndef USE_RTTTL
     #define USE_RTTTL
   #endif
