@@ -101,3 +101,16 @@
 .. |P118_maintainer| replace:: `svollebregt`
 .. |P118_compileinfo| replace:: `.`
 .. |P118_usedlibraries| replace:: `https://github.com/arjenhiemstra/IthoEcoFanRFT/tree/master/Master (currently using v2.0.0 due to v2.1.0 recieve issues i.c.w. plugin)`
+
+.. |P119_name| replace:: :cyan:`ITG3205`
+.. |P119_type| replace:: :cyan:`Gyro`
+.. |P119_typename| replace:: :cyan:`Gyro - ITG3205`
+.. |P119_porttype| replace:: `.`
+.. |P119_status| replace:: :yellow:`TESTING C`
+.. |P119_github| replace:: _P119_ITG3205_Gyro.ino
+.. _P119_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P119_ITG3205_Gyro.ino
+.. |P119_usedby| replace:: `.`
+.. |P119_shortinfo| replace:: `ITG3205 Gyro sensor`
+.. |P119_maintainer| replace:: `tonhuisman`
+.. |P119_compileinfo| replace:: `.`
+.. |P119_usedlibraries| replace:: `https://github.com/ikiselev/ITG3205`

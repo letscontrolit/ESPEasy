@@ -32,6 +32,8 @@ The value is placed in the Tag variable (this name can be changed).
 
 .. image:: P008_DeviceConfiguration.png
 
+* **Enable backward compatibility mode** (Added: 2021-11-20) When enabled, uses the GPIO pins in 'reversed' mode, to be compatible with previous versions of this plugin (by default it will be enabled when updating an existing device/task), to ensure the same Tag results are given as on previous ESPEasy releases. When unchecked (default when newly added), the scan results will be the same as received with other Wiegand protocol RFID & Keypad readers.
+
 * **Wiegand Type (bits)** Select the number of bits to expect from the device. Often used values are 26 and 34, resulting in 24 and 32 bit received data. Selection allows up to 64 bits to be received, giving a 62 bit value, as 2 bits are used for parity information during transmission, and discarded from the received value. When set too high, no data will be recognized, and automatic resets will appear in the log after 5 seconds (``Info   : RFID : reset bits: nn``).
 
 * **Present hex as decimal value** (Disabled by default) For decimal numeric keypads this option is provided to transform the hex value into a decimal representation, so that when entering value 1234# (# is the confirmation key here), not the result 4660 (0x1234) is made available, but actually 1234. This for easier processing/validating of the entered value. Any input of A-F is replaced by 0 when this option is enabled! It should not be enabled when using a RFID reader, as the Tag ID won't be correct!
@@ -64,6 +66,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |improved| 2021-11-20 Correct reverted GPIO/interrupt handlers with optional backward compatibility mode.
 
   |added| 2021-08-23 Extended selection of received bits to 26..64 bit range.
 

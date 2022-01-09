@@ -1,4 +1,5 @@
 .. |Plugin_Analog_input| replace:: :ref:`P002_page`, :ref:`P007_page`, :ref:`P025_page`, :ref:`P060_page`, :ref:`P097_page`
+.. |Plugin_Acceleration| replace:: :ref:`P120_page`, :ref:`P125_page`
 .. |Plugin_Communication| replace:: :ref:`P016_page`, :ref:`P020_page`, :ref:`P035_page`, :ref:`P044_page`, :ref:`P054_page`, :ref:`P071_page`, :ref:`P087_page`, :ref:`P089_page`, :ref:`P094_page`, :ref:`P101_page`, :ref:`P118_page`
 .. |Plugin_Display| replace:: :ref:`P012_page`, :ref:`P023_page`, :ref:`P036_page`, :ref:`P057_page`, :ref:`P073_page`, :ref:`P075_page`, :ref:`P095_page`, :ref:`P104_page`, :ref:`P116_page`
 .. |Plugin_Distance| replace:: :ref:`P110_page`, :ref:`P113_page`
@@ -11,7 +12,7 @@
 .. |Plugin_Gases| replace:: :ref:`P049_page`, :ref:`P052_page`, :ref:`P083_page`, :ref:`P090_page`, :ref:`P117_page`
 .. |Plugin_Generic| replace:: :ref:`P003_page`, :ref:`P026_page`, :ref:`P033_page`, :ref:`P037_page`, :ref:`P081_page`, :ref:`P100_page`
 .. |Plugin_Gesture| replace:: :ref:`P064_page`
-.. |Plugin_Gyro| replace:: :ref:`P045_page`
+.. |Plugin_Gyro| replace:: :ref:`P045_page`, :ref:`P119_page`
 .. |Plugin_Hardware| replace:: :ref:`P046_page`
 .. |Plugin_Keypad| replace:: :ref:`P058_page`, :ref:`P061_page`, :ref:`P062_page`, :ref:`P063_page`
 .. |Plugin_Light_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
