@@ -4,18 +4,19 @@
 #include "src/PluginStructs/P095_data_struct.h"
 
 //#######################################################################################################
-//#################################### Plugin 095: ILI9341 TFT 2.4inches display #################################
+//################################# Plugin 095: ILI934x/ILI948x TFT display #############################
 //#######################################################################################################
 
 #define PLUGIN_095
 #define PLUGIN_ID_095         95
-#define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341 [TESTING]"
+#define PLUGIN_NAME_095       "Display - TFT ILI934x/ILI948x [TESTING]"
 #define PLUGIN_VALUENAME1_095 "TFT"
 #define PLUGIN_095_MAX_DISPLAY 1
 
 
 /**
  * Changelog:
+ * 2022-01-09 tonhuisman: Add support for ILI9342 (M5Stack, 240x320), ILI9481, ILI9486 and ILI9488 (320x480) displays
  * 2020-08-29 tonhuisman: Removed TS (Touchscreen) related stuff, XPT2046 will be a separate plugin
  *                        Changed initial text from '--cdt--' to 'ESPEasy'
  * 2020-08 tonhuisman: SPI improvements
@@ -213,6 +214,39 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t init = PCONFIG(0);
 
+      {
+        const __FlashStringHelper *hardwareTypes[] = {
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9341_240x320),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9342_240x320),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CPT29_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_PVI35_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_AUO317_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMO35_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9488_320x480),
+        };
+        const int hardwareOptions[] = {
+          static_cast<int>(ILI9xxx_type_e::ILI9341_240x320),
+          static_cast<int>(ILI9xxx_type_e::ILI9342_240x320),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CPT29_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_PVI35_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_AUO317_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMO35_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
+        };
+        addFormSelector(F("TFT display model"),
+                        F("p095_type"),
+                        static_cast<int>(ILI9xxx_type_e::ILI9xxx_MAX),
+                        hardwareTypes,
+                        hardwareOptions,
+                        P095_CONFIG_FLAG_GET_TYPE);
+      }
+
         //if already configured take it from settings, else use default values (only for pin values)
         if(init == 1)
         {
@@ -235,6 +269,11 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG(0) = 1; //mark config as already saved (next time, will not use default values)
         // PIN(0)..(2) are already set
         PCONFIG(1) = getFormItemInt(F("p095_rotate"));
+
+        uint32_t lSettings = 0;
+        set4BitToUL(lSettings, P095_CONFIG_FLAG_TYPE,        getFormItemInt(F("p095_type")));            // Bit 20..24 Hardwaretype
+        P095_CONFIG_FLAGS = lSettings;
+
         success = true;
         break;
       }
@@ -249,6 +288,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
         initPluginTaskData(event->TaskIndex, 
         new (std::nothrow) P095_data_struct(
+          static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE),
           TFT_Settings.address_tft_cs, 
           TFT_Settings.address_tft_dc, 
           TFT_Settings.address_tft_rst));
@@ -256,8 +296,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<P095_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P095_data) {
-          P095_data->tft.setRotation(TFT_Settings.rotation);
-          P095_data->tft.fillScreen(ILI9341_WHITE);
+          P095_data->tft->setRotation(TFT_Settings.rotation);
+          P095_data->tft->fillScreen(ILI9341_WHITE);
           P095_data->printText(F("ESPEasy"), 1, 1);
           success = true;
         }
@@ -300,28 +340,28 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
             {
               if(subcommand.equalsIgnoreCase(F("ON")))
               {
-                P095_data->tft.sendCommand(ILI9341_DISPON);
+                P095_data->tft->sendCommand(ILI9341_DISPON);
               }
               else if(subcommand.equalsIgnoreCase(F("OFF")))
               {
-                P095_data->tft.sendCommand(ILI9341_DISPOFF);
+                P095_data->tft->sendCommand(ILI9341_DISPOFF);
               }
               else if(subcommand.equalsIgnoreCase(F("CLEAR")))
               {
                 arguments = arguments.substring(argIndex + 1);
-                P095_data->tft.fillScreen(P095_data->ParseColor(arguments));
+                P095_data->tft->fillScreen(P095_data->ParseColor(arguments));
               }
               else if(subcommand.equalsIgnoreCase(F("INV")))
               {
                 arguments = arguments.substring(argIndex + 1);
-                P095_data->tft.invertDisplay(arguments.toInt() == 1);
+                P095_data->tft->invertDisplay(arguments.toInt() == 1);
               }
               else if(subcommand.equalsIgnoreCase(F("ROT")))
               {
                 ///control?cmd=tftcmd,rot,0
                 //not working to verify
                 arguments = arguments.substring(argIndex + 1);
-                P095_data->tft.setRotation(arguments.toInt() % 4);
+                P095_data->tft->setRotation(arguments.toInt() % 4);
               }
               else
               {
@@ -346,33 +386,33 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
               if(subcommand.equalsIgnoreCase(F("txt")))
               {
-                P095_data->tft.println(arguments); //write all pending cars
+                P095_data->tft->println(arguments); //write all pending cars
               }
               else if(subcommand.equalsIgnoreCase(F("txp")) && argCount == 2)
               {
-                P095_data->tft.setCursor(sParams[0].toInt(), sParams[1].toInt());
+                P095_data->tft->setCursor(sParams[0].toInt(), sParams[1].toInt());
               }
               else if(subcommand.equalsIgnoreCase(F("txc")) && (argCount == 1 || argCount == 2) )
               {
                 if(argCount == 1)
-                  P095_data->tft.setTextColor(P095_data->ParseColor(sParams[0]));
+                  P095_data->tft->setTextColor(P095_data->ParseColor(sParams[0]));
                 else //argCount=2
-                  P095_data->tft.setTextColor(P095_data->ParseColor(sParams[0]), P095_data->ParseColor(sParams[1]));
+                  P095_data->tft->setTextColor(P095_data->ParseColor(sParams[0]), P095_data->ParseColor(sParams[1]));
               }
               else if(subcommand.equalsIgnoreCase(F("txs")) && argCount == 1)
               {
-                P095_data->tft.setTextSize(sParams[0].toInt());
+                P095_data->tft->setTextSize(sParams[0].toInt());
               }
               #ifdef PLUGIN_095_FONT_INCLUDED
                   else if(subcommand.equalsIgnoreCase(F("font")) && argCount == 1) {
                     if (sParams[0].equalsIgnoreCase(F("SEVENSEG24"))) {
-                        P095_data->tft.setFont(&Seven_Segment24pt7b);
+                        P095_data->tft->setFont(&Seven_Segment24pt7b);
                     } else if (sParams[0].equalsIgnoreCase(F("SEVENSEG18"))) {
-                        P095_data->tft.setFont(&Seven_Segment18pt7b);
+                        P095_data->tft->setFont(&Seven_Segment18pt7b);
                     } else if (sParams[0].equalsIgnoreCase(F("FREESANS"))) {
-                        P095_data->tft.setFont(&FreeSans9pt7b);
+                        P095_data->tft->setFont(&FreeSans9pt7b);
                     } else if (sParams[0].equalsIgnoreCase(F("DEFAULT"))) {
-                        P095_data->tft.setFont(); 
+                        P095_data->tft->setFont(); 
                     } else {
                         success = false;
                     }
@@ -404,55 +444,55 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
               }
               else if(subcommand.equalsIgnoreCase(F("l")) && argCount == 5)
               {
-                P095_data->tft.drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
+                P095_data->tft->drawLine(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
               }
               else if(subcommand.equalsIgnoreCase(F("lh")) && argCount == 3)
               {
-                P095_data->tft.drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
+                P095_data->tft->drawFastHLine(0, sParams[0].toInt(), sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
               }
               else if(subcommand.equalsIgnoreCase(F("lv")) && argCount == 3)
               {
-                P095_data->tft.drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
+                P095_data->tft->drawFastVLine(sParams[0].toInt(), 0, sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
               }
               else if(subcommand.equalsIgnoreCase(F("r")) && argCount == 5)
               {
-                P095_data->tft.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
+                P095_data->tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
               }
               else if(subcommand.equalsIgnoreCase(F("rf")) && argCount == 6)
               {
-                P095_data->tft.fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[5]));
-                P095_data->tft.drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
+                P095_data->tft->fillRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[5]));
+                P095_data->tft->drawRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), P095_data->ParseColor(sParams[4]));
               }
               else if(subcommand.equalsIgnoreCase(F("c")) && argCount == 4)
               {
-                P095_data->tft.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
+                P095_data->tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
               }
               else if(subcommand.equalsIgnoreCase(F("cf")) && argCount == 5)
               {
-                P095_data->tft.fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[4]));
-                P095_data->tft.drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
+                P095_data->tft->fillCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[4]));
+                P095_data->tft->drawCircle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), P095_data->ParseColor(sParams[3]));
               }
               else if(subcommand.equalsIgnoreCase(F("t")) && argCount == 7)
               {
-                P095_data->tft.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[6]));
+                P095_data->tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[6]));
               }
               else if(subcommand.equalsIgnoreCase(F("tf")) && argCount == 8)
               {
-                P095_data->tft.fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[7]));
-                P095_data->tft.drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[6]));
+                P095_data->tft->fillTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[7]));
+                P095_data->tft->drawTriangle(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), sParams[5].toInt(), P095_data->ParseColor(sParams[6]));
               }
               else if(subcommand.equalsIgnoreCase(F("rr")) && argCount == 6)
               {
-                P095_data->tft.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[5]));
+                P095_data->tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[5]));
               }
               else if(subcommand.equalsIgnoreCase(F("rrf")) && argCount == 7)
               {
-                P095_data->tft.fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[6]));
-                P095_data->tft.drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[5]));
+                P095_data->tft->fillRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[6]));
+                P095_data->tft->drawRoundRect(sParams[0].toInt(), sParams[1].toInt(), sParams[2].toInt(), sParams[3].toInt(), sParams[4].toInt(), P095_data->ParseColor(sParams[5]));
               }
               else if(subcommand.equalsIgnoreCase(F("px")) && argCount == 3)
               {
-                P095_data->tft.drawPixel(sParams[0].toInt(), sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
+                P095_data->tft->drawPixel(sParams[0].toInt(), sParams[1].toInt(), P095_data->ParseColor(sParams[2]));
               }
               else
               {

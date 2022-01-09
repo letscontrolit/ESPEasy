@@ -15,16 +15,43 @@
 # ifdef PLUGIN_095_FONT_INCLUDED
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
 #  include "../Static/Fonts/Seven_Segment18pt7b.h"
-#  include <Fonts/FreeSans9pt7b.h> // included in Adafruit-GFX-Library
+#  include <Fonts/FreeSans9pt7b.h>                      // included in Adafruit-GFX-Library
 # endif // ifdef PLUGIN_095_FONT_INCLUDED
+
+# define P095_CONFIG_FLAGS              PCONFIG_LONG(0) // All flags
+# define P095_CONFIG_FLAG_TYPE          20              // Flag-offset to store 4 bits for Display type, uses bits 20..24
+
+// // Getters
+# define P095_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE))
+
+enum class ILI9xxx_type_e : uint8_t {
+  ILI9341_240x320 = 0u,
+  ILI9342_240x320,
+  ILI9481_320x480,
+  ILI9481_CPT29_320x480,
+  ILI9481_PVI35_320x480,
+  ILI9481_AUO317_320x480,
+  ILI9481_CMO35_320x480,
+  ILI9481_RGB_320x480,
+  ILI9486_320x480,
+  ILI9488_320x480,
+  ILI9xxx_MAX // last value = count
+};
+
+const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device);
+
+void                       ILI9xxx_type_toResolution(ILI9xxx_type_e device,
+                                                     uint16_t     & x,
+                                                     uint16_t     & y);
 
 struct P095_data_struct : public PluginTaskData_base {
 public:
 
-  P095_data_struct(int8_t _CS,
-                   int8_t _DC,
-                   int8_t _RST = -1);
-
+  P095_data_struct(ILI9xxx_type_e displayType,
+                   int8_t         _CS,
+                   int8_t         _DC,
+                   int8_t         _RST = -1);
+  ~P095_data_struct();
 
   // Print some text
   // param [in] string : The text to display
@@ -58,7 +85,13 @@ public:
                   String  op[],
                   int     limit);
 
-  Adafruit_ILI9341 tft;
+  Adafruit_ILI9341 *tft = nullptr;
+
+private:
+
+  ILI9xxx_type_e _displayType;
+  uint16_t       _xpix;
+  uint16_t       _ypix;
 };
 #endif // ifdef USES_P095
 #endif // ifndef PLUGINSTRUCTS_P095_DATA_STRUCT_H

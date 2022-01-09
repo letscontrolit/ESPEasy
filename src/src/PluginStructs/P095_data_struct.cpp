@@ -2,12 +2,79 @@
 
 #ifdef USES_P095
 
-
-P095_data_struct::P095_data_struct(int8_t _CS, int8_t _DC, int8_t _RST)
-  : tft(_CS,  _DC, _RST) 
-  {
-    tft.begin();
+/****************************************************************************
+ * ILI9xxx_type_toString: Display-value for the device selected
+ ***************************************************************************/
+const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device) {
+  switch (device) {
+    case ILI9xxx_type_e::ILI9341_240x320: return F("ILI9341 240 x 320px");
+    case ILI9xxx_type_e::ILI9342_240x320: return F("ILI9342 240 x 320px (M5Stack)");
+    case ILI9xxx_type_e::ILI9481_320x480: return F("ILI9481 320 x 480px");
+    case ILI9xxx_type_e::ILI9481_CPT29_320x480: return F("ILI9481 320 x 480px (CPT29)");
+    case ILI9xxx_type_e::ILI9481_PVI35_320x480: return F("ILI9481 320 x 480px (PVI35)");
+    case ILI9xxx_type_e::ILI9481_AUO317_320x480: return F("ILI9481 320 x 480px (AUO317)");
+    case ILI9xxx_type_e::ILI9481_CMO35_320x480: return F("ILI9481 320 x 480px (CMO35)");
+    case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
+    case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
+    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
+    case ILI9xxx_type_e::ILI9xxx_MAX: break;
   }
+  return F("Unsupported type!");
+}
+
+/****************************************************************************
+ * ILI9xxx_type_toResolution: X and Y resolution for the selected type
+ ***************************************************************************/
+void ILI9xxx_type_toResolution(ILI9xxx_type_e device, uint16_t& x, uint16_t& y) {
+  switch (device) {
+    case ILI9xxx_type_e::ILI9341_240x320:
+    case ILI9xxx_type_e::ILI9342_240x320:
+      x = 240;
+      y = 320;
+      break;
+    case ILI9xxx_type_e::ILI9481_320x480:
+    case ILI9xxx_type_e::ILI9481_CPT29_320x480:
+    case ILI9xxx_type_e::ILI9481_PVI35_320x480:
+    case ILI9xxx_type_e::ILI9481_AUO317_320x480:
+    case ILI9xxx_type_e::ILI9481_CMO35_320x480:
+    case ILI9xxx_type_e::ILI9481_RGB_320x480:
+    case ILI9xxx_type_e::ILI9486_320x480:
+    case ILI9xxx_type_e::ILI9488_320x480:
+      x = 320;
+      y = 480;
+      break;
+    case ILI9xxx_type_e::ILI9xxx_MAX:
+      break;
+  }
+}
+
+
+/****************************************************************************
+ * Constructor
+ ***************************************************************************/
+P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
+                                   int8_t _CS, int8_t _DC, int8_t _RST)
+  : _displayType(displayType)//, tft(_CS,  _DC, _RST) 
+  {
+  _xpix = 240;
+  _ypix = 320;
+  ILI9xxx_type_toResolution(_displayType, _xpix, _ypix);
+
+    tft = new (std::nothrow) Adafruit_ILI9341(_CS, _DC, _RST, static_cast<uint8_t>(_displayType), _xpix, _ypix);
+    if (nullptr != tft) {
+      tft->begin();
+    }
+  }
+
+/****************************************************************************
+ * Destructor
+ ***************************************************************************/
+P095_data_struct::~P095_data_struct() {
+  if (nullptr != tft) {
+    delete tft;
+    tft = nullptr;
+  }
+}
 
 //Print some text
 //param [in] string : The text to display
@@ -18,10 +85,10 @@ P095_data_struct::P095_data_struct(int8_t _CS, int8_t _DC, int8_t _RST)
 //param [in] bkcolor : The background color (default ILI9341_BLACK)
 void P095_data_struct::printText(const String& string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
 {
-  tft.setCursor(X, Y);
-  tft.setTextColor(color, bkcolor);
-  tft.setTextSize(textSize);
-  tft.println(string);
+  tft->setCursor(X, Y);
+  tft->setTextColor(color, bkcolor);
+  tft->setTextSize(textSize);
+  tft->println(string);
 }
 
 
@@ -77,7 +144,7 @@ unsigned short P095_data_struct::ParseColor(String & s)
     //long long g = number >> 8 & 0xFF;
     //long long b = number & 0xFF;
     //convert to color565 (used by adafruit lib)
-    return tft.color565(number >> 16, number >> 8 & 0xFF, number & 0xFF);
+    return tft->color565(number >> 16, number >> 8 & 0xFF, number & 0xFF);
   }
   return ILI9341_WHITE; //fallback value
 }
