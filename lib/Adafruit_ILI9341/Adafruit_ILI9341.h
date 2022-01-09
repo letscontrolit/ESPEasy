@@ -126,7 +126,7 @@
 #define ILI9341_PINK 0xFC18        ///< 255, 130, 198
 
 
-#define ILI_TYPE_9341           0 // Must match with enum class ILI9xxx_type_e in P095_data_struct.h
+#define ILI_TYPE_9341           0  // Must match with enum class ILI9xxx_type_e in P095_data_struct.h
 #define ILI_TYPE_9342           1
 #define ILI_TYPE_9481           2
 #define ILI_TYPE_9481_CPT29     3
@@ -157,7 +157,7 @@ public:
                    uint8_t  _MODEL = ILI_TYPE_9341,
                    uint16_t w      = ILI9341_TFTWIDTH,
                    uint16_t h      = ILI9341_TFTHEIGHT); // Default to ILI9341, check ILI9xxx_type_e
-  virtual ~Adafruit_ILI9341() {}; // Virtual destructor
+  virtual ~Adafruit_ILI9341() {}  // Virtual destructor
 
 #if !defined(ESP8266)
 
