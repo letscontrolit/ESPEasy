@@ -15,14 +15,12 @@
 #include "../Helpers/StringParser.h"
 
 
-
-
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
   // FIXME TD-er: Why have an event here as argument? It is not used.
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("remoteConfig"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   bool   success = false;
   String command = parseString(string, 1);
 
@@ -53,8 +51,6 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   return success;
 }
 
-
-
 /********************************************************************************************\
    delay in milliseconds with background processing
  \*********************************************************************************************/
@@ -75,7 +71,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
   if (!validControllerIndex(controllerIndex)) { return false; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setControllerEnableStatus"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
@@ -93,11 +89,12 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
   if (!validTaskIndex(event->TaskIndex)) { return false; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setTaskEnableStatus"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
     String dummy;
+
     if (!enabled) {
       PluginCall(PLUGIN_EXIT, event, dummy);
     }
@@ -107,6 +104,7 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
       if (!PluginCall(PLUGIN_INIT, event, dummy)) {
         return false;
       }
+
       // Schedule the task to be executed almost immediately
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
     }
@@ -123,7 +121,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   if (!validTaskIndex(taskIndex)) { return; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
   ExtraTaskSettings.TaskIndex = taskIndex;
@@ -187,7 +185,8 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );
+                    // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
@@ -217,7 +216,6 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
    - maximum number of variables <= defined number of variables in plugin
  \*********************************************************************************************/
 String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
-
   TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
 
   LoadTaskSettings(TaskIndex);
@@ -244,7 +242,6 @@ void emergencyReset()
     }
   }
 }
-
 
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -275,7 +272,7 @@ void FeedSW_watchdog()
 {
   #ifdef ESP8266
   ESP.wdtFeed();
-  #endif
+  #endif // ifdef ESP8266
 }
 
 void SendValueLogger(taskIndex_t TaskIndex)
@@ -334,10 +331,10 @@ void SendValueLogger(taskIndex_t TaskIndex)
 void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
 
-  H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
+  H = fmod(H, 360);                           // cycle H around to 0-360 degrees
+  H = 3.14159f * H / static_cast<float>(180); // Convert to radians.
   S = S / 100;
-  S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
+  S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
   I = I / 100;
   I = I > 0 ? (I < 1 ? I : 1) : 0;
 
@@ -369,10 +366,10 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   int   r, g, b, w;
   float cos_h, cos_1047_h;
 
-  H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / static_cast<float>(180);   // Convert to radians.
+  H = fmod(H, 360);                           // cycle H around to 0-360 degrees
+  H = 3.14159f * H / static_cast<float>(180); // Convert to radians.
   S = S / 100;
-  S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
+  S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
   I = I / 100;
   I = I > 0 ? (I < 1 ? I : 1) : 0;
 
@@ -431,6 +428,27 @@ void set4BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   number = (number & ~mask) | newvalue;
 }
 
+uint8_t get3BitFromUL(uint32_t number, uint8_t bitnr) {
+  return (number >> bitnr) &  0x07;
+}
+
+void set3BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
+  uint32_t mask     = (0x07UL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
+
+uint8_t get2BitFromUL(uint32_t number, uint8_t bitnr) {
+  return (number >> bitnr) &  0x03;
+}
+
+void set2BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
+  uint32_t mask     = (0x03UL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
 
 float getCPUload() {
   return 100.0f - Scheduler.getIdleTimePct();
@@ -447,39 +465,42 @@ int getUptimeMinutes() {
 /******************************************************************************
  * scan an int array of specified size for a value
  *****************************************************************************/
-bool intArrayContains(const int arraySize, const int array[], const int& value){
-  for(int i = 0; i < arraySize; i++) {
-    if (array[i] == value) return true;
+bool intArrayContains(const int arraySize, const int array[], const int& value) {
+  for (int i = 0; i < arraySize; i++) {
+    if (array[i] == value) { return true; }
   }
   return false;
 }
 
 bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t& value) {
-  for(int i = 0; i < arraySize; i++) {
-    if (array[i] == value) return true;
+  for (int i = 0; i < arraySize; i++) {
+    if (array[i] == value) { return true; }
   }
   return false;
 }
 
-
 #ifndef BUILD_NO_RAM_TRACKER
-void logMemUsageAfter(const __FlashStringHelper * function, int value) {
+void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   // Store free memory in an int, as subtracting may sometimes result in negative value.
   // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
   static int last_freemem = ESP.getFreeHeap();
-  const int freemem_end = ESP.getFreeHeap();
+  const int  freemem_end  = ESP.getFreeHeap();
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log.reserve(128);
     log  = F("After ");
     log += function;
+
     if (value >= 0) {
       log += value;
     }
-    while (log.length() < 30) log += ' ';
+
+    while (log.length() < 30) { log += ' '; }
     log += F("Free mem after: ");
     log += freemem_end;
-    while (log.length() < 55) log += ' ';
+
+    while (log.length() < 55) { log += ' '; }
     log += F("diff: ");
     log += last_freemem - freemem_end;
     addLog(LOG_LEVEL_DEBUG, log);
@@ -487,4 +508,5 @@ void logMemUsageAfter(const __FlashStringHelper * function, int value) {
 
   last_freemem = freemem_end;
 }
-#endif
+
+#endif // ifndef BUILD_NO_RAM_TRACKER
