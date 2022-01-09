@@ -1165,6 +1165,7 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
+    #define USES_P119   // ITG3205 Gyro
 #endif
 
 #ifdef PLUGIN_SET_TESTING_D
