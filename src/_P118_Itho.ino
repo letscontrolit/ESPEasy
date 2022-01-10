@@ -81,7 +81,7 @@ int PLUGIN_118_LastIDindex = 0;
 int PLUGIN_118_OldLastIDindex = 0;
 int8_t Plugin_118_IRQ_pin=-1;
 bool PLUGIN_118_InitRunned = false;
-bool PLUGIN_118_Log = PCONFIG(0);
+bool PLUGIN_118_Log = 0;
 
 // volatile for interrupt function
 volatile bool PLUGIN_118_Int = false;
@@ -145,11 +145,11 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 
 	case PLUGIN_SET_DEFAULTS: //Set defaults address to the one used in old versions of the library for backwards compatability
 		{
-    	PCONFIG(0) = 1;
+    		PCONFIG(0) = 1;
 			PCONFIG(1) = 10;
 			PCONFIG(2) = 87;
 			PCONFIG(3) = 81;
-    	success = true;
+    		success = true;
 			break;
 		}
 
@@ -171,6 +171,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String &string)
 			addLog(LOG_LEVEL_INFO, F("CC1101 868Mhz transmitter initialized"));
 			PLUGIN_118_rf.initReceive();
 			PLUGIN_118_InitRunned=true;
+			PLUGIN_118_Log = PCONFIG(0);
 			success = true;
 			break;
 		}
