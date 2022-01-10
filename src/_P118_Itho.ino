@@ -81,7 +81,7 @@ int PLUGIN_118_LastIDindex = 0;
 int PLUGIN_118_OldLastIDindex = 0;
 int8_t Plugin_118_IRQ_pin=-1;
 bool PLUGIN_118_InitRunned = false;
-bool PLUGIN_118_Log = false;
+bool PLUGIN_118_Log = PCONFIG(0);
 
 // volatile for interrupt function
 volatile bool PLUGIN_118_Int = false;
