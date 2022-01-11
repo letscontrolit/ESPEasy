@@ -38,8 +38,8 @@ private:
   Adafruit_NeoPixel *Plugin_038_pixels = nullptr;
 
   int8_t   _gpioPin;
-  uint8_t  _stripType;
   uint16_t _maxPixels;
+  uint8_t  _stripType;
 };
 #endif // ifdef USES_P038
 #endif // ifndef PLUGINSTRUCTS_P038_DATA_STRUCT_H
