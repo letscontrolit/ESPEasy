@@ -259,10 +259,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::HEAP_SIZE:              return String(ESP.getHeapSize());
     case LabelType::HEAP_MIN_FREE:          return String(ESP.getMinFreeHeap());
     #ifdef BOARD_HAS_PSRAM
-    case LabelType::PSRAM_SIZE:             return String(ESP.getPsramSize());
-    case LabelType::PSRAM_FREE:             return String(ESP.getFreePsram());
-    case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreePsram());
-    case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(ESP.getMaxAllocPsram());
+    case LabelType::PSRAM_SIZE:             return String(UsePSRAM() ? ESP.getPsramSize() : 0);
+    case LabelType::PSRAM_FREE:             return String(UsePSRAM() ? ESP.getFreePsram() : 0);
+    case LabelType::PSRAM_MIN_FREE:         return String(UsePSRAM() ? ESP.getMinFreePsram() : 0);
+    case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(UsePSRAM() ? ESP.getMaxAllocPsram() : 0);
     #endif // BOARD_HAS_PSRAM
 #endif // ifdef ESP32
 

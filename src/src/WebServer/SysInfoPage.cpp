@@ -383,7 +383,7 @@ void handle_sysinfo_memory() {
 # if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 
   addRowLabelValue(LabelType::PSRAM_SIZE);
-  if (ESP.getPsramSize() > 0) {
+  if (UsePSRAM()) {
     addRowLabelValue(LabelType::PSRAM_FREE);
     addRowLabelValue(LabelType::PSRAM_MIN_FREE);
     addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
