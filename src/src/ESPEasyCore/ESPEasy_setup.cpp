@@ -107,7 +107,7 @@ void ESPEasy_setup()
   initWiFi();
 
   run_compiletime_checks();
-#ifdef ESP32_ENABLE_PSRAM
+#ifdef BOARD_HAS_PSRAM
   psramInit();
 #endif
 #ifndef BUILD_NO_RAM_TRACKER
@@ -145,7 +145,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("initLog()"));
   #endif
-  #ifdef ESP32_ENABLE_PSRAM
+  #ifdef BOARD_HAS_PSRAM
   if (psramFound()) {
     addLog(LOG_LEVEL_INFO, F("Found PSRAM"));
   }

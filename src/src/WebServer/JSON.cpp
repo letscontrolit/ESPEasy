@@ -180,12 +180,12 @@ void handle_json()
     #ifdef ESP32
         LabelType::HEAP_SIZE,
         LabelType::HEAP_MIN_FREE,
-        #ifdef ESP32_ENABLE_PSRAM
+        #ifdef BOARD_HAS_PSRAM
         LabelType::PSRAM_SIZE,
         LabelType::PSRAM_FREE,
         LabelType::PSRAM_MIN_FREE,
         LabelType::PSRAM_MAX_FREE_BLOCK,
-        #endif // ESP32_ENABLE_PSRAM
+        #endif // BOARD_HAS_PSRAM
     #endif // ifdef ESP32
 
         LabelType::SUNRISE,
