@@ -75,12 +75,12 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 #ifdef ESP32
     case LabelType::HEAP_SIZE:              return F("Heap Size");
     case LabelType::HEAP_MIN_FREE:          return F("Heap Min Free");
-    #ifdef ESP32_ENABLE_PSRAM
+    #ifdef BOARD_HAS_PSRAM
     case LabelType::PSRAM_SIZE:             return F("PSRAM Size");
     case LabelType::PSRAM_FREE:             return F("PSRAM Free");
     case LabelType::PSRAM_MIN_FREE:         return F("PSRAM Min Free");
     case LabelType::PSRAM_MAX_FREE_BLOCK:   return F("PSRAM Max Free Block");
-    #endif // ESP32_ENABLE_PSRAM
+    #endif // BOARD_HAS_PSRAM
 #endif // ifdef ESP32
 
     case LabelType::JSON_BOOL_QUOTES:       return F("JSON bool output without quotes");
@@ -258,12 +258,12 @@ String getValue(LabelType::Enum label) {
 #ifdef ESP32
     case LabelType::HEAP_SIZE:              return String(ESP.getHeapSize());
     case LabelType::HEAP_MIN_FREE:          return String(ESP.getMinFreeHeap());
-    #ifdef ESP32_ENABLE_PSRAM
+    #ifdef BOARD_HAS_PSRAM
     case LabelType::PSRAM_SIZE:             return String(ESP.getPsramSize());
     case LabelType::PSRAM_FREE:             return String(ESP.getFreePsram());
     case LabelType::PSRAM_MIN_FREE:         return String(ESP.getMinFreePsram());
     case LabelType::PSRAM_MAX_FREE_BLOCK:   return String(ESP.getMaxAllocPsram());
-    #endif // ESP32_ENABLE_PSRAM
+    #endif // BOARD_HAS_PSRAM
 #endif // ifdef ESP32
 
 

@@ -48,12 +48,12 @@ struct LabelType {
 #ifdef ESP32
     HEAP_SIZE,
     HEAP_MIN_FREE,
-    #ifdef ESP32_ENABLE_PSRAM
+    #ifdef BOARD_HAS_PSRAM
     PSRAM_SIZE,
     PSRAM_FREE,
     PSRAM_MIN_FREE,
     PSRAM_MAX_FREE_BLOCK,
-    #endif // ESP32_ENABLE_PSRAM
+    #endif // BOARD_HAS_PSRAM
 #endif // ifdef ESP32
 
     JSON_BOOL_QUOTES,
