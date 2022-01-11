@@ -196,6 +196,16 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
     return F("Eth");
   }
   #endif // ifdef HAS_ETHERNET
+
+  if (UsePSRAM()) {
+    // PSRAM can use GPIO 16 and 17
+    switch (gpio) {
+      case 16:
+      case 17:
+        return F("PSRAM");
+    }
+  }
+
   return F("");
 }
 
