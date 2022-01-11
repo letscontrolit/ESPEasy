@@ -210,10 +210,33 @@ void handle_hardware() {
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
   {
-    const __FlashStringHelper * ethPhyTypes[2] = { 
+  #if ESP_IDF_VERSION_MAJOR > 3
+    const uint32_t nrItems = 5;
+  #else
+    const uint32_t nrItems = 2;
+  #endif
+    const __FlashStringHelper * ethPhyTypes[nrItems] = { 
       toString(EthPhyType_t::LAN8710), 
-      toString(EthPhyType_t::TLK110) };
-    addSelector(F("ethtype"), 2, ethPhyTypes, NULL, NULL, static_cast<int>(Settings.ETH_Phy_Type), false, true);
+      toString(EthPhyType_t::TLK110)
+  #if ESP_IDF_VERSION_MAJOR > 3
+      ,
+      toString(EthPhyType_t::RTL8201),
+      toString(EthPhyType_t::DP83848),
+      toString(EthPhyType_t::DM9051) 
+  #endif
+      };
+    const int ethPhyTypes_index[] = {
+      static_cast<int>(EthPhyType_t::LAN8710),
+      static_cast<int>(EthPhyType_t::TLK110)
+  #if ESP_IDF_VERSION_MAJOR > 3
+      ,
+      static_cast<int>(EthPhyType_t::RTL8201),
+      static_cast<int>(EthPhyType_t::DP83848),
+      static_cast<int>(EthPhyType_t::DM9051)
+  #endif
+    };
+
+    addSelector(F("ethtype"), nrItems, ethPhyTypes, ethPhyTypes_index, NULL, static_cast<int>(Settings.ETH_Phy_Type), false, true);
   }
   addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, 0, 255);
   addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
