@@ -556,6 +556,7 @@ void processEthernetConnected() {
 }
 
 void processEthernetDisconnected() {
+  if (EthEventData.processedDisconnect) return;
   EthEventData.setEthDisconnected();
   EthEventData.processedDisconnect = true;
   EthEventData.ethConnectAttemptNeeded = true;
