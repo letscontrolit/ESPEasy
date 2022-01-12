@@ -402,7 +402,7 @@ bool P035_data_struct::handleRawRaw2Encoding(const String& cmd) {
   return true;
 }
 
-void P035_data_struct::printToLog(String protocol, String data, int bits, int repeats) {
+void P035_data_struct::printToLog(const String& protocol, const String& data, int bits, int repeats) {
   if (!loglevelActiveFor(LOG_LEVEL_INFO) && !printToWeb) {
     return;
   }
@@ -609,7 +609,7 @@ bool P035_data_struct::parseStringAndSendAirCon(const int irtype, const String s
       stateSize = std::min(stateSize, kSamsungAcExtendedStateLength);
       break;
     default: // Everything else.
-      stateSize = IRsend::defaultBits(irType) / 8;
+      stateSize = (IRsend::defaultBits(irType) + 7) / 8;
 
       if (!stateSize || !hasACState(irType)) {
         // Not a protocol we expected. Abort.

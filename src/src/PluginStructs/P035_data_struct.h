@@ -51,10 +51,10 @@ private:
 
   bool   handleIRremote(const String& cmd);
   bool   handleRawRaw2Encoding(const String& cmd);
-  void   printToLog(String protocol,
-                    String data,
-                    int    bits,
-                    int    repeats);
+  void   printToLog(const String& protocol,
+                    const String& data,
+                    int           bits,
+                    int           repeats);
   String listProtocols();
   bool   addErrorTrue();
   bool   sendIRCode(int const      irtype,
