@@ -113,15 +113,21 @@ bool ETHConnectRelaxed() {
     return false;
   }
   EthEventData.markEthBegin();
-  EthEventData.ethInitSuccess = ETH.begin( 
-    Settings.ETH_Phy_Addr,
-    Settings.ETH_Pin_power,
-    Settings.ETH_Pin_mdc,
-    Settings.ETH_Pin_mdio,
-    (eth_phy_type_t)Settings.ETH_Phy_Type,
-    (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+  if (!EthEventData.ethInitSuccess) {
+    EthEventData.ethInitSuccess = ETH.begin( 
+      Settings.ETH_Phy_Addr,
+      Settings.ETH_Pin_power,
+      Settings.ETH_Pin_mdc,
+      Settings.ETH_Pin_mdio,
+      (eth_phy_type_t)Settings.ETH_Phy_Type,
+      (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+  }
   if (EthEventData.ethInitSuccess) {
     EthEventData.ethConnectAttemptNeeded = false;
+    if (EthLinkUp()) {
+      // We might miss the connected event, since we are already connected.
+      EthEventData.markConnected();
+    }
   }
   return EthEventData.ethInitSuccess;
 }
@@ -149,7 +155,7 @@ bool ETHConnected() {
           }
         }
       }
-      return false;
+      return EthEventData.EthServicesInitialized();
     } else {
       if (EthEventData.last_eth_connect_attempt_moment.isSet() && 
           EthEventData.last_eth_connect_attempt_moment.millisPassedSince() < 5000) {

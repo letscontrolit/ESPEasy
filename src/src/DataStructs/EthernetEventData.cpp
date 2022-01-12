@@ -32,7 +32,6 @@ void EthernetEventData_t::clearAll() {
   lastGetIPmoment.clear();
   last_eth_connect_attempt_moment.clear();
 
-  setEthDisconnected();
   lastEthResetMoment.setNow();
   eth_considered_stable = false;
 
@@ -45,7 +44,6 @@ void EthernetEventData_t::clearAll() {
 }
 
 void EthernetEventData_t::markEthBegin() {
-  setEthDisconnected();
   lastDisconnectMoment.clear();
   lastConnectMoment.clear();
   lastGetIPmoment.clear();
@@ -60,6 +58,7 @@ bool EthernetEventData_t::EthDisconnected() const {
 }
 
 bool EthernetEventData_t::EthGotIP() const {
+
   return bitRead(ethStatus, ESPEASY_ETH_GOT_IP);
 }
 
@@ -72,6 +71,11 @@ bool EthernetEventData_t::EthServicesInitialized() const {
 }
 
 void EthernetEventData_t::setEthDisconnected() {
+  processedConnect          = true;
+  processedDisconnect       = true;
+  processedGotIP            = true;
+  processedDHCPTimeout      = true;
+
   ethStatus = ESPEASY_ETH_DISCONNECTED;
 }
 
@@ -121,7 +125,6 @@ void EthernetEventData_t::markDisconnect() {
     lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
   }
   lastConnectMoment.clear();
-  setEthDisconnected();
   processedDisconnect  = false;
 }
 
