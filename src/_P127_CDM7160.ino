@@ -4,10 +4,14 @@
 // development version
 // by: V0JT4
 // Resolves: https://github.com/letscontrolit/ESPEasy/issues/986
-// TODO:
-// - Restructure: Use ESPEasy 'modern' code
-// - Restructure: Split into PluginDataStruct
-// - Select Plugin ID (127?)
+//
+// Changelog:
+// 2022-01-13, tonhuisman Ignore measured values > 15000: unit is still initializing
+//                        Change status from Development to Testing
+// 2021-12-31, tonhuisman Migrate plugin from ESPEasyPluginPlayground to ESPEasy repository
+// - Restructured: Use ESPEasy 'modern' code
+// - Restructured: Split into PluginDataStruct
+// - Select Plugin ID 127
 
 #include "_Plugin_Helper.h"
 #ifdef USES_P127
@@ -16,7 +20,7 @@
 
 # define PLUGIN_127
 # define PLUGIN_ID_127         127
-# define PLUGIN_NAME_127       "Gases - CO2 CDM7160 [DEVELOPMENT]"
+# define PLUGIN_NAME_127       "Gases - CO2 CDM7160 [TESTING]"
 # define PLUGIN_VALUENAME1_127 "CO2"
 
 
@@ -124,7 +128,12 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
 
       UserVar[event->BaseVarIndex] = P127_data->readData();
 
-      if (UserVar[event->BaseVarIndex] > 10000) {
+      success = true;
+
+      if (UserVar[event->BaseVarIndex] > 15000) {
+        addLog(LOG_LEVEL_ERROR, F("CDM7160: Sensor still initializing, data ignored"));
+        success = false; // Do not send out to controllers
+      } else if (UserVar[event->BaseVarIndex] > 10000) {
         addLog(LOG_LEVEL_ERROR, F("CDM7160: Sensor saturated! > 10000 ppm"));
       }
 
@@ -139,7 +148,6 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
         log += P127_data->getCompensation();
         addLog(LOG_LEVEL_INFO, log);
       }
-      success = true;
       break;
     }
     case PLUGIN_WRITE:
