@@ -170,6 +170,20 @@ void    set4BitToUL(uint32_t& number,
                     uint8_t      bitnr,
                     uint8_t   value);
 
+uint8_t get3BitFromUL(uint32_t number,
+                      uint8_t     bitnr);
+
+void    set3BitToUL(uint32_t& number,
+                    uint8_t      bitnr,
+                    uint8_t   value);
+
+uint8_t get2BitFromUL(uint32_t number,
+                      uint8_t     bitnr);
+
+void    set2BitToUL(uint32_t& number,
+                    uint8_t      bitnr,
+                    uint8_t   value);
+
 
 float getCPUload();
 

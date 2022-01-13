@@ -191,6 +191,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x18:
       result += F("I2C_MultiRelay");
       break;
+    case 0x1D:
+      result +=  F("ADXL345");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
@@ -261,6 +264,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x51:
       result +=  F("PCF8563");
       break;
+    case 0x53:
+      result +=  F("ADXL345");
+      break;
     case 0x58:
       result +=  F("SGP30");
       break;
@@ -292,10 +298,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result +=  F("DS1307,DS3231,PCF8523,CDM7160");
+      result +=  F("DS1307,DS3231,PCF8523,ITG3205,CDM7160");
       break;
     case 0x69:
-      result +=  F("CDM7160");
+      result +=  F("ITG3205,CDM7160");
       break;
     case 0x70:
       result +=  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");

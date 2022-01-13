@@ -46,6 +46,7 @@ test_A      | Normal + test set A                       | Stable + Testing base 
 test_B      | Normal + test set B                       | Stable + Testing base + set B  |
 test_C      | Normal + test set C                       | Stable + Testing base + set C  |
 test_D      | Normal + test set D                       | Stable + Testing base + set D  |
+test_E      | Normal + test set E                       | Stable + Testing base + set E  |
 max         | All available plugins                     | All available                  |
 energy      | All plugins related to energy measurement | Stable + Energy measurement    |
 display     | All plugins related to displays           | Stable + Displays              |
