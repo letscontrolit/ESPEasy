@@ -1,0 +1,19 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``config,task,<taskname>,SetLevel,<value|calculation>``
+
+        Value: {Any valid numeric (float) value}
+
+        Calculation: {A valid calculation, as can be used in Rules}
+
+        ","
+        Using this command, either from rules, via http or mqtt, the **Set Level** of the plugin can be changed. If the value differs from the currently set value, the settings are saved.
+        "
+        "
+        ``[<taskname>#GetLevel]``
+        ","
+        Not a real command, but this plugin supports the ``GetLevel`` Config function, to retrieve the **Set Value** from the settings, by using the pseudo value ``GetLevel``.
+        "

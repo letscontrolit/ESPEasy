@@ -1,3 +1,29 @@
+.. |P120_name| replace:: :cyan:`ADXL345 I2C`
+.. |P120_type| replace:: :cyan:`Acceleration`
+.. |P120_typename| replace:: :cyan:`Acceleration - ADXL345 (I2C)`
+.. |P120_porttype| replace:: `.`
+.. |P120_status| replace:: :yellow:`TESTING E`
+.. |P120_github| replace:: P120_ADXL345_Accelerometer.ino
+.. _P120_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P120_ADXL345_Accelerometer.ino
+.. |P120_usedby| replace:: `.`
+.. |P120_shortinfo| replace:: `Acceleration X/Y/X sensor`
+.. |P120_maintainer| replace:: `tonhuisman`
+.. |P120_compileinfo| replace:: `.`
+.. |P120_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
+
+.. |P121_name| replace:: :cyan:`HCM5883L`
+.. |P121_type| replace:: :cyan:`Output`
+.. |P121_typename| replace:: :cyan:`Position - HMC5883L`
+.. |P121_porttype| replace:: `.`
+.. |P121_status| replace:: :yellow:`TESTING D`
+.. |P121_github| replace:: P121_HMC5883L.ino
+.. _P121_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P121_HMC5883L.ino
+.. |P121_usedby| replace:: `.`
+.. |P121_shortinfo| replace:: `Adafruit HMC5883L Breakout - Triple-Axis Magnetometer Compass Sensor`
+.. |P121_maintainer| replace:: `svn2208`
+.. |P121_compileinfo| replace:: `.`
+.. |P121_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_HMC5883_Unified (modified local copy)`
+
 .. |P124_name| replace:: :cyan:`MultiRelay`
 .. |P124_type| replace:: :cyan:`Output`
 .. |P124_typename| replace:: :cyan:`Output - I2C Multi Relay`
@@ -10,6 +36,19 @@
 .. |P124_maintainer| replace:: `tonhuisman`
 .. |P124_compileinfo| replace:: `.`
 .. |P124_usedlibraries| replace:: `https://github.com/Seeed-Studio/Multi_Channel_Relay_Arduino_Library (modified local copy)`
+
+.. |P125_name| replace:: :cyan:`ADXL345 SPI`
+.. |P125_type| replace:: :cyan:`Acceleration`
+.. |P125_typename| replace:: :cyan:`Acceleration - ADXL345 (SPI)`
+.. |P125_porttype| replace:: `.`
+.. |P125_status| replace:: :yellow:`TESTING E`
+.. |P125_github| replace:: P125_ADXL345_SPI.ino
+.. _P125_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P125_ADXL345_SPI.ino
+.. |P125_usedby| replace:: `.`
+.. |P125_shortinfo| replace:: `Acceleration X/Y/X sensor`
+.. |P125_maintainer| replace:: `tonhuisman`
+.. |P125_compileinfo| replace:: `.`
+.. |P125_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
 
 .. |P128_name| replace:: :cyan:`NeoPixel (BusFX)`
 .. |P128_type| replace:: :cyan:`Output`
