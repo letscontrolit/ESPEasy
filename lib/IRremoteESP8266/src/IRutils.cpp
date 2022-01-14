@@ -95,6 +95,9 @@ String uint64ToString(uint64_t input, uint8_t base) {
 /// @returns A String representation of the integer.
 String int64ToString(int64_t input, uint8_t base) {
   if (input < 0) {
+    // Using String(kDashStr) to keep compatible with old arduino
+    // frameworks. Not needed with 3.0.2.
+    ///> @see https://github.com/crankyoldgit/IRremoteESP8266/issues/1639#issuecomment-944906016
     return String(kDashStr) + uint64ToString(-input, base);
   }
   return uint64ToString(input, base);
@@ -583,6 +586,7 @@ namespace irutils {
   /// @param[in] protocol The IR protocol.
   /// @param[in] model The model number for that protocol.
   /// @return The resulting String.
+  /// @note After adding a new model you should update IRac::strToModel() too.
   String modelToStr(const decode_type_t protocol, const int16_t model) {
     switch (protocol) {
       case decode_type_t::FUJITSU_AC:
@@ -603,6 +607,16 @@ namespace irutils {
           default:                            return kUnknownStr;
         }
         break;
+      case decode_type_t::HAIER_AC176:
+        switch (model) {
+          case haier_ac176_remote_model_t::V9014557_A:
+            return kV9014557AStr;
+          case haier_ac176_remote_model_t::V9014557_B:
+            return kV9014557BStr;
+          default:
+            return kUnknownStr;
+        }
+        break;
       case decode_type_t::HITACHI_AC1:
         switch (model) {
           case hitachi_ac1_remote_model_t::R_LT0541_HTA_A:
@@ -621,6 +635,13 @@ namespace irutils {
           case lg_ac_remote_model_t::AKB74955603:   return kAkb74955603Str;
           case lg_ac_remote_model_t::AKB73757604:   return kAkb73757604Str;
           default:                                  return kUnknownStr;
+        }
+        break;
+      case decode_type_t::MIRAGE:
+        switch (model) {
+          case mirage_ac_remote_model_t::KKG9AC1:  return kKkg9ac1Str;
+          case mirage_ac_remote_model_t::KKG29AC1: return kKkg29ac1Str;
+          default:                                 return kUnknownStr;
         }
         break;
       case decode_type_t::PANASONIC_AC:
@@ -1026,6 +1047,21 @@ namespace irutils {
     const uint8_t nrofnibbles = (count < 16) ? count : (64 / 4);
     for (uint8_t i = 0; i < nrofnibbles; i++, copy >>= 4) sum += copy & 0xF;
     return nibbleonly ? sum & 0xF : sum;
+  }
+
+  /// Sum all the bytes together in an integer.
+  /// @param[in] data The integer to be summed.
+  /// @param[in] count The number of bytes to sum. Starts from LSB. Max of 8.
+  /// @param[in] init Starting value of the calculation to use. (Default is 0)
+  /// @param[in] byteonly true, the result is 8 bits. false, it's 16 bits.
+  /// @return The 8/16-bit calculated result of all the bytes and init value.
+  uint16_t sumBytes(const uint64_t data, const uint8_t count,
+                    const uint8_t init, const bool byteonly) {
+    uint16_t sum = init;
+    uint64_t copy = data;
+    const uint8_t nrofbytes = (count < 8) ? count : (64 / 8);
+    for (uint8_t i = 0; i < nrofbytes; i++, copy >>= 8) sum += (copy & 0xFF);
+    return byteonly ? sum & 0xFF : sum;
   }
 
   /// Convert a byte of Binary Coded Decimal(BCD) into an Integer.
