@@ -1,11 +1,11 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P022
 
-#include "src/DataStructs/PinMode.h"
-#include "src/Helpers/PortStatus.h"
-#include "src/PluginStructs/P022_data_struct.h"
+# include "src/DataStructs/PinMode.h"
+# include "src/Helpers/PortStatus.h"
+# include "src/PluginStructs/P022_data_struct.h"
 
-#include "ESPEasy-Globals.h" // For dummystring
+# include "ESPEasy-Globals.h" // For dummystring
 
 
 // #######################################################################################################
@@ -13,10 +13,10 @@
 // #######################################################################################################
 
 
-#define PLUGIN_022
-#define PLUGIN_ID_022         22
-#define PLUGIN_NAME_022       "Extra IO - PCA9685"
-#define PLUGIN_VALUENAME1_022 "PWM"
+# define PLUGIN_022
+# define PLUGIN_ID_022         22
+# define PLUGIN_NAME_022       "Extra IO - PCA9685"
+# define PLUGIN_VALUENAME1_022 "PWM"
 
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
@@ -90,6 +90,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(0) = 0x10; // Default
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       // The options lists are quite long.
@@ -143,6 +149,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       if (nullptr != P022_data) {
         P022_data->p022_clear_init(oldAddress);
 
@@ -184,36 +191,34 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
       String log;
-      String line           = string;
-      String command;
-      int    dotPos          = line.indexOf('.');
       bool   instanceCommand = false;
+      String command         = parseString(string, 1);
+      int8_t dotPos          = command.indexOf('.');
 
       if (dotPos > -1)
       {
         LoadTaskSettings(event->TaskIndex);
-        String name = line.substring(0, dotPos);
+        String name = command.substring(0, dotPos);
         name.replace(F("["), EMPTY_STRING);
         name.replace(F("]"), EMPTY_STRING);
 
         if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
-          line            = line.substring(dotPos + 1);
+          command         = command.substring(dotPos + 1);
           instanceCommand = true;
         } else {
           break;
         }
       }
-      command = parseString(line, 1);
 
       if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
       {
         success = true;
 
         // "log" is also sent along with the SendStatusOnlyIfNeeded
-        log     = F("PCA 0x");
-        log    += String(address, HEX);
-        log    += F(": PWM ");
-        log    += event->Par1;
+        log  = F("PCA 0x");
+        log += String(address, HEX);
+        log += F(": PWM ");
+        log += event->Par1;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
@@ -310,7 +315,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-          log = F("PCA 0x");
+          log  = F("PCA 0x");
           log += String(address, HEX);
           log += F(": MODE2 0x");
           log += String(event->Par1, HEX);
@@ -325,7 +330,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       if (command == F("status"))
       {
-        if (parseString(line, 2) == F("pca"))
+        if (parseString(string, 2) == F("pca"))
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -358,7 +363,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           int pin = event->Par1;
 
-          if (parseString(line, 2) == F("all"))
+          if (parseString(string, 2) == F("all"))
           {
             pin  = -1;
             log += F("all");
@@ -433,7 +438,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           if (event->Par3 > 0)
           {
-            if (parseString(line, 5) == F("auto"))
+            if (parseString(string, 5) == F("auto"))
             {
               autoreset = -1;
               log      += F(" with autoreset infinity");
@@ -486,10 +491,10 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P022_data) {
         String log = F("PCA 0x");
-        log    += String(address, HEX);
-        log    += F(": GPIO ");
-        log    += event->Par1;
-        int    autoreset = event->Par4;
+        log += String(address, HEX);
+        log += F(": GPIO ");
+        log += event->Par1;
+        int autoreset = event->Par4;
 
         if (event->Par2 == 0)
         {
@@ -511,11 +516,11 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             autoreset--;
           }
           Scheduler.setPluginTaskTimer(event->Par3
-                                      , event->TaskIndex
-                                      , event->Par1
-                                      , !event->Par2
-                                      , event->Par3
-                                      , autoreset);
+                                       , event->TaskIndex
+                                       , event->Par1
+                                       , !event->Par2
+                                       , event->Par3
+                                       , autoreset);
         }
 
         // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);
