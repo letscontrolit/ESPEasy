@@ -81,6 +81,14 @@ IRTEXT_CONST_STRING(kHoldStr, D_STR_HOLD);  ///< "Hold"
 IRTEXT_CONST_STRING(kButtonStr, D_STR_BUTTON);  ///< "Button"
 IRTEXT_CONST_STRING(k8CHeatStr, D_STR_8C_HEAT);  ///< "8C Heat"
 IRTEXT_CONST_STRING(k10CHeatStr, D_STR_10C_HEAT);  ///< "10C Heat"
+IRTEXT_CONST_STRING(kISeeStr, D_STR_ISEE);  ///< "ISee"
+IRTEXT_CONST_STRING(kAbsenseDetectStr, D_STR_ABSENSEDETECT);
+                                                   ///< "AbsenseDetect"
+IRTEXT_CONST_STRING(kDirectIndirectModeStr, D_STR_DIRECTINDIRECTMODE);
+                                                   ///< "Direct/Indirect mode"
+IRTEXT_CONST_STRING(kDirectStr, D_STR_DIRECT);  ///< "Direct"
+IRTEXT_CONST_STRING(kIndirectStr, D_STR_INDIRECT);  ///< "Indirect"
+
 IRTEXT_CONST_STRING(kNightStr, D_STR_NIGHT);  ///< "Night"
 IRTEXT_CONST_STRING(kSilentStr, D_STR_SILENT);  ///< "Silent"
 IRTEXT_CONST_STRING(kFilterStr, D_STR_FILTER);  ///< "Filter"
@@ -123,6 +131,7 @@ IRTEXT_CONST_STRING(kTypeStr, D_STR_TYPE);  ///< "Type"
 IRTEXT_CONST_STRING(kSpecialStr, D_STR_SPECIAL);  ///< "Special"
 IRTEXT_CONST_STRING(kIdStr, D_STR_ID);  ///< "Id" / Device Identifier
 IRTEXT_CONST_STRING(kVaneStr, D_STR_VANE);  ///< "Vane"
+IRTEXT_CONST_STRING(kLockStr, D_STR_LOCK);  ///< "Lock"
 
 IRTEXT_CONST_STRING(kAutoStr, D_STR_AUTO);  ///< "Auto"
 IRTEXT_CONST_STRING(kAutomaticStr, D_STR_AUTOMATIC);  ///< "Automatic"
@@ -139,7 +148,7 @@ IRTEXT_CONST_STRING(kFanStr, D_STR_FAN);  ///< "Fan"
 // HomeAssistant & Google Home Climate integration. For compatibility only.
 // Ref: https://www.home-assistant.io/integrations/google_assistant/#climate-operation-modes
 IRTEXT_CONST_STRING(kFanOnlyStr, D_STR_FANONLY);  ///< "fan-only"
-IRTEXT_CONST_STRING(kFan_OnlyStr, D_STR_FAN_ONLY);  ///< "fan_only" (legacy)
+IRTEXT_CONST_STRING(kFan_OnlyStr, D_STR_FAN_ONLY);  ///< "fan_only" (HA/legacy)
 IRTEXT_CONST_STRING(kFanOnlyWithSpaceStr, D_STR_FANSPACEONLY);  ///< "Fan Only"
 IRTEXT_CONST_STRING(kFanOnlyNoSpaceStr, D_STR_FANONLYNOSPACE);  ///< "FanOnly"
 
@@ -227,6 +236,8 @@ IRTEXT_CONST_STRING(kBitsStr, D_STR_BITS);  ///< "Bits"
 // Model Names
 IRTEXT_CONST_STRING(kYaw1fStr, D_STR_YAW1F);  ///< "YAW1F"
 IRTEXT_CONST_STRING(kYbofbStr, D_STR_YBOFB);  ///< "YBOFB"
+IRTEXT_CONST_STRING(kV9014557AStr, D_STR_V9014557_A);  ///< "V9014557-A"
+IRTEXT_CONST_STRING(kV9014557BStr, D_STR_V9014557_B);  ///< "V9014557-B"
 IRTEXT_CONST_STRING(kRlt0541htaaStr, D_STR_RLT0541HTA_A);  ///< "R-LT0541-HTA-A"
 IRTEXT_CONST_STRING(kRlt0541htabStr, D_STR_RLT0541HTA_B);  ///< "R-LT0541-HTA-B"
 IRTEXT_CONST_STRING(kArrah2eStr, D_STR_ARRAH2E);  ///< "ARRAH2E"
@@ -240,6 +251,8 @@ IRTEXT_CONST_STRING(kGe6711ar2853mStr, D_STR_GE6711AR2853M);  ///<
 IRTEXT_CONST_STRING(kAkb75215403Str, D_STR_AKB75215403);  ///< "AKB75215403"
 IRTEXT_CONST_STRING(kAkb74955603Str, D_STR_AKB74955603);  ///< "AKB74955603"
 IRTEXT_CONST_STRING(kAkb73757604Str, D_STR_AKB73757604);  ///< "AKB73757604"
+IRTEXT_CONST_STRING(kKkg9ac1Str, D_STR_KKG9AC1);  ///< "KKG9AC1"
+IRTEXT_CONST_STRING(kKkg29ac1Str, D_STR_KKG29AC1);  ///< "KKG29AC1"
 IRTEXT_CONST_STRING(kLkeStr, D_STR_LKE);  ///< "LKE"
 IRTEXT_CONST_STRING(kNkeStr, D_STR_NKE);  ///< "NKE"
 IRTEXT_CONST_STRING(kDkeStr, D_STR_DKE);  ///< "DKE"
@@ -376,6 +389,8 @@ IRTEXT_CONST_BLOB_DECL(kAllProtocolNamesStr) {
     D_STR_BOSE "\x0"
     D_STR_ARRIS "\x0"
     D_STR_RHOSS "\x0"
+    D_STR_AIRTON "\x0"
+    D_STR_COOLIX48 "\x0"
     ///< New protocol strings should be added just above this line.
     "\x0"  ///< This string requires double null termination.
 };
