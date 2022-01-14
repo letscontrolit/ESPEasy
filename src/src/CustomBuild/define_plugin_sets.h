@@ -472,7 +472,9 @@ To create/register a plugin, you have to :
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-    #define USES_P088      // ToniA IR plugin
+    #ifndef SIZE_1M          // Leaving out Heatpump IR for 1M builds because it won't fit after upgrading IRremoteESP8266 library to v2.8.1
+      #define USES_P088      // ToniA IR plugin
+    #endif
     #define PLUGIN_SET_ONLY_SWITCH
     #define NOTIFIER_SET_STABLE
     #define USES_P029      // Output - Domoticz MQTT Helper
