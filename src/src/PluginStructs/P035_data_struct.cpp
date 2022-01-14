@@ -31,8 +31,10 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
   if ((Plugin_035_irSender == nullptr) && validGpio(_gpioPin)) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
-      addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
+      addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_STR));
+      # ifdef P035_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSEND: ")) + listProtocols());
+      # endif // ifdef P035_DEBUG_LOG
     }
     Plugin_035_irSender = new (std::nothrow) IRsend(_gpioPin);
 
@@ -54,7 +56,9 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
   if (success && (Plugin_035_commonAc == nullptr) && validGpio(_gpioPin)) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX"));
+      #  ifdef P035_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, String(F("Supported Protocols by IRSENDAC: ")) + listACProtocols());
+      #  endif // ifdef P035_DEBUG_LOG
     }
     Plugin_035_commonAc = new (std::nothrow) IRac(_gpioPin);
   }
@@ -428,6 +432,7 @@ void P035_data_struct::printToLog(const String& protocol, const String& data, in
   }
 }
 
+# ifdef P035_DEBUG_LOG
 String P035_data_struct::listProtocols() {
   String temp;
 
@@ -439,7 +444,9 @@ String P035_data_struct::listProtocols() {
   return temp;
 }
 
-# ifdef P016_P035_Extended_AC
+# endif // ifdef P035_DEBUG_LOG
+
+# if defined(P016_P035_Extended_AC) && defined(P035_DEBUG_LOG)
 String P035_data_struct::listACProtocols() {
   String temp;
 
@@ -451,7 +458,7 @@ String P035_data_struct::listACProtocols() {
   return temp;
 }
 
-# endif // ifdef P016_P035_Extended_AC
+# endif // if defined(P016_P035_Extended_AC) && defined(P035_DEBUG_LOG)
 
 bool P035_data_struct::addErrorTrue() {
   addLog(LOG_LEVEL_ERROR, F("RAW2: Invalid encoding!"));

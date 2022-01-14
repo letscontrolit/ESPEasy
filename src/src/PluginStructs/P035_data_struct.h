@@ -21,7 +21,7 @@ extern void enableIR_RX(boolean enable); // To be found in _P016_IR.ino
 
 # define P35_Ntimings 250u // Defines the ammount of timings that can be stored. Used in RAW and RAW2 encodings
 
-// # define P035_DEBUG_LOG // Enable for some (extra) logging
+# define P035_DEBUG_LOG    // Enable for some (extra) logging
 
 struct P035_data_struct : public PluginTaskData_base {
 public:
