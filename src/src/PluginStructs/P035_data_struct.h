@@ -43,7 +43,7 @@ private:
   # ifdef P016_P035_Extended_AC
 
   IRac          *Plugin_035_commonAc = nullptr;
-  stdAc::state_t st, prev;
+  stdAc::state_t st{}, prev{};
 
   bool   handle_AC_IRremote(const String& irData);
   String listACProtocols();
