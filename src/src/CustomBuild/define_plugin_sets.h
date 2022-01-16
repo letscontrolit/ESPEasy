@@ -1178,12 +1178,12 @@ To create/register a plugin, you have to :
     #define USES_P117  // SCD30
     #define USES_P118  // Itho ventilation control
     #define USES_P124  // I2C MultiRelay
-    #define USES_P126  // 74HC595 Shift register
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
     #define USES_P120  // ADXL345 I2C
     // #define USES_P125  // ADXL345 SPI
+    #define USES_P126  // 74HC595 Shift register
 #endif
 
 
