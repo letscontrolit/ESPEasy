@@ -241,7 +241,7 @@ bool P028_data_struct::check() {
       log += F(", failed");
     }
     log += ')';
-    addLog(LOG_LEVEL_INFO, log);
+  //  addLog(LOG_LEVEL_INFO, log);
     return false;
   }
   return wire_status;
