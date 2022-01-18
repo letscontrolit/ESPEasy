@@ -234,7 +234,7 @@ float ul2float(unsigned long ul)
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(const float& value, uint8_t decimals)
+String toString(const float& value, unsigned int decimals)
 {
   String sValue = String(value, decimals);
 
@@ -242,7 +242,7 @@ String toString(const float& value, uint8_t decimals)
   return sValue;
 }
 
-String doubleToString(const double& value, int decimals, bool trimTrailingZeros) {
+String doubleToString(const double& value, unsigned int decimals, bool trimTrailingZeros) {
   String res(value, decimals);
   if (trimTrailingZeros) {
     int dot_pos = res.lastIndexOf('.');
