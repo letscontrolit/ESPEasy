@@ -9,6 +9,7 @@
 # define P126_DEBUG_LOG // Enable for some (extra) logging
 
 # define P126_CONFIG_CHIP_COUNT       PCONFIG(0)
+# define P126_CONFIG_SHOW_OFFSET      PCONFIG(1)
 # define P126_CONFIG_DATA_PIN         PIN(0)
 # define P126_CONFIG_CLOCK_PIN        PIN(1)
 # define P126_CONFIG_LATCH_PIN        PIN(2)
@@ -18,11 +19,18 @@
 
 # define P126_CONFIG_FLAGS_GET_VALUES_DISPLAY (bitRead(P126_CONFIG_FLAGS, P126_FLAGS_VALUES_DISPLAY))
 
-# define P126_MAX_CHIP_COUNT          16 // Number of chips to support undefined = 1, range 1..16
+# define P126_MAX_CHIP_COUNT          255 // Number of chips to support undefined = 1, range 1..255 necause that's the largest uint8_t
+# define P126_MAX_SHOW_OFFSET         252 // Multiple of 4, and less than P126_MAX_CHIP_COUNT
 
 # if !defined(P126_MAX_CHIP_COUNT)
-#  define P126_MAX_CHIP_COUNT         1  // Fallback value
+#  define P126_MAX_CHIP_COUNT         1   // Fallback value
 # endif // if !defined(P126_MAX_CHIP_COUNT)
+
+# define P126_SHOW_VALUES                 // When defined, will show the selected output values in either Hex or Bin format on the Devices
+                                          // page. Disabled when LIMIT_BUILD_SIZE is set
+# if defined(LIMIT_BUILD_SIZE) && defined(P126_SHOW_VALUES)
+#  undef P126_SHOW_VALUES
+# endif // if defined(LIMIT_BUILD_SIZE) && defined(P126_SHOW_VALUES)
 
 struct P126_data_struct : public PluginTaskData_base {
 public:
@@ -35,7 +43,7 @@ public:
   P126_data_struct() = delete;
   ~P126_data_struct();
 
-  bool isInitialized() {
+  const bool isInitialized() const {
     return nullptr != shift;
   }
 
@@ -45,10 +53,10 @@ public:
 
 private:
 
-  uint32_t getChannelState(uint8_t offset,
-                           uint8_t size);
+  const uint32_t getChannelState(uint8_t offset,
+                                 uint8_t size) const;
 
-  bool     validChannel(uint channel) {
+  const bool     validChannel(uint channel) const {
     return channel > 0 && channel <= (_chipCount * 8);
   }
 

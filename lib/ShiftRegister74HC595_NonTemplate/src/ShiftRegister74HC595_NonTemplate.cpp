@@ -44,18 +44,21 @@ ShiftRegister74HC595_NonTemplate::ShiftRegister74HC595_NonTemplate(const uint8_t
   updateRegisters(); // reset shift register
 }
 
-// Set all pins of the shift registers at once.
+// Set all pins of the shift registers at once. Do not yet update the registers if update is false
 // digitalVAlues is a uint8_t array where the length is equal to the number of shift registers.
-void ShiftRegister74HC595_NonTemplate::setAll(const uint8_t *digitalValues) {
+void ShiftRegister74HC595_NonTemplate::setAll(const uint8_t *digitalValues, bool update) {
   for (int i = 0; i < _size; i++) {
     _digitalValues[i] = digitalValues[i]; // Length check should be done elsewhere (prerequisite)
   }
-  updateRegisters();
+
+  if (update) {
+    updateRegisters();
+  }
 }
 
 // Retrieve all states of the shift registers' output pins.
 // The returned array's length is equal to the number of shift registers.
-uint8_t * ShiftRegister74HC595_NonTemplate::getAll() {
+const uint8_t * ShiftRegister74HC595_NonTemplate::getAll() const {
   return &_digitalValues[0];
 }
 
@@ -85,18 +88,20 @@ void ShiftRegister74HC595_NonTemplate::setNoUpdate(const uint8_t pin, const uint
 
 // Returns the state of the given pin.
 // Either HIGH (1) or LOW (0)
-uint8_t ShiftRegister74HC595_NonTemplate::get(const uint8_t pin) {
+const uint8_t ShiftRegister74HC595_NonTemplate::get(const uint8_t pin) const {
   return (_digitalValues[pin / 8] >> (pin % 8)) & 1;
 }
 
 // Sets all pins of all shift registers to HIGH (1).
 void ShiftRegister74HC595_NonTemplate::setAllHigh() {
+  _digitalValues.clear();
   _digitalValues.resize(_size, 255);
   updateRegisters();
 }
 
 // Sets all pins of all shift registers to LOW (0).
 void ShiftRegister74HC595_NonTemplate::setAllLow() {
+  _digitalValues.clear();
   _digitalValues.resize(_size, 0);
   updateRegisters();
 }
