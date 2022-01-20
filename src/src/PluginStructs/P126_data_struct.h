@@ -19,7 +19,7 @@
 
 # define P126_CONFIG_FLAGS_GET_VALUES_DISPLAY (bitRead(P126_CONFIG_FLAGS, P126_FLAGS_VALUES_DISPLAY))
 
-# define P126_MAX_CHIP_COUNT          255 // Number of chips to support undefined = 1, range 1..255 necause that's the largest uint8_t
+# define P126_MAX_CHIP_COUNT          255 // Number of chips to support undefined = 1, range 1..255 = 8..2048 pins
 # define P126_MAX_SHOW_OFFSET         252 // Multiple of 4, and less than P126_MAX_CHIP_COUNT
 
 # if !defined(P126_MAX_CHIP_COUNT)

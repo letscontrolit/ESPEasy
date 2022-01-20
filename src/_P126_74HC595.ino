@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-01-20 tonhuisman: Fix some bugs, optimize code, now actually supports 255 chips = 2048 pins
+ *                        Hex Values display now in uppercase for readability
  * 2022-01-19 tonhuisman: Add 74hcSetOffset and 74hxSetHexBin commands
  * 2022-01-18 tonhuisman: Improve parsing for 74hcsetall with chipnumber (1..chipCount) and data width (1..4) options
  * 2022-01-17 tonhuisman: Extend to max. 255 chips, add offset for display values, add 74hcSetAllNoUpdate command
@@ -205,7 +207,8 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       P126_data_struct *P126_data = static_cast<P126_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P126_data) && P126_data->isInitialized()) { // Only show if plugin is active
-        String   state, label;
+        String state, label;
+        state.reserve(40);
         String   abcd = F("ABCD");
         uint64_t val;
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 1 : 0);
@@ -232,12 +235,13 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
             val &= 0x0ffffffff;                                          // Keep 32 bits
             val |= 0x100000000;                                          // Set bit just left of 32 bits so we will see the
                                                                          // leading zeroes
-            state += ull2String(val, (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX));
-            state.remove(2, 1);                                          // Delete leading 1 we added
+            String valStr = ull2String(val, (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX));
+            valStr.remove(0, 1);                                         // Delete leading 1 we added
+            valStr.toUpperCase();
+            state += valStr;
 
-            if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {                  // Insert readability separators for Bin display
+            if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) { // Insert readability separators for Bin display
               uint8_t o = 10;
-              state.reserve(state.length() + 3);                         // insert 3 separators
 
               for (uint8_t i = 0; i < 3; i++, o += 9) {
                 state = state.substring(0, o) + '.' + state.substring(o);

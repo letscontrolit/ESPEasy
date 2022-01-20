@@ -21,14 +21,18 @@ public:
   void           setAll(const uint8_t *digitalValues,
                         bool           update = true);
   const uint8_t* getAll() const;
-  void           set(const uint8_t pin,
-                     const uint8_t value);
+  void           set(const uint8_t  pin,
+                     const uint16_t value,
+                     const bool     update = true);
   void           setNoUpdate(const uint8_t pin,
-                             uint8_t       value);
-  void           updateRegisters();
-  void           setAllLow();
-  void           setAllHigh();
-  const uint8_t  get(const uint8_t pin) const;
+                             uint16_t      value) {
+    set(pin, value, false);
+  }
+
+  void          updateRegisters();
+  void          setAllLow();
+  void          setAllHigh();
+  const uint8_t get(const uint8_t pin) const;
 
 private:
 

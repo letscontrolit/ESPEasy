@@ -69,191 +69,167 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.equals(F("74hcset"))) {
-    const uint8_t pin   = event->Par1;
-    const uint8_t value = event->Par2;
+  if (command.startsWith(F("74hc"))) {
+    if (command.equals(F("74hcset")) || command.equals(F("74hcsetnoupdate"))) {
+      const uint8_t  pin   = event->Par1;
+      const uint16_t value = event->Par2;
 
-    if (validChannel(pin)) {
-      shift->set(pin, value);
-      success = true;
-    }
-    # ifdef P126_DEBUG_LOG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("74hcset, pin: ");
-      log += pin;
-      log += F(", value: ");
-      log += value;
-      addLog(LOG_LEVEL_DEBUG, log);
-    }
-    # endif // ifdef P126_DEBUG_LOG
-  } else if (command.equals(F("74hcsetnoupdate"))) {
-    const uint8_t pin   = event->Par1;
-    const uint8_t value = event->Par2;
-
-    if (validChannel(pin)) {
-      shift->setNoUpdate(pin, value);
-      success = true;
-    }
-    # ifdef P126_DEBUG_LOG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("74hcsetnoupdate, pin: ");
-      log += pin;
-      log += F(", value: ");
-      log += value;
-      addLog(LOG_LEVEL_DEBUG, log);
-    }
-    # endif // ifdef P126_DEBUG_LOG
-  } else if (command.equals(F("74hcupdate"))) {
-    shift->updateRegisters();
-    success = true;
-    # ifdef P126_DEBUG_LOG
-
-    addLog(LOG_LEVEL_DEBUG, F("74hcupdate"));
-    # endif // ifdef P126_DEBUG_LOG
-  } else if (command.equals(F("74hcsetall")) || command.equals(F("74hcsetallnoupdate"))) {
-    success = true;
-    bool update = command.equals(F("74hcsetall"));
-    std::vector<uint8_t> value;
-    value.resize(_chipCount, 0);             // Initialize vector to 0's
-
-    const uint8_t *pvalue = shift->getAll(); // Get current state
-
-    for (uint8_t i = 0; i < _chipCount; i++) {
-      value[i] = pvalue[i];
-    }
-
-    uint32_t par   = 0u;
-    uint8_t  param = 2; // Start with an offset
-    uint8_t  width = 4;
-    uint8_t  idx   = 0;
-    String   arg   = parseString(string, param);
-
-    while (!arg.isEmpty() && idx < _chipCount && success) {
-      int colon = arg.indexOf(':'); // First colon: Chip-index, range 1.._chipCount
-      int itmp  = 0;
-
-      if (colon != -1) {
-        String cis = arg.substring(0, colon);
-        arg = arg.substring(colon + 1);
-
-        if (!cis.isEmpty() && validIntFromString(cis, itmp) && (itmp > 0) && (itmp <= _chipCount)) {
-          idx = itmp - 1;       // Actual range is 0.._chipCount - 1
-        } else {
-          success = false;      // Cancel entire operation on error
-        }
+      if (validChannel(pin)) {
+        shift->set(pin - 1, value, command.equals(F("74hcset")));
+        success = true;
       }
-      colon = arg.indexOf(':'); // Second colon: data width, range 1..4 bytes
-      width = 4;                // Set default data width to 4 = 32 bits
-
-      if (colon != -1) {
-        String lis = arg.substring(0, colon);
-        arg = arg.substring(colon + 1);
-
-        if (!lis.isEmpty() && validIntFromString(lis, itmp) && (itmp > 0) && (itmp <= 4)) {
-          width = itmp;
-        } else {
-          success = false; // Cancel entire operation on error
-        }
-      }
-      int64_t tmp = 0;
-      par = 0u; // reset
-
-      if (validInt64FromString(arg, tmp)) {
-        par = static_cast<uint32_t>(tmp);
-      }
-
-      param++; // Process next argument
-      arg = parseString(string, param);
-
       # ifdef P126_DEBUG_LOG
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("74hcsetall: arg: ");
-        log += arg;
-        log += F(", tmp: ");
-        log += ull2String(tmp);
-        log += F("/0x");
-        log += ull2String(tmp, HEX);
-        log += F(", par: ");
-        log += par;
-        log += F("/0x");
-        log += ull2String(par, HEX);
-        log += F(", chip:");
-        log += idx;
-        log += F(", width:");
-        log += width;
-        addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = command;
+        log += F(", pin: ");
+        log += pin;
+        log += F(", value: ");
+        log += value;
+        addLog(LOG_LEVEL_DEBUG, log);
       }
       # endif // ifdef P126_DEBUG_LOG
+    } else if (command.equals(F("74hcupdate"))) {
+      shift->updateRegisters();
+      success = true;
+    } else if (command.equals(F("74hcsetall")) || command.equals(F("74hcsetallnoupdate"))) {
+      success = true;
+      std::vector<uint8_t> value;
+      value.resize(_chipCount, 0);             // Initialize vector to 0's
 
-      for (uint8_t n = 0; n < width && idx < _chipCount; n++, idx++) {
-        value[idx] = ((par >> (n * 8)) & 0xff);
+      const uint8_t *pvalue = shift->getAll(); // Get current state
+
+      for (uint8_t i = 0; i < _chipCount; i++) {
+        value[i] = pvalue[i];
+      }
+
+      uint32_t par   = 0u;
+      uint8_t  param = 2; // Start with an offset
+      uint8_t  width = 4;
+      uint8_t  idx   = 0;
+      String   arg   = parseString(string, param);
+
+      while (!arg.isEmpty() && idx < _chipCount && success) {
+        int colon = arg.indexOf(':'); // First colon: Chip-index, range 1.._chipCount
+        int itmp  = 0;
+
+        if (colon != -1) {
+          String cis = arg.substring(0, colon);
+          arg = arg.substring(colon + 1);
+
+          if (!cis.isEmpty() && validIntFromString(cis, itmp) && (itmp > 0) && (itmp <= _chipCount)) {
+            idx = itmp - 1;       // Actual range is 0.._chipCount - 1
+          } else {
+            success = false;      // Cancel entire operation on error
+          }
+        }
+        colon = arg.indexOf(':'); // Second colon: data width, range 1..4 bytes
+        width = 4;                // Set default data width to 4 = 32 bits
+
+        if (colon != -1) {
+          String lis = arg.substring(0, colon);
+          arg = arg.substring(colon + 1);
+
+          if (!lis.isEmpty() && validIntFromString(lis, itmp) && (itmp > 0) && (itmp <= 4)) {
+            width = itmp;
+          } else {
+            success = false; // Cancel entire operation on error
+          }
+        }
+        int64_t tmp = 0;
+        par = 0u; // reset
+
+        if (validInt64FromString(arg, tmp)) {
+          par = static_cast<uint32_t>(tmp);
+        }
+
+        param++; // Process next argument
+        arg = parseString(string, param);
 
         # ifdef P126_DEBUG_LOG
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("74hcsetall: value[");
-          log += idx;
-          log += F("] : ");
-          log += value[idx];
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = command;
+          log += F(": arg: ");
+          log += arg;
+          log += F(", tmp: ");
+          log += ull2String(tmp);
           log += F("/0x");
-          log += String(value[idx], HEX);
-          log += F(", n * 8: ");
-          log += n;
-          log += '/';
-          log += n * 8;
-          addLog(LOG_LEVEL_DEBUG, log);
+          log += ull2String(tmp, HEX);
+          log += F(", par: ");
+          log += par;
+          log += F("/0x");
+          log += ull2String(par, HEX);
+          log += F(", chip:");
+          log += idx;
+          log += F(", width:");
+          log += width;
+          addLog(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P126_DEBUG_LOG
+
+        for (uint8_t n = 0; n < width && idx < _chipCount; n++, idx++) {
+          value[idx] = ((par >> (n * 8)) & 0xff);
+
+          # ifdef P126_DEBUG_LOG
+
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = command;
+            log += F(": value[");
+            log += idx;
+            log += F("] : ");
+            log += value[idx];
+            log += F("/0x");
+            log += String(value[idx], HEX);
+            log += F(", n * 8: ");
+            log += n;
+            log += '/';
+            log += n * 8;
+            addLog(LOG_LEVEL_DEBUG, log);
+          }
+          # endif // ifdef P126_DEBUG_LOG
+        }
       }
+
+      if (success) {
+        shift->setAll(&value[0], command.equals(F("74hcsetall")));
+      }
+    } else if (command.equals(F("74hcsetalllow"))) {
+      shift->setAllLow();
+      success = true;
+    } else if (command.equals(F("74hcsetallhigh"))) {
+      shift->setAllHigh();
+      success = true;
+    } else if (command.equals(F("74hcsetoffset"))) {
+      if ((event->Par1 >= 0) && (event->Par1 <= P126_MAX_SHOW_OFFSET)) {
+        P126_CONFIG_SHOW_OFFSET = event->Par1;
+
+        if (P126_CONFIG_SHOW_OFFSET >= P126_CONFIG_CHIP_COUNT) {
+          P126_CONFIG_SHOW_OFFSET = 0;
+        }
+        P126_CONFIG_SHOW_OFFSET -= (P126_CONFIG_SHOW_OFFSET % 4);
+
+        if ((P126_CONFIG_SHOW_OFFSET > P126_CONFIG_CHIP_COUNT - 4) && (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
+          P126_CONFIG_SHOW_OFFSET -= 4;
+        }
+        success = true;
+      }
+    # ifdef P126_SHOW_VALUES
+    } else if (command.equals(F("74hcsethexbin"))) {
+      if ((event->Par1 == 0) || (event->Par1 == 1)) {
+        uint32_t lSettings = P126_CONFIG_FLAGS;
+        bitWrite(lSettings, P126_FLAGS_VALUES_DISPLAY, event->Par1 == 1);
+        P126_CONFIG_FLAGS = lSettings;
+        success           = true;
+      }
+    # endif // ifdef P126_SHOW_VALUES
     }
+    # ifdef P126_DEBUG_LOG
 
     if (success) {
-      shift->setAll(&value[0], update);
+      addLog(LOG_LEVEL_DEBUG, command);
     }
-  } else if (command.equals(F("74hcsetalllow"))) {
-    shift->setAllLow();
-    # ifdef P126_DEBUG_LOG
-    addLog(LOG_LEVEL_DEBUG, F("74hcsetalllow"));
     # endif // ifdef P126_DEBUG_LOG
-    success = true;
-  } else if (command.equals(F("74hcsetallhigh"))) {
-    shift->setAllHigh();
-    # ifdef P126_DEBUG_LOG
-    addLog(LOG_LEVEL_DEBUG, F("74hcsetallhigh"));
-    # endif // ifdef P126_DEBUG_LOG
-    success = true;
-  } else if (command.equals(F("74hcsetoffset"))) {
-    if ((event->Par1 >= 0) && (event->Par1 <= P126_MAX_SHOW_OFFSET)) {
-      # ifdef P126_DEBUG_LOG
-      addLog(LOG_LEVEL_DEBUG, F("74hcsetoffset"));
-      # endif // ifdef P126_DEBUG_LOG
-      P126_CONFIG_SHOW_OFFSET = event->Par1;
-
-      if (P126_CONFIG_SHOW_OFFSET >= P126_CONFIG_CHIP_COUNT) {
-        P126_CONFIG_SHOW_OFFSET = 0;
-      }
-      P126_CONFIG_SHOW_OFFSET -= (P126_CONFIG_SHOW_OFFSET % 4);
-
-      if ((P126_CONFIG_SHOW_OFFSET > P126_CONFIG_CHIP_COUNT - 4) && (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
-        P126_CONFIG_SHOW_OFFSET -= 4;
-      }
-      success = true;
-    }
-  # ifdef P126_SHOW_VALUES
-  } else if (command.equals(F("74hcsethexbin"))) {
-    if ((event->Par1 == 0) || (event->Par1 == 1)) {
-      #  ifdef P126_DEBUG_LOG
-      addLog(LOG_LEVEL_DEBUG, F("74hcsethexbin"));
-      #  endif // ifdef P126_DEBUG_LOG
-      uint32_t lSettings = P126_CONFIG_FLAGS;
-      bitWrite(lSettings, P126_FLAGS_VALUES_DISPLAY, event->Par1 == 1);
-      P126_CONFIG_FLAGS = lSettings;
-      success           = true;
-    }
-  # endif // ifdef P126_SHOW_VALUES
   }
   return success;
 }
