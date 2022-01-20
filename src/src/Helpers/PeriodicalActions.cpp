@@ -203,20 +203,22 @@ void runEach30Seconds()
     log += WiFiEventData.connectionFailures;
     log += F(" FreeMem ");
     log += FreeMem();
+    bool logWiFiStatus = true;
     #ifdef HAS_ETHERNET
     if(active_network_medium == NetworkMedium_t::Ethernet) {
+      logWiFiStatus = false;
       log += F( " EthSpeedState ");
       log += getValue(LabelType::ETH_SPEED_STATE);
-    } else {
+      log += F(" ETH status: ");
+      log += EthEventData.ESPEasyEthStatusToString();
+    }
+    #endif
+    if (logWiFiStatus) {
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
+      log += F(" ESPeasy internal wifi status: ");
+      log += WiFiEventData.ESPeasyWifiStatusToString();
     }
-    #else
-    log += F(" WiFiStatus ");
-    log += ArduinoWifiStatusToString(WiFi.status());
-    #endif
-    log += F(" ESPeasy internal wifi status: ");
-    log += ESPeasyWifiStatusToString();
 
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();

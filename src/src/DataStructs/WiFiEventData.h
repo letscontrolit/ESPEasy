@@ -55,6 +55,8 @@ struct WiFiEventData_t {
 
   void setAuthMode(uint8_t newMode);
 
+  String ESPeasyWifiStatusToString() const;
+
 
   // WiFi related data
   bool          wifiSetup        = false;

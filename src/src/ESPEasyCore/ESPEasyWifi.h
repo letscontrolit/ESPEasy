@@ -134,7 +134,6 @@ void setupStaticIPconfig();
 String formatScanResult(int i, const String& separator);
 String formatScanResult(int i, const String& separator, int32_t& rssi);
 
-String ESPeasyWifiStatusToString();
 void logConnectionStatus();
 
 
