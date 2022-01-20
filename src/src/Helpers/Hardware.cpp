@@ -61,7 +61,20 @@ void hardwareInit()
       checkAndClearPWM(key);
       #endif
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
-        const PinBootState bootState = Settings.getPinBootState(gpio);
+        PinBootState bootState = Settings.getPinBootState(gpio);
+      #ifdef HAS_ETHERNET
+        if (Settings.ETH_Pin_power == gpio)
+        {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("ETH  : Reset ETH module on pin ");
+            log += Settings.ETH_Pin_power;
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          bootState = PinBootState::Output_low;
+        }
+
+      #endif
+
         if (bootState != PinBootState::Default_state) {
           int8_t state = -1;
           uint8_t mode = PIN_MODE_UNDEFINED;
