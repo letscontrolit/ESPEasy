@@ -144,13 +144,15 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       }
       P126_CONFIG_SHOW_OFFSET -= (P126_CONFIG_SHOW_OFFSET % 4);
 
-      if ((P126_CONFIG_SHOW_OFFSET > P126_CONFIG_CHIP_COUNT - 4) && (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
+      if ((P126_CONFIG_CHIP_COUNT > 4) &&
+          (P126_CONFIG_SHOW_OFFSET > P126_CONFIG_CHIP_COUNT - 4) &&
+          (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
         P126_CONFIG_SHOW_OFFSET -= 4;
       }
       # ifdef P126_SHOW_VALUES
       uint32_t lSettings = 0u;
 
-      bitWrite(lSettings, P126_FLAGS_VALUES_DISPLAY, isFormItemChecked(F("p126_valuesdisplay")));
+      if (isFormItemChecked(F("p126_valuesdisplay"))) { bitSet(lSettings, P126_FLAGS_VALUES_DISPLAY); }
 
       P126_CONFIG_FLAGS = lSettings;
       # endif // ifdef P126_SHOW_VALUES
@@ -211,7 +213,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         state.reserve(40);
         String   abcd = F("ABCD");
         uint64_t val;
-        const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 1 : 0);
+        const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4);
         const uint16_t maxVar   = min(static_cast<uint8_t>(4), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
 
         for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
