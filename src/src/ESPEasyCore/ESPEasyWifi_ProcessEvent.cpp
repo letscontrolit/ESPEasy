@@ -155,7 +155,7 @@ void handle_unprocessedNetworkEvents()
           lastDisconnectMoment_log.set(WiFiEventData.lastDisconnectMoment.get());
           lastWiFiStatus_log = cur_wifi_status;
           String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-          wifilog += ESPeasyWifiStatusToString();
+          wifilog += WiFiEventData.ESPeasyWifiStatusToString();
           wifilog += F(" RSSI: ");
           wifilog += String(WiFi.RSSI());
           wifilog += F(" status: ");

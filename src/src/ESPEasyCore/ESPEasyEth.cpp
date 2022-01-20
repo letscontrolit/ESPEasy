@@ -24,7 +24,9 @@ bool ethUseStaticIP() {
 void ethSetupStaticIPconfig() {
   if (!ethUseStaticIP()) { 
     const IPAddress IP_zero(0, 0, 0, 0); 
-    ETH.config(IP_zero, IP_zero, IP_zero);
+    if (!ETH.config(IP_zero, IP_zero, IP_zero, IP_zero)) {
+      addLog(LOG_LEVEL_ERROR, F("ETH  : Cannot set IP config"));
+    }
     return; 
   }
   const IPAddress ip     = Settings.ETH_IP;

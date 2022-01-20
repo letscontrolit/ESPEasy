@@ -133,3 +133,21 @@ void EthernetEventData_t::markConnected() {
   processedConnect    = false;
 }
 
+String EthernetEventData_t::ESPEasyEthStatusToString() const {
+  String log;
+  if (EthDisconnected()) {
+    log = F("DISCONNECTED");
+  } else {
+    if (EthConnected()) {
+      log += F("Conn. ");
+    }
+    if (EthGotIP()) {
+      log += F("IP ");
+    }
+    if (EthServicesInitialized()) {
+      log += F("Init");
+    }
+  }
+  return log;
+
+}

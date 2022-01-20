@@ -504,7 +504,7 @@ bool checkAndResetWiFi() {
   }
   #endif
   String log = F("WiFi : WiFiConnected() out of sync: ");
-  log += ESPeasyWifiStatusToString();
+  log += WiFiEventData.ESPeasyWifiStatusToString();
   log += F(" RSSI: ");
   log += String(WiFi.RSSI());
   #ifdef ESP8266
@@ -1335,24 +1335,6 @@ String formatScanResult(int i, const String& separator, int32_t& rssi) {
 }
 
 
-String ESPeasyWifiStatusToString() {
-  String log;
-  if (WiFiEventData.WiFiDisconnected()) {
-    log = F("DISCONNECTED");
-  } else {
-    if (WiFiEventData.WiFiConnected()) {
-      log += F("Conn. ");
-    }
-    if (WiFiEventData.WiFiGotIP()) {
-      log += F("IP ");
-    }
-    if (WiFiEventData.WiFiServicesInitialized()) {
-      log += F("Init");
-    }
-  }
-  return log;
-}
-
 void logConnectionStatus() {
   static unsigned long lastLog = 0;
   if (lastLog != 0 && timePassedSince(lastLog) < 1000) {
@@ -1379,7 +1361,7 @@ void logConnectionStatus() {
     String log = F("WIFI : Arduino wifi status: ");
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
-    log += ESPeasyWifiStatusToString();
+    log += WiFiEventData.ESPeasyWifiStatusToString();
     addLog(LOG_LEVEL_INFO, log);
   }
 /*
