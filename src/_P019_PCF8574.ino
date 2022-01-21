@@ -2,7 +2,6 @@
 #ifdef USES_P019
 
 #include "src/DataStructs/PinMode.h"
-#include "src/Commands/GPIO.h"
 #include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################

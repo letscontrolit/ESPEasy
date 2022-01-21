@@ -3,7 +3,6 @@
 #ifdef USES_P001
 
 #include "src/DataStructs/PinMode.h"
-#include "src/Commands/GPIO.h"
 #include "src/ESPEasyCore/Controller.h"
 #include "src/ESPEasyCore/ESPEasyGPIO.h"
 #include "src/Helpers/Audio.h"

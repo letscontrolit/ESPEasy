@@ -46,7 +46,7 @@ bool isValid(EthPhyType_t phyType) {
 
 const __FlashStringHelper * toString(EthPhyType_t phyType) {
   switch (phyType) {
-    case EthPhyType_t::LAN8710: return F("LAN8710");
+    case EthPhyType_t::LAN8710: return F("LAN8710/LAN8720");
     case EthPhyType_t::TLK110:  return F("TLK110");
     case EthPhyType_t::RTL8201: return F("RTL8201");
     case EthPhyType_t::DP83848: return F("DP83848");

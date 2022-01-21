@@ -5,6 +5,7 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
@@ -113,6 +114,10 @@ bool ETHConnectRelaxed() {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     EthEventData.ethInitSuccess = false;
     return false;
+  }
+  if (Settings.ETH_Pin_power >= 0) {
+    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power, 1, PIN_MODE_OUTPUT);
+    delay(100); // Give the Eth module some time to power on.
   }
   EthEventData.markEthBegin();
   if (!EthEventData.ethInitSuccess) {
