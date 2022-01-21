@@ -217,11 +217,11 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     if (Plugin076_LoadMultipliers(event->TaskIndex, current, voltage, power)) {
       addFormSubHeader(F("Calibration Values"));
       addFormTextBox(F("Current Multiplier"), F("p076_currmult"),
-                     String(current, 2), 25);
+                     doubleToString(current, 2), 25);
       addFormTextBox(F("Voltage Multiplier"), F("p076_voltmult"),
-                     String(voltage, 2), 25);
+                     doubleToString(voltage, 2), 25);
       addFormTextBox(F("Power Multiplier"), F("p076_powmult"),
-                     String(power, 2), 25);
+                     doubleToString(power, 2), 25);
     }
 
     success = true;

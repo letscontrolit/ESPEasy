@@ -73,11 +73,11 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Point 1"), F("p060_adc1"), PCONFIG_LONG(0), 0, 4095);
       html_add_estimate_symbol();
-      addTextBox(F("p060_out1"), String(PCONFIG_FLOAT(0), 3), 10);
+      addTextBox(F("p060_out1"), toString(PCONFIG_FLOAT(0), 3), 10);
 
       addFormNumericBox(F("Point 2"), F("p060_adc2"), PCONFIG_LONG(1), 0, 4095);
       html_add_estimate_symbol();
-      addTextBox(F("p060_out2"), String(PCONFIG_FLOAT(1), 3), 10);
+      addTextBox(F("p060_out2"), toString(PCONFIG_FLOAT(1), 3), 10);
 
       success = true;
       break;
