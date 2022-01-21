@@ -11,6 +11,7 @@
 // bit definition in PCONFIG_LONG(0)
 # define P016_BitAddNewCode  0 // Add automatically new code into Code of the command structure
 # define P016_BitExecuteCmd  1 // Execute command if received code matches Code or AlternativeCode of the command structure
+# define P016_BitAcceptUnknownType  2 // Accept unknown DecodeType as valid IR code (will be set to RAW before calling AddCode() or ExecuteCode()) 
 
 # define P16_Nlines   10       // The number of different lines which can be displayed - each line is 64 chars max
 # define P16_Nchars   64       // max chars per command line
