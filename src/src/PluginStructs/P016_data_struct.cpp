@@ -265,6 +265,24 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       }
       return;
     }
+    # ifdef PLUGIN_016_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
+        log.reserve(128); // estimated
+        log  = F("[P36] ValidateCode failed: ");
+        log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
+        log += F(" Code: 0x");
+        log += uint64ToString(Code, 16);
+        log += F(" / [");
+        log += (i + 1);
+        log += F("] = {");
+        log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
+        log += F(" Code: 0x");
+        log += uint64ToString(CommandLines[i].Code, 16);
+        log += '}';
+        addLog(LOG_LEVEL_INFO, log);
+    }
+    # endif // PLUGIN_016_DEBUG
   }
 }
 
