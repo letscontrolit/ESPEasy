@@ -244,6 +244,7 @@ String toString(const float& value, uint8_t decimals)
 
 String doubleToString(const double& value, int decimals, bool trimTrailingZeros) {
   String res(value, decimals);
+  res.trim();
   if (trimTrailingZeros) {
     int dot_pos = res.lastIndexOf('.');
     if (dot_pos != -1) {
