@@ -370,7 +370,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                 
   #ifndef BUILD_NO_DEBUG
                 s.add(usecPassedSince(statisticsTimerStart));
-                tmpString += "<br/> Display timings = " + String(s.getAvg());
+                tmpString += "<br/> Display timings = " + toString(s.getAvg());
   #endif              
                 P096_data->eInkScreen.clearBuffer();
                 P096_data->plugin_096_sequence_in_progress = false;

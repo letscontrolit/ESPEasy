@@ -24,6 +24,7 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -64,7 +65,7 @@ void handle_sysinfo_json() {
   json_number(F("unit"), String(Settings.Unit));
   json_prop(F("time"),   node_time.getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
-  json_number(F("cpu_load"),   String(getCPUload()));
+  json_number(F("cpu_load"),   toString(getCPUload()));
   json_number(F("loop_count"), String(getLoopCountPerSec()));
   json_close();
 

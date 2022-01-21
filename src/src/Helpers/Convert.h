@@ -65,9 +65,9 @@ float ul2float(unsigned long ul);
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(const float& value, unsigned int decimals);
+String toString(const float& value, unsigned int decimalPlaces = 2);
 
-String doubleToString(const double& value, unsigned int decimals = 2, bool trimTrailingZeros = false);
+String doubleToString(const double& value, unsigned int decimalPlaces = 2, bool trimTrailingZeros = false);
 
 
 #endif // HELPERS_CONVERT_H

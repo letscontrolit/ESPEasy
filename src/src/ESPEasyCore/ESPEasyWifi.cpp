@@ -681,14 +681,14 @@ void SetWiFiTXpower(float dBm, float rssi) {
       if (TX_pwr_int != last_log) {
         last_log = TX_pwr_int;
         String log = F("WiFi : Set TX power to ");
-        log += String(dBm, 0);
+        log += toString(dBm, 0);
         log += F("dBm");
         log += F(" sensitivity: ");
-        log += String(threshold, 0);
+        log += toString(threshold, 0);
         log += F("dBm");
         if (rssi < 0) {
           log += F(" RSSI: ");
-          log += String(rssi, 0);
+          log += toString(rssi, 0);
           log += F("dBm");
         }
         addLog(LOG_LEVEL_DEBUG, log);

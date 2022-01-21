@@ -1024,7 +1024,7 @@ void addSVG_param(const __FlashStringHelper * key, int value) {
 }
 
 void addSVG_param(const __FlashStringHelper * key, float value) {
-  addSVG_param(key, String(value, 2));
+  addSVG_param(key, toString(value, 2));
 }
 
 void addSVG_param(const __FlashStringHelper * key, const String& value) {

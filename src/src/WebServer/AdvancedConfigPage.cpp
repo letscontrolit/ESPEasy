@@ -260,14 +260,14 @@ void handle_advanced() {
     addUnit(F("dBm"));
     String note;
     note = F("Current max: ");
-    note += String(maxTXpwr, 2);
+    note += toString(maxTXpwr, 2);
     note += F(" dBm");
     addFormNote(note);
 
     addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
     addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
     note = F("Adjust TX power to target the AP with (threshold + margin) dBm signal strength. Current threshold: ");
-    note += String(threshold, 2);
+    note += toString(threshold, 2);
     note += F(" dBm");
     addFormNote(note);
   }
