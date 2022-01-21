@@ -1167,7 +1167,6 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
-    #define USES_P119   // ITG3205 Gyro
 #endif
 
 #ifdef PLUGIN_SET_TESTING_D
@@ -1181,8 +1180,10 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
-    #define USES_P120  // ADXL345 I2C
-    // #define USES_P125  // ADXL345 SPI
+    #define USES_P119   // ITG3205 Gyro
+    #define USES_P120   // ADXL345 I2C
+    #define USES_P121   // HMC5883L 
+    #define USES_P125   // ADXL345 SPI
 #endif
 
 
@@ -1474,10 +1475,10 @@ To create/register a plugin, you have to :
     #define USES_P119   // ITG3205 Gyro
   #endif
   #ifndef USES_P120
-    #define USES_P120   // ADXL345 Acceleration / Gravity
+    #define USES_P120   // ADXL345 I2C Acceleration / Gravity
   #endif
   #ifndef USES_P121
-    #define USES_P121   //
+    #define USES_P121   // HMC5883L 
   #endif
   #ifndef USES_P122
     #define USES_P122   //
@@ -1489,7 +1490,7 @@ To create/register a plugin, you have to :
     #define USES_P124   //
   #endif
   #ifndef USES_P125
-    #define USES_P125   //
+    #define USES_P125   // ADXL345 SPI Acceleration / Gravity
   #endif
   #ifndef USES_P126
     #define USES_P126   //
