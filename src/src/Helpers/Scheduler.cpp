@@ -6,7 +6,6 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include "../Commands/GPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyRules.h"

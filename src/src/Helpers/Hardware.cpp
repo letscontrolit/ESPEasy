@@ -1,6 +1,5 @@
 #include "../Helpers/Hardware.h"
 
-#include "../Commands/GPIO.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
