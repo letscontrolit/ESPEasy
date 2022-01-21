@@ -19,10 +19,11 @@
 Adafruit_MPR121::Adafruit_MPR121() {
 }
 
-boolean Adafruit_MPR121::begin(uint8_t i2caddr) {
+boolean Adafruit_MPR121::begin(uint8_t i2caddr, uint8_t sensitivity) {
   //Wire.begin();   called in ESPEasy framework
 
   _i2caddr = i2caddr;
+  _sensitivity = sensitivity;
 
   // soft reset
   writeRegister(MPR121_SOFTRESET, 0x63);
@@ -56,8 +57,16 @@ boolean Adafruit_MPR121::begin(uint8_t i2caddr) {
   writeRegister(MPR121_FDLT, 0x00);
 
   writeRegister(MPR121_DEBOUNCE, 0);
-  writeRegister(MPR121_CONFIG1, 0x10); // default, 16uA charge current
-  writeRegister(MPR121_CONFIG2, 0x20); // 0.5uS encoding, 1ms period
+  switch(_sensitivity) {
+    case MPR212_EXTRA_SENSITIVITY:
+      writeRegister(MPR121_CONFIG1, 0x20); // increased to 32uA charge current
+      writeRegister(MPR121_CONFIG2, 0x3A); // 0.5uS encoding, 18 samples, 4ms period
+      break;
+    default: // MPR212_NORMAL_SENSITIVITY
+      writeRegister(MPR121_CONFIG1, 0x10); // default, 16uA charge current
+      writeRegister(MPR121_CONFIG2, 0x20); // 0.5uS encoding, 1ms period
+      break;
+  }
 
 //  writeRegister(MPR121_AUTOCONFIG0, 0x8F);
 
@@ -94,7 +103,8 @@ uint16_t  Adafruit_MPR121::filteredData(uint8_t t) {
 }
 
 uint16_t  Adafruit_MPR121::baselineData(uint8_t t) {
-  if (t > 12) return 0;
+  if ((_sensitivity == MPR212_EXTRA_SENSITIVITY) && (t > 3)) return 0;
+  if (t > 12) return 0; // MPR212_NORMAL_SENSITIVITY
   uint16_t bl = readRegister8(MPR121_BASELINE_0 + t);
   return (bl << 2);
 }
