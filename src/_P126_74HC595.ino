@@ -12,6 +12,7 @@
  *                        NB:!!! Only restores up to 4 * VARS_PER_TASK (16) chip values, starting at the configured Offset for display !!!
  *                        When enabled, changing the offset will reset the values content to 0.
  *                        Code improvements and optimizations
+ *                        Add command 74hcSetChipCount for changing the number of chips at runtime. Does not restart the plugin.
  * 2022-01-20 tonhuisman: Fix some bugs, optimize code, now actually supports 255 chips = 2048 pins
  *                        Hex Values display now in uppercase for readability
  * 2022-01-19 tonhuisman: Add 74hcSetOffset and 74hxSetHexBin commands
@@ -33,6 +34,7 @@
  * 74hcSetAllLow                              : Set all register outputs to 0/low.
  * 74hcSetAllHigh                             : Set all register outputs to 1/high.
  * 74hcSetOffset,<chip offset>                : Set the chip offset for display. Will reflect in the device configuration, but not saved.
+ * 74hcSetChipCount,<chip count>              : Set the number of chips to use, without restarting the plugin. Range 1..P126_MAX_CHIP_COUNT.
  * 74hcSetHexBin,<0|1>                        : Turn off/on the Hex or Bin Values display, reflected in device configuration, but not saved.
  */
 

@@ -285,6 +285,13 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         }
         success = true;
       }
+    } else if (command.equals(F("74hcsetchipcount"))) {
+      if ((event->Par1 >= 1) && (event->Par1 <= P126_MAX_CHIP_COUNT)) {
+        P126_CONFIG_CHIP_COUNT = event->Par1;
+        _chipCount             = event->Par1;
+        shift->setSize(P126_CONFIG_CHIP_COUNT);
+        success = true;
+      }
     # ifdef P126_SHOW_VALUES
     } else if (command.equals(F("74hcsethexbin"))) {
       if ((event->Par1 == 0) || (event->Par1 == 1)) {
