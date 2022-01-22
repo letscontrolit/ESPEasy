@@ -1,4 +1,4 @@
-#include "ESPEasy_now_hdr.h"
+#include "../DataStructs/ESPEasy_now_hdr.h"
 
 #ifdef USES_ESPEASY_NOW
 

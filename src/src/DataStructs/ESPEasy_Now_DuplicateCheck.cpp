@@ -1,4 +1,4 @@
-#include "ESPEasy_Now_DuplicateCheck.h"
+#include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 
 ESPEasy_Now_DuplicateCheck::ESPEasy_Now_DuplicateCheck()
   : _key(0), _type(ESPEasy_Now_DuplicateCheck::message_t::KeyToCheck) {}

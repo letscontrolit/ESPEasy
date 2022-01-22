@@ -1,4 +1,4 @@
-#include "ESPEasy_Now_packet.h"
+#include "../DataStructs/ESPEasy_Now_packet.h"
 
 #ifdef USES_ESPEASY_NOW
 

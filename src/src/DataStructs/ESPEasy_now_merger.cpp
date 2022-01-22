@@ -1,4 +1,4 @@
-#include "ESPEasy_now_merger.h"
+#include "../DataStructs/ESPEasy_now_merger.h"
 
 #ifdef USES_ESPEASY_NOW
 
@@ -18,7 +18,7 @@ void ESPEasy_now_merger::addPacket(
   const uint8_t     *buf,
   size_t             packetSize)
 {
-  #ifdef ESP8266
+  # ifdef ESP8266
   const uint16_t maxFreeBlock = ESP.getMaxFreeBlockSize();
 
   if (2 * packetSize > maxFreeBlock) {
@@ -27,14 +27,15 @@ void ESPEasy_now_merger::addPacket(
     _firstPacketTimestamp -= ESPEASY_NOW_MESSAGE_TIMEOUT;
     return;
   }
-  #endif
+  # endif // ifdef ESP8266
 
   // FIXME TD-er: How to handle duplicates?
   // We might receive some packets several times if the sender does not receive our acknowledgement
   ESPEasy_Now_packet packet;
   packet.setReceivedPacket(mac, buf, packetSize);
+
   if (packet.valid()) {
-    _queue[packet_nr] = std::move(packet);
+    _queue[packet_nr]     = std::move(packet);
     _firstPacketTimestamp = millis();
   }
 }
@@ -122,6 +123,7 @@ String ESPEasy_now_merger::getLogString() const
 
   getMac(mac);
   String log;
+
   log.reserve(64);
   log += mac.toString();
   log += F(" payload: ");
@@ -166,13 +168,14 @@ bool ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
     if (stringLength == 0) {
       return false;
     }
+
     if (!string.reserve(stringLength)) {
       return false;
     }
   }
 
   const size_t bufsize = 128;
-  uint8_t buf[bufsize] = {0};
+  uint8_t buf[bufsize] = { 0 };
 
   bool done = false;
 
@@ -201,8 +204,8 @@ bool ESPEasy_now_merger::getString(String& string, size_t& payload_pos) const
 size_t ESPEasy_now_merger::str_len(size_t& payload_pos) const
 {
   const size_t bufsize = 128;
-  uint8_t buf[bufsize] = {0};
-  bool done = false;
+  uint8_t buf[bufsize] = { 0 };
+  bool    done         = false;
 
   // We do fetch more data from the message than the string size, so copy payload_pos first
   size_t tmp_payload_pos = payload_pos;

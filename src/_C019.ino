@@ -5,6 +5,7 @@
 // #######################################################################################################
 
 #include "ESPEasy_fdwdecl.h"
+#include "ESPEasy_common.h"
 #include "src/ControllerQueue/C019_queue_element.h"
 #include "src/Globals/ESPEasy_now_handler.h"
 #include "src/Helpers/_CPlugin_Helper.h"

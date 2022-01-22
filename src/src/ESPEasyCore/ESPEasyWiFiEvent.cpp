@@ -1,7 +1,7 @@
-#include "ESPEasyWiFiEvent.h"
+#include "../ESPEasyCore/ESPEasyWiFiEvent.h"
 
 #ifdef HAS_ETHERNET
-#include "ETH.h"
+#include <ETH.h>
 #endif
 
 #include "../DataStructs/RTCStruct.h"

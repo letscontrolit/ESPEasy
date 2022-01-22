@@ -1,4 +1,4 @@
-#include "ESPEasy_now_splitter.h"
+#include "../DataStructs/ESPEasy_now_splitter.h"
 
 #ifdef USES_ESPEASY_NOW
 

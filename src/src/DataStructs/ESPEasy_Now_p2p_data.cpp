@@ -1,4 +1,4 @@
-#include "ESPEasy_Now_p2p_data.h"
+#include "../DataStructs/ESPEasy_Now_p2p_data.h"
 
 #include <cstddef>
 

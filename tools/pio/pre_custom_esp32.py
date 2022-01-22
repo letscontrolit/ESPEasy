@@ -48,15 +48,16 @@ else:
 #   "-DUSES_P094",  # CUL Reader
 #   "-DUSES_P095",  # TFT ILI9341
     "-DUSES_P097",  # Touch (ESP32)
-    "-DUSES_P098",  # ESPEasy-NOW Reader
+#    "-DUSES_P098",  # ESPEasy-NOW Reader
     "-DUSES_P106",  # BME680
     "-DUSES_P107",  # SI1145 UV index
 
 #   "-DUSES_C015",  # Blynk
     "-DUSES_C016",  # Cache Controller
     "-DUSES_C018",  # TTN/RN2483
-    "-DUSES_C019",  # ESPEasy-NOW
+#    "-DUSES_C019",  # ESPEasy-NOW
 
+    "-DUSES_ESPEASY_NOW",
     "-DUSE_EXT_RTC",
     "-DFEATURE_SD",
     "-DFEATURE_I2CMULTIPLEXER",

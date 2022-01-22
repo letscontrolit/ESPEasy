@@ -4,10 +4,11 @@
 #include <Arduino.h>
 
 #include "../Globals/ESPEasy_now_state.h"
+#include "../../ESPEasy_common.h"
 #ifdef USES_ESPEASY_NOW
 
-# include "MAC_address.h"
-# include "ESPEasy_now_hdr.h"
+# include "../DataStructs/MAC_address.h"
+# include "../DataStructs/ESPEasy_now_hdr.h"
 
 # include <list>
 # include <map>

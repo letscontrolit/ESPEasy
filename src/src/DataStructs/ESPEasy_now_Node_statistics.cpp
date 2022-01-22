@@ -16,7 +16,7 @@ void ESPEasy_now_Node_statistics_t::addRoute(uint8_t unit, const ESPEasy_now_tra
     return;
   }
 
-  if (last_update_route[last_route_index] != 0 && timePassedSince(last_update_route[last_route_index]) < 1000) {
+  if ((last_update_route[last_route_index] != 0) && (timePassedSince(last_update_route[last_route_index]) < 1000)) {
     // Handling a burst of updates, only add those which have a higher success rate.
     if (routes[last_route_index] < route) {
       return;
@@ -55,7 +55,8 @@ void ESPEasy_now_Node_statistics_t::updateSuccessRate(uint8_t unit, bool success
     if (timePassedSince(last_update) < 100) {
       // Apply some rate limiter.
       return;
-      //if (success_rate > 100) { --success_rate; }
+
+      // if (success_rate > 100) { --success_rate; }
     } else if (success_rate < 255) { ++success_rate; }
     last_update = millis();
   } else {
@@ -63,7 +64,7 @@ void ESPEasy_now_Node_statistics_t::updateSuccessRate(uint8_t unit, bool success
   }
 
   for (unsigned int i = 0; i < ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES; ++i) {
-    if (last_update_route[i] != 0 && timePassedSince(last_update_route[i]) > 125000) {
+    if ((last_update_route[i] != 0) && (timePassedSince(last_update_route[i]) > 125000)) {
       last_update_route[i] = 0;
       routes[i].clear();
     } else {
@@ -99,7 +100,7 @@ const ESPEasy_now_traceroute_struct * ESPEasy_now_Node_statistics_t::bestRoute()
     const int     successRate = routes[i].computeSuccessRate();
 
     if (distance == bestDistance) {
-      if (successRate > bestSuccessRate && distance < 255) {
+      if ((successRate > bestSuccessRate) && (distance < 255)) {
         bestSuccessRate = successRate;
         bestIndex       = i;
       }
@@ -132,4 +133,4 @@ void ESPEasy_now_Node_statistics_t::setMQTTQueueState(ESPEasy_Now_MQTT_queue_che
   mqtt_queue_state = state;
 }
 
-#endif
+#endif // ifdef USES_ESPEASY_NOW

@@ -55,6 +55,6 @@ private:
 
 typedef std::map<uint8_t, ESPEasy_now_Node_statistics_t> ESPEasy_now_Node_statisticsMap;
 
-#endif
+#endif // ifdef USES_ESPEASY_NOW
 
 #endif // ifndef DATASTRUCTS_ESPEASY_NOW_NODE_STATISTICS_H

@@ -4,6 +4,7 @@
 #include <Arduino.h>
 
 #include "../Globals/ESPEasy_now_state.h"
+#include "../../ESPEasy_common.h"
 #ifdef USES_ESPEASY_NOW
 
 class ESPEasy_Now_MQTT_queue_check_packet {

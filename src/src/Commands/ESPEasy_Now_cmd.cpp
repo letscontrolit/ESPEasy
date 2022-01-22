@@ -3,10 +3,11 @@
 
 #include "../Globals/ESPEasy_now_state.h"
 
+#include "../../ESPEasy_common.h"
+
 #ifdef USES_ESPEASY_NOW
 
 #include "../Commands/Common.h"
-#include "../../ESPEasy_common.h"
 #include "../Globals/ESPEasy_now_handler.h"
 
 String Command_ESPEasy_Now_Disable(struct EventStruct *event, const char *Line)

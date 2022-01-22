@@ -4,10 +4,11 @@
 #include <Arduino.h>
 
 #include "../Globals/ESPEasy_now_state.h"
+#include "../../ESPEasy_common.h"
 #ifdef USES_ESPEASY_NOW
 
 # include "../Helpers/ESPEasy_time.h"
-# include "MAC_address.h"
+# include "../DataStructs/MAC_address.h"
 
 
 class ESPEasy_Now_NTP_query {

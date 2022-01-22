@@ -1,4 +1,4 @@
-#include "SendData_DuplicateChecker_struct.h"
+#include "../DataStructs/SendData_DuplicateChecker_struct.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Plugins.h"

@@ -1,4 +1,4 @@
-#include "SendData_DuplicateChecker_data.h"
+#include "../DataStructs/SendData_DuplicateChecker_data.h"
 
 #include "../ESPEasyCore/Controller.h"
 #include "../Helpers/ESPEasy_time_calc.h"

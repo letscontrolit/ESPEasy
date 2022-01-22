@@ -9,7 +9,6 @@
 
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
-#include "../Globals/ESPEasy_now_handler.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"

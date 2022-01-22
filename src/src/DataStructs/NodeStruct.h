@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../Helpers/ESPEasy_time.h"
-#include "MAC_address.h"
+#include "../DataStructs/MAC_address.h"
 
 #include <IPAddress.h>
 #include <map>

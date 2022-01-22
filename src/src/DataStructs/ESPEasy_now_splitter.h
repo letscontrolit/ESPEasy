@@ -1,9 +1,12 @@
 #ifndef DATASTRUCTS_ESPEASY_NOW_SPLITTER_H
 #define DATASTRUCTS_ESPEASY_NOW_SPLITTER_H
 
-#include "ESPEasy_Now_packet.h"
+#include "../DataStructs/ESPEasy_Now_packet.h"
+#include "../../ESPEasy_common.h"
 
 #ifdef USES_ESPEASY_NOW
+
+# include "../Globals/ESPEasy_now_peermanager.h"
 
 class ESPEasy_now_splitter {
 public:

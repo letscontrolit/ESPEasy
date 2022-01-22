@@ -1,4 +1,4 @@
-#include "ESPEasy_Now_NTP_query.h"
+#include "../DataStructs/ESPEasy_Now_NTP_query.h"
 
 #ifdef USES_ESPEASY_NOW
 
@@ -251,6 +251,7 @@ bool ESPEasy_Now_NTP_query::processReply(const ESPEasy_Now_NTP_query& received, 
   }
   double compensation_ms = air_time + timePassedSince(receiveTimestamp);
   double new_unixTime_d  = received._unixTime_d + (compensation_ms / 1000);
+
   node_time.setExternalTimeSource(new_unixTime_d, timeSource_t::ESP_now_peer);
   node_time.now();
 

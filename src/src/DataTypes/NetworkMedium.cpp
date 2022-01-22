@@ -1,4 +1,4 @@
-#include "NetworkMedium.h"
+#include "../DataTypes/NetworkMedium.h"
 
 #include "../../ESPEasy_common.h"
 

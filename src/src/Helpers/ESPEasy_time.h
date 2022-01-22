@@ -7,6 +7,11 @@
 
 #include <time.h>
 
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
+
+
 class ESPEasy_time {
 public:
 
