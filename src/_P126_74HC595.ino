@@ -13,6 +13,10 @@
  *                        When enabled, changing the offset will reset the values content to 0.
  *                        Code improvements and optimizations
  *                        Add command 74hcSetChipCount for changing the number of chips at runtime. Does not restart the plugin.
+ *                        Hide regular Values display if plugin is active, only custom Hex/Bin states. Show periods in Hex state (too).
+ *                        Hide Formula and Decimals for Values. Correct Sensor_VType setting.
+ *                        Output both Decimal and Hex or Bin (depending on setting) in generated event. Don't use Single event option, as
+ *                        that won't allow handling all 8 values (yet).
  * 2022-01-20 tonhuisman: Fix some bugs, optimize code, now actually supports 255 chips = 2048 pins
  *                        Hex Values display now in uppercase for readability
  * 2022-01-19 tonhuisman: Add 74hcSetOffset and 74hxSetHexBin commands
@@ -58,11 +62,12 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number           = PLUGIN_ID_126;
       Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
+      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
       Device[deviceCount].Ports              = 0;
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].FormulaOption      = false;
+      Device[deviceCount].DecimalsOnly       = false;
       Device[deviceCount].ValueCount         =
       # if P126_MAX_CHIP_COUNT <= 4
         1
@@ -228,6 +233,19 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_FORMAT_USERVAR:
+    {
+      P126_data_struct *P126_data = static_cast<P126_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P126_data) && P126_data->isInitialized()) { // Only fill if plugin is active
+        string  = String(UserVar.getUint32(event->TaskIndex, event->idx));
+        string += F(",0x");
+        string += ull2String(UserVar.getUint32(event->TaskIndex, event->idx), (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX));
+        success = true;
+      }
+      break;
+    }
+
     # ifdef P126_SHOW_VALUES
     case PLUGIN_WEBFORM_SHOW_VALUES:
     {
@@ -241,14 +259,20 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         uint64_t val;
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
         const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
+        uint8_t dotInsert;
+        uint8_t dotOffset;
 
         for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
-            label = F("Bin");
-            state = F("0b");
+            label     = F("Bin");
+            state     = F("0b");
+            dotInsert = 10;
+            dotOffset = 9;
           } else {
-            label = F("Hex");
-            state = F("0x");
+            label     = F("Hex");
+            state     = F("0x");
+            dotInsert = 4;
+            dotOffset = 3;
           }
           label += F(" State_");
           label += abcd.substring(varNr, varNr + 1);
@@ -268,16 +292,13 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
             valStr.toUpperCase();                                        // uppercase hex for readability
             state += valStr;
 
-            if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {                  // Insert readability separators for Bin display
-              uint8_t dotInsert = 10;
-
-              for (uint8_t i = 0; i < 3; i++, dotInsert += 9) {
-                state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
-              }
+            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+              state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
             }
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
           }
         }
+        success = true; // Don't show the default value data
       }
       break;
     }
