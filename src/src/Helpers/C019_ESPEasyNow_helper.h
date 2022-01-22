@@ -1,7 +1,7 @@
 #ifndef HELPERS_CONTROLLER_C019_ESPEASYNOW_HELPER_H
 #define HELPERS_CONTROLLER_C019_ESPEASYNOW_HELPER_H
 
-#include "../../DataStructs/ESPEasy_Now_p2p_data.h"
+#include "../DataStructs/ESPEasy_Now_p2p_data.h"
 
 struct C019_ESPEasyNow_helper {
   static bool process_receive(struct EventStruct *event);
