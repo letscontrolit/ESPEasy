@@ -23,6 +23,62 @@ P126_data_struct::~P126_data_struct() {
   }
 }
 
+bool P126_data_struct::plugin_init(struct EventStruct *event) {
+  if (P126_CONFIG_FLAGS_GET_VALUES_RESTORE) { // Restore only when enabled
+    uint8_t idx = P126_CONFIG_SHOW_OFFSET;
+    std::vector<uint8_t> value;
+
+    # ifdef P126_DEBUG_LOG
+    String log;
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      log.reserve(64);
+    }
+    # endif // ifdef P126_DEBUG_LOG
+
+    value.resize(_chipCount, 0);           // Initialize vector to 0's
+
+    const uint8_t *pvalue = shift->getAll(); // Get current state
+
+    for (uint8_t i = 0; i < _chipCount; i++) {
+      value[i] = pvalue[i];
+    }
+
+    const uint16_t maxVar = min(static_cast<uint8_t>(VARS_PER_TASK),
+                                static_cast<uint8_t>(ceil((P126_CONFIG_CHIP_COUNT - P126_CONFIG_SHOW_OFFSET) / 4.0)));
+    uint32_t par;
+
+    for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+      par = UserVar.getUint32(event->TaskIndex, varNr);
+
+      for (uint8_t n = 0; n < 4 && idx < _chipCount; n++, idx++) {
+        value[idx] = ((par >> (n * 8)) & 0xff);
+
+        # ifdef P126_DEBUG_LOG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          log  = F("74hc595: plugin_init: value[");
+          log += idx;
+          log += F("] : ");
+          log += value[idx];
+          log += F("/0x");
+          log += String(value[idx], HEX);
+          log += F(", n * 8: ");
+          log += n;
+          log += '/';
+          log += n * 8;
+          log += F(", varNr: ");
+          log += varNr;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        # endif // ifdef P126_DEBUG_LOG
+      }
+    }
+    shift->setAll(&value[0], false);    // DO NOT SEND OUTPUT TO REGISTERS
+  }
+  return true;
+}
+
 const uint32_t P126_data_struct::getChannelState(uint8_t offset, uint8_t size) const {
   uint32_t result       = 0u;
   const uint8_t *pvalue = shift->getAll();
@@ -70,12 +126,14 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
   String command = parseString(string, 1);
 
   if (command.startsWith(F("74hc"))) {
+    const bool hc_update = command.indexOf(F("noupdate")) == -1;
+
     if (command.equals(F("74hcset")) || command.equals(F("74hcsetnoupdate"))) {
       const uint8_t  pin   = event->Par1;
       const uint16_t value = event->Par2;
 
       if (validChannel(pin)) {
-        shift->set(pin - 1, value, command.equals(F("74hcset")));
+        shift->set(pin - 1, value, hc_update);
         success = true;
       }
       # ifdef P126_DEBUG_LOG
@@ -192,7 +250,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       }
 
       if (success) {
-        shift->setAll(&value[0], command.equals(F("74hcsetall")));
+        shift->setAll(&value[0], hc_update);
       }
     } else if (command.equals(F("74hcsetalllow"))) {
       shift->setAllLow();
@@ -202,6 +260,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       success = true;
     } else if (command.equals(F("74hcsetoffset"))) {
       if ((event->Par1 >= 0) && (event->Par1 <= P126_MAX_SHOW_OFFSET)) {
+        uint8_t previousOffset = P126_CONFIG_SHOW_OFFSET;
         P126_CONFIG_SHOW_OFFSET = event->Par1;
 
         if (P126_CONFIG_SHOW_OFFSET >= P126_CONFIG_CHIP_COUNT) {
@@ -209,8 +268,20 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         }
         P126_CONFIG_SHOW_OFFSET -= (P126_CONFIG_SHOW_OFFSET % 4);
 
-        if ((P126_CONFIG_SHOW_OFFSET > P126_CONFIG_CHIP_COUNT - 4) && (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
+        if ((P126_CONFIG_CHIP_COUNT > 4) &&
+            (P126_CONFIG_SHOW_OFFSET > P126_CONFIG_CHIP_COUNT - 4) &&
+            (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
           P126_CONFIG_SHOW_OFFSET -= 4;
+        }
+
+        // Reset State_A..D values when changing the offset
+        if ((previousOffset != P126_CONFIG_SHOW_OFFSET) && P126_CONFIG_FLAGS_GET_VALUES_RESTORE) {
+          for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+            UserVar.setUint32(event->TaskIndex, varNr, 0u);
+          }
+          # ifdef P126_DEBUG_LOG
+          addLog(LOG_LEVEL_INFO, F("74HC595: 'Offset for display' changed: state values reset."));
+          # endif // ifdef P126_DEBUG_LOG
         }
         success = true;
       }

@@ -7,6 +7,11 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-01-22 tonhuisman: ShiftRegister74HC595_NonTemplate library: Add setSize method, cleanup constructor
+ *                        Setting: Restore register-buffer state from RTC values after warm boot (or crash...)
+ *                        NB:!!! Only restores up to 4 * VARS_PER_TASK (16) chip values, starting at the configured Offset for display !!!
+ *                        When enabled, changing the offset will reset the values content to 0.
+ *                        Code improvements and optimizations
  * 2022-01-20 tonhuisman: Fix some bugs, optimize code, now actually supports 255 chips = 2048 pins
  *                        Hex Values display now in uppercase for readability
  * 2022-01-19 tonhuisman: Add 74hcSetOffset and 74hxSetHexBin commands
@@ -110,7 +115,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Number of chips (Q7' -> DS)"),
+      addFormNumericBox(F("Number of chips (Q7' &rarr; DS)"),
                         F("p126_chips"),
                         P126_CONFIG_CHIP_COUNT,
                         1,                    // Minimum is 1 chip
@@ -129,6 +134,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       # ifdef P126_SHOW_VALUES
       addFormCheckBox(F("Values display (Off=Hex/On=Bin)"), F("p126_valuesdisplay"), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY == 1);
       # endif // ifdef P126_SHOW_VALUES
+      addFormCheckBox(F("Restore Values on warm boot"),     F("p126_valuesrestore"), P126_CONFIG_FLAGS_GET_VALUES_RESTORE);
 
       success = true;
       break;
@@ -136,6 +142,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
+      uint8_t previousOffset = P126_CONFIG_SHOW_OFFSET;
       P126_CONFIG_CHIP_COUNT  = getFormItemInt(F("p126_chips"));
       P126_CONFIG_SHOW_OFFSET = getFormItemInt(F("p126_offset"));
 
@@ -149,13 +156,27 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           (P126_CONFIG_CHIP_COUNT < P126_MAX_SHOW_OFFSET)) {
         P126_CONFIG_SHOW_OFFSET -= 4;
       }
-      # ifdef P126_SHOW_VALUES
+
       uint32_t lSettings = 0u;
 
+      # ifdef P126_SHOW_VALUES
+
       if (isFormItemChecked(F("p126_valuesdisplay"))) { bitSet(lSettings, P126_FLAGS_VALUES_DISPLAY); }
+      # endif // ifdef P126_SHOW_VALUES
+
+      if (!isFormItemChecked(F("p126_valuesrestore"))) { bitSet(lSettings, P126_FLAGS_VALUES_RESTORE); } // Inverted setting!
 
       P126_CONFIG_FLAGS = lSettings;
-      # endif // ifdef P126_SHOW_VALUES
+
+      // Reset State_A..D values when changing the offset
+      if ((previousOffset != P126_CONFIG_SHOW_OFFSET) && P126_CONFIG_FLAGS_GET_VALUES_RESTORE) {
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+          UserVar.setUint32(event->TaskIndex, varNr, 0u);
+        }
+        # ifdef P126_DEBUG_LOG
+        addLog(LOG_LEVEL_INFO, F("74HC595: 'Offset for display' changed: state values reset."));
+        # endif // ifdef P126_DEBUG_LOG
+      }
 
       success = true;
       break;
@@ -174,9 +195,11 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P126_data->isInitialized()) {
-        addLog(LOG_LEVEL_INFO, F("74HC595: Initialized."));
+        success = P126_data->plugin_init(event); // Optionally restore State_A..State_D values from RTC (on warm-boot only!)
+      }
 
-        success = true;
+      if (success) {
+        addLog(LOG_LEVEL_INFO, F("74HC595: Initialized."));
       } else {
         addLog(LOG_LEVEL_ERROR, F("74HC595: Initialization error!"));
       }
@@ -208,13 +231,14 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
     {
       P126_data_struct *P126_data = static_cast<P126_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if ((nullptr != P126_data) && P126_data->isInitialized()) { // Only show if plugin is active
+      if ((nullptr != P126_data) && P126_data->isInitialized()) {                                   // Only show if plugin is active
         String state, label;
         state.reserve(40);
-        String   abcd = F("ABCD");
+        String abcd = F("ABCDEFGH");                                                                // In case anyone dares to extend
+                                                                                                    // VARS_PER_TASK to 8...
         uint64_t val;
-        const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4);
-        const uint16_t maxVar   = min(static_cast<uint8_t>(4), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
+        const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
 
         for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
@@ -228,7 +252,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           label += abcd.substring(varNr, varNr + 1);
           label += ' ';
 
-          label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);
+          label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
           label += '_';
           label += min(255, P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
 
@@ -239,14 +263,14 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
                                                                          // leading zeroes
             String valStr = ull2String(val, (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX));
             valStr.remove(0, 1);                                         // Delete leading 1 we added
-            valStr.toUpperCase();
+            valStr.toUpperCase();                                        // uppercase hex for readability
             state += valStr;
 
-            if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) { // Insert readability separators for Bin display
-              uint8_t o = 10;
+            if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {                  // Insert readability separators for Bin display
+              uint8_t dotInsert = 10;
 
-              for (uint8_t i = 0; i < 3; i++, o += 9) {
-                state = state.substring(0, o) + '.' + state.substring(o);
+              for (uint8_t i = 0; i < 3; i++, dotInsert += 9) {
+                state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
               }
             }
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);

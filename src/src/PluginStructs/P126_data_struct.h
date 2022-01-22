@@ -6,7 +6,9 @@
 
 # include <ShiftRegister74HC595_NonTemplate.h>
 
-# define P126_DEBUG_LOG // Enable for some (extra) logging
+# ifndef LIMIT_BUILD_SIZE
+#  define P126_DEBUG_LOG // Enable for some (extra) logging
+# endif // ifndef LIMIT_BUILD_SIZE
 
 # define P126_CONFIG_CHIP_COUNT       PCONFIG(0)
 # define P126_CONFIG_SHOW_OFFSET      PCONFIG(1)
@@ -16,18 +18,24 @@
 # define P126_CONFIG_FLAGS            PCONFIG_LONG(0)
 
 # define P126_FLAGS_VALUES_DISPLAY    0 // 0/off = HEX, 1/on = BIN
+// Restore values from RTC after warm boot (default enabled, inverted logic)
+# define P126_FLAGS_VALUES_RESTORE    1
 
 # define P126_CONFIG_FLAGS_GET_VALUES_DISPLAY (bitRead(P126_CONFIG_FLAGS, P126_FLAGS_VALUES_DISPLAY))
+# define P126_CONFIG_FLAGS_GET_VALUES_RESTORE (bitRead(P126_CONFIG_FLAGS, P126_FLAGS_VALUES_RESTORE) == 0) // Inverted logic
 
-# define P126_MAX_CHIP_COUNT          255 // Number of chips to support undefined = 1, range 1..255 = 8..2048 pins
-# define P126_MAX_SHOW_OFFSET         252 // Multiple of 4, and less than P126_MAX_CHIP_COUNT
+// Number of chips to support undefined = 1, range 1..255 = 8..2048 pins
+# define P126_MAX_CHIP_COUNT          255
+
+// Multiple of 4, and less than P126_MAX_CHIP_COUNT
+# define P126_MAX_SHOW_OFFSET         252
 
 # if !defined(P126_MAX_CHIP_COUNT)
-#  define P126_MAX_CHIP_COUNT         1   // Fallback value
+#  define P126_MAX_CHIP_COUNT         1 // Fallback value
 # endif // if !defined(P126_MAX_CHIP_COUNT)
 
-# define P126_SHOW_VALUES                 // When defined, will show the selected output values in either Hex or Bin format on the Devices
-                                          // page. Disabled when LIMIT_BUILD_SIZE is set
+# define P126_SHOW_VALUES               // When defined, will show the selected output values in either Hex or Bin format on the Devices
+                                        // page. Disabled when LIMIT_BUILD_SIZE is set
 # if defined(LIMIT_BUILD_SIZE) && defined(P126_SHOW_VALUES)
 #  undef P126_SHOW_VALUES
 # endif // if defined(LIMIT_BUILD_SIZE) && defined(P126_SHOW_VALUES)
@@ -47,9 +55,10 @@ public:
     return nullptr != shift;
   }
 
+  bool plugin_init(struct EventStruct *event);
+  bool plugin_read(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
-  bool plugin_read(struct EventStruct *event);
 
 private:
 
