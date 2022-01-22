@@ -1589,6 +1589,14 @@ To create/register a plugin, you have to :
 #endif
 */
 
+#ifdef ESP32S2   // For now not yet support for ESPEasy-NOW on ESP32-S2 due to compile issues
+  #ifdef USES_C019
+    #undef USES_C019
+  #endif
+  #ifdef USES_P098
+    #undef USES_P098
+  #endif
+#endif
 
 #if defined(USES_C018) || defined(USES_C019)
   #define USES_PACKED_RAW_DATA
