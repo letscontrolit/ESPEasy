@@ -21,28 +21,31 @@
 ShiftRegister74HC595_NonTemplate::ShiftRegister74HC595_NonTemplate(const uint8_t size,
                                                                    const uint8_t serialDataPin,
                                                                    const uint8_t clockPin,
-                                                                   const uint8_t latchPin) {
+                                                                   const uint8_t latchPin) :
   // set attributes
-  _size          = size;
-  _clockPin      = clockPin;
-  _serialDataPin = serialDataPin;
-  _latchPin      = latchPin;
+  _size(size), _clockPin(clockPin), _serialDataPin(serialDataPin), _latchPin(latchPin) {
 
   // define pins as outputs
-  pinMode(clockPin,      OUTPUT);
-  pinMode(serialDataPin, OUTPUT);
-  pinMode(latchPin,      OUTPUT);
+  pinMode(_clockPin,      OUTPUT);
+  pinMode(_serialDataPin, OUTPUT);
+  pinMode(_latchPin,      OUTPUT);
 
   // set pins low
-  digitalWrite(clockPin,      LOW);
-  digitalWrite(serialDataPin, LOW);
-  digitalWrite(latchPin,      LOW);
+  digitalWrite(_clockPin,      LOW);
+  digitalWrite(_serialDataPin, LOW);
+  digitalWrite(_latchPin,      LOW);
 
   // allocates the specified number of bytes and initializes them to zero
   _digitalValues.resize(_size, 0);
 
   // Do _not_ update the empty buffer to the register, we want to retain the current state
   // updateRegisters(); // reset shift register
+}
+
+// Set a new size for the mnumber of shift registers
+void ShiftRegister74HC595_NonTemplate::setSize(const uint8_t size) {
+  _size = size;
+  _digitalValues.resize(_size, 0); // Reset new values to 0 when enlarging
 }
 
 // Set all pins of the shift registers at once. Do not yet update the registers if update is false

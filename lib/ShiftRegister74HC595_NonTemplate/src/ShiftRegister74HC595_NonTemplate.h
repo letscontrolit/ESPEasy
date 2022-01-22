@@ -18,6 +18,7 @@ public:
                                    const uint8_t clockPin,
                                    const uint8_t latchPin);
 
+  void           setSize(const uint8_t size);
   void           setAll(const uint8_t *digitalValues,
                         bool           update = true);
   const uint8_t* getAll() const;
