@@ -6,6 +6,7 @@
 #include "../DataStructs/TimingStats.h"
 #include "../WebServer/WebServer.h"
 #include "../Globals/Protocol.h"
+#include "../Helpers/Convert.h"
 
 /*
    void logStatistics(uint8_t loglevel, bool clearStats) {
@@ -56,10 +57,10 @@ void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0f;
 
   json_number(F("count"), String(count));
-  json_number(F("call-per-sec"),   String(call_per_sec));
+  json_number(F("call-per-sec"),   toString(call_per_sec, 2));
   json_number(F("min"),   String(minVal));
   json_number(F("max"),   String(maxVal));
-  json_number(F("avg"),   String(stats.getAvg()));
+  json_number(F("avg"),   toString(stats.getAvg(), 2));
   json_prop(F("unit"), F("usec"));
 }
 

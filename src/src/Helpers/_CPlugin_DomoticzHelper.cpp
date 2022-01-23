@@ -284,7 +284,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         }
         else {
           json += ',';
-          json += to_json_object_value(F("Set%20Level"), String(UserVar[event->BaseVarIndex], 2));
+          json += to_json_object_value(F("Set%20Level"), toString(UserVar[event->BaseVarIndex], 2));
         }
         break;
 
