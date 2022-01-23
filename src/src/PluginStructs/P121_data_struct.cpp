@@ -29,11 +29,11 @@ bool P121_data_struct::begin(int taskid)
         log += F(" Unique ID:    "); 
         log += sensor.sensor_id;
         log += F(" Max Value:    "); 
-        log += String(sensor.max_value);
+        log += toString(sensor.max_value);
         log += F(" Min Value:    ");
-        log += String(sensor.min_value);
+        log += toString(sensor.min_value);
         log += F(" Resolution:   "); 
-        log += String(sensor.resolution);
+        log += toString(sensor.resolution);
         addLog(LOG_LEVEL_DEBUG, log);
       }
       #endif

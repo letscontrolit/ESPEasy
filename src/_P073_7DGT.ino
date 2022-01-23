@@ -1139,7 +1139,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& text) {
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON: {
       if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
-        P073_data->FillBufferWithNumber(String(round(event->Par1)));
+        P073_data->FillBufferWithNumber(String(event->Par1));
       }
       else {
         P073_data->FillBufferWithDash();
