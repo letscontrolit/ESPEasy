@@ -101,7 +101,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     UserVar[uservarIndex] = result;
   } else  {
     // TODO: Get Task description and var name
-    serialPrintln(String(UserVar[uservarIndex]));
+    serialPrintln(toString(UserVar[uservarIndex]));
   }
   success = true;
   return return_command_success();

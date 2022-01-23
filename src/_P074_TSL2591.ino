@@ -270,7 +270,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("TSL2591: Lux: ");
-            log += String(lux);
+            log += toString(lux);
             log += F(" Full: ");
             log += String(full);
             log += F(" Visible: ");
