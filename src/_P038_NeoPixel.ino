@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-23, tonhuisman:  Some duplicate code unduplicated, some optimizations
 // 2022-01-10, tonhuisman:  Make plugin multi-instance compatible, by moving variables and code to P038_data_struct
 
 // 15-June-2017: Fixed broken plugin; tested with several neopixels (single LED, 8 LED bars and 300 leds strips.
