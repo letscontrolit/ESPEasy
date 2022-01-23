@@ -39,7 +39,8 @@ public:
 //  Web_StreamingBuffer& operator=(const String& a);
   Web_StreamingBuffer& operator+=(char a);
   Web_StreamingBuffer& operator+=(long unsigned int a);
-  Web_StreamingBuffer& operator+=(float a);
+  Web_StreamingBuffer& operator+=(const float& a);
+  Web_StreamingBuffer& operator+=(const double& a);
   Web_StreamingBuffer& operator+=(int a);
   Web_StreamingBuffer& operator+=(uint32_t a);
   Web_StreamingBuffer& operator+=(const String& a);

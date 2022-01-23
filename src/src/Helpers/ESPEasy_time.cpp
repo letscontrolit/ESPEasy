@@ -198,14 +198,14 @@ unsigned long ESPEasy_time::now() {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log         = F("Time set to ");
-        log += String(unixTime_d, 3);
+        log += doubleToString(unixTime_d, 3);
 
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0);
+          log += doubleToString(time_offset * 1000.0);
           log += F(" msec. Wander: ");
-          log += String(timeWander, 3);
+          log += doubleToString(timeWander, 3);
           log += F(" msec/second");
           log += F(" Source: ");
           log += toString(timeSource);
@@ -449,7 +449,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // We gained more than 1 second in accuracy
           fractpart += 1.0;
         }
-        log += String(fractpart, 3);
+        log += doubleToString(fractpart, 3);
         log += F(" seconds");
         addLog(LOG_LEVEL_INFO, log);
       }
