@@ -305,7 +305,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("CCS811 : Compensating for Temperature: ");
-          log += String(temperature) + temp + F(" & Humidity: ") + String(humidity) + F("%");
+          log += toString(temperature) + temp + F(" & Humidity: ") + toString(humidity) + F("%");
           addLog(LOG_LEVEL_DEBUG, log);
         }
       #endif // ifndef BUILD_NO_DEBUG

@@ -408,11 +408,11 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                   nb = static_cast<float>(b) / t * sRGBFactor;
                   P050_data->applyTransformation(nr, ng, nb, &tr, &tg, &tb);
                 }
-                RuleEvent += String(tr, 4);
+                RuleEvent += toString(tr, 4);
                 RuleEvent += ',';
-                RuleEvent += String(tg, 4);
+                RuleEvent += toString(tg, 4);
                 RuleEvent += ',';
-                RuleEvent += String(tb, 4);
+                RuleEvent += toString(tb, 4);
                 break;
               case 2:
                 sRGBFactor = 255.0f;
@@ -423,11 +423,11 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
                 } else {
                   RuleEvent += F("NormSRGB=");
                 }
-                RuleEvent += String(static_cast<float>(r) / t * sRGBFactor, 4);
+                RuleEvent += toString(static_cast<float>(r) / t * sRGBFactor, 4);
                 RuleEvent += ',';
-                RuleEvent += String(static_cast<float>(g) / t * sRGBFactor, 4);
+                RuleEvent += toString(static_cast<float>(g) / t * sRGBFactor, 4);
                 RuleEvent += ',';
-                RuleEvent += String(static_cast<float>(b) / t * sRGBFactor, 4);
+                RuleEvent += toString(static_cast<float>(b) / t * sRGBFactor, 4);
                 break;
               default:
                 RuleEvent = EMPTY_STRING;

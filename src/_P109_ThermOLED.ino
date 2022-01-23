@@ -340,9 +340,9 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       }
 
       logstr  = F("Thermo : Starting status S:");
-      logstr += String(UserVar[event->BaseVarIndex]);
+      logstr += toString(UserVar[event->BaseVarIndex]);
       logstr += F(", R:");
-      logstr += String(UserVar[event->BaseVarIndex + 1]);
+      logstr += toString(UserVar[event->BaseVarIndex + 1]);
       addLog(LOG_LEVEL_INFO, logstr);
 
       Plugin_109_changed    = 1;
