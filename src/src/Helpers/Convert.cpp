@@ -234,17 +234,48 @@ float ul2float(unsigned long ul)
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(const float& value, uint8_t decimals)
+String toString(const float& value, unsigned int decimalPlaces)
 {
-  String sValue = String(value, decimals);
+  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
+  // https://github.com/espressif/arduino-esp32/pull/6138/files
+//  #ifdef ESP8266
+  char *buf = (char*)malloc(decimalPlaces + 42);
+  if (nullptr == buf) {
+    return F("nan");
+  }
+  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  free(buf);
+//  #else
+//  String sValue = String(value, decimalPlaces);
+//  #endif
 
   sValue.trim();
   return sValue;
 }
 
-String doubleToString(const double& value, int decimals, bool trimTrailingZeros) {
-  String res(value, decimals);
+String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros) {
+  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
+  // https://github.com/espressif/arduino-esp32/pull/6138/files
+//  #ifdef ESP8266
+  unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
+  if (value > 1e32 || value < -1e32) {
+    expectedChars += 308; // Just assume the worst
+  } else {
+    expectedChars += 33;
+  }
+  char *buf = (char*)malloc(expectedChars);
+
+  if (nullptr == buf) {
+    return F("nan");
+  }
+  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  free(buf);
+
+//  #else
+//  String res(value, decimalPlaces);
+//  #endif
   res.trim();
+
   if (trimTrailingZeros) {
     int dot_pos = res.lastIndexOf('.');
     if (dot_pos != -1) {
