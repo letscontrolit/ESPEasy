@@ -11,7 +11,7 @@
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
   extern "C" {
-    #include "spi_flash.h"
+    #include <spi_flash.h>
   }
   #ifdef CORE_POST_2_6_0
     extern "C" uint32_t _FS_start;

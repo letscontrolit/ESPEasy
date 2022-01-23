@@ -1,7 +1,7 @@
 #include "../Helpers/StringProvider.h"
 
 #ifdef HAS_ETHERNET
-# include "ETH.h"
+# include <ETH.h>
 #endif // ifdef HAS_ETHERNET
 
 #include "../../ESPEasy-Globals.h"

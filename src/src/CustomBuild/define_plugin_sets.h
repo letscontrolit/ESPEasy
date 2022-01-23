@@ -1428,7 +1428,7 @@ To create/register a plugin, you have to :
     #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
   #endif
   #ifndef USES_P098
-    #define USES_P098   // ESPEasy-NOW Receiver
+//    #define USES_P098   // ESPEasy-NOW Receiver
   #endif
   #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen

@@ -7,7 +7,7 @@
 
 
 #ifdef HAS_ETHERNET
-#include "ETH.h"
+#include <ETH.h>
 #endif
 
 String Command_AccessInfo_Ls(struct EventStruct *event, const char* Line)
