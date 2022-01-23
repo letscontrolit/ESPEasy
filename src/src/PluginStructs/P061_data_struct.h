@@ -9,7 +9,13 @@
 # define P061_CONFIG_I2C_ADDRESS  PCONFIG(0)
 # define P061_CONFIG_KEYPAD_TYPE  PCONFIG(1)
 
-// # define P061_DEBUG_LOG false // Set to true to enable debug out log (currently not used)
+// # define P061_DEBUG_LOG true // Set to true to enable debug out log
+
+# define P061_ENABLE_PCF8575 // Enables support for the PCF8575 16 pin I/O expander (needs pull-ups for inputs)
+
+// # if defined(LIMIT_BUILD_SIZE) && defined(P061_ENABLE_PCF8575)
+// #  undef P061_ENABLE_PCF8575 // Saves ca. 800 bytes on ESP8266 (not sure if this needs to be disabled)
+// # endif // if defined(LIMIT_BUILD_SIZE) && defined(P061_ENABLE_PCF8575)
 
 // MCP23017 Matrix /////////////////////////////////////////////////////////////
 
@@ -56,6 +62,9 @@ private:
                           uint8_t reg);
   void    MCP23017_KeyPadMatrixInit(uint8_t addr);
   uint8_t MCP23017_KeyPadMatrixScan(uint8_t addr);
+  void    MCP23017_KeyPadDirectInit(uint8_t addr);
+  uint8_t MCP23017_KeyPadDirectScan(uint8_t addr);
+
   // PCF8574
   void    PCF8574_setReg(uint8_t addr,
                          uint8_t data);
@@ -64,6 +73,18 @@ private:
   uint8_t PCF8574_KeyPadMatrixScan(uint8_t addr);
   void    PCF8574_KeyPadDirectInit(uint8_t addr);
   uint8_t PCF8574_KeyPadDirectScan(uint8_t addr);
+
+  # ifdef P061_ENABLE_PCF8575
+
+  // PCF8575
+  void     PCF8575_setReg(uint8_t  addr,
+                          uint16_t data);
+  uint16_t PCF8575_getReg(uint8_t addr);
+  void     PCF8575_KeyPadMatrixInit(uint8_t addr);
+  uint8_t  PCF8575_KeyPadMatrixScan(uint8_t addr);
+  void     PCF8575_KeyPadDirectInit(uint8_t addr);
+  uint8_t  PCF8575_KeyPadDirectScan(uint8_t addr);
+  # endif // ifdef P061_ENABLE_PCF8575
 
   uint8_t _i2c_addr;
   uint8_t _keypadType;
