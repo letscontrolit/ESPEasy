@@ -4,6 +4,7 @@
 
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
+# include "../DataStructs/ESPEasy_now_hdr.h"
 # include "../DataStructs/TimingStats.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/Settings.h"

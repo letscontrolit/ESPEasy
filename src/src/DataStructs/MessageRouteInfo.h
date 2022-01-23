@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_UNITMESSAGECOUNT_H
-#define DATASTRUCTS_UNITMESSAGECOUNT_H
+#ifndef DATASTRUCTS_MESSAGEROUTEINFO_H
+#define DATASTRUCTS_MESSAGEROUTEINFO_H
 
 #include "../../ESPEasy_common.h"
 
@@ -68,4 +68,4 @@ private:
   std::map<uint8_t, MessageRouteInfo_t> _map;
 };
 
-#endif // ifndef DATASTRUCTS_UNITMESSAGECOUNT_H
+#endif // ifndef DATASTRUCTS_MESSAGEROUTEINFO_H

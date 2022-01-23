@@ -5,6 +5,7 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataStructs/MessageRouteInfo.h"
+#include "../DataTypes/ControllerIndex.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;

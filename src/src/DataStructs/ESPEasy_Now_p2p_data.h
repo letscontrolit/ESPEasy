@@ -5,6 +5,8 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/PluginID.h"
+#include "../DataTypes/TaskIndex.h"
 #include "../Globals/Plugins.h"
 
 #define ESPEASY_NOW_P2P_DATA_VERSION    1

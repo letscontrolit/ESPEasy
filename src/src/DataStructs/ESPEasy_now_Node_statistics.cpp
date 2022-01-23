@@ -123,12 +123,12 @@ const ESPEasy_now_traceroute_struct& ESPEasy_now_Node_statistics_t::discoveryRou
   return discovery_route;
 }
 
-ESPEasy_Now_MQTT_queue_check_packet::QueueState ESPEasy_now_Node_statistics_t::getMQTTQueueState() const
+ESPEasy_Now_MQTT_QueueCheckState::Enum ESPEasy_now_Node_statistics_t::getMQTTQueueState() const
 {
   return mqtt_queue_state;
 }
 
-void ESPEasy_now_Node_statistics_t::setMQTTQueueState(ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
+void ESPEasy_now_Node_statistics_t::setMQTTQueueState(ESPEasy_Now_MQTT_QueueCheckState::Enum state)
 {
   mqtt_queue_state = state;
 }

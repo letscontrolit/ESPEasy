@@ -9,8 +9,11 @@
 #ifdef USES_ESPEASY_NOW
 # include "../DataStructs/ESPEasy_now_traceroute.h"
 # include "../DataStructs/ESPEasy_now_Node_statistics.h"
+# include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
 # include "../Globals/ESPEasy_now_peermanager.h"
 #endif // ifdef USES_ESPEASY_NOW
+
+#include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 
 #include "../Helpers/ESPEasyMutex.h"
 
@@ -101,12 +104,12 @@ public:
 
   uint8_t                                         getSuccessRate(uint8_t unit) const;
 
-  ESPEasy_Now_MQTT_queue_check_packet::QueueState getMQTTQueueState(uint8_t unit) const;
+  ESPEasy_Now_MQTT_QueueCheckState::Enum getMQTTQueueState(uint8_t unit) const;
 
   void                                            setMQTTQueueState(uint8_t                                         unit,
-                                                                    ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
+                                                                    ESPEasy_Now_MQTT_QueueCheckState::Enum state);
   void                                            setMQTTQueueState(const MAC_address                             & mac,
-                                                                    ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
+                                                                    ESPEasy_Now_MQTT_QueueCheckState::Enum state);
 
 #endif // ifdef USES_ESPEASY_NOW
 

@@ -4,19 +4,14 @@
 #include <Arduino.h>
 
 #include "../Globals/ESPEasy_now_state.h"
-#include "../../ESPEasy_common.h"
+#include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
+
 #ifdef USES_ESPEASY_NOW
 
 class ESPEasy_Now_MQTT_queue_check_packet {
 public:
 
-  enum class QueueState : uint8_t {
-    Unset,
-    Empty,
-    Full
-  };
-
-  ESPEasy_Now_MQTT_queue_check_packet() {}
+  ESPEasy_Now_MQTT_queue_check_packet();
 
   void setState(bool isFull);
 
@@ -27,7 +22,7 @@ public:
   void markSendTime();
 
   unsigned long _millis_out = millis();
-  QueueState state          = QueueState::Unset;
+  ESPEasy_Now_MQTT_QueueCheckState::Enum state = ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
 };
 
 #endif // ifdef USES_ESPEASY_NOW

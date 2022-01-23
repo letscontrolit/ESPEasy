@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_ESPEASY_NOW_MESSAGE_HEADER_STRUCT_H
-#define DATASTRUCTS_ESPEASY_NOW_MESSAGE_HEADER_STRUCT_H
+#ifndef DATASTRUCTS_ESPEASY_NOW_HDR_H
+#define DATASTRUCTS_ESPEASY_NOW_HDR_H
 
 /*********************************************************************************************\
 * ESPEasy_now_message_struct
@@ -39,6 +39,8 @@ public:
 
   ESPEasy_now_hdr(const uint8_t *buf);
 
+  ESPEasy_now_hdr(const ESPEasy_now_hdr& other);
+
   ESPEasy_now_hdr& operator=(const ESPEasy_now_hdr& other);
 
 
@@ -53,4 +55,4 @@ public:
 
 #endif // ifdef USES_ESPEASY_NOW
 
-#endif // DATASTRUCTS_ESPEASY_NOW_MESSAGE_HEADER_STRUCT_H
+#endif // DATASTRUCTS_ESPEASY_NOW_HDR_H

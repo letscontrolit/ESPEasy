@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef USES_ESPEASY_NOW
+
 #include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
 #include "../DataStructs/ESPEasy_now_traceroute.h"
 
@@ -10,7 +12,6 @@
 
 #define ESPEASY_NOW_NODE_STATISTICS_NR_ROUTES  3
 
-#ifdef USES_ESPEASY_NOW
 struct ESPEasy_now_Node_statistics_t {
   unsigned long getAge() const;
 
@@ -32,9 +33,9 @@ struct ESPEasy_now_Node_statistics_t {
 
   const ESPEasy_now_traceroute_struct& discoveryRoute() const;
 
-  ESPEasy_Now_MQTT_queue_check_packet::QueueState getMQTTQueueState() const;
+  ESPEasy_Now_MQTT_QueueCheckState::Enum getMQTTQueueState() const;
 
-  void setMQTTQueueState(ESPEasy_Now_MQTT_queue_check_packet::QueueState state);
+  void setMQTTQueueState(ESPEasy_Now_MQTT_QueueCheckState::Enum state);
 
 private:
 
@@ -50,7 +51,7 @@ private:
   // Increase on success, decrease on fail, with limits of 255 and 0.
   uint8_t success_rate = 127;
 
-  ESPEasy_Now_MQTT_queue_check_packet::QueueState mqtt_queue_state = ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset;
+  ESPEasy_Now_MQTT_QueueCheckState::Enum mqtt_queue_state = ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
 };
 
 typedef std::map<uint8_t, ESPEasy_now_Node_statistics_t> ESPEasy_now_Node_statisticsMap;

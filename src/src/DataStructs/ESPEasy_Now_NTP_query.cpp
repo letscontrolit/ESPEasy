@@ -1,6 +1,5 @@
 #include "../DataStructs/ESPEasy_Now_NTP_query.h"
 
-#ifdef USES_ESPEASY_NOW
 
 
 // Typical time wander for ESP nodes is 0.04 ms/sec
@@ -12,10 +11,10 @@
 
 # define MINIMUM_TIME_BETWEEN_UPDATES  (1800 * 1000) // Half an hour
 
+# include "../DataStructs/MAC_address.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../Globals/ESPEasy_time.h"
 # include "../Helpers/ESPEasy_time_calc.h"
-# include "../../ESPEasy_fdwdecl.h"
 
 ESPEasy_Now_NTP_query::ESPEasy_Now_NTP_query()
 {
@@ -99,8 +98,8 @@ void ESPEasy_Now_NTP_query::find_best_NTP(const MAC_address& mac,
       return;
     }
   }
-  bool updated                    = false;
-  unsigned long expectedWander_ms =
+  bool updated = false;
+  const unsigned long expectedWander_ms =
     computeExpectedWander(timeSource, timePassedSinceLastTimeSync);
 
   // First check if it matches the current best candidate.
@@ -269,5 +268,3 @@ bool ESPEasy_Now_NTP_query::processReply(const ESPEasy_Now_NTP_query& received, 
   reset(true);
   return true;
 }
-
-#endif // ifdef USES_ESPEASY_NOW

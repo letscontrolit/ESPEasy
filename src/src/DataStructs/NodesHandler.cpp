@@ -625,17 +625,17 @@ uint8_t NodesHandler::getSuccessRate(uint8_t unit) const
   return 127;
 }
 
-ESPEasy_Now_MQTT_queue_check_packet::QueueState NodesHandler::getMQTTQueueState(uint8_t unit) const
+ESPEasy_Now_MQTT_QueueCheckState::Enum NodesHandler::getMQTTQueueState(uint8_t unit) const
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
     return it->second.getMQTTQueueState();
   }
-  return ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset;
+  return ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
 
 }
 
-void NodesHandler::setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
+void NodesHandler::setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_QueueCheckState::Enum state)
 {
   auto it = _nodeStats.find(unit);
   if (it != _nodeStats.end()) {
@@ -643,7 +643,7 @@ void NodesHandler::setMQTTQueueState(uint8_t unit, ESPEasy_Now_MQTT_queue_check_
   }
 }
 
-void NodesHandler::setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_queue_check_packet::QueueState state)
+void NodesHandler::setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_QueueCheckState::Enum state)
 {
   const NodeStruct * node = getNodeByMac(mac);
   if (node != nullptr) {

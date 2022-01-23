@@ -84,8 +84,7 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 	return success;
 }
 
-
-#ifdef USES_NOTIFIER
+boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
 
 boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {
@@ -186,7 +185,6 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	return myStatus;
 }
 
-#endif
 
 boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {

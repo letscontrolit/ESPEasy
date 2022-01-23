@@ -3,24 +3,26 @@
 
 #ifdef USES_ESPEASY_NOW
 
+ESPEasy_Now_MQTT_queue_check_packet::ESPEasy_Now_MQTT_queue_check_packet() {}
+
 void ESPEasy_Now_MQTT_queue_check_packet::markSendTime() {
   _millis_out = millis();
-  state       = QueueState::Unset;
+  state       = ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
 }
 
 void ESPEasy_Now_MQTT_queue_check_packet::setState(bool isFull)
 {
-  state = isFull ? QueueState::Full : QueueState::Empty;
+  state = isFull ? ESPEasy_Now_MQTT_QueueCheckState::Enum::Full : ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty;
 }
 
 bool ESPEasy_Now_MQTT_queue_check_packet::isFull() const
 {
-  return state == QueueState::Full;
+  return state == ESPEasy_Now_MQTT_QueueCheckState::Enum::Full;
 }
 
 bool ESPEasy_Now_MQTT_queue_check_packet::isSet() const
 {
-  return state != QueueState::Unset;
+  return state != ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset;
 }
 
 #endif // ifdef USES_ESPEASY_NOW

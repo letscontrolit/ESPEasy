@@ -1,5 +1,5 @@
-#ifndef GLOBALS_ESPEASY_NOW_H
-#define GLOBALS_ESPEASY_NOW_H
+#ifndef GLOBALS_ESPEASY_NOW_PEERMANAGER_H
+#define GLOBALS_ESPEASY_NOW_PEERMANAGER_H
 
 #include "../../ESPEasy_common.h"
 
@@ -12,4 +12,4 @@ extern ESPEasy_now_peermanager_t ESPEasy_now_peermanager;
 
 #endif // ifdef USES_ESPEASY_NOW
 
-#endif // GLOBALS_ESPEASY_NOW_H
+#endif // GLOBALS_ESPEASY_NOW_PEERMANAGER_H

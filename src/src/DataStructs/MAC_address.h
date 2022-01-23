@@ -11,6 +11,8 @@ public:
 
   MAC_address(const uint8_t new_mac[6]);
 
+  MAC_address(const MAC_address& other);
+
   MAC_address& operator=(const MAC_address& other);
 
   bool operator==(const MAC_address& other) const {

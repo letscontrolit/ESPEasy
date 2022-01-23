@@ -1,14 +1,21 @@
 #include "../Helpers/ESPEasy_now_handler.h"
 
-#ifdef USES_ESPEASY_NOW
 
-# include "../../ESPEasy_fdwdecl.h"
 # include "../ControllerQueue/MQTT_queue_element.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
+# include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
+# include "../DataStructs/ESPEasy_now_hdr.h"
+# include "../DataStructs/ESPEasy_now_merger.h"
 # include "../DataStructs/ESPEasy_Now_packet.h"
+# include "../DataStructs/ESPEasy_Now_p2p_data.h"
 # include "../DataStructs/ESPEasy_now_splitter.h"
+# include "../DataStructs/ESPEasy_now_traceroute.h"
+# include "../DataStructs/ESPEasy_Now_NTP_query.h"
+# include "../DataStructs/MessageRouteInfo.h"
+# include "../DataStructs/MAC_address.h"
 # include "../DataStructs/NodeStruct.h"
 # include "../DataStructs/TimingStats.h"
+# include "../DataStructs/WiFi_AP_Candidate.h"
 # include "../ESPEasyCore/Controller.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
@@ -32,6 +39,7 @@
 
 # include <list>
 
+#ifdef USES_ESPEASY_NOW
 
 # define ESPEASY_NOW_ACTIVITY_TIMEOUT      125000 // 2 minutes + 5 sec
 # define ESPEASY_NOW_SINCE_LAST_BROADCAST   65000 // 1 minute + 5 sec to start sending a node directly
@@ -92,6 +100,19 @@ void ICACHE_FLASH_ATTR ESPEasy_now_onReceive(const uint8_t mac[6], const uint8_t
     ESPEasy_now_in_queue_mutex.unlock();
   }
   STOP_TIMER(RECEIVE_ESPEASY_NOW_LOOP);
+}
+
+ESPEasy_now_handler_t::ESPEasy_now_handler_t()
+{
+  _best_NTP_candidate = new ESPEasy_Now_NTP_query();
+}
+
+ESPEasy_now_handler_t::~ESPEasy_now_handler_t() 
+{
+  if (_best_NTP_candidate != nullptr) {
+    delete _best_NTP_candidate;
+    _best_NTP_candidate = nullptr;
+  }
 }
 
 bool ESPEasy_now_handler_t::begin()
@@ -721,7 +742,7 @@ bool ESPEasy_now_handler_t::handle_DiscoveryAnnounce(const ESPEasy_now_merger& m
   }
 
   // Test to see if the discovery announce could be a good candidate for next NTP query.
-  _best_NTP_candidate.find_best_NTP(
+  _best_NTP_candidate->find_best_NTP(
     mac,
     static_cast<timeSource_t>(received.timeSource),
     received.lastUpdated);
@@ -900,10 +921,10 @@ bool ESPEasy_now_handler_t::handle_TraceRoute(const ESPEasy_now_merger& message,
 
 void ESPEasy_now_handler_t::sendNTPquery()
 {
-  if (!_best_NTP_candidate.hasLowerWander()) { return; }
+  if (!_best_NTP_candidate->hasLowerWander()) { return; }
   MAC_address mac;
 
-  if (!_best_NTP_candidate.getMac(mac)) { return; }
+  if (!_best_NTP_candidate->getMac(mac)) { return; }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F(ESPEASY_NOW_NAME ": Send NTP query to: ");
@@ -911,7 +932,7 @@ void ESPEasy_now_handler_t::sendNTPquery()
     addLog(LOG_LEVEL_INFO, log);
   }
 
-  _best_NTP_candidate.markSendTime();
+  _best_NTP_candidate->markSendTime();
   ESPEasy_Now_NTP_query query;
   const size_t len = sizeof(ESPEasy_Now_NTP_query);
   ESPEasy_now_splitter msg(ESPEasy_now_hdr::message_t::NTP_Query, len);
@@ -962,7 +983,7 @@ bool ESPEasy_now_handler_t::handle_NTPquery(const ESPEasy_now_merger& message, b
   }
 
   // Received a reply on our own query
-  return _best_NTP_candidate.processReply(query, message.getFirstPacketTimestamp());
+  return _best_NTP_candidate->processReply(query, message.getFirstPacketTimestamp());
 }
 
 // *************************************************************
@@ -1004,11 +1025,11 @@ bool ESPEasy_now_handler_t::sendToMQTT(
       }
       MAC_address mac = preferred->ESPEasy_Now_MAC();
       switch (Nodes.getMQTTQueueState(preferred->unit)) {
-        case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset:
-        case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Full:
+        case ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset:
+        case ESPEasy_Now_MQTT_QueueCheckState::Enum::Full:
           ESPEasy_now_MQTT_check_queue.push_back(mac);
           return false;
-        case ESPEasy_Now_MQTT_queue_check_packet::QueueState::Empty:
+        case ESPEasy_Now_MQTT_QueueCheckState::Enum::Empty:
           break;
       }
 
@@ -1052,7 +1073,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(
         case WifiEspNowSendStatus::NONE:
         case WifiEspNowSendStatus::FAIL:
         {
-          Nodes.setMQTTQueueState(preferred->unit, ESPEasy_Now_MQTT_queue_check_packet::QueueState::Unset);
+          Nodes.setMQTTQueueState(preferred->unit, ESPEasy_Now_MQTT_QueueCheckState::Enum::Unset);
           ESPEasy_now_MQTT_check_queue.push_back(mac);
           ++_send_failed_count;
           break;
@@ -1137,7 +1158,7 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(controllerIndex_t contr
 
 bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address                             & mac,
                                                          int                                             channel,
-                                                         ESPEasy_Now_MQTT_queue_check_packet::QueueState state) {
+                                                         ESPEasy_Now_MQTT_QueueCheckState::Enum state) {
   ESPEasy_Now_MQTT_queue_check_packet query;
 
   query.state = state;

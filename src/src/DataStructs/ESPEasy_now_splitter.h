@@ -1,10 +1,12 @@
 #ifndef DATASTRUCTS_ESPEASY_NOW_SPLITTER_H
 #define DATASTRUCTS_ESPEASY_NOW_SPLITTER_H
 
-#include "../DataStructs/ESPEasy_Now_packet.h"
 #include "../../ESPEasy_common.h"
 
 #ifdef USES_ESPEASY_NOW
+
+# include "../DataStructs/ESPEasy_Now_packet.h"
+# include "../DataStructs/ESPEasy_now_hdr.h"
 
 # include "../Globals/ESPEasy_now_peermanager.h"
 

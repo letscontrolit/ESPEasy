@@ -1,5 +1,5 @@
-#ifndef ESPEASY_WTH_WIFI_H_
-#define ESPEASY_WTH_WIFI_H_
+#ifndef DATATYPES_NETWORKMEDIUM_H
+#define DATATYPES_NETWORKMEDIUM_H
 
 #include <Arduino.h>
 
@@ -16,4 +16,4 @@ bool   isValid(NetworkMedium_t medium);
 const __FlashStringHelper * toString(NetworkMedium_t medium);
 
 
-#endif // ESPEASY_WTH_WIFI_H_
+#endif // DATATYPES_NETWORKMEDIUM_H

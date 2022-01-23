@@ -1,15 +1,14 @@
-#ifndef GLOBALS_ESPEASY_NOW_H
-#define GLOBALS_ESPEASY_NOW_H
+#ifndef GLOBALS_ESPEASY_NOW_HANDLER_H
+#define GLOBALS_ESPEASY_NOW_HANDLER_H
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_ESPEASY_NOW
+#include "../Helpers/ESPEasy_now_handler.h"
 
-# include "../Helpers/ESPEasy_now_handler.h"
+#ifdef USES_ESPEASY_NOW
 
 extern ESPEasy_now_handler_t ESPEasy_now_handler;
 
-
 #endif // ifdef USES_ESPEASY_NOW
 
-#endif // GLOBALS_ESPEASY_NOW_H
+#endif // ifndef GLOBALS_ESPEASY_NOW_HANDLER_H

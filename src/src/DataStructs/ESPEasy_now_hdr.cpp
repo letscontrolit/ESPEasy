@@ -29,6 +29,11 @@ ESPEasy_now_hdr::ESPEasy_now_hdr(const uint8_t *buf)
   memcpy(this, buf, sizeof(ESPEasy_now_hdr));
 }
 
+ESPEasy_now_hdr::ESPEasy_now_hdr(const ESPEasy_now_hdr& other)
+{
+  *this = other;
+}
+
 ESPEasy_now_hdr& ESPEasy_now_hdr::operator=(const ESPEasy_now_hdr& other)
 {
   if (&other == this) {

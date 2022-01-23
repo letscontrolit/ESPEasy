@@ -1,18 +1,21 @@
-#ifndef DATASTRUCTS_ESPEASY_NOW_INCOMING_H
-#define DATASTRUCTS_ESPEASY_NOW_INCOMING_H
+#ifndef DATASTRUCTS_ESPEASY_NOW_PACKET_H
+#define DATASTRUCTS_ESPEASY_NOW_PACKET_H
 
 #include <Arduino.h>
 
 #include "../Globals/ESPEasy_now_state.h"
 #include "../../ESPEasy_common.h"
+#include "../DataStructs/MAC_address.h"
+
+
+#include <list>
+#include <map>
+#include <vector>
+
 #ifdef USES_ESPEASY_NOW
 
-# include "../DataStructs/MAC_address.h"
-# include "../DataStructs/ESPEasy_now_hdr.h"
+class  ESPEasy_now_hdr;
 
-# include <list>
-# include <map>
-# include <vector>
 class ESPEasy_Now_packet {
 public:
 
@@ -107,7 +110,7 @@ typedef std::list<ESPEasy_Now_packet> ESPEasy_Now_packet_list;
 
 typedef std::map<uint8_t, ESPEasy_Now_packet> ESPEasy_Now_packet_map;
 
-
 #endif // ifdef USES_ESPEASY_NOW
 
-#endif // DATASTRUCTS_ESPEASY_NOW_INCOMING_H
+
+#endif // DATASTRUCTS_ESPEASY_NOW_PACKET_H

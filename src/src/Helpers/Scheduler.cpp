@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/RTC.h"
+#include "../Globals/NPlugins.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Networking.h"

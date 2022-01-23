@@ -2,14 +2,13 @@
 #define DATASTRUCT_ESPEASY_NOW_NTP_QUERY_H
 
 #include <Arduino.h>
+#include <stdint.h>
 
 #include "../Globals/ESPEasy_now_state.h"
-#include "../../ESPEasy_common.h"
-#ifdef USES_ESPEASY_NOW
 
-# include "../Helpers/ESPEasy_time.h"
-# include "../DataStructs/MAC_address.h"
+#include "../DataTypes/ESPEasyTimeSource.h"
 
+class MAC_address;
 
 class ESPEasy_Now_NTP_query {
 public:
@@ -54,7 +53,5 @@ public:
   // so we will not get stuck retrying the one that does not reply
   uint8_t _mac_prev_fail[6] = { 0 };
 };
-
-#endif // ifdef USES_ESPEASY_NOW
 
 #endif // DATASTRUCT_ESPEASY_NOW_NTP_QUERY_H
