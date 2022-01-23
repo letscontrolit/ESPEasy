@@ -66,13 +66,17 @@
 
 #define MPR121_SOFTRESET    0x80
 
+#define MPR212_NORMAL_SENSITIVITY 0
+#define MPR212_EXTRA_SENSITIVITY  1
+
 //.. thru to 0x1C/0x1D
 class Adafruit_MPR121 {
  public:
   // Hardware I2C
   Adafruit_MPR121(void);
 
-  boolean begin(uint8_t i2caddr = MPR121_I2CADDR_DEFAULT);
+  boolean begin(uint8_t i2caddr     = MPR121_I2CADDR_DEFAULT,
+                uint8_t sensitivity = MPR212_NORMAL_SENSITIVITY);
 
   uint16_t filteredData(uint8_t t);
   uint16_t baselineData(uint8_t t);
@@ -88,6 +92,7 @@ class Adafruit_MPR121 {
 
  private:
   int8_t _i2caddr;
+  uint8_t _sensitivity;
 };
 
 #endif // ADAFRUIT_MPR121_H
