@@ -685,7 +685,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(C018_data->sysver());
 
         addRowLabel(F("Voltage"));
-        addHtml(String(static_cast<float>(C018_data->getVbat()) / 1000.0f, 3));
+        addHtml(toString(static_cast<float>(C018_data->getVbat()) / 1000.0f, 3));
 
         addRowLabel(F("Dev Addr"));
         addHtml(C018_data->getDevaddr());
@@ -966,7 +966,7 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
           String log = F("LoRaWAN : Payload Length: ");
           log += pl + 13; // We have a LoRaWAN header of 13 bytes.
           log += F(" Air Time: ");
-          log += String(airtime_ms, 3);
+          log += toString(airtime_ms, 3);
           log += F(" ms");
           addLog(LOG_LEVEL_INFO, log);
         }

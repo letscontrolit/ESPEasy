@@ -9,6 +9,7 @@
 #include "../Globals/Services.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Convert.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -44,12 +45,16 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator+=(char a)                   {
   return addString(String(a));
 }
 
-Web_StreamingBuffer& Web_StreamingBuffer::operator+=(long unsigned int a)     {
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(long unsigned int a)      {
   return addString(String(a));
 }
 
-Web_StreamingBuffer& Web_StreamingBuffer::operator+=(float a)                  {
-  return addString(String(a));
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const float& a)           {
+  return addString(toString(a, 2));
+}
+
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const double& a)          {
+  return addString(doubleToString(a));
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(int a)                    {
