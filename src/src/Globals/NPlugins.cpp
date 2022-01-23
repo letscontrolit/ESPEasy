@@ -1,12 +1,11 @@
 #include "../Globals/NPlugins.h"
 
+
 #include "../DataStructs/NotificationStruct.h"
 #include "../Globals/Settings.h"
 
 
 nprotocolIndex_t INVALID_NPROTOCOL_INDEX = NPLUGIN_MAX;
-notifierIndex_t  INVALID_NOTIFIER_INDEX  = NOTIFICATION_MAX;
-npluginID_t      INVALID_N_PLUGIN_ID     = 0;
 
 
 boolean (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
@@ -66,3 +65,4 @@ nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index) {
   }
   return INVALID_NPROTOCOL_INDEX;
 }
+

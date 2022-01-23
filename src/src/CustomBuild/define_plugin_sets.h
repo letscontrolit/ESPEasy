@@ -1,5 +1,5 @@
-#ifndef DEFINE_PLUGIN_SETS_H
-#define DEFINE_PLUGIN_SETS_H
+#ifndef CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
+#define CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 
 #include "../../ESPEasy_common.h"
 
@@ -1820,4 +1820,4 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#endif // DEFINE_PLUGIN_SETS_H
+#endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

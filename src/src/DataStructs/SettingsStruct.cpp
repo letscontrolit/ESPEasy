@@ -1,11 +1,11 @@
 #include "../DataStructs/SettingsStruct.h"
 
-#include "../Globals/Plugins.h"
-#include "../Globals/CPlugins.h"
+#include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/SPI_options.h"
-#include "../../ESPEasy_common.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
 
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP

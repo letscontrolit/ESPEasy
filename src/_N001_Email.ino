@@ -25,6 +25,10 @@
 // Forward declaration
 boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
 
+// Forward declaration
+boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
+
+
 // The message body is included in event->String1
 boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -85,8 +89,6 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 	return success;
 }
 
-
-#ifdef USES_NOTIFIER
 
 boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {
@@ -187,7 +189,6 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 	return myStatus;
 }
 
-#endif
 
 boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
