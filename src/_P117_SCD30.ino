@@ -91,7 +91,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Altitude"), F("plugin_117_SCD30_alt"), PCONFIG(0), 0, 2000);
       addUnit(F("0..2000 m"));
-      addFormTextBox(F("Temp offset"), F("plugin_117_SCD30_tmp"), String(PCONFIG_FLOAT(0), 2), 5);
+      addFormTextBox(F("Temp offset"), F("plugin_117_SCD30_tmp"), toString(PCONFIG_FLOAT(0), 2), 5);
       addUnit(F("&deg;C"));
       success = true;
       break;
@@ -185,7 +185,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       {
         P117_data->getTemperatureOffset(&temp);
         log    += F("Temp offset: ");
-        log    += String(temp, 2);
+        log    += toString(temp, 2);
         success = true;
       }
 
