@@ -4,6 +4,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
