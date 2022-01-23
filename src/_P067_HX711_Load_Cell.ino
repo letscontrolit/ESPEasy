@@ -197,7 +197,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
         }
 
         int2float(PCONFIG(1), PCONFIG(2), &valFloat);
-        addFormTextBox(F("Offset"), F("p067_offset_chanA"), String(valFloat, 3), 25);
+        addFormTextBox(F("Offset"), F("p067_offset_chanA"), toString(valFloat, 3), 25);
         addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));
         addCheckBox(F("tareChanA"), 0);   //always off
 
@@ -212,7 +212,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
         }
 
         int2float(PCONFIG(3), PCONFIG(4), &valFloat);
-        addFormTextBox(F("Offset"), F("p067_offset_chanB"), String(valFloat, 3), 25);
+        addFormTextBox(F("Offset"), F("p067_offset_chanB"), toString(valFloat, 3), 25);
         addHtml(F(" &nbsp; &nbsp; &#8617; Tare: "));
         addCheckBox(F("tareChanB"), 0);   //always off
 
@@ -222,11 +222,11 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
         addFormNumericBox(F("Point 1"), F("p067_adc1_chanA"), PCONFIG_LONG(0));
         html_add_estimate_symbol();
-        addTextBox(F("p067_out1_chanA"), String(PCONFIG_FLOAT(0), 3), 10);
+        addTextBox(F("p067_out1_chanA"), toString(PCONFIG_FLOAT(0), 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p067_adc2_chanA"), PCONFIG_LONG(1));
         html_add_estimate_symbol();
-        addTextBox(F("p067_out2_chanA"), String(PCONFIG_FLOAT(1), 3), 10);
+        addTextBox(F("p067_out2_chanA"), toString(PCONFIG_FLOAT(1), 3), 10);
 
         //------------
         addFormSubHeader(F("Two Point Calibration Channel B"));
@@ -235,11 +235,11 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
         addFormNumericBox(F("Point 1"), F("p067_adc1_chanB"), PCONFIG_LONG(2));
         html_add_estimate_symbol();
-        addTextBox(F("p067_out1_chanB"), String(PCONFIG_FLOAT(2), 3), 10);
+        addTextBox(F("p067_out1_chanB"), toString(PCONFIG_FLOAT(2), 3), 10);
 
         addFormNumericBox(F("Point 2"), F("p067_adc2_chanB"), PCONFIG_LONG(3));
         html_add_estimate_symbol();
-        addTextBox(F("p067_out2_chanB"), String(PCONFIG_FLOAT(3), 3), 10);
+        addTextBox(F("p067_out2_chanB"), toString(PCONFIG_FLOAT(3), 3), 10);
 
         success = true;
         break;
