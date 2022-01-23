@@ -96,9 +96,12 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       success = true;
     }
 
-    if (cmd.equals(F("neopixelline"))) { // NeoPixelLine
+    if (cmd.equals(F("neopixelline"))) {                      // NeoPixelLine
+      int brightness;
+      validIntFromString(parseString(string, 7), brightness); // Get 7th argument aka Par6
+
       for (int i = event->Par1 - 1; i < event->Par2; i++) {
-        Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, event->Par4, event->Par5));
+        Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(event->Par3, event->Par4, event->Par5, brightness));
       }
       Plugin_038_pixels->show();
       success = true;
