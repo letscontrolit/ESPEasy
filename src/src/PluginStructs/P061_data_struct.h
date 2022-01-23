@@ -13,9 +13,9 @@
 
 # define P061_ENABLE_PCF8575 // Enables support for the PCF8575 16 pin I/O expander (needs pull-ups for inputs)
 
-// # if defined(LIMIT_BUILD_SIZE) && defined(P061_ENABLE_PCF8575)
-// #  undef P061_ENABLE_PCF8575 // Saves ca. 800 bytes on ESP8266 (not sure if this needs to be disabled)
-// # endif // if defined(LIMIT_BUILD_SIZE) && defined(P061_ENABLE_PCF8575)
+# if defined(LIMIT_BUILD_SIZE) && defined(P061_ENABLE_PCF8575)
+#  undef P061_ENABLE_PCF8575 // Saves ca. 800 bytes on ESP8266 (not sure if this needs to be disabled)
+# endif // if defined(LIMIT_BUILD_SIZE) && defined(P061_ENABLE_PCF8575)
 
 // MCP23017 Matrix /////////////////////////////////////////////////////////////
 
