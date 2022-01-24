@@ -125,6 +125,10 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   }
   #endif // ifdef USES_TIMING_STATS
   {
+    #ifdef USE_SECOND_HEAP
+    // Store template in 2nd heap
+    HeapSelectIram ephemeral;
+    #endif
     String pageTemplate;
     String fileName = tmplName;
 
@@ -434,6 +438,11 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
 {
+  #ifdef USE_SECOND_HEAP
+  // Store template in 2nd heap
+  HeapSelectIram ephemeral;
+  #endif
+
   const bool addJS   = true;
   const bool addMeta = true;
 

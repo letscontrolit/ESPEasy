@@ -667,8 +667,13 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
+            #ifdef USE_SECOND_HEAP
+            // Store each string in 2nd heap
+            HeapSelectIram ephemeral;
+            #endif
+
             strings[stringCount] = tmpString;
-            tmpString            = "";
+            tmpString.clear();
             tmpString.reserve(readSize);
             ++stringCount;
           } else {

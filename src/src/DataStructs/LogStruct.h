@@ -10,7 +10,7 @@
 \*********************************************************************************************/
 #define LOG_STRUCT_MESSAGE_SIZE 128
 #ifdef ESP32
-  #define LOG_STRUCT_MESSAGE_LINES 30
+  #define LOG_STRUCT_MESSAGE_LINES 60
   #define LOG_BUFFER_EXPIRE         30000  // Time after which a buffered log item is considered expired.
 #else
   #ifdef USE_SECOND_HEAP
