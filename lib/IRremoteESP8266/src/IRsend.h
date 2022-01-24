@@ -42,78 +42,78 @@ const uint32_t kDefaultMessageGap = 100000;
 
 /// Enumerators and Structures for the Common A/C API.
 namespace stdAc {
-  /// Common A/C settings for A/C operating modes.
-  enum class opmode_t {
-    kOff  = -1,
-    kAuto =  0,
-    kCool =  1,
-    kHeat =  2,
-    kDry  =  3,
-    kFan  =  4,
-    // Add new entries before this one, and update it to point to the last entry
-    kLastOpmodeEnum = kFan,
-  };
+/// Common A/C settings for A/C operating modes.
+enum class opmode_t {
+  kOff  = -1,
+  kAuto =  0,
+  kCool =  1,
+  kHeat =  2,
+  kDry  =  3,
+  kFan  =  4,
+  // Add new entries before this one, and update it to point to the last entry
+  kLastOpmodeEnum = kFan,
+};
 
-  /// Common A/C settings for Fan Speeds.
-  enum class fanspeed_t {
-    kAuto =   0,
-    kMin =    1,
-    kLow =    2,
-    kMedium = 3,
-    kHigh =   4,
-    kMax =    5,
-    // Add new entries before this one, and update it to point to the last entry
-    kLastFanspeedEnum = kMax,
-  };
+/// Common A/C settings for Fan Speeds.
+enum class fanspeed_t {
+  kAuto =   0,
+  kMin =    1,
+  kLow =    2,
+  kMedium = 3,
+  kHigh =   4,
+  kMax =    5,
+  // Add new entries before this one, and update it to point to the last entry
+  kLastFanspeedEnum = kMax,
+};
 
-  /// Common A/C settings for Vertical Swing.
-  enum class swingv_t {
-    kOff =    -1,
-    kAuto =    0,
-    kHighest = 1,
-    kHigh =    2,
-    kMiddle =  3,
-    kLow =     4,
-    kLowest =  5,
-    // Add new entries before this one, and update it to point to the last entry
-    kLastSwingvEnum = kLowest,
-  };
+/// Common A/C settings for Vertical Swing.
+enum class swingv_t {
+  kOff =    -1,
+  kAuto =    0,
+  kHighest = 1,
+  kHigh =    2,
+  kMiddle =  3,
+  kLow =     4,
+  kLowest =  5,
+  // Add new entries before this one, and update it to point to the last entry
+  kLastSwingvEnum = kLowest,
+};
 
-  /// Common A/C settings for Horizontal Swing.
-  enum class swingh_t {
-    kOff =     -1,
-    kAuto =     0,  // a.k.a. On.
-    kLeftMax =  1,
-    kLeft =     2,
-    kMiddle =   3,
-    kRight =    4,
-    kRightMax = 5,
-    kWide =     6,  // a.k.a. left & right at the same time.
-    // Add new entries before this one, and update it to point to the last entry
-    kLastSwinghEnum = kWide,
-  };
+/// Common A/C settings for Horizontal Swing.
+enum class swingh_t {
+  kOff =     -1,
+  kAuto =     0,  // a.k.a. On.
+  kLeftMax =  1,
+  kLeft =     2,
+  kMiddle =   3,
+  kRight =    4,
+  kRightMax = 5,
+  kWide =     6,  // a.k.a. left & right at the same time.
+  // Add new entries before this one, and update it to point to the last entry
+  kLastSwinghEnum = kWide,
+};
 
-  /// Structure to hold a common A/C state.
-  typedef struct {
-    decode_type_t protocol;
-    int16_t model;
-    bool power;
-    stdAc::opmode_t mode;
-    float degrees;
-    bool celsius;
-    stdAc::fanspeed_t fanspeed;
-    stdAc::swingv_t swingv;
-    stdAc::swingh_t swingh;
-    bool quiet;
-    bool turbo;
-    bool econo;
-    bool light;
-    bool filter;
-    bool clean;
-    bool beep;
-    int16_t sleep;
-    int16_t clock;
-  } state_t;
+/// Structure to hold a common A/C state.
+struct state_t {
+  decode_type_t protocol;
+  int16_t model;
+  bool power;
+  stdAc::opmode_t mode;
+  float degrees;
+  bool celsius;
+  stdAc::fanspeed_t fanspeed;
+  stdAc::swingv_t swingv;
+  stdAc::swingh_t swingh;
+  bool quiet;
+  bool turbo;
+  bool econo;
+  bool light;
+  bool filter;
+  bool clean;
+  bool beep;
+  int16_t sleep;
+  int16_t clock;
+};
 };  // namespace stdAc
 
 /// Fujitsu A/C model numbers
@@ -136,10 +136,22 @@ enum gree_ac_remote_model_t {
   YBOFB,     // (2) Green, YBOFB2, YAPOF3
 };
 
+/// HAIER_AC176 A/C model numbers
+enum haier_ac176_remote_model_t {
+  V9014557_A = 1,  // (1) V9014557 Remote in "A" setting. (Default)
+  V9014557_B,      // (2) V9014557 Remote in "B" setting.
+};
+
 /// HITACHI_AC1 A/C model numbers
 enum hitachi_ac1_remote_model_t {
   R_LT0541_HTA_A = 1,  // (1) R-LT0541-HTA Remote in "A" setting. (Default)
   R_LT0541_HTA_B,      // (2) R-LT0541-HTA Remote in "B" setting.
+};
+
+/// MIRAGE A/C model numbers
+enum mirage_ac_remote_model_t {
+  KKG9AC1 = 1,  // (1) KKG9A-C1 Remote. (Default)
+  KKG29AC1,     // (2) KKG29A-C1 Remote.
 };
 
 /// Panasonic A/C model numbers
@@ -369,9 +381,13 @@ class IRsend {
                 uint16_t repeat = kNoRepeat);
 #endif
 #if SEND_COOLIX
-  void sendCOOLIX(uint64_t data, uint16_t nbits = kCoolixBits,
-                  uint16_t repeat = kCoolixDefaultRepeat);
-#endif
+  void sendCOOLIX(const uint64_t data, const uint16_t nbits = kCoolixBits,
+                  const uint16_t repeat = kCoolixDefaultRepeat);
+#endif  // SEND_COOLIX
+#if SEND_COOLIX48
+  void sendCoolix48(const uint64_t data, const uint16_t nbits = kCoolix48Bits,
+                    const uint16_t repeat = kCoolixDefaultRepeat);
+#endif  // SEND_COOLIX48
 #if SEND_WHYNTER
   void sendWhynter(const uint64_t data, const uint16_t nbits = kWhynterBits,
                    const uint16_t repeat = kNoRepeat);
@@ -754,6 +770,10 @@ class IRsend {
                  const uint16_t nbytes = kRhossStateLength,
                  const uint16_t repeat = kRhossDefaultRepeat);
 #endif  // SEND_RHOSS
+#if SEND_AIRTON
+  void sendAirton(const uint64_t data, const uint16_t nbits = kAirtonBits,
+                  const uint16_t repeat = kAirtonDefaultRepeat);
+#endif  // SEND_AIRTON
 
  protected:
 #ifdef UNIT_TEST

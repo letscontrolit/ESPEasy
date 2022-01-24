@@ -190,7 +190,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addUnit(F("V"));
 
       addRowLabel(F("Sensor Data"));
-      addHtml(String(UserVar[event->BaseVarIndex]));
+      addHtml(toString(UserVar[event->BaseVarIndex]));
       switch (board_type)
       {
       case PH:
