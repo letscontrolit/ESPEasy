@@ -9,10 +9,10 @@
     "url": "https://github.com/jrowberg/i2cdevlib.git"
   },
   "frameworks": "arduino",
-  "platforms": "atmelavr",
-  "dependencies": [
-    {
-       "name": "Wire"
-    }
+  "platforms": "*",
+   "dependencies": [
+     {
+        "name": "Wire"
+     }
   ]
 }

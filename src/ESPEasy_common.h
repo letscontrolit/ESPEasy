@@ -75,7 +75,7 @@ namespace std
 
 
 
-  #include "core_version.h"
+  #include <core_version.h>
   #define NODE_TYPE_ID      NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
   #define FILE_SECURITY     "security.dat"
@@ -95,13 +95,13 @@ namespace std
   #ifndef LWIP_OPEN_SRC
   #define LWIP_OPEN_SRC
   #endif
-  #include "lwip/opt.h"
-  #include "lwip/udp.h"
-  #include "lwip/igmp.h"
-  #include "include/UdpContext.h"
-  #include "limits.h"
+  #include <lwip/opt.h>
+  #include <lwip/udp.h>
+  #include <lwip/igmp.h>
+  #include <include/UdpContext.h>
+  #include <limits.h>
   extern "C" {
-   #include "user_interface.h"
+   #include <user_interface.h>
   }
 
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image

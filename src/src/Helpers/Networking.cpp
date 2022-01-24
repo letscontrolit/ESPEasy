@@ -60,7 +60,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 #  include <ESP8266HTTPClient.h>
 # endif // ifdef ESP8266
 # ifdef ESP32
-#  include "HTTPClient.h"
+#  include <HTTPClient.h>
 # endif // ifdef ESP32
 #endif  // USE_SETTINGS_ARCHIVE
 

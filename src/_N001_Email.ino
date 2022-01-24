@@ -22,9 +22,10 @@
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
 
+// Forward declaration
+boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
 
 // The message body is included in event->String1
-
 boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
 	boolean success = false;
