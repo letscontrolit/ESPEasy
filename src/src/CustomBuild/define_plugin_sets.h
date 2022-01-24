@@ -1688,7 +1688,7 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifndef PLUGIN_SET_TESTING
+  #if !defined(PLUGIN_SET_TESTING) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
       #undef USES_P076   // HWL8012   in POW r1
     #endif
