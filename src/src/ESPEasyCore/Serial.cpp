@@ -78,6 +78,11 @@ void serial()
 }
 
 int getRoomLeft() {
+  #ifdef USE_SECOND_HEAP
+  // If stored in 2nd heap, we must check this for space
+  HeapSelectIram ephemeral;
+  #endif
+
   int roomLeft = getMaxFreeBlock();
 
   if (roomLeft < 1000) {
@@ -92,20 +97,33 @@ int getRoomLeft() {
 
 void addToSerialBuffer(const String& line) {
   process_serialWriteBuffer(); // Try to make some room first.
-  int roomLeft = getRoomLeft();
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
+    int roomLeft = getRoomLeft();
 
-  auto it = line.begin();
-  while (roomLeft > 0 && it != line.end()) {
-    serialWriteBuffer.push_back(*it);
-    --roomLeft;
-    ++it;
+    auto it = line.begin();
+    while (roomLeft > 0 && it != line.end()) {
+      serialWriteBuffer.push_back(*it);
+      --roomLeft;
+      ++it;
+    }
   }
 }
 
 void addNewlineToSerialBuffer() {
   process_serialWriteBuffer(); // Try to make some room first.
-  serialWriteBuffer.push_back('\r');
-  serialWriteBuffer.push_back('\n');
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
+
+    serialWriteBuffer.push_back('\r');
+    serialWriteBuffer.push_back('\n');
+  }
 }
 
 void process_serialWriteBuffer() {

@@ -14,10 +14,17 @@ void LogStruct::add(const uint8_t loglevel, const String& line) {
   timeStamp[write_idx] = millis();
   log_level[write_idx] = loglevel;
 
-  if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
-    Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
-  } else {
-    Message[write_idx] = line;
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
+
+    if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+    } else {
+      Message[write_idx] = line;
+    }
   }
 }
 
