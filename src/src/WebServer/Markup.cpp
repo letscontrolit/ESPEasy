@@ -7,6 +7,7 @@
 
 #include "../Globals/Settings.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -683,9 +684,9 @@ void addFloatNumberBox(const String& id, float value, float min, float max, uint
   html += id;
   html += '\'';
   html += F(" min=");
-  html += String(min, nrDecimals);
+  html += toString(min, nrDecimals);
   html += F(" max=");
-  html += String(max, nrDecimals);
+  html += toString(max, nrDecimals);
   html += F(" step=");
 
   if (stepsize <= 0.0f) {
@@ -696,11 +697,11 @@ void addFloatNumberBox(const String& id, float value, float min, float max, uint
     }
     html += '1';
   } else {
-    html += String(stepsize, nrDecimals);
+    html += toString(stepsize, nrDecimals);
   }
 
   html += F(" style='width:7em;' value=");
-  html += String(value, nrDecimals);
+  html += toString(value, nrDecimals);
 
   #ifdef ENABLE_TOOLTIPS
 
