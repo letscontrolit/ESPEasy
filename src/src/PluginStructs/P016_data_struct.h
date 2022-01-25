@@ -68,6 +68,10 @@ public:
             uint16_t            CmdInhibitTime);
   void loadCommandLines(struct EventStruct *event);
   void saveCommandLines(struct EventStruct *event);
+
+  static void loadCommandLine(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr);
+  static void saveCommandLine(struct EventStruct *event, const tCommandLinesV2 &line, uint8_t lineNr);
+
   void AddCode(uint64_t      Code,
                decode_type_t DecodeType = decode_type_t::UNKNOWN,
                uint16_t      CodeFlags  = 0u);

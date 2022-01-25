@@ -315,14 +315,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
                         2000);
 
       {
-        // For load and save of the display lines, we must not rely on the data in memory.
-        // This data in memory can be altered through write commands.
-        // Therefore we must read the lines from flash in a temporary object.
-        P016_data_struct *P016_data = new (std::nothrow) P016_data_struct();
-
-        if (nullptr != P016_data) {
-          P016_data->loadCommandLines(event); // load saved codes and commands
-
+        {
           addFormSubHeader(F("Code - command map"));
 
           int size = static_cast<int>(decode_type_t::kLastDecodeType) + 1;
@@ -366,6 +359,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           int rowCnt = 0;
 
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
+            tCommandLinesV2 line;
+            P016_data_struct::loadCommandLine(event, line, varNr);
+
             html_TR_TD();
 
             if (varNr < 9) {
@@ -375,30 +371,30 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             {                      // Decode type
               addSelector(getPluginCustomArgName(rowCnt + 0), size, &decodeTypes[0], &decodeTypeOptions[0], NULL,
-                          static_cast<int>(P016_data->CommandLines[varNr].CodeDecodeType), false, true, EMPTY_STRING);
+                          static_cast<int>(line.CodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
-            addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(P016_data->CommandLines[varNr].CodeFlags, P16_FLAGS_REPEAT));
+            addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
             html_TD();
             strCode = EMPTY_STRING;
 
-            if (P016_data->CommandLines[varNr].Code > 0) {
-              strCode = uint64ToString(P016_data->CommandLines[varNr].Code, 16); // convert code to hex for display
+            if (line.Code > 0) {
+              strCode = uint64ToString(line.Code, 16); // convert code to hex for display
             }
             addTextBox(getPluginCustomArgName(rowCnt + 2), strCode, P16_Cchars - 1, false, false, P016_HEX_INPUT_PATTERN, EMPTY_STRING);
 
             html_TD();
             {
               addSelector(getPluginCustomArgName(rowCnt + 3), size, &decodeTypes[0], &decodeTypeOptions[0], NULL,
-                          static_cast<int>(P016_data->CommandLines[varNr].AlternativeCodeDecodeType), false, true, EMPTY_STRING);
+                          static_cast<int>(line.AlternativeCodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
-            addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(P016_data->CommandLines[varNr].AlternativeCodeFlags, P16_FLAGS_REPEAT));
+            addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));
             html_TD();
             strCode = EMPTY_STRING;
 
-            if (P016_data->CommandLines[varNr].AlternativeCode > 0) {
-              strCode = uint64ToString(P016_data->CommandLines[varNr].AlternativeCode, 16); // convert code to hex for display
+            if (line.AlternativeCode > 0) {
+              strCode = uint64ToString(line.AlternativeCode, 16); // convert code to hex for display
             }
             addTextBox(getPluginCustomArgName(rowCnt + 5), strCode, P16_Cchars - 1, false, false, P016_HEX_INPUT_PATTERN, EMPTY_STRING);
 
@@ -409,15 +405,12 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1);
             addHtml(':');
             addHtml(F("<TD colspan=\"5\">")); // Use as much of available width (though limited to 500px by css)
-            addTextBox(getPluginCustomArgName(rowCnt + 6), String(P016_data->CommandLines[varNr].Command), P16_Nchars - 1);
+            addTextBox(getPluginCustomArgName(rowCnt + 6), String(line.Command), P16_Nchars - 1);
 
             rowCnt += 7;
             delay(0);
           }
           html_end_table();
-
-          // Need to delete the allocated object here
-          delete P016_data;
         }
 
         if (P016_SETTINGS_VERSION != P16_SETTINGS_LATEST) {
@@ -455,12 +448,6 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       P016_CMDINHIBIT     = getFormItemInt(F("p016_cmdinhibit"));
 
       {
-        // For load and save of the display lines, we must not rely on the data in memory.
-        // This data in memory can be altered through write commands.
-        // Therefore we must use a temporary version to store the settings.
-        P016_data_struct *P016_data = new (std::nothrow) P016_data_struct();
-
-        if (nullptr != P016_data) {
           char   strCode[P16_Cchars];
           String strError;
           strError.reserve(30); // Length of expected string, needed for strings > 11 chars
@@ -469,15 +456,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           int rowCnt = 0;
 
-          P016_data->CommandLines.clear(); // Start fresh
-
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
-            P016_data->CommandLines.push_back(tCommandLinesV2());
+            tCommandLinesV2 line;
+
             strError = EMPTY_STRING;
 
             // Normal Code & flags
-            P016_data->CommandLines[varNr].CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
-            bitWrite(P016_data->CommandLines[varNr].CodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 1)));
+            line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
+            bitWrite(line.CodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 1)));
             iCode = 0;
 
             if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 2)), P16_Cchars)) {
@@ -487,14 +473,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             } else {
               iCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
             }
-            P016_data->CommandLines[varNr].Code = iCode;
+            line.Code = iCode;
 
             delay(0);
 
             // Alternate Code & flags
-            P016_data->CommandLines[varNr].AlternativeCodeDecodeType =
+            line.AlternativeCodeDecodeType =
               static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 3)));
-            bitWrite(P016_data->CommandLines[varNr].AlternativeCodeFlags, P16_FLAGS_REPEAT,
+            bitWrite(line.AlternativeCodeFlags, P16_FLAGS_REPEAT,
                      isFormItemChecked(getPluginCustomArgName(rowCnt + 4)));
             iCode = 0;
 
@@ -505,14 +491,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             } else {
               iCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
             }
-            P016_data->CommandLines[varNr].AlternativeCode = iCode;
+            line.AlternativeCode = iCode;
 
             // Command
-            if (!safe_strncpy(P016_data->CommandLines[varNr].Command, webArg(getPluginCustomArgName(rowCnt + 6)), P16_Nchars)) {
+            if (!safe_strncpy(line.Command, webArg(getPluginCustomArgName(rowCnt + 6)), P16_Nchars)) {
               strError += F("Command ");
               strError += (varNr + 1);
             }
-            P016_data->CommandLines[varNr].Command[P16_Nchars - 1] = 0; // Terminate string
+            line.Command[P16_Nchars - 1] = 0; // Terminate string
 
             if (!strError.isEmpty()) {
               addHtmlError(strError);
@@ -520,21 +506,17 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             rowCnt += 7;
             delay(0);
+
+            P016_data_struct::saveCommandLine(event, line, varNr);
           }
 
           # ifdef PLUGIN_016_DEBUG
           P016_infoLogMemory(F("before save"));
           # endif // ifdef PLUGIN_016_DEBUG
 
-          P016_data->saveCommandLines(event);
-
           # ifdef PLUGIN_016_DEBUG
           P016_infoLogMemory(F("after save"));
           # endif // ifdef PLUGIN_016_DEBUG
-
-          // Need to delete the allocated object here
-          delete P016_data;
-        }
       }
 
       # ifdef PLUGIN_016_DEBUG
