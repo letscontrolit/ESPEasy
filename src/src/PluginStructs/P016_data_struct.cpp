@@ -85,11 +85,6 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
   CommandLines.clear(); // Start fresh
   for (uint8_t i = 0; i < P16_Nlines; i++) {
     CommandLines.push_back(tCommandLinesV2());
-    # ifdef P16_SETTINGS_V1
-    if (PCONFIG(7) != P16_SETTINGS_LATEST)
-      loadCommandLinev1(event, CommandLines[i], i);
-    else
-    # endif // ifdef P16_SETTINGS_V1
     loadCommandLine(event, CommandLines[i], i);
   }
 }
@@ -102,6 +97,13 @@ void P016_data_struct::saveCommandLines(struct EventStruct *event) {
 
 void P016_data_struct::loadCommandLine(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr)
 {
+  # ifdef P16_SETTINGS_V1
+  if (PCONFIG(7) != P16_SETTINGS_LATEST) {
+    loadCommandLinev1(event, line, lineNr);
+    return;
+  }
+  # endif // ifdef P16_SETTINGS_V1
+
   const int loadOffset = lineNr * sizeof(tCommandLinesV2);
   LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
                 event->TaskIndex,
