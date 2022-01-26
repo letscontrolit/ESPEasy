@@ -131,6 +131,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = false;
       Device[deviceCount].TimerOptional      = false;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].ClearTaskDataBeforeSave = false;
       break;
     }
 

@@ -659,6 +659,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
           event->sensorType = Device[DeviceIndex].VType;
         }
+        if (Function == PLUGIN_WEBFORM_SAVE) {
+          if (Device[DeviceIndex].ClearTaskDataBeforeSave) {
+            clearPluginTaskData(event->TaskIndex);
+          }
+        }
 
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);

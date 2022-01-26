@@ -121,6 +121,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption = true;
       Device[deviceCount].TimerOptional = true;         // Allow user to disable interval function.
       Device[deviceCount].GlobalSyncOption = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ClearTaskDataBeforeSave = false;
+
       break;
     }
 

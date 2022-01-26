@@ -704,6 +704,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = false;
       Device[deviceCount].TimerOptional      = false;
       Device[deviceCount].GlobalSyncOption   = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ClearTaskDataBeforeSave = false;
       break;
     }
 

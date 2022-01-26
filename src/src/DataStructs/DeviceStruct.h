@@ -93,6 +93,7 @@ struct DeviceStruct
   bool TimerOption        : 1;       // Allow to set the "Interval" timer for the plugin.
   bool TimerOptional      : 1;       // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
   bool DecimalsOnly       : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
+  bool ClearTaskDataBeforeSave : 1;  // Optimization in memory usage, Do not clear when task data is needed during save.
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 
