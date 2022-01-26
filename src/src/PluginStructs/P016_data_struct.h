@@ -6,18 +6,19 @@
 
 # include <IRremoteESP8266.h>
 
-# define PLUGIN_016_DEBUG      // additional debug messages in the log
+# define PLUGIN_016_DEBUG             // additional debug messages in the log
 
 // bit definition in PCONFIG_LONG(0)
-# define P016_BitAddNewCode  0 // Add automatically new code into Code of the command structure
-# define P016_BitExecuteCmd  1 // Execute command if received code matches Code or AlternativeCode of the command structure
-# define P016_BitAcceptUnknownType  2 // Accept unknown DecodeType as valid IR code (will be set to RAW before calling AddCode() or ExecuteCode()) 
+# define P016_BitAddNewCode  0        // Add automatically new code into Code of the command structure
+# define P016_BitExecuteCmd  1        // Execute command if received code matches Code or AlternativeCode of the command structure
+# define P016_BitAcceptUnknownType  2 // Accept unknown DecodeType as valid IR code (will be set to RAW before calling AddCode() or
+                                      // ExecuteCode())
 
-# define P16_Nlines   10       // The number of different lines which can be displayed - each line is 64 chars max
-# define P16_Nchars   64       // max chars per command line
-# define P16_Cchars   20       // max chars per code
+# define P16_Nlines   10              // The number of different lines which can be displayed - each line is 64 chars max
+# define P16_Nchars   64              // max chars per command line
+# define P16_Cchars   20              // max chars per code
 
-# define P16_SETTINGS_V1       // Settings v1 original settings when enabled, settings conversion is also enabled
+# define P16_SETTINGS_V1              // Settings v1 original settings when enabled, settings conversion is also enabled
 // Settings v2 includes 64 bit codes and some separated flags
 
 # ifdef P16_SETTINGS_V1
@@ -41,7 +42,8 @@ typedef struct {
 struct tCommandLinesV2 {
   # ifdef P16_SETTINGS_V1
   tCommandLinesV2() = default;
-  tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i);
+  tCommandLinesV2(const tCommandLinesV1& lineV1,
+                  uint8_t                i);
   # endif // ifdef P16_SETTINGS_V1
 
   char          Command[P16_Nchars]       = { 0 };
@@ -62,16 +64,22 @@ public:
 
   P016_data_struct();
 
-  void init(struct EventStruct *event,
-            uint16_t            CmdInhibitTime);
-  void loadCommandLines(struct EventStruct *event);
-  void saveCommandLines(struct EventStruct *event);
+  void        init(struct EventStruct *event,
+                   uint16_t            CmdInhibitTime);
+  void        loadCommandLines(struct EventStruct *event);
+  void        saveCommandLines(struct EventStruct *event);
 
-  static void loadCommandLine(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr);
+  static void loadCommandLine(struct EventStruct *event,
+                              tCommandLinesV2   & line,
+                              uint8_t             lineNr);
   # ifdef P16_SETTINGS_V1
-  static void loadCommandLinev1(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr);
-  #endif
-  static void saveCommandLine(struct EventStruct *event, const tCommandLinesV2 &line, uint8_t lineNr);
+  static void loadCommandLinev1(struct EventStruct *event,
+                                tCommandLinesV2   & line,
+                                uint8_t             lineNr);
+  # endif // ifdef P16_SETTINGS_V1
+  static void saveCommandLine(struct EventStruct    *event,
+                              const tCommandLinesV2& line,
+                              uint8_t                lineNr);
 
   void AddCode(uint64_t      Code,
                decode_type_t DecodeType = decode_type_t::UNKNOWN,
@@ -92,11 +100,11 @@ private:
                     decode_type_t DecodeType,
                     uint16_t      CodeFlags);
 
-  uint64_t      iLastCmd = 0;                   // last command send
-  uint32_t      iLastCmdTime = 0;               // time while last command was send
-  decode_type_t iLastDecodeType = decode_type_t::UNKNOWN;            // last decode_type sent
-  uint16_t      iCmdInhibitTime = 0;            // inhibit time for sending the same command again
-  uint16_t      iLastCodeFlags = 0;             // last flags sent
+  uint64_t      iLastCmd        = 0;                      // last command send
+  uint32_t      iLastCmdTime    = 0;                      // time while last command was send
+  decode_type_t iLastDecodeType = decode_type_t::UNKNOWN; // last decode_type sent
+  uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again
+  uint16_t      iLastCodeFlags  = 0;                      // last flags sent
 };
 
 #endif // ifdef USES_P016

@@ -7,6 +7,7 @@
 # include <IRutils.h>
 
 # ifdef P16_SETTINGS_V1
+
 // Conversion constructor
 tCommandLinesV2::tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i)
 {
@@ -28,6 +29,7 @@ tCommandLinesV2::tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i)
 
   memcpy(Command, lineV1.Command, P16_Nchars);
   const uint32_t oldCode = lineV1.Code;
+
   if (oldCode > 0) {
     CodeDecodeType = static_cast<decode_type_t>((oldCode >> 24));                // decode_type
     bitWrite(CodeFlags, P16_FLAGS_REPEAT, oldCode & (0x1 << P16_CMDBIT_REPEAT)); // Repeat flag
@@ -73,7 +75,6 @@ void P016_data_struct::init(struct EventStruct *event, uint16_t CmdInhibitTime) 
   iLastCmdTime    = 0;
 }
 
-
 void P016_data_struct::loadCommandLines(struct EventStruct *event) {
   # ifdef P16_SETTINGS_V1
 
@@ -83,6 +84,7 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
   }
   # endif // ifdef P16_SETTINGS_V1
   CommandLines.clear(); // Start fresh
+
   for (uint8_t i = 0; i < P16_Nlines; i++) {
     CommandLines.push_back(tCommandLinesV2());
     loadCommandLine(event, CommandLines[i], i);
@@ -95,9 +97,10 @@ void P016_data_struct::saveCommandLines(struct EventStruct *event) {
   }
 }
 
-void P016_data_struct::loadCommandLine(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr)
+void P016_data_struct::loadCommandLine(struct EventStruct *event, tCommandLinesV2& line, uint8_t lineNr)
 {
   # ifdef P16_SETTINGS_V1
+
   if (PCONFIG(7) != P16_SETTINGS_LATEST) {
     loadCommandLinev1(event, line, lineNr);
     return;
@@ -106,40 +109,42 @@ void P016_data_struct::loadCommandLine(struct EventStruct *event, tCommandLinesV
 
   const int loadOffset = lineNr * sizeof(tCommandLinesV2);
   LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
-                event->TaskIndex,
-                reinterpret_cast<uint8_t *>(&line),
-                sizeof(tCommandLinesV2),
-                loadOffset);
+               event->TaskIndex,
+               reinterpret_cast<uint8_t *>(&line),
+               sizeof(tCommandLinesV2),
+               loadOffset);
   line.Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data
 }
 
 # ifdef P16_SETTINGS_V1
-void P016_data_struct::loadCommandLinev1(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr)
+void P016_data_struct::loadCommandLinev1(struct EventStruct *event, tCommandLinesV2& line, uint8_t lineNr)
 {
   tCommandLinesV1 lineV1;
+
   {
     const int loadOffsetV1 = lineNr * sizeof(tCommandLinesV1);
     LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
-                  event->TaskIndex,
-                  reinterpret_cast<uint8_t *>(&lineV1),
-                  sizeof(tCommandLinesV2),
-                  loadOffsetV1);
+                 event->TaskIndex,
+                 reinterpret_cast<uint8_t *>(&lineV1),
+                 sizeof(tCommandLinesV2),
+                 loadOffsetV1);
   }
-  line = tCommandLinesV2(lineV1, lineNr);
+  line                         = tCommandLinesV2(lineV1, lineNr);
   line.Command[P16_Nchars - 1] = 0;
 }
-#endif
 
-void P016_data_struct::saveCommandLine(struct EventStruct *event, const tCommandLinesV2 &line, uint8_t lineNr)
+# endif // ifdef P16_SETTINGS_V1
+
+void P016_data_struct::saveCommandLine(struct EventStruct *event, const tCommandLinesV2& line, uint8_t lineNr)
 {
   const int saveOffset = lineNr * sizeof(tCommandLinesV2);
-  SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
-              event->TaskIndex,
-              reinterpret_cast<const uint8_t *>(&line),
-              sizeof(tCommandLinesV2),
-              saveOffset);
-}
 
+  SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
+             event->TaskIndex,
+             reinterpret_cast<const uint8_t *>(&line),
+             sizeof(tCommandLinesV2),
+             saveOffset);
+}
 
 void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t CodeFlags) {
   // add received code
@@ -236,21 +241,22 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
       return;
     }
     # ifdef PLUGIN_016_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log;
-        log.reserve(128); // estimated
-        log  = F("[P36] ValidateCode failed: ");
-        log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-        log += F(" Code: 0x");
-        log += uint64ToString(Code, 16);
-        log += F(" / [");
-        log += (i + 1);
-        log += F("] = {");
-        log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
-        log += F(" Code: 0x");
-        log += uint64ToString(CommandLines[i].Code, 16);
-        log += '}';
-        addLog(LOG_LEVEL_INFO, log);
+      String log;
+      log.reserve(128); // estimated
+      log  = F("[P36] ValidateCode failed: ");
+      log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
+      log += F(" Code: 0x");
+      log += uint64ToString(Code, 16);
+      log += F(" / [");
+      log += (i + 1);
+      log += F("] = {");
+      log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
+      log += F(" Code: 0x");
+      log += uint64ToString(CommandLines[i].Code, 16);
+      log += '}';
+      addLog(LOG_LEVEL_INFO, log);
     }
     # endif // PLUGIN_016_DEBUG
   }
