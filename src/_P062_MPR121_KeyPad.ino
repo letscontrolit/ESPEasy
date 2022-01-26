@@ -56,7 +56,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].ClearTaskDataBeforeSave = false;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 

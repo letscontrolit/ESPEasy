@@ -159,7 +159,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
       // FIXME TD-er: Seems to use task data, but not sure if really needed.
-      Device[deviceCount].ClearTaskDataBeforeSave = false;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 

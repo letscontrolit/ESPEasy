@@ -63,7 +63,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].Custom             = true;
       Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].ClearTaskDataBeforeSave = false;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
