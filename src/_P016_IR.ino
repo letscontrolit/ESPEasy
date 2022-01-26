@@ -447,12 +447,13 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG_LONG(0)     = lSettings;
       P016_CMDINHIBIT     = getFormItemInt(F("p016_cmdinhibit"));
 
+      # ifdef PLUGIN_016_DEBUG
+      P016_infoLogMemory(F("before save"));
+      # endif // ifdef PLUGIN_016_DEBUG
+
       {
-          char   strCode[P16_Cchars];
           String strError;
           strError.reserve(30); // Length of expected string, needed for strings > 11 chars
-          String   strID;
-          uint64_t iCode;
 
           int rowCnt = 0;
 
@@ -464,16 +465,16 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             // Normal Code & flags
             line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
             bitWrite(line.CodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 1)));
-            iCode = 0;
+            line.Code = 0;
 
+            char strCode[P16_Cchars] = {0};
             if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 2)), P16_Cchars)) {
               strError += F("Code ");
               strError += (varNr + 1);
               strError += ' ';
             } else {
-              iCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
+              line.Code = hexToULL(strCode); // convert string with hexnumbers to uint64_t
             }
-            line.Code = iCode;
 
             delay(0);
 
@@ -482,16 +483,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 3)));
             bitWrite(line.AlternativeCodeFlags, P16_FLAGS_REPEAT,
                      isFormItemChecked(getPluginCustomArgName(rowCnt + 4)));
-            iCode = 0;
+            line.AlternativeCode = 0;
 
             if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 5)), P16_Cchars)) {
               strError += F("Alt.Code ");
               strError += (varNr + 1);
               strError += ' ';
             } else {
-              iCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
+              line.AlternativeCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
             }
-            line.AlternativeCode = iCode;
 
             // Command
             if (!safe_strncpy(line.Command, webArg(getPluginCustomArgName(rowCnt + 6)), P16_Nchars)) {
@@ -509,10 +509,6 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             P016_data_struct::saveCommandLine(event, line, varNr);
           }
-
-          # ifdef PLUGIN_016_DEBUG
-          P016_infoLogMemory(F("before save"));
-          # endif // ifdef PLUGIN_016_DEBUG
 
           # ifdef PLUGIN_016_DEBUG
           P016_infoLogMemory(F("after save"));

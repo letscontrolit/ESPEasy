@@ -8,10 +8,8 @@
 
 # ifdef P16_SETTINGS_V1
 // Conversion constructor
-tCommandLinesV2::tCommandLinesV2(const String& command,
-                                 uint32_t      oldCode,
-                                 uint32_t      oldAlternativeCode,
-                                 uint8_t       i) {
+tCommandLinesV2::tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i)
+{
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -28,10 +26,8 @@ tCommandLinesV2::tCommandLinesV2(const String& command,
   log += ':';
   #  endif // ifdef PLUGIN_016_DEBUG
 
-  if (command.length() > 0) {
-    safe_strncpy(Command, command, P16_Nchars);
-  }
-
+  memcpy(Command, lineV1.Command, P16_Nchars);
+  const uint32_t oldCode = lineV1.Code;
   if (oldCode > 0) {
     CodeDecodeType = static_cast<decode_type_t>((oldCode >> 24));                // decode_type
     bitWrite(CodeFlags, P16_FLAGS_REPEAT, oldCode & (0x1 << P16_CMDBIT_REPEAT)); // Repeat flag
@@ -46,6 +42,8 @@ tCommandLinesV2::tCommandLinesV2(const String& command,
     }
     #  endif // ifdef PLUGIN_016_DEBUG
   }
+
+  const uint32_t oldAlternativeCode = lineV1.AlternativeCode;
 
   if (oldAlternativeCode > 0) {
     AlternativeCodeDecodeType = static_cast<decode_type_t>((oldAlternativeCode >> 24));                // decode_type
@@ -124,14 +122,9 @@ void P016_data_struct::loadCommandLinev1(struct EventStruct *event, tCommandLine
                   reinterpret_cast<uint8_t *>(&lineV1),
                   sizeof(tCommandLinesV2),
                   loadOffsetV1);
-    lineV1.Command[P16_Nchars - 1] = 0;
   }
-  line = tCommandLinesV2(
-    String(lineV1.Command), 
-    lineV1.Code, 
-    lineV1.AlternativeCode, 
-    lineNr);  
-  line.Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data
+  line = tCommandLinesV2(lineV1, lineNr);
+  line.Command[P16_Nchars - 1] = 0;
 }
 #endif
 

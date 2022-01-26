@@ -30,13 +30,18 @@
 # define P16_FLAGS_REPEAT    0 // Repeat code
 // # define P16_FLAGS_HASH      1  // Code is a Hash
 
+# ifdef P16_SETTINGS_V1
+typedef struct {
+  char     Command[P16_Nchars] = { 0 };
+  uint32_t Code                = 0; // received code (can be added automatically)
+  uint32_t AlternativeCode     = 0; // alternative code fpr the same command
+} tCommandLinesV1;
+# endif // ifdef P16_SETTINGS_V1
+
 struct tCommandLinesV2 {
   # ifdef P16_SETTINGS_V1
   tCommandLinesV2() = default;
-  tCommandLinesV2(const String& command,
-                  uint32_t      oldCode,
-                  uint32_t      oldAlternativeCode,
-                  uint8_t       i);
+  tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i);
   # endif // ifdef P16_SETTINGS_V1
 
   char          Command[P16_Nchars]       = { 0 };
@@ -48,13 +53,6 @@ struct tCommandLinesV2 {
   uint16_t      AlternativeCodeFlags      = 0;
 };
 
-# ifdef P16_SETTINGS_V1
-typedef struct {
-  char     Command[P16_Nchars] = { 0 };
-  uint32_t Code                = 0; // received code (can be added automatically)
-  uint32_t AlternativeCode     = 0; // alternative code fpr the same command
-} tCommandLinesV1;
-# endif // ifdef P16_SETTINGS_V1
 
 extern String uint64ToString(uint64_t input,
                              uint8_t  base);
