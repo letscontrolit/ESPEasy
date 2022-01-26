@@ -7,8 +7,6 @@
 # include <IRutils.h>
 
 # ifdef P16_SETTINGS_V1
-tCommandLinesV2::tCommandLinesV2() {} // Default constructor
-
 // Conversion constructor
 tCommandLinesV2::tCommandLinesV2(const String& command,
                                  uint32_t      oldCode,
@@ -77,53 +75,6 @@ void P016_data_struct::init(struct EventStruct *event, uint16_t CmdInhibitTime) 
   iLastCmdTime    = 0;
 }
 
-# ifdef P16_SETTINGS_V1
-void P016_data_struct::convertCommandLines(struct EventStruct *event) {
-  String log;
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    #  ifndef PLUGIN_016_DEBUG
-    log.reserve(20); // less space needed
-    #  else // ifndef PLUGIN_016_DEBUG
-    log.reserve(80);
-
-    log  = F("P016: struct size: ");
-    log += sizeof(tCommandLinesV2);
-    log += '/';
-    log += sizeof(tCommandLines);
-    log += F(" enum: ");
-    log += sizeof(decode_type_t);
-    log += F(" p016: ");
-    log += sizeof(P016_data_struct);
-    addLog(LOG_LEVEL_INFO, log);
-    #  endif // ifdef PLUGIN_016_DEBUG
-  }
-
-  // read V1 data && convert
-  CommandLinesV1.clear(); // Start fresh
-  int loadOffset = 0;
-
-  for (uint8_t i = 0; i < P16_Nlines; i++) {
-    CommandLinesV1.push_back(tCommandLines());
-    LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
-                 event->TaskIndex,
-                 reinterpret_cast<uint8_t *>(&(CommandLinesV1[i])),
-                 sizeof(tCommandLines),
-                 loadOffset);
-    loadOffset += sizeof(tCommandLines);
-  }
-
-  CommandLines.clear(); // Start fresh
-
-  for (int i = 0; i < P16_Nlines; ++i) {
-    CommandLines.push_back(tCommandLinesV2(String(CommandLinesV1[i].Command), CommandLinesV1[i].Code, CommandLinesV1[i].AlternativeCode, i));
-
-    delay(0);
-  }
-  CommandLinesV1.clear(); // clean up after conversion
-}
-
-# endif // ifdef P16_SETTINGS_V1
 
 void P016_data_struct::loadCommandLines(struct EventStruct *event) {
   # ifdef P16_SETTINGS_V1
@@ -131,25 +82,17 @@ void P016_data_struct::loadCommandLines(struct EventStruct *event) {
   // Convert the settings if both versions are defined and PCONFIG(7) != latest version
   if (PCONFIG(7) != P16_SETTINGS_LATEST) {
     addLog(LOG_LEVEL_ERROR, F("P016 IR: Settings conversion, save task settings to store in new format."));
-
-    convertCommandLines(event);
   }
-  else
   # endif // ifdef P16_SETTINGS_V1
-  {
-    // read V2 settings data
-
-    CommandLines.clear(); // Start fresh
-    int loadOffset = 0;
-
-    for (uint8_t i = 0; i < P16_Nlines; i++) {
-      CommandLines.push_back(tCommandLinesV2());
-      loadCommandLine(event, CommandLines[i], i);
-    }
-  }
-
-  for (int i = 0; i < P16_Nlines; ++i) {
-    CommandLines[i].Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data
+  CommandLines.clear(); // Start fresh
+  for (uint8_t i = 0; i < P16_Nlines; i++) {
+    CommandLines.push_back(tCommandLinesV2());
+    # ifdef P16_SETTINGS_V1
+    if (PCONFIG(7) != P16_SETTINGS_LATEST)
+      loadCommandLinev1(event, CommandLines[i], i);
+    else
+    # endif // ifdef P16_SETTINGS_V1
+    loadCommandLine(event, CommandLines[i], i);
   }
 }
 
@@ -167,11 +110,34 @@ void P016_data_struct::loadCommandLine(struct EventStruct *event, tCommandLinesV
                 reinterpret_cast<uint8_t *>(&line),
                 sizeof(tCommandLinesV2),
                 loadOffset);
+  line.Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data
 }
+
+# ifdef P16_SETTINGS_V1
+void P016_data_struct::loadCommandLinev1(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr)
+{
+  tCommandLinesV1 lineV1;
+  {
+    const int loadOffsetV1 = lineNr * sizeof(tCommandLinesV1);
+    LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type,
+                  event->TaskIndex,
+                  reinterpret_cast<uint8_t *>(&lineV1),
+                  sizeof(tCommandLinesV2),
+                  loadOffsetV1);
+    lineV1.Command[P16_Nchars - 1] = 0;
+  }
+  line = tCommandLinesV2(
+    String(lineV1.Command), 
+    lineV1.Code, 
+    lineV1.AlternativeCode, 
+    lineNr);  
+  line.Command[P16_Nchars - 1] = 0; // Terminate in case of uninitalized data
+}
+#endif
 
 void P016_data_struct::saveCommandLine(struct EventStruct *event, const tCommandLinesV2 &line, uint8_t lineNr)
 {
-  const int loadOffset = lineNr * sizeof(tCommandLinesV2);
+  const int saveOffset = lineNr * sizeof(tCommandLinesV2);
   SaveToFile(SettingsType::Enum::CustomTaskSettings_Type,
               event->TaskIndex,
               reinterpret_cast<const uint8_t *>(&line),

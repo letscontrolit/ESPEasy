@@ -32,7 +32,7 @@
 
 struct tCommandLinesV2 {
   # ifdef P16_SETTINGS_V1
-  tCommandLinesV2();
+  tCommandLinesV2() = default;
   tCommandLinesV2(const String& command,
                   uint32_t      oldCode,
                   uint32_t      oldAlternativeCode,
@@ -53,7 +53,7 @@ typedef struct {
   char     Command[P16_Nchars] = { 0 };
   uint32_t Code                = 0; // received code (can be added automatically)
   uint32_t AlternativeCode     = 0; // alternative code fpr the same command
-} tCommandLines;
+} tCommandLinesV1;
 # endif // ifdef P16_SETTINGS_V1
 
 extern String uint64ToString(uint64_t input,
@@ -70,6 +70,9 @@ public:
   void saveCommandLines(struct EventStruct *event);
 
   static void loadCommandLine(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr);
+  # ifdef P16_SETTINGS_V1
+  static void loadCommandLinev1(struct EventStruct *event, tCommandLinesV2 &line, uint8_t lineNr);
+  #endif
   static void saveCommandLine(struct EventStruct *event, const tCommandLinesV2 &line, uint8_t lineNr);
 
   void AddCode(uint64_t      Code,
@@ -90,11 +93,7 @@ private:
                     uint64_t      Code,
                     decode_type_t DecodeType,
                     uint16_t      CodeFlags);
-  void convertCommandLines(struct EventStruct *event);
 
-  # ifdef P16_SETTINGS_V1
-  std::vector<tCommandLines>CommandLinesV1; // holds the CustomTaskSettings V1, allocated when needed for conversion
-  # endif  // ifdef P16_SETTINGS_V1
   uint64_t      iLastCmd = 0;                   // last command send
   uint32_t      iLastCmdTime = 0;               // time while last command was send
   decode_type_t iLastDecodeType = decode_type_t::UNKNOWN;            // last decode_type sent
