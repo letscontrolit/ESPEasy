@@ -307,6 +307,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Add new received code to command lines"), F("p016_AddNewCode"), bAddNewCode);
       bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
       addFormCheckBox(F("Execute commands"),                       F("p016_ExecuteCmd"), bExecuteCmd);
+      bool bAcceptUnknownType = bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType);
+      addFormCheckBox(F("Accept DecodeType UNKNOWN"),              F("p016_AcceptUnknownType"), bAcceptUnknownType);
       addFormNumericBox(F("Inhibit time for the same command [ms]"),
                         F("p016_cmdinhibit"),
                         P016_CMDINHIBIT,
@@ -447,6 +449,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       uint32_t lSettings = 0;
       bitWrite(lSettings, P016_BitAddNewCode, isFormItemChecked(F("p016_AddNewCode")));
       bitWrite(lSettings, P016_BitExecuteCmd, isFormItemChecked(F("p016_ExecuteCmd")));
+      bitWrite(lSettings, P016_BitAcceptUnknownType, isFormItemChecked(F("p016_AcceptUnknownType")));
 
       bEnableIRcodeAdding = true;
       PCONFIG_LONG(0)     = lSettings;
@@ -578,7 +581,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         output.reserve(100); // Length of expected string, needed for strings > 11 chars
 
         // Display the basic output of what we found.
-        if (results.decode_type != decode_type_t::UNKNOWN)
+        if ((results.decode_type != decode_type_t::UNKNOWN) || (bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)))
         {
           // String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)
           // + ',' + uint64ToString(results.bits);
@@ -618,6 +621,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             if (strCode.length() <= P16_Cchars) {
               iCode += hexToULL(strCode);
 
+              if (iCodeDecodeType == decode_type_t::UNKNOWN) {
+                // set iCodeDecodeType UNKNOWN to RAW, otherwise AddCode() or ExecuteCode() will fail
+                iCodeDecodeType=decode_type_t::RAW;
+              }
+
               if (bitRead(PCONFIG_LONG(0), P016_BitAddNewCode) && bEnableIRcodeAdding) {
                 P016_data->AddCode(iCode, iCodeDecodeType, iCodeFlags); // add code if not saved so far
               }
@@ -629,23 +637,26 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-        // Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
-        # ifdef P016_P035_USE_RAW_RAW2
+        if  (!bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)) {
+          // decode_type_t::UNKNOWN is not used as a valid IR code
+          // Check if a solution for RAW2 is found and if not give the user the option to access the timings info.
+          # ifdef P016_P035_USE_RAW_RAW2
 
-        if ((results.decode_type == decode_type_t::UNKNOWN) && !displayRawToReadableB32Hex(event->String2, results))
-        # else // ifdef P016_P035_USE_RAW_RAW2
+          if ((results.decode_type == decode_type_t::UNKNOWN) && !displayRawToReadableB32Hex(event->String2, results))
+          # else // ifdef P016_P035_USE_RAW_RAW2
 
-        if (results.decode_type == decode_type_t::UNKNOWN)
-        # endif // ifdef P016_P035_USE_RAW_RAW2
-        {
-          addLog(LOG_LEVEL_INFO,
-                 F("IR: No replay solutions found! Press button again or try RAW encoding (timings are in the serial output)"));
-          serialPrint(F("IR: RAW TIMINGS: "));
-          serialPrint(resultToSourceCode(&results));
-          event->String2 = F("NaN");
-          yield(); // Feed the WDT as it can take a while to print.
-                   // addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW
-                   // source code //not showing up nicely in the web log
+          if (results.decode_type == decode_type_t::UNKNOWN)
+          # endif // ifdef P016_P035_USE_RAW_RAW2
+          {
+            addLog(LOG_LEVEL_INFO,
+                  F("IR: No replay solutions found! Press button again or try RAW encoding (timings are in the serial output)"));
+            serialPrint(F("IR: RAW TIMINGS: "));
+            serialPrint(resultToSourceCode(&results));
+            event->String2 = F("NaN");
+            yield(); // Feed the WDT as it can take a while to print.
+                    // addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW
+                    // source code //not showing up nicely in the web log
+          }
         }
 
         # ifdef P016_P035_Extended_AC

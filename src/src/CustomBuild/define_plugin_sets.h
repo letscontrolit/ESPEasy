@@ -472,7 +472,9 @@ To create/register a plugin, you have to :
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-    #define USES_P088      // ToniA IR plugin
+    #ifndef SIZE_1M          // Leaving out Heatpump IR for 1M builds because it won't fit after upgrading IRremoteESP8266 library to v2.8.1
+      #define USES_P088      // ToniA IR plugin
+    #endif
     #define PLUGIN_SET_ONLY_SWITCH
     #define NOTIFIER_SET_STABLE
     #define USES_P029      // Output - Domoticz MQTT Helper
@@ -1166,7 +1168,6 @@ To create/register a plugin, you have to :
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
-    #define USES_P119   // ITG3205 Gyro
 #endif
 
 #ifdef PLUGIN_SET_TESTING_D
@@ -1183,8 +1184,10 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
-    #define USES_P120  // ADXL345 I2C
-    // #define USES_P125  // ADXL345 SPI
+    #define USES_P119   // ITG3205 Gyro
+    #define USES_P120   // ADXL345 I2C
+    #define USES_P121   // HMC5883L 
+    #define USES_P125   // ADXL345 SPI
 #endif
 
 
@@ -1225,8 +1228,8 @@ To create/register a plugin, you have to :
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
-   #if !defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
-    #define LIMIT_BUILD_SIZE // Redice buildsize on ESP8266 to fit in all Display plugins
+   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+     #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
@@ -1476,10 +1479,10 @@ To create/register a plugin, you have to :
     #define USES_P119   // ITG3205 Gyro
   #endif
   #ifndef USES_P120
-    #define USES_P120   // ADXL345 Acceleration / Gravity
+    #define USES_P120   // ADXL345 I2C Acceleration / Gravity
   #endif
   #ifndef USES_P121
-    #define USES_P121   //
+    #define USES_P121   // HMC5883L 
   #endif
   #ifndef USES_P122
     #define USES_P122   //
@@ -1491,7 +1494,7 @@ To create/register a plugin, you have to :
     #define USES_P124   //
   #endif
   #ifndef USES_P125
-    #define USES_P125   //
+    #define USES_P125   // ADXL345 SPI Acceleration / Gravity
   #endif
   #ifndef USES_P126
     #define USES_P126   //
