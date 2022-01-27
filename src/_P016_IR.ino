@@ -182,6 +182,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOptional      = true;
       break;
     }
 
