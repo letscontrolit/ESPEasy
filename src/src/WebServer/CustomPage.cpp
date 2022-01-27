@@ -141,7 +141,7 @@ bool handle_custom(const String& path) {
     line.reserve(128);
     while (available > 0) {
       uint32_t chunksize = 64;
-      if (available < chunksize) {
+      if (available < static_cast<int>(chunksize)) {
         chunksize = available;
       }
       uint8_t buf[64] = {0};
