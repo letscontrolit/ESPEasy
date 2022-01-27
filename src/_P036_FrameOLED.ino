@@ -461,17 +461,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      P036_data_struct *P036_data =
-        static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P036_data) {
-        // After saving, make sure the active lines are updated.
-        P036_data->frameCounter       = 0;
-        P036_data->MaxFramesToDisplay = 0xFF;
-        P036_data->disp_resolution   = static_cast<p036_resolution>(P036_RESOLUTION);
-        P036_data->loadDisplayLines(event->TaskIndex, 1);
-      }
-
 #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_SAVE Done"));
 #endif // PLUGIN_036_DEBUG

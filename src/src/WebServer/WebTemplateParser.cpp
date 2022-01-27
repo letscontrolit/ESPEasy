@@ -4,6 +4,7 @@
 
 #include "../DataTypes/ControllerIndex.h"
 
+#include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"

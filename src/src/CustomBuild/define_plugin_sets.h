@@ -1141,6 +1141,7 @@ To create/register a plugin, you have to :
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
     //#define USES_P099   // XPT2046 Touchscreen
+    #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
     #define USES_P105   // AHT10/20/21
 #endif
 
@@ -1172,6 +1173,9 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_TESTING_D
     #define USES_P093   // Mitsubishi Heat Pump
     #define USES_P094  // CUL Reader
+    #ifndef USES_P098
+      #define USES_P098   // PWM motor
+    #endif
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
@@ -1415,7 +1419,7 @@ To create/register a plugin, you have to :
     #define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
   #endif
   #ifndef USES_P098
-//    #define USES_P098   // ESPEasy-NOW Receiver
+    #define USES_P098   // PWM motor
   #endif
   #ifndef USES_P099
     #define USES_P099   // XPT2046 Touchscreen
@@ -1774,6 +1778,13 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+
+// P098 PWM motor needs P003 pulse
+#if defined(USES_P098)
+  #ifndef USES_P003
+    #define USES_P003
+  #endif
+#endif
 
 #ifdef USES_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size

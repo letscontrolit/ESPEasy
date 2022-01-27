@@ -101,7 +101,6 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
       }
       f.close();
     } else {
-      // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
       getWebPageTemplateDefault(tmplName, templateParser);
     }
     #ifndef BUILD_NO_RAM_TRACKER
