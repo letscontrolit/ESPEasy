@@ -1140,9 +1140,8 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
-    //#define USES_P098   // ESPEasy-NOW Reader
-    //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
+    //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
 #endif
 
@@ -1598,7 +1597,7 @@ To create/register a plugin, you have to :
   #define USES_PACKED_RAW_DATA
 #endif
 
-#if defined(USES_C019) || defined(USES_P098)
+#if defined(USES_C019)
   #ifndef USES_ESPEASY_NOW
     #define USES_ESPEASY_NOW
   #endif

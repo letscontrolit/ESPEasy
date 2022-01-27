@@ -394,7 +394,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P095   // ILI9341
 // #define USES_P096   // eInk
 // #define USES_P097   // ESP32Touch
-// #define USES_P098   // 
+// #define USES_P098   // PWM Motor
 // #define USES_P099   // XPT2046 touchscreen
 
 // #define USES_P100   // DS2423 counter
