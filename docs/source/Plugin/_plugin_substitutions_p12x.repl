@@ -50,3 +50,16 @@
 .. |P125_compileinfo| replace:: `.`
 .. |P125_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
 
+.. |P126_name| replace:: :cyan:`74HC595 Shiftregisters`
+.. |P126_type| replace:: :cyan:`Output`
+.. |P126_typename| replace:: :cyan:`Output - 74HC595 Shiftregisters`
+.. |P126_porttype| replace:: `.`
+.. |P126_status| replace:: :yellow:`TESTING E`
+.. |P126_github| replace:: P126_74HC595.ino
+.. _P126_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P126_74HC595.ino
+.. |P126_usedby| replace:: `.`
+.. |P126_shortinfo| replace:: `Output shift registers`
+.. |P126_maintainer| replace:: `tonhuisman`
+.. |P126_compileinfo| replace:: `.`
+.. |P126_usedlibraries| replace:: `https://timodenk.com/blog/shift-register-arduino-library/ (Non-Template, modified local copy)`
+
