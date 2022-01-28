@@ -374,7 +374,16 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   // allow the plugin to save plugin-specific form settings.
   {
     String dummy;
+    if (Device[DeviceIndex].ExitTaskBeforeSave) {
+      PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+    }
+
     PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
+
+    // Make sure the task needs to reload using the new settings.
+    if (!Device[DeviceIndex].ExitTaskBeforeSave) {
+      PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
+    }
   }
 
   // notify controllers: CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION
