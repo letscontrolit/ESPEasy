@@ -132,21 +132,21 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       const uint8_t  pin   = event->Par1;
       const uint16_t value = event->Par2;
 
-      if (validChannel(pin)) {
+      if (validChannel(pin) && ((value == 0) || (value == 1))) {
         shift->set(pin - 1, value, hc_update);
         success = true;
-      }
-      # ifdef P126_DEBUG_LOG
+        # ifdef P126_DEBUG_LOG
 
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = command;
-        log += F(", pin: ");
-        log += pin;
-        log += F(", value: ");
-        log += value;
-        addLog(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = command;
+          log += F(", pin: ");
+          log += pin;
+          log += F(", value: ");
+          log += value;
+          addLog(LOG_LEVEL_DEBUG, log);
+        }
+        # endif // ifdef P126_DEBUG_LOG
       }
-      # endif // ifdef P126_DEBUG_LOG
     } else if (command.equals(F("74hcupdate"))) {
       shift->updateRegisters();
       success = true;

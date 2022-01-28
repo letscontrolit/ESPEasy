@@ -122,6 +122,8 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormSubHeader(F("Device configuration"));
+
       addFormNumericBox(F("Number of chips (Q7' &rarr; DS)"),
                         F("p126_chips"),
                         P126_CONFIG_CHIP_COUNT,
