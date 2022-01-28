@@ -597,12 +597,28 @@ const __FlashStringHelper * getChipModel() {
     }
   }
   #endif
-#elif defined(ESP8285)
-  return F("ESP8285");
 #elif defined(ESP8266)
-  return F("ESP8266");
+  return isESP8285() ? F("ESP8285") : F("ESP8266");
 #endif
   return F("Unknown");
+}
+
+bool isESP8285() {
+  #ifdef ESP8266
+  const uint32_t efuse_blocks[4] {
+    READ_PERI_REG(0x3ff00050),
+    READ_PERI_REG(0x3ff00054),
+    READ_PERI_REG(0x3ff00058),
+    READ_PERI_REG(0x3ff0005c)
+  };
+
+  return (
+      (efuse_blocks[0] & (1 << 4))
+      || (efuse_blocks[2] & (1 << 16))
+  );
+  #else
+  return false;
+  #endif
 }
 
 uint8_t getChipRevision() {
@@ -1137,28 +1153,24 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
   }
   if (isFlashInterfacePin(gpio)) {
-    #ifdef ESP8285
-    
-    if ((gpio == 9) || (gpio == 10)) {
-      // Usable on ESP8285
+    if (isESP8285()) {
+      if ((gpio == 9) || (gpio == 10)) {
+        // Usable on ESP8285
+      } else {
+        warning = true;
+      }
     } else {
       warning = true;
+      // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
+      if (gpio == 9) {
+        // GPIO9 is internally used to control the flash memory.
+        input  = false;
+        output = false;
+      } else if (gpio == 10) {
+        // GPIO10 can be used as input only.
+        output = false;
+      }
     }
-
-    #else
-
-    warning = true;
-    // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
-    if (gpio == 9) {
-      // GPIO9 is internally used to control the flash memory.
-      input  = false;
-      output = false;
-    } else if (gpio == 10) {
-      // GPIO10 can be used as input only.
-      output = false;
-    }
-
-    #endif
   }
 
   if (pinnr < 0 || pinnr > 16) {

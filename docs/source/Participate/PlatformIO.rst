@@ -132,9 +132,9 @@ The environment definitions all have at least the used micro controller in the n
 For example:
 
 * ..._ESP8266_4Mnn -> ESP8266 has external flash, which can vary in size from 512 kB to 16 MB, with nn configured as filesystem.
-* ..._ESP8285_1M -> ESP8285 has the flash internal, so is always 1 MB.
+* ..._ESP8266_1M -> ESP8285 has the flash internal, which is almost always 1 MB. ESP8266 does have an external flash chip, which allows for exchanging it for a larger flash chip (recommended).
 * ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
-* ..._ESP32_16M2M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (2MB LittleFS)
+* ..._ESP32_16M8M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (8MB LittleFS)
 * ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
 
 Make a custom build using PlatformIO

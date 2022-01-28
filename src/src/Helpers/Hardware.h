@@ -80,6 +80,8 @@ uint8_t getChipCores();
 
 const __FlashStringHelper * getChipModel();
 
+bool isESP8285();
+
 uint8_t getChipRevision();
 
 uint32_t getSketchSize();

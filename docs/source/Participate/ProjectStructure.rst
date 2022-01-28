@@ -108,8 +108,11 @@ ESP Chip Type
 -------------
 
 * ``ESP8266`` Most likely option.
-* ``ESP8285`` Used in some Sonoff modules. This chip has embedded flash, so no extra flash chip.
-* ``ESP32``   Experimental support at this moment.
+* ``ESP8285`` Supported in ``ESP8266`` builds. Used in some Sonoff modules. This chip has embedded flash, so no extra flash chip.
+* ``ESP32``   Allows for more memory and more GPIO pins.
+* ``ESP32-S2`` Newer version of ESP32. Has even more GPIO pins, but some specific features of ESP32 were removed.
+* ``ESP32-S3`` Not yet available.
+* ``ESP32-C3`` Support will be added soon.
 
 Memory Size and Partitioning
 ----------------------------

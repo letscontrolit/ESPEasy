@@ -70,7 +70,6 @@ _[hardware-type]_ cn be any of:
 Hardware type    | Description                                 |
 -----------------|---------------------------------------------|
 ESP8266          | Espressif ESP8266 generic boards            |
-ESP8285          | Espressif ESP8285 generic boards 1MB Flash  |
 WROOM02          | Espressif ESP8266 WRoom02 boards            |
 ESP32            | Espressif ESP32 generic boards              |
 ESP32-wrover-kit | Espressif ESP32 wrover-kit boards           |
@@ -112,7 +111,6 @@ Some example firmware names:
 Firmware name                                      | Hardware                | Included plugins              |
 ---------------------------------------------------|-------------------------|-------------------------------|
 ESPEasy_mega-20210501_normal_ESP8266_1M.bin        | ESP8266 with 1MB flash  | Stable                        |
-ESPEasy_mega-20210501_normal_ESP8285_1M.bin        | ESP8285 with 1MB flash  | Stable                        |
 ESPEasy_mega-20210501_normal_ESP8266_4M1M.bin      | ESP8266 with 4MB flash  | Stable                        |
 ESPEasy_mega-20210501_test_A_ESP8266_4M1M.bin      | ESP8266 with 4MB flash  | Stable + Testing base + set A |
 ESPEasy_mega-20210501_normal_ESP32_4M316k.bin      | ESP32 with 4MB flash    | Stable                        |
