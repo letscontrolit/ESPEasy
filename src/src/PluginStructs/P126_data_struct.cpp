@@ -201,9 +201,6 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
           par = static_cast<uint32_t>(tmp);
         }
 
-        param++; // Process next argument
-        arg = parseString(string, param);
-
         # ifdef P126_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -225,6 +222,9 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
           addLog(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P126_DEBUG_LOG
+
+        param++; // Process next argument
+        arg = parseString(string, param);
 
         for (uint8_t n = 0; n < width && idx < _chipCount; n++, idx++) {
           value[idx] = ((par >> (n * 8)) & 0xff);
