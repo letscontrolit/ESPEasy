@@ -18,6 +18,10 @@ void Caches::updateTaskCaches() {
   taskIndexName.clear();
   taskIndexValueName.clear();
   updateActiveTaskUseSerial0();
+
+  for (int i = 0; i < (TASKS_MAX * VARS_PER_TASK); ++i) {
+    taskValueDecimals[i] = -1;
+  }
 }
 
 void Caches::updateActiveTaskUseSerial0() {
@@ -47,3 +51,30 @@ void Caches::updateActiveTaskUseSerial0() {
     }
   }
 }
+
+int Caches::taskValueIndex(taskIndex_t taskIndex, uint8_t rel_index)
+{
+  //  TASKS_MAX * VARS_PER_TASK
+  if (!validTaskIndex(taskIndex)) { return -1; }
+
+  if (rel_index >= VARS_PER_TASK) { return -1; }
+  return taskIndex * TASKS_MAX + rel_index;
+}
+
+int8_t Caches::getTaskValueDecimals(taskIndex_t taskIndex, uint8_t rel_index) const
+{
+  const int index = taskValueIndex(taskIndex, rel_index);
+
+  if (index < 0) { return -1; }
+  return taskValueDecimals[index];
+}
+
+void Caches::setTaskValueDecimals(taskIndex_t taskIndex, uint8_t rel_index, int8_t decimals)
+{
+  const int index = taskValueIndex(taskIndex, rel_index);
+
+  if (index >= 0) {
+    taskValueDecimals[index] = decimals;
+  }
+}
+

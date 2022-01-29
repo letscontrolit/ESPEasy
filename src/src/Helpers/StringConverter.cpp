@@ -379,9 +379,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
   }
-  LoadTaskSettings(event->TaskIndex);
 
-  uint8_t nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+  uint8_t nrDecimals = getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
 
   if (!Device[DeviceIndex].configurableDecimals()) {
     nrDecimals = 0;

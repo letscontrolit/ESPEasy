@@ -4,6 +4,7 @@
 
 #include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/DataStructs/SettingsStruct.h"
+#include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"
@@ -155,6 +156,14 @@ int getValueCountForTask(taskIndex_t taskIndex) {
 
   PluginCall(PLUGIN_GET_DEVICEVALUECOUNT, &TempEvent, dummy);
   return TempEvent.Par1;
+}
+
+uint8_t getTaskDeviceValueDecimals(taskIndex_t taskIndex, uint8_t rel_index) {
+  const int8_t cache_nrDecimals = Cache.getTaskValueDecimals(taskIndex, rel_index);
+  if (cache_nrDecimals >= 0) return static_cast<uint8_t>(cache_nrDecimals);
+
+  LoadTaskSettings(taskIndex);
+  return ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
 }
 
 int checkDeviceVTypeForTask(struct EventStruct *event) {

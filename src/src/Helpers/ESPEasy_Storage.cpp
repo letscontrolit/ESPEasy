@@ -851,6 +851,10 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
+  for (uint8_t varIndex = 0; varIndex < VARS_PER_TASK; ++varIndex) {
+    Cache.setTaskValueDecimals(TaskIndex, varIndex, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]);
+  }
+
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

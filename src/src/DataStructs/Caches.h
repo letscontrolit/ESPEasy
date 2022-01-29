@@ -16,10 +16,17 @@ struct Caches {
 
   void updateActiveTaskUseSerial0();
 
+  static int taskValueIndex(taskIndex_t taskIndex, uint8_t rel_index); 
+
+  int8_t getTaskValueDecimals(taskIndex_t taskIndex, uint8_t rel_index) const;
+
+  void setTaskValueDecimals(taskIndex_t taskIndex, uint8_t rel_index, int8_t decimals);
+
   TaskIndexNameMap      taskIndexName;
   TaskIndexValueNameMap taskIndexValueName;
   FilePresenceMap       fileExistsMap;
   bool                  activeTaskUseSerial0 = false;
+  int8_t taskValueDecimals[TASKS_MAX * VARS_PER_TASK];
 };
 
 
