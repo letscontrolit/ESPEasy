@@ -25,12 +25,12 @@
 // Connecting KeyPad matrix to MCP23017 / PCF8575 chip:
 // row 0 = GND   (optional if 9 rows needed)
 // row 1 = GPA0 / P00
-// row 2 = GPA1 / P02
+// row 2 = GPA1 / P01
 // ...
 // row 8 = GPA7 / P07
 //
 // column 1 = GPB0 / P10
-// column 2 = GPB1 / P12
+// column 2 = GPB1 / P11
 // ...
 // column 8 = GPB7 / P17
 
