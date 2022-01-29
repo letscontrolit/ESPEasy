@@ -36,6 +36,8 @@
 #include "../WebServer/UploadPage.h"
 #include "../WebServer/WiFiScanner.h"
 
+#include "../WebServer/WebTemplateParser.h"
+
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
@@ -66,45 +68,6 @@
 
 #include "../Static/WebStaticData.h"
 
-// Determine what pages should be visible
-#ifndef MENU_INDEX_MAIN_VISIBLE
-  # define MENU_INDEX_MAIN_VISIBLE true
-#endif // ifndef MENU_INDEX_MAIN_VISIBLE
-
-#ifndef MENU_INDEX_CONFIG_VISIBLE
-  # define MENU_INDEX_CONFIG_VISIBLE true
-#endif // ifndef MENU_INDEX_CONFIG_VISIBLE
-
-#ifndef MENU_INDEX_CONTROLLERS_VISIBLE
-  # define MENU_INDEX_CONTROLLERS_VISIBLE true
-#endif // ifndef MENU_INDEX_CONTROLLERS_VISIBLE
-
-#ifndef MENU_INDEX_HARDWARE_VISIBLE
-  # define MENU_INDEX_HARDWARE_VISIBLE true
-#endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
-
-#ifndef MENU_INDEX_DEVICES_VISIBLE
-  # define MENU_INDEX_DEVICES_VISIBLE true
-#endif // ifndef MENU_INDEX_DEVICES_VISIBLE
-
-#ifndef MENU_INDEX_RULES_VISIBLE
-  # define MENU_INDEX_RULES_VISIBLE true
-#endif // ifndef MENU_INDEX_RULES_VISIBLE
-
-#ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
-  # define MENU_INDEX_NOTIFICATIONS_VISIBLE true
-#endif // ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
-
-#ifndef MENU_INDEX_TOOLS_VISIBLE
-  # define MENU_INDEX_TOOLS_VISIBLE true
-#endif // ifndef MENU_INDEX_TOOLS_VISIBLE
-
-
-#if defined(NOTIFIER_SET_NONE) && defined(MENU_INDEX_NOTIFICATIONS_VISIBLE)
-  #undef MENU_INDEX_NOTIFICATIONS_VISIBLE
-  #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
-#endif
-
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
@@ -118,27 +81,27 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
   #ifdef USES_TIMING_STATS
-  static unsigned statisticsTimerStart = 0;
+  static uint64_t statisticsTimerStart = 0;
 
   if (!Tail) {
-    statisticsTimerStart = micros();
+    statisticsTimerStart = getMicros64();
   }
   #endif // ifdef USES_TIMING_STATS
   {
-    String pageTemplate;
     String fileName = tmplName;
 
     fileName += F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
 
+    WebTemplateParser templateParser(Tail, rebooting);
     if (f) {
-      pageTemplate.reserve(f.size());
-
-      while (f.available()) { pageTemplate += (char)f.read(); }
+      bool success = true;
+      while (f.available() && success) { 
+        success = templateParser.process((char)f.read());
+      }
       f.close();
     } else {
-      // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
-      getWebPageTemplateDefault(tmplName, pageTemplate);
+      getWebPageTemplateDefault(tmplName, templateParser);
     }
     #ifndef BUILD_NO_RAM_TRACKER
     checkRAM(F("sendWebPage"));
@@ -146,55 +109,6 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
 
     // web activity timer
     lastWeb = millis();
-
-    if (Tail) {
-      int pos = pageTemplate.indexOf(F("{{content}}"));
-      if (pos >= 0) {
-        pos += 11; // Size of "{{content}}"
-        const int length = pageTemplate.length();
-        // Prevent copy'ing the string, just stream directly to the buffer.
-        for (int i = pos; i < length; ++i) {
-          addHtml(pageTemplate[i]);
-        }
-      }
-    } else {
-      int indexStart = 0;
-      int indexEnd   = 0;
-      int readPos    = 0; // Position of data sent to TXBuffer
-      String varName;     // , varValue;
-
-      while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-        for (int i = readPos; i < indexStart; ++i) {
-          addHtml(pageTemplate[i]);
-        }
-        readPos = indexStart;
-
-        if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
-          varName    = pageTemplate.substring(indexStart + 2, indexEnd);
-          indexStart = indexEnd + 2;
-          readPos    = indexEnd + 2;
-          varName.toLowerCase();
-
-          if (varName == F("content")) { // is var == page content?
-            break;                       // send first part of result only
-          } else if (varName == F("error")) {
-            getErrorNotifications();
-          }
-          else if (varName == F("meta")) {
-            if (rebooting) {
-              addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
-            }
-          }
-          else {
-            getWebPageTemplateVar(varName);
-          }
-        } else { // no closing "}}"
-          // eat "{{"
-          readPos    += 2;
-          indexStart += 2;
-        }
-      }
-    }
   }
 
   if (shouldReboot) {
@@ -432,95 +346,72 @@ void setWebserverRunning(bool state) {
   CheckRunningServices(); // Uses webserverRunning state.
 }
 
-void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
+void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
 {
   const bool addJS   = true;
   const bool addMeta = true;
 
   if (tmplName == F("TmplAP"))
   {
-    static size_t expectedSize = 200;
 
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
+    getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
 
     #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-    tmpl += F("<body><header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>");
+    parser.process(F("<body><header class='apheader'>"
+              "<h1>Welcome to ESP Easy Mega AP</h1>"));
     #else
-    tmpl += F(WEBPAGE_TEMPLATE_AP_HEADER);
+    parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
     #endif
 
-    tmpl += F("</header>");
-    getWebPageTemplateDefaultContentSection(tmpl);
-    getWebPageTemplateDefaultFooter(tmpl);
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
-    }
+    parser.process(F("</header>"));
+    getWebPageTemplateDefaultContentSection(parser);
+    getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplMsg"))
   {
-    static size_t expectedSize = 200;
-
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
-    tmpl += F("<body>");
-    getWebPageTemplateDefaultHeader(tmpl, F("{{name}}"), false);
-    getWebPageTemplateDefaultContentSection(tmpl);
-    getWebPageTemplateDefaultFooter(tmpl);
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
-    }
+    getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
+    parser.process(F("<body>"));
+    getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
+    getWebPageTemplateDefaultContentSection(parser);
+    getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplDsh"))
   {
-    static size_t expectedSize = 200;
-
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, !addMeta, addJS);
-    tmpl += F(
+    getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
+    parser.process(F(
       "<body>"
       "{{content}}"
       "</body></html>"
-      );
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
-    }
+      ));
   }
   else // all other template names e.g. TmplStd
   {
-    static size_t expectedSize = 200;
-
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, addMeta, addJS);
-    tmpl += F("<body class='bodymenu'>"
-              "<span class='message' id='rbtmsg'></span>");
-    getWebPageTemplateDefaultHeader(tmpl, F("{{name}} {{logo}}"), true);
-    getWebPageTemplateDefaultContentSection(tmpl);
-    getWebPageTemplateDefaultFooter(tmpl);
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
-    }
+    getWebPageTemplateDefaultHead(parser, addMeta, addJS);
+    parser.process(F("<body class='bodymenu'>"
+              "<span class='message' id='rbtmsg'></span>"));
+    getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
+    getWebPageTemplateDefaultContentSection(parser);
+    getWebPageTemplateDefaultFooter(parser);
   }
 //  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
 }
 
-void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
-  tmpl += F("<!DOCTYPE html><html lang='en'>"
+void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
+  parser.process(F("<!DOCTYPE html><html lang='en'>"
             "<head>"
             "<meta charset='utf-8'/>"
             "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-            "<title>{{name}}</title>");
+            "<title>{{name}}</title>"));
 
-  if (addMeta) { tmpl += F("{{meta}}"); }
+  if (addMeta) { parser.process(F("{{meta}}")); }
 
-  if (addJS) { tmpl += F("{{js}}"); }
+  if (addJS) { parser.process(F("{{js}}")); }
 
-  tmpl += F("{{css}}"
-            "</head>");
+  parser.process(F("{{css}}"
+                   "</head>"));
 }
 
-void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool addMenu) {
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const String& title, bool addMenu) {
   {
     String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
@@ -538,26 +429,26 @@ void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool add
     #if BUILD_IN_WEBHEADER
     tmp.replace(F("{{date}}"), get_build_date());
     #endif // #if BUILD_IN_WEBHEADER
-    tmpl += tmp;
+    parser.process(tmp);
   }
 
-  if (addMenu) { tmpl += F("{{menu}}"); }
-  tmpl += F("</header>");
+  if (addMenu) { parser.process(F("{{menu}}")); }
+  parser.process(F("</header>"));
 }
 
-void getWebPageTemplateDefaultContentSection(String& tmpl) {
-  tmpl += F("<section>"
+void getWebPageTemplateDefaultContentSection(WebTemplateParser& parser) {
+  parser.process(F("<section>"
             "<span class='message error'>"
             "{{error}}"
             "</span>"
             "{{content}}"
             "</section>"
-            );
+            ));
 }
 
-void getWebPageTemplateDefaultFooter(String& tmpl) {
+void getWebPageTemplateDefaultFooter(WebTemplateParser& parser) {
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
-  tmpl += F("<footer>"
+  parser.process(F("<footer>"
             "<br>"
             "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
             #if BUILD_IN_WEBFOOTER
@@ -566,193 +457,13 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
             "</h6>"
             "</footer>"
             "</body></html>"
-            );
+            ));
 #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
-  tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
+  parser.process(F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER));
 #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
-  #if BUILD_IN_WEBFOOTER
-  tmpl.replace(F("{{build}}"), get_binary_filename()); // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
-  tmpl.replace(F("{{date}}"),  get_build_date());      // And the compile-date
-  #endif // #if BUILD_IN_WEBFOOTER
-}
-
-void getErrorNotifications() {
-  // Check number of MQTT controllers active.
-  int nrMQTTenabled = 0;
-
-  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-    if (Settings.Protocol[x] != 0) {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
-
-      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
-        ++nrMQTTenabled;
-      }
-    }
-  }
-
-  if (nrMQTTenabled > 1) {
-    // Add warning, only one MQTT protocol should be used.
-    addHtmlError(F("Only one MQTT controller should be active."));
-  }
-
-  // Check checksum of stored settings.
-}
-
-uint8_t navMenuIndex = MENU_INDEX_MAIN;
-
-// See https://github.com/letscontrolit/ESPEasy/issues/1650
-const __FlashStringHelper * getGpMenuIcon(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return F("&#8962;");
-    case MENU_INDEX_CONFIG: return F("&#9881;");
-    case MENU_INDEX_CONTROLLERS: return F("&#128172;");
-    case MENU_INDEX_HARDWARE: return F("&#128204;");
-    case MENU_INDEX_DEVICES: return F("&#128268;");
-    case MENU_INDEX_RULES: return F("&#10740;");
-    case MENU_INDEX_NOTIFICATIONS: return F("&#9993;");
-    case MENU_INDEX_TOOLS: return F("&#128295;");
-  }
-  return F("");
-}
-
-const __FlashStringHelper * getGpMenuLabel(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return F("Main");
-    case MENU_INDEX_CONFIG: return F("Config");
-    case MENU_INDEX_CONTROLLERS: return F("Controllers");
-    case MENU_INDEX_HARDWARE: return F("Hardware");
-    case MENU_INDEX_DEVICES: return F("Devices");
-    case MENU_INDEX_RULES: return F("Rules");
-    case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
-    case MENU_INDEX_TOOLS: return F("Tools");
-  }
-  return F("");
-}
-
-const __FlashStringHelper * getGpMenuURL(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return F("/");
-    case MENU_INDEX_CONFIG: return F("/config");
-    case MENU_INDEX_CONTROLLERS: return F("/controllers");
-    case MENU_INDEX_HARDWARE: return F("/hardware");
-    case MENU_INDEX_DEVICES: return F("/devices");
-    case MENU_INDEX_RULES: return F("/rules");
-    case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
-    case MENU_INDEX_TOOLS: return F("/tools");
-  }
-  return F("");
 }
 
 
-bool GpMenuVisible(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
-    case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;
-    case MENU_INDEX_CONTROLLERS: return MENU_INDEX_CONTROLLERS_VISIBLE;
-    case MENU_INDEX_HARDWARE: return MENU_INDEX_HARDWARE_VISIBLE;
-    case MENU_INDEX_DEVICES: return MENU_INDEX_DEVICES_VISIBLE;
-    case MENU_INDEX_RULES: return MENU_INDEX_RULES_VISIBLE;
-    case MENU_INDEX_NOTIFICATIONS: return MENU_INDEX_NOTIFICATIONS_VISIBLE;
-    case MENU_INDEX_TOOLS: return MENU_INDEX_TOOLS_VISIBLE;
-  }
-  return false;
-}
-
-void getWebPageTemplateVar(const String& varName)
-{
-  // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint
-  // (varValue.length()) ;serialPrint("after:  ");
-  // varValue = "";
-
-  if (varName == F("name"))
-  {
-    addHtml(Settings.Name);
-  }
-
-  else if (varName == F("unit"))
-  {
-    addHtmlInt(Settings.Unit);
-  }
-
-  else if (varName == F("menu"))
-  {
-    addHtml(F("<div class='menubar'>"));
-
-    for (uint8_t i = 0; i < 8; i++)
-    {
-      if (!GpMenuVisible(i)) {
-        // hide menu item
-        continue;
-      }
-      if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
-        continue;
-      }
-#ifndef USES_NOTIFIER
-
-      if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
-        continue;
-      }
-#endif // ifndef USES_NOTIFIER
-
-      addHtml(F("<a "));
-
-      addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
-      addHtmlAttribute(F("href"),  getGpMenuURL(i));
-      addHtml('>');
-      addHtml(getGpMenuIcon(i));
-      addHtml(F("<span class='showmenulabel'>"));
-      addHtml(getGpMenuLabel(i));
-      addHtml(F("</span></a>"));
-    }
-
-    addHtml(F("</div>"));
-  }
-
-  else if (varName == F("logo"))
-  {
-    if (fileExists(F("esp.png")))
-    {
-      addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
-    }
-  }
-
-  else if (varName == F("css"))
-  {
-    serve_favicon();
-    serve_CSS();
-  }
-
-
-  else if (varName == F("js"))
-  {
-    html_add_autosubmit_form();
-    serve_JS(JSfiles_e::Toasting);
-  }
-
-  else if (varName == F("error"))
-  {
-    // print last error - not implemented yet
-  }
-
-  else if (varName == F("debug"))
-  {
-    // print debug messages - not implemented yet
-  }
-
-  else
-  {
-    #ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("Templ: Unknown Var : ");
-      log += varName;
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-    #endif // ifndef BUILD_NO_DEBUG
-
-    // no return string - eat var name
-  }
-}
 
 void writeDefaultCSS(void)
 {
