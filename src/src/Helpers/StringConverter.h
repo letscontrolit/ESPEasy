@@ -242,10 +242,8 @@ void   repl(const String& key,
             String      & s,
             bool       useURLencode);
 
-#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s,
                             bool useURLencode);
-#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%

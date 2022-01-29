@@ -788,7 +788,6 @@ void repl(const String& key, const String& val, String& s, bool useURLencode)
   }
 }
 
-#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s, bool useURLencode)
 {
   const bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
@@ -806,6 +805,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     repl(F("&deg;"), degree,   s, useURLencode);
     repl(degreeC,    degree_C, s, useURLencode);
   }
+  // Degree symbol is often used on displays, so still support that one.
+#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   {
     // Angle quotes
     const char laquo[3] = { 0xc2, 0xab, 0 }; // Unicode left angle quotes symbol
@@ -866,9 +867,9 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     repl(F("{..}"),     divide, s, useURLencode);
     repl(F("&divide;"), divide, s, useURLencode);
   }
+#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 }
 
-#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
@@ -896,9 +897,7 @@ void parseSingleControllerVariable(String            & s,
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
 void parseSystemVariables(String& s, bool useURLencode)
 {
-  #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   parseSpecialCharacters(s, useURLencode);
-  #endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
   SystemVariables::parseSystemVariables(s, useURLencode);
 }
