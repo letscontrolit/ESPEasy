@@ -24,9 +24,9 @@ void TimingStats::add(int64_t time) {
   _timeTotal += static_cast<float>(time);
   ++_count;
 
-  if (time > _maxVal) { _maxVal = time; }
+  if (time > static_cast<int64_t>(_maxVal)) { _maxVal = time; }
 
-  if (time < _minVal) { _minVal = time; }
+  if (time < static_cast<int64_t>(_minVal)) { _minVal = time; }
 }
 
 void TimingStats::reset() {
