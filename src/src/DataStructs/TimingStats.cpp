@@ -20,7 +20,7 @@ unsigned long timingstats_last_reset(0);
 
 TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
 
-void TimingStats::add(unsigned long time) {
+void TimingStats::add(int64_t time) {
   _timeTotal += static_cast<float>(time);
   ++_count;
 
@@ -45,7 +45,7 @@ float TimingStats::getAvg() const {
   return _timeTotal / static_cast<float>(_count);
 }
 
-unsigned int TimingStats::getMinMax(unsigned long& minVal, unsigned long& maxVal) const {
+uint32_t TimingStats::getMinMax(uint64_t& minVal, uint64_t& maxVal) const {
   if (_count == 0) {
     minVal = 0;
     maxVal = 0;
@@ -56,7 +56,7 @@ unsigned int TimingStats::getMinMax(unsigned long& minVal, unsigned long& maxVal
   return _count;
 }
 
-bool TimingStats::thresholdExceeded(unsigned long threshold) const {
+bool TimingStats::thresholdExceeded(const uint64_t& threshold) const {
   if (_count == 0) {
     return false;
   }

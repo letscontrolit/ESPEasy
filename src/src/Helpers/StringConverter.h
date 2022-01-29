@@ -22,6 +22,9 @@ unsigned long str2int(const char *string);
 String        ull2String(uint64_t value,
                          uint8_t  base = 10);
 
+String        ll2String(int64_t value,
+                         uint8_t  base = 10);
+
 /********************************************************************************************\
    Check if valid float and convert string to float.
  \*********************************************************************************************/
