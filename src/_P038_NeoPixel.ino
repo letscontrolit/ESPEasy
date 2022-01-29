@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-29, tonhuisman:  Resolve FIXME for GPIO selection, update comments
 // 2022-01-23, tonhuisman:  Some duplicate code unduplicated, some optimizations
 // 2022-01-10, tonhuisman:  Make plugin multi-instance compatible, by moving variables and code to P038_data_struct
 
@@ -26,7 +27,7 @@
 // RGBW note:
 // for RGBW strips append the additional <brightness> to the commands
 // eg: NeoPixel,<led nr>,<red 0-255>,<green 0-255>,<blue 0-255>,<brightness 0-255>
-// The NeoPixelLine command does not work for RGBW, cause espeasy currently only allows max. 5 parameters
+// 2022-01-23: The NeoPixelLine command now also works for RGBW
 
 // Added HSV compatibility for Homie convention and others
 // Hue, Satuation and Value (Intensity/Brightness) is a more human readable and easier to adjust color space with only 3 values
@@ -51,7 +52,6 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
     {
       Device[++deviceCount].Number    = PLUGIN_ID_038;
       Device[deviceCount].Type        = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].Custom      = true;
       Device[deviceCount].TimerOption = false;
       break;
     }
@@ -68,12 +68,15 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    {
+      event->String1 = formatGpioName_output(F("DIN"));
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Led Count"), F("p038_leds"), P038_CONFIG_LEDCOUNT, 1, 999);
-
-      // FIXME TD-er: Why isn't this using the normal pin selection functions?
-      addFormPinSelect(F("GPIO"), F("taskdevicepin1"), CONFIG_PIN1);
 
       {
         const __FlashStringHelper *options[] = { F("GRB"), F("GRBW") };
