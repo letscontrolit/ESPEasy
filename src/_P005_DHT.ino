@@ -135,9 +135,9 @@ void P005_log(struct EventStruct *event, int logNr)
 /*********************************************************************************************\
 * DHT sub to wait until a pin is in a certain state
 \*********************************************************************************************/
-boolean P005_waitState(int state)
+bool P005_waitState(int state)
 {
-  unsigned long timeout = micros() + 100;
+  const uint64_t timeout = getMicros64() + 100;
   while (digitalRead(Plugin_005_DHT_Pin) != state)
   {
     if (usecTimeOutReached(timeout)) return false;

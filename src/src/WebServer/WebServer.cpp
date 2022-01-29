@@ -81,10 +81,10 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
   #ifdef USES_TIMING_STATS
-  static unsigned statisticsTimerStart = 0;
+  static uint64_t statisticsTimerStart = 0;
 
   if (!Tail) {
-    statisticsTimerStart = micros();
+    statisticsTimerStart = getMicros64();
   }
   #endif // ifdef USES_TIMING_STATS
   {
