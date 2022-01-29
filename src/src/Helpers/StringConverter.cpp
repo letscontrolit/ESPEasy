@@ -68,6 +68,18 @@ String ull2String(uint64_t value, uint8_t base) {
   return res;
 }
 
+String ll2String(int64_t value, uint8_t  base) {
+  if (value < 0) {
+    String res;
+    res = '-';
+    res += ull2String(value * -1ll, base);
+    return res;
+  } else {
+    return ull2String(value, base);
+  }
+}
+
+
 /********************************************************************************************\
    Check if valid float and convert string to float.
  \*********************************************************************************************/
