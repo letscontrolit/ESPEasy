@@ -91,7 +91,7 @@ String flashGuard()
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
-    String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
+    String log = F("FS   : Daily flash write rate exceeded! (powercycle or send command 'resetFlashWriteCounter' to reset this)");
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
