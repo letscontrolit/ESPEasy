@@ -127,7 +127,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
       addHtml(F("<input type='hidden' name='plugin_214_sensorVersion' value='"));
       addHtml(version);
-      addHtml(F("'>"));
+      addHtml('\'', '>');;
     }
     else
     {

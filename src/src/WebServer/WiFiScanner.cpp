@@ -22,7 +22,7 @@ void handle_wifiscanner_json() {
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_TOOLS;
   TXBuffer.startJsonStream();
-  addHtml(F("[{"));
+  addHtml('[', '{');
   bool firstentry = true;
 
   if (WiFi_AP_Candidates.scanComplete() <= 0) {
@@ -34,7 +34,7 @@ void handle_wifiscanner_json() {
   for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
   {
     if (firstentry) { firstentry = false; }
-    else { addHtml(F(",{")); }
+    else { addHtml(',', '{'); }
     const String authType = it->encryption_type();
     if (authType.length() > 0) {
       stream_next_json_object_value(F("auth"), authType);

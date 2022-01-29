@@ -81,7 +81,7 @@ void handle_log_JSON() {
       stream_next_json_object_value(F("text"),  message);
       stream_last_json_object_value(F("level"), String(loglevel));
       if (logLinesAvailable) {
-        addHtml(F(",\n"));
+        addHtml(',', '\n');
       }
       if (nrEntries == 0) {
         firstTimeStamp = lastTimeStamp;

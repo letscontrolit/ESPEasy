@@ -612,12 +612,12 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           }
           addRowLabel(label);
         } else {
-          addHtml(F(", "));
+          addHtml(',', ' ');
         }
         addHtmlInt(id);
 
         if (tracked) {
-          addHtml(F(" ("));
+          addHtml(' ', '(');
           addHtmlInt(snr);
           addHtml(')');
         }

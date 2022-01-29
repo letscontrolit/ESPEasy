@@ -205,7 +205,7 @@ void handle_json()
       };
 
       stream_json_object_values(labels, true);
-      addHtml(F(",\n"));
+      addHtml(',', '\n');
     }
 
     if (showWifi) {
@@ -257,7 +257,7 @@ void handle_json()
       stream_json_object_values(labels, true);
 
       // TODO: PKR: Add ETH Objects
-      addHtml(F(",\n"));
+      addHtml(',', '\n');
     }
 
     #ifdef HAS_ETHERNET
@@ -278,7 +278,7 @@ void handle_json()
       };
 
       stream_json_object_values(labels, true);
-      addHtml(F(",\n"));
+      addHtml(',', '\n');
     }
     #endif // ifdef HAS_ETHERNET
 
@@ -354,7 +354,7 @@ void handle_json()
     {
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
       LoadTaskSettings(TaskIndex);
-      addHtml(F("{\n"));
+      addHtml('{', '\n');
 
       unsigned long ttl_json = 60; // Default value
 
@@ -391,7 +391,7 @@ void handle_json()
           stream_last_json_object_value(F("Value"), value);
 
           if (x < (valueCount - 1)) {
-            addHtml(F(",\n"));
+            addHtml(',', '\n');
           }
         }
         addHtml(F("],\n"));
@@ -412,7 +412,7 @@ void handle_json()
           stream_last_json_object_value(F("Enabled"), jsonBool(Settings.TaskDeviceSendData[x][TaskIndex]));
 
           if (x < (CONTROLLER_MAX - 1)) {
-            addHtml(F(",\n"));
+            addHtml(',', '\n');
           }
         }
         addHtml(F("],\n"));
@@ -431,7 +431,7 @@ void handle_json()
             uint8_t b = 0;
             for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
               if (bitRead(channel, c)) {
-                if (b > 0) { addHtml(F(",\n")); }
+                if (b > 0) { addHtml(',', '\n'); }
                 b++;
                 String i2cChannel = F("\"Multiplexer channel ");
                 i2cChannel += String(c);
@@ -606,14 +606,14 @@ void stream_to_json_value(const String& value) {
 void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value) {
   addHtml('\"');
   addHtml(object);
-  addHtml(F("\":"));
+  addHtml('"', ':');
   stream_to_json_value(value);
 }
 
 void stream_to_json_object_value(const String& object, const String& value) {
   addHtml('\"');
   addHtml(object);
-  addHtml(F("\":"));
+  addHtml('"', ':');
   stream_to_json_value(value);
 }
 
@@ -624,23 +624,23 @@ String jsonBool(bool value) {
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
 void stream_next_json_object_value(const __FlashStringHelper * object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml(F(",\n"));
+  addHtml(',', '\n');
 }
 
 void stream_next_json_object_value(const String& object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml(F(",\n"));
+  addHtml(',', '\n');
 }
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
 void stream_last_json_object_value(const __FlashStringHelper * object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml(F("\n}"));
+  addHtml('\n', '}');
 }
 
 void stream_last_json_object_value(const String& object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml(F("\n}"));
+  addHtml('\n', '}');
 }
 
 void stream_json_object_values(const LabelType::Enum labels[], bool markLast)

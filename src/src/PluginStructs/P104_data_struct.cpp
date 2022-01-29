@@ -2368,7 +2368,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         # ifdef P104_USE_ZONE_ACTIONS
 
         html_TD();  // Spacer
-        addHtml(F("|"));
+        addHtml('|');
 
         if (currentRow < 2) {
           addHtml(F("<TD style=\"text-align:center;font-size:90%\">")); // Action column, text centered and font-size 90%
@@ -2464,7 +2464,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         # ifdef P104_USE_ZONE_ACTIONS
         html_TD(); // Spacer
-        addHtml(F("|"));
+        addHtml('|');
 
         html_TD(); // Action
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ACTION),

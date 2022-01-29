@@ -102,7 +102,9 @@ void html_add_script_end();
 void addHtmlError(const __FlashStringHelper * error);
 void addHtmlError(const String& error);
 
-void addHtml(const char& html);
+void addHtml(const char& char1);
+// Convenience function to send 2 chars without the need to use flash strings.
+void addHtml(const char& char1, const char& char2);
 void addHtml(const __FlashStringHelper * html);
 void addHtml(const String& html);
 void addHtmlInt(int32_t int_val);
