@@ -28,6 +28,10 @@ The 74HC595 Shiftregisters can be used to connect many output pins to an ESP usi
 
 When connecting many shift regiters daisy-chained, it is important to ensure that not *too* many are connected to a single GPIO output pin, as that could overload that pin. It is advised to use a buffer chip for all used GPIOs for every 4 or 5 shift registers. When using a Schmitt-trigger buffer, it will also clean up the signal further down the line. Any buffer will introduce a small delay in the signal, possibly reducing the number of shift registers that can be controlled. A few useful answers are in this `Stack Exchange question`_
 
+The output pins can be used to control f.e. relays. The logic is built so that on crash or reboot of the ESP, the last used state can be restored from RTC memory (enabled by default), so the state of the outputs is kept. This is limited to max. 16 shift registers, as that is the size of the memory reserved per task in RTC memory. This memory only survives a warm boot, *not* a reset or power-cycle!
+
+The register outputs are **not** updated on start of the plugin, only when changing a pin state, or using the ``74hcUpdate`` command, the shift registers are updated.
+
 Configuration
 -------------
 
@@ -41,7 +45,7 @@ Configuration
 Sensor
 ^^^^^^
 
-* **GPIO -> Data pin (DS)**: Select the GPIO pin that is connected to the Data in pin of the (first) shift register. Any daisy chained register has its DS pin connected to the ``Q7'`` pin of the previous shift register.
+* **GPIO -> Data pin (DS)**: Select the GPIO pin that is connected to the Data in pin of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7'`` pin of the previous shift register.
 
 * **GPIO -> Clock pin (SH_CP)**: Select the Clock pin of all shift registers.
 
@@ -50,15 +54,15 @@ Sensor
 Device configuration
 ^^^^^^^^^^^^^^^^^^^^
 
-* **Number of chips (Q7' -> DS)**: The number of chips daisy-chained to each other. Default: 1, max. 255 (compile-time defined, technically limited to 255).
+* **Number of chips (Q7' -> DS)**: The number of chips daisy-chained to each other. Default: 1, max. 255 (compile-time defined, technically limited to 255), allowing for max. 2040 output pins.
 
 * **Offset for display**: This setting determines which set of chip states are displayed on the Devices screen, but, more importantly, which will be restored from RTC memory on a warm boot of the ESP.
 
 ESPEasy stores the current values of each task in RTC memory (that is retained during a warm boot, not a reset or power cycle), and restores their values if possible. This plugin uses the setting **Restore Values on warm boot** to determine if these values should then be used as the new state for the shift registers, allowing the outputs to survive a warm boot of the ESP.
 
-Using this **Offset for display**, the chips that will be restored, with a maximum of 16, are configured. This value is always rounded to a multiple of 4, and lower than the number of chips configured.
+Using **Offset for display**, the chips that will be restored, with a maximum of 16, are configured. This value is always rounded to a multiple of 4, and lower than the number of chips configured.
 
-* **Values display (Off=Hex/On=Bin)**: The display on the Devices page if specifically formatted to show the state of the outputs of the shift registers in either Hex (default) or Bin format, having a separator per chip (8 bits) for readability.
+* **Values display (Off=Hex/On=Bin)**: The display on the Devices page is custom formatted (when the plugin is enabled) to show the state of the outputs of the shift registers in either Hex (default) or Bin format, having a separator per chip (8 bits) for readability.
 
 All off, Hex display (default)
 
