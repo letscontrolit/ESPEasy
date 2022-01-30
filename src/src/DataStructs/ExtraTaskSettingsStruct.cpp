@@ -71,26 +71,30 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames() const {
   return true;
 }
 
-bool ExtraTaskSettingsStruct::validCharForNames(char character) {
-  switch (character) {
-    case ',':
-    case ' ':
-    case '#':
-    case '-':
-    case '+':
-    case '/':
-    case '*':
-    case '=':
-    case '^':
-    case '%':
-    case '!':
-    case '[':
-    case ']':
-    case '{':
-    case '}':
-    case '(':
-    case ')':
+bool ExtraTaskSettingsStruct::validCharForNames(char c) {
+  // Smal optimization to check these chars as they are in sequence in the ASCII table
+  /*
+    case '(': // 40
+    case ')': // 41
+    case '*': // 42
+    case '+': // 43
+    case ',': // 44
+    case '-': // 45
+  */
+
+  if (c >= '(' && c <= '-') return false;
+  if (
+    (c == ' ') || 
+    (c == '!') || 
+    (c == '#') || 
+    (c == '%') || 
+    (c == '/') || 
+    (c == '=') || 
+    (c == '[') || 
+    (c == ']') || 
+    (c == '^') || 
+    (c == '{') || 
+    (c == '}'))
       return false;
-  }
   return true;
 }
