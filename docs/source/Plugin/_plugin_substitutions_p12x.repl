@@ -54,7 +54,7 @@
 .. |P128_type| replace:: :cyan:`Output`
 .. |P128_typename| replace:: :cyan:`Output - NeoPixel (BusFX)`
 .. |P128_porttype| replace:: `.`
-.. |P128_status| replace:: :yellow:`MAX`
+.. |P128_status| replace:: :yellow:`NEOPIXEL`
 .. |P128_github| replace:: P128_NeoPixelBusFX.ino
 .. _P128_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P128_NeoPixelBusFX.ino
 .. |P128_usedby| replace:: `.`

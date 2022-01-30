@@ -20,8 +20,8 @@
 .. |Plugin_Light_Lux| replace:: :ref:`P010_page`, :ref:`P015_page`, :ref:`P074_page`
 .. |Plugin_Motor| replace:: :ref:`P048_page`, :ref:`P079_page`
 .. |Plugin_Notify| replace:: :ref:`P055_page`, :ref:`P065_page`
-.. |Plugin_Output| replace:: :ref:`P029_page`, :ref:`P038_page`, :ref:`P041_page`, :ref:`P042_page`, :ref:`P043_page`, :ref:`P070_page`, :ref:`P124_page`
-.. |Plugin_Position| replace:: :ref:`P013_page`, :ref:`P082_page`, :ref:`P128_page`
+.. |Plugin_Output| replace:: :ref:`P029_page`, :ref:`P038_page`, :ref:`P041_page`, :ref:`P042_page`, :ref:`P043_page`, :ref:`P070_page`, :ref:`P124_page`, :ref:`P128_page`
+.. |Plugin_Position| replace:: :ref:`P013_page`, :ref:`P082_page`
 .. |Plugin_Regulator| replace:: :ref:`P021_page`
 .. |Plugin_RFID| replace:: :ref:`P008_page`, :ref:`P017_page`, :ref:`P040_page`, :ref:`P111_page`
 .. |Plugin_Switch_input| replace:: :ref:`P001_page`, :ref:`P009_page`, :ref:`P019_page`, :ref:`P059_page`, :ref:`P080_page`, :ref:`P091_page`, :ref:`P097_page`
