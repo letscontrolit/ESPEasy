@@ -79,7 +79,7 @@ void handle_upload_json() {
 
   TXBuffer.startJsonStream();
   addHtml('{');
-  stream_next_json_object_value(F("status"), String(result));
+  stream_next_json_object_value(F("status"), result);
   addHtml('}');
 
   TXBuffer.endStream();

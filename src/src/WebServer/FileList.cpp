@@ -75,8 +75,8 @@ void handle_filelist_json() {
           addHtml(',', '{');
         }
         stream_next_json_object_value(F("fileName"), String(file.name()));
-        stream_next_json_object_value(F("index"),    String(startIdx));
-        stream_last_json_object_value(F("size"), String(file.size()));
+        stream_next_json_object_value(F("index"),    startIdx);
+        stream_last_json_object_value(F("size"), file.size());
       }
     }
     file = root.openNextFile();
@@ -107,11 +107,11 @@ void handle_filelist_json() {
     fs::File f = dir.openFile("r");
 
     if (f) {
-      stream_next_json_object_value(F("size"), String(f.size()));
+      stream_next_json_object_value(F("size"), f.size());
       f.close();
     }
 
-    stream_last_json_object_value(F("index"), String(startIdx));
+    stream_last_json_object_value(F("index"), startIdx);
 
     if (count >= endIdx)
     {

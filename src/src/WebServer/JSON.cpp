@@ -117,19 +117,17 @@ void handle_json()
   bool showTaskDetails     = true;
   bool showNodes           = true;
   {
-    const String view = webArg("view");
+    const String view = webArg(F("view"));
 
-    if (!view.isEmpty()) {
-      if (view == F("sensorupdate")) {
-        showSystem = false;
-        showWifi   = false;
-        #ifdef HAS_ETHERNET
-        showEthernet = false;
-        #endif // ifdef HAS_ETHERNET
-        showDataAcquisition = false;
-        showTaskDetails     = false;
-        showNodes           = false;
-      }
+    if (view == F("sensorupdate")) {
+      showSystem = false;
+      showWifi   = false;
+      #ifdef HAS_ETHERNET
+      showEthernet = false;
+      #endif // ifdef HAS_ETHERNET
+      showDataAcquisition = false;
+      showTaskDetails     = false;
+      showNodes           = false;
     }
   }
 
@@ -297,12 +295,12 @@ void handle_json()
           }
 
           addHtml('{');
-          stream_next_json_object_value(F("nr"), String(it->first));
+          stream_next_json_object_value(F("nr"), it->first);
           stream_next_json_object_value(F("name"),
                                         (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
 
           if (it->second.build) {
-            stream_next_json_object_value(F("build"), String(it->second.build));
+            stream_next_json_object_value(F("build"), it->second.build);
           }
 
           if (it->second.nodeType) {
@@ -313,7 +311,7 @@ void handle_json()
             }
           }
           stream_next_json_object_value(F("ip"), it->second.ip.toString());
-          stream_last_json_object_value(F("age"), String(it->second.age));
+          stream_last_json_object_value(F("age"), it->second.age);
         } // if node info exists
       }   // for loop
 
@@ -381,13 +379,13 @@ void handle_json()
           const String value = formatUserVarNoCheck(TaskIndex, x);
           uint8_t nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
 
-          if (mustConsiderAsString(value)) {
+          if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
             nrDecimals = 255;
           }
-          stream_next_json_object_value(F("ValueNumber"), String(x + 1));
+          stream_next_json_object_value(F("ValueNumber"), x + 1);
           stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
-          stream_next_json_object_value(F("NrDecimals"),  String(nrDecimals));
+          stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
           stream_last_json_object_value(F("Value"), value);
 
           if (x < (valueCount - 1)) {
@@ -398,7 +396,7 @@ void handle_json()
       }
 
       if (showSpecificTask) {
-        stream_next_json_object_value(F("TTL"), String(ttl_json * 1000));
+        stream_next_json_object_value(F("TTL"), ttl_json * 1000);
       }
 
       if (showDataAcquisition) {
@@ -407,8 +405,8 @@ void handle_json()
         for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
         {
           addHtml('{');
-          stream_next_json_object_value(F("Controller"), String(x + 1));
-          stream_next_json_object_value(F("IDX"),        String(Settings.TaskDeviceID[x][TaskIndex]));
+          stream_next_json_object_value(F("Controller"), x + 1);
+          stream_next_json_object_value(F("IDX"),        Settings.TaskDeviceID[x][TaskIndex]);
           stream_last_json_object_value(F("Enabled"), jsonBool(Settings.TaskDeviceSendData[x][TaskIndex]));
 
           if (x < (CONTROLLER_MAX - 1)) {
@@ -419,10 +417,10 @@ void handle_json()
       }
 
       if (showTaskDetails) {
-        stream_next_json_object_value(F("TaskInterval"),     String(taskInterval));
+        stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
-        stream_next_json_object_value(F("TaskDeviceNumber"), String(Settings.TaskDeviceNumber[TaskIndex]));
+        stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
 #ifdef FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
@@ -453,7 +451,7 @@ void handle_json()
 #endif
       }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
-      stream_last_json_object_value(F("TaskNumber"), String(TaskIndex + 1));
+      stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);
 
       if (TaskIndex != lastActiveTaskIndex) {
         addHtml(',');
@@ -464,7 +462,7 @@ void handle_json()
 
   if (!showSpecificTask) {
     addHtml(F("],\n"));
-    stream_last_json_object_value(F("TTL"), String(lowest_ttl_json * 1000));
+    stream_last_json_object_value(F("TTL"), lowest_ttl_json * 1000);
   }
 
   TXBuffer.endStream();
@@ -580,11 +578,11 @@ void handle_buildinfo() {
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
 void stream_to_json_value(const String& value) {
-  NumericalType detectedType;
-  bool isNum  = isNumerical(value, detectedType);
-  bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-
-  if (!isBool && ((value.isEmpty()) || !isNum || mustConsiderAsString(detectedType))) {
+  if (value.isEmpty()) {
+    addHtml('"', '"');
+    return;
+  }
+  if (mustConsiderAsJSONString(value)) {
     // Either empty, not a numerical or a BIN/HEX notation.
     addHtml('\"');
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
@@ -617,6 +615,13 @@ void stream_to_json_object_value(const String& object, const String& value) {
   stream_to_json_value(value);
 }
 
+void stream_to_json_object_value(const __FlashStringHelper *  object, int value) {
+  addHtml('\"');
+  addHtml(object);
+  addHtml('"', ':');
+  addHtmlInt(value);
+}
+
 String jsonBool(bool value) {
   return boolToString(value);
 }
@@ -632,6 +637,11 @@ void stream_next_json_object_value(const String& object, const String& value) {
   addHtml(',', '\n');
 }
 
+void stream_next_json_object_value(const __FlashStringHelper * object, int value) {
+  stream_to_json_object_value(object, value);
+  addHtml(',', '\n');
+}
+
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
 void stream_last_json_object_value(const __FlashStringHelper * object, const String& value) {
   stream_to_json_object_value(object, value);
@@ -639,6 +649,11 @@ void stream_last_json_object_value(const __FlashStringHelper * object, const Str
 }
 
 void stream_last_json_object_value(const String& object, const String& value) {
+  stream_to_json_object_value(object, value);
+  addHtml('\n', '}');
+}
+
+void stream_last_json_object_value(const __FlashStringHelper * object, int value) {
   stream_to_json_object_value(object, value);
   addHtml('\n', '}');
 }

@@ -135,7 +135,7 @@ void handle_cache_json() {
     }
   }
   addHtml(F("],\n"));
-  stream_last_json_object_value(F("nrfiles"), String(filenr));
+  stream_last_json_object_value(F("nrfiles"), filenr);
   addHtml('\n');
   TXBuffer.endStream();
 }

@@ -482,8 +482,6 @@ String to_json_object_value(const __FlashStringHelper * object,
 
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   String result;
-  bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-
   result.reserve(object.length() + value.length() + 6);
   wrap_String(object, F("\""), result);
   result += F(":");
@@ -493,7 +491,7 @@ String to_json_object_value(const String& object, const String& value, bool wrap
     result += F("\"\"");
     return result;
   }
-  if (wrapInQuotes || (!isBool && mustConsiderAsString(value))) {
+  if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
