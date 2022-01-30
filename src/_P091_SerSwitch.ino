@@ -625,7 +625,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             }
             String log = F("SerSW   : SetSwitch r");
             log += rnum;
-            log += F(":");
+            log += ':';
             log += rcmd;
             addLog(LOG_LEVEL_INFO, log);
           }
@@ -672,7 +672,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
             String log = F("SerSW   : SetSwitchPulse r");
             log += rnum;
-            log += F(":");
+            log += ':';
             log += rcmd;
             log += F(" Pulsed for ");
             log += String(event->Par3);
@@ -723,7 +723,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
             String log = F("SerSW   : SetSwitchPulse r");
             log += rnum;
-            log += F(":");
+            log += ':';
             log += rcmd;
             log += F(" Pulse for ");
             log += String(event->Par3);
@@ -802,7 +802,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
         String log = F("SerSW   : SetSwitchPulse r");
         log += rnum;
-        log += F(":");
+        log += ':';
         log += rcmd;
         log += F(" Pulse ended");
         addLog(LOG_LEVEL_INFO, log);

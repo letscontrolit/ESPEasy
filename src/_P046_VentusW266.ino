@@ -339,7 +339,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
               log += F(") ");
               for (int i = 0; i < Plugin_046_Payload; i++) {
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {
-                  log += F(":");
+                  log += ':';
                 }
                 char myHex = (P046_data->Plugin_046_databuffer[i] >> 4) + 0x30;
                 if (myHex > 0x39) { myHex += 7; }
