@@ -276,7 +276,7 @@ void transformValue(
             }
 
             if (value == F("0")) {
-              value = "";
+              value.clear();
             } else {
               const int valueLength = value.length();
 
@@ -299,7 +299,7 @@ void transformValue(
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
           case 'm':
-            value = logicVal == 0 ? F("A") : F("M");
+            value = logicVal == 0 ? 'A' : 'M';
             break;
           case 'H':
             value = logicVal == 0 ? F("COLD") : F(" HOT");
@@ -308,16 +308,16 @@ void transformValue(
             value = logicVal == 0 ? F("DOWN") : F("  UP");
             break;
           case 'u':
-            value = logicVal == 0 ? F("D") : F("U");
+            value = logicVal == 0 ? 'D' : 'U';
             break;
           case 'Y':
             value = logicVal == 0 ? F(" NO") : F("YES");
             break;
           case 'y':
-            value = logicVal == 0 ? F("N") : F("Y");
+            value = logicVal == 0 ? 'N' : 'Y';
             break;
           case 'X':
-            value = logicVal == 0 ? F("O") : F("X");
+            value = logicVal == 0 ? 'O' : 'X';
             break;
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
@@ -326,10 +326,10 @@ void transformValue(
             value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
             break;
           case 'l':
-            value = logicVal == 0 ? F("L") : F("R");
+            value = logicVal == 0 ? 'L' : 'R';
             break;
           case 'Z': // return "0" or "1"
-            value = logicVal == 0 ? "0" : "1";
+            value = logicVal == 0 ? '0' : '1';
             break;
           case 'D': // Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
           case 'd': // like above but with spaces padding
