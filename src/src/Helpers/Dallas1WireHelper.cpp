@@ -19,9 +19,9 @@ uint8_t LastDiscrepancy;
 uint8_t LastFamilyDiscrepancy;
 uint8_t LastDeviceFlag;
 
-long usec_release   = 0;
-long presence_start = 0;
-long presence_end   = 0;
+int64_t usec_release   = 0;
+int64_t presence_start = 0;
+int64_t presence_end   = 0;
 
 
 // References to 1-wire family codes:
@@ -353,11 +353,11 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
       log += F(",P");
     }
     log += ',';
-    log += String(usec_release, DEC);
+    log += ll2String(usec_release, DEC);
     log += ',';
-    log += String(presence_start, DEC);
+    log += ll2String(presence_start, DEC);
     log += ',';
-    log += String(presence_end, DEC);
+    log += ll2String(presence_end, DEC);
     addLog(LOG_LEVEL_DEBUG, log);
   }
 
@@ -654,8 +654,8 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     // - Presemce condition start (typ: 30 usec after release)
     // - Presence condition end   (minimal duration 60 usec, typ: 100 usec)
     // - Wait till 480 usec after release.
-    const unsigned long start = micros();
-    long usec_passed          = 0;
+    const uint64_t start = getMicros64();
+    int64_t usec_passed          = 0;
 
     while (usec_passed < 480) {
       usec_passed = usecPassedSince(start);
@@ -882,10 +882,10 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   if (gpio_pin_rx == -1) { return 0; }
   if (gpio_pin_tx == -1) { return 0; }
-  unsigned long start = micros();
+  const uint64_t start = getMicros64();
   uint8_t r = Dallas_read_bit_ISR(gpio_pin_rx, gpio_pin_tx, start);
 
-  while (usecPassedSince(start) < 70) {
+  while (usecPassedSince(start) < 70ll) {
     // Wait for another 55 usec
     // Complete read cycle:
     // LOW: 6 usec
@@ -911,14 +911,14 @@ uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned lon
     while (usecPassedSince(start) < 6) {
       // Wait for 6 usec
     }
-    unsigned long startwait = micros();
+    const uint64_t startwait = getMicros64();
     if(gpio_pin_rx == gpio_pin_tx) {
       pinMode(gpio_pin_rx, INPUT); // let pin float, pull up will raise
     } else {
       digitalWrite(gpio_pin_tx, HIGH);
     }
 
-    while (usecPassedSince(startwait) < 9) {
+    while (usecPassedSince(startwait) < 9ll) {
       // Wait for another 9 usec
     }
     r = digitalRead(gpio_pin_rx);
@@ -943,7 +943,7 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   // write 0: low 60 usec, high 10 usec
   const long low_time  = (v & 1) ? 6 : 60;
   const long high_time = (v & 1) ? 64 : 10;
-  unsigned long start  = micros();
+  uint64_t start  = getMicros64();
 
   Dallas_write_bit_ISR(v, gpio_pin_rx, gpio_pin_tx, low_time, high_time, start);
 
@@ -957,7 +957,7 @@ void Dallas_write_bit_ISR(uint8_t v,
                       int8_t  gpio_pin_tx,
                       long low_time,
                       long high_time,
-                      unsigned long &start)
+                      uint64_t &start)
 {
   #if defined(ESP32)
   ESP32noInterrupts();
@@ -970,7 +970,7 @@ void Dallas_write_bit_ISR(uint8_t v,
   while (usecPassedSince(start) < low_time) {
     // output remains low
   }
-  start = micros();
+  start = getMicros64();
   digitalWrite(gpio_pin_tx, HIGH);
   #if defined(ESP32)
   ESP32interrupts();

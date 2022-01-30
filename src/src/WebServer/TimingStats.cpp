@@ -70,8 +70,8 @@ void format_using_threshhold(unsigned long value) {
 }
 
 void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  unsigned long minVal, maxVal;
-  const unsigned int  c = stats.getMinMax(minVal, maxVal);
+  uint64_t minVal, maxVal;
+  const uint64_t c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
   addHtmlInt(c);
