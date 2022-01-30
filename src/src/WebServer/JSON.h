@@ -35,8 +35,6 @@ void handle_buildinfo();
 /*********************************************************************************************\
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
-void stream_to_json_value(const String& value);
-
 void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value);
 void stream_to_json_object_value(const String& object, const String& value);
 void stream_to_json_object_value(const __FlashStringHelper *  object, int value);

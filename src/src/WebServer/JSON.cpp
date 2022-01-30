@@ -577,42 +577,18 @@ void handle_buildinfo() {
 /*********************************************************************************************\
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
-void stream_to_json_value(const String& value) {
-  if (value.isEmpty()) {
-    addHtml('"', '"');
-    return;
-  }
-  if (mustConsiderAsJSONString(value)) {
-    // Either empty, not a numerical or a BIN/HEX notation.
-    addHtml('\"');
-    if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
-      // Must replace characters, so make a deepcopy
-      String tmpValue(value);
-      tmpValue.replace('\n', '^');
-      tmpValue.replace('\r', '^');
-      tmpValue.replace('"',  '\'');
-      addHtml(tmpValue);
-    } else {
-      addHtml(value);
-    }
-    addHtml('\"');
-  } else {
-    addHtml(value);
-  }
-}
-
 void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value) {
   addHtml('\"');
   addHtml(object);
   addHtml('"', ':');
-  stream_to_json_value(value);
+  addHtml(to_json_value(value));
 }
 
 void stream_to_json_object_value(const String& object, const String& value) {
   addHtml('\"');
   addHtml(object);
   addHtml('"', ':');
-  stream_to_json_value(value);
+  addHtml(to_json_value(value));
 }
 
 void stream_to_json_object_value(const __FlashStringHelper *  object, int value) {

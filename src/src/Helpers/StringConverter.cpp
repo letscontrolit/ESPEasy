@@ -316,7 +316,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   if (!validDeviceIndex(DeviceIndex)) {
     isvalid = false;
-    return F("0");
+    return EMPTY_STRING;
   }
 
   {
@@ -423,7 +423,8 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
-  String result = F("C");
+  String result;
+  result += 'C';
 
   if (cpluginID < 100) { result += '0'; }
 
@@ -484,11 +485,16 @@ String to_json_object_value(const String& object, const String& value, bool wrap
   String result;
   result.reserve(object.length() + value.length() + 6);
   wrap_String(object, F("\""), result);
-  result += F(":");
+  result += ':';
+  result += to_json_value(value, wrapInQuotes);
+  return result;
+}
 
+String to_json_value(const String& value, bool wrapInQuotes) {
+  String result;
   if (value.isEmpty()) {
     // Empty string
-    result += F("\"\"");
+    result = F("\"\"");
     return result;
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
@@ -509,6 +515,7 @@ String to_json_object_value(const String& object, const String& value, bool wrap
   }
   return result;
 }
+
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
