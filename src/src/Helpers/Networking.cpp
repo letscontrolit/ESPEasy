@@ -566,7 +566,7 @@ void SSDP_schema(WiFiClient& client) {
             (uint16_t)((chipId >>  8) & 0xff),
             (uint16_t)chipId        & 0xff);
 
-  String ssdp_schema = F(
+  client.print(F(
     "HTTP/1.1 200 OK\r\n"
     "Content-Type: text/xml\r\n"
     "Connection: close\r\n"
@@ -578,33 +578,31 @@ void SSDP_schema(WiFiClient& client) {
     "<major>1</major>"
     "<minor>0</minor>"
     "</specVersion>"
-    "<URLBase>http://");
+    "<URLBase>http://"));
 
-  ssdp_schema += formatIP(ip);
-  ssdp_schema += F(":80/</URLBase>"
+  client.print(formatIP(ip));
+  client.print(F(":80/</URLBase>"
                    "<device>"
                    "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
-                   "<friendlyName>");
-  ssdp_schema += Settings.Name;
-  ssdp_schema += F("</friendlyName>"
+                   "<friendlyName>"));
+  client.print(Settings.Name);
+  client.print(F("</friendlyName>"
                    "<presentationURL>/</presentationURL>"
-                   "<serialNumber>");
-  ssdp_schema += ESP.getChipId();
-  ssdp_schema += F("</serialNumber>"
+                   "<serialNumber>"));
+  client.print(String(ESP.getChipId()));
+  client.print(F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
-                   "<modelNumber>");
-  ssdp_schema += getValue(LabelType::GIT_BUILD);
-  ssdp_schema += F("</modelNumber>"
+                   "<modelNumber>"));
+  client.print(getValue(LabelType::GIT_BUILD));
+  client.print(F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"
                    "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
-                   "<UDN>uuid:");
-  ssdp_schema += uuid;
-  ssdp_schema += F("</UDN></device>"
+                   "<UDN>uuid:"));
+  client.print(String(uuid));
+  client.print(F("</UDN></device>"
                    "</root>\r\n"
-                   "\r\n");
-
-  client.printf("%s", ssdp_schema.c_str());
+                   "\r\n"));
 }
 
 /********************************************************************************************\
