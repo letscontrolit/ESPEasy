@@ -817,8 +817,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
+  ExtraTaskSettings.clear();
   if (!validTaskIndex(TaskIndex)) {
-    ExtraTaskSettings.clear();
     return String(); // Un-initialized task index.
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -826,7 +826,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   #endif
 
   START_TIMER
-  ExtraTaskSettings.clear();
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
@@ -851,10 +850,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
-  for (uint8_t varIndex = 0; varIndex < VARS_PER_TASK; ++varIndex) {
-    Cache.setTaskValueDecimals(TaskIndex, varIndex, ExtraTaskSettings.TaskDeviceValueDecimals[varIndex]);
-  }
-
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

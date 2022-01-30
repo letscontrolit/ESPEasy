@@ -380,10 +380,10 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     f = 0;
   }
 
-  uint8_t nrDecimals = getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
-
-  if (!Device[DeviceIndex].configurableDecimals()) {
-    nrDecimals = 0;
+  uint8_t nrDecimals = 0;
+  if (Device[DeviceIndex].configurableDecimals()) {
+    LoadTaskSettings(event->TaskIndex);
+    nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
   }
 
   String result = toString(f, nrDecimals);

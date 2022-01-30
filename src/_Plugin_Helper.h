@@ -152,8 +152,6 @@ bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex,
 
 int getValueCountForTask(taskIndex_t taskIndex);
 
-uint8_t getTaskDeviceValueDecimals(taskIndex_t taskIndex, uint8_t rel_index);
-
 // Check if the DeviceVType is set and update if it isn't.
 // Return pconfig_index
 int checkDeviceVTypeForTask(struct EventStruct *event);

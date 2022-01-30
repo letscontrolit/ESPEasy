@@ -158,14 +158,6 @@ int getValueCountForTask(taskIndex_t taskIndex) {
   return TempEvent.Par1;
 }
 
-uint8_t getTaskDeviceValueDecimals(taskIndex_t taskIndex, uint8_t rel_index) {
-  const int8_t cache_nrDecimals = Cache.getTaskValueDecimals(taskIndex, rel_index);
-  if (cache_nrDecimals >= 0) return static_cast<uint8_t>(cache_nrDecimals);
-
-  LoadTaskSettings(taskIndex);
-  return ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
-}
-
 int checkDeviceVTypeForTask(struct EventStruct *event) {
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_NOT_SET) {
     if (validTaskIndex(event->TaskIndex)) {
