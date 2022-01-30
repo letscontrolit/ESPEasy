@@ -107,12 +107,10 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
     if (it != Plugin_id_to_DeviceIndex.end())
     {
       if (!validDeviceIndex(it->second)) { return INVALID_DEVICE_INDEX; }
-/*
       if (Device[it->second].Number != pluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));
       }
-*/
       return it->second;
     }
   }
