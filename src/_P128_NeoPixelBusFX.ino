@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-01-30, tonhuisman Fix JSON message to use proper JSON functions, some bugfixes and small source improvements
 // 2022-01-09, tonhuisman Add conditional defines P128_USES_<colormode> (options: GRB/GRBW/RGB/RGBW/BRG/BRG) for selecting the
 //                        desired pixel type, optionally, from Custom.h
 // 2022-01-08, tonhuisman Small UI fixes while writing documentation.

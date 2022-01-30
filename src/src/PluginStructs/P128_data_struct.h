@@ -2378,16 +2378,19 @@ private:
 
   /// random number seed
   uint16_t rand16seed; // = RAND16_SEED; // leave uninitialized
-  uint8_t  random8();
-  uint8_t  random8(uint8_t lim);
-  uint8_t  random8(uint8_t min,
-                   uint8_t lim);
-  uint8_t  qsub8(uint8_t i,
-                 uint8_t j);
-  uint8_t  qadd8(uint8_t i,
-                 uint8_t j);
-  uint8_t  scale8_video(uint8_t i,
-                        uint8_t scale);
+  uint8_t random8();
+  uint8_t random8(uint8_t lim);
+  uint8_t random8(uint8_t min,
+                  uint8_t lim);
+  uint8_t qsub8(uint8_t i,
+                uint8_t j);
+  uint8_t qadd8(uint8_t i,
+                uint8_t j);
+  uint8_t scale8_video(uint8_t i,
+                       uint8_t scale);
+
+  // Fire2012: Array of temperature readings at each simulation cell
+  byte heat[ARRAYSIZE];
   void     Fire2012(void);
   void     fire_flicker();
   void     Plugin_128_simpleclock();
