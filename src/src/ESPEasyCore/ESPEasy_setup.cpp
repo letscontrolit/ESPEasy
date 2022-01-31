@@ -15,6 +15,7 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Statistics.h"
 #include "../Globals/WiFi_AP_Candidates.h"
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
