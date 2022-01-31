@@ -489,6 +489,11 @@ struct C018_ConfigStruct
 };
 
 
+// Forward declarations
+bool C018_init(struct EventStruct *event);
+String c018_add_joinChanged_script_element_line(const String& id, bool forOTAA);
+
+
 bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
