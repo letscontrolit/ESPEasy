@@ -308,6 +308,8 @@ void P098_data_struct::setPinState(const P098_GPIO_config& gpio_config, int8_t s
         }
       }
       break;
+      case P098_config_struct::PWM_mode_type::MAX_TYPE:
+        break;
     }
   }
 }
@@ -366,7 +368,7 @@ bool P098_data_struct::check_encoder_timeout(const P098_GPIO_config & gpio_confi
   if (enc_lastChanged_us == 0) {
     return false;
   }
-  const bool expired = usecPassedSince(enc_lastChanged_us) > _config.encoder.timer_us;
+  const bool expired = usecPassedSince(enc_lastChanged_us) > static_cast<int64_t>(_config.encoder.timer_us);
   if (!expired) {
     return false;
   }
