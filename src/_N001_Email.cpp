@@ -11,6 +11,7 @@
 
 #define NPLUGIN_001_TIMEOUT 5000
 
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -25,6 +26,9 @@
 
 // Forward declaration
 bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
+bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass);
+bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern);
+bool getNextMailAddress(const String& data, String& address, int index);
 
 // The message body is included in event->String1
 
@@ -188,7 +192,6 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 	return myStatus;
 }
 
-#endif
 
 bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
