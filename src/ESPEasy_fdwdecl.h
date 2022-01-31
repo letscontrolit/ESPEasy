@@ -7,7 +7,6 @@
 // This is only needed until the classes that need these can include the appropriate .h files to have these forward declared.
 
 
-void PluginInit(void);
 void CPluginInit(void);
 void NPluginInit(void);
 
