@@ -1271,7 +1271,7 @@ To create/register a plugin, you have to :
     #define USES_P104   // MAX7219 dot matrix
    #endif
    #ifndef USES_P109
-    #define USES_P109   // ThermoOLED
+    // #define USES_P109   // ThermoOLED, disabled because of build-size
    #endif
 #endif
 
