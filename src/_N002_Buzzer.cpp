@@ -9,9 +9,10 @@
 #define NPLUGIN_ID_002         2
 #define NPLUGIN_NAME_002       "Buzzer"
 
-#include "src/Helpers/Audio.h"
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/Globals/NPlugins.h"
+#include "src/Helpers/Audio.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/_NPlugin_init.h"
 
