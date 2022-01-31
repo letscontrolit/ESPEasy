@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+
 #include <Arduino.h>
 
 

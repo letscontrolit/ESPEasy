@@ -21,13 +21,17 @@
 #include "src/Helpers/Networking.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
+#include "src/Helpers/_NPlugin_init.h"
 
+// Forward declaration
+bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
 
 // The message body is included in event->String1
 
-boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
+// The message body is included in event->String1
+bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
-	boolean success = false;
+	bool success = false;
 
 	switch (function) {
 		case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
@@ -85,12 +89,10 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 }
 
 
-#ifdef USES_NOTIFIER
-
-boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
+bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {
 //  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
-	boolean myStatus = false;
+	bool myStatus = false;
 
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
@@ -188,7 +190,7 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 
 #endif
 
-boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
+bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
 	if (user.isEmpty() || pass.isEmpty()) {
 		// No user/password given.
@@ -205,7 +207,7 @@ boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& p
 	return true;
 }
 
-boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
+bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
 {
 	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
 		addLog(LOG_LEVEL_DEBUG, aStr);
