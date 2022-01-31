@@ -1319,7 +1319,7 @@ To create/register a plugin, you have to :
 	#define USES_P113	// SI1145
 	#define USES_P114	// DSM501
 	//#define USES_P115	// HeatpumpIR - P088 in the main repo.
-	#define USES_P116	// ID12
+//	#define USES_P116	// ID12
 	#define USES_P117	// LW12FC
 	//#define USES_P117	// Neopixels
 	//#define USES_P117	// Nextion
@@ -1327,8 +1327,8 @@ To create/register a plugin, you have to :
 	#define USES_P119	// BME680
 	#define USES_P120	// Thermocouple
 	#define USES_P121	// Candle
-	   #define USES_P122	// NeoPixel       (MERGED?)
-	      #define USES_P123	// NeoPixel_Clock  (MERGED?)
+//	   #define USES_P122	// NeoPixel       (MERGED?)
+//	      #define USES_P123	// NeoPixel_Clock  (MERGED?)
 	#define USES_P124	// NeoPixelBusFX
 	//#define USES_P124	// Ventus_W266_RFM69
 	#define USES_P125	// ArduCAM
@@ -1467,7 +1467,7 @@ To create/register a plugin, you have to :
     #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-    #define USES_P116   //
+//    #define USES_P116   //
   #endif
   #ifndef USES_P117
     #define USES_P117   // SCD30
@@ -1485,10 +1485,10 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
   #endif
   #ifndef USES_P122
-    #define USES_P122   //
+//    #define USES_P122   //
   #endif
   #ifndef USES_P123
-    #define USES_P123   //
+//    #define USES_P123   //
   #endif
   #ifndef USES_P124
     #define USES_P124   //
@@ -1497,34 +1497,34 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI Acceleration / Gravity
   #endif
   #ifndef USES_P126
-    #define USES_P126   //
+//    #define USES_P126   //
   #endif
   #ifndef USES_P127
-    #define USES_P127   //
+//    #define USES_P127   //
   #endif
   #ifndef USES_P128
-    #define USES_P128   //
+//    #define USES_P128   //
   #endif
   #ifndef USES_P129
-    #define USES_P129   //
+//    #define USES_P129   //
   #endif
   #ifndef USES_P130
-    #define USES_P130   //
+//    #define USES_P130   //
   #endif
   #ifndef USES_P131
-    #define USES_P131   //
+//    #define USES_P131   //
   #endif
   #ifndef USES_P132
-    #define USES_P132   //
+//    #define USES_P132   //
   #endif
   #ifndef USES_P133
-    #define USES_P133   //
+//    #define USES_P133   //
   #endif
   #ifndef USES_P134
-    #define USES_P134   //
+//    #define USES_P134   //
   #endif
   #ifndef USES_P135
-    #define USES_P135   //
+//    #define USES_P135   //
   #endif
 
   // Controllers
