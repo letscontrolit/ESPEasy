@@ -1,5 +1,11 @@
 #include "_Plugin_Helper.h"
 #if defined(USES_P089) && defined(ESP8266)
+
+
+// FIXME TD-er: Support Ping in ESP32
+// Also remove check for ESP8266 in Helpers/_Plugin_init.h and .cpp
+
+
 //#######################################################################################################
 //#################### Plugin 089 ICMP Ping probing ##############
 //#######################################################################################################

@@ -389,7 +389,10 @@ void PluginInit()
 #endif
 
 #ifdef USES_P089
+  #ifdef ESP8266
+  // FIXME TD-er: Support Ping plugin for ESP32
   ADDPLUGIN(089, 89)
+  #endif
 #endif
 
 #ifdef USES_P090
@@ -421,7 +424,9 @@ void PluginInit()
 #endif
 
 #ifdef USES_P097
-  ADDPLUGIN(097, 97)
+  #ifdef ESP32
+  ADDPLUGIN(097, 97) // Touch (ESP32)
+  #endif
 #endif
 
 #ifdef USES_P098
