@@ -11,6 +11,8 @@ struct EventStruct;
 void CPluginInit();
 
 // Macro to forward declare the CPlugin_NNN functions.
+// N.B. Some controllers also have a do_process_cNNN_delay_queue function.
+//      Forward declaration of these is done in ControllerQueue/ControllerDelayHandlerStruct.h
 //
 // Uncrustify must not be used on macros, so turn it off.
 // *INDENT-OFF*

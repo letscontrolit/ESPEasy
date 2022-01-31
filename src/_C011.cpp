@@ -32,6 +32,15 @@ struct C011_ConfigStruct
   char HttpBody[C011_HTTP_BODY_MAX_LEN]     = { 0 };
 };
 
+
+// Forward declarations
+bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody);
+boolean Create_schedule_HTTP_C011(struct EventStruct *event);
+void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted);
+void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary);
+
+
+
 bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -190,8 +199,6 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
   WiFiClient client;
