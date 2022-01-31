@@ -21,8 +21,8 @@
 #define P36_MaxDisplayHeight 64
 #define P36_DisplayCentre 64
 #define P36_HeaderHeight 12
-#define P036_IndicatorTop 54
-#define P036_IndicatorHeight 10
+#define P036_IndicatorTop 56
+#define P036_IndicatorHeight 8
 
 #define P36_CONTRAST_OFF    1
 #define P36_CONTRAST_LOW    64

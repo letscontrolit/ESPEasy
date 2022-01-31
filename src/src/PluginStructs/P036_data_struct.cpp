@@ -10,7 +10,7 @@
 # include "../Helpers/StringParser.h"
 # include "../Helpers/SystemVariables.h"
 
-# include <Dialog_Plain_12_font.h>
+# include <SansSerif_Plain_8_font.h>
 # include <OLED_SSD1306_SH1106_images.h>
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
@@ -29,10 +29,11 @@ void P036_data_struct::reset() {
 }
 
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24, 24, 28},
-  { ArialMT_Plain_16, 16, 19},
-  { Dialog_plain_12,  13, 15},
-  { ArialMT_Plain_10, 10, 13}
+  { ArialMT_Plain_24, 24, 28}, // 9643
+  { ArialMT_Plain_16, 16, 19}, // 5049
+  // { Dialog_plain_12,  13, 15}, // 3707, was never selected
+  { ArialMT_Plain_10, 10, 13}, // 2731
+  { SansSerif_plain_8, 8, 10} // 2732
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -409,7 +410,7 @@ void P036_data_struct::display_indicator() {
 
     int x, y;
 
-    y = P036_IndicatorTop + 2 + TopLineOffset;
+    y = P036_IndicatorTop + TopLineOffset; // 2022-01-31 Removed unneeded offset '+ 2'
 
     // I would like a margin of 20 pixels on each side of the indicator.
     // Therefore the width of the indicator should be 128-40=88 and so space between indicator dots is 88/(framecount-1)
