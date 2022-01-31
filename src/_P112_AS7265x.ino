@@ -423,7 +423,7 @@ void queueEvent(taskIndex_t TaskIndex, int wavelength, float value) {
   RuleEvent += '#';
   RuleEvent += wavelength;
   RuleEvent += '=';
-  RuleEvent += String(value, 2);
+  RuleEvent += toString(value, 2);
   eventQueue.add(RuleEvent);
 }
 

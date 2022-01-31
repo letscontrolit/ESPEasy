@@ -704,6 +704,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = false;
       Device[deviceCount].TimerOptional      = false;
       Device[deviceCount].GlobalSyncOption   = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -1139,7 +1141,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event, const String& text) {
   switch (P073_data->displayModel) {
     case P073_TM1637_4DGTCOLON: {
       if ((event->Par1 > -1000) && (event->Par1 < 10000)) {
-        P073_data->FillBufferWithNumber(String(round(event->Par1)));
+        P073_data->FillBufferWithNumber(String(event->Par1));
       }
       else {
         P073_data->FillBufferWithDash();
