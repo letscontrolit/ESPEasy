@@ -13,11 +13,12 @@
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/Globals/NPlugins.h"
 #include "src/Helpers/ESPEasy_Storage.h"
+#include "src/Helpers/_NPlugin_init.h"
 
 
-boolean NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& string)
+bool NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& string)
 {
-  boolean success = false;
+  bool success = false;
 
   switch (function)
   {
