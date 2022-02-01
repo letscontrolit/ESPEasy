@@ -109,7 +109,7 @@
 #define DEFAULT_PIN_STATUS_LED                  (-1)
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
 
-#define DEFAULT_PIN_RESET_BUTTON                (-1)
+#define DEFAULT_PIN_RESET_BUTTON                0
 
 
 #define DEFAULT_USE_RULES                       true             // (true|false) Enable Rules?
