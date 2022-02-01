@@ -122,9 +122,9 @@
 #define DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE     "Connection Lost" // Default lwt message
 #define DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID   0
 
-#define DEFAULT_USE_NTP                         true             // (true|false) Use NTP Server
+#define DEFAULT_USE_NTP                         true              // (true|false) Use NTP Server
 #define DEFAULT_NTP_HOST                        "by.pool.ntp.org"                // NTP Server Hostname
-#define DEFAULT_TIME_ZONE                       180                 // Time Offset (in minutes)
+#define DEFAULT_TIME_ZONE                       180               // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         false             // (true|false) Use Daily Time Saving
 
 #define DEFAULT_LATITUDE                        0.0f              // Default Latitude  
@@ -132,12 +132,12 @@
 
 #define DEFAULT_SYSLOG_IP                       ""                // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    0                 // Syslog Log Level
-#define DEFAULT_SERIAL_LOG_LEVEL                LOG_LEVEL_INFO    // Serial Log Level
+#define DEFAULT_SERIAL_LOG_LEVEL                0                 // Serial Log Level
 #define DEFAULT_WEB_LOG_LEVEL                   LOG_LEVEL_INFO    // Web Log Level
 #define DEFAULT_SD_LOG_LEVEL                    0                 // SD Card Log Level
 #define DEFAULT_USE_SD_LOG                      false             // (true|false) Enable Logging to the SD card
 
-#define DEFAULT_USE_SERIAL                      true              // (true|false) Enable Logging to the Serial Port
+#define DEFAULT_USE_SERIAL                      false             // (true|false) Enable Logging to the Serial Port
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
 #define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
