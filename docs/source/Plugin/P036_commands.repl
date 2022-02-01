@@ -50,3 +50,10 @@
 
         When the display is off, because a 'Display Timeout' is set and the timer has expired or it is turned off by the off command (see above), then it is turned on, and, when set, the timer is started again.
         "
+        "
+        ``oledframedcmd,linecount,<1..4>``
+        ","
+        This command changes the number of lines in each frame. When the next frame is to be displayed, the frames are recalculated and the sequence is restarted at the first frame.
+
+        If Generate events for 'Linecount' is selected, a ``<taskname#linecount=<lines>`` event is generated on initialization of the plugin and when changing the setting.
+        "
