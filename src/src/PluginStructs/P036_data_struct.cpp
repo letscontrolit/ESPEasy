@@ -216,6 +216,18 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
   }
 }
 
+#ifdef P036_ENABLE_LINECOUNT
+void P036_data_struct::setNrLines(uint8_t NrLines){
+  if ((NrLines >= 1) && (NrLines <= 4)) {
+    ScrollingPages.linesPerFrame = NrLines;
+    prepare_pagescrolling();    // Recalculate font
+    MaxFramesToDisplay = 0xFF;  // Recalculate page indicator
+    nextFrameToDisplay = 0;     // Reset to first page
+  }
+}
+#endif // P036_ENABLE_LINECOUNT
+
+
 void P036_data_struct::display_header() {
   if (!isInitialized()) {
     return;

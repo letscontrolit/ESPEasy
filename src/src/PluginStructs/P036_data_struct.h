@@ -10,6 +10,11 @@
 
 // #define PLUGIN_036_DEBUG    // additional debug messages in the log
 
+#ifndef LIMIT_BUILD_SIZE
+#define P036_SEND_EVENTS      // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
+#endif
+#define P036_ENABLE_LINECOUNT // Enable the linecount subcommand, may need to be disabled by LIMIT_BUILD_SIZE
+
 
 #define P36_Nlines 12       // The number of different lines which can be displayed - each line is 64 chars max
 #define P36_NcharsV0 32     // max chars per line up to 22.11.2019 (V0)
@@ -171,12 +176,15 @@ struct P036_data_struct : public PluginTaskData_base {
   void setContrast(uint8_t OLED_contrast);
 
   void setOrientationRotated(bool rotated);
+  #ifdef P036_ENABLE_LINECOUNT
+  void setNrLines(uint8_t NrLines);
+  #endif // P036_ENABLE_LINECOUNT
 
 
   // The screen is set up as:
   // - 10 rows at the top for the header
-  // - 44 rows in the middle for the scroll region
-  // - 10 rows at the bottom for the footer
+  // - 46 rows in the middle for the scroll region
+  // -  8 rows at the bottom for the footer
   void    display_header();
   void    display_time();
   void    display_title(const String& title);

@@ -14,8 +14,10 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2022-02-01
+// ADD: oledframedcmd Subcommand 'lines' for changing the number of lines per frame. Also generates an event on init and when changed, when enabled.
 // @tonhuisman: 2022-01-31
-// FIX: Enable 4 line frames again by using a smaller font and tweaking the footer
+// BUG: Enable 4 line frames again by using a smaller font and tweaking the footer
 // @tonhuisman: 2021-06-11
 // ADD: Send events on Frame and Line
 // CHG: Setting contrast always turns on display, reduce code size by some refactoring
@@ -127,15 +129,12 @@
 #define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 
 
-#ifndef LIMIT_BUILD_SIZE
-#define P036_SEND_EVENTS      // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
-#endif
-
 #ifdef P036_SEND_EVENTS
 #define P036_EVENT_DISPLAY  0 // event: <taskname>#display=0/1
 #define P036_EVENT_CONTRAST 1 // event: <taskname>#contrast=0/1/2
 #define P036_EVENT_FRAME    2 // event: <taskname>#frame=1..n
 #define P036_EVENT_LINE     3 // event: <taskname>#line=1..n
+#define P036_EVENT_LINECNT  4 // event: <taskname>#linecount=1..4
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue);
 #endif
 
@@ -307,13 +306,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper * options[3];
         options[0] = F("None");
         options[1] = F("Display &amp; Contrast");
-        options[2] = F("Display, Contrast, Frame &amp; Line");
+        options[2] = F("Display, Contrast, Frame, Line &amp; Linecount");
         int optionValues[3]; // Bitmap
         optionValues[0] = 0;
         optionValues[1] = 1;
         optionValues[2] = 3;
         addFormSelector(F("Generate events"), F("p036_generateEvents"), 3, options, optionValues, choice);
-        addFormNote(F("Events named &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high), #frame=&lt;framenr&gt; and #line=&lt;linenr&gt;"));
+        addFormNote(F("Events: &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high),"));
+        addFormNote(F("and #frame=&lt;framenr&gt;, #line=&lt;linenr&gt; and #linecount=&lt;lines&gt;"));
       }
       #endif
 
@@ -509,6 +509,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS)) {
         P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
         if (bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) {
+          #ifdef P036_ENABLE_LINECOUNT
+          P036_SendEvent(event, P036_EVENT_LINECNT, P036_NLINES); // Send the current nr. of lines per frame
+          #endif // P036_ENABLE_LINECOUNT
           P036_SendEvent(event, P036_EVENT_FRAME, P036_data->currentFrameToDisplay + 1);
         }
       }
@@ -919,6 +922,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
           #endif
         }
+        #ifdef P036_ENABLE_LINECOUNT
+        else if ((subcommand == F("linecount")) && (event->Par2 >= 1) && (event->Par2 <= 4))
+        {
+          success = true;
+          if (P036_NLINES != event->Par2) {
+            P036_NLINES = event->Par2;
+            P036_data->setNrLines(P036_NLINES);
+            #ifdef P036_SEND_EVENTS
+            if (sendEvents && bitRead(P036_FLAGS_0, P036_FLAG_EVENTS_FRAME_LINE)) { // Bit 29 Send Events Frame & Line
+              P036_SendEvent(event, P036_EVENT_LINECNT, P036_NLINES);
+            }
+            #endif
+          }
+        }
+        #endif // P036_ENABLE_LINECOUNT
         else if ((LineNo > 0) && (LineNo <= P36_Nlines))
         {
           // content functions
@@ -1046,6 +1064,13 @@ void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventVal
         RuleEvent += F("line");
         break;
       }
+      #ifdef P036_ENABLE_LINECOUNT
+      case P036_EVENT_LINECNT: 
+      {
+        RuleEvent += F("linecount");
+        break;
+      }
+      #endif // P036_ENABLE_LINECOUNT
     }
     RuleEvent += '=';
     RuleEvent += eventValue;
