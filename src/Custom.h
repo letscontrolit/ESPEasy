@@ -28,7 +28,7 @@
 #define BUILD_GIT           "My Build: "  __DATE__ " "  __TIME__
 
 
-#define DEFAULT_NAME        "ФшкЬЙ"                        // Enter your device friendly name
+#define DEFAULT_NAME        "AirMQ"                                  // Enter your device friendly name
 #define UNIT                0                                        // Unit Number
 #define DEFAULT_DELAY       60                                       // Sleep Delay in seconds
 
