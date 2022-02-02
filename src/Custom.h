@@ -25,7 +25,7 @@
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
 
-#define BUILD_GIT           "My Build: "  __DATE__ " "  __TIME__
+#define BUILD_GIT           "20220201-noDebug"
 
 
 #define DEFAULT_NAME        "AirMQ"                                  // Enter your device friendly name
