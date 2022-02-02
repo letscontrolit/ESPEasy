@@ -74,9 +74,10 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
       if (C009_DelayHandler == nullptr) {
         break;
       }
-
-
-      success = C009_DelayHandler->addToQueue(C009_queue_element(event));
+      {
+        C009_queue_element element(event);
+        success = C009_DelayHandler->addToQueue(std::move(element));
+      }
       Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       break;
     }
@@ -108,92 +109,108 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
     return false;
   }
   LoadTaskSettings(element.TaskIndex);
-  String jsonString;
-  jsonString.reserve(768);
+  String request;
   {
-    jsonString = '{';
+    // Place in separate scope, so we can destruct it jsonString before calling send_to_http.
+    String jsonString;
+    // Make an educated guess on the actual length, based on earlier requests.
+    static size_t expectedJsonLength = 100;
     {
-      jsonString += to_json_object_value(F("module"),  F("ESPEasy"));
-      jsonString += ',';
-      jsonString += to_json_object_value(F("version"), F("1.04"));
-
-      // Create nested object "ESP" inside "data"
-      jsonString += ',';
-      jsonString += F("\"data\":{");
-      {
-        jsonString += F("\"ESP\":{");
-        {
-          // Create nested objects in "ESP":
-          jsonString += to_json_object_value(F("name"), Settings.Name);
-          jsonString += ',';
-          jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("version"), String(Settings.Version));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("build"), String(Settings.Build));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
-
-          // embed IP, important if there is NAT/PAT
-          // char ipStr[20];
-          // IPAddress ip = NetworkLocalIP();
-          // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-          jsonString += ',';
-          jsonString += to_json_object_value(F("ip"), NetworkLocalIP().toString());
-        }
-        jsonString += '}'; // End "ESP"
-
-        jsonString += ',';
-
-        // Create nested object "SENSOR" json object inside "data"
-        jsonString += F("\"SENSOR\":{");
-        {
-          // char itemNames[valueCount][2];
-          for (uint8_t x = 0; x < element.valueCount; x++)
-          {
-            // Each sensor value get an own object (0..n)
-            // sprintf(itemNames[x],"%d",x);
-            if (x != 0) {
-              jsonString += ',';
-            }
-
-            jsonString += '"';
-            jsonString += x;
-            jsonString += F("\":{");
-            {
-              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
-              jsonString += ',';
-              jsonString += to_json_object_value(F("valueName"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-              jsonString += ',';
-              jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
-              jsonString += ',';
-              jsonString += to_json_object_value(F("value"), element.txt[x]);
-            }
-            jsonString += '}'; // End "sensor value N"
-          }
-        }
-        jsonString += '}';     // End "SENSOR"
-      }
-      jsonString += '}';       // End "data"
+      #ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      #endif
+      // Reserve on the 2nd heap
+      jsonString.reserve(expectedJsonLength);
     }
-    jsonString += '}';         // End JSON structure
+    {
+      jsonString = '{';
+      {
+        jsonString += to_json_object_value(F("module"),  F("ESPEasy"));
+        jsonString += ',';
+        jsonString += to_json_object_value(F("version"), F("1.04"));
+
+        // Create nested object "ESP" inside "data"
+        jsonString += ',';
+        jsonString += F("\"data\":{");
+        {
+          jsonString += F("\"ESP\":{");
+          {
+            // Create nested objects in "ESP":
+            jsonString += to_json_object_value(F("name"), Settings.Name);
+            jsonString += ',';
+            jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
+            jsonString += ',';
+            jsonString += to_json_object_value(F("version"), String(Settings.Version));
+            jsonString += ',';
+            jsonString += to_json_object_value(F("build"), String(Settings.Build));
+            jsonString += ',';
+            jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
+            jsonString += ',';
+            jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
+            jsonString += ',';
+            jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
+            jsonString += ',';
+            jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
+
+            // embed IP, important if there is NAT/PAT
+            // char ipStr[20];
+            // IPAddress ip = NetworkLocalIP();
+            // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+            jsonString += ',';
+            jsonString += to_json_object_value(F("ip"), NetworkLocalIP().toString());
+          }
+          jsonString += '}'; // End "ESP"
+
+          jsonString += ',';
+
+          // Create nested object "SENSOR" json object inside "data"
+          jsonString += F("\"SENSOR\":{");
+          {
+            // char itemNames[valueCount][2];
+            for (uint8_t x = 0; x < element.valueCount; x++)
+            {
+              // Each sensor value get an own object (0..n)
+              // sprintf(itemNames[x],"%d",x);
+              if (x != 0) {
+                jsonString += ',';
+              }
+
+              jsonString += '"';
+              jsonString += x;
+              jsonString += F("\":{");
+              {
+                jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
+                jsonString += ',';
+                jsonString += to_json_object_value(F("valueName"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+                jsonString += ',';
+                jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
+                jsonString += ',';
+                jsonString += to_json_object_value(F("value"), element.txt[x]);
+              }
+              jsonString += '}'; // End "sensor value N"
+            }
+          }
+          jsonString += '}';     // End "SENSOR"
+        }
+        jsonString += '}';       // End "data"
+      }
+      jsonString += '}';         // End JSON structure
+    }
+
+    if (expectedJsonLength < jsonString.length()) {
+      expectedJsonLength = jsonString.length();
+    }
+
+    // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
+    // addLog(LOG_LEVEL_INFO, jsonString);
+
+    // We now create a URI for the request
+    request = create_http_request_auth(
+      controller_number, element.controller_idx, ControllerSettings,
+      F("POST"), F("/ESPEasy"), jsonString.length());
+
+    request += jsonString;
   }
-
-  // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
-  // addLog(LOG_LEVEL_INFO, jsonString);
-
-  // We now create a URI for the request
-  String request = create_http_request_auth(
-    controller_number, element.controller_idx, ControllerSettings,
-    F("POST"), F("/ESPEasy"), jsonString.length());
-
-  request += jsonString;
 
   return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);
 }

@@ -335,15 +335,9 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   bool success = !must_check_reply;
 
   // This will send the request to the server
-  uint8_t written = client.print(postStr);
+  const size_t written = client.print(postStr);
 
-  // as of 2018/11/01 the print function only returns one byte (upd to 256 chars sent). However if the string sent can be longer than this
-  // therefore we calculate modulo 256.
-  // see discussion here https://github.com/letscontrolit/ESPEasy/pull/1979
-  // and implementation here
-  // https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/../include/ClientContext.h#L437-L467
-  // this needs to be adjusted if the WiFiClient.print method changes.
-  if (written != (postStr.length() % 256)) {
+  if (written != postStr.length()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("HTTP : ");
       log += logIdentifier;
@@ -371,16 +365,20 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   }
 #endif // ifndef BUILD_NO_DEBUG
 
+  unsigned long timeout = client.getTimeout();
+  if (timeout < 200) timeout = 200;
   if (must_check_reply) {
-    unsigned long timer = millis() + 200;
+    unsigned long timer = millis() + timeout;
 
     while (!client_available(client)) {
       if (timeOutReached(timer)) { return false; }
       delay(1);
     }
 
+    timer = millis() + timeout;
+
     // Read all the lines of the reply from server and print them to Serial
-    while (client_available(client) && !success) {
+    while (client_available(client) && !success && !timeOutReached(timer)) {
       //   String line = client.readStringUntil('\n');
       String line;
       safeReadStringUntil(client, line, '\n');
@@ -420,6 +418,8 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG_MORE, postStr);
 #endif // ifndef BUILD_NO_DEBUG
+
+        // FIXME TD-er: Must add event with return code
       }
       delay(0);
     }
@@ -433,9 +433,13 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
     addLog(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
-
+#ifdef ESP8266
+  client.flush(timeout);
+  client.stop(timeout);
+#else
   client.flush();
   client.stop();
+#endif
   return success;
 }
 

@@ -14,7 +14,7 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
 {
   # ifdef USES_PACKED_RAW_DATA
     #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+//    HeapSelectIram ephemeral;
     #endif
 
     packed = getPackedFromPlugin(event, sampleSetCount);
