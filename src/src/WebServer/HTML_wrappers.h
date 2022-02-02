@@ -105,7 +105,10 @@ void addHtmlError(const String& error);
 void addHtml(const char& html);
 void addHtml(const __FlashStringHelper * html);
 void addHtml(const String& html);
-void addHtmlInt(int int_val);
+void addHtmlInt(int32_t int_val);
+void addHtmlInt(uint32_t int_val);
+void addHtmlInt(int64_t int_val);
+void addHtmlInt(uint64_t int_val);
 
 void addEncodedHtml(const __FlashStringHelper * html);
 void addEncodedHtml(const String& html);
