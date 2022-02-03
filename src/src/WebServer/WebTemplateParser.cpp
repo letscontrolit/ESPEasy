@@ -127,9 +127,8 @@ bool WebTemplateParser::process(const char c) {
           // Done parsing varName, still need to process it.
           if (varName.equalsIgnoreCase(F("content"))) {
             contentVarFound = true;
-          }
-          if (Tail == contentVarFound) {
-              processVarName();
+          } else if (Tail == contentVarFound) {
+            processVarName();
           }
           varName.clear();
         }
