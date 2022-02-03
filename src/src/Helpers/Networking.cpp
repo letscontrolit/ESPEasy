@@ -244,7 +244,8 @@ void checkUDP()
 #endif // ifndef BUILD_NO_DEBUG
                 {
                   #ifdef USE_SECOND_HEAP
-                  HeapSelectIram ephemeral;
+                  // HeapSelectIram ephemeral;
+                  // TD-er: Disabled for now as it is suspect for crashes.
                   #endif
 
                   Nodes[unit].age = 0; // Create a new element when not present
@@ -524,7 +525,8 @@ void sendSysInfoUDP(uint8_t repeats)
 
   {
     #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+    // HeapSelectIram ephemeral;
+    // TD-er: disabled for now as it is suspect for crashes.
     #endif
 
     Nodes[Settings.Unit].age = 0; // Create new node when not already present.

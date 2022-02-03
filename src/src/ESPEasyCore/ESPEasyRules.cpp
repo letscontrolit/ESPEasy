@@ -1443,7 +1443,8 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;  
+//  HeapSelectIram ephemeral;  
+// TD-er: Disabled for now, suspect for causing crashes
   #endif
 
 

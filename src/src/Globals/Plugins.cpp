@@ -352,7 +352,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
           if (Function == PLUGIN_DEVICE_ADD) {
             #ifdef USE_SECOND_HEAP
-            HeapSelectIram ephemeral;
+            //HeapSelectIram ephemeral;
+            // TD-er: Disabled for now, as it is suspect for crashes.
             #endif
 
             if ((deviceCount + 2) > static_cast<int>(Device.size())) {

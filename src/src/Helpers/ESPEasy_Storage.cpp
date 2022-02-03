@@ -646,10 +646,6 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   tmpString.reserve(bufferSize);
 
   {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
       result += LoadFromFile(settingsType,
