@@ -38,11 +38,11 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator=(const String& a)           {
 */
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(char a)                   {
-  if (CHUNKED_BUFFER_SIZE > (this->buf.length() + 1)) {
-    this->buf += a;
-    return *this;
+  if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
+    flush();
   }
-  return addString(String(a));
+  this->buf += a;
+  return *this;
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(long unsigned int a)      {
@@ -96,11 +96,10 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
     while (!done) {
       const uint8_t ch = mmu_get_uint8(cur_char++);
       if (ch == 0) return *this;
-      if (CHUNKED_BUFFER_SIZE > (this->buf.length() + 1)) {
-        this->buf += (char)ch;
-      } else {
-        this->operator+=((char)ch);
+      if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
+        flush();
       }
+      this->buf += (char)ch;
     }
   }
   #endif
@@ -113,6 +112,15 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   if (length == 0) { return *this; }
   flashStringData += length;
 
+  int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
+  if (flush_step < 1) { flush_step = 0; }
+
+  if (length < static_cast<unsigned int>(flush_step)) {
+    // Just use the faster String operator to copy flash strings.
+    this->buf += str;
+    return *this;
+  }
+
   // FIXME TD-er: Not sure what happens, but streaming large flash chunks does cause allocation issues.
   const bool stream_P = ESP.getFreeHeap() > 4000 && length < (2 * CHUNKED_BUFFER_SIZE);
 
@@ -123,17 +131,16 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   } else {
     // Copy to internal buffer and send in chunks
     unsigned int pos          = 0;
-    int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
 
-    if (flush_step < 1) { flush_step = 0; }
-
+    const char * cur_char = &str[pos];
     while (pos < length) {
       if (flush_step == 0) {
-        sendContentBlocking(this->buf);
+        flush();
         flush_step = CHUNKED_BUFFER_SIZE;
       }
-      this->buf += (char)pgm_read_byte(&str[pos]);
+      this->buf += (char)pgm_read_byte(cur_char);
       ++pos;
+      ++cur_char;
       --flush_step;
     }
     checkFull();
@@ -146,19 +153,38 @@ Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
 
   if (flush_step < 1) { flush_step = 0; }
-  int pos          = 0;
-  const int length = a.length();
 
+  const unsigned int length = a.length();
+
+  if (length < static_cast<unsigned int>(flush_step)) {
+    // Just use the faster String operator to copy flash strings.
+    this->buf += a;
+    return *this;
+  }
+
+  unsigned int pos = 0;
   while (pos < length) {
     if (flush_step == 0) {
-      if (this->buf.length() > 0) {
-        sendContentBlocking(this->buf);
-      }
+      flush();
       flush_step = CHUNKED_BUFFER_SIZE;
+      const int bytes_left = (length - pos);
+      if (bytes_left < flush_step) {
+        // Buf is cleared, just copy the rest of the string in one go.
+        this->buf = std::move(a.substring(pos));
+        return *this;
+      } else {
+        // Buf is cleared, remaining string is longer than 1 chunk
+        // Copy chunk
+        this->buf = std::move(a.substring(pos, pos + flush_step));
+        pos += flush_step;
+        flush_step = 0;
+      }
+    } else {
+      // Just copy per byte instead of using substring as substring needs to allocate memory.
+      this->buf += a[pos];
+      ++pos;
+      --flush_step;
     }
-    this->buf += a[pos];
-    ++pos;
-    --flush_step;
   }
   checkFull();
   return *this;
@@ -179,7 +205,7 @@ void Web_StreamingBuffer::checkFull() {
 
   if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
     trackTotalMem();
-    sendContentBlocking(this->buf);
+    flush();
   }
 }
 

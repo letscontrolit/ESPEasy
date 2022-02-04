@@ -187,7 +187,7 @@ String do_create_http_request(
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
   request += "\r\n";
-  if (request.length() > (estimated_size + est_size_error)) {
+  if (request.length() > static_cast<size_t>(estimated_size + est_size_error)) {
     est_size_error = request.length() - estimated_size;
   }
 #ifndef BUILD_NO_DEBUG
