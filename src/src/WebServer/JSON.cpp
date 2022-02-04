@@ -25,13 +25,12 @@
 // ********************************************************************************
 void handle_csvval()
 {
-  String htmlData;
-  htmlData.reserve(25); // Reserve for error message
+  TXBuffer.startJsonStream();
   const int printHeader = getFormItemInt(F("header"), 1);
   bool printHeaderValid = true;
   if (printHeader != 1 && printHeader != 0)
   {
-    htmlData = F("ERROR: Header not valid!\n");
+    addHtml(F("ERROR: Header not valid!\n"));
     printHeaderValid = false;
   }
 
@@ -39,7 +38,7 @@ void handle_csvval()
   const bool taskValid = validTaskIndex(taskNr);
   if (!taskValid)
   {
-    htmlData = F("ERROR: TaskNr not valid!\n");
+    addHtml(F("ERROR: TaskNr not valid!\n"));
   }
 
   const int INVALID_VALUE_NUM = INVALID_TASKVAR_INDEX + 1;
@@ -47,11 +46,10 @@ void handle_csvval()
   bool valueNumberValid = true;
   if (valNr != INVALID_VALUE_NUM && !validTaskVarIndex(valNr))
   {
-    htmlData = F("ERROR: ValueId not valid!\n");
+    addHtml(F("ERROR: ValueId not valid!\n"));
     valueNumberValid = false;
   }
 
-  TXBuffer.startJsonStream();
   if (taskValid && valueNumberValid && printHeaderValid)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskNr);
@@ -60,8 +58,6 @@ void handle_csvval()
     {
       LoadTaskSettings(taskNr);
       const uint8_t taskValCount = getValueCountForTask(taskNr);
-      uint16_t stringReserveSize = (valNr == INVALID_VALUE_NUM ? 1 : taskValCount) * 24;
-      htmlData.reserve(stringReserveSize);
 
       if (printHeader)
       {
@@ -69,34 +65,31 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            htmlData += String(ExtraTaskSettings.TaskDeviceValueNames[x]);
+            addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[x]));
             if (x != taskValCount - 1)
             {
-              htmlData += ';';
+              addHtml(';');
             }
           }
         }
-        htmlData += '\n';
-        addHtml(htmlData);
-        htmlData = "";
+        addHtml('\n');
       }
 
       for (uint8_t x = 0; x < taskValCount; x++)
       {
         if ((valNr == INVALID_VALUE_NUM) || (valNr == x))
         {
-          htmlData += formatUserVarNoCheck(taskNr, x);
+          addHtml(formatUserVarNoCheck(taskNr, x));
 
           if (x != taskValCount - 1)
           {
-            htmlData += ';';
+            addHtml(';');
           }
         }
       }
-      htmlData += '\n';
+      addHtml('\n');
     }
   }
-  addHtml(htmlData);
   TXBuffer.endStream();
 }
 
