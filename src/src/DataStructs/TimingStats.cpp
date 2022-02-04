@@ -194,7 +194,8 @@ bool mustLogCFunction(CPlugin::Function function) {
   return false;
 }
 
-String getMiscStatsName(int stat) {
+// Return flash string type to reduce bin size
+const __FlashStringHelper * getMiscStatsName_F(int stat) {
   switch (stat) {
     case LOADFILE_STATS:          return F("Load File");
     case SAVEFILE_STATS:          return F("Save File");
@@ -236,35 +237,19 @@ String getMiscStatsName(int stat) {
     case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
     case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
-    case C001_DELAY_QUEUE:
-    case C002_DELAY_QUEUE:
-    case C003_DELAY_QUEUE:
-    case C004_DELAY_QUEUE:
-    case C005_DELAY_QUEUE:
-    case C006_DELAY_QUEUE:
-    case C007_DELAY_QUEUE:
-    case C008_DELAY_QUEUE:
-    case C009_DELAY_QUEUE:
-    case C010_DELAY_QUEUE:
-    case C011_DELAY_QUEUE:
-    case C012_DELAY_QUEUE:
-    case C013_DELAY_QUEUE:
-    case C014_DELAY_QUEUE:
-    case C015_DELAY_QUEUE:
-    case C016_DELAY_QUEUE:
-    case C017_DELAY_QUEUE:
-    case C018_DELAY_QUEUE:
-    case C019_DELAY_QUEUE:
-    case C020_DELAY_QUEUE:
-    {
-      String result;
-      result.reserve(16);
-      result  = F("Delay queue ");
-      result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
-      return result;
-    }
   }
-  return getUnknownString();
+  return F("Unknown");
+}
+
+String getMiscStatsName(int stat) {
+  if (stat >= C001_DELAY_QUEUE && stat <= C025_DELAY_QUEUE) {
+    String result;
+    result.reserve(16);
+    result  = F("Delay queue ");
+    result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
+    return result;
+  }
+  return getMiscStatsName_F(stat);
 }
 
 #endif

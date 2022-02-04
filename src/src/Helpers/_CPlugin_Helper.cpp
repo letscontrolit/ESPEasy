@@ -150,6 +150,7 @@ String do_create_http_request(
   const String& method, const String& uri,
   const String& auth_header, const String& additional_options,
   int content_length) {
+  static int est_size_error = 0; // prevent re-alloc by compensating for estimation error
   int estimated_size = hostportString.length() + method.length()
                        + uri.length() + auth_header.length()
                        + additional_options.length()
@@ -158,7 +159,7 @@ String do_create_http_request(
   if (content_length >= 0) { estimated_size += 45; }
   String request;
 
-  request.reserve(estimated_size);
+  request.reserve(estimated_size + est_size_error);
   request += method;
   request += ' ';
 
@@ -186,6 +187,9 @@ String do_create_http_request(
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
   request += "\r\n";
+  if (request.length() > (estimated_size + est_size_error)) {
+    est_size_error = request.length() - estimated_size;
+  }
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, request);
 #endif // ifndef BUILD_NO_DEBUG

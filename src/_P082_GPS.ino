@@ -557,24 +557,24 @@ void P082_logStats(struct EventStruct *event) {
     return;
   }
   String log;
-
-  log.reserve(128);
-  log  = F("GPS:");
-  log += F(" Fix: ");
-  log += String(P082_data->hasFix(P082_TIMEOUT));
-  log += F(" #sat: ");
-  log += P082_data->gps->satellites.value();
-  log += F(" #SNR: ");
-  log += P082_data->gps->satellitesStats.getBestSNR();
-  log += F(" HDOP: ");
-  log += P082_data->gps->hdop.value() / 100.0f;
-  log += F(" Chksum(pass/fail): ");
-  log += P082_data->gps->passedChecksum();
-  log += '/';
-  log += P082_data->gps->failedChecksum();
-  log += F(" invalid: ");
-  log += P082_data->gps->invalidData();
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (log.reserve(128)) {
+    log  = F("GPS:");
+    log += F(" Fix: ");
+    log += String(P082_data->hasFix(P082_TIMEOUT));
+    log += F(" #sat: ");
+    log += P082_data->gps->satellites.value();
+    log += F(" #SNR: ");
+    log += P082_data->gps->satellitesStats.getBestSNR();
+    log += F(" HDOP: ");
+    log += P082_data->gps->hdop.value() / 100.0f;
+    log += F(" Chksum(pass/fail): ");
+    log += P082_data->gps->passedChecksum();
+    log += '/';
+    log += P082_data->gps->failedChecksum();
+    log += F(" invalid: ");
+    log += P082_data->gps->invalidData();
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 }
 
 void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyGPS) {

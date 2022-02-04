@@ -120,7 +120,10 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
       HeapSelectIram ephemeral;
       #endif
       // Reserve on the 2nd heap
-      jsonString.reserve(expectedJsonLength);
+      if (!jsonString.reserve(expectedJsonLength)) {
+        // Not enough free memory
+        return false;
+      }
     }
     {
       jsonString = '{';

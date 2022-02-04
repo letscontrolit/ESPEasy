@@ -68,7 +68,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 /*********************************************************************************************\
    Syslog client
 \*********************************************************************************************/
-void syslog(uint8_t logLevel, const String& message)
+void sendSyslog(uint8_t logLevel, const String& message)
 {
   if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
@@ -106,7 +106,7 @@ void syslog(uint8_t logLevel, const String& message)
       header += hostname;
       header += F(" EspEasy: ");
       #ifdef ESP8266
-      portUDP.write(header.c_str(),            header.length());
+      portUDP.write(header.c_str(), header.length());
       #endif // ifdef ESP8266
       #ifdef ESP32
       portUDP.write(reinterpret_cast<const uint8_t *>(header.c_str()), header.length());

@@ -131,10 +131,6 @@ String get_formatted_Controller_number(cpluginID_t cpluginID);
 String wrap_String(const String& string,
                    char wrap);
                    
-void   wrap_String(const String& string,
-                   const String& wrap,
-                   String      & result);
-
 String wrapIfContains(const String& value,
                       char          contains,
                       char          wrap = '\"');

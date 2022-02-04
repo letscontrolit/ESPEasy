@@ -982,20 +982,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
 #ifdef PLUGIN_036_DEBUG
           String log;
-          log.reserve(200); // estimated
-          log = F("[P36] Line: ");
-          log += LineNo;
-          log += F(" NewContent:");
-          log += NewContent;
-          log += F(" Content:");
-          log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
-          log += F(" Length:");
-          log += String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
-          log += F(" Pix: ");
-          log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
-          log += F(" Reserved:");
-          log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
-          addLog(LOG_LEVEL_INFO, log);
+          if (log.reserve(200)) {; // estimated
+            log = F("[P36] Line: ");
+            log += LineNo;
+            log += F(" NewContent:");
+            log += NewContent;
+            log += F(" Content:");
+            log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
+            log += F(" Length:");
+            log += String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
+            log += F(" Pix: ");
+            log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
+            log += F(" Reserved:");
+            log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
+            addLog(LOG_LEVEL_INFO, log);
+          }
 #endif // PLUGIN_036_DEBUG
         }
       }

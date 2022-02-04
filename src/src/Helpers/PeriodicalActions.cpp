@@ -196,31 +196,32 @@ void runEach30Seconds()
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(80);
-    log = F("WD   : Uptime ");
-    log += getUptimeMinutes();
-    log += F(" ConnectFailures ");
-    log += WiFiEventData.connectionFailures;
-    log += F(" FreeMem ");
-    log += FreeMem();
-    #ifdef HAS_ETHERNET
-    if(active_network_medium == NetworkMedium_t::Ethernet) {
-      log += F( " EthSpeedState ");
-      log += getValue(LabelType::ETH_SPEED_STATE);
-    } else {
+    if (log.reserve(80)) {
+      log = F("WD   : Uptime ");
+      log += getUptimeMinutes();
+      log += F(" ConnectFailures ");
+      log += WiFiEventData.connectionFailures;
+      log += F(" FreeMem ");
+      log += FreeMem();
+      #ifdef HAS_ETHERNET
+      if(active_network_medium == NetworkMedium_t::Ethernet) {
+        log += F( " EthSpeedState ");
+        log += getValue(LabelType::ETH_SPEED_STATE);
+      } else {
+        log += F(" WiFiStatus ");
+        log += ArduinoWifiStatusToString(WiFi.status());
+      }
+      #else
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
-    }
-    #else
-    log += F(" WiFiStatus ");
-    log += ArduinoWifiStatusToString(WiFi.status());
-    #endif
-    log += F(" ESPeasy internal wifi status: ");
-    log += ESPeasyWifiStatusToString();
+      #endif
+      log += F(" ESPeasy internal wifi status: ");
+      log += ESPeasyWifiStatusToString();
 
-//    log += F(" ListenInterval ");
-//    log += WiFi.getListenInterval();
-    addLog(LOG_LEVEL_INFO, log);
+  //    log += F(" ListenInterval ");
+  //    log += WiFi.getListenInterval();
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);

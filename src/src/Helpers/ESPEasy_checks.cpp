@@ -172,13 +172,13 @@ void run_compiletime_checks() {
 #ifndef LIMIT_BUILD_SIZE
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
-
-  error.reserve(48 + structname.length());
-  error  = F("Error: Incorrect offset in struct: ");
-  error += structname;
-  error += '(';
-  error += String(offset);
-  error += ')';
+  if (error.reserve(48 + structname.length())) {
+    error  = F("Error: Incorrect offset in struct: ");
+    error += structname;
+    error += '(';
+    error += String(offset);
+    error += ')';
+  }
   return error;
 }
 #endif

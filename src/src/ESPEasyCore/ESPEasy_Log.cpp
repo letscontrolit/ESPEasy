@@ -214,7 +214,7 @@ void addToLog(uint8_t logLevel, const String& string)
     addNewlineToSerialBuffer();
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
-    syslog(logLevel, string);
+    sendSyslog(logLevel, string);
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(logLevel, string);

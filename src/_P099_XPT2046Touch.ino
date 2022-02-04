@@ -485,18 +485,19 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
             bool bEnableCalibrationLog = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION);
             if (bEnableCalibrationLog && loglevelActiveFor(LOG_LEVEL_INFO)) { // REQUIRED for calibration and setting up objects, so do not make this optional!
               String log;
-              log.reserve(72);
-              log = F("Touch calibration rx= "); // Space before the logged values was added for readability
-              log += rx;
-              log += F(", ry= ");
-              log += ry;
-              log += F("; z= "); // Always log the z value even if not used.
-              log += z;
-              log += F(", x= ");
-              log += x;
-              log += F(", y= ");
-              log += y;
-              addLog(LOG_LEVEL_INFO, log);
+              if (log.reserve(72)) {
+                log = F("Touch calibration rx= "); // Space before the logged values was added for readability
+                log += rx;
+                log += F(", ry= ");
+                log += ry;
+                log += F("; z= "); // Always log the z value even if not used.
+                log += z;
+                log += F(", x= ");
+                log += x;
+                log += F(", y= ");
+                log += y;
+                addLog(LOG_LEVEL_INFO, log);
+              }
             }
 
             if (Settings.UseRules) { // No events to handle if rules not enabled

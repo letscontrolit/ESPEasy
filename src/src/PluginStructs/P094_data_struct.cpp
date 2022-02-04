@@ -280,21 +280,22 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(128);
-      log  = F("CUL Reader: ");
-      log += F(" length: ");
-      log += packet_header[P094_packet_length];
-      log += F(" (header: ");
-      log += strlength - (packet_header[P094_packet_length] * 2);
-      log += F(") manu: ");
-      log += formatToHex_decimal(packet_header[P094_manufacturer]);
-      log += F(" serial: ");
-      log += formatToHex_decimal(packet_header[P094_serial_number]);
-      log += F(" mType: ");
-      log += formatToHex_decimal(packet_header[P094_meter_type]);
-      log += F(" RSSI: ");
-      log += formatToHex_decimal(packet_header[P094_rssi]);
-      addLog(LOG_LEVEL_INFO, log);
+      if (log.reserve(128)) {
+        log  = F("CUL Reader: ");
+        log += F(" length: ");
+        log += packet_header[P094_packet_length];
+        log += F(" (header: ");
+        log += strlength - (packet_header[P094_packet_length] * 2);
+        log += F(") manu: ");
+        log += formatToHex_decimal(packet_header[P094_manufacturer]);
+        log += F(" serial: ");
+        log += formatToHex_decimal(packet_header[P094_serial_number]);
+        log += F(" mType: ");
+        log += formatToHex_decimal(packet_header[P094_meter_type]);
+        log += F(" RSSI: ");
+        log += formatToHex_decimal(packet_header[P094_rssi]);
+        addLog(LOG_LEVEL_INFO, log);
+      }
     }
 
     bool filter_matches[P094_NR_FILTERS];
@@ -335,29 +336,30 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
-              log.reserve(64);
-              log  = F("CUL Reader: ");
-              log += P094_FilterValueType_toString(valueType_index[f]);
-              log += F(":  in:");
-              log += inputString;
-              log += ' ';
-              log += P094_FilterComp_toString(comparator);
-              log += ' ';
-              log += valueString;
+              if (log.reserve(64)) {
+                log  = F("CUL Reader: ");
+                log += P094_FilterValueType_toString(valueType_index[f]);
+                log += F(":  in:");
+                log += inputString;
+                log += ' ';
+                log += P094_FilterComp_toString(comparator);
+                log += ' ';
+                log += valueString;
 
-              switch (comparator) {
-                case P094_Filter_Comp::P094_Equal_OR:
-                case P094_Filter_Comp::P094_Equal_MUST:
+                switch (comparator) {
+                  case P094_Filter_Comp::P094_Equal_OR:
+                  case P094_Filter_Comp::P094_Equal_MUST:
 
-                  if (match) { log += F(" expected MATCH"); } 
-                  break;
-                case P094_Filter_Comp::P094_NotEqual_OR:
-                case P094_Filter_Comp::P094_NotEqual_MUST:
+                    if (match) { log += F(" expected MATCH"); } 
+                    break;
+                  case P094_Filter_Comp::P094_NotEqual_OR:
+                  case P094_Filter_Comp::P094_NotEqual_MUST:
 
-                  if (!match) { log += F(" expected NO MATCH"); }
-                  break;
+                    if (!match) { log += F(" expected NO MATCH"); }
+                    break;
+                }
+                addLog(LOG_LEVEL_INFO, log);
               }
-              addLog(LOG_LEVEL_INFO, log);
             }
 
             switch (comparator) {

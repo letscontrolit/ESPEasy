@@ -518,24 +518,25 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // See also logMemUsageAfter()
             const int freemem_end = ESP.getFreeHeap();
             String log;
-            log.reserve(128);
-            log  = F("After PLUGIN_INIT ");
-            log += F(" task: ");
-            if (taskIndex < 9) log += ' ';
-            log += taskIndex + 1;
-            while (log.length() < 30) log += ' ';
-            log += F("Free mem after: ");
-            log += freemem_end;
-            while (log.length() < 53) log += ' ';
-            log += F("plugin: ");
-            log += freemem_begin - freemem_end;
-            while (log.length() < 67) log += ' ';
+            if (log.reserve(128)) {
+              log  = F("After PLUGIN_INIT ");
+              log += F(" task: ");
+              if (taskIndex < 9) log += ' ';
+              log += taskIndex + 1;
+              while (log.length() < 30) log += ' ';
+              log += F("Free mem after: ");
+              log += freemem_end;
+              while (log.length() < 53) log += ' ';
+              log += F("plugin: ");
+              log += freemem_begin - freemem_end;
+              while (log.length() < 67) log += ' ';
 
-            log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
-            while (log.length() < 73) log += ' ';
-            log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
+              log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+              while (log.length() < 73) log += ' ';
+              log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
 
-            addLog(LOG_LEVEL_DEBUG, log);
+              addLog(LOG_LEVEL_DEBUG, log);
+            }
           }
         }
         #endif

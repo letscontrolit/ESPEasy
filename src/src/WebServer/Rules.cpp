@@ -205,24 +205,16 @@ void handle_rules_new() {
                                      String encodedPath =  URLEncode(String(fi.Name + F(".txt")));
 
                                      // File Name
-                                     {
-                                       String html;
-                                       html.reserve(128);
+                                     addHtml(F("</TD><TD><a href='"));
+                                     addHtml(String(fi.Name));
+                                     addHtml(F(".txt'>"));
+                                     addHtml(String(fi.Name));
+                                     addHtml(F(".txt</a></TD>"));
 
-                                       html += F("</TD><TD><a href='");
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += "'>";
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += F("</a></TD>");
-
-                                       // File size
-                                       html += F("<TD>");
-                                       html += fi.Size;
-                                       html += F("</TD>");
-                                       addHtml(html);
-                                     }
+                                     // File size
+                                     html_TD();
+                                     addHtmlInt(fi.Size);
+                                     addHtml(F("</TD>"));
 
                                      // Actions
                                      html_TD();

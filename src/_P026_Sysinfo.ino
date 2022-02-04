@@ -164,16 +164,18 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1));
-        log = F("SYS  : ");
+        if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
+        {
+          log = F("SYS  : ");
 
-        for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
-          if (i != 0) {
-            log += ',';
+          for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+            if (i != 0) {
+              log += ',';
+            }
+            log += formatUserVarNoCheck(event->TaskIndex, i);
           }
-          log += formatUserVarNoCheck(event->TaskIndex, i);
+          addLog(LOG_LEVEL_INFO, log);
         }
-        addLog(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;

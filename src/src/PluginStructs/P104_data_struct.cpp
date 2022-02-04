@@ -725,28 +725,29 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
 
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(70);
-      log = F("dotmatrix: Bar-graph: ");
+      if (log.reserve(70)) {
+        log = F("dotmatrix: Bar-graph: ");
 
-      if (loop) {
-        log += currentBar;
-        log += F(" in: ");
-        log += graphpart;
-        log += F(" value: ");
-        log += barGraphs[currentBar].value;
-        log += F(" max: ");
-        log += barGraphs[currentBar].max;
-        log += F(" min: ");
-        log += barGraphs[currentBar].min;
-        log += F(" dir: ");
-        log += barGraphs[currentBar].direction;
-        log += F(" typ: ");
-        log += barGraphs[currentBar].barType;
-      } else {
-        log += F(" bsize: ");
-        log += barGraphs.size();
+        if (loop) {
+          log += currentBar;
+          log += F(" in: ");
+          log += graphpart;
+          log += F(" value: ");
+          log += barGraphs[currentBar].value;
+          log += F(" max: ");
+          log += barGraphs[currentBar].max;
+          log += F(" min: ");
+          log += barGraphs[currentBar].min;
+          log += F(" dir: ");
+          log += barGraphs[currentBar].direction;
+          log += F(" typ: ");
+          log += barGraphs[currentBar].barType;
+        } else {
+          log += F(" bsize: ");
+          log += barGraphs.size();
+        }
+        addLog(LOG_LEVEL_INFO, log);
       }
-      addLog(LOG_LEVEL_INFO, log);
     }
     #  endif // ifdef P104_DEBUG
     currentBar++; // next

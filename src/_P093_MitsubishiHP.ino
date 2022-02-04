@@ -75,21 +75,21 @@ struct P093_data_struct : public PluginTaskData_base {
     }
 
     result.reserve(150);
-
-    #define map(x, list) findByValue(x, list, sizeof(list) / sizeof(Tuple))
+    // FIXME TD-er: See if this macro can be simpler as it does expand to quite some code which is not changing.
+    #define map_list(x, list) findByValue(x, list, sizeof(list) / sizeof(Tuple))
 
     result = F("{\"roomTemperature\":");
     result += toString(_currentValues.roomTemperature, 1);
     result += F(",\"wideVane\":\"");
-    result += map(_currentValues.wideVane, _mappings.wideVane);
+    result += map_list(_currentValues.wideVane, _mappings.wideVane);
     result += F("\",\"power\":\"");
-    result += map(_currentValues.power, _mappings.power);
+    result += map_list(_currentValues.power, _mappings.power);
     result += F("\",\"mode\":\"");
-    result += map(_currentValues.mode, _mappings.mode);
+    result += map_list(_currentValues.mode, _mappings.mode);
     result += F("\",\"fan\":\"");
-    result += map(_currentValues.fan, _mappings.fan);
+    result += map_list(_currentValues.fan, _mappings.fan);
     result += F("\",\"vane\":\"");
-    result += map(_currentValues.vane, _mappings.vane);
+    result += map_list(_currentValues.vane, _mappings.vane);
     result += F("\",\"iSee\":");
     result += boolToString(_currentValues.iSee);
     if (_includeStatus) {
@@ -101,7 +101,7 @@ struct P093_data_struct : public PluginTaskData_base {
     result += F(",\"temperature\":");
     result += toString(_currentValues.temperature, 1) + '}';
 
-    #undef map
+    #undef map_list
 
     return true;
   }

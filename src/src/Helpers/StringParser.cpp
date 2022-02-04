@@ -62,100 +62,102 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   int startpos = 0;
   int lastStartpos = 0;
   int endpos = 0;
-  String deviceName, valueName, format;
+  {
+    String deviceName, valueName, format;
 
-  while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
-    // First copy all upto the start of the [...#...] part to be replaced.
-    newString += tmpString.substring(lastStartpos, startpos);
+    while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
+      // First copy all upto the start of the [...#...] part to be replaced.
+      newString += tmpString.substring(lastStartpos, startpos);
 
-    // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
-    if (deviceName.equals(F("plugin")))
-    {
-      // Handle a plugin request.
-      // For example: "[Plugin#GPIO#Pinstate#N]"
-      // The command is stored in valueName & format
-      String command;
-      command.reserve(valueName.length() + format.length() + 1);
-      command  = valueName;
-      command += '#';
-      command += format;
-      command.replace('#', ',');
-
-      if (getGPIOPinStateValues(command)) {
-        newString += command;
-      }
-/* @giig1967g
-      if (PluginCall(PLUGIN_REQUEST, 0, command))
+      // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
+      if (deviceName.equals(F("plugin")))
       {
-        // Do not call transformValue here.
-        // The "format" is not empty so must not call the formatter function.
-        newString += command;
-      }
-*/
-    }
-    else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
-    {
-      // Address an internal variable either as float or as int
-      // For example: Let,10,[VAR#9]
-      unsigned int varNum;
+        // Handle a plugin request.
+        // For example: "[Plugin#GPIO#Pinstate#N]"
+        // The command is stored in valueName & format
+        String command;
+        command.reserve(valueName.length() + format.length() + 1);
+        command  = valueName;
+        command += '#';
+        command += format;
+        command.replace('#', ',');
 
-      if (validUIntFromString(valueName, varNum)) {
-        unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
-        bool trimTrailingZeros    = true;
-
-        if (deviceName.equals(F("int"))) {
-          nr_decimals = 0;
-        } else if (!format.isEmpty())
+        if (getGPIOPinStateValues(command)) {
+          newString += command;
+        }
+  /* @giig1967g
+        if (PluginCall(PLUGIN_REQUEST, 0, command))
         {
-          // There is some formatting here, so do not throw away decimals
-          trimTrailingZeros = false;
+          // Do not call transformValue here.
+          // The "format" is not empty so must not call the formatter function.
+          newString += command;
         }
-        String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
-        value.trim();
-        transformValue(newString, minimal_lineSize, value, format, tmpString);
+  */
       }
-    }
-    else
-    {
-      // Address a value from a plugin.
-      // For example: "[bme#temp]"
-      // If value name is unknown, run a PLUGIN_GET_CONFIG command.
-      // For example: "[<taskname>#getLevel]"
-      taskIndex_t taskIndex = findTaskIndexByName(deviceName);
+      else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
+      {
+        // Address an internal variable either as float or as int
+        // For example: Let,10,[VAR#9]
+        unsigned int varNum;
 
-      if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
-        uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+        if (validUIntFromString(valueName, varNum)) {
+          unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
+          bool trimTrailingZeros    = true;
 
-        if (valueNr != VARS_PER_TASK) {
-          // here we know the task and value, so find the uservar
-          // Try to format and transform the values
-          bool   isvalid;
-          String value = formatUserVar(taskIndex, valueNr, isvalid);
-
-          if (isvalid) {
-            transformValue(newString, minimal_lineSize, value, format, tmpString);
-          }
-        } else {
-          // try if this is a get config request
-          struct EventStruct TempEvent(taskIndex);
-          String tmpName = valueName;
-
-          if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+          if (deviceName.equals(F("int"))) {
+            nr_decimals = 0;
+          } else if (!format.isEmpty())
           {
-            transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
+            // There is some formatting here, so do not throw away decimals
+            trimTrailingZeros = false;
+          }
+          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          value.trim();
+          transformValue(newString, minimal_lineSize, value, format, tmpString);
+        }
+      }
+      else
+      {
+        // Address a value from a plugin.
+        // For example: "[bme#temp]"
+        // If value name is unknown, run a PLUGIN_GET_CONFIG command.
+        // For example: "[<taskname>#getLevel]"
+        taskIndex_t taskIndex = findTaskIndexByName(deviceName);
+
+        if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
+          uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+
+          if (valueNr != VARS_PER_TASK) {
+            // here we know the task and value, so find the uservar
+            // Try to format and transform the values
+            bool   isvalid;
+            String value = formatUserVar(taskIndex, valueNr, isvalid);
+
+            if (isvalid) {
+              transformValue(newString, minimal_lineSize, value, format, tmpString);
+            }
+          } else {
+            // try if this is a get config request
+            struct EventStruct TempEvent(taskIndex);
+            String tmpName = valueName;
+
+            if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+            {
+              transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
+            }
           }
         }
       }
+
+
+      // Conversion is done (or impossible) for the found "[...#...]"
+      // Continue with the next one.
+      lastStartpos = endpos + 1;
+      startpos     = endpos + 1;
+
+      // This may have taken some time, so call delay()
+      delay(0);
     }
-
-
-    // Conversion is done (or impossible) for the found "[...#...]"
-    // Continue with the next one.
-    lastStartpos = endpos + 1;
-    startpos     = endpos + 1;
-
-    // This may have taken some time, so call delay()
-    delay(0);
   }
 
   // Copy the rest of the string (or all if no replacements were done)

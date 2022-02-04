@@ -445,13 +445,6 @@ String wrap_String(const String& string, char wrap) {
   return result;
 }
 
-
-void wrap_String(const String& string, const String& wrap, String& result) {
-  result += wrap;
-  result += string;
-  result += wrap;
-}
-
 String wrapIfContains(const String& value, char contains, char wrap) {
   if (value.indexOf(contains) != -1) {
     String result(wrap);
@@ -484,18 +477,16 @@ String to_json_object_value(const __FlashStringHelper * object,
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   String result;
   result.reserve(object.length() + value.length() + 6);
-  wrap_String(object, F("\""), result);
+  result = wrap_String(object, '"');
   result += ':';
   result += to_json_value(value, wrapInQuotes);
   return result;
 }
 
 String to_json_value(const String& value, bool wrapInQuotes) {
-  String result;
   if (value.isEmpty()) {
     // Empty string
-    result = F("\"\"");
-    return result;
+    return F("\"\"");
   }
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
@@ -505,15 +496,13 @@ String to_json_value(const String& value, bool wrapInQuotes) {
       tmpValue.replace('\n', '^');
       tmpValue.replace('\r', '^');
       tmpValue.replace('"',  '\'');
-      wrap_String(tmpValue, F("\""), result);
+      return wrap_String(tmpValue, '"');
     } else {
-      wrap_String(value, F("\""), result);
+      return wrap_String(value, '"');
     }
-  } else {
-    // It is a numerical
-    result += value;
-  }
-  return result;
+  } 
+  // It is a numerical
+  return value;
 }
 
 

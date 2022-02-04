@@ -488,22 +488,23 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
-    log.reserve(128);
-    log  = F("After ");
-    log += function;
+    if (log.reserve(128)) {
+      log  = F("After ");
+      log += function;
 
-    if (value >= 0) {
-      log += value;
+      if (value >= 0) {
+        log += value;
+      }
+
+      while (log.length() < 30) { log += ' '; }
+      log += F("Free mem after: ");
+      log += freemem_end;
+
+      while (log.length() < 55) { log += ' '; }
+      log += F("diff: ");
+      log += last_freemem - freemem_end;
+      addLog(LOG_LEVEL_DEBUG, log);
     }
-
-    while (log.length() < 30) { log += ' '; }
-    log += F("Free mem after: ");
-    log += freemem_end;
-
-    while (log.length() < 55) { log += ' '; }
-    log += F("diff: ");
-    log += last_freemem - freemem_end;
-    addLog(LOG_LEVEL_DEBUG, log);
   }
 
   last_freemem = freemem_end;

@@ -642,9 +642,16 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   uint32_t readPos       = 0;
   uint32_t nextStringPos = 0;
   uint32_t stringCount   = 0;
-  String   tmpString;
-  tmpString.reserve(bufferSize);
 
+  const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
+  String   tmpString;
+  {
+    #ifdef USE_SECOND_HEAP
+    // Store each string in 2nd heap
+    HeapSelectIram ephemeral;
+    #endif
+    tmpString.reserve(estimatedStringSize);
+  }
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
@@ -670,7 +677,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
             strings[stringCount] = tmpString;
             tmpString.clear();
-            tmpString.reserve(readSize);
+            tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
             tmpString += buffer[i];
