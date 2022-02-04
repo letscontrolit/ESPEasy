@@ -223,12 +223,12 @@ void handle_advanced() {
   #ifdef USES_TIMING_STATS
   addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
   #endif
-  addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
-  addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
-
 #ifndef BUILD_NO_RAM_TRACKER
   addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
 #endif
+
+  addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
+  addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());

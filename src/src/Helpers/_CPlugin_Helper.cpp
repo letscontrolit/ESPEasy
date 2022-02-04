@@ -369,8 +369,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   }
 #endif // ifndef BUILD_NO_DEBUG
 
-  unsigned long timeout = client.getTimeout();
-  if (timeout < 200) timeout = 200;
+  const unsigned long timeout = 1000;
   if (must_check_reply) {
     unsigned long timer = millis() + timeout;
 
