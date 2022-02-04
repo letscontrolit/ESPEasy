@@ -188,7 +188,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
 *  Not a member function to be able to use the F-macro
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
-  error = "";
+  error.clear();
   #ifndef LIMIT_BUILD_SIZE
 #ifdef esp8266
   size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);

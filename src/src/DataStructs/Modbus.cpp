@@ -81,7 +81,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
 bool Modbus::handle() {
   unsigned int RXavailable = 0;
 
-  LogString = "";
+  LogString.clear();
   int64_t rxValue = 0;
 
   switch (TXRXstate) {

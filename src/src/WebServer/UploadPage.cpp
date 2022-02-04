@@ -27,7 +27,7 @@ void handle_upload() {
             "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
-  printWebString = "";
+  printWebString.clear();
   printToWeb     = false;
 }
 
@@ -64,7 +64,7 @@ void handle_upload_post() {
   addHtml(F("Upload finished"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
-  printWebString = "";
+  printWebString.clear();
   printToWeb     = false;
 }
 

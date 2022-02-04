@@ -50,7 +50,7 @@ bool safeReadStringUntil(Stream     & input,
   const unsigned long timer           = start + timeout;
   unsigned long backgroundtasks_timer = start + 10;
 
-  str = "";
+  str.clear();
 
   do {
     // read character

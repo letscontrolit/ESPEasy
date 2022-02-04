@@ -48,9 +48,9 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
-    cacheDevAddr     = "";
-    cacheHWEUI       = "";
-    cacheSysVer      = "";
+    cacheDevAddr.clear();
+    cacheHWEUI.clear();
+    cacheSysVer.clear();
     autobaud_success = false;
   }
 
@@ -180,7 +180,7 @@ struct C018_data_struct {
   }
 
 
-  bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
+  bool initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI) {
     if (myLora == nullptr) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
 
@@ -353,7 +353,7 @@ private:
   }
 
   void updateCacheOnInit() {
-    cacheDevAddr = "";
+    cacheDevAddr.clear();
 
     if (isInitialized()) {
       if (myLora->getStatus().Joined)
@@ -361,7 +361,7 @@ private:
         cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
         if (cacheDevAddr == F("00000000")) {
-          cacheDevAddr = "";
+          cacheDevAddr.clear();
         }
       }
     }

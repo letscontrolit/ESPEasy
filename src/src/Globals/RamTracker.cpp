@@ -80,7 +80,7 @@ RamTracker::RamTracker(void) {
   writePtr = 0;
 
   for (int i = 0; i < TRACES; i++) {
-    traces[i]       = "";
+    traces[i].clear();
     tracesMemory[i] = 0xffffffff; // init with best case memory values, so they get replaced if memory goes lower
   }
 
@@ -96,7 +96,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
   int bestCase = bestCaseTrace();                      // find best case memory trace
 
   if (ESP.getFreeHeap() < tracesMemory[bestCase]) {    // compare to current memory value
-    traces[bestCase] = "";
+    traces[bestCase].clear();
     readPtr          = writePtr + 1;                   // read out buffer, oldest value first
 
     if (readPtr >= TRACEENTRIES) { 
@@ -135,7 +135,7 @@ void RamTracker::getTraceBuffer() {
       retval += "  ";
       retval += traces[i];
       addLog(LOG_LEVEL_DEBUG_DEV, retval);
-      retval = "";
+      retval.clear();
     }
   }
 #endif // ifndef BUILD_NO_DEBUG

@@ -428,7 +428,7 @@ void PLUGIN_118_ITHOcheck()
 
 		//int index = PLUGIN_118_RFRemoteIndex(Id);
 		// IF id is know index should be >0
-		String log2 = "";
+		String log2;
 		if (index>0)
 		{
 			if(PLUGIN_118_Log){

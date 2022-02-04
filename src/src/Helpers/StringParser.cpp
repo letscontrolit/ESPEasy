@@ -666,7 +666,7 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
     format    = valueName.substring(hashpos + 1);
     valueName = valueName.substring(0, hashpos);
   } else {
-    format = "";
+    format.clear();
   }
   deviceName.toLowerCase();
   valueName.toLowerCase();

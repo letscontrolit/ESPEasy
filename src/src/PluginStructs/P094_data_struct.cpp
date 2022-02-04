@@ -114,7 +114,7 @@ bool P094_data_struct::loop() {
 
           for (size_t i = 0; i < length && valid; ++i) {
             if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = "";
+              sentence_part.clear();
               ++sentences_received_error;
               valid = false;
             }
@@ -151,7 +151,7 @@ const String& P094_data_struct::peekSentence() const {
 
 void P094_data_struct::getSentence(String& string, bool appendSysTime) {
   string = std::move(sentence_part);
-  sentence_part = ""; // FIXME TD-er: Should not be needed as move already cleared it.
+  sentence_part.clear(); // FIXME TD-er: Should not be needed as move already cleared it.
   if (appendSysTime) {
     // Unix timestamp = 10 decimals + separator
     if (string.reserve(sentence_part.length() + 11)) {
