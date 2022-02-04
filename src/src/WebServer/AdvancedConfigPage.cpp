@@ -104,6 +104,11 @@ void handle_advanced() {
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
     Settings.AllowTaskValueSetAllPlugins(isFormItemChecked(LabelType::TASKVALUESET_ALL_PLUGINS));
     Settings.EnableClearHangingI2Cbus(isFormItemChecked(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS));
+
+#ifndef BUILD_NO_RAM_TRACKER
+    Settings.EnableRAMTracking(isFormItemChecked(LabelType::ENABLE_RAM_TRACKING));
+#endif
+
     #ifdef ESP8266
     Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
     #endif
@@ -220,6 +225,10 @@ void handle_advanced() {
   #endif
   addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
   addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
+
+#ifndef BUILD_NO_RAM_TRACKER
+  addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
+#endif
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());

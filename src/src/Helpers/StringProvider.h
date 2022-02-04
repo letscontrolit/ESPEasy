@@ -61,6 +61,9 @@ struct LabelType {
     ENABLE_TIMING_STATISTICS,
     TASKVALUESET_ALL_PLUGINS,
     ENABLE_CLEAR_HUNG_I2C_BUS,
+#ifndef BUILD_NO_RAM_TRACKER
+    ENABLE_RAM_TRACKING,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0

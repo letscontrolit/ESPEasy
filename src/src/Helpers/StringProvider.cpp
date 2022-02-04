@@ -92,6 +92,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ENABLE_TIMING_STATISTICS:  return F("Collect Timing Statistics");
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return F("Allow TaskValueSet on all plugins");
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return F("Try clear I2C bus when stuck");
+#ifndef BUILD_NO_RAM_TRACKER
+    case LabelType::ENABLE_RAM_TRACKING:    return F("Enable RAM Tracker");
+#endif
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -278,6 +281,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::ENABLE_TIMING_STATISTICS:  return jsonBool(Settings.EnableTimingStats());
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return jsonBool(Settings.EnableClearHangingI2Cbus());
+#ifndef BUILD_NO_RAM_TRACKER
+    case LabelType::ENABLE_RAM_TRACKING:     return jsonBool(Settings.EnableRAMTracking());
+#endif
+
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;

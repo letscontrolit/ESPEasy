@@ -36,7 +36,8 @@ void checkRAM(const __FlashStringHelper * descr ) {
 }
 
 void checkRAM(const String& descr ) {
-  myRamTracker.registerRamState(descr);
+  if (Settings.EnableRAMTracking())
+    myRamTracker.registerRamState(descr);
   
   uint32_t freeRAM = FreeMem();
   if (freeRAM <= lowestRAM)

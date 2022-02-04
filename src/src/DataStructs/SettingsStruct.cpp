@@ -251,6 +251,15 @@ void SettingsStruct_tmpl<N_TASKS>::EnableClearHangingI2Cbus(bool value) {
   bitWrite(VariousBits1, 22, value);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableRAMTracking() const {
+  return bitRead(VariousBits1, 23);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableRAMTracking(bool value) {
+  bitWrite(VariousBits1, 23, value);
+}
 
 
 template<unsigned int N_TASKS>
