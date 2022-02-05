@@ -555,15 +555,11 @@ void Rule_showRuleTextArea(const String& fileName) {
 
   html_TR_TD();
   {
-    String html;
-    html.reserve(64);
-
-    html += F("Current size: <span id='size'>");
-    html += size;
-    html += F("</span> characters (Max ");
-    html += RULES_MAX_SIZE;
-    html += F(")");
-    addHtml(html);
+    addHtml(F("Current size: <span id='size'>"));
+    addHtmlInt(size);
+    addHtml(F("</span> characters (Max "));
+    addHtmlInt(RULES_MAX_SIZE);
+    addHtml(F(")"));
   }
 
   if (size > RULES_MAX_SIZE) {

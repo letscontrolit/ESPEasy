@@ -322,20 +322,16 @@ void handle_root() {
           }
           html_add_wide_button_prefix();
           {
-            String html;
-            html.reserve(64);
-
-            html += F("http://");
-            html += it->second.ip.toString();
+            addHtml(F("http://"));
+            addHtml(it->second.ip.toString());
             uint16_t port = it->second.webgui_portnumber;
             if (port !=0 && port != 80) {
-              html += ':';
-              html += String(port);
+              addHtml(':');
+              addHtmlInt(port);
             }
-            html += "'>";
-            html += it->second.ip.toString();
-            html += "</a>";
-            addHtml(html);
+            addHtml('\'', '>');
+            addHtml(it->second.ip.toString());
+            addHtml(F("</a>"));
           }
           html_TD();
           addHtmlInt(it->second.age);

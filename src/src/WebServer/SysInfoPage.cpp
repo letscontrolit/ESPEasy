@@ -651,26 +651,20 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {
-    String html;
-    html.reserve(32);
-    html += RTC.flashDayCounter;
-    html += F(" daily / ");
-    html += RTC.flashCounter;
-    html += F(" boot");
-    addHtml(html);
+    addHtmlInt(RTC.flashDayCounter);
+    addHtml(F(" daily / "));
+    addHtmlInt(static_cast<int>(RTC.flashCounter));
+    addHtml(F(" boot"));
   }
 
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(LabelType::SKETCH_SIZE);
     {
-      String html;
-      html.reserve(32);
-      html += getSketchSize() / 1024;
-      html += F(" kB (");
-      html += getFreeSketchSpace() / 1024;
-      html += F(" kB free)");
-      addHtml(html);
+      addHtmlInt(getSketchSize() / 1024);
+      addHtml(F(" kB ("));
+      addHtmlInt(getFreeSketchSpace() / 1024);
+      addHtml(F(" kB free)"));
     }
 
     uint32_t maxSketchSize;
@@ -681,14 +675,10 @@ void handle_sysinfo_Storage() {
     OTA_possible(maxSketchSize, use2step);
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
     {
-      String html;
-      html.reserve(32);
-
-      html += maxSketchSize / 1024;
-      html += F(" kB (");
-      html += maxSketchSize;
-      html += F(" bytes)");
-      addHtml(html);
+      addHtmlInt(maxSketchSize / 1024);
+      addHtml(F(" kB ("));
+      addHtmlInt(maxSketchSize);
+      addHtml(F(" bytes)"));
     }
 
     # if defined(ESP8266)
@@ -702,14 +692,10 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FS_SIZE);
   {
-    String html;
-    html.reserve(32);
-
-    html += SpiffsTotalBytes() / 1024;
-    html += F(" kB (");
-    html += SpiffsFreeSpace() / 1024;
-    html += F(" kB free)");
-    addHtml(html);
+    addHtmlInt(SpiffsTotalBytes() / 1024);
+    addHtml(F(" kB ("));
+    addHtmlInt(SpiffsFreeSpace() / 1024);
+    addHtml(F(" kB free)"));
   }
   # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));

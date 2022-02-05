@@ -299,22 +299,22 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       if ((nullptr != P052_data) && P052_data->isInitialized()) {
         addFormSubHeader(F("Device Information"));
         {
-          String detectedString = P052_data->modbus.detected_device_description;
-
-          if (detectedString.length() > 0) {
+          if (P052_data->modbus.detected_device_description.length() > 0) {
             addRowLabel(F("Detected Device"));
-            addHtml(detectedString);
+            addHtml(P052_data->modbus.detected_device_description);
           }
           addRowLabel(F("Checksum (pass/fail/nodata)"));
-          uint32_t reads_pass, reads_crc_failed, reads_nodata;
-          P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-          String chksumStats;
-          chksumStats  = reads_pass;
-          chksumStats += '/';
-          chksumStats += reads_crc_failed;
-          chksumStats += '/';
-          chksumStats += reads_nodata;
-          addHtml(chksumStats);
+          {
+            uint32_t reads_pass, reads_crc_failed, reads_nodata;
+            P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
+            String chksumStats;
+            chksumStats  = reads_pass;
+            chksumStats += '/';
+            chksumStats += reads_crc_failed;
+            chksumStats += '/';
+            chksumStats += reads_nodata;
+            addHtml(chksumStats);
+          }
 
           uint8_t errorcode = 0;
           int  value     = P052_data->modbus.readInputRegister(0x06, errorcode);

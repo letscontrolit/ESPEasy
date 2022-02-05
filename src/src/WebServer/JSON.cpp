@@ -424,10 +424,9 @@ void handle_json()
               if (bitRead(channel, c)) {
                 if (b > 0) { addHtml(',', '\n'); }
                 b++;
-                String i2cChannel = F("\"Multiplexer channel ");
-                i2cChannel += String(c);
-                i2cChannel += F("\"");
-                addHtml(i2cChannel);
+                addHtml(F("\"Multiplexer channel "));
+                addHtmlInt(c);
+                addHtml('"');
               }
             }
             addHtml(F("],\n"));

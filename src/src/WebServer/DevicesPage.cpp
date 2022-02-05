@@ -987,15 +987,9 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   html_TR_TD();
   addHtml(F("<TD colspan='3'>"));
   html_add_button_prefix();
-  {
-    String html;
-    html.reserve(32);
-
-    html += F("devices?setpage=");
-    html += page;
-    html += F("'>Close</a>");
-    addHtml(html);
-  }
+  addHtml(F("devices?setpage="));
+  addHtmlInt(page);
+  addHtml(F("'>Close</a>"));
   addSubmitButton();
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   addHtml(F("<input type='hidden' name='page' value='1'>"));
@@ -1141,9 +1135,9 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
 
       for (uint8_t x = 0; x < I2CMultiplexerMaxChannels(); x++) {
         String label = F("Channel ");
-        label += String(x);
+        label += x;
         String id = F("taskdeviceflag1ch");
-        id += String(x);
+        id += x;
 
         if (x % 2 == 0) { html_TR(); } // Start a new row for every 2 channels
         html_TD();
