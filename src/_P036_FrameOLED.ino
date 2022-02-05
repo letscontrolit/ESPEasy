@@ -193,9 +193,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_LOAD ..."));
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
 
       // Use number 5 to remain compatible with existing configurations,
       // but the item should be one of the first choices.
@@ -256,13 +256,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t choice = uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
         int Opcount = 2;
-#ifdef INPUT_PULLDOWN
+        #ifdef INPUT_PULLDOWN
         choice += uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) * 2;  // Bit 27 Input PullDown
         if (choice > 2) {
           choice = 2;
         }
         Opcount = 3;
-#endif
+        #endif
         const __FlashStringHelper *  options[3];
         options[0] = F("Input");
         options[1] = F("Input pullup");
@@ -382,9 +382,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_SAVE ..."));
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
 
       // update now
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
@@ -463,9 +463,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WEBFORM_SAVE Done"));
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
       success = true;
       break;
     }
@@ -520,12 +520,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (validGpio(CONFIG_PIN3)) // Button related setup
       {
 
-#ifdef INPUT_PULLDOWN
+        #ifdef INPUT_PULLDOWN
         if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) {      // Bit 27 Input PullDown
           pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
         }
         else
-#endif
+        #endif
         {
           if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)) {      // Bit 26 Input PullUp
             pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
@@ -540,14 +540,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         P036_data->ButtonState     = false;
       }
 
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
 
       if (P036_data->isInitialized()) {
         addLog(LOG_LEVEL_INFO, F("P036_init Done"));
       } else {
         addLog(LOG_LEVEL_INFO, F("P036_init Not initialized"));
       }
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
 
       success = true;
       break;
@@ -555,9 +555,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_EXIT ..."));
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
       success = true;
       break;
     }
@@ -616,12 +616,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
         P036_data->markButtonStateProcessed();
 
-#ifdef INPUT_PULLDOWN
+        #ifdef INPUT_PULLDOWN
         if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) {      // Bit 27 Input PullDown
           pinMode(CONFIG_PIN3, INPUT_PULLDOWN); // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
         }
         else
-#endif
+        #endif
         {
           if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)) {      // Bit 26 Input PullUp
             pinMode(CONFIG_PIN3, INPUT_PULLUP);   // Reset pinstate to PIN_MODE_INPUT_PULLUP
@@ -657,25 +657,25 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
     {
       if (Settings.TaskDeviceEnabled[event->TaskIndex] == false) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_ONCE_A_SECOND Not enabled"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P036_data) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_ONCE_A_SECOND NoData"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
       if (!P036_data->isInitialized()) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_ONCE_A_SECOND Not initialized"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
@@ -716,25 +716,25 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TIMER_IN:
     {
       if (Settings.TaskDeviceEnabled[event->TaskIndex] == false) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_TIMER_IN Not enabled"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
       P036_data_struct *P036_data =
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P036_data) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_TIMER_IN NoData"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
       if (!P036_data->isInitialized()) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_TIMER_IN Not initialized"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
@@ -757,9 +757,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       if (Settings.TaskDeviceEnabled[event->TaskIndex] == false) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Not enabled"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
@@ -767,24 +767,24 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P036_data) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ NoData"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
       if (!P036_data->isInitialized()) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Not initialized"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
       if (P036_data->disableFrameChangeCnt) {
         //  disable next page change after JumpToPage if PLUGIN_READ was already scheduled
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ disableFrameChangeCnt"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
@@ -792,9 +792,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // Define Scroll area layout
         P036_data->P036_DisplayPage(event);
       } else {
-          #ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_READ Page scrolling running"));
-          #endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
       }
 
       success = true;
@@ -807,9 +807,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P036_data) {
-#ifdef PLUGIN_036_DEBUG
+        #ifdef PLUGIN_036_DEBUG
         addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE NoData"));
-#endif // PLUGIN_036_DEBUG
+        #endif // PLUGIN_036_DEBUG
         return success;
       }
 
@@ -817,9 +817,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
       addLog(LOG_LEVEL_INFO, F("P036_PLUGIN_WRITE ..."));
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
 
       String command    = parseString(string, 1);
       String subcommand = parseString(string, 2);
@@ -1000,7 +1000,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             #endif
           }
 
-#ifdef PLUGIN_036_DEBUG
+          #ifdef PLUGIN_036_DEBUG
           String log;
           log.reserve(200); // estimated
           log = F("[P36] Line: ");
@@ -1016,10 +1016,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           log += F(" Reserved:");
           log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
           addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_036_DEBUG
+          #endif // PLUGIN_036_DEBUG
         }
       }
-#ifdef PLUGIN_036_DEBUG
+      #ifdef PLUGIN_036_DEBUG
 
       if (!success) {
         String log = F("[P36] Cmd: ");
@@ -1030,7 +1030,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         log += jsonBool(success);
         addLog(LOG_LEVEL_INFO, log);
       }
-#endif // PLUGIN_036_DEBUG
+      #endif // PLUGIN_036_DEBUG
       break;
     }
   }

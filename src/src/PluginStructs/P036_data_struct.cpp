@@ -29,25 +29,25 @@ void P036_data_struct::reset() {
 }
 
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24, 24, 28}, // 9643
-  { ArialMT_Plain_16, 16, 19}, // 5049
+  { ArialMT_Plain_24,  24,  28 }, // 9643
+  { ArialMT_Plain_16,  16,  19 }, // 5049
   // { Dialog_plain_12,  13, 15}, // 3707, was never selected
-  { ArialMT_Plain_10, 10, 13}, // 2731
-  { SansSerif_plain_8, 8, 10} // 2732
+  { ArialMT_Plain_10,  10,  13 }, // 2731
+  { SansSerif_plain_8, 8,   10 } // 2732
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
-  { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0, // 128x64
-       4,               // max. line count
-       113, 15          // WiFi indicator
+  { P36_MaxDisplayWidth, P36_MaxDisplayHeight, 0,  // 128x64
+    4,                                             // max. line count
+    113, 15                                        // WiFi indicator
   },
-  { P36_MaxDisplayWidth, 32,                   0, // 128x32
-       2,               // max. line count
-       113, 15          // WiFi indicator
+  { P36_MaxDisplayWidth, 32,                   0,  // 128x32
+    2,                                             // max. line count
+    113, 15                                        // WiFi indicator
   },
   { 64,                  48,                   32, // 64x48
-       3,               // max. line count
-       32,  10          // WiFi indicator
+    3,                                             // max. line count
+    32,  10                                        // WiFi indicator
   }
 };
 
@@ -110,7 +110,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
     display->init(); // call to local override of init function
 
     disp_resolution = Disp_resolution;
-    bHideFooter = !(getDisplaySizeSettings(disp_resolution).Height == P36_MaxDisplayHeight);
+    bHideFooter     = !(getDisplaySizeSettings(disp_resolution).Height == P36_MaxDisplayHeight);
 
     if (disp_resolution == p036_resolution::pix128x32) {
       display->displayOff();
@@ -216,23 +216,25 @@ void P036_data_struct::setOrientationRotated(bool rotated) {
   }
 }
 
-#ifdef P036_ENABLE_LINECOUNT
-void P036_data_struct::setNrLines(uint8_t NrLines){
+# ifdef P036_ENABLE_LINECOUNT
+void P036_data_struct::setNrLines(uint8_t NrLines) {
   if ((NrLines >= 1) && (NrLines <= 4)) {
     ScrollingPages.linesPerFrame = NrLines;
-    prepare_pagescrolling();    // Recalculate font
-    MaxFramesToDisplay = 0xFF;  // Recalculate page indicator
-    nextFrameToDisplay = 0;     // Reset to first page
+    prepare_pagescrolling();   // Recalculate font
+    MaxFramesToDisplay = 0xFF; // Recalculate page indicator
+    nextFrameToDisplay = 0;    // Reset to first page
   }
 }
-#endif // P036_ENABLE_LINECOUNT
+
+# endif // P036_ENABLE_LINECOUNT
 
 
 void P036_data_struct::display_header() {
   if (!isInitialized()) {
     return;
   }
-  if (bHideHeader) {  //  hide header
+
+  if (bHideHeader) { //  hide header
     return;
   }
 
@@ -371,19 +373,20 @@ void P036_data_struct::display_logo() {
   int top;
   tFontSettings iFontsettings = CalculateFontSettings(2); // get font with max. height for displaying "ESP Easy"
 
-  bDisplayingLogo = true; // next time the display must be cleared completely
+  bDisplayingLogo = true;                                 // next time the display must be cleared completely
   display->setTextAlignment(TEXT_ALIGN_LEFT);
   display->setFont(iFontsettings.fontData);
-  display->clear(); // resets all pixels to black
+  display->clear();                                       // resets all pixels to black
   display->setColor(WHITE);
-  display->drawString(65, iFontsettings.Top + TopLineOffset, F("ESP"));
+  display->drawString(65, iFontsettings.Top + TopLineOffset,                                              F("ESP"));
   display->drawString(65, iFontsettings.Top + iFontsettings.Height + iFontsettings.Space + TopLineOffset, F("Easy"));
 
   if (getDisplaySizeSettings(disp_resolution).PixLeft < left) { left = getDisplaySizeSettings(disp_resolution).PixLeft; }
-  top = (getDisplaySizeSettings(disp_resolution).Height-espeasy_logo_height)/2;
+  top = (getDisplaySizeSettings(disp_resolution).Height - espeasy_logo_height) / 2;
+
   if (top < 0) { top = 0; }
   display->drawXbm(left,
-                   top+TopLineOffset,
+                   top + TopLineOffset,
                    espeasy_logo_width,
                    espeasy_logo_height,
                    espeasy_logo_bits); // espeasy_logo_width=espeasy_logo_height=36
@@ -395,7 +398,8 @@ void P036_data_struct::display_indicator() {
   if (!isInitialized()) {
     return;
   }
-  if (bHideFooter) {  //  hide footer
+
+  if (bHideFooter) { //  hide footer
     return;
   }
 
@@ -453,8 +457,8 @@ int16_t P036_data_struct::GetHeaderHeight()
     return 0;
   }
   return P36_HeaderHeight;
-
 }
+
 int16_t P036_data_struct::GetIndicatorTop()
 {
   if (bHideFooter) {
@@ -468,92 +472,101 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
 {
   tFontSettings result;
   int iHeight;
-  int8_t iFontIndex = -1;
+  int8_t  iFontIndex = -1;
   uint8_t iMaxHeightForFont;
   uint8_t iLinesPerFrame;
 
-  if (lDefaultLines == 0) 
+  if (lDefaultLines == 0)
   {
     // number of lines can be reduced if no font fits the setting
     iLinesPerFrame = ScrollingPages.linesPerFrame;
-    iHeight = GetIndicatorTop() - GetHeaderHeight();
+    iHeight        = GetIndicatorTop() - GetHeaderHeight();
   }
   else
   {
     // number of lines is fixed (e.g. for splash screen)
     iLinesPerFrame = lDefaultLines;
-    iHeight = getDisplaySizeSettings(disp_resolution).Height;
+    iHeight        = getDisplaySizeSettings(disp_resolution).Height;
   }
-  
+
   while (iFontIndex < 0) {
-    iMaxHeightForFont = (iHeight - (iLinesPerFrame - 1)) / iLinesPerFrame;  // at least 1 pixel space between lines
+    iMaxHeightForFont = (iHeight - (iLinesPerFrame - 1)) / iLinesPerFrame; // at least 1 pixel space between lines
 
     for (uint8_t i = P36_MaxFontCount; i > 0; i--) {
-      // check available fonts for the line setting  
-      if (FontSizes[i-1].Height > iMaxHeightForFont) {
+      // check available fonts for the line setting
+      if (FontSizes[i - 1].Height > iMaxHeightForFont) {
         // height of font is to big
         break;
       }
-      iFontIndex = i-1; // save the current index
+      iFontIndex = i - 1; // save the current index
+
       if (FontSizes[iFontIndex].Height == iMaxHeightForFont) {
         // height of font just fits the line setting
         break;
       }
     }
+
     if (iFontIndex < 0) {
       // no font fits -> reduce number of lines per page
       iLinesPerFrame--;
+
       if (iLinesPerFrame == 0) {
         // lines per frame is at minimum
         break;
       }
     }
   }
+
   if (iFontIndex >= 0) {
     // font found -> calculate top position and space between lines
     iMaxHeightForFont = FontSizes[iFontIndex].Height * iLinesPerFrame;
+
     if (iLinesPerFrame > 1) {
       // more than one lines per frame -> calculate space inbetween
-      result.Space = (iHeight-iMaxHeightForFont) / iLinesPerFrame;
+      result.Space = (iHeight - iMaxHeightForFont) / iLinesPerFrame;
     }
     else {
       // just one lines per frame -> no space inbetween
       result.Space = 0;
     }
-    result.Top = (iHeight - (iMaxHeightForFont + (result.Space * (iLinesPerFrame-1)))) / 2;
+    result.Top = (iHeight - (iMaxHeightForFont + (result.Space * (iLinesPerFrame - 1)))) / 2;
   }
   else {
     // no font found -> return font with shortest height
-    result.Top = 0;
-    result.Space = 1;
+    result.Top     = 0;
+    result.Space   = 1;
     iLinesPerFrame = 1;
-    iFontIndex = P36_MaxFontCount-1;
- }
+    iFontIndex     = P36_MaxFontCount - 1;
+  }
   result.fontData = FontSizes[iFontIndex].fontData;
-  result.Height = FontSizes[iFontIndex].Height;
+  result.Height   = FontSizes[iFontIndex].Height;
 
-# ifdef PLUGIN_036_DEBUG
+  # ifdef PLUGIN_036_DEBUG
   String log;
-  log.reserve(128); // estimated
-  log = F("CalculateFontSettings: FontIndex:");
-  log += iFontIndex;
-  log += F(" Top:");
-  log += result.Top;
-  log += F(" FontHeight:");
-  log += result.Height;
-  log += F(" Space:");
-  log += result.Space;
-  log += F(" Height:");
-  log += iHeight;
-  log += F(" LinesPerFrame:");
-  log += iLinesPerFrame;
-  log += F(" DefaultLines:");
-  log += lDefaultLines;
-  addLog(LOG_LEVEL_INFO, log);
-# endif // PLUGIN_036_DEBUG
-  
-  if (lDefaultLines == 0) 
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+      log.reserve(128)) { // estimated
+    log  = F("CalculateFontSettings: FontIndex:");
+    log += iFontIndex;
+    log += F(" Top:");
+    log += result.Top;
+    log += F(" FontHeight:");
+    log += result.Height;
+    log += F(" Space:");
+    log += result.Space;
+    log += F(" Height:");
+    log += iHeight;
+    log += F(" LinesPerFrame:");
+    log += iLinesPerFrame;
+    log += F(" DefaultLines:");
+    log += lDefaultLines;
+    addLog(LOG_LEVEL_INFO, log);
+  }
+  # endif // PLUGIN_036_DEBUG
+
+  if (lDefaultLines == 0) {
     ScrollingPages.linesPerFrame = iLinesPerFrame;
+  }
   return result;
 }
 
@@ -594,7 +607,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 # ifdef PLUGIN_036_DEBUG
   String log;
   log.reserve(128); // estimated
-  log = F("Start Scrolling: Speed: ");
+  log  = F("Start Scrolling: Speed: ");
   log += static_cast<int>(lscrollspeed);
   addLog(LOG_LEVEL_INFO, log);
 # endif // PLUGIN_036_DEBUG
@@ -763,6 +776,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   ScrollingPages.dPixSum = ScrollingPages.dPix;
 
   display->setColor(BLACK);
+
   // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
   // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
   display->fillRect(0, GetHeaderHeight() + TopLineOffset, P36_MaxDisplayWidth, GetIndicatorTop() - GetHeaderHeight());
@@ -960,7 +974,8 @@ bool P036_data_struct::display_wifibars() {
   if (!isInitialized()) {
     return false;
   }
-  if (bHideHeader) {  //  hide header
+
+  if (bHideHeader) { //  hide header
     return false;
   }
 
@@ -1140,7 +1155,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
     //      Update display
     if (bDisplayingLogo) {
       bDisplayingLogo = false;
-      display->clear(); // resets all pixels to black
+      display->clear();        // resets all pixels to black
     }
 
     bAlternativHeader = false; // start with first header content
