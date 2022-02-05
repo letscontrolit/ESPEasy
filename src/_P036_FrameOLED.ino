@@ -283,14 +283,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = P036_CONTRAST;
 
         if (choice == 0) { choice = P36_CONTRAST_HIGH; }
-        const __FlashStringHelper * options[3];
-        options[0] = F("Low");
-        options[1] = F("Medium");
-        options[2] = F("High");
-        int optionValues[3];
-        optionValues[0] = P36_CONTRAST_LOW;
-        optionValues[1] = P36_CONTRAST_MED;
-        optionValues[2] = P36_CONTRAST_HIGH;
+        const __FlashStringHelper * options[3] = {
+          F("Low"),
+          F("Medium"),
+          F("High")
+        };
+        const int optionValues[3] = {
+          P36_CONTRAST_LOW,
+          P36_CONTRAST_MED,
+          P36_CONTRAST_HIGH
+        };
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
       }
 

@@ -106,10 +106,11 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
         uint8_t   choice = P020_SERIAL_PROCESSING;
-        const __FlashStringHelper * options[3];
-        options[0] = F("None");
-        options[1] = F("Generic");
-        options[2] = F("RFLink");
+        const __FlashStringHelper * options[3] = {
+          F("None"),
+          F("Generic"),
+          F("RFLink")
+        };
         addFormSelector(F("Event processing"), F("p020_events"), 3, options, NULL, choice);
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);

@@ -348,7 +348,7 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
   addRowLabel(label);
   const __FlashStringHelper * options[5] =
     { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
-  int optionValues[5] = { 
+  const int optionValues[5] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
@@ -381,7 +381,7 @@ void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashSt
   const __FlashStringHelper * options[12] =
   { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
-  int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+  const int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
   addSelector(id, 12, options, optionValues, NULL, choice);
 }

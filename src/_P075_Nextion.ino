@@ -156,11 +156,12 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      const __FlashStringHelper * options[4];
-      options[0] = F("9600");
-      options[1] = F("38400");
-      options[2] = F("57600");
-      options[3] = F("115200");
+      const __FlashStringHelper * options[4] = {
+        F("9600"),
+        F("38400"),
+        F("57600"),
+        F("115200")
+      };
 
       addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
       addUnit(F("baud"));

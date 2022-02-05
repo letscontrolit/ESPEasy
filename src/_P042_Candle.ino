@@ -146,17 +146,17 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
         {
-          const __FlashStringHelper * options[8];
+          const __FlashStringHelper * options[8] = {
+            F("Off"),
+            F("Static Light"),
+            F("Simple Candle"),
+            F("Advanced Candle"),
+            F("Police"),
+            F("Blink"),
+            F("Strobe"),
+            F("Color Fader")
+          };
           // int optionValues[8];
-
-          options[0] = F("Off");
-          options[1] = F("Static Light");
-          options[2] = F("Simple Candle");
-          options[3] = F("Advanced Candle");
-          options[4] = F("Police");
-          options[5] = F("Blink");
-          options[6] = F("Strobe");
-          options[7] = F("Color Fader");
 
           uint8_t choice = PCONFIG(4);
           if (choice > sizeof(options) - 1)

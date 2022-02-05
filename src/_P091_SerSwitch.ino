@@ -121,12 +121,13 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
       {
         {
           uint8_t choice = PCONFIG(0);
-          const __FlashStringHelper * options[4];
-          options[0] = F("Yewelink/TUYA");
-          options[1] = F("Sonoff Dual");
-          options[2] = F("LC TECH");
-          options[3] = F("Moes Wifi Dimmer");
-          int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
+          const __FlashStringHelper * options[4] = {
+            F("Yewelink/TUYA"),
+            F("Sonoff Dual"),
+            F("LC TECH"),
+            F("Moes Wifi Dimmer")
+          };
+          const int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
           addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
         }
 
