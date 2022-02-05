@@ -311,9 +311,9 @@ void processConnect() {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
-    log += F(" (");
-    log += WiFi.BSSIDstr();
-    log += F(") Ch: ");
+    log += ' ';
+    log += wrap_braces(WiFi.BSSIDstr());
+    log += F(" Ch: ");
     log += RTC.lastWiFiChannel;
 
     if ((connect_duration > 0ll) && (connect_duration < 30000000ll)) {
@@ -375,9 +375,9 @@ void processGotIP() {
       log += F("DHCP IP: ");
     }
     log += formatIP(ip);
-    log += F(" (");
-    log += NetworkGetHostname();
-    log += F(") GW: ");
+    log += ' ';
+    log += wrap_braces(NetworkGetHostname());
+    log += F(" GW: ");
     log += formatIP(gw);
     log += F(" SN: ");
     log += formatIP(subnet);
@@ -589,9 +589,9 @@ void processEthernetGotIP() {
       }
       log += F(" IP: ");
       log += NetworkLocalIP().toString();
-      log += F(" (");
-      log += NetworkGetHostname();
-      log += F(") GW: ");
+      log += ' ';
+      log += wrap_braces(NetworkGetHostname());
+      log += F(" GW: ");
       log += NetworkGatewayIP().toString();
       log += F(" SN: ");
       log += NetworkSubnetMask().toString();

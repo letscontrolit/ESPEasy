@@ -49,7 +49,7 @@ String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
     return fname;
   }
-  return String(F("/")) + fname;
+  return String('/') + fname;
 }
 #endif
 #ifdef ESP8266
@@ -1301,7 +1301,7 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
 }
 
@@ -1324,7 +1324,7 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   if (!fileExists(fname)) {
     InitFile(settingsType);
   }
@@ -1338,7 +1338,7 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   return ClearInFile(fname.c_str(), offset, max_size);
 }
 

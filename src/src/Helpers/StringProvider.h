@@ -205,7 +205,7 @@ struct FileType {
 };
 
 
-String getFileName(FileType::Enum filetype);
+const __FlashStringHelper * getFileName(FileType::Enum filetype);
 String getFileName(FileType::Enum filetype,
                    unsigned int   filenr);
 

@@ -436,6 +436,10 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/
+String wrap_braces(const String& string) {
+  return wrap_String(string, '(', ')');
+}
+
 String wrap_String(const String& string, char wrap) {
   String result;
   result.reserve(string.length() + 2);
@@ -445,12 +449,18 @@ String wrap_String(const String& string, char wrap) {
   return result;
 }
 
+String wrap_String(const String& string, char char1, char char2) {
+  String result;
+  result.reserve(string.length() + 2);
+  result += char1;
+  result += string;
+  result += char2;
+  return result;
+}
+
 String wrapIfContains(const String& value, char contains, char wrap) {
   if (value.indexOf(contains) != -1) {
-    String result(wrap);
-    result += value;
-    result += wrap;
-    return result;
+    return wrap_String(value, wrap, wrap);
   }
   return value;
 }

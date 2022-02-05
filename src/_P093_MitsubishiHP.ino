@@ -659,7 +659,7 @@ private:
   }
 
   #ifdef PLUGIN_093_DEBUG
-  static String stateToString(State state) {
+  static const __FlashStringHelper * stateToString_f(State state) {
     switch (state) {
       case Invalid: return F("Invalid");
       case NotConnected: return F("NotConnected");
@@ -673,7 +673,16 @@ private:
       case ApplyingSettings: return F("ApplyingSettings");
       case SettingsApplied: return F("SettingsApplied");
     }
-    return String(F("<unknown> ")) + state;
+    return F("");
+  }
+
+
+  static String stateToString(State state) {
+    String res = stateToString_f(state);
+    if (res.isEmpty()) {
+      return String(F("<unknown> ")) + state;
+    }
+    return res;
   }
 
   static void dumpPacket(const uint8_t* packet, size_t length, String& result) {

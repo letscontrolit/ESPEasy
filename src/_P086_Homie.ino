@@ -304,9 +304,8 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" enum set to ");
                   log += floatValue;
-                  log += F(" (");
-                  log += parameter;
-                  log += F(")");
+                  log += ' ';
+                  log += wrap_braces(parameter);
                   addLog(LOG_LEVEL_INFO,log);
                 }
                 break;

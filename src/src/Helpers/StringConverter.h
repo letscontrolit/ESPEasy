@@ -128,9 +128,14 @@ String get_formatted_Controller_number(cpluginID_t cpluginID);
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/
+String wrap_braces(const String& string);
+
 String wrap_String(const String& string,
                    char wrap);
-                   
+
+String wrap_String(const String& string,
+                   char char1, char char2);
+
 String wrapIfContains(const String& value,
                       char          contains,
                       char          wrap = '\"');

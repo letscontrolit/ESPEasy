@@ -160,18 +160,14 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       note = F("SPI->MAX7219: MOSI");
 
       if (spi_pins[2] != -1) {
-        note += '(';
         getGpioInfo(spi_pins[2], pinnr, input, output, warning);
-        note += createGPIO_label(spi_pins[2], pinnr, true, true, false);
-        note += ')';
+        note += wrap_braces(createGPIO_label(spi_pins[2], pinnr, true, true, false));
       }
       note += F("->DIN, CLK");
 
       if (spi_pins[0] != -1) {
-        note += '(';
         getGpioInfo(spi_pins[0], pinnr, input, output, warning);
-        note += createGPIO_label(spi_pins[0], pinnr, true, true, false);
-        note += ')';
+        note += wrap_braces(createGPIO_label(spi_pins[0], pinnr, true, true, false));
       }
       note += F("->CLK");
       addFormNote(note);

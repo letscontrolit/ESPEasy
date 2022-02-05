@@ -25,6 +25,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 
 #include <cstddef>
 
@@ -175,9 +176,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   if (error.reserve(48 + structname.length())) {
     error  = F("Error: Incorrect offset in struct: ");
     error += structname;
-    error += '(';
-    error += String(offset);
-    error += ')';
+    error += wrap_braces(String(offset));
   }
   return error;
 }

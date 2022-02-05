@@ -237,7 +237,7 @@ bool deserializeDomoticzJson(const String& json,
   }
 
   if (switchtype_c == nullptr) {
-    switchtype = F("?");
+    switchtype = '?';
   } else {
     switchtype = switchtype_c;
   }

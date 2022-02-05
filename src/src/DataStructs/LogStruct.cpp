@@ -90,7 +90,7 @@ void LogStruct::clearExpiredEntries() {
     // Clear the entire log.
     // If web log is the only log active, it will not be checked again until it is read.
     for (read_idx = 0; read_idx < LOG_STRUCT_MESSAGE_LINES; ++read_idx) {
-      Message[read_idx]   = String(); // Free also the reserved memory.
+      Message[read_idx].clear(); // Free also the reserved memory.
       timeStamp[read_idx] = 0;
       log_level[read_idx] = 0;
     }

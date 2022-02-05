@@ -49,8 +49,8 @@ const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_SINGLE:           return F("Single");
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM:         return F("Temp / Hum");
-    case Sensor_VType::SENSOR_TYPE_TEMP_BARO:
-    case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:  return F("Temp / Baro");
+    case Sensor_VType::SENSOR_TYPE_TEMP_BARO:        return F("Temp / Baro");
+    case Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO:  return F("Temp / - / Baro");
     case Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO:    return F("Temp / Hum / Baro");
     case Sensor_VType::SENSOR_TYPE_DUAL:             return F("Dual");
     case Sensor_VType::SENSOR_TYPE_TRIPLE:           return F("Triple");

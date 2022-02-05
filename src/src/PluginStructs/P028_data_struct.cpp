@@ -47,7 +47,7 @@ String P028_data_struct::getFullDeviceName() const {
   return devicename;
 }
 
-String P028_data_struct::getDeviceName() const {
+const __FlashStringHelper * P028_data_struct::getDeviceName() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:

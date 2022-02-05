@@ -555,11 +555,11 @@ void parse_string_commands(String& line) {
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
-    String fullCommand = line.substring(startIndex + 1, closingIndex);
-    String cmd_s_lower = parseString(fullCommand, 1, ':');
-    String arg1        = parseStringKeepCase(fullCommand, 2, ':');
-    String arg2        = parseStringKeepCase(fullCommand, 3, ':');
-    String arg3        = parseStringKeepCase(fullCommand, 4, ':');
+    const String fullCommand = line.substring(startIndex + 1, closingIndex);
+    const String cmd_s_lower = parseString(fullCommand, 1, ':');
+    const String arg1        = parseStringKeepCase(fullCommand, 2, ':');
+    const String arg2        = parseStringKeepCase(fullCommand, 3, ':');
+    const String arg3        = parseStringKeepCase(fullCommand, 4, ':');
 
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
