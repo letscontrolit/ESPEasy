@@ -809,7 +809,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     log += codeBlock ? 0 : 1;
     log += match ? 0 : 1;
     log += isCommand ? 0 : 1;
-    log += ": ";
+    log += F(": ");
     log += line;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }

@@ -146,7 +146,7 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   if (rssi == -1) {
     result += F(" (RTC) ");
   } else {
-    result += " (";
+    result += F(" (");
     result += rssi;
     result += F("dBm) ");
   }

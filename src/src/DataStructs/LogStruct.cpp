@@ -75,7 +75,7 @@ String LogStruct::formatLine(int index, const String& lineEnd) {
   String output;
 
   output += timeStamp[index];
-  output += " : ";
+  output += F(" : ");
   output += Message[index];
   output += lineEnd;
   return output;

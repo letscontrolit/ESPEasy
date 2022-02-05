@@ -595,7 +595,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
                 {
                   String html;
                   html.reserve(16);
-                  html += " (";
+                  html += F(" (");
                   html += Settings.TaskDeviceID[controllerNr][x];
                   html += ')';
 

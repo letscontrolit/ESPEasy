@@ -167,7 +167,7 @@ void ESPEasy_setup()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
     log += getValue(LabelType::GIT_BUILD);
-    log += " (";
+    log += F(" (");
     log += getSystemLibraryString();
     log += ')';
     addLog(LOG_LEVEL_INFO, log);
@@ -352,7 +352,7 @@ void ESPEasy_setup()
     log += deviceCount + 1;
     log += ' ';
     log += getPluginDescriptionString();
-    log += " (";
+    log += F(" (");
     log += getSystemLibraryString();
     log += ')';
     addLog(LOG_LEVEL_INFO, log);

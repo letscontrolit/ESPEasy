@@ -321,7 +321,7 @@ void handle_sysinfo_basicInfo() {
     html.reserve(64);
 
     html += getLastBootCauseString();
-    html += " (";
+    html += F(" (");
     html += RTC.bootCounter;
     html += ')';
     addHtml(html);
@@ -347,7 +347,7 @@ void handle_sysinfo_memory() {
 
     html += freeMem;
 # ifndef BUILD_NO_RAM_TRACKER
-    html += " (";
+    html += F(" (");
     html += lowestRAM;
     html += F(" - ");
     html += lowestRAMfunction;
@@ -379,7 +379,7 @@ void handle_sysinfo_memory() {
     html.reserve(64);
     html += getCurrentFreeStack();
 # ifndef BUILD_NO_RAM_TRACKER
-    html += " (";
+    html += F(" (");
     html += lowestFreeStack;
     html += F(" - ");
     html += lowestFreeStackfunction;
@@ -452,7 +452,7 @@ void handle_sysinfo_Network() {
     html.reserve(64);
 
     html += WiFi.SSID();
-    html += " (";
+    html += F(" (");
     html += WiFi.BSSIDstr();
     html += ')';
     addHtml(html);

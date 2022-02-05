@@ -345,7 +345,7 @@ private:
       if (error.length() > 0) {
         String log = F("RN2483: ");
         log += command;
-        log += ": ";
+        log += F(": ");
         log += error;
         addLog(LOG_LEVEL_INFO, log);
       }

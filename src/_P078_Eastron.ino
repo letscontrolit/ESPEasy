@@ -293,9 +293,9 @@ float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
     log += node;
     log += ',';
     log += model;
-    log += ") ";
+    log += F(") ");
     log += p078_getQueryString(query);
-    log += ": ";
+    log += F(": ");
     log += _tempvar;
     addLog(LOG_LEVEL_INFO, log);
   }

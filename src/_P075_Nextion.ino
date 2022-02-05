@@ -440,9 +440,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                   log.reserve(70);                        // Prevent re-allocation
                   log = F("NEXTION075 : code: ");
                   log += __buffer[1];
-                  log += ",";
+                  log += ',';
                   log += __buffer[2];
-                  log += ",";
+                  log += ',';
                   log += __buffer[3];
                   addLog(LOG_LEVEL_INFO, log);
                 #endif

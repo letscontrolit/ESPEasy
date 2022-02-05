@@ -802,7 +802,7 @@ String IthoCC1101::getLastIDstr(bool ashex) {
   for (uint8_t i = 0; i < 3; i++) {
     if (ashex) str += String(inIthoPacket.deviceId[i], HEX);
     else str += String(inIthoPacket.deviceId[i]);
-    if (i < 2) str += ",";
+    if (i < 2) str += ',';
   }
   return str;
 }
@@ -816,11 +816,13 @@ int * IthoCC1101::getLastID() {
 }
 
 String IthoCC1101::getLastMessagestr(bool ashex) {
-  String str = "Length=" + String(inMessage.length) + ".";
+  String str = F("Length=");
+  str += inMessage.length;
+  str += '.';
   for (uint8_t i = 0; i < inMessage.length; i++) {
     if (ashex) str += String(inMessage.data[i], HEX);
     else str += String(inMessage.data[i]);
-    if (i < inMessage.length - 1) str += ":";
+    if (i < inMessage.length - 1) str += ':';
   }
   return str;
 }
@@ -829,22 +831,23 @@ String IthoCC1101::LastMessageDecoded() {
 
   String str;
   if (inIthoPacket.length > 11) {
-    str += "Device type?: " + String(inIthoPacket.deviceType);
-    str += " - CMD: ";
+    str += F("Device type?: ");
+    str += String(inIthoPacket.deviceType);
+    str += F(" - CMD: ");
     for (int i = 4; i < inIthoPacket.length; i++) {
       str += String(inIthoPacket.dataDecoded[i]);
-      if (i < inIthoPacket.length - 1) str += ",";
+      if (i < inIthoPacket.length - 1) str += ',';
     }
 
   }
   else {
     for (uint8_t i = 0; i < inIthoPacket.length; i++) {
       str += String(inIthoPacket.dataDecoded[i]);
-      if (i < inIthoPacket.length - 1) str += ",";
+      if (i < inIthoPacket.length - 1) str += ',';
     }
 
   }
-  str += "\n";
+  str += '\n';
   return str;
 
 }

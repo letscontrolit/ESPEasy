@@ -1384,9 +1384,9 @@ bool p073_plugin_write_7dst(struct EventStruct *event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Time=");
     log += event->Par1;
-    log += ":";
+    log += ':';
     log += event->Par2;
-    log += ":";
+    log += ':';
     log += event->Par3;
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -1427,9 +1427,9 @@ bool p073_plugin_write_7dsd(struct EventStruct *event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Date=");
     log += event->Par1;
-    log += "-";
+    log += '-';
     log += event->Par2;
-    log += "-";
+    log += '-';
     log += event->Par3;
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -1662,9 +1662,9 @@ void tm1637_i2cAck(uint8_t clk_pin, uint8_t dio_pin) {
   String log = F("7DGT : Comm ACK=");
 
   if (dummyAck == 0) {
-    log += "TRUE";
+    log += F("TRUE");
   } else {
-    log += "FALSE";
+    log += F("FALSE");
   }
   addLog(LOG_LEVEL_DEBUG, log);
   # endif // ifdef P073_DEBUG

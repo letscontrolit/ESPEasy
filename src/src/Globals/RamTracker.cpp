@@ -3,6 +3,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
 #include "../Helpers/Memory.h"
@@ -25,7 +26,7 @@ void checkRAM(const String &flashString, int a ) {
 
 void checkRAM(const String& flashString, const String &a ) {
   String s = flashString;
-  s += " (";
+  s += F(" (");
   s += a;
   s += ')';
   checkRAM(s);
@@ -106,7 +107,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
 
     for (int i = 0; i < TRACEENTRIES; i++) {           // tranfer cyclic buffer strings and mem values to this trace
       traces[bestCase] += nextAction[readPtr];
-      traces[bestCase] += "-> ";
+      traces[bestCase] += F("-> ");
       traces[bestCase] += String(nextActionStartMemory[readPtr]);
       traces[bestCase] += ' ';
       readPtr++;
@@ -126,13 +127,13 @@ void RamTracker::getTraceBuffer() {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    String retval = "Memtrace\n";
+    String retval = F("Memtrace\n");
 
     for (int i = 0; i < TRACES; i++) {
       retval += String(i);
-      retval += ": lowest: ";
+      retval += F(": lowest: ");
       retval += String(tracesMemory[i]);
-      retval += "  ";
+      retval += ' ';
       retval += traces[i];
       addLog(LOG_LEVEL_DEBUG_DEV, retval);
       retval.clear();

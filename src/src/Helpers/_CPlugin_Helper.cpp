@@ -140,7 +140,7 @@ String get_user_agent_request_header_field() {
   request.reserve(agent_size);
   request    = F("User-Agent: ");
   request   += get_user_agent_string();
-  request   += "\r\n";
+  request   += F("\r\n");
   agent_size = request.length();
   return request;
 }
@@ -166,27 +166,27 @@ String do_create_http_request(
   if (!uri.startsWith("/")) { request += '/'; }
   request += uri;
   request += F(" HTTP/1.1");
-  request += "\r\n";
+  request += F("\r\n");
 
   if (content_length >= 0) {
     request += F("Content-Length: ");
     request += content_length;
-    request += "\r\n";
+    request += F("\r\n");
   }
   request += F("Host: ");
   request += hostportString;
-  request += "\r\n";
+  request += F("\r\n");
   request += auth_header;
 
   // Add request header as fall back.
   // When adding another "accept" header, it may be interpreted as:
   // "if you have XXX, send it; or failing that, just give me what you've got."
   request += F("Accept: */*;q=0.1");
-  request += "\r\n";
+  request += F("\r\n");
   request += additional_options;
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
-  request += "\r\n";
+  request += F("\r\n");
   if (request.length() > static_cast<size_t>(estimated_size + est_size_error)) {
     est_size_error = request.length() - estimated_size;
   }
@@ -347,9 +347,9 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += logIdentifier;
       log += F(" Error: could not write to client (");
       log += written;
-      log += "/";
+      log += '/';
       log += postStr.length();
-      log += ")";
+      log += ')';
       addLog(LOG_LEVEL_ERROR, log);
     }
     success = false;
@@ -361,9 +361,9 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += logIdentifier;
       log += F(" written to client (");
       log += written;
-      log += "/";
+      log += '/';
       log += postStr.length();
-      log += ")";
+      log += ')';
       addLog(LOG_LEVEL_DEBUG, log);
     }
   }

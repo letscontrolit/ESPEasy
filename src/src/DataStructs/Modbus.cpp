@@ -156,7 +156,8 @@ bool Modbus::handle() {
           break;
       }
 
-      LogString += "value: "; LogString += result;
+      LogString += F("value: "); 
+      LogString += result;
 
       // if ((systemTimePresent()) && (hour() == 0)) errcnt = 0;
 

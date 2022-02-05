@@ -179,7 +179,7 @@ struct ControllerDelayHandlerStruct {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
       String log = get_formatted_Controller_number(cpluginID);
-      log += " : queue full";
+      log += F(" : queue full");
       addLog(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG

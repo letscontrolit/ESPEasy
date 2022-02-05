@@ -311,7 +311,7 @@ void processConnect() {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
-    log += " (";
+    log += F(" (");
     log += WiFi.BSSIDstr();
     log += F(") Ch: ");
     log += RTC.lastWiFiChannel;
@@ -375,7 +375,7 @@ void processGotIP() {
       log += F("DHCP IP: ");
     }
     log += formatIP(ip);
-    log += " (";
+    log += F(" (");
     log += NetworkGetHostname();
     log += F(") GW: ");
     log += formatIP(gw);

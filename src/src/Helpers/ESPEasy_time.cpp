@@ -317,7 +317,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     useNTPpool = true;
   }
 
-  log += " (";
+  log += F(" (");
   log += timeServerIP.toString();
   log += ')';
 

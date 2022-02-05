@@ -166,7 +166,7 @@ void handle_root() {
         html.reserve(64);
         html += freeMem;
         #ifndef BUILD_NO_RAM_TRACKER
-        html += " (";
+        html += F(" (");
         html += lowestRAM;
         html += F(" - ");
         html += lowestRAMfunction;
@@ -185,7 +185,7 @@ void handle_root() {
         html.reserve(64);
         html += String(getCurrentFreeStack());
         #ifndef BUILD_NO_RAM_TRACKER
-        html += " (";
+        html += F(" (");
         html += String(lowestFreeStack);
         html += F(" - ");
         html += String(lowestFreeStackfunction);

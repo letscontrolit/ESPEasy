@@ -150,13 +150,13 @@ void runOncePerSecond()
       event.reserve(21);
       event  = F("Clock#Time=");
       event += node_time.weekday_str();
-      event += ",";
+      event += ',';
 
       if (node_time.hour() < 10) {
         event += '0';
       }
       event += node_time.hour();
-      event += ":";
+      event += ':';
 
       if (node_time.minute() < 10) {
         event += '0';

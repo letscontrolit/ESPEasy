@@ -304,7 +304,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
         logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
         logger += ',';
         logger += formatUserVarNoCheck(TaskIndex, varNr);
-        logger += "\r\n";
+        logger += F("\r\n");
       }
       addLog(LOG_LEVEL_DEBUG, logger);
     }

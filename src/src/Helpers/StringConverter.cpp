@@ -235,7 +235,7 @@ String formatToHex_decimal(unsigned long value) {
 String formatToHex_decimal(unsigned long value, unsigned long factor) {
   String result = formatToHex(value);
 
-  result += " (";
+  result += F(" (");
 
   if (factor > 1) {
     result += formatHumanReadable(value, factor);
