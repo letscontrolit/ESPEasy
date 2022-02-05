@@ -187,7 +187,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
 
       addRowLabel(F("Board voltage"));
       addHtml(boardStatus.substring(boardStatus.lastIndexOf(',') + 1));
-      addUnit(F("V"));
+      addUnit('V');
 
       addRowLabel(F("Sensor Data"));
       addHtml(toString(UserVar[event->BaseVarIndex]));

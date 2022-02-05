@@ -116,7 +116,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       }
 
       addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), P115_THRESHOLD, 1, 32);
-      addUnit(F("%"));
+      addUnit('%');
       addFormCheckBox(F("Send Event on Alert"), F("plugin_115_alertevent"), P115_ALERTEVENT);
 
       success = true;

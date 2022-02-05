@@ -203,13 +203,13 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
           if (errorcode == 0) {
             addFormNumericBox(F("Full Range Voltage Value"), F("p085_fr_volt"), value, 5, 9999);
-            addUnit(F("V"));
+            addUnit('V');
           }
           value = P085_data->modbus.readHoldingRegister(0x104, errorcode);
 
           if (errorcode == 0) {
             addFormNumericBox(F("Full Range Current Value"), F("p085_fr_curr"), value, 20, 50000);
-            addUnit(F("A"));
+            addUnit('A');
           }
           value = P085_data->modbus.readHoldingRegister(0x105, errorcode);
 

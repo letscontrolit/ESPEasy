@@ -259,7 +259,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       addFormNumericBox(F("Distance Update Interval"), P082_DISTANCE_LABEL, P082_DISTANCE, 0, 10000);
-      addUnit(F("m"));
+      addUnit('m');
       addFormNote(F("0 = disable update based on distance travelled"));
 
       success = true;
@@ -693,23 +693,25 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("Distance Travelled"));
   addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DISTANCE)]));
-  addUnit(F("m"));
+  addUnit('m');
 
   if (P082_referencePointSet(event)) {
     addRowLabel(F("Distance from Ref. Point"));
     addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DIST_REF)]));
-    addUnit(F("m"));
+    addUnit('m');
   }
 
   addRowLabel(F("Checksum (pass/fail/invalid)"));
-  String chksumStats;
+  {
+    String chksumStats;
 
-  chksumStats  = P082_data->gps->passedChecksum();
-  chksumStats += '/';
-  chksumStats += P082_data->gps->failedChecksum();
-  chksumStats += '/';
-  chksumStats += P082_data->gps->invalidData();
-  addHtml(chksumStats);
+    chksumStats  = P082_data->gps->passedChecksum();
+    chksumStats += '/';
+    chksumStats += P082_data->gps->failedChecksum();
+    chksumStats += '/';
+    chksumStats += P082_data->gps->invalidData();
+    addHtml(chksumStats);
+  }
 }
 
 void P082_setSystemTime(struct EventStruct *event) {

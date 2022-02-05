@@ -361,7 +361,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
              */
             if (has_period) {
               addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
-              addUnit(F("s"));
+              addUnit('s');
             }
 
             if (has_samp_meas) {
