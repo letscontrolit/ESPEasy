@@ -865,7 +865,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = data.logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        log = String(data.logPrefix) + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       } else {
