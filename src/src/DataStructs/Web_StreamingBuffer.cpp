@@ -10,6 +10,7 @@
 
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Convert.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../../ESPEasy_common.h"
 
@@ -27,16 +28,6 @@ Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   buf.clear();
 }
 
-/*
-Web_StreamingBuffer& Web_StreamingBuffer::operator=(String& a)                 {
-  flush(); return addString(a);
-}
-
-Web_StreamingBuffer& Web_StreamingBuffer::operator=(const String& a)           {
-  flush(); return addString(a);
-}
-*/
-
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(char a)                   {
   if (this->buf.length() >= CHUNKED_BUFFER_SIZE) {
     flush();
@@ -45,8 +36,12 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator+=(char a)                   {
   return *this;
 }
 
-Web_StreamingBuffer& Web_StreamingBuffer::operator+=(long unsigned int a)      {
-  return addString(String(a));
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(uint64_t a) {
+  return addString(ull2String(a));
+}
+
+Web_StreamingBuffer& Web_StreamingBuffer::operator+=(int64_t a) {
+  return addString(ll2String(a));
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const float& a)           {
@@ -55,14 +50,6 @@ Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const float& a)           {
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const double& a)          {
   return addString(doubleToString(a));
-}
-
-Web_StreamingBuffer& Web_StreamingBuffer::operator+=(int a)                    {
-  return addString(String(a));
-}
-
-Web_StreamingBuffer& Web_StreamingBuffer::operator+=(uint32_t a)               {
-  return addString(String(a));
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::operator+=(const String& a)          {
@@ -167,18 +154,6 @@ Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
     if (flush_step == 0) {
       flush();
       flush_step = CHUNKED_BUFFER_SIZE;
-      const int bytes_left = (length - pos);
-      if (bytes_left < flush_step) {
-        // Buf is cleared, just copy the rest of the string in one go.
-        this->buf = std::move(a.substring(pos));
-        return *this;
-      } else {
-        // Buf is cleared, remaining string is longer than 1 chunk
-        // Copy chunk
-        this->buf = std::move(a.substring(pos, pos + flush_step));
-        pos += flush_step;
-        flush_step = 0;
-      }
     } else {
       // Just copy per byte instead of using substring as substring needs to allocate memory.
       this->buf += a[pos];
