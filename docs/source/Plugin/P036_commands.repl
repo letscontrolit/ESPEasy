@@ -57,3 +57,8 @@
 
         If Generate events for 'Linecount' is selected, a ``<taskname#linecount=<lines>`` event is generated on initialization of the plugin and when changing the setting.
         "
+        "
+        ``oledframedcmd,leftalign,<0|1>``
+        ","
+        Set the Left-align option for content off (0) or on (1).
+        "
