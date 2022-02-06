@@ -7,12 +7,18 @@
 # include <SSD1306.h>
 # include <SH1106Wire.h>
 
+# ifdef LIMIT_BUILD_SIZE
+#  define P036_LIMIT_BUILD_SIZE
+# else // ifdef LIMIT_BUILD_SIZE
+#  define P036_FIVE_FONTS // Enable 5 fonts setup
+# endif // ifdef LIMIT_BUILD_SIZE
 
-// #define PLUGIN_036_DEBUG    // additional debug messages in the log
+// # define PLUGIN_036_DEBUG    // additional debug messages in the log
+# define P036_FONT_CALC_LOG    // Enable to add extra logging during font calculation (selection)
 
-# ifndef LIMIT_BUILD_SIZE
+# ifndef P036_LIMIT_BUILD_SIZE
 #  define P036_SEND_EVENTS     // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
-# endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef P036_LIMIT_BUILD_SIZE
 # define P036_ENABLE_LINECOUNT // Enable the linecount subcommand, may need to be disabled by LIMIT_BUILD_SIZE
 
 
@@ -20,7 +26,11 @@
 # define P36_NcharsV0      32  // max chars per line up to 22.11.2019 (V0)
 # define P36_NcharsV1      64  // max chars per line from 22.11.2019 (V1)
 # define P36_MaxSizesCount  3  // number of different OLED sizes
-# define P36_MaxFontCount   4  // number of different fonts
+# ifdef P036_FIVE_FONTS
+#  define P36_MaxFontCount   5 // number of different fonts
+# else // ifdef P036_FIVE_FONTS
+#  define P36_MaxFontCount   4 // number of different fonts
+# endif // ifdef P036_FIVE_FONTS
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight  64
@@ -46,6 +56,33 @@
 # define P36_DebounceTreshold           5                         // number of 20 msec (fifty per second) ticks before the button has
                                                                   // settled
 # define P36_RepeatDelay               50                         // number of 20 msec ticks before repeating the button action when holding
+
+# define P036_ADR         PCONFIG(0)
+# define P036_ROTATE      PCONFIG(1)
+# define P036_NLINES      PCONFIG(2)
+# define P036_SCROLL      PCONFIG(3)
+# define P036_TIMER       PCONFIG(4)
+# define P036_CONTROLLER  PCONFIG(5)
+# define P036_CONTRAST    PCONFIG(6)
+# define P036_RESOLUTION  PCONFIG(7)
+
+# define P036_FLAGS_0     PCONFIG_LONG(0)
+
+# define P036_FLAG_HEADER_ALTERNATIVE   0 // Bit 7-0 HeaderContentAlternative
+# define P036_FLAG_HEADER               8 // Bit15-8 HeaderContent
+# define P036_FLAG_PIN3_INVERSE        16 // Bit 16 Pin3Invers
+# define P036_FLAG_SCROLL_LINES        17 // Bit 17 ScrollLines
+# define P036_FLAG_NODISPLAY_ONRECEIVE 18 // Bit 18 NoDisplayOnReceivingText
+# define P036_FLAG_STEP_PAGES_BUTTON   19 // Bit 19 StepThroughPagesWithButton
+# define P036_FLAG_SETTINGS_VERSION    20 // Bit23-20 Version CustomTaskSettings -> version V1
+# define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
+# define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
+# define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
+# define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown
+# define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
+# define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
+# define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
+
 
 enum class eHeaderContent {
   eSSID     = 1,
