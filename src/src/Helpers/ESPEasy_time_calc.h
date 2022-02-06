@@ -25,14 +25,26 @@ inline int32_t timeDiff(const unsigned long prev, const unsigned long next) {
   return ((int32_t) (next - prev));
 }
 
+inline int64_t timeDiff64(uint64_t prev, uint64_t next) {
+  return ((int64_t) (next - prev));
+}
+
 // Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.
-inline long timePassedSince(unsigned long timestamp) {
+inline long timePassedSince(const uint32_t& timestamp) {
   return timeDiff(timestamp, millis());
 }
 
-inline long usecPassedSince(unsigned long timestamp) {
-  return timeDiff(timestamp, micros());
+inline int64_t usecPassedSince(volatile uint64_t& timestamp) {
+  return timeDiff64(timestamp, getMicros64());
+}
+
+inline int64_t usecPassedSince(const uint64_t& timestamp) {
+  return timeDiff64(timestamp, getMicros64());
+}
+
+inline int64_t usecPassedSince(uint64_t& timestamp) {
+  return timeDiff64(timestamp, getMicros64());
 }
 
 // Check if a certain timeout has been reached.
@@ -40,17 +52,9 @@ inline bool timeOutReached(unsigned long timer) {
   return timePassedSince(timer) >= 0;
 }
 
-inline bool usecTimeOutReached(unsigned long timer) {
+inline bool usecTimeOutReached(const uint64_t& timer) {
   return usecPassedSince(timer) >= 0;
 }
-
-
-// Check if a certain timeout has been reached.
-bool timeOutReached(unsigned long timer);
-
-bool usecTimeOutReached(unsigned long timer);
-
-
 
 
 

@@ -31,11 +31,11 @@
 .. |P062_status| replace:: :yellow:`TESTING`
 .. |P062_github| replace:: P062_MPR121_KeyPad.ino
 .. _P062_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P062_MPR121_KeyPad.ino
-.. |P062_usedby| replace:: `.`
+.. |P062_usedby| replace:: `NXP MPR121 I2C controller`
 .. |P062_shortinfo| replace:: `.`
 .. |P062_maintainer| replace:: `.`
 .. |P062_compileinfo| replace:: `.`
-.. |P062_usedlibraries| replace:: `.`
+.. |P062_usedlibraries| replace:: `Adafruit_MPR121 (Local copy, with added extra sensitivity option)`
 
 .. |P063_name| replace:: :cyan:`TTP229 Touch`
 .. |P063_type| replace:: :cyan:`Keypad`

@@ -142,11 +142,11 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, P002_MAX_ADC_VALUE);
       html_add_estimate_symbol();
-      addTextBox(F("p002_out1"), String(P002_CALIBRATION_VALUE1, 3), 10);
+      addTextBox(F("p002_out1"), toString(P002_CALIBRATION_VALUE1, 3), 10);
 
       addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, P002_MAX_ADC_VALUE);
       html_add_estimate_symbol();
-      addTextBox(F("p002_out2"), String(P002_CALIBRATION_VALUE2, 3), 10);
+      addTextBox(F("p002_out2"), toString(P002_CALIBRATION_VALUE2, 3), 10);
 
       {
         // Output the statistics for the current settings.
@@ -302,7 +302,7 @@ void P002_formatStatistics(const __FlashStringHelper * label, int raw, float flo
   addRowLabel(label);
   addHtmlInt(raw);
   html_add_estimate_symbol();
-  addHtml(String(float_value, 3));
+  addHtml(toString(float_value, 3));
 }
 
 #endif // USES_P002
