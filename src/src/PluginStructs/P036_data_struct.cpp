@@ -824,68 +824,16 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   ScrollingPages.dPix    = P36_PageScrollPix * static_cast<int>(lscrollspeed); // pix change per scrolling page tick
   ScrollingPages.dPixSum = ScrollingPages.dPix;
 
-  display->setColor(BLACK);
+  display_scroll_timer(true, lscrollspeed);                                    // Initial display of the page
 
-  // We allow 12 pixels at the top because otherwise the wifi indicator gets too squashed!!
-  // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
-  display->fillRect(0, GetHeaderHeight() + TopLineOffset, P36_MaxDisplayWidth, GetIndicatorTop() - GetHeaderHeight());
-  display->setColor(WHITE);
-
-  if (!bHideHeader) {
-    display->drawLine(0,
-                      GetHeaderHeight() + TopLineOffset,
-                      P36_MaxDisplayWidth,
-                      GetHeaderHeight() + TopLineOffset); // line below title
-  }
-
-  for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++) {
-    if (lscrollspeed < ePageScrollSpeed::ePSS_Instant) { // scrolling
-      if (ScrollingLines.Line[j].LastWidth > 0) {
-        // width of LineOut[j] > display width -> line at beginning of scrolling page is right aligned
-        display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
-                            ScrollingPages.ypos[j],
-                            ScrollingPages.LineOut[j]);
-      } else {
-        // line at beginning of scrolling page is centered
-        display->setTextAlignment(TEXT_ALIGN_CENTER);
-        display->drawString(P36_DisplayCentre + ScrollingPages.dPixSum,
-                            ScrollingPages.ypos[j],
-                            ScrollingPages.LineOut[j]);
-      }
-    }
-
-    if (ScrollingLines.Line[j].Width > 0) {
-      // width of LineIn[j] > display width -> line at end of scrolling page should be left aligned
-      display->setTextAlignment(TEXT_ALIGN_LEFT);
-      display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
-                          ScrollingPages.ypos[j],
-                          ScrollingPages.LineIn[j]);
-    } else {
-      // line at end of scrolling page should be centered
-      display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->drawString(-P36_DisplayCentre + ScrollingPages.dPixSum,
-                          ScrollingPages.ypos[j],
-                          ScrollingPages.LineIn[j]);
-    }
-  }
-
-  update_display();
-
-  if (lscrollspeed < ePageScrollSpeed::ePSS_Instant) {
-    // page scrolling (using PLUGIN_TIMER_IN)
-    ScrollingPages.dPixSum += ScrollingPages.dPix;
-  } else {
-    // no page scrolling
-    ScrollingPages.Scrolling = 0; // allow following line scrolling
-  }
   # ifdef PLUGIN_036_DEBUG
   addLog(LOG_LEVEL_INFO, F("Scrolling finished"));
   # endif // PLUGIN_036_DEBUG
   return ScrollingPages.Scrolling;
 }
 
-uint8_t P036_data_struct::display_scroll_timer() {
+uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
+                                               ePageScrollSpeed lscrollspeed) {
   if (!isInitialized()) {
     return 0;
   }
@@ -893,25 +841,39 @@ uint8_t P036_data_struct::display_scroll_timer() {
   // page scrolling (using PLUGIN_TIMER_IN)
   display->setColor(BLACK);
 
-  // We allow 13 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
-  // scrolling window is 42 pixels high - ie 64 less margin of 12 at top and 10 at bottom
-  display->fillRect(0, GetHeaderHeight() + 1 + TopLineOffset, P36_MaxDisplayWidth, GetIndicatorTop() - GetHeaderHeight());
+  // We allow 12 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
+  // scrolling window is 44 pixels high - ie 64 less margin of 12 at top and 8 at bottom
+  display->fillRect(0, GetHeaderHeight() + (initialScroll ? 0 : 1) + TopLineOffset, P36_MaxDisplayWidth,
+                    GetIndicatorTop() - GetHeaderHeight());
   display->setColor(WHITE);
-  display->setFont(ScrollingPages.Font);
+
+  if (initialScroll) {
+    if (!bHideHeader) {
+      display->drawLine(0,
+                        GetHeaderHeight() + TopLineOffset,
+                        P36_MaxDisplayWidth,
+                        GetHeaderHeight() + TopLineOffset); // line below title
+    }
+  } else {
+    display->setFont(ScrollingPages.Font);
+  }
 
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrame; j++) {
-    if (ScrollingLines.Line[j].LastWidth > 0) {
-      // width of LineOut[j] > display width -> line is right aligned while scrolling page
-      display->setTextAlignment(TEXT_ALIGN_RIGHT);
-      display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
-                          ScrollingPages.ypos[j],
-                          ScrollingPages.LineOut[j]);
-    } else {
-      // line is centered while scrolling page
-      display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->drawString(P36_DisplayCentre + ScrollingPages.dPixSum,
-                          ScrollingPages.ypos[j],
-                          ScrollingPages.LineOut[j]);
+    if ((initialScroll && (lscrollspeed < ePageScrollSpeed::ePSS_Instant)) ||
+        !initialScroll) { // scrolling
+      if (ScrollingLines.Line[j].LastWidth > 0) {
+        // width of LineOut[j] > display width -> line is right aligned while scrolling page
+        display->setTextAlignment(TEXT_ALIGN_RIGHT);
+        display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
+                            ScrollingPages.ypos[j],
+                            ScrollingPages.LineOut[j]);
+      } else {
+        // line is centered while scrolling page
+        display->setTextAlignment(textAlignment);
+        display->drawString(textLeftMargin + ScrollingPages.dPixSum,
+                            ScrollingPages.ypos[j],
+                            ScrollingPages.LineOut[j]);
+      }
     }
 
     if (ScrollingLines.Line[j].Width > 0) {
@@ -922,8 +884,8 @@ uint8_t P036_data_struct::display_scroll_timer() {
                           ScrollingPages.LineIn[j]);
     } else {
       // line is centered while scrolling page
-      display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->drawString(-P36_DisplayCentre + ScrollingPages.dPixSum,
+      display->setTextAlignment(textAlignment);
+      display->drawString((-1 * getDisplaySizeSettings(disp_resolution).Width) + textLeftMargin + ScrollingPages.dPixSum,
                           ScrollingPages.ypos[j],
                           ScrollingPages.LineIn[j]);
     }
@@ -931,7 +893,8 @@ uint8_t P036_data_struct::display_scroll_timer() {
 
   update_display();
 
-  if (ScrollingPages.dPixSum < P36_MaxDisplayWidth) { // scrolling
+  if ((initialScroll && (lscrollspeed < ePageScrollSpeed::ePSS_Instant)) ||
+      (!initialScroll && (ScrollingPages.dPixSum < P36_MaxDisplayWidth))) { // scrolling
     // page still scrolling
     ScrollingPages.dPixSum += ScrollingPages.dPix;
   } else {
@@ -1253,9 +1216,35 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineSize) 
      const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
      result.replace(euro, euro_oled);
    */
-  result.trim();
+  if (textAlignment == TEXT_ALIGN_LEFT) {
+    // result.rtrim();
+    for (int16_t l = result.length() - 1; l >= 0; l--) {
+      if (result[l] != ' ') {
+        break;
+      }
+      result.remove(l);
+    }
+  } else {
+    result.trim();
+  }
   return result;
 }
+
+# ifdef P036_ENABLE_LEFT_ALIGN
+void P036_data_struct::setTextAlignment(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) {
+  textAlignment = _textAlignment;
+
+  if (_textAlignment == TEXT_ALIGN_LEFT) {
+    textLeftMargin = 0;
+  } else {
+    textLeftMargin = getDisplaySizeSettings(disp_resolution).Width / 2;
+  }
+
+  MaxFramesToDisplay = 0xFF; // Recalculate page indicator
+  nextFrameToDisplay = 0;    // Reset to first page
+}
+
+# endif // ifdef P036_ENABLE_LEFT_ALIGN
 
 void P036_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
   if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {

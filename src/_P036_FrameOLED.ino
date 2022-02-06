@@ -15,7 +15,8 @@
 // Al long as the device is not selected, no RAM is waisted.
 //
 // @tonhuisman: 2022-02-06
-// CHG: Move #define for settings to P036_data_struct.h file, 
+// ADD: Setting and support for showing the content left-aligned, and oledframedcmd,leftalign,<0|1> subcommand
+// CHG: Move #define for settings to P036_data_struct.h file,
 // ADD: Setting for always hiding indicator (footer), recalculate fontsize when number of frames changes
 // @tonhuisman: 2022-02-05
 // CHG: Small optimizations and code improvements, add optional logging for CalculateFontSettings
@@ -255,13 +256,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p036_pinmode"), Opcount, options, optionValues, choice);
       }
 
-      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE));      //
-                                                                                                                                               // Bit
-                                                                                                                                               // 16
+      addFormCheckBox(F("Inversed Logic"),                          F("p036_pin3invers"), bitRead(P036_FLAGS_0, P036_FLAG_PIN3_INVERSE));
 
-      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON)); //
-                                                                                                                                               // Bit
-                                                                                                                                               // 19
+      addFormCheckBox(F("Step through frames with Display button"), F("p036_StepPages"),  bitRead(P036_FLAGS_0, P036_FLAG_STEP_PAGES_BUTTON));
 
       addFormNumericBox(F("Display Timeout"), F("p036_timer"), P036_TIMER);
 
@@ -298,7 +295,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Content"));
 
       addFormCheckBox(F("Hide header"),    F("p036_HideHeader"), bitRead(P036_FLAGS_0, P036_FLAG_HIDE_HEADER)); // Bit 25
+      # ifdef P036_ENABLE_HIDE_FOOTER
       addFormCheckBox(F("Hide indicator"), F("p036_HideFooter"), bitRead(P036_FLAGS_0, P036_FLAG_HIDE_FOOTER)); // Bit 30
+      # endif // ifdef P036_ENABLE_HIDE_FOOTER
 
       {
         const __FlashStringHelper *options9[14] =
@@ -321,23 +320,19 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eHeaderContent::eTime),
           static_cast<int>(eHeaderContent::ePageNo) };
         addFormSelector(F("Header"), F("p036_header"), 14, options9, optionValues9,
-                        get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));                                                                   //
-                                                                                                                                          // Bit15-8
-                                                                                                                                          // HeaderContent
+                        get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));             // HeaderContent
         addFormSelector(F("Header (alternate)"), F("p036_headerAlternate"), 14, options9, optionValues9,
-                        get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));                                                       //
-                                                                                                                                          // Bit7-0
-                                                                                                                                          // HeaderContentAlternative
+                        get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // HeaderContentAlternative
       }
 
-      addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_LINES));         //
-                                                                                                                                          // Bit
-                                                                                                                                          // 17
+      addFormCheckBox(F("Scroll long lines"),              F("p036_ScrollLines"), bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_LINES));
 
-      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE)); //
-                                                                                                                                          // Bit
-                                                                                                                                          // 18
+      addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE));
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+
+      # ifdef P036_ENABLE_LEFT_ALIGN
+      addFormCheckBox(F("Left-align content"), F("p036_LeftAlign"), bitRead(P036_FLAGS_0, P036_FLAG_LEFT_ALIGNED)); // Bit 31
+      # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
       {
         // For load and save of the display lines, we must not rely on the data in memory.
@@ -389,44 +384,44 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_RESOLUTION = getFormItemInt(F("p036_size"));
 
       uint32_t lSettings = 0;
-      set8BitToUL(lSettings, P036_FLAG_HEADER,             uint8_t(getFormItemInt(F("p036_header")) & 0xff));          // Bit15-8
-                                                                                                                       // HeaderContent
-      set8BitToUL(lSettings, P036_FLAG_HEADER_ALTERNATIVE, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // Bit 7-0
-                                                                                                                       // HeaderContentAlternative
-      bitWrite(lSettings, P036_FLAG_PIN3_INVERSE,        isFormItemChecked(F("p036_pin3invers")));                     // Bit 16 Pin3Invers
-      bitWrite(lSettings, P036_FLAG_SCROLL_LINES,        isFormItemChecked(F("p036_ScrollLines")));                    // Bit 17 ScrollLines
-      bitWrite(lSettings, P036_FLAG_NODISPLAY_ONRECEIVE, !isFormItemChecked(F("p036_NoDisplay")));                     // Bit 18
-                                                                                                                       // NoDisplayOnReceivingText
-      bitWrite(lSettings, P036_FLAG_STEP_PAGES_BUTTON,   isFormItemChecked(F("p036_StepPages")));                      // Bit 19
-                                                                                                                       // StepThroughPagesWithButton
+      set8BitToUL(lSettings, P036_FLAG_HEADER,             uint8_t(getFormItemInt(F("p036_header")) & 0xff));          // HeaderContent
+      set8BitToUL(lSettings, P036_FLAG_HEADER_ALTERNATIVE, uint8_t(getFormItemInt(F("p036_headerAlternate")) & 0xff)); // HeaderContentAlternative
+      bitWrite(lSettings, P036_FLAG_PIN3_INVERSE,        isFormItemChecked(F("p036_pin3invers")));                     // Pin3Invers
+      bitWrite(lSettings, P036_FLAG_SCROLL_LINES,        isFormItemChecked(F("p036_ScrollLines")));                    // ScrollLines
+      bitWrite(lSettings, P036_FLAG_NODISPLAY_ONRECEIVE, !isFormItemChecked(F("p036_NoDisplay")));                     // NoDisplayOnReceivingText
+      bitWrite(lSettings, P036_FLAG_STEP_PAGES_BUTTON,   isFormItemChecked(F("p036_StepPages")));                      // StepThroughPagesWithButton
       // save CustomTaskSettings always in version V1
       set4BitToUL(lSettings, P036_FLAG_SETTINGS_VERSION, 0x01);                                                        // Bit23-20 Version
                                                                                                                        // CustomTaskSettings
                                                                                                                        // ->
                                                                                                                        // version V1
-      bitWrite(lSettings, P036_FLAG_SCROLL_WITHOUTWIFI, !isFormItemChecked(F("p036_ScrollWithoutWifi")));              // Bit 24
-                                                                                                                       // ScrollWithoutWifi
-      bitWrite(lSettings, P036_FLAG_HIDE_HEADER,        isFormItemChecked(F("p036_HideHeader")));                      // Bit 25 Hide header
-      bitWrite(lSettings, P036_FLAG_HIDE_FOOTER,        isFormItemChecked(F("p036_HideFooter")));                      // Bit 30 Hide footer
+      bitWrite(lSettings, P036_FLAG_SCROLL_WITHOUTWIFI, !isFormItemChecked(F("p036_ScrollWithoutWifi")));              // ScrollWithoutWifi
+      bitWrite(lSettings, P036_FLAG_HIDE_HEADER,        isFormItemChecked(F("p036_HideHeader")));                      // Hide header
+      # ifdef P036_ENABLE_HIDE_FOOTER
+      bitWrite(lSettings, P036_FLAG_HIDE_FOOTER,        isFormItemChecked(F("p036_HideFooter")));                      // Hide footer
+      # endif // ifdef P036_ENABLE_HIDE_FOOTER
+      # ifdef P036_ENABLE_LEFT_ALIGN
+      bitWrite(lSettings, P036_FLAG_LEFT_ALIGNED,       isFormItemChecked(F("p036_LeftAlign")));                       // Left align content
+      # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
       int P036pinmode = getFormItemInt(F("p036_pinmode"));
 
       switch (P036pinmode) {
         case 1:
         {
-          bitWrite(lSettings, P036_FLAG_INPUT_PULLUP, true); // Bit 26 Input PullUp
+          bitWrite(lSettings, P036_FLAG_INPUT_PULLUP, true); // Input PullUp
           break;
         }
         case 2:
         {
-          bitWrite(lSettings, P036_FLAG_INPUT_PULLDOWN, true); // Bit 27 Input PullDown
+          bitWrite(lSettings, P036_FLAG_INPUT_PULLDOWN, true); // Input PullDown
           break;
         }
       }
       # ifdef P036_SEND_EVENTS
       uint8_t generateEvents = getFormItemInt(F("p036_generateEvents")) & 0xFF;
-      bitWrite(lSettings, P036_FLAG_SEND_EVENTS,       bitRead(generateEvents, 0)); // Bit 28 SendEvents
-      bitWrite(lSettings, P036_FLAG_EVENTS_FRAME_LINE, bitRead(generateEvents, 1)); // Bit 29 SendEventsFrameLine
+      bitWrite(lSettings, P036_FLAG_SEND_EVENTS,       bitRead(generateEvents, 0)); // SendEvents
+      bitWrite(lSettings, P036_FLAG_EVENTS_FRAME_LINE, bitRead(generateEvents, 1)); // SendEventsFrameLine
       # endif // ifdef P036_SEND_EVENTS
 
       P036_FLAGS_0 = lSettings;
@@ -482,8 +477,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Load the custom settings from flash
 
-      P036_data->bHideHeader  = bitRead(P036_FLAGS_0, P036_FLAG_HIDE_HEADER); // Bit 25 Hide header
+      P036_data->bHideHeader = bitRead(P036_FLAGS_0, P036_FLAG_HIDE_HEADER);  // Bit 25 Hide header
+      # ifdef P036_ENABLE_HIDE_FOOTER
       P036_data->bHideFooter |= bitRead(P036_FLAGS_0, P036_FLAG_HIDE_FOOTER); // Bit 30 Hide footer
+      # endif // ifdef P036_ENABLE_HIDE_FOOTER
+      # ifdef P036_ENABLE_LEFT_ALIGN
+      P036_data->setTextAlignment(bitRead(P036_FLAGS_0, P036_FLAG_LEFT_ALIGNED) ? TEXT_ALIGN_LEFT : TEXT_ALIGN_CENTER);
+      # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
       // Init the display and turn it on
       if (!(P036_data->init(event->TaskIndex,
@@ -709,13 +709,11 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) {
         // Display is on.
 
-        P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER));             // Bit15-8
-                                                                                                                                      // HeaderContent
-        P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE)); // Bit
-                                                                                                                                      // 7-0
+        P036_data->HeaderContent            = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER)); // HeaderContent
+        P036_data->HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(P036_FLAGS_0, P036_FLAG_HEADER_ALTERNATIVE));
+
         // HeaderContentAlternative
-        P036_data->display_header();                                                                                                  // Update
-                                                                                                                                      // Header
+        P036_data->display_header(); // UpdateHeader
 
         if (P036_data->isInitialized() && P036_data->display_wifibars()) {
           // WiFi symbol was updated.
@@ -967,6 +965,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           }
         }
         # endif // P036_ENABLE_LINECOUNT
+        # ifdef P036_ENABLE_LEFT_ALIGN
+        else if ((subcommand == F("leftalign")) &&
+                 ((event->Par2 == 0) ||
+                  (event->Par2 == 1))) {
+          success = true;
+          P036_data->setTextAlignment(event->Par2 == 1 ? TEXT_ALIGN_LEFT : TEXT_ALIGN_CENTER);
+          bitWrite(P036_FLAGS_0, P036_FLAG_LEFT_ALIGNED, event->Par2); // Set in settings
+        }
+        # endif // ifdef P036_ENABLE_LEFT_ALIGN
         else if ((LineNo > 0) &&
                  (LineNo <= P36_Nlines)) {
           // content functions

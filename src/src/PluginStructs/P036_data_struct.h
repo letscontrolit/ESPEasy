@@ -14,22 +14,23 @@
 # endif // ifdef LIMIT_BUILD_SIZE
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
-# define P036_FONT_CALC_LOG    // Enable to add extra logging during font calculation (selection)
+// # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
 
 # ifndef P036_LIMIT_BUILD_SIZE
-#  define P036_SEND_EVENTS     // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
+#  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
+#  define P036_ENABLE_LINECOUNT  // Enable the linecount subcommand
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-# define P036_ENABLE_LINECOUNT // Enable the linecount subcommand, may need to be disabled by LIMIT_BUILD_SIZE
+# define P036_ENABLE_HIDE_FOOTER // Enable the Hide indicator (footer) option
+# define P036_ENABLE_LEFT_ALIGN  // Enable the Left-align content option and leftalign subcommand
 
-
-# define P36_Nlines        12  // The number of different lines which can be displayed - each line is 64 chars max
-# define P36_NcharsV0      32  // max chars per line up to 22.11.2019 (V0)
-# define P36_NcharsV1      64  // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount  3  // number of different OLED sizes
+# define P36_Nlines        12    // The number of different lines which can be displayed - each line is 64 chars max
+# define P36_NcharsV0      32    // max chars per line up to 22.11.2019 (V0)
+# define P36_NcharsV1      64    // max chars per line from 22.11.2019 (V1)
+# define P36_MaxSizesCount  3    // number of different OLED sizes
 # ifdef P036_FIVE_FONTS
-#  define P36_MaxFontCount   5 // number of different fonts
+#  define P36_MaxFontCount   5   // number of different fonts
 # else // ifdef P036_FIVE_FONTS
-#  define P36_MaxFontCount   4 // number of different fonts
+#  define P36_MaxFontCount   4   // number of different fonts
 # endif // ifdef P036_FIVE_FONTS
 
 # define P36_MaxDisplayWidth  128
@@ -82,6 +83,7 @@
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
+# define P036_FLAG_LEFT_ALIGNED        31 // Bit 31 Layout left aligned
 
 
 enum class eHeaderContent {
@@ -223,15 +225,16 @@ struct P036_data_struct : public PluginTaskData_base {
   // - 10 rows at the top for the header
   // - 46 rows in the middle for the scroll region
   // -  8 rows at the bottom for the footer
-  void          display_header();
-  void          display_time();
-  void          display_title(const String& title);
-  void          display_logo();
-  void          display_indicator();
-  void          prepare_pagescrolling();
-  uint8_t       display_scroll(ePageScrollSpeed lscrollspeed,
-                               int              lTaskTimer);
-  uint8_t       display_scroll_timer();
+  void    display_header();
+  void    display_time();
+  void    display_title(const String& title);
+  void    display_logo();
+  void    display_indicator();
+  void    prepare_pagescrolling();
+  uint8_t display_scroll(ePageScrollSpeed lscrollspeed,
+                         int              lTaskTimer);
+  uint8_t display_scroll_timer(bool             initialScroll = false,
+                               ePageScrollSpeed lscrollspeed  = ePageScrollSpeed::ePSS_Instant);
 
   // Draw scrolling line (1pix/s)
   void          display_scrolling_lines();
@@ -260,6 +263,10 @@ struct P036_data_struct : public PluginTaskData_base {
                                     bool    bPin3Invers);
 
   void          markButtonStateProcessed();
+
+  # ifdef P036_ENABLE_LEFT_ALIGN
+  void          setTextAlignment(OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
+  # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
   // Instantiate display here - does not work to do this within the INIT call
   OLEDDisplay *display = nullptr;
@@ -299,6 +306,9 @@ struct P036_data_struct : public PluginTaskData_base {
   uint8_t frameCounter          = 0;    // need to keep track of framecounter from call to call
   uint8_t disableFrameChangeCnt = 0;    // counter to disable frame change after JumpToPage in case PLUGIN_READ already scheduled
   bool    bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
+
+  OLEDDISPLAY_TEXT_ALIGNMENT textAlignment  = TEXT_ALIGN_CENTER;
+  uint8_t                    textLeftMargin = P36_DisplayCentre;
 };
 
 #endif // ifdef USES_P036
