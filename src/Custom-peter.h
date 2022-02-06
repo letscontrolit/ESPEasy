@@ -25,11 +25,11 @@
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
 
-#define BUILD_GIT           "Peters Build: "  __DATE__ " "  __TIME__
+#define BUILD_GIT           "Peter's Build: "  __DATE__ " "  __TIME__
 
 
-#define DEFAULT_NAME        "PoolMeter"                              // Enter your device friendly name
-#define UNIT                9                                        // Unit Number
+#define DEFAULT_NAME        "paulszimmer"                           // Enter your device friendly name
+#define UNIT                13                                       // Unit Number
 #define DEFAULT_DELAY       60                                       // Sleep Delay in seconds
 
 // --- Wifi AP Mode (when your Wifi Network is not reachable) ----------------------------------------
@@ -38,7 +38,7 @@
 #define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
-#define DEFAULT_SSID                         "idefixn"               // Enter your network SSID
+#define DEFAULT_SSID                         "idefixn"            // Enter your network SSID
 #define DEFAULT_KEY                          "$Michaelstrasse28a026458507" // Enter your network WPA key
 #define DEFAULT_SSID2                        ""                      // Enter your fallback network SSID
 #define DEFAULT_KEY2                         ""                      // Enter your fallback network WPA key
@@ -78,12 +78,12 @@
 #define DEFAULT_CONTROLLER_PASS    "letsdoit"                               // Default controller Password
 
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
-#define DEFAULT_PUB         "/%sysname%/%tskname%/%valname%"                // Enter your pub
-#define DEFAULT_SUB         "/%sysname%/#"                                  // Enter your sub
+#define DEFAULT_PUB         "sensors/espeasy/%sysname%/%tskname%/%valname%" // Enter your pub
+#define DEFAULT_SUB         "sensors/espeasy/%sysname%/#"                   // Enter your sub
 #define DEFAULT_SERVER      "192.168.39.104"                                // Enter your Server IP address
 #define DEFAULT_SERVER_HOST ""                                              // Server hostname
 #define DEFAULT_SERVER_USEDNS false                                         // true: Use hostname.  false: use IP
-#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   false                     // true: Allow longer user credentials for controllers
+#define DEFAULT_USE_EXTD_CONTROLLER_CREDENTIALS   true                      // true: Allow longer user credentials for controllers
 
 #define DEFAULT_PORT        1883                                            // Enter your Server port value
 
@@ -99,22 +99,23 @@
                                                                             //   8 = Generic HTTP
                                                                             //   9 = FHEM HTTP
 
-#define DEFAULT_PIN_I2C_SDA                     13
-#define DEFAULT_PIN_I2C_SCL                     16
+#define DEFAULT_PIN_I2C_SDA                     21
+#define DEFAULT_PIN_I2C_SCL                     22
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
+#define USE_I2C_DEVICE_SCAN                     true
 
 #define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
 
-#define DEFAULT_PIN_STATUS_LED                  (-1)
+#define DEFAULT_PIN_STATUS_LED                  2
 #define DEFAULT_PIN_STATUS_LED_INVERSED         true
 
 #define DEFAULT_PIN_RESET_BUTTON                (-1)
 
 
-#define DEFAULT_USE_RULES                       false             // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true              // (true|false) Enable Rules?
 #define DEFAULT_RULES_OLDENGINE                 true
 
-#define DEFAULT_MQTT_RETAIN                     false             // (true|false) Retain MQTT messages?
+#define DEFAULT_MQTT_RETAIN                     true              // (true|false) Retain MQTT messages?
 #define DEFAULT_MQTT_DELAY                      100               // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
@@ -126,8 +127,8 @@
 #define DEFAULT_TIME_ZONE                       60                // Time Offset (in minutes)
 #define DEFAULT_USE_DST                         true              // (true|false) Use Daily Time Saving
 
-#define DEFAULT_LATITUDE                        50.616582583527666f // Default Latitude  
-#define DEFAULT_LONGITUDE                       7.342491746057931f  // Default Longitude
+#define DEFAULT_LATITUDE                        50.616581f        // Default Latitude  
+#define DEFAULT_LONGITUDE                       7.342492f         // Default Longitude
 
 #define DEFAULT_SYSLOG_IP                       "192.168.39.104"  // Syslog IP Address
 #define DEFAULT_SYSLOG_LEVEL                    LOG_LEVEL_INFO    // Syslog Log Level
@@ -212,12 +213,12 @@
    CSS / template
  #######################################################################################################
  */
-
 #define WEBPAGE_TEMPLATE_DEFAULT_HEADER "<header class='headermenu'><h1>Kretz IoT: {{title}}</h1><BR>"
 #define WEBPAGE_TEMPLATE_DEFAULT_FOOTER "<footer><br><h6>Server: <a href='https://openhab:8443' style='font-size: 15px; text-decoration: none'>Openhab</a></h6></footer></body></html>"
 #define WEBPAGE_TEMPLATE_AP_HEADER      "<body><header class='apheader'><h1>Willkommen im kretz-net.</h1>"
-//#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
-
+/*
+#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
+*/
 // Embed Custom CSS in Custom.h:
 /*
 #define WEBSERVER_EMBED_CUSTOM_CSS
@@ -255,20 +256,20 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USE_SERVO
 
 
-#define USES_P001   // Switch
+ #define USES_P001   // Switch
 // #define USES_P002   // ADC
 // #define USES_P003   // Pulse
-#define USES_P004   // Dallas
-#define USES_P005   // DHT
-#define USES_P006   // BMP085
+ #define USES_P004   // Dallas
+ #define USES_P005   // DHT
+ #define USES_P006   // BMP085
 // #define USES_P007   // PCF8591
 // #define USES_P008   // RFID
 // #define USES_P009   // MCP
 
 // #define USES_P010   // BH1750
 // #define USES_P011   // PME
-// #define USES_P012   // LCD
-#define USES_P013   // HCSR04
+ #define USES_P012   // LCD
+ #define USES_P013   // HCSR04
 // #define USES_P014   // SI7021
 // #define USES_P015   // TSL2561
 // #define USES_P017   // PN532
@@ -278,10 +279,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P020   // Ser2Net
 // #define USES_P021   // Level
 // #define USES_P022   // PCA9685
-// #define USES_P023   // OLED
+ #define USES_P023   // OLED
 // #define USES_P024   // MLX90614
 // #define USES_P025   // ADS1115
-// #define USES_P026   // SysInfo
+#define USES_P026   // SysInfo
 // #define USES_P027   // INA219
 #define USES_P028   // BME280
 // #define USES_P029   // Output
@@ -290,7 +291,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P032   // MS5611
 #define USES_P033   // Dummy
 #define USES_P034   // DHT12
-// #define USES_P036   // FrameOLED
+#define USES_P036   // FrameOLED
 #define USES_P037   // MQTTImport
 // #define USES_P038   // NeoPixel
 // #define USES_P039   // Environment - Thermocouple
@@ -304,7 +305,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P046   // VentusW266
 // #define USES_P047   // I2C_soil_misture
 // #define USES_P048   // Motoshield_v2
-// #define USES_P049   // MHZ19
+#define USES_P049   // MHZ19
 
 // #define USES_P050   // TCS34725 RGB Color Sensor with IR filter and White LED
 // #define USES_P051   // AM2320
@@ -333,7 +334,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P072   // HDC1080
 // #define USES_P073   // 7DG
 // #define USES_P074   // TSL2561
-// #define USES_P075   // Nextion
+#define USES_P075   // Nextion
 // #define USES_P076   // HWL8012   in POW r1
 // #define USES_P077   // CSE7766   in POW R2
 // #define USES_P078   // Eastron Modbus Energy meters
@@ -355,23 +356,32 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P092   // DLbus
 // #define USES_P093   // MitsubishiHP
 // #define USES_P094   // CULReader
-// #define USES_P095   // ILI9341
-// #define USES_P096   // eInk
-// #define USES_P097   // ESP32Touch
+#define USES_P095   // ILI9341
+#define USES_P096   // eInk
+#define USES_P097   // ESP32Touch
 // #define USES_P098   // 
 // #define USES_P099   // XPT2046 touchscreen
 
 // #define USES_P100   // DS2423 counter
 // #define USES_P101   // WakeOnLan
 // #define USES_P102   // PZEM004Tv3
-#define USES_P103   // Atlas_EZO_pH_ORP_EC
+#define USES_P103   // Atlas Scientific EZO Sensors (pH, ORP, EZO, DO)
+// #define USES_P104   // MAX7219 dotmatrix
+// #define USES_P105   // AHT10/20/21
 #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
+// #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
+// #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P117   // SCD30
+// #define USES_P119   // ITG3205 Gyro
+// #define USES_P120   // ADXL345 I2C Acceleration / Gravity
+// #define USES_P124   // I2C MultiRelay
+// #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 
 
 // Special plugins needing IR library
@@ -419,7 +429,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  */
 
 
-#define USES_N001   // Email
+// #define USES_N001   // Email
 // #define USES_N002   // Buzzer
 
 
