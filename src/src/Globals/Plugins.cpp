@@ -555,6 +555,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
+      if (!validTaskIndex(event->TaskIndex)) {
+        return false;
+      }
+      if (Function == PLUGIN_READ || Function == PLUGIN_INIT) {
+        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
+          return false;
+        }
+      }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
