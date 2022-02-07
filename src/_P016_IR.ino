@@ -143,7 +143,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 # endif // ifdef P016_P035_USE_RAW_RAW2
 
 # ifdef PLUGIN_016_DEBUG
-void P016_infoLogMemory(const String& text) {
+void P016_infoLogMemory(const __FlashStringHelper * text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     if (log.reserve(37 + text.length())) {

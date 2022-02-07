@@ -146,7 +146,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
-      event->String1 = formatGpioName_output("CS");
+      event->String1 = formatGpioName_output(F("CS"));
       break;
     }
 

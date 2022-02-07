@@ -142,7 +142,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
-      event->String3 = formatGpioName_output_optional("DE");
+      event->String3 = formatGpioName_output_optional(F("DE"));
       break;
     }
 

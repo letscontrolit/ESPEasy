@@ -146,9 +146,9 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
   }
 
   case PLUGIN_GET_DEVICEGPIONAMES: {
-    event->String1 = formatGpioName_output("SEL");
-    event->String2 = formatGpioName_input("CF1");
-    event->String3 = formatGpioName_input("CF");
+    event->String1 = formatGpioName_output(F("SEL"));
+    event->String2 = formatGpioName_input(F("CF1"));
+    event->String3 = formatGpioName_input(F("CF"));
     break;
   }
 

@@ -76,7 +76,7 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) 
   }
 }
 
-void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -416,25 +416,20 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
                    "</head>"));
 }
 
-void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const String& title, bool addMenu) {
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
   {
-    String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
-            #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
-            #endif // #if BUILD_IN_WEBHEADER
-            "</h1><BR>"
-            );
-  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
-  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-
-    tmp.replace(F("{{title}}"), title);
+    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(title);
     #if BUILD_IN_WEBHEADER
-    tmp.replace(F("{{date}}"), get_build_date());
+    parser.process(F("<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"));
     #endif // #if BUILD_IN_WEBHEADER
+    parser.process(F("</h1><BR>"));
+  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    String tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
+    tmp.replace(F("{{title}}"), title);
     parser.process(tmp);
+  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
   }
 
   if (addMenu) { parser.process(F("{{menu}}")); }
