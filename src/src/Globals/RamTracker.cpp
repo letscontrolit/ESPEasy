@@ -125,8 +125,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
  // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
 void RamTracker::getTraceBuffer() {
 #ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+  if (Settings.EnableRAMTracking() && loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String retval = F("Memtrace\n");
 
     for (int i = 0; i < TRACES; i++) {

@@ -285,6 +285,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
           return false;
         }
+        #ifndef BUILD_NO_RAM_TRACKER
         switch (Function) {
           case PLUGIN_WRITE:          // First set
           case PLUGIN_REQUEST:
@@ -296,12 +297,11 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           case PLUGIN_EVENT_OUT:
           case PLUGIN_TIME_CHANGE:
             {
-              #ifndef BUILD_NO_RAM_TRACKER
               checkRAM(F("PluginCall_s"), taskIndex);
-              #endif
               break;
             }
         }
+        #endif
         START_TIMER;
         retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
         STOP_TIMER_TASK(DeviceIndex, Function);
