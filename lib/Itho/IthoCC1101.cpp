@@ -474,7 +474,7 @@ void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
   itho->dataDecoded[4] = itho->counter;
 
   // set command bytes on dataDecoded[5 - 10]
-  uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
     itho->dataDecoded[i + 5] = commandBytes[i];
@@ -516,7 +516,7 @@ void IthoCC1101::createMessageJoin(IthoPacket *itho, CC1101Packet *packet)
   itho->dataDecoded[4] = itho->counter;
 
   // set command bytes on dataDecoded[5 - ?]
-  uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
     itho->dataDecoded[i + 5] = commandBytes[i];
@@ -572,7 +572,7 @@ void IthoCC1101::createMessageLeave(IthoPacket *itho, CC1101Packet *packet)
   itho->dataDecoded[4] = itho->counter;
 
   // set command bytes on dataDecoded[5 - 10]
-  uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
     itho->dataDecoded[i + 5] = commandBytes[i];
@@ -602,32 +602,32 @@ void IthoCC1101::createMessageLeave(IthoPacket *itho, CC1101Packet *packet)
   packet->length += 7;
 }
 
-uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
+const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
 {
   switch (command)
   {
     case IthoStandby:
-      return (uint8_t *)&ithoMessageStandByCommandBytes[0];
+      return &ithoMessageStandByCommandBytes[0];
     case IthoHigh:
-      return (uint8_t *)&ithoMessageHighCommandBytes[0];
+      return &ithoMessageHighCommandBytes[0];
     case IthoFull:
-      return (uint8_t *)&ithoMessageFullCommandBytes[0];
+      return &ithoMessageFullCommandBytes[0];
     case IthoMedium:
-      return (uint8_t *)&ithoMessageMediumCommandBytes[0];
+      return &ithoMessageMediumCommandBytes[0];
     case IthoLow:
-      return (uint8_t *)&ithoMessageLowCommandBytes[0];
+      return &ithoMessageLowCommandBytes[0];
     case IthoTimer1:
-      return (uint8_t *)&ithoMessageTimer1CommandBytes[0];
+      return &ithoMessageTimer1CommandBytes[0];
     case IthoTimer2:
-      return (uint8_t *)&ithoMessageTimer2CommandBytes[0];
+      return &ithoMessageTimer2CommandBytes[0];
     case IthoTimer3:
-      return (uint8_t *)&ithoMessageTimer3CommandBytes[0];
+      return &ithoMessageTimer3CommandBytes[0];
     case IthoJoin:
-      return (uint8_t *)&ithoMessageJoinCommandBytes[0];
+      return &ithoMessageJoinCommandBytes[0];
     case IthoLeave:
-      return (uint8_t *)&ithoMessageLeaveCommandBytes[0];
+      return &ithoMessageLeaveCommandBytes[0];
     default:
-      return (uint8_t *)&ithoMessageLowCommandBytes[0];
+      return &ithoMessageLowCommandBytes[0];
   }
 }
 
@@ -647,6 +647,8 @@ uint8_t IthoCC1101::getCounter2(IthoPacket *itho, uint8_t len) {
 }
 
 uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
+  // FIXME TD-er: lenOutbuf not used????
+  /*
   uint8_t lenOutbuf = 0;
 
   if ((itho->length * 20) % 8 == 0) { // inData len fits niecly in out buffer length
@@ -656,6 +658,7 @@ uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
                                       // is done after encode
     lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
   }
+  */
 
   uint8_t out_bytecounter    = 14; // index of Outbuf, start at offset 14, first part of the message is set manually
   uint8_t out_bitcounter     = 0;  // bit position of current outbuf byte
@@ -664,7 +667,7 @@ uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
   uint8_t out_shift          = 7;  // bit shift inData bit in position of outbuf byte
 
   // we need to zero the out buffer first cause we are using bitshifts
-  for (int i = out_bytecounter; i < sizeof(packet->data) / sizeof(packet->data[0]); i++) {
+  for (unsigned int i = out_bytecounter; i < sizeof(packet->data) / sizeof(packet->data[0]); i++) {
     packet->data[i] = 0;
   }
 
@@ -745,11 +748,11 @@ void IthoCC1101::messageDecode(CC1101Packet *packet, IthoPacket *itho) {
     itho->length++;
   }
 
-  for (int i = 0; i < sizeof(itho->dataDecoded) / sizeof(itho->dataDecoded[0]); i++) {
+  for (unsigned int i = 0; i < sizeof(itho->dataDecoded) / sizeof(itho->dataDecoded[0]); i++) {
     itho->dataDecoded[i] = 0;
   }
 
-  for (int i = 0; i < sizeof(itho->dataDecodedChk) / sizeof(itho->dataDecodedChk[0]); i++) {
+  for (unsigned int i = 0; i < sizeof(itho->dataDecodedChk) / sizeof(itho->dataDecodedChk[0]); i++) {
     itho->dataDecodedChk[i] = 0;
   }
 

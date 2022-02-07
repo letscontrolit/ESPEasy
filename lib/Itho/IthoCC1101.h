@@ -15,22 +15,22 @@ const uint8_t ithoPaTableSend[8]    = { 0x6F, 0x26, 0x2E, 0x8C, 0x87, 0xCD, 0xC7
 const uint8_t ithoPaTableReceive[8] = { 0x6F, 0x26, 0x2E, 0x7F, 0x8A, 0x84, 0xCA, 0xC4 };
 
 // message command bytes
-const uint8_t ithoMessageRVHighCommandBytes[]   =   { 49, 224, 4, 0, 0, 200 };
-const uint8_t ithoMessageHighCommandBytes[]     =     { 34, 241, 3, 0, 4, 4 };
-const uint8_t ithoMessageFullCommandBytes[]     =     { 34, 241, 3, 0, 4, 4 };
-const uint8_t ithoMessageMediumCommandBytes[]   =   { 34, 241, 3, 0, 3, 4 };
+const uint8_t ithoMessageRVHighCommandBytes[]   = { 49, 224, 4, 0, 0, 200 };
+const uint8_t ithoMessageHighCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
+const uint8_t ithoMessageFullCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
+const uint8_t ithoMessageMediumCommandBytes[]   = { 34, 241, 3, 0, 3, 4 };
 const uint8_t ithoMessageRVMediumCommandBytes[] = { 34, 241, 3, 0, 3, 7 };
-const uint8_t ithoMessageLowCommandBytes[]      =      { 34, 241, 3, 0, 2, 4 };
-const uint8_t ithoMessageRVLowCommandBytes[]    =    { 49, 224, 4, 0, 0, 1 };
-const uint8_t ithoMessageRVAutoCommandBytes[]   =   { 34, 241, 3, 0, 5, 7 };
-const uint8_t ithoMessageStandByCommandBytes[]  =  { 0, 0, 0, 0, 0, 0 };           // unkown, tbd
-const uint8_t ithoMessageTimer1CommandBytes[]   =   { 34, 243, 3, 0, 0, 10 };      // 10 minutes full speed
-const uint8_t ithoMessageTimer2CommandBytes[]   =   { 34, 243, 3, 0, 0, 20 };      // 20 minutes full speed
-const uint8_t ithoMessageTimer3CommandBytes[]   =   { 34, 243, 3, 0, 0, 30 };      // 30 minutes full speed
-const uint8_t ithoMessageJoinCommandBytes[]     =     { 31, 201, 12, 0, 34, 241 };
-const uint8_t ithoMessageJoin2CommandBytes[]    =    { 31, 201, 12, 99, 34, 248 }; // join command of RFT AUTO Co2 remote
-const uint8_t ithoMessageRVJoinCommandBytes[]   =   { 31, 201, 24, 0, 49, 224 };   // join command of RFT-RV
-const uint8_t ithoMessageLeaveCommandBytes[]    =    { 31, 201, 6, 0, 31, 201 };
+const uint8_t ithoMessageLowCommandBytes[]      = { 34, 241, 3, 0, 2, 4 };
+const uint8_t ithoMessageRVLowCommandBytes[]    = { 49, 224, 4, 0, 0, 1 };
+const uint8_t ithoMessageRVAutoCommandBytes[]   = { 34, 241, 3, 0, 5, 7 };
+const uint8_t ithoMessageStandByCommandBytes[]  = { 0, 0, 0, 0, 0, 0 };           // unkown, tbd
+const uint8_t ithoMessageTimer1CommandBytes[]   = { 34, 243, 3, 0, 0, 10 };      // 10 minutes full speed
+const uint8_t ithoMessageTimer2CommandBytes[]   = { 34, 243, 3, 0, 0, 20 };      // 20 minutes full speed
+const uint8_t ithoMessageTimer3CommandBytes[]   = { 34, 243, 3, 0, 0, 30 };      // 30 minutes full speed
+const uint8_t ithoMessageJoinCommandBytes[]     = { 31, 201, 12, 0, 34, 241 };
+const uint8_t ithoMessageJoin2CommandBytes[]    = { 31, 201, 12, 99, 34, 248 }; // join command of RFT AUTO Co2 remote
+const uint8_t ithoMessageRVJoinCommandBytes[]   = { 31, 201, 24, 0, 49, 224 };   // join command of RFT-RV
+const uint8_t ithoMessageLeaveCommandBytes[]    = { 31, 201, 6, 0, 31, 201 };
 
 // itho rft-rv
 // unknown, high
@@ -68,7 +68,8 @@ public:
 
   // init
   void init() {
-    CC1101::init(); initReceive();
+    CC1101::init(); 
+    initReceive();
   } // init,reset CC1101
 
   void    initReceive();
@@ -136,7 +137,7 @@ private:
                              CC1101Packet *packet);
   void     createMessageLeave(IthoPacket   *itho,
                               CC1101Packet *packet);
-  uint8_t* getMessageCommandBytes(IthoCommand command);
+  const uint8_t* getMessageCommandBytes(IthoCommand command);
   uint8_t  getCounter2(IthoPacket *itho,
                        uint8_t     len);
 
