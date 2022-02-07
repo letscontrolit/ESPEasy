@@ -146,8 +146,8 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 void P016_infoLogMemory(const __FlashStringHelper * text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    if (log.reserve(37 + text.length())) {
-      log  = F("P016: Free memory ");
+    if (log.reserve(40 + strlen_P((PGM_P)text))) {
+      log += F("P016: Free memory ");
       log += text;
       log += F(": ");
       log += FreeMem();
