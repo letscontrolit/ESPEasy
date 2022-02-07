@@ -570,9 +570,9 @@ bool safe_strncpy(char *dest, const String& source, size_t max_size) {
 bool safe_strncpy(char *dest, const char *source, size_t max_size) {
   if (max_size < 1) { return false; }
 
-  if (dest == NULL) { return false; }
+  if (dest == nullptr) { return false; }
 
-  if (source == NULL) { return false; }
+  if (source == nullptr) { return false; }
   bool result = true;
 
   memset(dest, 0, max_size);

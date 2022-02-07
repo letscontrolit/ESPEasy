@@ -19,7 +19,7 @@
 
 #include <HLW8012.h>
 
-HLW8012 *Plugin_076_hlw = NULL;
+HLW8012 *Plugin_076_hlw = nullptr;
 
 #define PLUGIN_076
 #define PLUGIN_ID_076 76

@@ -1597,7 +1597,7 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd) {
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   String result;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   if (_mypartiterator) {
     do {
@@ -1612,7 +1612,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
       result += itemSep;
       result += (_mypart->encrypted ? F("Yes") : F("-"));
       result += lineEnd;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return result;

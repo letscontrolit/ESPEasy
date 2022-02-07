@@ -178,7 +178,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             speedOptions[5] = F("4800");
             speedOptions[6] = F("38400");
             speedOptions[7] = F("57600");
-            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, NULL, choice);
+            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, nullptr, choice);
           }
 
           addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), PCONFIG(3));

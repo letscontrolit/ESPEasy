@@ -135,7 +135,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         F("Use IP address"),
         F("Use Hostname")
       };
-      addFormSelector(displayName, internalName, 2, options, NULL, NULL, choice, true);
+      addFormSelector(displayName, internalName, 2, options, nullptr, nullptr, choice, true);
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_HOSTNAME:
@@ -200,7 +200,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         F("Ignore New"),
         F("Delete Oldest")
       };
-      addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.DeleteOldest, false);
+      addFormSelector(displayName, internalName, 2, options, nullptr, nullptr, ControllerSettings.DeleteOldest, false);
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE:
@@ -218,7 +218,7 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
         F("Ignore Acknowledgement"),
         F("Check Acknowledgement")
       };
-      addFormSelector(displayName, internalName, 2, options, NULL, NULL, ControllerSettings.MustCheckReply, false);
+      addFormSelector(displayName, internalName, 2, options, nullptr, nullptr, ControllerSettings.MustCheckReply, false);
       break;
     }
     case ControllerSettingsStruct::CONTROLLER_CLIENT_ID:

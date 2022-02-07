@@ -131,7 +131,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           F("G-force Y"),
           F("G-force Z")
         };
-        addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
+        addFormSelector(F("Function"), F("p045_function"), 10, options, nullptr, choice);
       }
 
       if (choice == 0) {

@@ -89,7 +89,7 @@ void handle_rules() {
       RULESETS_MAX, 
       options, 
       optionValues, 
-      NULL, 
+      nullptr, 
       choice, 
       F("return rules_set_onchange(rulesselect)"), 
       true,

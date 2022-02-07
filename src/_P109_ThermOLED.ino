@@ -115,7 +115,7 @@ static int8_t P109_lastWiFiState = P109_WIFI_STATE_UNSET;
 
 // Instantiate display here - does not work to do this within the INIT call
 
-OLEDDisplay *P109_display = NULL;
+OLEDDisplay *P109_display = nullptr;
 
 char P109_deviceTemplate[P109_Nlines][P109_Nchars];
 
@@ -367,7 +367,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         P109_display->end();
         delete P109_display;
-        P109_display = NULL;
+        P109_display = nullptr;
       }
       break;
     }

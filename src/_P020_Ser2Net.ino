@@ -111,7 +111,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
           F("Generic"),
           F("RFLink")
         };
-        addFormSelector(F("Event processing"), F("p020_events"), 3, options, NULL, choice);
+        addFormSelector(F("Event processing"), F("p020_events"), 3, options, nullptr, choice);
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
       addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);

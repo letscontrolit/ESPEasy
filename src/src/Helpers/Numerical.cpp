@@ -68,7 +68,7 @@ bool validUIntFromString(const String& tBuf, unsigned int& result) {
       numerical = numerical.substring(2);
       base      = BIN;
     }
-    result = strtoul(numerical.c_str(), NULL, base);
+    result = strtoul(numerical.c_str(), nullptr, base);
   }
   return isvalid;
 }
@@ -88,7 +88,7 @@ bool validUInt64FromString(const String& tBuf, uint64_t& result) {
       numerical = numerical.substring(2);
       base      = BIN;
     }
-    result = strtoull(numerical.c_str(), NULL, base);
+    result = strtoull(numerical.c_str(), nullptr, base);
   }
   return isvalid;
 }

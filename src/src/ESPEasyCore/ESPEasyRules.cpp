@@ -588,7 +588,7 @@ void parse_string_commands(String& line) {
         // Syntax like 1234{strtol:16:38}7890
         if (validUInt64FromString(arg1, iarg1)
             && validUInt64FromString(arg2, iarg2)) {
-          replacement = String(strtoul(arg2.c_str(), NULL, iarg1));
+          replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
         }
 
         // FIXME TD-er: removed for now as it is too specific.

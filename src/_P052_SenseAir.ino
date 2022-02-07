@@ -356,7 +356,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             /*
                if (has_meas_mode) {
                const __FlashStringHelper * options[2] = { F("Continuous"), F("Single Measurement") };
-               addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
+               addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, nullptr, meas_mode);
                }
              */
             if (has_period) {
@@ -378,7 +378,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
          const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
          addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
-         NULL, choiceABCperiod);
+         nullptr, choiceABCperiod);
        */
 
 

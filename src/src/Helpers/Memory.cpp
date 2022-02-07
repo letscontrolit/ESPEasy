@@ -20,15 +20,15 @@ extern "C" {
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
 #ifdef ESP32
 
-// FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
+// FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
   register uint8_t *sp asm ("a1");
 
-  return sp - pxTaskGetStackStart(NULL);
+  return sp - pxTaskGetStackStart(nullptr);
 }
 
 uint32_t getFreeStackWatermark() {
-  return uxTaskGetStackHighWaterMark(NULL);
+  return uxTaskGetStackHighWaterMark(nullptr);
 }
 
 #else // ifdef ESP32

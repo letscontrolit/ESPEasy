@@ -167,7 +167,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 6; ++i) {
         options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, NULL, P085_BAUDRATE);
+      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P085_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
       break;

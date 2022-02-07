@@ -108,7 +108,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
               choice = i;
             }
           }
-          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, NULL, choice);
+          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, nullptr, choice);
         }
 
         addFormTextBox(F("URI"), F("P011httpuri"), HttpUri, C011_HTTP_URI_MAX_LEN - 1);

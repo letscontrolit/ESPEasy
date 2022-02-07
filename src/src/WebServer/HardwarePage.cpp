@@ -178,7 +178,7 @@ void handle_hardware() {
       static_cast<int>(SPI_Options_e::Hspi),
       static_cast<int>(SPI_Options_e::UserDefined)
     };
-    addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, spi_index, NULL, Settings.InitSPI, F("spiOptionChanged(this)"));
+    addFormSelector_script(F("Init SPI"), F("initspi"), 4, spi_options, spi_index, nullptr, Settings.InitSPI, F("spiOptionChanged(this)"));
     // User-defined pins
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_output(F("CLK")),  F("spipinsclk"), Settings.SPI_SCLK_pin);
     addFormPinSelect(PinSelectPurpose::SPI, formatGpioName_input(F("MISO")),  F("spipinmiso"), Settings.SPI_MISO_pin);
@@ -205,7 +205,7 @@ void handle_hardware() {
       toString(NetworkMedium_t::WIFI), 
       toString(NetworkMedium_t::Ethernet) 
       };
-    addSelector(F("ethwifi"), 2, ethWifiOptions, NULL, NULL, static_cast<int>(Settings.NetworkMedium), false, true);
+    addSelector(F("ethwifi"), 2, ethWifiOptions, nullptr, nullptr, static_cast<int>(Settings.NetworkMedium), false, true);
   }
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
@@ -213,7 +213,7 @@ void handle_hardware() {
     const __FlashStringHelper * ethPhyTypes[2] = { 
       toString(EthPhyType_t::LAN8710), 
       toString(EthPhyType_t::TLK110) };
-    addSelector(F("ethtype"), 2, ethPhyTypes, NULL, NULL, static_cast<int>(Settings.ETH_Phy_Type), false, true);
+    addSelector(F("ethtype"), 2, ethPhyTypes, nullptr, nullptr, static_cast<int>(Settings.ETH_Phy_Type), false, true);
   }
   addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, 0, 255);
   addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
@@ -228,7 +228,7 @@ void handle_hardware() {
       toString(EthClockMode_t::Int_50MHz_GPIO_16),
       toString(EthClockMode_t::Int_50MHz_GPIO_17_inv)
       };
-    addSelector(F("ethclock"), 4, ethClockOptions, NULL, NULL, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
+    addSelector(F("ethclock"), 4, ethClockOptions, nullptr, nullptr, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
   }
 #endif // ifdef HAS_ETHERNET
 

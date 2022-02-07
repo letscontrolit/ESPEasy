@@ -976,13 +976,13 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 int getPartionCount(uint8_t pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   int nrPartitions                         = 0;
 
   if (_mypartiterator) {
     do {
       ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return nrPartitions;
@@ -997,7 +997,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   uint32_t realSize                      = getFlashRealSizeInBytes();
   esp_partition_type_t     partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t   *_mypart;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
@@ -1015,7 +1015,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
       textXoffset = SVG_BAR_WIDTH + 130;
       createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
       yOffset += SVG_BAR_HEIGHT;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   addHtml(F("</svg>\n"));
   esp_partition_iterator_release(_mypartiterator);

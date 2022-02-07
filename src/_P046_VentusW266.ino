@@ -168,7 +168,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             F("Unknown 3, uint8_t 19"),
           };
 
-          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice);
         }
 
         if (choice==0) {
