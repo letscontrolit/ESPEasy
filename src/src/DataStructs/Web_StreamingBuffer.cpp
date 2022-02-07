@@ -99,6 +99,8 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   if (length == 0) { return *this; }
   flashStringData += length;
 
+  checkFull();
+
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
   if (flush_step < 1) { flush_step = 0; }
 
@@ -130,18 +132,19 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
       ++cur_char;
       --flush_step;
     }
-    checkFull();
   }
   return *this;
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
   if (lowMemorySkip) { return *this; }
+  const unsigned int length = a.length();
+  if (length == 0) { return *this; }
+
+  checkFull();
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
 
   if (flush_step < 1) { flush_step = 0; }
-
-  const unsigned int length = a.length();
 
   if (length < static_cast<unsigned int>(flush_step)) {
     // Just use the faster String operator to copy flash strings.
@@ -161,7 +164,6 @@ Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
       --flush_step;
     }
   }
-  checkFull();
   return *this;
 }
 
@@ -188,11 +190,11 @@ void Web_StreamingBuffer::startStream() {
   startStream(false, F("text/html"), F(""));
 }
 
-void Web_StreamingBuffer::startStream(const String& origin) {
+void Web_StreamingBuffer::startStream(const __FlashStringHelper * origin) {
   startStream(false, F("text/html"), origin);
 }
 
-void Web_StreamingBuffer::startStream(const String& content_type, const String& origin) {
+void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin) {
   startStream(false, content_type, origin);
 }
 
@@ -202,8 +204,8 @@ void Web_StreamingBuffer::startJsonStream() {
 }
 
 void Web_StreamingBuffer::startStream(bool allowOriginAll, 
-                                      const String& content_type, 
-                                      const String& origin) {
+                                      const __FlashStringHelper * content_type, 
+                                      const __FlashStringHelper * origin) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -296,7 +298,12 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   const uint32_t length   = data.length();
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    addLog(LOG_LEVEL_DEBUG_DEV, String(F("sendcontent free: ")) + ESP.getFreeHeap() + F(" chunk size:") + length);
+    String log;
+    log += F("sendcontent free: ");
+    log += ESP.getFreeHeap();
+    log += F(" chunk size:");
+    log += length;
+    addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   const uint32_t freeBeforeSend = ESP.getFreeHeap();

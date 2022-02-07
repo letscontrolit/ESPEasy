@@ -64,17 +64,17 @@ public:
 
   void startStream();
 
-  void startStream(const String& origin);
+  void startStream(const __FlashStringHelper * origin);
 
-  void startStream(const String& content_type, const String& origin);
+  void startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin);
 
   void startJsonStream();
 
 private:
 
   void startStream(bool allowOriginAll, 
-                   const String& content_type, 
-                   const String& origin);
+                   const __FlashStringHelper * content_type, 
+                   const __FlashStringHelper * origin);
 
   void trackTotalMem();
 
