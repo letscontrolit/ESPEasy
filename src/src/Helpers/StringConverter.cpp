@@ -483,6 +483,12 @@ String to_json_object_value(const __FlashStringHelper * object,
   return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            String&& value,
+                            bool wrapInQuotes) 
+{
+  return to_json_object_value(String(object), value, wrapInQuotes);
+}
 
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   String result;

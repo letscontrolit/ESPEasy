@@ -18,6 +18,9 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
 
+void stream_comma_newline() {
+  addHtml(',', '\n');
+}
 
 
 // ********************************************************************************
@@ -195,8 +198,8 @@ void handle_json()
         LabelType::MAX_LABEL
       };
 
-      stream_json_object_values(labels, true);
-      addHtml(',', '\n');
+      stream_json_object_values(labels);
+      stream_comma_newline();
     }
 
     if (showWifi) {
@@ -245,10 +248,10 @@ void handle_json()
         LabelType::MAX_LABEL
       };
 
-      stream_json_object_values(labels, true);
+      stream_json_object_values(labels);
 
       // TODO: PKR: Add ETH Objects
-      addHtml(',', '\n');
+      stream_comma_newline();
     }
 
     #ifdef HAS_ETHERNET
@@ -268,8 +271,8 @@ void handle_json()
         LabelType::MAX_LABEL
       };
 
-      stream_json_object_values(labels, true);
-      addHtml(',', '\n');
+      stream_json_object_values(labels);
+      stream_comma_newline();
     }
     #endif // ifdef HAS_ETHERNET
 
@@ -382,7 +385,7 @@ void handle_json()
           stream_last_json_object_value(F("Value"), value);
 
           if (x < (valueCount - 1)) {
-            addHtml(',', '\n');
+            stream_comma_newline();
           }
         }
         addHtml(F("],\n"));
@@ -403,7 +406,7 @@ void handle_json()
           stream_last_json_object_value(F("Enabled"), jsonBool(Settings.TaskDeviceSendData[x][TaskIndex]));
 
           if (x < (CONTROLLER_MAX - 1)) {
-            addHtml(',', '\n');
+            stream_comma_newline();
           }
         }
         addHtml(F("],\n"));
@@ -422,7 +425,7 @@ void handle_json()
             uint8_t b = 0;
             for (uint8_t c = 0; c < I2CMultiplexerMaxChannels(); c++) {
               if (bitRead(channel, c)) {
-                if (b > 0) { addHtml(',', '\n'); }
+                if (b > 0) { stream_comma_newline(); }
                 b++;
                 addHtml(F("\"Multiplexer channel "));
                 addHtmlInt(c);
@@ -594,39 +597,55 @@ String jsonBool(bool value) {
   return boolToString(value);
 }
 
+
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
 void stream_next_json_object_value(const __FlashStringHelper * object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml(',', '\n');
+  stream_comma_newline();
+}
+
+void stream_next_json_object_value(const __FlashStringHelper * object, String&& value) {
+  stream_to_json_object_value(object, value);
+  stream_comma_newline();
 }
 
 void stream_next_json_object_value(const String& object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml(',', '\n');
+  stream_comma_newline();
 }
 
 void stream_next_json_object_value(const __FlashStringHelper * object, int value) {
   stream_to_json_object_value(object, value);
-  addHtml(',', '\n');
+  stream_comma_newline();
 }
+
+void stream_newline_close_brace() {
+  addHtml('\n', '}');
+}
+
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
 void stream_last_json_object_value(const __FlashStringHelper * object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml('\n', '}');
+  stream_newline_close_brace();
+}
+
+void stream_last_json_object_value(const __FlashStringHelper * object, String&& value) {
+  stream_to_json_object_value(object, value);
+  stream_newline_close_brace();
 }
 
 void stream_last_json_object_value(const String& object, const String& value) {
   stream_to_json_object_value(object, value);
-  addHtml('\n', '}');
+  stream_newline_close_brace();
 }
 
 void stream_last_json_object_value(const __FlashStringHelper * object, int value) {
   stream_to_json_object_value(object, value);
-  addHtml('\n', '}');
+  stream_newline_close_brace();
 }
 
-void stream_json_object_values(const LabelType::Enum labels[], bool markLast)
+void stream_json_object_values(const LabelType::Enum labels[])
 {
   size_t i = 0;
 
@@ -635,14 +654,11 @@ void stream_json_object_values(const LabelType::Enum labels[], bool markLast)
     const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
     const bool nextIsLast      = next == LabelType::MAX_LABEL;
 
-    if (markLast && nextIsLast) {
+    if (nextIsLast) {
       stream_last_json_object_value(cur);
+      return;
     } else {
       stream_next_json_object_value(cur);
-    }
-
-    if (nextIsLast) {
-      return;
     }
     ++i;
   }

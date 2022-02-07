@@ -339,6 +339,10 @@ void addHtml(const String& html) {
   TXBuffer += html;
 }
 
+void addHtml(String&& html) {
+  TXBuffer += html;
+}
+
 void addHtmlInt(int32_t int_val) {
   addHtml(String(int_val));
 }

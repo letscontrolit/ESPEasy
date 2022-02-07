@@ -151,6 +151,10 @@ String to_json_object_value(const __FlashStringHelper * object,
                             const String& value,
                             bool wrapInQuotes = false);
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            String&& value,
+                            bool wrapInQuotes = false);
+
 String to_json_object_value(const String& object,
                             const String& value,
                             bool wrapInQuotes = false);
