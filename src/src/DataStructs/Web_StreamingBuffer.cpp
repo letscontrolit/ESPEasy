@@ -103,13 +103,15 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
 
   int flush_step = CHUNKED_BUFFER_SIZE - this->buf.length();
   if (flush_step < 1) { flush_step = 0; }
-
+/*
+  // This part does act strange on 1 heap builds
+  // See: https://github.com/letscontrolit/ESPEasy/pull/3680#issuecomment-1031716163
   if (length < static_cast<unsigned int>(flush_step)) {
     // Just use the faster String operator to copy flash strings.
     this->buf += str;
     return *this;
   }
-
+*/
   // FIXME TD-er: Not sure what happens, but streaming large flash chunks does cause allocation issues.
   const bool stream_P = ESP.getFreeHeap() > 4000 && length < (2 * CHUNKED_BUFFER_SIZE);
 
@@ -120,16 +122,13 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   } else {
     // Copy to internal buffer and send in chunks
     unsigned int pos          = 0;
-
-    const char * cur_char = &str[pos];
     while (pos < length) {
       if (flush_step == 0) {
         flush();
         flush_step = CHUNKED_BUFFER_SIZE;
       }
-      this->buf += (char)pgm_read_byte(cur_char);
+      this->buf += (char)pgm_read_byte(&str[pos]);
       ++pos;
-      ++cur_char;
       --flush_step;
     }
   }
