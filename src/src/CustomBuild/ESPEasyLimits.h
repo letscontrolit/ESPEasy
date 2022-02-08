@@ -66,6 +66,7 @@
   #define NAME_FORMULA_LENGTH_MAX            40
 #endif
 
+#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
 // ***********************************************************************
 // * The next limits affect memory usage

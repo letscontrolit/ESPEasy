@@ -81,7 +81,7 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
 bool Modbus::handle() {
   unsigned int RXavailable = 0;
 
-  LogString = "";
+  LogString.clear();
   int64_t rxValue = 0;
 
   switch (TXRXstate) {
@@ -156,7 +156,8 @@ bool Modbus::handle() {
           break;
       }
 
-      LogString += "value: "; LogString += result;
+      LogString += F("value: "); 
+      LogString += result;
 
       // if ((systemTimePresent()) && (hour() == 0)) errcnt = 0;
 

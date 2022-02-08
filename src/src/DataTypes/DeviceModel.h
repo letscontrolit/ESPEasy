@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_DEVICEMODEL_H
-#define DATASTRUCTS_DEVICEMODEL_H
+#ifndef DATATYPES_DEVICEMODEL_H
+#define DATATYPES_DEVICEMODEL_H
 
 /********************************************************************************************\
   Pre defined settings for off-the-shelf hardware
@@ -32,4 +32,4 @@ enum class DeviceModel : uint8_t {
 };
 
 
-#endif // DATASTRUCTS_DEVICEMODEL_H
+#endif // DATATYPES_DEVICEMODEL_H

@@ -52,7 +52,7 @@ bool AHTx_Device::softReset() {
 }
 
 uint8_t AHTx_Device::readStatus() {
-  return I2C_read8(i2cAddress, NULL);
+  return I2C_read8(i2cAddress, nullptr);
 }
 
 bool AHTx_Device::readData() {
