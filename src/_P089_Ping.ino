@@ -1,5 +1,11 @@
 #include "_Plugin_Helper.h"
 #if defined(USES_P089) && defined(ESP8266)
+
+
+// FIXME TD-er: Support Ping in ESP32
+// Also remove check for ESP8266 in Helpers/_Plugin_init.h and .cpp
+
+
 //#######################################################################################################
 //#################### Plugin 089 ICMP Ping probing ##############
 //#######################################################################################################
@@ -49,7 +55,7 @@ public:
       P089_data = new (std::nothrow) P089_icmp_pcb();
       if (P089_data != nullptr) {
         P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-        raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
+        raw_recv(P089_data->m_IcmpPCB, PingReceiver, nullptr);
         raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
       }
     } else {
@@ -98,7 +104,7 @@ public:
     u16_t ping_len = ICMP_PAYLOAD_LEN + sizeof(struct icmp_echo_hdr);
     struct pbuf *packetBuffer = pbuf_alloc(PBUF_IP, ping_len, PBUF_RAM);
     /* Lost for sure, TODO: Might be good to log such failures, this means we are short on ram? */
-    if (packetBuffer == NULL) {
+    if (packetBuffer == nullptr) {
       return true;
     }
 

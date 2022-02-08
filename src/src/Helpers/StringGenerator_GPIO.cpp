@@ -29,8 +29,8 @@ String formatGpioLabel(int gpio, bool includeWarning) {
   return F("-");
 }
 
-String formatGpioName(const String& label, gpio_direction direction, bool optional) {
-  int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
+String formatGpioName(const __FlashStringHelper * label, gpio_direction direction, bool optional) {
+  int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + strlen_P((PGM_P)label);
 
   if (optional) {
     reserveLength += 11;
@@ -48,27 +48,23 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   return result;
 }
 
-String formatGpioName(const String& label, gpio_direction direction) {
-  return formatGpioName(label, direction, false);
-}
-
-String formatGpioName_input(const String& label) {
+String formatGpioName_input(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_input, false);
 }
 
-String formatGpioName_output(const String& label) {
+String formatGpioName_output(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_output, false);
 }
 
-String formatGpioName_bidirectional(const String& label) {
+String formatGpioName_bidirectional(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_bidirectional, false);
 }
 
-String formatGpioName_input_optional(const String& label) {
+String formatGpioName_input_optional(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_input, true);
 }
 
-String formatGpioName_output_optional(const String& label) {
+String formatGpioName_output_optional(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_output, true);
 }
 

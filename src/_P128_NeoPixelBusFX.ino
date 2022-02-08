@@ -185,7 +185,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormSubHeader(F("Actuator"));
 
-      addRowLabel(formatGpioName_output("Stripe data"));
+      addRowLabel(formatGpioName_output(F("Stripe data")));
       # ifdef ESP8266
       addHtml(F("<span style=\"color:red\">Please connect stripe to GPIO2!</span>"));
       # endif // ifdef ESP8266

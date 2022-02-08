@@ -212,7 +212,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         { static_cast<int>(p036_resolution::pix128x64),
           static_cast<int>(p036_resolution::pix128x32),
           static_cast<int>(p036_resolution::pix64x48) };
-        addFormSelector(F("Size"), F("p036_size"), P36_MaxSizesCount, options, optionValues, NULL, P036_RESOLUTION, true);
+        addFormSelector(F("Size"), F("p036_size"), P36_MaxSizesCount, options, optionValues, nullptr, P036_RESOLUTION, true);
       }
 
       {
@@ -283,14 +283,16 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = P036_CONTRAST;
 
         if (choice == 0) { choice = P36_CONTRAST_HIGH; }
-        const __FlashStringHelper * options[3];
-        options[0] = F("Low");
-        options[1] = F("Medium");
-        options[2] = F("High");
-        int optionValues[3];
-        optionValues[0] = P36_CONTRAST_LOW;
-        optionValues[1] = P36_CONTRAST_MED;
-        optionValues[2] = P36_CONTRAST_HIGH;
+        const __FlashStringHelper * options[3] = {
+          F("Low"),
+          F("Medium"),
+          F("High")
+        };
+        const int optionValues[3] = {
+          P36_CONTRAST_LOW,
+          P36_CONTRAST_MED,
+          P36_CONTRAST_HIGH
+        };
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
       }
 
@@ -982,20 +984,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
 #ifdef PLUGIN_036_DEBUG
           String log;
-          log.reserve(200); // estimated
-          log = F("[P36] Line: ");
-          log += LineNo;
-          log += F(" NewContent:");
-          log += NewContent;
-          log += F(" Content:");
-          log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
-          log += F(" Length:");
-          log += P036_data->DisplayLinesV1[LineNo - 1].Content).length();
-          log += F(" Pix: ");
-          log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
-          log += F(" Reserved:");
-          log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
-          addLog(LOG_LEVEL_INFO, log);
+          if (log.reserve(200)) {; // estimated
+            log = F("[P36] Line: ");
+            log += LineNo;
+            log += F(" NewContent:");
+            log += NewContent;
+            log += F(" Content:");
+            log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
+            log += F(" Length:");
+            log += String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
+            log += F(" Pix: ");
+            log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
+            log += F(" Reserved:");
+            log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
+            addLog(LOG_LEVEL_INFO, log);
+          }
 #endif // PLUGIN_036_DEBUG
         }
       }
@@ -1006,8 +1009,8 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         log += command;
         log += F(" SubCmd:");
         log += subcommand;
-        log += F(" Success:"):
-        log += jsonBool(success);
+        log += F(" Success:");
+        log += success ? F("true") : F("false");
         addLog(LOG_LEVEL_INFO, log);
       }
 #endif // PLUGIN_036_DEBUG

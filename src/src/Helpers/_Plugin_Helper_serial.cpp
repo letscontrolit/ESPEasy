@@ -237,7 +237,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
     }
   }
   addFormSelector_script(F("Serial Port"), F("serPort"), NR_ESPEASY_SERIAL_TYPES,
-                         options, ids, NULL,
+                         options, ids, nullptr,
                          static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)),
                          F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
 #ifndef DISABLE_SC16IS752_Serial
