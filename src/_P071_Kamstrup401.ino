@@ -168,43 +168,43 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
               else
                m_energy = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_volume = atol(tmpstr);
               else
                m_volume = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_hours = atol(tmpstr);
               else
                m_hours = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_tempin = atol(tmpstr)/100.0f;
               else
                m_tempin = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_tempout = atol(tmpstr)/100.0f;
               else
                m_tempout = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_tempdiff = atol(tmpstr)/100.0f;
               else
                m_tempdiff = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_power = atol(tmpstr)/10.0f;
               else
                m_power = 0;
 
-              tmpstr = strtok(NULL, " ");
+              tmpstr = strtok(nullptr, " ");
               if (tmpstr)
                m_flow = atol(tmpstr);
               else

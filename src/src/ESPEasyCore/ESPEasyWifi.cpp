@@ -540,8 +540,8 @@ void initWiFi()
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
   // FIXME TD-er: Do not destruct WiFi object, it may cause crashes with queued UDP traffic.
-  WiFi.~ESP8266WiFiClass();
-  WiFi = ESP8266WiFiClass();
+//  WiFi.~ESP8266WiFiClass();
+//  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters

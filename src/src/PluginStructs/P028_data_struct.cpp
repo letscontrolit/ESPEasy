@@ -47,7 +47,7 @@ String P028_data_struct::getFullDeviceName() const {
   return devicename;
 }
 
-String P028_data_struct::getDeviceName() const {
+const __FlashStringHelper * P028_data_struct::getDeviceName() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -136,7 +136,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(120); // Prevent re-allocation
     log  = getDeviceName();
-    log += F(":");
+    log += ':';
   }
   boolean logAdded = false;
 
@@ -154,7 +154,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += F(" Apply temp offset ");
       log += tempOffset;
-      log += F("C");
+      log += 'C';
     }
 
     if (hasHumidity()) {
@@ -182,7 +182,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F("C => ");
       log     += last_temp_val;
-      log     += F("C");
+      log     += 'C';
       logAdded = true;
     }
   }
@@ -191,7 +191,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F(" dew point ");
       log     += last_dew_temp_val;
-      log     += F("C");
+      log     += 'C';
       logAdded = true;
     }
   }

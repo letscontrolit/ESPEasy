@@ -19,7 +19,7 @@ void ModbusRTU_struct::reset() {
     delete easySerial;
     easySerial = nullptr;
   }
-  detected_device_description = "";
+  detected_device_description.clear();
 
   for (int i = 0; i < 8; ++i) {
     _sendframe[i] = 0;
@@ -142,12 +142,12 @@ String ModbusRTU_struct::getDevice_description(uint8_t slaveAddress) {
       if (label.length() > 0) {
         // description += MEI_objectid_to_name(object_id);
         description += label;
-        description += ": ";
+        description += F(": ");
       }
 
       if (obj_text.length() > 0) {
         description += obj_text;
-        description += " - ";
+        description += F(" - ");
       }
     }
   }
@@ -290,7 +290,7 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
 
         if (i != 0) {
           // Append to existing description
-          result += ", ";
+          result += F(", ");
         }
         result += object_value;
       }

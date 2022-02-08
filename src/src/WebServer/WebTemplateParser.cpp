@@ -127,9 +127,8 @@ bool WebTemplateParser::process(const char c) {
           // Done parsing varName, still need to process it.
           if (varName.equalsIgnoreCase(F("content"))) {
             contentVarFound = true;
-          }
-          if (Tail == contentVarFound) {
-              processVarName();
+          } else if (Tail == contentVarFound) {
+            processVarName();
           }
           varName.clear();
         }
@@ -140,6 +139,7 @@ bool WebTemplateParser::process(const char c) {
       if (parsingVarName) {
         varName += c;
       } else {
+        // FIXME TD-er: if a template has single '{' or '}' they will not be sent. Is that a problem?
         if (Tail == contentVarFound) {
           // only send the template tail after {{content}} is found
           // Or send all until the {{content}} tag.
