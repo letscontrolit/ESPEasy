@@ -20,7 +20,7 @@
 #define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
 #define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
 
-#define P026_NR_OUTPUT_OPTIONS  14
+#define P026_NR_OUTPUT_OPTIONS  15
 
 const __FlashStringHelper * Plugin_026_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
@@ -37,7 +37,8 @@ const __FlashStringHelper * Plugin_026_valuename(uint8_t value_nr, bool displayS
     case 10: return displayString ? F("Free Stack") : F("freestack");
     case 11: return displayString ? F("None") : F("");
     case 12: return displayString ? F("WiFi TX pwr") : F("txpwr");
-    case 13: return displayString ? F("Test Counter") : F("testcount");
+    case 13: return displayString ? F("Free 2nd Heap") : F("free2ndheap");
+    case 14: return displayString ? F("Test Counter") : F("testcount");
     default:
       break;
   }
@@ -167,16 +168,18 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1));
-        log = F("SYS  : ");
+        if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
+        {
+          log = F("SYS  : ");
 
-        for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
-          if (i != 0) {
-            log += ',';
+          for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+            if (i != 0) {
+              log += ',';
+            }
+            log += formatUserVarNoCheck(event->TaskIndex, i);
           }
-          log += formatUserVarNoCheck(event->TaskIndex, i);
+          addLog(LOG_LEVEL_INFO, log);
         }
-        addLog(LOG_LEVEL_INFO, log);
       }
       ++p026_read_count;
       success = true;
@@ -223,7 +226,7 @@ float P026_get_value(int type)
     }
     case 1:
     {
-      value = ESP.getFreeHeap();
+      value = FreeMem();
       break;
     }
     case 2:
@@ -268,8 +271,15 @@ float P026_get_value(int type)
       value = WiFiEventData.wifi_TX_pwr;
       break;
     }
-
     case 13:
+    {
+      #ifdef USE_SECOND_HEAP
+      value = FreeMem2ndHeap();
+      #endif
+      break;
+    }
+
+    case 14:
     {
       value = p026_read_count;
       break;

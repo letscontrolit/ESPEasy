@@ -35,22 +35,26 @@ void handle_buildinfo();
 /*********************************************************************************************\
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
-void stream_to_json_value(const String& value);
-
 void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value);
 void stream_to_json_object_value(const String& object, const String& value);
+void stream_to_json_object_value(const __FlashStringHelper *  object, int value);
+
 
 String jsonBool(bool value);
 
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
 void stream_next_json_object_value(const __FlashStringHelper * object, const String& value);
+void stream_next_json_object_value(const __FlashStringHelper * object, String&& value);
 void stream_next_json_object_value(const String& object, const String& value);
+void stream_next_json_object_value(const __FlashStringHelper * object, int value);
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
 void stream_last_json_object_value(const __FlashStringHelper * object, const String& value);
+void stream_last_json_object_value(const __FlashStringHelper * object, String&& value);
 void stream_last_json_object_value(const String& object, const String& value);
+void stream_last_json_object_value(const __FlashStringHelper * object, int value);
 
-void stream_json_object_values(const LabelType::Enum labels[], bool markLast = false);
+void stream_json_object_values(const LabelType::Enum labels[]);
 
 void stream_next_json_object_value(LabelType::Enum label);
 

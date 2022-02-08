@@ -1,6 +1,7 @@
 #include "../Globals/NPlugins.h"
 
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/NotificationStruct.h"
 #include "../Globals/Settings.h"
 
@@ -8,7 +9,7 @@
 nprotocolIndex_t INVALID_NPROTOCOL_INDEX = NPLUGIN_MAX;
 
 
-boolean (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
+bool (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
                                     struct EventStruct *,
                                     String&);
 npluginID_t NPlugin_id[NPLUGIN_MAX];
@@ -16,6 +17,44 @@ npluginID_t NPlugin_id[NPLUGIN_MAX];
 NotificationStruct Notification[NPLUGIN_MAX];
 
 int notificationCount = -1;
+
+
+uint8_t NPluginCall(NPlugin::Function Function, struct EventStruct *event)
+{
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+  int x;
+  struct EventStruct TempEvent;
+
+  if (event == 0) {
+    event = &TempEvent;
+  }
+
+  switch (Function)
+  {
+    // Unconditional calls to all plugins
+    case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
+
+      for (x = 0; x < NPLUGIN_MAX; x++) {
+        if (validNPluginID(NPlugin_id[x])) {
+          String dummy;
+          NPlugin_ptr[x](Function, event, dummy);
+        }
+      }
+      return true;
+      break;
+
+    case NPlugin::Function::NPLUGIN_GET_DEVICENAME:
+    case NPlugin::Function::NPLUGIN_WEBFORM_SAVE:
+    case NPlugin::Function::NPLUGIN_WEBFORM_LOAD:
+    case NPlugin::Function::NPLUGIN_WRITE:
+    case NPlugin::Function::NPLUGIN_NOTIFY:
+      break;
+  }
+
+  return false;
+}
 
 
 bool validNProtocolIndex(nprotocolIndex_t index) {
@@ -66,3 +105,19 @@ nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index) {
   return INVALID_NPROTOCOL_INDEX;
 }
 
+bool addNPlugin(npluginID_t npluginID, nprotocolIndex_t x) {
+  if (x < NPLUGIN_MAX) { 
+    // FIXME TD-er: Must add lookup for notification plugins too
+//    ProtocolIndex_to_NPlugin_id[x] = npluginID; 
+//    NPlugin_id_to_ProtocolIndex[npluginID] = x;
+    return true;
+  }
+  /*
+  {
+    String log = F("System: Error - Too many N-Plugins. NPLUGIN_MAX = ");
+    log += NPLUGIN_MAX;
+    addLog(LOG_LEVEL_ERROR, log);
+  }
+  */
+  return false;
+}

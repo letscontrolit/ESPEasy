@@ -725,28 +725,29 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
 
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(70);
-      log = F("dotmatrix: Bar-graph: ");
+      if (log.reserve(70)) {
+        log = F("dotmatrix: Bar-graph: ");
 
-      if (loop) {
-        log += currentBar;
-        log += F(" in: ");
-        log += graphpart;
-        log += F(" value: ");
-        log += barGraphs[currentBar].value;
-        log += F(" max: ");
-        log += barGraphs[currentBar].max;
-        log += F(" min: ");
-        log += barGraphs[currentBar].min;
-        log += F(" dir: ");
-        log += barGraphs[currentBar].direction;
-        log += F(" typ: ");
-        log += barGraphs[currentBar].barType;
-      } else {
-        log += F(" bsize: ");
-        log += barGraphs.size();
+        if (loop) {
+          log += currentBar;
+          log += F(" in: ");
+          log += graphpart;
+          log += F(" value: ");
+          log += barGraphs[currentBar].value;
+          log += F(" max: ");
+          log += barGraphs[currentBar].max;
+          log += F(" min: ");
+          log += barGraphs[currentBar].min;
+          log += F(" dir: ");
+          log += barGraphs[currentBar].direction;
+          log += F(" typ: ");
+          log += barGraphs[currentBar].barType;
+        } else {
+          log += F(" bsize: ");
+          log += barGraphs.size();
+        }
+        addLog(LOG_LEVEL_INFO, log);
       }
-      addLog(LOG_LEVEL_INFO, log);
     }
     #  endif // ifdef P104_DEBUG
     currentBar++; // next
@@ -1907,7 +1908,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonetip += F(" will save and reload the page.");
     }
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    addFormSelector(F("Zones"), F("plugin_104_zonecount"), P104_MAX_ZONES, zonesList, zonesOptions, NULL, P104_CONFIG_ZONE_COUNT, true
+    addFormSelector(F("Zones"), F("plugin_104_zonecount"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
                     , zonetip
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -1919,7 +1920,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Display order (n..1)")
     };
     const int    orderOptions[] = { 0, 1 };
-    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL,
+    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, nullptr,
                     bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
                     #  ifdef P104_USE_TOOLTIPS
                     , zonetip
@@ -2292,7 +2293,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     P104_CONTENT_count,
                     contentTypes,
                     contentOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].content,
                     false,
                     true,
@@ -2303,7 +2304,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     3,
                     alignmentTypes,
                     alignmentOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].alignment,
                     false,
                     true,
@@ -2315,7 +2316,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       animationCount - 1,
                       &animationTypes[1],
                       &animationOptions[1],
-                      NULL,
+                      nullptr,
                       zones[zone].animationIn,
                       false,
                       true,
@@ -2339,7 +2340,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     fontCount,
                     fontTypes,
                     fontOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].font,
                     false,
                     true,
@@ -2354,7 +2355,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     2,
                     invertedTypes,
                     invertedOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].inverted,
                     false,
                     true,
@@ -2368,7 +2369,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         # ifdef P104_USE_ZONE_ACTIONS
 
         html_TD();  // Spacer
-        addHtml(F("|"));
+        addHtml('|');
 
         if (currentRow < 2) {
           addHtml(F("<TD style=\"text-align:center;font-size:90%\">")); // Action column, text centered and font-size 90%
@@ -2394,7 +2395,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       animationCount,
                       animationTypes,
                       animationOptions,
-                      NULL,
+                      nullptr,
                       zones[zone].animationOut,
                       false,
                       true,
@@ -2418,7 +2419,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     layoutCount,
                     layoutTypes,
                     layoutOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].layout,
                     false,
                     true,
@@ -2433,7 +2434,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     specialEffectCount,
                     specialEffectTypes,
                     specialEffectOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].specialEffect,
                     false,
                     true,
@@ -2464,14 +2465,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         # ifdef P104_USE_ZONE_ACTIONS
         html_TD(); // Spacer
-        addHtml(F("|"));
+        addHtml('|');
 
         html_TD(); // Action
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ACTION),
                     actionCount,
                     actionTypes,
                     actionOptions,
-                    NULL,
+                    nullptr,
                     P104_ACTION_NONE, // Always start with None
                     true,
                     true,

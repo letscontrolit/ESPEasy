@@ -57,7 +57,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t   choice     = PCONFIG(0);
       const __FlashStringHelper * options[2] = { F("Digital"), F("Analog") };
-      addFormSelector(F("Port Type"), F("p011"), 2, options, NULL, choice);
+      addFormSelector(F("Port Type"), F("p011"), 2, options, nullptr, choice);
 
       success = true;
       break;

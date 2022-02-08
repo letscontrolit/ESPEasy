@@ -13,6 +13,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -319,7 +320,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     useNTPpool = true;
   }
 
-  log += " (";
+  log += F(" (");
   log += timeServerIP.toString();
   log += ')';
 

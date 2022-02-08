@@ -39,7 +39,7 @@ void handleNotFound() {
   message += (web_server.method() == HTTP_GET) ? F("GET") : F("POST");
   message += F("\nArguments: ");
   message += web_server.args();
-  message += "\n";
+  message += '\n';
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
     message += F(" NAME:");

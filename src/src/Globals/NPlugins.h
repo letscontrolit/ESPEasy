@@ -19,7 +19,7 @@ typedef uint8_t    nprotocolIndex_t;
 extern nprotocolIndex_t INVALID_NPROTOCOL_INDEX;
 
 
-extern boolean (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
+extern bool (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
                                            struct EventStruct *,
                                            String&);
 extern npluginID_t NPlugin_id[NPLUGIN_MAX];
@@ -29,7 +29,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 extern int notificationCount;
 
 
-uint8_t             NPluginCall(NPlugin::Function   Function,
+uint8_t          NPluginCall(NPlugin::Function   Function,
                              struct EventStruct *event);
 
 bool             validNProtocolIndex(nprotocolIndex_t index);
@@ -39,5 +39,6 @@ bool             validNPluginID(npluginID_t npluginID);
 String           getNPluginNameFromNotifierIndex(notifierIndex_t NotifierIndex);
 nprotocolIndex_t getNProtocolIndex(npluginID_t Number);
 nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index);
+bool             addNPlugin(npluginID_t npluginID, nprotocolIndex_t x);
 
 #endif // GLOBALS_NPLUGIN_H

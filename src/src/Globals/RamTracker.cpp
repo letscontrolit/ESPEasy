@@ -3,6 +3,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
 #include "../Helpers/Memory.h"
@@ -25,7 +26,7 @@ void checkRAM(const String &flashString, int a ) {
 
 void checkRAM(const String& flashString, const String &a ) {
   String s = flashString;
-  s += " (";
+  s += F(" (");
   s += a;
   s += ')';
   checkRAM(s);
@@ -36,7 +37,8 @@ void checkRAM(const __FlashStringHelper * descr ) {
 }
 
 void checkRAM(const String& descr ) {
-  myRamTracker.registerRamState(descr);
+  if (Settings.EnableRAMTracking())
+    myRamTracker.registerRamState(descr);
   
   uint32_t freeRAM = FreeMem();
   if (freeRAM <= lowestRAM)
@@ -79,7 +81,7 @@ RamTracker::RamTracker(void) {
   writePtr = 0;
 
   for (int i = 0; i < TRACES; i++) {
-    traces[i]       = "";
+    traces[i].clear();
     tracesMemory[i] = 0xffffffff; // init with best case memory values, so they get replaced if memory goes lower
   }
 
@@ -95,7 +97,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
   int bestCase = bestCaseTrace();                      // find best case memory trace
 
   if (ESP.getFreeHeap() < tracesMemory[bestCase]) {    // compare to current memory value
-    traces[bestCase] = "";
+    traces[bestCase].clear();
     readPtr          = writePtr + 1;                   // read out buffer, oldest value first
 
     if (readPtr >= TRACEENTRIES) { 
@@ -105,7 +107,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
 
     for (int i = 0; i < TRACEENTRIES; i++) {           // tranfer cyclic buffer strings and mem values to this trace
       traces[bestCase] += nextAction[readPtr];
-      traces[bestCase] += "-> ";
+      traces[bestCase] += F("-> ");
       traces[bestCase] += String(nextActionStartMemory[readPtr]);
       traces[bestCase] += ' ';
       readPtr++;
@@ -123,18 +125,17 @@ void RamTracker::registerRamState(const String& s) {   // store function
  // return giant strings, one line per trace. Add stremToWeb method to avoid large strings.
 void RamTracker::getTraceBuffer() {
 #ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    String retval = "Memtrace\n";
+  if (Settings.EnableRAMTracking() && loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+    String retval = F("Memtrace\n");
 
     for (int i = 0; i < TRACES; i++) {
       retval += String(i);
-      retval += ": lowest: ";
+      retval += F(": lowest: ");
       retval += String(tracesMemory[i]);
-      retval += "  ";
+      retval += ' ';
       retval += traces[i];
       addLog(LOG_LEVEL_DEBUG_DEV, retval);
-      retval = "";
+      retval.clear();
     }
   }
 #endif // ifndef BUILD_NO_DEBUG

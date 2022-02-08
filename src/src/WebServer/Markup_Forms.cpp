@@ -379,17 +379,17 @@ void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addres
 
 void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange)
 {
-  addFormSelector(String(label), String(id), optionCount, options, indices, NULL, selectedIndex, reloadonchange);
+  addFormSelector(String(label), String(id), optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false);
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, false);
 }
 
 void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex)
 {
-  addFormSelector(String(label), String(id), optionCount, options, indices, NULL, selectedIndex, false);
+  addFormSelector(String(label), String(id), optionCount, options, indices, nullptr, selectedIndex, false);
 }
 
 void addFormSelector(const String  & label,
@@ -403,7 +403,7 @@ void addFormSelector(const String  & label,
                      #endif // ifdef ENABLE_TOOLTIPS
                      )
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, false
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, false
                   #ifdef ENABLE_TOOLTIPS
                   , tooltip
                   #endif // ifdef ENABLE_TOOLTIPS
@@ -418,7 +418,7 @@ void addFormSelector(const String& label,
                      int           selectedIndex,
                      bool          reloadonchange)
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, reloadonchange);
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
 }
 
 void addFormSelector(const String& label,
@@ -442,7 +442,7 @@ void addFormSelector(const String& label,
                      int           selectedIndex,
                      bool          reloadonchange)
 {
-  addFormSelector(label, id, optionCount, options, indices, NULL, selectedIndex, reloadonchange);
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
 }
 
 void addFormSelector(const String  & label,
@@ -556,7 +556,7 @@ void addFormPinStateSelect(int gpio, int choice)
         ++nr_options;
       }
     }
-    addSelector(id, nr_options, options, option_val, NULL, choice, false, enabled);
+    addSelector(id, nr_options, options, option_val, nullptr, choice, false, enabled);
     {
       const String conflict = getConflictingUse(gpio);
       if (!conflict.isEmpty()) {

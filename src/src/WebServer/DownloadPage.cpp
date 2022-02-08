@@ -32,7 +32,7 @@ void handle_download()
 
   String str = F("attachment; filename=config_");
   str += Settings.Name;
-  str += "_U";
+  str += F("_U");
   str += Settings.Unit;
   str += F("_Build");
   str += BUILD;

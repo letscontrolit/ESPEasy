@@ -119,13 +119,11 @@ void sendData_checkDuplicates(struct EventStruct *event, const String& compare_k
 }
 
 bool validUserVar(struct EventStruct *event) {
-  switch (event->getSensorType()) {
-    case Sensor_VType::SENSOR_TYPE_LONG:    return true;
-    case Sensor_VType::SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
-    default:
-      break;
-  }
-  uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType vtype = event->getSensorType();
+  if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
+      vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
+  ) return true;
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);

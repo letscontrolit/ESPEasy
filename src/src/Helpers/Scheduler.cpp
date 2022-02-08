@@ -23,55 +23,43 @@
 #define TIMER_ID_SHIFT       28 // Must be decreased as soon as timers below reach 15
 
 
+#ifndef BUILD_NO_DEBUG
+const __FlashStringHelper * toString_f(ESPEasy_Scheduler::IntervalTimer_e timer) {
+  switch (timer) {
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_20MSEC:           return F("TIMER_20MSEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_100MSEC:          return F("TIMER_100MSEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_1SEC:             return F("TIMER_1SEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC:            return F("TIMER_30SEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT:             return F("TIMER_MQTT");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS:       return F("TIMER_STATISTICS");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_GRATUITOUS_ARP:   return F("TIMER_GRATUITOUS_ARP");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE: return F("TIMER_MQTT_DELAY_QUEUE");
+    default: 
+      break;
+  }
+  return F("unknown");
+}
+#endif
+
 String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
 #ifdef BUILD_NO_DEBUG
   return String(static_cast<int>(timer));
 #else // ifdef BUILD_NO_DEBUG
 
-  switch (timer) {
-    case IntervalTimer_e::TIMER_20MSEC:           return F("TIMER_20MSEC");
-    case IntervalTimer_e::TIMER_100MSEC:          return F("TIMER_100MSEC");
-    case IntervalTimer_e::TIMER_1SEC:             return F("TIMER_1SEC");
-    case IntervalTimer_e::TIMER_30SEC:            return F("TIMER_30SEC");
-    case IntervalTimer_e::TIMER_MQTT:             return F("TIMER_MQTT");
-    case IntervalTimer_e::TIMER_STATISTICS:       return F("TIMER_STATISTICS");
-    case IntervalTimer_e::TIMER_GRATUITOUS_ARP:   return F("TIMER_GRATUITOUS_ARP");
-    case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE: return F("TIMER_MQTT_DELAY_QUEUE");
-    case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C003_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C004_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C007_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C008_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C009_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C010_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C011_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C012_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C013_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C014_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C015_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C016_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C017_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C018_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C019_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C020_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C021_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C022_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C023_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C024_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C025_DELAY_QUEUE:
-    {
-      String res;
-      res.reserve(24);
-      res = F("TIMER_C0");
-      const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
+  if (timer >= IntervalTimer_e::TIMER_C001_DELAY_QUEUE && 
+      timer <= IntervalTimer_e::TIMER_C025_DELAY_QUEUE) 
+  {
+    String res;
+    res.reserve(24);
+    res = F("TIMER_C0");
+    const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
 
-      if (id < 10) { res += '0'; }
-      res += id;
-      res += F("_DELAY_QUEUE");
-      return res;
-    }
+    if (id < 10) { res += '0'; }
+    res += id;
+    res += F("_DELAY_QUEUE");
+    return res;
   }
-  return F("unknown");
+  return toString_f(timer);
 #endif // ifdef BUILD_NO_DEBUG
 }
 
@@ -98,19 +86,25 @@ const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::Plugi
   return F("unknown");
 }
 
-String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+const __FlashStringHelper * toString_f(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
   switch (reason) {
-    case IntendedRebootReason_e::DeepSleep:              return F("DeepSleep");
-    case IntendedRebootReason_e::DelayedReboot:          return F("DelayedReboot");
-    case IntendedRebootReason_e::ResetFactory:           return F("ResetFactory");
-    case IntendedRebootReason_e::ResetFactoryPinActive:  return F("ResetFactoryPinActive");
-    case IntendedRebootReason_e::ResetFactoryCommand:    return F("ResetFactoryCommand");
-    case IntendedRebootReason_e::CommandReboot:          return F("CommandReboot");
-    case IntendedRebootReason_e::RestoreSettings:        return F("RestoreSettings");
-    case IntendedRebootReason_e::OTA_error:              return F("OTA_error");
-    case IntendedRebootReason_e::ConnectionFailuresThreshold: return F("ConnectionFailuresThreshold");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::DeepSleep:              return F("DeepSleep");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot:          return F("DelayedReboot");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactory:           return F("ResetFactory");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive:  return F("ResetFactoryPinActive");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryCommand:    return F("ResetFactoryCommand");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot:          return F("CommandReboot");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings:        return F("RestoreSettings");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error:              return F("OTA_error");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ConnectionFailuresThreshold: return F("ConnectionFailuresThreshold");
   }
-  return String(static_cast<int>(reason));
+  return F("");
+}
+
+String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+  String res = toString_f(reason);
+  if (res.isEmpty()) return String(static_cast<int>(reason));
+  return res;
 }
 
 void ESPEasy_Scheduler::markIntendedReboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
@@ -630,6 +624,10 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
 }
 
 void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   START_TIMER;
 
   const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, id);
@@ -832,6 +830,10 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
 }
 
 void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   START_TIMER;
   const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
@@ -1133,6 +1135,10 @@ void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, uint8_t Ind
 }
 
 void ESPEasy_Scheduler::process_system_event_queue() {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   if (ScheduledEventQueue.size() == 0) { return; }
 
   const unsigned long id = ScheduledEventQueue.front().id;

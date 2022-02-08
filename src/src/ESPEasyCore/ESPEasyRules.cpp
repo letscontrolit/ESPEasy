@@ -555,11 +555,11 @@ void parse_string_commands(String& line) {
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
-    String fullCommand = line.substring(startIndex + 1, closingIndex);
-    String cmd_s_lower = parseString(fullCommand, 1, ':');
-    String arg1        = parseStringKeepCase(fullCommand, 2, ':');
-    String arg2        = parseStringKeepCase(fullCommand, 3, ':');
-    String arg3        = parseStringKeepCase(fullCommand, 4, ':');
+    const String fullCommand = line.substring(startIndex + 1, closingIndex);
+    const String cmd_s_lower = parseString(fullCommand, 1, ':');
+    const String arg1        = parseStringKeepCase(fullCommand, 2, ':');
+    const String arg2        = parseStringKeepCase(fullCommand, 3, ':');
+    const String arg3        = parseStringKeepCase(fullCommand, 4, ':');
 
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
@@ -588,7 +588,7 @@ void parse_string_commands(String& line) {
         // Syntax like 1234{strtol:16:38}7890
         if (validUInt64FromString(arg1, iarg1)
             && validUInt64FromString(arg2, iarg2)) {
-          replacement = String(strtoul(arg2.c_str(), NULL, iarg1));
+          replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
         }
 
         // FIXME TD-er: removed for now as it is too specific.
@@ -630,7 +630,7 @@ void parse_string_commands(String& line) {
         // Convert to url-encoded string
         // Syntax like {urlencode:"string to/encode"}
         if (!arg1.isEmpty()) {
-          replacement = URLEncode(arg1.c_str());
+          replacement = URLEncode(arg1);
         }
       }
 
@@ -809,7 +809,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     log += codeBlock ? 0 : 1;
     log += match ? 0 : 1;
     log += isCommand ? 0 : 1;
-    log += ": ";
+    log += F(": ");
     log += line;
     addLog(LOG_LEVEL_DEBUG_DEV, log);
   }
@@ -1441,6 +1441,12 @@ void createRuleEvents(struct EventStruct *event) {
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
+
+  #ifdef USE_SECOND_HEAP
+//  HeapSelectIram ephemeral;  
+// TD-er: Disabled for now, suspect for causing crashes
+  #endif
+
 
   LoadTaskSettings(event->TaskIndex);
 

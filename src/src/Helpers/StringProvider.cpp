@@ -35,6 +35,8 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
+#include "../../ESPEasy_common.h"
+
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
 }
@@ -62,6 +64,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
+#ifdef USE_SECOND_HEAP
+    case LabelType::FREE_HEAP_IRAM:         return F("Free 2nd Heap");
+#endif
+
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
   #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return F("Heap Max Free Block");
@@ -88,6 +94,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ENABLE_TIMING_STATISTICS:  return F("Collect Timing Statistics");
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return F("Allow TaskValueSet on all plugins");
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return F("Try clear I2C bus when stuck");
+#ifndef BUILD_NO_RAM_TRACKER
+    case LabelType::ENABLE_RAM_TRACKING:    return F("Enable RAM Tracker");
+#endif
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -243,8 +252,13 @@ String getValue(LabelType::Enum label) {
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return jsonBool(Settings.UseLastWiFiFromRTC());
 
-    case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
+    case LabelType::FREE_MEM:               return String(FreeMem());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
+
+#ifdef USE_SECOND_HEAP
+    case LabelType::FREE_HEAP_IRAM:         return String(FreeMem2ndHeap());
+#endif
+
 #if defined(CORE_POST_2_5_0)
   #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
@@ -276,6 +290,10 @@ String getValue(LabelType::Enum label) {
     case LabelType::ENABLE_TIMING_STATISTICS:  return jsonBool(Settings.EnableTimingStats());
     case LabelType::TASKVALUESET_ALL_PLUGINS:  return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return jsonBool(Settings.EnableClearHangingI2Cbus());
+#ifndef BUILD_NO_RAM_TRACKER
+    case LabelType::ENABLE_RAM_TRACKING:     return jsonBool(Settings.EnableRAMTracking());
+#endif
+
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -466,3 +484,35 @@ String getExtendedValue(LabelType::Enum label) {
   return "";
 }
 
+const __FlashStringHelper * getFileName(FileType::Enum filetype) {
+
+  switch (filetype)
+  {
+    case FileType::CONFIG_DAT:       return F("config.dat");
+    case FileType::NOTIFICATION_DAT: return F("notification.dat");
+    case FileType::SECURITY_DAT:     return F("security.dat");
+    case FileType::RULES_TXT:
+      // Use getRulesFileName
+      break;
+  }
+  return F("");
+}
+
+String getFileName(FileType::Enum filetype, unsigned int filenr) {
+  if (filetype == FileType::RULES_TXT) {
+    return getRulesFileName(filenr);
+  }
+  return getFileName(filetype);
+}
+
+// filenr = 0...3 for files rules1.txt ... rules4.txt
+String getRulesFileName(unsigned int filenr) {
+  String result;
+
+  if (filenr < 4) {
+    result += F("rules");
+    result += filenr + 1;
+    result += F(".txt");
+  }
+  return result;
+}
