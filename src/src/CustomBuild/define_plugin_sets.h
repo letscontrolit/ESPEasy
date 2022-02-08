@@ -1192,8 +1192,10 @@ To create/register a plugin, you have to :
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
-    #ifndef USE_SECOND_HEAP  // Disable Itho when using second heap as it no longer fits.
-    #define USES_P118  // Itho ventilation control
+      // Disable Itho when using second heap as it no longer fits.
+      // Disable Itho for ESP32 as it does not (yet) work on ESP32 IDF4.4
+    #if !defined(USE_SECOND_HEAP) && !defined(ESP32)
+      #define USES_P118  // Itho ventilation control
     #endif
     #define USES_P124  // I2C MultiRelay
 #endif
@@ -1488,7 +1490,8 @@ To create/register a plugin, you have to :
     #define USES_P117   // SCD30
   #endif
   #ifndef USES_P118
-    #define USES_P118   // Itho ventilation coontrol
+    // Does not (yet) work well on ESP32 with IDF 4.4
+    // #define USES_P118   // Itho ventilation coontrol
   #endif
   #ifndef USES_P119
     #define USES_P119   // ITG3205 Gyro

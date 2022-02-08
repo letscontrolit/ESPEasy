@@ -61,7 +61,7 @@
 
 #include "_Plugin_Helper.h"
 
-#ifdef USES_P118_disabled
+#ifdef USES_P118
 
 #include <SPI.h>
 #include "IthoCC1101.h"
