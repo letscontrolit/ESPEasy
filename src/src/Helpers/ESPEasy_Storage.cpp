@@ -49,7 +49,7 @@ String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
     return fname;
   }
-  return String(F("/")) + fname;
+  return String('/') + fname;
 }
 #endif
 #ifdef ESP8266
@@ -91,7 +91,7 @@ String flashGuard()
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
-    String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
+    String log = F("FS   : Daily flash write rate exceeded! (powercycle or send command 'resetFlashWriteCounter' to reset this)");
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
@@ -118,6 +118,10 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 }
 
 bool fileExists(const String& fname) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   const String patched_fname = patch_fname(fname);
   auto search = Cache.fileExistsMap.find(patched_fname);
   if (search != Cache.fileExistsMap.end()) {
@@ -638,9 +642,16 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   uint32_t readPos       = offset_in_block;
   uint32_t nextStringPos = 0;
   uint32_t stringCount   = 0;
-  String   tmpString;
-  tmpString.reserve(bufferSize);
 
+  const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
+  String   tmpString;
+  {
+    #ifdef USE_SECOND_HEAP
+    // Store each string in 2nd heap
+    HeapSelectIram ephemeral;
+    #endif
+    tmpString.reserve(estimatedStringSize);
+  }
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
@@ -659,9 +670,14 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
+            #ifdef USE_SECOND_HEAP
+            // Store each string in 2nd heap
+            HeapSelectIram ephemeral;
+            #endif
+
             strings[stringCount] = tmpString;
-            tmpString            = "";
-            tmpString.reserve(readSize);
+            tmpString.clear();
+            tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
             tmpString += buffer[i];
@@ -804,8 +820,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
+  ExtraTaskSettings.clear();
   if (!validTaskIndex(TaskIndex)) {
-    ExtraTaskSettings.clear();
     return String(); // Un-initialized task index.
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -813,7 +829,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   #endif
 
   START_TIMER
-  ExtraTaskSettings.clear();
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
@@ -1286,7 +1301,7 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
 }
 
@@ -1301,7 +1316,7 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   if (!fileExists(fname)) {
     InitFile(settingsType);
   }
@@ -1315,7 +1330,7 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   return ClearInFile(fname.c_str(), offset, max_size);
 }
 
@@ -1574,7 +1589,7 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd) {
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   String result;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   if (_mypartiterator) {
     do {
@@ -1589,7 +1604,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
       result += itemSep;
       result += (_mypart->encrypted ? F("Yes") : F("-"));
       result += lineEnd;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return result;

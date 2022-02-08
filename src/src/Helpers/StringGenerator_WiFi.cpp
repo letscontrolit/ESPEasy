@@ -1,5 +1,7 @@
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#include "../Helpers/StringConverter.h"
+
 #include "../Globals/ESPEasyWiFiEvent.h"
 
 const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType) {
@@ -109,13 +111,12 @@ const __FlashStringHelper * getLastDisconnectReason(WiFiDisconnectReason reason)
 }
 
 String getLastDisconnectReason() {
-  String reason = "(";
-
-  reason += WiFiEventData.lastDisconnectReason;
-  reason += F(") ");
-
   #ifndef LIMIT_BUILD_SIZE
+  String reason = wrap_braces(String(WiFiEventData.lastDisconnectReason));
+  reason += ' ';
   reason += getLastDisconnectReason(WiFiEventData.lastDisconnectReason);
-  #endif
   return reason;
+  #else
+  return wrap_braces(String(WiFiEventData.lastDisconnectReason));
+  #endif
 }

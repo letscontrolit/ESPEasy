@@ -490,7 +490,7 @@ uint8_t Plugin_055_ReadChime(const String& name, String& tokens)
   log += fileName;
   log += ' ';
 
-  tokens = "";
+  tokens.clear();
   fs::File f = tryOpenFile(fileName, "r");
   if (f)
   {

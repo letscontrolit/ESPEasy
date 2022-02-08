@@ -26,17 +26,17 @@ void updateLoopStats() {
   ++loopCounter_full;
 
   if (lastLoopStart == 0) {
-    lastLoopStart = micros();
+    lastLoopStart = getMicros64();
     return;
   }
-  const long usecSince = usecPassedSince(lastLoopStart);
+  const int64_t usecSince = usecPassedSince(lastLoopStart);
 
   #ifdef USES_TIMING_STATS
   miscStats[LOOP_STATS].add(usecSince);
   #endif // ifdef USES_TIMING_STATS
 
   loop_usec_duration_total += usecSince;
-  lastLoopStart             = micros();
+  lastLoopStart             = getMicros64();
 
   if ((usecSince <= 0) || (usecSince > 10000000)) {
     return; // No loop should take > 10 sec.
@@ -57,6 +57,9 @@ void updateLoopStats() {
 \*********************************************************************************************/
 void ESPEasy_loop()
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
   /*
      //FIXME TD-er: No idea what this does.
      if(MainLoopCall_ptr)

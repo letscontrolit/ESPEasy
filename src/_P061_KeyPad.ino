@@ -116,7 +116,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * options[3] = { F("MCP23017 (Matrix 9x8)"), F("PCF8574 (Matrix 5x4)"), F("PCF8574 (Direct 8)") };
-      addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, NULL, PCONFIG(1));
+      addFormSelector(F("Chip (Mode)"), F("chip"), 3, options, nullptr, PCONFIG(1));
 
       success = true;
       break;

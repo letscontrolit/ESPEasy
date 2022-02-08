@@ -2124,7 +2124,7 @@ void Adafruit_NeoPixel::show(void) {
 
 // ESP8266 ----------------------------------------------------------------
 
-  // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
+  // ESP8266 show() is external to enforce IRAM_ATTR execution
   espShow(pin, pixels, numBytes, is800KHz);
 
 #elif defined(KENDRYTE_K210)

@@ -56,26 +56,7 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames(const char *name) const {
   int pos = 0;
 
   while (*(name + pos) != 0) {
-    switch (*(name + pos)) {
-      case ',':
-      case ' ':
-      case '#':
-      case '-':
-      case '+':
-      case '/':
-      case '*':
-      case '=':
-      case '^':
-      case '%':
-      case '!':
-      case '[':
-      case ']':
-      case '{':
-      case '}':
-      case '(':
-      case ')':
-        return false;
-    }
+    if (!validCharForNames(*(name + pos))) { return false; }
     ++pos;
   }
   return true;
@@ -87,5 +68,33 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames() const {
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     if (!checkInvalidCharInNames(&TaskDeviceValueNames[i][0])) { return false; }
   }
+  return true;
+}
+
+bool ExtraTaskSettingsStruct::validCharForNames(char c) {
+  // Smal optimization to check these chars as they are in sequence in the ASCII table
+  /*
+    case '(': // 40
+    case ')': // 41
+    case '*': // 42
+    case '+': // 43
+    case ',': // 44
+    case '-': // 45
+  */
+
+  if (c >= '(' && c <= '-') return false;
+  if (
+    (c == ' ') || 
+    (c == '!') || 
+    (c == '#') || 
+    (c == '%') || 
+    (c == '/') || 
+    (c == '=') || 
+    (c == '[') || 
+    (c == ']') || 
+    (c == '^') || 
+    (c == '{') || 
+    (c == '}'))
+      return false;
   return true;
 }

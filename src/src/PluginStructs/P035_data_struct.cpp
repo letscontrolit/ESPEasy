@@ -132,7 +132,7 @@ bool P035_data_struct::handleIRremote(const String& cmd) {
   if (!error) {                                  // If the command is in JSON format
     IrType    =  docTemp[F("protocol")].as<String>();
     ircodestr = docTemp[F("data")].as<String>(); // JSON does not support hex values, thus we use command representation
-    IrCode    = strtoull(ircodestr.c_str(), NULL, 16);
+    IrCode    = strtoull(ircodestr.c_str(), nullptr, 16);
     IrBits    = docTemp[F("bits")] | 0;
     IrRepeat  = docTemp[F("repeats")] | 0;
   } else { // If the command is NOT in JSON format (legacy)
@@ -142,7 +142,7 @@ bool P035_data_struct::handleIRremote(const String& cmd) {
       ircodestr = parseString(cmd, 3);
 
       if (ircodestr.length() > 0) {
-        IrCode = strtoull(ircodestr.c_str(), NULL, 16);
+        IrCode = strtoull(ircodestr.c_str(), nullptr, 16);
       }
       IrBits   = parseString(cmd, 4).toInt(); // Number of bits to be sent. USE 0 for default protocol bits
       IrRepeat = parseString(cmd, 5).toInt(); // Nr. of times the message is to be repeated

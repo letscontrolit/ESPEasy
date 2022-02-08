@@ -38,13 +38,13 @@ void handle_pinstates_json() {
     const uint16_t plugin = getPluginFromKey(it->first);
     const uint16_t port   = getPortFromKey(it->first);
 
-    stream_next_json_object_value(F("plugin"),  String(plugin));
-    stream_next_json_object_value(F("port"),    String(port));
-    stream_next_json_object_value(F("state"),   String(it->second.state));
-    stream_next_json_object_value(F("task"),    String(it->second.task));
-    stream_next_json_object_value(F("monitor"), String(it->second.monitor));
-    stream_next_json_object_value(F("command"), String(it->second.command));
-    stream_last_json_object_value(F("init"), String(it->second.init));
+    stream_next_json_object_value(F("plugin"),  plugin);
+    stream_next_json_object_value(F("port"),    port);
+    stream_next_json_object_value(F("state"),   it->second.state);
+    stream_next_json_object_value(F("task"),    it->second.task);
+    stream_next_json_object_value(F("monitor"), it->second.monitor);
+    stream_next_json_object_value(F("command"), it->second.command);
+    stream_last_json_object_value(F("init"), it->second.init);
   }
 
   addHtml(']');
