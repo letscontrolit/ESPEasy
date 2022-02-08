@@ -6,6 +6,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasy_time.h"

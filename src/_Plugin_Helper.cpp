@@ -4,6 +4,7 @@
 
 #include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/DataStructs/SettingsStruct.h"
+#include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
 #include "src/Globals/SecuritySettings.h"

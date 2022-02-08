@@ -2,7 +2,7 @@
 #define DATASTRUCTS_EVENTSTRUCTCOMMANDWRAPPER_H
 
 #include <Arduino.h>
-#include "ESPEasy_EventStruct.h"
+#include "../DataStructs/ESPEasy_EventStruct.h"
 
 struct EventStructCommandWrapper {
   EventStructCommandWrapper() : id(0) {}

@@ -30,7 +30,7 @@ String fileFromUrl(String path) {
 
   // First prepend slash
   if (!path.startsWith(F("/"))) {
-    path = String(F("/")) + path;
+    path = String('/') + path;
   }
 
   if (path.endsWith(F("/"))) { path += F("index.htm"); }

@@ -122,7 +122,6 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-
     case PLUGIN_WRITE:
     {
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));

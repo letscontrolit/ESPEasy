@@ -62,7 +62,7 @@
 
 // Must use volatile declared variable (which will end up in iRAM)
 volatile unsigned long P082_pps_time = 0;
-void    Plugin_082_interrupt() ICACHE_RAM_ATTR;
+void    Plugin_082_interrupt() IRAM_ATTR;
 
 boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -259,7 +259,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       addFormNumericBox(F("Distance Update Interval"), P082_DISTANCE_LABEL, P082_DISTANCE, 0, 10000);
-      addUnit(F("m"));
+      addUnit('m');
       addFormNote(F("0 = disable update based on distance travelled"));
 
       success = true;
@@ -557,24 +557,24 @@ void P082_logStats(struct EventStruct *event) {
     return;
   }
   String log;
-
-  log.reserve(128);
-  log  = F("GPS:");
-  log += F(" Fix: ");
-  log += String(P082_data->hasFix(P082_TIMEOUT));
-  log += F(" #sat: ");
-  log += P082_data->gps->satellites.value();
-  log += F(" #SNR: ");
-  log += P082_data->gps->satellitesStats.getBestSNR();
-  log += F(" HDOP: ");
-  log += P082_data->gps->hdop.value() / 100.0f;
-  log += F(" Chksum(pass/fail): ");
-  log += P082_data->gps->passedChecksum();
-  log += '/';
-  log += P082_data->gps->failedChecksum();
-  log += F(" invalid: ");
-  log += P082_data->gps->invalidData();
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (log.reserve(128)) {
+    log  = F("GPS:");
+    log += F(" Fix: ");
+    log += String(P082_data->hasFix(P082_TIMEOUT));
+    log += F(" #sat: ");
+    log += P082_data->gps->satellites.value();
+    log += F(" #SNR: ");
+    log += P082_data->gps->satellitesStats.getBestSNR();
+    log += F(" HDOP: ");
+    log += P082_data->gps->hdop.value() / 100.0f;
+    log += F(" Chksum(pass/fail): ");
+    log += P082_data->gps->passedChecksum();
+    log += '/';
+    log += P082_data->gps->failedChecksum();
+    log += F(" invalid: ");
+    log += P082_data->gps->invalidData();
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
 }
 
 void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyGPS) {
@@ -612,12 +612,12 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           }
           addRowLabel(label);
         } else {
-          addHtml(F(", "));
+          addHtml(',', ' ');
         }
         addHtmlInt(id);
 
         if (tracked) {
-          addHtml(F(" ("));
+          addHtml(' ', '(');
           addHtmlInt(snr);
           addHtml(')');
         }
@@ -693,23 +693,25 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("Distance Travelled"));
   addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DISTANCE)]));
-  addUnit(F("m"));
+  addUnit('m');
 
   if (P082_referencePointSet(event)) {
     addRowLabel(F("Distance from Ref. Point"));
     addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DIST_REF)]));
-    addUnit(F("m"));
+    addUnit('m');
   }
 
   addRowLabel(F("Checksum (pass/fail/invalid)"));
-  String chksumStats;
+  {
+    String chksumStats;
 
-  chksumStats  = P082_data->gps->passedChecksum();
-  chksumStats += '/';
-  chksumStats += P082_data->gps->failedChecksum();
-  chksumStats += '/';
-  chksumStats += P082_data->gps->invalidData();
-  addHtml(chksumStats);
+    chksumStats  = P082_data->gps->passedChecksum();
+    chksumStats += '/';
+    chksumStats += P082_data->gps->failedChecksum();
+    chksumStats += '/';
+    chksumStats += P082_data->gps->invalidData();
+    addHtml(chksumStats);
+  }
 }
 
 void P082_setSystemTime(struct EventStruct *event) {
