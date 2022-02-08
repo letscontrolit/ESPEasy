@@ -65,6 +65,8 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -335,7 +337,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, NULL, static_cast<int>(comparator), false, true, EMPTY_STRING);
+          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, EMPTY_STRING);
           break;
         }
         case 2:

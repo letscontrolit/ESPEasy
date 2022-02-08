@@ -126,5 +126,5 @@ void addIPaccessControlSelect(const String& name, int choice)
 {
   const __FlashStringHelper *  options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
 
-  addSelector(name, 3, options, NULL, NULL, choice);
+  addSelector(name, 3, options, nullptr, nullptr, choice);
 }

@@ -30,7 +30,7 @@ String fileFromUrl(String path) {
 
   // First prepend slash
   if (!path.startsWith(F("/"))) {
-    path = String(F("/")) + path;
+    path = String('/') + path;
   }
 
   if (path.endsWith(F("/"))) { path += F("index.htm"); }
@@ -156,7 +156,7 @@ size_t streamFromFS(String path, bool htmlEscape) {
   String escaped;
   while (available > 0) {
     uint32_t chunksize = 64;
-    if (available < chunksize) {
+    if (available < static_cast<int>(chunksize)) {
       chunksize = available;
     }
     uint8_t buf[64] = {0};

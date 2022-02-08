@@ -121,6 +121,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption = true;
       Device[deviceCount].TimerOptional = true;         // Allow user to disable interval function.
       Device[deviceCount].GlobalSyncOption = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
+
       break;
     }
 
@@ -153,11 +156,12 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      const __FlashStringHelper * options[4];
-      options[0] = F("9600");
-      options[1] = F("38400");
-      options[2] = F("57600");
-      options[3] = F("115200");
+      const __FlashStringHelper * options[4] = {
+        F("9600"),
+        F("38400"),
+        F("57600"),
+        F("115200")
+      };
 
       addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
       addUnit(F("baud"));
@@ -437,9 +441,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                   log.reserve(70);                        // Prevent re-allocation
                   log = F("NEXTION075 : code: ");
                   log += __buffer[1];
-                  log += ",";
+                  log += ',';
                   log += __buffer[2];
-                  log += ",";
+                  log += ',';
                   log += __buffer[3];
                   addLog(LOG_LEVEL_INFO, log);
                 #endif

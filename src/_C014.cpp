@@ -71,16 +71,6 @@ bool   CPlugin_014_mqtt_retainFlag = false;
    }
  */
 
-// send MQTT Message with CPLUGIN_014_BASE_TOPIC Topic scheme / Payload
-bool CPlugin_014_sendMQTTdevice(const String& tmppubname, 
-                                taskIndex_t taskIndex, 
-                                const __FlashStringHelper *topic, 
-                                const __FlashStringHelper *payload, 
-                                int& errorCounter) 
-{
-  return CPlugin_014_sendMQTTdevice(tmppubname, taskIndex, topic, String(payload), errorCounter);
-}
-
 bool CPlugin_014_sendMQTTdevice(String tmppubname, 
                                 taskIndex_t taskIndex, 
                                 const __FlashStringHelper *topic, 
@@ -113,6 +103,16 @@ bool CPlugin_014_sendMQTTdevice(String tmppubname,
   }
   processMQTTdelayQueue();
   return mqttReturn;
+}
+
+// send MQTT Message with CPLUGIN_014_BASE_TOPIC Topic scheme / Payload
+bool CPlugin_014_sendMQTTdevice(const String& tmppubname, 
+                                taskIndex_t taskIndex, 
+                                const __FlashStringHelper *topic, 
+                                const __FlashStringHelper *payload, 
+                                int& errorCounter) 
+{
+  return CPlugin_014_sendMQTTdevice(tmppubname, taskIndex, topic, String(payload), errorCounter);
 }
 
 // send MQTT Message with CPLUGIN_014_BASE_VALUE Topic scheme / Payload
@@ -525,13 +525,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
                         /*                          // because values in ESPEasy are unitless lets assueme some units by the value name
                            (still case sensitive)
-                                                  if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != NULL )
+                                                  if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != nullptr )
                                                   {
                                                     unitName = F("°C");
-                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != NULL )
+                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != nullptr )
                                                   {
                                                     unitName = F("%");
-                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != NULL )
+                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != nullptr )
                                                   {
                                                     unitName = F("Pa");
                                                   } // ToDo: .... and more

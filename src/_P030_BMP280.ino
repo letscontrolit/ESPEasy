@@ -118,7 +118,7 @@ boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormNumericBox(F("Altitude"), F("p030_bmp280_elev"), PCONFIG(1));
-      addUnit(F("m"));
+      addUnit('m');
 
       success = true;
       break;

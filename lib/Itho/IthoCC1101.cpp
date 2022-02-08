@@ -74,17 +74,17 @@ void IthoCC1101::initSendMessage(uint8_t len)
   /*
      Configuration reverse engineered from remote print. The commands below are used by IthoDaalderop.
      Base frequency    868.299866MHz
-     Channel       0
+     Channel           0
      Channel spacing   199.951172kHz
      Carrier frequency 868.299866MHz
      Xtal frequency    26.000000MHz
-     Data rate     38.3835kBaud
-     Manchester      disabled
-     Modulation      2-FSK
-     Deviation     50.781250kHz
-     TX power      ?
-     PA ramping      enabled
-     Whitening     disabled
+     Data rate         38.3835kBaud
+     Manchester        disabled
+     Modulation        2-FSK
+     Deviation         50.781250kHz
+     TX power          ?
+     PA ramping        enabled
+     Whitening         disabled
    */
   writeCommand(CC1101_SRES);
   delayMicroseconds(1);
@@ -474,7 +474,7 @@ void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
   itho->dataDecoded[4] = itho->counter;
 
   // set command bytes on dataDecoded[5 - 10]
-  uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
     itho->dataDecoded[i + 5] = commandBytes[i];
@@ -516,7 +516,7 @@ void IthoCC1101::createMessageJoin(IthoPacket *itho, CC1101Packet *packet)
   itho->dataDecoded[4] = itho->counter;
 
   // set command bytes on dataDecoded[5 - ?]
-  uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
     itho->dataDecoded[i + 5] = commandBytes[i];
@@ -572,7 +572,7 @@ void IthoCC1101::createMessageLeave(IthoPacket *itho, CC1101Packet *packet)
   itho->dataDecoded[4] = itho->counter;
 
   // set command bytes on dataDecoded[5 - 10]
-  uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
     itho->dataDecoded[i + 5] = commandBytes[i];
@@ -602,32 +602,32 @@ void IthoCC1101::createMessageLeave(IthoPacket *itho, CC1101Packet *packet)
   packet->length += 7;
 }
 
-uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
+const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
 {
   switch (command)
   {
     case IthoStandby:
-      return (uint8_t *)&ithoMessageStandByCommandBytes[0];
+      return &ithoMessageStandByCommandBytes[0];
     case IthoHigh:
-      return (uint8_t *)&ithoMessageHighCommandBytes[0];
+      return &ithoMessageHighCommandBytes[0];
     case IthoFull:
-      return (uint8_t *)&ithoMessageFullCommandBytes[0];
+      return &ithoMessageFullCommandBytes[0];
     case IthoMedium:
-      return (uint8_t *)&ithoMessageMediumCommandBytes[0];
+      return &ithoMessageMediumCommandBytes[0];
     case IthoLow:
-      return (uint8_t *)&ithoMessageLowCommandBytes[0];
+      return &ithoMessageLowCommandBytes[0];
     case IthoTimer1:
-      return (uint8_t *)&ithoMessageTimer1CommandBytes[0];
+      return &ithoMessageTimer1CommandBytes[0];
     case IthoTimer2:
-      return (uint8_t *)&ithoMessageTimer2CommandBytes[0];
+      return &ithoMessageTimer2CommandBytes[0];
     case IthoTimer3:
-      return (uint8_t *)&ithoMessageTimer3CommandBytes[0];
+      return &ithoMessageTimer3CommandBytes[0];
     case IthoJoin:
-      return (uint8_t *)&ithoMessageJoinCommandBytes[0];
+      return &ithoMessageJoinCommandBytes[0];
     case IthoLeave:
-      return (uint8_t *)&ithoMessageLeaveCommandBytes[0];
+      return &ithoMessageLeaveCommandBytes[0];
     default:
-      return (uint8_t *)&ithoMessageLowCommandBytes[0];
+      return &ithoMessageLowCommandBytes[0];
   }
 }
 
@@ -647,14 +647,18 @@ uint8_t IthoCC1101::getCounter2(IthoPacket *itho, uint8_t len) {
 }
 
 uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
-  // uint8_t lenOutbuf = 0; // Inhinit unused code to avoid compiler warning
+  // FIXME TD-er: lenOutbuf not used????
+  /*
+  uint8_t lenOutbuf = 0;
 
-  // if ((itho->length * 20) % 8 == 0) { //inData len fits niecly in out buffer length
-  //   lenOutbuf = itho->length * 2.5;
-  // }
-  // else { //is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra, padding is done after encode
-  //   lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
-  // }
+  if ((itho->length * 20) % 8 == 0) { // inData len fits niecly in out buffer length
+    lenOutbuf = itho->length * 2.5;
+  }
+  else {                              // is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra, padding
+                                      // is done after encode
+    lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
+  }
+  */
 
   uint8_t out_bytecounter    = 14; // index of Outbuf, start at offset 14, first part of the message is set manually
   uint8_t out_bitcounter     = 0;  // bit position of current outbuf byte
@@ -663,7 +667,7 @@ uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
   uint8_t out_shift          = 7;  // bit shift inData bit in position of outbuf byte
 
   // we need to zero the out buffer first cause we are using bitshifts
-  for (uint32_t i = out_bytecounter; i < sizeof(packet->data) / sizeof(packet->data[0]); i++) {
+  for (unsigned int i = out_bytecounter; i < sizeof(packet->data) / sizeof(packet->data[0]); i++) {
     packet->data[i] = 0;
   }
 
@@ -744,11 +748,11 @@ void IthoCC1101::messageDecode(CC1101Packet *packet, IthoPacket *itho) {
     itho->length++;
   }
 
-  for (uint32_t i = 0; i < sizeof(itho->dataDecoded) / sizeof(itho->dataDecoded[0]); i++) {
+  for (unsigned int i = 0; i < sizeof(itho->dataDecoded) / sizeof(itho->dataDecoded[0]); i++) {
     itho->dataDecoded[i] = 0;
   }
 
-  for (uint32_t i = 0; i < sizeof(itho->dataDecodedChk) / sizeof(itho->dataDecodedChk[0]); i++) {
+  for (unsigned int i = 0; i < sizeof(itho->dataDecodedChk) / sizeof(itho->dataDecodedChk[0]); i++) {
     itho->dataDecodedChk[i] = 0;
   }
 
@@ -834,7 +838,7 @@ String IthoCC1101::getLastIDstr(bool ashex) {
     if (ashex) { str += String(inIthoPacket.deviceId[i], HEX); }
     else { str += String(inIthoPacket.deviceId[i]); }
 
-    if (i < 2) { str += ","; }
+    if (i < 2) { str += ','; }
   }
   return str;
 }
@@ -849,13 +853,16 @@ int * IthoCC1101::getLastID() {
 }
 
 String IthoCC1101::getLastMessagestr(bool ashex) {
-  String str = "Length=" + String(inMessage.length) + ".";
+  String str = F("Length=");
+
+  str += inMessage.length;
+  str += '.';
 
   for (uint8_t i = 0; i < inMessage.length; i++) {
     if (ashex) { str += String(inMessage.data[i], HEX); }
     else { str += String(inMessage.data[i]); }
 
-    if (i < inMessage.length - 1) { str += ":"; }
+    if (i < inMessage.length - 1) { str += ':'; }
   }
   return str;
 }
@@ -864,22 +871,23 @@ String IthoCC1101::LastMessageDecoded() {
   String str;
 
   if (inIthoPacket.length > 11) {
-    str += "Device type?: " + String(inIthoPacket.deviceType);
-    str += " - CMD: ";
+    str += F("Device type?: ");
+    str += String(inIthoPacket.deviceType);
+    str += F(" - CMD: ");
 
     for (int i = 4; i < inIthoPacket.length; i++) {
       str += String(inIthoPacket.dataDecoded[i]);
 
-      if (i < inIthoPacket.length - 1) { str += ","; }
+      if (i < inIthoPacket.length - 1) { str += ','; }
     }
   }
   else {
     for (uint8_t i = 0; i < inIthoPacket.length; i++) {
       str += String(inIthoPacket.dataDecoded[i]);
 
-      if (i < inIthoPacket.length - 1) { str += ","; }
+      if (i < inIthoPacket.length - 1) { str += ','; }
     }
   }
-  str += "\n";
+  str += '\n';
   return str;
 }
