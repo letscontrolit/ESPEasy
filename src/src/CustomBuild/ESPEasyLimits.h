@@ -83,16 +83,12 @@
 // ***********************************************************************
 #ifndef DEVICES_MAX
   // TODO TD-er: This should be set automatically by counting the number of included plugins.
-  #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-    # define DEVICES_MAX                      95
-  #else    // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-    # ifdef ESP32
-      # ifdef PLUGIN_BUILD_MAX_ESP32
-        #  define DEVICES_MAX                    135
-      # else // ifdef PLUGIN_BUILD_MAX_ESP32
-      #  define DEVICES_MAX                      100
-      # endif // ifdef PLUGIN_BUILD_MAX_ESP32
-    # else // ifdef ESP32
+  # ifdef ESP32
+    # define DEVICES_MAX                      130
+  #else
+    #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+      #  define DEVICES_MAX                      95
+    # else 
       #  define DEVICES_MAX                      60
     # endif
   #endif
