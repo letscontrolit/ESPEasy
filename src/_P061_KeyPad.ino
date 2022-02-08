@@ -154,7 +154,7 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
       # else // ifdef P061_ENABLE_PCF8575
         4;
       # endif // ifdef P061_ENABLE_PCF8575
-      addFormSelector(F("Chip (Mode)"), F("chip"), optionsCount, options, NULL, P061_CONFIG_KEYPAD_TYPE);
+      addFormSelector(F("Chip (Mode)"), F("chip"), optionsCount, options, nullptr, P061_CONFIG_KEYPAD_TYPE);
 
       success = true;
       break;
