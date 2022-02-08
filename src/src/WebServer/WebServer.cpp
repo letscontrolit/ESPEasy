@@ -76,15 +76,15 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) 
   }
 }
 
-void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
   #ifdef USES_TIMING_STATS
-  static unsigned statisticsTimerStart = 0;
+  static uint64_t statisticsTimerStart = 0;
 
   if (!Tail) {
-    statisticsTimerStart = micros();
+    statisticsTimerStart = getMicros64();
   }
   #endif // ifdef USES_TIMING_STATS
   {
@@ -348,6 +348,11 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
 {
+  #ifdef USE_SECOND_HEAP
+  // Store template in 2nd heap
+  HeapSelectIram ephemeral;
+  #endif
+
   const bool addJS   = true;
   const bool addMeta = true;
 
@@ -411,25 +416,20 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
                    "</head>"));
 }
 
-void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const String& title, bool addMenu) {
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
   {
-    String tmp;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
-            #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
-            #endif // #if BUILD_IN_WEBHEADER
-            "</h1><BR>"
-            );
-  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
-  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-
-    tmp.replace(F("{{title}}"), title);
+    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(title);
     #if BUILD_IN_WEBHEADER
-    tmp.replace(F("{{date}}"), get_build_date());
+    parser.process(F("<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"));
     #endif // #if BUILD_IN_WEBHEADER
+    parser.process(F("</h1><BR>"));
+  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    String tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
+    tmp.replace(F("{{title}}"), title);
     parser.process(tmp);
+  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
   }
 
   if (addMenu) { parser.process(F("{{menu}}")); }
@@ -808,7 +808,7 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml(F("\">"));
+  addHtml('"', '>');
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
@@ -971,13 +971,13 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 int getPartionCount(uint8_t pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   int nrPartitions                         = 0;
 
   if (_mypartiterator) {
     do {
       ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return nrPartitions;
@@ -992,7 +992,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   uint32_t realSize                      = getFlashRealSizeInBytes();
   esp_partition_type_t     partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t   *_mypart;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
@@ -1010,7 +1010,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
       textXoffset = SVG_BAR_WIDTH + 130;
       createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
       yOffset += SVG_BAR_HEIGHT;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   addHtml(F("</svg>\n"));
   esp_partition_iterator_release(_mypartiterator);

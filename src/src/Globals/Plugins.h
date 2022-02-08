@@ -1,16 +1,16 @@
 #ifndef GLOBALS_PLUGIN_H
 #define GLOBALS_PLUGIN_H
 
+#include "../../ESPEasy_common.h"
+
 #include <map>
 #include <vector>
 #include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/TaskIndex.h"
 
-#include "../../ESPEasy_common.h"
 
 
 /********************************************************************************************\
@@ -41,7 +41,7 @@
    - USERVAR_MAX_INDEX = (TASKS_MAX * VARS_PER_TASK)
  \*********************************************************************************************/
 
-
+struct EventStruct;
 
 extern int deviceCount;
 

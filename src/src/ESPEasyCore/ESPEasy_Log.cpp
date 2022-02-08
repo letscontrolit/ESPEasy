@@ -164,8 +164,6 @@ bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
-//#ifdef LIMIT_BUILD_SIZE
-
 void addLog(uint8_t loglevel, const __FlashStringHelper *str)
 {
   addToLog(loglevel, str);
@@ -173,14 +171,20 @@ void addLog(uint8_t loglevel, const __FlashStringHelper *str)
 
 void addLog(uint8_t logLevel, const char *line)
 {
-  addToLog(logLevel, line);
+  // Please note all functions called from here handling line must be PROGMEM aware.
+  if (loglevelActiveFor(logLevel)) {
+    String copy;
+    if (copy.reserve(strlen_P((PGM_P)line))) {
+      copy = line;
+      addToLog(logLevel, copy);
+    }
+  }
 }
 
 void addLog(uint8_t loglevel, const String& string)
 {
   addToLog(loglevel, string);
 }
-//#endif
 
 void addToLog(uint8_t loglevel, const __FlashStringHelper *str)
 {
@@ -188,21 +192,13 @@ void addToLog(uint8_t loglevel, const __FlashStringHelper *str)
     String copy;
     if (copy.reserve(strlen_P((PGM_P)str))) {
       copy = str;
-      addToLog(loglevel, copy.c_str());
+      addToLog(loglevel, copy);
     }
   }
 }
 
-void addToLog(uint8_t loglevel, const String& string)
+void addToLog(uint8_t logLevel, const String& string)
 {
-  if (loglevelActiveFor(loglevel)) {
-    addToLog(loglevel, string.c_str());
-  }
-}
-
-void addToLog(uint8_t logLevel, const char *line)
-{
-  // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()));
     addToSerialBuffer(F(" : "));
@@ -214,30 +210,23 @@ void addToLog(uint8_t logLevel, const char *line)
       addToSerialBuffer(loglevelDisplayString);
     }
     addToSerialBuffer(F(" : "));
-    addToSerialBuffer(line);
+    addToSerialBuffer(string);
     addNewlineToSerialBuffer();
   }
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
-    syslog(logLevel, line);
+    sendSyslog(logLevel, string);
   }
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
-    Logging.add(logLevel, line);
+    Logging.add(logLevel, string);
   }
 
 #ifdef FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile) {
-      const char* c = line;
-      bool done = false;
-      while (!done) {
-        // Must use PROGMEM aware functions here to process line
-        char ch = pgm_read_byte(c++);
-        if (ch == '\0') {
-          done = true;
-        } else {
-          logFile.print(ch);
-        }
+      const size_t stringLength = string.length();
+      for (size_t i = 0; i < stringLength; ++i) {
+        logFile.print(string[i]);
       }
       logFile.println();
     }

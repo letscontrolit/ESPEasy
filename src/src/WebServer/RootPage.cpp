@@ -166,7 +166,7 @@ void handle_root() {
         html.reserve(64);
         html += freeMem;
         #ifndef BUILD_NO_RAM_TRACKER
-        html += " (";
+        html += F(" (");
         html += lowestRAM;
         html += F(" - ");
         html += lowestRAMfunction;
@@ -175,12 +175,17 @@ void handle_root() {
         addHtml(html);
       }
       {
+        #ifdef USE_SECOND_HEAP
+        addRowLabelValue(LabelType::FREE_HEAP_IRAM);
+        #endif
+      }
+      {
         addRowLabel(LabelType::FREE_STACK);
         String html;
         html.reserve(64);
         html += String(getCurrentFreeStack());
         #ifndef BUILD_NO_RAM_TRACKER
-        html += " (";
+        html += F(" (");
         html += String(lowestFreeStack);
         html += F(" - ");
         html += String(lowestFreeStackfunction);
@@ -260,7 +265,7 @@ void handle_root() {
           addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
           addHtml(printWebString);
           addHtml(F("</textarea>"));
-          printWebString = "";
+          printWebString.clear();
         }
       }
       html_end_table();
@@ -317,20 +322,16 @@ void handle_root() {
           }
           html_add_wide_button_prefix();
           {
-            String html;
-            html.reserve(64);
-
-            html += F("http://");
-            html += it->second.ip.toString();
+            addHtml(F("http://"));
+            addHtml(it->second.ip.toString());
             uint16_t port = it->second.webgui_portnumber;
             if (port !=0 && port != 80) {
-              html += ':';
-              html += String(port);
+              addHtml(':');
+              addHtmlInt(port);
             }
-            html += "'>";
-            html += it->second.ip.toString();
-            html += "</a>";
-            addHtml(html);
+            addHtml('\'', '>');
+            addHtml(it->second.ip.toString());
+            addHtml(F("</a>"));
           }
           html_TD();
           addHtmlInt(it->second.age);
@@ -341,7 +342,7 @@ void handle_root() {
       html_end_form();
     }
 
-    printWebString = "";
+    printWebString.clear();
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }

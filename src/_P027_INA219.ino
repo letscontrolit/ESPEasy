@@ -82,7 +82,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t   choiceMeasureType = PCONFIG(2);
         const __FlashStringHelper * options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
-        addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, NULL, choiceMeasureType);
+        addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, nullptr, choiceMeasureType);
       }
 
       success = true;

@@ -135,7 +135,7 @@
 
   void msecTimerHandlerStruct::recordIdle() {
     if (is_idle) { return; }
-    last_exec_time_usec = micros();
+    last_exec_time_usec = getMicros64();
     is_idle             = true;
     delay(0); // Nothing to do, so leave time for backgroundtasks
   }
