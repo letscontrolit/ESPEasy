@@ -4,8 +4,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-
-void LogStruct::add(const uint8_t loglevel, const char *line) {
+void LogStruct::add(const uint8_t loglevel, const String& line) {
   write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
 
   if (write_idx == read_idx) {
@@ -15,20 +14,17 @@ void LogStruct::add(const uint8_t loglevel, const char *line) {
   timeStamp[write_idx] = millis();
   log_level[write_idx] = loglevel;
 
-  // Must use PROGMEM aware functions here to process line
-  unsigned int linelength = strlen_P(line);
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
 
-  if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
-    linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
-  }
-  Message[write_idx] = "";
-  if (!Message[write_idx].reserve(linelength)) {
-    return;
-  }
-
-  const char* c = line;
-  for (unsigned i = 0; i < linelength; ++i) {
-    Message[write_idx] += static_cast<char>(pgm_read_byte(c++));
+    if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+    } else {
+      Message[write_idx] = line;
+    }
   }
 }
 
@@ -38,6 +34,11 @@ bool LogStruct::get(String& output, const String& lineEnd) {
   lastReadTimeStamp = millis();
 
   if (!isEmpty()) {
+    #ifdef USE_SECOND_HEAP
+    // Fetch the log line and make sure it is allocated on the DRAM heap, not the 2nd heap
+    // Otherwise checks like strnlen_P may crash on it.
+    HeapSelectDram ephemeral;
+    #endif
     read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
     output  += formatLine(read_idx, lineEnd);
   }
@@ -74,7 +75,7 @@ String LogStruct::formatLine(int index, const String& lineEnd) {
   String output;
 
   output += timeStamp[index];
-  output += " : ";
+  output += F(" : ");
   output += Message[index];
   output += lineEnd;
   return output;
@@ -89,7 +90,7 @@ void LogStruct::clearExpiredEntries() {
     // Clear the entire log.
     // If web log is the only log active, it will not be checked again until it is read.
     for (read_idx = 0; read_idx < LOG_STRUCT_MESSAGE_LINES; ++read_idx) {
-      Message[read_idx]   = String(); // Free also the reserved memory.
+      Message[read_idx].clear(); // Free also the reserved memory.
       timeStamp[read_idx] = 0;
       log_level[read_idx] = 0;
     }

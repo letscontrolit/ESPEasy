@@ -6,6 +6,7 @@
 #include "../DataStructs/EventStructCommandWrapper.h"
 #include "../DataStructs/SystemTimerStruct.h"
 #include "../DataTypes/ProtocolIndex.h"
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Helpers/msecTimerHandlerStruct.h"
 
 #include <list>

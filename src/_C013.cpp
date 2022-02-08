@@ -17,6 +17,12 @@
 
 WiFiUDP C013_portUDP;
 
+// Forward declarations
+void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex);
+void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t destTaskIndex);
+void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size);
+void C013_Receive(struct EventStruct *event);
+
 
 bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& string)
 {

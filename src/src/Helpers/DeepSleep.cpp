@@ -141,7 +141,7 @@ void deepSleepStart(int dsdelay)
 
   if (Settings.UseAlternativeDeepSleep()) {
     // See: https://github.com/esp8266/Arduino/issues/6318#issuecomment-711389479
-    #include "c_types.h"
+    #include <c_types.h>
     // system_phy_set_powerup_option:
     // 1 = RF initialization only calibrate VDD33 and Tx power which will take about 18 ms
     // 2 = RF initialization only calibrate VDD33 which will take about 2 ms

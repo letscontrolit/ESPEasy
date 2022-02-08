@@ -10,15 +10,11 @@ public:
 
   typedef int64_t Duration;
 
-  LongTermTimer() {}
+  LongTermTimer() = default;
 
-  explicit LongTermTimer(const LongTermTimer& rhs) {
-    _timer_usec = rhs.get();
-  }
+  explicit LongTermTimer(const LongTermTimer& rhs);
 
-  explicit LongTermTimer(bool usenow) : _timer_usec(0ull) {
-    if (usenow) setNow();
-  }
+  explicit LongTermTimer(bool usenow);
 
   //explicit LongTermTimer(uint64_t start_time) : _timer_usec(start_time) {}
 
@@ -32,11 +28,7 @@ public:
     return _timer_usec > rhs.get();
   }
 
-  LongTermTimer& operator=(const LongTermTimer& rhs)
-  {
-    _timer_usec = rhs.get();
-    return *this;
-  }
+  LongTermTimer& operator=(const LongTermTimer& rhs);
 
   void clear() {
     _timer_usec = 0ull;
@@ -46,9 +38,7 @@ public:
     _timer_usec = start_time;
   }
 
-  void setMillisFromNow(uint32_t millisFromNow) {
-    _timer_usec = getMicros64() + (millisFromNow * 1000ull);
-  }
+  void setMillisFromNow(uint32_t millisFromNow);
 
   bool isSet() const {
     return _timer_usec > 0ull;
@@ -58,9 +48,7 @@ public:
     return _timer_usec;
   }
 
-  void setNow() {
-    _timer_usec = getMicros64();
-  }
+  void setNow();
 
   // Positive when next is past this time value.
   Duration timeDiff(const LongTermTimer& next) const {
@@ -71,17 +59,13 @@ public:
     return __timeDiff(_timer_usec, getMicros64());
   }
 
-  Duration millisPassedSince() const {
-    return usecPassedSince() / 1000ll;
-  }
+  Duration millisPassedSince() const;
 
   bool timeReached() const {
     return getMicros64() > _timer_usec;
   }
 
-  bool timeoutReached(uint32_t millisTimeout) const {
-    return getMicros64() > (_timer_usec + (millisTimeout * 1000ull));
-  }
+  bool timeoutReached(uint32_t millisTimeout) const;
 
 private:
 
