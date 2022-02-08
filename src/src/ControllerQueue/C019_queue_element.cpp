@@ -9,6 +9,19 @@ String getPackedFromPlugin(struct EventStruct *event,
                            uint8_t             sampleSetCount);
 #endif // USES_PACKED_RAW_DATA
 
+#ifdef USE_SECOND_HEAP
+C019_queue_element::C019_queue_element(const C019_queue_element& other) :
+  packed(other.packed),
+  _timestamp(other._timestamp),
+  TaskIndex(other.TaskIndex),
+  controller_idx(other.controller_idx),
+  plugin_id(other.plugin_id),
+  MessageRouteInfo(other.MessageRouteInfo)
+{
+   event.deep_copy(other.event);
+}
+#endif
+
 C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
   controller_idx(event_p->ControllerIndex)
 {

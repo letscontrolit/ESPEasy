@@ -1,14 +1,14 @@
+#include "src/Helpers/_CPlugin_Helper.h"
+
 #ifdef USES_C019
 
 // #######################################################################################################
 // ################### Controller Plugin 019: ESPEasy-NOW ################################################
 // #######################################################################################################
 
-#include "ESPEasy_fdwdecl.h"
 #include "ESPEasy_common.h"
 #include "src/ControllerQueue/C019_queue_element.h"
 #include "src/Globals/ESPEasy_now_handler.h"
-#include "src/Helpers/_CPlugin_Helper.h"
 #include "src/Helpers/C019_ESPEasyNow_helper.h"
 
 
@@ -98,11 +98,6 @@ bool CPlugin_019(CPlugin::Function function, struct EventStruct *event, String& 
 
   return success;
 }
-
-// Uncrustify may change this into multi line, which will result in failed builds
-// *INDENT-OFF*
-bool do_process_c019_delay_queue(int controller_number, const C019_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-// *INDENT-ON*
 
 bool do_process_c019_delay_queue(int controller_number, const C019_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
   ESPEasy_Now_p2p_data data;

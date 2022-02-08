@@ -1,7 +1,5 @@
 #include "../ESPEasyCore/ESPEasy_setup.h"
 
-#include "../../ESPEasy_fdwdecl.h" // Needed for PluginInit() and CPluginInit()
-
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"

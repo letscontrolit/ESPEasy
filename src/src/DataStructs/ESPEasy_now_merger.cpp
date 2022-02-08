@@ -3,7 +3,6 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../Helpers/ESPEasy_time_calc.h"
-# include "../../ESPEasy_fdwdecl.h"
 
 # define ESPEASY_NOW_MESSAGE_TIMEOUT  5000
 

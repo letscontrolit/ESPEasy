@@ -20,7 +20,11 @@ public:
 
   C019_queue_element() = default;
 
+  #ifdef USE_SECOND_HEAP
+  C019_queue_element(const C019_queue_element& other);
+  #else
   C019_queue_element(const C019_queue_element& other) = delete;
+  #endif
 
   C019_queue_element(C019_queue_element&& other) = default;
 
