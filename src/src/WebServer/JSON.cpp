@@ -310,8 +310,8 @@ void handle_json()
           if (rssi < 0) {
             stream_next_json_object_value(F("rssi"), rssi);
           }
-          stream_next_json_object_value(F("ip"), it->second.ip.toString());
-          stream_last_json_object_value(F("age"), it->second.age);
+          stream_next_json_object_value(F("ip"), it->second.IP().toString());
+          stream_last_json_object_value(F("age"), it->second.getAge());
         } // if node info exists
       }   // for loop
 

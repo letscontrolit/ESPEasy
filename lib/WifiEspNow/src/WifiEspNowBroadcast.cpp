@@ -48,7 +48,7 @@ WifiEspNowBroadcastClass::end()
 {
   WifiEspNow.end();
   WiFi.softAPdisconnect();
-  m_ssid = "";
+  m_ssid.clear();
 }
 
 bool

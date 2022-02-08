@@ -57,6 +57,7 @@ else:
     "-DUSES_C018",  # TTN/RN2483
     "-DUSES_C019",  # ESPEasy-NOW
 
+    "-DUSES_ESPEASY_NOW",
 #    "-DFEATURE_MDNS",
 #    "-DFEATURE_SD",
     "-DUSE_EXT_RTC",

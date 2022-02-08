@@ -484,35 +484,4 @@ String getExtendedValue(LabelType::Enum label) {
   return "";
 }
 
-const __FlashStringHelper * getFileName(FileType::Enum filetype) {
 
-  switch (filetype)
-  {
-    case FileType::CONFIG_DAT:       return F("config.dat");
-    case FileType::NOTIFICATION_DAT: return F("notification.dat");
-    case FileType::SECURITY_DAT:     return F("security.dat");
-    case FileType::RULES_TXT:
-      // Use getRulesFileName
-      break;
-  }
-  return F("");
-}
-
-String getFileName(FileType::Enum filetype, unsigned int filenr) {
-  if (filetype == FileType::RULES_TXT) {
-    return getRulesFileName(filenr);
-  }
-  return getFileName(filetype);
-}
-
-// filenr = 0...3 for files rules1.txt ... rules4.txt
-String getRulesFileName(unsigned int filenr) {
-  String result;
-
-  if (filenr < 4) {
-    result += F("rules");
-    result += filenr + 1;
-    result += F(".txt");
-  }
-  return result;
-}

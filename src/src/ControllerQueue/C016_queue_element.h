@@ -6,7 +6,6 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataStructs/MessageRouteInfo.h"
-#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/Plugins.h"
 
 struct EventStruct;

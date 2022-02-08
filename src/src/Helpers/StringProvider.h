@@ -203,10 +203,5 @@ String getExtendedValue(LabelType::Enum label);
 
 
 
-const __FlashStringHelper * getFileName(FileType::Enum filetype);
-String getFileName(FileType::Enum filetype,
-                   unsigned int   filenr);
-
-
 
 #endif // STRING_PROVIDER_TYPES_H

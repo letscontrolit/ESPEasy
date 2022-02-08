@@ -18,22 +18,14 @@ bool isProtectedFileType(const String& filename)
          matchFileType(filename, FileType::PROVISIONING_DAT);
 }
 
-String getFileName(FileType::Enum filetype) {
-  String result;
+const __FlashStringHelper * getFileName(FileType::Enum filetype) {
 
   switch (filetype)
   {
-    case FileType::CONFIG_DAT:
-      result += F("config.dat");
-      break;
-    case FileType::NOTIFICATION_DAT:
-      result += F("notification.dat");
-      break;
-    case FileType::SECURITY_DAT:
-      result += F("security.dat");
-      break;
-    case FileType::PROVISIONING_DAT:
-      result += F("provisioning.dat");
+    case FileType::CONFIG_DAT:       return F("config.dat");
+    case FileType::NOTIFICATION_DAT: return F("notification.dat");
+    case FileType::SECURITY_DAT:     return F("security.dat");
+    case FileType::PROVISIONING_DAT: return F("provisioning.dat");
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
@@ -41,7 +33,7 @@ String getFileName(FileType::Enum filetype) {
     case FileType::MAX_FILETYPE:
       break;
   }
-  return result;
+  return F("");
 }
 
 String getFileName(FileType::Enum filetype, unsigned int filenr) {

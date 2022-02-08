@@ -20,10 +20,9 @@ bool matchFileType(const String& filename, FileType::Enum filetype);
 
 bool isProtectedFileType(const String& filename);
 
-String getFileName(FileType::Enum filetype);
+const __FlashStringHelper * getFileName(FileType::Enum filetype);
 String getFileName(FileType::Enum filetype,
                    unsigned int   filenr);
-
 
 // filenr = 0...3 for files rules1.txt ... rules4.txt
 String getRulesFileName(unsigned int filenr);

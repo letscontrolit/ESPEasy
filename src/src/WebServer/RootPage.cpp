@@ -175,6 +175,11 @@ void handle_root() {
       addHtml(html);
     }
     {
+      #ifdef USE_SECOND_HEAP
+      addRowLabelValue(LabelType::FREE_HEAP_IRAM);
+      #endif
+    }
+    {
       addRowLabel(LabelType::FREE_STACK);
       String html;
       html.reserve(64);
@@ -260,7 +265,7 @@ void handle_root() {
         addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
         addHtml(printWebString);
         addHtml(F("</textarea>"));
-        printWebString = "";
+        printWebString.clear();
       }
     }
     html_end_table();
@@ -380,7 +385,7 @@ void handle_root() {
     html_end_table();
     html_end_form();
 
-    printWebString = "";
+    printWebString.clear();
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }

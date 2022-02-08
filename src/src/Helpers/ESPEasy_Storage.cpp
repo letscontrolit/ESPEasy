@@ -457,7 +457,7 @@ String SaveSecuritySettings() {
   if (memcmp(tmp_md5, SecuritySettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(SecuritySettings.md5, tmp_md5, 16);
-    err = SaveToFile(getFileName(FileType::SECURITY_DAT).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
 
     if (WifiIsAP(WiFi.getMode())) {
       // Security settings are saved, may be update of WiFi settings or hostname.
@@ -541,7 +541,7 @@ String LoadSettings()
      }
    */
 
-  err = LoadFromFile(getFileName(FileType::SECURITY_DAT).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
+  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
   md5.begin();
   md5.add(reinterpret_cast< uint8_t *>(&SecuritySettings), sizeof(SecuritySettings) - 16);
   md5.calculate();
@@ -1033,7 +1033,7 @@ String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
   if (memcmp(tmp_md5, ProvisioningSettings.md5, 16) != 0) {
     // Settings have changed, save to file.
     memcpy(ProvisioningSettings.md5, tmp_md5, 16);
-    err = SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
+    err = SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
   }
   return err;
 }
@@ -1046,7 +1046,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
   uint8_t calculatedMd5[16] = { 0 };
   MD5Builder md5;
 
-  String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
+  String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
   md5.begin();
   md5.add(((uint8_t *)&ProvisioningSettings) + 16, sizeof(ProvisioningSettings) - 16);
   md5.calculate();
