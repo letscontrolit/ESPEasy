@@ -214,20 +214,17 @@ void handle_controllers_ShowAllControllersTable()
         html_add_button_prefix();
       }
       {
-        String html;
-        html.reserve(32);
-        html += F("controllers?index=");
-        html += x + 1;
-        html += F("'>");
+        addHtml(F("controllers?index="));
+        addHtmlInt(x + 1);
+        addHtml(F("'>"));
 
         if (cplugin_set) {
-          html += F("Edit");
+          addHtml(F("Edit"));
         } else {
-          html += F("Add");
+          addHtml(F("Add"));
         }
-        html += F("</a><TD>");
-        html += getControllerSymbol(x);
-        addHtml(html);
+        addHtml(F("</a><TD>"));
+        addHtml(getControllerSymbol(x));
       }
       html_TD();
 

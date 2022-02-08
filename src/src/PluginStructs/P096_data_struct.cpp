@@ -106,11 +106,11 @@ int P096_data_struct::StringSplit(const String &s, char c, String op[], int limi
   char * pch;
   String d = String(c);
   pch = strtok ((char*)(s.c_str()),d.c_str());
-  while (pch != NULL && count < limit)
+  while (pch != nullptr && count < limit)
   {
     op[count] = String(pch);
     count++;
-    pch = strtok (NULL, ",");
+    pch = strtok (nullptr, ",");
   }  
   return count;
 }

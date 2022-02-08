@@ -381,7 +381,7 @@ bool setPCFInputMode(uint8_t pin)
     return false;
   }
   uint8_t unit = (pin - 1) / 8;
-  uint8_t port = pin - (unit * 8)-1;
+  const uint8_t port = pin - (unit * 8)-1;
   uint8_t address = 0x20 + unit;
   if (unit > 7) address += 0x10;
 
@@ -425,7 +425,7 @@ void GPIO_Monitor10xSec()
       const uint16_t gpioPort = getPortFromKey(it->first);
       const uint16_t pluginID = getPluginFromKey(it->first);
       int8_t currentState = -1;
-      String eventString;
+      const __FlashStringHelper * eventString;
       bool caseFound = true;
 
       switch (pluginID)
@@ -458,7 +458,7 @@ void GPIO_Monitor10xSec()
             it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
             // send event if not task, otherwise is sent in the task PLUGIN_TEN_PER_SECOND
             if (it->second.monitor) { 
-              sendMonitorEvent(eventString.c_str(), gpioPort, currentState);
+              sendMonitorEvent(String(eventString).c_str(), gpioPort, currentState);
             }
           }
         }

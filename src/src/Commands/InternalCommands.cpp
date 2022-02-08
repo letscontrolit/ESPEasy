@@ -43,11 +43,11 @@
 #include "../Helpers/StringParser.h"
 
 
-bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
+bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
   if (nrArguments < 0) { return true; }
 
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
-  if (HasArgv(Line, nrArguments + 2)) {
+  if (HasArgv(Line.c_str(), nrArguments + 2)) {
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
@@ -89,7 +89,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
           }
         }
         log += F(" lineLength=");
-        log += strlen(Line);
+        log += Line.length();
         addLog(LOG_LEVEL_ERROR, log);
         log  = F("Line: _");
         log += Line;
@@ -176,7 +176,7 @@ bool do_command_case_check(command_case_data         & data,
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
-  data.status = "";
+  data.status.clear();
   if (!data.cmd_lc.equals(cmd_test)) {
     return false;
   }
@@ -209,7 +209,8 @@ bool do_command_case(command_case_data         & data,
 {
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
-    data.status = pFunc(data.event, data.line);
+    // FIXME TD-er: Must change command function signature to use const String&
+    data.status = pFunc(data.event, data.line.c_str());
     return true;
   }
   return false;
@@ -224,7 +225,8 @@ bool do_command_case(command_case_data         & data,
 {
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
-    data.status = pFunc(data.event, data.line);
+    // FIXME TD-er: Must change command function signature to use const String&
+    data.status = pFunc(data.event, data.line.c_str());
     return true;
   }
   return false;

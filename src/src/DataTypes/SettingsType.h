@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_SETTINGSTYPE_H
-#define DATASTRUCTS_SETTINGSTYPE_H
+#ifndef DATATYPES_SETTINGSTYPE_H
+#define DATATYPES_SETTINGSTYPE_H
 
 #include "../../ESPEasy_common.h"
 
@@ -48,9 +48,9 @@ public:
 
   static SettingsFileEnum getSettingsFile(Enum settingsType);
   static String           getSettingsFileName(Enum settingsType);
-  static String           getSettingsFileName(SettingsType::SettingsFileEnum file_type);
+  static const __FlashStringHelper * getSettingsFileName(SettingsType::SettingsFileEnum file_type);
   static size_t           getInitFileSize(SettingsType::SettingsFileEnum file_type);
 };
 
 
-#endif // DATASTRUCTS_SETTINGSTYPE_H
+#endif // DATATYPES_SETTINGSTYPE_H

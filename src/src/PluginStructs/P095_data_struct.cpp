@@ -72,7 +72,7 @@ unsigned short P095_data_struct::ParseColor(String & s)
   if(s.length() == 7 && s[0] == '#')
   {
     // convrt to long value in base16, then split up into r, g, b values
-    long long number = strtoll( &s[1], NULL, 16);
+    long long number = strtoll( &s[1], nullptr, 16);
     //long long r = number >> 16;
     //long long g = number >> 8 & 0xFF;
     //long long b = number & 0xFF;
@@ -94,11 +94,11 @@ int P095_data_struct::StringSplit(String &s, char c, String op[], int limit)
   char * pch;
   String d = String(c);
   pch = strtok ((char*)(s.c_str()),d.c_str());
-  while (pch != NULL && count < limit)
+  while (pch != nullptr && count < limit)
   {
     op[count] = String(pch);
     count++;
-    pch = strtok (NULL, ",");
+    pch = strtok (nullptr, ",");
   }
   return count;
 }

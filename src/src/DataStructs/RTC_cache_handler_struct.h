@@ -2,7 +2,7 @@
 #define DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
 
 
-#include "RTCCacheStruct.h"
+#include "../DataStructs/RTCCacheStruct.h"
 
 #include "../../ESPEasy_common.h"
 

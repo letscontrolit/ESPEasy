@@ -109,7 +109,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Split functionality of this plugin into 2 new ones:
       // - switch/dimmer input
       // - switch output (relays)
-      event->String1 = formatGpioName_bidirectional("");
+      event->String1 = formatGpioName_bidirectional(F(""));
       break;
     }
 

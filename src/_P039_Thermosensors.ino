@@ -528,7 +528,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           }
           {
             addFormFloatNumberBox(F("Offset"), F("P039_offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
-            addUnit(F("K"));            
+            addUnit('K');            
             addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
           }
         }

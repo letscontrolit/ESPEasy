@@ -16,7 +16,7 @@ void wrap_html_tag(const __FlashStringHelper * tag, const String& text) {
   addHtml(tag);
   addHtml('>');
   addHtml(text);
-  addHtml(F("</"));
+  addHtml('<', '/');
   addHtml(tag);
   addHtml('>');
 }
@@ -26,7 +26,7 @@ void wrap_html_tag(const String& tag, const String& text) {
   addHtml(tag);
   addHtml('>');
   addHtml(text);
-  addHtml(F("</"));
+  addHtml('<', '/');
   addHtml(tag);
   addHtml('>');
 }
@@ -36,7 +36,7 @@ void wrap_html_tag(char tag, const String& text) {
   addHtml(tag);
   addHtml('>');
   addHtml(text);
-  addHtml(F("</"));
+  addHtml('<', '/');
   addHtml(tag);
   addHtml('>');
 }
@@ -76,16 +76,16 @@ void html_TR_TD_height(int height) {
 
   addHtml(F("<TD HEIGHT=\""));
   addHtmlInt(height);
-  addHtml(F("\">"));
+  addHtml('"', '>');
 }
 
 void html_TD() {
-  html_TD(1);
+  addHtml(F("<TD>"));
 }
 
 void html_TD(int td_cnt) {
   for (int i = 0; i < td_cnt; ++i) {
-    addHtml(F("<TD>"));
+    html_TD();
   }
 }
 
@@ -100,7 +100,7 @@ void html_copyText_TD() {
 
   addHtml(F("<TD id='copyText_"));
   addHtmlInt(copyTextCounter);
-  addHtml(F("'>"));
+  addHtml('\'', '>');;
 }
 
 // Add some recognizable token to show which parts will be copied.
@@ -322,8 +322,13 @@ void addHtmlError(const String& error) {
   }
 }
 
-void addHtml(const char& html) {
-  TXBuffer += html;
+void addHtml(const char& char1) {
+  TXBuffer += char1;
+}
+
+void addHtml(const char& char1, const char& char2) {
+  TXBuffer += char1;
+  TXBuffer += char2;
 }
 
 void addHtml(const __FlashStringHelper * html) {
@@ -331,6 +336,10 @@ void addHtml(const __FlashStringHelper * html) {
 }
 
 void addHtml(const String& html) {
+  TXBuffer += html;
+}
+
+void addHtml(String&& html) {
   TXBuffer += html;
 }
 

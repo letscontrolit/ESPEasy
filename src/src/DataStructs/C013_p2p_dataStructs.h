@@ -4,11 +4,11 @@
 #include <Arduino.h>
 
 #include "../CustomBuild/ESPEasyLimits.h"
-#include "../Globals/Plugins.h"
+#include "../DataTypes/TaskIndex.h"
+#include "../DataTypes/PluginID.h"
 
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
 
-#ifdef USES_C013
 struct C013_SensorInfoStruct
 {
   C013_SensorInfoStruct();
@@ -41,6 +41,5 @@ struct C013_SensorDataStruct
   float       Values[VARS_PER_TASK];
 };
 
-#endif
 
 #endif // DATASTRUCTS_C013_P2P_DATASTRUCTS_H
