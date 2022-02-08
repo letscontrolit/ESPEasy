@@ -331,10 +331,10 @@
 /*
 TODO : 
 Following https://github.com/letscontrolit/ESPEasy/pull/3884/files#r774431094 in #3884
-The current "ESPEasy@mega-20211105" tag, should be replaced at build/release time with the correct tag while still allowing self-made builds
+The current "ESPEasy@mega-20211224" tag, should be replaced at build/release time with the correct tag while still allowing self-made builds
 */
 #ifndef CDN_JS_CSS_URL
-#define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20211105/static/"
+#define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20211224/static/"
 #endif
 
 
