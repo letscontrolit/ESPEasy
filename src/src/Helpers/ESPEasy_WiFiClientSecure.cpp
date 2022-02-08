@@ -27,6 +27,8 @@
 #include <mbedtls/pem.h>
 #include <mbedtls/oid.h>
 
+#include <vector>
+
 #undef connect
 #undef write
 #undef read
