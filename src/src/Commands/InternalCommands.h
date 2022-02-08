@@ -9,7 +9,7 @@
 
 bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum group);
 
-bool checkNrArguments(const char *cmd, const char *Line, int nrArguments);
+bool checkNrArguments(const char *cmd, const String& Line, int nrArguments);
 
 
 // Typedef for function pointer to be called for handling an internal command.
@@ -26,7 +26,7 @@ struct command_case_data {
     String cmd_lc;
     const char  *cmd;
     struct EventStruct *event;
-    const char *line;
+    const String line;
     String status;
     bool retval = false;
 

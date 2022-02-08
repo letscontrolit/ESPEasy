@@ -1,11 +1,7 @@
-#ifndef DATASTRUCT_TASKINDEX_H
-#define DATASTRUCT_TASKINDEX_H
+#ifndef DATATYPES_TASKINDEX_H
+#define DATATYPES_TASKINDEX_H
 
 #include <Arduino.h>
-
-#include "../CustomBuild/ESPEasyLimits.h"
-
-#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
 typedef uint8_t taskIndex_t;
 typedef uint16_t userVarIndex_t;
@@ -16,4 +12,4 @@ extern userVarIndex_t INVALID_USERVAR_INDEX;
 extern taskVarIndex_t INVALID_TASKVAR_INDEX;
 
 
-#endif // ifndef DATASTRUCT_TASKINDEX_H
+#endif // ifndef DATATYPES_TASKINDEX_H

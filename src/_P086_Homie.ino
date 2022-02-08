@@ -76,22 +76,24 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = 0;
         String labelText;
         String keyName;
-        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES];
-        options[0] = F("integer");
-        options[1] = F("float");
-        options[2] = F("boolean");
-        options[3] = F("string");
-        options[4] = F("enum");
-        options[5] = F("rgb");
-        options[6] = F("hsv");
-        int optionValues[PLUGIN_086_VALUE_TYPES];
-        optionValues[0] = PLUGIN_086_VALUE_INTEGER;
-        optionValues[1] = PLUGIN_086_VALUE_FLOAT;
-        optionValues[2] = PLUGIN_086_VALUE_BOOLEAN;
-        optionValues[3] = PLUGIN_086_VALUE_STRING;
-        optionValues[4] = PLUGIN_086_VALUE_ENUM;
-        optionValues[5] = PLUGIN_086_VALUE_RGB;
-        optionValues[6] = PLUGIN_086_VALUE_HSV;
+        const __FlashStringHelper * options[PLUGIN_086_VALUE_TYPES] = {
+          F("integer"),
+          F("float"),
+          F("boolean"),
+          F("string"),
+          F("enum"),
+          F("rgb"),
+          F("hsv")
+        };
+        const int optionValues[PLUGIN_086_VALUE_TYPES] = {
+          PLUGIN_086_VALUE_INTEGER,
+          PLUGIN_086_VALUE_FLOAT,
+          PLUGIN_086_VALUE_BOOLEAN,
+          PLUGIN_086_VALUE_STRING,
+          PLUGIN_086_VALUE_ENUM,
+          PLUGIN_086_VALUE_RGB,
+         PLUGIN_086_VALUE_HSV
+        };
         for (int i=0;i<PLUGIN_086_VALUE_MAX;i++) {
           labelText = F("Function #");
           labelText += (i+1);
@@ -302,9 +304,8 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" enum set to ");
                   log += floatValue;
-                  log += F(" (");
-                  log += parameter;
-                  log += F(")");
+                  log += ' ';
+                  log += wrap_braces(parameter);
                   addLog(LOG_LEVEL_INFO,log);
                 }
                 break;

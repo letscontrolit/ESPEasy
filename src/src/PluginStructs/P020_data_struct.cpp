@@ -109,7 +109,7 @@ void P020_Task::discardClientIn() {
 }
 
 void P020_Task::clearBuffer() {
-  serial_buffer = "";
+  serial_buffer.clear();
   serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 

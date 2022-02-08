@@ -1,5 +1,5 @@
-#ifndef I2C_TYPES_H
-#define I2C_TYPES_H I2C_TYPES_H
+#ifndef DATASTRUCTS_I2C_TYPES_H
+#define DATASTRUCTS_I2C_TYPES_H
 
 #include <Arduino.h>
 #include <vector>
@@ -70,4 +70,4 @@ const __FlashStringHelper * toString(I2C_bus_state state);
 
 
 
-#endif // I2C_TYPES_H
+#endif // DATASTRUCTS_I2C_TYPES_H

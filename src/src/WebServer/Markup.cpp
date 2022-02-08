@@ -545,11 +545,25 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
 }
 
 void addFormHeader(const __FlashStringHelper *header) {
+  addFormHeader(header, F(""), F(""));
+}
+
+void addFormHeader(const __FlashStringHelper *header,
+                   const __FlashStringHelper *helpButton)
+{
+  addFormHeader(header, helpButton, F(""));
+}
+
+void addFormHeader(const __FlashStringHelper *header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton)
+{
   html_TR();
-  html_table_header(header, EMPTY_STRING, EMPTY_STRING, 0);
+  html_table_header(header, helpButton, rtdHelpButton, 0);
   html_table_header(F(""));
 }
 
+/*
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, EMPTY_STRING);
 }
@@ -560,6 +574,7 @@ void addFormHeader(const String& header, const String& helpButton, const String&
   html_table_header(header, helpButton, rtdHelpButton, 0);
   html_table_header(F(""));
 }
+*/
 
 // ********************************************************************************
 // Add a sub header

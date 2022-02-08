@@ -20,7 +20,7 @@
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 
-void sendHeadandTail(const String& tmplName,
+void sendHeadandTail(const __FlashStringHelper * tmplName,
                      boolean       Tail      = false,
                      boolean       rebooting = false);
 
@@ -46,7 +46,7 @@ void   getWebPageTemplateDefaultHead(WebTemplateParser& parser,
                                      bool    addJS);
 
 void getWebPageTemplateDefaultHeader(WebTemplateParser& parser,
-                                     const String& title,
+                                     const __FlashStringHelper * title,
                                      bool          addMenu);
 
 void   getWebPageTemplateDefaultContentSection(WebTemplateParser& parser);

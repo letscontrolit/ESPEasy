@@ -8,7 +8,7 @@
 String generate_external_URL(const String& fname) {
     String url;
     url.reserve(80 + fname.length());
-    url = F(CDN_JS_CSS_URL);
+    url += F(CDN_JS_CSS_URL);
     url += fname;
     return url;
 }

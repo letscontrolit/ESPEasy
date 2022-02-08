@@ -1,5 +1,5 @@
-#ifndef ESPEASY_DEFAULTS_H_
-#define ESPEASY_DEFAULTS_H_
+#ifndef CUSTOMBUILD_ESPEASY_DEFAULTS_H_
+#define CUSTOMBUILD_ESPEASY_DEFAULTS_H_
 
 // Needed to make sure Custom.h is used.
 #include "../../ESPEasy_common.h"
@@ -352,4 +352,4 @@ The current "ESPEasy@mega-20211105" tag, should be replaced at build/release tim
 #define DEFAULT_I2C_CLOCK_LIMIT                 0                       //
 */
 
-#endif // ESPEASY_DEFAULTS_H_
+#endif // CUSTOMBUILD_ESPEASY_DEFAULTS_H_
