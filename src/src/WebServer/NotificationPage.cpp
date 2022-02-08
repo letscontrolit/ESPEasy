@@ -12,7 +12,6 @@
 #include "../Helpers/ESPEasy_Storage.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/NPlugins.h"
 #include "../Globals/Settings.h"
 
 

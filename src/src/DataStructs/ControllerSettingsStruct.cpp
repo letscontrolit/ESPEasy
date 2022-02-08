@@ -158,7 +158,7 @@ bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
 String ControllerSettingsStruct::getHostPortString() const {
   String result = getHost();
 
-  result += ":";
+  result += ':';
   result += Port;
   return result;
 }

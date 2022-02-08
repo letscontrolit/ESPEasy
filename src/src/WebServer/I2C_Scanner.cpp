@@ -362,9 +362,8 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
             addHtml(F("Standard I2C bus"));
             excludeDevices[address] = true;
           } else {
-            String i2cChannel = F("Multiplexer channel ");
-            i2cChannel += String(channel);
-            addHtml(i2cChannel);
+            addHtml(F("Multiplexer channel "));
+            addHtmlInt(channel);
           }
           html_TD();
         }

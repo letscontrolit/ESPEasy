@@ -289,7 +289,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         float temperature  = UserVar[BaseVarIndex]; // in degrees C
         // convert to celsius if required
         int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
-        String temp                   = F("C");
+        String temp;
+        temp += 'C';
 
         if (temperature_in_fahrenheit)
         {

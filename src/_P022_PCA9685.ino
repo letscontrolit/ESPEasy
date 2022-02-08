@@ -29,7 +29,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
   uint16_t freq    = PCA9685_MAX_FREQUENCY;
   uint16_t range   = PCA9685_MAX_PWM;
 
-  if ((event != NULL) && (event->TaskIndex >= 0))
+  if ((event != nullptr) && (event->TaskIndex >= 0))
   {
     address = CONFIG_PORT;
     mode2   = PCONFIG(0);

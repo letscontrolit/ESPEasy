@@ -179,7 +179,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
             addRowLabel(RGB.substring(i, i + 1));
             String id = F("p050_cal_");
             for (int j = 0; j < 3; j++) {
-              addHtml(String(static_cast<char>('a' + i)));
+              addHtml(static_cast<char>('a' + i));
               addHtml(F("<sub>"));
               addHtmlInt(j + 1);
               addHtml(F("</sub>"));
