@@ -21,7 +21,7 @@
 const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
 	if (NetworkConnected()) {
-		String host = parseString(Line, 2);
+		const String host = parseString(Line, 2);
 		const int port = parseCommandArgumentInt(Line, 2);
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Host: ");
@@ -33,7 +33,7 @@ const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, c
 		if (port < 0 || port > 65535) return return_command_failed();
 		// FIXME TD-er: This is not using the tolerant settings option.
     // String path = tolerantParseStringKeepCase(Line, 4);
-		String path = parseStringToEndKeepCase(Line, 4);
+		const String path = parseStringToEndKeepCase(Line, 4);
 #ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Path: ");
@@ -50,12 +50,11 @@ const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, c
 				hostportString += ':';
 				hostportString += port;
 			}
-			String request = do_create_http_request(hostportString, F("GET"), path);
+			const String request = do_create_http_request(hostportString, F("GET"), path);
 #ifndef BUILD_NO_DEBUG
 			addLog(LOG_LEVEL_DEBUG, request);
 #endif
-            bool mustCheckAck = Settings.SendToHttp_ack();
-			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, mustCheckAck);
+			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, Settings.SendToHttp_ack());
 			return return_command_success();
 		}
 		addLog(LOG_LEVEL_ERROR, F("SendToHTTP connection failed"));

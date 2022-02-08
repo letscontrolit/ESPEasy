@@ -73,6 +73,8 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
 //      Device[deviceCount].DuplicateDetection = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -405,7 +407,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, EMPTY_STRING);
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, EMPTY_STRING);
             }
 
             break;
@@ -427,7 +429,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, EMPTY_STRING);
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, EMPTY_STRING);
             break;
           }
           case 3:

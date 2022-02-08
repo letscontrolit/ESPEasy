@@ -105,6 +105,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -131,7 +132,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
-      event->String3 = formatGpioName_output_optional("DE");
+      event->String3 = formatGpioName_output_optional(F("DE"));
       break;
     }
 
@@ -166,7 +167,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 6; ++i) {
         options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, NULL, P085_BAUDRATE);
+      addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P085_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
       break;
@@ -202,13 +203,13 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
 
           if (errorcode == 0) {
             addFormNumericBox(F("Full Range Voltage Value"), F("p085_fr_volt"), value, 5, 9999);
-            addUnit(F("V"));
+            addUnit('V');
           }
           value = P085_data->modbus.readHoldingRegister(0x104, errorcode);
 
           if (errorcode == 0) {
             addFormNumericBox(F("Full Range Current Value"), F("p085_fr_curr"), value, 20, 50000);
-            addUnit(F("A"));
+            addUnit('A');
           }
           value = P085_data->modbus.readHoldingRegister(0x105, errorcode);
 

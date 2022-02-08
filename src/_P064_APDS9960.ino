@@ -308,7 +308,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           case DIR_FAR:     log += F("FAR");     break;
           default:          log += F("NONE");    break;
         }
-        log += " (";
+        log += F(" (");
         log += gesture;
         log += ')';
 

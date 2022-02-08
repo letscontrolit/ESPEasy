@@ -108,7 +108,7 @@ bool P087_data_struct::loop() {
 
           for (size_t i = 0; i < length && valid; ++i) {
             if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = "";
+              sentence_part.clear();
               ++sentences_received_error;
               valid = false;
             }
@@ -117,7 +117,7 @@ bool P087_data_struct::loop() {
           if (valid) {
             fullSentenceReceived = true;
             last_sentence = sentence_part;
-            sentence_part = "";
+            sentence_part.clear();
           }
           break;
         }
@@ -146,7 +146,7 @@ bool P087_data_struct::getSentence(String& string) {
   if (string.isEmpty()) {
     return false;
   }
-  last_sentence = "";
+  last_sentence.clear();
   return true;
 }
 

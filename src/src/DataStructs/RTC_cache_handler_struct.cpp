@@ -435,13 +435,14 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
 void RTC_cache_handler_struct::rtc_debug_log(const String& description, size_t nrBytes) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(18 + description.length());
-    log  = F("RTC  : ");
-    log += description;
-    log += ' ';
-    log += nrBytes;
-    log += F(" bytes");
-    addLog(LOG_LEVEL_INFO, log);
+    if (log.reserve(18 + description.length())) {
+      log  = F("RTC  : ");
+      log += description;
+      log += ' ';
+      log += nrBytes;
+      log += F(" bytes");
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
 }
 

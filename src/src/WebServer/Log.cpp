@@ -62,7 +62,7 @@ void handle_log_JSON() {
       addHtml('{');
       int loglevel;
       stream_next_json_object_value(F("label"), getLogLevelDisplayStringFromIndex(i, loglevel));
-      stream_last_json_object_value(F("loglevel"), String(loglevel));
+      stream_last_json_object_value(F("loglevel"), loglevel);
     }
     addHtml(F("],\n"));
   }
@@ -77,11 +77,11 @@ void handle_log_JSON() {
     uint8_t loglevel;
     if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
       addHtml('{');
-      stream_next_json_object_value(F("timestamp"), String(lastTimeStamp));
+      stream_next_json_object_value(F("timestamp"), lastTimeStamp);
       stream_next_json_object_value(F("text"),  message);
-      stream_last_json_object_value(F("level"), String(loglevel));
+      stream_last_json_object_value(F("level"), loglevel);
       if (logLinesAvailable) {
-        addHtml(F(",\n"));
+        addHtml(',', '\n');
       }
       if (nrEntries == 0) {
         firstTimeStamp = lastTimeStamp;
@@ -109,11 +109,11 @@ void handle_log_JSON() {
     // Reload times no lower than 100 msec.
     refreshSuggestion = 100;
   }
-  stream_next_json_object_value(F("TTL"),                 String(refreshSuggestion));
-  stream_next_json_object_value(F("timeHalfBuffer"),      String(newOptimum));
-  stream_next_json_object_value(F("nrEntries"),           String(nrEntries));
-  stream_next_json_object_value(F("SettingsWebLogLevel"), String(Settings.WebLogLevel));
-  stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
+  stream_next_json_object_value(F("TTL"),                 refreshSuggestion);
+  stream_next_json_object_value(F("timeHalfBuffer"),      newOptimum);
+  stream_next_json_object_value(F("nrEntries"),           nrEntries);
+  stream_next_json_object_value(F("SettingsWebLogLevel"), Settings.WebLogLevel);
+  stream_last_json_object_value(F("logTimeSpan"),         logTimeSpan);
   addHtml(F("}\n"));
   TXBuffer.endStream();
   updateLogLevelCache();

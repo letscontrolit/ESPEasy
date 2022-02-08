@@ -206,22 +206,6 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         addLog(LOG_LEVEL_INFO, log);
       }
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        // FIXME TD-er: What kind of nonsense code is this?
-        unsigned long tmpmillis = millis();
-        unsigned long tmpmicros = micros();
-        delay(100);
-        long millispassed = timePassedSince(tmpmillis);
-        long microspassed = usecPassedSince(tmpmicros);
-
-        String log = F("ULTRASONIC : micros() test: ");
-        log += millispassed;
-        log += F(" msec, ");
-        log += microspassed;
-        log += F(" usec, ");
-        addLog(LOG_LEVEL_INFO, log);
-      }
-
       success = true;
       break;
     }

@@ -559,7 +559,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
           String log2 = F("Parsed command = \"");
           log2 += string;
-          log2 += F("\"");
+          log2 += '"';
           addLog(LOG_LEVEL_INFO, log2);
         }
       }

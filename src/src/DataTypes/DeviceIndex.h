@@ -1,12 +1,10 @@
-#ifndef DATASTRUCT_DEVICEINDEX_H
-#define DATASTRUCT_DEVICEINDEX_H
+#ifndef DATATYPES_DEVICEINDEX_H
+#define DATATYPES_DEVICEINDEX_H
 
 #include <Arduino.h>
 
-typedef uint8_t  deviceIndex_t;
+typedef uint8_t deviceIndex_t;
 
+extern deviceIndex_t INVALID_DEVICE_INDEX;
 
-extern deviceIndex_t  INVALID_DEVICE_INDEX;
-
-
-#endif
+#endif // ifndef DATATYPES_DEVICEINDEX_H
