@@ -22,8 +22,10 @@
 #include <lwip/netdb.h>
 #include <errno.h>
 
+
 // FIXME TD-er: Feels wrong this needs to be included here to use mbedtls_pem_write_buffer
 #include <mbedtls/pem.h>
+#include <mbedtls/oid.h>
 
 #undef connect
 #undef write
