@@ -101,6 +101,9 @@ void ESPEasy_setup()
 #ifdef PHASE_LOCKED_WAVEFORM
   enablePhaseLockedWaveform();
 #endif // ifdef PHASE_LOCKED_WAVEFORM
+#ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+#endif
   initWiFi();
 
   run_compiletime_checks();
@@ -113,7 +116,7 @@ void ESPEasy_setup()
 #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifdef ESP8266
 
-  //  ets_isr_attach(8, sw_watchdog_callback, NULL);  // Set a callback for feeding the watchdog.
+  //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
 #endif // ifdef ESP8266
 
 
@@ -164,7 +167,7 @@ void ESPEasy_setup()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
     log += getValue(LabelType::GIT_BUILD);
-    log += " (";
+    log += F(" (");
     log += getSystemLibraryString();
     log += ')';
     addLog(LOG_LEVEL_INFO, log);
@@ -349,7 +352,7 @@ void ESPEasy_setup()
     log += deviceCount + 1;
     log += ' ';
     log += getPluginDescriptionString();
-    log += " (";
+    log += F(" (");
     log += getSystemLibraryString();
     log += ')';
     addLog(LOG_LEVEL_INFO, log);
@@ -447,16 +450,16 @@ void ESPEasy_setup()
       String log = F("RTOS : Launching tasks");
       addLog(LOG_LEVEL_INFO, log);
     }
-    xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, NULL, 1, NULL, 1);
-    xTaskCreatePinnedToCore(RTOS_TaskSerial,  "RTOS_TaskSerial",  8192,  NULL, 1, NULL, 1);
-    xTaskCreatePinnedToCore(RTOS_Task10ps,    "RTOS_Task10ps",    8192,  NULL, 1, NULL, 1);
+    xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, nullptr, 1, nullptr, 1);
+    xTaskCreatePinnedToCore(RTOS_TaskSerial,  "RTOS_TaskSerial",  8192,  nullptr, 1, nullptr, 1);
+    xTaskCreatePinnedToCore(RTOS_Task10ps,    "RTOS_Task10ps",    8192,  nullptr, 1, nullptr, 1);
     xTaskCreatePinnedToCore(
       RTOS_HandleSchedule,   /* Function to implement the task */
       "RTOS_HandleSchedule", /* Name of the task */
       16384,                 /* Stack size in words */
-      NULL,                  /* Task input parameter */
+      nullptr,                  /* Task input parameter */
       1,                     /* Priority of the task */
-      NULL,                  /* Task handle. */
+      nullptr,                  /* Task handle. */
       1);                    /* Core where the task should run */
   }
   #endif // ifdef USE_RTOS_MULTITASKING

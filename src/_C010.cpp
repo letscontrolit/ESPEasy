@@ -35,7 +35,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      event->String1 = "";
+      event->String1.clear();
       event->String2 = F("%sysname%_%tskname%_%valname%=%value%");
       break;
     }

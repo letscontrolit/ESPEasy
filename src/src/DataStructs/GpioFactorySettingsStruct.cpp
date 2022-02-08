@@ -21,8 +21,10 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
     relais[i] = -1;
   }
 
+#ifndef LIMIT_BUILD_SIZE
+
   switch (model) {
-#if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+#if defined(ESP8266)
     case DeviceModel::DeviceModel_Sonoff_Basic:
     case DeviceModel::DeviceModel_Sonoff_TH1x:
     case DeviceModel::DeviceModel_Sonoff_S2x:
@@ -212,4 +214,5 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       // Do not use default: as this allows the compiler to detect any missing cases.
       // default: break;
   }
+  #endif
 }

@@ -525,13 +525,13 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
                         /*                          // because values in ESPEasy are unitless lets assueme some units by the value name
                            (still case sensitive)
-                                                  if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != NULL )
+                                                  if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "temp") != nullptr )
                                                   {
                                                     unitName = F("°C");
-                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != NULL )
+                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "humi") != nullptr )
                                                   {
                                                     unitName = F("%");
-                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != NULL )
+                                                  } else if (strstr(ExtraTaskSettings.TaskDeviceValueNames[varNr], "press") != nullptr )
                                                   {
                                                     unitName = F("Pa");
                                                   } // ToDo: .... and more

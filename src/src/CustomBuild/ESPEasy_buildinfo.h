@@ -1,5 +1,5 @@
-#ifndef ESPEASY_BUILD_INFO_H
-#define ESPEASY_BUILD_INFO_H
+#ifndef CUSTOMBUILD_ESPEASY_BUILD_INFO_H
+#define CUSTOMBUILD_ESPEASY_BUILD_INFO_H
 
 
 // ********************************************************************************
@@ -41,4 +41,4 @@
 #endif // ifndef BUILD_GIT
 
 
-#endif // ESPEASY_BUILD_INFO_H
+#endif // CUSTOMBUILD_ESPEASY_BUILD_INFO_H

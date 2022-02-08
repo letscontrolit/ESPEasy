@@ -48,9 +48,9 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
-    cacheDevAddr     = "";
-    cacheHWEUI       = "";
-    cacheSysVer      = "";
+    cacheDevAddr.clear();
+    cacheHWEUI.clear();
+    cacheSysVer.clear();
     autobaud_success = false;
   }
 
@@ -180,7 +180,7 @@ struct C018_data_struct {
   }
 
 
-  bool initOTAA(const String& AppEUI = "", const String& AppKey = "", const String& DevEUI = "") {
+  bool initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI) {
     if (myLora == nullptr) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
 
@@ -345,7 +345,7 @@ private:
       if (error.length() > 0) {
         String log = F("RN2483: ");
         log += command;
-        log += ": ";
+        log += F(": ");
         log += error;
         addLog(LOG_LEVEL_INFO, log);
       }
@@ -353,7 +353,7 @@ private:
   }
 
   void updateCacheOnInit() {
-    cacheDevAddr = "";
+    cacheDevAddr.clear();
 
     if (isInitialized()) {
       if (myLora->getStatus().Joined)
@@ -361,7 +361,7 @@ private:
         cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
         if (cacheDevAddr == F("00000000")) {
-          cacheDevAddr = "";
+          cacheDevAddr.clear();
         }
       }
     }
@@ -630,7 +630,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         String options[2] = { F("OTAA"),  F("ABP") };
         int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
         addFormSelector_script(F("Activation Method"), F("joinmethod"), 2,
-                               options, values, NULL, joinmethod,
+                               options, values, nullptr, joinmethod,
                                F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
       }
       html_add_script(F("document.getElementById('joinmethod').onchange();"), false);
@@ -646,7 +646,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
           RN2xx3_datatypes::Freq_plan::DEFAULT_EU
         };
 
-        addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, NULL, frequencyplan, false);
+        addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, nullptr, frequencyplan, false);
       }
       {
         const __FlashStringHelper * options[2] = { F("TTN v2"), F("TTN v3") };
@@ -655,7 +655,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
           RN2xx3_datatypes::TTN_stack_version::TTN_v3
         };
 
-        addFormSelector(F("TTN Stack"), F("ttnstack"), 2, options, values, NULL, stackVersion, false);
+        addFormSelector(F("TTN Stack"), F("ttnstack"), 2, options, values, nullptr, stackVersion, false);
       }
 
       addFormNumericBox(F("Spread Factor"), F("sf"), sf, 7, 12);

@@ -31,8 +31,6 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWait
 bool getNextMailAddress(const String& data, String& address, int index);
 
 // The message body is included in event->String1
-
-// The message body is included in event->String1
 bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
 	bool success = false;

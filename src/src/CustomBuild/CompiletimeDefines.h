@@ -1,5 +1,5 @@
-#ifndef HELPERS_COMPILETIMEDEFINES_H
-#define HELPERS_COMPILETIMEDEFINES_H
+#ifndef CUSTOMBUILD_COMPILETIMEDEFINES_H
+#define CUSTOMBUILD_COMPILETIMEDEFINES_H
 
 #include <Arduino.h>
 
@@ -13,4 +13,4 @@ const __FlashStringHelper * get_build_platform();
 const __FlashStringHelper * get_git_head();
 
 
-#endif // HELPERS_COMPILETIMEDEFINES_H
+#endif // CUSTOMBUILD_COMPILETIMEDEFINES_H

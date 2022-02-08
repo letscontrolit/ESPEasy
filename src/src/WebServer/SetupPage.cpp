@@ -380,22 +380,22 @@ bool handle_setup_connectingStage(uint8_t refreshCount) {
   if (refreshCount != 0) {
     wait = 3;
   }
-  addHtml(F("Please wait for <h1 id='countdown'>20..</h1>"));
-  addHtml(F("<script type='text/JavaScript'>"));
-  addHtml(F("function timedRefresh(timeoutPeriod) {"));
-  addHtml(F("var timer = setInterval(function() {"));
-  addHtml(F("if (timeoutPeriod > 0) {"));
-  addHtml(F("timeoutPeriod -= 1;"));
-  addHtml(F("document.getElementById('countdown').innerHTML = timeoutPeriod + '..' + '<br />';"));
-  addHtml(F("} else {"));
-  addHtml(F("clearInterval(timer);"));
-  addHtml(F("window.location.href = window.location.href;"));
-  addHtml(F("};"));
-  addHtml(F("}, 1000);"));
-  addHtml(F("};"));
-  addHtml(F("timedRefresh("));
+  addHtml(F("Please wait for <h1 id='countdown'>20..</h1>" 
+            "<script type='text/JavaScript'>"
+            "function timedRefresh(timeoutPeriod) {"
+            "var timer = setInterval(function() {"
+            "if (timeoutPeriod > 0) {"
+            "timeoutPeriod -= 1;"
+            "document.getElementById('countdown').innerHTML = timeoutPeriod + '..' + '<br />';"
+            "} else {"
+            "clearInterval(timer);"
+            "window.location.href = window.location.href;"
+            "};"
+            "}, 1000);"
+            "};"
+            "timedRefresh("));
   addHtmlInt(wait);
-  addHtml(F(");"));
+  addHtml(')', ';');
   html_add_script_end();
   addHtml(F("seconds while trying to connect"));
   return true;

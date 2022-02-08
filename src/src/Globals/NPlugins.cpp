@@ -7,8 +7,6 @@
 
 
 nprotocolIndex_t INVALID_NPROTOCOL_INDEX = NPLUGIN_MAX;
-notifierIndex_t  INVALID_NOTIFIER_INDEX  = NOTIFICATION_MAX;
-npluginID_t      INVALID_N_PLUGIN_ID     = 0;
 
 
 bool (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,

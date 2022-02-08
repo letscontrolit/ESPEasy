@@ -161,11 +161,11 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" HSV converted to RGB(W):");
               log += rgbw[0];
-              log += ",";
+              log += ',';
               log += rgbw[1];
-              log += ",";
+              log += ',';
               log += rgbw[2];
-              log += ",";
+              log += ',';
               log += rgbw[3];
               addLog(LOG_LEVEL_INFO,log);
             }
@@ -200,11 +200,11 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" HSV converted to RGB(W):");
               log += rgbw[0];
-              log += ",";
+              log += ',';
               log += rgbw[1];
-              log += ",";
+              log += ',';
               log += rgbw[2];
-              log += ",";
+              log += ',';
               log += rgbw[3];
               addLog(LOG_LEVEL_INFO,log);
             }
@@ -247,11 +247,11 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" HSV converted to RGB(W):");
               log += rgbw[0];
-              log += ",";
+              log += ',';
               log += rgbw[1];
-              log += ",";
+              log += ',';
               log += rgbw[2];
-              log += ",";
+              log += ',';
               log += rgbw[3];
               addLog(LOG_LEVEL_INFO,log);
             }

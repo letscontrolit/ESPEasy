@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_SPI_OPTIONS_H
-#define DATASTRUCTS_SPI_OPTIONS_H
+#ifndef DATATYPES_SPI_OPTIONS_H
+#define DATATYPES_SPI_OPTIONS_H
 
 #include <Arduino.h>
 
@@ -15,4 +15,4 @@ const __FlashStringHelper* getSPI_optionToString(SPI_Options_e option);
 const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option);
 #endif // ifdef ESP32
 
-#endif // ifndef DATASTRUCTS_SPI_OPTIONS_H
+#endif // ifndef DATATYPES_SPI_OPTIONS_H

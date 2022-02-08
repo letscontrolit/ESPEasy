@@ -1,5 +1,5 @@
-#ifndef DEFINE_PLUGIN_SETS_H
-#define DEFINE_PLUGIN_SETS_H
+#ifndef CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
+#define CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 
 #include "../../ESPEasy_common.h"
 
@@ -1179,7 +1179,9 @@ To create/register a plugin, you have to :
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
+    #ifndef USE_SECOND_HEAP  // Disable Itho when using second heap as it no longer fits.
     #define USES_P118  // Itho ventilation control
+    #endif
     #define USES_P124  // I2C MultiRelay
 #endif
 
@@ -1831,4 +1833,4 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#endif // DEFINE_PLUGIN_SETS_H
+#endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

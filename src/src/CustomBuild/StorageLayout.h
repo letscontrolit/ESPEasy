@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_STORAGE_LAYOUT_H
-#define DATASTRUCTS_STORAGE_LAYOUT_H
+#ifndef CUSTOMBUILD_STORAGE_LAYOUT_H
+#define CUSTOMBUILD_STORAGE_LAYOUT_H
 
 #include "../../ESPEasy_common.h"
 
@@ -172,4 +172,4 @@
 #endif    // if defined(ESP32)
 
 
-#endif    // DATASTRUCTS_STORAGE_LAYOUT_H
+#endif    // CUSTOMBUILD_STORAGE_LAYOUT_H
