@@ -115,7 +115,7 @@ static int8_t P109_lastWiFiState = P109_WIFI_STATE_UNSET;
 
 // Instantiate display here - does not work to do this within the INIT call
 
-OLEDDisplay *P109_display = NULL;
+OLEDDisplay *P109_display = nullptr;
 
 char P109_deviceTemplate[P109_Nlines][P109_Nchars];
 
@@ -367,7 +367,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         P109_display->end();
         delete P109_display;
-        P109_display = NULL;
+        P109_display = nullptr;
       }
       break;
     }
@@ -780,14 +780,13 @@ void P109_display_timeout() {
     if (Plugin_109_prev_timeout >= (UserVar[Plugin_109_varindex + 3] + 60)) {
       float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60;
       String thour     = toString((static_cast<int>(timeinmin / 60)), 0);
-      thour += F(":");
+      thour += ':';
       String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
 
       if (thour2.length() < 2) {
-        thour += "0" + thour2;
-      } else {
-        thour += thour2;
+        thour += '0';
       }
+      thour += thour2;
       P109_display->setColor(BLACK);
       P109_display->fillRect(86, 35, 41, 21);
       P109_display->setColor(WHITE);

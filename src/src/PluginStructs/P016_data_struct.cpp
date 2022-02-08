@@ -178,14 +178,15 @@ void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(80); // estimated
-    log  = F("[P36] AddCode: ");
-    log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-    log += F(" code: 0x");
-    log += uint64ToString(Code, 16);
-    log += F(" to index ");
-    log += _index;
-    addLog(LOG_LEVEL_INFO, log);
+    if (log.reserve(80)) { // estimated
+      log  = F("[P36] AddCode: ");
+      log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
+      log += F(" code: 0x");
+      log += uint64ToString(Code, 16);
+      log += F(" to index ");
+      log += _index;
+      addLog(LOG_LEVEL_INFO, log);
+    }
   }
   # endif // PLUGIN_016_DEBUG
 }
@@ -220,21 +221,22 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
-          log.reserve(128); // estimated
-          log  = F("[P36] Execute: ");
-          log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-          log += F(" Code: 0x");
-          log += uint64ToString(Code, 16);
-          log += F(" with command ");
-          log += (i + 1);
-          log += F(": {");
-          log += String(CommandLines[i].Command);
-          log += '}';
+          if (log.reserve(128)) { // estimated
+            log  = F("[P36] Execute: ");
+            log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
+            log += F(" Code: 0x");
+            log += uint64ToString(Code, 16);
+            log += F(" with command ");
+            log += (i + 1);
+            log += F(": {");
+            log += String(CommandLines[i].Command);
+            log += '}';
 
-          if (!_success) {
-            log += F(" FAILED!");
+            if (!_success) {
+              log += F(" FAILED!");
+            }
+            addLog(LOG_LEVEL_INFO, log);
           }
-          addLog(LOG_LEVEL_INFO, log);
         }
         # endif // PLUGIN_016_DEBUG
       }
@@ -244,19 +246,20 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(128); // estimated
-      log  = F("[P36] ValidateCode failed: ");
-      log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
-      log += F(" Code: 0x");
-      log += uint64ToString(Code, 16);
-      log += F(" / [");
-      log += (i + 1);
-      log += F("] = {");
-      log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
-      log += F(" Code: 0x");
-      log += uint64ToString(CommandLines[i].Code, 16);
-      log += '}';
-      addLog(LOG_LEVEL_INFO, log);
+      if (log.reserve(128)) { // estimated
+        log  = F("[P36] ValidateCode failed: ");
+        log += typeToString(DecodeType, bitRead(CodeFlags, P16_FLAGS_REPEAT));
+        log += F(" Code: 0x");
+        log += uint64ToString(Code, 16);
+        log += F(" / [");
+        log += (i + 1);
+        log += F("] = {");
+        log += typeToString(CommandLines[i].CodeDecodeType, bitRead(CommandLines[i].CodeFlags, P16_FLAGS_REPEAT));
+        log += F(" Code: 0x");
+        log += uint64ToString(CommandLines[i].Code, 16);
+        log += '}';
+        addLog(LOG_LEVEL_INFO, log);
+      }
     }
     # endif // PLUGIN_016_DEBUG
   }

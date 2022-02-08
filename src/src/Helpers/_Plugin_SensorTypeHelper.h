@@ -29,11 +29,11 @@ void pconfig_webformSave(struct EventStruct *event, uint8_t pconfigIndex);
 
 void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
-  int optionCount, const __FlashStringHelper * options[], const int indices[] = NULL);
+  int optionCount, const __FlashStringHelper * options[], const int indices[] = nullptr);
 
 void sensorTypeHelper_loadOutputSelector(
   struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr,
-  int optionCount, const String options[], const int indices[] = NULL);
+  int optionCount, const String options[], const int indices[] = nullptr);
 
 
 #endif // HELPER_CPLUGIN_SENSORTYPEHELPER_H

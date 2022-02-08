@@ -212,7 +212,7 @@ uint8_t I2C_read8(uint8_t i2caddr, bool *is_ok) {
 
   uint8_t count = Wire.requestFrom(i2caddr, (uint8_t)1);
 
-  if (is_ok != NULL) {
+  if (is_ok != nullptr) {
     *is_ok = (count == 1);
   }
 
@@ -240,13 +240,13 @@ uint8_t I2C_read8_reg(uint8_t i2caddr, uint8_t reg, bool *is_ok) {
        4:other error
        See https://www.arduino.cc/en/Reference/WireEndTransmission
      */
-    if (is_ok != NULL) {
+    if (is_ok != nullptr) {
       *is_ok = false;
     }
   }
   uint8_t count = Wire.requestFrom(i2caddr, (uint8_t)1);
 
-  if (is_ok != NULL) {
+  if (is_ok != nullptr) {
     *is_ok = (count == 1);
   }
   value = Wire.read();

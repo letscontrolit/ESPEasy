@@ -46,7 +46,7 @@
 
 #include <HeatpumpIRFactory.h>
 
-IRSenderIRremoteESP8266 *Plugin_088_irSender = NULL;
+IRSenderIRremoteESP8266 *Plugin_088_irSender = nullptr;
 int panasonicCKPTimer = 0;
 
 boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
@@ -118,7 +118,7 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
         if (validGpio(irPin))
         {
           addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter activated"));
-          if (Plugin_088_irSender != NULL)
+          if (Plugin_088_irSender != nullptr)
           {
             delete Plugin_088_irSender;
           }
@@ -128,7 +128,7 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
         {
           addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter deactivated"));
           delete Plugin_088_irSender;
-          Plugin_088_irSender = NULL;
+          Plugin_088_irSender = nullptr;
         }
         success = true;
         break;
@@ -151,7 +151,7 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
         unsigned int hDir = HDIR_AUTO;
 
         String cmd = parseString(string, 1);
-        if (cmd.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != NULL)
+        if (cmd.equalsIgnoreCase(F("HEATPUMPIR")) && Plugin_088_irSender != nullptr)
         {
           String TmpStr1;
           if (GetArgv(string.c_str(), TmpStr1, 2)) heatpumpModel = TmpStr1;
@@ -168,13 +168,13 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
 #endif
           HeatpumpIR *heatpumpIR = HeatpumpIRFactory::create(heatpumpModel.c_str());
 
-          if (heatpumpIR != NULL) {
+          if (heatpumpIR != nullptr) {
             enableIR_RX(false);
             heatpumpIR->send(*Plugin_088_irSender, powerMode, operatingMode, fanSpeed, temperature, vDir, hDir);
             enableIR_RX(true);
 
             delete heatpumpIR;
-            heatpumpIR = NULL;
+            heatpumpIR = nullptr;
 
             addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
 #ifdef IR_DEBUG_PACKET

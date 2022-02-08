@@ -112,7 +112,7 @@ struct P028_data_struct : public PluginTaskData_base {
 
   String  getFullDeviceName() const;
 
-  String  getDeviceName() const;
+  const __FlashStringHelper *  getDeviceName() const;
 
   boolean hasHumidity() const;
 
