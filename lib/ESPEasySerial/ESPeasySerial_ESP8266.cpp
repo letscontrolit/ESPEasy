@@ -3,30 +3,32 @@
 
 #define DETECT_BAUDATE_TIMEOUT     250
 
+#include <Arduino.h>
+
 
 String ESPeasySerial::getLogString() const {
   String log;
 
   log.reserve(48);
-  log = "ESPEasy serial: ";
+  log = F("ESPEasy serial: ");
 
   if (isI2Cserial()) {
-    log += "I2C: addr:";
+    log += F("I2C: addr:");
     log += String(_receivePin);
-    log += " ch:";
-    log += _transmitPin == 0 ? "A" : "B";
+    log += F(" ch:");
+    log += _transmitPin == 0 ? 'A' : 'B';
   } else {
     if (isSWserial()) {
-      log += "SW";
+      log += F("SW");
     } else {
-      log += "HW";
+      log += F("HW");
     }
-    log += ": rx:";
+    log += F(": rx:");
     log += String(_receivePin);
-    log += " tx:";
+    log += F(" tx:");
     log += String(_transmitPin);
   }
-  log += " baud:";
+  log += F(" baud:");
   log += String(_baud);
   return log;
 }

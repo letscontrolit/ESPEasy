@@ -1,5 +1,5 @@
-#ifndef ESPEASY_PLUGIN_DEFS_H
-#define ESPEASY_PLUGIN_DEFS_H
+#ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
+#define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
 
 // ********************************************************************************
@@ -106,4 +106,4 @@ public:
 };
 
 
-#endif // ESPEASY_PLUGIN_DEFS_H
+#endif // DATATYPES_ESPEASY_PLUGIN_DEFS_H

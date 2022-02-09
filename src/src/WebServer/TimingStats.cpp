@@ -70,8 +70,8 @@ void format_using_threshhold(unsigned long value) {
 }
 
 void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  unsigned long minVal, maxVal;
-  const unsigned int  c = stats.getMinMax(minVal, maxVal);
+  uint64_t minVal, maxVal;
+  const uint64_t c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
   addHtmlInt(c);
@@ -117,13 +117,10 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          String html;
-          html.reserve(64);
-          html += F("P_");
-          html += Device[deviceIndex].Number;
-          html += '_';
-          html += getPluginNameFromDeviceIndex(deviceIndex);
-          addHtml(html);
+          addHtml(F("P_"));
+          addHtmlInt(Device[deviceIndex].Number);
+          addHtml('_');
+          addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }
         html_TD();
         addHtml(getPluginFunctionName(x.first % 256));
@@ -144,14 +141,10 @@ long stream_timing_statistics(bool clearStats) {
         html_TR_TD();
       }
       {
-        String html;
-        html.reserve(64);
-
-        html += F("C_");
-        html += Protocol[ProtocolIndex].Number;
-        html += '_';
-        html += getCPluginNameFromProtocolIndex(ProtocolIndex);
-        addHtml(html);
+        addHtml(F("C_"));
+        addHtmlInt(Protocol[ProtocolIndex].Number);
+        addHtml('_');
+        addHtml(getCPluginNameFromProtocolIndex(ProtocolIndex));
       }
       html_TD();
       addHtml(getCPluginCFunctionName(static_cast<CPlugin::Function>(x.first % 256)));

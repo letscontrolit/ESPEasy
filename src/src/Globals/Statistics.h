@@ -32,7 +32,7 @@ extern unsigned long lastMixedSchedulerId_beforereboot;
 extern unsigned long loopCounter;
 extern unsigned long loopCounterLast;
 extern unsigned long loopCounterMax;
-extern unsigned long lastLoopStart;
+extern uint64_t lastLoopStart;
 extern unsigned long shortestLoop;
 extern unsigned long longestLoop;
 extern unsigned long loopCounter_full;

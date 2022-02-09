@@ -19,6 +19,10 @@
   #define STR(x) STR_HELPER(x)
 #endif
 
+#ifdef USE_SECOND_HEAP
+  #include <umm_malloc/umm_heap_select.h>
+#endif
+
 #ifdef __GCC__
 #pragma GCC system_header
 #endif
@@ -64,7 +68,14 @@ namespace std
 
 #define FS_NO_GLOBALS
 #if defined(ESP8266)
-  #include "core_version.h"
+
+  #ifndef CORE_POST_3_0_0
+    #define IRAM_ATTR ICACHE_RAM_ATTR
+  #endif
+
+
+
+  #include <core_version.h>
   #define NODE_TYPE_ID      NODE_TYPE_ID_ESP_EASYM_STD
   #define FILE_CONFIG       "config.dat"
   #define FILE_SECURITY     "security.dat"
@@ -84,13 +95,13 @@ namespace std
   #ifndef LWIP_OPEN_SRC
   #define LWIP_OPEN_SRC
   #endif
-  #include "lwip/opt.h"
-  #include "lwip/udp.h"
-  #include "lwip/igmp.h"
-  #include "include/UdpContext.h"
-  #include "limits.h"
+  #include <lwip/opt.h>
+  #include <lwip/udp.h>
+  #include <lwip/igmp.h>
+  #include <include/UdpContext.h>
+  #include <limits.h>
   extern "C" {
-   #include "user_interface.h"
+   #include <user_interface.h>
   }
 
   #define SMALLEST_OTA_IMAGE 276848 // smallest known 2-step OTA image

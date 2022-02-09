@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
 /*********************************************************************************************\
    Memory management
 \*********************************************************************************************/
@@ -14,7 +16,7 @@
 //      https://github.com/letscontrolit/ESPEasy/issues/1824
 #ifdef ESP32
 
-// FIXME TD-er: For ESP32 you need to provide the task number, or NULL to get from the calling task.
+// FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack();
 
 uint32_t getFreeStackWatermark();
@@ -37,7 +39,11 @@ bool     allocatedOnStack(const void *address);
 /********************************************************************************************\
    Get free system mem
  \*********************************************************************************************/
-unsigned long FreeMem(void);
+unsigned long FreeMem();
+
+#ifdef USE_SECOND_HEAP
+unsigned long FreeMem2ndHeap();
+#endif
 
 unsigned long getMaxFreeBlock();
 

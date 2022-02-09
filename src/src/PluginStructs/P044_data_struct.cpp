@@ -122,7 +122,7 @@ void P044_Task::clearBuffer() {
     maxMessageSize = _min(serial_buffer.length(), P044_DATAGRAM_MAX_SIZE);
   }
 
-  serial_buffer = "";
+  serial_buffer.clear();
   serial_buffer.reserve(maxMessageSize);
 }
 
@@ -156,7 +156,7 @@ bool P044_Task::checkDatagram() const {
 
   // calculate the CRC and check if it equals the hexadecimal one attached to the datagram
   unsigned int crc = CRC16(serial_buffer, checksumStartIndex);
-  return strtoul(serial_buffer.substring(checksumStartIndex).c_str(), NULL, 16) == crc;
+  return strtoul(serial_buffer.substring(checksumStartIndex).c_str(), nullptr, 16) == crc;
 }
 
 /*
