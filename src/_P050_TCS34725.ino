@@ -366,7 +366,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
           log += formatUserVarNoCheck(event->TaskIndex, 1);
           log += F(" B: ");
           log += formatUserVarNoCheck(event->TaskIndex, 2);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
 #ifdef P050_OPTION_RGB_EVENTS

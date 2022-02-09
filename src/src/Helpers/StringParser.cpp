@@ -508,7 +508,7 @@ void transformValue(
           logFormatted += newString;
           logFormatted += value;
           logFormatted += '\'';
-          addLog(LOG_LEVEL_DEBUG, logFormatted);
+          addLogMove(LOG_LEVEL_DEBUG, logFormatted);
         }
 #endif // ifndef BUILD_NO_DEBUG
       }
@@ -525,7 +525,7 @@ void transformValue(
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
       logParsed += '\'';
-      addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+      addLogMove(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }

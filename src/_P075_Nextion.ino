@@ -11,7 +11,7 @@
 //#######################################################################################################
 //
 // Updated: Oct-03-2018, ThomasB.
-// Added DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
+// Added P075_DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
 // Added SendStatus() to post log message on browser to acknowledge HTTP write.
 // Added reserve() to minimize string memory allocations.
 //
@@ -23,7 +23,7 @@
 // Defines start here
 // *****************************************************************************************************
 
-//#define DEBUG_LOG             // Enable this to include additional info messages in log output.
+//#define P075_DEBUG_LOG             // Enable this to include additional info messages in log output.
 
 
 // Plug-In defines
@@ -303,34 +303,34 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());
-            #ifdef DEBUG_LOG
+            #ifdef P075_DEBUG_LOG
               String log;
               log.reserve(P75_Nchars+50);                 // Prevent re-allocation
               log = F("NEXTION075 : Cmd Statement Line-");
               log += String(x+1);
               log += F(" Sent: ");
               log += newString;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             #endif
           }
         }
 
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
         if(P075_IncludeValues) {
-            #ifdef DEBUG_LOG
+            #ifdef P075_DEBUG_LOG
              String log;
              log.reserve(120);                          // Prevent re-allocation
              log = F("NEXTION075: Interval values data enabled, resending idx=");
              log += formatUserVarNoCheck(event->TaskIndex, 0);
              log += F(", value=");
              log += formatUserVarNoCheck(event->TaskIndex, 1);
-             addLog(LOG_LEVEL_INFO, log);
+             addLogMove(LOG_LEVEL_INFO, log);
             #endif
 
             success = true;
         }
         else {
-            #ifdef DEBUG_LOG
+            #ifdef P075_DEBUG_LOG
              addLog(LOG_LEVEL_INFO, F("NEXTION075: Interval values data disabled, idx & value not resent"));
             #endif
 
@@ -406,10 +406,10 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
         if(charCount >= RXBUFFWARN) {
             String log;
             log.reserve(70);                           // Prevent re-allocation
-            log = F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
+            log += F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
             log += String(charCount);
             log += F(" bytes");
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
         }
         uint32_t baudrate_delay_unit = P075_data->baudrate / 9600;
         if (baudrate_delay_unit == 0) {
@@ -436,16 +436,16 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex + 1] = __buffer[3];
                 sendData(event);
 
-                #ifdef DEBUG_LOG
+                #ifdef P075_DEBUG_LOG
                   String log;
                   log.reserve(70);                        // Prevent re-allocation
-                  log = F("NEXTION075 : code: ");
+                  log += F("NEXTION075 : code: ");
                   log += __buffer[1];
                   log += ',';
                   log += __buffer[2];
                   log += ',';
                   log += __buffer[3];
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 #endif
               }
             }
@@ -469,12 +469,12 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 
               String tmpString = __buffer;
 
-              #ifdef DEBUG_LOG
+              #ifdef P075_DEBUG_LOG
                 String log;
                 log.reserve(50);                          // Prevent re-allocation
                 log = F("NEXTION075 : Code = ");
                 log += tmpString;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               #endif
 
               int argIndex = tmpString.indexOf(F(",i"));
@@ -509,17 +509,17 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
                   validFloatFromString(Svalue, UserVar[event->BaseVarIndex+1]);
                   sendData(event);
 
-                  #ifdef DEBUG_LOG
+                  #ifdef P075_DEBUG_LOG
                   String log;
                   log.reserve(80);                       // Prevent re-allocation
                   log = F("NEXTION075 : Pipe Command Sent: ");
                   log += __buffer;
                   log += formatUserVarNoCheck(event->TaskIndex, 0);
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                   #endif
               }
               else {
-                  #ifdef DEBUG_LOG
+                  #ifdef P075_DEBUG_LOG
                   addLog(LOG_LEVEL_INFO, F("NEXTION075 : Unknown Pipe Command, skipped"));
                   #endif
               }

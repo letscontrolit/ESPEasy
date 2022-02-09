@@ -156,7 +156,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
           log += P115_data->alert;
           log += F(" Rate: ");
           log += P115_data->changeRate;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         success = true;
       }

@@ -352,7 +352,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Templ: Unknown Var : ");
       log += varName;
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
 

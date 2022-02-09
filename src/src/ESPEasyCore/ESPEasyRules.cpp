@@ -124,7 +124,7 @@ void rulesProcessing(const String& event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EVENT: ");
     log += event;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (Settings.OldRulesEngine()) {
@@ -159,7 +159,7 @@ void rulesProcessing(const String& event) {
     log += F(" Processing time:");
     log += timePassedSince(timer);
     log += F(" milliSeconds");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   STOP_TIMER(RULES_PROCESSING);
@@ -342,7 +342,7 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
       log += F("' in: '");
       log += line;
       log += '\'';
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   line.replace(from, to);
@@ -448,7 +448,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       }
     }
     log += '}';
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   #endif
 
@@ -811,7 +811,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     log += isCommand ? 0 : 1;
     log += F(": ");
     log += line;
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 }
@@ -857,7 +857,7 @@ void processMatchedRule(String& action, const String& event,
             log += check;
             log += F("]=");
             log += boolToString(condition[ifBlock - 1]);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
         }
@@ -884,7 +884,7 @@ void processMatchedRule(String& action, const String& event,
             log += check;
             log += F("]=");
             log += boolToString(condition[ifBlock - 1]);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
         } else {
@@ -897,7 +897,7 @@ void processMatchedRule(String& action, const String& event,
           String log  = F("Lev.");
           log += String(ifBlock);
           log += F(": Error: IF Nesting level exceeded!");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
       }
       isCommand = false;
@@ -917,7 +917,7 @@ void processMatchedRule(String& action, const String& event,
       log += String(ifBlock);
       log += F(": [else]=");
       log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -941,7 +941,7 @@ void processMatchedRule(String& action, const String& event,
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String actionlog = F("ACT  : ");
       actionlog += action;
-      addLog(LOG_LEVEL_INFO, actionlog);
+      addLogMove(LOG_LEVEL_INFO, actionlog);
     }
 
     ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
@@ -1077,7 +1077,7 @@ bool conditionMatchExtended(String& check) {
       log += debugstr;
       log += ' ';
       log += wrap_String(check, '"');
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
     condAnd = check.indexOf(F(" and "));
@@ -1242,7 +1242,7 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
     } else {
       log += F("invalid");
     }
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 
   #endif // ifndef BUILD_NO_DEBUG
@@ -1423,7 +1423,7 @@ bool conditionMatch(const String& check) {
     log += wrap_String(check.substring(posStart, posEnd), ' '); // Compare
     log += compareTimes ? String(timeInSec2) : doubleToString(Value2, 6, trimTrailingZeros);
     log += ')';
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   #else // ifndef BUILD_NO_DEBUG
   (void)compareTimes; // To avoid compiler warning

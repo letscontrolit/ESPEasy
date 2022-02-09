@@ -302,7 +302,7 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
     log += ESP.getFreeHeap();
     log += F(" chunk size:");
     log += length;
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   const uint32_t freeBeforeSend = ESP.getFreeHeap();

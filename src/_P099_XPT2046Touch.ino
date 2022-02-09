@@ -360,9 +360,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         addHtmlError(error);
       }
 #ifdef PLUGIN_099_DEBUG
-      String log = F("p099_data save size: ");
-      log += sizeof(P099_data->StoredSettings);
-      addLog(LOG_LEVEL_INFO, log);
+      if (logLevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("p099_data save size: ");
+        log += sizeof(P099_data->StoredSettings);
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
 #endif // PLUGIN_099_DEBUG
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P099_data->StoredSettings)), sizeof(P099_data->StoredSettings) /*+ sizeof(P099_data->TouchObjects)*/);
       delete P099_data;
@@ -496,7 +498,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                 log += x;
                 log += F(", y= ");
                 log += y;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
             }
 

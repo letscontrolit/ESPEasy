@@ -113,7 +113,7 @@ void handleFileUpload() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: START, filename: ");
       log += upload.filename;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     valid        = false;
     uploadResult = uploadResult_e::UploadStarted;
@@ -167,7 +167,7 @@ void handleFileUpload() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: WRITE, Bytes: ");
       log += upload.currentSize;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   else if (upload.status == UPLOAD_FILE_END)
@@ -177,7 +177,7 @@ void handleFileUpload() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: END, Size: ");
       log += upload.totalSize;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 

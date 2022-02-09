@@ -153,7 +153,7 @@ void updateUDPport()
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("UDP : Cannot bind to ESPEasy p2p UDP port ");
         log += String(Settings.UDPPort);
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     } else {
       lastUsedUDPPort = Settings.UDPPort;
@@ -161,7 +161,7 @@ void updateUDPport()
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("UDP : Start listening on port ");
         log += String(Settings.UDPPort);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -291,7 +291,7 @@ void checkUDP()
                   log += formatIP(ip);
                   log += ',';
                   log += unit;
-                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                  addLogMove(LOG_LEVEL_DEBUG_MORE, log);
                 }
 #endif // ifndef BUILD_NO_DEBUG
                 break;
@@ -413,7 +413,7 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
     log += unit;
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -1081,10 +1081,12 @@ bool hostReachable(const String& hostname) {
   if (resolveHostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
   }
-  String log = F("Hostname cannot be resolved: ");
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("Hostname cannot be resolved: ");
 
-  log += hostname;
-  addLog(LOG_LEVEL_ERROR, log);
+    log += hostname;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }
 
@@ -1207,7 +1209,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     log += ':';
     log += port;
     log += uri;
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
   }
 
   if (file_save.isEmpty()) {

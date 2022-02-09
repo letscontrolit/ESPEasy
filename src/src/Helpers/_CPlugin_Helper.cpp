@@ -253,7 +253,7 @@ void log_connecting_to(const __FlashStringHelper * prefix, int controller_number
     log += get_formatted_Controller_number(controller_number);
     log += F(" connecting to ");
     log += ControllerSettings.getHostPortString();
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 }
 
@@ -268,7 +268,7 @@ void log_connecting_fail(const __FlashStringHelper * prefix, int controller_numb
     log += F("/");
     log += Settings.ConnectionFailuresThreshold;
     log += F(")");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
   }
 }
 
@@ -350,7 +350,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += '/';
       log += postStr.length();
       log += ')';
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     success = false;
   }
@@ -364,7 +364,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += '/';
       log += postStr.length();
       log += ')';
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 #endif // ifndef BUILD_NO_DEBUG
@@ -408,7 +408,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
           log += logIdentifier;
           log += F(" Success! ");
           log += line;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       } else if (line.startsWith(F("HTTP/1.1 4"))) {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -416,7 +416,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
           log += logIdentifier;
           log += F(" Error: ");
           log += line;
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
 #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG_MORE, postStr);
@@ -433,7 +433,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
     String log = F("HTTP : ");
     log += logIdentifier;
     log += F(" closing connection");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 #ifdef ESP8266
@@ -579,7 +579,7 @@ String send_via_http(const String& logIdentifier,
         log += ' ';
         log += response;
       }
-      addLog(loglevel, log);
+      addLogMove(loglevel, log);
     }
   } else {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -589,7 +589,7 @@ String send_via_http(const String& logIdentifier,
       log += HttpMethod;
       log += F("... failed, error: ");
       log += http.errorToString(httpCode);
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   http.end();

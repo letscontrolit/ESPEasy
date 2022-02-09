@@ -386,20 +386,26 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
               distance = P082_data->distanceSinceLast(P082_TIMEOUT);
             }
             success = true;
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("GPS: Position update."));
+            #endif
           }
 
           if (P082_data->gps->altitude.isUpdated()) {
             // ToDo make unit selectable
             P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_ALT), P082_data->gps->altitude.meters());
             success = true;
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("GPS: Altitude update."));
+            #endif
           }
 
           if (P082_data->gps->speed.isUpdated()) {
             // ToDo make unit selectable
             P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SPD), P082_data->gps->speed.mps());
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("GPS: Speed update."));
+            #endif
             success = true;
           }
         }
@@ -438,7 +444,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
                     String log = F("GPS: Distance trigger : ");
                     log += distance;
                     log += F(" m");
-                    addLog(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, log);
                   }
                 }
               }
@@ -549,6 +555,7 @@ void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float va
 }
 
 void P082_logStats(struct EventStruct *event) {
+  #ifndef BUILD_NO_DEBUG
   if (!loglevelActiveFor(LOG_LEVEL_DEBUG)) { return; }
   P082_data_struct *P082_data =
     static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -573,8 +580,9 @@ void P082_logStats(struct EventStruct *event) {
     log += P082_data->gps->failedChecksum();
     log += F(" invalid: ");
     log += P082_data->gps->invalidData();
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 }
 
 void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyGPS) {

@@ -90,11 +90,11 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
         }
         log += F(" lineLength=");
         log += Line.length();
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
         log  = F("Line: _");
         log += Line;
         log += '_';
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
 
         if (!Settings.TolerantLastArgParse()) {
           log = F("Command not executed!");
@@ -102,7 +102,7 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
           log = F("Command executed, but may fail.");
         }
         log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #endif
@@ -577,24 +577,28 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   delay(0);
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("Command: ");
-    log += cmd;
-    addLog(LOG_LEVEL_DEBUG, log);
+    {
+      String log = F("Command: ");
+      log += cmd;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    String parameters;
-    parameters.reserve(64);
-    parameters += F("Par1: ");
-    parameters += TempEvent.Par1;
-    parameters += F(" Par2: ");
-    parameters += TempEvent.Par2;
-    parameters += F(" Par3: ");
-    parameters += TempEvent.Par3;
-    parameters += F(" Par4: ");
-    parameters += TempEvent.Par4;
-    parameters += F(" Par5: ");
-    parameters += TempEvent.Par5;
-    addLog(LOG_LEVEL_DEBUG, parameters);
+    {
+      String parameters;
+      parameters.reserve(64);
+      parameters += F("Par1: ");
+      parameters += TempEvent.Par1;
+      parameters += F(" Par2: ");
+      parameters += TempEvent.Par2;
+      parameters += F(" Par3: ");
+      parameters += TempEvent.Par3;
+      parameters += F(" Par4: ");
+      parameters += TempEvent.Par4;
+      parameters += F(" Par5: ");
+      parameters += TempEvent.Par5;
+      addLogMove(LOG_LEVEL_DEBUG, parameters);
+    }
 #endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -632,7 +636,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
         log += action;
         log += F(" to: ");
         log += tmpAction;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #endif

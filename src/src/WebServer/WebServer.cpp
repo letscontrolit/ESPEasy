@@ -142,7 +142,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
           log += F("' length: ");
           log += webArg(i).length();
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     #endif // ifndef BUILD_NO_DEBUG

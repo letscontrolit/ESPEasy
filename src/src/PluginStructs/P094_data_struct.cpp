@@ -77,7 +77,7 @@ void P094_data_struct::sendString(const String& data) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Proxy: Sending: ");
         log += data;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -294,7 +294,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
         log += formatToHex_decimal(packet_header[P094_meter_type]);
         log += F(" RSSI: ");
         log += formatToHex_decimal(packet_header[P094_rssi]);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
 
@@ -358,7 +358,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
                     if (!match) { log += F(" expected NO MATCH"); }
                     break;
                 }
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
             }
 

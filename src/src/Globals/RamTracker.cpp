@@ -134,7 +134,7 @@ void RamTracker::getTraceBuffer() {
       retval += String(tracesMemory[i]);
       retval += ' ';
       retval += traces[i];
-      addLog(LOG_LEVEL_DEBUG_DEV, retval);
+      addLogMove(LOG_LEVEL_DEBUG_DEV, retval);
       retval.clear();
     }
   }

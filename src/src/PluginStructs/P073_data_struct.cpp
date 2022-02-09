@@ -386,7 +386,7 @@ void P073_data_struct::LogBufferContent(String prefix) {
       log += ',';
       log += showperiods[i] ? F(".") : F("");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 
