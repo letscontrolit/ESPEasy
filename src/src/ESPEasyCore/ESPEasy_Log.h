@@ -47,10 +47,11 @@ bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings);
 void addLog(uint8_t loglevel, const __FlashStringHelper *str);
 void addLog(uint8_t logLevel, const char *line);
 void addLog(uint8_t loglevel, const String& string);
+void addLog(uint8_t loglevel, String&& string);
 
 void addToLog(uint8_t loglevel, const __FlashStringHelper *str);
-
 void addToLog(uint8_t loglevel, const String& string);
+void addToLog(uint8_t loglevel, String&& string);
 
 
 #endif 

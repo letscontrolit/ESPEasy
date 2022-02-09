@@ -173,11 +173,52 @@ void addLog(uint8_t logLevel, const char *line)
 {
   // Please note all functions called from here handling line must be PROGMEM aware.
   if (loglevelActiveFor(logLevel)) {
+
     String copy;
-    if (copy.reserve(strlen_P((PGM_P)line))) {
-      copy = line;
-      addToLog(logLevel, copy);
+    #ifdef USE_SECOND_HEAP
+    {
+      // Allow to store the logs in 2nd heap if present.
+      HeapSelectIram ephemeral;
+
+      if (mmu_is_iram(line)) {
+        size_t length = 0;
+        const char* cur_char = line;
+        bool copying = false;
+        bool done = false;
+        while (!done) {
+          const uint8_t ch = mmu_get_uint8(cur_char++);
+          if (ch == 0) {
+            if (copying) {
+              done = true;
+            } else {
+              if (!copy.reserve(length)) {
+                return;
+              }
+              copying = true;
+              cur_char = line;
+            }
+          } else {
+            if (copying) {
+              copy +=  (char)ch;
+            } else {
+              ++length;
+            }
+          }
+        }
+      } else {
+        if (!copy.reserve(strlen_P((PGM_P)line))) {
+          return;
+        }
+        copy = line;
+      }
     }
+    #else 
+    if (!copy.reserve(strlen_P((PGM_P)line))) {
+      return;
+    }
+    copy = line;
+    #endif
+    addToLog(logLevel, std::move(copy));
   }
 }
 
@@ -186,18 +227,32 @@ void addLog(uint8_t loglevel, const String& string)
   addToLog(loglevel, string);
 }
 
+void addLog(uint8_t loglevel, String&& string)
+{
+  addToLog(loglevel, string);
+}
+
 void addToLog(uint8_t loglevel, const __FlashStringHelper *str)
 {
   if (loglevelActiveFor(loglevel)) {
     String copy;
-    if (copy.reserve(strlen_P((PGM_P)str))) {
+    {
+      #ifdef USE_SECOND_HEAP
+      // Allow to store the logs in 2nd heap if present.
+      HeapSelectIram ephemeral;
+      #endif
+
+      if (!copy.reserve(strlen_P((PGM_P)str))) {
+        return;
+      }
       copy = str;
-      addToLog(loglevel, copy);
     }
+    addToLog(loglevel, std::move(copy));
   }
 }
 
-void addToLog(uint8_t logLevel, const String& string)
+
+void addToSerialLog(uint8_t logLevel, const String& string)
 {
   if (loglevelActiveFor(LOG_TO_SERIAL, logLevel)) {
     addToSerialBuffer(String(millis()));
@@ -213,13 +268,17 @@ void addToLog(uint8_t logLevel, const String& string)
     addToSerialBuffer(string);
     addNewlineToSerialBuffer();
   }
+}
+
+void addToSysLog(uint8_t logLevel, const String& string)
+{
   if (loglevelActiveFor(LOG_TO_SYSLOG, logLevel)) {
     sendSyslog(logLevel, string);
   }
-  if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
-    Logging.add(logLevel, string);
-  }
+}
 
+void addToSDLog(uint8_t logLevel, const String& string)
+{
 #ifdef FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     File logFile = SD.open("log.dat", FILE_WRITE);
@@ -233,4 +292,34 @@ void addToLog(uint8_t logLevel, const String& string)
     logFile.close();
   }
 #endif
+}
+
+void addToWebLog(uint8_t logLevel, const String& string)
+{
+  if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
+    Logging.add(logLevel, string);
+  }
+}
+
+void addToWebLog(uint8_t logLevel, String&& string)
+{
+  if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
+    Logging.add(logLevel, std::move(string));
+  }
+}
+
+void addToLog(uint8_t logLevel, const String& string)
+{
+  addToSerialLog(logLevel, string);
+  addToSysLog(logLevel, string);
+  addToSDLog(logLevel, string);
+  addToWebLog(logLevel, string);
+}
+
+void addToLog(uint8_t logLevel, String&& string)
+{
+  addToSerialLog(logLevel, string);
+  addToSysLog(logLevel, string);
+  addToSDLog(logLevel, string);
+  addToWebLog(logLevel, std::move(string)); // May clear the string, so keep as last
 }

@@ -28,6 +28,7 @@
 struct LogStruct {
     
     void add(const uint8_t loglevel, const String& line);
+    void add(const uint8_t loglevel, String&& line);
 
     // Read the next item and append it to the given string.
     // Returns whether new lines are available.
@@ -40,6 +41,8 @@ struct LogStruct {
     bool logActiveRead();
 
   private:
+    void add_start(const uint8_t logLevel);
+
     String formatLine(int index, const String& lineEnd);
 
     void clearExpiredEntries();
