@@ -483,10 +483,13 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
         else 
         {
             String log;
-            log.reserve(110);                           // Prevent re-allocation
-            log = F("P095-ILI9341 : WRITE = ");
-            log += tmpString;
-            SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.
+            if (log.reserve(24 + tmpString.length())) { // Prevent re-allocation
+              log = F("P095-ILI9341 : WRITE = ");
+              log += tmpString;
+              SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.
+            } else {
+              SendStatus(event, F("P095-ILI9341 : WRITE = "));
+            }
         }
         break;
       }

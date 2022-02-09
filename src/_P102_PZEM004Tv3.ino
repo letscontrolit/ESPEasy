@@ -137,7 +137,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
         addFormSubHeader(F("PZEM actions"));
         {
           const __FlashStringHelper * options_model[3] = { F("Read_value"), F("Reset_Energy"), F("Program_adress") };
-          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, NULL, P102_PZEM_mode);
+          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 3, options_model, nullptr, P102_PZEM_mode);
         }
 
         if (P102_PZEM_mode == 2)
@@ -146,7 +146,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
                     "<span style=\"color:red\"> <br>When programming an address, only one PZEMv30 must be connected. Otherwise, all connected PZEMv30s will get the same address, which would cause a conflict during reading.</span>"));
           {
             const __FlashStringHelper * options_confirm[2] = { F("NO"), F("YES") };
-            addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, NULL, P102_PZEM_ADDR_SET);
+            addFormSelector(F("Confirm address programming ?"), F("P102_PZEM_addr_set"), 2, options_confirm, nullptr, P102_PZEM_ADDR_SET);
           }
           addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), (P102_PZEM_ADDR < 1) ? 1 : P102_PZEM_ADDR, 1, 247);
           addHtml(F("Select the address to set PZEM. Programming address 0 is forbidden."));
@@ -168,7 +168,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
         addFormSubHeader(F("PZEM actions"));
         {
           const __FlashStringHelper * options_model[2] = { F("Read_value"), F("Reset_Energy") };
-          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, NULL, P102_PZEM_mode);
+          addFormSelector(F("PZEM Mode"), F("P102_PZEM_mode"), 2, options_model, nullptr, P102_PZEM_mode);
         }
         addHtml(F(" Tx/Rx Pins config disabled: Configuration is available in the first PZEM plugin.<br>"));
         addFormNumericBox(F("Address of PZEM"), F("P102_PZEM_addr"), P102_PZEM_ADDR, 1, 247);

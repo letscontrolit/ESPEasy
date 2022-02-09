@@ -78,7 +78,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
-      addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, NULL, PCONFIG(0));
+      addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, nullptr, PCONFIG(0));
 
       success = true;
       break;

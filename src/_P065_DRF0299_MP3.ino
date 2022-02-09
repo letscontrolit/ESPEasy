@@ -44,7 +44,7 @@
 # include <ESPeasySerial.h>
 
 
-ESPeasySerial *P065_easySerial = NULL;
+ESPeasySerial *P065_easySerial = nullptr;
 
 
 boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)

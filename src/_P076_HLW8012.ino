@@ -19,7 +19,7 @@
 
 #include <HLW8012.h>
 
-HLW8012 *Plugin_076_hlw = NULL;
+HLW8012 *Plugin_076_hlw = nullptr;
 
 #define PLUGIN_076
 #define PLUGIN_ID_076 76
@@ -65,8 +65,8 @@ unsigned int p076_hpowfact = 0;
 // Keep values as they are stored and increase this when adding new ones.
 #define MAX_P076_DEVICE   11
 
-void ICACHE_RAM_ATTR p076_hlw8012_cf1_interrupt();
-void ICACHE_RAM_ATTR p076_hlw8012_cf_interrupt();
+void IRAM_ATTR p076_hlw8012_cf1_interrupt();
+void IRAM_ATTR p076_hlw8012_cf_interrupt();
 
 
 bool p076_getDeviceString(int device, String& name) {
@@ -146,9 +146,9 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
   }
 
   case PLUGIN_GET_DEVICEGPIONAMES: {
-    event->String1 = formatGpioName_output("SEL");
-    event->String2 = formatGpioName_input("CF1");
-    event->String3 = formatGpioName_input("CF");
+    event->String1 = formatGpioName_output(F("SEL"));
+    event->String2 = formatGpioName_input(F("CF1"));
+    event->String3 = formatGpioName_input(F("CF"));
     break;
   }
 
@@ -552,13 +552,13 @@ void Plugin076_Reset(taskIndex_t TaskIndex) {
 
 // When using interrupts we have to call the library entry point
 // whenever an interrupt is triggered
-void ICACHE_RAM_ATTR p076_hlw8012_cf1_interrupt() {
+void IRAM_ATTR p076_hlw8012_cf1_interrupt() {
   if (Plugin_076_hlw) {
     Plugin_076_hlw->cf1_interrupt();
   }
 }
 
-void ICACHE_RAM_ATTR p076_hlw8012_cf_interrupt() {
+void IRAM_ATTR p076_hlw8012_cf_interrupt() {
   if (Plugin_076_hlw) {
     Plugin_076_hlw->cf_interrupt();
   }
