@@ -164,9 +164,23 @@ bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings) {
   return (logLevel <= logLevelSettings);
 }
 
-void addLog(uint8_t loglevel, const __FlashStringHelper *str)
+void addLog(uint8_t logLevel, const __FlashStringHelper *str)
 {
-  addToLog(loglevel, str);
+  if (loglevelActiveFor(logLevel)) {
+    String copy;
+    {
+      #ifdef USE_SECOND_HEAP
+      // Allow to store the logs in 2nd heap if present.
+      HeapSelectIram ephemeral;
+      #endif
+
+      if (!copy.reserve(strlen_P((PGM_P)str))) {
+        return;
+      }
+      copy = str;
+    }
+    addToLogMove(logLevel, std::move(copy));
+  }
 }
 
 void addLog(uint8_t logLevel, const char *line)
@@ -218,39 +232,14 @@ void addLog(uint8_t logLevel, const char *line)
     }
     copy = line;
     #endif
-    addToLog(logLevel, std::move(copy));
+    addToLogMove(logLevel, std::move(copy));
   }
 }
 
-void addLog(uint8_t loglevel, const String& string)
+void addLog(uint8_t logLevel, String&& string)
 {
-  addToLog(loglevel, string);
+  addToLogMove(logLevel, std::move(string));
 }
-
-void addLog(uint8_t loglevel, String&& string)
-{
-  addToLog(loglevel, string);
-}
-
-void addToLog(uint8_t loglevel, const __FlashStringHelper *str)
-{
-  if (loglevelActiveFor(loglevel)) {
-    String copy;
-    {
-      #ifdef USE_SECOND_HEAP
-      // Allow to store the logs in 2nd heap if present.
-      HeapSelectIram ephemeral;
-      #endif
-
-      if (!copy.reserve(strlen_P((PGM_P)str))) {
-        return;
-      }
-      copy = str;
-    }
-    addToLog(loglevel, std::move(copy));
-  }
-}
-
 
 void addToSerialLog(uint8_t logLevel, const String& string)
 {
@@ -294,32 +283,27 @@ void addToSDLog(uint8_t logLevel, const String& string)
 #endif
 }
 
-void addToWebLog(uint8_t logLevel, const String& string)
+
+void addLog(uint8_t logLevel, const String& string)
 {
+  addToSerialLog(logLevel, string);
+  addToSysLog(logLevel, string);
+  addToSDLog(logLevel, string);
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(logLevel, string);
   }
 }
 
-void addToWebLog(uint8_t logLevel, String&& string)
+void addToLogMove(uint8_t logLevel, String&& string)
 {
+  addToSerialLog(logLevel, string);
+  addToSysLog(logLevel, string);
+  addToSDLog(logLevel, string);
+
+  // May clear the string, so call as last one.
   if (loglevelActiveFor(LOG_TO_WEBLOG, logLevel)) {
     Logging.add(logLevel, std::move(string));
   }
-}
-
-void addToLog(uint8_t logLevel, const String& string)
-{
-  addToSerialLog(logLevel, string);
-  addToSysLog(logLevel, string);
-  addToSDLog(logLevel, string);
-  addToWebLog(logLevel, string);
-}
-
-void addToLog(uint8_t logLevel, String&& string)
-{
-  addToSerialLog(logLevel, string);
-  addToSysLog(logLevel, string);
-  addToSDLog(logLevel, string);
-  addToWebLog(logLevel, std::move(string)); // May clear the string, so keep as last
+  // Make sure the string may no longer keep up memory
+  string.clear();
 }

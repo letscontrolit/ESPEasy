@@ -16,6 +16,7 @@ void LogStruct::add_start(const uint8_t loglevel) {
 }
 
 void LogStruct::add(const uint8_t loglevel, const String& line) {
+  if (!line.length()) return;
   add_start(loglevel);
   {
     #ifdef USE_SECOND_HEAP
@@ -32,16 +33,26 @@ void LogStruct::add(const uint8_t loglevel, const String& line) {
 }
 
 void LogStruct::add(const uint8_t loglevel, String&& line) {
+  if (!line.length()) return;
   add_start(loglevel);
   {
-    #ifdef USE_SECOND_HEAP
-    // Allow to store the logs in 2nd heap if present.
-    HeapSelectIram ephemeral;
-    #endif
-
     if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      #ifdef USE_SECOND_HEAP
+      // Need to make a substring, which is a new allocation, on the 2nd heap
+      HeapSelectIram ephemeral;
+      #endif
       Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
     } else {
+      #ifdef USE_SECOND_HEAP
+      // Allow to store the logs in 2nd heap if present.
+      HeapSelectIram ephemeral;
+
+      if (!mmu_is_iram(&(line[0]))) {
+        // The log entry was not allocated on the 2nd heap, so copy instead of move
+        Message[write_idx] = line;
+        return;
+      } 
+      #endif
       Message[write_idx] = std::move(line);
     }
   }
