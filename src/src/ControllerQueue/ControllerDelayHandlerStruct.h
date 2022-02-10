@@ -110,7 +110,7 @@ struct ControllerDelayHandlerStruct {
       log += F(" items ");
       log += freeHeap;
       log += F(" free");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
     return true;
@@ -138,7 +138,7 @@ struct ControllerDelayHandlerStruct {
             const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->controller_idx);
             String log = get_formatted_Controller_number(cpluginID);
             log += F(" : Remove duplicate");
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
           return true;
@@ -180,7 +180,7 @@ struct ControllerDelayHandlerStruct {
       const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
       String log = get_formatted_Controller_number(cpluginID);
       log += F(" : queue full");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
     return false;

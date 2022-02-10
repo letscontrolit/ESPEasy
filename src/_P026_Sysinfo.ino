@@ -170,7 +170,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
         String log;
         if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
         {
-          log = F("SYS  : ");
+          log += F("SYS  : ");
 
           for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
             if (i != 0) {
@@ -178,7 +178,7 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
             }
             log += formatUserVarNoCheck(event->TaskIndex, i);
           }
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       ++p026_read_count;

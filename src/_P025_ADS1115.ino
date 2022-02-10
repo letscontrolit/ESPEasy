@@ -171,11 +171,13 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
         const int16_t value = P025_data->read();
         UserVar[event->BaseVarIndex] = value;
 
+        #ifndef BUILD_NO_DEBUG
         String log;
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           log  = F("ADS1115 : Analog value: ");
           log += value;
         }
+        #endif
 
         if (PCONFIG(3)) // Calibration?
         {
@@ -188,18 +190,22 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           {
             const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               log += ' ';
               log += formatUserVarNoCheck(event->TaskIndex, 0);
             }
+            #endif
           }
         }
 
         // TEST log += F(" @0x");
         // TEST log += String(config, 16);
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+        #endif
         success = true;
       }
       break;

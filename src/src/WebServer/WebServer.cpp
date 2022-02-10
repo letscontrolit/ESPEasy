@@ -88,9 +88,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   }
   #endif // ifdef USES_TIMING_STATS
   {
-    String fileName = tmplName;
-
-    fileName += F(".htm");
+    const String fileName = String(tmplName) + F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
@@ -142,7 +140,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
           log += F("' length: ");
           log += webArg(i).length();
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     #endif // ifndef BUILD_NO_DEBUG
@@ -351,11 +349,6 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
 {
-  #ifdef USE_SECOND_HEAP
-  // Store template in 2nd heap
-  HeapSelectIram ephemeral;
-  #endif
-
   const bool addJS   = true;
   const bool addMeta = true;
 
@@ -364,21 +357,25 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
 
-    #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-    parser.process(F("<body><header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>"));
-    #else
-    parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
-    #endif
+    if (!parser.isTail()) {
+      #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+      parser.process(F("<body><header class='apheader'>"
+                "<h1>Welcome to ESP Easy Mega AP</h1>"));
+      #else
+      parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
+      #endif
 
-    parser.process(F("</header>"));
+      parser.process(F("</header>"));
+    }
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplMsg"))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
-    parser.process(F("<body>"));
+    if (!parser.isTail()) {
+      parser.process(F("<body>"));
+    }
     getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
@@ -395,8 +392,10 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else // all other template names e.g. TmplStd
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
-    parser.process(F("<body class='bodymenu'>"
-              "<span class='message' id='rbtmsg'></span>"));
+    if (!parser.isTail()) {
+      parser.process(F("<body class='bodymenu'>"
+                "<span class='message' id='rbtmsg'></span>"));
+    }
     getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
@@ -405,6 +404,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 }
 
 void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
+  if (parser.isTail()) return;
   parser.process(F("<!DOCTYPE html><html lang='en'>"
             "<head>"
             "<meta charset='utf-8'/>"
@@ -421,6 +421,7 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
 
 void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
   {
+    if (parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
     parser.process(title);
@@ -450,6 +451,7 @@ void getWebPageTemplateDefaultContentSection(WebTemplateParser& parser) {
 }
 
 void getWebPageTemplateDefaultFooter(WebTemplateParser& parser) {
+  if (!parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   parser.process(F("<footer>"
             "<br>"
@@ -955,7 +957,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   if (struct_size != 0) {
     String text;
     text.reserve(32);
-    text = formatHumanReadable(struct_size, 1024);
+    text += formatHumanReadable(struct_size, 1024);
     text += '/';
     text += formatHumanReadable(max_size, 1024);
     text += F(" per item");

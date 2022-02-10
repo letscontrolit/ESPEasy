@@ -196,7 +196,7 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("C013 : Send UDP message to ");
     log += unit;
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -228,7 +228,7 @@ void C013_Receive(struct EventStruct *event) {
         log += ' ';
         log += static_cast<int>(event->Data[x]);
       }
-      addLog(LOG_LEVEL_DEBUG_MORE, log);
+      addLogMove(LOG_LEVEL_DEBUG_MORE, log);
     }
   }
 # endif // ifndef BUILD_NO_DEBUG

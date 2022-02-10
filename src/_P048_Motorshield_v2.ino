@@ -132,7 +132,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("MotorShield: Address: 0x");
           log += String(Plugin_048_MotorShield_address, HEX);
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
         #endif
 
@@ -155,7 +155,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 log += param2;
                 log += F("->Forward Speed: ");
                 log += speed;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               myMotor->setSpeed(speed);
               myMotor->run(FORWARD);
@@ -175,7 +175,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 log += param2;
                 log += F("->Backward Speed: ");
                 log += speed;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
 
               myMotor->setSpeed(speed);
@@ -191,7 +191,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 String log = F("DCMotor");
                 log += param2;
                 log += F("->Release");
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               myMotor->run(RELEASE);
               success = true;
@@ -216,7 +216,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
               log += String(Plugin_048_MotorStepsPerRevolution);
               log += F(" Stepperspeed: ");
               log += String(Plugin_048_StepperSpeed);
-              addLog(LOG_LEVEL_DEBUG_MORE, log);
+              addLogMove(LOG_LEVEL_DEBUG_MORE, log);
             }
             #endif
 
@@ -260,7 +260,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                   log += steps;
                   log += ' ';
                   log += param5;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
             }
@@ -306,7 +306,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                   log += steps;
                   log += ' ';
                   log += param5;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
             }
@@ -318,7 +318,7 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 String log = F("Stepper");
                 log += param2;
                 log += F("->Release.");
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               myStepper->release();
               success = true;

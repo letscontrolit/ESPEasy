@@ -182,7 +182,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("RFID : reset bits: ");
                 log += Plugin_008_bitCount;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
 
               // reset after ~5 sec
@@ -221,7 +221,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
             log += ull2String(keyMask, 16);
             log += F(" Bits: ");
             log += Plugin_008_bitCount;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           // reset everything

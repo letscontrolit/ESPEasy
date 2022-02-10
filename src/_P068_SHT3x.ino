@@ -238,10 +238,10 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
         if (log.reserve(25)) {
           log = F("SHT3x: Temperature: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = F("SHT3x: Humidity: ");
           log += formatUserVarNoCheck(event->TaskIndex, 1);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       success = true;

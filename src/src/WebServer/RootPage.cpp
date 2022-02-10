@@ -86,9 +86,8 @@ void handle_root() {
 
   TXBuffer.startStream();
 
-  String  sCommand;
   boolean rebootCmd = false;
-  sCommand  = webArg(F("cmd"));
+  String sCommand  = webArg(F("cmd"));
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
@@ -385,7 +384,7 @@ void handle_root() {
     html_end_table();
     html_end_form();
 
-    printWebString.clear();
+    printWebString = String();
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }
