@@ -1468,10 +1468,10 @@ void createRuleEvents(struct EventStruct *event) {
       addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
       return;
     }
-    eventString  = getTaskDeviceName(event->TaskIndex);
-    eventString += F("#");
+    eventString += getTaskDeviceName(event->TaskIndex);
+    eventString += '#';
     eventString += ExtraTaskSettings.TaskDeviceValueNames[0];
-    eventString += F("=");
+    eventString += '=';
     eventString += '`';
     if (appendCompleteStringvalue) {
       eventString += event->String2;
@@ -1485,7 +1485,7 @@ void createRuleEvents(struct EventStruct *event) {
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventString;
     eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
-    eventString  = getTaskDeviceName(event->TaskIndex);
+    eventString += getTaskDeviceName(event->TaskIndex);
     eventString += F("#All=");
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
@@ -1499,10 +1499,10 @@ void createRuleEvents(struct EventStruct *event) {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       String eventString;
       eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
-      eventString  = getTaskDeviceName(event->TaskIndex);
-      eventString += F("#");
+      eventString += getTaskDeviceName(event->TaskIndex);
+      eventString += '#';
       eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      eventString += F("=");
+      eventString += '=';
       eventString += formatUserVarNoCheck(event, varNr);
       eventQueue.addMove(std::move(eventString));
     }

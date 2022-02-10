@@ -94,7 +94,6 @@ void LogStruct::clearExpiredEntries() {
   while (maxLoops > 0) {
     --maxLoops;
     if (isEmpty() ||  // Nothing left
-        timeStamp[read_idx] == 0 || // Already reset entry
         (timePassedSince(timeStamp[read_idx]) < LOG_BUFFER_EXPIRE)) // Expired
     {
       return;
@@ -106,7 +105,7 @@ void LogStruct::clearExpiredEntries() {
 void LogStruct::clearOldest() {
   if (!isEmpty()) {
     is_full = false;
-    Message[read_idx].clear();
+    Message[read_idx] = String();
     timeStamp[read_idx] = 0;
     log_level[read_idx] = 0;
     read_idx  = nextIndex(read_idx);

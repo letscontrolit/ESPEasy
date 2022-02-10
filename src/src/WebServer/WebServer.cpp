@@ -348,11 +348,6 @@ void setWebserverRunning(bool state) {
 
 void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
 {
-  #ifdef USE_SECOND_HEAP
-  // Store template in 2nd heap
-  HeapSelectIram ephemeral;
-  #endif
-
   const bool addJS   = true;
   const bool addMeta = true;
 
