@@ -30,6 +30,10 @@ void EventStruct::setTaskIndex(taskIndex_t taskIndex) {
   sensorType   = Sensor_VType::SENSOR_TYPE_NOT_SET;
 }
 
+void EventStruct::clear() {
+  *this = EventStruct();
+}
+
 Sensor_VType EventStruct::getSensorType() {
   const int tmp_idx = idx;
   checkDeviceVTypeForTask(this);

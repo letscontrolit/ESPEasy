@@ -304,27 +304,20 @@ void handle_sysinfo_basicInfo() {
 
   if (wdcounter > 0)
   {
-    String html;
-    html.reserve(32);
-    html += getCPUload();
-    html += F("% (LC=");
-    html += getLoopCountPerSec();
-    html += ')';
-    addHtml(html);
+    addHtml(String(getCPUload()));
+    addHtml(F("% (LC="));
+    addHtmlInt(getLoopCountPerSec());
+    addHtml(')');
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
 
   addRowLabel(F("Boot"));
   {
-    String html;
-    html.reserve(64);
-
-    html += getLastBootCauseString();
-    html += F(" (");
-    html += RTC.bootCounter;
-    html += ')';
-    addHtml(html);
+    addHtml(getLastBootCauseString());
+    addHtml(F(" ("));
+    addHtmlInt(static_cast<uint32_t>(RTC.bootCounter));
+    addHtml(')');
   }
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
@@ -342,18 +335,14 @@ void handle_sysinfo_memory() {
   int freeMem = ESP.getFreeHeap();
   addRowLabel(LabelType::FREE_MEM);
   {
-    String html;
-    html.reserve(64);
-
-    html += freeMem;
+    addHtmlInt(freeMem);
 # ifndef BUILD_NO_RAM_TRACKER
-    html += F(" (");
-    html += lowestRAM;
-    html += F(" - ");
-    html += lowestRAMfunction;
-    html += ')';
+    addHtml(F(" ("));
+    addHtmlInt(lowestRAM);
+    addHtml(F(" - "));
+    addHtml(lowestRAMfunction);
+    addHtml(')');
 # endif // ifndef BUILD_NO_RAM_TRACKER
-    addHtml(html);
   }
 # if defined(CORE_POST_2_5_0) || defined(ESP32)
  #  ifndef LIMIT_BUILD_SIZE
@@ -375,17 +364,14 @@ void handle_sysinfo_memory() {
 
   addRowLabel(LabelType::FREE_STACK);
   {
-    String html;
-    html.reserve(64);
-    html += getCurrentFreeStack();
+    addHtmlInt(getCurrentFreeStack());
 # ifndef BUILD_NO_RAM_TRACKER
-    html += F(" (");
-    html += lowestFreeStack;
-    html += F(" - ");
-    html += lowestFreeStackfunction;
-    html += ')';
+    addHtml(F(" ("));
+    addHtmlInt(lowestFreeStack);
+    addHtml(F(" - "));
+    addHtml(lowestFreeStackfunction);
+    addHtml(')');
 # endif // ifndef BUILD_NO_RAM_TRACKER
-    addHtml(html);
   }
 
 # if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
@@ -448,14 +434,10 @@ void handle_sysinfo_Network() {
   addRowLabel(LabelType::SSID);
   if (showWiFiConnectionInfo)
   {
-    String html;
-    html.reserve(64);
-
-    html += WiFi.SSID();
-    html += F(" (");
-    html += WiFi.BSSIDstr();
-    html += ')';
-    addHtml(html);
+    addHtml(WiFi.SSID());
+    addHtml(F(" ("));
+    addHtml(WiFi.BSSIDstr());
+    addHtml(')');
   } else addHtml('-');
 
   addRowLabel(getLabel(LabelType::CHANNEL));
@@ -561,15 +543,12 @@ void handle_sysinfo_ESP_Board() {
 
   addRowLabel(LabelType::ESP_CHIP_ID);
   {
-    String html;
-    html.reserve(32);
-    html += getChipId();
-    html += F(" (0x");
+    addHtml(getChipId());
+    addHtml(F(" (0x"));
     String espChipId(getChipId(), HEX);
     espChipId.toUpperCase();
-    html += espChipId;
-    html += ')';
-    addHtml(html);
+    addHtml(espChipId);
+    addHtml(')');
   }
 
   addRowLabel(LabelType::ESP_CHIP_FREQ);

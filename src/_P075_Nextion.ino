@@ -271,7 +271,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
             if(RssiIndex >= 0) {
               int barVal=0;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
-              newString = P075_data->displayLines[x].substring(0, RssiIndex);
+              newString.clear();
+              newString += P075_data->displayLines[x].substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
               if (nbars < -100 || nbars >= 0)
                  barVal=0;

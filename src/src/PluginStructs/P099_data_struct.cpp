@@ -227,7 +227,7 @@ bool P099_data_struct::isValidAndTouchedTouchObject(uint16_t x, uint16_t y, Stri
  * Set the enabled/disabled state by inserting or deleting an underscore '_' as the first character of the object name.
  * Checks if the name doesn't exceed the max. length.
  */
-bool P099_data_struct::setTouchObjectState(String touchObject, bool state, uint8_t checkObjectCount) {
+bool P099_data_struct::setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount) {
   if (touchObject.isEmpty() || touchObject.substring(0, 1) == F("_")) return false;
   String findObject = (state ? F("_") : F("")); // When enabling, try to find a disabled object
   findObject += touchObject;

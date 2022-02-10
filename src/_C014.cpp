@@ -829,7 +829,6 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
           {
             if (Settings.UseRules) {
               String newEvent = parseStringToEnd(cmd, 2);
-              eventQueue.add(newEvent);
 
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("C014 : taskIndex:");
@@ -847,6 +846,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 log += newEvent;
                 addLogMove(LOG_LEVEL_INFO, log);
               }
+              eventQueue.addMove(std::move(newEvent));
             }
           } else { // not an event
             String log;

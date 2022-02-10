@@ -947,7 +947,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   if (struct_size != 0) {
     String text;
     text.reserve(32);
-    text = formatHumanReadable(struct_size, 1024);
+    text += formatHumanReadable(struct_size, 1024);
     text += '/';
     text += formatHumanReadable(max_size, 1024);
     text += F(" per item");

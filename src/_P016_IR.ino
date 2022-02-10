@@ -325,7 +325,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log; // Log this always
             if (log.reserve(30)) {
-              log  = F("IR: available decodetypes: ");
+              log += F("IR: available decodetypes: ");
               log += size;
               addLogMove(LOG_LEVEL_INFO, log);
             }
@@ -378,7 +378,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode = String();
+            strCode.clear();
 
             if (line.Code > 0) {
               strCode = uint64ToString(line.Code, 16); // convert code to hex for display
@@ -393,7 +393,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode = String();
+            strCode.clear();
 
             if (line.AlternativeCode > 0) {
               strCode = uint64ToString(line.AlternativeCode, 16); // convert code to hex for display
@@ -462,7 +462,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
             tCommandLinesV2 line;
 
-            strError = String();
+            strError.clear();
 
             // Normal Code & flags
             line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
@@ -567,7 +567,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             // + ',' + uint64ToString(results.bits);
             // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style
             // command
-            output  = F("{\"protocol\":\"");
+            output += F("{\"protocol\":\"");
             output += typeToString(results.decode_type, results.repeat);
             output += F("\",\"data\":\"");
             output += resultToHexidecimal(&results);
@@ -578,7 +578,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String Log;
               if (Log.reserve(output.length() + 22)) {
-                Log  = F("IRSEND,\'");
+                Log += F("IRSEND,\'");
                 Log += output;
                 Log += F("\' type: 0x");
                 Log += uint64ToString(results.decode_type);

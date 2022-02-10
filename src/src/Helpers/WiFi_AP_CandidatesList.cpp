@@ -230,7 +230,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (scanned_new.size() > 0) {
     // We have new scans to process.
     #ifdef USE_SECOND_HEAP
-    // HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     // TD-er: Disabled for now as it is suspect for crashes
     #endif
     purge_expired();

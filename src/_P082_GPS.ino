@@ -364,7 +364,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           // Fix status changed, send events.
           if (Settings.UseRules) {
             String event = curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix");
-            eventQueue.add(event);
+            eventQueue.addMove(std::move(event));
           }
           activeFix = curFixStatus;
         }
@@ -437,7 +437,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
                   if (Settings.UseRules) {
                     String eventString = F("GPS#travelled=");
                     eventString += distance;
-                    eventQueue.add(eventString);
+                    eventQueue.addMove(std::move(eventString));
                   }
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

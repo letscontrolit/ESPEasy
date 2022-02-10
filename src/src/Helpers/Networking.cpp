@@ -244,7 +244,7 @@ void checkUDP()
 #endif // ifndef BUILD_NO_DEBUG
                 {
                   #ifdef USE_SECOND_HEAP
-                  // HeapSelectIram ephemeral;
+                  HeapSelectIram ephemeral;
                   // TD-er: Disabled for now as it is suspect for crashes.
                   #endif
 

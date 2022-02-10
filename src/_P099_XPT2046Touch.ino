@@ -424,8 +424,6 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
     {
       String command;
       String subcommand;
-      String arguments;
-      arguments.reserve(24);
 
       int argIndex = string.indexOf(',');
       if (argIndex) {
@@ -439,23 +437,19 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         }
         if (command.equals(F("touch"))) {
           if(subcommand.equals(F("rot"))) { // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
-            arguments = parseString(string, 3);
-            uint8_t rot_ = static_cast<uint8_t>(arguments.toInt() % 4);
+            uint8_t rot_ = static_cast<uint8_t>(parseString(string, 3).toInt() % 4);
 
             P099_data->setRotation(rot_);
             success = true;
           } else if (subcommand.equals(F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
-            arguments = parseString(string, 3);
-            bool flip_ = (arguments.toInt() > 0);
+            bool flip_ = (parseString(string, 3).toInt() > 0);
 
             P099_data->setRotationFlipped(flip_);
             success = true;
           } else if (subcommand.equals(F("enable"))) { // touch,enable,<objectName> : Enables a disabled objectname (with a leading underscore)
-            arguments = parseString(string, 3);
-            success = P099_data->setTouchObjectState(arguments, true, P099_CONFIG_OBJECTCOUNT);
+            success = P099_data->setTouchObjectState(parseString(string, 3), true, P099_CONFIG_OBJECTCOUNT);
           } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname (without a leading underscore)
-            arguments = parseString(string, 3);
-            success = P099_data->setTouchObjectState(arguments, false, P099_CONFIG_OBJECTCOUNT);
+            success = P099_data->setTouchObjectState(parseString(string, 3), false, P099_CONFIG_OBJECTCOUNT);
           }
         }
       }
@@ -528,7 +522,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                         P099_data->TouchTimers[selectedObjectIndex] = 0;
                         String eventCommand;
                         eventCommand.reserve(48);
-                        eventCommand = getTaskDeviceName(event->TaskIndex);
+                        eventCommand += getTaskDeviceName(event->TaskIndex);
                         eventCommand += '#';
                         eventCommand += selectedObjectName;
                         eventCommand += '='; // Add arguments
@@ -537,14 +531,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                         } else {
                           eventCommand += (P099_data->TouchStates[selectedObjectIndex] ? '1' : '0'); // Act like a button, 1 = On, 0 = Off
                         }
-                        eventQueue.add(eventCommand);
+                        eventQueue.addMove(std::move(eventCommand));
                       }
                     }
                   } else {
                     // Matching object is found, send <TaskDeviceName>#<ObjectName> event with x, y and z as %eventvalue1/2/3%
                     String eventCommand;
                     eventCommand.reserve(48);
-                    eventCommand = getTaskDeviceName(event->TaskIndex);
+                    eventCommand += getTaskDeviceName(event->TaskIndex);
                     eventCommand += '#';
                     eventCommand += selectedObjectName;
                     eventCommand += '='; // Add arguments
@@ -553,7 +547,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                     eventCommand += y;
                     eventCommand += ',';
                     eventCommand += z;
-                    eventQueue.add(eventCommand);
+                    eventQueue.addMove(std::move(eventCommand));
                   }
                 }
               }

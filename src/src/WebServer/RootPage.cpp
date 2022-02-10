@@ -86,9 +86,8 @@ void handle_root() {
 
   TXBuffer.startStream();
 
-  String  sCommand;
   boolean rebootCmd = false;
-  sCommand  = webArg(F("cmd"));
+  String sCommand  = webArg(F("cmd"));
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
   {
@@ -152,27 +151,21 @@ void handle_root() {
 
       if (wdcounter > 0)
       {
-        String html;
-        html.reserve(32);
-        html += getCPUload();
-        html += F("% (LC=");
-        html += getLoopCountPerSec();
-        html += ')';
-        addHtml(html);
+        addHtml(String(getCPUload()));
+        addHtml(F("% (LC="));
+        addHtmlInt(getLoopCountPerSec());
+        addHtml(')');
       }
       {
         addRowLabel(LabelType::FREE_MEM);
-        String html;
-        html.reserve(64);
-        html += freeMem;
+        addHtmlInt(freeMem);
         #ifndef BUILD_NO_RAM_TRACKER
-        html += F(" (");
-        html += lowestRAM;
-        html += F(" - ");
-        html += lowestRAMfunction;
-        html += ')';
+        addHtml(F(" ("));
+        addHtmlInt(lowestRAM);
+        addHtml(F(" - "));
+        addHtml(lowestRAMfunction);
+        addHtml(')');
         #endif
-        addHtml(html);
       }
       {
         #ifdef USE_SECOND_HEAP
@@ -181,17 +174,14 @@ void handle_root() {
       }
       {
         addRowLabel(LabelType::FREE_STACK);
-        String html;
-        html.reserve(64);
-        html += String(getCurrentFreeStack());
+        addHtmlInt(getCurrentFreeStack());
         #ifndef BUILD_NO_RAM_TRACKER
-        html += F(" (");
-        html += String(lowestFreeStack);
-        html += F(" - ");
-        html += String(lowestFreeStackfunction);
-        html += ')';
+        addHtml(F(" ("));
+        addHtmlInt(lowestFreeStack);
+        addHtml(F(" - "));
+        addHtml(lowestFreeStackfunction);
+        addHtml(')');
         #endif
-        addHtml(html);
       }
 
   #ifdef HAS_ETHERNET
@@ -202,13 +192,10 @@ void handle_root() {
       {
         addRowLabelValue(LabelType::IP_ADDRESS);
         addRowLabel(LabelType::WIFI_RSSI);
-        String html;
-        html.reserve(32);
-        html += String(WiFi.RSSI());
-        html += F(" dBm (");
-        html += WiFi.SSID();
-        html += ')';
-        addHtml(html);
+        addHtmlInt(WiFi.RSSI());
+        addHtml(F(" dBm ("));
+        addHtml(WiFi.SSID());
+        addHtml(')');
       }
 
   #ifdef HAS_ETHERNET
@@ -221,14 +208,11 @@ void handle_root() {
       #ifdef FEATURE_MDNS
       {
         addRowLabel(LabelType::M_DNS);
-        String html;
-        html.reserve(64);
-        html += F("<a href='http://");
-        html += getValue(LabelType::M_DNS);
-        html += F("'>");
-        html += getValue(LabelType::M_DNS);
-        html += F("</a>");
-        addHtml(html);
+        addHtml(F("<a href='http://"));
+        addHtml(getValue(LabelType::M_DNS));
+        addHtml(F("'>"));
+        addHtml(getValue(LabelType::M_DNS));
+        addHtml(F("</a>"));
       }
       #endif // ifdef FEATURE_MDNS
 

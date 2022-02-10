@@ -168,6 +168,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             log += F(" : Address: 0x");
             log += String(PCONFIG(0), HEX);
             addLogMove(LOG_LEVEL_INFO, log);
+            // addLogMove does also clear the string.
             log  = P028_data->getDeviceName();
             log += F(" : Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);

@@ -252,7 +252,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
           }
 
           // Prepare for new line
-          line = EMPTY_STRING;
+          line.clear();
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;

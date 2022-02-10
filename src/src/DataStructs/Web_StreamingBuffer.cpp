@@ -113,7 +113,9 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str) {
   }
 */
   // FIXME TD-er: Not sure what happens, but streaming large flash chunks does cause allocation issues.
-  const bool stream_P = ESP.getFreeHeap() > 4000 && length < (2 * CHUNKED_BUFFER_SIZE);
+  const bool stream_P = ESP.getFreeHeap() > 4000 && 
+                        length > (CHUNKED_BUFFER_SIZE >> 2) &&
+                        length < (2 * CHUNKED_BUFFER_SIZE);
 
   if (stream_P && ((this->buf.length() + length) > CHUNKED_BUFFER_SIZE)) {
     // Do not copy to the internal buffer, but stream immediately.

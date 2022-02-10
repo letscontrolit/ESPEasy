@@ -153,10 +153,10 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
                 if (Settings.UseRules) {
                   String eventString;
                   eventString.reserve(32);
-                  eventString  = getTaskDeviceName(event->TaskIndex);
+                  eventString += getTaskDeviceName(event->TaskIndex);
                   eventString += F("#Duration=");
                   eventString += timePassedSince(p097_timestamp[t]);
-                  eventQueue.add(eventString);
+                  eventQueue.addMove(std::move(eventString));
                 }
               }
               bitClear(p097_pinTouchedPrev, t);

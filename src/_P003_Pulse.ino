@@ -179,7 +179,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log; 
           if (log.reserve(20)) {
-            log = F("INIT : PulsePin: "); 
+            log += F("INIT : PulsePin: "); 
             log += Settings.TaskDevicePin1[event->TaskIndex];
             addLogMove(LOG_LEVEL_INFO, log);
           }

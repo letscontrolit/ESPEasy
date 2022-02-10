@@ -161,7 +161,6 @@ void P104_data_struct::loadSettings() {
 
     {
       String buffer;
-      buffer.reserve(bufferSize + 1);
       buffer = String(settingsBuffer);
       # ifdef P104_DEBUG_DEV
 
@@ -200,7 +199,6 @@ void P104_data_struct::loadSettings() {
       }
 
       while (offset2 > -1) {
-        tmp.reserve(offset2 - prev2);
         tmp = buffer.substring(prev2, offset2);
         # ifdef P104_DEBUG_DEV
 
@@ -296,7 +294,6 @@ void P104_data_struct::loadSettings() {
             loadOffset    += sizeof(bufferSize);
             LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)settingsBuffer, structDataSize, loadOffset);
             settingsBuffer[bufferSize + 1] = '\0'; // Terminate string
-            buffer.reserve(bufferSize + 1);
             buffer = String(settingsBuffer);
           }
         }
@@ -1569,7 +1566,7 @@ String P104_data_struct::enquoteString(const String& input) {
  * saveSettings gather the zones data from the UI and store in customsettings
  **************************************/
 bool P104_data_struct::saveSettings() {
-  error = EMPTY_STRING; // Clear
+  error = String(); // Clear
   String zbuffer;
 
   # ifdef P104_DEBUG_DEV

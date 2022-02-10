@@ -115,7 +115,7 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     log.reserve(30);
 
     if (!device.initialize()) {
-      log  = getDeviceName();
+      log += getDeviceName();
       log += F(" : unable to initialize");
       addLogMove(LOG_LEVEL_ERROR, log);
       return false;
@@ -162,7 +162,7 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
       String log;
       log.reserve(50);                        // Prevent re-allocation
-      log  = getDeviceName();
+      log += getDeviceName();
       log += F(" : humidity ");
       log += device.getHumidity();
       log += F("% temperature ");
@@ -179,7 +179,7 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     // should not happen
     String log;
     log.reserve(15); // Prevent re-allocation
-    log  = getDeviceName();
+    log += getDeviceName();
     log += F(" : reset");
     addLogMove(LOG_LEVEL_ERROR, log);
     device.softReset();

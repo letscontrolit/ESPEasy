@@ -424,7 +424,7 @@ void queueEvent(taskIndex_t TaskIndex, int wavelength, float value) {
   RuleEvent += wavelength;
   RuleEvent += '=';
   RuleEvent += toString(value, 2);
-  eventQueue.add(RuleEvent);
+  eventQueue.addMove(std::move(RuleEvent));
 }
 
 #endif // USES_P112
