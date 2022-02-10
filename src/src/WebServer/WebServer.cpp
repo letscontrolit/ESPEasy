@@ -354,21 +354,25 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
 
-    #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-    parser.process(F("<body><header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>"));
-    #else
-    parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
-    #endif
+    if (!parser.isTail()) {
+      #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+      parser.process(F("<body><header class='apheader'>"
+                "<h1>Welcome to ESP Easy Mega AP</h1>"));
+      #else
+      parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
+      #endif
 
-    parser.process(F("</header>"));
+      parser.process(F("</header>"));
+    }
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplMsg"))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
-    parser.process(F("<body>"));
+    if (!parser.isTail()) {
+      parser.process(F("<body>"));
+    }
     getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
@@ -385,8 +389,10 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else // all other template names e.g. TmplStd
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
-    parser.process(F("<body class='bodymenu'>"
-              "<span class='message' id='rbtmsg'></span>"));
+    if (!parser.isTail()) {
+      parser.process(F("<body class='bodymenu'>"
+                "<span class='message' id='rbtmsg'></span>"));
+    }
     getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
@@ -395,6 +401,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 }
 
 void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
+  if (parser.isTail()) return;
   parser.process(F("<!DOCTYPE html><html lang='en'>"
             "<head>"
             "<meta charset='utf-8'/>"
@@ -411,6 +418,7 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
 
 void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
   {
+    if (parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
     parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
     parser.process(title);
@@ -440,6 +448,7 @@ void getWebPageTemplateDefaultContentSection(WebTemplateParser& parser) {
 }
 
 void getWebPageTemplateDefaultFooter(WebTemplateParser& parser) {
+  if (!parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   parser.process(F("<footer>"
             "<br>"
