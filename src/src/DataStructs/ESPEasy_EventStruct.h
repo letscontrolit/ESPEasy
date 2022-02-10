@@ -18,7 +18,7 @@
 \*********************************************************************************************/
 struct EventStruct
 {
-  EventStruct();
+  EventStruct() = default;
   // Delete the copy constructor
   EventStruct(const struct EventStruct& event) = delete;
 private:

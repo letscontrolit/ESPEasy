@@ -8,8 +8,6 @@
 
 #include "../../_Plugin_Helper.h"
 
-EventStruct::EventStruct() {}
-
 EventStruct::EventStruct(taskIndex_t taskIndex) :
   TaskIndex(taskIndex), BaseVarIndex(taskIndex * VARS_PER_TASK) 
 {}

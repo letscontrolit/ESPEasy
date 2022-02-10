@@ -89,13 +89,12 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
-          String tmppubname = pubname;
           bool   isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
+          const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            element.txt[x]  = "/";
-            element.txt[x] += tmppubname;
+            element.txt[x]  = '/';
+            element.txt[x] += pubname;
             parseSingleControllerVariable(element.txt[x], event, x, true);
             element.txt[x].replace(F("%value%"), formattedValue);
 # ifndef BUILD_NO_DEBUG
