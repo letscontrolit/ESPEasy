@@ -619,7 +619,7 @@ int CalculateParam(const String& TmpStr) {
         log += TmpStr;
         log += F(" = ");
         log += round(param);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
 #endif // ifndef BUILD_NO_DEBUG
     }
@@ -669,7 +669,7 @@ CalculateReturnCode Calculate(const String& input,
       log += doubleToString(result, 6, trimTrailingZeros);
       #endif // ifndef BUILD_NO_DEBUG
 
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   return returnCode;

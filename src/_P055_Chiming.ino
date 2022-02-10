@@ -196,7 +196,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
           }
           if (Plugin_055_Data->lowActive)
             log += F("!");
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           success = true;
         }
 
@@ -320,7 +320,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
             String log = F("Chime: Process '");
             log += c;
             log += '\'';
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
 
             switch (c)
             {
@@ -477,7 +477,7 @@ void Plugin_055_WriteChime(const String& name, const String& tokens)
     log += tokens;
   }
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
 }
 
 uint8_t Plugin_055_ReadChime(const String& name, String& tokens)
@@ -490,7 +490,7 @@ uint8_t Plugin_055_ReadChime(const String& name, String& tokens)
   log += fileName;
   log += ' ';
 
-  tokens.clear();
+  tokens = String();
   fs::File f = tryOpenFile(fileName, "r");
   if (f)
   {
@@ -506,7 +506,7 @@ uint8_t Plugin_055_ReadChime(const String& name, String& tokens)
     log += tokens;
   }
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
 
   return tokens.length();
 }

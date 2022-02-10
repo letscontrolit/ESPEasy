@@ -335,6 +335,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
 
   bool crc_ok = Dallas_crc8(ScratchPad);
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("DS: SP: ");
 
@@ -359,8 +360,9 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     log += ll2String(presence_start, DEC);
     log += ',';
     log += ll2String(presence_end, DEC);
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 
   if (!crc_ok)
   {
@@ -436,7 +438,7 @@ bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_p
       found = true;
     }
   }
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   return found;
 }
 

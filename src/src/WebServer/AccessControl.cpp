@@ -109,7 +109,7 @@ boolean clientIPallowed()
     response += formatIP(low);
     response += F(" - ");
     response += formatIP(high);
-    addLog(LOG_LEVEL_ERROR, response);
+    addLogMove(LOG_LEVEL_ERROR, response);
   }
   return false;
 }

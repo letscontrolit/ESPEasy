@@ -115,10 +115,10 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("MS5611  : Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
             log  = F("MS5611  : Barometric Pressure: ");
             log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           success = true;
         }

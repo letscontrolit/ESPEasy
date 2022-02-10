@@ -234,7 +234,9 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
         {
           while (param.length())
           {
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, param);
+            #endif
 
             if (param == F("log"))
             {
@@ -246,7 +248,7 @@ boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
                   log += String(P057_data->ledMatrix.GetRow(i), 16);
                   log += F("h, ");
                 }
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               success = true;
             }

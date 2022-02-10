@@ -178,7 +178,7 @@ bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, stru
         while (log.length() < 73) log += ' ';
         log += getCPluginNameFromProtocolIndex(protocolIndex);
 
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
     #endif
@@ -271,7 +271,7 @@ protocolIndex_t getProtocolIndex(cpluginID_t cpluginID)
         log += String(cpluginID);
         log += F(" p_index: ");
         log += String(it->second);
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       #endif
       return it->second;
@@ -308,8 +308,10 @@ bool addCPlugin(cpluginID_t cpluginID, protocolIndex_t x) {
     CPlugin_id_to_ProtocolIndex[cpluginID] = x;
     return true;
   }
-  String log = F("System: Error - Too many C-Plugins. CPLUGIN_MAX = ");
-  log += CPLUGIN_MAX;
-  addLog(LOG_LEVEL_ERROR, log);
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("System: Error - Too many C-Plugins. CPLUGIN_MAX = ");
+    log += CPLUGIN_MAX;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }

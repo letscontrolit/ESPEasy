@@ -36,7 +36,7 @@ void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Serial : ");
     log += serialHelper_getGpioDescription(typeHint, config_pin1, config_pin2, " ");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 }
 
