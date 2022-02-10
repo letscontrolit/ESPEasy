@@ -49,7 +49,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      event->String1.clear();
+      event->String1 = String();
       event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
       break;
     }

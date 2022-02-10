@@ -315,7 +315,7 @@ void P073_data_struct::NextScroll() {
 }
 
 void P073_data_struct::setTextToScroll(const String& text) {
-  _textToScroll.clear();
+  _textToScroll = String();
 
   if (!text.isEmpty()) {
     const int bufToFill = getBufferLength(displayModel);

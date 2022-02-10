@@ -313,7 +313,7 @@ void P104_data_struct::loadSettings() {
         # endif // ifdef P104_DEBUG
       }
 
-      buffer.clear();        // Free some memory
+      buffer = String();        // Free some memory
     }
 
     delete[] settingsBuffer; // Release allocated buffer

@@ -1092,7 +1092,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
   int  pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
 
-  argvString.clear();
+  argvString = String();
 
   if (!hasArgument) { return false; }
 

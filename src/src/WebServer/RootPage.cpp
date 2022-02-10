@@ -265,7 +265,7 @@ void handle_root() {
           addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
           addHtml(printWebString);
           addHtml(F("</textarea>"));
-          printWebString.clear();
+          printWebString = String();
         }
       }
       html_end_table();
@@ -342,7 +342,7 @@ void handle_root() {
       html_end_form();
     }
 
-    printWebString.clear();
+    printWebString = String();
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }

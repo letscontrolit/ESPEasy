@@ -300,5 +300,5 @@ void addToLogMove(uint8_t logLevel, String&& string)
     Logging.add(logLevel, std::move(string));
   }
   // Make sure the string may no longer keep up memory
-  string.clear();
+  string = String();
 }

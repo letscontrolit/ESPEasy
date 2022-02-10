@@ -97,7 +97,7 @@ bool Modbus::handle() {
   unsigned int RXavailable = 0;
 
   #ifndef BUILD_NO_DEBUG
-  LogString.clear();
+  LogString = String();
   #endif
   int64_t rxValue = 0;
 

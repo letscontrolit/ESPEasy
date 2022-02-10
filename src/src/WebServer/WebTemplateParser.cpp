@@ -130,7 +130,7 @@ bool WebTemplateParser::process(const char c) {
           } else if (Tail == contentVarFound) {
             processVarName();
           }
-          varName.clear();
+          varName = String();
         }
       }
       break;

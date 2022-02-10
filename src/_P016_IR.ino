@@ -378,7 +378,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode.clear();
+            strCode = String();
 
             if (line.Code > 0) {
               strCode = uint64ToString(line.Code, 16); // convert code to hex for display
@@ -393,7 +393,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode.clear();
+            strCode = String();
 
             if (line.AlternativeCode > 0) {
               strCode = uint64ToString(line.AlternativeCode, 16); // convert code to hex for display
@@ -462,7 +462,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
             tCommandLinesV2 line;
 
-            strError.clear();
+            strError = String();
 
             // Normal Code & flags
             line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));

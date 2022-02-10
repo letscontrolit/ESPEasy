@@ -176,7 +176,7 @@ bool do_command_case_check(command_case_data         & data,
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
-  data.status.clear();
+  data.status = String();
   if (!data.cmd_lc.equals(cmd_test)) {
     return false;
   }

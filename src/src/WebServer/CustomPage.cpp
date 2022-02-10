@@ -153,7 +153,7 @@ bool handle_custom(const String& path) {
           line += c;
           if (c == '\n') {
             addHtml(parseTemplate(line));
-            line.clear();
+            line = String();
             line.reserve(128);
           }
         }

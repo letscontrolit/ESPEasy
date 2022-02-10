@@ -19,7 +19,7 @@ void ModbusRTU_struct::reset() {
     delete easySerial;
     easySerial = nullptr;
   }
-  detected_device_description.clear();
+  detected_device_description = String();
 
   for (int i = 0; i < 8; ++i) {
     _sendframe[i] = 0;

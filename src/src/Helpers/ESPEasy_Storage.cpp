@@ -676,7 +676,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
             #endif
 
             strings[stringCount] = tmpString;
-            tmpString.clear();
+            tmpString = String();
             tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {

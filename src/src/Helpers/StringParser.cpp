@@ -278,7 +278,7 @@ void transformValue(
             }
 
             if (value == F("0")) {
-              value.clear();
+              value = String();
             } else {
               const int valueLength = value.length();
 
@@ -666,7 +666,7 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
     format    = valueName.substring(hashpos + 1);
     valueName = valueName.substring(0, hashpos);
   } else {
-    format.clear();
+    format = String();
   }
   deviceName.toLowerCase();
   valueName.toLowerCase();

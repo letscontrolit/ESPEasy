@@ -48,9 +48,9 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
-    cacheDevAddr.clear();
-    cacheHWEUI.clear();
-    cacheSysVer.clear();
+    cacheDevAddr = String();
+    cacheHWEUI = String();
+    cacheSysVer = String();
     autobaud_success = false;
   }
 
@@ -353,7 +353,7 @@ private:
   }
 
   void updateCacheOnInit() {
-    cacheDevAddr.clear();
+    cacheDevAddr = String();
 
     if (isInitialized()) {
       if (myLora->getStatus().Joined)
@@ -361,7 +361,7 @@ private:
         cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
         if (cacheDevAddr == F("00000000")) {
-          cacheDevAddr.clear();
+          cacheDevAddr = String();
         }
       }
     }
