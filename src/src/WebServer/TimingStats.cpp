@@ -46,7 +46,7 @@ void handle_timingstats() {
   addHtml(ESPEasy_time::getDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
-  addHtml(String(timespan));
+  addHtml(toString(timespan));
   addHtml(F(" sec"));
   addRowLabel(F("*"));
   addHtml(F("Duty cycle based on average < 1 msec is highly unreliable"));
@@ -63,26 +63,26 @@ void format_using_threshhold(unsigned long value) {
   float value_msec = value / 1000.0f;
 
   if (value > TIMING_STATS_THRESHOLD) {
-    html_B(String(value_msec, 3));
+    html_B(toString(value_msec, 3));
   } else {
-    addHtml(String(value_msec, 3));
+    addHtml(toString(value_msec, 3));
   }
 }
 
 void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  unsigned long minVal, maxVal;
-  const unsigned int  c = stats.getMinMax(minVal, maxVal);
+  uint64_t minVal, maxVal;
+  const uint64_t c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
   addHtmlInt(c);
   html_TD();
   const float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
   const float avg = stats.getAvg();
-  addHtml(String(call_per_sec, 2));
+  addHtml(toString(call_per_sec, 2));
   html_TD();
   {
     const float duty = (call_per_sec * avg / 10000.0f);
-    String duty_str = String(duty, 2);
+    String duty_str = toString(duty, 2);
     if (avg < 1000) {
       // Unreliable as average is below 1 msec
       duty_str += '*';
@@ -117,13 +117,10 @@ long stream_timing_statistics(bool clearStats) {
           html_TR_TD();
         }
         {
-          String html;
-          html.reserve(64);
-          html += F("P_");
-          html += Device[deviceIndex].Number;
-          html += '_';
-          html += getPluginNameFromDeviceIndex(deviceIndex);
-          addHtml(html);
+          addHtml(F("P_"));
+          addHtmlInt(Device[deviceIndex].Number);
+          addHtml('_');
+          addHtml(getPluginNameFromDeviceIndex(deviceIndex));
         }
         html_TD();
         addHtml(getPluginFunctionName(x.first % 256));
@@ -144,14 +141,10 @@ long stream_timing_statistics(bool clearStats) {
         html_TR_TD();
       }
       {
-        String html;
-        html.reserve(64);
-
-        html += F("C_");
-        html += Protocol[ProtocolIndex].Number;
-        html += '_';
-        html += getCPluginNameFromProtocolIndex(ProtocolIndex);
-        addHtml(html);
+        addHtml(F("C_"));
+        addHtmlInt(Protocol[ProtocolIndex].Number);
+        addHtml('_');
+        addHtml(getCPluginNameFromProtocolIndex(ProtocolIndex));
       }
       html_TD();
       addHtml(getCPluginCFunctionName(static_cast<CPlugin::Function>(x.first % 256)));

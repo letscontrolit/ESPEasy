@@ -176,7 +176,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
         const __FlashStringHelper * optionsMode[6] = { F("100ms"), F("200ms"), F("300ms"),
                                   F("400ms"), F("500ms"), F("600ms") };
         addFormSelector(F("Integration Time"), F("p074_itime"), 6, optionsMode,
-                        NULL, PCONFIG(1));
+                        nullptr, PCONFIG(1));
       }
 
       //        TSL2591_GAIN_LOW                  = 0x00,    // low gain (1x)
@@ -186,7 +186,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       {
         const __FlashStringHelper * optionsGain[4] = { F("low gain (1x)"),      F("medium gain (25x)"),
                                   F("medium gain (428x)"), F("max gain (9876x)") };
-        addFormSelector(F("Value Mapping"), F("p074_gain"), 4, optionsGain, NULL,
+        addFormSelector(F("Value Mapping"), F("p074_gain"), 4, optionsGain, nullptr,
                         PCONFIG(2));
       }
 
@@ -233,7 +233,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
             case TSL2591_GAIN_HIGH: log += F("428x (High)");  break;
             case TSL2591_GAIN_MAX:  log += F("9876x (Max)");  break;
           }
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -270,7 +270,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("TSL2591: Lux: ");
-            log += String(lux);
+            log += toString(lux);
             log += F(" Full: ");
             log += String(full);
             log += F(" Visible: ");
@@ -279,7 +279,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
             log += String(ir);
             log += F(" duration: ");
             log += P074_data->duration;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           // Update was succesfull, schedule a read.

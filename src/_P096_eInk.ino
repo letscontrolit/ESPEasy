@@ -370,7 +370,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                 
   #ifndef BUILD_NO_DEBUG
                 s.add(usecPassedSince(statisticsTimerStart));
-                tmpString += "<br/> Display timings = " + String(s.getAvg());
+                tmpString += F("<br/> Display timings = ");
+                tmpString += toString(s.getAvg());
   #endif              
                 P096_data->eInkScreen.clearBuffer();
                 P096_data->plugin_096_sequence_in_progress = false;
@@ -543,10 +544,13 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         }
 #ifndef BUILD_NO_DEBUG
         String log;
-        log.reserve(110);                           // Prevent re-allocation
-        log = F("P096-eInk : WRITE = ");
-        log += tmpString;
-        SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.  
+        if (log.reserve(20 + tmpString.length())) { // Prevent re-allocation
+          log = F("P096-eInk : WRITE = ");
+          log += tmpString;
+          SendStatus(event, log);             // Reply (echo) to sender. This will print message on browser.  
+        } else {
+          SendStatus(event, F("P096-eInk : WRITE = "));
+        }
 #endif
         break;        
       }

@@ -158,6 +158,8 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      // FIXME TD-er: Seems to use task data, but not sure if really needed.
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -297,22 +299,22 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       if ((nullptr != P052_data) && P052_data->isInitialized()) {
         addFormSubHeader(F("Device Information"));
         {
-          String detectedString = P052_data->modbus.detected_device_description;
-
-          if (detectedString.length() > 0) {
+          if (P052_data->modbus.detected_device_description.length() > 0) {
             addRowLabel(F("Detected Device"));
-            addHtml(detectedString);
+            addHtml(P052_data->modbus.detected_device_description);
           }
           addRowLabel(F("Checksum (pass/fail/nodata)"));
-          uint32_t reads_pass, reads_crc_failed, reads_nodata;
-          P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-          String chksumStats;
-          chksumStats  = reads_pass;
-          chksumStats += '/';
-          chksumStats += reads_crc_failed;
-          chksumStats += '/';
-          chksumStats += reads_nodata;
-          addHtml(chksumStats);
+          {
+            uint32_t reads_pass, reads_crc_failed, reads_nodata;
+            P052_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
+            String chksumStats;
+            chksumStats  = reads_pass;
+            chksumStats += '/';
+            chksumStats += reads_crc_failed;
+            chksumStats += '/';
+            chksumStats += reads_nodata;
+            addHtml(chksumStats);
+          }
 
           uint8_t errorcode = 0;
           int  value     = P052_data->modbus.readInputRegister(0x06, errorcode);
@@ -354,12 +356,12 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             /*
                if (has_meas_mode) {
                const __FlashStringHelper * options[2] = { F("Continuous"), F("Single Measurement") };
-               addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, NULL, meas_mode);
+               addFormSelector(F("Measurement Mode"), F("p052_mode"), 2, options, nullptr, meas_mode);
                }
              */
             if (has_period) {
               addFormNumericBox(F("Measurement Period"), F("p052_period"), period, 2, 65534);
-              addUnit(F("s"));
+              addUnit('s');
             }
 
             if (has_samp_meas) {
@@ -376,7 +378,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
          const __FlashStringHelper * optionsABCperiod[9] = { F("disable"), F("1 h"), F("12 h"), F("1
          day"), F("2 days"), F("4 days"), F("7 days"), F("14 days"), F("30 days") };
          addFormSelector(F("ABC period"), F("p052_ABC_period"), 9, optionsABCperiod,
-         NULL, choiceABCperiod);
+         nullptr, choiceABCperiod);
        */
 
 
@@ -583,7 +585,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
             log                                 += value;
           }
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
 
         success = true;
         break;

@@ -59,7 +59,7 @@ void P087_data_struct::post_init() {
       capture_index_used[index] = true;
     }
   }
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLogMove(LOG_LEVEL_DEBUG, log);
 }
 
 bool P087_data_struct::isInitialized() const {
@@ -75,7 +75,7 @@ void P087_data_struct::sendString(const String& data) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Proxy: Sending: ");
         log += data;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -108,7 +108,7 @@ bool P087_data_struct::loop() {
 
           for (size_t i = 0; i < length && valid; ++i) {
             if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = "";
+              sentence_part = String();
               ++sentences_received_error;
               valid = false;
             }
@@ -117,7 +117,7 @@ bool P087_data_struct::loop() {
           if (valid) {
             fullSentenceReceived = true;
             last_sentence = sentence_part;
-            sentence_part = "";
+            sentence_part = String();
           }
           break;
         }
@@ -146,7 +146,7 @@ bool P087_data_struct::getSentence(String& string) {
   if (string.isEmpty()) {
     return false;
   }
-  last_sentence = "";
+  last_sentence = String();
   return true;
 }
 
@@ -303,7 +303,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
               // Found a match. Now check if it is supposed to be one or not.
               if (capture_index_must_not_match[n]) {
                 log += F(" (!=)");
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
                 return false;
               } else {
                 match_result = true;
@@ -319,7 +319,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
               }
               log += _lines[lines_index];
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
       }
@@ -329,13 +329,15 @@ bool P087_data_struct::matchRegexp(String& received) const {
     char result = ms.Match(_lines[P087_REGEX_POS].c_str());
 
     if (result == REGEXP_MATCHED) {
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("Match at: ");
         log += ms.MatchStart;
         log += F(" Match Length: ");
         log += ms.MatchLength;
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
+      #endif
       match_result = true;
     }
   }

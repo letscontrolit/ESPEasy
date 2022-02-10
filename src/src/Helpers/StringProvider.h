@@ -32,6 +32,9 @@ struct LabelType {
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
+#ifdef USE_SECOND_HEAP
+    FREE_HEAP_IRAM,
+#endif
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
   #ifndef LIMIT_BUILD_SIZE
     HEAP_MAX_FREE_BLOCK, // 7654
@@ -58,6 +61,9 @@ struct LabelType {
     ENABLE_TIMING_STATISTICS,
     TASKVALUESET_ALL_PLUGINS,
     ENABLE_CLEAR_HUNG_I2C_BUS,
+#ifndef BUILD_NO_RAM_TRACKER
+    ENABLE_RAM_TRACKING,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -191,7 +197,21 @@ String getExtendedValue(LabelType::Enum label);
 
 
 
+const __FlashStringHelper * getFileName(FileType::Enum filetype);
+String getFileName(FileType::Enum filetype,
+                   unsigned int   filenr);
 
+// filenr = 0...3 for files rules1.txt ... rules4.txt
+String getRulesFileName(unsigned int filenr);
+void   addDownloadFiletypeCheckbox(FileType::Enum filetype,
+                                   unsigned int   filenr = 0);
+void   storeDownloadFiletypeCheckbox(FileType::Enum filetype,
+                                     unsigned int   filenr = 0);
+bool   tryDownloadFileType(const String & url,
+                           const String & user,
+                           const String & pass,
+                           FileType::Enum filetype,
+                           unsigned int   filenr = 0);
 
 
 #endif // STRING_PROVIDER_TYPES_H

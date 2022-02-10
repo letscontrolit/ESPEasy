@@ -151,7 +151,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
                                                                          "UVR 61-3 (v8.3 or higher)") };
         const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
 
-        addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, NULL, PCONFIG(0), true);
+        addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
       }
       {
         int P092_ValueType, P092_ValueIdx;
@@ -236,7 +236,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
                         P092_DLbus_OptionCount,
                         Options,
                         P092_OptionTypes,
-                        NULL,
+                        nullptr,
                         P092_ValueType,
                         true);
 
@@ -378,7 +378,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
         log += F(" IdxCRC:");
         log += P092_data->P092_DataSettings.IdxCRC;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 # endif // PLUGIN_092_DEBUG
       UserVar[event->BaseVarIndex] = NAN;
@@ -391,7 +391,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("PLUGIN_092_INIT Task:");
         log += event->TaskIndex;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       if (P092_init) {
@@ -474,7 +474,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("Received data OK TI:");
             log += event->TaskIndex;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
         P092_data->P092_ReceivedOK = success;
@@ -497,7 +497,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("PLUGIN_092_READ Task:");
         log += event->TaskIndex;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       if (!NetworkConnected()) {
@@ -523,7 +523,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           log += P092_data->DLbus_Data->ISR_DLB_Pin;
           log += F(" Setting:");
           log += CONFIG_PIN1;
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
         return false;
       }

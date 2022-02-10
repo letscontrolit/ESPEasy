@@ -44,11 +44,11 @@
 #include "../Helpers/StringParser.h"
 
 
-bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
+bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
   if (nrArguments < 0) { return true; }
 
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
-  if (HasArgv(Line, nrArguments + 2)) {
+  if (HasArgv(Line.c_str(), nrArguments + 2)) {
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
@@ -90,12 +90,12 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
           }
         }
         log += F(" lineLength=");
-        log += strlen(Line);
-        addLog(LOG_LEVEL_ERROR, log);
+        log += Line.length();
+        addLogMove(LOG_LEVEL_ERROR, log);
         log  = F("Line: _");
         log += Line;
         log += '_';
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
 
         if (!Settings.TolerantLastArgParse()) {
           log = F("Command not executed!");
@@ -103,7 +103,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
           log = F("Command executed, but may fail.");
         }
         log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #endif
@@ -177,7 +177,7 @@ bool do_command_case_check(command_case_data         & data,
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
-  data.status = "";
+  data.status = String();
   if (!data.cmd_lc.equals(cmd_test)) {
     return false;
   }
@@ -210,7 +210,8 @@ bool do_command_case(command_case_data         & data,
 {
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
-    data.status = pFunc(data.event, data.line);
+    // FIXME TD-er: Must change command function signature to use const String&
+    data.status = pFunc(data.event, data.line.c_str());
     return true;
   }
   return false;
@@ -225,7 +226,8 @@ bool do_command_case(command_case_data         & data,
 {
   if (do_command_case_check(data, cmd_test, nrArguments, group)) {
     // It has been handled, check if we need to execute it.
-    data.status = pFunc(data.event, data.line);
+    // FIXME TD-er: Must change command function signature to use const String&
+    data.status = pFunc(data.event, data.line.c_str());
     return true;
   }
   return false;
@@ -583,24 +585,28 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   delay(0);
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("Command: ");
-    log += cmd;
-    addLog(LOG_LEVEL_DEBUG, log);
+    {
+      String log = F("Command: ");
+      log += cmd;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    String parameters;
-    parameters.reserve(64);
-    parameters += F("Par1: ");
-    parameters += TempEvent.Par1;
-    parameters += F(" Par2: ");
-    parameters += TempEvent.Par2;
-    parameters += F(" Par3: ");
-    parameters += TempEvent.Par3;
-    parameters += F(" Par4: ");
-    parameters += TempEvent.Par4;
-    parameters += F(" Par5: ");
-    parameters += TempEvent.Par5;
-    addLog(LOG_LEVEL_DEBUG, parameters);
+    {
+      String parameters;
+      parameters.reserve(64);
+      parameters += F("Par1: ");
+      parameters += TempEvent.Par1;
+      parameters += F(" Par2: ");
+      parameters += TempEvent.Par2;
+      parameters += F(" Par3: ");
+      parameters += TempEvent.Par3;
+      parameters += F(" Par4: ");
+      parameters += TempEvent.Par4;
+      parameters += F(" Par5: ");
+      parameters += TempEvent.Par5;
+      addLogMove(LOG_LEVEL_DEBUG, parameters);
+    }
 #endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -638,7 +644,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
         log += action;
         log += F(" to: ");
         log += tmpAction;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #endif

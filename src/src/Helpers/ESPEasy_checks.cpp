@@ -28,6 +28,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 
 #include <cstddef>
 
@@ -100,9 +101,9 @@ void run_compiletime_checks() {
   // Has to be round up to multiple of 4.
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  const unsigned int LogStructSize = ((13u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #else
-  const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  const unsigned int LogStructSize = ((13u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
@@ -178,13 +179,11 @@ void run_compiletime_checks() {
 #ifndef LIMIT_BUILD_SIZE
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
-
-  error.reserve(48 + structname.length());
-  error  = F("Error: Incorrect offset in struct: ");
-  error += structname;
-  error += '(';
-  error += String(offset);
-  error += ')';
+  if (error.reserve(48 + structname.length())) {
+    error  = F("Error: Incorrect offset in struct: ");
+    error += structname;
+    error += wrap_braces(String(offset));
+  }
   return error;
 }
 #endif
@@ -194,7 +193,7 @@ String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
 *  Not a member function to be able to use the F-macro
 \*********************************************************************************************/
 bool SettingsCheck(String& error) {
-  error = "";
+  error = String();
   #ifndef LIMIT_BUILD_SIZE
 #ifdef esp8266
   size_t offset = offsetof(SettingsStruct, ResetFactoryDefaultPreference);

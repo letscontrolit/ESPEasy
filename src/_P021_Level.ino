@@ -76,9 +76,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(F("Check Value"));
       addTaskValueSelect(F("p021_value"), PCONFIG(1), PCONFIG(0));
 
-      addFormTextBox(F("Set Level"),  F("p021_setvalue"), String(PCONFIG_FLOAT(0)), 8);
+      addFormTextBox(F("Set Level"),  F("p021_setvalue"), toString(PCONFIG_FLOAT(0)), 8);
 
-      addFormTextBox(F("Hysteresis"), F("p021_hyst"),     String(PCONFIG_FLOAT(1)), 8);
+      addFormTextBox(F("Hysteresis"), F("p021_hyst"),     toString(PCONFIG_FLOAT(1)), 8);
 
       addFormCheckBox(F("Save 'Set Level' after change via <tt>config</tt> command"), F("p021_save_always"), PCONFIG(2) == 0); // inverted
                                                                                                                                // flag!
@@ -168,7 +168,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("LEVEL: State ");
           log += state;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         switchstate[event->TaskIndex] = state;
         digitalWrite(CONFIG_PIN1, state);

@@ -45,9 +45,9 @@ private:
   unsigned long max_queue_length;
 
   // Compute idle system time
-  unsigned long last_exec_time_usec;
-  unsigned long total_idle_time_usec;
-  unsigned long last_log_start_time;
+  uint64_t last_exec_time_usec;
+  uint64_t total_idle_time_usec;
+  uint32_t last_log_start_time;
   float         idle_time_pct;
   bool          is_idle;
   bool          eco_mode;

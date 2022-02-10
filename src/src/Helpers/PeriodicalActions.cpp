@@ -150,13 +150,13 @@ void runOncePerSecond()
       event.reserve(21);
       event  = F("Clock#Time=");
       event += node_time.weekday_str();
-      event += ",";
+      event += ',';
 
       if (node_time.hour() < 10) {
         event += '0';
       }
       event += node_time.hour();
-      event += ":";
+      event += ':';
 
       if (node_time.minute() < 10) {
         event += '0';
@@ -196,31 +196,32 @@ void runEach30Seconds()
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(80);
-    log = F("WD   : Uptime ");
-    log += getUptimeMinutes();
-    log += F(" ConnectFailures ");
-    log += WiFiEventData.connectionFailures;
-    log += F(" FreeMem ");
-    log += FreeMem();
-    #ifdef HAS_ETHERNET
-    if(active_network_medium == NetworkMedium_t::Ethernet) {
-      log += F( " EthSpeedState ");
-      log += getValue(LabelType::ETH_SPEED_STATE);
-    } else {
+    if (log.reserve(80)) {
+      log = F("WD   : Uptime ");
+      log += getUptimeMinutes();
+      log += F(" ConnectFailures ");
+      log += WiFiEventData.connectionFailures;
+      log += F(" FreeMem ");
+      log += FreeMem();
+      #ifdef HAS_ETHERNET
+      if(active_network_medium == NetworkMedium_t::Ethernet) {
+        log += F( " EthSpeedState ");
+        log += getValue(LabelType::ETH_SPEED_STATE);
+      } else {
+        log += F(" WiFiStatus ");
+        log += ArduinoWifiStatusToString(WiFi.status());
+      }
+      #else
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
-    }
-    #else
-    log += F(" WiFiStatus ");
-    log += ArduinoWifiStatusToString(WiFi.status());
-    #endif
-    log += F(" ESPeasy internal wifi status: ");
-    log += ESPeasyWifiStatusToString();
+      #endif
+      log += F(" ESPeasy internal wifi status: ");
+      log += ESPeasyWifiStatusToString();
 
-//    log += F(" ListenInterval ");
-//    log += WiFi.getListenInterval();
-    addLog(LOG_LEVEL_INFO, log);
+  //    log += F(" ListenInterval ");
+  //    log += WiFi.getListenInterval();
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
   WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);
@@ -303,7 +304,7 @@ void processMQTTdelayQueue() {
       String log = F("MQTT : process MQTT queue not published, ");
       log += MQTTDelayHandler->sendQueue.size();
       log += F(" items left in queue");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -319,7 +320,7 @@ void updateMQTTclient_connected() {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String connectionError = F("MQTT : Connection lost, state: ");
         connectionError += getMQTT_state();
-        addLog(LOG_LEVEL_ERROR, connectionError);
+        addLogMove(LOG_LEVEL_ERROR, connectionError);
       }
       MQTTclient_must_send_LWT_connected = false;
     } else {
@@ -395,7 +396,7 @@ void logTimerStatistics() {
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
     queueLog += Scheduler.getQueueStats();
-    addLog(loglevel, queueLog);
+    addLogMove(loglevel, queueLog);
   }
 #endif
 }
@@ -420,7 +421,7 @@ void updateLoopStats_30sec(uint8_t loglevel) {
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
     log += loopCounterLast;
-    addLog(loglevel, log);
+    addLogMove(loglevel, log);
   }
 #endif
   loop_usec_duration_total = 0;

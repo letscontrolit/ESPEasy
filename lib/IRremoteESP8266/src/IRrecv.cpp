@@ -22,8 +22,8 @@ extern "C" {
 #include "IRutils.h"
 
 #ifdef UNIT_TEST
-#undef ICACHE_RAM_ATTR
-#define ICACHE_RAM_ATTR
+#undef IRAM_ATTR
+#define IRAM_ATTR
 #endif
 
 #ifndef USE_IRAM_ATTR
