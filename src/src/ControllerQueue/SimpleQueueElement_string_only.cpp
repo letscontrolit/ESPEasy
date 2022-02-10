@@ -6,10 +6,15 @@ simple_queue_element_string_only::simple_queue_element_string_only(int ctrl_idx,
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  #endif
-
-  // Copy in the scope of the constructor, so we might store it in the 2nd heap
+  if (req.length() > 0 && !mmu_is_iram(&(req[0]))) {
+    // The string was not allocated on the 2nd heap, so copy instead of move
+    txt = req;
+  } else {
+    txt = std::move(req);
+  }
+  #else
   txt = std::move(req);
+  #endif
 }
 
 size_t simple_queue_element_string_only::getSize() const {

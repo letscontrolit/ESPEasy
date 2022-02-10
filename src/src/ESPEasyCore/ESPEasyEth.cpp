@@ -44,7 +44,7 @@ void ethSetupStaticIPconfig() {
     log += formatIP(subnet);
     log += F(" DNS: ");
     log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   ETH.config(ip, gw, subnet, dns);
 }
@@ -86,7 +86,7 @@ void ethPrintSettings() {
       log += String(Settings.ETH_Pin_mdio);
       log += F(" Power Pin: ");
       log += String(Settings.ETH_Pin_power);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 }

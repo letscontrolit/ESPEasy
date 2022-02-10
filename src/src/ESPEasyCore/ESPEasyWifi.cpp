@@ -343,7 +343,7 @@ void WiFiConnectRelaxed() {
         log += F(" DHCP_t/o");
       }
       
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return;
   }
@@ -390,7 +390,7 @@ void AttemptWiFiConnect() {
       log += candidate.toString();
       log += F(" attempt #");
       log += WiFiEventData.wifi_connect_attempt;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
@@ -514,7 +514,7 @@ bool checkAndResetWiFi() {
 
   // Call for reset first, to make sure a syslog call will not try to send.
   resetWiFi();
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   return true;
 }
 
@@ -691,7 +691,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
           log += toString(rssi, 0);
           log += F("dBm");
         }
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
   }
@@ -813,7 +813,7 @@ bool WiFiScanAllowed() {
         log += F(" DHCP_t/o");
       }
       
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return false;
   }
@@ -867,7 +867,7 @@ void WifiScan(bool async, uint8_t channel) {
       String log;
       log = F("WiFi : Start network scan channel ");
       log += channel;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   bool show_hidden         = true;
@@ -1040,7 +1040,7 @@ void setAPinternal(bool enable)
         log += softAPSSID;
         log += F(" with address ");
         log += WiFi.softAPIP().toString();
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -1048,7 +1048,7 @@ void setAPinternal(bool enable)
         log += softAPSSID;
         log += F(" IP: ");
         log += apIP.toString();
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #ifdef ESP32
@@ -1314,7 +1314,7 @@ void setupStaticIPconfig() {
     log += formatIP(subnet);
     log += F(" DNS: ");
     log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   WiFi.config(ip, gw, subnet, dns);
 }
@@ -1352,7 +1352,7 @@ void logConnectionStatus() {
       log += SDKwifiStatusToString(sdk_wifistatus);
       log += F(" Arduino status: ");
       log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   #endif
@@ -1362,7 +1362,7 @@ void logConnectionStatus() {
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += WiFiEventData.ESPeasyWifiStatusToString();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 /*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

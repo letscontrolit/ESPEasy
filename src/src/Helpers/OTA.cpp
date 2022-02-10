@@ -102,7 +102,7 @@ void ArduinoOTAInit()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("OTA  : Arduino OTA enabled on port ");
     log += ARDUINO_OTA_PORT;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 

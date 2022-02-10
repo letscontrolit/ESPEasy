@@ -34,7 +34,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
       log += F(" RAW: ");
       log += raw_packed;
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (raw_packed.length() > 0) {

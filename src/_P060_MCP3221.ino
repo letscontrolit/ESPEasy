@@ -159,7 +159,7 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;

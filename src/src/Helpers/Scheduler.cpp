@@ -686,7 +686,7 @@ static bool checkRulesTimerIndex(unsigned int timerIndex) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("TIMER: invalid timer number ");
       log += timerIndex;
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return false;
   }

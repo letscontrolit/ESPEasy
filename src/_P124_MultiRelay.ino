@@ -196,11 +196,13 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P124_data->isInitialized()) {
-        String log;
-        log.reserve(46);
-        log  = F("MultiRelay: Initialized, firmware version: ");
-        log += P124_data->getFirmwareVersion();
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          log.reserve(46);
+          log  = F("MultiRelay: Initialized, firmware version: ");
+          log += P124_data->getFirmwareVersion();
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
 
         if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS) &&
             (!bitRead(P124_InitializedRelays, event->TaskIndex) ||
@@ -288,13 +290,15 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
 
       # ifdef P124_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, string);
-      String log = F("Par1..3:");
-      log += event->Par1;
-      log += ',';
-      log += event->Par2;
-      log += ',';
-      log += event->Par3;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("Par1..3:");
+        log += event->Par1;
+        log += ',';
+        log += event->Par2;
+        log += ',';
+        log += event->Par3;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       # endif // ifdef P124_DEBUG_LOG
 
       String command = parseString(string, 1);

@@ -279,7 +279,7 @@ void transformValue(
             }
 
             if (value == F("0")) {
-              value.clear();
+              value = String();
             } else {
               const int valueLength = value.length();
 
@@ -509,7 +509,7 @@ void transformValue(
           logFormatted += newString;
           logFormatted += value;
           logFormatted += '\'';
-          addLog(LOG_LEVEL_DEBUG, logFormatted);
+          addLogMove(LOG_LEVEL_DEBUG, logFormatted);
         }
 #endif // ifndef BUILD_NO_DEBUG
       }
@@ -526,7 +526,7 @@ void transformValue(
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
       logParsed += '\'';
-      addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+      addLogMove(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -667,7 +667,7 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
     format    = valueName.substring(hashpos + 1);
     valueName = valueName.substring(0, hashpos);
   } else {
-    format.clear();
+    format = String();
   }
   deviceName.toLowerCase();
   valueName.toLowerCase();

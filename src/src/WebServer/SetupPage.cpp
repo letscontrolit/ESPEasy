@@ -119,7 +119,7 @@ void handle_setup() {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
                 reconnectlog += ssid;
-                addLog(LOG_LEVEL_INFO, reconnectlog);
+                addLogMove(LOG_LEVEL_INFO, reconnectlog);
               }
               status       = HANDLE_SETUP_CONNECTING_STAGE;
               refreshCount = 0;

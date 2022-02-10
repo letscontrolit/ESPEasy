@@ -24,19 +24,31 @@ void checkRAM(const String &flashString, int a ) {
   checkRAM(flashString, String(a));
 }
 
+void checkRAM(const __FlashStringHelper * flashString, const String& a) {
+  checkRAM(String(flashString), a);
+}
+
+void checkRAM(const __FlashStringHelper * flashString, const __FlashStringHelper * a) {
+  String s = flashString;
+  s += F(" (");
+  s += a;
+  s += ')';
+  checkRAM(std::move(s));
+}
+
 void checkRAM(const String& flashString, const String &a ) {
   String s = flashString;
   s += F(" (");
   s += a;
   s += ')';
-  checkRAM(s);
+  checkRAM(std::move(s));
 }
 
 void checkRAM(const __FlashStringHelper * descr ) {
   checkRAM(String(descr));
 }
 
-void checkRAM(const String& descr ) {
+void checkRAM(String&& descr ) {
   if (Settings.EnableRAMTracking())
     myRamTracker.registerRamState(descr);
   
@@ -44,12 +56,12 @@ void checkRAM(const String& descr ) {
   if (freeRAM <= lowestRAM)
   {
     lowestRAM = freeRAM;
-    lowestRAMfunction = descr;
+    lowestRAMfunction = std::move(descr);
   }
   uint32_t freeStack = getFreeStackWatermark();
   if (freeStack <= lowestFreeStack) {
     lowestFreeStack = freeStack;
-    lowestFreeStackfunction = descr;
+    lowestFreeStackfunction = std::move(descr);
   }
 }
 
@@ -81,7 +93,7 @@ RamTracker::RamTracker(void) {
   writePtr = 0;
 
   for (int i = 0; i < TRACES; i++) {
-    traces[i].clear();
+    traces[i] = String();
     tracesMemory[i] = 0xffffffff; // init with best case memory values, so they get replaced if memory goes lower
   }
 
@@ -97,7 +109,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
   int bestCase = bestCaseTrace();                      // find best case memory trace
 
   if (ESP.getFreeHeap() < tracesMemory[bestCase]) {    // compare to current memory value
-    traces[bestCase].clear();
+    traces[bestCase] = String();
     readPtr          = writePtr + 1;                   // read out buffer, oldest value first
 
     if (readPtr >= TRACEENTRIES) { 
@@ -134,8 +146,8 @@ void RamTracker::getTraceBuffer() {
       retval += String(tracesMemory[i]);
       retval += ' ';
       retval += traces[i];
-      addLog(LOG_LEVEL_DEBUG_DEV, retval);
-      retval.clear();
+      addLogMove(LOG_LEVEL_DEBUG_DEV, retval);
+      retval = String();
     }
   }
 #endif // ifndef BUILD_NO_DEBUG

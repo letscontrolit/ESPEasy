@@ -199,7 +199,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (!isvalid) {
             // send empty string to Blynk in case of error
-            formattedValue = EMPTY_STRING;
+            formattedValue = String();
           }
 
           String valueName     = ExtraTaskSettings.TaskDeviceValueNames[x];
@@ -229,7 +229,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
               log += F(", got not valid value: ");
               log += vPinNumberStr;
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           element.vPin[x] = vPinNumber;
           element.txt[x]  = formattedValue;
@@ -321,8 +321,10 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
       String hostName = ControllerSettings.getHost();
 
       if (!hostName.isEmpty()) {
-        log += F("Connecting to custom blynk server ");
-        log += ControllerSettings.getHostPortString();
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          log += F("Connecting to custom blynk server ");
+          log += ControllerSettings.getHostPortString();
+        }
         Blynk.config(auth.c_str(),
                      CPlugin_015_handleInterrupt,
                      hostName.c_str(),
@@ -333,7 +335,9 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
                      );
       }
       else {
-        log           += F("Custom blynk server name not specified. ");
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          log += F("Custom blynk server name not specified. ");
+        }
         connectDefault = true;
       }
     }
@@ -341,8 +345,10 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
       IPAddress ip = ControllerSettings.getIP();
 
       if ((ip[0] + ip[1] + ip[2] + ip[3]) > 0) {
-        log += F("Connecting to custom blynk server ");
-        log += ControllerSettings.getHostPortString();
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          log += F("Connecting to custom blynk server ");
+          log += ControllerSettings.getHostPortString();
+        }
         Blynk.config(auth.c_str(),
                      CPlugin_015_handleInterrupt,
                      ip,
@@ -353,11 +359,13 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
                      );
       }
       else {
-        log           += F("Custom blynk server ip not specified. ");
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          log += F("Custom blynk server ip not specified. ");
+        }
         connectDefault = true;
       }
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
 
     if (connectDefault) {
       addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "Connecting to default server"));
@@ -417,7 +425,7 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char *Line) {
     log += vPin;
     log += F(" = ");
     log += data;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   Blynk.virtualWrite(vPin, data);
@@ -446,7 +454,7 @@ BLYNK_WRITE_DEFAULT() {
     log += vPin;
     log += F(" to ");
     log += pinValue;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (Settings.UseRules) {

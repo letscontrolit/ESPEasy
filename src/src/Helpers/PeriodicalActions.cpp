@@ -222,7 +222,7 @@ void runEach30Seconds()
 
 //    log += F(" ListenInterval ");
 //    log += WiFi.getListenInterval();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);
@@ -305,7 +305,7 @@ void processMQTTdelayQueue() {
       String log = F("MQTT : process MQTT queue not published, ");
       log += MQTTDelayHandler->sendQueue.size();
       log += F(" items left in queue");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -321,7 +321,7 @@ void updateMQTTclient_connected() {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String connectionError = F("MQTT : Connection lost, state: ");
         connectionError += getMQTT_state();
-        addLog(LOG_LEVEL_ERROR, connectionError);
+        addLogMove(LOG_LEVEL_ERROR, connectionError);
       }
       MQTTclient_must_send_LWT_connected = false;
     } else {
@@ -397,7 +397,7 @@ void logTimerStatistics() {
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
     queueLog += Scheduler.getQueueStats();
-    addLog(loglevel, queueLog);
+    addLogMove(loglevel, queueLog);
   }
 #endif
 }
@@ -422,7 +422,7 @@ void updateLoopStats_30sec(uint8_t loglevel) {
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
     log += loopCounterLast;
-    addLog(loglevel, log);
+    addLogMove(loglevel, log);
   }
 #endif
   loop_usec_duration_total = 0;

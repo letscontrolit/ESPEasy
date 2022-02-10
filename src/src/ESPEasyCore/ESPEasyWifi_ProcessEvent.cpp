@@ -166,7 +166,7 @@ void handle_unprocessedNetworkEvents()
           #ifdef ESP32
           wifilog += ArduinoWifiStatusToString(WiFi.status());
           #endif
-          addLog(LOG_LEVEL_DEBUG, wifilog);
+          addLogMove(LOG_LEVEL_DEBUG, wifilog);
         }
       }
       #endif // ifndef BUILD_NO_DEBUG
@@ -240,7 +240,7 @@ void processDisconnect() {
     } else {
       log += F(" Connected for a long time...");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
 
@@ -321,7 +321,7 @@ void processConnect() {
       log += String(static_cast<int32_t>(connect_duration / 1000));
       log += F(" ms");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (Settings.UseRules) {
@@ -387,7 +387,7 @@ void processGotIP() {
       log += static_cast<int32_t>(dhcp_duration / 1000);
       log += F(" ms");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   // Might not work in core 2.5.0
@@ -399,7 +399,7 @@ void processGotIP() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("IP   : Fixed IP octet:");
       log += formatIP(ip);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }
@@ -450,7 +450,7 @@ void processDisconnectAPmode() {
     log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 
@@ -466,7 +466,7 @@ void processConnectAPmode() {
     log += WiFiEventData.lastMacConnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   #ifdef FEATURE_DNS_SERVER
@@ -529,7 +529,7 @@ void processScanDone() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WiFi : Scan finished, found: ");
     log += scanCompleteStatus;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
@@ -613,7 +613,7 @@ void processEthernetGotIP() {
         log += F(" ms");
       }
 
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 
