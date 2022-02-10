@@ -45,8 +45,6 @@ uint8_t getWebLogLevel();
 bool loglevelActiveFor(uint8_t destination, uint8_t logLevel);
 
 
-bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings);
-
 void addLog(uint8_t logLevel, const __FlashStringHelper *str);
 void addLog(uint8_t logLevel, const char *line);
 void addLog(uint8_t logLevel, String&& string);

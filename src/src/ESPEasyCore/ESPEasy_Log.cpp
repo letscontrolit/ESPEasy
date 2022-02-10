@@ -107,7 +107,7 @@ void updateLogLevelCache() {
 }
 
 bool loglevelActiveFor(uint8_t logLevel) {
-  return loglevelActive(logLevel, highest_active_log_level);
+  return logLevel <= highest_active_log_level;
 }
 
 uint8_t getSerialLogLevel() {
@@ -156,12 +156,7 @@ bool loglevelActiveFor(uint8_t destination, uint8_t logLevel) {
     default:
       return false;
   }
-  return loglevelActive(logLevel, logLevelSettings);
-}
-
-
-bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings) {
-  return (logLevel <= logLevelSettings);
+  return logLevel <= logLevelSettings;
 }
 
 void addLog(uint8_t logLevel, const __FlashStringHelper *str)

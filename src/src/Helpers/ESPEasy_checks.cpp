@@ -95,9 +95,9 @@ void run_compiletime_checks() {
   // Has to be round up to multiple of 4.
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
-  const unsigned int LogStructSize = ((12u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  const unsigned int LogStructSize = ((13u + 21 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #else
-  const unsigned int LogStructSize = ((12u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
+  const unsigned int LogStructSize = ((13u + 17 * LOG_STRUCT_MESSAGE_LINES) + 3) & ~3;
   #endif
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
