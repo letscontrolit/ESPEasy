@@ -100,10 +100,10 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("AM2320: Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
             log  = F("AM2320: Humidity: ");
             log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           success = true;
           break;

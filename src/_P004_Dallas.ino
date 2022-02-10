@@ -308,7 +308,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 log += F(" (");
                 log += P004_data->get_formatted_address(i);
                 log += ')';
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
             }
             P004_data->set_measurement_inactive();

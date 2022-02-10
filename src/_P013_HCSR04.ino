@@ -203,7 +203,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         }
         log += F(" nr_tasks: ");
         log += P_013_sensordefs.size();
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       success = true;
@@ -239,7 +239,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
             log += Plugin_013_getErrorStatusString(event->TaskIndex);
           }
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       success = true;
@@ -271,7 +271,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
               log += F(" Error: ");
               log += Plugin_013_getErrorStatusString(event->TaskIndex);
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           switchstate[event->TaskIndex] = state;
           UserVar[event->BaseVarIndex]  = state;

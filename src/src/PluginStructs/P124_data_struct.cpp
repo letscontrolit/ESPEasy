@@ -19,11 +19,13 @@ P124_data_struct::P124_data_struct(int8_t  i2c_address,
       uint8_t _new_address = _i2c_address == 0x18 ? 0x11 : _i2c_address + 1; // Set to next address
       relay->changeI2CAddress(_new_address, _i2c_address);
       # ifndef BUILD_NO_DEBUG
-      String log = F("MultiRelay: Change I2C address 0x");
-      log += String(_i2c_address, HEX);
-      log += F(" to 0x");
-      log += String(_new_address, HEX);
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("MultiRelay: Change I2C address 0x");
+        log += String(_i2c_address, HEX);
+        log += F(" to 0x");
+        log += String(_new_address, HEX);
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       # endif // ifndef BUILD_NO_DEBUG
     }
   }

@@ -230,7 +230,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
   if (scanned_new.size() > 0) {
     // We have new scans to process.
     #ifdef USE_SECOND_HEAP
-    // HeapSelectIram ephemeral;
+    HeapSelectIram ephemeral;
     // TD-er: Disabled for now as it is suspect for crashes
     #endif
     purge_expired();
@@ -239,7 +239,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("WiFi : Scan result: ");
         log += scan->toString();
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
       #endif // ifndef BUILD_NO_DEBUG
 
@@ -301,7 +301,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
     if (bestCandidate.usable()) {
       String log = F("WiFi : Best AP candidate: ");
       log += bestCandidate.toString();
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   candidates.sort();

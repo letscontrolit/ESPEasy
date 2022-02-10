@@ -163,10 +163,10 @@ boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("SGP30: TVOC: ");
               log += UserVar[P083_TVOC];
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
               log  = F("SGP30: eCO2: ");
               log += UserVar[P083_ECO2];
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             success = true;
             break;

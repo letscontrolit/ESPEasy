@@ -205,7 +205,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         msgStr  = wolStr;
         msgStr += F("Loaded Default IP = ");
         msgStr += F(IP_STR_DEF_P101);
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
       else if (strlen(ipString) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
         strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
@@ -216,7 +216,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         msgStr   += F("[");
         msgStr   += F(IP_STR_DEF_P101);
         msgStr   += F("]");
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
       else if (!validateIp(ipString)) { // Unexpected IP Address value. Leave as-is, but Warn User.
         msgStr    = F("WARNING, Please Review IP Address. ");
@@ -225,7 +225,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         msgStr   += F("[");
         msgStr   += ipString;
         msgStr   += F("]");
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
 
       // Check MAC Address.
@@ -250,7 +250,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
         msgStr   += F("[");
         msgStr   += macString;
         msgStr   += F("]");
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
 
       // Save the user's IP and MAC Address parameters into Custom Settings.
@@ -340,7 +340,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
           msgStr     += F("Error, MAC Addr Invalid [");
           msgStr     += paramMac;
           msgStr     += F("]");
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
         }
 
         // Validate IP Address.
@@ -350,7 +350,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
           msgStr     += F("Error, IP Addr Invalid [");
           msgStr     += paramIp;
           msgStr     += F("]");
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
         }
 
         // Validate UDP Port.
@@ -360,7 +360,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
           msgStr     += F("Error, Port Invalid [");
           msgStr     += paramPort;
           msgStr     += F("]");
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
         }
 
         // If no errors we can send Magic Packet.
@@ -378,7 +378,7 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
           msgStr += paramIp;
           msgStr += F(", Port= ");
           msgStr += paramPort;
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
 
           // Send Magic Packet.
           if (WiFi.status() == WL_CONNECTED) {
@@ -391,13 +391,13 @@ boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
             if (!WOL.sendMagicPacket(paramMac, paramPort.toInt())) {
               msgStr  = wolStr;
               msgStr += F("Error, Magic Packet Failed (check parameters)");
-              addLog(LOG_LEVEL_INFO, msgStr);
+              addLogMove(LOG_LEVEL_INFO, msgStr);
             }
           }
           else {
             msgStr  = wolStr;
             msgStr += F("Error, WiFi Off-Line");
-            addLog(LOG_LEVEL_INFO, msgStr);
+            addLogMove(LOG_LEVEL_INFO, msgStr);
           }
         }
       }
