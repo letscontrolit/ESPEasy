@@ -88,9 +88,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   }
   #endif // ifdef USES_TIMING_STATS
   {
-    String fileName = tmplName;
-
-    fileName += F(".htm");
+    const String fileName = String(tmplName) + F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
