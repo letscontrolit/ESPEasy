@@ -44,7 +44,7 @@ String getReplacementString(const String& format, String& s) {
     log += R;
     log += F(" offset: ");
     log += ESPEasy_time::getSecOffset(R);
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   return R;

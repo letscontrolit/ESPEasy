@@ -536,7 +536,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
     log += iLinesPerFrame;
     log += F(" DefaultLines:");
     log += lDefaultLines;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 # endif // PLUGIN_036_DEBUG
   
@@ -580,12 +580,12 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   int iCharToRemove;
 
 # ifdef PLUGIN_036_DEBUG
-  if (loglevelActive(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     if (log.reserve(128)) { // estimated
       log = F("Start Scrolling: Speed: ");
       log += static_cast<int>(lscrollspeed);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 # endif // PLUGIN_036_DEBUG
@@ -604,11 +604,11 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   int iScrollTime = static_cast<float>(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100; // scrollTime in ms
 
 # ifdef PLUGIN_036_DEBUG
-  if (loglevelActive(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log  = F("PageScrollTime: ");
     log += iPageScrollTime;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 # endif // PLUGIN_036_DEBUG
 
@@ -665,7 +665,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingLines.Line[j].dPix = (static_cast<float>(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / iScrollTime;
 
 # ifdef PLUGIN_036_DEBUG
-        if (loglevelActive(LOG_LEVEL_INFO)) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
           if (log.reserve(128)) { // estimated
             log  = String(F("Line: ")) + String(j + 1);
@@ -673,7 +673,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
             log += ScrollingLines.Line[j].Width;
             log += F(" dPix: ");
             log += ScrollingLines.Line[j].dPix;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
 # endif // PLUGIN_036_DEBUG
@@ -702,7 +702,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(iCharToRemove);
       }
 # ifdef PLUGIN_036_DEBUG
-      if (loglevelActive(LOG_LEVEL_INFO)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         if (log.reserve(128)) { // estimated
           log  = String(F("Line: ")) + String(j + 1);
@@ -711,11 +711,11 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
           log += String(F(" PixLength: ")) + String(PixLengthLineIn);
           log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
           log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = String(F(" -> Changed to: ")) + String(ScrollingPages.LineIn[j]);
           log += String(F(" Length: ")) + String(ScrollingPages.LineIn[j].length());
           log += String(F(" PixLength: ")) + String(display->getStringWidth(ScrollingPages.LineIn[j]));
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
 # endif // PLUGIN_036_DEBUG
@@ -748,7 +748,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
       }
 # ifdef PLUGIN_036_DEBUG
-      if (loglevelActive(LOG_LEVEL_INFO)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         if (log.reserve(128)) { // estimated
           log  = String(F("Line: ")) + String(j + 1);
@@ -757,11 +757,11 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
           log += String(F(" PixLength: ")) + String(PixLengthLineOut);
           log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
           log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = String(F(" -> Changed to: ")) + String(ScrollingPages.LineOut[j]);
           log += String(F(" Length: ")) + String(ScrollingPages.LineOut[j].length());
           log += String(F(" PixLength: ")) + String(display->getStringWidth(ScrollingPages.LineOut[j]));
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
 # endif // PLUGIN_036_DEBUG

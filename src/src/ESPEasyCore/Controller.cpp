@@ -76,7 +76,7 @@ void sendData(struct EventStruct *event)
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
           log += getCPluginNameFromProtocolIndex(ProtocolIndex);
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       }
 #endif // ifndef BUILD_NO_DEBUG
@@ -440,7 +440,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     String log = F("MQTT : Connected to broker with client ID: ");
 
     log += clientid;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   #ifdef USE_MQTT_TLS
@@ -451,10 +451,11 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     log += ControllerSettings.getHost();
     log += ' ';
     log += mqtt_tls->getPeerCertificateInfo();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #endif
   #endif
+
   String subscribeTo = ControllerSettings.Subscribe;
 
   parseSystemVariables(subscribeTo, false);
@@ -463,7 +464,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   {
     String log  = F("Subscribed to: ");
     log += subscribeTo;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   updateMQTTclient_connected();

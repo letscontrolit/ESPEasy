@@ -19,7 +19,7 @@ void ModbusRTU_struct::reset() {
     delete easySerial;
     easySerial = nullptr;
   }
-  detected_device_description.clear();
+  detected_device_description = String();
 
   for (int i = 0; i < 8; ++i) {
     _sendframe[i] = 0;
@@ -62,7 +62,7 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log; // = F("Modbus detected: ");
     log += detected_device_description;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     modbus_log_MEI(_modbus_address);
   }
   return true;
@@ -618,7 +618,7 @@ void ModbusRTU_struct::modbus_log_MEI(uint8_t slaveAddress) {
         String log = MEI_objectid_to_name(object_id);
         log += F(": ");
         log += result;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
       switch (process_result) {

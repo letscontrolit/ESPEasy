@@ -67,7 +67,7 @@ String FileError(int line, const char *fname)
   err += fname;
   err += F(" in ");
   err += line;
-  addLog(LOG_LEVEL_ERROR, err);
+  addLogMove(LOG_LEVEL_ERROR, err);
   return err;
 }
 
@@ -348,10 +348,10 @@ void fileSystemCheck()
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FS   : Mount successful, used ");
-      log = log + fs_info.usedBytes;
-      log = log + F(" bytes of ");
-      log = log + fs_info.totalBytes;
-      addLog(LOG_LEVEL_INFO, log);
+      log += fs_info.usedBytes;
+      log += F(" bytes of ");
+      log += fs_info.totalBytes;
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     // Run garbage collection before any file is open.
@@ -375,7 +375,7 @@ void fileSystemCheck()
   {
     String log = F("FS   : Mount failed");
     serialPrintln(log);
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
 }
@@ -616,7 +616,7 @@ bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int
     log += SettingsType::getSettingsTypeString(settingsType);
     log += F(" index: ");
     log += index;
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   return SettingsType::getSettingsParameters(settingsType, index, offset, max_size);
@@ -684,7 +684,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
             #endif
 
             strings[stringCount] = tmpString;
-            tmpString.clear();
+            tmpString = String();
             tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
@@ -1218,7 +1218,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack: ");
     log += getCurrentFreeStack();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #endif
   delay(1);
@@ -1262,7 +1262,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
       log += index;
       log += F(" size: ");
       log += datasize;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     #endif
   } else {
@@ -1282,7 +1282,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack after: ");
     log += getCurrentFreeStack();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #endif
 

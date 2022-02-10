@@ -165,7 +165,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           log += tmppubname;
           log += ' ';
           log += value;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
 # endif // ifndef BUILD_NO_DEBUG
 
