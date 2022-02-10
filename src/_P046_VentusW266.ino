@@ -334,6 +334,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             }
             P046_data->Plugin_046_MasterSlave = false;
             P046_data->Plugin_046_newData = false;
+            #ifndef BUILD_NO_DEBUG
             if (PLUGIN_046_DEBUG) {
               String log = F("Ventus W266 Rcvd(");
               log += node_time.getTimeString(':');
@@ -356,8 +357,9 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
               myHex = (crc & 0x0f) + 0x30;
               if (myHex > 0x39) { myHex += 7; }
               log += myHex;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
+            #endif
             if (crc != 00)
             {
               P046_data->Plugin_046_databuffer[0] = 0;                   // Not MagicByte, so not valid.

@@ -51,7 +51,7 @@ void handle_rules() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Rules : Create new file: ");
       log += fileName;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     fs::File f = tryOpenFile(fileName, "w");
 

@@ -997,7 +997,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
             log += F(" Reserved:");
             log += P036_data->DisplayLinesV1[LineNo - 1].reserved;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 #endif // PLUGIN_036_DEBUG
         }
@@ -1011,7 +1011,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         log += subcommand;
         log += F(" Success:");
         log += success ? F("true") : F("false");
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 #endif // PLUGIN_036_DEBUG
       break;

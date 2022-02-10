@@ -48,7 +48,7 @@ struct P099_data_struct : public PluginTaskData_base
   void setRotationFlipped(bool _flipped);
   bool isCalibrationActive();
   bool isValidAndTouchedTouchObject(uint16_t x, uint16_t y, String &selectedObjectName, int &selectedObjectIndex, uint8_t checkObjectCount);
-  bool setTouchObjectState(String touchObject, bool state, uint8_t checkObjectCount);
+  bool setTouchObjectState(const String& touchObject, bool state, uint8_t checkObjectCount);
   void scaleRawToCalibrated(uint16_t &x, uint16_t &y);
 
   // This is initialized by calling init()

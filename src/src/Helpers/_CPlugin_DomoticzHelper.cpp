@@ -172,7 +172,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
         log += static_cast<uint8_t>(event->sensorType);
         log += F(" idx: ");
         log += event->idx;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       # endif // ifndef BUILD_NO_DEBUG
       break;
@@ -196,7 +196,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       log += event->idx;
       log += F(" values: ");
       log += values;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
   }

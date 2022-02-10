@@ -315,7 +315,7 @@ void P073_data_struct::NextScroll() {
 }
 
 void P073_data_struct::setTextToScroll(const String& text) {
-  _textToScroll.clear();
+  _textToScroll = String();
 
   if (!text.isEmpty()) {
     const int bufToFill = getBufferLength(displayModel);
@@ -386,7 +386,7 @@ void P073_data_struct::LogBufferContent(String prefix) {
       log += ',';
       log += showperiods[i] ? F(".") : F("");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 

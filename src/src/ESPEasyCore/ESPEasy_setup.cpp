@@ -170,10 +170,10 @@ void ESPEasy_setup()
     log += F(" (");
     log += getSystemLibraryString();
     log += ')';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     log  = F("INIT : Free RAM:");
     log += FreeMem();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   readBootCause();
@@ -218,7 +218,7 @@ void ESPEasy_setup()
     RTC.deepSleepState = 0;
     saveToRTC();
 
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("RTC init"));
@@ -322,7 +322,7 @@ void ESPEasy_setup()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log  = F("INIT : Free RAM:");
     log += FreeMem();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
@@ -355,7 +355,7 @@ void ESPEasy_setup()
     log += F(" (");
     log += getSystemLibraryString();
     log += ')';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (deviceCount + 1 >= PLUGIN_MAX) {
@@ -447,8 +447,7 @@ void ESPEasy_setup()
 
   if (UseRTOSMultitasking) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("RTOS : Launching tasks");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("RTOS : Launching tasks"));
     }
     xTaskCreatePinnedToCore(RTOS_TaskServers, "RTOS_TaskServers", 16384, nullptr, 1, nullptr, 1);
     xTaskCreatePinnedToCore(RTOS_TaskSerial,  "RTOS_TaskSerial",  8192,  nullptr, 1, nullptr, 1);

@@ -286,7 +286,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) 
   */
 
   case PLUGIN_READ: {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
+    #endif
     //        sendData(event);
     //        Variables set in PLUGIN_SERIAL_IN as soon as there are new values!
     //        UserVar[event->BaseVarIndex] = energy_voltage;
@@ -303,49 +305,50 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) 
       success = true;
       /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
       if (P077_data->processSerialData()) {
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
         if (CseReceived(event)) {
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
             String log = F("CSE: adjustment ");
             log += P077_data->adjustment;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: voltage_cycle ");
             log += P077_data->voltage_cycle;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: current_cycle ");
             log += P077_data->current_cycle;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: power_cycle ");
             log += P077_data->power_cycle;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: cf_pulses ");
             log += P077_data->cf_pulses;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
           }
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("CSE voltage: ");
             log += P077_data->energy_voltage;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
             log = F("CSE power: ");
             log += P077_data->energy_power;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
             log = F("CSE current: ");
             log += P077_data->energy_current;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
             log = F("CSE pulses: ");
             log += P077_data->cf_pulses;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
         }
-
+        #endif
         // new packet received, update values
         UserVar[event->BaseVarIndex] = P077_data->energy_voltage;
         UserVar[event->BaseVarIndex + 1] = P077_data->energy_power;
         UserVar[event->BaseVarIndex + 2] = P077_data->energy_current;
         UserVar[event->BaseVarIndex + 3] = P077_data->cf_pulses;
 
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("CSE: time ");
           log += P077_data->t_max;
@@ -353,18 +356,19 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) 
           log += P077_data->t_pkt;
           log += '/';
           log += P077_data->t_all;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
           log = F("CSE: bytes ");
           log += P077_data->count_bytes;
           log += '/';
           log += P077_data->count_max;
           log += '/';
           log += Serial.available();
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
           log = F("CSE: nr ");
           log += P077_data->count_pkt;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+#endif
         P077_data->t_all = 0;
         P077_data->count_bytes = 0;
       }
@@ -381,7 +385,9 @@ bool CseReceived(struct EventStruct *event) {
     return false;
   }
   if (!P077_data->processCseReceived(event)) {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
+    #endif
     return false;
   }
   return true;
