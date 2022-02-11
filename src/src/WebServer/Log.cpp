@@ -78,7 +78,7 @@ void handle_log_JSON() {
     if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
       addHtml('{');
       stream_next_json_object_value(F("timestamp"), lastTimeStamp);
-      stream_next_json_object_value(F("text"),  message);
+      stream_next_json_object_value(F("text"),  std::move(message));
       stream_last_json_object_value(F("level"), loglevel);
       if (logLinesAvailable) {
         addHtml(',', '\n');

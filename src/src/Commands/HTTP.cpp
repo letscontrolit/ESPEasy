@@ -23,13 +23,15 @@ const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, c
 	if (NetworkConnected()) {
 		const String host = parseString(Line, 2);
 		const int port = parseCommandArgumentInt(Line, 2);
+		#ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Host: ");
 			log += host;
 			log += F(" port: ");
 			log += port;
-			addLog(LOG_LEVEL_DEBUG, log);
+			addLogMove(LOG_LEVEL_DEBUG, log);
 		}
+		#endif
 		if (port < 0 || port > 65535) return return_command_failed();
 		// FIXME TD-er: This is not using the tolerant settings option.
     // String path = tolerantParseStringKeepCase(Line, 4);
@@ -38,7 +40,7 @@ const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, c
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
 			String log = F("SendToHTTP: Path: ");
 			log += path;
-			addLog(LOG_LEVEL_DEBUG, log);
+			addLogMove(LOG_LEVEL_DEBUG, log);
 		}
 #endif
 		WiFiClient client;

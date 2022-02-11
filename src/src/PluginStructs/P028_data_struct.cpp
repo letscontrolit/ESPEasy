@@ -197,7 +197,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   }
 
   if (logAdded && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return true;
 }
@@ -220,9 +220,11 @@ bool P028_data_struct::check() {
         if (sensorID != chip_id) {
           sensorID = static_cast<BMx_ChipId>(chip_id);
           setUninitialized();
-          String log = F("BMx280 : Detected ");
-          log += getFullDeviceName();
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("BMx280 : Detected ");
+            log += getFullDeviceName();
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
         }
       } else {
         sensorID = Unknown_DEVICE;
@@ -241,7 +243,7 @@ bool P028_data_struct::check() {
       log += F(", failed");
     }
     log += ')';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return false;
   }
   return wire_status;

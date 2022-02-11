@@ -597,7 +597,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     log += iLinesPerFrame;
     log += F(" DefaultLines:");
     log += lDefaultLines;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // PLUGIN_036_DEBUG
 
@@ -645,7 +645,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
       log.reserve(128)) { // estimated
-    log  = F("Start Scrolling: Speed: ");
+    log += F("Start Scrolling: Speed: ");
     log += static_cast<int>(lscrollspeed);
     addLog(LOG_LEVEL_INFO, log);
   }
@@ -667,9 +667,10 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   # ifdef PLUGIN_036_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log  = F("PageScrollTime: ");
+    log.clear();
+    log += F("PageScrollTime: ");
     log += iPageScrollTime;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // PLUGIN_036_DEBUG
 
@@ -727,13 +728,14 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         # ifdef PLUGIN_036_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          log  = F("Line: ");
+          log.clear();
+          log += F("Line: ");
           log += (j + 1);
           log += F(" width: ");
           log += ScrollingLines.Line[j].Width;
           log += F(" dPix: ");
           log += ScrollingLines.Line[j].dPix;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // PLUGIN_036_DEBUG
       }
@@ -762,17 +764,19 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
       # ifdef PLUGIN_036_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("Line: "); log += (j + 1);
+        log.clear();
+        log += F("Line: "); log += (j + 1);
         log += F(" LineIn: "); log += LineInStr;
         log += F(" Length: "); log += strlen;
         log += F(" PixLength: "); log += PixLengthLineIn;
         log += F(" AvgPixPerChar: "); log += fAvgPixPerChar;
         log += F(" CharsRemoved: "); log += iCharToRemove;
         addLog(LOG_LEVEL_INFO, log);
-        log  = F(" -> Changed to: "); log += ScrollingPages.LineIn[j];
+        log.clear();
+        log += F(" -> Changed to: "); log += ScrollingPages.LineIn[j];
         log += F(" Length: "); log += ScrollingPages.LineIn[j].length();
         log += F(" PixLength: "); log += display->getStringWidth(ScrollingPages.LineIn[j]);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // PLUGIN_036_DEBUG
     }
@@ -805,17 +809,19 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
       # ifdef PLUGIN_036_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("Line: "); log += (j + 1);
+        log.clear();
+        log += F("Line: "); log += (j + 1);
         log += F(" LineOut: "); log += LineOutStr;
         log += F(" Length: "); log += strlen;
         log += F(" PixLength: "); log += PixLengthLineOut;
         log += F(" AvgPixPerChar: "); log += fAvgPixPerChar;
         log += F(" CharsRemoved: "); log += iCharToRemove;
         addLog(LOG_LEVEL_INFO, log);
-        log  = F(" -> Changed to: "); log += ScrollingPages.LineOut[j];
+        log.clear();
+        log += F(" -> Changed to: "); log += ScrollingPages.LineOut[j];
         log += F(" Length: "); log += ScrollingPages.LineOut[j].length();
         log += F(" PixLength: "); log += display->getStringWidth(ScrollingPages.LineOut[j]);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // PLUGIN_036_DEBUG
     }

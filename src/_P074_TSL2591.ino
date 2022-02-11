@@ -233,7 +233,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
             case TSL2591_GAIN_HIGH: log += F("428x (High)");  break;
             case TSL2591_GAIN_MAX:  log += F("9876x (Max)");  break;
           }
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       } else {
         clearPluginTaskData(event->TaskIndex);
@@ -279,7 +279,7 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
             log += String(ir);
             log += F(" duration: ");
             log += P074_data->duration;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           // Update was succesfull, schedule a read.

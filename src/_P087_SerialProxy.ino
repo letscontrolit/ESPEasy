@@ -210,7 +210,9 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       if ((nullptr != P087_data) && P087_data->getSentence(event->String2)) {
         if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
 //          sendData(event);
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, event->String2);
+#endif
           success = true;
         }
       }
@@ -231,7 +233,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
           String param1 = parseStringKeepCase(string, 2);
           parseSystemVariables(param1, false);
           P087_data->sendString(param1);
-          addLog(LOG_LEVEL_INFO, param1);
+          addLogMove(LOG_LEVEL_INFO, param1);
           success = true;
         }
       }

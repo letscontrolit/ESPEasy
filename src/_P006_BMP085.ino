@@ -103,10 +103,10 @@ boolean Plugin_006(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("BMP  : Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
             log  = F("BMP  : Barometric Pressure: ");
             log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           success = true;
         }

@@ -77,7 +77,7 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
       log += String(initialized() ? F("true") : F("false"));
       log += F(", ID=0x");
       log += String(adxl345->getDevID(), HEX);
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // if PLUGIN_120_DEBUG
   }
@@ -109,7 +109,7 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
       log += _y;
       log += F(", Z: ");
       log += _z;
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // if PLUGIN_120_DEBUG
 
@@ -151,7 +151,7 @@ bool P120_data_struct::read_data(struct EventStruct *event, int& X, int& Y, int&
         log += Y;
         log += F(", Z: ");
         log += Z;
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
     # endif // if PLUGIN_120_DEBUG
@@ -171,15 +171,17 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
 
   if (initialized()) {
     uint8_t act = 0, freeFall = 0, singleTap = 0, doubleTap = 0;
-    String  log = F("ADXL345: Initializing sensor for ");
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String  log = F("ADXL345: Initializing sensor for ");
 
-    if (i2c_mode) {
-      log += F("I2C");
-    } else {
-      log += F("SPI");
+      if (i2c_mode) {
+        log += F("I2C");
+      } else {
+        log += F("SPI");
+      }
+      log += F("...");
+      addLogMove(LOG_LEVEL_INFO, log);
     }
-    log += F("...");
-    addLog(LOG_LEVEL_INFO, log);
     adxl345->powerOn();
     adxl345->setRangeSetting(2 ^ (get2BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_RANGE) + 1)); // Range is stored in 2 bits, only 4 possible
                                                                                               // options
@@ -258,6 +260,7 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
     return false;
   }
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
@@ -273,9 +276,10 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
         log += _cs_pin;
         # endif // ifdef USES_P125
       }
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
+  #endif
 
   return true;
 }

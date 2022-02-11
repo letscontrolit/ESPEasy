@@ -190,7 +190,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("MQTT : ");
           log += json;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
 # endif // ifndef BUILD_NO_DEBUG
 

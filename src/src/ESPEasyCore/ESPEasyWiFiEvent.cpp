@@ -181,7 +181,7 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
       {
         String log = F("UNKNOWN WIFI/ETH EVENT: ");
         log += event;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       break;
   }
@@ -310,7 +310,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       {
         String log = F("UNKNOWN WIFI/ETH EVENT: ");
         log += event;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       break;
   }
@@ -369,7 +369,7 @@ void onWiFiScanDone(void *arg, STATUS status) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("WiFi : Scan finished, found: ");
       log += scanCount;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 

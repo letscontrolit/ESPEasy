@@ -48,9 +48,9 @@ struct C018_data_struct {
       delete C018_easySerial;
       C018_easySerial = nullptr;
     }
-    cacheDevAddr.clear();
-    cacheHWEUI.clear();
-    cacheSysVer.clear();
+    cacheDevAddr = String();
+    cacheHWEUI = String();
+    cacheSysVer = String();
     autobaud_success = false;
   }
 
@@ -204,7 +204,7 @@ struct C018_data_struct {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("sendRawCommand: ");
       log += command;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     String res = myLora->sendRawCommand(command);
 
@@ -347,13 +347,13 @@ private:
         log += command;
         log += F(": ");
         log += error;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
 
   void updateCacheOnInit() {
-    cacheDevAddr.clear();
+    cacheDevAddr = String();
 
     if (isInitialized()) {
       if (myLora->getStatus().Joined)
@@ -361,7 +361,7 @@ private:
         cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
 
         if (cacheDevAddr == F("00000000")) {
-          cacheDevAddr.clear();
+          cacheDevAddr = String();
         }
       }
     }
@@ -410,7 +410,7 @@ private:
         log += response;
         log += F(" status: ");
         log += myLora->sendRawCommand(F("mac get status"));
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         C018_logError(F("autobaud check"));
       }
       --retries;
@@ -924,7 +924,7 @@ bool C018_init(struct EventStruct *event) {
       log += F(" DevEUI: ");
       log += customConfig->DeviceEUI;
 
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     if (!C018_data->initOTAA(AppEUI, AppKey, customConfig->DeviceEUI)) {
@@ -971,7 +971,7 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
           log += F(" Air Time: ");
           log += toString(airtime_ms, 3);
           log += F(" ms");
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
     }
@@ -992,7 +992,7 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
       log += F(" (success) ");
     }
     log += error;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (mustSetDelay) {
@@ -1005,7 +1005,7 @@ bool do_process_c018_delay_queue(int controller_number, const C018_queue_element
       String log = F("LoRaWAN : Unable to send. Delay for ");
       log += 10 * airtime_ms;
       log += F(" ms");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 

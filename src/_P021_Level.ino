@@ -168,7 +168,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("LEVEL: State ");
           log += state;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         switchstate[event->TaskIndex] = state;
         digitalWrite(CONFIG_PIN1, state);
