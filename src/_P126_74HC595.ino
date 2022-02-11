@@ -207,10 +207,12 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         success = P126_data->plugin_init(event); // Optionally restore State_A..State_D values from RTC (on warm-boot only!)
       }
 
-      if (success) {
-        addLog(LOG_LEVEL_INFO, F("74HC595: Initialized."));
-      } else {
+      if (!success) {
         addLog(LOG_LEVEL_ERROR, F("74HC595: Initialization error!"));
+      # ifdef P126_DEBUG_LOG
+      } else {
+        addLog(LOG_LEVEL_INFO, F("74HC595: Initialized."));
+      # endif // ifdef P126_DEBUG_LOG
       }
 
       break;

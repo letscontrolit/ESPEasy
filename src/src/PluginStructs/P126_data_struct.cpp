@@ -28,14 +28,6 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
     uint8_t idx = P126_CONFIG_SHOW_OFFSET;
     std::vector<uint8_t> value;
 
-    # ifdef P126_DEBUG_LOG
-    String log;
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      log.reserve(64);
-    }
-    # endif // ifdef P126_DEBUG_LOG
-
     value.resize(_chipCount, 0);           // Initialize vector to 0's
 
     const uint8_t *pvalue = shift->getAll(); // Get current state
@@ -57,7 +49,9 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
         # ifdef P126_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          log  = F("74hc595: plugin_init: value[");
+          String log;
+          log.reserve(64);
+          log += F("74hc595: plugin_init: value[");
           log += idx;
           log += F("] : ");
           log += value[idx];
@@ -69,7 +63,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
           log += n * 8;
           log += F(", varNr: ");
           log += varNr;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
         # endif // ifdef P126_DEBUG_LOG
       }
@@ -102,7 +96,7 @@ const uint32_t P126_data_struct::getChannelState(uint8_t offset, uint8_t size) c
       log += result;
       log += F("/0x");
       log += String(result, HEX);
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef P126_DEBUG_LOG
   }
@@ -143,7 +137,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
           log += pin;
           log += F(", value: ");
           log += value;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
         # endif // ifdef P126_DEBUG_LOG
       }
@@ -219,7 +213,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
           log += idx;
           log += F(", width:");
           log += width;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P126_DEBUG_LOG
 
@@ -243,7 +237,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
             log += n;
             log += '/';
             log += n * 8;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
           # endif // ifdef P126_DEBUG_LOG
         }
@@ -305,7 +299,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
     # ifdef P126_DEBUG_LOG
 
     if (success) {
-      addLog(LOG_LEVEL_DEBUG, command);
+      addLogMove(LOG_LEVEL_DEBUG, command);
     }
     # endif // ifdef P126_DEBUG_LOG
   }
