@@ -38,7 +38,7 @@ bool P061_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
       String log = F("KPad : ScanCode=0x");
       log += String(actScanCode, HEX);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
 
       sendData(event);
 
@@ -95,7 +95,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadMatrixScan(uint8_t addr) {
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
     String log = F("P061 MCP23017 matrix, read data: 0x");
     log += String(colData, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // if P061_DEBUG_LOG
 
@@ -140,7 +140,7 @@ uint8_t P061_data_struct::MCP23017_KeyPadDirectScan(uint8_t addr) {
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
     String log = F("P061 MCP23017 direct, read data: 0x");
     log += String(colData, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // if P061_DEBUG_LOG
 
@@ -190,7 +190,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadMatrixScan(uint8_t addr) {
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
     String log = F("P061 PCF8574 matrix, read data: 0x");
     log += String(colData, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // if P061_DEBUG_LOG
 
@@ -240,7 +240,7 @@ uint8_t P061_data_struct::PCF8574_KeyPadDirectScan(uint8_t addr) {
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
     String log = F("P061 PCF8574 direct, read data: 0x");
     log += String(colData, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // if P061_DEBUG_LOG
 
@@ -300,12 +300,12 @@ uint8_t P061_data_struct::PCF8575_KeyPadMatrixScan(uint8_t addr) {
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
     String log = F("P061 PCF8575 matrix, read data: 0x");
     log += String(colData, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #  endif // if P061_DEBUG_LOG
 
-  if (colData == 0xFF00) {      // no key pressed?
-    return 0;                   // no key pressed!
+  if (colData == 0xFF00) { // no key pressed?
+    return 0;              // no key pressed!
   }
 
   for (uint8_t row = 0; row <= 8; row++) {
@@ -351,7 +351,7 @@ uint8_t P061_data_struct::PCF8575_KeyPadDirectScan(uint8_t addr) {
   if (loglevelActiveFor(LOG_LEVEL_INFO) && (millis() % 1000 < 10)) {
     String log = F("P061 PCF8575 direct, read data: 0x");
     log += String(colData, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #  endif // if P061_DEBUG_LOG
 
