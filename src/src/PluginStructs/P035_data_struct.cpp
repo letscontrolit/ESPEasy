@@ -425,11 +425,10 @@ void P035_data_struct::printToLog(const String& protocol, const String& data, in
     tmp += F(" Repeats: ");
     tmp += repeats;
   }
-  addLog(LOG_LEVEL_INFO, tmp);
-
   if (printToWeb) {
     printWebString = tmp;
   }
+  addLogMove(LOG_LEVEL_INFO, tmp);
 }
 
 # ifdef P035_DEBUG_LOG

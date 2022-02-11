@@ -165,9 +165,11 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
           UserVar[event->BaseVarIndex] = actScanCode;
           event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
-          String log = F("KPad : ScanCode=0x");
-          log += String(actScanCode, 16);
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("KPad : ScanCode=0x");
+            log += String(actScanCode, 16);
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
 
           sendData(event);
 

@@ -166,14 +166,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
                 String log = F("IMPT : Bad Import MQTT Command ");
                 log += event->String1;
-                addLog(LOG_LEVEL_ERROR, log);
+                addLogMove(LOG_LEVEL_ERROR, log);
               }
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("ERR  : Illegal Payload ");
                 log += event->String2;
                 log += ' ';
                 log += getTaskDeviceName(event->TaskIndex);
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               success = false;
               break;
@@ -189,7 +189,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               log += ExtraTaskSettings.TaskDeviceValueNames[x];
               log += F("] : ");
               log += floatPayload;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
             // Generate event for rules processing - proposed by TridentTD
@@ -240,7 +240,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
           log += ExtraTaskSettings.TaskDeviceValueNames[x];
           log += F("] subscribed to ");
           log += subscribeTo;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       else
@@ -248,7 +248,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("IMPT : Error subscribing to ");
           log += subscribeTo;
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
         return false;
       }

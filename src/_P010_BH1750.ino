@@ -131,7 +131,7 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
           log += String(mode);
           log += F(" : Light intensity: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         success = true;
       }
