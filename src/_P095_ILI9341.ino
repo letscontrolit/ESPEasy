@@ -562,7 +562,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           log += F("Parsed command = \"");
           log += string;
           log += '"';
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       else
