@@ -170,13 +170,13 @@ boolean Plugin_030(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("BMP280  : Address: 0x");
           log += String(bmp280_i2caddr, HEX);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = F("BMP280  : Temperature: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = F("BMP280  : Barometric Pressure: ");
           log += formatUserVarNoCheck(event->TaskIndex, 1);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
 
         /*
                   log = F("BMP280  : Coefficients [T]: ");

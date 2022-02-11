@@ -262,7 +262,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log; log.reserve(48);
         log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: "); log += pStep;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       break;
     }
@@ -337,7 +337,7 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
           log.reserve(48);
           log  = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
           log += static_cast<int>(config.interruptPinMode);
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
         break;
       }
@@ -451,7 +451,7 @@ void Internal_GPIO_pulseHelper::doStatisticLogging(uint8_t logLevel)
       log += ISRdata.pulseTotalCounter;         log += F("] [");
       log += pulseModeData.pulseLowTime / 1000L;  log += '|';
       log += pulseModeData.pulseHighTime / 1000L; log += ']';
-      addLog(logLevel, log);
+      addLogMove(logLevel, log);
     }
   }
 }
@@ -477,7 +477,7 @@ void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
         if (pStep < P003_PSTEP_MAX) { log += '|'; }
       }
       log += ']';
-      addLog(logLevel, log);
+      addLogMove(logLevel, log);
     }
   }
 }

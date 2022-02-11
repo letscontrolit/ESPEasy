@@ -236,7 +236,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MCP INIT=");
           log += newStatus.state;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         newStatus.output                         = newStatus.state;
         (newStatus.state == -1) ? newStatus.mode = PIN_MODE_OFFLINE : newStatus.mode = PIN_MODE_INPUT_PULLUP; // @giig1967g: if it is in the
@@ -386,7 +386,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += state;
               log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
               log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
             // send task event
@@ -453,7 +453,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += state ? '1' : '0';
               log += F(" Output value=");
               log += output_value;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
             // send task event
@@ -479,7 +479,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
               log += CONFIG_PORT;
               log += F(" State=");
               log += tempUserVar;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             // send task event: DO NOT SEND TASK EVENT
             //sendData(event);
@@ -500,7 +500,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
           String log = F("MCP  : Port=");
           log += CONFIG_PORT;
           log += F(" is offline (EVENT= -1)");
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         // send task event
@@ -531,7 +531,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         log += CONFIG_PORT;
         log += F(" State=");
         log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;
