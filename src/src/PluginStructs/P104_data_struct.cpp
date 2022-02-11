@@ -137,15 +137,17 @@ void P104_data_struct::loadSettings() {
     }
     structDataSize = bufferSize;
     # ifdef P104_DEBUG_DEV
-    String log;
+    {
+      String log;
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-        log.reserve(54)) {
-      log  = F("P104: loadSettings stored Size: ");
-      log += structDataSize;
-      log += F(" taskindex: ");
-      log += taskIndex;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+          log.reserve(54)) {
+        log  = F("P104: loadSettings stored Size: ");
+        log += structDataSize;
+        log += F(" taskindex: ");
+        log += taskIndex;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -159,10 +161,10 @@ void P104_data_struct::loadSettings() {
 
     {
       String buffer;
-      buffer.reserve(bufferSize + 1);
       buffer = String(settingsBuffer);
       # ifdef P104_DEBUG_DEV
 
+      String log;
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log  = F("P104: loadSettings bufferSize: ");
         log += bufferSize;
@@ -176,7 +178,7 @@ void P104_data_struct::loadSettings() {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" trimmed: ");
         log += buffer.length();
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
 
@@ -197,7 +199,6 @@ void P104_data_struct::loadSettings() {
       }
 
       while (offset2 > -1) {
-        tmp.reserve(offset2 - prev2);
         tmp = buffer.substring(prev2, offset2);
         # ifdef P104_DEBUG_DEV
 
@@ -205,7 +206,7 @@ void P104_data_struct::loadSettings() {
           log  = F("P104: reading string: ");
           log += tmp;
           log.replace(P104_FIELD_SEP, P104_FIELD_DISP);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG_DEV
 
@@ -293,7 +294,6 @@ void P104_data_struct::loadSettings() {
             loadOffset    += sizeof(bufferSize);
             LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)settingsBuffer, structDataSize, loadOffset);
             settingsBuffer[bufferSize + 1] = '\0'; // Terminate string
-            buffer.reserve(bufferSize + 1);
             buffer = String(settingsBuffer);
           }
         }
@@ -305,12 +305,12 @@ void P104_data_struct::loadSettings() {
           String log;
           log  = F("dotmatrix: parsed zone: ");
           log += zoneIndex;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
       }
 
-      buffer.clear();        // Free some memory
+      buffer = String();        // Free some memory
     }
 
     delete[] settingsBuffer; // Release allocated buffer
@@ -322,7 +322,7 @@ void P104_data_struct::loadSettings() {
 
       // log += F(" struct size: ");
       // log += sizeof(P104_zone_struct);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -347,7 +347,7 @@ void P104_data_struct::loadSettings() {
       log += zoneIndex;
       log += F(" expected: ");
       log += expectedZones;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
   }
@@ -372,7 +372,7 @@ void P104_data_struct::configureZones() {
       log.reserve(45)) {
     log  = F("P104: configureZones to do: ");
     log += zones.size();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // ifdef P104_DEBUG_DEV
 
@@ -465,7 +465,7 @@ void P104_data_struct::configureZones() {
         log += expectedZones;
         log += F(" offset: ");
         log += zoneOffset;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
 
@@ -536,7 +536,7 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
     log += F("' -> '");
     log += sZoneBuffers[zone];
     log += '\'';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   P->displayZoneText(zone,
@@ -746,7 +746,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
           log += F(" bsize: ");
           log += barGraphs.size();
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     #  endif // ifdef P104_DEBUG
@@ -842,7 +842,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
     #  ifdef P104_DEBUG
 
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     #  endif // ifdef P104_DEBUG
     modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON);  // Continue updates on modules
@@ -1211,7 +1211,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
       if (!success) { log += F("NOT "); }
       log += F("succesful: ");
       log += string;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 
@@ -1505,7 +1505,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           log += F(" (");
           log += (timePassedSince(it->_repeatTimer) / 1000.0f); // Decimals can be useful here
           log += ')';
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
 
@@ -1566,17 +1566,19 @@ String P104_data_struct::enquoteString(const String& input) {
  * saveSettings gather the zones data from the UI and store in customsettings
  **************************************/
 bool P104_data_struct::saveSettings() {
-  error = EMPTY_STRING; // Clear
+  error = String(); // Clear
   String zbuffer;
 
   # ifdef P104_DEBUG_DEV
-  String log;
+  {
+    String log;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(64)) {
-    log  = F("P104: saving zones, count: ");
-    log += expectedZones;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+        log.reserve(64)) {
+      log  = F("P104: saving zones, count: ");
+      log += expectedZones;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
   # endif // ifdef P104_DEBUG_DEV
 
@@ -1598,9 +1600,9 @@ bool P104_data_struct::saveSettings() {
       #  ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: insert before zone: ");
+        String log  = F("P104: insert before zone: ");
         log += (zoneIndex + 1);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       #  endif // ifdef P104_DEBUG_DEV
     }
@@ -1613,9 +1615,9 @@ bool P104_data_struct::saveSettings() {
       # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: read zone: ");
+        String log  = F("P104: read zone: ");
         log += (zoneIndex + 1);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
       zones.push_back(P104_zone_struct(zoneIndex + 1));
@@ -1642,9 +1644,9 @@ bool P104_data_struct::saveSettings() {
     # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log  = F("P104: add zone: ");
+      String log  = F("P104: add zone: ");
       log += (zoneIndex + 1);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -1657,9 +1659,9 @@ bool P104_data_struct::saveSettings() {
       #  ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: insert after zone: ");
+        String log  = F("P104: insert after zone: ");
         log += (zoneIndex + 2);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       #  endif // ifdef P104_DEBUG_DEV
     }
@@ -1761,7 +1763,7 @@ bool P104_data_struct::saveSettings() {
           log += bufferSize;
           log += F(" offset: ");
           log += saveOffset;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           zbuffer.replace(P104_FIELD_SEP, P104_FIELD_DISP);
           addLog(LOG_LEVEL_INFO, zbuffer);
         }

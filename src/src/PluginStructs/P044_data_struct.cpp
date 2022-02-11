@@ -122,7 +122,7 @@ void P044_Task::clearBuffer() {
     maxMessageSize = _min(serial_buffer.length(), P044_DATAGRAM_MAX_SIZE);
   }
 
-  serial_buffer.clear();
+  serial_buffer = String();
   serial_buffer.reserve(maxMessageSize);
 }
 

@@ -278,7 +278,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // Now check if the incoming topic matches one of our subscriptions
-        subscriptionTopicParsed = P037_data->StoredSettings.globalTopicPrefix;
+        subscriptionTopicParsed += P037_data->StoredSettings.globalTopicPrefix;
         subscriptionTopicParsed.trim();
         subscriptionTopicParsed += P037_data->deviceTemplate[x];
         parseSystemVariables(subscriptionTopicParsed, false);
@@ -342,7 +342,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       #  endif // P037_FILTER_PER_TOPIC
 
         // non-json filter check
-        if (!checkJson && P037_data->hasFilters()) {   // See if we pass the filters
+        if (!checkJson && P037_data->hasFilters()) { // See if we pass the filters
           key = P037_getMQTTLastTopicPart(event->String1);
           #  if P037_MAPPING_SUPPORT
 
@@ -350,7 +350,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
             Payload = P037_data->mapValue(Payload, key);
           }
           #  endif // if P037_MAPPING_SUPPORT
-          processData = P037_data->checkFilters(key, Payload, x + 1);   // Will return true unless key matches *and* Payload doesn't
+          processData = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
         }
         #  if P037_JSON_SUPPORT
 
@@ -367,7 +367,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               Payload = P037_data->mapValue(Payload, key);
             }
             #    endif // if P037_MAPPING_SUPPORT
-            processData = P037_data->checkFilters(key, Payload, x + 1);   // Will return true unless key matches *and* Payload doesn't
+            processData = P037_data->checkFilters(key, Payload, x + 1); // Will return true unless key matches *and* Payload doesn't
             ++P037_data->iter;
           } while (processData && P037_data->iter != P037_data->doc.end());
         }
@@ -376,10 +376,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
-          loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Reduce standard logging
-        log  = F("IMPT : MQTT filter result: ");
+          loglevelActiveFor(LOG_LEVEL_DEBUG)) {      // Reduce standard logging
+        String log = F("IMPT : MQTT filter result: ");
         log += processData ? F("true") : F("false");
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
       # endif // if P037_FILTER_SUPPORT
 
@@ -453,7 +453,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   #  if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    log  = F("IMPT : MQTT fetched json attribute: ");
+                    String log = F("IMPT : MQTT fetched json attribute: ");
+                    log.reserve(48);
                     log += key;
                     log += F(" payload: ");
                     log += Payload;
@@ -462,7 +463,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                       log += F(" index: ");
                       log += jsonIndex;
                     }
-                    addLog(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, log);
                   }
                   #  endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
                   continueProcessing = false; // no need to loop over all attributes, the configured one is found
@@ -474,7 +475,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 #  ifdef PLUGIN_037_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  log  = F("P037 json key: ");
+                  String log = F("P037 json key: ");
+                  log.reserve(48);
                   log += key;
                   log += F(" payload: ");
                   #   if P037_MAPPING_SUPPORT
@@ -482,7 +484,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   #   else // if P037_MAPPING_SUPPORT
                   log += Payload;
                   #   endif // if P037_MAPPING_SUPPORT
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 #  endif // ifdef PLUGIN_037_DEBUG
                 ++P037_data->iter;
@@ -501,17 +503,19 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
                 if (!validDoubleFromString(Payload, doublePayload)) {
                   if (!checkJson && (P037_SEND_EVENTS == 0)) { // If we want all values as events, then no error logged and don't stop here
-                    log  = F("IMPT : Bad Import MQTT Command ");
+                    String log = F("IMPT : Bad Import MQTT Command ");
+                    log.reserve(64);
                     log += event->String1;
                     addLog(LOG_LEVEL_ERROR, log);
                     # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                      log  = F("ERR  : Illegal Payload ");
+                      log.clear();
+                      log += F("ERR  : Illegal Payload ");
                       log += Payload;
                       log += ' ';
                       log += getTaskDeviceName(event->TaskIndex);
-                      addLog(LOG_LEVEL_INFO, log);
+                      addLogMove(LOG_LEVEL_INFO, log);
                     }
                     # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
                     success = false;
@@ -525,12 +529,11 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
                   String RuleEvent;
                   RuleEvent.reserve(64);
-                  RuleEvent  = getTaskDeviceName(event->TaskIndex);
+                  RuleEvent += getTaskDeviceName(event->TaskIndex);
                   RuleEvent += '#';
                   RuleEvent += event->String1;
                   RuleEvent += '=';
                   RuleEvent += unparsedPayload;
-                  RuleEvent.reserve(RuleEvent.length()); // Resize
                   eventQueue.addMove(std::move(RuleEvent));
                 }
 
@@ -549,19 +552,18 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   }
                   log += F("] : ");
                   log += doublePayload;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                 // Generate event for rules processing - proposed by TridentTD
 
                 if (Settings.UseRules) {
-                  String RuleEvent;
-                  RuleEvent.reserve(64);
-
                   if (checkJson) {
                     // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
-                    RuleEvent = event->String1;
+                    String RuleEvent;
+                    RuleEvent.reserve(64);
+                    RuleEvent += event->String1;
                     # if P037_FILTER_SUPPORT && defined(P037_FILTER_PER_TOPIC)
                     RuleEvent += P037_data->getFilterAsTopic(x + 1);
                     # endif // if P037_FILTER_SUPPORT && defined(P037_FILTER_PER_TOPIC)
@@ -577,14 +579,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                       RuleEvent += ',';
                       RuleEvent += unparsedPayload;
                     } else {
-                      RuleEvent += Payload;                // Pass mapped result
+                      RuleEvent += Payload; // Pass mapped result
                     }
-                    RuleEvent.reserve(RuleEvent.length()); // Resize
                     eventQueue.addMove(std::move(RuleEvent));
                   }
 
                   // (Always) Generate <Taskname>#<Valuename>=<Payload> event
-                  RuleEvent  = getTaskDeviceName(event->TaskIndex);
+                  String RuleEvent;
+                  RuleEvent.reserve(64);
+                  RuleEvent += getTaskDeviceName(event->TaskIndex);
                   RuleEvent += '#';
                   RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
                   RuleEvent += '=';
@@ -594,7 +597,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   } else {
                     RuleEvent += Payload;
                   }
-                  RuleEvent.reserve(RuleEvent.length()); // Resize
                   eventQueue.addMove(std::move(RuleEvent));
                 }
                 # if P037_JSON_SUPPORT
@@ -663,13 +665,13 @@ bool MQTTSubscribe_037(struct EventStruct *event)
           log += ExtraTaskSettings.TaskDeviceValueNames[x];
           log += F("] subscribed to ");
           log += subscribeTo;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       } else {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("IMPT : Error subscribing to ");
           log += subscribeTo;
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
         return false;
       }

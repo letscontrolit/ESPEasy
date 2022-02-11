@@ -13,9 +13,11 @@ bool P113_data_struct::begin() {
   sensor.setI2CAddress(i2cAddress); // Initialize for configured address
 
   if (sensor.begin() != 0) {
-    String log = F("VL53L1X: Sensor not found, init failed for 0x");
-    log += String(i2cAddress, HEX);
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("VL53L1X: Sensor not found, init failed for 0x");
+      log += String(i2cAddress, HEX);
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
     initState = false;
     return initState;
   }
@@ -66,7 +68,7 @@ uint16_t P113_data_struct::readDistance() {
     log += String(i2cAddress, HEX);
     log += F(" init: ");
     log += String(initState, BIN);
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // P113_DEBUG_DEBUG
 
@@ -81,15 +83,17 @@ uint16_t P113_data_struct::readDistance() {
   }
 
   # ifdef P113_DEBUG
-  log  = F("VL53L1X: Address: 0x");
-  log += String(i2cAddress, HEX);
-  log += F(" / Timing: ");
-  log += String(timing, DEC);
-  log += F(" / Long Range: ");
-  log += String(range, BIN);
-  log += F(" / Distance: ");
-  log += distance;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    log  = F("VL53L1X: Address: 0x");
+    log += String(i2cAddress, HEX);
+    log += F(" / Timing: ");
+    log += String(timing, DEC);
+    log += F(" / Long Range: ");
+    log += String(range, BIN);
+    log += F(" / Distance: ");
+    log += distance;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   # endif // P113_DEBUG
 
   return distance;

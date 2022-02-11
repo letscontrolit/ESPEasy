@@ -128,7 +128,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("VEML6070: UV: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         success = true;
@@ -185,7 +185,7 @@ double VEML6070_UvRiskLevel(uint16_t uv_level)
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("VEML6070 out of range: ");
       log += risk;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     return 99;

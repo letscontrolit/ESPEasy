@@ -196,7 +196,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
               log += F(" card: ");
               log += P111_data->getCardName();
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any
