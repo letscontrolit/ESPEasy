@@ -33,7 +33,7 @@ void checkRAM(const __FlashStringHelper * flashString, const __FlashStringHelper
   s += F(" (");
   s += a;
   s += ')';
-  checkRAM(std::move(s));
+  checkRAM(s);
 }
 
 void checkRAM(const String& flashString, const String &a ) {
@@ -41,14 +41,14 @@ void checkRAM(const String& flashString, const String &a ) {
   s += F(" (");
   s += a;
   s += ')';
-  checkRAM(std::move(s));
+  checkRAM(s);
 }
 
 void checkRAM(const __FlashStringHelper * descr ) {
   checkRAM(String(descr));
 }
 
-void checkRAM(String&& descr ) {
+void checkRAM(const String& descr ) {
   if (Settings.EnableRAMTracking())
     myRamTracker.registerRamState(descr);
   
