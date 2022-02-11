@@ -19,7 +19,7 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
     # endif // ifdef ESP32
 
     if (nullptr != Plugin_128_pixels) {
-      Plugin_128_pixels->Begin();   // This initializes the NeoPixelBus library.
+      Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
     }
   }
 }
@@ -43,6 +43,7 @@ bool P128_data_struct::plugin_read(struct EventStruct *event) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
+    log.reserve(64);
     log  = F("Lights: mode: ");
     log += P128_modeType_toString(mode);
     log += F(" lastmode: ");
@@ -51,7 +52,7 @@ bool P128_data_struct::plugin_read(struct EventStruct *event) {
     log += (int)UserVar[event->BaseVarIndex + 2];
     log += F(" fadedelay: ");
     log += (int)UserVar[event->BaseVarIndex + 3];
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return true;
 }
@@ -60,7 +61,6 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
   bool success = false;
 
-  String log;
   String command = parseString(string, 1);
 
   if ((command == F("neopixelfx")) || (command == F("nfx"))) {
@@ -646,9 +646,9 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
     if (!success) {
       success = true; // Fake the command to be successful, to get this custom error message out
-      log     = F("NeoPixelBus: unknown subcommand: ");
-      log    += subCommand;
-      addLog(LOG_LEVEL_INFO, log);
+      String log = F("NeoPixelBus: unknown subcommand: ");
+      log += subCommand;
+      addLogMove(LOG_LEVEL_INFO, log);
 
       String json;
       printToWebJSON = true;
@@ -779,10 +779,9 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
   if (mode != lastmode) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      log  = F("NeoPixelBus: Mode Change: ");
+      String log = F("NeoPixelBus: Mode Change: ");
       log += P128_modeType_toString(mode);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     NeoPixelSendStatus(event);
   }
@@ -1473,7 +1472,7 @@ void P128_data_struct::NeoPixelSendStatus(struct EventStruct *eventSource) {
   log += '/';
   log += rgb.B;
 
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
 
   String json;
 
