@@ -73,7 +73,7 @@ P053_data_struct::P053_data_struct(
     log += _resetPin;
     log += ' ';
     log += _pwrPin;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -131,14 +131,16 @@ void P053_data_struct::SerialRead16(uint16_t& value, uint16_t *checksum)
 
   # ifdef P053_LOW_LEVEL_DEBUG
 
-  // Low-level logging to see data from sensor
-  String log = F("PMSx003 : uint8_t high=0x");
-  log += String(data_high, HEX);
-  log += F(" uint8_t low=0x");
-  log += String(data_low, HEX);
-  log += F(" result=0x");
-  log += String(value, HEX);
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    // Low-level logging to see data from sensor
+    String log = F("PMSx003 : uint8_t high=0x");
+    log += String(data_high, HEX);
+    log += F(" uint8_t low=0x");
+    log += String(data_low, HEX);
+    log += F(" result=0x");
+    log += String(value, HEX);
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   # endif // ifdef P053_LOW_LEVEL_DEBUG
 }
 
@@ -243,7 +245,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       log.reserve(34);
       log  = F("PMSx003 : invalid framelength - ");
       log += framelength;
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return false;
   }
@@ -286,7 +288,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       log += data[PMS_PM2_5_ug_m3_normal];
       log += F(", pm10a=");
       log += data[PMS_PM10_0_ug_m3_normal];
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 
@@ -310,7 +312,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       log += data[PMS_cnt5_0_100ml];
       log += F(", 10um=");
       log += data[PMS_cnt10_0_100ml];
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 
@@ -329,7 +331,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         log += F(", hcho=");
         log += static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f;
       }
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
   #   endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -352,7 +354,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
         log = F("PMSx003 : Less than ");
         log += _delay_read_after_wakeup_ms / 1000ul;
         log += F(" sec since sensor wakeup => Ignoring sample");
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     return false;
@@ -491,7 +493,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       String log = F("PMSx003: Oversampling using ");
       log += _values_received;
       log += F(" samples");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS

@@ -174,14 +174,14 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
               if (log.reserve(40)) {
-                log  = F("PCF  : Analog port: A");
+                log += F("PCF  : Analog port: A");
                 log += port - 1;
                 log += F(" value ");
                 log += var + 1;
                 log += ':';
                 log += ' ';
                 log += formatUserVarNoCheck(event->TaskIndex, var);
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
             }
             success = true;

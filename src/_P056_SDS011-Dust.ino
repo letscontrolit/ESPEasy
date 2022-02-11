@@ -116,7 +116,7 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
         log += serial_rx;
         log += F(" TX:");
         log += serial_tx;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
 
         success = true;
         break;
@@ -145,11 +145,15 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
         {
           const float pm2_5 = Plugin_056_SDS->GetPM2_5();
           const float pm10 = Plugin_056_SDS->GetPM10_();
-          String log = F("SDS  : act ");
-          log += pm2_5;
-          log += ' ';
-          log += pm10;
-          addLog(LOG_LEVEL_DEBUG, log);
+          #ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = F("SDS  : act ");
+            log += pm2_5;
+            log += ' ';
+            log += pm10;
+            addLogMove(LOG_LEVEL_DEBUG, log);
+          }
+          #endif
 
           if (Settings.TaskDeviceTimer[event->TaskIndex] == 0)
           {
@@ -214,9 +218,11 @@ void Plugin_056_setWorkingPeriod(int minutes) {
   if (!Plugin_056_SDS)
     return;
   Plugin_056_SDS->SetWorkingPeriod(minutes);
-  String log = F("SDS  : Working Period set to: ");
-  log += Plugin_056_WorkingPeriodToString(minutes);
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("SDS  : Working Period set to: ");
+    log += Plugin_056_WorkingPeriodToString(minutes);
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 }
 
 //#endif

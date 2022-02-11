@@ -34,7 +34,7 @@ bool P121_data_struct::begin(int taskid)
         log += toString(sensor.min_value);
         log += F(" Resolution:   "); 
         log += toString(sensor.resolution);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
       #endif
     }

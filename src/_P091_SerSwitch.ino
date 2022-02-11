@@ -313,7 +313,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             Plugin_091_type = Sensor_VType::SENSOR_TYPE_QUAD;
             break;
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
 
         success = true;
         Plugin_091_init = true;
@@ -439,7 +439,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                       log += F(" r3:");
                       log += Plugin_091_switchstate[3];
                     }
-                    addLog(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, log);
                     if ( (Plugin_091_ostate[0] != Plugin_091_switchstate[0]) || (Plugin_091_ostate[1] != Plugin_091_switchstate[1]) || (Plugin_091_ostate[2] != Plugin_091_switchstate[2]) || (Plugin_091_ostate[3] != Plugin_091_switchstate[3]) ) {
                       event->sensorType = Plugin_091_type;
                       sendData(event);
@@ -495,7 +495,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                               }
                           }
                           event->sensorType = Plugin_091_type;
-                          addLog(LOG_LEVEL_INFO, log);
+                          addLogMove(LOG_LEVEL_INFO, log);
                           sendData(event);
                         }
                       }
@@ -529,7 +529,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                               }
                           }
                           event->sensorType = Plugin_091_type;
-                          addLog(LOG_LEVEL_INFO, log);
+                          addLogMove(LOG_LEVEL_INFO, log);
                           sendData(event);
                         }
                       }
@@ -624,11 +624,13 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                 sendData(event);
               }
             }
-            String log = F("SerSW   : SetSwitch r");
-            log += rnum;
-            log += ':';
-            log += rcmd;
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SerSW   : SetSwitch r");
+              log += rnum;
+              log += ':';
+              log += rcmd;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
 
           if ( command == F("relaypulse") )
@@ -671,14 +673,16 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-            String log = F("SerSW   : SetSwitchPulse r");
-            log += rnum;
-            log += ':';
-            log += rcmd;
-            log += F(" Pulsed for ");
-            log += String(event->Par3);
-            log += F(" mS");
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SerSW   : SetSwitchPulse r");
+              log += rnum;
+              log += ':';
+              log += rcmd;
+              log += F(" Pulsed for ");
+              log += String(event->Par3);
+              log += F(" mS");
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
 
           if ( command == F("relaylongpulse") )
@@ -722,18 +726,19 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               }
             }
 
-            String log = F("SerSW   : SetSwitchPulse r");
-            log += rnum;
-            log += ':';
-            log += rcmd;
-            log += F(" Pulse for ");
-            log += String(event->Par3);
-            log += F(" sec");
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SerSW   : SetSwitchPulse r");
+              log += rnum;
+              log += ':';
+              log += rcmd;
+              log += F(" Pulse for ");
+              log += String(event->Par3);
+              log += F(" sec");
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
           if ( command == F("ydim") ) // deal with dimmer command
           {
-            String log = F("SerSW   : SetDim ");
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
 
@@ -753,11 +758,13 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
                 event->sensorType = Plugin_091_type;
                 sendData(event);
               }
-              log += event->Par1;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SerSW   : SetDim ");
+                log += event->Par1;
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
             } else {
-              log = F("\nYDim not supported");
-              SendStatus(event, log);
+              SendStatus(event, F("\nYDim not supported"));
             }
           }
 
@@ -801,12 +808,14 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-        String log = F("SerSW   : SetSwitchPulse r");
-        log += rnum;
-        log += ':';
-        log += rcmd;
-        log += F(" Pulse ended");
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SerSW   : SetSwitchPulse r");
+          log += rnum;
+          log += ':';
+          log += rcmd;
+          log += F(" Pulse ended");
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
 
         break;
       }
