@@ -236,7 +236,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
               log += P002_data->OversamplingCount;
               log += F(" samples)");
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           P002_data->reset();
           success = true;

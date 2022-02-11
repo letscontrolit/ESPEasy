@@ -122,6 +122,7 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
         }
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("DS   : iButton: ");
 
@@ -130,8 +131,9 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
           } else {
             log += F("Not Present!");
           }
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+        #endif
       }
       break;
     }

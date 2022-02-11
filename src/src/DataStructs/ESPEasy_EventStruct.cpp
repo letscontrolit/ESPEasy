@@ -8,8 +8,6 @@
 
 #include "../../_Plugin_Helper.h"
 
-EventStruct::EventStruct() {}
-
 EventStruct::EventStruct(taskIndex_t taskIndex) :
   TaskIndex(taskIndex), BaseVarIndex(taskIndex * VARS_PER_TASK) 
 {}
@@ -28,6 +26,10 @@ void EventStruct::setTaskIndex(taskIndex_t taskIndex) {
   TaskIndex    = taskIndex;
   BaseVarIndex = taskIndex * VARS_PER_TASK;
   sensorType   = Sensor_VType::SENSOR_TYPE_NOT_SET;
+}
+
+void EventStruct::clear() {
+  *this = EventStruct();
 }
 
 Sensor_VType EventStruct::getSensorType() {

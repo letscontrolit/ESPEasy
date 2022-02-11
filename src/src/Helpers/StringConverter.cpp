@@ -347,7 +347,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       log += rel_index + 1;
       log += F(" type: ");
       log += getSensorTypeLabel(sensorType);
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
     return EMPTY_STRING;
@@ -374,7 +374,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       log += event->TaskIndex;
       log += F(" varnumber: ");
       log += rel_index;
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
@@ -1092,7 +1092,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
   int  pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
 
-  argvString.clear();
+  argvString = String();
 
   if (!hasArgument) { return false; }
 

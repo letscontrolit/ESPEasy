@@ -182,7 +182,7 @@ void handle_devices() {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = F("DEBUG: String size:");
     log += String(TXBuffer.sentBytes);
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 # endif // ifndef BUILD_NO_DEBUG
   sendHeadandTail_stdtemplate(_TAIL);
