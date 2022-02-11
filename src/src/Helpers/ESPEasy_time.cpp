@@ -208,7 +208,7 @@ unsigned long ESPEasy_time::now() {
           log += F(" Source: ");
           log += toString(timeSource);
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       time_zone.applyTimeZone(unixTime_d);
@@ -229,7 +229,7 @@ unsigned long ESPEasy_time::now() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Local time: ");
       log += getDateTimeString('-', ':', ' ');
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     {
       // Notify plugins the time has been set.
@@ -323,7 +323,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 
   if (!hostReachable(timeServerIP)) {
     log += F(" unreachable");
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return false;
   }
 
@@ -379,7 +379,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           String log = F("NTP  : NTP host (");
           log += timeServerIP.toString();
           log += F(") unsynchronized");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
         if (!useNTPpool) {
           // Does not make sense to try it very often if a single host is used which is not synchronized.
@@ -447,7 +447,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         }
         log += doubleToString(fractpart, 3);
         log += F(" seconds");
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();
       timeSource = timeSource_t::NTP_time_source;
@@ -793,7 +793,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
   if (unixtime != 0) {
     String log = F("ExtRTC: Read external time source: ");
     log += unixtime;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
@@ -863,7 +863,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
   if (timeAdjusted) {
     String log = F("ExtRTC: External time source set to: ");
     log += unixtime;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));

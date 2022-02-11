@@ -164,7 +164,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("TCLK : State ");
                 log += state;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               sendData(event);
             }

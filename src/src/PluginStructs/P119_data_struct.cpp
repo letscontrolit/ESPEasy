@@ -29,14 +29,14 @@ P119_data_struct::~P119_data_struct() {
 // Initialize sensor and read data from ITG3205
 // **************************************************************************/
 bool P119_data_struct::read_sensor() {
-  # if PLUGIN_119_DEBUG
+  #ifdef PLUGIN_119_DEBUG
   String log;
   # endif // if PLUGIN_119_DEBUG
 
   if (!initialized()) {
     init_sensor();
 
-    # if PLUGIN_119_DEBUG
+    #ifdef PLUGIN_119_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
         log.reserve(55)) {
@@ -46,7 +46,7 @@ bool P119_data_struct::read_sensor() {
       log += String(initialized() ? F("true") : F("false"));
       log += F(", ID=0x");
       log += String(itg3205->readWhoAmI(), HEX);
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // if PLUGIN_119_DEBUG
   }
@@ -71,7 +71,7 @@ bool P119_data_struct::read_sensor() {
       _aUsed = 0;
     }
 
-    # if PLUGIN_119_DEBUG
+    #ifdef PLUGIN_119_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG) &&
         log.reserve(40)) {
@@ -83,7 +83,7 @@ bool P119_data_struct::read_sensor() {
       log += itg3205->g.y;
       log += F(", Z: ");
       log += itg3205->g.z;
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // if PLUGIN_119_DEBUG
     return true;
@@ -110,7 +110,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
     Y /= _aMax;
     Z /= _aMax;
 
-    # if PLUGIN_119_DEBUG
+    #ifdef PLUGIN_119_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log;
@@ -122,7 +122,7 @@ bool P119_data_struct::read_data(int& X, int& Y, int& Z) {
         log += Y;
         log += F(", Z: ");
         log += Z;
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
     # endif // if PLUGIN_119_DEBUG
@@ -147,15 +147,17 @@ bool P119_data_struct::init_sensor() {
     return false;
   }
 
+  #ifdef PLUGIN_119_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
     if (log.reserve(25)) {
       log  = F("ITG3205: Address: 0x");
       log += String(_i2cAddress, HEX);
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
+  #endif
 
   return true;
 }

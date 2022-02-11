@@ -74,7 +74,7 @@ struct P014_data_struct : public PluginTaskData_base {
       log += String(res, HEX);
       log += F(" => Error 0x");
       log += String(ret, HEX);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     return false;
   }
@@ -166,10 +166,10 @@ struct P014_data_struct : public PluginTaskData_base {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("SI7021 : Temperature: ");
           log += temperature;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = F("SI7021 : Humidity: ");
           log += humidity;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         break;
       }
