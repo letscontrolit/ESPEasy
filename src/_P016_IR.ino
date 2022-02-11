@@ -153,7 +153,7 @@ void P016_infoLogMemory(const __FlashStringHelper * text) {
       log += FreeMem();
       log += F(" stack: ");
       log += getCurrentFreeStack();
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 }
@@ -325,9 +325,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log; // Log this always
             if (log.reserve(30)) {
-              log  = F("IR: available decodetypes: ");
+              log += F("IR: available decodetypes: ");
               log += size;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
           }
 
@@ -567,7 +567,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             // + ',' + uint64ToString(results.bits);
             // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style
             // command
-            output  = F("{\"protocol\":\"");
+            output += F("{\"protocol\":\"");
             output += typeToString(results.decode_type, results.repeat);
             output += F("\",\"data\":\"");
             output += resultToHexidecimal(&results);
@@ -578,11 +578,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String Log;
               if (Log.reserve(output.length() + 22)) {
-                Log  = F("IRSEND,\'");
+                Log += F("IRSEND,\'");
                 Log += output;
                 Log += F("\' type: 0x");
                 Log += uint64ToString(results.decode_type);
-                addLog(LOG_LEVEL_INFO, Log); // JSON representation of the command
+                addLogMove(LOG_LEVEL_INFO, Log); // JSON representation of the command
               }
             }
             event->String2 = std::move(output);
@@ -674,9 +674,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             // If we got a human-readable description of the message, display it.
             String log;
             if (log.reserve(10 + description.length())) {
-              log  = F("AC State: ");
+              log += F("AC State: ");
               log += description;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
           }
         }
@@ -755,10 +755,10 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             // Show the command that the user can put to replay the AC state with P035
             String log;
             if (log.reserve(12 + event->String2.length())) {
-              log  = F("IRSENDAC,'");
+              log += F("IRSENDAC,'");
               log += event->String2;
               log += '\'';
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
           }
         }
@@ -800,6 +800,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
 {
   uint16_t div[2];
 
+  #ifndef BUILD_NO_DEBUG
   // print the values: either pulses or blanks
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String line;
@@ -807,8 +808,9 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
     for (uint16_t i = 1; i < results.rawlen; i++) {
       line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
     }
-    addLog(LOG_LEVEL_DEBUG, line); // Display the RAW timings
+    addLogMove(LOG_LEVEL_DEBUG, line); // Display the RAW timings
   }
+  #endif
 
   // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks).
   for (uint16_t p = 0; p < 2; p++)
@@ -875,6 +877,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
     }
     div[p] = bstDiv;
 
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String line;
       line  = p ? F("Blank: ") : F("Pulse: ");
@@ -886,8 +889,9 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
       line += uint64ToString((uint16_t)bstMul, 10);
       line += '.';
       line += ((char)((bstMul - (uint16_t)bstMul) * 10) + '0');
-      addLog(LOG_LEVEL_DEBUG, line);
+      addLogMove(LOG_LEVEL_DEBUG, line);
     }
+    #endif
   }
 
   // Generate the B32 Hex string, per the divisors found.
@@ -945,7 +949,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
   out[iOut] = 0;
 
   outputStr.reserve(32 + iOut);
-  outputStr  = F("IRSEND,RAW2,");
+  outputStr += F("IRSEND,RAW2,");
   outputStr += out;
   outputStr += F(",38,");
   outputStr += uint64ToString(div[0], 10);

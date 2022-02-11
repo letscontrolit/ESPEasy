@@ -18,6 +18,9 @@
 #define LOG_TO_SDCARD         4
 
 
+// Move the log String so it does not have to be copied in the web log
+#define addLogMove(L, S)  addToLogMove(L, std::move(S))
+
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
@@ -42,15 +45,12 @@ uint8_t getWebLogLevel();
 bool loglevelActiveFor(uint8_t destination, uint8_t logLevel);
 
 
-bool loglevelActive(uint8_t logLevel, uint8_t logLevelSettings);
-
-void addLog(uint8_t loglevel, const __FlashStringHelper *str);
+void addLog(uint8_t logLevel, const __FlashStringHelper *str);
 void addLog(uint8_t logLevel, const char *line);
-void addLog(uint8_t loglevel, const String& string);
+void addLog(uint8_t logLevel, String&& string);
 
-void addToLog(uint8_t loglevel, const __FlashStringHelper *str);
-
-void addToLog(uint8_t loglevel, const String& string);
+void addLog(uint8_t logLevel, const String& string);
+void addToLogMove(uint8_t logLevel, String&& string);
 
 
 #endif 

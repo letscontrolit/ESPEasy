@@ -115,17 +115,21 @@ void P005_log(struct EventStruct *event, int logNr)
     case P005_error_checksum_error:      text += F("Checksum Error"); break;
     case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
     case P005_info_temperature:
-      text += F("Temperature: ");
-      text += formatUserVarNoCheck(event->TaskIndex, 0);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        text += F("Temperature: ");
+        text += formatUserVarNoCheck(event->TaskIndex, 0);
+      }
       isError = false;
       break;
     case P005_info_humidity:
-      text += F("Humidity: ");
-      text += formatUserVarNoCheck(event->TaskIndex, 1);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        text += F("Humidity: ");
+        text += formatUserVarNoCheck(event->TaskIndex, 1);
+      }
       isError = false;
       break;
   }
-  addLog(LOG_LEVEL_INFO, text);
+  addLogMove(LOG_LEVEL_INFO, text);
   if (isError) {
     UserVar[event->BaseVarIndex] = NAN;
     UserVar[event->BaseVarIndex + 1] = NAN;

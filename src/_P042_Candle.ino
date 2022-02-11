@@ -284,7 +284,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("CAND : Init WS2812 Pin : ");
             log += CONFIG_PIN1;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
           #endif
         }
@@ -428,7 +428,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("CAND : CMD - Type : ");
                   log += val_Type;
-                  addLog(LOG_LEVEL_DEBUG, log);
+                  addLogMove(LOG_LEVEL_DEBUG, log);
                 }
                 #endif
              }
@@ -442,7 +442,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("CAND : CMD - Bright : ");
                   log += val_Bright;
-                  addLog(LOG_LEVEL_DEBUG, log);
+                  addLogMove(LOG_LEVEL_DEBUG, log);
                 }
                 #endif
              }
@@ -472,7 +472,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
               log += g;
               log += F(" B ");
               log += b;
-              addLog(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, log);
             }
             #endif
           } else {

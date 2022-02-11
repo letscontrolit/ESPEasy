@@ -535,7 +535,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               while (log.length() < 73) log += ' ';
               log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
 
-              addLog(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, log);
             }
           }
         }
@@ -703,8 +703,10 @@ bool addPlugin(pluginID_t pluginID, deviceIndex_t x) {
     Plugin_id_to_DeviceIndex[pluginID] = x;
     return true;
   }
-  String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
-  log += PLUGIN_MAX;
-  addLog(LOG_LEVEL_ERROR, log);
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
+    log += PLUGIN_MAX;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }

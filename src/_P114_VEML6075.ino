@@ -134,8 +134,6 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      String log;
-
       float UVA     = 0.0f;
       float UVB     = 0.0f;
       float UVIndex = 0.0f;
@@ -146,8 +144,9 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = UVIndex;
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
           if (log.reserve(130)) {
-            log  = F("VEML6075: Address: 0x");
+            String log  = F("VEML6075: Address: 0x");
             log += String(PCONFIG(0), HEX);
             log += F(" / Integration Time: ");
             log += PCONFIG(1);
@@ -161,7 +160,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
             log += UserVar[event->BaseVarIndex + 1];
             log += F(" / UVIndex: ");
             log += UserVar[event->BaseVarIndex + 2];
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
 

@@ -311,11 +311,13 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
         int16_t pinSCL = CONFIG_PIN1;
         int16_t pinDOUT = CONFIG_PIN2;
 
-        String log = F("HX711: GPIO: SCL=");
-        log += pinSCL;
-        log += F(" DOUT=");
-        log += pinDOUT;
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("HX711: GPIO: SCL=");
+          log += pinSCL;
+          log += F(" DOUT=");
+          log += pinDOUT;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
 
         if (pinSCL >= 0 && pinDOUT >= 0)
         {
@@ -377,7 +379,6 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
       {
-        String log;
         int8_t modeChanA = (PCONFIG(0) >> 2) & 0x03;
         int8_t modeChanB = (PCONFIG(0) >> 4) & 0x01;
         float valFloat;
@@ -390,7 +391,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
         // Channel A activated?
         if (modeChanA != modeAoff)
         {
-          log = F("HX711: ChanA: ");
+          String log = F("HX711: ChanA: ");
 
           if (Plugin_067_OversamplingCountChanA[event->TaskIndex] > 0)
           {
@@ -424,13 +425,13 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
           {
             log += F("NO NEW VALUE");
           }
-          addLog(LOG_LEVEL_INFO,log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         // Channel B activated?
         if (modeChanB != modeBoff)
         {
-          log = F("HX711: ChanB: ");
+          String log = F("HX711: ChanB: ");
 
           if (Plugin_067_OversamplingCountChanB[event->TaskIndex] > 0)
           {
@@ -464,7 +465,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
           {
             log += F("NO NEW VALUE");
           }
-          addLog(LOG_LEVEL_INFO,log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         success = true;

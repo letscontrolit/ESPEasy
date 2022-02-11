@@ -196,7 +196,7 @@ void initI2C() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("INIT : I2C custom clockstretchlimit:");
       log += Settings.WireClockStretchLimit;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
       #if defined(ESP8266)
     Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
@@ -918,7 +918,7 @@ void addButtonRelayRule(uint8_t buttonNumber, int relay_gpio) {
   String result = appendLineToFile(fileName, rule);
 
   if (result.length() > 0) {
-    addLog(LOG_LEVEL_ERROR, result);
+    addLogMove(LOG_LEVEL_ERROR, result);
   }
 }
 
