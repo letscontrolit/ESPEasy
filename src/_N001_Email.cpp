@@ -159,10 +159,11 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 				break;
 			}
 			while (nextAddressAvailable) {
-				String mailFound = F("Email: To ");
-				mailFound += emailTo;
-				if (loglevelActiveFor(LOG_LEVEL_INFO))
-					addLog(LOG_LEVEL_INFO, mailFound);
+				if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+					String log = F("Email: To ");
+					log += emailTo;
+					addLogMove(LOG_LEVEL_INFO, log);
+				}
 				if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + emailTo + ">", F("250 "))) break;
 				++i;
 				nextAddressAvailable = getNextMailAddress(notificationsettings.Receiver, emailTo, i);
@@ -184,7 +185,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
 				String log = F("EMAIL: Connection Closed With Error. Used header: ");
 				log += mailheader;
-				addLog(LOG_LEVEL_ERROR, log);
+				addLogMove(LOG_LEVEL_ERROR, log);
 			}
 		}
 	}
@@ -224,7 +225,7 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWait
 			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
 				String log = F("NPlugin_001_MTA: timeout. ");
 				log += aStr;
-				addLog(LOG_LEVEL_ERROR, log);
+				addLogMove(LOG_LEVEL_ERROR, log);
 			}
 			return false;
 		}
@@ -235,10 +236,14 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWait
 		String line;
 		safeReadStringUntil(client, line, '\n');
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-			addLog(LOG_LEVEL_DEBUG, line);
+		const bool patternFound = line.indexOf(aWaitForPattern) >= 0;
 
-		if (line.indexOf(aWaitForPattern) >= 0) {
+		#ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+			addLogMove(LOG_LEVEL_DEBUG, line);
+		#endif
+
+		if (patternFound) {
 			return true;
 		}
 	}

@@ -187,7 +187,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         log += P020_SERVER_PORT;
         log += F(" SERIAL_PROCESSING=");
         log += P020_SERIAL_PROCESSING;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
@@ -202,13 +202,15 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (validGpio(P020_RESET_TARGET_PIN)) {
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log;
           log.reserve(38);
-          log  = F("Ser2net  : P020_RESET_TARGET_PIN : ");
+          log += F("Ser2net  : P020_RESET_TARGET_PIN : ");
           log += P020_RESET_TARGET_PIN;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+        #endif
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
         digitalWrite(P020_RESET_TARGET_PIN, LOW);
         delay(500);

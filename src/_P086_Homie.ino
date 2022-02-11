@@ -171,7 +171,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
           log += x+1;
           log += F(": ");
           log += formatUserVarNoCheck(event->TaskIndex, x);
-          addLog(LOG_LEVEL_INFO,log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         success = true;
         break;
@@ -246,7 +246,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                       log += F(" integer/float set to ");
                       log += floatValue;
-                      addLog(LOG_LEVEL_INFO,log);
+                      addLogMove(LOG_LEVEL_INFO, log);
                     }
                     UserVar[userVarIndex]=floatValue;
                   } else { // float conversion failed!
@@ -254,14 +254,14 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                       log += F(" parameter:");
                       log += parameter;
                       log += F(" not a float value!");
-                      addLog(LOG_LEVEL_ERROR,log);
+                      addLogMove(LOG_LEVEL_ERROR, log);
                     }
                   }
                 } else {
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     log += F(" value:");
                     log += UserVar[userVarIndex];
-                    addLog(LOG_LEVEL_INFO,log);
+                    addLogMove(LOG_LEVEL_INFO, log);
                   }
                 }
                 break;
@@ -276,7 +276,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" boolean set to ");
                   log += floatValue;
-                  addLog(LOG_LEVEL_INFO,log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 break;
 
@@ -286,7 +286,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" string set to ");
                   log += parameter;
-                  addLog(LOG_LEVEL_INFO,log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 break;
 
@@ -306,7 +306,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                   log += floatValue;
                   log += ' ';
                   log += wrap_braces(parameter);
-                  addLog(LOG_LEVEL_INFO,log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 break;
 
@@ -316,7 +316,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" RGB received ");
                   log += parameter;
-                  addLog(LOG_LEVEL_INFO,log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 break;
 
@@ -326,7 +326,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   log += F(" HSV received ");
                   log += parameter;
-                  addLog(LOG_LEVEL_INFO,log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 break;
             }

@@ -61,7 +61,7 @@ tCommandLinesV2::tCommandLinesV2(const tCommandLinesV1& lineV1, uint8_t i)
     }
     #  endif // ifdef PLUGIN_016_DEBUG
   }
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
 }
 
 # endif // ifdef P16_SETTINGS_V1
@@ -185,7 +185,7 @@ void P016_data_struct::AddCode(uint64_t Code, decode_type_t DecodeType, uint16_t
       log += uint64ToString(Code, 16);
       log += F(" to index ");
       log += _index;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   # endif // PLUGIN_016_DEBUG
@@ -235,7 +235,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
             if (!_success) {
               log += F(" FAILED!");
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
         # endif // PLUGIN_016_DEBUG
@@ -258,7 +258,7 @@ void P016_data_struct::ExecuteCode(uint64_t Code, decode_type_t DecodeType, uint
         log += F(" Code: 0x");
         log += uint64ToString(CommandLines[i].Code, 16);
         log += '}';
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     # endif // PLUGIN_016_DEBUG

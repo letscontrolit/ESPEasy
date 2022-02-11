@@ -32,7 +32,7 @@ void set_mDNS() {
         else {
           log += F("mDNS failed");
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       if (mDNS_init) {
         MDNS.addService(F("http"), F("tcp"), Settings.WebserverPort);

@@ -292,13 +292,15 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
       P109_setContrast(OLED_contrast);
 
-      String logstr = F("Thermo : Btn L:");
-      logstr += Settings.TaskDevicePin1[event->TaskIndex];
-      logstr += F("R:");
-      logstr += Settings.TaskDevicePin2[event->TaskIndex];
-      logstr += F("M:");
-      logstr += Settings.TaskDevicePin3[event->TaskIndex];
-      addLog(LOG_LEVEL_INFO, logstr);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String logstr = F("Thermo : Btn L:");
+        logstr += Settings.TaskDevicePin1[event->TaskIndex];
+        logstr += F("R:");
+        logstr += Settings.TaskDevicePin2[event->TaskIndex];
+        logstr += F("M:");
+        logstr += Settings.TaskDevicePin3[event->TaskIndex];
+        addLogMove(LOG_LEVEL_INFO, logstr);
+      }
 
       if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
       {
@@ -339,11 +341,13 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
         P109_setHeatRelay(byte(UserVar[event->BaseVarIndex + 1]));
       }
 
-      logstr  = F("Thermo : Starting status S:");
-      logstr += toString(UserVar[event->BaseVarIndex]);
-      logstr += F(", R:");
-      logstr += toString(UserVar[event->BaseVarIndex + 1]);
-      addLog(LOG_LEVEL_INFO, logstr);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String logstr  = F("Thermo : Starting status S:");
+        logstr += toString(UserVar[event->BaseVarIndex]);
+        logstr += F(", R:");
+        logstr += toString(UserVar[event->BaseVarIndex + 1]);
+        addLogMove(LOG_LEVEL_INFO, logstr);
+      }
 
       Plugin_109_changed    = 1;
       Plugin_109_buttons[0] = 0; Plugin_109_buttons[1] = 0; Plugin_109_buttons[2] = 0;
@@ -509,8 +513,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
               f.close();
               flashCount();
             }
-            String logstr = F("Thermo : Save UserVars to SPIFFS");
-            addLog(LOG_LEVEL_INFO, logstr);
+            addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
           }
         }
         success = true;
@@ -890,12 +893,15 @@ void P109_setSetpoint(String sptemp) {
 
 void P109_setHeatRelay(byte state) {
   uint8_t relaypin = Settings.TaskDevicePluginConfig[Plugin_109_taskindex][4];
-  String  logstr   = F("Thermo : Set Relay");
 
-  logstr += relaypin;
-  logstr += F("=");
-  logstr += state;
-  addLog(LOG_LEVEL_INFO, logstr);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String  logstr   = F("Thermo : Set Relay");
+
+    logstr += relaypin;
+    logstr += F("=");
+    logstr += state;
+    addLogMove(LOG_LEVEL_INFO, logstr);
+  }
 
   if (relaypin != -1) {
     pinMode(relaypin, OUTPUT);

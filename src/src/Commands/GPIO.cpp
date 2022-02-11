@@ -89,7 +89,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
       log += F(" port #"); 
       log += port; 
       log += F(": added to monitor list.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -141,7 +141,7 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
       log += F(" port #");
       log += port;
       log += F(": removed from monitor list.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     return true;
@@ -302,7 +302,7 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
     log += event->Par1;
     log += F(" melody: ");
     log += melody;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (play_rtttl(event->Par1, melody.c_str())) {
@@ -627,7 +627,7 @@ range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, u
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = data.logPrefix;
       log += F(": pin numbers out of range.");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return data;
   }
@@ -687,7 +687,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = data.logPrefix;
         log += F(": write value must be 0 or 1.");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       return data;
     }

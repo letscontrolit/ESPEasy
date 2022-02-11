@@ -63,7 +63,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
       for (uint8_t x = 0; x < valueCount; x++)
       {
         bool   isvalid;
-        String formattedValue = formatUserVar(event, x, isvalid);
+        const String formattedValue = formatUserVar(event, x, isvalid);
 
         if (isvalid) {
           element.txt[x]  = F("update/V");
