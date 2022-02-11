@@ -307,9 +307,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         unparsedPayload = event->String2;
       }
 
-      String log;
-      log.reserve(64);
-
       bool   continueProcessing = false;
       String key;
 
