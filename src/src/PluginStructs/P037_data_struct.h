@@ -53,8 +53,8 @@
 
 # define P037_MAX_MAPPINGS  25
 # define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
-# define P037_EXTRA_VALUES  5 // The number of extra, empty, values to show when adding mappings
-                              // (or filters if not 1:1 with topics is used)
+# define P037_EXTRA_VALUES  5             // The number of extra, empty, values to show when adding mappings
+                                          // (or filters if not 1:1 with topics is used)
 
 // Only 1 filter per topic
 # if P037_FILTER_SUPPORT && P037_MAX_FILTERS == VARS_PER_TASK
@@ -63,7 +63,7 @@
 #  endif // ifndef P037_FILTER_PER_TOPIC
 # endif  // if P037_FILTER_SUPPORT && P037_MAX_FILTERS == VARS_PER_TASK
 
-# define P037_ARRAY_SIZE      (P037_MAX_MAPPINGS + P037_MAX_FILTERS)  // Storage layout definitions
+# define P037_ARRAY_SIZE      (P037_MAX_MAPPINGS + P037_MAX_FILTERS) // Storage layout definitions
 # define P037_START_MAPPINGS  0
 # define P037_END_MAPPINGS    (P037_MAX_MAPPINGS - 1)
 # define P037_START_FILTERS   P037_MAX_MAPPINGS

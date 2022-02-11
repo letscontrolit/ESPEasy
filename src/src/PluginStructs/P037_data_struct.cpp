@@ -100,7 +100,7 @@ bool P037_data_struct::webform_load(
   # if P037_MAPPING_SUPPORT
   bool mappingEnabled
   # endif // if P037_MAPPING_SUPPORT
-  # if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
+  # if P037_MAPPING_SUPPORT&& P037_FILTER_SUPPORT
   ,
   # endif // if P037_MAPPING_SUPPORT && P037_FILTER_SUPPORT
   # if P037_FILTER_SUPPORT
@@ -205,12 +205,8 @@ bool P037_data_struct::webform_load(
       #  endif // if P037_FILTER_COUNT >= 3
     };
 
-    String filters = P037_FILTER_LIST;   // Anticipate more filters
+    String filters = P037_FILTER_LIST; // Anticipate more filters
     int8_t filterIndex;
-
-    #  ifdef PLUGIN_037_DEBUG
-    String info;
-    #  endif // ifdef PLUGIN_037_DEBUG
 
     int8_t idx      = 0;
     int8_t filterNr = 1;
@@ -246,13 +242,14 @@ bool P037_data_struct::webform_load(
     }
     #  ifdef PLUGIN_037_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-        info.reserve(25)) {
-      info  = F("P037 maxFilter: ");
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String info;
+      info.reserve(25);
+      info += F("P037 maxFilter: ");
       info += _maxFilter;
       info += F(" idx: ");
       info += idx;
-      addLog(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     #  ifndef P037_FILTER_PER_TOPIC
@@ -291,7 +288,7 @@ bool P037_data_struct::webform_load(
       info += extraFilters;
       info += F(" idx: ");
       info += idx;
-      addLog(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, info);
     }
     #   endif // ifdef PLUGIN_037_DEBUG
     #  endif  // ifndef P037_FILTER_PER_TOPIC
@@ -329,10 +326,6 @@ bool P037_data_struct::webform_load(
     String operands = P037_OPERAND_LIST; // Anticipate more operations
     int8_t operandIndex;
 
-    #  ifdef PLUGIN_037_DEBUG
-    String info;
-    #  endif // ifdef PLUGIN_037_DEBUG
-
     int8_t idx   = 0;
     int8_t mapNr = 1;
 
@@ -361,13 +354,14 @@ bool P037_data_struct::webform_load(
     }
     #  ifdef PLUGIN_037_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-        info.reserve(25)) {
-      info  = F("P037 maxIdx: ");
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String info;
+      info.reserve(25);
+      info += F("P037 maxIdx: ");
       info += _maxIdx;
       info += F(" idx: ");
       info += idx;
-      addLog(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     operandIndex = 0;
@@ -398,11 +392,12 @@ bool P037_data_struct::webform_load(
     #  ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      info  = F("P037 extraMappings: ");
+      String info;
+      info += F("P037 extraMappings: ");
       info += extraMappings;
       info += F(" idx: ");
       info += idx;
-      addLog(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     addFormNote(F("Both Name and Value must be filled for a valid mapping. Mappings are case-sensitive."));
@@ -440,7 +435,7 @@ String P037_data_struct::enquoteString(const String& input) {
   String result;
 
   result.reserve(input.length() + 2);
-  result  = quoteChar;
+  result += quoteChar;
   result += input;
   result += quoteChar;
 
@@ -451,7 +446,7 @@ bool P037_data_struct::webform_save(
   # if P037_FILTER_SUPPORT
   bool filterEnabled
   # endif // if P037_FILTER_SUPPORT
-  # if P037_FILTER_SUPPORT && defined(P037_JSON_SUPPORT)
+  # if P037_FILTER_SUPPORT&& defined(P037_JSON_SUPPORT)
   ,
   # endif // if P037_FILTER_SUPPORT && defined(P037_JSON_SUPPORT)
   # ifdef P037_JSON_SUPPORT
@@ -506,9 +501,11 @@ bool P037_data_struct::webform_save(
   right.reserve(32);
 
   for (uint8_t mappingOffset = P037_START_MAPPINGS; mappingOffset <= P037_END_MAPPINGS; mappingOffset++) {
-    left =  web_server.arg(getPluginCustomArgName(idx + 0));
+    left.clear();
+    left +=  web_server.arg(getPluginCustomArgName(idx + 0));
     left.trim();
-    right = web_server.arg(getPluginCustomArgName(idx + 2));
+    right.clear();
+    right += web_server.arg(getPluginCustomArgName(idx + 2));
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()) {
@@ -593,7 +590,7 @@ bool P037_data_struct::webform_save(
 
   error += SaveCustomTaskSettings(_taskIndex, (uint8_t *)&StoredSettings, sizeof(StoredSettings)); // Part 1
   error += SaveCustomTaskSettings(_taskIndex, valueArray,
-                                  P037_ARRAY_SIZE, 0, sizeof(StoredSettings) + 1); // Part 2, after part 1
+                                  P037_ARRAY_SIZE, 0, sizeof(StoredSettings) + 1);                 // Part 2, after part 1
 
   if (!error.isEmpty()) {
     addHtmlError(error);
@@ -616,12 +613,12 @@ void P037_data_struct::logMapValue(const String& input, const String& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String info;
     info.reserve(45);
-    info  = F("IMPT : MQTT mapped value '");
+    info += F("IMPT : MQTT mapped value '");
     info += input;
     info += F("' to '");
     info += result;
     info += '\'';
-    addLog(LOG_LEVEL_INFO, info);
+    addLogMove(LOG_LEVEL_INFO, info);
   }
 } // logMapValue
 
@@ -704,9 +701,9 @@ bool P037_data_struct::hasFilters() {
   parseMappings(); // When not parsed yet
   #  ifdef PLUGIN_037_DEBUG
   String log;
-  log  = F("p037 hasFilter: ");
+  log += F("p037 hasFilter: ");
   log += _maxFilter;
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   #  endif // ifdef PLUGIN_037_DEBUG
   return _maxFilter > 0;
 } // hasFilters
@@ -725,7 +722,7 @@ String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
 
     if ((!name.isEmpty()) &&
         (!valu.isEmpty())) {
-      result  = '/';
+      result += '/';
       result += name;
       result += '/';
 
@@ -745,14 +742,14 @@ String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
 void P037_data_struct::logFilterValue(const String& text, const String& key, const String& value, const String& match) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(50);
-    log  = text;
+    log.reserve(text.length() + key.length() + value.length() + match.length() + 16);
+    log += text;
     log += key;
     log += F(" value: ");
     log += value;
     log += F(" match: ");
     log += match;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 } // logFilterValue
 
@@ -815,7 +812,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
               #  ifdef PLUGIN_037_DEBUG
               String match;
               match.reserve(30);
-              match = parseStringKeepCase(valueArray[flt], 3, P037_VALUE_SEPARATOR); // re-parse
+              match += parseStringKeepCase(valueArray[flt], 3, P037_VALUE_SEPARATOR); // re-parse
 
               if (topicId > 0) {
                 match += F(" topic match: ");
@@ -859,7 +856,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String match;
                   match.reserve(30);
-                  match  = F("P037 filter ");
+                  match += F("P037 filter ");
                   match += accept ? EMPTY_STRING : F("NOT ");
                   match += F("in range key: ");
                   logFilterValue(match, key, valueData, parseStringKeepCase(valueArray[flt], 3, P037_VALUE_SEPARATOR));
@@ -907,7 +904,7 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String match;
                 match.reserve(30);
-                match  = F("P037 filter ");
+                match += F("P037 filter ");
                 match += accept ? EMPTY_STRING : F("NOT ");
                 match += F("in list key: ");
                 logFilterValue(match, key, valueData, parseStringKeepCase(valueArray[flt], 3, P037_VALUE_SEPARATOR));
@@ -954,9 +951,9 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(35);
-      log  = F("IMPT : JSON buffer increased to ");
+      log += F("IMPT : JSON buffer increased to ");
       log += lastJsonMessageLength;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     #  endif // ifdef PLUGIN_037_DEBUG
   }
