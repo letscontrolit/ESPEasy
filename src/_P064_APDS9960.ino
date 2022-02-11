@@ -266,7 +266,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           log += F("Error during APDS-9960 init!");
         }
 
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;
@@ -296,28 +296,29 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       // if ( 0 && P064_data->sensor.isGestureAvailable() )
       if (gesture >= 0)
       {
-        String log = F("APDS : Gesture=");
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("APDS : Gesture=");
 
-        switch (gesture)
-        {
-          case DIR_UP:      log += F("UP");      break;
-          case DIR_DOWN:    log += F("DOWN");    break;
-          case DIR_LEFT:    log += F("LEFT");    break;
-          case DIR_RIGHT:   log += F("RIGHT");   break;
-          case DIR_NEAR:    log += F("NEAR");    break;
-          case DIR_FAR:     log += F("FAR");     break;
-          default:          log += F("NONE");    break;
+          switch (gesture)
+          {
+            case DIR_UP:      log += F("UP");      break;
+            case DIR_DOWN:    log += F("DOWN");    break;
+            case DIR_LEFT:    log += F("LEFT");    break;
+            case DIR_RIGHT:   log += F("RIGHT");   break;
+            case DIR_NEAR:    log += F("NEAR");    break;
+            case DIR_FAR:     log += F("FAR");     break;
+            default:          log += F("NONE");    break;
+          }
+          log += F(" (");
+          log += gesture;
+          log += ')';
+          addLogMove(LOG_LEVEL_INFO, log);
         }
-        log += F(" (");
-        log += gesture;
-        log += ')';
 
         UserVar[event->BaseVarIndex] = static_cast<float>(gesture);
         event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         sendData(event);
-
-        addLog(LOG_LEVEL_INFO, log);
       }
 
       success = true;

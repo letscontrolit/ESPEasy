@@ -22,7 +22,7 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("C018 queue element: ");
       log += packed;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   # endif // USES_PACKED_RAW_DATA
 }

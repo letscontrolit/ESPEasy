@@ -18,7 +18,7 @@
 \*********************************************************************************************/
 struct EventStruct
 {
-  EventStruct();
+  EventStruct() = default;
   // Delete the copy constructor
   EventStruct(const struct EventStruct& event) = delete;
 private:
@@ -40,6 +40,8 @@ public:
 
 
   void setTaskIndex(taskIndex_t taskIndex);
+
+  void clear();
 
   // Check (and update) sensorType if not set, plus return (corrected) sensorType
   Sensor_VType getSensorType();

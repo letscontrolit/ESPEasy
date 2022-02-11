@@ -167,7 +167,7 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
               log += rgbw[2];
               log += ',';
               log += rgbw[3];
-              addLog(LOG_LEVEL_INFO,log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
@@ -206,7 +206,7 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
               log += rgbw[2];
               log += ',';
               log += rgbw[3];
-              addLog(LOG_LEVEL_INFO,log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
            for (int i = 0; i < MaxPixels; i++)
@@ -253,7 +253,7 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
               log += rgbw[2];
               log += ',';
               log += rgbw[3];
-              addLog(LOG_LEVEL_INFO,log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
   					for (int i = event->Par1 - 1; i < event->Par2; i++)

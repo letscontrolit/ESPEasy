@@ -232,22 +232,26 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
               UserVar[event->BaseVarIndex] = m_energy; //gives energy in Wh
               UserVar[event->BaseVarIndex+1] = m_volume;  //gives volume in liters
 
-              String log = F("Kamstrup  : Heat value: ");
-              log += m_energy/1000;
-              log += F(" kWh");
-              addLog(LOG_LEVEL_INFO, log);
-              log = F("Kamstrup  : Volume value: ");
-              log += m_volume;
-              log += F(" Liter");
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("Kamstrup  : Heat value: ");
+                log += m_energy/1000;
+                log += F(" kWh");
+                addLogMove(LOG_LEVEL_INFO, log);
+                log = F("Kamstrup  : Volume value: ");
+                log += m_volume;
+                log += F(" Liter");
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
             }
             else
             {
               message[i] = 0;
-              String log = F("ERR(PARITY):" );
-              serialPrint("par");
-              log += message;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ERR(PARITY):" );
+                serialPrint("par");
+                log += message;
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
               //UserVar[event->BaseVarIndex] = NAN;
               //UserVar[event->BaseVarIndex + 1] = NAN;
             }
@@ -256,9 +260,11 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
           if (to>100)
           {
             message[i] = 0;
-            String log = F("ERR(TIMEOUT):" );
-            log += message;
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("ERR(TIMEOUT):" );
+              log += message;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
 
             //UserVar[event->BaseVarIndex] = NAN;
             //UserVar[event->BaseVarIndex + 1] = NAN;

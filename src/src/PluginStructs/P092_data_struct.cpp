@@ -633,7 +633,7 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("P092_receiving ... TaskIndex:");
     log += taskindex;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
@@ -740,7 +740,7 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
     else {
       log += F("nan");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return result;
 }
