@@ -32,6 +32,8 @@ public:
   bool process(PGM_P str);
   bool process(const String& str);
 
+  bool isTail() const { return Tail; }
+
 private:
 
   void processVarName();

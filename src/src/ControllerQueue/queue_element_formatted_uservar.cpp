@@ -48,12 +48,17 @@ queue_element_formatted_uservar& queue_element_formatted_uservar::operator=(queu
   sensorType     = other.sensorType;
   valueCount     = other.valueCount;
 
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
-
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    if (other.txt[i].length() && !mmu_is_iram(&(other.txt[i][0]))) {
+      txt[i] = other.txt[i];
+    } else {
+      txt[i] = std::move(other.txt[i]);
+    }
+    #else
     txt[i] = std::move(other.txt[i]);
+    #endif // ifdef USE_SECOND_HEAP
   }
   return *this;
 }

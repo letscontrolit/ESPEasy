@@ -94,7 +94,7 @@ bool loadFromFS(String path) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
     log += path;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 

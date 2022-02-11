@@ -112,7 +112,7 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MLX90614  : Temperature: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         //        send(msgObjTemp024->set(UserVar[event->BaseVarIndex], 1)); // Mysensors
         success = true;

@@ -91,13 +91,13 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("SI1145: Visible: ");
         log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         log  = F("SI1145: Infrared: ");
         log += formatUserVarNoCheck(event->TaskIndex, 1);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         log  = F("SI1145: UV index: ");
         log += formatUserVarNoCheck(event->TaskIndex, 2);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;

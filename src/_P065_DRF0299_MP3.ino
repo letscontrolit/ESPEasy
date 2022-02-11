@@ -189,7 +189,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
           log += '=';
           log += value;
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       break;
     }
@@ -257,6 +257,7 @@ void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 
   P065_easySerial->write(buffer, 10); // Send the byte array
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MP3  : Send Cmd ");
 
@@ -264,8 +265,9 @@ void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
       log += String(buffer[i], 16);
       log += ' ';
     }
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
+#endif
 }
 
 #endif // USES_P065
