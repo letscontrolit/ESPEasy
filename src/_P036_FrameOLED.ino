@@ -1051,7 +1051,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           if (loglevelActiveFor(LOG_LEVEL_INFO) &&
               log.reserve(200)) { // estimated
-            log  = F("[P36] Line: ");
+            log += F("[P36] Line: ");
             log += LineNo;
             log += F(" NewContent:");
             log += NewContent;
@@ -1077,7 +1077,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         log += subcommand;
         log += F(" Success:");
         log += boolToString(success);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // PLUGIN_036_DEBUG
       break;
@@ -1091,7 +1091,7 @@ void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventVal
   if (Settings.UseRules) {
     String RuleEvent;
     RuleEvent.reserve(32); // Guesstimate
-    RuleEvent  = getTaskDeviceName(event->TaskIndex);
+    RuleEvent += getTaskDeviceName(event->TaskIndex);
     RuleEvent += '#';
 
     switch (eventId) {

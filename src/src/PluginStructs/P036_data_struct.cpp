@@ -34,13 +34,13 @@ void P036_data_struct::reset() {
 }
 
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24,  24,   28                        }, // 9643
-  { ArialMT_Plain_16,  16,   19                        }, // 5049
+  { ArialMT_Plain_24,  24,   28                                    }, // 9643
+  { ArialMT_Plain_16,  16,   19                                    }, // 5049
   # ifdef P036_FIVE_FONTS
-  { Dialog_plain_12,   13,   15                        }, // 3707
+  { Dialog_plain_12,   13,   15                                    }, // 3707
   # endif // ifdef P036_FIVE_FONTS
-  { ArialMT_Plain_10,  10,   13                        }, // 2731
-  { SansSerif_plain_8, 8,    10                        } // 2732
+  { ArialMT_Plain_10,  10,   13                                    }, // 2731
+  { SansSerif_plain_8, 8,    10                                    } // 2732
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -487,16 +487,21 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   }
 
   # ifdef P036_FONT_CALC_LOG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log.reserve(80);
+    log += F("P036 CalculateFontSettings lines: ");
+    log += iLinesPerFrame;
+    log += F(", height: ");
+    log += iHeight;
+    log += F(", header: ");
+    log += boolToString(!bHideHeader);
+    log += F(", footer: ");
+    log += boolToString(!bHideFooter);
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   String log;
-  log  = F("P036 CalculateFontSettings lines: ");
-  log += iLinesPerFrame;
-  log += F(", height: ");
-  log += iHeight;
-  log += F(", header: ");
-  log += boolToString(!bHideHeader);
-  log += F(", footer: ");
-  log += boolToString(!bHideFooter);
-  addLog(LOG_LEVEL_INFO, log);
   # endif // ifdef P036_FONT_CALC_LOG
 
   while (iFontIndex < 0) {
@@ -552,7 +557,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     # ifdef P036_FONT_CALC_LOG
     log += F(", font: ");
     log += iFontIndex;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     # endif // ifdef P036_FONT_CALC_LOG
   }
 
@@ -644,10 +649,10 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   String log;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(128)) { // estimated
+      log.reserve(32)) {
     log += F("Start Scrolling: Speed: ");
     log += static_cast<int>(lscrollspeed);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // PLUGIN_036_DEBUG
 
@@ -667,7 +672,8 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   # ifdef PLUGIN_036_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log.clear();
+    String log;
+    log.reserve(32);
     log += F("PageScrollTime: ");
     log += iPageScrollTime;
     addLogMove(LOG_LEVEL_INFO, log);
@@ -728,7 +734,8 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         # ifdef PLUGIN_036_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          log.clear();
+          String log;
+          log.reserve(32);
           log += F("Line: ");
           log += (j + 1);
           log += F(" width: ");
@@ -762,9 +769,10 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(iCharToRemove);
       }
       # ifdef PLUGIN_036_DEBUG
+      String log;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log.clear();
+      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+          log.reserve(128)) {
         log += F("Line: "); log += (j + 1);
         log += F(" LineIn: "); log += LineInStr;
         log += F(" Length: "); log += strlen;
@@ -807,9 +815,10 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
       }
       # ifdef PLUGIN_036_DEBUG
+      String log;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log.clear();
+      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+          log.reserve(128)) {
         log += F("Line: "); log += (j + 1);
         log += F(" LineOut: "); log += LineOutStr;
         log += F(" Length: "); log += strlen;
@@ -906,8 +915,6 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
   } else {
     // page scrolling finished
     ScrollingPages.Scrolling = 0; // allow following line scrolling
-    // String log = F("Scrolling finished");
-    // addLog(LOG_LEVEL_INFO, log);
   }
   return ScrollingPages.Scrolling;
 }
