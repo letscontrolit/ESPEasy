@@ -146,7 +146,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
         log += P127_data->getAltitude();
         log += F(", comp: ");
         log += P127_data->getCompensation();
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       break;
     }
