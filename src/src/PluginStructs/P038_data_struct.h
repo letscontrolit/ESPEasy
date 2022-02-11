@@ -37,10 +37,10 @@ private:
 
   Adafruit_NeoPixel *Plugin_038_pixels = nullptr;
 
-  String HSV2RGBWorRGBandLog(float H,
-                             float S,
-                             float V,
-                             int   rgbw[4]);
+  void HSV2RGBWorRGBandLog(float H,
+                           float S,
+                           float V,
+                           int   rgbw[4]);
 
   int8_t   _gpioPin;
   uint16_t _maxPixels;

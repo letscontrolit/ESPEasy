@@ -51,8 +51,9 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
 
     if (loglevelActiveFor(LOG_LEVEL_INFO) &&
         log.reserve(64)) {
-      log  = F("P038 : ");
+      log += F("P038 : write - ");
       log += string;
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     String cmd = parseString(string, 1);
@@ -68,7 +69,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       int rgbw[4];
       rgbw[3] = 0;
 
-      log += HSV2RGBWorRGBandLog(event->Par2, event->Par3, event->Par4, rgbw);
+      HSV2RGBWorRGBandLog(event->Par2, event->Par3, event->Par4, rgbw);
 
       Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
       Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
@@ -87,7 +88,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       int rgbw[4];
       rgbw[3] = 0;
 
-      log += HSV2RGBWorRGBandLog(event->Par1, event->Par2, event->Par3, rgbw);
+      HSV2RGBWorRGBandLog(event->Par1, event->Par2, event->Par3, rgbw);
 
       for (int i = 0; i < _maxPixels; i++) {
         Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
@@ -111,7 +112,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
       int rgbw[4];
       rgbw[3] = 0;
 
-      log += HSV2RGBWorRGBandLog(event->Par3, event->Par4, event->Par5, rgbw);
+      HSV2RGBWorRGBandLog(event->Par3, event->Par4, event->Par5, rgbw);
 
       for (int i = event->Par1 - 1; i < event->Par2; i++) {
         Plugin_038_pixels->setPixelColor(i, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
@@ -123,7 +124,7 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
   return success;
 }
 
-String P038_data_struct::HSV2RGBWorRGBandLog(float H, float S, float V, int rgbw[4]) {
+void P038_data_struct::HSV2RGBWorRGBandLog(float H, float S, float V, int rgbw[4]) {
   if (_stripType == P038_STRIP_TYPE_RGBW) { // RGBW
     HSV2RGBW(H, S, V, rgbw);
   } else {                                  // RGB
@@ -131,8 +132,9 @@ String P038_data_struct::HSV2RGBWorRGBandLog(float H, float S, float V, int rgbw
   }
   String log;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    log += F(" HSV converted to RGB(W):");
+  if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+      log.reserve(48)) {
+    log += F("P038 HSV converted to RGB(W):");
     log += rgbw[0];
     log += ',';
     log += rgbw[1];
@@ -140,9 +142,8 @@ String P038_data_struct::HSV2RGBWorRGBandLog(float H, float S, float V, int rgbw
     log += rgbw[2];
     log += ',';
     log += rgbw[3];
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
-  return log;
 }
 
 #endif // ifdef USES_P038
