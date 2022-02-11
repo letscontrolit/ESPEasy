@@ -557,19 +557,21 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, F("Fail to parse command correctly; please check API documentation"));
-          String log2 = F("Parsed command = \"");
-          log2 += string;
-          log2 += '"';
-          addLog(LOG_LEVEL_INFO, log2);
+          String log;
+          log.reserve(string.length() + 20); // Prevent re-allocation
+          log += F("Parsed command = \"");
+          log += string;
+          log += '"';
+          addLog(LOG_LEVEL_INFO, log);
         }
       }
       else
       {
         String log;
-        log.reserve(110);       // Prevent re-allocation
-        log  = F("P095-ILI9341 : WRITE = ");
+        log.reserve(tmpString.length() + 23); // Prevent re-allocation
+        log += F("P095-ILI9341 : WRITE = ");
         log += tmpString;
-        SendStatus(event, log); // Reply (echo) to sender. This will print message on browser.
+        SendStatus(event, log);               // Reply (echo) to sender. This will print message on browser.
       }
       break;
     }
