@@ -347,7 +347,7 @@ void P118_data_struct::ITHOcheck() {
     }
 
     if (PLUGIN_118_Log) {
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 }
@@ -362,12 +362,14 @@ void P118_data_struct::PublishData(struct EventStruct *event) {
 
     log += UserVar[event->BaseVarIndex];
     addLog(LOG_LEVEL_DEBUG, log);
-    log  = F("Timer: ");
+    log.clear();
+    log += F("Timer: ");
     log += UserVar[event->BaseVarIndex + 1];
     addLog(LOG_LEVEL_DEBUG, log);
-    log  = F("LastIDindex: ");
+    log.clear();
+    log += F("LastIDindex: ");
     log += UserVar[event->BaseVarIndex + 2];
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 }
 
