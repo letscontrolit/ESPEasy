@@ -526,7 +526,9 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 
     # ifdef P036_FONT_CALC_LOG
     uint8_t prLines = iLinesPerFrame;
-    log  = F("CalculateFontSettings prLines: ");
+    log.reserve(80);
+    log.clear()
+    log += F("CalculateFontSettings prLines: ");
     log += prLines;
     log += F(", max: ");
     log += iMaxHeightForFont;
@@ -604,7 +606,7 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
 
   if (loglevelActiveFor(LOG_LEVEL_INFO) &&
       log.reserve(128)) { // estimated
-    log  = F("CalculateFontSettings: FontIndex:");
+    log += F("CalculateFontSettings: FontIndex:");
     log += iFontIndex;
     log += F(" Top:");
     log += result.Top;
