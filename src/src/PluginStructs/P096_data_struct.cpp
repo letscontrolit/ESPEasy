@@ -140,7 +140,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(50);
-      log  = F("EPD  : Init done, address: 0x");
+      log += F("EPD  : Init done, address: 0x");
       log += String(reinterpret_cast<ulong>(eInkScreen), HEX);
       log += ' ';
 
@@ -150,8 +150,14 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       log += F("valid, commands: ");
       log += _commandTrigger;
       log += F(", display: ");
-      log += EPD_type_toString(static_cast<EPD_type_e>(_display));
+      log += EPD_type_toString(_display);
       addLog(LOG_LEVEL_INFO, log);
+      log.clear();
+      log += F("EPD  : Foreground: 0x");
+      log += String(_fgcolor, HEX);
+      log += F(", background: 0x");
+      log += String(_bgcolor, HEX);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
 
@@ -263,7 +269,6 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
 
   if ((nullptr != eInkScreen) && cmd.equals(_commandTriggerCmd)) {
     String arg1 = parseString(string, 2);
-    success = true;
 
     if (arg1.equals(F("off"))) { // Not supported 'on' and 'off' as commands
       success = false;
@@ -271,8 +276,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     else if (arg1.equals(F("on"))) {
       success = false;
     }
-    else if (arg1.equals(F("clear")))
-    {
+    else if (arg1.equals(F("clear"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -284,16 +288,15 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       }
       eInkScreen->display();
       eInkScreen->clearBuffer();
+      success = true;
     }
     else if (arg1.equals(F("backlight"))) { // not supported
       success = false;
     }
-    else if (arg1.equals(F("deepsleep")))
-    {
+    else if (arg1.equals(F("deepsleep"))) {
       eInkScreen->deepSleep();
     }
-    else if (arg1.equals(F("seq_start")))
-    {
+    else if (arg1.equals(F("seq_start"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
@@ -302,9 +305,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
         : AdaGFXparseColor(arg2, _colorDepth));
       eInkScreen->fillScreen(fillColor);
       plugin_096_sequence_in_progress = true;
+      success                         = true;
     }
-    else if (arg1.equals(F("seq_end")))
-    {
+    else if (arg1.equals(F("seq_end"))) {
       // # ifndef BUILD_NO_DEBUG
       //             TimingStats s;
       //             const unsigned statisticsTimerStart(micros());
@@ -317,9 +320,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       // # endif // ifndef BUILD_NO_DEBUG
       eInkScreen->clearBuffer();
       plugin_096_sequence_in_progress = false;
+      success                         = true;
     }
-    else if (arg1.equals(F("inv")))
-    {
+    else if (arg1.equals(F("inv"))) {
       String arg2 = parseString(string, 3);
       int    nArg2;
 
@@ -328,12 +331,10 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
           (nArg2 <= 1)) {
         eInkScreen->invertDisplay(nArg2);
         eInkScreen->display();
-      } else {
-        success = false;
+        success = true;
       }
     }
-    else if (arg1.equals(F("rot")))
-    {
+    else if (arg1.equals(F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
       String arg2 = parseString(string, 3);
@@ -343,8 +344,7 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
           (nArg2 >= 0)) {
         eInkScreen->setRotation(nArg2 % 4);
         eInkScreen->display();
-      } else {
-        success = false;
+        success = true;
       }
     } else {
       success = false;
