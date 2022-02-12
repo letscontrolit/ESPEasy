@@ -79,7 +79,7 @@
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
 # endif  // ifdef LIMIT_BUILD_SIZE
 
-# ifdef PLUGIN_SET_MAX                    // Include all fonts in MAX builds
+# ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
 #  ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
@@ -97,7 +97,7 @@
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // ifdef PLUGIN_SET_MAX
 
-# define ADAGFX_PARSE_PREFIX      F("~") // Subcommand-trigger prefix and postfix strings
+# define ADAGFX_PARSE_PREFIX      F("~")            // Subcommand-trigger prefix and postfix strings
 # define ADAGFX_PARSE_PREFIX_LEN  1
 # define ADAGFX_PARSE_POSTFIX     F("~")            // Will be removed before the normal template parsing is done
 # define ADAGFX_PARSE_POSTFIX_LEN 1
@@ -216,6 +216,8 @@ uint16_t AdaGFXparseColor(String         & s,
                           AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
                           bool             emptyIsBlack = false); // Parse either a color by name, 6 digit hex rrggbb color, or 1..4 digit
                                                                   // #rgb565 color (hex with # prefix)
+void   AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
+                                    AdaGFXColorDepth           colorDepth);
 String AdaGFXcolorToString(uint16_t         color,
                            AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
                            bool             blackIsEmpty = false);

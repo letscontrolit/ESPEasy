@@ -97,7 +97,7 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
   const int colorDepthCount = 6 + 1;
   # endif // if ADAGFX_SUPPORT_7COLOR
   const __FlashStringHelper *colorDepths[colorDepthCount] = { // Be sure to use all available modes from enum!
-    toString(static_cast<AdaGFXColorDepth>(0)), // include None
+    toString(static_cast<AdaGFXColorDepth>(0)),               // include None
     toString(AdaGFXColorDepth::Monochrome),
     toString(AdaGFXColorDepth::BlackWhiteRed),
     toString(AdaGFXColorDepth::BlackWhite2Greyscales),
@@ -255,13 +255,13 @@ String AdaGFXparseTemplate(String            & tmpString,
           if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
             String log;
             log.reserve(command.length() + 20);
-            log  = F("AdaGFX: inline cmd: ");
+            log += F("AdaGFX: inline cmd: ");
             log += command;
-            addLog(ADAGFX_LOG_LEVEL, log);
+            addLogMove(ADAGFX_LOG_LEVEL, log);
           }
           #  endif // ifndef BUILD_NO_DEBUG
 
-          if (gfxHelper->processCommand(command)) {   // Execute command and remove from result incl. pre/postfix
+          if (gfxHelper->processCommand(command)) { // Execute command and remove from result incl. pre/postfix
             result.remove(prefixTrigger, (postfixTrigger - prefixTrigger) + ADAGFX_PARSE_POSTFIX_LEN);
             prefixTrigger  = result.indexOf(ADAGFX_PARSE_PREFIX);
             postfixTrigger = result.indexOf(ADAGFX_PARSE_POSTFIX, prefixTrigger + 1);
@@ -381,10 +381,10 @@ String AdaGFXparseTemplate(String            & tmpString,
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
     log.reserve(result.length() + 24);
-    log  = F("AdaGFX: parse result: '");
+    log += F("AdaGFX: parse result: '");
     log += result;
     log += '\'';
-    addLog(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
   return result;
@@ -416,7 +416,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
     log.reserve(65);
-    log  = F("AdaGFX: Init, x: ");
+    log += F("AdaGFX: Init, x: ");
     log += _res_x;
     log += F(", y: ");
     log += _res_y;
@@ -424,7 +424,7 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
     log += static_cast<uint16_t>(colorDepth);
     log += F(", trigger: ");
     log += _trigger;
-    addLog(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -498,7 +498,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     log.reserve(90);
-    log  = F("AdaGFX: command: ");
+    log.clear();
+    log += F("AdaGFX: command: ");
     log += _trigger;
     log += F(" argCount: ");
     log += argCount;
@@ -508,7 +509,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (subcommand.equals(F("txt"))) // txt: Print text at last cursor position, ends at next line!
+  if (subcommand.equals(F("txt")))                          // txt: Print text at last cursor position, ends at next line!
   {
     _display->println(parseStringToEndKeepCase(string, 3)); // Print entire rest of provided line
   }
@@ -878,7 +879,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  endif // ifndef BUILD_NO_DEBUG
 
     while (mloop) {
-      sParams[optCount] = parseString(string, parCount + 4); // 0-offset + 1st and 2nd cmd-argument and 1 for color argument
+      sParams[optCount] = parseString(string, parCount + 4);       // 0-offset + 1st and 2nd cmd-argument and 1 for color argument
 
       if (!validIntFromString(sParams[optCount], nParams[optCount]) && !sParams[optCount].isEmpty()) {
         mcolor = AdaGFXparseColor(sParams[optCount], _colorDepth); // Interpret as a color
@@ -910,7 +911,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             mloop      = false; // Exit after closing the line
           }
           #  ifndef BUILD_NO_DEBUG
-          log  = F("AdaGFX: cmd: lm x/y/x1/y1:");
+          log.clear();
+          log += F("AdaGFX: cmd: lm x/y/x1/y1:");
           log += nParams[0];
           log += '/';
           log += nParams[1];
@@ -1369,6 +1371,82 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
                                                         AdaGFXColorDepth colorDepth,
                                                         bool             blackIsEmpty);
 
+// Add a single optionvalue of a color to a datalist (internal/private)
+void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
+                                           AdaGFXColorDepth colorDepth) {
+  const __FlashStringHelper *clr = AdaGFXcolorToString_internal(color, colorDepth, false);
+
+  if (clr != F("*")) {
+    addHtml(F("<option value=\""));
+    addHtml(clr);
+    addHtml(F("\">"));
+    addHtml(clr);
+    addHtml(F("</option>"));
+  }
+}
+
+/*****************************************************************************************
+ * Generate a html 'datalist' of the colors available for selected colorDepth, with id provided
+ ****************************************************************************************/
+void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
+                                  AdaGFXColorDepth           colorDepth) {
+  addHtml(F("<datalist id=\""));
+  addHtml(id);
+  addHtml(F("\">"));
+
+  switch (colorDepth) {
+    case AdaGFXColorDepth::BlackWhiteRed:
+    case AdaGFXColorDepth::BlackWhite2Greyscales:
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_RED),     colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_DARK),    colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_LIGHT),   colorDepth);
+    case AdaGFXColorDepth::Monochrome:
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK),   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE),   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_INVERSE), colorDepth);
+      break;
+    # if ADAGFX_SUPPORT_7COLOR
+    case AdaGFXColorDepth::SevenColor:
+    {
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK),  colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE),  colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_GREEN),  colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLUE),   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_RED),    colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_YELLOW), colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_ORANGE), colorDepth);
+      break;
+    }
+    # endif // if ADAGFX_SUPPORT_7COLOR
+    case AdaGFXColorDepth::EightColor: // TODO: Sort out the actual 8/16 color options
+    case AdaGFXColorDepth::SixteenColor:
+    case AdaGFXColorDepth::FullColor:
+    {
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_BLACK,       colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_NAVY,        colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_DARKGREEN,   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_DARKCYAN,    colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_MAROON,      colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_PURPLE,      colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_OLIVE,       colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_LIGHTGREY,   colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_DARKGREY,    colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_BLUE,        colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_GREEN,       colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_CYAN,        colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_RED,         colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_MAGENTA,     colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_YELLOW,      colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_WHITE,       colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_ORANGE,      colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_GREENYELLOW, colorDepth);
+      AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_PINK,        colorDepth);
+      break;
+    }
+  }
+  addHtml(F("</datalist>"));
+}
+
 /*****************************************************************************************
  * Convert an RGB565 color (number) to it's name or the #rgb565 hex string, based on depth
  ****************************************************************************************/
@@ -1562,7 +1640,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
     String log;
     log.reserve(60);
-    log = F("AdaGFX:");
+    log += F("AdaGFX:");
 
     if (!_trigger.isEmpty()) {
       log += F(" tr: ");
@@ -1576,7 +1654,7 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
     log += _textcols;
     log += F(" rows: ");
     log += _textrows;
-    addLog(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
@@ -1598,7 +1676,7 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
     String log;
 
     log.reserve(49);
-    log  = F("invalidCoordinates: X:");
+    log += F("invalidCoordinates: X:");
     log += X;
     log += '/';
     log += (colRowMode ? _textcols : _res_x);
@@ -1606,7 +1684,7 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
     log += Y;
     log += '/';
     log += (colRowMode ? _textrows : _res_y);
-    addLog(ADAGFX_LOG_LEVEL, log);
+    addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   #  endif // ifndef BUILD_NO_DEBUG
 
