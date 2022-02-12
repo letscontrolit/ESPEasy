@@ -43,6 +43,16 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
 }
 
 /****************************************************************************
+ * Destructor
+ ***************************************************************************/
+P095_data_struct::~P095_data_struct() {
+  if (nullptr != tft) {
+    delete tft;
+    tft = nullptr;
+  }
+}
+
+/****************************************************************************
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P095_data_struct::plugin_init(struct EventStruct *event) {
@@ -57,8 +67,8 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(50);
-      log  = F("ILI9341: Init done, address: 0x");
+      log.reserve(65);
+      log += F("ILI9341: Init done, address: 0x");
       log += String(reinterpret_cast<ulong>(tft), HEX);
       log += ' ';
 
@@ -67,7 +77,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       }
       log += F("valid, commands: ");
       log += _commandTrigger;
-      addLog(LOG_LEVEL_INFO, log);
+      log += '/';
+      log += _commandTriggerCmd;
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
