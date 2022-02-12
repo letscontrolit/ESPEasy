@@ -15,7 +15,15 @@
 # ifdef P036_FIVE_FONTS
 #  include <Dialog_Plain_12_font.h>
 # endif // ifndef P036_FIVE_FONTS
-# include <SansSerif_Plain_8_font.h>
+# ifdef P036_USE_SANSERIF_8_FONT
+#  include <SansSerif_Plain_8_font.h>
+# endif // ifdef P036_USE_SANSERIF_8_FONT
+# ifdef P036_USE_LATO_8_FONT
+#  include <Lato_Thin_8_font.h>
+# endif // ifdef P036_USE_LATO_8_FONT
+# ifdef P036_USE_MONOSPACED_8_FONT
+#  include <Monospaced_plain_8_font.h>
+# endif // ifdef P036_USE_MONOSPACED_8_FONT
 # include <OLED_SSD1306_SH1106_images.h>
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
@@ -34,13 +42,21 @@ void P036_data_struct::reset() {
 }
 
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24,  24,   28                                    }, // 9643
-  { ArialMT_Plain_16,  16,   19                                    }, // 5049
+  { ArialMT_Plain_24,   24,      28             }, // 9643
+  { ArialMT_Plain_16,   16,      19             }, // 5049
   # ifdef P036_FIVE_FONTS
-  { Dialog_plain_12,   13,   15                                    }, // 3707
+  { Dialog_plain_12,    13,      15             }, // 3707
   # endif // ifdef P036_FIVE_FONTS
-  { ArialMT_Plain_10,  10,   13                                    }, // 2731
-  { SansSerif_plain_8, 8,    10                                    } // 2732
+  { ArialMT_Plain_10,   10,      13             }, // 2731
+  # ifdef P036_USE_SANSERIF_8_FONT
+  { SansSerif_plain_8,  8,       10             }, // 2732
+  # endif // ifdef P036_USE_SANSERIF_8_FONT
+  # ifdef P036_USE_LATO_8_FONT
+  { Lato_Thin_8,        8,       10             }, // 2371
+  # endif // ifdef P036_USE_LATO_8_FONT
+  # ifdef P036_USE_MONOSPACED_8_FONT
+  { Monospaced_plain_8, 8,       10             } // 2715
+  # endif // ifdef P036_USE_MONOSPACED_8_FONT
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {

@@ -33,6 +33,22 @@
 #  define P36_MaxFontCount   4   // number of different fonts
 # endif // ifdef P036_FIVE_FONTS
 
+// Select the desired 8px font, as they have somewhat different readability, you can match to you personal taste
+// Default used: P036_USE_MONOSPACED_8_FONT (as the name says, it's mono-spaced, not proportional like the other fonts)
+// # define P036_USE_SANSERIF_8_FONT
+// # define P036_USE_MONOSPACED_8_FONT
+// # define P036_USE_LATO_8_FONT
+
+# if (defined(P036_USE_SANSERIF_8_FONT) && defined(P036_USE_MONOSPACED_8_FONT)) || \
+  (defined(P036_USE_SANSERIF_8_FONT) && defined(P036_USE_LATO_8_FONT)) ||          \
+  (defined(P036_USE_MONOSPACED_8_FONT) && defined(P036_USE_LATO_8_FONT))
+#  pragma error "Only a single OLed 8 px font should be enabled!"
+# endif // if (defined(P036_USE_SANSERIF_8_FONT) && defined(P036_USE_MONOSPACED_8_FONT)) || (defined(P036_USE_SANSERIF_8_FONT) &&
+// defined(P036_USE_LATO_8_FONT)) || (defined(P036_USE_MONOSPACED_8_FONT) && defined(P036_USE_LATO_8_FONT))
+# if !defined(P036_USE_SANSERIF_8_FONT) && !defined(P036_USE_LATO_8_FONT) && !defined(P036_USE_MONOSPACED_8_FONT)
+#  define P036_USE_MONOSPACED_8_FONT
+# endif // if !defined(P036_USE_SANSERIF_8_FONT) && !defined(P036_USE_LATO_8_FONT) && !defined(P036_USE_MONOSPACED_8_FONT)
+
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight  64
 # define P36_DisplayCentre     64
