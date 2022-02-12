@@ -239,6 +239,7 @@ public:
                      uint16_t            bgcolor       = ADAGFX_BLACK,
                      bool                useValidation = true,
                      bool                textBackFill  = false);
+  virtual ~AdafruitGFX_helper() {}
 
   bool processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
 
