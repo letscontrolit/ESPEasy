@@ -106,6 +106,26 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
 }
 
 /****************************************************************************
+ * Destructor
+ ***************************************************************************/
+P116_data_struct::~P116_data_struct() {
+  if (nullptr != gfxHelper) {
+    delete gfxHelper;
+    gfxHelper = nullptr;
+  }
+
+  if (nullptr != st77xx) {
+    delete st77xx;
+    st77xx = nullptr;
+  }
+
+  // No need to delete these, as the object has been deleted via st77xx already, see plugin_init
+  st7735 = nullptr;
+  st7789 = nullptr;
+  st7796 = nullptr;
+}
+
+/****************************************************************************
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P116_data_struct::plugin_init(struct EventStruct *event) {
@@ -419,7 +439,7 @@ void P116_data_struct::displayOnOff(bool state) {
     analogWriteESP32(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0, 0);
     # endif // if defined(ESP32)
   }
-  st77xx->enableDisplay(state);           // Display on
+  st77xx->enableDisplay(state); // Display on
   _displayTimer = (state ? _displayTimeout : 0);
 }
 
