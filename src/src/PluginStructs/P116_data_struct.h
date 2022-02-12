@@ -105,6 +105,7 @@ public:
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    bool                textBackFill = true);
+  ~P116_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);
