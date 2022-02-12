@@ -103,6 +103,7 @@ public:
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
                    bool                textBackFill = true);
+  ~P096_data_struct();
 
   bool plugin_init(struct EventStruct *event);
   bool plugin_exit(struct EventStruct *event);

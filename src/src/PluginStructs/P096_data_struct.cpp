@@ -87,6 +87,21 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
 }
 
 /****************************************************************************
+ * Destructor
+ ***************************************************************************/
+P096_data_struct::~P096_data_struct() {
+  if (nullptr != gfxHelper) {
+    delete gfxHelper;
+    gfxHelper = nullptr;
+  }
+
+  if (nullptr != eInkScreen) {
+    delete eInkScreen;
+    eInkScreen = nullptr;
+  }
+}
+
+/****************************************************************************
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P096_data_struct::plugin_init(struct EventStruct *event) {
