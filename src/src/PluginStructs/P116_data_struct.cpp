@@ -180,7 +180,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(90);
-      log  = F("ST77xx: Init done, address: 0x");
+      log += F("ST77xx: Init done, address: 0x");
       log += String(reinterpret_cast<ulong>(st77xx), HEX);
       log += ' ';
 
@@ -190,8 +190,8 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       log += F("valid, commands: ");
       log += _commandTrigger;
       log += F(", display: ");
-      log += ST77xx_type_toString(static_cast<ST77xx_type_e>(_device));
-      addLog(LOG_LEVEL_INFO, log);
+      log += ST77xx_type_toString(_device);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
