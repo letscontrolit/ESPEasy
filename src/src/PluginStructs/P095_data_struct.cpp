@@ -46,6 +46,11 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
  * Destructor
  ***************************************************************************/
 P095_data_struct::~P095_data_struct() {
+  if (nullptr != gfxHelper) {
+    delete gfxHelper;
+    gfxHelper = nullptr;
+  }
+
   if (nullptr != tft) {
     delete tft;
     tft = nullptr;
