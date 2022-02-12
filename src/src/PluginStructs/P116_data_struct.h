@@ -126,6 +126,7 @@ private:
 
   void displayOnOff(bool state);
   void updateFontMetrics();
+  void cleanup();
 
   Adafruit_ST77xx      *st77xx    = nullptr;
   Adafruit_ST7735      *st7735    = nullptr;

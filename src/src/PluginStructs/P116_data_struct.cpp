@@ -109,20 +109,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
  * Destructor
  ***************************************************************************/
 P116_data_struct::~P116_data_struct() {
-  if (nullptr != gfxHelper) {
-    delete gfxHelper;
-    gfxHelper = nullptr;
-  }
-
-  if (nullptr != st77xx) {
-    delete st77xx;
-    st77xx = nullptr;
-  }
-
-  // No need to delete these, as the object has been deleted via st77xx already, see plugin_init
-  st7735 = nullptr;
-  st7789 = nullptr;
-  st7796 = nullptr;
+  cleanup();
 }
 
 /****************************************************************************
@@ -282,7 +269,14 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
     st77xx->fillScreen(ADAGFX_BLACK); // fill screen with black color
     displayOnOff(false);
   }
+  cleanup();
+  return true;
+}
 
+/****************************************************************************
+ * cleanup: De-initialize pointers
+ ***************************************************************************/
+void P116_data_struct::cleanup() {
   if (nullptr != gfxHelper) { delete gfxHelper; }
   gfxHelper = nullptr;
 
@@ -292,7 +286,6 @@ bool P116_data_struct::plugin_exit(struct EventStruct *event) {
   if (nullptr != st7789) { delete st7789; }
   st7789 = nullptr;
   st77xx = nullptr; // Only used as a proxy
-  return true;
 }
 
 /****************************************************************************
