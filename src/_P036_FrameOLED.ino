@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @tonhuisman: 2022-02-13
+// CHG: Tweak font metrics for 4-lines display to not need to use an 8px font (height 10 pix).
+// DEL: Removed the extra fonts added earlier in this change, including the mono-spaced font
 // @tonhuisman: 2022-02-06
 // ADD: Setting and support for showing the content left-aligned, and oledframedcmd,leftalign,<0|1> subcommand
 // CHG: Move #define for settings to P036_data_struct.h file,

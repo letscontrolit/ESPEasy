@@ -12,18 +12,7 @@
 # include "../Helpers/StringParser.h"
 # include "../Helpers/SystemVariables.h"
 
-# ifdef P036_FIVE_FONTS
-#  include <Dialog_Plain_12_font.h>
-# endif // ifndef P036_FIVE_FONTS
-# ifdef P036_USE_SANSERIF_8_FONT
-#  include <SansSerif_Plain_8_font.h>
-# endif // ifdef P036_USE_SANSERIF_8_FONT
-# ifdef P036_USE_LATO_8_FONT
-#  include <Lato_Thin_8_font.h>
-# endif // ifdef P036_USE_LATO_8_FONT
-# ifdef P036_USE_MONOSPACED_8_FONT
-#  include <Monospaced_plain_8_font.h>
-# endif // ifdef P036_USE_MONOSPACED_8_FONT
+# include <Dialog_Plain_12_font.h>
 # include <OLED_SSD1306_SH1106_images.h>
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}
@@ -42,21 +31,10 @@ void P036_data_struct::reset() {
 }
 
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24,   24,      28             }, // 9643
-  { ArialMT_Plain_16,   16,      19             }, // 5049
-  # ifdef P036_FIVE_FONTS
-  { Dialog_plain_12,    13,      15             }, // 3707
-  # endif // ifdef P036_FIVE_FONTS
-  { ArialMT_Plain_10,   10,      13             }, // 2731
-  # ifdef P036_USE_SANSERIF_8_FONT
-  { SansSerif_plain_8,  8,       10             }, // 2732
-  # endif // ifdef P036_USE_SANSERIF_8_FONT
-  # ifdef P036_USE_LATO_8_FONT
-  { Lato_Thin_8,        8,       10             }, // 2371
-  # endif // ifdef P036_USE_LATO_8_FONT
-  # ifdef P036_USE_MONOSPACED_8_FONT
-  { Monospaced_plain_8, 8,       10             } // 2715
-  # endif // ifdef P036_USE_MONOSPACED_8_FONT
+  { ArialMT_Plain_24, 24,    28                 }, // 9643
+  { ArialMT_Plain_16, 16,    19                 }, // 5049
+  { Dialog_plain_12,  13,    15                 }, // 3707
+  { ArialMT_Plain_10, 10,    13                 }, // 2731
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -521,13 +499,13 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
   # endif // ifdef P036_FONT_CALC_LOG
 
   while (iFontIndex < 0) {
-    iMaxHeightForFont = round((iHeight /*- (iLinesPerFrame - 1)*/) / (iLinesPerFrame * 1.0f)); // at least 0/1? pixel space between lines
+    iMaxHeightForFont = round(iHeight / (iLinesPerFrame * 1.0f)); // no extra space between lines
     // Fonts already have their own extra space, no need to add an extra pixel space
 
     # ifdef P036_FONT_CALC_LOG
     uint8_t prLines = iLinesPerFrame;
     log.reserve(80);
-    log.clear()
+    log.clear();
     log += F("CalculateFontSettings prLines: ");
     log += prLines;
     log += F(", max: ");
@@ -560,17 +538,19 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     }
 
     if (iFontIndex < 0) {
+      // FIXED: tonhuisman Reduce number of lines feature disabled for now, by tweaking the font metrics for 4 lines, see below
       // no font fits -> reduce number of lines per page
-      iLinesPerFrame--;
+      // iLinesPerFrame--;
       # ifdef P036_FONT_CALC_LOG
       log += F(", L: ");
       log += iLinesPerFrame;
       # endif // ifdef P036_FONT_CALC_LOG
 
-      if (iLinesPerFrame == 0) {
-        // lines per frame is at minimum
-        break;
-      }
+      // if (iLinesPerFrame == 0) {
+      // lines per frame is at minimum
+      break;
+
+      // }
     }
     # ifdef P036_FONT_CALC_LOG
     log += F(", font: ");
@@ -593,10 +573,11 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
     result.Top = (iHeight - (iMaxHeightForFont + (result.Space * (iLinesPerFrame - 1)))) / 2;
   } else {
     // no font found -> return font with shortest height
-    result.Top     = 0;
-    result.Space   = 1;
-    iLinesPerFrame = 1;
-    iFontIndex     = P36_MaxFontCount - 1;
+    // FIXED: tonhuisman Tweaked to match the 13 pix font to fit for 4 lines display
+    // iLinesPerFrame = 1; // Disabled to show all 4 lines
+    result.Top   = 0;
+    result.Space = bHideFooter ? 0 : -2;
+    iFontIndex   = P36_MaxFontCount - 1;
   }
   result.fontData = FontSizes[iFontIndex].fontData;
   result.Height   = FontSizes[iFontIndex].Height;

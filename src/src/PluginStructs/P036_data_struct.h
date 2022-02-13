@@ -9,8 +9,6 @@
 
 # ifdef LIMIT_BUILD_SIZE
 #  define P036_LIMIT_BUILD_SIZE
-# else // ifdef LIMIT_BUILD_SIZE
-#  define P036_FIVE_FONTS // Enable 5 fonts setup
 # endif // ifdef LIMIT_BUILD_SIZE
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
@@ -27,27 +25,7 @@
 # define P36_NcharsV0      32    // max chars per line up to 22.11.2019 (V0)
 # define P36_NcharsV1      64    // max chars per line from 22.11.2019 (V1)
 # define P36_MaxSizesCount  3    // number of different OLED sizes
-# ifdef P036_FIVE_FONTS
-#  define P36_MaxFontCount   5   // number of different fonts
-# else // ifdef P036_FIVE_FONTS
-#  define P36_MaxFontCount   4   // number of different fonts
-# endif // ifdef P036_FIVE_FONTS
-
-// Select the desired 8px font, as they have somewhat different readability, you can match to you personal taste
-// Default used: P036_USE_MONOSPACED_8_FONT (as the name says, it's mono-spaced, not proportional like the other fonts)
-// # define P036_USE_SANSERIF_8_FONT
-// # define P036_USE_MONOSPACED_8_FONT
-// # define P036_USE_LATO_8_FONT
-
-# if (defined(P036_USE_SANSERIF_8_FONT) && defined(P036_USE_MONOSPACED_8_FONT)) || \
-  (defined(P036_USE_SANSERIF_8_FONT) && defined(P036_USE_LATO_8_FONT)) ||          \
-  (defined(P036_USE_MONOSPACED_8_FONT) && defined(P036_USE_LATO_8_FONT))
-#  pragma error "Only a single OLed 8 px font should be enabled!"
-# endif // if (defined(P036_USE_SANSERIF_8_FONT) && defined(P036_USE_MONOSPACED_8_FONT)) || (defined(P036_USE_SANSERIF_8_FONT) &&
-// defined(P036_USE_LATO_8_FONT)) || (defined(P036_USE_MONOSPACED_8_FONT) && defined(P036_USE_LATO_8_FONT))
-# if !defined(P036_USE_SANSERIF_8_FONT) && !defined(P036_USE_LATO_8_FONT) && !defined(P036_USE_MONOSPACED_8_FONT)
-#  define P036_USE_MONOSPACED_8_FONT
-# endif // if !defined(P036_USE_SANSERIF_8_FONT) && !defined(P036_USE_LATO_8_FONT) && !defined(P036_USE_MONOSPACED_8_FONT)
+# define P36_MaxFontCount   4    // number of different fonts
 
 # define P36_MaxDisplayWidth  128
 # define P36_MaxDisplayHeight  64
@@ -187,7 +165,7 @@ typedef struct {
   const char *fontData; // font for this line setting
   uint8_t     Top;      // top in pix for this line setting
   uint8_t     Height;   // font height in pix
-  uint8_t     Space;    // space in pix between lines for this line setting
+  int8_t      Space;    // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 } tFontSettings;
 
 typedef struct {
