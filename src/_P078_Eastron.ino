@@ -51,9 +51,9 @@
 
 // These pointers may be used among multiple instances of the same plugin,
 // as long as the same serial settings are used.
-ESPeasySerial *Plugin_078_SoftSerial = NULL;
-SDM *Plugin_078_SDM                  = NULL;
-boolean Plugin_078_init              = false;
+ESPeasySerial* Plugin_078_SoftSerial = nullptr;
+SDM* Plugin_078_SDM = nullptr;
+boolean Plugin_078_init = false;
 
 
 // Forward declaration helper functions
@@ -158,7 +158,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         for (int i = 0; i < 6; ++i) {
           options_baudrate[i] = String(p078_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, NULL, P078_BAUDRATE);
+        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P078_BAUDRATE );
         addUnit(F("baud"));
       }
 
@@ -189,10 +189,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *options_model[5] =
         { F("SDM220 & SDM120CT & SDM120"), F("SDM230"), F("SDM72D"), F("DDM18SD"), F("SDM630") };
-        addFormSelector(F("Model Type"), P078_MODEL_LABEL, 5, options_model, NULL, P078_MODEL);
+        addFormSelector(F("Model Type"), P078_MODEL_LABEL, 5, options_model, nullptr, P078_MODEL);
         addFormNote(F("Submit after changing the modell to update Output Configuration."));
       }
-
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
@@ -245,9 +244,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     {
       Plugin_078_init = true;
 
-      if (Plugin_078_SoftSerial != NULL) {
+      if (Plugin_078_SoftSerial != nullptr) {
         delete Plugin_078_SoftSerial;
-        Plugin_078_SoftSerial = NULL;
+        Plugin_078_SoftSerial = nullptr;
       }
       Plugin_078_SoftSerial = new (std::nothrow) ESPeasySerial(static_cast<ESPEasySerialPort>(CONFIG_PORT), CONFIG_PIN1, CONFIG_PIN2);
 
@@ -257,9 +256,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       unsigned int baudrate = p078_storageValueToBaudrate(P078_BAUDRATE);
       Plugin_078_SoftSerial->begin(baudrate);
 
-      if (Plugin_078_SDM != NULL) {
+      if (Plugin_078_SDM != nullptr) {
         delete Plugin_078_SDM;
-        Plugin_078_SDM = NULL;
+        Plugin_078_SDM = nullptr;
       }
       Plugin_078_SDM = new SDM(*Plugin_078_SoftSerial, baudrate, P078_DEPIN);
 
@@ -273,15 +272,15 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_EXIT:
     {
       Plugin_078_init = false;
-
-      if (Plugin_078_SoftSerial != NULL) {
+      
+      if (Plugin_078_SoftSerial != nullptr) {
         delete Plugin_078_SoftSerial;
-        Plugin_078_SoftSerial = NULL;
+        Plugin_078_SoftSerial = nullptr;
       }
 
-      if (Plugin_078_SDM != NULL) {
+      if (Plugin_078_SDM != nullptr) {
         delete Plugin_078_SDM;
-        Plugin_078_SDM = NULL;
+        Plugin_078_SDM = nullptr;
       }
       break;
     }
@@ -307,7 +306,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 }
 
 float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
-  if (Plugin_078_SDM == NULL) { return 0.0f; }
+  if (Plugin_078_SDM == nullptr) { return 0.0f; }
 
   uint8_t  retry_count = 3;
   bool  success     = false;
@@ -332,7 +331,7 @@ float p078_readVal(uint8_t query, uint8_t node, unsigned int model) {
     log += p078_getQueryString(query, model);
     log += F(": ");
     log += _tempvar;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   delay(1);
   return _tempvar;

@@ -1,45 +1,65 @@
 #include "../WebServer/LoadFromFS.h"
 
-#include "../WebServer/WebServer.h"
-#include "../WebServer/CustomPage.h"
 #include "../Globals/RamTracker.h"
+
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Network.h"
 
-#ifdef FEATURE_SD
-#include <SD.h>
-#endif
+#include "../WebServer/CustomPage.h"
+#include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/WebServer.h"
 
-bool match_ext(const String& path, const __FlashStringHelper * ext) {
-  return (path.endsWith(ext) || path.endsWith(String(ext) + F(".gz")));
+#ifdef FEATURE_SD
+# include <SD.h>
+#endif // ifdef FEATURE_SD
+
+bool match_ext(const String& path, const __FlashStringHelper *ext) {
+  return path.endsWith(ext) || path.endsWith(String(ext) + F(".gz"));
 }
 
+bool gzipEncoded(const String& path) {
+  return path.endsWith(F(".gz"));
+}
 
-// ********************************************************************************
-// Web Interface server web file from FS
-// ********************************************************************************
-bool loadFromFS(boolean spiffs, String path) {
-  // path is a deepcopy, since it will be changed here.
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("loadFromFS"));
-  #endif
-
-  statusLED(true);
-
-  String dataType = F("text/plain");
-  bool mustCheckCredentials = false;
-
+String fileFromUrl(String path) {
   const int questionmarkPos = path.indexOf('?');
+
   if (questionmarkPos >= 0) {
     path = path.substring(0, questionmarkPos);
   }
 
+  // First prepend slash
   if (!path.startsWith(F("/"))) {
-    path = String(F("/")) + path;
+    path = String('/') + path;
   }
 
-
   if (path.endsWith(F("/"))) { path += F("index.htm"); }
+
+  #ifdef ESP8266
+  // Remove leading slash to generate filename from it.
+  if (path.startsWith(F("/"))) {
+    path = path.substring(1);
+  }
+  #endif
+
+  return path;
+}
+
+// ********************************************************************************
+// Web Interface server web file from FS
+// ********************************************************************************
+bool loadFromFS(String path) {
+  // path is a deepcopy, since it will be changed here.
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("loadFromFS"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  statusLED(true);
+
+  const __FlashStringHelper* dataType = F("text/plain");
+  bool   mustCheckCredentials = false;
+
+  path = fileFromUrl(path);
 
   if (path.endsWith(F(".src"))) { path = path.substring(0, path.lastIndexOf(".")); }
   else if (match_ext(path, F(".htm")) || match_ext(path, F(".html"))) { dataType = F("text/html"); }
@@ -52,15 +72,15 @@ bool loadFromFS(boolean spiffs, String path) {
   else if (path.endsWith(F(".svg"))) { dataType = F("image/svg+xml"); }
   else if (path.endsWith(F(".json"))) { dataType = F("application/json"); }
   else if (path.endsWith(F(".txt")) ||
-           path.endsWith(F(".dat"))) { 
+           path.endsWith(F(".dat"))) {
     mustCheckCredentials = true;
-    dataType = F("application/octet-stream"); 
+    dataType             = F("application/octet-stream");
   }
 #ifdef WEBSERVER_CUSTOM
   else if (path.endsWith(F(".esp"))) {
-    return handle_custom(path); 
+    return handle_custom(path);
   }
-#endif
+#endif // ifdef WEBSERVER_CUSTOM
   else {
     mustCheckCredentials = true;
   }
@@ -74,57 +94,90 @@ bool loadFromFS(boolean spiffs, String path) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
     log += path;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
-#if !defined(ESP32)
-  path = path.substring(1);
-#endif // if !defined(ESP32)
+  fs::File f;
 
-  if (spiffs)
-  {
-    if (!fileExists(path)) {
-      return false;
-    }
-    fs::File dataFile = tryOpenFile(path.c_str(), "r");
-
-    if (!dataFile) {
-      return false;
-    }
-
-    // prevent reloading stuff on every click
-    web_server.sendHeader(F("Cache-Control"), F("max-age=3600, public"));
-    web_server.sendHeader(F("Vary"),          "*");
-    web_server.sendHeader(F("ETag"),          F("\"2.0.0\""));
-
-    if (path.endsWith(F(".dat"))) {
-      web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
-    }
-
-    web_server.streamFile(dataFile, dataType);
-    dataFile.close();
+  // Search flash file system first, then SD if present
+  f = tryOpenFile(path.c_str(), "r");
+  #ifdef FEATURE_SD
+  if (!f) {
+    f = SD.open(path.c_str(), "r");
   }
-  else
-  {
-#ifdef FEATURE_SD
-    File dataFile = SD.open(path.c_str());
+  #endif // ifdef FEATURE_SD
 
-    if (!dataFile) {
-      return false;
-    }
-
-    if (path.endsWith(F(".DAT"))) {
-      web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
-    }
-    web_server.streamFile(dataFile, dataType);
-    dataFile.close();
-#else // ifdef FEATURE_SD
-
-    // File from SD requested, but no SD support.
+  if (!f) {
     return false;
-#endif // ifdef FEATURE_SD
   }
+
+  // prevent reloading stuff on every click
+  web_server.sendHeader(F("Cache-Control"), F("max-age=3600, public"));
+  web_server.sendHeader(F("Vary"),          "*");
+  web_server.sendHeader(F("ETag"),          F("\"2.0.0\""));
+
+  if (path.endsWith(F(".dat"))) {
+    web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
+  }
+  if (gzipEncoded(path)) {
+    web_server.sendHeader(F("Content-Encoding"), F("gzip"));
+  }
+
+  web_server.streamFile(f, dataType);
+  f.close();
+
   statusLED(true);
   return true;
+}
+
+size_t streamFromFS(String path, bool htmlEscape) {
+  // path is a deepcopy, since it will be changed here.
+  path = fileFromUrl(path);
+  statusLED(true);
+
+  size_t bytesStreamed = 0;
+
+  fs::File f;
+
+  // Search flash file system first, then SD if present
+  f = tryOpenFile(path.c_str(), "r");
+  #ifdef FEATURE_SD
+  if (!f) {
+    f = SD.open(path.c_str(), "r");
+  }
+  #endif // ifdef FEATURE_SD
+
+  if (!f) {
+    return bytesStreamed;
+  }
+
+  int available = f.available();
+  String escaped;
+  while (available > 0) {
+    uint32_t chunksize = 64;
+    if (available < static_cast<int>(chunksize)) {
+      chunksize = available;
+    }
+    uint8_t buf[64] = {0};
+    const size_t read = f.read(buf, chunksize);
+    if (read == chunksize) {
+      for (uint32_t i = 0; i < chunksize; ++i) {
+        const char c = (char)buf[i];
+        if (htmlEscape && htmlEscapeChar(c, escaped)) {
+          addHtml(escaped);
+        } else {
+          addHtml(c);
+        }
+      }
+      bytesStreamed += read;
+      available = f.available();
+    } else {
+      available = 0;
+    }
+  }
+  statusLED(true);
+
+  f.close();
+  return bytesStreamed;
 }

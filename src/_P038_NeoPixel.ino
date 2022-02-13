@@ -31,7 +31,7 @@
 
 #include <Adafruit_NeoPixel.h>
 
-Adafruit_NeoPixel *Plugin_038_pixels;
+Adafruit_NeoPixel *Plugin_038_pixels = nullptr;
 
 #define PLUGIN_038
 #define PLUGIN_ID_038         38
@@ -94,22 +94,35 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_038_pixels)
+        if (Plugin_038_pixels == nullptr)
         {
           uint8_t striptype = PCONFIG(1);
           if (striptype == 1)
-            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+            Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
           else if (striptype == 2)
-            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRBW + NEO_KHZ800);
+            Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRBW + NEO_KHZ800);
           else
-            Plugin_038_pixels = new Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+            Plugin_038_pixels = new (std::nothrow) Adafruit_NeoPixel(PCONFIG(0), CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
 
-          Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
+          if (Plugin_038_pixels != nullptr) {
+            Plugin_038_pixels->begin(); // This initializes the NeoPixel library.
+          }
         }
         MaxPixels = PCONFIG(0);
+        success = Plugin_038_pixels != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_038_pixels != nullptr) {
+          delete Plugin_038_pixels;
+          Plugin_038_pixels = nullptr;
+        }
         success = true;
         break;
       }
+
 
     case PLUGIN_WRITE:
       {
@@ -148,13 +161,13 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" HSV converted to RGB(W):");
               log += rgbw[0];
-              log += ",";
+              log += ',';
               log += rgbw[1];
-              log += ",";
+              log += ',';
               log += rgbw[2];
-              log += ",";
+              log += ',';
               log += rgbw[3];
-              addLog(LOG_LEVEL_INFO,log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(rgbw[0], rgbw[1], rgbw[2], rgbw[3]));
             Plugin_038_pixels->show(); // This sends the updated pixel color to the hardware.
@@ -187,13 +200,13 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" HSV converted to RGB(W):");
               log += rgbw[0];
-              log += ",";
+              log += ',';
               log += rgbw[1];
-              log += ",";
+              log += ',';
               log += rgbw[2];
-              log += ",";
+              log += ',';
               log += rgbw[3];
-              addLog(LOG_LEVEL_INFO,log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
            for (int i = 0; i < MaxPixels; i++)
@@ -234,13 +247,13 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               log += F(" HSV converted to RGB(W):");
               log += rgbw[0];
-              log += ",";
+              log += ',';
               log += rgbw[1];
-              log += ",";
+              log += ',';
               log += rgbw[2];
-              log += ",";
+              log += ',';
               log += rgbw[3];
-              addLog(LOG_LEVEL_INFO,log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
   					for (int i = event->Par1 - 1; i < event->Par2; i++)

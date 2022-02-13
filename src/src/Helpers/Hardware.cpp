@@ -25,6 +25,7 @@
 #ifdef ESP32
 #include <soc/soc.h>
 #include <soc/efuse_reg.h>
+#include <rom/spi_flash.h>
 #endif
 
 /********************************************************************************************\
@@ -195,7 +196,7 @@ void initI2C() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("INIT : I2C custom clockstretchlimit:");
       log += Settings.WireClockStretchLimit;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
       #if defined(ESP8266)
     Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
@@ -480,21 +481,30 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
    Hardware information
  \*********************************************************************************************/
 uint32_t getFlashChipId() {
-  uint32_t flashChipId = 0;
+  // Cache since size does not change
+  static uint32_t flashChipId = 0;
+  if (flashChipId == 0) {
   #ifdef ESP32
-  //esp_flash_read_id(nullptr, &flashChipId);
+    flashChipId = g_rom_flashchip.device_id;
+//    esp_flash_read_id(nullptr, &flashChipId);
   #elif defined(ESP8266)
-  flashChipId = ESP.getFlashChipId();
+    flashChipId = ESP.getFlashChipId();
   #endif
+  }
   return flashChipId;
 }
 
 uint32_t getFlashRealSizeInBytes() {
-  #if defined(ESP32)
-  return ESP.getFlashChipSize();
-  #else // if defined(ESP32)
-  return ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
-  #endif // if defined(ESP32)
+  // Cache since size does not change
+  static uint32_t res = 0;
+  if (res == 0) {
+    #if defined(ESP32)
+    res = ESP.getFlashChipSize();
+    #else // if defined(ESP32)
+    res = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
+    #endif // if defined(ESP32)
+  }
+  return res;
 }
 
 
@@ -519,17 +529,17 @@ uint8_t getFlashChipVendorId() {
   return ESP.getFlashChipVendorId();
 #else // ifdef PUYA_SUPPORT
   # if defined(ESP8266)
-    uint32_t flashChipId = ESP.getFlashChipId();
+    // Cache since size does not change
+    static uint32_t flashChipId = ESP.getFlashChipId();
     return flashChipId & 0x000000ff;
   # elif defined(ESP32)
-  
+    return 0xFF; // Not an existing function for ESP32  
   # endif // if defined(ESP8266)
 #endif // ifdef PUYA_SUPPORT
-  return 0xFF; // Not an existing function for ESP32
 }
 
 bool flashChipVendorPuya() {
-  uint8_t vendorId = getFlashChipVendorId();
+  const uint8_t vendorId = getFlashChipVendorId();
 
   return vendorId == 0x85; // 0x146085 PUYA
 }
@@ -550,13 +560,17 @@ uint32_t getChipId() {
 }
 
 uint8_t getChipCores() {
-  uint8_t cores = 1;
-  #ifdef ESP32
+  #ifdef ESP8266
+  return 1;
+  #else
+  static uint8_t cores = 0;
+  if (cores == 0) {
     esp_chip_info_t chip_info;
     esp_chip_info(&chip_info);
     cores = chip_info.cores;
-  #endif
+  }
   return cores;
+  #endif
 }
 
 const __FlashStringHelper * getChipModel() {
@@ -598,6 +612,19 @@ uint8_t getChipRevision() {
   #endif
   return rev;
 }
+
+uint32_t getSketchSize() {
+  // Cache the value as this never changes during run time.
+  static uint32_t res = ESP.getSketchSize();
+  return res;
+}
+
+uint32_t getFreeSketchSpace() {
+  // Cache the value as this never changes during run time.
+  static uint32_t res = ESP.getFreeSketchSpace();
+  return res;
+}
+
 
 #ifdef ESP8266
 void readBootCause() {
@@ -875,7 +902,7 @@ void addButtonRelayRule(uint8_t buttonNumber, int relay_gpio) {
   String result = appendLineToFile(fileName, rule);
 
   if (result.length() > 0) {
-    addLog(LOG_LEVEL_ERROR, result);
+    addLogMove(LOG_LEVEL_ERROR, result);
   }
 }
 

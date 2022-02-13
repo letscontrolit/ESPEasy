@@ -7,6 +7,7 @@
 
 #include "../Globals/Settings.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
@@ -544,11 +545,25 @@ void addTableSeparator(const String& label, int colspan, int h_size, const Strin
 }
 
 void addFormHeader(const __FlashStringHelper *header) {
+  addFormHeader(header, F(""), F(""));
+}
+
+void addFormHeader(const __FlashStringHelper *header,
+                   const __FlashStringHelper *helpButton)
+{
+  addFormHeader(header, helpButton, F(""));
+}
+
+void addFormHeader(const __FlashStringHelper *header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton)
+{
   html_TR();
-  html_table_header(header, EMPTY_STRING, EMPTY_STRING, 225);
+  html_table_header(header, helpButton, rtdHelpButton, 225);
   html_table_header(F(""));
 }
 
+/*
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, EMPTY_STRING);
 }
@@ -559,6 +574,7 @@ void addFormHeader(const String& header, const String& helpButton, const String&
   html_table_header(header, helpButton, rtdHelpButton, 225);
   html_table_header(F(""));
 }
+*/
 
 // ********************************************************************************
 // Add a sub header
@@ -683,9 +699,9 @@ void addFloatNumberBox(const String& id, float value, float min, float max, uint
   html += id;
   html += '\'';
   html += F(" min=");
-  html += String(min, nrDecimals);
+  html += toString(min, nrDecimals);
   html += F(" max=");
-  html += String(max, nrDecimals);
+  html += toString(max, nrDecimals);
   html += F(" step=");
 
   if (stepsize <= 0.0f) {
@@ -696,11 +712,11 @@ void addFloatNumberBox(const String& id, float value, float min, float max, uint
     }
     html += '1';
   } else {
-    html += String(stepsize, nrDecimals);
+    html += toString(stepsize, nrDecimals);
   }
 
   html += F(" style='width:7em;' value=");
-  html += String(value, nrDecimals);
+  html += toString(value, nrDecimals);
 
   #ifdef ENABLE_TOOLTIPS
 

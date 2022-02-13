@@ -94,7 +94,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("SDO Low=0x76, High=0x77"));
 
       addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), PCONFIG(1));
-      addUnit(F("m"));
+      addUnit('m');
 
       addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
       addUnit(F("x 0.1C"));
@@ -167,22 +167,23 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             log  = P028_data->getDeviceName();
             log += F(" : Address: 0x");
             log += String(PCONFIG(0), HEX);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
+            // addLogMove does also clear the string.
             log  = P028_data->getDeviceName();
             log += F(" : Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             if (P028_data->hasHumidity()) {
               log  = P028_data->getDeviceName();
               log += F(" : Humidity: ");
               log += formatUserVarNoCheck(event->TaskIndex, 1);
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             log  = P028_data->getDeviceName();
             log += F(" : Barometric Pressure: ");
             log += formatUserVarNoCheck(event->TaskIndex, 2);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
         success = true;

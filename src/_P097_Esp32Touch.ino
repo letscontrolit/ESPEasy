@@ -56,6 +56,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].DecimalsOnly       = false;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -152,10 +153,10 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
                 if (Settings.UseRules) {
                   String eventString;
                   eventString.reserve(32);
-                  eventString  = getTaskDeviceName(event->TaskIndex);
+                  eventString += getTaskDeviceName(event->TaskIndex);
                   eventString += F("#Duration=");
                   eventString += timePassedSince(p097_timestamp[t]);
-                  eventQueue.add(eventString);
+                  eventQueue.addMove(std::move(eventString));
                 }
               }
               bitClear(p097_pinTouchedPrev, t);
@@ -178,7 +179,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
         log += formatGpioName_ADC(CONFIG_PIN1);
         log += F(": ");
         log += raw_value;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;

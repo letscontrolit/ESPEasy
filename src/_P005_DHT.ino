@@ -115,17 +115,21 @@ void P005_log(struct EventStruct *event, int logNr)
     case P005_error_checksum_error:      text += F("Checksum Error"); break;
     case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
     case P005_info_temperature:
-      text += F("Temperature: ");
-      text += formatUserVarNoCheck(event->TaskIndex, 0);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        text += F("Temperature: ");
+        text += formatUserVarNoCheck(event->TaskIndex, 0);
+      }
       isError = false;
       break;
     case P005_info_humidity:
-      text += F("Humidity: ");
-      text += formatUserVarNoCheck(event->TaskIndex, 1);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        text += F("Humidity: ");
+        text += formatUserVarNoCheck(event->TaskIndex, 1);
+      }
       isError = false;
       break;
   }
-  addLog(LOG_LEVEL_INFO, text);
+  addLogMove(LOG_LEVEL_INFO, text);
   if (isError) {
     UserVar[event->BaseVarIndex] = NAN;
     UserVar[event->BaseVarIndex + 1] = NAN;
@@ -135,9 +139,9 @@ void P005_log(struct EventStruct *event, int logNr)
 /*********************************************************************************************\
 * DHT sub to wait until a pin is in a certain state
 \*********************************************************************************************/
-boolean P005_waitState(int state)
+bool P005_waitState(int state)
 {
-  unsigned long timeout = micros() + 100;
+  const uint64_t timeout = getMicros64() + 100;
   while (digitalRead(Plugin_005_DHT_Pin) != state)
   {
     if (usecTimeOutReached(timeout)) return false;

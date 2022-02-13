@@ -9,21 +9,8 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringConverter.h"
 
-#define _HEAD false
-#define _TAIL true
+#include "../WebServer/WebTemplateParser.h"
 
-#define TASKS_PER_PAGE TASKS_MAX
-
-
-#define MENU_INDEX_MAIN          0
-#define MENU_INDEX_CONFIG        1
-#define MENU_INDEX_CONTROLLERS   2
-#define MENU_INDEX_HARDWARE      3
-#define MENU_INDEX_DEVICES       4
-#define MENU_INDEX_RULES         5
-#define MENU_INDEX_NOTIFICATIONS 6
-#define MENU_INDEX_TOOLS         7
-extern uint8_t navMenuIndex;
 
 // Uncrustify must not be used on macros, so turn it off.
 // *INDENT-OFF*
@@ -33,14 +20,13 @@ extern uint8_t navMenuIndex;
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 
-void sendHeadandTail(const String& tmplName,
+void sendHeadandTail(const __FlashStringHelper * tmplName,
                      boolean       Tail      = false,
                      boolean       rebooting = false);
 
 void   sendHeadandTail_stdtemplate(boolean Tail      = false,
                                    boolean rebooting = false);
 
-size_t streamFile_htmlEscape(const String& fileName);
 
 void   WebServerInit();
 
@@ -53,31 +39,20 @@ bool   captivePortal();
 void   setWebserverRunning(bool state);
 
 void   getWebPageTemplateDefault(const String& tmplName,
-                                 String      & tmpl);
+                                 WebTemplateParser& parser);
 
-void   getWebPageTemplateDefaultHead(String& tmpl,
+void   getWebPageTemplateDefaultHead(WebTemplateParser& parser,
                                      bool    addMeta,
                                      bool    addJS);
 
-void getWebPageTemplateDefaultHeader(String      & tmpl,
-                                     const String& title,
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser,
+                                     const __FlashStringHelper * title,
                                      bool          addMenu);
 
-void   getWebPageTemplateDefaultContentSection(String& tmpl);
+void   getWebPageTemplateDefaultContentSection(WebTemplateParser& parser);
 
-void   getWebPageTemplateDefaultFooter(String& tmpl);
+void   getWebPageTemplateDefaultFooter(WebTemplateParser& parser);
 
-void   getErrorNotifications();
-
-const __FlashStringHelper * getGpMenuIcon(uint8_t index);
-
-const __FlashStringHelper * getGpMenuLabel(uint8_t index);
-
-const __FlashStringHelper * getGpMenuURL(uint8_t index);
-
-bool   GpMenuVisible(uint8_t index);
-
-void   getWebPageTemplateVar(const String& varName);
 
 void   writeDefaultCSS(void);
 
@@ -143,10 +118,13 @@ String  getControllerSymbol(uint8_t index);
 /*
    String getValueSymbol(uint8_t index);
  */
-void    addSVG_param(const String& key,
+void    addSVG_param(const __FlashStringHelper * key,
+                     int         value);
+
+void    addSVG_param(const __FlashStringHelper * key,
                      float         value);
 
-void    addSVG_param(const String& key,
+void    addSVG_param(const __FlashStringHelper * key,
                      const String& value);
 
 void    createSvgRect_noStroke(const __FlashStringHelper * classname,
@@ -181,12 +159,9 @@ void createSvgTextElement(const String& text,
                           float         textXoffset,
                           float         textYoffset);
 
-void write_SVG_image_header(int width,
-                            int height);
-
 void write_SVG_image_header(int  width,
                             int  height,
-                            bool useViewbox);
+                            bool useViewbox = false);
 
 /*
    void getESPeasyLogo(int width_pixels);

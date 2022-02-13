@@ -120,6 +120,9 @@
 #ifndef D_STR_IFEEL
 #define D_STR_IFEEL "IFeel"
 #endif  // D_STR_IFEEL
+#ifndef D_STR_ISEE
+#define D_STR_ISEE "ISee"
+#endif  // D_STR_ISEE
 #ifndef D_STR_HUMID
 #define D_STR_HUMID "Humid"
 #endif  // D_STR_HUMID
@@ -207,6 +210,19 @@
 #ifndef D_STR_SENSOR
 #define D_STR_SENSOR "Sensor"
 #endif  // D_STR_SENSOR
+#ifndef D_STR_ABSENSEDETECT
+#define D_STR_ABSENSEDETECT "Absense detect"
+#endif  // D_STR_ABSENSEDETECT
+#ifndef D_STR_DIRECT
+#define D_STR_DIRECT "Direct"
+#endif  // D_STR_DIRECT
+#ifndef D_STR_INDIRECT
+#define D_STR_INDIRECT "Indirect"
+#endif  // D_STR_INDIRECT
+#ifndef D_STR_DIRECTINDIRECTMODE
+#define D_STR_DIRECTINDIRECTMODE D_STR_DIRECT " / " \
+D_STR_INDIRECT " " D_STR_MODE
+#endif  // D_STR_DIRECTINDIRECTMODE
 #ifndef D_STR_DISPLAY
 #define D_STR_DISPLAY "Display"
 #endif  // D_STR_DISPLAY
@@ -291,6 +307,9 @@
 #ifndef D_STR_VANE
 #define D_STR_VANE "Vane"
 #endif  // D_STR_VANE
+#ifndef D_STR_LOCK
+#define D_STR_LOCK "Lock"
+#endif  // D_STR_LOCK
 
 #ifndef D_STR_AUTO
 #define D_STR_AUTO "Auto"
@@ -547,6 +566,12 @@
 #ifndef D_STR_YBOFB
 #define D_STR_YBOFB "YBOFB"
 #endif  // D_STR_YBOFB
+#ifndef D_STR_V9014557_A
+#define D_STR_V9014557_A "V9014557-A"
+#endif  // D_STR_V9014557_A
+#ifndef D_STR_V9014557_B
+#define D_STR_V9014557_B "V9014557-B"
+#endif  // D_STR_V9014557_B
 #ifndef D_STR_RLT0541HTA_A
 #define D_STR_RLT0541HTA_A "R-LT0541-HTA-A"
 #endif  // D_STR_RLT0541HTA_A
@@ -583,6 +608,12 @@
 #ifndef D_STR_AKB73757604
 #define D_STR_AKB73757604 "AKB73757604"
 #endif  // D_STR_AKB73757604
+#ifndef D_STR_KKG9AC1
+#define D_STR_KKG9AC1 "KKG9AC1"
+#endif  // D_STR_KKG9AC1
+#ifndef D_STR_KKG29AC1
+#define D_STR_KKG29AC1 "KKG29AC1"
+#endif  // D_STR_KKG9AC1
 #ifndef D_STR_LKE
 #define D_STR_LKE "LKE"
 #endif  // D_STR_LKE
@@ -654,6 +685,9 @@
 #endif  // D_STR_DG11J191
 
 // Protocols Names
+#ifndef D_STR_AIRTON
+#define D_STR_AIRTON "AIRTON"
+#endif  // D_STR_AIRTON
 #ifndef D_STR_AIRWELL
 #define D_STR_AIRWELL "AIRWELL"
 #endif  // D_STR_AIRWELL
@@ -684,6 +718,9 @@
 #ifndef D_STR_COOLIX
 #define D_STR_COOLIX "COOLIX"
 #endif  // D_STR_COOLIX
+#ifndef D_STR_COOLIX48
+#define D_STR_COOLIX48 D_STR_COOLIX "48"
+#endif  // D_STR_COOLIX48
 #ifndef D_STR_CORONA_AC
 #define D_STR_CORONA_AC "CORONA_AC"
 #endif  // D_STR_CORONA_AC

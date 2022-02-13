@@ -5,6 +5,7 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
@@ -12,8 +13,8 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 
   // Compute the current free space and sketch size, rounded to 4k blocks.
   // These block bounaries are needed for erasing a full block on flash.
-  const uint32_t freeSketchSpace            = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-  const uint32_t currentSketchSize          = (ESP.getSketchSize() + 0x1000) & 0xFFFFF000;
+  const uint32_t freeSketchSpace            = (getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const uint32_t currentSketchSize          = (getSketchSize() + 0x1000) & 0xFFFFF000;
   const uint32_t smallestOtaImageSizeNeeded = (((SMALLEST_OTA_IMAGE + 16) + 0x1000) & 0xFFFFF000);
   const bool     otaPossible                = freeSketchSpace >= smallestOtaImageSizeNeeded;
   use2step = freeSketchSpace < currentSketchSize; // Assume the new image has the same size.
@@ -99,7 +100,7 @@ void ArduinoOTAInit()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("OTA  : Arduino OTA enabled on port ");
     log += ARDUINO_OTA_PORT;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 
