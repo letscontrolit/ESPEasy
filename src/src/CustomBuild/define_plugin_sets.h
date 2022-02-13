@@ -1195,6 +1195,9 @@ To create/register a plugin, you have to :
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
+   #ifndef NOTIFIER_SET_STABLE
+     #define NOTIFIER_SET_STABLE
+   #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
    #endif
