@@ -66,7 +66,9 @@ namespace std
 #include "src/Globals/RamTracker.h"
 
 
-#define FS_NO_GLOBALS
+#ifndef FS_NO_GLOBALS
+  #define FS_NO_GLOBALS
+#endif
 #if defined(ESP8266)
 
   #ifndef CORE_POST_3_0_0
@@ -141,7 +143,6 @@ namespace std
   
   #include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
 #endif
-
 
 #ifdef USE_LITTLEFS
   #ifdef ESP32

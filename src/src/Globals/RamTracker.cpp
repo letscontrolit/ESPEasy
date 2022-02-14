@@ -51,17 +51,22 @@ void checkRAM(const __FlashStringHelper * descr ) {
 void checkRAM(const String& descr ) {
   if (Settings.EnableRAMTracking())
     myRamTracker.registerRamState(descr);
-  
-  uint32_t freeRAM = FreeMem();
+
+  const uint32_t freeStack = getFreeStackWatermark();
+  if (freeStack <= lowestFreeStack) {
+    lowestFreeStack = freeStack;
+    lowestFreeStackfunction = descr;
+  }
+
+#ifdef ESP32
+  const uint32_t freeRAM = ESP.getMinFreeHeap();
+#else
+  const uint32_t freeRAM = FreeMem();
+#endif
   if (freeRAM <= lowestRAM)
   {
     lowestRAM = freeRAM;
     lowestRAMfunction = std::move(descr);
-  }
-  uint32_t freeStack = getFreeStackWatermark();
-  if (freeStack <= lowestFreeStack) {
-    lowestFreeStack = freeStack;
-    lowestFreeStackfunction = std::move(descr);
   }
 }
 

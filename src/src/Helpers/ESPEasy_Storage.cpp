@@ -1515,7 +1515,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   highest         = 0;
   filesizeHighest = 0;
 #ifdef ESP8266
-  Dir dir = ESPEASY_FS.openDir(F("cache"));
+  fs::Dir dir = ESPEASY_FS.openDir(F("cache"));
 
   while (dir.next()) {
     String filename = dir.fileName();
@@ -1534,8 +1534,8 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   }
 #endif // ESP8266
 #ifdef ESP32
-  File root = ESPEASY_FS.open(F("/"));
-  File file = root.openNextFile();
+  fs::File root = ESPEASY_FS.open(F("/"));
+  fs::File file = root.openNextFile();
 
   while (file)
   {

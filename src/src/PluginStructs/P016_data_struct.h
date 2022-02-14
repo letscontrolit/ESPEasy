@@ -6,6 +6,8 @@
 
 # include <IRremoteESP8266.h>
 
+#include <vector>
+
 # define PLUGIN_016_DEBUG             // additional debug messages in the log
 
 // bit definition in PCONFIG_LONG(0)
