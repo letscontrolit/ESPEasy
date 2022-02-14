@@ -102,6 +102,19 @@ volatile bool PLUGIN_118_Int = false;
 #define PLUGIN_118_Time2      20 * 60
 #define PLUGIN_118_Time3      30 * 60
 
+// Forward declarations
+void PLUGIN_118_ITHOcheck();
+void PLUGIN_118_Publishdata(struct EventStruct *event);
+void PLUGIN_118_PluginWriteLog(const String& command);
+
+ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
+{
+  PLUGIN_118_Int = true; // flag
+  // PLUGIN_118_Int_time = millis(); //used to register time since interrupt, to make sure we don't read within 10 ms as the RX buffer needs
+  // some time to get ready. Update: Disabled as it appear not necessary
+}
+
+
 boolean Plugin_118(byte function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -419,13 +432,6 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
-{
-  PLUGIN_118_Int = true; // flag
-  // PLUGIN_118_Int_time = millis(); //used to register time since interrupt, to make sure we don't read within 10 ms as the RX buffer needs
-  // some time to get ready. Update: Disabled as it appear not necessary
-}
-
 void PLUGIN_118_ITHOcheck()
 {
   #ifndef BUILD_NO_DEBUG
@@ -563,7 +569,7 @@ void PLUGIN_118_Publishdata(struct EventStruct *event)
 
 #ifndef BUILD_NO_DEBUG
 
-  if (logLevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("State: ");
     log += UserVar[event->BaseVarIndex];
     addLogMove(LOG_LEVEL_DEBUG, log);
