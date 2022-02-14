@@ -9,6 +9,7 @@
 
 #ifdef USES_P087
 
+#include <vector>
 
 P087_data_struct::P087_data_struct() :  easySerial(nullptr) {}
 
