@@ -98,9 +98,9 @@ volatile bool PLUGIN_118_Int = false;
 #define PLUGIN_VALUENAME3_118 "LastIDindex"
 
 // Timer values for hardware timer in Fan in seconds
-#define PLUGIN_118_Time1      10 * 60
-#define PLUGIN_118_Time2      20 * 60
-#define PLUGIN_118_Time3      30 * 60
+#define PLUGIN_118_Time1      (10 * 60)
+#define PLUGIN_118_Time2      (20 * 60)
+#define PLUGIN_118_Time3      (30 * 60)
 
 // Forward declarations
 void PLUGIN_118_ITHOcheck();
