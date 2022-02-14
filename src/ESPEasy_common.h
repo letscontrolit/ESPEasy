@@ -154,7 +154,7 @@ namespace std
 #include <SPI.h>
 #include <FS.h>
 #ifdef FEATURE_SD
-#include <SD.h>
+//#include <SD.h>
 #else
 using namespace fs;
 #endif
