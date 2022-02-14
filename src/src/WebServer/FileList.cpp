@@ -17,6 +17,10 @@
 #include "../Globals/C016_ControllerCache.h"
 #endif
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 
 #ifdef WEBSERVER_NEW_UI
 

@@ -66,6 +66,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 # endif // ifdef ESP32
 #endif
 
+#include <vector>
 
 /*********************************************************************************************\
    Syslog client

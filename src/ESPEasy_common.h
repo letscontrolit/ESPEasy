@@ -66,7 +66,9 @@ namespace std
 #include "src/Globals/RamTracker.h"
 
 
-#define FS_NO_GLOBALS
+#ifndef FS_NO_GLOBALS
+  #define FS_NO_GLOBALS
+#endif
 #if defined(ESP8266)
 
   #ifndef CORE_POST_3_0_0
@@ -144,9 +146,9 @@ namespace std
 #include <SPI.h>
 #include <FS.h>
 #ifdef FEATURE_SD
-#include <SD.h>
+//#include <SD.h>
 #else
-using namespace fs;
+  using namespace fs;
 #endif
 #include <base64.h>
 
