@@ -8,6 +8,7 @@
 #ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef FEATURE_I2CMULTIPLEXER
+#include <vector>
 typedef std::vector<bool> i2c_addresses_t;
 #endif
 
