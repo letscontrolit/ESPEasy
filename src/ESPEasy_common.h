@@ -156,7 +156,7 @@ namespace std
 #ifdef FEATURE_SD
 //#include <SD.h>
 #else
-using namespace fs;
+  using namespace fs;
 #endif
 #include <base64.h>
 
