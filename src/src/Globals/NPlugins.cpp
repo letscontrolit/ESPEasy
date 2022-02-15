@@ -12,7 +12,7 @@ nprotocolIndex_t INVALID_NPROTOCOL_INDEX = NPLUGIN_MAX;
 bool (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
                                     struct EventStruct *,
                                     String&);
-npluginID_t NPlugin_id[NPLUGIN_MAX];
+npluginID_t NPlugin_id[NPLUGIN_MAX] = { INVALID_N_PLUGIN_ID };
 
 NotificationStruct Notification[NPLUGIN_MAX];
 
@@ -110,6 +110,8 @@ bool addNPlugin(npluginID_t npluginID, nprotocolIndex_t x) {
     // FIXME TD-er: Must add lookup for notification plugins too
 //    ProtocolIndex_to_NPlugin_id[x] = npluginID; 
 //    NPlugin_id_to_ProtocolIndex[npluginID] = x;
+
+    NPlugin_id[x] = npluginID;
     return true;
   }
   /*
