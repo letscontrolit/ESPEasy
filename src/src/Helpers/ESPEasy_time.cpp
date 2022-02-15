@@ -807,7 +807,9 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     // Do not adjust the external RTC time if we already used it as a time source.
     return true;
   }
+  #ifdef USE_EXT_RTC
   bool timeAdjusted = false;
+  #endif
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
@@ -860,12 +862,14 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         break;
       }
   }
+  #ifdef USE_EXT_RTC
   if (timeAdjusted) {
     String log = F("ExtRTC: External time source set to: ");
     log += unixtime;
     addLogMove(LOG_LEVEL_INFO, log);
     return true;
   }
+  #endif
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
   return false;
 }
