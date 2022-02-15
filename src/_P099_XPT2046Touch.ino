@@ -360,7 +360,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
         addHtmlError(error);
       }
 #ifdef PLUGIN_099_DEBUG
-      if (logLevelActiveFor(LOG_LEVEL_INFO)) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("p099_data save size: ");
         log += sizeof(P099_data->StoredSettings);
         addLogMove(LOG_LEVEL_INFO, log);

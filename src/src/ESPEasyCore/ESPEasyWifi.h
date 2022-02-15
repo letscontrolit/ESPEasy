@@ -5,11 +5,9 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
-  # include <ESP8266WebServer.h>
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
-  # include <WebServer.h>
 #endif // if defined(ESP32)
 
 #include "../DataTypes/WiFiConnectionProtocol.h"

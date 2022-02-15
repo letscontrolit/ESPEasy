@@ -14,6 +14,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
