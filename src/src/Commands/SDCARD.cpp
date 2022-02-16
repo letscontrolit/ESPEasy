@@ -13,7 +13,7 @@
 #include <SD.h>
 
 
-void printDirectory(File dir, int numTabs)
+void printDirectory(fs::File dir, int numTabs)
 {
   while (true) {
     File entry = dir.openNextFile();
