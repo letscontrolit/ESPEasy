@@ -28,6 +28,11 @@
 #include <rom/spi_flash.h>
 #endif
 
+
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
