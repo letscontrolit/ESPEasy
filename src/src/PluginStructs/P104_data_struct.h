@@ -17,6 +17,8 @@
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 
+# include <vector>
+
 # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
 #  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font for double-height time/date
 # endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)

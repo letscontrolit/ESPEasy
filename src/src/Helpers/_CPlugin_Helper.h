@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/Services.h"
 #include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"

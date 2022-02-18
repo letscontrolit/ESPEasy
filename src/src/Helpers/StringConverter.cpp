@@ -263,7 +263,7 @@ void addNewLine(String& line) {
   line += F("\r\n");
 }
 
-size_t UTF8_charLength(char firstByte) {
+size_t UTF8_charLength(uint8_t firstByte) {
   if (firstByte <= 0x7f) {
     return 1;
   }
@@ -291,7 +291,7 @@ size_t UTF8_charLength(char firstByte) {
 void replaceUnicodeByChar(String& line, char replChar) {
   size_t pos = 0;
   while (pos < line.length()) {
-    const size_t charLength = UTF8_charLength(line[pos]);
+    const size_t charLength = UTF8_charLength((uint8_t)line[pos]);
 
     if (charLength > 1) {
       // Is unicode char in UTF-8 format
