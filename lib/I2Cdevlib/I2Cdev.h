@@ -297,11 +297,11 @@ class I2Cdev {
     //#define _SFR_BYTE(sfr) _MMIO_BYTE(_SFR_ADDR(sfr))
 
     #ifndef sbi // set bit
-        #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= (1 << bit))
+        #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= (1 << (bit)))
     #endif // sbi
 
     #ifndef cbi // clear bit
-        #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~(1 << bit))
+        #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~(1 << (bit)))
     #endif // cbi
 
     extern TwoWire Wire;
