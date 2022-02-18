@@ -14,6 +14,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
@@ -503,7 +507,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
       while (log.length() < 55) { log += ' '; }
       log += F("diff: ");
       log += last_freemem - freemem_end;
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 

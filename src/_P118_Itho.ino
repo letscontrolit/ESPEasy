@@ -98,9 +98,22 @@ volatile bool PLUGIN_118_Int = false;
 #define PLUGIN_VALUENAME3_118 "LastIDindex"
 
 // Timer values for hardware timer in Fan in seconds
-#define PLUGIN_118_Time1      10 * 60
-#define PLUGIN_118_Time2      20 * 60
-#define PLUGIN_118_Time3      30 * 60
+#define PLUGIN_118_Time1      (10 * 60)
+#define PLUGIN_118_Time2      (20 * 60)
+#define PLUGIN_118_Time3      (30 * 60)
+
+// Forward declarations
+void PLUGIN_118_ITHOcheck();
+void PLUGIN_118_Publishdata(struct EventStruct *event);
+void PLUGIN_118_PluginWriteLog(const String& command);
+
+ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
+{
+  PLUGIN_118_Int = true; // flag
+  // PLUGIN_118_Int_time = millis(); //used to register time since interrupt, to make sure we don't read within 10 ms as the RX buffer needs
+  // some time to get ready. Update: Disabled as it appear not necessary
+}
+
 
 boolean Plugin_118(byte function, struct EventStruct *event, String& string)
 {
@@ -160,7 +173,9 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
       // If configured interrupt pin differs from configured, release old pin first
       if ((Settings.TaskDevicePin1[event->TaskIndex] != Plugin_118_IRQ_pin) && (Plugin_118_IRQ_pin != -1))
       {
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("IO-PIN changed, deatachinterrupt old pin"));
+        #endif
         detachInterrupt(Plugin_118_IRQ_pin);
       }
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
@@ -204,7 +219,9 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
       if  ((PLUGIN_118_OldState != PLUGIN_118_State) || ((PLUGIN_118_Timer > 0) && (PLUGIN_118_Timer % 2 == 0)) ||
            (PLUGIN_118_OldLastIDindex != PLUGIN_118_LastIDindex) || PLUGIN_118_InitRunned)
       {
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("UPDATE by PLUGIN_ONCE_A_SECOND"));
+        #endif
         PLUGIN_118_Publishdata(event);
         sendData(event);
 
@@ -245,7 +262,9 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ: {
       // This ensures that even when Values are not changing, data is send at the configured interval for aquisition
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("UPDATE by PLUGIN_READ"));
+      #endif
       PLUGIN_118_Publishdata(event);
 
       // sendData(event); //SV - Added to send status every xx secnds as set within plugin
@@ -413,17 +432,12 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
   return success;
 }
 
-ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
-{
-  PLUGIN_118_Int = true; // flag
-  // PLUGIN_118_Int_time = millis(); //used to register time since interrupt, to make sure we don't read within 10 ms as the RX buffer needs
-  // some time to get ready. Update: Disabled as it appear not necessary
-}
-
 void PLUGIN_118_ITHOcheck()
 {
+  #ifndef BUILD_NO_DEBUG
   if (PLUGIN_118_Log) { addLog(LOG_LEVEL_DEBUG, "RF signal received"); } // All logs statements contain if-statement to disable logging to
                                                                          // reduce log clutter when many RF sources are present
+  #endif
 
   if (PLUGIN_118_rf.checkForNewPacket())
   {
@@ -541,7 +555,9 @@ void PLUGIN_118_ITHOcheck()
       }
     }
 
-    if (PLUGIN_118_Log) { addLog(LOG_LEVEL_DEBUG, log2); }
+    if (PLUGIN_118_Log) { 
+      addLogMove(LOG_LEVEL_DEBUG, log2);
+    }
   }
 }
 
@@ -553,16 +569,16 @@ void PLUGIN_118_Publishdata(struct EventStruct *event)
 
 #ifndef BUILD_NO_DEBUG
 
-  if (logLevelActiveFor(LOG_LEVEL_DEBUG)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("State: ");
     log += UserVar[event->BaseVarIndex];
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
     log  = F("Timer: ");
     log += UserVar[event->BaseVarIndex + 1];
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
     log  = F("LastIDindex: ");
     log += UserVar[event->BaseVarIndex + 2];
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 }
@@ -572,8 +588,8 @@ void PLUGIN_118_PluginWriteLog(const String& command)
   String log = F("Send Itho command for: ");
 
   log += command;
-  addLog(LOG_LEVEL_INFO, log);
   printWebString += log;
+  addLogMove(LOG_LEVEL_INFO, log);
 }
 
 #endif // USES_P118

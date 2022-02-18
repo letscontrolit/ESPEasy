@@ -94,7 +94,7 @@ bool loadFromFS(String path) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("HTML : Request file ");
     log += path;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -119,9 +119,6 @@ bool loadFromFS(String path) {
 
   if (path.endsWith(F(".dat"))) {
     web_server.sendHeader(F("Content-Disposition"), F("attachment;"));
-  }
-  if (gzipEncoded(path)) {
-    web_server.sendHeader(F("Content-Encoding"), F("gzip"));
   }
 
   web_server.streamFile(f, dataType);

@@ -28,6 +28,11 @@
 #include <rom/spi_flash.h>
 #endif
 
+
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -196,7 +201,7 @@ void initI2C() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("INIT : I2C custom clockstretchlimit:");
       log += Settings.WireClockStretchLimit;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
       #if defined(ESP8266)
     Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
@@ -902,7 +907,7 @@ void addButtonRelayRule(uint8_t buttonNumber, int relay_gpio) {
   String result = appendLineToFile(fileName, rule);
 
   if (result.length() > 0) {
-    addLog(LOG_LEVEL_ERROR, result);
+    addLogMove(LOG_LEVEL_ERROR, result);
   }
 }
 
@@ -1009,7 +1014,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   if (gpio == 37 || gpio == 38) {
     // Pins are not present on the ESP32
-    input  = false;
+    input  = true;
     output = false;
   }
 

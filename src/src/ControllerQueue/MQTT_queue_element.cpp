@@ -27,8 +27,16 @@ MQTT_queue_element::MQTT_queue_element(int         ctrl_idx,
   // Copy in the scope of the constructor, so we might store it in the 2nd heap
   #ifdef USE_SECOND_HEAP
   HeapSelectIram ephemeral;
-  _topic = topic;
-  _payload = payload;
+  if (topic.length() && !mmu_is_iram(&(topic[0]))) {
+    _topic = topic;
+  } else {
+    _topic = std::move(topic);  
+  }
+  if (payload.length() && !mmu_is_iram(&(payload[0]))) {
+    _payload = payload;
+  } else {
+    _payload = std::move(payload);
+  }
   #else
   _topic = std::move(topic);
   _payload = std::move(payload);

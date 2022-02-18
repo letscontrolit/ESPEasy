@@ -269,23 +269,23 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("AS7265X: AMS Device Type: 0x");
             log += P112_data->sensor.getDeviceType();
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             log = F("AS7265X: AMS Hardware Version: 0x");
             log += P112_data->sensor.getHardwareVersion();
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             log = F("AS7265X: AMS Major Firmware Version: 0x");
             log += P112_data->sensor.getMajorFirmwareVersion();
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             log = F("AS7265X: AMS Patch Firmware Version: 0x");
             log += P112_data->sensor.getPatchFirmwareVersion();
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             log = F("AS7265X: AMS Build Firmware Version: 0x");
             log += P112_data->sensor.getBuildFirmwareVersion();
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           success = true;
@@ -424,7 +424,7 @@ void queueEvent(taskIndex_t TaskIndex, int wavelength, float value) {
   RuleEvent += wavelength;
   RuleEvent += '=';
   RuleEvent += toString(value, 2);
-  eventQueue.add(RuleEvent);
+  eventQueue.addMove(std::move(RuleEvent));
 }
 
 #endif // USES_P112
