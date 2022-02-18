@@ -25,6 +25,7 @@
 
 
 #include <math.h>
+#include <vector>
 
 boolean activeRuleSets[RULESETS_MAX];
 

@@ -29,7 +29,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-
+#include <vector>
 
 int deviceCount = -1;
 
