@@ -96,7 +96,7 @@ void   removeExtraNewLine(String& line);
 
 void   addNewLine(String& line);
 
-size_t UTF8_charLength(char firstByte);
+size_t UTF8_charLength(uint8_t firstByte);
 
 void   replaceUnicodeByChar(String& line, char replChar);
 
