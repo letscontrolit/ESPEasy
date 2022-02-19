@@ -1,9 +1,9 @@
-#include "../PluginStructs/P133_data_struct.h"
+#include "../PluginStructs/P126_data_struct.h"
 
-#ifdef USES_P133
+#ifdef USES_P126
 
 
-P133_data_struct::P133_data_struct(int8_t _CS, int8_t _DC, int8_t _RST, int16_t _W, int16_t _H)
+P126_data_struct::P126_data_struct(int8_t _CS, int8_t _DC, int8_t _RST, int16_t _W, int16_t _H)
   : tft(_W, _H) 
   {
     tft.begin();
@@ -16,7 +16,7 @@ P133_data_struct::P133_data_struct(int8_t _CS, int8_t _DC, int8_t _RST, int16_t 
 //param [in] textSize : The text size (default 1)
 //param [in] color : The fore color (default TFT_WHITE)
 //param [in] bkcolor : The background color (default TFT_BLACK)
-void P133_data_struct::printText(const String& string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
+void P126_data_struct::printText(const String& string, int X, int Y, unsigned int textSize, unsigned short color, unsigned short bkcolor)
 {
   tft.setTextColor(color, bkcolor);
   tft.setTextSize(textSize);
@@ -27,7 +27,7 @@ void P133_data_struct::printText(const String& string, int X, int Y, unsigned in
 //Parse color string to TFT_eSPI color
 //param [in] s : The color string (white, red, ...)
 //return : color (default TFT_WHITE)
-unsigned short P133_data_struct::ParseColor(String & s)
+unsigned short P126_data_struct::ParseColor(String & s)
 {
   if (s.equalsIgnoreCase(F("BLACK")))
     return TFT_BLACK;
@@ -87,7 +87,7 @@ unsigned short P133_data_struct::ParseColor(String & s)
 //param [out] op : The resulting string array
 //param [in] limit : The maximum strings to find
 //return : The string count
-int P133_data_struct::StringSplit(String &s, char c, String op[], int limit)
+int P126_data_struct::StringSplit(String &s, char c, String op[], int limit)
 {
   int count = 0;
   char * pch;
@@ -102,4 +102,4 @@ int P133_data_struct::StringSplit(String &s, char c, String op[], int limit)
   return count;
 }
 
-#endif // ifdef USES_P133
+#endif // ifdef USES_P126

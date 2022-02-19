@@ -1,28 +1,28 @@
-#ifndef PLUGINSTRUCTS_P133_DATA_STRUCT_H
-#define PLUGINSTRUCTS_P133_DATA_STRUCT_H
+#ifndef PLUGINSTRUCTS_P126_DATA_STRUCT_H
+#define PLUGINSTRUCTS_P126_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#ifdef USES_P133
+#ifdef USES_P126
 
 
-# if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_133_FONT_INCLUDED)
-  #  define PLUGIN_133_FONT_INCLUDED // enable to use fonts in this plugin
-# endif // if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_133_FONT_INCLUDED)
+# if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_126_FONT_INCLUDED)
+  #  define PLUGIN_126_FONT_INCLUDED // enable to use fonts in this plugin
+# endif // if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_126_FONT_INCLUDED)
 
 
 # include <TFT_eSPI.h>
 
 // TODOPETER
-# ifdef PLUGIN_133_FONT_INCLUDED
+# ifdef PLUGIN_126_FONT_INCLUDED
 //#  include "../Static/Fonts/Seven_Segment24pt7b.h"
 //#  include "../Static/Fonts/Seven_Segment18pt7b.h"
 //#  include <Fonts/FreeSans9pt7b.h> // included in Adafruit-GFX-Library
-# endif // ifdef PLUGIN_133_FONT_INCLUDED
+# endif // ifdef PLUGIN_126_FONT_INCLUDED
 
-struct P133_data_struct : public PluginTaskData_base {
+struct P126_data_struct : public PluginTaskData_base {
 public:
 
-  P133_data_struct(int8_t _CS,
+  P126_data_struct(int8_t _CS,
                    int8_t _DC,
                    int8_t _RST = -1,
                    int16_t _W = TFT_WIDTH,
@@ -63,5 +63,5 @@ public:
 
   TFT_eSPI tft;
 };
-#endif // ifdef USES_P133
-#endif // ifndef PLUGINSTRUCTS_P133_DATA_STRUCT_H
+#endif // ifdef USES_P126
+#endif // ifndef PLUGINSTRUCTS_P126_DATA_STRUCT_H
