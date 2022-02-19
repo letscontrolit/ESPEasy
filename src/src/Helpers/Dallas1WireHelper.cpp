@@ -14,6 +14,7 @@
   # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
 #endif // if defined(ESP32)
 
+#include <vector>
 
 unsigned char ROM_NO[8];
 uint8_t LastDiscrepancy;
