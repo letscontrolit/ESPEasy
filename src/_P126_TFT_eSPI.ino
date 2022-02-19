@@ -195,11 +195,6 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         //if already configured take it from settings, else use default values (only for pin values)
         if(init != 1)
         {
-          #ifdef ESP32
-          if (Settings.InitSPI == 2) {  // When using ESP32 H(ardware-)SPI
-            TFT_eSPI_Settings.address_tft_cs = TFT_CS_HSPI; 
-          }
-          #endif
           PIN(0) = TFT_eSPI_Settings.address_tft_cs;
           PIN(1) = TFT_eSPI_Settings.address_tft_dc;
           PIN(2) = TFT_eSPI_Settings.address_tft_rst;
