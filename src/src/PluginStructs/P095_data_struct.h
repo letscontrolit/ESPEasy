@@ -9,7 +9,6 @@
   #  define PLUGIN_095_FONT_INCLUDED // enable to use fonts in this plugin
 # endif // if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
 
-
 # include <Adafruit_ILI9341.h>
 
 # ifdef PLUGIN_095_FONT_INCLUDED
@@ -25,17 +24,17 @@
 # define P095_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE))
 
 enum class ILI9xxx_type_e : uint8_t {
-  ILI9341_240x320 = 0u,
-  ILI9342_240x320,
-  ILI9481_320x480,
-  ILI9481_CPT29_320x480,
-  ILI9481_PVI35_320x480,
-  ILI9481_AUO317_320x480,
-  ILI9481_CMO35_320x480,
-  ILI9481_RGB_320x480,
-  ILI9486_320x480,
-  ILI9488_320x480,
-  ILI9xxx_MAX // last value = count
+  ILI9341_240x320        = 0u,
+  ILI9342_240x320        = 1u,
+  ILI9481_320x480        = 2u,
+  ILI9481_CPT29_320x480  = 3u,
+  ILI9481_PVI35_320x480  = 4u,
+  ILI9481_AUO317_320x480 = 5u,
+  ILI9481_CMO35_320x480  = 6u,
+  ILI9481_RGB_320x480    = 7u,
+  ILI9486_320x480        = 8u,
+  ILI9488_320x480        = 9u,
+  ILI9xxx_MAX            = 10u // last value = count
 };
 
 const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device);
