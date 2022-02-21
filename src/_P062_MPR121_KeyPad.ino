@@ -226,9 +226,11 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
           P062_data->StoredSettings.TouchObjects[objectNr].release = getFormItemInt(getPluginCustomArgName(objectNr + 200));
         }
         # ifdef PLUGIN_062_DEBUG
-        String log = F("p062_data save size: ");
-        log += sizeof(P062_data->StoredSettings);
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("p062_data save size: ");
+          log += sizeof(P062_data->StoredSettings);
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
         # endif // PLUGIN_062_DEBUG
         SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P062_data->StoredSettings)),
                                sizeof(P062_data->StoredSettings));
@@ -319,7 +321,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
               log = F("KeyMap=0x");
             }
             log += String(key, 16);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             bool tbUseCalibration = bitRead(P062_CONFIG_FLAGS, P062_FLAGS_USE_CALIBRATION);
 
@@ -343,7 +345,7 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
                   log += min;
                   log += F(" max: ");
                   log += max;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
 
                   if (!PCONFIG(1)) {
                     break;

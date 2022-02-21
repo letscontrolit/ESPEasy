@@ -104,8 +104,8 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      event->String1 = "";
-      event->String2 = "";
+      event->String1 = String();
+      event->String2 = String();
       break;
     }
 
@@ -151,8 +151,6 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
 // ********************************************************************************
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-
 bool do_process_c016_delay_queue(int controller_number, const C016_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
   return true;

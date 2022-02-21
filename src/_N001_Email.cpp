@@ -11,6 +11,7 @@
 
 #define NPLUGIN_001_TIMEOUT 5000
 
+#include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/NotificationSettingsStruct.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 #include "src/ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -21,13 +22,19 @@
 #include "src/Helpers/Networking.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
+#include "src/Helpers/_NPlugin_init.h"
+
+// Forward declaration
+bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
+bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass);
+bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern);
+bool getNextMailAddress(const String& data, String& address, int index);
 
 
 // The message body is included in event->String1
-
-boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
+bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
-	boolean success = false;
+	bool success = false;
 
 	switch (function) {
 		case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
@@ -85,12 +92,10 @@ boolean NPlugin_001(NPlugin::Function function, struct EventStruct *event, Strin
 }
 
 
-#ifdef USES_NOTIFIER
-
-boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
+bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg)
 {
 //  String& aDomain , String aTo, String aFrom, String aSub, String aMesg, String aHost, int aPort)
-	boolean myStatus = false;
+	bool myStatus = false;
 
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
@@ -154,10 +159,11 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 				break;
 			}
 			while (nextAddressAvailable) {
-				String mailFound = F("Email: To ");
-				mailFound += emailTo;
-				if (loglevelActiveFor(LOG_LEVEL_INFO))
-					addLog(LOG_LEVEL_INFO, mailFound);
+				if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+					String log = F("Email: To ");
+					log += emailTo;
+					addLogMove(LOG_LEVEL_INFO, log);
+				}
 				if (!NPlugin_001_MTA(client, String(F("RCPT TO:<")) + emailTo + ">", F("250 "))) break;
 				++i;
 				nextAddressAvailable = getNextMailAddress(notificationsettings.Receiver, emailTo, i);
@@ -179,16 +185,15 @@ boolean NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
 			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
 				String log = F("EMAIL: Connection Closed With Error. Used header: ");
 				log += mailheader;
-				addLog(LOG_LEVEL_ERROR, log);
+				addLogMove(LOG_LEVEL_ERROR, log);
 			}
 		}
 	}
 	return myStatus;
 }
 
-#endif
 
-boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
+bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass)
 {
 	if (user.isEmpty() || pass.isEmpty()) {
 		// No user/password given.
@@ -205,7 +210,7 @@ boolean NPlugin_001_Auth(WiFiClient& client, const String& user, const String& p
 	return true;
 }
 
-boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
+bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aWaitForPattern)
 {
 	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
 		addLog(LOG_LEVEL_DEBUG, aStr);
@@ -220,7 +225,7 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 			if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
 				String log = F("NPlugin_001_MTA: timeout. ");
 				log += aStr;
-				addLog(LOG_LEVEL_ERROR, log);
+				addLogMove(LOG_LEVEL_ERROR, log);
 			}
 			return false;
 		}
@@ -231,10 +236,14 @@ boolean NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String &aW
 		String line;
 		safeReadStringUntil(client, line, '\n');
 
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-			addLog(LOG_LEVEL_DEBUG, line);
+		const bool patternFound = line.indexOf(aWaitForPattern) >= 0;
 
-		if (line.indexOf(aWaitForPattern) >= 0) {
+		#ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+			addLogMove(LOG_LEVEL_DEBUG, line);
+		#endif
+
+		if (patternFound) {
 			return true;
 		}
 	}

@@ -102,12 +102,13 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         unsigned int choice = P115_DEVICESELECTOR;
-        const __FlashStringHelper * options[4];
-        options[0]          = F("MAX17043");
-        options[1]          = F("MAX17044 (2S)"); // 2-cell version of the MAX17043 (full-scale range of 10V)
-        options[2]          = F("MAX17048");
-        options[3]          = F("MAX17049 (2S)"); // 2-cell version of the MAX17048
-        int optionValues[4] = {
+        const __FlashStringHelper * options[4] = {
+          F("MAX17043"),
+          F("MAX17044 (2S)"), // 2-cell version of the MAX17043 (full-scale range of 10V)
+          F("MAX17048"),
+          F("MAX17049 (2S)") // 2-cell version of the MAX17048
+        };
+        const int optionValues[4] = {
           MAX1704X_MAX17043,
           MAX1704X_MAX17044,
           MAX1704X_MAX17048,
@@ -116,7 +117,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       }
 
       addFormNumericBox(F("Alert threshold"), F("plugin_115_threshold"), P115_THRESHOLD, 1, 32);
-      addUnit(F("%"));
+      addUnit('%');
       addFormCheckBox(F("Send Event on Alert"), F("plugin_115_alertevent"), P115_ALERTEVENT);
 
       success = true;
@@ -155,7 +156,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
           log += P115_data->alert;
           log += F(" Rate: ");
           log += P115_data->changeRate;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         success = true;
       }

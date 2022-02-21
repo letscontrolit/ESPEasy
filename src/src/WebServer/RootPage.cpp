@@ -86,9 +86,8 @@ void handle_root() {
 
   TXBuffer.startStream();
 
-  String  sCommand;
   boolean rebootCmd = false;
-  sCommand  = webArg(F("cmd"));
+  String sCommand  = webArg(F("cmd"));
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
   {
@@ -152,41 +151,37 @@ void handle_root() {
 
       if (wdcounter > 0)
       {
-        String html;
-        html.reserve(32);
-        html += getCPUload();
-        html += F("% (LC=");
-        html += getLoopCountPerSec();
-        html += ')';
-        addHtml(html);
+        addHtml(String(getCPUload()));
+        addHtml(F("% (LC="));
+        addHtmlInt(getLoopCountPerSec());
+        addHtml(')');
       }
       {
         addRowLabel(LabelType::FREE_MEM);
-        String html;
-        html.reserve(64);
-        html += freeMem;
+        addHtmlInt(freeMem);
         #ifndef BUILD_NO_RAM_TRACKER
-        html += " (";
-        html += lowestRAM;
-        html += F(" - ");
-        html += lowestRAMfunction;
-        html += ')';
+        addHtml(F(" ("));
+        addHtmlInt(lowestRAM);
+        addHtml(F(" - "));
+        addHtml(lowestRAMfunction);
+        addHtml(')');
         #endif
-        addHtml(html);
+      }
+      {
+        #ifdef USE_SECOND_HEAP
+        addRowLabelValue(LabelType::FREE_HEAP_IRAM);
+        #endif
       }
       {
         addRowLabel(LabelType::FREE_STACK);
-        String html;
-        html.reserve(64);
-        html += String(getCurrentFreeStack());
+        addHtmlInt(getCurrentFreeStack());
         #ifndef BUILD_NO_RAM_TRACKER
-        html += " (";
-        html += String(lowestFreeStack);
-        html += F(" - ");
-        html += String(lowestFreeStackfunction);
-        html += ')';
+        addHtml(F(" ("));
+        addHtmlInt(lowestFreeStack);
+        addHtml(F(" - "));
+        addHtml(lowestFreeStackfunction);
+        addHtml(')');
         #endif
-        addHtml(html);
       }
 
   #ifdef HAS_ETHERNET
@@ -197,13 +192,10 @@ void handle_root() {
       {
         addRowLabelValue(LabelType::IP_ADDRESS);
         addRowLabel(LabelType::WIFI_RSSI);
-        String html;
-        html.reserve(32);
-        html += String(WiFi.RSSI());
-        html += F(" dBm (");
-        html += WiFi.SSID();
-        html += ')';
-        addHtml(html);
+        addHtmlInt(WiFi.RSSI());
+        addHtml(F(" dBm ("));
+        addHtml(WiFi.SSID());
+        addHtml(')');
       }
 
   #ifdef HAS_ETHERNET
@@ -216,14 +208,11 @@ void handle_root() {
       #ifdef FEATURE_MDNS
       {
         addRowLabel(LabelType::M_DNS);
-        String html;
-        html.reserve(64);
-        html += F("<a href='http://");
-        html += getValue(LabelType::M_DNS);
-        html += F("'>");
-        html += getValue(LabelType::M_DNS);
-        html += F("</a>");
-        addHtml(html);
+        addHtml(F("<a href='http://"));
+        addHtml(getValue(LabelType::M_DNS));
+        addHtml(F("'>"));
+        addHtml(getValue(LabelType::M_DNS));
+        addHtml(F("</a>"));
       }
       #endif // ifdef FEATURE_MDNS
 
@@ -260,7 +249,7 @@ void handle_root() {
           addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
           addHtml(printWebString);
           addHtml(F("</textarea>"));
-          printWebString = "";
+          printWebString = String();
         }
       }
       html_end_table();
@@ -317,20 +306,16 @@ void handle_root() {
           }
           html_add_wide_button_prefix();
           {
-            String html;
-            html.reserve(64);
-
-            html += F("http://");
-            html += it->second.ip.toString();
+            addHtml(F("http://"));
+            addHtml(it->second.ip.toString());
             uint16_t port = it->second.webgui_portnumber;
             if (port !=0 && port != 80) {
-              html += ':';
-              html += String(port);
+              addHtml(':');
+              addHtmlInt(port);
             }
-            html += "'>";
-            html += it->second.ip.toString();
-            html += "</a>";
-            addHtml(html);
+            addHtml('\'', '>');
+            addHtml(it->second.ip.toString());
+            addHtml(F("</a>"));
           }
           html_TD();
           addHtmlInt(it->second.age);
@@ -341,7 +326,7 @@ void handle_root() {
       html_end_form();
     }
 
-    printWebString = "";
+    printWebString = String();
     printToWeb     = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }

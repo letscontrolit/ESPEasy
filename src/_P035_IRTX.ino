@@ -69,7 +69,7 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_output("LED");
+      event->String1 = formatGpioName_output(F("LED"));
       break;
     }
     case PLUGIN_WEBFORM_LOAD:

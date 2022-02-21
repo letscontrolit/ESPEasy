@@ -35,7 +35,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      event->String1 = "";
+      event->String1 = String();
       event->String2 = F("%sysname%_%tskname%_%valname%=%value%");
       break;
     }
@@ -83,11 +83,10 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         for (uint8_t x = 0; x < valueCount; x++)
         {
           bool   isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
+          const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            String tmppubname = pubname;
-            element.txt[x] = tmppubname;
+            element.txt[x] = pubname;
             parseSingleControllerVariable(element.txt[x], event, x, false);
             element.txt[x].replace(F("%value%"), formattedValue);
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
@@ -121,8 +120,6 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-
 bool do_process_c010_delay_queue(int controller_number, const C010_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {

@@ -7,12 +7,14 @@
 
 #include "../WebServer/JSON.h"
 
+#include "../../ESPEasy_common.h"
 
 #if defined(ESP32)
   # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
   # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
 #endif // if defined(ESP32)
 
+#include <vector>
 
 unsigned char ROM_NO[8];
 uint8_t LastDiscrepancy;
@@ -334,6 +336,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
 
   bool crc_ok = Dallas_crc8(ScratchPad);
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("DS: SP: ");
 
@@ -358,8 +361,9 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     log += ll2String(presence_start, DEC);
     log += ',';
     log += ll2String(presence_end, DEC);
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 
   if (!crc_ok)
   {
@@ -435,7 +439,7 @@ bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_p
       found = true;
     }
   }
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   return found;
 }
 
@@ -896,7 +900,7 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   return r;
 }
 
-uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start)
+uint8_t IRAM_ATTR Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start)
 {
   uint8_t r;
   {
@@ -952,7 +956,7 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   }
 }
 
-void Dallas_write_bit_ISR(uint8_t v,
+void IRAM_ATTR Dallas_write_bit_ISR(uint8_t v,
                       int8_t  gpio_pin_rx,
                       int8_t  gpio_pin_tx,
                       long low_time,

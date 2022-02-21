@@ -25,6 +25,7 @@
 
 
 #include <math.h>
+#include <vector>
 
 boolean activeRuleSets[RULESETS_MAX];
 
@@ -124,7 +125,7 @@ void rulesProcessing(const String& event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("EVENT: ");
     log += event;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (Settings.OldRulesEngine()) {
@@ -159,7 +160,7 @@ void rulesProcessing(const String& event) {
     log += F(" Processing time:");
     log += timePassedSince(timer);
     log += F(" milliSeconds");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   STOP_TIMER(RULES_PROCESSING);
@@ -252,7 +253,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
           }
 
           // Prepare for new line
-          line = EMPTY_STRING;
+          line.clear();
           line.reserve(longestLineSize);
           firstNonSpaceRead = false;
           commentFound      = false;
@@ -342,7 +343,7 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
       log += F("' in: '");
       log += line;
       log += '\'';
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   line.replace(from, to);
@@ -448,7 +449,7 @@ bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, cons
       }
     }
     log += '}';
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   #endif
 
@@ -555,11 +556,11 @@ void parse_string_commands(String& line) {
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
-    String fullCommand = line.substring(startIndex + 1, closingIndex);
-    String cmd_s_lower = parseString(fullCommand, 1, ':');
-    String arg1        = parseStringKeepCase(fullCommand, 2, ':');
-    String arg2        = parseStringKeepCase(fullCommand, 3, ':');
-    String arg3        = parseStringKeepCase(fullCommand, 4, ':');
+    const String fullCommand = line.substring(startIndex + 1, closingIndex);
+    const String cmd_s_lower = parseString(fullCommand, 1, ':');
+    const String arg1        = parseStringKeepCase(fullCommand, 2, ':');
+    const String arg2        = parseStringKeepCase(fullCommand, 3, ':');
+    const String arg3        = parseStringKeepCase(fullCommand, 4, ':');
 
     if (cmd_s_lower.length() > 0) {
       String replacement; // maybe just replace with empty to avoid looping?
@@ -588,7 +589,7 @@ void parse_string_commands(String& line) {
         // Syntax like 1234{strtol:16:38}7890
         if (validUInt64FromString(arg1, iarg1)
             && validUInt64FromString(arg2, iarg2)) {
-          replacement = String(strtoul(arg2.c_str(), NULL, iarg1));
+          replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
         }
 
         // FIXME TD-er: removed for now as it is too specific.
@@ -630,7 +631,7 @@ void parse_string_commands(String& line) {
         // Convert to url-encoded string
         // Syntax like {urlencode:"string to/encode"}
         if (!arg1.isEmpty()) {
-          replacement = URLEncode(arg1.c_str());
+          replacement = URLEncode(arg1);
         }
       }
 
@@ -809,9 +810,9 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     log += codeBlock ? 0 : 1;
     log += match ? 0 : 1;
     log += isCommand ? 0 : 1;
-    log += ": ";
+    log += F(": ");
     log += line;
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 }
@@ -857,7 +858,7 @@ void processMatchedRule(String& action, const String& event,
             log += check;
             log += F("]=");
             log += boolToString(condition[ifBlock - 1]);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
         }
@@ -884,7 +885,7 @@ void processMatchedRule(String& action, const String& event,
             log += check;
             log += F("]=");
             log += boolToString(condition[ifBlock - 1]);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
         } else {
@@ -897,7 +898,7 @@ void processMatchedRule(String& action, const String& event,
           String log  = F("Lev.");
           log += String(ifBlock);
           log += F(": Error: IF Nesting level exceeded!");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
       }
       isCommand = false;
@@ -917,7 +918,7 @@ void processMatchedRule(String& action, const String& event,
       log += String(ifBlock);
       log += F(": [else]=");
       log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -941,7 +942,7 @@ void processMatchedRule(String& action, const String& event,
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String actionlog = F("ACT  : ");
       actionlog += action;
-      addLog(LOG_LEVEL_INFO, actionlog);
+      addLogMove(LOG_LEVEL_INFO, actionlog);
     }
 
     ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
@@ -1077,7 +1078,7 @@ bool conditionMatchExtended(String& check) {
       log += debugstr;
       log += ' ';
       log += wrap_String(check, '"');
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
     condAnd = check.indexOf(F(" and "));
@@ -1242,7 +1243,7 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
     } else {
       log += F("invalid");
     }
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 
   #endif // ifndef BUILD_NO_DEBUG
@@ -1423,7 +1424,7 @@ bool conditionMatch(const String& check) {
     log += wrap_String(check.substring(posStart, posEnd), ' '); // Compare
     log += compareTimes ? String(timeInSec2) : doubleToString(Value2, 6, trimTrailingZeros);
     log += ')';
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   #else // ifndef BUILD_NO_DEBUG
   (void)compareTimes; // To avoid compiler warning
@@ -1441,6 +1442,12 @@ void createRuleEvents(struct EventStruct *event) {
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) { return; }
+
+  #ifdef USE_SECOND_HEAP
+//  HeapSelectIram ephemeral;  
+// TD-er: Disabled for now, suspect for causing crashes
+  #endif
+
 
   LoadTaskSettings(event->TaskIndex);
 
@@ -1462,10 +1469,10 @@ void createRuleEvents(struct EventStruct *event) {
       addLog(LOG_LEVEL_ERROR, F("Not enough memory for event"));
       return;
     }
-    eventString  = getTaskDeviceName(event->TaskIndex);
-    eventString += F("#");
+    eventString += getTaskDeviceName(event->TaskIndex);
+    eventString += '#';
     eventString += ExtraTaskSettings.TaskDeviceValueNames[0];
-    eventString += F("=");
+    eventString += '=';
     eventString += '`';
     if (appendCompleteStringvalue) {
       eventString += event->String2;
@@ -1479,7 +1486,7 @@ void createRuleEvents(struct EventStruct *event) {
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventString;
     eventString.reserve(128); // Enough for most use cases, prevent lots of memory allocations.
-    eventString  = getTaskDeviceName(event->TaskIndex);
+    eventString += getTaskDeviceName(event->TaskIndex);
     eventString += F("#All=");
 
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
@@ -1493,10 +1500,10 @@ void createRuleEvents(struct EventStruct *event) {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       String eventString;
       eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
-      eventString  = getTaskDeviceName(event->TaskIndex);
-      eventString += F("#");
+      eventString += getTaskDeviceName(event->TaskIndex);
+      eventString += '#';
       eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
-      eventString += F("=");
+      eventString += '=';
       eventString += formatUserVarNoCheck(event, varNr);
       eventQueue.addMove(std::move(eventString));
     }

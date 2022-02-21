@@ -143,17 +143,18 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 # endif // ifdef P016_P035_USE_RAW_RAW2
 
 # ifdef PLUGIN_016_DEBUG
-void P016_infoLogMemory(const String& text) {
+void P016_infoLogMemory(const __FlashStringHelper * text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(37 + text.length());
-    log  = F("P016: Free memory ");
-    log += text;
-    log += F(": ");
-    log += FreeMem();
-    log += F(" stack: ");
-    log += getCurrentFreeStack();
-    addLog(LOG_LEVEL_INFO, log);
+    if (log.reserve(40 + strlen_P((PGM_P)text))) {
+      log += F("P016: Free memory ");
+      log += text;
+      log += F(": ");
+      log += FreeMem();
+      log += F(" stack: ");
+      log += getCurrentFreeStack();
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 }
 
@@ -323,10 +324,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log; // Log this always
-            log.reserve(30);
-            log  = F("IR: available decodetypes: ");
-            log += size;
-            addLog(LOG_LEVEL_INFO, log);
+            if (log.reserve(30)) {
+              log += F("IR: available decodetypes: ");
+              log += size;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
 
           // Fill a vector with all supported decode_type_t names
@@ -342,10 +344,6 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
                                                                              // default
-
-          String strCode;
-          strCode.reserve(20);
-
           addRowLabel(F("Code - command map"));
 
           html_table(EMPTY_STRING);
@@ -359,6 +357,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           int rowCnt = 0;
 
+          String strCode;
+          strCode.reserve(20);
+
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
             tCommandLinesV2 line;
             P016_data_struct::loadCommandLine(event, line, varNr);
@@ -371,13 +372,13 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), size, &decodeTypes[0], &decodeTypeOptions[0], NULL,
+              addSelector(getPluginCustomArgName(rowCnt + 0), size, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
                           static_cast<int>(line.CodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 1), bitRead(line.CodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode = EMPTY_STRING;
+            strCode.clear();
 
             if (line.Code > 0) {
               strCode = uint64ToString(line.Code, 16); // convert code to hex for display
@@ -386,13 +387,13 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), size, &decodeTypes[0], &decodeTypeOptions[0], NULL,
+              addSelector(getPluginCustomArgName(rowCnt + 3), size, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
                           static_cast<int>(line.AlternativeCodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
             addCheckBox(getPluginCustomArgName(rowCnt + 4), bitRead(line.AlternativeCodeFlags, P16_FLAGS_REPEAT));
             html_TD();
-            strCode = EMPTY_STRING;
+            strCode.clear();
 
             if (line.AlternativeCode > 0) {
               strCode = uint64ToString(line.AlternativeCode, 16); // convert code to hex for display
@@ -461,7 +462,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
             tCommandLinesV2 line;
 
-            strError = EMPTY_STRING;
+            strError.clear();
 
             // Normal Code & flags
             line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
@@ -555,34 +556,37 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           success = false;
           break;             // Do not continue and risk hanging the ESP
         }
-        String output;
-        output.reserve(100); // Length of expected string, needed for strings > 11 chars
 
         // Display the basic output of what we found.
         if ((results.decode_type != decode_type_t::UNKNOWN) || (bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)))
         {
-          // String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)
-          // + ',' + uint64ToString(results.bits);
-          // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style
-          // command
-          output  = F("{\"protocol\":\"");
-          output += typeToString(results.decode_type, results.repeat);
-          output += F("\",\"data\":\"");
-          output += resultToHexidecimal(&results);
-          output += F("\",\"bits\":");
-          output += uint64ToString(results.bits);
-          output += '}';
+          {
+            String output;
+            output.reserve(100); // Length of expected string, needed for strings > 11 chars
+            // String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)
+            // + ',' + uint64ToString(results.bits);
+            // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style
+            // command
+            output += F("{\"protocol\":\"");
+            output += typeToString(results.decode_type, results.repeat);
+            output += F("\",\"data\":\"");
+            output += resultToHexidecimal(&results);
+            output += F("\",\"bits\":");
+            output += uint64ToString(results.bits);
+            output += '}';
 
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String Log;
-            Log.reserve(output.length() + 22);
-            Log  = F("IRSEND,\'");
-            Log += output;
-            Log += F("\' type: 0x");
-            Log += uint64ToString(results.decode_type);
-            addLog(LOG_LEVEL_INFO, Log); // JSON representation of the command
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String Log;
+              if (Log.reserve(output.length() + 22)) {
+                Log += F("IRSEND,\'");
+                Log += output;
+                Log += F("\' type: 0x");
+                Log += uint64ToString(results.decode_type);
+                addLogMove(LOG_LEVEL_INFO, Log); // JSON representation of the command
+              }
+            }
+            event->String2 = std::move(output);
           }
-          event->String2 = output;
 
           // Check if this is a code we have a command for or we have to add
           P016_data_struct *P016_data =
@@ -669,10 +673,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             // If we got a human-readable description of the message, display it.
             String log;
-            log.reserve(10 + description.length());
-            log  = F("AC State: ");
-            log += description;
-            addLog(LOG_LEVEL_INFO, log);
+            if (log.reserve(10 + description.length())) {
+              log += F("AC State: ");
+              log += description;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
         }
 
@@ -744,18 +749,17 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (state.clock >= 0) {
             doc[F("clock")] = state.clock; // Nr. of mins past midnight to set the clock to. (< 0 means off.)
           }
-          output = EMPTY_STRING;
-          serializeJson(doc, output);
-          event->String2 = output;
+          serializeJson(doc, event->String2);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             // Show the command that the user can put to replay the AC state with P035
             String log;
-            log.reserve(12 + output.length());
-            log  = F("IRSENDAC,'");
-            log += output;
-            log += '\'';
-            addLog(LOG_LEVEL_INFO, log);
+            if (log.reserve(12 + event->String2.length())) {
+              log += F("IRSENDAC,'");
+              log += event->String2;
+              log += '\'';
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
         }
         # endif // P016_P035_Extended_AC
@@ -796,6 +800,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
 {
   uint16_t div[2];
 
+  #ifndef BUILD_NO_DEBUG
   // print the values: either pulses or blanks
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String line;
@@ -803,8 +808,9 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
     for (uint16_t i = 1; i < results.rawlen; i++) {
       line += uint64ToString(results.rawbuf[i] * RAWTICK, 10) + ",";
     }
-    addLog(LOG_LEVEL_DEBUG, line); // Display the RAW timings
+    addLogMove(LOG_LEVEL_DEBUG, line); // Display the RAW timings
   }
+  #endif
 
   // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks).
   for (uint16_t p = 0; p < 2; p++)
@@ -871,6 +877,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
     }
     div[p] = bstDiv;
 
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String line;
       line  = p ? F("Blank: ") : F("Pulse: ");
@@ -882,8 +889,9 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
       line += uint64ToString((uint16_t)bstMul, 10);
       line += '.';
       line += ((char)((bstMul - (uint16_t)bstMul) * 10) + '0');
-      addLog(LOG_LEVEL_DEBUG, line);
+      addLogMove(LOG_LEVEL_DEBUG, line);
     }
+    #endif
   }
 
   // Generate the B32 Hex string, per the divisors found.
@@ -941,7 +949,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
   out[iOut] = 0;
 
   outputStr.reserve(32 + iOut);
-  outputStr  = F("IRSEND,RAW2,");
+  outputStr += F("IRSEND,RAW2,");
   outputStr += out;
   outputStr += F(",38,");
   outputStr += uint64ToString(div[0], 10);

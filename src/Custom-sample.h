@@ -333,7 +333,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P071   // Kamstrup401
 // #define USES_P072   // HDC1080
 // #define USES_P073   // 7DG
-// #define USES_P074   // TSL2561
+// #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
 // #define USES_P076   // HWL8012   in POW r1
 // #define USES_P077   // CSE7766   in POW R2

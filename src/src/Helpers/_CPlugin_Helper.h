@@ -7,11 +7,13 @@
 #include "../../_Plugin_Helper.h"
 
 
-#include "../ControllerQueue/DelayQueueElements.h"
+#include "../ControllerQueue/DelayQueueElements.h" // Also forward declaring the do_process_cNNN_delay_queue
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/Services.h"
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"

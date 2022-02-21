@@ -106,7 +106,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
           if (CONFIG_PIN1 >= 0) {
             addHtml(' ');
             const uint8_t choice = ExtraTaskSettings.TaskDevicePluginConfig[x];
-            addSelector(String(F("p043_state")) + (x), 3, options, NULL, NULL, choice);
+            addSelector(String(F("p043_state")) + (x), 3, options, nullptr, nullptr, choice);
           }
           else addFormNumericBox(String(F("Value")) + (x + 1), String(F("p043_state")) + (x), ExtraTaskSettings.TaskDevicePluginConfig[x]);
         }
@@ -164,7 +164,7 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("TCLK : State ");
                 log += state;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               sendData(event);
             }

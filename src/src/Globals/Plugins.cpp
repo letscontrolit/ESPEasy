@@ -29,7 +29,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-
+#include <vector>
 
 int deviceCount = -1;
 
@@ -107,7 +107,6 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
     if (it != Plugin_id_to_DeviceIndex.end())
     {
       if (!validDeviceIndex(it->second)) { return INVALID_DEVICE_INDEX; }
-
       if (Device[it->second].Number != pluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));
@@ -122,7 +121,11 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
    Find name of plugin given the plugin device index..
  \*********************************************************************************************/
 String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
-  String deviceName = "";
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
+  String deviceName;
 
   if (validDeviceIndex(deviceIndex)) {
     Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, nullptr, deviceName);
@@ -157,32 +160,6 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
 #endif // if USE_I2C_DEVICE_SCAN
 
 // ********************************************************************************
-// Device Sort routine, compare two array entries
-// ********************************************************************************
-bool arrayLessThan(const String& ptr_1, const String& ptr_2)
-{
-  unsigned int i = 0;
-
-  while (i < ptr_1.length()) // For each character in string 1, starting with the first:
-  {
-    if (ptr_2.length() < i)  // If string 2 is shorter, then switch them
-    {
-      return true;
-    }
-    const char check1 = static_cast<char>(ptr_1[i]); // get the same char from string 1 and string 2
-    const char check2 = static_cast<char>(ptr_2[i]);
-
-    if (check1 == check2) {
-      // they're equal so far; check the next char !!
-      i++;
-    } else {
-      return check2 > check1;
-    }
-  }
-  return false;
-}
-
-// ********************************************************************************
 // Device Sort routine, actual sorting alfabetically by plugin name.
 // Sorting does happen case sensitive.
 // ********************************************************************************
@@ -208,10 +185,9 @@ void sortDeviceIndexArray() {
 
     while (innerLoop  >= 1)
     {
-      if (arrayLessThan(
-            getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]),
-            getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1])))
-      {
+      const String cur(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]));
+      const String prev(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
+      if (cur < prev) {
         deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
         DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
         DeviceIndex_sorted[innerLoop]     = temp;
@@ -289,6 +265,10 @@ void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) 
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
 bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   bool retval = false;
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
@@ -305,6 +285,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
           return false;
         }
+        #ifndef BUILD_NO_RAM_TRACKER
         switch (Function) {
           case PLUGIN_WRITE:          // First set
           case PLUGIN_REQUEST:
@@ -316,12 +297,11 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           case PLUGIN_EVENT_OUT:
           case PLUGIN_TIME_CHANGE:
             {
-              #ifndef BUILD_NO_RAM_TRACKER
               checkRAM(F("PluginCall_s"), taskIndex);
-              #endif
               break;
             }
         }
+        #endif
         START_TIMER;
         retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
         STOP_TIMER_TASK(DeviceIndex, Function);
@@ -345,6 +325,10 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
 \*********************************************************************************************/
 bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   struct EventStruct TempEvent;
 
   if (event == nullptr) {
@@ -367,6 +351,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++) {
         if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
           if (Function == PLUGIN_DEVICE_ADD) {
+            #ifdef USE_SECOND_HEAP
+            //HeapSelectIram ephemeral;
+            // TD-er: Disabled for now, as it is suspect for crashes.
+            #endif
+
             if ((deviceCount + 2) > static_cast<int>(Device.size())) {
               // Increase with 16 to get some compromise between number of resizes and wasted space
               unsigned int newSize = Device.size();
@@ -529,24 +518,25 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // See also logMemUsageAfter()
             const int freemem_end = ESP.getFreeHeap();
             String log;
-            log.reserve(128);
-            log  = F("After PLUGIN_INIT ");
-            log += F(" task: ");
-            if (taskIndex < 9) log += ' ';
-            log += taskIndex + 1;
-            while (log.length() < 30) log += ' ';
-            log += F("Free mem after: ");
-            log += freemem_end;
-            while (log.length() < 53) log += ' ';
-            log += F("plugin: ");
-            log += freemem_begin - freemem_end;
-            while (log.length() < 67) log += ' ';
+            if (log.reserve(128)) {
+              log  = F("After PLUGIN_INIT ");
+              log += F(" task: ");
+              if (taskIndex < 9) log += ' ';
+              log += taskIndex + 1;
+              while (log.length() < 30) log += ' ';
+              log += F("Free mem after: ");
+              log += freemem_end;
+              while (log.length() < 53) log += ' ';
+              log += F("plugin: ");
+              log += freemem_begin - freemem_end;
+              while (log.length() < 67) log += ' ';
 
-            log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
-            while (log.length() < 73) log += ' ';
-            log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
+              log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+              while (log.length() < 73) log += ' ';
+              log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
 
-            addLog(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, log);
+            }
           }
         }
         #endif
@@ -565,6 +555,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
+      if (!validTaskIndex(event->TaskIndex)) {
+        return false;
+      }
+      if (Function == PLUGIN_READ || Function == PLUGIN_INIT) {
+        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
+          return false;
+        }
+      }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
@@ -578,8 +576,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           String descr;
           descr.reserve(20);
           descr  = F("PluginCall_task_");
-          descr += event->TaskIndex;
+          descr += (event->TaskIndex + 1);
+          #ifdef USES_TIMING_STATS
+          checkRAM(descr, getPluginFunctionName(Function));
+          #else
           checkRAM(descr, String(Function));
+          #endif
           #endif
         }
         if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
@@ -644,9 +646,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           String descr;
           descr.reserve(20);
           descr  = F("PluginCall_task_");
-          descr += event->TaskIndex;
+          descr += (event->TaskIndex + 1);
+          #ifdef USES_TIMING_STATS
+          checkRAM(descr, getPluginFunctionName(Function));
+          #else
           checkRAM(descr, String(Function));
           #endif
+          #endif
+
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
@@ -696,8 +703,10 @@ bool addPlugin(pluginID_t pluginID, deviceIndex_t x) {
     Plugin_id_to_DeviceIndex[pluginID] = x;
     return true;
   }
-  String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
-  log += PLUGIN_MAX;
-  addLog(LOG_LEVEL_ERROR, log);
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
+    log += PLUGIN_MAX;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }

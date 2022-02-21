@@ -30,8 +30,8 @@
 # define PLUGIN_NAME_008       "RFID - Wiegand"
 # define PLUGIN_VALUENAME1_008 "Tag"
 
-void Plugin_008_interrupt1() ICACHE_RAM_ATTR;
-void Plugin_008_interrupt2() ICACHE_RAM_ATTR;
+void Plugin_008_interrupt1() IRAM_ATTR;
+void Plugin_008_interrupt2() IRAM_ATTR;
 
 volatile uint8_t Plugin_008_bitCount = 0u;   // Count the number of bits received.
 uint64_t Plugin_008_keyBuffer        = 0ull; // A 64-bit-long keyBuffer into which the number is stored.
@@ -182,7 +182,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("RFID : reset bits: ");
                 log += Plugin_008_bitCount;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
 
               // reset after ~5 sec
@@ -221,7 +221,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
             log += ull2String(keyMask, 16);
             log += F(" Bits: ");
             log += Plugin_008_bitCount;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           // reset everything

@@ -79,7 +79,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
           log += x + 1;
           log += F(": ");
           log += formatUserVarNoCheck(event->TaskIndex, x);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       success = true;
@@ -106,7 +106,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
               log += event->Par2;
               log += F(" set to ");
               log += floatValue;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             UserVar[event->BaseVarIndex + event->Par2 - 1] = floatValue;
             success                                        = true;
@@ -120,7 +120,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
               log += F(" parameter3: ");
               log += parseStringKeepCase(string, 4);
               log += F(" not a float value!");
-              addLog(LOG_LEVEL_ERROR, log);
+              addLogMove(LOG_LEVEL_ERROR, log);
             }
           }
         }
