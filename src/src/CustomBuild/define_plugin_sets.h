@@ -1190,6 +1190,7 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
+    #define USES_P129   // 74HC165 Input shiftregisters
 #endif
 
 
@@ -1508,7 +1509,7 @@ To create/register a plugin, you have to :
 //    #define USES_P128   //
   #endif
   #ifndef USES_P129
-//    #define USES_P129   //
+    #define USES_P129   // 74HC165 Input shiftregisters
   #endif
   #ifndef USES_P130
 //    #define USES_P130   //
