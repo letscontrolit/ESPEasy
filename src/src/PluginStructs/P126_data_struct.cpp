@@ -119,10 +119,10 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.startsWith(F("74hc"))) {
+  if (command.startsWith(F("74hc595"))) {
     const bool hc_update = command.indexOf(F("noupdate")) == -1;
 
-    if (command.equals(F("74hcset")) || command.equals(F("74hcsetnoupdate"))) {
+    if (command.equals(F("74hc595set")) || command.equals(F("74hc595setnoupdate"))) {
       const uint8_t  pin   = event->Par1;
       const uint16_t value = event->Par2;
 
@@ -141,10 +141,10 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         }
         # endif // ifdef P126_DEBUG_LOG
       }
-    } else if (command.equals(F("74hcupdate"))) {
+    } else if (command.equals(F("74hc595update"))) {
       shift->updateRegisters();
       success = true;
-    } else if (command.equals(F("74hcsetall")) || command.equals(F("74hcsetallnoupdate"))) {
+    } else if (command.equals(F("74hc595setall")) || command.equals(F("74hc595setallnoupdate"))) {
       success = true;
       std::vector<uint8_t> value;
       value.resize(_chipCount, 0);             // Initialize vector to 0's
@@ -246,13 +246,13 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       if (success) {
         shift->setAll(&value[0], hc_update);
       }
-    } else if (command.equals(F("74hcsetalllow"))) {
+    } else if (command.equals(F("74hc595setalllow"))) {
       shift->setAllLow();
       success = true;
-    } else if (command.equals(F("74hcsetallhigh"))) {
+    } else if (command.equals(F("74hc595setallhigh"))) {
       shift->setAllHigh();
       success = true;
-    } else if (command.equals(F("74hcsetoffset"))) {
+    } else if (command.equals(F("74hc595setoffset"))) {
       if ((event->Par1 >= 0) && (event->Par1 <= P126_MAX_SHOW_OFFSET)) {
         uint8_t previousOffset = P126_CONFIG_SHOW_OFFSET;
         P126_CONFIG_SHOW_OFFSET = event->Par1;
@@ -279,7 +279,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         }
         success = true;
       }
-    } else if (command.equals(F("74hcsetchipcount"))) {
+    } else if (command.equals(F("74hc595setchipcount"))) {
       if ((event->Par1 >= 1) && (event->Par1 <= P126_MAX_CHIP_COUNT)) {
         P126_CONFIG_CHIP_COUNT = event->Par1;
         _chipCount             = event->Par1;
@@ -287,7 +287,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         success = true;
       }
     # ifdef P126_SHOW_VALUES
-    } else if (command.equals(F("74hcsethexbin"))) {
+    } else if (command.equals(F("74hc595sethexbin"))) {
       if ((event->Par1 == 0) || (event->Par1 == 1)) {
         uint32_t lSettings = P126_CONFIG_FLAGS;
         bitWrite(lSettings, P126_FLAGS_VALUES_DISPLAY, event->Par1 == 1);

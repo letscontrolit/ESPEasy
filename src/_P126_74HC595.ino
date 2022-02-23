@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-02-23 tonhuisman: Renamce commands using prefix 74hc595 to distinguish from plugin P129 74hc165 using similar commands.
  * 2022-01-22 tonhuisman: ShiftRegister74HC595_NonTemplate library: Add setSize method, cleanup constructor
  *                        Setting: Restore register-buffer state from RTC values after warm boot (or crash...)
  *                        NB:!!! Only restores up to 4 * VARS_PER_TASK (16) chip values, starting at the configured Offset for display !!!
@@ -30,16 +31,16 @@
  */
 
 /** Commands:
- * 74hcSet,<pin>,<0|1>                        : Set a single pin on or off, and update.
- * 74hcSetNoUpdate,<pin>,<0|1>                : Set a single pin on or off. Use 74hcUpdate to set outputs.
- * 74hcUpdate                                 : Update all pin states to the registers.
- * 74hcSetAll,[chip:][width:]<value>...       : Set a range of chips with values, default 32 bit values (width 4).
- * 74hcSetAllNoUpdate,[chip:][width:]<value>  : Ditto, without immediate update. Use 74hcUpdate to set outputs.
- * 74hcSetAllLow                              : Set all register outputs to 0/low.
- * 74hcSetAllHigh                             : Set all register outputs to 1/high.
- * 74hcSetOffset,<chip offset>                : Set the chip offset for display. Will reflect in the device configuration, but not saved.
- * 74hcSetChipCount,<chip count>              : Set the number of chips to use, without restarting the plugin. Range 1..P126_MAX_CHIP_COUNT.
- * 74hcSetHexBin,<0|1>                        : Turn off/on the Hex or Bin Values display, reflected in device configuration, but not saved.
+ * 74hc595Set,<pin>,<0|1>                       : Set a single pin on or off, and update.
+ * 74hc595SetNoUpdate,<pin>,<0|1>               : Set a single pin on or off. Use 74hcUpdate to set outputs.
+ * 74hc595Update                                : Update all pin states to the registers.
+ * 74hc595SetAll,[chip:][width:]<value>...      : Set a range of chips with values, default 32 bit values (width 4).
+ * 74hc595SetAllNoUpdate,[chip:][width:]<value> : Ditto, without immediate update. Use 74hcUpdate to set outputs.
+ * 74hc595SetAllLow                             : Set all register outputs to 0/low.
+ * 74hc595SetAllHigh                            : Set all register outputs to 1/high.
+ * 74hc595SetOffset,<chip offset>               : Set the chip offset for display. Will reflect in the device configuration, but not saved.
+ * 74hc595SetChipCount,<chip count>             : Set the number of chips to use, without restarting the plugin. Range 1..P126_MAX_CHIP_COUNT.
+ * 74hc595SetHexBin,<0|1>                       : Turn off/on the Hex or Bin Values display, reflected in device configuration, but not saved.
  */
 
 # define PLUGIN_126

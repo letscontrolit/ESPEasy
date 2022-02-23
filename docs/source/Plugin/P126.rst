@@ -30,7 +30,7 @@ When connecting many shift regiters daisy-chained, it is important to ensure tha
 
 The output pins can be used to control f.e. relays. The logic is built so that on crash or reboot of the ESP, the last used state can be restored from RTC memory (enabled by default), so the state of the outputs is kept. This is limited to max. 16 shift registers, as that is the size of the memory reserved per task in RTC memory. This memory only survives a warm boot, *not* a reset or power-cycle!
 
-The register outputs are **not** updated on start of the plugin, only when changing a pin state, or using the ``74hcUpdate`` command, the shift registers are updated.
+The register outputs are **not** updated on start of the plugin, only when changing a pin state, or using the ``74hc595Update`` command, the shift registers are updated.
 
 Configuration
 -------------
