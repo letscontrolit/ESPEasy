@@ -26,11 +26,11 @@ Description
 
 The 74HC595 Shiftregisters can be used to connect many output pins to an ESP using only 3 GPIO pins, as these shift registers can easily be daisy chained. There are several shift registers compatible with the 74HC595, like the 74HC164 or TPIC6B595, and probably a couple more.
 
-When connecting many shift regiters daisy-chained, it is important to ensure that not *too* many are connected to a single GPIO output pin, as that could overload that pin. It is advised to use a buffer chip for all used GPIOs for every 4 or 5 shift registers. When using a Schmitt-trigger buffer, it will also clean up the signal further down the line. Any buffer will introduce a small delay in the signal, possibly reducing the number of shift registers that can be controlled. A few useful answers are in this `Stack Exchange question`_
+When connecting many shift registers daisy-chained, it is important to ensure that not *too* many are connected to a single GPIO output pin, as that could overload that pin. It is advised to use a buffer chip for all used GPIOs for every 4 to 5 shift registers. When using a Schmitt-trigger buffer, it will also clean up the signal further down the line. Any buffer will introduce a small delay in the signal, possibly reducing the number of shift registers that can be controlled. A few useful answers are in this `Stack Exchange question`_
 
 The output pins can be used to control f.e. relays. The logic is built so that on crash or reboot of the ESP, the last used state can be restored from RTC memory (enabled by default), so the state of the outputs is kept. This is limited to max. 16 shift registers, as that is the size of the memory reserved per task in RTC memory. This memory only survives a warm boot, *not* a reset or power-cycle!
 
-The register outputs are **not** updated on start of the plugin, only when changing a pin state, or using the ``74hc595Update`` command, the shift registers are updated.
+The register outputs are **not** updated during initialization of the plugin; only when changing a pin state, or using the ``74hc595Update`` command, the shift register outputs are updated.
 
 Configuration
 -------------
@@ -74,7 +74,18 @@ Some random values, Bin display (16 chips visible)
 .. image:: P126_Values_Bin.png
   :alt: Devices page, binary Values example
 
-NB: The State values are grouped per 4 chips. If less chips are configured, only valid states are shown. Display is started at the **Offset for display** + 1 chip.
+NB: The State values are grouped per 4 chips. To be read from right to left in chip-order. If less chips are configured, only available states are shown. Display is started at the **Offset for display** + 1 chip.
+
+* **Output selection**: Choose the values that are sent out to any controllers configured, or when getting the value from processing ``[<taskname>#<valuename>]``.
+
+These are the available options:
+
+.. image:: P126_OutputOptions.png
+  :alt: Output selection options
+
+If ``Decimal & hex/bin`` is selected, the value is output twice, formatted as decimal and as hexadecimal or binary, separated by a comma.
+
+If either of the Hex/bin options is selected, but no ``Values display (Off=Hex/On=Bin)`` option is available, then the output will be formatted as hexadecimal.
 
 * **Restore Values on warm boot**: By default, the register states are restored from RTC memory, so the outputs are in their previous state after a warm boot of the ESP. When turned off, all outputs will be turned off (low) on the next update.
 
