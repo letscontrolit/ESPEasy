@@ -20,9 +20,16 @@
 # define P126_FLAGS_VALUES_DISPLAY    0 // 0/off = HEX, 1/on = BIN
 // Restore values from RTC after warm boot (default enabled, inverted logic)
 # define P126_FLAGS_VALUES_RESTORE    1
+// 0 = decimal & hex/bin, 1 = Decimal, 2 = hex/bin
+# define P126_FLAGS_OUTPUT_SELECTION  4
 
 # define P126_CONFIG_FLAGS_GET_VALUES_DISPLAY (bitRead(P126_CONFIG_FLAGS, P126_FLAGS_VALUES_DISPLAY))
 # define P126_CONFIG_FLAGS_GET_VALUES_RESTORE (bitRead(P126_CONFIG_FLAGS, P126_FLAGS_VALUES_RESTORE) == 0) // Inverted logic
+# define P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION (get4BitFromUL(P126_CONFIG_FLAGS, P126_FLAGS_OUTPUT_SELECTION))
+
+# define P126_OUTPUT_BOTH             0 // Decimal + hex/bin
+# define P126_OUTPUT_DEC_ONLY         1 // Decimal
+# define P126_OUTPUT_HEXBIN           2 // Hex/bin
 
 // Number of chips to support undefined = 1, range 1..255 = 8..2048 pins
 # define P126_MAX_CHIP_COUNT          255

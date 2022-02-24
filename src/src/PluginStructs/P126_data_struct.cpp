@@ -28,7 +28,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
     uint8_t idx = P126_CONFIG_SHOW_OFFSET;
     std::vector<uint8_t> value;
 
-    value.resize(_chipCount, 0);           // Initialize vector to 0's
+    value.resize(_chipCount, 0);             // Initialize vector to 0's
 
     const uint8_t *pvalue = shift->getAll(); // Get current state
 
@@ -68,7 +68,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
         # endif // ifdef P126_DEBUG_LOG
       }
     }
-    shift->setAll(&value[0], false);    // DO NOT SEND OUTPUT TO REGISTERS
+    shift->setAll(&value[0], false); // DO NOT SEND OUTPUT TO REGISTERS
   }
   return true;
 }
@@ -299,7 +299,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
     # ifdef P126_DEBUG_LOG
 
     if (success) {
-      addLogMove(LOG_LEVEL_DEBUG, command);
+      addLog(LOG_LEVEL_DEBUG, string);
     }
     # endif // ifdef P126_DEBUG_LOG
   }
