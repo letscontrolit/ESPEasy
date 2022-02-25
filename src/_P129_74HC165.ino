@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-02-25 tonhuisman: Rename command to ShiftIn,<subcommand>,<arg>...
  * 2022-02-23 tonhuisman: Add command handling.
  * 2022-02-22 tonhuisman: Compare results and generate events.
  * 2022-02-21 tonhuisman: Add output selection dec + hex/bin, dec or hex/bin.
@@ -16,12 +17,12 @@
 
 /** Commands:
  * These commands only change configuration settings, but do not save them. They can be saved using the 'save' command.
- * 
- * 74hc165pinevent,<pin>,<0|1>    : Set the event enable state for pin (1..128), max. up to configured chips * 8.
- * 74hc165chipevent,<chip>,<0|1>  : Set the event enable state for an entire chip (1..16), max. up to configured chips.
- * 74hc165setchipcount,<count>    : Set the number of chips, up to 16 (P129_MAX_CHIP_COUNT).
- * 74hc165samplefrequency,<0|1>   : Set the sample frequency, 0 = 10x/sec, 1 = 50x/sec
- * 74hc165eventperpin,<0|1>       : Set events per pin off or on.
+ *
+ * ShiftIn,PinEvent,<pin>,<0|1>    : Set the event enable state for pin (1..128), max. up to configured chips * 8.
+ * ShiftIn,ChipEvent,<chip>,<0|1>  : Set the event enable state for an entire chip (1..16), max. up to configured chips.
+ * ShiftIn,SetChipCount,<count>    : Set the number of chips, up to 16 (P129_MAX_CHIP_COUNT).
+ * ShiftIn,SampleFrequency,<0|1>   : Set the sample frequency, 0 = 10x/sec, 1 = 50x/sec.
+ * ShiftIn,EventPerPin,<0|1>       : Set events per pin off or on.
  */
 
 # define PLUGIN_129
@@ -38,12 +39,15 @@
 String P129_ul2stringFixed(uint32_t value, uint8_t base) {
   uint64_t val = static_cast<uint64_t>(value);
 
-  val &= 0x0ffffffff;   // Keep 32 bits
-  val |= 0x100000000;   // Set bit just left of 32 bits so we will see the leading zeroes
+  val &= 0x0ffffffff;     // Keep 32 bits
+  val |= 0x100000000;     // Set bit just left of 32 bits so we will see the leading zeroes
   String valStr = ull2String(val, base);
 
-  valStr.remove(0, 1);  // Delete leading 1 we added
-  valStr.toUpperCase(); // uppercase hex for readability
+  valStr.remove(0, 1);    // Delete leading 1 we added
+
+  if (base == HEX) {
+    valStr.toUpperCase(); // uppercase hex for readability
+  }
   return valStr;
 }
 

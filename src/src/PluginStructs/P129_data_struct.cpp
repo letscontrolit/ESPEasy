@@ -48,7 +48,7 @@ const uint32_t P129_data_struct::getChannelState(uint8_t offset, uint8_t size) c
   # ifdef P129_DEBUG_LOG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("74hc165: getChannelState offset: ");
+    String log = F("SHIFTIN: getChannelState offset: ");
     log += offset;
     log += F(", size: ");
     log += size;
@@ -80,10 +80,12 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
 
   String command = parseString(string, 1);
 
-  if (command.startsWith(F("74hc165"))) {
-    if (command.equals(F("74hc165pinevent"))) { // 74hc165pinevent,<pin>,<0|1>
-      const uint8_t pin   = event->Par1 - 1;
-      const uint8_t value = event->Par2;
+  if (command.equals(F("shiftin"))) {
+    const String subcommand = parseString(string, 2);
+
+    if (subcommand.equals(F("pinevent"))) { // ShiftIn,pinevent,<pin>,<0|1>
+      const uint8_t pin   = event->Par2 - 1;
+      const uint8_t value = event->Par3;
 
       if (validChannel(pin + 1) && ((value == 0) || (value == 1))) {
         const uint8_t ulong = pin / 32;
@@ -98,7 +100,7 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = command;
           log += F(", pin: ");
-          log += event->Par1;
+          log += event->Par2;
           log += F(", value: ");
           log += value;
           log += F(", config: ");
@@ -109,9 +111,9 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         }
         # endif // ifdef P129_DEBUG_LOG
       }
-    } else if (command.equals(F("74hc165chipevent"))) { // 74hc165chipevent,<chip>,<0|1>
-      const uint8_t chip  = event->Par1 - 1;
-      const uint8_t value = event->Par2;
+    } else if (subcommand.equals(F("chipevent"))) { // ShiftIn,chipevent,<chip>,<0|1>
+      const uint8_t chip  = event->Par2 - 1;
+      const uint8_t value = event->Par3;
 
       if ((chip >= 0) && (chip < P129_CONFIG_CHIP_COUNT) && ((value == 0) || (value == 1))) {
         const uint8_t ulong = chip / 4;
@@ -126,7 +128,7 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = command;
           log += F(", chip: ");
-          log += event->Par1;
+          log += event->Par2;
           log += F(", value: ");
           log += value;
           log += F(", config: ");
@@ -137,23 +139,23 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
         }
         # endif // ifdef P129_DEBUG_LOG
       }
-    } else if (command.equals(F("74hc165setchipcount"))) { // 74hc165setchipcount,<count>
-      if ((event->Par1 >= 1) && (event->Par1 <= P129_MAX_CHIP_COUNT)) {
-        P129_CONFIG_CHIP_COUNT = event->Par1;
-        _chipCount             = event->Par1;
+    } else if (subcommand.equals(F("setchipcount"))) { // ShiftIn,setchipcount,<count>
+      if ((event->Par2 >= 1) && (event->Par2 <= P129_MAX_CHIP_COUNT)) {
+        P129_CONFIG_CHIP_COUNT = event->Par2;
+        _chipCount             = event->Par2;
         success                = true;
       }
-    } else if (command.equals(F("74hc165samplefrequency"))) { // 74hc165samplefrequency,<0|1>
-      if ((event->Par1 == 0) || (event->Par1 == 1)) {
+    } else if (subcommand.equals(F("samplefrequency"))) { // ShiftIn,samplefrequency,<0|1>
+      if ((event->Par2 == 0) || (event->Par2 == 1)) {
         uint32_t lSettings = P129_CONFIG_FLAGS;
-        bitWrite(lSettings, P129_FLAGS_READ_FREQUENCY, event->Par1 == 1);
+        bitWrite(lSettings, P129_FLAGS_READ_FREQUENCY, event->Par2 == 1);
         P129_CONFIG_FLAGS = lSettings;
         success           = true;
       }
-    } else if (command.equals(F("74hc165eventperpin"))) { // 74hc165eventperpin,<0|1>
-      if ((event->Par1 == 0) || (event->Par1 == 1)) {
+    } else if (subcommand.equals(F("eventperpin"))) { // ShiftIn,eventperpin,<0|1>
+      if ((event->Par2 == 0) || (event->Par2 == 1)) {
         uint32_t lSettings = P129_CONFIG_FLAGS;
-        bitWrite(lSettings, P129_FLAGS_SEPARATE_EVENTS, event->Par1 == 1);
+        bitWrite(lSettings, P129_FLAGS_SEPARATE_EVENTS, event->Par2 == 1);
         P129_CONFIG_FLAGS = lSettings;
         success           = true;
       }
