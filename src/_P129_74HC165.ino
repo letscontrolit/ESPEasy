@@ -27,7 +27,7 @@
 
 # define PLUGIN_129
 # define PLUGIN_ID_129          129
-# define PLUGIN_NAME_129        "Input - 74HC165 Shiftregisters [TESTING]"
+# define PLUGIN_NAME_129        "Input - Shift registers (74HC165) [TESTING]"
 # define PLUGIN_VALUENAME1_129  "State_A"
 # define PLUGIN_VALUENAME2_129  "State_B"
 # define PLUGIN_VALUENAME3_129  "State_C"
@@ -78,8 +78,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         4
       # endif // if P129_MAX_CHIP_COUNT <= 4
       ;
-      Device[deviceCount].SendDataOption = false; // No use in sending the Values to a controller
-      Device[deviceCount].TimerOption    = true;  // Used to update the Devices page
+      Device[deviceCount].SendDataOption = true; // No use in sending the Values to a controller
+      Device[deviceCount].TimerOption    = true; // Used to update the Devices page
       Device[deviceCount].TimerOptional  = true;
 
       break;
@@ -372,7 +372,15 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
             (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_HEXBIN)) {
           string += '0';
           string += (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-          string += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx), (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX));
+          string += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
+                                        # ifdef P129_SHOW_VALUES
+                                        (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+                                        # endif // ifdef P129_SHOW_VALUES
+                                        HEX
+                                        # ifdef P129_SHOW_VALUES
+                                        )
+                                        # endif // ifdef P129_SHOW_VALUES
+                                        );
         }
         success = true;
       }
@@ -381,64 +389,64 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
     # ifdef P129_SHOW_VALUES
     case PLUGIN_WEBFORM_SHOW_VALUES:
-    {
-      // P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
+      {
+        // P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      // if ((nullptr != P129_data) && P129_data->isInitialized()) {                                   // Only show if plugin is active
-      String state, label;
-      state.reserve(40);
-      String abcd             = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
-      const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
-      const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0)));
-      uint8_t dotInsert;
-      uint8_t dotOffset;
+        // if ((nullptr != P129_data) && P129_data->isInitialized()) {                                   // Only show if plugin is active
+        String state, label;
+        state.reserve(40);
+        String abcd             = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
+        const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0)));
+        uint8_t dotInsert;
+        uint8_t dotOffset;
 
-      for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
-        if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
-          label     = F("Bin");
-          state     = F("0b");
-          dotInsert = 10;
-          dotOffset = 9;
-        } else {
-          label     = F("Hex");
-          state     = F("0x");
-          dotInsert = 4;
-          dotOffset = 3;
-        }
-        label += F(" State_");
-        label += abcd.substring(varNr, varNr + 1);
-        label += ' ';
-
-        label += min(255, P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
-        label += '_';
-        label += (P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
-
-        if ((P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-          state += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
-
-          for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
-            state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
+        for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+          if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
+            label     = F("Bin");
+            state     = F("0b");
+            dotInsert = 10;
+            dotOffset = 9;
+          } else {
+            label     = F("Hex");
+            state     = F("0x");
+            dotInsert = 4;
+            dotOffset = 3;
           }
-          pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
+          label += F(" State_");
+          label += abcd.substring(varNr, varNr + 1);
+          label += ' ';
+
+          label += min(255, P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
+          label += '_';
+          label += (P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
+
+          if ((P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
+            state += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
+
+            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+              state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
+            }
+            pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
+          }
         }
+        success = true; // Don't show the default value data
+        // }
+        break;
       }
-      success = true; // Don't show the default value data
-      // }
-      break;
-    }
     # endif // ifdef P129_SHOW_VALUES
     case PLUGIN_WRITE:
-    {
-      P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
+      {
+        P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P129_data) {
-        return success;
+        if (nullptr == P129_data) {
+          return success;
+        }
+
+        success = P129_data->plugin_write(event, string);
+
+        break;
       }
-
-      success = P129_data->plugin_write(event, string);
-
-      break;
-    }
   }
   return success;
 }
