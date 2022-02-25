@@ -14,6 +14,7 @@
 .. |Plugin_Gesture| replace:: :ref:`P064_page`
 .. |Plugin_Gyro| replace:: :ref:`P045_page`, :ref:`P119_page`
 .. |Plugin_Hardware| replace:: :ref:`P046_page`
+.. |Plugin_Input| replace:: :ref:`P129_page`
 .. |Plugin_Keypad| replace:: :ref:`P058_page`, :ref:`P061_page`, :ref:`P062_page`, :ref:`P063_page`
 .. |Plugin_Light_Color| replace:: :ref:`P050_page`, :ref:`P066_page`
 .. |Plugin_Light_UV| replace:: :ref:`P084_page`, :ref:`P107_page`, :ref:`P114_page`
