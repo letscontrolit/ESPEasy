@@ -30,7 +30,7 @@ When connecting many shift registers daisy-chained, it is important to ensure th
 
 The output pins can be used to control f.e. relays. The logic is built so that on crash or reboot of the ESP, the last used state can be restored from RTC memory (enabled by default), so the state of the outputs is kept. This is limited to max. 16 shift registers, as that is the size of the memory reserved per task in RTC memory. This memory only survives a warm boot, *not* a reset or power-cycle!
 
-The register outputs are **not** updated during initialization of the plugin; only when changing a pin state, or using the ``74hc595Update`` command, the shift register outputs are updated.
+The register outputs are **not** updated during initialization of the plugin; only when changing a pin state, or using the ``ShiftOut,Update`` command, the shift register outputs are updated.
 
 Configuration
 -------------
@@ -64,7 +64,7 @@ Using **Offset for display**, the chips that will be restored, with a maximum of
 
 * **Values display (Off=Hex/On=Bin)**: The display on the Devices page is custom formatted (when the plugin is enabled) to show the state of the outputs of the shift registers in either Hex (default) or Bin format, having a separator per chip (8 bits) for readability.
 
-All off, Hex display (default)
+Some random values, Hex display (default)
 
 .. image:: P126_Values_Hex.png
   :alt: Devices page, hexadecimal Values example
@@ -74,7 +74,10 @@ Some random values, Bin display (16 chips visible)
 .. image:: P126_Values_Bin.png
   :alt: Devices page, binary Values example
 
-NB: The State values are grouped per 4 chips. To be read from right to left in chip-order. If less chips are configured, only available states are shown. Display is started at the **Offset for display** + 1 chip.
+NB: The State values are grouped per 4 chips. To be read from right to left in chip-order, see image below. If less chips are configured, only available states are shown. Display is started at the **Offset for display** + 1 chip.
+
+.. image:: P126_Values_HexChip.png
+  :alt: Devices page, hexadecimal Values pointing out chip numbers
 
 * **Output selection**: Choose the values that are sent out to any controllers configured, or when getting the value from processing ``[<taskname>#<valuename>]``.
 
