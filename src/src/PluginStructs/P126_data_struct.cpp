@@ -51,7 +51,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log;
           log.reserve(64);
-          log += F("74hc595: plugin_init: value[");
+          log += F("SHIFTOUT: plugin_init: value[");
           log += idx;
           log += F("] : ");
           log += value[idx];
@@ -88,7 +88,7 @@ const uint32_t P126_data_struct::getChannelState(uint8_t offset, uint8_t size) c
     # ifdef P126_DEBUG_LOG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("74hc595: getChannelState offset: ");
+      String log = F("SHIFTOUT: getChannelState offset: ");
       log += offset;
       log += F(", size: ");
       log += size;
@@ -119,12 +119,13 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command.startsWith(F("74hc595"))) {
-    const bool hc_update = command.indexOf(F("noupdate")) == -1;
+  if (command.equals(F("shiftout"))) {
+    const String subcommand = parseString(string,2);
+    const bool hc_update = subcommand.indexOf(F("noupdate")) == -1;
 
-    if (command.equals(F("74hc595set")) || command.equals(F("74hc595setnoupdate"))) {
-      const uint8_t  pin   = event->Par1;
-      const uint16_t value = event->Par2;
+    if (subcommand.equals(F("set")) || subcommand.equals(F("setnoupdate"))) {
+      const uint8_t  pin   = event->Par2;
+      const uint16_t value = event->Par3;
 
       if (validChannel(pin) && ((value == 0) || (value == 1))) {
         shift->set(pin - 1, value, hc_update);
@@ -141,10 +142,10 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
         }
         # endif // ifdef P126_DEBUG_LOG
       }
-    } else if (command.equals(F("74hc595update"))) {
+    } else if (subcommand.equals(F("update"))) {
       shift->updateRegisters();
       success = true;
-    } else if (command.equals(F("74hc595setall")) || command.equals(F("74hc595setallnoupdate"))) {
+    } else if (subcommand.equals(F("setall")) || subcommand.equals(F("setallnoupdate"))) {
       success = true;
       std::vector<uint8_t> value;
       value.resize(_chipCount, 0);             // Initialize vector to 0's
@@ -156,7 +157,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       }
 
       uint32_t par   = 0u;
-      uint8_t  param = 2; // Start with an offset
+      uint8_t  param = 3; // Start with an offset
       uint8_t  width = 4;
       uint8_t  idx   = 0;
       String   arg   = parseString(string, param);
@@ -246,16 +247,16 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       if (success) {
         shift->setAll(&value[0], hc_update);
       }
-    } else if (command.equals(F("74hc595setalllow"))) {
+    } else if (subcommand.equals(F("setalllow"))) {
       shift->setAllLow();
       success = true;
-    } else if (command.equals(F("74hc595setallhigh"))) {
+    } else if (subcommand.equals(F("setallhigh"))) {
       shift->setAllHigh();
       success = true;
-    } else if (command.equals(F("74hc595setoffset"))) {
-      if ((event->Par1 >= 0) && (event->Par1 <= P126_MAX_SHOW_OFFSET)) {
+    } else if (subcommand.equals(F("setoffset"))) {
+      if ((event->Par2 >= 0) && (event->Par2 <= P126_MAX_SHOW_OFFSET)) {
         uint8_t previousOffset = P126_CONFIG_SHOW_OFFSET;
-        P126_CONFIG_SHOW_OFFSET = event->Par1;
+        P126_CONFIG_SHOW_OFFSET = event->Par2;
 
         if (P126_CONFIG_SHOW_OFFSET >= P126_CONFIG_CHIP_COUNT) {
           P126_CONFIG_SHOW_OFFSET = 0;
@@ -274,23 +275,23 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
             UserVar.setUint32(event->TaskIndex, varNr, 0u);
           }
           # ifdef P126_DEBUG_LOG
-          addLog(LOG_LEVEL_INFO, F("74HC595: 'Offset for display' changed: state values reset."));
+          addLog(LOG_LEVEL_INFO, F("SHIFTOUT: 'Offset for display' changed: state values reset."));
           # endif // ifdef P126_DEBUG_LOG
         }
         success = true;
       }
-    } else if (command.equals(F("74hc595setchipcount"))) {
-      if ((event->Par1 >= 1) && (event->Par1 <= P126_MAX_CHIP_COUNT)) {
-        P126_CONFIG_CHIP_COUNT = event->Par1;
-        _chipCount             = event->Par1;
+    } else if (subcommand.equals(F("setchipcount"))) {
+      if ((event->Par2 >= 1) && (event->Par2 <= P126_MAX_CHIP_COUNT)) {
+        P126_CONFIG_CHIP_COUNT = event->Par2;
+        _chipCount             = event->Par2;
         shift->setSize(P126_CONFIG_CHIP_COUNT);
         success = true;
       }
     # ifdef P126_SHOW_VALUES
-    } else if (command.equals(F("74hc595sethexbin"))) {
-      if ((event->Par1 == 0) || (event->Par1 == 1)) {
+    } else if (subcommand.equals(F("sethexbin"))) {
+      if ((event->Par2 == 0) || (event->Par2 == 1)) {
         uint32_t lSettings = P126_CONFIG_FLAGS;
-        bitWrite(lSettings, P126_FLAGS_VALUES_DISPLAY, event->Par1 == 1);
+        bitWrite(lSettings, P126_FLAGS_VALUES_DISPLAY, event->Par2 == 1);
         P126_CONFIG_FLAGS = lSettings;
         success           = true;
       }
