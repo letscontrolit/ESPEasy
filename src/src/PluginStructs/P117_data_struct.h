@@ -9,7 +9,8 @@ struct P117_data_struct : public PluginTaskData_base {
 public:
 
   P117_data_struct(uint16_t altitude,
-                   float    temperatureOffset);
+                   float    temperatureOffset,
+                   bool     autoCalibration);
 
   P117_data_struct() = delete;
 
@@ -36,6 +37,9 @@ public:
     }
   }
 
+  int setCalibrationMode(bool isAuto);
+  int setForcedRecalibrationFactor(uint16_t co2_ppm);
+
 private:
 
   FrogmoreScd30 scd30;
@@ -44,6 +48,7 @@ private:
 
   uint16_t _altitude;
   float    _temperatureOffset;
+  bool     _autoCalibration;
 
   bool initialised = false;
 };

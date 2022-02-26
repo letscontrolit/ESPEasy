@@ -11,13 +11,17 @@
 
 // Changelog:
 //
+// 2022-02-26 tonhuisman: Implement commands for auto/manual CO2 calibration, and setting for auto calibration
 // 2021-11-20 tonhuisman: Implement multi-instance support (using PluginStruct)
 // 2021-09 tonhuisman: Moved from ESPEasyPluginPlayground to main repository
 
 // Commands:
-//   SCDGETABC - shows automatic calibration period in days, 0 = disable
-//   SCDGETALT - shows altitude compensation configuration in meters above sea level
-//   SCDGETTMP - shows temperature offset in degrees C
+//   SCDGETABC               - shows automatic calibration period in days, 0 = disable
+//   SCDGETALT               - shows altitude compensation configuration in meters above sea level
+//   SCDGETTMP               - shows temperature offset in degrees C
+//   SCDSETCALIBRATION,<0|1> - Set Automatic calibration off or on
+//   SCDSETFRC,<co2_ppm>     - Set the Forced ReCalibration value, range between 400 and 2000 ppm
+//                             Turns off AutoCalibration mode!
 
 # define PLUGIN_117
 # define PLUGIN_ID_117         117
@@ -91,8 +95,11 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Altitude"), F("plugin_117_SCD30_alt"), PCONFIG(0), 0, 2000);
       addUnit(F("0..2000 m"));
+
       addFormTextBox(F("Temp offset"), F("plugin_117_SCD30_tmp"), toString(PCONFIG_FLOAT(0), 2), 5);
       addUnit(F("&deg;C"));
+
+      addFormCheckBox(F("Automatic Calibration (ABC)"), F("plugin_117_abc"), PCONFIG(1) == 1);
       success = true;
       break;
     }
@@ -104,12 +111,13 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       if (alt > 2000) { alt = 2000; }
       PCONFIG(0)       = alt;
       PCONFIG_FLOAT(0) = getFormItemFloat(F("plugin_117_SCD30_tmp"));
+      PCONFIG(1)       = isFormItemChecked(F("plugin_117_abc")) ? 1 : 0;
       success          = true;
       break;
     }
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P117_data_struct(PCONFIG(0), PCONFIG_FLOAT(0)));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P117_data_struct(PCONFIG(0), PCONFIG_FLOAT(0), PCONFIG(1) == 1));
       P117_data_struct *P117_data = static_cast<P117_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P117_data) {
@@ -169,23 +177,33 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       String   log;
       float    temp;
 
-      if (command.equals(F("scdgetabc")))
-      {
+      if (command.equals(F("scdgetabc"))) {
         P117_data->getCalibrationType(&value);
         log    += F("ABC: ");
         log    += value;
         success = true;
-      } else if (command.equals(F("scdgetalt")))
-      {
+      } else if (command.equals(F("scdgetalt"))) {
         P117_data->getAltitudeCompensation(&value);
         log    += F("Altitude: ");
         log    += value;
         success = true;
-      } else if (command.equals(F("scdgettmp")))
-      {
+      } else if (command.equals(F("scdgettmp"))) {
         P117_data->getTemperatureOffset(&temp);
         log    += F("Temp offset: ");
         log    += toString(temp, 2);
+        success = true;
+      } else if (command.equals(F("scdsetcalibration")) && (event->Par1 >= 0) && (event->Par1 <= 1)) {
+        P117_data->setCalibrationMode(event->Par1 == 1);
+        PCONFIG(1) = event->Par1; // Update device configuration
+        log       += F("Calibration: ");
+        log       += event->Par1 == 1 ? F("auto") : F("manual");
+        success    = true;
+      } else if (command.equals(F("scdsetfrc")) && (event->Par1 >= 400) && (event->Par1 <= 2000)) {
+        int res = P117_data->setCalibrationMode(event->Par1 == 1);
+        log    += F("SCD30 Forced calibration: ");
+        log    += event->Par1;
+        log    += F(", result: ");
+        log    += res;
         success = true;
       }
 
