@@ -47,3 +47,13 @@
 
     | FRC value is saved in non-volatile memory, the last set FRC value will be used for field-calibration after repowering.
     "
+    "
+    | ``scdgetinterval``
+    ","
+    | Shows the current Measurement Interval of the sensor.
+    "
+    "
+    | ``scdsetinterval,<interval>``
+    ","
+    | Set the Measurement Interval to ``<interval>`` seconds. Factory default is 2 sec. Range from 2 to 1800 seconds.
+    "

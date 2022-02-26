@@ -53,11 +53,13 @@ Device Settings
 
 * **Temp offset** Offset for temperature correction. Can be set to compensate any self-heating of the device, by comparing the temperature measurement with another calibrated temperature measured close to the device. The difference can be set here, and is (also) stored in the sensor (but re-written every time ESPEasy initializes the sensor).
 
-* **Automatic Calibration (ABC)**: When enabled, the automatic calibration will be activated when the plugin is started.
+* **Measurement Interval**: The default interval for continuous measuring is 2 sec. Here this interval can be increased, if so desired.
+
+* **Automatic Self Calibration**: When enabled, the automatic self-calibration will be activated when the plugin is started. If the calibration is set via the ``scdsetfrc,<co2_ppm>`` command, the calibration is reset to manual, as the ASC overwrites the manually set calibration.
 
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 60 sec. The data will be measured and optionally sent to any configured controllers using this interval.
+* **Interval** By default, Interval will be set to 60 sec. The data will be measured and optionally sent to any configured controllers using this interval.
 
 Values
 ^^^^^^
