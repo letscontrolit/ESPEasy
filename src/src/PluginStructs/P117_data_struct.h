@@ -5,6 +5,11 @@
 #ifdef USES_P117
 # include <FrogmoreScd30.h>
 
+# define P117_SENSOR_ALTITUDE     PCONFIG(0)
+# define P117_TEMPERATURE_OFFSET  PCONFIG_FLOAT(0)
+# define P117_AUTO_CALIBRATION    PCONFIG(1)
+# define P117_MEASURE_INTERVAL    PCONFIG(2)
+
 struct P117_data_struct : public PluginTaskData_base {
 public:
 
