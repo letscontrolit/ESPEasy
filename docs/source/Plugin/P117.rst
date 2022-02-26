@@ -57,6 +57,8 @@ Device Settings
 
 * **Automatic Self Calibration**: When enabled, the automatic self-calibration will be activated when the plugin is started. If the calibration is set via the ``scdsetfrc,<co2_ppm>`` command, the calibration is reset to manual, as the ASC overwrites the manually set calibration.
 
+.. warning:: Automatic Self Calibration is a tedious process, that at first run takes at least 7 days to complete, and requires the sensor to be in fresh air for at least 1 hour daily, during the self-calibration period.
+
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
 * **Interval** By default, Interval will be set to 60 sec. The data will be measured and optionally sent to any configured controllers using this interval.
@@ -82,7 +84,7 @@ Change log
   ...
 
   |added|
-  2022-02-26 Added commands and setting for automatic calibration and forced recalibration.
+  2022-02-26 Added commands and settings for measurement interval, automatic calibration and forced recalibration.
 
   |added|
   2021-11-20 Initial release version.
