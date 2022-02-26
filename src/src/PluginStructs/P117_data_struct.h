@@ -10,7 +10,8 @@ public:
 
   P117_data_struct(uint16_t altitude,
                    float    temperatureOffset,
-                   bool     autoCalibration);
+                   bool     autoCalibration,
+                   uint16_t interval);
 
   P117_data_struct() = delete;
 
@@ -37,8 +38,15 @@ public:
     }
   }
 
+  void getMeasurementInterval(uint16_t *interval) {
+    if (initialised) {
+      scd30.getMeasurementInterval(interval);
+    }
+  }
+
   int setCalibrationMode(bool isAuto);
   int setForcedRecalibrationFactor(uint16_t co2_ppm);
+  int setMeasurementInterval(uint16_t interval);
 
 private:
 
@@ -49,6 +57,7 @@ private:
   uint16_t _altitude;
   float    _temperatureOffset;
   bool     _autoCalibration;
+  uint16_t _interval;
 
   bool initialised = false;
 };

@@ -11,17 +11,20 @@
 
 // Changelog:
 //
+// 2022-02-26 tonhuisman: Implement commands for get/set measurement interval, and a setting too. Bugfix.
 // 2022-02-26 tonhuisman: Implement commands for auto/manual CO2 calibration, and setting for auto calibration
 // 2021-11-20 tonhuisman: Implement multi-instance support (using PluginStruct)
 // 2021-09 tonhuisman: Moved from ESPEasyPluginPlayground to main repository
 
 // Commands:
-//   SCDGETABC               - shows automatic calibration period in days, 0 = disable
-//   SCDGETALT               - shows altitude compensation configuration in meters above sea level
-//   SCDGETTMP               - shows temperature offset in degrees C
-//   SCDSETCALIBRATION,<0|1> - Set Automatic calibration off or on
-//   SCDSETFRC,<co2_ppm>     - Set the Forced ReCalibration value, range between 400 and 2000 ppm
-//                             Turns off AutoCalibration mode!
+//   SCDGETABC                 - shows automatic calibration period in days, 0 = disable
+//   SCDGETALT                 - shows altitude compensation configuration in meters above sea level
+//   SCDGETTMP                 - shows temperature offset in degrees C
+//   SCDSETCALIBRATION,<0|1>   - Set Automatic calibration off or on
+//   SCDSETFRC,<co2_ppm>       - Set the Forced ReCalibration value, range between 400 and 2000 ppm
+//                               Turns off AutoCalibration mode!
+//   SCDGETINTERVAL            - shows the current measuring interval
+//   SCDSETINTERVAL,<interval> - Set the measuring interval, default 2 sec., range 2-1800 seconds.
 
 # define PLUGIN_117
 # define PLUGIN_ID_117         117
@@ -78,6 +81,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
+      PCONFIG(2)                                   = 2; // Default Measurement Interval
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0; // CO2 values are integers
       ExtraTaskSettings.TaskDeviceValueDecimals[3] = 0;
       break;
@@ -99,7 +103,10 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       addFormTextBox(F("Temp offset"), F("plugin_117_SCD30_tmp"), toString(PCONFIG_FLOAT(0), 2), 5);
       addUnit(F("&deg;C"));
 
-      addFormCheckBox(F("Automatic Calibration (ABC)"), F("plugin_117_abc"), PCONFIG(1) == 1);
+      addFormNumericBox(F("Measurement Interval"), F("plugin_117_interval"), PCONFIG(2), 2, 1800);
+      addUnit(F("2..1800 sec."));
+
+      addFormCheckBox(F("Automatic Self Calibration"), F("plugin_117_abc"), PCONFIG(1) == 1);
       success = true;
       break;
     }
@@ -112,12 +119,24 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(0)       = alt;
       PCONFIG_FLOAT(0) = getFormItemFloat(F("plugin_117_SCD30_tmp"));
       PCONFIG(1)       = isFormItemChecked(F("plugin_117_abc")) ? 1 : 0;
-      success          = true;
+      uint16_t interval = getFormItemInt(F("plugin_117_interval"));
+
+      if (interval < 2) { interval = 2; }
+
+      if (interval > 1800) { interval = 1800; }
+      PCONFIG(2) = interval;
+      success    = true;
       break;
     }
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P117_data_struct(PCONFIG(0), PCONFIG_FLOAT(0), PCONFIG(1) == 1));
+      uint16_t interval = PCONFIG(2);
+
+      if (interval < 2) { interval = 2; }
+
+      if (interval > 1800) { interval = 1800; }
+      PCONFIG(2) = interval;
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P117_data_struct(PCONFIG(0), PCONFIG_FLOAT(0), PCONFIG(1) == 1, PCONFIG(2)));
       P117_data_struct *P117_data = static_cast<P117_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P117_data) {
@@ -199,12 +218,25 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
         log       += event->Par1 == 1 ? F("auto") : F("manual");
         success    = true;
       } else if (command.equals(F("scdsetfrc")) && (event->Par1 >= 400) && (event->Par1 <= 2000)) {
-        int res = P117_data->setCalibrationMode(event->Par1 == 1);
+        int res = P117_data->setForcedRecalibrationFactor(event->Par1);
         log    += F("SCD30 Forced calibration: ");
         log    += event->Par1;
         log    += F(", result: ");
         log    += res;
         success = true;
+      } else if (command.equals(F("scdgetinterval"))) {
+        P117_data->getMeasurementInterval(&value);
+        log    += F("Interval: ");
+        log    += value;
+        success = true;
+      } else if (command.equals(F("scdsetinterval")) && (event->Par1 >= 2) && (event->Par1 <= 1800)) {
+        int res = P117_data->setMeasurementInterval(event->Par1);
+        PCONFIG(2) = event->Par1; // Update device configuration
+        log       += F("SCD30 Measurement Interval: ");
+        log       += event->Par1;
+        log       += F(", result: ");
+        log       += res;
+        success    = true;
       }
 
       if (success) {

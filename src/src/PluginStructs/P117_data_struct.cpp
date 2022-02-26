@@ -5,8 +5,11 @@
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
-P117_data_struct::P117_data_struct(uint16_t altitude, float temperatureOffset, bool autoCalibration)
-  : _altitude(altitude), _temperatureOffset(temperatureOffset), _autoCalibration(autoCalibration) {}
+P117_data_struct::P117_data_struct(uint16_t altitude,
+                                   float    temperatureOffset,
+                                   bool     autoCalibration,
+                                   uint16_t interval)
+  : _altitude(altitude), _temperatureOffset(temperatureOffset), _autoCalibration(autoCalibration), _interval(interval) {}
 
 
 // **************************************************************************/
@@ -41,6 +44,7 @@ bool P117_data_struct::init_sensor() {
     scd30.begin();
 
     scd30.setCalibrationType(_autoCalibration);
+    scd30.setMeasurementInterval(_interval);
 
     scd30.beginMeasuring();
     scd30.setAltitudeCompensation(_altitude);
@@ -63,6 +67,17 @@ int P117_data_struct::setForcedRecalibrationFactor(uint16_t co2_ppm) {
   if (initialised) {
     setCalibrationMode(false); // Force to manual mode
     return scd30.setForcedRecalibrationFactor(co2_ppm);
+  }
+  return ERROR_SCD30_NOT_FOUND_ERROR;
+}
+
+int P117_data_struct::setMeasurementInterval(uint16_t interval) {
+  if (initialised) {
+    if ((interval >= 2) && (interval <= 1800)) {
+      return scd30.setMeasurementInterval(interval);
+    } else {
+      return ERROR_SCD30_INVALID_VALUE;
+    }
   }
   return ERROR_SCD30_NOT_FOUND_ERROR;
 }
