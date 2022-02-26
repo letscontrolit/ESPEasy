@@ -29,3 +29,21 @@
     | Shows temperature offset in degrees C.
 
     "
+    "
+    | ``scdsetcalibration,<0|1>``
+    ","
+    | Set the sensor calibration mode to manual (0) or automatic (1).
+
+    | The Device configuration setting is also updated, but not saved, when using this command.
+    "
+    "
+    | ``scdsetfrc,<co2_ppm>``
+    ","
+    | Set the sensor forced recalibration value. The ``<co2_ppm>`` is validated to be between 400 and 2000 (as per the manual). When using this command, the sensor is switched to Manual Calibration, as Automatic Self Calibration overwrites this setting.
+
+    | Forced Re-Calibration instructions (from the manual):
+
+    | Forced recalibration (FRC) is used to compensate for sensor drifts when a reference value of the CO2 concentration in close proximity to the SCD30 is available. For best results the sensor has to be run in a stable environment in continuous mode at a measurement rate of 2s for at least two minutes before applying the calibration command and sending the reference value. Setting a reference CO2 concentration by the here described method will always overwrite the settings from ASC (Automatic Calibration) and vice-versa. The reference CO2 concentration has to be within the range 400 ppm ≤ cref(CO2) ≤ 2000 ppm.
+
+    | FRC value is saved in non-volatile memory, the last set FRC value will be used for field-calibration after repowering.
+    "
