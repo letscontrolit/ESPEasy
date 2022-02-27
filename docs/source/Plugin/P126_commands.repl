@@ -42,9 +42,9 @@
     "
     | ``ShiftOut,SetChipCount,<chip count>``
     ","
-    | Change the number of chips configured. Will adjust the configuration immediately, but not store the setting, use the ``save`` command for storing the setting.
+    | Change the number of chips configured. Will adjust the configuration immediately, and set in Device configuration, but not store the setting, use the ``save`` command for storing the setting.
     
-    | When adding chips, the extra outputs will all be set to low/off.
+    | When increasing the number of chips, the extra outputs will all be set to low/off.
     "
     "
     | ``ShiftOut,SetOffset,<chip offset>``

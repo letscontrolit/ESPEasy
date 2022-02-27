@@ -3,11 +3,12 @@
 #ifdef USES_P126
 
 // #######################################################################################################
-// ################################ Plugin 126 74HC595 Shiftregisters      ###############################
+// ################################ Plugin 126 Shift registers 74HC595     ###############################
 // #######################################################################################################
 
 /** Changelog:
- * 2022-02-25 tonhuisman: Agaijn rename commands, now using separate prefix shiftout and the rest of the previous command as subcommand.
+ * 2022-02-27 tonhuisman: Rename plugin title to Output - Shift registers (74HC595)
+ * 2022-02-25 tonhuisman: Again rename commands, now using separate prefix shiftout and the rest of the previous command as subcommand.
  * 2022-02-24 tonhuisman: Further update changing 74hc commands to 74hc595.
  *                        Allow selecting value output decimal + hex/bin, decimal only or hex/bin only.
  *                        Adjust Values display label order to show State_4_1 instead of State_1_4, same order as byte values.
@@ -49,7 +50,7 @@
 
 # define PLUGIN_126
 # define PLUGIN_ID_126          126
-# define PLUGIN_NAME_126        "Output - 74HC595 Shiftregisters [TESTING]"
+# define PLUGIN_NAME_126        "Output - Shift registers (74HC595) [TESTING]"
 # define PLUGIN_VALUENAME1_126  "State_A"
 # define PLUGIN_VALUENAME2_126  "State_B"
 # define PLUGIN_VALUENAME3_126  "State_C"
