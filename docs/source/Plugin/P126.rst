@@ -62,7 +62,7 @@ ESPEasy stores the current values of each task in RTC memory (that is retained d
 
 Using **Offset for display**, the chips that will be restored, with a maximum of 16, are configured. This value is always rounded to a multiple of 4, and lower than the number of chips configured.
 
-* **Values display (Off=Hex/On=Bin)**: The display on the Devices page is custom formatted (when the plugin is enabled) to show the state of the outputs of the shift registers in either Hex (default) or Bin format, having a separator per chip (8 bits) for readability.
+* **Values display (Off=Hex/On=Bin)**: The display on the Devices page is custom formatted to show the state of the outputs of the shift registers in either Hex (default) or Bin format, having a separator per chip (8 bits) for readability.
 
 Some random values, Hex display (default)
 

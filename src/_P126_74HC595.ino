@@ -267,88 +267,77 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_FORMAT_USERVAR:
     {
-      P126_data_struct *P126_data = static_cast<P126_data_struct *>(getPluginTaskData(event->TaskIndex));
+      string.clear();
 
-      if ((nullptr != P126_data) && P126_data->isInitialized()) { // Only fill if plugin is active
-        // string  = String(UserVar.getUint32(event->TaskIndex, event->idx));
-        // string += F(",0x");
-        // string += ull2String(UserVar.getUint32(event->TaskIndex, event->idx), (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX));
-        string.clear();
-
-        if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
-            (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_DEC_ONLY)) {
-          string += String(UserVar.getUint32(event->TaskIndex, event->idx));
-        }
-
-        if (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) {
-          string += ',';
-        }
-
-        if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
-            (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_HEXBIN)) {
-          string += '0';
-          string += (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-          string += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
-                                        # ifdef P126_SHOW_VALUES
-                                        (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
-                                        # endif // ifdef P126_SHOW_VALUES
-                                        HEX
-                                        # ifdef P126_SHOW_VALUES
-                                        )
-                                        # endif // ifdef P126_SHOW_VALUES
-                                        );
-        }
-        success = true;
+      if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
+          (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_DEC_ONLY)) {
+        string += ull2String(UserVar.getUint32(event->TaskIndex, event->idx));
       }
+
+      if (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) {
+        string += ',';
+      }
+
+      if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
+          (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_HEXBIN)) {
+        string += '0';
+        string += (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
+        string += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
+                                      # ifdef P126_SHOW_VALUES
+                                      (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+                                      # endif // ifdef P126_SHOW_VALUES
+                                      HEX
+                                      # ifdef P126_SHOW_VALUES
+                                      )
+                                      # endif // ifdef P126_SHOW_VALUES
+                                      );
+      }
+      success = true;
       break;
     }
 
     # ifdef P126_SHOW_VALUES
     case PLUGIN_WEBFORM_SHOW_VALUES:
       {
-        P126_data_struct *P126_data = static_cast<P126_data_struct *>(getPluginTaskData(event->TaskIndex));
+        String state, label;
+        state.reserve(40);
+        String abcd = F("ABCDEFGH");                                                                // In case anyone dares to extend
+                                                                                                    // VARS_PER_TASK to 8...
+        const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
+        uint8_t dotInsert;
+        uint8_t dotOffset;
 
-        if ((nullptr != P126_data) && P126_data->isInitialized()) {                                   // Only show if plugin is active
-          String state, label;
-          state.reserve(40);
-          String abcd = F("ABCDEFGH");                                                                // In case anyone dares to extend
-                                                                                                      // VARS_PER_TASK to 8...
-          const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
-          const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
-          uint8_t dotInsert;
-          uint8_t dotOffset;
-
-          for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
-            if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
-              label     = F("Bin");
-              state     = F("0b");
-              dotInsert = 10;
-              dotOffset = 9;
-            } else {
-              label     = F("Hex");
-              state     = F("0x");
-              dotInsert = 4;
-              dotOffset = 3;
-            }
-            label += F(" State_");
-            label += abcd.substring(varNr, varNr + 1);
-            label += ' ';
-
-            label += min(255, P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
-            label += '_';
-            label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
-
-            if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-              state += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
-
-              for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
-                state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
-              }
-              pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
-            }
+        for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+          if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
+            label     = F("Bin");
+            state     = F("0b");
+            dotInsert = 10;
+            dotOffset = 9;
+          } else {
+            label     = F("Hex");
+            state     = F("0x");
+            dotInsert = 4;
+            dotOffset = 3;
           }
-          success = true; // Don't show the default value data
+          label += F(" State_");
+          label += abcd.substring(varNr, varNr + 1);
+          label += ' ';
+
+          label += min(255, P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
+          label += '_';
+          label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
+
+          if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
+            state += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
+
+            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+              state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
+            }
+            pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
+          }
         }
+        success = true; // Don't show the default value data
         break;
       }
     # endif // ifdef P126_SHOW_VALUES
