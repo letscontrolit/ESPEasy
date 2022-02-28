@@ -87,8 +87,8 @@ private:
 
   void checkDiff(struct EventStruct *event);
   void sendInputEvent(struct EventStruct *event,
-                      uint8_t             i,
-                      uint8_t             j,
+                      uint8_t             group,
+                      uint8_t             bit,
                       uint8_t             state);
 
 

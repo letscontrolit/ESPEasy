@@ -20,7 +20,7 @@ P129_data_struct::~P129_data_struct() {}
 bool P129_data_struct::plugin_init(struct EventStruct *event) {
   if (isInitialized()) {
     for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; i++) { // Clear entire buffer
-      readBuffer[i] = 0xFF;                             // FIXME temporary set all bits ON for testing... was: 0;
+      readBuffer[i] = 0;
     }
 
     // Prepare all used GPIO pins
@@ -198,7 +198,7 @@ void P129_data_struct::checkDiff(struct EventStruct *event) {
   for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i += 4) {
     const uint32_t bits = PCONFIG_LONG(i / 4);
 
-    if (bits != 0) {
+    if (bits != 0) { // Any input event enabled?
       const uint32_t read = readBuffer[i + 3] << 24 | readBuffer[i + 2] << 16 | readBuffer[i + 1] << 8 | readBuffer[i + 0];
       const uint32_t prev = prevBuffer[i + 3] << 24 | prevBuffer[i + 2] << 16 | prevBuffer[i + 1] << 8 | prevBuffer[i + 0];
 
@@ -213,13 +213,13 @@ void P129_data_struct::checkDiff(struct EventStruct *event) {
 }
 
 void P129_data_struct::sendInputEvent(struct EventStruct *event,
-                                      uint8_t             i,
-                                      uint8_t             j,
+                                      uint8_t             group,
+                                      uint8_t             bit,
                                       uint8_t             state) {
   String  send;
-  uint8_t pin  = (i * 8) + j + 1; // 1..128
-  uint8_t chip = i + (j / 8) + 1; // 1..16
-  uint8_t port = (j % 8);         // 0..7
+  uint8_t pin  = (group * 8) + bit + 1; // 1..128
+  uint8_t chip = group + (bit / 8) + 1; // 1..16
+  uint8_t port = (bit % 8);             // 0..7
 
   send.reserve(40);
   send += getTaskDeviceName(event->TaskIndex);

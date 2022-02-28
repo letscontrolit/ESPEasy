@@ -354,45 +354,38 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_FORMAT_USERVAR:
     {
-      P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
+      string.clear();
 
-      if ((nullptr != P129_data) && P129_data->isInitialized()) { // Only fill if plugin is active
-        string.clear();
-
-        if ((P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) ||
-            (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_DEC_ONLY)) {
-          string += String(UserVar.getUint32(event->TaskIndex, event->idx));
-        }
-
-        if (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) {
-          string += ',';
-        }
-
-        if ((P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) ||
-            (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_HEXBIN)) {
-          string += '0';
-          string += (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-          string += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
-                                        # ifdef P129_SHOW_VALUES
-                                        (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
-                                        # endif // ifdef P129_SHOW_VALUES
-                                        HEX
-                                        # ifdef P129_SHOW_VALUES
-                                        )
-                                        # endif // ifdef P129_SHOW_VALUES
-                                        );
-        }
-        success = true;
+      if ((P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) ||
+          (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_DEC_ONLY)) {
+        string += String(UserVar.getUint32(event->TaskIndex, event->idx));
       }
+
+      if (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) {
+        string += ',';
+      }
+
+      if ((P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) ||
+          (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_HEXBIN)) {
+        string += '0';
+        string += (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
+        string += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
+                                      # ifdef P129_SHOW_VALUES
+                                      (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+                                      # endif // ifdef P129_SHOW_VALUES
+                                      HEX
+                                      # ifdef P129_SHOW_VALUES
+                                      )
+                                      # endif // ifdef P129_SHOW_VALUES
+                                      );
+      }
+      success = true;
       break;
     }
 
     # ifdef P129_SHOW_VALUES
     case PLUGIN_WEBFORM_SHOW_VALUES:
       {
-        // P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        // if ((nullptr != P129_data) && P129_data->isInitialized()) {                                   // Only show if plugin is active
         String state, label;
         state.reserve(40);
         String abcd             = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
@@ -431,7 +424,6 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           }
         }
         success = true; // Don't show the default value data
-        // }
         break;
       }
     # endif // ifdef P129_SHOW_VALUES
