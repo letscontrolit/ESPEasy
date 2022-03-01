@@ -19,6 +19,7 @@
 String CPlugin_005_pubname;
 bool   CPlugin_005_mqtt_retainFlag = false;
 
+bool C005_parse_command(struct EventStruct *event);
 
 bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -72,60 +73,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         // Controller is not enabled.
         break;
       } else {
-        // FIXME TD-er: Command is not parsed for template arguments.
-
-        // Topic  : event->String1
-        // Message: event->String2
-        String cmd;
-        bool   validTopic          = false;
-        const int lastindex        = event->String1.lastIndexOf('/');
-        const String lastPartTopic = event->String1.substring(lastindex + 1);
-
-        if (lastPartTopic.equals(F("cmd"))) {
-          // Example:
-          // topic: ESP_Easy/Bathroom_pir_env/cmd
-          // data: gpio,14,0
-          // Full command:  gpio,14,0
-
-          cmd = event->String2;
-
-          // SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
-          validTopic = true;
-        } else {
-          // Example:
-          // topic: ESP_Easy/Bathroom_pir_env/GPIO/14
-          // data: 0 or 1
-          // Full command:  gpio,14,0
-          if (lastindex > 0) {
-            // Topic has at least one separator
-            int   lastPartTopic_int;
-            float value_f;
-
-            if (validFloatFromString(event->String2, value_f) &&
-                validIntFromString(lastPartTopic, lastPartTopic_int)) {
-              int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
-              cmd        = event->String1.substring(prevLastindex + 1, lastindex);
-              cmd       += ',';
-              cmd       += lastPartTopic_int;
-              cmd       += ',';
-              cmd       += event->String2; // Just use the original format
-              validTopic = true;
-            }
-          }
-        }
-
-        if (validTopic) {
-          // in case of event, store to buffer and return...
-          const String command = parseString(cmd, 1);
-
-          if ((command.equals(F("event"))) || (command.equals(F("asyncevent")))) {
-            if (Settings.UseRules) {
-              eventQueue.addMove(parseStringToEnd(cmd, 2));
-            }
-          } else {
-            ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
-          }
-        }
+        C005_parse_command(event);
       }
       break;
     }
@@ -188,6 +136,76 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
   }
 
   return success;
+}
+
+bool C005_parse_command(struct EventStruct *event) {
+  // FIXME TD-er: Command is not parsed for template arguments.
+
+  // Topic  : event->String1
+  // Message: event->String2
+  String cmd;
+  bool   validTopic          = false;
+  const int lastindex        = event->String1.lastIndexOf('/');
+  const String lastPartTopic = event->String1.substring(lastindex + 1);
+
+  const int cmd_arg_index    = event->String1.lastIndexOf(F("cmd_arg"));
+
+  if (lastPartTopic.equals(F("cmd"))) {
+    // Example:
+    // Topic: ESP_Easy/Bathroom_pir_env/cmd
+    // Message: gpio,14,0
+    // Full command:  gpio,14,0
+
+    cmd = event->String2;
+
+    // SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
+    validTopic = true;
+  } else if (cmd_arg_index != -1) {
+    // Example:
+    // Topic: ESP_Easy/Bathroom_pir_env/cmd_arg1/GPIO/0
+    // Message: 14
+    // Full command: gpio,14,0
+
+    int cmd_arg_nr = 
+
+
+
+  } else {
+    // Example:
+    // Topic: ESP_Easy/Bathroom_pir_env/GPIO/14
+    // Message: 0 or 1
+    // Full command:  gpio,14,0
+    if (lastindex > 0) {
+      // Topic has at least one separator
+      int   lastPartTopic_int;
+      float value_f;
+
+      if (validFloatFromString(event->String2, value_f) &&
+          validIntFromString(lastPartTopic, lastPartTopic_int)) {
+        int prevLastindex = event->String1.lastIndexOf('/', lastindex - 1);
+        cmd        = event->String1.substring(prevLastindex + 1, lastindex);
+        cmd       += ',';
+        cmd       += lastPartTopic_int;
+        cmd       += ',';
+        cmd       += event->String2; // Just use the original format
+        validTopic = true;
+      }
+    }
+  }
+
+  if (validTopic) {
+    // in case of event, store to buffer and return...
+    const String command = parseString(cmd, 1);
+
+    if ((command.equals(F("event"))) || (command.equals(F("asyncevent")))) {
+      if (Settings.UseRules) {
+        eventQueue.addMove(parseStringToEnd(cmd, 2));
+      }
+    } else {
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());
+    }
+  }
+  return validTopic;
 }
 
 #endif // ifdef USES_C005
