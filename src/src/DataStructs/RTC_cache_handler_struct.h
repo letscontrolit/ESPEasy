@@ -86,9 +86,9 @@ private:
   RTC_cache_struct    RTC_cache;
   std::vector<uint8_t>RTC_cache_data;
 #endif
-  File                fw;
-  File                fr;
-  File                fp;
+  fs::File            fw;
+  fs::File            fr;
+  fs::File            fp;
   size_t              peekfilenr  = 0;
   size_t              peekreadpos = 0;
 
