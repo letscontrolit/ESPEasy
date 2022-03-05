@@ -233,7 +233,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
                     log += F("...");
                     log += event->String2.substring(messageLength - 40);
                   }
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
               // Filter length options:
@@ -257,7 +257,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
         if ((nullptr != P094_data)) {
           const uint32_t debug_count = P094_data->getDebugCounter();
           event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
-          event->String2 = String(debug_count);
+          event->String2 += String(debug_count);
           event->String2 += '_';
           const char c = '0' + debug_count % 10;
           for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
@@ -267,7 +267,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             String log = F("CUL Reader: Sending: ");
             log += event->String2.substring(0, 20);
             log += F("...");
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 //          sendData_checkDuplicates(event, event->String2.substring(0, 22));
           sendData(event);
@@ -288,7 +288,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
             String param1 = parseStringKeepCase(string, 2);
             parseSystemVariables(param1, false);
             P094_data->sendString(param1);
-            addLog(LOG_LEVEL_INFO, param1);
+            addLogMove(LOG_LEVEL_INFO, param1);
             success = true;
           }
         }
@@ -407,7 +407,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, EMPTY_STRING);
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, EMPTY_STRING);
             }
 
             break;
@@ -429,7 +429,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, EMPTY_STRING);
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, EMPTY_STRING);
             break;
           }
           case 3:

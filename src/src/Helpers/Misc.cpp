@@ -14,6 +14,10 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
@@ -304,7 +308,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
         logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
         logger += ',';
         logger += formatUserVarNoCheck(TaskIndex, varNr);
-        logger += "\r\n";
+        logger += F("\r\n");
       }
       addLog(LOG_LEVEL_DEBUG, logger);
     }
@@ -488,22 +492,23 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
-    log.reserve(128);
-    log  = F("After ");
-    log += function;
+    if (log.reserve(128)) {
+      log  = F("After ");
+      log += function;
 
-    if (value >= 0) {
-      log += value;
+      if (value >= 0) {
+        log += value;
+      }
+
+      while (log.length() < 30) { log += ' '; }
+      log += F("Free mem after: ");
+      log += freemem_end;
+
+      while (log.length() < 55) { log += ' '; }
+      log += F("diff: ");
+      log += last_freemem - freemem_end;
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
-
-    while (log.length() < 30) { log += ' '; }
-    log += F("Free mem after: ");
-    log += freemem_end;
-
-    while (log.length() < 55) { log += ' '; }
-    log += F("diff: ");
-    log += last_freemem - freemem_end;
-    addLog(LOG_LEVEL_DEBUG, log);
   }
 
   last_freemem = freemem_end;

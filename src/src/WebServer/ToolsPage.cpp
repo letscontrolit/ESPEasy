@@ -57,7 +57,7 @@ void handle_tools() {
     addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
     addHtml(printWebString);
     addHtml(F("</textarea>"));
-    printWebString = "";
+    printWebString = String();
   }
 
 
@@ -177,7 +177,7 @@ void handle_tools() {
   html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
-  printWebString = "";
+  printWebString = String();
   printToWeb     = false;
 }
 

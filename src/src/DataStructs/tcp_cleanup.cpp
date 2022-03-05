@@ -11,7 +11,7 @@ extern "C" void tcp_abort (struct tcp_pcb* pcb);
 void tcpCleanup()
 {
 
-     while(tcp_tw_pcbs!=NULL)
+     while(tcp_tw_pcbs!=nullptr)
     {
       tcp_abort(tcp_tw_pcbs);
     }

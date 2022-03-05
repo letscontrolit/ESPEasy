@@ -49,7 +49,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     {
-      event->String1 = "";
+      event->String1 = String();
       event->String2 = F("demo.php?name=%sysname%&task=%tskname%&valuename=%valname%&value=%value%");
       break;
     }
@@ -89,13 +89,12 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
-          String tmppubname = pubname;
           bool   isvalid;
-          String formattedValue = formatUserVar(event, x, isvalid);
+          const String formattedValue = formatUserVar(event, x, isvalid);
 
           if (isvalid) {
-            element.txt[x]  = "/";
-            element.txt[x] += tmppubname;
+            element.txt[x]  = '/';
+            element.txt[x] += pubname;
             parseSingleControllerVariable(element.txt[x], event, x, true);
             element.txt[x].replace(F("%value%"), formattedValue);
 # ifndef BUILD_NO_DEBUG
@@ -128,8 +127,6 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-
 bool do_process_c008_delay_queue(int controller_number, const C008_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {

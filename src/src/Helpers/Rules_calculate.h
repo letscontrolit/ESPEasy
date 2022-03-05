@@ -52,7 +52,7 @@ enum class UnaryOperator  {
 void   preProcessReplace(String      & input,
                          UnaryOperator op);
 bool   angleDegree(UnaryOperator op);
-String toString(UnaryOperator op);
+const __FlashStringHelper* toString(UnaryOperator op);
 
 class RulesCalculate_t {
 private:

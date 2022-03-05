@@ -76,7 +76,7 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) 
   }
 }
 
-void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
@@ -88,9 +88,7 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
   }
   #endif // ifdef USES_TIMING_STATS
   {
-    String fileName = tmplName;
-
-    fileName += F(".htm");
+    const String fileName = String(tmplName) + F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
 
     WebTemplateParser templateParser(Tail, rebooting);
@@ -142,7 +140,7 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
           log += F("' length: ");
           log += webArg(i).length();
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     #endif // ifndef BUILD_NO_DEBUG
@@ -356,21 +354,25 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
 
-    #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-    parser.process(F("<body><header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>"));
-    #else
-    parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
-    #endif
+    if (!parser.isTail()) {
+      #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+      parser.process(F("<body><header class='apheader'>"
+                "<h1>Welcome to ESP Easy Mega AP</h1>"));
+      #else
+      parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
+      #endif
 
-    parser.process(F("</header>"));
+      parser.process(F("</header>"));
+    }
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplMsg"))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
-    parser.process(F("<body>"));
+    if (!parser.isTail()) {
+      parser.process(F("<body>"));
+    }
     getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
@@ -387,8 +389,10 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else // all other template names e.g. TmplStd
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
-    parser.process(F("<body class='bodymenu'>"
-              "<span class='message' id='rbtmsg'></span>"));
+    if (!parser.isTail()) {
+      parser.process(F("<body class='bodymenu'>"
+                "<span class='message' id='rbtmsg'></span>"));
+    }
     getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
@@ -397,6 +401,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 }
 
 void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
+  if (parser.isTail()) return;
   parser.process(F("<!DOCTYPE html><html lang='en'>"
             "<head>"
             "<meta charset='utf-8'/>"
@@ -411,25 +416,21 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
                    "</head>"));
 }
 
-void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const String& title, bool addMenu) {
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
   {
-    String tmp;
+    if (parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
-            #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
-            #endif // #if BUILD_IN_WEBHEADER
-            "</h1><BR>"
-            );
-  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
-  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-
-    tmp.replace(F("{{title}}"), title);
+    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(title);
     #if BUILD_IN_WEBHEADER
-    tmp.replace(F("{{date}}"), get_build_date());
+    parser.process(F("<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"));
     #endif // #if BUILD_IN_WEBHEADER
+    parser.process(F("</h1><BR>"));
+  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    String tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
+    tmp.replace(F("{{title}}"), title);
     parser.process(tmp);
+  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
   }
 
   if (addMenu) { parser.process(F("{{menu}}")); }
@@ -447,6 +448,7 @@ void getWebPageTemplateDefaultContentSection(WebTemplateParser& parser) {
 }
 
 void getWebPageTemplateDefaultFooter(WebTemplateParser& parser) {
+  if (!parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
   parser.process(F("<footer>"
             "<br>"
@@ -808,7 +810,7 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml(F("\">"));
+  addHtml('"', '>');
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
@@ -952,7 +954,7 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   if (struct_size != 0) {
     String text;
     text.reserve(32);
-    text = formatHumanReadable(struct_size, 1024);
+    text += formatHumanReadable(struct_size, 1024);
     text += '/';
     text += formatHumanReadable(max_size, 1024);
     text += F(" per item");
@@ -971,13 +973,13 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 int getPartionCount(uint8_t pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   int nrPartitions                         = 0;
 
   if (_mypartiterator) {
     do {
       ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return nrPartitions;
@@ -992,7 +994,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   uint32_t realSize                      = getFlashRealSizeInBytes();
   esp_partition_type_t     partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t   *_mypart;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
@@ -1010,7 +1012,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
       textXoffset = SVG_BAR_WIDTH + 130;
       createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
       yOffset += SVG_BAR_HEIGHT;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   addHtml(F("</svg>\n"));
   esp_partition_iterator_release(_mypartiterator);

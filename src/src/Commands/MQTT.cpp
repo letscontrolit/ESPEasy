@@ -76,8 +76,11 @@ boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boole
   if (MQTTclient.subscribe(topic)) {
     Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
     scheduleNextMQTTdelayQueue();
-    String log = F("Subscribed to: ");  log += topic;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Subscribed to: ");  
+      log += topic;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("MQTT : subscribe failed"));

@@ -132,7 +132,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
           log += pin;
           log += ' ';
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
 
         success = true;
         break;
@@ -154,9 +154,11 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = c;
             event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
-            String log = F("QEI  : ");
-            log += c;
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("QEI  : ");
+              log += c;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
 
             sendData(event);
           }
@@ -188,7 +190,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("QEI  : ");
                   log += string;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 P_059_sensordefs[event->TaskIndex]->write(event->Par1);
                 Scheduler.schedule_task_device_timer(event->TaskIndex, millis());

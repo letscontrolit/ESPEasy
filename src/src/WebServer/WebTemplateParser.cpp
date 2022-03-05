@@ -127,11 +127,10 @@ bool WebTemplateParser::process(const char c) {
           // Done parsing varName, still need to process it.
           if (varName.equalsIgnoreCase(F("content"))) {
             contentVarFound = true;
+          } else if (Tail == contentVarFound) {
+            processVarName();
           }
-          if (Tail == contentVarFound) {
-              processVarName();
-          }
-          varName.clear();
+          varName = String();
         }
       }
       break;
@@ -140,6 +139,7 @@ bool WebTemplateParser::process(const char c) {
       if (parsingVarName) {
         varName += c;
       } else {
+        // FIXME TD-er: if a template has single '{' or '}' they will not be sent. Is that a problem?
         if (Tail == contentVarFound) {
           // only send the template tail after {{content}} is found
           // Or send all until the {{content}} tag.
@@ -352,7 +352,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("Templ: Unknown Var : ");
       log += varName;
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
 

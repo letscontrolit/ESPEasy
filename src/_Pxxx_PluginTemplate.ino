@@ -221,7 +221,7 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
       // For strings, always use the F() macro, which stores the string in flash, not in memory.
 
       // String dropdown[5] = { F("option1"), F("option2"), F("option3"), F("option4")};
-      // addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, NULL, PCONFIG(0));
+      // addFormSelector(string, F("drop-down menu"), F("plugin_xxx_displtype"), 4, dropdown, nullptr, PCONFIG(0));
 
       // number selection (min-value - max-value)
       addFormNumericBox(string, F("description"), F("plugin_xxx_description"), PCONFIG(1), min - value, max - value);

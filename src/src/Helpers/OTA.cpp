@@ -8,6 +8,13 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
+#ifdef FEATURE_ARDUINO_OTA
+  //enable Arduino OTA updating.
+  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+  #include <ArduinoOTA.h>
+#endif
+
+
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #if defined(ESP8266)
 
@@ -100,8 +107,13 @@ void ArduinoOTAInit()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("OTA  : Arduino OTA enabled on port ");
     log += ARDUINO_OTA_PORT;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
+}
+
+void ArduinoOTA_handle()
+{
+  ArduinoOTA.handle();
 }
 
 #endif // ifdef FEATURE_ARDUINO_OTA

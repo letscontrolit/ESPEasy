@@ -146,17 +146,17 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         addHtml(F("<script src=\"jscolor.min.js\"></script>\n"));
 
         {
-          const __FlashStringHelper * options[8];
+          const __FlashStringHelper * options[8] = {
+            F("Off"),
+            F("Static Light"),
+            F("Simple Candle"),
+            F("Advanced Candle"),
+            F("Police"),
+            F("Blink"),
+            F("Strobe"),
+            F("Color Fader")
+          };
           // int optionValues[8];
-
-          options[0] = F("Off");
-          options[1] = F("Static Light");
-          options[2] = F("Simple Candle");
-          options[3] = F("Advanced Candle");
-          options[4] = F("Police");
-          options[5] = F("Blink");
-          options[6] = F("Strobe");
-          options[7] = F("Color Fader");
 
           uint8_t choice = PCONFIG(4);
           if (choice > sizeof(options) - 1)
@@ -165,7 +165,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           }
 
           // Candle Type Selection
-          addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, NULL, choice);
+          addFormSelector(F("Flame Type"), F("web_Candle_Type"), 8, options, nullptr, choice);
         }
 
         // Advanced Color options
@@ -196,7 +196,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         // http://jscolor.com/examples/
         addHtml(F("<TR><TD>Color:<TD><input class=\"jscolor {onFineChange:'update(this)'}\" value='"));
         addHtml(hexvalue);
-        addHtml(F("'>"));
+        addHtml('\'', '>');
         addFormNumericBox(F("RGB Color"), F("web_RGB_Red"), PCONFIG(0), 0, 255);
         addNumericBox(F("web_RGB_Green"), PCONFIG(1), 0, 255);
         addNumericBox(F("web_RGB_Blue"), PCONFIG(2), 0, 255);
@@ -284,7 +284,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("CAND : Init WS2812 Pin : ");
             log += CONFIG_PIN1;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
           #endif
         }
@@ -428,7 +428,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("CAND : CMD - Type : ");
                   log += val_Type;
-                  addLog(LOG_LEVEL_DEBUG, log);
+                  addLogMove(LOG_LEVEL_DEBUG, log);
                 }
                 #endif
              }
@@ -442,14 +442,14 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   String log = F("CAND : CMD - Bright : ");
                   log += val_Bright;
-                  addLog(LOG_LEVEL_DEBUG, log);
+                  addLogMove(LOG_LEVEL_DEBUG, log);
                 }
                 #endif
              }
           }
 
           if (!val_Color.isEmpty()) {
-            long number = strtol( &val_Color[0], NULL, 16);
+            long number = strtol( &val_Color[0], nullptr, 16);
             // Split RGB to r, g, b values
             uint8_t r = number >> 16;
             uint8_t g = number >> 8 & 0xFF;
@@ -472,7 +472,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
               log += g;
               log += F(" B ");
               log += b;
-              addLog(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, log);
             }
             #endif
           } else {

@@ -146,7 +146,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
-      event->String1 = formatGpioName_output("CS");
+      event->String1 = formatGpioName_output(F("CS"));
       break;
     }
 
@@ -160,18 +160,14 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       note = F("SPI->MAX7219: MOSI");
 
       if (spi_pins[2] != -1) {
-        note += '(';
         getGpioInfo(spi_pins[2], pinnr, input, output, warning);
-        note += createGPIO_label(spi_pins[2], pinnr, true, true, false);
-        note += ')';
+        note += wrap_braces(createGPIO_label(spi_pins[2], pinnr, true, true, false));
       }
       note += F("->DIN, CLK");
 
       if (spi_pins[0] != -1) {
-        note += '(';
         getGpioInfo(spi_pins[0], pinnr, input, output, warning);
-        note += createGPIO_label(spi_pins[0], pinnr, true, true, false);
-        note += ')';
+        note += wrap_braces(createGPIO_label(spi_pins[0], pinnr, true, true, false));
       }
       note += F("->CLK");
       addFormNote(note);
@@ -249,7 +245,7 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
         log.reserve(38);
         log  = F("dotmatrix: PLUGIN_INIT numDevices: ");
         log += numDevices;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG
 

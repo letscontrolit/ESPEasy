@@ -96,8 +96,8 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
       {
-        event->String1 = formatGpioName_output("SCL");
-        event->String2 = formatGpioName_bidirectional("SDO");
+        event->String1 = formatGpioName_output(F("SCL"));
+        event->String2 = formatGpioName_bidirectional(F("SDO"));
         break;
       }
 
@@ -124,11 +124,13 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
         int16_t pinSCL = CONFIG_PIN1;
         int16_t pinSDO = CONFIG_PIN2;
 
-        String log = F("Tkey : GPIO: ");
-        log += pinSCL;
-        log += ' ';
-        log += pinSDO;
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("Tkey : GPIO: ");
+          log += pinSCL;
+          log += ' ';
+          log += pinSDO;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
 
         if (pinSCL >= 0 && pinSDO >= 0)
         {
@@ -189,13 +191,15 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex] = key;
             event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
 
-            String log = F("Tkey : ");
-            if (PCONFIG(1))
-              log = F("ScanCode=0x");
-            else
-              log = F("KeyMap=0x");
-            log += String(key, 16);
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("Tkey : ");
+              if (PCONFIG(1))
+                log = F("ScanCode=0x");
+              else
+                log = F("KeyMap=0x");
+              log += String(key, 16);
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
 
             sendData(event);
           }

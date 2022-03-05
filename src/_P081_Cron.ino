@@ -290,13 +290,17 @@ boolean Plugin_081(uint8_t function, struct EventStruct *event, String& string)
           const bool   cron_elapsed = (next_exec_time <= current_time);
 
           if (cron_elapsed) {
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("Cron Elapsed"));
+            #endif
 
             time_t last_exec_time = next_exec_time;
             next_exec_time = P081_computeNextCronTime(event->TaskIndex, current_time);
             P081_setCronExecTimes(event, last_exec_time, next_exec_time);
 
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, String(F("Next execution:")) + ESPEasy_time::getDateTimeString(*gmtime(&next_exec_time)));
+            #endif
 
             if (function != PLUGIN_TIME_CHANGE) {
               if (Settings.UseRules) {

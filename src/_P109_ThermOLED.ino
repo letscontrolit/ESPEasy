@@ -115,7 +115,7 @@ static int8_t P109_lastWiFiState = P109_WIFI_STATE_UNSET;
 
 // Instantiate display here - does not work to do this within the INIT call
 
-OLEDDisplay *P109_display = NULL;
+OLEDDisplay *P109_display = nullptr;
 
 char P109_deviceTemplate[P109_Nlines][P109_Nchars];
 
@@ -292,13 +292,15 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       uint8_t OLED_contrast = Settings.TaskDevicePluginConfig[event->TaskIndex][3];
       P109_setContrast(OLED_contrast);
 
-      String logstr = F("Thermo : Btn L:");
-      logstr += Settings.TaskDevicePin1[event->TaskIndex];
-      logstr += F("R:");
-      logstr += Settings.TaskDevicePin2[event->TaskIndex];
-      logstr += F("M:");
-      logstr += Settings.TaskDevicePin3[event->TaskIndex];
-      addLog(LOG_LEVEL_INFO, logstr);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String logstr = F("Thermo : Btn L:");
+        logstr += Settings.TaskDevicePin1[event->TaskIndex];
+        logstr += F("R:");
+        logstr += Settings.TaskDevicePin2[event->TaskIndex];
+        logstr += F("M:");
+        logstr += Settings.TaskDevicePin3[event->TaskIndex];
+        addLogMove(LOG_LEVEL_INFO, logstr);
+      }
 
       if (validGpio(Settings.TaskDevicePin1[event->TaskIndex]) )
       {
@@ -339,11 +341,13 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
         P109_setHeatRelay(byte(UserVar[event->BaseVarIndex + 1]));
       }
 
-      logstr  = F("Thermo : Starting status S:");
-      logstr += toString(UserVar[event->BaseVarIndex]);
-      logstr += F(", R:");
-      logstr += toString(UserVar[event->BaseVarIndex + 1]);
-      addLog(LOG_LEVEL_INFO, logstr);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String logstr  = F("Thermo : Starting status S:");
+        logstr += toString(UserVar[event->BaseVarIndex]);
+        logstr += F(", R:");
+        logstr += toString(UserVar[event->BaseVarIndex + 1]);
+        addLogMove(LOG_LEVEL_INFO, logstr);
+      }
 
       Plugin_109_changed    = 1;
       Plugin_109_buttons[0] = 0; Plugin_109_buttons[1] = 0; Plugin_109_buttons[2] = 0;
@@ -367,7 +371,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       {
         P109_display->end();
         delete P109_display;
-        P109_display = NULL;
+        P109_display = nullptr;
       }
       break;
     }
@@ -509,8 +513,7 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
               f.close();
               flashCount();
             }
-            String logstr = F("Thermo : Save UserVars to SPIFFS");
-            addLog(LOG_LEVEL_INFO, logstr);
+            addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
           }
         }
         success = true;
@@ -780,14 +783,13 @@ void P109_display_timeout() {
     if (Plugin_109_prev_timeout >= (UserVar[Plugin_109_varindex + 3] + 60)) {
       float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60;
       String thour     = toString((static_cast<int>(timeinmin / 60)), 0);
-      thour += F(":");
+      thour += ':';
       String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
 
       if (thour2.length() < 2) {
-        thour += "0" + thour2;
-      } else {
-        thour += thour2;
+        thour += '0';
       }
+      thour += thour2;
       P109_display->setColor(BLACK);
       P109_display->fillRect(86, 35, 41, 21);
       P109_display->setColor(WHITE);
@@ -891,12 +893,15 @@ void P109_setSetpoint(String sptemp) {
 
 void P109_setHeatRelay(byte state) {
   uint8_t relaypin = Settings.TaskDevicePluginConfig[Plugin_109_taskindex][4];
-  String  logstr   = F("Thermo : Set Relay");
 
-  logstr += relaypin;
-  logstr += F("=");
-  logstr += state;
-  addLog(LOG_LEVEL_INFO, logstr);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String  logstr   = F("Thermo : Set Relay");
+
+    logstr += relaypin;
+    logstr += F("=");
+    logstr += state;
+    addLogMove(LOG_LEVEL_INFO, logstr);
+  }
 
   if (relaypin != -1) {
     pinMode(relaypin, OUTPUT);

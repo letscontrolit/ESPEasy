@@ -114,7 +114,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                    F("TM1637 - 4 digit (dots)"),
                                                    F("TM1637 - 6 digit"),
                                                    F("MAX7219 - 8 digit") };
-        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, NULL, PCONFIG(0));
+        addFormSelector(F("Display Type"), F("plugin_073_displtype"), 4, displtype, nullptr, PCONFIG(0));
       }
       {
         const __FlashStringHelper *displout[] = { F("Manual"),
@@ -123,7 +123,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Clock 12h - Blink"),
                                                   F("Clock 12h - No Blink"),
                                                   F("Date") };
-        addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout, NULL, PCONFIG(1));
+        addFormSelector(F("Display Output"), F("plugin_073_displout"), 6, displout, nullptr, PCONFIG(1));
       }
 
       addFormNumericBox(F("Brightness"), F("plugin_073_brightness"), PCONFIG(2), 0, 15);
@@ -135,7 +135,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
                                                   F("Siekoo"),
                                                   F("Siekoo with uppercase 'CHNORUX'"),
                                                   F("dSEG7") };
-        addFormSelector(F("Font set"), F("plugin_073_fontset"), 4, fontset, NULL, PCONFIG(4));
+        addFormSelector(F("Font set"), F("plugin_073_fontset"), 4, fontset, nullptr, PCONFIG(4));
         addFormNote(F("Check documentation for examples of the font sets."));
       }
       # endif // P073_EXTRA_FONTS
@@ -398,7 +398,7 @@ bool p073_plugin_write(struct EventStruct *event,
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Brightness=");
           log += event->Par1;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         P073_data->brightness = event->Par1;
         PCONFIG(2)            = event->Par1;
@@ -411,7 +411,7 @@ bool p073_plugin_write(struct EventStruct *event,
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("7DGT : Display output=");
           log += event->Par1;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         P073_data->output = event->Par1;
         PCONFIG(1)        = event->Par1;
@@ -456,7 +456,7 @@ bool p073_plugin_write_7dn(struct EventStruct *event,
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Number=");
     log += event->Par1;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   switch (P073_data->displayModel) {
@@ -518,7 +518,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Temperature=");
     log += p073_temptemp;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   switch (P073_data->displayModel) {
@@ -557,7 +557,7 @@ bool p073_plugin_write_7dt(struct EventStruct *event,
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("7DGT : 7dt preprocessed =");
         log += p073_temptemp;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P073_DEBUG
 
@@ -598,7 +598,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
     log += p073_lefttemp;
     log += F(" 2nd=");
     log += p073_righttemp;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   switch (P073_data->displayModel) {
@@ -650,7 +650,7 @@ bool p073_plugin_write_7ddt(struct EventStruct *event,
         log += p073_lefttemp;
         log += F(" 2nd=");
         log += p073_righttemp;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       #  endif // ifdef P073_DEBUG
 
@@ -685,11 +685,11 @@ bool p073_plugin_write_7dst(struct EventStruct *event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Time=");
     log += event->Par1;
-    log += ":";
+    log += ':';
     log += event->Par2;
-    log += ":";
+    log += ':';
     log += event->Par3;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   P073_data->timesep = true;
   P073_data->FillBufferWithTime(false, event->Par1, event->Par2, event->Par3, false);
@@ -726,11 +726,11 @@ bool p073_plugin_write_7dsd(struct EventStruct *event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Date=");
     log += event->Par1;
-    log += "-";
+    log += '-';
     log += event->Par2;
-    log += "-";
+    log += '-';
     log += event->Par3;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   P073_data->FillBufferWithDate(false, event->Par1, event->Par2, event->Par3);
 
@@ -767,7 +767,7 @@ bool p073_plugin_write_7dtext(struct EventStruct *event,
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("7DGT : Show Text=");
     log += text;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # ifdef P073_SCROLL_TEXT
   P073_data->setTextToScroll("");
@@ -837,7 +837,7 @@ bool p073_plugin_write_7dfont(struct EventStruct *event,
       info += fontArg;
       info += F(" -> ");
       info += fontNr;
-      addLog(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, info);
     }
     #  endif // P073_DEBUG
 
@@ -979,11 +979,11 @@ void tm1637_i2cAck(uint8_t clk_pin,
     String log = F("7DGT : Comm ACK=");
 
     if (dummyAck == 0) {
-      log += "TRUE";
+      log += F("TRUE");
     } else {
-      log += "FALSE";
+      log += F("FALSE");
     }
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifdef P073_DEBUG
   CLK_HIGH();
