@@ -58,19 +58,25 @@ boolean Plugin_130(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      #define ADS1015_I2C_OPTION 4
+      #define ADS1015_I2C_ADDR_COUNT 4
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), ADS1015_I2C_OPTION, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c_addr"), ADS1015_I2C_ADDR_COUNT, i2cAddressValues, PCONFIG(0));
       } else {
-        success = intArrayContains(ADS1015_I2C_OPTION, i2cAddressValues, event->Par1);
+        success = intArrayContains(ADS1015_I2C_ADDR_COUNT, i2cAddressValues, event->Par1);
       }
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      #define ADS1015_SPS_AVAILABLE_COUNT 3
+      const String spsAvailableStr[] = {String(1600), String(2400), String(3300)};
+      const int spsAvailableVal[] = {P130_ADS1015_RATE_1600SPS,
+                                      P130_ADS1015_RATE_2400SPS,
+                                      P130_ADS1015_RATE_3300SPS};
       addFormSubHeader(F("Calibration - General"));
+      addFormSelector(F("SPS"),F("p130_sps"), ADS1015_SPS_AVAILABLE_COUNT, spsAvailableStr,spsAvailableVal, PCONFIG_LONG(3));
       addFormNumericBox(F("Current Frequency"), F("p130_frequency"), PCONFIG_LONG(0), 50, 60);
       addFormNumericBox(F("Nb Sinus to read"), F("p130_nb_sinus"), PCONFIG_LONG(1), 1, 25);
       addFormNote("Take care! Reading sinus is a blocking process. With a SCT013 (60A/50A/30A - 1V), reading 2 sinus on 50Hz giving stable values.");
@@ -95,6 +101,7 @@ boolean Plugin_130(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG_LONG(0) = getFormItemInt(F("p130_frequency"));
       PCONFIG_LONG(1) = getFormItemInt(F("p130_nb_sinus"));
       PCONFIG_LONG(2) = (true == isFormItemChecked(F("p130_adc_continous")))?1:0;
+      PCONFIG_LONG(3) = getFormItemInt(F("p130_sps"));
 
       PCONFIG_FLOAT(0) = getFormItemFloat(F("p130_voltageEstimated"));
 
@@ -111,9 +118,10 @@ boolean Plugin_130(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t currentFreq = PCONFIG_LONG(0);
       const uint8_t nbSinus = PCONFIG_LONG(1);
       const uint8_t adc_continous = PCONFIG_LONG(2);
+      const uint8_t sps = PCONFIG_LONG(3);
       const float_t voltageEstimated = PCONFIG_FLOAT(0);
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P130_data_struct(address, calCurrent1, calCurrent2, voltageEstimated, currentFreq, nbSinus, adc_continous));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P130_data_struct(address, calCurrent1, calCurrent2, voltageEstimated, currentFreq, nbSinus, adc_continous, sps));
       P130_data_struct *P130_data =
         static_cast<P130_data_struct *>(getPluginTaskData(event->TaskIndex));
 

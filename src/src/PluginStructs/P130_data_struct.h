@@ -5,6 +5,9 @@
 #ifdef USES_P130
 
 #undef P130_DEBUG_DEV
+#define P130_ADS1015_RATE_3300SPS           (0x00C0) // < 3300 samples per second
+#define P130_ADS1015_RATE_2400SPS           (0x00A0) // < 2400 samples per second
+#define P130_ADS1015_RATE_1600SPS           (0x0080) // < 1600 samples per second
 
 struct P130_data_struct : public PluginTaskData_base {
 public:
@@ -15,7 +18,8 @@ public:
                    float_t _calVoltage,
                    uint8_t _currentFreq,
                    uint8_t _nbSinus,
-                   uint8_t _convModeContinuous);
+                   uint8_t _convModeContinuous,
+                   uint8_t _sps);
 
   void setDebug(uint8_t _debug);
   uint8_t getDebug();
@@ -32,8 +36,9 @@ private:
   uint8_t nbSinus;
   uint8_t convModeContinuous;
   uint8_t debug;
+  uint8_t sps;
 
-  static uint16_t getDefaultADS1015ReadConfig();
+  uint16_t getDefaultADS1015ReadConfig();
   boolean writeRegister(uint8_t registerAddr, uint16_t registerValue);
   boolean readRegister(uint8_t registerAddr, uint16_t& registerValue);
   uint16_t readRegisterFacility(uint8_t registerAddr);

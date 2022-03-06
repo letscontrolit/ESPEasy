@@ -14,21 +14,19 @@
 #define P130_ADS1015_CONFIG_CLAT_NONLAT     (0x0000) // Non-latching (default val)
 #define P130_ADS1015_CONFIG_CPOL_ACTVLOW    (0x0000) // Alert/Rdy active low   (default val)
 #define P130_ADS1015_CONFIG_CMODE_TRAD      (0x0000) // Traditional comparator (default val)
-#define P130_ADS1015_RATE_3300SPS           (0x00C0) // < 3300 samples per second
-#define P130_ADS1015_RATE_2400SPS           (0x00A0) // < 2400 samples per second
-#define P130_ADS1015_RATE_1600SPS           (0x0080) // < 1600 samples per second
 #define P130_ADS1015_CONV_MODE_CONTINUOUS   (0x0000) // Single-shot mode (default)
 #define P130_ADS1015_CONV_MODE_SINGLE       (0x0100) // Single-shot mode (default)
 #define P130_ADS1015_START_SINGLE_CONV      (0x8000) // Start a single conversion
 
-P130_data_struct::P130_data_struct(uint8_t i2c_addr, uint8_t _calCurrent1, uint8_t _calCurrent2, float_t _calVoltage, uint8_t _currentFreq, uint8_t _nbSinus, uint8_t _convModeContinuous) : 
+P130_data_struct::P130_data_struct(uint8_t i2c_addr, uint8_t _calCurrent1, uint8_t _calCurrent2, float_t _calVoltage, uint8_t _currentFreq, uint8_t _nbSinus, uint8_t _convModeContinuous, uint8_t _sps) : 
     i2cAddress(i2c_addr),
     calCurrent1(_calCurrent1),
     calCurrent2(_calCurrent2),
     calVoltage(_calVoltage),
     currentFreq(_currentFreq),
     nbSinus(_nbSinus),
-    convModeContinuous (_convModeContinuous) {
+    convModeContinuous (_convModeContinuous),
+    sps (_sps) {
         this->debug = 0;
     }
 
@@ -46,6 +44,8 @@ void P130_data_struct::setDebug(uint8_t _debug) {
         log += this->currentFreq;
         log += F(" nbSinus=");
         log += this->nbSinus;
+        log += F(" SPS=");
+        log += this->sps;
         addLog(LOG_LEVEL_INFO, log);
     }
 }
@@ -98,9 +98,8 @@ uint16_t P130_data_struct::getDefaultADS1015ReadConfig(){
             P130_ADS1015_CONFIG_CLAT_NONLAT |
             P130_ADS1015_CONFIG_CPOL_ACTVLOW |
             P130_ADS1015_CONFIG_CMODE_TRAD |
-            P130_ADS1015_RATE_1600SPS |
-            P130_ADS1015_PGA_1_024V;
-
+            P130_ADS1015_PGA_1_024V |
+            this->sps;
 }
 
 boolean P130_data_struct::readAdcSingleValue(uint16_t muxConf, int16_t& adcValue) {
@@ -272,6 +271,7 @@ boolean P130_data_struct::readCurrent(uint8_t canal, float_t& currentValue) {
             log += String(" readCurrent canal = "); log += canal; addLog(LOG_LEVEL_INFO, log);
             log = F("Irms - ADS1015 : Differential square/root: "); log += adcIrms; addLog(LOG_LEVEL_INFO, log);
             log = F("Irms - ADS1015 :  (voltage: "); log += voltage + String("mV )"); addLog(LOG_LEVEL_INFO, log);
+            log = F("Irms - ADS1015 :  (SPS: "); log += this->sps + String(" )"); addLog(LOG_LEVEL_INFO, log);
             log = F("Irms - ADS1015 :  (sample duration: "); log += durationSample + String("ms )"); addLog(LOG_LEVEL_INFO, log);
             log = F("Irms - ADS1015 :  (sample count: "); log += nbSample + String(" )"); addLog(LOG_LEVEL_INFO, log);
             log = F("Irms - ADS1015 : Current: "); log += currentValue; addLog(LOG_LEVEL_INFO, log);
