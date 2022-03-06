@@ -15,6 +15,8 @@
 #define P130_ADS1015_CONFIG_CPOL_ACTVLOW    (0x0000) // Alert/Rdy active low   (default val)
 #define P130_ADS1015_CONFIG_CMODE_TRAD      (0x0000) // Traditional comparator (default val)
 #define P130_ADS1015_RATE_3300SPS           (0x00C0) // < 3300 samples per second
+#define P130_ADS1015_RATE_2400SPS           (0x00A0) // < 2400 samples per second
+#define P130_ADS1015_RATE_1600SPS           (0x0080) // < 1600 samples per second
 #define P130_ADS1015_CONV_MODE_CONTINUOUS   (0x0000) // Single-shot mode (default)
 #define P130_ADS1015_CONV_MODE_SINGLE       (0x0100) // Single-shot mode (default)
 #define P130_ADS1015_START_SINGLE_CONV      (0x8000) // Start a single conversion
@@ -91,15 +93,20 @@ uint16_t P130_data_struct::readRegisterFacility(uint8_t registerAddr) {
     return registerValue;
 }
 
+uint16_t P130_data_struct::getDefaultADS1015ReadConfig(){
+    return P130_ADS1015_CONFIG_CQUE_NONE |
+            P130_ADS1015_CONFIG_CLAT_NONLAT |
+            P130_ADS1015_CONFIG_CPOL_ACTVLOW |
+            P130_ADS1015_CONFIG_CMODE_TRAD |
+            P130_ADS1015_RATE_1600SPS |
+            P130_ADS1015_PGA_1_024V;
+
+}
+
 boolean P130_data_struct::readAdcSingleValue(uint16_t muxConf, int16_t& adcValue) {
     boolean result = false;
     uint16_t registerValue = 0;
-    uint16_t configGlobal = P130_ADS1015_CONFIG_CQUE_NONE |
-                        P130_ADS1015_CONFIG_CLAT_NONLAT |
-                        P130_ADS1015_CONFIG_CPOL_ACTVLOW |
-                        P130_ADS1015_CONFIG_CMODE_TRAD |
-                        P130_ADS1015_RATE_3300SPS |
-                        P130_ADS1015_PGA_1_024V;
+    uint16_t configGlobal = P130_data_struct::getDefaultADS1015ReadConfig();
     configGlobal |= muxConf;
 
     uint16_t configStartSingle = configGlobal | 
@@ -145,12 +152,7 @@ boolean P130_data_struct::readAdcContinuousRmsValue(uint16_t muxConf, uint16_t p
     uint64_t sumI = 0, sqrI = 0;
     adcIrms = 0.;
     nbSample = 0;
-    uint16_t configGlobal = P130_ADS1015_CONFIG_CQUE_NONE |
-                        P130_ADS1015_CONFIG_CLAT_NONLAT |
-                        P130_ADS1015_CONFIG_CPOL_ACTVLOW |
-                        P130_ADS1015_CONFIG_CMODE_TRAD |
-                        P130_ADS1015_RATE_3300SPS |
-                        P130_ADS1015_PGA_1_024V;
+    uint16_t configGlobal = P130_data_struct::getDefaultADS1015ReadConfig();
     configGlobal |= muxConf;
 
     uint16_t configStartSingle = configGlobal | 

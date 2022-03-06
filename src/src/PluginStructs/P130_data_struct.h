@@ -33,6 +33,7 @@ private:
   uint8_t convModeContinuous;
   uint8_t debug;
 
+  static uint16_t getDefaultADS1015ReadConfig();
   boolean writeRegister(uint8_t registerAddr, uint16_t registerValue);
   boolean readRegister(uint8_t registerAddr, uint16_t& registerValue);
   uint16_t readRegisterFacility(uint8_t registerAddr);
