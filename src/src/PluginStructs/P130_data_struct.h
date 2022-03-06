@@ -1,15 +1,15 @@
-#ifndef PLUGINSTRUCTS_P127_DATA_STRUCT_H
-#define PLUGINSTRUCTS_P127_DATA_STRUCT_H
+#ifndef PLUGINSTRUCTS_P130_DATA_STRUCT_H
+#define PLUGINSTRUCTS_P130_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#ifdef USES_P127
+#ifdef USES_P130
 
-#undef P127_DEBUG_DEV
+#undef P130_DEBUG_DEV
 
-struct P127_data_struct : public PluginTaskData_base {
+struct P130_data_struct : public PluginTaskData_base {
 public:
 
-  P127_data_struct(uint8_t i2c_addr,
+  P130_data_struct(uint8_t i2c_addr,
                    uint8_t _calCurrent1,
                    uint8_t _calCurrent2,
                    float_t _calVoltage,
@@ -40,5 +40,5 @@ private:
   boolean readAdcContinuousRmsValue(uint16_t muxConf, uint16_t period_ms, float_t& adcIrms, uint16_t& nbSample);
 };
 
-#endif // ifdef USES_P127
-#endif // ifndef PLUGINSTRUCTS_P127_DATA_STRUCT_H
+#endif // ifdef USES_P130
+#endif // ifndef PLUGINSTRUCTS_P130_DATA_STRUCT_H

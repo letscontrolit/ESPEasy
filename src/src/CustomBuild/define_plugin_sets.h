@@ -1053,8 +1053,6 @@ To create/register a plugin, you have to :
     #define USES_P079   // Wemos Motoshield
 #endif
 
-#define USES_P127
-
 #ifdef CONTROLLER_SET_STABLE
     #define USES_C001   // Domoticz HTTP
     #define USES_C002   // Domoticz MQTT
@@ -1191,6 +1189,7 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
+    #define USES_P130   // Current Sensor Irms - ADS1015
 #endif
 
 
@@ -1336,7 +1335,7 @@ To create/register a plugin, you have to :
 	//#define USES_P124	// Ventus_W266_RFM69
 	#define USES_P125	// ArduCAM
 	#define USES_P127	// Teleinfo
-	#define USES_P130	// VEML6075
+	#define USES_P130	// [Irms - ADS1015](https://github.com/letscontrolit/ESPEasy/issues/3839)
 	#define USES_P131	// SHT3X
 	#define USES_P133	// VL53L0X
 	#define USES_P141	// LedStrip

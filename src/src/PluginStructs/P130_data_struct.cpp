@@ -1,25 +1,25 @@
-#include "../PluginStructs/P127_data_struct.h"
+#include "../PluginStructs/P130_data_struct.h"
 
-#ifdef USES_P127
+#ifdef USES_P130
 
-#define P127_ADS1X15_REG_POINTER_CONVERT         (0x00)
-#define P127_ADS1X15_REG_POINTER_CONFIG          (0x01)
-#define P127_ADS1X15_REG_POINTER_THRESH_LO       (0x02)
-#define P127_ADS1X15_REG_POINTER_THRESH_HI       (0x03)
+#define P130_ADS1X15_REG_POINTER_CONVERT         (0x00)
+#define P130_ADS1X15_REG_POINTER_CONFIG          (0x01)
+#define P130_ADS1X15_REG_POINTER_THRESH_LO       (0x02)
+#define P130_ADS1X15_REG_POINTER_THRESH_HI       (0x03)
 
-#define P127_ADS1015_MUX_DIFF_01            (0x0000)
-#define P127_ADS1015_MUX_DIFF_23            (0x3000)
-#define P127_ADS1015_PGA_1_024V             (0x0600) //< +/-1.024V range = Gain 4 => datasheet says 1bit = 0.5mV
-#define P127_ADS1015_CONFIG_CQUE_NONE       (0x0003) // Disable the comparator (default val)
-#define P127_ADS1015_CONFIG_CLAT_NONLAT     (0x0000) // Non-latching (default val)
-#define P127_ADS1015_CONFIG_CPOL_ACTVLOW    (0x0000) // Alert/Rdy active low   (default val)
-#define P127_ADS1015_CONFIG_CMODE_TRAD      (0x0000) // Traditional comparator (default val)
-#define P127_ADS1015_RATE_3300SPS           (0x00C0) // < 3300 samples per second
-#define P127_ADS1015_CONV_MODE_CONTINUOUS   (0x0000) // Single-shot mode (default)
-#define P127_ADS1015_CONV_MODE_SINGLE       (0x0100) // Single-shot mode (default)
-#define P127_ADS1015_START_SINGLE_CONV      (0x8000) // Start a single conversion
+#define P130_ADS1015_MUX_DIFF_01            (0x0000)
+#define P130_ADS1015_MUX_DIFF_23            (0x3000)
+#define P130_ADS1015_PGA_1_024V             (0x0600) //< +/-1.024V range = Gain 4 => datasheet says 1bit = 0.5mV
+#define P130_ADS1015_CONFIG_CQUE_NONE       (0x0003) // Disable the comparator (default val)
+#define P130_ADS1015_CONFIG_CLAT_NONLAT     (0x0000) // Non-latching (default val)
+#define P130_ADS1015_CONFIG_CPOL_ACTVLOW    (0x0000) // Alert/Rdy active low   (default val)
+#define P130_ADS1015_CONFIG_CMODE_TRAD      (0x0000) // Traditional comparator (default val)
+#define P130_ADS1015_RATE_3300SPS           (0x00C0) // < 3300 samples per second
+#define P130_ADS1015_CONV_MODE_CONTINUOUS   (0x0000) // Single-shot mode (default)
+#define P130_ADS1015_CONV_MODE_SINGLE       (0x0100) // Single-shot mode (default)
+#define P130_ADS1015_START_SINGLE_CONV      (0x8000) // Start a single conversion
 
-P127_data_struct::P127_data_struct(uint8_t i2c_addr, uint8_t _calCurrent1, uint8_t _calCurrent2, float_t _calVoltage, uint8_t _currentFreq, uint8_t _nbSinus, uint8_t _convModeContinuous) : 
+P130_data_struct::P130_data_struct(uint8_t i2c_addr, uint8_t _calCurrent1, uint8_t _calCurrent2, float_t _calVoltage, uint8_t _currentFreq, uint8_t _nbSinus, uint8_t _convModeContinuous) : 
     i2cAddress(i2c_addr),
     calCurrent1(_calCurrent1),
     calCurrent2(_calCurrent2),
@@ -30,7 +30,7 @@ P127_data_struct::P127_data_struct(uint8_t i2c_addr, uint8_t _calCurrent1, uint8
         this->debug = 0;
     }
 
-void P127_data_struct::setDebug(uint8_t _debug) {
+void P130_data_struct::setDebug(uint8_t _debug) {
     this->debug = _debug;
     if (this->debug) {
         String log;
@@ -48,11 +48,11 @@ void P127_data_struct::setDebug(uint8_t _debug) {
     }
 }
 
-uint8_t P127_data_struct::getDebug() {
+uint8_t P130_data_struct::getDebug() {
     return this->debug;
 }
 
-boolean P127_data_struct::writeRegister(uint8_t registerAddr, uint16_t registerValue) {
+boolean P130_data_struct::writeRegister(uint8_t registerAddr, uint16_t registerValue) {
     boolean result = false;
     uint8_t res = 0;
     Wire.beginTransmission(this->i2cAddress);
@@ -71,7 +71,7 @@ boolean P127_data_struct::writeRegister(uint8_t registerAddr, uint16_t registerV
     return result;
 }
 
-boolean P127_data_struct::readRegister(uint8_t registerAddr, uint16_t& registerValue) {
+boolean P130_data_struct::readRegister(uint8_t registerAddr, uint16_t& registerValue) {
     boolean result = false;
     const uint8_t requestedByte = 2;
     Wire.beginTransmission(this->i2cAddress);
@@ -85,34 +85,34 @@ boolean P127_data_struct::readRegister(uint8_t registerAddr, uint16_t& registerV
     return result;
 }
 
-uint16_t P127_data_struct::readRegisterFacility(uint8_t registerAddr) {
+uint16_t P130_data_struct::readRegisterFacility(uint8_t registerAddr) {
     uint16_t registerValue = 0;
     this->readRegister(registerAddr, registerValue);
     return registerValue;
 }
 
-boolean P127_data_struct::readAdcSingleValue(uint16_t muxConf, int16_t& adcValue) {
+boolean P130_data_struct::readAdcSingleValue(uint16_t muxConf, int16_t& adcValue) {
     boolean result = false;
     uint16_t registerValue = 0;
-    uint16_t configGlobal = P127_ADS1015_CONFIG_CQUE_NONE |
-                        P127_ADS1015_CONFIG_CLAT_NONLAT |
-                        P127_ADS1015_CONFIG_CPOL_ACTVLOW |
-                        P127_ADS1015_CONFIG_CMODE_TRAD |
-                        P127_ADS1015_RATE_3300SPS |
-                        P127_ADS1015_PGA_1_024V;
+    uint16_t configGlobal = P130_ADS1015_CONFIG_CQUE_NONE |
+                        P130_ADS1015_CONFIG_CLAT_NONLAT |
+                        P130_ADS1015_CONFIG_CPOL_ACTVLOW |
+                        P130_ADS1015_CONFIG_CMODE_TRAD |
+                        P130_ADS1015_RATE_3300SPS |
+                        P130_ADS1015_PGA_1_024V;
     configGlobal |= muxConf;
 
     uint16_t configStartSingle = configGlobal | 
-                        P127_ADS1015_CONV_MODE_SINGLE |
-                        P127_ADS1015_START_SINGLE_CONV;
+                        P130_ADS1015_CONV_MODE_SINGLE |
+                        P130_ADS1015_START_SINGLE_CONV;
     uint16_t configStartContinuous = configGlobal | 
-                        P127_ADS1015_CONV_MODE_CONTINUOUS |
-                        P127_ADS1015_START_SINGLE_CONV;
+                        P130_ADS1015_CONV_MODE_CONTINUOUS |
+                        P130_ADS1015_START_SINGLE_CONV;
     uint16_t configStop = configGlobal | 
-                        P127_ADS1015_CONV_MODE_SINGLE;
+                        P130_ADS1015_CONV_MODE_SINGLE;
 
     // write conf+ =>start reading
-    if ( false == this->writeRegister(P127_ADS1X15_REG_POINTER_CONFIG, configStartSingle) ) {
+    if ( false == this->writeRegister(P130_ADS1X15_REG_POINTER_CONFIG, configStartSingle) ) {
         addLog(LOG_LEVEL_INFO, F("readadcsingle write register conf failed"));
         result = false;
     } else {
@@ -120,8 +120,8 @@ boolean P127_data_struct::readAdcSingleValue(uint16_t muxConf, int16_t& adcValue
         // requesting if conversion ended
         ulong readingLongUS = micros();
         while ( micros() < (readingLongUS + 1000) ) {
-            if ( ( this->readRegisterFacility(P127_ADS1X15_REG_POINTER_CONFIG) & 0x8000) != 0 ) {
-                if ( true == this->readRegister(P127_ADS1X15_REG_POINTER_CONVERT, registerValue) ) {
+            if ( ( this->readRegisterFacility(P130_ADS1X15_REG_POINTER_CONFIG) & 0x8000) != 0 ) {
+                if ( true == this->readRegister(P130_ADS1X15_REG_POINTER_CONVERT, registerValue) ) {
                     // Shift 12-bit results right 4 bits for the ADS1015,
                     // making sure we keep the sign bit intact
                     adcValue = ((int16_t)(registerValue >> 4));
@@ -138,32 +138,32 @@ boolean P127_data_struct::readAdcSingleValue(uint16_t muxConf, int16_t& adcValue
     return result;
 }
 
-boolean P127_data_struct::readAdcContinuousRmsValue(uint16_t muxConf, uint16_t period_ms, float_t& adcIrms, uint16_t& nbSample) {
+boolean P130_data_struct::readAdcContinuousRmsValue(uint16_t muxConf, uint16_t period_ms, float_t& adcIrms, uint16_t& nbSample) {
     boolean success = false;
     boolean pbmWhileReading = false;
     uint16_t registerValue = 0;
     uint64_t sumI = 0, sqrI = 0;
     adcIrms = 0.;
     nbSample = 0;
-    uint16_t configGlobal = P127_ADS1015_CONFIG_CQUE_NONE |
-                        P127_ADS1015_CONFIG_CLAT_NONLAT |
-                        P127_ADS1015_CONFIG_CPOL_ACTVLOW |
-                        P127_ADS1015_CONFIG_CMODE_TRAD |
-                        P127_ADS1015_RATE_3300SPS |
-                        P127_ADS1015_PGA_1_024V;
+    uint16_t configGlobal = P130_ADS1015_CONFIG_CQUE_NONE |
+                        P130_ADS1015_CONFIG_CLAT_NONLAT |
+                        P130_ADS1015_CONFIG_CPOL_ACTVLOW |
+                        P130_ADS1015_CONFIG_CMODE_TRAD |
+                        P130_ADS1015_RATE_3300SPS |
+                        P130_ADS1015_PGA_1_024V;
     configGlobal |= muxConf;
 
     uint16_t configStartSingle = configGlobal | 
-                        P127_ADS1015_CONV_MODE_SINGLE |
-                        P127_ADS1015_START_SINGLE_CONV;
+                        P130_ADS1015_CONV_MODE_SINGLE |
+                        P130_ADS1015_START_SINGLE_CONV;
     uint16_t configStartContinuous = configGlobal | 
-                        P127_ADS1015_CONV_MODE_CONTINUOUS |
-                        P127_ADS1015_START_SINGLE_CONV;
+                        P130_ADS1015_CONV_MODE_CONTINUOUS |
+                        P130_ADS1015_START_SINGLE_CONV;
     uint16_t configStop = configGlobal | 
-                        P127_ADS1015_CONV_MODE_SINGLE;
+                        P130_ADS1015_CONV_MODE_SINGLE;
 
     // write conf+ =>start reading
-    if ( false == this->writeRegister(P127_ADS1X15_REG_POINTER_CONFIG, configStartContinuous) ) {
+    if ( false == this->writeRegister(P130_ADS1X15_REG_POINTER_CONFIG, configStartContinuous) ) {
         addLog(LOG_LEVEL_INFO, F("readadccontinuous write register conf failed"));
         success = false;
     } else {
@@ -172,7 +172,7 @@ boolean P127_data_struct::readAdcContinuousRmsValue(uint16_t muxConf, uint16_t p
         pbmWhileReading = false;
         ulong endPeriod = millis() + period_ms;
         while ( millis() < endPeriod ) {
-            if ( true != this->readRegister(P127_ADS1X15_REG_POINTER_CONVERT, registerValue) ) {
+            if ( true != this->readRegister(P130_ADS1X15_REG_POINTER_CONVERT, registerValue) ) {
                 pbmWhileReading = true;
                 break;
             } else {
@@ -186,7 +186,7 @@ boolean P127_data_struct::readAdcContinuousRmsValue(uint16_t muxConf, uint16_t p
                 }
                 sqrI = adcValue * adcValue;
                 sumI += sqrI;
-                #ifdef P127_DEBUG_DEV
+                #ifdef P130_DEBUG_DEV
                 String log = "readadccontinuous registerValue=" + String(registerValue);
                 log += " adcValue=" + String(adcValue);
                 log += " sqrI=" + String((unsigned long)(sqrI >>16), HEX) + String((unsigned long)(sqrI & 0x0000FFFF), HEX);
@@ -202,17 +202,17 @@ boolean P127_data_struct::readAdcContinuousRmsValue(uint16_t muxConf, uint16_t p
             success = true;
         }
     }
-    if ( false == this->writeRegister(P127_ADS1X15_REG_POINTER_CONFIG, configStop) ) {
+    if ( false == this->writeRegister(P130_ADS1X15_REG_POINTER_CONFIG, configStop) ) {
         addLog(LOG_LEVEL_INFO, F("readadccontinuous stop reading failed"));
     }
     return success;
 }
 
-float_t P127_data_struct::estimatePower(float_t current) {
+float_t P130_data_struct::estimatePower(float_t current) {
     return calVoltage * current;
 }
 
-boolean P127_data_struct::readCurrent(uint8_t canal, float_t& currentValue) {
+boolean P130_data_struct::readCurrent(uint8_t canal, float_t& currentValue) {
     boolean success = false;
     boolean calculatingRMSSuccess = true;
     uint16_t registerValue = 0;
@@ -227,13 +227,13 @@ boolean P127_data_struct::readCurrent(uint8_t canal, float_t& currentValue) {
     if ( ( 1 != canal ) && ( 2 != canal ) )
         success = false;
     else {
-        uint16_t muxConf = P127_ADS1015_MUX_DIFF_01;
+        uint16_t muxConf = P130_ADS1015_MUX_DIFF_01;
         if ( 1 == canal )
-            muxConf = P127_ADS1015_MUX_DIFF_01;
+            muxConf = P130_ADS1015_MUX_DIFF_01;
         else if ( 2 == canal )
-            muxConf = P127_ADS1015_MUX_DIFF_23;
+            muxConf = P130_ADS1015_MUX_DIFF_23;
         else
-            muxConf = P127_ADS1015_MUX_DIFF_01; //default value, should never happened
+            muxConf = P130_ADS1015_MUX_DIFF_01; //default value, should never happened
 
         if ( 1 != this->convModeContinuous ) {
             // start loop
@@ -278,4 +278,4 @@ boolean P127_data_struct::readCurrent(uint8_t canal, float_t& currentValue) {
     return success;
 }
 
-#endif // ifdef USES_P127
+#endif // ifdef USES_P130
