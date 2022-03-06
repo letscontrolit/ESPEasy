@@ -1053,7 +1053,6 @@ To create/register a plugin, you have to :
     #define USES_P079   // Wemos Motoshield
 #endif
 
-#define USES_P126
 #define USES_P127
 
 #ifdef CONTROLLER_SET_STABLE
