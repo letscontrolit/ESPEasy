@@ -49,7 +49,7 @@ String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
     return fname;
   }
-  return String(F("/")) + fname;
+  return String('/') + fname;
 }
 #endif
 #ifdef ESP8266
@@ -67,7 +67,7 @@ String FileError(int line, const char *fname)
   err += fname;
   err += F(" in ");
   err += line;
-  addLog(LOG_LEVEL_ERROR, err);
+  addLogMove(LOG_LEVEL_ERROR, err);
   return err;
 }
 
@@ -91,7 +91,7 @@ String flashGuard()
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
-    String log = F("FS   : Daily flash write rate exceeded! (powercycle to reset this)");
+    String log = F("FS   : Daily flash write rate exceeded! (powercycle or send command 'resetFlashWriteCounter' to reset this)");
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
@@ -118,6 +118,10 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
 }
 
 bool fileExists(const String& fname) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   const String patched_fname = patch_fname(fname);
   auto search = Cache.fileExistsMap.find(patched_fname);
   if (search != Cache.fileExistsMap.end()) {
@@ -336,10 +340,10 @@ void fileSystemCheck()
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("FS   : Mount successful, used ");
-      log = log + fs_info.usedBytes;
-      log = log + F(" bytes of ");
-      log = log + fs_info.totalBytes;
-      addLog(LOG_LEVEL_INFO, log);
+      log += fs_info.usedBytes;
+      log += F(" bytes of ");
+      log += fs_info.totalBytes;
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     // Run garbage collection before any file is open.
@@ -363,7 +367,7 @@ void fileSystemCheck()
   {
     String log = F("FS   : Mount failed");
     serialPrintln(log);
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
     ResetFactory();
   }
 }
@@ -604,7 +608,7 @@ bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int
     log += SettingsType::getSettingsTypeString(settingsType);
     log += F(" index: ");
     log += index;
-    addLog(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   return SettingsType::getSettingsParameters(settingsType, index, offset, max_size);
@@ -638,9 +642,16 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   uint32_t readPos       = 0;
   uint32_t nextStringPos = 0;
   uint32_t stringCount   = 0;
-  String   tmpString;
-  tmpString.reserve(bufferSize);
 
+  const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
+  String   tmpString;
+  {
+    #ifdef USE_SECOND_HEAP
+    // Store each string in 2nd heap
+    HeapSelectIram ephemeral;
+    #endif
+    tmpString.reserve(estimatedStringSize);
+  }
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
@@ -659,9 +670,14 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
+            #ifdef USE_SECOND_HEAP
+            // Store each string in 2nd heap
+            HeapSelectIram ephemeral;
+            #endif
+
             strings[stringCount] = tmpString;
-            tmpString            = "";
-            tmpString.reserve(readSize);
+            tmpString = String();
+            tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
             tmpString += buffer[i];
@@ -804,8 +820,8 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
+  ExtraTaskSettings.clear();
   if (!validTaskIndex(TaskIndex)) {
-    ExtraTaskSettings.clear();
     return String(); // Un-initialized task index.
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -813,7 +829,6 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   #endif
 
   START_TIMER
-  ExtraTaskSettings.clear();
   const String result = LoadFromFile(SettingsType::Enum::TaskSettings_Type, TaskIndex, reinterpret_cast<uint8_t *>(&ExtraTaskSettings), sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
@@ -1083,7 +1098,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack: ");
     log += getCurrentFreeStack();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #endif
   delay(1);
@@ -1125,7 +1140,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
       log += index;
       log += F(" size: ");
       log += datasize;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     #endif
   } else {
@@ -1145,7 +1160,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("SaveToFile: free stack after: ");
     log += getCurrentFreeStack();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   #endif
 
@@ -1286,7 +1301,7 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
 }
 
@@ -1309,7 +1324,7 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   if (!fileExists(fname)) {
     InitFile(settingsType);
   }
@@ -1323,7 +1338,7 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
-  String fname = SettingsType::getSettingsFileName(settingsType);
+  const String fname = SettingsType::getSettingsFileName(settingsType);
   return ClearInFile(fname.c_str(), offset, max_size);
 }
 
@@ -1467,7 +1482,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   highest         = 0;
   filesizeHighest = 0;
 #ifdef ESP8266
-  Dir dir = ESPEASY_FS.openDir(F("cache"));
+  fs::Dir dir = ESPEASY_FS.openDir(F("cache"));
 
   while (dir.next()) {
     String filename = dir.fileName();
@@ -1486,8 +1501,8 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   }
 #endif // ESP8266
 #ifdef ESP32
-  File root = ESPEASY_FS.open(F("/"));
-  File file = root.openNextFile();
+  fs::File root = ESPEASY_FS.open(F("/"));
+  fs::File file = root.openNextFile();
 
   while (file)
   {
@@ -1582,7 +1597,7 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd) {
   esp_partition_type_t partitionType = static_cast<esp_partition_type_t>(pType);
   String result;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   if (_mypartiterator) {
     do {
@@ -1597,7 +1612,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
       result += itemSep;
       result += (_mypart->encrypted ? F("Yes") : F("-"));
       result += lineEnd;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return result;

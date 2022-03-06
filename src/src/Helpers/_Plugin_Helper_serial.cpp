@@ -36,7 +36,7 @@ void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Serial : ");
     log += serialHelper_getGpioDescription(typeHint, config_pin1, config_pin2, " ");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 }
 
@@ -237,7 +237,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
     }
   }
   addFormSelector_script(F("Serial Port"), F("serPort"), NR_ESPEASY_SERIAL_TYPES,
-                         options, ids, NULL,
+                         options, ids, nullptr,
                          static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)),
                          F("serialPortChanged(this)")); // Script to toggle GPIO visibility when changing selection.
 #ifndef DISABLE_SC16IS752_Serial

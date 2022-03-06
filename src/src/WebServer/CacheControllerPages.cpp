@@ -100,11 +100,11 @@ void handle_cache_json() {
   addHtml(F("{\"columns\": ["));
 
   //     addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
-  stream_to_json_value(F("UNIX timestamp"));
+  addHtml(to_json_value(F("UNIX timestamp")));
   addHtml(',');
-  stream_to_json_value(F("UTC timestamp"));
+  addHtml(to_json_value(F("UTC timestamp")));
   addHtml(',');
-  stream_to_json_value(F("task index"));
+  addHtml(to_json_value(F("task index")));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
     LoadTaskSettings(i);
@@ -114,7 +114,7 @@ void handle_cache_json() {
       label += '#';
       label += ExtraTaskSettings.TaskDeviceValueNames[j];
       addHtml(',');
-      stream_to_json_value(label);
+      addHtml(to_json_value(label));
     }
   }
   addHtml(F("],\n"));
@@ -130,13 +130,13 @@ void handle_cache_json() {
       if (filenr != 0) {
         addHtml(',');
       }
-      stream_to_json_value(currentFile);
+      addHtml(to_json_value(currentFile));
       ++filenr;
     }
   }
   addHtml(F("],\n"));
-  stream_last_json_object_value(F("nrfiles"), String(filenr));
-  addHtml(F("\n"));
+  stream_last_json_object_value(F("nrfiles"), filenr);
+  addHtml('\n');
   TXBuffer.endStream();
 }
 

@@ -32,6 +32,15 @@ struct C011_ConfigStruct
   char HttpBody[C011_HTTP_BODY_MAX_LEN]     = { 0 };
 };
 
+
+// Forward declarations
+bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody);
+boolean Create_schedule_HTTP_C011(struct EventStruct *event);
+void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted);
+void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary);
+
+
+
 bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
@@ -99,7 +108,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
               choice = i;
             }
           }
-          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, NULL, choice);
+          addFormSelector(F("Method"), F("P011httpmethod"), 5, methods, nullptr, choice);
         }
 
         addFormTextBox(F("URI"), F("P011httpuri"), HttpUri, C011_HTTP_URI_MAX_LEN - 1);
@@ -129,7 +138,15 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
     {
-      std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+      std::shared_ptr<C011_ConfigStruct> customConfig;
+      {
+        // Try to allocate on 2nd heap
+        #ifdef USE_SECOND_HEAP
+//        HeapSelectIram ephemeral;
+        #endif
+        std::shared_ptr<C011_ConfigStruct> tmp_shared(new (std::nothrow) C011_ConfigStruct);
+        customConfig = std::move(tmp_shared);
+      }
 
       if (customConfig) {
         uint8_t   choice    = 0;
@@ -182,8 +199,6 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings);
-
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
   WiFiClient client;
@@ -211,7 +226,15 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
 
 bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMethod, String& HttpUri, String& HttpHeader, String& HttpBody) {
   // Just copy the needed strings and destruct the C011_ConfigStruct as soon as possible
-  std::shared_ptr<C011_ConfigStruct> customConfig(new C011_ConfigStruct);
+  std::shared_ptr<C011_ConfigStruct> customConfig;
+  {
+    // Try to allocate on 2nd heap
+    #ifdef USE_SECOND_HEAP
+//    HeapSelectIram ephemeral;
+    #endif
+    std::shared_ptr<C011_ConfigStruct> tmp_shared(new (std::nothrow) C011_ConfigStruct);
+    customConfig = std::move(tmp_shared);
+  }
 
   if (!customConfig) {
     return false;
@@ -253,7 +276,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
         log += element.uri;
         log += element.header;
         log += element.postStr;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       C011_DelayHandler->sendQueue.pop_back();
       return false;
@@ -334,25 +357,31 @@ void ReplaceTokenByValue(String& s, struct EventStruct *event, bool sendBinary)
   // write?db=testdb&type=%1%%vname1%%/1%%2%;%vname2%%/2%%3%;%vname3%%/3%%4%;%vname4%%/4%&value=%1%%val1%%/1%%2%;%val2%%/2%%3%;%val3%%/3%%4%;%val4%%/4%
   //	%1%%vname1%,Standort=%tskname% Wert=%val1%%/1%%2%%LF%%vname2%,Standort=%tskname% Wert=%val2%%/2%%3%%LF%%vname3%,Standort=%tskname%
   //  Wert=%val3%%/3%%4%%LF%%vname4%,Standort=%tskname% Wert=%val4%%/4%
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP before parsing: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
+  #endif
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   DeleteNotNeededValues(s, valueCount);
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after parsing: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
+  #endif
 
   parseControllerVariables(s, event, !sendBinary);
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     addLog(LOG_LEVEL_DEBUG_MORE, F("HTTP after replacements: "));
     addLog(LOG_LEVEL_DEBUG_MORE, s);
   }
+  #endif
 }
 
 #endif // ifdef USES_C011

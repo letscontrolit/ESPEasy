@@ -127,8 +127,8 @@ volatile int Plugin_046_strikesph = 0;
 
 
 // TODO TD-er: These call-back functions are quite long and will take a lot of iRAM.
-void Plugin_046_ISR_nSEL() ICACHE_RAM_ATTR;                     // Interrupt routines
-void Plugin_046_ISR_SCLK() ICACHE_RAM_ATTR;
+void Plugin_046_ISR_nSEL() IRAM_ATTR;                     // Interrupt routines
+void Plugin_046_ISR_SCLK() IRAM_ATTR;
 
 boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -155,19 +155,20 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = PCONFIG(0);
         {
           const uint8_t nrchoices = 9;
-          const __FlashStringHelper * options[nrchoices];
-          options[0] = F("Main + Temp/Hygro");
-          options[1] = F("Wind");
-          options[2] = F("Rain");
-          options[3] = F("UV");
-          options[4] = F("Lightning strikes");
-          options[5] = F("Lightning distance");
+          const __FlashStringHelper * options[nrchoices] = {
+            F("Main + Temp/Hygro"),
+            F("Wind"),
+            F("Rain"),
+            F("UV"),
+            F("Lightning strikes"),
+            F("Lightning distance"),
 
-          options[6] = F("Unknown 1, uint8_t 6");
-          options[7] = F("Unknown 2, uint8_t 16");
-          options[8] = F("Unknown 3, uint8_t 19");
+            F("Unknown 1, uint8_t 6"),
+            F("Unknown 2, uint8_t 16"),
+            F("Unknown 3, uint8_t 19"),
+          };
 
-          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice);
         }
 
         if (choice==0) {
@@ -333,13 +334,14 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             }
             P046_data->Plugin_046_MasterSlave = false;
             P046_data->Plugin_046_newData = false;
+            #ifndef BUILD_NO_DEBUG
             if (PLUGIN_046_DEBUG) {
               String log = F("Ventus W266 Rcvd(");
               log += node_time.getTimeString(':');
               log += F(") ");
               for (int i = 0; i < Plugin_046_Payload; i++) {
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {
-                  log += F(":");
+                  log += ':';
                 }
                 char myHex = (P046_data->Plugin_046_databuffer[i] >> 4) + 0x30;
                 if (myHex > 0x39) { myHex += 7; }
@@ -355,8 +357,9 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
               myHex = (crc & 0x0f) + 0x30;
               if (myHex > 0x39) { myHex += 7; }
               log += myHex;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
+            #endif
             if (crc != 00)
             {
               P046_data->Plugin_046_databuffer[0] = 0;                   // Not MagicByte, so not valid.

@@ -3,46 +3,61 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/StringConverter.h"
 
-
-
-void LogStruct::add(const uint8_t loglevel, const char *line) {
-  write_idx = (write_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
-
-  if (write_idx == read_idx) {
-    // Buffer full, move read_idx to overwrite oldest entry.
-    read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
-  }
+void LogStruct::add_end(const uint8_t loglevel) {
   timeStamp[write_idx] = millis();
   log_level[write_idx] = loglevel;
-
-  // Must use PROGMEM aware functions here to process line
-  unsigned int linelength = strlen_P(line);
-
-  if (linelength > LOG_STRUCT_MESSAGE_SIZE - 1) {
-    linelength = LOG_STRUCT_MESSAGE_SIZE - 1;
+  if (isFull()) {
+    read_idx  = nextIndex(read_idx);
   }
-  Message[write_idx] = "";
-  if (!Message[write_idx].reserve(linelength)) {
-    return;
-  }
+  write_idx = nextIndex(write_idx);
+  is_full = (write_idx == read_idx);
+}
 
-  const char* c = line;
-  for (unsigned i = 0; i < linelength; ++i) {
-    Message[write_idx] += static_cast<char>(pgm_read_byte(c++));
+void LogStruct::add(const uint8_t loglevel, const String& line) {
+  if (line.length() > 0)
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
+
+    if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+    } else {
+      Message[write_idx] = line;
+    }
+    add_end(loglevel);
   }
 }
 
-// Read the next item and append it to the given string.
-// Returns whether new lines are available.
-bool LogStruct::get(String& output, const String& lineEnd) {
-  lastReadTimeStamp = millis();
+void LogStruct::add(const uint8_t loglevel, String&& line) {
+  if (line.length() > 0)
+  {
+    if (line.length() > LOG_STRUCT_MESSAGE_SIZE - 1) {
+      #ifdef USE_SECOND_HEAP
+      // Need to make a substring, which is a new allocation, on the 2nd heap
+      HeapSelectIram ephemeral;
+      #endif
+      Message[write_idx] = std::move(line.substring(0, LOG_STRUCT_MESSAGE_SIZE - 1));
+    } else {
+      #ifdef USE_SECOND_HEAP
+      // Allow to store the logs in 2nd heap if present.
+      HeapSelectIram ephemeral;
 
-  if (!isEmpty()) {
-    read_idx = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
-    output  += formatLine(read_idx, lineEnd);
+      if (!mmu_is_iram(&(line[0]))) {
+        // The log entry was not allocated on the 2nd heap, so copy instead of move
+        Message[write_idx] = line;
+      } else {
+        Message[write_idx] = std::move(line);
+      }
+      #else
+      Message[write_idx] = std::move(line);
+      #endif
+    }
+    add_end(loglevel);
   }
-  return !isEmpty();
 }
+
 
 bool LogStruct::getNext(bool& logLinesAvailable, unsigned long& timestamp, String& message, uint8_t& loglevel) {
   lastReadTimeStamp = millis();
@@ -51,18 +66,22 @@ bool LogStruct::getNext(bool& logLinesAvailable, unsigned long& timestamp, Strin
   if (isEmpty()) {
     return false;
   }
-  read_idx  = (read_idx + 1) % LOG_STRUCT_MESSAGE_LINES;
   timestamp = timeStamp[read_idx];
-  message = Message[read_idx];
+  message = std::move(Message[read_idx]);
   loglevel = log_level[read_idx];
+  clearOldest();
   if (!isEmpty()) { 
     logLinesAvailable = true;
   }
   return true;
 }
 
-bool LogStruct::isEmpty() {
-  return write_idx == read_idx;
+bool LogStruct::isEmpty() const {
+  return !is_full && (write_idx == read_idx);
+}
+
+bool LogStruct::isFull() const {
+  return is_full;
 }
 
 bool LogStruct::logActiveRead() {
@@ -70,30 +89,25 @@ bool LogStruct::logActiveRead() {
   return timePassedSince(lastReadTimeStamp) < LOG_BUFFER_EXPIRE;
 }
 
-String LogStruct::formatLine(int index, const String& lineEnd) {
-  String output;
-
-  output += timeStamp[index];
-  output += " : ";
-  output += Message[index];
-  output += lineEnd;
-  return output;
+void LogStruct::clearExpiredEntries() {
+  unsigned int maxLoops = LOG_STRUCT_MESSAGE_LINES;
+  while (maxLoops > 0) {
+    --maxLoops;
+    if (isEmpty() ||  // Nothing left
+        (timePassedSince(timeStamp[read_idx]) < LOG_BUFFER_EXPIRE)) // Expired
+    {
+      return;
+    }
+    clearOldest();
+  }
 }
 
-void LogStruct::clearExpiredEntries() {
-  if (isEmpty()) {
-    return;
-  }
-
-  if (timePassedSince(lastReadTimeStamp) > LOG_BUFFER_EXPIRE) {
-    // Clear the entire log.
-    // If web log is the only log active, it will not be checked again until it is read.
-    for (read_idx = 0; read_idx < LOG_STRUCT_MESSAGE_LINES; ++read_idx) {
-      Message[read_idx]   = String(); // Free also the reserved memory.
-      timeStamp[read_idx] = 0;
-      log_level[read_idx] = 0;
-    }
-    read_idx  = 0;
-    write_idx = 0;
+void LogStruct::clearOldest() {
+  if (!isEmpty()) {
+    is_full = false;
+    Message[read_idx] = String();
+    timeStamp[read_idx] = 0;
+    log_level[read_idx] = 0;
+    read_idx  = nextIndex(read_idx);
   }
 }

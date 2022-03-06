@@ -137,15 +137,17 @@ void P104_data_struct::loadSettings() {
     }
     structDataSize = bufferSize;
     # ifdef P104_DEBUG_DEV
-    String log;
+    {
+      String log;
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-        log.reserve(54)) {
-      log  = F("P104: loadSettings stored Size: ");
-      log += structDataSize;
-      log += F(" taskindex: ");
-      log += taskIndex;
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+          log.reserve(54)) {
+        log  = F("P104: loadSettings stored Size: ");
+        log += structDataSize;
+        log += F(" taskindex: ");
+        log += taskIndex;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -159,10 +161,10 @@ void P104_data_struct::loadSettings() {
 
     {
       String buffer;
-      buffer.reserve(bufferSize + 1);
       buffer = String(settingsBuffer);
       # ifdef P104_DEBUG_DEV
 
+      String log;
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log  = F("P104: loadSettings bufferSize: ");
         log += bufferSize;
@@ -176,7 +178,7 @@ void P104_data_struct::loadSettings() {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         log += F(" trimmed: ");
         log += buffer.length();
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
 
@@ -197,7 +199,6 @@ void P104_data_struct::loadSettings() {
       }
 
       while (offset2 > -1) {
-        tmp.reserve(offset2 - prev2);
         tmp = buffer.substring(prev2, offset2);
         # ifdef P104_DEBUG_DEV
 
@@ -205,7 +206,7 @@ void P104_data_struct::loadSettings() {
           log  = F("P104: reading string: ");
           log += tmp;
           log.replace(P104_FIELD_SEP, P104_FIELD_DISP);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG_DEV
 
@@ -293,7 +294,6 @@ void P104_data_struct::loadSettings() {
             loadOffset    += sizeof(bufferSize);
             LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, taskIndex, (uint8_t *)settingsBuffer, structDataSize, loadOffset);
             settingsBuffer[bufferSize + 1] = '\0'; // Terminate string
-            buffer.reserve(bufferSize + 1);
             buffer = String(settingsBuffer);
           }
         }
@@ -305,12 +305,12 @@ void P104_data_struct::loadSettings() {
           String log;
           log  = F("dotmatrix: parsed zone: ");
           log += zoneIndex;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
       }
 
-      buffer.clear();        // Free some memory
+      buffer = String();        // Free some memory
     }
 
     delete[] settingsBuffer; // Release allocated buffer
@@ -322,7 +322,7 @@ void P104_data_struct::loadSettings() {
 
       // log += F(" struct size: ");
       // log += sizeof(P104_zone_struct);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -347,7 +347,7 @@ void P104_data_struct::loadSettings() {
       log += zoneIndex;
       log += F(" expected: ");
       log += expectedZones;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
   }
@@ -372,7 +372,7 @@ void P104_data_struct::configureZones() {
       log.reserve(45)) {
     log  = F("P104: configureZones to do: ");
     log += zones.size();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // ifdef P104_DEBUG_DEV
 
@@ -465,7 +465,7 @@ void P104_data_struct::configureZones() {
         log += expectedZones;
         log += F(" offset: ");
         log += zoneOffset;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
 
@@ -536,7 +536,7 @@ void P104_data_struct::displayOneZoneText(uint8_t                 zone,
     log += F("' -> '");
     log += sZoneBuffers[zone];
     log += '\'';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   P->displayZoneText(zone,
@@ -725,28 +725,29 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
 
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(70);
-      log = F("dotmatrix: Bar-graph: ");
+      if (log.reserve(70)) {
+        log = F("dotmatrix: Bar-graph: ");
 
-      if (loop) {
-        log += currentBar;
-        log += F(" in: ");
-        log += graphpart;
-        log += F(" value: ");
-        log += barGraphs[currentBar].value;
-        log += F(" max: ");
-        log += barGraphs[currentBar].max;
-        log += F(" min: ");
-        log += barGraphs[currentBar].min;
-        log += F(" dir: ");
-        log += barGraphs[currentBar].direction;
-        log += F(" typ: ");
-        log += barGraphs[currentBar].barType;
-      } else {
-        log += F(" bsize: ");
-        log += barGraphs.size();
+        if (loop) {
+          log += currentBar;
+          log += F(" in: ");
+          log += graphpart;
+          log += F(" value: ");
+          log += barGraphs[currentBar].value;
+          log += F(" max: ");
+          log += barGraphs[currentBar].max;
+          log += F(" min: ");
+          log += barGraphs[currentBar].min;
+          log += F(" dir: ");
+          log += barGraphs[currentBar].direction;
+          log += F(" typ: ");
+          log += barGraphs[currentBar].barType;
+        } else {
+          log += F(" bsize: ");
+          log += barGraphs.size();
+        }
+        addLogMove(LOG_LEVEL_INFO, log);
       }
-      addLog(LOG_LEVEL_INFO, log);
     }
     #  endif // ifdef P104_DEBUG
     currentBar++; // next
@@ -841,7 +842,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
     #  ifdef P104_DEBUG
 
     if (logAllText && loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     #  endif // ifdef P104_DEBUG
     modulesOnOff(zstruct._startModule, zstruct._startModule + zstruct.size - 1, MD_MAX72XX::MD_ON);  // Continue updates on modules
@@ -1210,7 +1211,7 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
       if (!success) { log += F("NOT "); }
       log += F("succesful: ");
       log += string;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 
@@ -1504,7 +1505,7 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
           log += F(" (");
           log += (timePassedSince(it->_repeatTimer) / 1000.0f); // Decimals can be useful here
           log += ')';
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         # endif // ifdef P104_DEBUG
 
@@ -1565,17 +1566,19 @@ String P104_data_struct::enquoteString(const String& input) {
  * saveSettings gather the zones data from the UI and store in customsettings
  **************************************/
 bool P104_data_struct::saveSettings() {
-  error = EMPTY_STRING; // Clear
+  error = String(); // Clear
   String zbuffer;
 
   # ifdef P104_DEBUG_DEV
-  String log;
+  {
+    String log;
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-      log.reserve(64)) {
-    log  = F("P104: saving zones, count: ");
-    log += expectedZones;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+        log.reserve(64)) {
+      log  = F("P104: saving zones, count: ");
+      log += expectedZones;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
   # endif // ifdef P104_DEBUG_DEV
 
@@ -1597,9 +1600,9 @@ bool P104_data_struct::saveSettings() {
       #  ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: insert before zone: ");
+        String log  = F("P104: insert before zone: ");
         log += (zoneIndex + 1);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       #  endif // ifdef P104_DEBUG_DEV
     }
@@ -1612,9 +1615,9 @@ bool P104_data_struct::saveSettings() {
       # ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: read zone: ");
+        String log  = F("P104: read zone: ");
         log += (zoneIndex + 1);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // ifdef P104_DEBUG_DEV
       zones.push_back(P104_zone_struct(zoneIndex + 1));
@@ -1641,9 +1644,9 @@ bool P104_data_struct::saveSettings() {
     # ifdef P104_DEBUG_DEV
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      log  = F("P104: add zone: ");
+      String log  = F("P104: add zone: ");
       log += (zoneIndex + 1);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef P104_DEBUG_DEV
 
@@ -1656,9 +1659,9 @@ bool P104_data_struct::saveSettings() {
       #  ifdef P104_DEBUG_DEV
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        log  = F("P104: insert after zone: ");
+        String log  = F("P104: insert after zone: ");
         log += (zoneIndex + 2);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       #  endif // ifdef P104_DEBUG_DEV
     }
@@ -1760,7 +1763,7 @@ bool P104_data_struct::saveSettings() {
           log += bufferSize;
           log += F(" offset: ");
           log += saveOffset;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           zbuffer.replace(P104_FIELD_SEP, P104_FIELD_DISP);
           addLog(LOG_LEVEL_INFO, zbuffer);
         }
@@ -1907,7 +1910,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       zonetip += F(" will save and reload the page.");
     }
     # endif    // if defined(P104_USE_TOOLTIPS) || defined(P104_ADD_SETTINGS_NOTES)
-    addFormSelector(F("Zones"), F("plugin_104_zonecount"), P104_MAX_ZONES, zonesList, zonesOptions, NULL, P104_CONFIG_ZONE_COUNT, true
+    addFormSelector(F("Zones"), F("plugin_104_zonecount"), P104_MAX_ZONES, zonesList, zonesOptions, nullptr, P104_CONFIG_ZONE_COUNT, true
                     # ifdef P104_USE_TOOLTIPS
                     , zonetip
                     # endif // ifdef P104_USE_TOOLTIPS
@@ -1919,7 +1922,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
       F("Display order (n..1)")
     };
     const int    orderOptions[] = { 0, 1 };
-    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, NULL,
+    addFormSelector(F("Zone order"), F("plugin_104_zoneorder"), 2, orderTypes, orderOptions, nullptr,
                     bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0, true
                     #  ifdef P104_USE_TOOLTIPS
                     , zonetip
@@ -2292,7 +2295,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     P104_CONTENT_count,
                     contentTypes,
                     contentOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].content,
                     false,
                     true,
@@ -2303,7 +2306,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     3,
                     alignmentTypes,
                     alignmentOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].alignment,
                     false,
                     true,
@@ -2315,7 +2318,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       animationCount - 1,
                       &animationTypes[1],
                       &animationOptions[1],
-                      NULL,
+                      nullptr,
                       zones[zone].animationIn,
                       false,
                       true,
@@ -2339,7 +2342,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     fontCount,
                     fontTypes,
                     fontOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].font,
                     false,
                     true,
@@ -2354,7 +2357,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     2,
                     invertedTypes,
                     invertedOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].inverted,
                     false,
                     true,
@@ -2368,7 +2371,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
         # ifdef P104_USE_ZONE_ACTIONS
 
         html_TD();  // Spacer
-        addHtml(F("|"));
+        addHtml('|');
 
         if (currentRow < 2) {
           addHtml(F("<TD style=\"text-align:center;font-size:90%\">")); // Action column, text centered and font-size 90%
@@ -2394,7 +2397,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                       animationCount,
                       animationTypes,
                       animationOptions,
-                      NULL,
+                      nullptr,
                       zones[zone].animationOut,
                       false,
                       true,
@@ -2418,7 +2421,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     layoutCount,
                     layoutTypes,
                     layoutOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].layout,
                     false,
                     true,
@@ -2433,7 +2436,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
                     specialEffectCount,
                     specialEffectTypes,
                     specialEffectOptions,
-                    NULL,
+                    nullptr,
                     zones[zone].specialEffect,
                     false,
                     true,
@@ -2464,14 +2467,14 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
 
         # ifdef P104_USE_ZONE_ACTIONS
         html_TD(); // Spacer
-        addHtml(F("|"));
+        addHtml('|');
 
         html_TD(); // Action
         addSelector(getPluginCustomArgName(index + P104_OFFSET_ACTION),
                     actionCount,
                     actionTypes,
                     actionOptions,
-                    NULL,
+                    nullptr,
                     P104_ACTION_NONE, // Always start with None
                     true,
                     true,

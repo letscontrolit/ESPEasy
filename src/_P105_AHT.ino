@@ -195,13 +195,13 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
           log  = P105_data->getDeviceName();
           log += F(" : Addr: 0x");
           log += String(PCONFIG(0), HEX);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
           log  = P105_data->getDeviceName();
           log += F(" : Temperature: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           log += F(" : Humidity: ");
           log += formatUserVarNoCheck(event->TaskIndex, 1);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         success = true;
       }

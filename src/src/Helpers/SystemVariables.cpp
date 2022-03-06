@@ -23,6 +23,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
@@ -43,7 +44,7 @@ String getReplacementString(const String& format, String& s) {
     log += R;
     log += F(" offset: ");
     log += ESPEasy_time::getSecOffset(R);
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   return R;
@@ -150,7 +151,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case SYSHEAP:           value = String(ESP.getFreeHeap()); break;
       case SYSHOUR:           value = String(node_time.hour()); break;
       case SYSHOUR_0:         value = timeReplacement_leadZero(node_time.hour()); break;
-      case SYSLOAD:           value = String(getCPUload()); break;
+      case SYSLOAD:           value = String(getCPUload(), 2); break;
       case SYSMIN:            value = String(node_time.minute()); break;
       case SYSMIN_0:          value = timeReplacement_leadZero(node_time.minute()); break;
       case SYSMONTH:          value = String(node_time.month()); break;

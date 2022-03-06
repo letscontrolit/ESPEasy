@@ -509,64 +509,51 @@ bool angleDegree(UnaryOperator op)
   return false;
 }
 
-String toString(UnaryOperator op)
+const __FlashStringHelper* toString(UnaryOperator op)
 {
-  String find;
-
   switch (op) {
     case UnaryOperator::Not:
       break; // No need to replace
     case UnaryOperator::Log:
-      find = F("log");
-      break;
+      return F("log");
     case UnaryOperator::Ln:
-      find = F("ln");
-      break;
+      return F("ln");
     case UnaryOperator::Abs:
-      find = F("abs");
-      break;
+      return F("abs");
     case UnaryOperator::Exp:
-      find = F("exp");
-      break;
+      return F("exp");
     case UnaryOperator::Sqrt:
-      find = F("sqrt");
-      break;
+      return F("sqrt");
     case UnaryOperator::Sq:
-      find = F("sq");
-      break;
+      return F("sq");
     case UnaryOperator::Round:
-      find = F("round");
-      break;
+      return F("round");
     case UnaryOperator::Sin:
+      return F("sin");
     case UnaryOperator::Sin_d:
-      find = F("sin");
-      break;
+      return F("sin_d");
     case UnaryOperator::Cos:
+      return F("cos");
     case UnaryOperator::Cos_d:
-      find = F("cos");
-      break;
+      return F("cos_d");
     case UnaryOperator::Tan:
+      return F("tan");
     case UnaryOperator::Tan_d:
-      find = F("tan");
-      break;
+      return F("tan_d");
     case UnaryOperator::ArcSin:
+      return F("asin");
     case UnaryOperator::ArcSin_d:
-      find = F("asin");
-      break;
+      return F("asin_d");
     case UnaryOperator::ArcCos:
+      return F("acos");
     case UnaryOperator::ArcCos_d:
-      find = F("acos");
-      break;
+      return F("acos_d");
     case UnaryOperator::ArcTan:
+      return F("atan");
     case UnaryOperator::ArcTan_d:
-      find = F("atan");
-      break;
+      return F("atan_d");
   }
-
-  if (angleDegree(op)) {
-    find += F("_d");
-  }
-  return find;
+  return F("");
 }
 
 String RulesCalculate_t::preProces(const String& input)
@@ -632,7 +619,7 @@ int CalculateParam(const String& TmpStr) {
         log += TmpStr;
         log += F(" = ");
         log += round(param);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
 #endif // ifndef BUILD_NO_DEBUG
     }
@@ -682,7 +669,7 @@ CalculateReturnCode Calculate(const String& input,
       log += doubleToString(result, 6, trimTrailingZeros);
       #endif // ifndef BUILD_NO_DEBUG
 
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   return returnCode;

@@ -4,6 +4,7 @@
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
+#include "../DataTypes/ControllerIndex.h"
 #include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/Plugins.h"
 

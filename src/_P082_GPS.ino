@@ -62,7 +62,7 @@
 
 // Must use volatile declared variable (which will end up in iRAM)
 volatile unsigned long P082_pps_time = 0;
-void    Plugin_082_interrupt() ICACHE_RAM_ATTR;
+void    Plugin_082_interrupt() IRAM_ATTR;
 
 boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -259,7 +259,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       }
 
       addFormNumericBox(F("Distance Update Interval"), P082_DISTANCE_LABEL, P082_DISTANCE, 0, 10000);
-      addUnit(F("m"));
+      addUnit('m');
       addFormNote(F("0 = disable update based on distance travelled"));
 
       success = true;
@@ -364,7 +364,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
           // Fix status changed, send events.
           if (Settings.UseRules) {
             String event = curFixStatus ? F("GPS#GotFix") : F("GPS#LostFix");
-            eventQueue.add(event);
+            eventQueue.addMove(std::move(event));
           }
           activeFix = curFixStatus;
         }
@@ -386,20 +386,26 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
               distance = P082_data->distanceSinceLast(P082_TIMEOUT);
             }
             success = true;
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("GPS: Position update."));
+            #endif
           }
 
           if (P082_data->gps->altitude.isUpdated()) {
             // ToDo make unit selectable
             P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_ALT), P082_data->gps->altitude.meters());
             success = true;
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("GPS: Altitude update."));
+            #endif
           }
 
           if (P082_data->gps->speed.isUpdated()) {
             // ToDo make unit selectable
             P082_setOutputValue(event, static_cast<uint8_t>(P082_query::P082_QUERY_SPD), P082_data->gps->speed.mps());
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, F("GPS: Speed update."));
+            #endif
             success = true;
           }
         }
@@ -431,14 +437,14 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
                   if (Settings.UseRules) {
                     String eventString = F("GPS#travelled=");
                     eventString += distance;
-                    eventQueue.add(eventString);
+                    eventQueue.addMove(std::move(eventString));
                   }
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     String log = F("GPS: Distance trigger : ");
                     log += distance;
                     log += F(" m");
-                    addLog(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, log);
                   }
                 }
               }
@@ -549,6 +555,7 @@ void P082_setOutputValue(struct EventStruct *event, uint8_t outputType, float va
 }
 
 void P082_logStats(struct EventStruct *event) {
+  #ifndef BUILD_NO_DEBUG
   if (!loglevelActiveFor(LOG_LEVEL_DEBUG)) { return; }
   P082_data_struct *P082_data =
     static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -557,24 +564,25 @@ void P082_logStats(struct EventStruct *event) {
     return;
   }
   String log;
-
-  log.reserve(128);
-  log  = F("GPS:");
-  log += F(" Fix: ");
-  log += String(P082_data->hasFix(P082_TIMEOUT));
-  log += F(" #sat: ");
-  log += P082_data->gps->satellites.value();
-  log += F(" #SNR: ");
-  log += P082_data->gps->satellitesStats.getBestSNR();
-  log += F(" HDOP: ");
-  log += P082_data->gps->hdop.value() / 100.0f;
-  log += F(" Chksum(pass/fail): ");
-  log += P082_data->gps->passedChecksum();
-  log += '/';
-  log += P082_data->gps->failedChecksum();
-  log += F(" invalid: ");
-  log += P082_data->gps->invalidData();
-  addLog(LOG_LEVEL_DEBUG, log);
+  if (log.reserve(128)) {
+    log  = F("GPS:");
+    log += F(" Fix: ");
+    log += String(P082_data->hasFix(P082_TIMEOUT));
+    log += F(" #sat: ");
+    log += P082_data->gps->satellites.value();
+    log += F(" #SNR: ");
+    log += P082_data->gps->satellitesStats.getBestSNR();
+    log += F(" HDOP: ");
+    log += P082_data->gps->hdop.value() / 100.0f;
+    log += F(" Chksum(pass/fail): ");
+    log += P082_data->gps->passedChecksum();
+    log += '/';
+    log += P082_data->gps->failedChecksum();
+    log += F(" invalid: ");
+    log += P082_data->gps->invalidData();
+    addLogMove(LOG_LEVEL_DEBUG, log);
+  }
+  #endif
 }
 
 void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyGPS) {
@@ -612,12 +620,12 @@ void P082_html_show_satStats(struct EventStruct *event, bool tracked, bool onlyG
           }
           addRowLabel(label);
         } else {
-          addHtml(F(", "));
+          addHtml(',', ' ');
         }
         addHtmlInt(id);
 
         if (tracked) {
-          addHtml(F(" ("));
+          addHtml(' ', '(');
           addHtmlInt(snr);
           addHtml(')');
         }
@@ -677,7 +685,7 @@ void P082_html_show_stats(struct EventStruct *event) {
   P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
-  addHtml(String(P082_data->gps->hdop.value() / 100.0f));
+  addHtml(toString(P082_data->gps->hdop.value() / 100.0f));
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;
@@ -693,23 +701,25 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   addRowLabel(F("Distance Travelled"));
   addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DISTANCE)]));
-  addUnit(F("m"));
+  addUnit('m');
 
   if (P082_referencePointSet(event)) {
     addRowLabel(F("Distance from Ref. Point"));
     addHtmlInt(static_cast<int>(P082_data->_cache[static_cast<uint8_t>(P082_query::P082_QUERY_DIST_REF)]));
-    addUnit(F("m"));
+    addUnit('m');
   }
 
   addRowLabel(F("Checksum (pass/fail/invalid)"));
-  String chksumStats;
+  {
+    String chksumStats;
 
-  chksumStats  = P082_data->gps->passedChecksum();
-  chksumStats += '/';
-  chksumStats += P082_data->gps->failedChecksum();
-  chksumStats += '/';
-  chksumStats += P082_data->gps->invalidData();
-  addHtml(chksumStats);
+    chksumStats  = P082_data->gps->passedChecksum();
+    chksumStats += '/';
+    chksumStats += P082_data->gps->failedChecksum();
+    chksumStats += '/';
+    chksumStats += P082_data->gps->invalidData();
+    addHtml(chksumStats);
+  }
 }
 
 void P082_setSystemTime(struct EventStruct *event) {

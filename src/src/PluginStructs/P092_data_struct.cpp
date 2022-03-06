@@ -29,7 +29,7 @@ DLBus::DLBus()
   {
     __instance             = this;
     ISR_PtrChangeBitStream = DLbus_ChangeBitStream;
-    addToLog(LOG_LEVEL_INFO, F("Class DLBus created"));
+    addLog(LOG_LEVEL_INFO, F("Class DLBus created"));
   }
 }
 
@@ -39,21 +39,21 @@ DLBus::~DLBus()
   {
     __instance             = nullptr;
     ISR_PtrChangeBitStream = nullptr;
-    addToLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
+    addLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
   }
 }
 
 void DLBus::AddToInfoLog(const String& string)
 {
   if ((IsLogLevelInfo) && (LogLevelInfo != 0xff)) {
-    addToLog(LogLevelInfo, string);
+    addLog(LogLevelInfo, string);
   }
 }
 
 void DLBus::AddToErrorLog(const String& string)
 {
   if (LogLevelError != 0xff) {
-    addToLog(LogLevelError, string);
+    addLog(LogLevelError, string);
   }
 }
 
@@ -74,7 +74,7 @@ void DLBus::StartReceiving(void)
   interrupts(); // interrupts allowed now, next instruction WILL be executed
 }
 
-void ICACHE_RAM_ATTR DLBus::ISR(void)
+void IRAM_ATTR DLBus::ISR(void)
 {
   if (__instance)
   {
@@ -82,7 +82,7 @@ void ICACHE_RAM_ATTR DLBus::ISR(void)
   }
 }
 
-void ICACHE_RAM_ATTR DLBus::ISR_PinChanged(void)
+void IRAM_ATTR DLBus::ISR_PinChanged(void)
 {
 //  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
   uint32_t _now = micros();
@@ -633,7 +633,7 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("P092_receiving ... TaskIndex:");
     log += taskindex;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
@@ -740,7 +740,7 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
     else {
       log += F("nan");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return result;
 }

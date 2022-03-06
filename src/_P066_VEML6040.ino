@@ -79,7 +79,7 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper * optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F(
                                     "1280ms (515)") };
-        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, PCONFIG(1));
+        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, nullptr, PCONFIG(1));
       }
 
       {
@@ -90,7 +90,7 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
           F("R, G, B, Color Temperature [K]"),
           F("R, G, B, Ambient Light [Lux]"),
           F("Color Temperature [K], Ambient Light [Lux], Y, W") };
-        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, PCONFIG(2));
+        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, nullptr, PCONFIG(2));
       }
 
       success = true;

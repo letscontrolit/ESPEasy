@@ -26,11 +26,12 @@ enum class NumericalType {
   FloatingPoint,
   Integer,
   HexadecimalUInt,
-  BinaryUint
+  BinaryUint,
+  Not_a_number
 };
 
 bool mustConsiderAsString(NumericalType detectedType);
-bool mustConsiderAsString(const String& value);
+bool mustConsiderAsJSONString(const String& value);
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType);
 

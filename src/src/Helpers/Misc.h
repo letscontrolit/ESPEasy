@@ -10,10 +10,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef FEATURE_SD
-#include <SD.h>
-#endif
-
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 
