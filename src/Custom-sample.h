@@ -382,6 +382,11 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
+// #define USES_P126   //
+// #define USES_P127   //
+// #define USES_P128   //
+// #define USES_P129   //
+// #define USES_P130   // Current Sensor Irms - ADS1015
 
 
 // Special plugins needing IR library
