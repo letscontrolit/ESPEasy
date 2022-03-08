@@ -144,7 +144,6 @@ bool C005_parse_command(struct EventStruct *event) {
   bool   validTopic          = false;
   const int lastindex        = event->String1.lastIndexOf('/');
   const String lastPartTopic = event->String1.substring(lastindex + 1);
-
   const bool has_cmd_arg_index = event->String1.lastIndexOf(F("cmd_arg")) != -1;
 
   if (lastPartTopic.equals(F("cmd"))) {
@@ -163,7 +162,7 @@ bool C005_parse_command(struct EventStruct *event) {
     // Message: 14
     // Full command: gpio,14,0
 
-    uint8_t topic_index = 0;
+    uint8_t topic_index = 1;
     String topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
 
     while(!topic_folder.startsWith(F("cmd_arg")) && !topic_folder.isEmpty()) {
@@ -172,16 +171,18 @@ bool C005_parse_command(struct EventStruct *event) {
     }
     if (!topic_folder.isEmpty()) {
       int cmd_arg_nr = -1;
-      if (validIntFromString(event->String1.substring(7), cmd_arg_nr)) {
+      if (validIntFromString(topic_folder.substring(7), cmd_arg_nr)) {
         int constructed_cmd_arg_nr = 0;
         ++topic_index;
         topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
+        bool msg_added = false;
         while(!topic_folder.isEmpty()) {
           if (constructed_cmd_arg_nr != 0) {
             cmd += ',';
           }
           if (constructed_cmd_arg_nr == cmd_arg_nr) {
             cmd += event->String2;
+            msg_added = true;
           } else {
             cmd += topic_folder;
             ++topic_index;
@@ -189,6 +190,12 @@ bool C005_parse_command(struct EventStruct *event) {
           }
           ++constructed_cmd_arg_nr;
         }
+        if (!msg_added) {
+          cmd += ',';
+          cmd += event->String2;
+        }
+        //addLog(LOG_LEVEL_INFO, String(F("MQTT cmd: ")) + cmd);
+
         validTopic = true;
       }
     }
