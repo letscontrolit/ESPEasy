@@ -69,10 +69,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
     {
       controllerIndex_t ControllerID = findFirstEnabledControllerWithId(CPLUGIN_ID_005);
 
-      if (!validControllerIndex(ControllerID)) {
-        // Controller is not enabled.
-        break;
-      } else {
+      if (validControllerIndex(ControllerID)) {
         C005_parse_command(event);
       }
       break;
@@ -148,7 +145,7 @@ bool C005_parse_command(struct EventStruct *event) {
   const int lastindex        = event->String1.lastIndexOf('/');
   const String lastPartTopic = event->String1.substring(lastindex + 1);
 
-  const int cmd_arg_index    = event->String1.lastIndexOf(F("cmd_arg"));
+  const bool has_cmd_arg_index = event->String1.lastIndexOf(F("cmd_arg")) != -1;
 
   if (lastPartTopic.equals(F("cmd"))) {
     // Example:
@@ -160,16 +157,41 @@ bool C005_parse_command(struct EventStruct *event) {
 
     // SP_C005a: string= ;cmd=gpio,12,0 ;taskIndex=12 ;string1=ESPT12/cmd ;string2=gpio,12,0
     validTopic = true;
-  } else if (cmd_arg_index != -1) {
+  } else if (has_cmd_arg_index) {
     // Example:
     // Topic: ESP_Easy/Bathroom_pir_env/cmd_arg1/GPIO/0
     // Message: 14
     // Full command: gpio,14,0
 
-    int cmd_arg_nr = 
+    uint8_t topic_index = 0;
+    String topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
 
-
-
+    while(!topic_folder.startsWith(F("cmd_arg")) && !topic_folder.isEmpty()) {
+      ++topic_index;
+      topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
+    }
+    if (!topic_folder.isEmpty()) {
+      int cmd_arg_nr = -1;
+      if (validIntFromString(event->String1.substring(7), cmd_arg_nr)) {
+        int constructed_cmd_arg_nr = 0;
+        ++topic_index;
+        topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
+        while(!topic_folder.isEmpty()) {
+          if (constructed_cmd_arg_nr != 0) {
+            cmd += ',';
+          }
+          if (constructed_cmd_arg_nr == cmd_arg_nr) {
+            cmd += event->String2;
+          } else {
+            cmd += topic_folder;
+            ++topic_index;
+            topic_folder = parseStringKeepCase(event->String1, topic_index, '/');
+          }
+          ++constructed_cmd_arg_nr;
+        }
+        validTopic = true;
+      }
+    }
   } else {
     // Example:
     // Topic: ESP_Easy/Bathroom_pir_env/GPIO/14
