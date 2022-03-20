@@ -5,6 +5,9 @@
 
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
+# if defined(FEATURE_SD) && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+#  include <SD.h>
+# endif // if defined(FEATURE_SD) && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 
 # if ADAGFX_FONTS_INCLUDED
 #  include "src/Static/Fonts/Seven_Segment24pt7b.h"
@@ -215,9 +218,14 @@ void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
  * Show a numeric input 1..10 for Font scaling setting
  ****************************************************************************************/
 void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
-                           uint8_t                    fontScaling) {
-  addFormNumericBox(F("Font scaling"), fontScalingId, fontScaling, 1, 10);
-  addUnit(F("1x..10x"));
+                           uint8_t                    fontScaling,
+                           uint8_t                    maxScale) {
+  addFormNumericBox(F("Font scaling"), fontScalingId, fontScaling, 1, maxScale);
+  String unit = F("1x..");
+
+  unit += maxScale;
+  unit += 'x';
+  addUnit(unit);
 }
 
 /****************************************************************************
@@ -393,7 +401,7 @@ String AdaGFXparseTemplate(String            & tmpString,
 // AdafruitGFX_helper class methods
 
 /****************************************************************************
- * parameterized constructor
+ * parameterized constructors
  ***************************************************************************/
 AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
                                        const String      & trigger,
@@ -410,6 +418,35 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _useValidation(useValidation), _textBackFill(textBackFill)
 {
+  addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: GFX Init."));
+  initialize();
+}
+
+# ifdef ADAGFX_ENABLE_BMP_DISPLAY
+AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT    *display,
+                                       const String      & trigger,
+                                       uint16_t            res_x,
+                                       uint16_t            res_y,
+                                       AdaGFXColorDepth    colorDepth,
+                                       AdaGFXTextPrintMode textPrintMode,
+                                       uint8_t             fontscaling,
+                                       uint16_t            fgcolor,
+                                       uint16_t            bgcolor,
+                                       bool                useValidation,
+                                       bool                textBackFill)
+  : _tft(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
+  _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
+  _useValidation(useValidation), _textBackFill(textBackFill)
+{
+  _display = _tft;
+  addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
+  initialize();
+}
+
+# endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+
+void AdafruitGFX_helper::initialize()
+{
   _trigger.toLowerCase(); // store trigger in lowercase
   # ifndef BUILD_NO_DEBUG
 
@@ -421,15 +458,15 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
     log += F(", y: ");
     log += _res_y;
     log += F(", colors: ");
-    log += static_cast<uint16_t>(colorDepth);
+    log += static_cast<uint16_t>(_colorDepth);
     log += F(", trigger: ");
     log += _trigger;
     addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  _display_x = res_x; // Store initial resolution
-  _display_y = res_y;
+  _display_x = _res_x; // Store initial resolution
+  _display_y = _res_y;
 
   if (_fontscaling < 1) { _fontscaling = 1; }
 
@@ -1079,10 +1116,11 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->startWrite();
       _display->writePixel(nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
       loop = true;
-      uint8_t h = 0;
-      uint8_t v = 0;
+      uint8_t h     = 0;
+      uint8_t v     = 0;
+      bool    isPxh = subcommand.equals(F("pxh"));
 
-      if (subcommand.equals(F("pxh"))) {
+      if (isPxh) {
         h++;
       } else {
         v++;
@@ -1100,7 +1138,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         } else {
           _display->writePixel(nParams[0] + h, nParams[1] + v, AdaGFXparseColor(color, _colorDepth));
 
-          if (subcommand.equals(F("pxh"))) {
+          if (isPxh) {
             h++;
           } else {
             v++;
@@ -1110,7 +1148,17 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       }
       _display->endWrite();
     }
-  } else {
+  }
+  # if ADAGFX_ENABLE_BMP_DISPLAY
+  else if (subcommand.equals(F("bmp")) && (argCount == 3)) { // bmp,x,y,filename.bmp : show bmp from file
+    if (!sParams[2].isEmpty()) {
+      success = showBmp(sParams[2], nParams[0], nParams[1]);
+    } else {
+      success = false;
+    }
+  }
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  else {
     success = false;
   }
 
@@ -1724,5 +1772,367 @@ void AdafruitGFX_helper::setRotation(uint8_t m) {
   }
   calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
 }
+
+# if ADAGFX_ENABLE_BMP_DISPLAY
+
+/**
+ * CPA (Copy/paste/adapt) from Adafruit_ImageReader::coreBMP()
+ * Changes:
+ * - No 'load to memory' feature
+ * - No special handling of SD Filesystem/FAT, but File only
+ * - Adds support for non-SPI displays (like NeoPixel Matrix, and possibly I2C displays, once supported)
+ */
+bool AdafruitGFX_helper::showBmp(const String& filename,
+                                 int16_t       x,
+                                 int16_t       y) {
+  bool transact = true;           // Enable transaction support to work proper with SD czrd, when enabled
+  bool status   = false;          // IMAGE_SUCCESS on valid file
+  uint16_t  tftbuf[BUFPIXELS];
+  uint16_t *dest = tftbuf;        // TFT working buffer, or NULL if to canvas
+  uint32_t  offset;               // Start of image data in file
+  uint32_t  headerSize;           // Indicates BMP version
+  uint8_t   planes;               // BMP planes
+  uint8_t   depth;                // BMP bit depth
+  uint32_t  compression = 0;      // BMP compression mode
+  uint32_t  colors      = 0;      // Number of colors in palette
+  uint16_t *quantized   = NULL;   // 16-bit 5/6/5 color palette
+  uint32_t  rowSize;              // >bmpWidth if scanline padding
+  uint8_t   sdbuf[3 * BUFPIXELS]; // BMP read buf (R+G+B/pixel)
+  int bmpWidth, bmpHeight;        // BMP width & height in pixels
+
+  #  if ((3 * BUFPIXELS) <= 255)
+  uint8_t srcidx = sizeof sdbuf;  // Current position in sdbuf
+  #  else // if ((3 * BUFPIXELS) <= 255)
+  uint16_t srcidx = sizeof sdbuf;
+  #  endif // if ((3 * BUFPIXELS) <= 255)
+  uint32_t destidx = 0;
+  bool     flip = true;      // BMP is stored bottom-to-top
+  uint32_t bmpPos = 0;       // Next pixel position in file
+  int loadWidth, loadHeight, // Region being loaded (clipped)
+      loadX, loadY;          // "
+  int row, col;              // Current pixel pos.
+  uint8_t r, g, b;           // Current pixel color
+  uint8_t bitIn = 0;         // Bit number for 1-bit data in
+  int16_t drow  = 0;
+  int16_t dcol  = 0;
+
+  bool canTransact = (nullptr != _tft);
+
+  // If BMP is being drawn off the right or bottom edge of the screen,
+  // nothing to do here. NOT an error, just a trivial clip operation.
+  if (_tft && ((x >= _tft->width()) || (y >= _tft->height()))) {
+    addLog(LOG_LEVEL_INFO, F("showBmp: coordinates off display"));
+    return false;
+  }
+
+  // Open requested file on storage
+  // Search flash file system first, then SD if present
+  file = tryOpenFile(filename, "r");
+  #  ifdef FEATURE_SD
+
+  if (!file) {
+    file = SD.open(filename.c_str(), "r");
+  }
+  #  endif // ifdef FEATURE_SD
+
+  if (!file) {
+    addLog(LOG_LEVEL_ERROR, F("showBmp: file not found"));
+    return false;
+  }
+
+  // Parse BMP header. 0x4D42 (ASCII 'BM') is the Windows BMP signature.
+  // There are other values possible in a .BMP file but these are super
+  // esoteric (e.g. OS/2 struct bitmap array) and NOT supported here!
+  if (readLE16() == 0x4D42) { // BMP signature
+    (void)readLE32();         // Read & ignore file size
+    (void)readLE32();         // Read & ignore creator bytes
+    offset = readLE32();      // Start of image data
+    // Read DIB header
+    headerSize = readLE32();
+    bmpWidth   = readLE32();
+    bmpHeight  = readLE32();
+
+    // If bmpHeight is negative, image is in top-down order.
+    // This is not canon but has been observed in the wild.
+    if (bmpHeight < 0) {
+      bmpHeight = -bmpHeight;
+      flip      = false;
+    }
+    planes = readLE16();
+    depth  = readLE16(); // Bits per pixel
+
+    // Compression mode is present in later BMP versions (default = none)
+    if (headerSize > 12) {
+      compression = readLE32();
+      (void)readLE32();    // Raw bitmap data size; ignore
+      (void)readLE32();    // Horizontal resolution, ignore
+      (void)readLE32();    // Vertical resolution, ignore
+      colors = readLE32(); // Number of colors in palette, or 0 for 2^depth
+      (void)readLE32();    // Number of colors used (ignore)
+      // File position should now be at start of palette (if present)
+    }
+
+    if (!colors) {
+      colors = 1 << depth;
+    }
+    #  ifndef BUILD_NO_DEBUG
+    String log;
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log.reserve(80);
+      log += F("showBmp: bitmap w:");
+      log += bmpWidth;
+      log += F(", h:");
+      log += bmpHeight;
+      log += F(", dpt:");
+      log += depth;
+      log += F(", colors:");
+      log += colors;
+      log += F(", cmp:");
+      log += compression;
+      log += F(", pl:");
+      log += planes;
+      log += F(", x:");
+      log += x;
+      log += F(", y:");
+      log += y;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    #  endif // ifndef BUILD_NO_DEBUG
+
+    loadWidth  = bmpWidth;
+    loadHeight = bmpHeight;
+    loadX      = 0;
+    loadY      = 0;
+
+    if (_display) {
+      // Crop area to be loaded (if destination is TFT)
+      if (x < 0) {
+        loadX      = -x;
+        loadWidth += x;
+        x          = 0;
+      }
+
+      if (y < 0) {
+        loadY       = -y;
+        loadHeight += y;
+        y           = 0;
+      }
+
+      if ((x + loadWidth) > _display->width()) {
+        loadWidth = _display->width() - x;
+      }
+
+      if ((y + loadHeight) > _display->height()) {
+        loadHeight = _display->height() - y;
+      }
+    }
+    #  ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      log.clear();
+      log += F("showBmp: x: ");
+      log += x;
+      log += F(", y:");
+      log += y;
+      log += F(", dw:");
+      log += _display->width();
+      log += F(", dh:");
+      log += _display->height();
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+    #  endif // ifndef BUILD_NO_DEBUG
+
+    if ((planes == 1) && (compression == 0)) { // Only uncompressed is handled
+      // BMP rows are padded (if needed) to 4-byte boundary
+      rowSize = ((depth * bmpWidth + 31) / 32) * 4;
+
+      if ((depth == 24) || (depth == 1)) {           // BGR or 1-bit bitmap format
+        if (dest) {                                  // Supported format, alloc OK, etc.
+          status = true;
+
+          if ((loadWidth > 0) && (loadHeight > 0)) { // Clip top/left
+            _display->startWrite();                  // Start SPI (regardless of transact)
+
+            if (canTransact) {
+              _tft->setAddrWindow(x, y, loadWidth, loadHeight);
+            }
+
+            if ((depth >= 16) ||
+                (quantized = (uint16_t *)malloc(colors * sizeof(uint16_t)))) {
+              if (depth < 16) {
+                // Load and quantize color table
+                for (uint16_t c = 0; c < colors; c++) {
+                  b = file.read();
+                  g = file.read();
+                  r = file.read();
+                  (void)file.read(); // Ignore 4th byte
+                  quantized[c] =
+                    ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                }
+              }
+
+              for (row = 0; row < loadHeight; row++) { // For each scanline...
+                delay(0);                              // Keep ESP8266 happy
+
+                // Seek to start of scan line.  It might seem labor-intensive
+                // to be doing this on every line, but this method covers a
+                // lot of gritty details like cropping, flip and scanline
+                // padding. Also, the seek only takes place if the file
+                // position actually needs to change (avoids a lot of cluster
+                // math in SD library).
+                if (flip) { // Bitmap is stored bottom-to-top order (normal BMP)
+                  bmpPos = offset + (bmpHeight - 1 - (row + loadY)) * rowSize;
+                } else {    // Bitmap is stored top-to-bottom
+                  bmpPos = offset + (row + loadY) * rowSize;
+                }
+
+                if (depth == 24) {
+                  bmpPos += loadX * 3;
+                } else {
+                  bmpPos += loadX / 8;
+                  bitIn   = 7 - (loadX & 7);
+                }
+
+                if (file.position() != bmpPos) {        // Need seek?
+                  if (transact && canTransact) {
+                    _tft->dmaWait();
+                    _tft->endWrite();                   // End TFT SPI transaction
+                  }
+                  file.seek(bmpPos);                    // Seek = SD transaction
+                  srcidx = sizeof sdbuf;                // Force buffer reload
+                }
+
+                for (col = 0; col < loadWidth; col++) { // For each pixel...
+                  if (srcidx >= sizeof sdbuf) {         // Time to load more?
+                    if (transact && canTransact) {
+                      _tft->dmaWait();
+                      _tft->endWrite();                 // End TFT SPI transact
+                    }
+                    file.read(sdbuf, sizeof sdbuf);     // Load from SD
+
+                    if (transact && canTransact) {
+                      _display->startWrite();           // Start TFT SPI transact
+                    }
+
+                    if (destidx) {                      // If buffered TFT data
+                      // Non-blocking writes (DMA) have been temporarily
+                      // disabled until this can be rewritten with two
+                      // alternating 'dest' buffers (else the nonblocking
+                      // data out is overwritten in the dest[] write below).
+                      // tft->writePixels(dest, destidx, false); // Write it
+                      delay(0);
+
+                      if (canTransact) {
+                        _tft->writePixels(dest, destidx, true); // Write it
+                      } else {
+                        // loop over buffer
+
+                        for (uint16_t p = 0; p < destidx; p++) {
+                          _display->drawPixel(x + p, y + drow, dest[p]);
+                        }
+                      }
+
+                      if (col % 33 == 0) { delay(0); }
+                      destidx = 0; // and reset dest index
+                    }
+
+                    srcidx = 0;    // Reset bmp buf index
+                  }
+
+                  if (depth == 24) {
+                    // Convert each pixel from BMP to 565 format, save in dest
+                    b               = sdbuf[srcidx++];
+                    g               = sdbuf[srcidx++];
+                    r               = sdbuf[srcidx++];
+                    dest[destidx++] =
+                      ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                  } else {
+                    // Extract 1-bit color index
+                    uint8_t n = (sdbuf[srcidx] >> bitIn) & 1;
+
+                    if (!bitIn) {
+                      srcidx++;
+                      bitIn = 7;
+                    } else {
+                      bitIn--;
+                    }
+
+                    // Look up in palette, store in tft dest buf
+                    dest[destidx++] = quantized[n];
+                  }
+                  dcol++;
+                }                                           // end pixel loop
+
+                if (_tft) {                                 // Drawing to TFT?
+                  delay(0);
+
+                  if (destidx) {                            // Any remainders?
+                    // See notes above re: DMA
+                    _tft->writePixels(dest, destidx, true); // Write it
+                    destidx = 0;                            // and reset dest index
+                  }
+                  _tft->dmaWait();
+                  _tft->endWrite();                         // update display
+                } else {
+                  // loop over buffer
+                  if (destidx) {
+                    for (uint16_t p = 0; p < destidx; p++) {
+                      _display->drawPixel(x + p, y + drow, dest[p]);
+
+                      if (p % 100 == 0) { delay(0); }
+                    }
+                    destidx = 0; // and reset dest index
+                  }
+                }
+
+                drow++;
+                dcol = 0;
+              } // end scanline loop
+
+              if (quantized) {
+                free(quantized);  // Palette no longer needed
+              }
+              delay(0);
+            } // end depth>24 or quantized malloc OK
+          }                       // end top/left clip
+        }                         // end malloc check
+      }       // end depth check
+    } // end planes/compression check
+  }   // end signature
+
+  file.close();
+  #  ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
+  #  endif // ifndef BUILD_NO_DEBUG
+  return status;
+
+  // }
+}
+
+/*!
+    @brief   Reads a little-endian 16-bit unsigned value from currently-
+             open File, converting if necessary to the microcontroller's
+             native endianism. (BMP files use little-endian values.)
+    @return  Unsigned 16-bit value, native endianism.
+ */
+uint16_t AdafruitGFX_helper::readLE16(void) {
+  // Big-endian or unknown. Byte-by-byte read will perform reversal if needed.
+  return file.read() | ((uint16_t)file.read() << 8);
+}
+
+/*!
+    @brief   Reads a little-endian 32-bit unsigned value from currently-
+             open File, converting if necessary to the microcontroller's
+             native endianism. (BMP files use little-endian values.)
+    @return  Unsigned 32-bit value, native endianism.
+ */
+uint32_t AdafruitGFX_helper::readLE32(void) {
+  // Big-endian or unknown. Byte-by-byte read will perform reversal if needed.
+  return file.read() | ((uint32_t)file.read() << 8) |
+         ((uint32_t)file.read() << 16) | ((uint32_t)file.read() << 24);
+}
+
+# endif // if ADAGFX_ENABLE_BMP_DISPLAY
 
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX

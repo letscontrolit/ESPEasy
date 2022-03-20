@@ -210,3 +210,14 @@
     ","
     Print a vertical chain of colored pixels (top to bottom, starting at position x,y). Just supply as many colors as pixels that need to be painted.
     "
+    "
+    ``<trigger>,bmp,<x>,<y>,<filename.bmp>``
+    ","
+    Display a bmp file (24 bit colors) with left/top at position x,y, with the current Rotation setting accounted for.
+
+    x and/or y can be negative to apply an offset for display. Width or height can **not** be adjusted, the full width & height of the bitmap are used.
+
+    The bitmap overwrites anything that was already displayed in the now overwritten area. After a bitmap is displayed, text/graphics can be placed on top of it using the available text and drawing commands, as listed above. By using the same background color as the foreground color (transparent), the image 'behind' the added text/graphics will stay intact.
+
+    The file can be read from SD-card, when available, and the bmp file is not found on the internal file storage.
+    "

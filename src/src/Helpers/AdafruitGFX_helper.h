@@ -12,8 +12,14 @@
  ***************************************************************************/
 # include <Arduino.h>
 # include <Adafruit_GFX.h>
+# include <Adafruit_SPITFT.h>
+# include <FS.h>
+
+// Used for bmp support
+# define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
 
 # include "../Helpers/Numerical.h"
+# include "../Helpers/ESPEasy_Storage.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
 # define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
@@ -35,6 +41,9 @@
 # ifndef ADAGFX_ENABLE_EXTRA_CMDS
 #  define ADAGFX_ENABLE_EXTRA_CMDS    1 // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
 # endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
+# ifndef ADAGFX_ENABLE_BMP_DISPLAY
+#  define ADAGFX_ENABLE_BMP_DISPLAY   1 // Enable subcommands for displaying .bmp files on supported displays (color)
+# endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 5 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~10,4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
@@ -77,6 +86,9 @@
 #  ifdef ADAGFX_USE_ASCIITABLE
 #   undef ADAGFX_USE_ASCIITABLE
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
+// #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
+// #   undef ADAGFX_ENABLE_BMP_DISPLAY
+// #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
@@ -208,7 +220,8 @@ void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
                              const __FlashStringHelper *displayTimeoutId,
                              int                        displayTimeout);
 void     AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
-                               uint8_t                    fontScaling);
+                               uint8_t                    fontScaling,
+                               uint8_t                    maxScale = 10);
 String   AdaGFXparseTemplate(String            & tmpString,
                              uint8_t             lineSize,
                              AdafruitGFX_helper *gfxHelper = nullptr);
@@ -239,6 +252,19 @@ public:
                      uint16_t            bgcolor       = ADAGFX_BLACK,
                      bool                useValidation = true,
                      bool                textBackFill  = false);
+  # ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  AdafruitGFX_helper(Adafruit_SPITFT    *display,
+                     const String      & trigger,
+                     uint16_t            res_x,
+                     uint16_t            res_y,
+                     AdaGFXColorDepth    colorDepth    = AdaGFXColorDepth::FullColor,
+                     AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
+                     uint8_t             fontscaling   = 1,
+                     uint16_t            fgcolor       = ADAGFX_WHITE,
+                     uint16_t            bgcolor       = ADAGFX_BLACK,
+                     bool                useValidation = true,
+                     bool                textBackFill  = false);
+  # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
   bool processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
@@ -284,7 +310,15 @@ public:
     return trigger.equalsIgnoreCase(ADAGFX_UNIVERSAL_TRIGGER);
   }
 
+  # ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  bool showBmp(const String& filename,
+               int16_t       x,
+               int16_t       y);
+  # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+
 private:
+
+  void initialize();
 
   # if ADAGFX_ARGUMENT_VALIDATION
   bool invalidCoordinates(int  X,
@@ -292,7 +326,8 @@ private:
                           bool colRowMode = false);
   # endif // if ADAGFX_ARGUMENT_VALIDATION
 
-  Adafruit_GFX *_display;
+  Adafruit_GFX *_display = nullptr;
+  Adafruit_SPITFT *_tft  = nullptr;
   String _trigger;
   uint16_t _res_x;
   uint16_t _res_y;
@@ -316,6 +351,11 @@ private:
 
   uint16_t _display_x;
   uint16_t _display_y;
+  # ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  uint16_t readLE16(void);
+  uint32_t readLE32(void);
+  fs::File file;
+  # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
 };
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX
 
