@@ -506,6 +506,7 @@ int SparkFun_APDS9960::readGesture()
     uint8_t fifo_level = 0;
     uint8_t fifo_data[128];
     uint8_t gstatus;
+    uint8_t loop_count = 0;
     int bytes_read = 0;  // Fixed Issue #23 reported in original library source
     int motion;
     int i;
@@ -534,6 +535,10 @@ int SparkFun_APDS9960::readGesture()
                 return ERROR;
             }
 
+            loop_count++;
+            if (loop_count > 32) {
+                return -1;
+            }
 #if DEBUG
             Serial.print("FIFO Level: ");
             Serial.println(fifo_level);

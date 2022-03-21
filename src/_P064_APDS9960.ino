@@ -13,9 +13,14 @@
 // RGB is not scanned because there are only 4 vars per task.
 
 // Known BUG: While performing a gesture the reader function blocks rest of ESPEasy processing!!! (Feel free to fix...)
+// See below, fixed by dropping out after 32 consecutive loops in reading gesture data. 
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
+// 2022-03-21 tonhuisman: Attempt to stop the sensor from blocking ESPEasy, by dropping out after 32 loops in reading gesture data
+//   This should fix the Known BUG above.
+//   Lowered reading gesture data from 50/sec to 10/sec, as it still won't be processed quick enough
+//   Change sensor to TESTING from DEVELOPMENT
 // 2020-04-25 tonhuisman: Added Plugin Mode setting to switch between Proximity/Ambient Light Sensor or R/G/B Colors.
 //   Added settings for Gain (Gesture, Proximity, Ambient Light Sensor), Led Power (Gesture and Proximity/ALS) and Led Boost (Gesture)
 //   to allow better tuning for use of the sensor. Also adapted the SparkFun_APDS9960 driver for enabling this.
@@ -25,7 +30,7 @@
 
 #define PLUGIN_064
 #define PLUGIN_ID_064             64
-#define PLUGIN_NAME_064           "Gesture - APDS9960 [DEVELOPMENT]"
+#define PLUGIN_NAME_064           "Gesture - APDS9960 [TESTING]"
 #define PLUGIN_GPL_VALUENAME1_064 "Gesture"
 #define PLUGIN_GPL_VALUENAME2_064 "Proximity"
 #define PLUGIN_GPL_VALUENAME3_064 "Light"
@@ -272,7 +277,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_FIFTY_PER_SECOND:
+    case PLUGIN_TEN_PER_SECOND:
     {
       P064_data_struct *P064_data =
         static_cast<P064_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -296,7 +301,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       // if ( 0 && P064_data->sensor.isGestureAvailable() )
       if (gesture >= 0)
       {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("APDS : Gesture=");
 
           switch (gesture)
@@ -312,7 +317,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           log += F(" (");
           log += gesture;
           log += ')';
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
 
         UserVar[event->BaseVarIndex] = static_cast<float>(gesture);
