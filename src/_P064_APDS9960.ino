@@ -13,7 +13,7 @@
 // RGB is not scanned because there are only 4 vars per task.
 
 // Known BUG: While performing a gesture the reader function blocks rest of ESPEasy processing!!! (Feel free to fix...)
-// See below, fixed by dropping out after 32 consecutive loops in reading gesture data. 
+// See below, fixed by dropping out after 32 consecutive loops in reading gesture data.
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
@@ -28,35 +28,34 @@
 // labels only.
 
 
-#define PLUGIN_064
-#define PLUGIN_ID_064             64
-#define PLUGIN_NAME_064           "Gesture - APDS9960 [TESTING]"
-#define PLUGIN_GPL_VALUENAME1_064 "Gesture"
-#define PLUGIN_GPL_VALUENAME2_064 "Proximity"
-#define PLUGIN_GPL_VALUENAME3_064 "Light"
+# define PLUGIN_064
+# define PLUGIN_ID_064             64
+# define PLUGIN_NAME_064           "Gesture - APDS9960 [TESTING]"
+# define PLUGIN_GPL_VALUENAME1_064 "Gesture"
+# define PLUGIN_GPL_VALUENAME2_064 "Proximity"
+# define PLUGIN_GPL_VALUENAME3_064 "Light"
 
-#define PLUGIN_RGB_VALUENAME1_064 "R"
-#define PLUGIN_RGB_VALUENAME2_064 "G"
-#define PLUGIN_RGB_VALUENAME3_064 "B"
+# define PLUGIN_RGB_VALUENAME1_064 "R"
+# define PLUGIN_RGB_VALUENAME2_064 "G"
+# define PLUGIN_RGB_VALUENAME3_064 "B"
 
-#define PLUGIN_MODE_GPL_064       0 // GPL = Gesture/Proximity/(Ambient) Light Sensor mode
-#define PLUGIN_MODE_RGB_064       1 // RGB = R/G/B Colors mode
+# define PLUGIN_MODE_GPL_064       0 // GPL = Gesture/Proximity/(Ambient) Light Sensor mode
+# define PLUGIN_MODE_RGB_064       1 // RGB = R/G/B Colors mode
 
-#define P064_ADDR                 PCONFIG(0)
-#define P064_MODE                 PCONFIG(1)
-#define P064_GGAIN                PCONFIG(2)
-#define P064_GLDRIVE              PCONFIG(3)
-#define P064_LED_BOOST            PCONFIG(4)
-#define P064_PGAIN                PCONFIG(5)
-#define P064_AGAIN                PCONFIG(6)
-#define P064_LDRIVE               PCONFIG(7)
+# define P064_ADDR                 PCONFIG(0)
+# define P064_MODE                 PCONFIG(1)
+# define P064_GGAIN                PCONFIG(2)
+# define P064_GLDRIVE              PCONFIG(3)
+# define P064_LED_BOOST            PCONFIG(4)
+# define P064_PGAIN                PCONFIG(5)
+# define P064_AGAIN                PCONFIG(6)
+# define P064_LDRIVE               PCONFIG(7)
 
-#define P064_IS_GPL_SENSOR        (P064_MODE == PLUGIN_MODE_GPL_064)
-#define P064_IS_RGB_SENSOR        (P064_MODE == PLUGIN_MODE_RGB_064)
+# define P064_IS_GPL_SENSOR        (P064_MODE == PLUGIN_MODE_GPL_064)
+# define P064_IS_RGB_SENSOR        (P064_MODE == PLUGIN_MODE_RGB_064)
 
 
-
-#include "src/PluginStructs/P064_data_struct.h"
+# include "src/PluginStructs/P064_data_struct.h"
 
 
 boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
@@ -106,6 +105,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x39 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, 0x39); // Only for display I2C address
       } else {
@@ -117,7 +117,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper * optionsPluginMode[2];
+        const __FlashStringHelper *optionsPluginMode[2];
         optionsPluginMode[0]           = F("Gesture/Proximity/Ambient Light Sensor");
         optionsPluginMode[1]           = F("R/G/B Colors");
         int optionsPluginModeValues[2] = { PLUGIN_MODE_GPL_064, PLUGIN_MODE_RGB_064 };
@@ -155,7 +155,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
       {
         // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        const __FlashStringHelper * optionsGain[4];
+        const __FlashStringHelper *optionsGain[4];
         optionsGain[0] = F("1x");
         optionsGain[1] = F("2x");
         optionsGain[2] = F("4x (default)");
@@ -163,7 +163,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         int optionsGainValues[4] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
 
         // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        const __FlashStringHelper * optionsLedDrive[4];
+        const __FlashStringHelper *optionsLedDrive[4];
         optionsLedDrive[0] = F("100 mA (default)");
         optionsLedDrive[1] = F("50 mA");
         optionsLedDrive[2] = F("25 mA");
@@ -182,7 +182,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           addFormSelector(F("Gesture LED Drive"), F("p064_gldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_GLDRIVE);
           {
             // Gesture Led-boost values
-            const __FlashStringHelper * optionsLedBoost[4];
+            const __FlashStringHelper *optionsLedBoost[4];
             optionsLedBoost[0] = F("100 %");
             optionsLedBoost[1] = F("150 %");
             optionsLedBoost[2] = F("200 %");
@@ -205,7 +205,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         }
         {
           // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
-          const __FlashStringHelper * optionsALSGain[4];
+          const __FlashStringHelper *optionsALSGain[4];
           optionsALSGain[0] = F("1x");
           optionsALSGain[1] = F("4x (default)");
           optionsALSGain[2] = F("16x");
