@@ -12,6 +12,9 @@ const __FlashStringHelper* EPD_type_toString(EPD_type_e device) {
     case EPD_type_e::EPD_IL3897: return F("IL3897 (Lolin 250 x 122px)");
     case EPD_type_e::EPD_UC8151D: return F("UC8151D (212 x 104px)");
     case EPD_type_e::EPD_SSD1680: return F("SSD1680 (250 x 212px)");
+    # if P096_USE_WAVESHARE_2IN7
+    case EPD_type_e::EPD_WS2IN7: return F("Waveshare 2.7\" (264 x 176px)");
+    # endif // if P096_USE_WAVESHARE_2IN7
     case EPD_type_e::EPD_MAX: break;
   }
   return F("Unsupported type!");
@@ -27,6 +30,9 @@ const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd)
     case P096_CommandTrigger::il3897: return F("il3897");
     case P096_CommandTrigger::uc8151d: return F("uc8151d");
     case P096_CommandTrigger::ssd1680: return F("ssd1680");
+    # if P096_USE_WAVESHARE_2IN7
+    case P096_CommandTrigger::ws2in7: return F("ws2in7");
+    # endif // if P096_USE_WAVESHARE_2IN7
     case P096_CommandTrigger::MAX: return F("None");
     case P096_CommandTrigger::epd: break;
   }
@@ -47,6 +53,12 @@ void EPD_type_toResolution(EPD_type_e device, uint16_t& x, uint16_t& y) {
       x = 212;
       y = 104;
       break;
+    # if P096_USE_WAVESHARE_2IN7
+    case EPD_type_e::EPD_WS2IN7:
+      x = 264;
+      y = 176;
+      break;
+    # endif // if P096_USE_WAVESHARE_2IN7
     case EPD_type_e::EPD_MAX:
       break;
   }
@@ -120,6 +132,11 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       case EPD_type_e::EPD_SSD1680:
         eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
         break;
+      # if P096_USE_WAVESHARE_2IN7
+      case EPD_type_e::EPD_WS2IN7:
+        eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        break;
+      # endif // if P096_USE_WAVESHARE_2IN7
       case EPD_type_e::EPD_MAX:
         break;
     }
@@ -202,6 +219,7 @@ void P096_data_struct::updateFontMetrics() {
     gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling, _heightOffset, _xpix, _ypix);
     gfxHelper->getColors(_fgcolor, _bgcolor);
   } else {
+    if (_fontscaling == 0) { _fontscaling = 1; }
     _textcols = _xpix / (_fontwidth * _fontscaling);
     _textrows = _ypix / (_fontheight * _fontscaling);
   }

@@ -48,7 +48,9 @@ LOLIN_EPD::~LOLIN_EPD()
 {
 
   free(bw_buf);
-  free(red_buf);
+  if (red_buf) {
+    free(red_buf);
+  }
 }
 
 /**************************************************************************/

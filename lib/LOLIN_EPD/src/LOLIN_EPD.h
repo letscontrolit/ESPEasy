@@ -87,8 +87,8 @@ protected:
       red_bufsize;     ///< size of the red buffer
   bool singleByteTxns; ///< if true CS will go high after every data byte transferred
 
-  uint8_t *bw_buf;  ///< the pointer to the black and white buffer if using on-chip ram
-  uint8_t *red_buf; ///< the pointer to the red buffer if using on-chip ram
+  uint8_t *bw_buf  = nullptr;  ///< the pointer to the black and white buffer if using on-chip ram
+  uint8_t *red_buf = nullptr; ///< the pointer to the red buffer if using on-chip ram
 
   void sendCmd(uint8_t c);
   void sendData(uint8_t data);
@@ -116,5 +116,6 @@ private:
 #include "LOLIN_IL3897.h"
 #include "LOLIN_UC8151D.h"
 #include "LOLIN_SSD1680.h"
+#include "Waveshare_2in7.h"
 
 #endif

@@ -4,14 +4,18 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P096
 
-# include <Adafruit_GFX.h>                              // include Adafruit graphics library
-# include <LOLIN_EPD.h>                                 // include Adafruit Lolin eInk/ePaper library
+# include <Adafruit_GFX.h>             // include Adafruit graphics library
+# include <LOLIN_EPD.h>                // include Adafruit Lolin eInk/ePaper library
 
-# define P096_USE_ADA_GRAPHICS                          // Use AdafruitGFX_helper
+# define P096_USE_ADA_GRAPHICS         // Use AdafruitGFX_helper
 
 # ifndef P096_USE_EXTENDED_SETTINGS
-#  define P096_USE_EXTENDED_SETTINGS 1                  // Allow more settings/options, made available by the AdaGFX helper
+#  define P096_USE_EXTENDED_SETTINGS 1 // Allow more settings/options, made available by the AdaGFX helper
 # endif // ifndef P096_USE_EXTENDED_SETTINGS
+
+# if !P096_USE_WAVESHARE_2IN7
+#  define P096_USE_WAVESHARE_2IN7 1                     // Include the Waveshare 2.7 inch ePaper display
+# endif // if !P096_USE_WAVESHARE_2IN7
 
 # include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
 # include "../CustomBuild/StorageLayout.h"
@@ -64,19 +68,25 @@
 # endif // ifdef ESP32
 
 enum class EPD_type_e : uint8_t {
-  EPD_IL3897 = 0,
-  EPD_UC8151D,
-  EPD_SSD1680,
+  EPD_IL3897  = 0u,
+  EPD_UC8151D = 1u,
+  EPD_SSD1680 = 2u,
+  # if P096_USE_WAVESHARE_2IN7
+  EPD_WS2IN7 = 3u,
+  # endif // if P096_USE_WAVESHARE_2IN7
   EPD_MAX // must be last value in enum
 };
 
 enum class P096_CommandTrigger : uint8_t {
-  epd = 0u,
-  eInk,
-  ePaper,
-  il3897,
-  uc8151d,
-  ssd1680,
+  epd     = 0u,
+  eInk    = 1u,
+  ePaper  = 2u,
+  il3897  = 3u,
+  uc8151d = 4u,
+  ssd1680 = 5u,
+  # if P096_USE_WAVESHARE_2IN7
+  ws2in7 = 6u,
+  # endif // if P096_USE_WAVESHARE_2IN7
 
   MAX // Keep as last item!
 };
