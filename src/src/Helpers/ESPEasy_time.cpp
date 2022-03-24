@@ -1,4 +1,4 @@
-#include "ESPEasy_time.h"
+#include "../Helpers/ESPEasy_time.h"
 
 #include "../DataTypes/TimeSource.h"
 
@@ -11,12 +11,13 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <time.h>
 
@@ -146,7 +147,7 @@ unsigned long ESPEasy_time::now() {
       if (getNtpTime(unixTime_d)) {
         updatedTime = true;
       } else {
-        uint32_t tmp_unixtime;
+        uint32_t tmp_unixtime = 0;;
         if (ExtRTC_get(tmp_unixtime)) {
           unixTime_d = tmp_unixtime;
           timeSource = timeSource_t::External_RTC_time_source;
@@ -195,19 +196,19 @@ unsigned long ESPEasy_time::now() {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log         = F("Time set to ");
-        log += String(unixTime_d, 3);
+        log += doubleToString(unixTime_d, 3);
 
         if ((-86400 < time_offset) && (time_offset < 86400)) {
           // Only useful to show adjustment if it is less than a day.
           log += F(" Time adjusted by ");
-          log += String(time_offset * 1000.0);
+          log += doubleToString(time_offset * 1000.0);
           log += F(" msec. Wander: ");
-          log += String(timeWander, 3);
+          log += doubleToString(timeWander, 3);
           log += F(" msec/second");
           log += F(" Source: ");
           log += toString(timeSource);
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       time_zone.applyTimeZone(unixTime_d);
@@ -228,7 +229,7 @@ unsigned long ESPEasy_time::now() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Local time: ");
       log += getDateTimeString('-', ':', ' ');
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     {
       // Notify plugins the time has been set.
@@ -316,13 +317,13 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     useNTPpool = true;
   }
 
-  log += " (";
+  log += F(" (");
   log += timeServerIP.toString();
   log += ')';
 
   if (!hostReachable(timeServerIP)) {
     log += F(" unreachable");
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return false;
   }
 
@@ -378,7 +379,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           String log = F("NTP  : NTP host (");
           log += timeServerIP.toString();
           log += F(") unsynchronized");
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
         if (!useNTPpool) {
           // Does not make sense to try it very often if a single host is used which is not synchronized.
@@ -444,9 +445,9 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           // We gained more than 1 second in accuracy
           fractpart += 1.0;
         }
-        log += String(fractpart, 3);
+        log += doubleToString(fractpart, 3);
         log += F(" seconds");
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       udp.stop();
       timeSource = timeSource_t::NTP_time_source;
@@ -717,7 +718,7 @@ struct tm ESPEasy_time::getSunSet(int secOffset) const {
 
 bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
 {
-  bool timeRead = false;
+  unixtime = 0;
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
@@ -735,7 +736,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -752,7 +752,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -770,7 +769,6 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
@@ -787,16 +785,15 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        timeRead = true;
         #endif
         break;
       }
 
   }
-  if (timeRead) {
+  if (unixtime != 0) {
     String log = F("ExtRTC: Read external time source: ");
     log += unixtime;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot get time from external time source"));
@@ -810,7 +807,9 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     // Do not adjust the external RTC time if we already used it as a time source.
     return true;
   }
+  #ifdef USE_EXT_RTC
   bool timeAdjusted = false;
+  #endif
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
@@ -863,12 +862,14 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
         break;
       }
   }
+  #ifdef USE_EXT_RTC
   if (timeAdjusted) {
     String log = F("ExtRTC: External time source set to: ");
     log += unixtime;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return true;
   }
+  #endif
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
   return false;
 }

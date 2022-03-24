@@ -203,23 +203,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         }
         log += F(" nr_tasks: ");
         log += P_013_sensordefs.size();
-        addLog(LOG_LEVEL_INFO, log);
-      }
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        // FIXME TD-er: What kind of nonsense code is this?
-        unsigned long tmpmillis = millis();
-        unsigned long tmpmicros = micros();
-        delay(100);
-        long millispassed = timePassedSince(tmpmillis);
-        long microspassed = usecPassedSince(tmpmicros);
-
-        String log = F("ULTRASONIC : micros() test: ");
-        log += millispassed;
-        log += F(" msec, ");
-        log += microspassed;
-        log += F(" usec, ");
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       success = true;
@@ -249,13 +233,13 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           log += (measuringUnit == UNIT_CM) ? F(" cm ") : F(" inch ");
 
-          if (value == NO_ECHO)
+          if (essentiallyEqual(value, NO_ECHO))
           {
             log += F(" Error: ");
             log += Plugin_013_getErrorStatusString(event->TaskIndex);
           }
 
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       success = true;
@@ -271,7 +255,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
         uint8_t state = 0;
         float   value = Plugin_013_read(event->TaskIndex);
 
-        if ((value != NO_ECHO) && (value < threshold)) {
+        if (!essentiallyEqual(value, NO_ECHO) && definitelyLessThan(value, threshold)) {
           state = 1;
         }
 
@@ -287,7 +271,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
               log += F(" Error: ");
               log += Plugin_013_getErrorStatusString(event->TaskIndex);
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           switchstate[event->TaskIndex] = state;
           UserVar[event->BaseVarIndex]  = state;

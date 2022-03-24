@@ -1,4 +1,4 @@
-#include "WebServer_commandHelper.h"
+#include "../Helpers/WebServer_commandHelper.h"
 
 #include "../../ESPEasy-Globals.h"
 #include "../Commands/InternalCommands.h"
@@ -22,7 +22,7 @@ HandledWebCommand_result handle_command_from_web(EventValueSource::Enum source, 
 
   bool handledCmd = false;
   bool sendOK     = false;
-  printWebString = "";
+  printWebString = String();
   printToWeb     = false;
   printToWebJSON = false;
 

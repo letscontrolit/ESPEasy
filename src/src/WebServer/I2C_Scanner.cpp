@@ -176,6 +176,24 @@ String getKnownI2Cdevice(uint8_t address) {
 
   switch (address)
   {
+    case 0x10:
+      result += F("VEML6075");
+      break;
+    case 0x11:
+      result += F("VEML6075,I2C_MultiRelay");
+      break;
+    case 0x12:
+    case 0x13:
+    case 0x14:
+    case 0x15:
+    case 0x16:
+    case 0x17:
+    case 0x18:
+      result += F("I2C_MultiRelay");
+      break;
+    case 0x1D:
+      result +=  F("ADXL345");
+      break;
     case 0x20:
     case 0x21:
     case 0x22:
@@ -246,6 +264,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x51:
       result +=  F("PCF8563");
       break;
+    case 0x53:
+      result +=  F("ADXL345");
+      break;
     case 0x58:
       result +=  F("SGP30");
       break;
@@ -264,6 +285,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x60:
       result +=  F("Adafruit Motorshield v2,SI1145");
       break;
+    case 0x61:
+      result += F("Atlas EZO DO,SCD30");
+      break;
     case 0x62:
       result += F("Atlas EZO ORP");
       break;
@@ -274,7 +298,10 @@ String getKnownI2Cdevice(uint8_t address) {
       result += F("Atlas EZO EC");
       break;
     case 0x68:
-      result +=  F("DS1307,DS3231,PCF8523");
+      result +=  F("DS1307,DS3231,PCF8523,ITG3205");
+      break;
+    case 0x69:
+      result +=  F("ITG3205");
       break;
     case 0x70:
       result +=  F("Adafruit Motorshield v2 (Catchall),HT16K33,TCA9543a/6a/8a I2C multiplexer,PCA9540 I2C multiplexer");
@@ -335,9 +362,8 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
             addHtml(F("Standard I2C bus"));
             excludeDevices[address] = true;
           } else {
-            String i2cChannel = F("Multiplexer channel ");
-            i2cChannel += String(channel);
-            addHtml(i2cChannel);
+            addHtml(F("Multiplexer channel "));
+            addHtmlInt(channel);
           }
           html_TD();
         }

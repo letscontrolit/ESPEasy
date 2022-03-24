@@ -1,4 +1,4 @@
-#include "_CPlugin_DomoticzHelper.h"
+#include "../Helpers/_CPlugin_DomoticzHelper.h"
 
 #ifdef USES_DOMOTICZ
 
@@ -146,12 +146,12 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       // http://www.domoticz.com/wiki/Domoticz_API/JSON_URL%27s#Wind
       values  = formatUserVarDomoticz(event, 0);          // WB = Wind bearing (0-359)
       values += getBearing(UserVar[event->BaseVarIndex]); // WD = Wind direction (S, SW, NNW, etc.)
-      values += ";";                                      // Needed after getBearing
+      values += ';';                                      // Needed after getBearing
       // Domoticz expects the wind speed in (m/s * 10)
       values += toString((UserVar[event->BaseVarIndex + 1] * 10), ExtraTaskSettings.TaskDeviceValueDecimals[1]);
-      values += ";";                                      // WS = 10 * Wind speed [m/s]
+      values += ';';                                      // WS = 10 * Wind speed [m/s]
       values += toString((UserVar[event->BaseVarIndex + 2] * 10), ExtraTaskSettings.TaskDeviceValueDecimals[2]);
-      values += ";";                                      // WG = 10 * Gust [m/s]
+      values += ';';                                      // WG = 10 * Gust [m/s]
       values += formatUserVarDomoticz(0);                 // Temperature
       values += formatUserVarDomoticz(0);                 // Temperature Windchill
       break;
@@ -172,7 +172,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
         log += static_cast<uint8_t>(event->sensorType);
         log += F(" idx: ");
         log += event->idx;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       # endif // ifndef BUILD_NO_DEBUG
       break;
@@ -196,7 +196,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       log += event->idx;
       log += F(" values: ");
       log += values;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
   }
@@ -237,7 +237,7 @@ bool deserializeDomoticzJson(const String& json,
   }
 
   if (switchtype_c == nullptr) {
-    switchtype = F("?");
+    switchtype = '?';
   } else {
     switchtype = switchtype_c;
   }
@@ -265,7 +265,7 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("command"), F("switchlight"));
 
-        if (UserVar[event->BaseVarIndex] == 0) {
+        if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
           json += ',';
           json += to_json_object_value(F("switchcmd"), F("Off"));
         }
@@ -278,13 +278,13 @@ String serializeDomoticzJson(struct EventStruct *event)
         json += ',';
         json += to_json_object_value(F("command"), F("switchlight"));
 
-        if (UserVar[event->BaseVarIndex] == 0) {
+        if (essentiallyEqual(UserVar[event->BaseVarIndex], 0.0f)) {
           json += ',';
           json += to_json_object_value(F("switchcmd"), F("Off"));
         }
         else {
           json += ',';
-          json += to_json_object_value(F("Set%20Level"), String(UserVar[event->BaseVarIndex], 2));
+          json += to_json_object_value(F("Set%20Level"), toString(UserVar[event->BaseVarIndex], 2));
         }
         break;
 

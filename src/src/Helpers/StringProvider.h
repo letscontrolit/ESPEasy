@@ -28,11 +28,13 @@ struct LabelType {
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
     WIFI_NR_EXTRA_SCANS,
-    WIFI_PERIODICAL_SCAN,
     WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
     FREE_STACK,          // 3456
+#ifdef USE_SECOND_HEAP
+    FREE_HEAP_IRAM,
+#endif
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
   #ifndef LIMIT_BUILD_SIZE
     HEAP_MAX_FREE_BLOCK, // 7654
@@ -59,6 +61,9 @@ struct LabelType {
     ENABLE_TIMING_STATISTICS,
     TASKVALUESET_ALL_PLUGINS,
     ENABLE_CLEAR_HUNG_I2C_BUS,
+#ifndef BUILD_NO_RAM_TRACKER
+    ENABLE_RAM_TRACKING,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -200,7 +205,7 @@ struct FileType {
 };
 
 
-String getFileName(FileType::Enum filetype);
+const __FlashStringHelper * getFileName(FileType::Enum filetype);
 String getFileName(FileType::Enum filetype,
                    unsigned int   filenr);
 

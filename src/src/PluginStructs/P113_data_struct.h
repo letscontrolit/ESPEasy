@@ -41,7 +41,7 @@ private:
   bool     range;
   bool     success    = false;
   bool     readActive = false;
-  uint16_t distance;
+  uint16_t distance = 0u;
 };
 #endif // ifdef USES_P113
 #endif // ifndef PLUGINSTRUCTS_P113_DATA_STRUCT_H

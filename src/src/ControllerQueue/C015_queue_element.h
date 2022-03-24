@@ -21,11 +21,17 @@ public:
 
   C015_queue_element() = default;
 
+#ifdef USE_SECOND_HEAP
+  C015_queue_element(const C015_queue_element& other) = default;
+#else
   C015_queue_element(const C015_queue_element& other) = delete;
+#endif
 
   C015_queue_element(C015_queue_element&& other);
 
   C015_queue_element(const struct EventStruct *event, uint8_t value_count);
+
+  C015_queue_element& operator=(C015_queue_element&& other);
 
   bool   checkDone(bool succesfull) const;
 

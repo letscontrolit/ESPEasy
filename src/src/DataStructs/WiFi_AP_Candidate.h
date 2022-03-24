@@ -21,10 +21,9 @@ struct WiFi_AP_Candidate {
   #endif
 
 
+  WiFi_AP_Candidate() = default;
   WiFi_AP_Candidate(const WiFi_AP_Candidate& other) = default;
 
-  // Default constructor
-  WiFi_AP_Candidate();
 
   // Return true when this one is preferred over 'other'.
   bool               operator<(const WiFi_AP_Candidate& other) const;

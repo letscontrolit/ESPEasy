@@ -47,7 +47,7 @@ String P028_data_struct::getFullDeviceName() const {
   return devicename;
 }
 
-String P028_data_struct::getDeviceName() const {
+const __FlashStringHelper * P028_data_struct::getDeviceName() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -136,7 +136,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(120); // Prevent re-allocation
     log  = getDeviceName();
-    log += F(":");
+    log += ':';
   }
   boolean logAdded = false;
 
@@ -154,7 +154,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += F(" Apply temp offset ");
       log += tempOffset;
-      log += F("C");
+      log += 'C';
     }
 
     if (hasHumidity()) {
@@ -182,7 +182,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F("C => ");
       log     += last_temp_val;
-      log     += F("C");
+      log     += 'C';
       logAdded = true;
     }
   }
@@ -191,13 +191,13 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F(" dew point ");
       log     += last_dew_temp_val;
-      log     += F("C");
+      log     += 'C';
       logAdded = true;
     }
   }
 
   if (logAdded && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return true;
 }
@@ -220,9 +220,11 @@ bool P028_data_struct::check() {
         if (sensorID != chip_id) {
           sensorID = static_cast<BMx_ChipId>(chip_id);
           setUninitialized();
-          String log = F("BMx280 : Detected ");
-          log += getFullDeviceName();
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("BMx280 : Detected ");
+            log += getFullDeviceName();
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
         }
       } else {
         sensorID = Unknown_DEVICE;
@@ -241,7 +243,7 @@ bool P028_data_struct::check() {
       log += F(", failed");
     }
     log += ')';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return false;
   }
   return wire_status;
@@ -355,7 +357,7 @@ float P028_data_struct::readPressure()
   var2 = var2 + (((int64_t)calib.dig_P4) << 35);
   var1 = ((var1 * var1 * (int64_t)calib.dig_P3) >> 8) +
          ((var1 * (int64_t)calib.dig_P2) << 12);
-  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)calib.dig_P1) >> 33;
+  var1 = ((((((int64_t)1) << 47) + var1)) * ((int64_t)calib.dig_P1)) >> 33;
 
   if (var1 == 0) {
     return 0; // avoid exception caused by division by zero

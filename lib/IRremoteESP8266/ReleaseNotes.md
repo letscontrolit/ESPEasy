@@ -1,5 +1,130 @@
 # Release Notes
 
+## _v2.8.1 (20220101)_
+
+**[Bug Fixes]**
+- Arduino ESP32 Core v2.0.2+ crashes due to our timer hack. (#1715 #1713)
+- SONY: Fix old Sony CD-Player Remote (12 Bit) (#1714)
+
+**[Features]**
+- Add tool to convert protocol & code to raw timing info. (#1708 #1707 #1703)
+- Add basic support for COOLIX48 protocol. (#1697 #1694)
+- MITSUBISHI_AC: Added support for i-SAVE mode. (#1666)
+- TOSHIBA_AC: Add Filter setting support. aka. Pure. (#1693 #1692)
+- Airton: Add detailed A/C support. (#1688 #1670)
+
+**[Misc]**
+- Add a structured library version number. (#1717)
+- Workflows Split UnitTests (#1712)
+- Reduce time for workflow/Build (#1709)
+- Fix some compiler & linter warnings (#1699 #1700)
+- Fujitsu: Update supported A/C models (#1690 #1689 #1702 #1701)
+- Remove extra `const` qualifier for char pointer (#1704)
+- TCL: Update supported devices. (#1698)
+- ESP32-C3: Work around for some C3 specific compiler issues. (#1696 #1695)
+
+
+## _v2.8.0 (20211119)_
+
+**[Bug Fixes]**
+- Fix compilation issue when using old 8266 Arduino Frameworks. (#1639 #1640)
+- Fix potential security issue with `scrape_supported_devices.py` (#1616 #1619)
+
+**[Features]**
+- SAMSUNG_AC
+  - Change `clean` setting to a toggle. (#1676 #1677)
+  - Highest fan speed is available without Powerful setting. (#1675 #1678)
+  - Change `beep` setting to a toggle. (#1669 #1671)
+  - Fix Beep for AR12TXEAAWKNEU (#1668 #1669)
+  - Add support for Horizontal Swing & Econo (#1277 #1667)
+  - Add support for On, Off, & Sleep Timers (#1277 #1662)
+  - Fix power control. Clean-up code & bitmaps from Checksum changes. (#1277 #1648 #1650)
+- HAIER_AC176/HAIER_AC_YRW02
+  - Add support A/B unit setting (#1672)
+  - Add support degree Fahrenheit (#1659)
+  - Add support `Lock` function (#1652)
+  - Implement horizontal swing feature (#1641)
+  - Implement Quiet setting. (#1634 #1635)
+- Basic support for Airton Protocol (#1670 #1681)
+- HAIER_AC176: Add Turbo and Quiet settings (#1634)
+- Gree: Add `SwingH` & `Econo` control. (#1587 #1653)
+- MIRAGE
+  - Add experimental detailed support. (#1573 #1615)
+  - Experimental detailed support for KKG29A-C1 remote. (#1573 #1660)
+- ELECTRA_AC: Add support for "IFeel" & Sensor settings. (#1644 #1645)
+- Add Russian translation (#1649)
+- Add Swedish translation (#1627)
+- Reduce flash space used. (#1633)
+- Strings finally in Flash! (#1493 #1614 #1623)
+- Add support for Rhoss Idrowall MPCV 20-30-35-40 A/C protocol (#1630)
+- Make `IRAc::opmodeToString()` output nicer for humans. (#1613)
+- TCL112AC/TEKNOPOINT: Add support for `GZ055BE1` model (#1486 #1602)
+- Support for Arris protocol. (#1598)
+- SharpAc: Allow position control of SwingV (#1590 #1594)
+
+**[Misc]**
+- HAIER_AC176/HAIER_AC_YRW02
+  - Replace some magic numbers with constants (#1679)
+  - Small fix `Quiet` and `Turbo` test (#1674)
+  - Fix `IRHaierAC176::getTemp()` return value description (#1663)
+- Security Policy creation and changes. (#1616 #1617 #1618 #1621 #1680)
+- IRrecvDumpV2/3: Update PlatformIO envs for missing languages (#1661)
+- IRMQTTServer
+  - Use the correct string for Fan mode in Home Assistant. (#1610 #1657)
+  - Move a lot of the strings/text to flash. (#1638)
+- Minor code style improvements. (#1656)
+- Update Supported Devices
+  - HAIER_AC176 (#1673)
+  - LG A/C (#1651 #1655)
+  - Symphony (#1603 #1605)
+  - Epson (#1574 #1601)
+  - GREE (#1587 #1588)
+  - SharpAc (#1590 #1591)
+- Add extra tests for LG2 protocol (#1654)
+- Fix parameter expansion in several macros.
+- Move some strings to `IRtext.cpp` & `locale/default.h` (#1637)
+- RHOSS: Move include and defines to their correct places (#1636)
+- Make makefile only build required files when running `run-%` target (#1632)
+- Update Portuguese translation (#1628)
+- Add possibility to run specific test case (#1625)
+- Change `googletest` library ignore (#1626)
+- Re-work "Fan Only" strings & matching. (#1610)
+- Address `C0209` pylint warnings. (#1608)
+
+
+## _v2.7.20 (20210828)_
+
+**[Bug Fixes]**
+- Make `strToSwingH()` match "Right Max" (#1550 #1551)
+
+**[Features]**
+- Experimental Bose remote support (#1579)
+- Added MitsubishiAC VaneLeft (#1572 #1576)
+- HAIER_AC176: Add experimental detailed support (#1480 #1571)
+- Detailed support for Tornado/Sanyo 88-bit A/C protocol (#1503 #1568)
+- Add support for new `TROTEC_3550` A/C protocol (#1563 #1566 #1507)
+- SamsungAc: Use `sendExtended()` going forward. (#1484 #1562)
+- SamsungAc: Redo/fix checksum calculations. (#1538 #1554)
+- LG: Add support for `AKB73757604` model (#1531 #1545)
+- Daikin176: Add support for Unit Id. (#1543 #1544)
+- Daikin2: Add support for Humidity setting/operation. (#1535 #1540)
+- TCL112AC: Add support for quiet/mute setting. (#1528 #1529)
+- LG2: Add Fan speed, Swing, & Light support for new `AKB74955603` model (#1513 #1530)
+- Add Mitsubishi AC "fan only" mode (#1527)
+
+**[Misc]**
+- Change when some github workflows run (#1583)
+- Add/update supported device info (#1580 #1581 #1585)
+- Fix pylint issues due to pylint update. (#1569 #1570)
+- DAIKIN216: Update supported models. (#1552 #1567)
+- IRMQTTServer: Build a minimal OTA image via PlatformIO. (#1513 #1541)
+- Reduce memory fragmentation cause by String usage. (#1493 #1536)
+- Refactor `decodeMitsubishiAC()` (#1523 #1532)
+- Fix incorrect comment.
+- Migrate from Travis to GitHub Actions (#1522 #1526)
+- Documentation update with additional supported Panasonic AC models (#1525)
+
+
 ## _v2.7.19 (20210706)_
 
 **[Bug Fixes]**

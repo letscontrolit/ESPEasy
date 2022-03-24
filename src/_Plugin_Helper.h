@@ -26,7 +26,9 @@
 #include "src/Globals/Plugins.h"
 #include "src/Globals/RuntimeData.h"
 #include "src/Globals/Settings.h"
+#include "src/Globals/Services.h"
 
+#include "src/Helpers/_Plugin_init.h"
 #include "src/Helpers/ESPEasy_math.h"
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
@@ -109,6 +111,8 @@ bool                 pluginTaskData_initialized(taskIndex_t taskIndex);
 
 String               getPluginCustomArgName(int varNr);
 
+int                  getFormItemIntCustomArgName(int varNr);
+
 // Helper function to create formatted custom values for display in the devices overview page.
 // When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
 // if the regular values should also be displayed.
@@ -144,7 +148,9 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t   taskIndex,
                                           const String& string,
                                           uint8_t          paramNr);
 
-bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, const String& newline);
+bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex, 
+                                      const String& newline,
+                                      String& description);
 
 int getValueCountForTask(taskIndex_t taskIndex);
 

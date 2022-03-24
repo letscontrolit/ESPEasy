@@ -78,7 +78,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
-      addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, NULL, PCONFIG(0));
+      addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, nullptr, PCONFIG(0));
 
       success = true;
       break;
@@ -128,7 +128,7 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("VEML6070: UV: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         success = true;
@@ -185,7 +185,7 @@ double VEML6070_UvRiskLevel(uint16_t uv_level)
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("VEML6070 out of range: ");
       log += risk;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     return 99;

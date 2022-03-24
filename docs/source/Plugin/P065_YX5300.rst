@@ -53,6 +53,13 @@ Wiring
 .. 
 ..   "XXXXXX", "N/A", "", "", ""
 
+
+Commands available
+~~~~~~~~~~~~~~~~~~
+
+.. include:: P065_commands.repl
+
+
 Where to buy
 ------------
 

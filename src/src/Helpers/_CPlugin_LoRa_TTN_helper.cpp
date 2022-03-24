@@ -1,4 +1,4 @@
-#include "_CPlugin_LoRa_TTN_helper.h"
+#include "../Helpers/_CPlugin_LoRa_TTN_helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
@@ -34,7 +34,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
       log += F(" RAW: ");
       log += raw_packed;
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (raw_packed.length() > 0) {

@@ -52,6 +52,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 1;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -71,6 +72,14 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success = (event->Par1 == 0x24);
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("RST: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      success = true;
       break;
     }
 
@@ -167,7 +176,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
             String log = F("PN532: Read error: ");
             log += errorCount;
-            addLog(LOG_LEVEL_ERROR, log);
+            addLogMove(LOG_LEVEL_ERROR, log);
           }
         }
         else {
@@ -195,6 +204,7 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
             new_key                          = true;
           }
 
+          tempcounter++;
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("PN532: ");
 
@@ -204,10 +214,9 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
               log += F("Old Tag: ");
             }
             log += key;
-            tempcounter++;
             log += ' ';
             log += tempcounter;
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           if (new_key) { sendData(event); }
@@ -232,7 +241,7 @@ boolean Plugin_017_Init(int8_t resetPin)
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("PN532: Reset on pin: ");
       log += resetPin;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
@@ -256,7 +265,7 @@ boolean Plugin_017_Init(int8_t resetPin)
       log += String((versiondata >> 16) & 0xFF, HEX);
       log += '.';
       log += String((versiondata >> 8) & 0xFF, HEX);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   else {

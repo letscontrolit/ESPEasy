@@ -1,15 +1,14 @@
-#ifndef ESPEASY_EVENTSTRUCT_H
-#define ESPEASY_EVENTSTRUCT_H
+#ifndef DATASTRUCTS_ESPEASY_EVENTSTRUCT_H
+#define DATASTRUCTS_ESPEASY_EVENTSTRUCT_H
 
 #include <Arduino.h>
 
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../DataTypes/TaskIndex.h"
-//#include "../Globals/CPlugins.h"
-#include "../Globals/NPlugins.h"
-//#include "../Globals/Plugins.h"
-#include "DeviceStruct.h"
+#include "../DataTypes/NotifierIndex.h"
+#include "../DataStructs/DeviceStruct.h"
+
 
 
 /*********************************************************************************************\
@@ -19,7 +18,7 @@
 \*********************************************************************************************/
 struct EventStruct
 {
-  EventStruct();
+  EventStruct() = default;
   // Delete the copy constructor
   EventStruct(const struct EventStruct& event) = delete;
 private:
@@ -41,6 +40,8 @@ public:
 
 
   void setTaskIndex(taskIndex_t taskIndex);
+
+  void clear();
 
   // Check (and update) sensorType if not set, plus return (corrected) sensorType
   Sensor_VType getSensorType();
@@ -68,4 +69,4 @@ public:
   uint8_t                OriginTaskIndex   = 0;
 };
 
-#endif // ESPEASY_EVENTSTRUCT_H
+#endif // DATASTRUCTS_ESPEASY_EVENTSTRUCT_H

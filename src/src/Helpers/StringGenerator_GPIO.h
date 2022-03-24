@@ -37,19 +37,16 @@ const __FlashStringHelper * formatGpioDirection(gpio_direction direction);
 String formatGpioLabel(int  gpio,
                        bool includeWarning);
 
-String formatGpioName(const String & label,
+String formatGpioName(const __FlashStringHelper * label,
                       gpio_direction direction,
-                      bool           optional);
+                      bool           optional = false);
 
-String formatGpioName(const String & label,
-                      gpio_direction direction);
+String formatGpioName_input(const __FlashStringHelper * label);
+String formatGpioName_output(const __FlashStringHelper * label);
+String formatGpioName_bidirectional(const __FlashStringHelper * label);
+String formatGpioName_input_optional(const __FlashStringHelper * label);
 
-String formatGpioName_input(const String& label);
-String formatGpioName_output(const String& label);
-String formatGpioName_bidirectional(const String& label);
-String formatGpioName_input_optional(const String& label);
-
-String formatGpioName_output_optional(const String& label);
+String formatGpioName_output_optional(const __FlashStringHelper * label);
 
 // RX/TX are the only signals which are crossed, so they must be labelled like this:
 // "GPIO <-- TX" and "GPIO --> RX"

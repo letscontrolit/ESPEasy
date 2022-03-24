@@ -96,13 +96,11 @@ void handle_unprocessedNetworkEvents()
   if (active_network_medium == NetworkMedium_t::WIFI) {
     if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
-        if (WiFiEventData.wifiConnectInProgress) {
-          if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
-            WiFiEventData.last_wifi_connect_attempt_moment.clear();
-          }
-          if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
-            WiFiEventData.wifiConnectInProgress = false;
-          }
+        if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
+          WiFiEventData.last_wifi_connect_attempt_moment.clear();
+        }
+        if (!WiFiEventData.last_wifi_connect_attempt_moment.isSet()) {
+          WiFiEventData.wifiConnectInProgress = false;
         }
         delay(10);
       }
@@ -168,7 +166,7 @@ void handle_unprocessedNetworkEvents()
           #ifdef ESP32
           wifilog += ArduinoWifiStatusToString(WiFi.status());
           #endif
-          addLog(LOG_LEVEL_DEBUG, wifilog);
+          addLogMove(LOG_LEVEL_DEBUG, wifilog);
         }
       }
       #endif // ifndef BUILD_NO_DEBUG
@@ -242,10 +240,11 @@ void processDisconnect() {
     } else {
       log += F(" Connected for a long time...");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
 
+  // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
   bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
@@ -312,9 +311,9 @@ void processConnect() {
     const LongTermTimer::Duration connect_duration = WiFiEventData.last_wifi_connect_attempt_moment.timeDiff(WiFiEventData.lastConnectMoment);
     String log = F("WIFI : Connected! AP: ");
     log += WiFi.SSID();
-    log += " (";
-    log += WiFi.BSSIDstr();
-    log += F(") Ch: ");
+    log += ' ';
+    log += wrap_braces(WiFi.BSSIDstr());
+    log += F(" Ch: ");
     log += RTC.lastWiFiChannel;
 
     if ((connect_duration > 0ll) && (connect_duration < 30000000ll)) {
@@ -323,7 +322,7 @@ void processConnect() {
       log += String(static_cast<int32_t>(connect_duration / 1000));
       log += F(" ms");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (Settings.UseRules) {
@@ -376,9 +375,9 @@ void processGotIP() {
       log += F("DHCP IP: ");
     }
     log += formatIP(ip);
-    log += " (";
-    log += NetworkGetHostname();
-    log += F(") GW: ");
+    log += ' ';
+    log += wrap_braces(NetworkGetHostname());
+    log += F(" GW: ");
     log += formatIP(gw);
     log += F(" SN: ");
     log += formatIP(subnet);
@@ -389,7 +388,7 @@ void processGotIP() {
       log += static_cast<int32_t>(dhcp_duration / 1000);
       log += F(" ms");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   // Might not work in core 2.5.0
@@ -401,7 +400,7 @@ void processGotIP() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("IP   : Fixed IP octet:");
       log += formatIP(ip);
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     WiFi.config(ip, gw, subnet, NetworkDnsIP(0), NetworkDnsIP(1));
   }
@@ -452,7 +451,7 @@ void processDisconnectAPmode() {
     log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 }
 
@@ -468,7 +467,7 @@ void processConnectAPmode() {
     log += WiFiEventData.lastMacConnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += WiFi.softAPgetStationNum();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   #ifdef FEATURE_DNS_SERVER
@@ -499,7 +498,10 @@ void processDisableAPmode() {
 }
 
 void processScanDone() {
+  WiFi_AP_Candidates.load_knownCredentials();
   if (WiFiEventData.processedScanDone) { return; }
+
+
 
   // Better act on the scan done event, as it may get triggered for normal wifi begin calls.
   int8_t scanCompleteStatus = WiFi.scanComplete();
@@ -528,7 +530,7 @@ void processScanDone() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("WiFi : Scan finished, found: ");
     log += scanCompleteStatus;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   WiFi_AP_Candidates.process_WiFiscan(scanCompleteStatus);
@@ -576,42 +578,43 @@ void processEthernetGotIP() {
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log;
-    log.reserve(160);
-    log = F("ETH MAC: ");
-    log += NetworkMacAddress().toString();
-    log += ' ';
-    if (useStaticIP()) {
-      log += F("Static");
-    } else {
-      log += F("DHCP");
-    }
-    log += F(" IP: ");
-    log += NetworkLocalIP().toString();
-    log += F(" (");
-    log += NetworkGetHostname();
-    log += F(") GW: ");
-    log += NetworkGatewayIP().toString();
-    log += F(" SN: ");
-    log += NetworkSubnetMask().toString();
-    if (EthLinkUp()) {
-      if (EthFullDuplex()) {
-        log += F(" FULL_DUPLEX");
-      }
+    if (log.reserve(160)) {
+      log = F("ETH MAC: ");
+      log += NetworkMacAddress().toString();
       log += ' ';
-      log += EthLinkSpeed();
-      log += F("Mbps");
-    } else {
-      log += F(" Link Down");
-    }
-    
-    if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
-      // Just log times when they make sense.
-      log += F("   duration: ");
-      log += static_cast<int32_t>(dhcp_duration / 1000);
-      log += F(" ms");
-    }
+      if (useStaticIP()) {
+        log += F("Static");
+      } else {
+        log += F("DHCP");
+      }
+      log += F(" IP: ");
+      log += NetworkLocalIP().toString();
+      log += ' ';
+      log += wrap_braces(NetworkGetHostname());
+      log += F(" GW: ");
+      log += NetworkGatewayIP().toString();
+      log += F(" SN: ");
+      log += NetworkSubnetMask().toString();
+      if (EthLinkUp()) {
+        if (EthFullDuplex()) {
+          log += F(" FULL_DUPLEX");
+        }
+        log += ' ';
+        log += EthLinkSpeed();
+        log += F("Mbps");
+      } else {
+        log += F(" Link Down");
+      }
+      
+      if ((dhcp_duration > 0ll) && (dhcp_duration < 30000000ll)) {
+        // Just log times when they make sense.
+        log += F("   duration: ");
+        log += static_cast<int32_t>(dhcp_duration / 1000);
+        log += F(" ms");
+      }
 
-    addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 
   // First try to get the time, since that may be used in logs

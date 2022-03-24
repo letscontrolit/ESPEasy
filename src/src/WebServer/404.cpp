@@ -32,16 +32,14 @@ void handleNotFound() {
   if (handle_rules_edit(web_server.uri())) { return; }
 #endif
 
-  if (loadFromFS(true, web_server.uri())) { return; }
-
-  if (loadFromFS(false, web_server.uri())) { return; }
+  if (loadFromFS(web_server.uri())) { return; }
   String message = F("URI: ");
   message += web_server.uri();
   message += F("\nMethod: ");
   message += (web_server.method() == HTTP_GET) ? F("GET") : F("POST");
   message += F("\nArguments: ");
   message += web_server.args();
-  message += "\n";
+  message += '\n';
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
     message += F(" NAME:");

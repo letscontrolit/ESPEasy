@@ -13,9 +13,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef FEATURE_SD
-#include <SD.h>
-#endif
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -81,6 +78,10 @@ uint8_t getChipCores();
 const __FlashStringHelper * getChipModel();
 
 uint8_t getChipRevision();
+
+uint32_t getSketchSize();
+
+uint32_t getFreeSketchSpace();
 
 /********************************************************************************************\
    Boot information

@@ -2,7 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
-
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../DataStructs/SecurityStruct.h"
@@ -21,7 +21,6 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 
-#include "../Helpers/CompiletimeDefines.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
@@ -37,7 +36,7 @@
 # include <ESP8266HTTPClient.h>
 #endif // ifdef ESP8266
 #ifdef ESP32
-# include "HTTPClient.h"
+# include <HTTPClient.h>
 #endif // ifdef ESP32
 
 bool safeReadStringUntil(Stream     & input,
@@ -51,7 +50,7 @@ bool safeReadStringUntil(Stream     & input,
   const unsigned long timer           = start + timeout;
   unsigned long backgroundtasks_timer = start + 10;
 
-  str = "";
+  str = String();
 
   do {
     // read character
@@ -91,11 +90,11 @@ bool safeReadStringUntil(Stream     & input,
 }
 
 String get_auth_header(const String& user, const String& pass) {
-  String authHeader = "";
+  String authHeader;
 
   if ((!user.isEmpty()) && (!pass.isEmpty())) {
     String auth = user;
-    auth       += ":";
+    auth       += ':';
     auth       += pass;
     authHeader  = F("Authorization: Basic ");
     authHeader += base64::encode(auth);
@@ -105,7 +104,7 @@ String get_auth_header(const String& user, const String& pass) {
 }
 
 String get_auth_header(int controller_index, const ControllerSettingsStruct& ControllerSettings) {
-  String authHeader = "";
+  String authHeader;
 
   if (validControllerIndex(controller_index)) {
     if (hasControllerCredentialsSet(controller_index, ControllerSettings))
@@ -141,7 +140,7 @@ String get_user_agent_request_header_field() {
   request.reserve(agent_size);
   request    = F("User-Agent: ");
   request   += get_user_agent_string();
-  request   += "\r\n";
+  request   += F("\r\n");
   agent_size = request.length();
   return request;
 }
@@ -151,6 +150,7 @@ String do_create_http_request(
   const String& method, const String& uri,
   const String& auth_header, const String& additional_options,
   int content_length) {
+  static int est_size_error = 0; // prevent re-alloc by compensating for estimation error
   int estimated_size = hostportString.length() + method.length()
                        + uri.length() + auth_header.length()
                        + additional_options.length()
@@ -159,34 +159,37 @@ String do_create_http_request(
   if (content_length >= 0) { estimated_size += 45; }
   String request;
 
-  request.reserve(estimated_size);
+  request.reserve(estimated_size + est_size_error);
   request += method;
   request += ' ';
 
   if (!uri.startsWith("/")) { request += '/'; }
   request += uri;
   request += F(" HTTP/1.1");
-  request += "\r\n";
+  request += F("\r\n");
 
   if (content_length >= 0) {
     request += F("Content-Length: ");
     request += content_length;
-    request += "\r\n";
+    request += F("\r\n");
   }
   request += F("Host: ");
   request += hostportString;
-  request += "\r\n";
+  request += F("\r\n");
   request += auth_header;
 
   // Add request header as fall back.
   // When adding another "accept" header, it may be interpreted as:
   // "if you have XXX, send it; or failing that, just give me what you've got."
   request += F("Accept: */*;q=0.1");
-  request += "\r\n";
+  request += F("\r\n");
   request += additional_options;
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
-  request += "\r\n";
+  request += F("\r\n");
+  if (request.length() > static_cast<size_t>(estimated_size + est_size_error)) {
+    est_size_error = request.length() - estimated_size;
+  }
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, request);
 #endif // ifndef BUILD_NO_DEBUG
@@ -250,7 +253,7 @@ void log_connecting_to(const __FlashStringHelper * prefix, int controller_number
     log += get_formatted_Controller_number(controller_number);
     log += F(" connecting to ");
     log += ControllerSettings.getHostPortString();
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 }
 
@@ -265,7 +268,7 @@ void log_connecting_fail(const __FlashStringHelper * prefix, int controller_numb
     log += F("/");
     log += Settings.ConnectionFailuresThreshold;
     log += F(")");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
   }
 }
 
@@ -336,24 +339,18 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
   bool success = !must_check_reply;
 
   // This will send the request to the server
-  uint8_t written = client.print(postStr);
+  const size_t written = client.print(postStr);
 
-  // as of 2018/11/01 the print function only returns one byte (upd to 256 chars sent). However if the string sent can be longer than this
-  // therefore we calculate modulo 256.
-  // see discussion here https://github.com/letscontrolit/ESPEasy/pull/1979
-  // and implementation here
-  // https://github.com/esp8266/Arduino/blob/561426c0c77e9d05708f2c4bf2a956d3552a3706/libraries/ESP8266WiFi/../include/ClientContext.h#L437-L467
-  // this needs to be adjusted if the WiFiClient.print method changes.
-  if (written != (postStr.length() % 256)) {
+  if (written != postStr.length()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("HTTP : ");
       log += logIdentifier;
       log += F(" Error: could not write to client (");
       log += written;
-      log += "/";
+      log += '/';
       log += postStr.length();
-      log += ")";
-      addLog(LOG_LEVEL_ERROR, log);
+      log += ')';
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     success = false;
   }
@@ -364,24 +361,27 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
       log += logIdentifier;
       log += F(" written to client (");
       log += written;
-      log += "/";
+      log += '/';
       log += postStr.length();
-      log += ")";
-      addLog(LOG_LEVEL_DEBUG, log);
+      log += ')';
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 #endif // ifndef BUILD_NO_DEBUG
 
+  const unsigned long timeout = 1000;
   if (must_check_reply) {
-    unsigned long timer = millis() + 200;
+    unsigned long timer = millis() + timeout;
 
     while (!client_available(client)) {
       if (timeOutReached(timer)) { return false; }
       delay(1);
     }
 
+    timer = millis() + timeout;
+
     // Read all the lines of the reply from server and print them to Serial
-    while (client_available(client) && !success) {
+    while (client_available(client) && !success && !timeOutReached(timer)) {
       //   String line = client.readStringUntil('\n');
       String line;
       safeReadStringUntil(client, line, '\n');
@@ -408,7 +408,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
           log += logIdentifier;
           log += F(" Success! ");
           log += line;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       } else if (line.startsWith(F("HTTP/1.1 4"))) {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -416,11 +416,13 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
           log += logIdentifier;
           log += F(" Error: ");
           log += line;
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
 #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG_MORE, postStr);
 #endif // ifndef BUILD_NO_DEBUG
+
+        // FIXME TD-er: Must add event with return code
       }
       delay(0);
     }
@@ -431,12 +433,16 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
     String log = F("HTTP : ");
     log += logIdentifier;
     log += F(" closing connection");
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
-
+#ifdef ESP8266
+  client.flush(timeout);
+  client.stop(timeout);
+#else
   client.flush();
   client.stop();
+#endif
   return success;
 }
 
@@ -573,7 +579,7 @@ String send_via_http(const String& logIdentifier,
         log += ' ';
         log += response;
       }
-      addLog(loglevel, log);
+      addLogMove(loglevel, log);
     }
   } else {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -583,7 +589,7 @@ String send_via_http(const String& logIdentifier,
       log += HttpMethod;
       log += F("... failed, error: ");
       log += http.errorToString(httpCode);
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   http.end();

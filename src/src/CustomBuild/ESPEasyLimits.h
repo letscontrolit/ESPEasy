@@ -66,6 +66,7 @@
   #define NAME_FORMULA_LENGTH_MAX            40
 #endif
 
+#define USERVAR_MAX_INDEX    (VARS_PER_TASK * TASKS_MAX)
 
 // ***********************************************************************
 // * The next limits affect memory usage
@@ -77,7 +78,7 @@
   #else    // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
     # ifdef ESP32
       # ifdef PLUGIN_BUILD_MAX_ESP32
-        #  define DEVICES_MAX                      125
+        #  define DEVICES_MAX                    135
       # else // ifdef PLUGIN_BUILD_MAX_ESP32
       #  define DEVICES_MAX                      100
       # endif // ifdef PLUGIN_BUILD_MAX_ESP32

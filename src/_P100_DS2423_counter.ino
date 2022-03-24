@@ -142,7 +142,7 @@ boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
             log += F(" (");
             log += Dallas_format_address(addr);
             log += ')';
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
       }

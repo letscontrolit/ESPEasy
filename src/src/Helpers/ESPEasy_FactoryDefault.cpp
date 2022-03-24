@@ -82,8 +82,7 @@ void ResetFactory()
   InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
   #endif
 
-  String fname = F(FILE_RULES);
-  InitFile(fname.c_str(), 0);
+  InitFile(F(FILE_RULES), 0);
 
   Settings.clearMisc();
 
@@ -234,7 +233,7 @@ void ResetFactory()
 #if DEFAULT_CONTROLLER
   {
     // Place in a scope to have its memory freed ASAP
-    MakeControllerSettings(ControllerSettings);
+    MakeControllerSettings(ControllerSettings); //-V522
 
     if (AllocatedControllerSettings()) {
       safe_strncpy(ControllerSettings.Subscribe,            F(DEFAULT_SUB),            sizeof(ControllerSettings.Subscribe));

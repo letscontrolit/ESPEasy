@@ -31,6 +31,10 @@
 //   Brand: Mitsubishi Electric,  Model: SG153/M21EDF426 remote (MITSUBISHI_AC)
 //   Brand: Mitsubishi Electric,  Model: MSZ-GV2519 A/C (MITSUBISHI_AC)
 //   Brand: Mitsubishi Electric,  Model: RH151/M21ED6426 remote (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: MSZ-SF25VE3 A/C (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: SG15D remote (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: MSZ-ZW4017S A/C (MITSUBISHI_AC)
+//   Brand: Mitsubishi Electric,  Model: MSZ-FHnnVE A/C (MITSUBISHI_AC)
 
 #ifndef IR_MITSUBISHI_H_
 #define IR_MITSUBISHI_H_
@@ -59,7 +63,8 @@ union Mitsubishi144Protocol{
     // Byte 6
     uint8_t       :3;
     uint8_t Mode  :3;
-    uint8_t       :2;
+    uint8_t ISee : 1;
+    uint8_t       :1;
     // Byte 7
     uint8_t Temp       :4;
     uint8_t HalfDegree :1;
@@ -69,7 +74,7 @@ union Mitsubishi144Protocol{
     uint8_t WideVane:4;  // SwingH
     // Byte 9
     uint8_t Fan     :3;
-    uint8_t Vane    :3;  // SwingV
+    uint8_t Vane    :3;  // SwingV or VaneRight
     uint8_t VaneBit :1;
     uint8_t FanAuto :1;
     // Byte 10
@@ -82,8 +87,22 @@ union Mitsubishi144Protocol{
     uint8_t Timer       :3;
     uint8_t WeeklyTimer :1;
     uint8_t             :4;
-    // Byte 14~16
-    uint8_t pad1[3];
+    // Byte 14
+    uint8_t               :5;
+    uint8_t Ecocool       :1;
+    uint8_t               :2;
+    // Byte 15
+    uint8_t DirectIndirect:2;
+    uint8_t AbsenseDetect :1;
+    uint8_t               :2;
+    uint8_t iSave10C      :1;  // i-SAVE:mode=Heat & iSave=on AND 10C on remote
+    uint8_t               :2;
+    // Byte 16
+    uint8_t               :1;
+    uint8_t NaturalFlow   :1;
+    uint8_t               :1;
+    uint8_t VaneLeft      :3;  // SwingV(Left)
+    uint8_t               :2;
     // Byte 17
     uint8_t Sum   :8;
   };
@@ -94,6 +113,7 @@ const uint8_t kMitsubishiAcAuto = 0b100;
 const uint8_t kMitsubishiAcCool = 0b011;
 const uint8_t kMitsubishiAcDry =  0b010;
 const uint8_t kMitsubishiAcHeat = 0b001;
+const uint8_t kMitsubishiAcFan  = 0b111;
 const uint8_t kMitsubishiAcFanAuto = 0;
 const uint8_t kMitsubishiAcFanMax = 5;
 const uint8_t kMitsubishiAcFanRealMax = 4;
@@ -116,6 +136,9 @@ const uint8_t kMitsubishiAcWideVaneRight    = 0b0100;  // 4
 const uint8_t kMitsubishiAcWideVaneRightMax = 0b0101;  // 5
 const uint8_t kMitsubishiAcWideVaneWide     = 0b0110;  // 6
 const uint8_t kMitsubishiAcWideVaneAuto     = 0b1000;  // 8
+const uint8_t kMitsubishiAcDirectOff    = 0b00;  // Vanes move when AC wants to.
+const uint8_t kMitsubishiAcIndirect     = 0b01;
+const uint8_t kMitsubishiAcDirect       = 0b11;
 const uint8_t kMitsubishiAcNoTimer = 0;
 const uint8_t kMitsubishiAcStartTimer = 5;
 const uint8_t kMitsubishiAcStopTimer = 3;
@@ -264,9 +287,23 @@ class IRMitsubishiAC {
   uint8_t getFan(void) const;
   void setMode(const uint8_t mode);
   uint8_t getMode(void) const;
-  void setVane(const uint8_t position);
-  void setWideVane(const uint8_t position);
+  void setISave10C(const bool state);
+  bool getISave10C(void) const;
+  void setISee(const bool state);
+  bool getISee(void) const;
+  void setDirectIndirect(const uint8_t position);
+  uint8_t getDirectIndirect(void) const;
+  void setEcocool(const bool state);
+  bool getEcocool(void) const;
+  void setAbsenseDetect(const bool state);
+  bool getAbsenseDetect(void) const;
+  void setNaturalFlow(const bool state);
+  bool getNaturalFlow(void) const;
+  void setVane(const uint8_t position);  // controls RIGHT vane on some models
   uint8_t getVane(void) const;
+  void setVaneLeft(const uint8_t position);
+  uint8_t getVaneLeft(void) const;
+  void setWideVane(const uint8_t position);
   uint8_t getWideVane(void) const;
   uint8_t* getRaw(void);
   void setRaw(const uint8_t* data);

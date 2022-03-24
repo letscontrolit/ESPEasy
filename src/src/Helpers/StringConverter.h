@@ -6,7 +6,7 @@
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
 
-#include "Convert.h"
+#include "../Helpers/Convert.h"
 
 class IPAddress;
 
@@ -20,6 +20,9 @@ class IPAddress;
 unsigned long str2int(const char *string);
 
 String        ull2String(uint64_t value,
+                         uint8_t  base = 10);
+
+String        ll2String(int64_t value,
                          uint8_t  base = 10);
 
 /********************************************************************************************\
@@ -93,7 +96,7 @@ void   removeExtraNewLine(String& line);
 
 void   addNewLine(String& line);
 
-size_t UTF8_charLength(char firstByte);
+size_t UTF8_charLength(uint8_t firstByte);
 
 void   replaceUnicodeByChar(String& line, char replChar);
 
@@ -125,12 +128,13 @@ String get_formatted_Controller_number(cpluginID_t cpluginID);
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/
+String wrap_braces(const String& string);
+
 String wrap_String(const String& string,
                    char wrap);
-                   
-void   wrap_String(const String& string,
-                   const String& wrap,
-                   String      & result);
+
+String wrap_String(const String& string,
+                   char char1, char char2);
 
 String wrapIfContains(const String& value,
                       char          contains,
@@ -147,9 +151,16 @@ String to_json_object_value(const __FlashStringHelper * object,
                             const String& value,
                             bool wrapInQuotes = false);
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            String&& value,
+                            bool wrapInQuotes = false);
+
 String to_json_object_value(const String& object,
                             const String& value,
                             bool wrapInQuotes = false);
+
+String to_json_value(const String& value,
+                     bool wrapInQuotes = false);
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
@@ -203,6 +214,10 @@ String parseStringToEndKeepCase(const String& string,
                                 uint8_t          indexFind,
                                 char          separator = ',');
 
+String tolerantParseStringKeepCase(const char * string,
+                                   uint8_t          indexFind,
+                                   char          separator = ',');
+
 String tolerantParseStringKeepCase(const String& string,
                                    uint8_t          indexFind,
                                    char          separator = ',');
@@ -218,7 +233,7 @@ void   htmlEscape(String& html);
 
 void   htmlStrongEscape(String& html);
 
-String URLEncode(const char *msg);
+String URLEncode(const String& msg);
 
 void   repl(const __FlashStringHelper * key,
             const String& val,
@@ -235,10 +250,8 @@ void   repl(const String& key,
             String      & s,
             bool       useURLencode);
 
-#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s,
                             bool useURLencode);
-#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%

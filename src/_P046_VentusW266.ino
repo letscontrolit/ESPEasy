@@ -127,8 +127,8 @@ volatile int Plugin_046_strikesph = 0;
 
 
 // TODO TD-er: These call-back functions are quite long and will take a lot of iRAM.
-void Plugin_046_ISR_nSEL() ICACHE_RAM_ATTR;                     // Interrupt routines
-void Plugin_046_ISR_SCLK() ICACHE_RAM_ATTR;
+void Plugin_046_ISR_nSEL() IRAM_ATTR;                     // Interrupt routines
+void Plugin_046_ISR_SCLK() IRAM_ATTR;
 
 boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -155,19 +155,20 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         uint8_t choice = PCONFIG(0);
         {
           const uint8_t nrchoices = 9;
-          const __FlashStringHelper * options[nrchoices];
-          options[0] = F("Main + Temp/Hygro");
-          options[1] = F("Wind");
-          options[2] = F("Rain");
-          options[3] = F("UV");
-          options[4] = F("Lightning strikes");
-          options[5] = F("Lightning distance");
+          const __FlashStringHelper * options[nrchoices] = {
+            F("Main + Temp/Hygro"),
+            F("Wind"),
+            F("Rain"),
+            F("UV"),
+            F("Lightning strikes"),
+            F("Lightning distance"),
 
-          options[6] = F("Unknown 1, uint8_t 6");
-          options[7] = F("Unknown 2, uint8_t 16");
-          options[8] = F("Unknown 3, uint8_t 19");
+            F("Unknown 1, uint8_t 6"),
+            F("Unknown 2, uint8_t 16"),
+            F("Unknown 3, uint8_t 19"),
+          };
 
-          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, NULL, choice);
+          addFormSelector(F("Plugin function"), F("p046"), nrchoices, options, nullptr, choice);
         }
 
         if (choice==0) {
@@ -279,7 +280,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
       {
         if (!P046_data) {
-          P046_data = new P046_data_struct();
+          P046_data = new (std::nothrow) P046_data_struct();
         }
 
         uint8_t choice = PCONFIG(0);
@@ -333,13 +334,14 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             }
             P046_data->Plugin_046_MasterSlave = false;
             P046_data->Plugin_046_newData = false;
+            #ifndef BUILD_NO_DEBUG
             if (PLUGIN_046_DEBUG) {
               String log = F("Ventus W266 Rcvd(");
               log += node_time.getTimeString(':');
               log += F(") ");
               for (int i = 0; i < Plugin_046_Payload; i++) {
                 if ((i==2)||(i==3)||(i==4)||(i==9)||(i==10)||(i==14)||(i==17)||(i==18)||(i==20)) {
-                  log += F(":");
+                  log += ':';
                 }
                 char myHex = (P046_data->Plugin_046_databuffer[i] >> 4) + 0x30;
                 if (myHex > 0x39) { myHex += 7; }
@@ -355,8 +357,9 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
               myHex = (crc & 0x0f) + 0x30;
               if (myHex > 0x39) { myHex += 7; }
               log += myHex;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
+            #endif
             if (crc != 00)
             {
               P046_data->Plugin_046_databuffer[0] = 0;                   // Not MagicByte, so not valid.
@@ -380,19 +383,18 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             {
               int myTemp = int((P046_data->Plugin_046_databuffer[5] * 256) + P046_data->Plugin_046_databuffer[4]);
               if (myTemp > 0x8000) { myTemp |= 0xffff0000; }                    // int @ esp8266 = 32 bits!
-              float temperature = float(myTemp) / 10.0f; // Temperature
+              float temperature = static_cast<float>(myTemp) / 10.0f; // Temperature
               uint8_t myHum = (P046_data->Plugin_046_databuffer[2] >> 4) * 10 + (P046_data->Plugin_046_databuffer[2] & 0x0f);
-              float humidity = float(myHum);
               UserVar[event->BaseVarIndex] = temperature;
-              UserVar[event->BaseVarIndex + 1] = humidity;
+              UserVar[event->BaseVarIndex + 1] = static_cast<float>(myHum);
               event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
               break;
             }
             case (1):
             {
-              float average = float((P046_data->Plugin_046_databuffer[11] << 8) + P046_data->Plugin_046_databuffer[10]) / 10;   // Wind speed average in m/s
-              float gust = float((P046_data->Plugin_046_databuffer[13] << 8) + P046_data->Plugin_046_databuffer[12]) / 10;      // Wind speed gust in m/s
-              float bearing = float(P046_data->Plugin_046_databuffer[9] & 0x0f) * 22.5f;                              // Wind bearing (0-359)
+              const float average = static_cast<float>((P046_data->Plugin_046_databuffer[11] << 8) + P046_data->Plugin_046_databuffer[10]) / 10.0f;   // Wind speed average in m/s
+              const float gust = static_cast<float>((P046_data->Plugin_046_databuffer[13] << 8) + P046_data->Plugin_046_databuffer[12]) / 10.0f;      // Wind speed gust in m/s
+              const float bearing = static_cast<float>(P046_data->Plugin_046_databuffer[9] & 0x0f) * 22.5f;                              // Wind bearing (0-359)
               UserVar[event->BaseVarIndex] = bearing;                                                     // degrees
               UserVar[event->BaseVarIndex + 1] = average;
               UserVar[event->BaseVarIndex + 2] = gust;
@@ -401,7 +403,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             }
             case (2):
             {
-              float raincnt = float(((P046_data->Plugin_046_databuffer[15]) * 256 + P046_data->Plugin_046_databuffer[14]) / 4);
+              float raincnt = static_cast<float>(((P046_data->Plugin_046_databuffer[15]) * 256 + P046_data->Plugin_046_databuffer[14])) / 4.0f;
               int rainnow = int(raincnt);
               if (wdcounter < Plugin_046_lastrainctr) { Plugin_046_lastrainctr = wdcounter; }
               if (Plugin_046_lastrainctr > (wdcounter + 10))                      // 5 min interval
@@ -409,7 +411,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
                 Plugin_046_lastrainctr = wdcounter;
                 if (rainnow > Plugin_046_lastraincount)
                 {                                                                 // per 5 min * 12 = per hour
-                  Plugin_046_rainmmph = float(rainnow - Plugin_046_lastraincount) * 12;
+                  Plugin_046_rainmmph = static_cast<float>(rainnow - Plugin_046_lastraincount) * 12.0f;
                   Plugin_046_lastraincount = rainnow;
                 } else {
                   Plugin_046_rainmmph = 0;
@@ -421,7 +423,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             }
             case (3):
             {
-              float uvindex = float((P046_data->Plugin_046_databuffer[17]) / 10);
+              float uvindex = static_cast<float>(P046_data->Plugin_046_databuffer[17]) / 10.0f;
               UserVar[event->BaseVarIndex] = uvindex;
               break;
             }
@@ -441,7 +443,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
                   Plugin_046_strikesph = 0;
                 }
               }
-              UserVar[event->BaseVarIndex] = float(Plugin_046_strikesph);
+              UserVar[event->BaseVarIndex] = Plugin_046_strikesph;
               break;
             }
             case (5):
@@ -449,24 +451,24 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
               float distance = -1.0f;
               if (P046_data->Plugin_046_databuffer[18] != 0x3F )
               {
-                distance = float(P046_data->Plugin_046_databuffer[18]);
+                distance = P046_data->Plugin_046_databuffer[18];
               }
               UserVar[event->BaseVarIndex] = distance;
               break;
             }
             case (6):
             {
-              UserVar[event->BaseVarIndex] = float(P046_data->Plugin_046_databuffer[6]);
+              UserVar[event->BaseVarIndex] = P046_data->Plugin_046_databuffer[6];
               break;
             }
             case (7):
             {
-              UserVar[event->BaseVarIndex] = float(P046_data->Plugin_046_databuffer[16]);
+              UserVar[event->BaseVarIndex] = P046_data->Plugin_046_databuffer[16];
               break;
             }
             case (8):
             {
-              UserVar[event->BaseVarIndex] = float(P046_data->Plugin_046_databuffer[19]);
+              UserVar[event->BaseVarIndex] = P046_data->Plugin_046_databuffer[19];
               break;
             }
           }   // switch

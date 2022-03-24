@@ -105,7 +105,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t choice  = PCONFIG(P003_IDX_COUNTERTYPE);
         const __FlashStringHelper *options[P003_NR_COUNTERTYPES] = P003_COUNTERTYPE_LIST;
-        addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, NULL, choice);
+        addFormSelector(F("Counter Type"), F("p003_countertype"), P003_NR_COUNTERTYPES, options, nullptr, choice);
         if (choice != 0) {
           addHtml(F("<span style=\"color:red\">Total count is not persistent!</span>"));
         }
@@ -159,6 +159,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         switch (PCONFIG(P003_IDX_COUNTERTYPE))
         {
           case P003_CT_INDEX_COUNTER:
+          case P003_CT_INDEX_COUNTER_TOTAL:
           {
             P003_data->pulseHelper.setPulseCounter(UserVar[event->BaseVarIndex + P003_IDX_pulseCounter]);
             break;
@@ -173,17 +174,15 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           {
             break;
           }
-          case P003_CT_INDEX_COUNTER_TOTAL:
-          {
-            P003_data->pulseHelper.setPulseCounter(UserVar[event->BaseVarIndex + P003_IDX_pulseCounter]);
-            break;
-          }
         }
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log; log.reserve(20);
-          log = F("INIT : PulsePin: "); log += Settings.TaskDevicePin1[event->TaskIndex];
-          addLog(LOG_LEVEL_INFO, log);
+          String log; 
+          if (log.reserve(20)) {
+            log += F("INIT : PulsePin: "); 
+            log += Settings.TaskDevicePin1[event->TaskIndex];
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
         }
 
         // set up device pin and estabish interupt handlers

@@ -60,15 +60,16 @@ void etharp_gratuitous_r(struct netif *netif) {
 #  include <ESP8266HTTPClient.h>
 # endif // ifdef ESP8266
 # ifdef ESP32
-#  include "HTTPClient.h"
+#  include <HTTPClient.h>
 # endif // ifdef ESP32
 #endif  // USE_SETTINGS_ARCHIVE
 
+#include <vector>
 
 /*********************************************************************************************\
    Syslog client
 \*********************************************************************************************/
-void syslog(uint8_t logLevel, const char *message)
+void sendSyslog(uint8_t logLevel, const String& message)
 {
   if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
@@ -106,29 +107,21 @@ void syslog(uint8_t logLevel, const char *message)
       header += hostname;
       header += F(" EspEasy: ");
       #ifdef ESP8266
-      portUDP.write(header.c_str(),            header.length());
+      portUDP.write(header.c_str(), header.length());
       #endif // ifdef ESP8266
       #ifdef ESP32
       portUDP.write(reinterpret_cast<const uint8_t *>(header.c_str()), header.length());
       #endif // ifdef ESP32
     }
-    const char *c = message;
-    bool done     = false;
 
-    while (!done) {
-      // Must use PROGMEM aware functions here to process message
-      char ch = pgm_read_byte(c++);
-
-      if (ch == '\0') {
-        done = true;
-      } else {
-        #ifdef ESP8266
-        portUDP.write(ch);
-        #endif // ifdef ESP8266
-        #ifdef ESP32
-        portUDP.write((uint8_t)ch);
-        #endif // ifdef ESP32
-      }
+    const size_t messageLength = message.length();
+    for (size_t i = 0; i < messageLength; ++i) {
+      #ifdef ESP8266
+      portUDP.write(message[i]);
+      #endif // ifdef ESP8266
+      #ifdef ESP32
+      portUDP.write((uint8_t)message[i]);
+      #endif // ifdef ESP32
     }
     portUDP.endPacket();
     FeedSW_watchdog();
@@ -161,7 +154,7 @@ void updateUDPport()
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("UDP : Cannot bind to ESPEasy p2p UDP port ");
         log += String(Settings.UDPPort);
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     } else {
       lastUsedUDPPort = Settings.UDPPort;
@@ -169,7 +162,7 @@ void updateUDPport()
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("UDP : Start listening on port ");
         log += String(Settings.UDPPort);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -250,7 +243,14 @@ void checkUDP()
                   ip[x] = packetBuffer[x + 8];
                 }
 #endif // ifndef BUILD_NO_DEBUG
-                Nodes[unit].age = 0; // Create a new element when not present
+                {
+                  #ifdef USE_SECOND_HEAP
+                  HeapSelectIram ephemeral;
+                  // TD-er: Disabled for now as it is suspect for crashes.
+                  #endif
+
+                  Nodes[unit].age = 0; // Create a new element when not present
+                }
                 NodesMap::iterator it = Nodes.find(unit);
 
                 if (it != Nodes.end()) {
@@ -265,8 +265,14 @@ void checkUDP()
                     char tmpNodeName[26] = { 0 };
                     memcpy(&tmpNodeName[0], reinterpret_cast<uint8_t *>(&packetBuffer[15]), 25);
                     tmpNodeName[25]     = 0;
-                    it->second.nodeName = tmpNodeName;
-                    it->second.nodeName.trim();
+                    {
+                      #ifdef USE_SECOND_HEAP
+                      HeapSelectIram ephemeral;
+                      #endif
+
+                      it->second.nodeName = tmpNodeName;
+                      it->second.nodeName.trim();
+                    }
                     it->second.nodeType          = packetBuffer[40];
                     it->second.webgui_portnumber = 80;
 
@@ -286,7 +292,7 @@ void checkUDP()
                   log += formatIP(ip);
                   log += ',';
                   log += unit;
-                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                  addLogMove(LOG_LEVEL_DEBUG_MORE, log);
                 }
 #endif // ifndef BUILD_NO_DEBUG
                 break;
@@ -408,7 +414,7 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
     log += unit;
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -518,7 +524,14 @@ void sendSysInfoUDP(uint8_t repeats)
     }
   }
 
-  Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  {
+    #ifdef USE_SECOND_HEAP
+    // HeapSelectIram ephemeral;
+    // TD-er: disabled for now as it is suspect for crashes.
+    #endif
+
+    Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  }
   // store my own info also in the list
   NodesMap::iterator it = Nodes.find(Settings.Unit);
 
@@ -556,7 +569,7 @@ void SSDP_schema(WiFiClient& client) {
             (uint16_t)((chipId >>  8) & 0xff),
             (uint16_t)chipId        & 0xff);
 
-  String ssdp_schema = F(
+  client.print(F(
     "HTTP/1.1 200 OK\r\n"
     "Content-Type: text/xml\r\n"
     "Connection: close\r\n"
@@ -568,33 +581,31 @@ void SSDP_schema(WiFiClient& client) {
     "<major>1</major>"
     "<minor>0</minor>"
     "</specVersion>"
-    "<URLBase>http://");
+    "<URLBase>http://"));
 
-  ssdp_schema += formatIP(ip);
-  ssdp_schema += F(":80/</URLBase>"
+  client.print(formatIP(ip));
+  client.print(F(":80/</URLBase>"
                    "<device>"
                    "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
-                   "<friendlyName>");
-  ssdp_schema += Settings.Name;
-  ssdp_schema += F("</friendlyName>"
+                   "<friendlyName>"));
+  client.print(Settings.Name);
+  client.print(F("</friendlyName>"
                    "<presentationURL>/</presentationURL>"
-                   "<serialNumber>");
-  ssdp_schema += ESP.getChipId();
-  ssdp_schema += F("</serialNumber>"
+                   "<serialNumber>"));
+  client.print(String(ESP.getChipId()));
+  client.print(F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
-                   "<modelNumber>");
-  ssdp_schema += getValue(LabelType::GIT_BUILD);
-  ssdp_schema += F("</modelNumber>"
+                   "<modelNumber>"));
+  client.print(getValue(LabelType::GIT_BUILD));
+  client.print(F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"
                    "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
-                   "<UDN>uuid:");
-  ssdp_schema += uuid;
-  ssdp_schema += F("</UDN></device>"
+                   "<UDN>uuid:"));
+  client.print(String(uuid));
+  client.print(F("</UDN></device>"
                    "</root>\r\n"
-                   "\r\n");
-
-  client.printf("%s", ssdp_schema.c_str());
+                   "\r\n"));
 }
 
 /********************************************************************************************\
@@ -627,13 +638,17 @@ static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
 bool SSDP_begin() {
   _pending = false;
 
-  if (_server) {
+  if (_server != nullptr) {
     _server->unref();
+    // FIXME TD-er: Shouldn't this also call delete _server ?
 
-    _server = 0;
+    _server = nullptr; 
   }
 
-  _server = new UdpContext;
+  _server = new (std::nothrow) UdpContext;
+  if (_server == nullptr) {
+    return false;
+  }
   _server->ref();
 
   ip_addr_t ifaddr;
@@ -1067,10 +1082,12 @@ bool hostReachable(const String& hostname) {
   if (resolveHostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
   }
-  String log = F("Hostname cannot be resolved: ");
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("Hostname cannot be resolved: ");
 
-  log += hostname;
-  addLog(LOG_LEVEL_ERROR, log);
+    log += hostname;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }
 
@@ -1193,7 +1210,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     log += ':';
     log += port;
     log += uri;
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
   }
 
   if (file_save.isEmpty()) {

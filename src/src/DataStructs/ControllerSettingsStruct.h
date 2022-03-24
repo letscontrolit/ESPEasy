@@ -148,7 +148,7 @@ struct ControllerSettingsStruct
   
 
   boolean      UseDNS;
-  uint8_t         IP[4];
+  uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];
   char         Publish[129];
@@ -173,11 +173,32 @@ private:
   bool updateIPcache();
 };
 
+
+#ifdef USE_SECOND_HEAP
+#include <umm_malloc/umm_heap_select.h>
+#endif
+
 typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
+
+
+#ifdef USE_SECOND_HEAP
+// Try to allocate the controller settings to the 2nd heap
+#define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr; \
+{                                                                                                 \
+  HeapSelectIram ephemeral;                                                                       \
+  ControllerSettingsStruct_ptr_type tmp_shared(new (std::nothrow)  ControllerSettingsStruct());   \
+  ControllerSettingsStruct_ptr = std::move(tmp_shared);                                           \
+}                                                                                                 \
+ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
+
+#else
+
 #define MakeControllerSettings(T) ControllerSettingsStruct_ptr_type ControllerSettingsStruct_ptr(new (std::nothrow)  ControllerSettingsStruct()); \
   ControllerSettingsStruct& T = *ControllerSettingsStruct_ptr;
 
+#endif
+
 // Check to see if MakeControllerSettings was successful
-#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr.get() != nullptr)
+#define AllocatedControllerSettings() (ControllerSettingsStruct_ptr ? true : false)
 
 #endif // DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H

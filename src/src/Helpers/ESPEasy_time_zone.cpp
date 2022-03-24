@@ -1,11 +1,11 @@
-#include "ESPEasy_time_zone.h"
+#include "../Helpers/ESPEasy_time_zone.h"
 
 #include "../DataStructs/TimeChangeRule.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <time.h>
 
@@ -53,6 +53,7 @@ void ESPEasy_time_zone::setTimeZone(const TimeChangeRule& dstStart, const TimeCh
 }
 
 void ESPEasy_time_zone::logTimeZoneInfo() {
+  if (!loglevelActiveFor(LOG_LEVEL_INFO)) return;
   String log = F("Current Time Zone: ");
 
   if (m_std.offset != m_dst.offset) {
@@ -80,7 +81,7 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
   log += F(" offset: ");
   log += m_std.offset;
   log += F(" min");
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
 }
 
 

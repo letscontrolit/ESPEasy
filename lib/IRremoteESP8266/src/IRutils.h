@@ -48,6 +48,8 @@ float fahrenheitToCelsius(const float deg);
 namespace irutils {
   String addBoolToString(const bool value, const String label,
                          const bool precomma = true);
+  String addToggleToString(const bool toggle, const String label,
+                           const bool precomma = true);
   String addIntToString(const uint16_t value, const String label,
                         const bool precomma = true);
   String addSignedIntToString(const int16_t value, const String label,
@@ -92,15 +94,17 @@ namespace irutils {
                      const uint8_t init = 0);
   uint8_t sumNibbles(const uint64_t data, const uint8_t count = 16,
                      const uint8_t init = 0, const bool nibbleonly = true);
+  uint16_t sumBytes(const uint64_t data, const uint8_t count = 8,
+                    const uint8_t init = 0, const bool byteonly = true);
   uint8_t bcdToUint8(const uint8_t bcd);
   uint8_t uint8ToBcd(const uint8_t integer);
   bool getBit(const uint64_t data, const uint8_t position,
               const uint8_t size = 64);
   bool getBit(const uint8_t data, const uint8_t position);
-#define GETBIT8(a, b) (a & ((uint8_t)1 << b))
-#define GETBIT16(a, b) (a & ((uint16_t)1 << b))
-#define GETBIT32(a, b) (a & ((uint32_t)1 << b))
-#define GETBIT64(a, b) (a & ((uint64_t)1 << b))
+#define GETBIT8(a, b) ((a) & ((uint8_t)1 << (b)))
+#define GETBIT16(a, b) ((a) & ((uint16_t)1 << (b)))
+#define GETBIT32(a, b) ((a) & ((uint32_t)1 << (b)))
+#define GETBIT64(a, b) ((a) & ((uint64_t)1 << (b)))
 #define GETBITS8(data, offset, size) \
     (((data) & (((uint8_t)UINT8_MAX >> (8 - (size))) << (offset))) >> (offset))
 #define GETBITS16(data, offset, size) \

@@ -9,6 +9,10 @@ C015_queue_element::C015_queue_element(C015_queue_element&& other)
   , controller_idx(other.controller_idx), valuesSent(other.valuesSent)
   , valueCount(other.valueCount)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     txt[i]  = std::move(other.txt[i]);
     vPin[i] = other.vPin[i];
@@ -21,6 +25,20 @@ C015_queue_element::C015_queue_element(const struct EventStruct *event, uint8_t 
   controller_idx(event->ControllerIndex),
   valuesSent(0),
   valueCount(value_count) {}
+
+C015_queue_element& C015_queue_element::operator=(C015_queue_element&& other) {
+  idx = other.idx;
+  _timestamp = other._timestamp;
+  TaskIndex  = other.TaskIndex;
+  controller_idx = other.controller_idx;
+  valuesSent = other.valuesSent;
+  valueCount = other.valueCount;
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    txt[i]  = std::move(other.txt[i]);
+    vPin[i] = other.vPin[i];
+  }
+  return *this;
+}
 
 bool C015_queue_element::checkDone(bool succesfull) const {
   if (succesfull) { ++valuesSent; }

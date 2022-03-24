@@ -5,11 +5,9 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
-  # include <ESP8266WebServer.h>
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
-  # include <WebServer.h>
 #endif // if defined(ESP32)
 
 #include "../DataTypes/WiFiConnectionProtocol.h"
@@ -115,7 +113,6 @@ void SetWiFiTXpower(float dBm, float rssi);
 float GetRSSIthreshold(float& maxTXpwr);
 WiFiConnectionProtocol getConnectionProtocol();
 void WifiDisconnect();
-void WiFiScanPeriodical();
 bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);
 void WifiScan();

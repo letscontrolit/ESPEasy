@@ -1,6 +1,6 @@
 {
     "name": "ESPeasySerial",
-    "version": "2.0.6",
+    "version": "2.0.8",
     "keywords": [
       "serial", "io", "softwareserial", "hardwareserial"
     ],
@@ -27,6 +27,6 @@
     ],
     "frameworks": "arduino",
     "platforms": [
-      "espressif8266","espressif32"
+      "espressif8266","espressif32","espressif32s2"
     ]
 }

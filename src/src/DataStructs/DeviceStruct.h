@@ -71,6 +71,12 @@ struct DeviceStruct
 
   bool configurableDecimals() const;
 
+  bool isSerial() const;
+
+  bool isSPI() const;
+
+  bool isCustom() const;
+
   uint8_t               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
   uint8_t               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
@@ -87,6 +93,7 @@ struct DeviceStruct
   bool TimerOption        : 1;       // Allow to set the "Interval" timer for the plugin.
   bool TimerOptional      : 1;       // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
   bool DecimalsOnly       : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
+  bool ExitTaskBeforeSave : 1;       // Optimization in memory usage, Do not exit when task data is needed during save.
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 

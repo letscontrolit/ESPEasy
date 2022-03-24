@@ -29,7 +29,7 @@ DLBus::DLBus()
   {
     __instance             = this;
     ISR_PtrChangeBitStream = DLbus_ChangeBitStream;
-    addToLog(LOG_LEVEL_INFO, F("Class DLBus created"));
+    addLog(LOG_LEVEL_INFO, F("Class DLBus created"));
   }
 }
 
@@ -39,21 +39,21 @@ DLBus::~DLBus()
   {
     __instance             = nullptr;
     ISR_PtrChangeBitStream = nullptr;
-    addToLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
+    addLog(LOG_LEVEL_INFO, F("Class DLBus destroyed"));
   }
 }
 
 void DLBus::AddToInfoLog(const String& string)
 {
   if ((IsLogLevelInfo) && (LogLevelInfo != 0xff)) {
-    addToLog(LogLevelInfo, string);
+    addLog(LogLevelInfo, string);
   }
 }
 
 void DLBus::AddToErrorLog(const String& string)
 {
   if (LogLevelError != 0xff) {
-    addToLog(LogLevelError, string);
+    addLog(LogLevelError, string);
   }
 }
 
@@ -74,7 +74,7 @@ void DLBus::StartReceiving(void)
   interrupts(); // interrupts allowed now, next instruction WILL be executed
 }
 
-void ICACHE_RAM_ATTR DLBus::ISR(void)
+void IRAM_ATTR DLBus::ISR(void)
 {
   if (__instance)
   {
@@ -82,7 +82,7 @@ void ICACHE_RAM_ATTR DLBus::ISR(void)
   }
 }
 
-void ICACHE_RAM_ATTR DLBus::ISR_PinChanged(void)
+void IRAM_ATTR DLBus::ISR_PinChanged(void)
 {
 //  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
   uint32_t _now = micros();
@@ -633,7 +633,7 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("P092_receiving ... TaskIndex:");
     log += taskindex;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   while ((timePassedSince(start) < 100) && (DLbus_Data->ISR_PulseCount == 0)) {
@@ -740,13 +740,13 @@ boolean P092_data_struct::P092_GetData(int OptionIdx, int CurIdx, sP092_ReadData
     else {
       log += F("nan");
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return result;
 }
 
 boolean P092_data_struct::P092_fetch_sensor(int number, sP092_ReadData *ReadData) {
-  float value;
+  float value = 0.0f;
 
   ReadData->mode = -1;
   number         = ReadData->Idx + (number - 1) * 2;
@@ -766,7 +766,7 @@ boolean P092_data_struct::P092_fetch_sensor(int number, sP092_ReadData *ReadData
         value = false;
         break;
       case DLbus_Sensor_TEMP:
-        value = sensorvalue * 0.1;
+        value = static_cast<float>(sensorvalue) * 0.1f;
         break;
       case DLbus_Sensor_RAYS:
         value = sensorvalue;
@@ -776,7 +776,7 @@ boolean P092_data_struct::P092_fetch_sensor(int number, sP092_ReadData *ReadData
         break;
       case DLbus_Sensor_ROOM:
         ReadData->mode = (sensorvalue & 0x600) >> 9;
-        value          = (sensorvalue & 0x1ff) * 0.1;
+        value          = static_cast<float>(sensorvalue & 0x1ff) * 0.1f;
         break;
       default:
         return false;
@@ -791,7 +791,7 @@ boolean P092_data_struct::P092_fetch_sensor(int number, sP092_ReadData *ReadData
         value = true;
         break;
       case DLbus_Sensor_TEMP:
-        value = (sensorvalue - 0x10000) * 0.1;
+        value = static_cast<float>(sensorvalue - 0x10000) * 0.1f;
         break;
       case DLbus_Sensor_RAYS:
         value = sensorvalue - 0x10000;
@@ -801,7 +801,7 @@ boolean P092_data_struct::P092_fetch_sensor(int number, sP092_ReadData *ReadData
         break;
       case DLbus_Sensor_ROOM:
         ReadData->mode = (sensorvalue & 0x600) >> 9;
-        value          = ((sensorvalue & 0x1ff) - 0x10000) * 0.1;
+        value          = static_cast<float>((sensorvalue & 0x1ff) - 0x10000) * 0.1f;
         break;
       default:
         return false;
@@ -920,20 +920,20 @@ boolean P092_data_struct::P092_fetch_heatpower(int number, sP092_ReadData *ReadD
     int low = (b1 * 10) / 0x100;
 
     if (!(b4 & 0x80)) { // sign positive
-      ReadData->value = (10 * high + low) / 100;
+      ReadData->value = static_cast<float>(10 * high + low) / 100.0f;
     }
     else {              // sign negative
-      ReadData->value = (10 * (high - 0x10000) - low) / 100;
+      ReadData->value = static_cast<float>(10 * (high - 0x10000) - low) / 100.0f;
     }
   }
   else {
     high = (b2 << 8) | b1;
 
     if ((b2 & 0x80) == 0) { // sign positive
-      ReadData->value = high / 10;
+      ReadData->value = static_cast<float>(high) / 10.0f;
     }
     else {                  // sign negative
-      ReadData->value = (high - 0x10000) / 10;
+      ReadData->value = static_cast<float>(high - 0x10000) / 10.0f;
     }
   }
   return true;

@@ -73,7 +73,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
 
   {
     // Place ControllerSettings in its own scope, as it is quite big.
-    MakeControllerSettings(ControllerSettings);
+    MakeControllerSettings(ControllerSettings); //-V522
     if (!AllocatedControllerSettings()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : Cannot run GET, out of RAM"));
       return false;
@@ -104,7 +104,9 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
               pass.c_str(),
               command.c_str(),
               hostname.c_str());
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, request);
+#endif
     client.print(request);
   }
   bool success = !MustCheckReply;
@@ -116,21 +118,28 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       delay(1);
     }
 
+    #ifndef BUILD_NO_DEBUG
     char log[80] = { 0 };
+    #endif
     timer = millis() + 1500;
 
     // Read all the lines of the reply from server and log them
     while (client_available(client) && !success && !timeOutReached(timer)) {
       String line;
       safeReadStringUntil(client, line, '\n');
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG_MORE, line);
+      #endif
 
       // success ?
       if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
+        #ifndef BUILD_NO_DEBUG
         strcpy_P(log, PSTR("HTTP : Success"));
+        #endif
 
         if (!data) { success = true; }
       }
+      #ifndef BUILD_NO_DEBUG
       else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
@@ -138,6 +147,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
       addLog(LOG_LEVEL_DEBUG, log);
+      #endif
 
       // data only
       if (data && line.startsWith("["))
@@ -152,8 +162,10 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
 
         char value_char[5] = { 0 };
         strValue.toCharArray(value_char, 5);
+        #ifndef BUILD_NO_DEBUG
         sprintf_P(log, PSTR("Blynk get - %s => %s"), command.c_str(), value_char);
         addLog(LOG_LEVEL_DEBUG, log);
+        #endif
       }
       delay(0);
     }

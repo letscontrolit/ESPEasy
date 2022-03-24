@@ -89,7 +89,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
       log += F(" port #"); 
       log += port; 
       log += F(": added to monitor list.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
@@ -141,7 +141,7 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
       log += F(" port #");
       log += port;
       log += F(": removed from monitor list.");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     return true;
@@ -302,7 +302,7 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
     log += event->Par1;
     log += F(" melody: ");
     log += melody;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (play_rtttl(event->Par1, melody.c_str())) {
@@ -590,7 +590,7 @@ bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefi
 }
 
 struct range_pattern_helper_data {
-  String   logPrefix;
+  const __FlashStringHelper *  logPrefix;
   uint32_t write = 0;
   uint32_t mask  = 0;
 
@@ -627,7 +627,7 @@ range_pattern_helper_data range_helper_shared(pluginID_t plugin, uint8_t pin1, u
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = data.logPrefix;
       log += F(": pin numbers out of range.");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return data;
   }
@@ -657,9 +657,9 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
   }
 
   if (isWritePattern) {
-    data.logPrefix += F("GPIOPattern");
+    data.logPrefix = F("GPIOPattern");
   } else {
-    data.logPrefix += F("GPIORange");
+    data.logPrefix = F("GPIORange");
   }
   data.valid  = false;
   data.isMask = !parseString(Line, 5).isEmpty();
@@ -687,7 +687,7 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = data.logPrefix;
         log += F(": write value must be 0 or 1.");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
       return data;
     }
@@ -772,17 +772,15 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   }
 
   bool   onLine = false;
-  String log;
-
   for (uint8_t i = 0; i < data.numBytes; i++) {
     uint8_t readValue;
-    uint8_t    currentVal            = data.initVal + i;
-    uint8_t    currentAddress        = static_cast<int>(currentVal / 2);
-    uint8_t    currentMask           = (data.mask  >> (8 * i)) & 0xFF;
-    uint8_t    currentInvertedMask   = 0xFF - currentMask;
-    uint8_t    currentWrite          = (data.write >> (8 * i)) & 0xFF;
-    uint8_t    currentGPIORegister   = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
-    uint8_t    currentIOModeRegister = ((currentVal % 2) == 0) ? MCP23017_IODIRA : MCP23017_IODIRB;
+    const uint8_t    currentVal            = data.initVal + i;
+    const uint8_t    currentAddress        = static_cast<int>(currentVal / 2);
+    const uint8_t    currentMask           = (data.mask  >> (8 * i)) & 0xFF;
+    const uint8_t    currentInvertedMask   = 0xFF - currentMask;
+    const uint8_t    currentWrite          = (data.write >> (8 * i)) & 0xFF;
+    const uint8_t    currentGPIORegister   = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
+    const uint8_t    currentIOModeRegister = ((currentVal % 2) == 0) ? MCP23017_IODIRA : MCP23017_IODIRB;
     uint8_t    writeGPIOValue        = 0;
 
     if (GPIO_MCP_ReadRegister(currentAddress, currentIOModeRegister, &readValue)) {
@@ -800,9 +798,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
       onLine = false;
     }
 
-    uint8_t   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
-    int8_t state;
-
+    const uint8_t   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
     for (uint8_t j = 0; j < 8; j++) {
       // if ((currentMask & (uint8_t(pow(2,j)))) >> j) { //only for the pins in the mask
       if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
@@ -810,10 +806,14 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         const uint32_t key = createKey(PLUGIN_MCP, currentPin);
 
         // state = onLine ? ((writeGPIOValue & uint8_t(pow(2,j))) >> j) : -1;
-        state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
+        const int8_t state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = data.logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        String log = data.logPrefix;
+        log += F(": port#");
+        log += currentPin;
+        log += F(": set to ");
+        log += state;
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
@@ -865,7 +865,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
-        log = data.logPrefix + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
+        log = String(data.logPrefix) + String(F(": port#")) + String(currentPin) + String(F(": set to ")) + String(state);
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       } else {
@@ -976,7 +976,7 @@ const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, co
 bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char *Line)
 {
   String logPrefix;  // = new char;
-  String logPostfix; // = new char;
+  const __FlashStringHelper * logPostfix = F(""); // = new char;
   pluginID_t pluginID = INVALID_PLUGIN_ID;
 
   // Line[0]='g':gpio; ='p':pcfgpio; ='m':mcpgpio
@@ -1068,33 +1068,29 @@ bool getGPIOPinStateValues(String& str) {
     int par1;
     const bool validArgument = validIntFromString(gpio_descr, par1);
 
-    switch (device[0]) {
-      case 'g':
+    if (validArgument) {
+      switch (device[0]) {
+        case 'g':
 
-        if (validArgument) {
           str       = digitalRead(par1);
           logPrefix = F("GPIO");
           success   = true;
-        }
-        break;
+          break;
 
-      case 'm':
+        case 'm':
 
-        if (validArgument) {
           str       = GPIO_MCP_Read(par1);
           logPrefix = F("MCP");
           success   = true;
-        }
-        break;
+          break;
 
-      case 'p':
+        case 'p':
 
-        if (validArgument) {
           str       = GPIO_PCF_Read(par1);
           logPrefix = F("PCF");
           success   = true;
-        }
-        break;
+          break;
+      }
     }
 
     if (success) {
@@ -1102,7 +1098,7 @@ bool getGPIOPinStateValues(String& str) {
       addLog(LOG_LEVEL_DEBUG, String(logPrefix) + F(" PLUGIN PINSTATE pin =") + String(par1) + F("; value=") + str);
       #endif // ifndef BUILD_NO_DEBUG
     } else {
-      addLog(LOG_LEVEL_ERROR, String(logPrefix) + F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
+      addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
     }
   } else if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinrange"))) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
@@ -1128,7 +1124,7 @@ bool getGPIOPinStateValues(String& str) {
 
         case 'p':
           logPrefix = F("PCF");
-          success   = mcpgpio_plugin_range_helper(par1, par2, tempValue);
+          success   = pcfgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
           break;
       }
@@ -1136,8 +1132,7 @@ bool getGPIOPinStateValues(String& str) {
       if (success) {
         #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG,
-               String(logPrefix) + F(" PLUGIN RANGE pin start=") + String(par1) + F("; pin end=") + String(par2) + String(F(
-                                                                                                                                    "; value=")) +
+               String(logPrefix) + F(" PLUGIN RANGE pin start=") + String(par1) + F("; pin end=") + String(par2) + String(F("; value=")) +
                str);
         #endif // ifndef BUILD_NO_DEBUG
       } else {
@@ -1146,10 +1141,10 @@ bool getGPIOPinStateValues(String& str) {
                F("; value=") + str);
       }
     } else {
-      addLog(LOG_LEVEL_ERROR, String(logPrefix) + F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric."));
+      addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINRANGE. Syntax error. Pin parameters are not numeric."));
     }
   } else {
-    addLog(LOG_LEVEL_ERROR, String(F("Syntax error. Invalid command. Valid commands are 'pinstate' and 'pinrange'.")));
+    addLog(LOG_LEVEL_ERROR, F("Syntax error. Invalid command. Valid commands are 'pinstate' and 'pinrange'."));
   }
 
   if (!success) {

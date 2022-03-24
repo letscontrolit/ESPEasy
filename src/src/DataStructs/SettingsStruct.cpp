@@ -1,11 +1,14 @@
 #include "../DataStructs/SettingsStruct.h"
 
-#include "../Globals/Plugins.h"
-#include "../Globals/CPlugins.h"
+#include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/SPI_options.h"
-#include "../../ESPEasy_common.h"
+#include "../Globals/Plugins.h"
+#include "../Globals/CPlugins.h"
+
+#ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
+#define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
@@ -159,17 +162,8 @@ void SettingsStruct_tmpl<N_TASKS>::ApDontForceSetup(bool value) {
   bitWrite(VariousBits1, 14, value);
 }
 
-template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::PeriodicalScanWiFi() const {
-  // Invert to enable it by default
-  return !bitRead(VariousBits1, 15);
-}
-
-template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::PeriodicalScanWiFi(bool value) {
-  // Invert to enable it by default
-  bitWrite(VariousBits1, 15, !value);
-}
+// VariousBits1 bit 15 was used by PeriodicalScanWiFi
+// Now removed, is reset to 0, can be used for some other setting.
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::JSONBoolWithoutQuotes() const {
@@ -257,6 +251,15 @@ void SettingsStruct_tmpl<N_TASKS>::EnableClearHangingI2Cbus(bool value) {
   bitWrite(VariousBits1, 22, value);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableRAMTracking() const {
+  return bitRead(VariousBits1, 23);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableRAMTracking(bool value) {
+  bitWrite(VariousBits1, 23, value);
+}
 
 
 template<unsigned int N_TASKS>
@@ -678,3 +681,4 @@ void SettingsStruct_tmpl<N_TASKS>::setWiFi_TX_power(float dBm) {
   WiFi_TX_power = dBm * 4.0f;
 }
 
+#endif

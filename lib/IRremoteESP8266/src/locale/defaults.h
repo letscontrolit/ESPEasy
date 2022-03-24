@@ -30,9 +30,15 @@
 #ifndef D_STR_ON
 #define D_STR_ON "On"
 #endif  // D_STR_ON
+#ifndef D_STR_1
+#define D_STR_1 "1"
+#endif  // D_STR_1
 #ifndef D_STR_OFF
 #define D_STR_OFF "Off"
 #endif  // D_STR_OFF
+#ifndef D_STR_0
+#define D_STR_0 "0"
+#endif  // D_STR_0
 #ifndef D_STR_MODE
 #define D_STR_MODE "Mode"
 #endif  // D_STR_MODE
@@ -90,6 +96,9 @@
 #ifndef D_STR_OFFTIMER
 #define D_STR_OFFTIMER D_STR_OFF " " D_STR_TIMER  // Set `D_STR_OFF` first!
 #endif  // D_STR_OFFTIMER
+#ifndef D_STR_TIMERMODE
+#define D_STR_TIMERMODE D_STR_TIMER " " D_STR_MODE  // Set `D_STR_MODE` first!
+#endif  // D_STR_TIMERMODE
 #ifndef D_STR_CLOCK
 #define D_STR_CLOCK "Clock"
 #endif  // D_STR_CLOCK
@@ -111,6 +120,9 @@
 #ifndef D_STR_IFEEL
 #define D_STR_IFEEL "IFeel"
 #endif  // D_STR_IFEEL
+#ifndef D_STR_ISEE
+#define D_STR_ISEE "ISee"
+#endif  // D_STR_ISEE
 #ifndef D_STR_HUMID
 #define D_STR_HUMID "Humid"
 #endif  // D_STR_HUMID
@@ -198,6 +210,19 @@
 #ifndef D_STR_SENSOR
 #define D_STR_SENSOR "Sensor"
 #endif  // D_STR_SENSOR
+#ifndef D_STR_ABSENSEDETECT
+#define D_STR_ABSENSEDETECT "Absense detect"
+#endif  // D_STR_ABSENSEDETECT
+#ifndef D_STR_DIRECT
+#define D_STR_DIRECT "Direct"
+#endif  // D_STR_DIRECT
+#ifndef D_STR_INDIRECT
+#define D_STR_INDIRECT "Indirect"
+#endif  // D_STR_INDIRECT
+#ifndef D_STR_DIRECTINDIRECTMODE
+#define D_STR_DIRECTINDIRECTMODE D_STR_DIRECT " / " \
+D_STR_INDIRECT " " D_STR_MODE
+#endif  // D_STR_DIRECTINDIRECTMODE
 #ifndef D_STR_DISPLAY
 #define D_STR_DISPLAY "Display"
 #endif  // D_STR_DISPLAY
@@ -279,6 +304,12 @@
 #ifndef D_STR_ID
 #define D_STR_ID "Id"
 #endif  // D_STR_ID
+#ifndef D_STR_VANE
+#define D_STR_VANE "Vane"
+#endif  // D_STR_VANE
+#ifndef D_STR_LOCK
+#define D_STR_LOCK "Lock"
+#endif  // D_STR_LOCK
 
 #ifndef D_STR_AUTO
 #define D_STR_AUTO "Auto"
@@ -292,18 +323,42 @@
 #ifndef D_STR_COOL
 #define D_STR_COOL "Cool"
 #endif  // D_STR_COOL
+#ifndef D_STR_COOLING
+#define D_STR_COOLING "Cooling"
+#endif  // D_STR_COOLING
 #ifndef D_STR_HEAT
 #define D_STR_HEAT "Heat"
 #endif  // D_STR_HEAT
+#ifndef D_STR_HEATING
+#define D_STR_HEATING "Heating"
+#endif  // D_STR_HEATING
 #ifndef D_STR_FAN
 #define D_STR_FAN "Fan"
 #endif  // D_STR_FAN
 #ifndef D_STR_FANONLY
-#define D_STR_FANONLY "fan_only"
+#define D_STR_FANONLY "fan-only"
 #endif  // D_STR_FANONLY
+#ifndef D_STR_FAN_ONLY
+#define D_STR_FAN_ONLY "fan_only"
+#endif  // D_STR_FAN_ONLY
+#ifndef D_STR_ONLY
+#define D_STR_ONLY "Only"
+#endif  // D_STR_ONLY
+#ifndef D_STR_FANSPACEONLY
+#define D_STR_FANSPACEONLY D_STR_FAN " " D_STR_ONLY
+#endif  // D_STR_FANSPACEONLY
+#ifndef D_STR_FANONLYNOSPACE
+#define D_STR_FANONLYNOSPACE D_STR_FAN D_STR_ONLY
+#endif  // D_STR_FANONLYNOSPACE
 #ifndef D_STR_DRY
 #define D_STR_DRY "Dry"
 #endif  // D_STR_DRY
+#ifndef D_STR_DRYING
+#define D_STR_DRYING "Drying"
+#endif  // D_STR_DRYING
+#ifndef D_STR_DEHUMIDIFY
+#define D_STR_DEHUMIDIFY "Dehumidify"
+#endif  // D_STR_DEHUMIDIFY
 
 #ifndef D_STR_MAX
 #define D_STR_MAX "Max"
@@ -354,6 +409,12 @@
 #ifndef D_STR_MAXRIGHT
 #define D_STR_MAXRIGHT D_STR_MAX " " D_STR_RIGHT  // Set `D_STR_MAX` first!
 #endif  // D_STR_MAXRIGHT
+#ifndef D_STR_MAXRIGHT_NOSPACE
+#define D_STR_MAXRIGHT_NOSPACE D_STR_MAX D_STR_RIGHT  // Set `D_STR_MAX` first!
+#endif  // D_STR_MAXRIGHT_NOSPACE
+#ifndef D_STR_RIGHTMAX
+#define D_STR_RIGHTMAX D_STR_RIGHT " " D_STR_MAX  // Set `D_STR_MAX` first!
+#endif  // D_STR_RIGHTMAX
 #ifndef D_STR_RIGHTMAX_NOSPACE
 #define D_STR_RIGHTMAX_NOSPACE D_STR_RIGHT D_STR_MAX  // Set `D_STR_MAX` first!
 #endif  // D_STR_RIGHTMAX_NOSPACE
@@ -363,6 +424,12 @@
 #ifndef D_STR_MAXLEFT
 #define D_STR_MAXLEFT D_STR_MAX " " D_STR_LEFT  // Set `D_STR_MAX` first!
 #endif  // D_STR_MAXLEFT
+#ifndef D_STR_MAXLEFT_NOSPACE
+#define D_STR_MAXLEFT_NOSPACE D_STR_MAX D_STR_LEFT  // Set `D_STR_MAX` first!
+#endif  // D_STR_MAXLEFT_NOSPACE
+#ifndef D_STR_LEFTMAX
+#define D_STR_LEFTMAX D_STR_LEFT " " D_STR_MAX  // Set `D_STR_MAX` first!
+#endif  // D_STR_LEFTMAX
 #ifndef D_STR_LEFTMAX_NOSPACE
 #define D_STR_LEFTMAX_NOSPACE D_STR_LEFT D_STR_MAX  // Set `D_STR_MAX` first!
 #endif  // D_STR_LEFTMAX_NOSPACE
@@ -434,6 +501,9 @@
 #ifndef D_STR_COLONSPACE
 #define D_STR_COLONSPACE ": "
 #endif  // D_STR_COLONSPACE
+#ifndef D_STR_DASH
+#define D_STR_DASH "-"
+#endif  // D_STR_DASH
 
 #ifndef D_STR_DAY
 #define D_STR_DAY "Day"
@@ -489,7 +559,135 @@
 #define D_STR_BITS "Bits"
 #endif  // D_STR_BITS
 
+// Model Names
+#ifndef D_STR_YAW1F
+#define D_STR_YAW1F "YAW1F"
+#endif  // D_STR_YAW1F
+#ifndef D_STR_YBOFB
+#define D_STR_YBOFB "YBOFB"
+#endif  // D_STR_YBOFB
+#ifndef D_STR_V9014557_A
+#define D_STR_V9014557_A "V9014557-A"
+#endif  // D_STR_V9014557_A
+#ifndef D_STR_V9014557_B
+#define D_STR_V9014557_B "V9014557-B"
+#endif  // D_STR_V9014557_B
+#ifndef D_STR_RLT0541HTA_A
+#define D_STR_RLT0541HTA_A "R-LT0541-HTA-A"
+#endif  // D_STR_RLT0541HTA_A
+#ifndef D_STR_RLT0541HTA_B
+#define D_STR_RLT0541HTA_B "R-LT0541-HTA-B"
+#endif  // D_STR_RLT0541HTA_B
+#ifndef D_STR_ARRAH2E
+#define D_STR_ARRAH2E "ARRAH2E"
+#endif  // D_STR_ARRAH2E
+#ifndef D_STR_ARDB1
+#define D_STR_ARDB1 "ARDB1"
+#endif  // D_STR_ARDB1
+#ifndef D_STR_ARREB1E
+#define D_STR_ARREB1E "ARREB1E"
+#endif  // D_STR_ARREB1E
+#ifndef D_STR_ARJW2
+#define D_STR_ARJW2 "ARJW2"
+#endif  // D_STR_ARJW2
+#ifndef D_STR_ARRY4
+#define D_STR_ARRY4 "ARRY4"
+#endif  // D_STR_ARRY4
+#ifndef D_STR_ARREW4E
+#define D_STR_ARREW4E "ARREW4E"
+#endif  // D_STR_ARREW4E
+#ifndef D_STR_GE6711AR2853M
+#define D_STR_GE6711AR2853M "GE6711AR2853M"
+#endif  // D_STR_GE6711AR2853M
+#ifndef D_STR_AKB75215403
+#define D_STR_AKB75215403 "AKB75215403"
+#endif  // D_STR_AKB75215403
+#ifndef D_STR_AKB74955603
+#define D_STR_AKB74955603 "AKB74955603"
+#endif  // D_STR_AKB74955603
+#ifndef D_STR_AKB73757604
+#define D_STR_AKB73757604 "AKB73757604"
+#endif  // D_STR_AKB73757604
+#ifndef D_STR_KKG9AC1
+#define D_STR_KKG9AC1 "KKG9AC1"
+#endif  // D_STR_KKG9AC1
+#ifndef D_STR_KKG29AC1
+#define D_STR_KKG29AC1 "KKG29AC1"
+#endif  // D_STR_KKG9AC1
+#ifndef D_STR_LKE
+#define D_STR_LKE "LKE"
+#endif  // D_STR_LKE
+#ifndef D_STR_NKE
+#define D_STR_NKE "NKE"
+#endif  // D_STR_NKE
+#ifndef D_STR_DKE
+#define D_STR_DKE "DKE"
+#endif  // D_STR_DKE
+#ifndef D_STR_PKR
+#define D_STR_PKR "PKR"
+#endif  // D_STR_PKR
+#ifndef D_STR_JKE
+#define D_STR_JKE "JKE"
+#endif  // D_STR_JKE
+#ifndef D_STR_CKP
+#define D_STR_CKP "CKP"
+#endif  // D_STR_CKP
+#ifndef D_STR_RKR
+#define D_STR_RKR "RKR"
+#endif  // D_STR_RKR
+#ifndef D_STR_PANASONICLKE
+#define D_STR_PANASONICLKE "PANASONICLKE"
+#endif  // D_STR_PANASONICLKE
+#ifndef D_STR_PANASONICNKE
+#define D_STR_PANASONICNKE "PANASONICNKE"
+#endif  // D_STR_PANASONICNKE
+#ifndef D_STR_PANASONICDKE
+#define D_STR_PANASONICDKE "PANASONICDKE"
+#endif  // D_STR_PANASONICDKE
+#ifndef D_STR_PANASONICPKR
+#define D_STR_PANASONICPKR "PANASONICPKR"
+#endif  // D_STR_PANASONICPKR
+#ifndef D_STR_PANASONICJKE
+#define D_STR_PANASONICJKE "PANASONICJKE"
+#endif  // D_STR_PANASONICJKE
+#ifndef D_STR_PANASONICCKP
+#define D_STR_PANASONICCKP "PANASONICCKP"
+#endif  // D_STR_PANASONICCKP
+#ifndef D_STR_PANASONICRKR
+#define D_STR_PANASONICRKR "PANASONICRKR"
+#endif  // D_STR_PANASONICRKR
+#ifndef D_STR_A907
+#define D_STR_A907 "A907"
+#endif  // D_STR_A907
+#ifndef D_STR_A705
+#define D_STR_A705 "A705"
+#endif  // D_STR_A705
+#ifndef D_STR_A903
+#define D_STR_A903 "A903"
+#endif  // D_STR_A903
+#ifndef D_STR_TAC09CHSD
+#define D_STR_TAC09CHSD "TAC09CHSD"
+#endif  // D_STR_TAC09CHSD
+#ifndef D_STR_GZ055BE1
+#define D_STR_GZ055BE1 "GZ055BE1"
+#endif  // D_STR_GZ055BE1
+#ifndef D_STR_122LZF
+#define D_STR_122LZF "122LZF"
+#endif  // D_STR_122LZF
+#ifndef D_STR_DG11J13A
+#define D_STR_DG11J13A "DG11J13A"
+#endif  // D_STR_DG11J13A
+#ifndef D_STR_DG11J104
+#define D_STR_DG11J104 "DG11J104"
+#endif  // D_STR_DG11J104
+#ifndef D_STR_DG11J191
+#define D_STR_DG11J191 "DG11J191"
+#endif  // D_STR_DG11J191
+
 // Protocols Names
+#ifndef D_STR_AIRTON
+#define D_STR_AIRTON "AIRTON"
+#endif  // D_STR_AIRTON
 #ifndef D_STR_AIRWELL
 #define D_STR_AIRWELL "AIRWELL"
 #endif  // D_STR_AIRWELL
@@ -502,6 +700,12 @@
 #ifndef D_STR_ARGO
 #define D_STR_ARGO "ARGO"
 #endif  // D_STR_ARGO
+#ifndef D_STR_ARRIS
+#define D_STR_ARRIS "ARRIS"
+#endif  // D_STR_ARRIS
+#ifndef D_STR_BOSE
+#define D_STR_BOSE "BOSE"
+#endif  // D_STR_BOSE
 #ifndef D_STR_CARRIER_AC
 #define D_STR_CARRIER_AC "CARRIER_AC"
 #endif  // D_STR_CARRIER_AC
@@ -514,6 +718,9 @@
 #ifndef D_STR_COOLIX
 #define D_STR_COOLIX "COOLIX"
 #endif  // D_STR_COOLIX
+#ifndef D_STR_COOLIX48
+#define D_STR_COOLIX48 D_STR_COOLIX "48"
+#endif  // D_STR_COOLIX48
 #ifndef D_STR_CORONA_AC
 #define D_STR_CORONA_AC "CORONA_AC"
 #endif  // D_STR_CORONA_AC
@@ -724,6 +931,9 @@
 #ifndef D_STR_RCMM
 #define D_STR_RCMM "RCMM"
 #endif  // D_STR_RCMM
+#ifndef D_STR_RHOSS
+#define D_STR_RHOSS "RHOSS"
+#endif  // D_STR_RHOSS
 #ifndef D_STR_SAMSUNG
 #define D_STR_SAMSUNG "SAMSUNG"
 #endif  // D_STR_SAMSUNG
@@ -739,6 +949,9 @@
 #ifndef D_STR_SANYO_AC
 #define D_STR_SANYO_AC "SANYO_AC"
 #endif  // D_STR_SANYO_AC
+#ifndef D_STR_SANYO_AC88
+#define D_STR_SANYO_AC88 "SANYO_AC88"
+#endif  // D_STR_SANYO_AC88
 #ifndef D_STR_SANYO_LC7461
 #define D_STR_SANYO_LC7461 "SANYO_LC7461"
 #endif  // D_STR_SANYO_LC7461
@@ -781,6 +994,9 @@
 #ifndef D_STR_TROTEC
 #define D_STR_TROTEC "TROTEC"
 #endif  // D_STR_TROTEC
+#ifndef D_STR_TROTEC_3550
+#define D_STR_TROTEC_3550 D_STR_TROTEC "_3550"
+#endif  // D_STR_TROTEC_3550
 #ifndef D_STR_TRUMA
 #define D_STR_TRUMA "TRUMA"
 #endif  // D_STR_TRUMA

@@ -41,7 +41,7 @@ void ethSetupStaticIPconfig() {
     log += formatIP(subnet);
     log += F(" DNS: ");
     log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   ETH.config(ip, gw, subnet, dns);
 }
@@ -68,22 +68,23 @@ bool ethPrepare() {
 void ethPrintSettings() {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(115);
+    if (log.reserve(115)) {
 //    log += F("ETH/Wifi mode: ");
 //    log += toString(active_network_medium);
-    log += F("ETH PHY Type: ");
-    log += toString(Settings.ETH_Phy_Type);
-    log += F(" PHY Addr: ");
-    log += Settings.ETH_Phy_Addr;
-    log += F(" Eth Clock mode: ");
-    log += toString(Settings.ETH_Clock_Mode);
-    log += F(" MDC Pin: ");
-    log += String(Settings.ETH_Pin_mdc);
-    log += F(" MIO Pin: ");
-    log += String(Settings.ETH_Pin_mdio);
-    log += F(" Power Pin: ");
-    log += String(Settings.ETH_Pin_power);
-    addLog(LOG_LEVEL_INFO, log);
+      log += F("ETH PHY Type: ");
+      log += toString(Settings.ETH_Phy_Type);
+      log += F(" PHY Addr: ");
+      log += Settings.ETH_Phy_Addr;
+      log += F(" Eth Clock mode: ");
+      log += toString(Settings.ETH_Clock_Mode);
+      log += F(" MDC Pin: ");
+      log += String(Settings.ETH_Pin_mdc);
+      log += F(" MIO Pin: ");
+      log += String(Settings.ETH_Pin_mdio);
+      log += F(" Power Pin: ");
+      log += String(Settings.ETH_Pin_power);
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 }
 

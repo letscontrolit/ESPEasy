@@ -390,7 +390,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           log = F("P039 : ");                            // 7 char
           log += getTaskDeviceName(event->TaskIndex);    // 41 char
           log += F(" : SPI Init - DONE" );               // 18 char
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
 
@@ -528,7 +528,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
           }
           {
             addFormFloatNumberBox(F("Offset"), F("P039_offset"), P039_RTD_OFFSET, -50.0f, 50.0f, 2, 0.01f);
-            addUnit(F("K"));            
+            addUnit('K');            
             addFormNote(F("Set Offset [K] for MAX31865. Valid values: [-50.0...50.0 K], min. stepsize: [0.01]"));
           }
         }
@@ -618,7 +618,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
               log += formatUserVarNoCheck(event->TaskIndex, i);                         //  char 
               log += ' ';                                                               // 1 char
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
         success = true;
@@ -635,7 +635,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
             log += getTaskDeviceName(event->TaskIndex);                               // 41 char
             log += F(" : ");                                                          // 3 char
             log += F("No Sensor attached !");                                         // 20 char
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
         success = false;
@@ -682,7 +682,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                         log += F("; delta: ");                                // 9 char
                         log += String(delta, DEC);                            // 4 char
                         log += F(" ms");                                      // 3 char
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        addLogMove(LOG_LEVEL_DEBUG, log);
                       }
                     }
                   # endif // ifndef BUILD_NO_DEBUG
@@ -705,7 +705,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                         log += F(" : ");                                      // 3 char
                         log += F("Next State: ");                             // 12 char
                         log += String(event->Par1, DEC);                      // 4 char
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        addLogMove(LOG_LEVEL_DEBUG, log);
                       }
                     }
                   # endif // ifndef BUILD_NO_DEBUG
@@ -732,7 +732,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                         log += F("; delta: ");                          // 9 char
                         log += String(delta, DEC);                      // 4 char - more than 1000ms delta will not occur
                         log += F(" ms");                                // 2 char   
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        addLogMove(LOG_LEVEL_DEBUG, log);
                       }
                     }
                   # endif // ifndef BUILD_NO_DEBUG
@@ -763,7 +763,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                           log += formatToHex_decimal(P039_data->deviceFaults);       // 9 char
                           log += F("; Next State: ");                        // 13 char
                           log += String(event->Par1, DEC);                   // 4 char
-                          addLog(LOG_LEVEL_DEBUG, log);
+                          addLogMove(LOG_LEVEL_DEBUG, log);
                       }
 
                     }
@@ -791,7 +791,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
                         log += F(" : ");                                            // 3 char
                         log += F("current state: MAX31865_INIT_STATE, default;");   // many char - 44
                         log += F(" next state: MAX31865_BIAS_ON_STATE");            // a little less char - 35
-                        addLog(LOG_LEVEL_DEBUG, log);
+                        addLogMove(LOG_LEVEL_DEBUG, log);
                       }
                       
                       // save current timer for next calculation
@@ -857,7 +857,7 @@ float readMax6675(struct EventStruct *event)
         log += formatToHex_decimal(messageBuffer[0]);          // 9 char 
         log += F(" LSB: ");                          // 5 char
         log += formatToHex_decimal(messageBuffer[1]);          // 9 char
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
 
@@ -918,7 +918,7 @@ float readMax31855(struct EventStruct *event)
                 log += ' ';                                 // 1 char
                 log += formatToHex_decimal(messageBuffer[i]);  // 9 char
         }
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
 
@@ -932,6 +932,8 @@ float readMax31855(struct EventStruct *event)
       if (P039_data->sensorFault != ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0)) {
         // Fault code changed, log them
         P039_data->sensorFault = ((rawvalue & (MAX31855_TC_SCVCC | MAX31855_TC_SC | MAX31855_TC_OC)) == 0);
+
+#ifndef BUILD_NO_DEBUG
 
          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) 
           {
@@ -956,10 +958,10 @@ float readMax31855(struct EventStruct *event)
                   log += F(" Short-circuit to Vcc");
                 }
               }
-              addLog(LOG_LEVEL_DEBUG_MORE, log);
+              addLogMove(LOG_LEVEL_DEBUG_MORE, log);
             }
           } 
-
+#endif
 
       }
 
@@ -974,7 +976,7 @@ float readMax31855(struct EventStruct *event)
             log += formatToHex_decimal(rawvalue);
             log += F(" P039_data->sensorFault: ");
             log += formatToHex_decimal(P039_data->sensorFault);
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
         } 
        
@@ -1063,7 +1065,7 @@ float readMax31856(struct EventStruct *event)
         }
         log+= F(" rawvalue: ");
         log+= formatToHex_decimal(rawvalue);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
 
@@ -1090,10 +1092,10 @@ float readMax31856(struct EventStruct *event)
 
     P039_data->sensorFault = (sr != 0); // Set new state
 
-    const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
-
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) 
     {
+      const bool faultResolved = (P039_data->sensorFault) && (sr == 0);
       if ((P039_data->sensorFault) || faultResolved) {
         String log;
         if((log.reserve(140u))) { // reserve value derived from example log file
@@ -1135,11 +1137,12 @@ float readMax31856(struct EventStruct *event)
             if (sr & MAX31856_TC_CJRANGE) {
               log += F(" CJ Range");
             }
-          addLog(LOG_LEVEL_DEBUG_MORE, log);
+            addLogMove(LOG_LEVEL_DEBUG_MORE, log);
           }
         }
       }
     }
+#endif
   }
 
 
@@ -1209,7 +1212,7 @@ float readMax31865(struct EventStruct *event)
           log += F(" P039_data->convReady: ");
           log += boolToString(P039_data->convReady);
 
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       }
 
@@ -1245,7 +1248,7 @@ float readMax31865(struct EventStruct *event)
           log += formatToHex_decimal(registers[i]);
         }
 
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1276,6 +1279,7 @@ float readMax31865(struct EventStruct *event)
     Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
   }
  
+ #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
     {
       if (registers[MAX31865_FAULT])
@@ -1317,10 +1321,11 @@ float readMax31865(struct EventStruct *event)
           {
             log += F(" RTD High Threshold");
           }
-          addLog(LOG_LEVEL_DEBUG_MORE, log);
+          addLogMove(LOG_LEVEL_DEBUG_MORE, log);
         }
       }
     }
+    #endif
 
 
   bool ValueValid = false;
@@ -1339,7 +1344,7 @@ float readMax31865(struct EventStruct *event)
         log += formatToHex_decimal(registers[MAX31865_FAULT]);      // 7 char
         log += F(" ValueValid: ");                                  // 13 char       
         log += boolToString(ValueValid);                            // 5 char
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
 
@@ -1366,7 +1371,7 @@ float readMax31865(struct EventStruct *event)
           log += String(P039_RTD_TYPE, DEC);          // 1 char
           log += F(" P039_RTD_RES: ");                // 15 char
           log += String(P039_RTD_RES, DEC);           // 4 char
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       }
 
@@ -1542,7 +1547,7 @@ float readLM7x(struct EventStruct *event)
         log += formatToHex(device_id);
         log += F(" temperature: ");
         log += String(temperature, DEC);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
 
@@ -1616,7 +1621,7 @@ float convertLM7xTemp(uint16_t l_rawValue, uint16_t l_LM7xsubtype)
         log += String(l_noBits, DEC);
         log += F(" l_lsbvalue: ");
         log += String(l_lsbvalue, DEC);
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1748,7 +1753,7 @@ uint16_t readLM7xRegisters(uint8_t l_CS_pin_no, uint8_t l_LM7xsubType, uint8_t l
         log += formatToHex_decimal(l_returnValue);
         log += F(" l_device_id: ");
         log += formatToHex(*(l_device_id));
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1857,7 +1862,7 @@ void write8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint8_t value)
         log += formatToHex(l_address);
         log += F(" value: ");
         log += formatToHex_decimal(value);
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1894,7 +1899,7 @@ void write16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address, uint16_t value)
         log += formatToHex(l_address);
         log += F(" value: ");
         log += formatToHex_decimal(value);
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1930,7 +1935,7 @@ uint8_t read8BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
         log += formatToHex(l_address);
         log += F(" returnvalue: ");
         log += formatToHex_decimal(l_messageBuffer[1]);
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -1970,7 +1975,7 @@ uint16_t read16BitRegister(uint8_t l_CS_pin_no, uint8_t l_address)
         log += formatToHex(l_address);
         log += F(" l_returnValue: ");
         log += formatToHex_decimal(l_returnValue);
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 
@@ -2020,7 +2025,7 @@ void transfer_n_ByteSPI(uint8_t l_CS_pin_no, uint8_t l_noBytesToSend, uint8_t* l
           log += ' ';                                               // 1 char
           log += formatToHex_decimal(l_inoutMessageBuffer[i]);      // 9 char
         }
-        addLog(LOG_LEVEL_DEBUG_MORE, log);
+        addLogMove(LOG_LEVEL_DEBUG_MORE, log);
       }
     }
 

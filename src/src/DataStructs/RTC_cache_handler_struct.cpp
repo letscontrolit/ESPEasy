@@ -1,4 +1,4 @@
-#include "RTC_cache_handler_struct.h"
+#include "../DataStructs/RTC_cache_handler_struct.h"
 
 #include "../../ESPEasy_common.h"
 #include "../DataStructs/RTCStruct.h"
@@ -149,13 +149,15 @@ bool RTC_cache_handler_struct::flush() {
 
       if ((bytesWriten < RTC_cache.writePos) /*|| (fw.size() == filesize)*/) {
           #ifdef RTC_STRUCT_DEBUG
-        String log = F("RTC  : error writing file. Size before: ");
-        log += filesize;
-        log += F(" after: ");
-        log += fw.size();
-        log += F(" writen: ");
-        log += bytesWriten;
-        addLog(LOG_LEVEL_ERROR, log);
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = F("RTC  : error writing file. Size before: ");
+            log += filesize;
+            log += F(" after: ");
+            log += fw.size();
+            log += F(" writen: ");
+            log += bytesWriten;
+            addLogMove(LOG_LEVEL_ERROR, log);
+          }
           #endif // ifdef RTC_STRUCT_DEBUG
         fw.close();
 
@@ -232,9 +234,11 @@ bool RTC_cache_handler_struct::deleteOldestCacheBlock() {
       writeerror = false;
       if (tryDeleteFile(fname)) {
           #ifdef RTC_STRUCT_DEBUG
-        String log = F("RTC  : Removed file from FS: ");
-        log += fname;
-        addLog(LOG_LEVEL_INFO, String(log));
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("RTC  : Removed file from FS: ");
+            log += fname;
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
           #endif // ifdef RTC_STRUCT_DEBUG
         updateRTC_filenameCounters();
         return true;
@@ -435,13 +439,14 @@ bool RTC_cache_handler_struct::prepareFileForWrite() {
 void RTC_cache_handler_struct::rtc_debug_log(const String& description, size_t nrBytes) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(18 + description.length());
-    log  = F("RTC  : ");
-    log += description;
-    log += ' ';
-    log += nrBytes;
-    log += F(" bytes");
-    addLog(LOG_LEVEL_INFO, log);
+    if (log.reserve(18 + description.length())) {
+      log  = F("RTC  : ");
+      log += description;
+      log += ' ';
+      log += nrBytes;
+      log += F(" bytes");
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
 }
 

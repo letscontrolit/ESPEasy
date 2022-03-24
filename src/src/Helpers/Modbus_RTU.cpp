@@ -1,9 +1,9 @@
-#include "Modbus_RTU.h"
+#include "../Helpers/Modbus_RTU.h"
 
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "ESPEasy_time_calc.h"
-#include "StringConverter.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
@@ -19,7 +19,7 @@ void ModbusRTU_struct::reset() {
     delete easySerial;
     easySerial = nullptr;
   }
-  detected_device_description = "";
+  detected_device_description = String();
 
   for (int i = 0; i < 8; ++i) {
     _sendframe[i] = 0;
@@ -62,7 +62,7 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log; // = F("Modbus detected: ");
     log += detected_device_description;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     modbus_log_MEI(_modbus_address);
   }
   return true;
@@ -142,12 +142,12 @@ String ModbusRTU_struct::getDevice_description(uint8_t slaveAddress) {
       if (label.length() > 0) {
         // description += MEI_objectid_to_name(object_id);
         description += label;
-        description += ": ";
+        description += F(": ");
       }
 
       if (obj_text.length() > 0) {
         description += obj_text;
-        description += " - ";
+        description += F(" - ");
       }
     }
   }
@@ -290,7 +290,7 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
 
         if (i != 0) {
           // Append to existing description
-          result += ", ";
+          result += F(", ");
         }
         result += object_value;
       }
@@ -618,7 +618,7 @@ void ModbusRTU_struct::modbus_log_MEI(uint8_t slaveAddress) {
         String log = MEI_objectid_to_name(object_id);
         log += F(": ");
         log += result;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
       switch (process_result) {
