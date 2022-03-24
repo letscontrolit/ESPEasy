@@ -1,9 +1,9 @@
-#include "Convert.h"
+#include "../Helpers/Convert.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
-String getBearing(int degrees)
+const __FlashStringHelper * getBearing(int degrees)
 {
   const int nr_directions = 16;
   float stepsize      = (360.0f / nr_directions);
@@ -31,7 +31,7 @@ String getBearing(int degrees)
       case 15: return F("NNW");
     }
   }
-  return "";
+  return F("");
 }
 
 float CelsiusToFahrenheit(float celsius) {
@@ -168,7 +168,7 @@ String format_msec_duration(int64_t duration) {
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php
 // Td = (f/100)^(1/8) * (112 + 0.9*T) + 0.1*T - 112
 float compute_dew_point_temp(float temperature, float humidity_percentage) {
-  return pow(humidity_percentage / 100.0f, 0.125f) *
+  return powf(humidity_percentage / 100.0f, 0.125f) *
          (112.0f + 0.9f*temperature) + 0.1f*temperature - 112.0f;
 }
 
@@ -176,9 +176,37 @@ float compute_dew_point_temp(float temperature, float humidity_percentage) {
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_relative_humidity.php
 // f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
 float compute_humidity_from_dewpoint(float temperature, float dew_temperature) {
-  return 100.0f * pow((112.0f - 0.1f * temperature + dew_temperature) /
+  return 100.0f * powf((112.0f - 0.1f * temperature + dew_temperature) /
                      (112.0f + 0.9f * temperature), 8);
 }
+
+
+
+/********************************************************************************************\
+   Compensate air pressure for given altitude (in meters)
+ \*********************************************************************************************/
+float pressureElevation(float atmospheric, float altitude) {
+  // Equation taken from BMP180 datasheet (page 16):
+  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+  // Note that using the equation from wikipedia can give bad results
+  // at high altitude.  See this thread for more information:
+  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
+  return atmospheric / powf(1.0f - (altitude / 44330.0f), 5.255f);
+}
+
+float altitudeFromPressure(float atmospheric, float seaLevel)
+{
+  // Equation taken from BMP180 datasheet (page 16):
+  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
+
+  // Note that using the equation from wikipedia can give bad results
+  // at high altitude.  See this thread for more information:
+  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
+  return 44330.0f * (1.0f - powf(atmospheric / seaLevel, 0.1903f));
+}
+
+
 
 
 /********************************************************************************************\
@@ -206,16 +234,48 @@ float ul2float(unsigned long ul)
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(const float& value, byte decimals)
+String toString(const float& value, unsigned int decimalPlaces)
 {
-  String sValue = String(value, decimals);
+  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
+  // https://github.com/espressif/arduino-esp32/pull/6138/files
+//  #ifdef ESP8266
+  char *buf = (char*)malloc(decimalPlaces + 42);
+  if (nullptr == buf) {
+    return F("nan");
+  }
+  String sValue(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  free(buf);
+//  #else
+//  String sValue = String(value, decimalPlaces);
+//  #endif
 
   sValue.trim();
   return sValue;
 }
 
-String doubleToString(const double& value, int decimals, bool trimTrailingZeros) {
-  String res(value, decimals);
+String doubleToString(const double& value, unsigned int decimalPlaces, bool trimTrailingZeros) {
+  // This has been fixed in ESP32 code, not (yet) in ESP8266 code
+  // https://github.com/espressif/arduino-esp32/pull/6138/files
+//  #ifdef ESP8266
+  unsigned int expectedChars = decimalPlaces + 4; // 1 dot, 2 minus signs and terminating zero
+  if (value > 1e32 || value < -1e32) {
+    expectedChars += 308; // Just assume the worst
+  } else {
+    expectedChars += 33;
+  }
+  char *buf = (char*)malloc(expectedChars);
+
+  if (nullptr == buf) {
+    return F("nan");
+  }
+  String res(dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf));
+  free(buf);
+
+//  #else
+//  String res(value, decimalPlaces);
+//  #endif
+  res.trim();
+
   if (trimTrailingZeros) {
     int dot_pos = res.lastIndexOf('.');
     if (dot_pos != -1) {

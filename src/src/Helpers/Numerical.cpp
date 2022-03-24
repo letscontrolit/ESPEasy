@@ -1,4 +1,6 @@
-#include "Numerical.h"
+#include "../Helpers/Numerical.h"
+
+#include "../Globals/Settings.h"
 
 /********************************************************************************************\
    Check if string is valid float
@@ -66,7 +68,7 @@ bool validUIntFromString(const String& tBuf, unsigned int& result) {
       numerical = numerical.substring(2);
       base      = BIN;
     }
-    result = strtoul(numerical.c_str(), NULL, base);
+    result = strtoul(numerical.c_str(), nullptr, base);
   }
   return isvalid;
 }
@@ -86,7 +88,7 @@ bool validUInt64FromString(const String& tBuf, uint64_t& result) {
       numerical = numerical.substring(2);
       base      = BIN;
     }
-    result = strtoull(numerical.c_str(), NULL, base);
+    result = strtoull(numerical.c_str(), nullptr, base);
   }
   return isvalid;
 }
@@ -149,39 +151,24 @@ bool mustConsiderAsString(NumericalType detectedType) {
     case NumericalType::Integer:
       break;
     case NumericalType::HexadecimalUInt:
-    case NumericalType::BinaryUint:
-      return true; // Has '0x' or '0b' as prefix
+    case NumericalType::BinaryUint: // Has '0x' or '0b' as prefix
+    case NumericalType::Not_a_number:
+      return true;
   }
   return false;
 }
 
-bool mustConsiderAsString(const String& value) {
-  const unsigned int length = value.length();
-  if (length == 0) return true;
-  unsigned int i = 0;
-  char c = value[i];
-  if (c == '+' || c == '-') {
-    ++i;
-    if (length == i) return true;
-    c = value[i];
+bool mustConsiderAsJSONString(const String& value) {
+  if (value.isEmpty()) {
+    // Empty string
+    return true;
   }
 
-  bool dotFound = false;
-  for (; i < length; ++i) {
-    if (c == '.') {
-      if (dotFound) {
-        return true;
-      } else {
-        dotFound = true;
-      }
-    } else {
-      if (!isdigit(c)) {
-        return true;
-      }
-    }
-    c = value[i];
-  }
-  return i < length;
+  NumericalType detectedType;
+  const bool isNum  = isNumerical(value, detectedType);
+  const bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
+
+  return (!isBool && (!isNum || value.isEmpty() || mustConsiderAsString(detectedType)));
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
@@ -194,7 +181,10 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
     ++firstDec;
   }
 
-  if (firstDec >= bufLength) { return result; }
+  if (firstDec >= bufLength) { 
+    detectedType = NumericalType::Not_a_number;
+    return result;
+  }
   bool decPt = false;
 
   detectedType = NumericalType::Integer;
@@ -242,19 +232,32 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
+        if (result == F("-")) {
+          detectedType = NumericalType::Not_a_number;
+          return emptyString;
+        }
         return result;
       }
     }
+  } else {
+    // Does not start with a 0 and already tested for +/-
+    // Only allowed to have a '.' or digits.
+    if (c != '.' && !isdigit(c)) {
+      detectedType = NumericalType::Not_a_number;
+      return result;
+    }
   }
 
-  for (unsigned int x = firstDec; x < bufLength; ++x) {
+  bool done = false;
+
+  for (unsigned int x = firstDec; !done && x < bufLength; ++x) {
     c = tBuf.charAt(x);
 
     if (c == '.') {
-      if (NumericalType::FloatingPoint != requestedType) { return result; }
+      if (NumericalType::FloatingPoint != requestedType) { done = true; }
 
       // Only one decimal point allowed
-      if (decPt) { return result; }
+      if (decPt) { done = true; }
       else {
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
@@ -265,24 +268,33 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         case NumericalType::Integer:
 
           if (!isdigit(c)) {
-            return result;
+            done = true;
           }
           break;
         case NumericalType::HexadecimalUInt:
 
           if (!isxdigit(c)) {
-            return result;
+            done = true;
           }
           break;
         case NumericalType::BinaryUint:
 
           if ((c != '0') && (c != '1')) {
-            return result;
+            done = true;
           }
+          break;
+        case NumericalType::Not_a_number:
+          done = true;
           break;
       }
     }
-    result += c;
+    if (!done) {
+      result += c;
+    }
+  }
+  if (result == F("-")) {
+    detectedType = NumericalType::Not_a_number;
+    return emptyString;
   }
   return result;
 }
@@ -290,6 +302,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
 bool isNumerical(const String& tBuf, NumericalType& detectedType) {
   NumericalType requestedType = NumericalType::FloatingPoint;
   const String  result        = getNumerical(tBuf, requestedType, detectedType);
+  if (detectedType == NumericalType::Not_a_number) return false;
   if (result.length() > 0)
   {
     String tmp(tBuf);

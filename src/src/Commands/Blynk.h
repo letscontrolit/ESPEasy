@@ -11,7 +11,7 @@
 controllerIndex_t firstEnabledBlynk_ControllerIndex();
 
 // FIXME: this should go to PLUGIN_WRITE in _C012.ino
-String            Command_Blynk_Get(struct EventStruct *event,
+const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event,
                                     const char         *Line);
 
 bool Blynk_get(const String    & command,

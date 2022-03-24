@@ -24,7 +24,7 @@ void handle_devices();
 // TODO TD-er: Add JavaScript filter:
 //             https://www.w3schools.com/howto/howto_js_filter_dropdown.asp
 // ********************************************************************************
-void addDeviceSelect(const String& name,  int choice);
+void addDeviceSelect(const __FlashStringHelper * name,  int choice);
 
 // ********************************************************************************
 // Collect all submitted form data and store the task settings
@@ -34,9 +34,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 // ********************************************************************************
 // Show table with all selected Tasks/Devices
 // ********************************************************************************
-void handle_devicess_ShowAllTasksTable(byte page);
+void handle_devicess_ShowAllTasksTable(uint8_t page);
 
-void format_originating_node(byte remoteUnit);
+void format_originating_node(uint8_t remoteUnit);
 
 void format_I2C_port_description(taskIndex_t x);
 
@@ -51,7 +51,7 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x);
 // ********************************************************************************
 // Show the task settings page
 // ********************************************************************************
-void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, byte page);
+void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page);
 
 void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 

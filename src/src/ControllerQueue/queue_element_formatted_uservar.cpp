@@ -5,7 +5,23 @@
 #include "../../_Plugin_Helper.h"
 
 
-queue_element_formatted_uservar::queue_element_formatted_uservar() {}
+queue_element_formatted_uservar::queue_element_formatted_uservar(queue_element_formatted_uservar&& other)
+  :
+  idx(other.idx),
+  _timestamp(other._timestamp),
+  TaskIndex(other.TaskIndex),
+  controller_idx(other.controller_idx),
+  sensorType(other.sensorType),
+  valueCount(other.valueCount)
+{
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    txt[i] = std::move(other.txt[i]);
+  }
+}
 
 queue_element_formatted_uservar::queue_element_formatted_uservar(EventStruct *event) :
   idx(event->idx),
@@ -13,10 +29,38 @@ queue_element_formatted_uservar::queue_element_formatted_uservar(EventStruct *ev
   controller_idx(event->ControllerIndex),
   sensorType(event->sensorType)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectIram ephemeral;
+  #endif
+
   valueCount = getValueCountForTask(TaskIndex);
-  for (byte i = 0; i < valueCount; ++i) {
+
+  for (uint8_t i = 0; i < valueCount; ++i) {
     txt[i] = formatUserVarNoCheck(event, i);
   }
+}
+
+queue_element_formatted_uservar& queue_element_formatted_uservar::operator=(queue_element_formatted_uservar&& other) {
+  idx            = other.idx;
+  _timestamp     = other._timestamp;
+  TaskIndex      = other.TaskIndex;
+  controller_idx = other.controller_idx;
+  sensorType     = other.sensorType;
+  valueCount     = other.valueCount;
+
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    if (other.txt[i].length() && !mmu_is_iram(&(other.txt[i][0]))) {
+      txt[i] = other.txt[i];
+    } else {
+      txt[i] = std::move(other.txt[i]);
+    }
+    #else
+    txt[i] = std::move(other.txt[i]);
+    #endif // ifdef USE_SECOND_HEAP
+  }
+  return *this;
 }
 
 size_t queue_element_formatted_uservar::getSize() const {
@@ -29,13 +73,14 @@ size_t queue_element_formatted_uservar::getSize() const {
 }
 
 bool queue_element_formatted_uservar::isDuplicate(const queue_element_formatted_uservar& other) const {
-  if (other.controller_idx != controller_idx || 
-      other.TaskIndex != TaskIndex ||
-      other.sensorType != sensorType ||
-      other.valueCount != valueCount) {
+  if ((other.controller_idx != controller_idx) ||
+      (other.TaskIndex != TaskIndex) ||
+      (other.sensorType != sensorType) ||
+      (other.valueCount != valueCount)) {
     return false;
   }
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     if (other.txt[i] != txt[i]) {
       return false;
     }

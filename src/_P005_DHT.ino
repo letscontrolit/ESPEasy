@@ -26,7 +26,7 @@
 
 uint8_t Plugin_005_DHT_Pin;
 
-boolean Plugin_005(byte function, struct EventStruct *event, String& string)
+boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -69,7 +69,7 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
       {
-        const String options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
+        const __FlashStringHelper * options[] = { F("DHT 11"), F("DHT 22"), F("DHT 12"), F("Sonoff am2301"), F("Sonoff si7021") };
         int indices[] = { P005_DHT11, P005_DHT22, P005_DHT12, P005_AM2301, P005_SI7021 };
 
         addFormSelector(F("Sensor model"), F("p005_dhttype"), 5, options, indices, PCONFIG(0) );
@@ -82,6 +82,12 @@ boolean Plugin_005(byte function, struct EventStruct *event, String& string)
       {
         PCONFIG(0) = getFormItemInt(F("p005_dhttype"));
 
+        success = true;
+        break;
+      }
+
+    case PLUGIN_INIT:
+      {
         success = true;
         break;
       }
@@ -109,17 +115,21 @@ void P005_log(struct EventStruct *event, int logNr)
     case P005_error_checksum_error:      text += F("Checksum Error"); break;
     case P005_error_invalid_NAN_reading: text += F("Invalid NAN reading"); break;
     case P005_info_temperature:
-      text += F("Temperature: ");
-      text += formatUserVarNoCheck(event->TaskIndex, 0);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        text += F("Temperature: ");
+        text += formatUserVarNoCheck(event->TaskIndex, 0);
+      }
       isError = false;
       break;
     case P005_info_humidity:
-      text += F("Humidity: ");
-      text += formatUserVarNoCheck(event->TaskIndex, 1);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        text += F("Humidity: ");
+        text += formatUserVarNoCheck(event->TaskIndex, 1);
+      }
       isError = false;
       break;
   }
-  addLog(LOG_LEVEL_INFO, text);
+  addLogMove(LOG_LEVEL_INFO, text);
   if (isError) {
     UserVar[event->BaseVarIndex] = NAN;
     UserVar[event->BaseVarIndex + 1] = NAN;
@@ -129,9 +139,9 @@ void P005_log(struct EventStruct *event, int logNr)
 /*********************************************************************************************\
 * DHT sub to wait until a pin is in a certain state
 \*********************************************************************************************/
-boolean P005_waitState(int state)
+bool P005_waitState(int state)
 {
-  unsigned long timeout = micros() + 100;
+  const uint64_t timeout = getMicros64() + 100;
   while (digitalRead(Plugin_005_DHT_Pin) != state)
   {
     if (usecTimeOutReached(timeout)) return false;
@@ -144,9 +154,9 @@ boolean P005_waitState(int state)
 * Perform the actual reading + interpreting of data.
 \*********************************************************************************************/
 bool P005_do_plugin_read(struct EventStruct *event) {
-  byte i;
+  uint8_t i;
 
-  byte Par3 = PCONFIG(0);
+  uint8_t Par3 = PCONFIG(0);
   Plugin_005_DHT_Pin = CONFIG_PIN1;
 
   pinMode(Plugin_005_DHT_Pin, OUTPUT);
@@ -181,7 +191,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
   if(!P005_waitState(0)) {interrupts(); P005_log(event, P005_error_no_reading); return false; }
 
   bool readingAborted = false;
-  byte dht_dat[5];
+  uint8_t dht_dat[5];
   for (i = 0; i < 5 && !readingAborted; i++)
   {
       int data = Plugin_005_read_dht_dat();
@@ -196,7 +206,7 @@ bool P005_do_plugin_read(struct EventStruct *event) {
     return false;
 
   // Checksum calculation is a Rollover Checksum by design!
-  byte dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
+  uint8_t dht_check_sum = (dht_dat[0] + dht_dat[1] + dht_dat[2] + dht_dat[3]) & 0xFF; // check check_sum
   if (dht_dat[4] != dht_check_sum)
   {
       P005_log(event, P005_error_checksum_error);
@@ -242,8 +252,8 @@ bool P005_do_plugin_read(struct EventStruct *event) {
 \*********************************************************************************************/
 int Plugin_005_read_dht_dat(void)
 {
-  byte i = 0;
-  byte result = 0;
+  uint8_t i = 0;
+  uint8_t result = 0;
   for (i = 0; i < 8; i++)
   {
     if (!P005_waitState(1))  return -1;

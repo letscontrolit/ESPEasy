@@ -1,0 +1,49 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``multirelay,on,<channel>``
+
+    ","
+
+    | Switch on the relay at the channel given. Range is 1..8, but limited to the number the plugin is configured for.
+
+    "
+    "
+
+    | ``multirelay,off,<channel>``
+
+    ","
+
+    | Switch off the relay at the channel given. Range is 1..8, but limited to the number the plugin is configured for.
+
+    "
+    "
+
+    | ``multirelay,set,<channel_bitmap>``
+
+    ","
+
+    | Switch on and off according to the bitmap provided, in 8..1 order. The bitmap can be given in decimal (``nn``, 1-3 digits, ``0`` to ``9``), hexadecimal (``0xnn``, 1 or 2 digits, ``0`` to ``f``) or binary (``0bnnnnnnnn``, 1 to 8 digits, ``0`` or ``1``) notation.
+
+    "
+    "
+
+    | ``multirelay,get,<channel>``
+
+    ","
+
+    | Get the current state of the requested channel (checked for being in range 1 to the number of relays configured), and put that in the Channel and Get values, so it will be available to rules or a configured controller.
+
+    "
+    "
+
+    | ``multirelay,loop,0|1``
+
+    ","
+
+    | Disable or enable getting the next channel state on every Interval read. Corresponds to the **Loop Channel/Get on read** option in the device settings, but does not check/uncheck that setting.
+
+    "

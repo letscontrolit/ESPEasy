@@ -18,6 +18,9 @@
 
 #ifdef WEBSERVER_ADVANCED
 
+void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
+  setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
+}
 
 // ********************************************************************************
 // Web Interface config page
@@ -32,10 +35,10 @@ void handle_advanced() {
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate();
 
-  if (web_server.arg(F("edit")).length() != 0)
+  if (!webArg(F("edit")).isEmpty())
   {
 //    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet     = web_server.arg(F("ip")).toInt();
+    Settings.IP_Octet     = webArg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));
     TimeChangeRule dst_start(getFormItemInt(F("dststartweek")), getFormItemInt(F("dststartdow")), getFormItemInt(F("dststartmonth")), getFormItemInt(F("dststarthour")), Settings.TimeZone);
@@ -51,15 +54,18 @@ void handle_advanced() {
     Settings.SyslogFacility = getFormItemInt(F("syslogfacility"));
     Settings.SyslogPort     = getFormItemInt(F("syslogport"));
     Settings.UseSerial      = isFormItemChecked(F("useserial"));
-    setLogLevelFor(LOG_TO_SYSLOG, getFormItemInt(getInternalLabel(LabelType::SYSLOG_LOG_LEVEL)));
-    setLogLevelFor(LOG_TO_SERIAL, getFormItemInt(getInternalLabel(LabelType::SERIAL_LOG_LEVEL)));
-    setLogLevelFor(LOG_TO_WEBLOG, getFormItemInt(getInternalLabel(LabelType::WEB_LOG_LEVEL)));
+    setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
+    setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
 #ifdef FEATURE_SD
-    setLogLevelFor(LOG_TO_SDCARD, getFormItemInt(getInternalLabel(LabelType::SD_LOG_LEVEL)));
+    setLogLevelFor(LOG_TO_SDCARD, LabelType::SD_LOG_LEVEL);
 #endif // ifdef FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
-    Settings.UseNTP                      = isFormItemChecked(F("usentp"));
+    Settings.UseNTP(isFormItemChecked(F("usentp")));
+    Settings.ExtTimeSource(
+      static_cast<ExtTimeSource_e>(getFormItemInt(F("exttimesource")))
+    );
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
     #ifdef USES_SSDP
@@ -67,7 +73,7 @@ void handle_advanced() {
     #endif // USES_SSDP
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
-    Settings.ConnectionFailuresThreshold = getFormItemInt(F("cft"));
+    Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking         = isFormItemChecked(F("usertosmultitasking"));
 
@@ -82,19 +88,30 @@ void handle_advanced() {
     #endif // WEBSERVER_NEW_RULES
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
-    Settings.ForceWiFi_bg_mode(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_BG)));
-    Settings.WiFiRestart_connection_lost(isFormItemChecked(getInternalLabel(LabelType::RESTART_WIFI_LOST_CONN)));
-    Settings.EcoPowerMode(isFormItemChecked(getInternalLabel(LabelType::CPU_ECO_MODE)));
-    Settings.WifiNoneSleep(isFormItemChecked(getInternalLabel(LabelType::FORCE_WIFI_NOSLEEP)));
+    Settings.ForceWiFi_bg_mode(isFormItemChecked(LabelType::FORCE_WIFI_BG));
+    Settings.WiFiRestart_connection_lost(isFormItemChecked(LabelType::RESTART_WIFI_LOST_CONN));
+    Settings.EcoPowerMode(isFormItemChecked(LabelType::CPU_ECO_MODE));
+    Settings.WifiNoneSleep(isFormItemChecked(LabelType::FORCE_WIFI_NOSLEEP));
 #ifdef SUPPORT_ARP
-    Settings.gratuitousARP(isFormItemChecked(getInternalLabel(LabelType::PERIODICAL_GRAT_ARP)));
+    Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
 #endif // ifdef SUPPORT_ARP
-    Settings.setWiFi_TX_power(getFormItemFloat(getInternalLabel(LabelType::WIFI_TX_MAX_PWR)));
-    Settings.WiFi_sensitivity_margin = getFormItemInt(getInternalLabel(LabelType::WIFI_SENS_MARGIN));
-    Settings.UseMaxTXpowerForSending(isFormItemChecked(getInternalLabel(LabelType::WIFI_SEND_AT_MAX_TX_PWR)));
-    Settings.NumberExtraWiFiScans = getFormItemInt(getInternalLabel(LabelType::WIFI_NR_EXTRA_SCANS));
-    Settings.PeriodicalScanWiFi(isFormItemChecked(getInternalLabel(LabelType::WIFI_PERIODICAL_SCAN)));
-    Settings.JSONBoolWithoutQuotes(isFormItemChecked(F("json_bool_with_quotes")));
+    Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
+    Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
+    Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
+    Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
+    Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
+    Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
+    Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
+    Settings.AllowTaskValueSetAllPlugins(isFormItemChecked(LabelType::TASKVALUESET_ALL_PLUGINS));
+    Settings.EnableClearHangingI2Cbus(isFormItemChecked(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS));
+
+#ifndef BUILD_NO_RAM_TRACKER
+    Settings.EnableRAMTracking(isFormItemChecked(LabelType::ENABLE_RAM_TRACKING));
+#endif
+
+    #ifdef ESP8266
+    Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
+    #endif
 
     addHtmlError(SaveSettings());
 
@@ -130,10 +147,11 @@ void handle_advanced() {
   addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
 */
 
-  addFormSubHeader(F("NTP Settings"));
+  addFormSubHeader(F("Time Source"));
 
-  addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP);
+  addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
   addFormTextBox(F("NTP Hostname"), F("ntphost"), Settings.NTPHost, 63);
+  addFormExtTimeSourceSelect(F("External Time Source"), F("exttimesource"), Settings.ExtTimeSource());
 
   addFormSubHeader(F("DST Settings"));
   addFormDstSelect(true,  Settings.DST_Start);
@@ -154,13 +172,13 @@ void handle_advanced() {
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
   addFormNumericBox(F("Syslog UDP port"), F("syslogport"), Settings.SyslogPort, 0, 65535);
 
-  addFormLogLevelSelect(getLabel(LabelType::SYSLOG_LOG_LEVEL), getInternalLabel(LabelType::SYSLOG_LOG_LEVEL), Settings.SyslogLevel);
+  addFormLogLevelSelect(LabelType::SYSLOG_LOG_LEVEL, Settings.SyslogLevel);
   addFormLogFacilitySelect(F("Syslog Facility"), F("syslogfacility"), Settings.SyslogFacility);
-  addFormLogLevelSelect(getLabel(LabelType::SERIAL_LOG_LEVEL), getInternalLabel(LabelType::SERIAL_LOG_LEVEL), Settings.SerialLogLevel);
-  addFormLogLevelSelect(getLabel(LabelType::WEB_LOG_LEVEL),    getInternalLabel(LabelType::WEB_LOG_LEVEL),    Settings.WebLogLevel);
+  addFormLogLevelSelect(LabelType::SERIAL_LOG_LEVEL, Settings.SerialLogLevel);
+  addFormLogLevelSelect(LabelType::WEB_LOG_LEVEL,    Settings.WebLogLevel);
 
 #ifdef FEATURE_SD
-  addFormLogLevelSelect(getLabel(LabelType::SD_LOG_LEVEL),     getInternalLabel(LabelType::SD_LOG_LEVEL),     Settings.SDLogLevel);
+  addFormLogLevelSelect(LabelType::SD_LOG_LEVEL,     Settings.SDLogLevel);
 
   addFormCheckBox(F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
 #endif // ifdef FEATURE_SD
@@ -188,6 +206,12 @@ void handle_advanced() {
   addHtml(F(" (decimal)"));
 
   addFormNumericBox(F("I2C ClockStretchLimit"), F("wireclockstretchlimit"), Settings.WireClockStretchLimit); // TODO define limits
+  #ifdef ESP8266
+  addUnit(F("usec"));
+  #endif
+  #ifdef ESP32
+  addUnit(F("1/80 usec"));
+  #endif
   #if defined(FEATURE_ARDUINO_OTA)
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif // if defined(FEATURE_ARDUINO_OTA)
@@ -195,13 +219,27 @@ void handle_advanced() {
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
-  addFormCheckBox(F("JSON bool output without quotes"), F("json_bool_with_quotes"), Settings.JSONBoolWithoutQuotes());
+  addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
+  #ifdef USES_TIMING_STATS
+  addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
+  #endif
+#ifndef BUILD_NO_RAM_TRACKER
+  addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
+#endif
+
+  addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
+  addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
+
+  #ifdef ESP8266
+  addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
+  #endif
+
 
   #ifdef USES_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
   #endif // ifdef USES_SSDP
 
-  addFormNumericBox(getLabel(LabelType::CONNECTION_FAIL_THRESH), F("cft"), Settings.ConnectionFailuresThreshold, 0, 100);
+  addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
 #endif // ifdef ESP8266
@@ -228,14 +266,14 @@ void handle_advanced() {
     addUnit(F("dBm"));
     String note;
     note = F("Current max: ");
-    note += String(maxTXpwr, 2);
+    note += toString(maxTXpwr, 2);
     note += F(" dBm");
     addFormNote(note);
 
     addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
     addUnit(F("dB")); // Relative, thus the unit is dB, not dBm
     note = F("Adjust TX power to target the AP with (threshold + margin) dBm signal strength. Current threshold: ");
-    note += String(threshold, 2);
+    note += toString(threshold, 2);
     note += F(" dBm");
     addFormNote(note);
   }
@@ -245,7 +283,7 @@ void handle_advanced() {
     String note = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
     addFormNote(note);
   }
-  addFormCheckBox(LabelType::WIFI_PERIODICAL_SCAN, Settings.PeriodicalScanWiFi());
+  addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
 
 
@@ -273,28 +311,28 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
     String weeklabel = isStart ? F("Start")  : F("End");
     weeklabel += F(" (week, dow, month)");
     String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
-    String week[5]       = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
+    const __FlashStringHelper *  week[5] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
     int    weekValues[5] = { 0, 1, 2, 3, 4 };
 
     addRowLabel(weeklabel);
-    addSelector(weekid, 5, week, weekValues, NULL, rule.week);
+    addSelector(weekid, 5, week, weekValues, nullptr, rule.week);
   }
   html_BR();
   {
     String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
-    String dow[7]        = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
+    const __FlashStringHelper *  dow[7] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
     int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
 
-    addSelector(dowid, 7, dow, dowValues, NULL, rule.dow);
+    addSelector(dowid, 7, dow, dowValues, nullptr, rule.dow);
   }
   html_BR();
   {
     String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
-    String month[12]     = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
+    const __FlashStringHelper * month[12] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
                              "Dec") };
     int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
-    addSelector(monthid, 12, month, monthValues, NULL, rule.month);
+    addSelector(monthid, 12, month, monthValues, nullptr, rule.month);
   }
   {
     String hourid  = isStart ? F("dststarthour")  : F("dstendhour");
@@ -305,15 +343,27 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
 }
 
-void addFormLogLevelSelect(const String& label, const String& id, int choice)
+void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
-  addLogLevelSelect(id, choice);
+  const __FlashStringHelper * options[5] =
+    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
+  const int optionValues[5] = { 
+    static_cast<int>(ExtTimeSource_e::None),
+    static_cast<int>(ExtTimeSource_e::DS1307),
+    static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::PCF8523),
+    static_cast<int>(ExtTimeSource_e::PCF8563)
+    };
+
+  addSelector(id, 5, options, optionValues, nullptr, static_cast<int>(choice));
 }
 
-void addLogLevelSelect(const String& name, int choice)
+
+void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
-  String options[LOG_LEVEL_NRELEMENTS + 1];
+  addRowLabel(getLabel(label));
+  const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };
 
   options[0]      = getLogLevelDisplayString(0);
@@ -321,23 +371,19 @@ void addLogLevelSelect(const String& name, int choice)
   for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
     options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
   }
-  addSelector(name, LOG_LEVEL_NRELEMENTS + 1, options, optionValues, NULL, choice);
+  addSelector(getInternalLabel(label), LOG_LEVEL_NRELEMENTS + 1, options, optionValues, nullptr, choice);
+
 }
 
-void addFormLogFacilitySelect(const String& label, const String& id, int choice)
+void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel(label);
-  addLogFacilitySelect(id, choice);
-}
-
-void addLogFacilitySelect(const String& name, int choice)
-{
-  String options[12] =
+  const __FlashStringHelper * options[12] =
   { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
     F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
-  int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+  const int optionValues[12] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
 
-  addSelector(name, 12, options, optionValues, NULL, choice);
+  addSelector(id, 12, options, optionValues, nullptr, choice);
 }
 
 #endif // ifdef WEBSERVER_ADVANCED

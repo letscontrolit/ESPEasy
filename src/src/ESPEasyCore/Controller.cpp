@@ -1,4 +1,4 @@
-#include "Controller.h"
+#include "../ESPEasyCore/Controller.h"
 
 #include "../../ESPEasy_common.h"
 #include "../../ESPEasy-Globals.h"
@@ -11,6 +11,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../DataTypes/SPI_options.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
@@ -48,7 +49,7 @@ void sendData(struct EventStruct *event)
     createRuleEvents(event);
   }
 
-  if (Settings.UseValueLogger && (Settings.InitSPI > 0) && (Settings.Pin_sd_cs >= 0)) {
+  if (Settings.UseValueLogger && (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) && (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
 
@@ -74,7 +75,7 @@ void sendData(struct EventStruct *event)
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
           log += getCPluginNameFromProtocolIndex(ProtocolIndex);
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       }
 #endif // ifndef BUILD_NO_DEBUG
@@ -91,13 +92,11 @@ void sendData(struct EventStruct *event)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  switch (event->getSensorType()) {
-    case Sensor_VType::SENSOR_TYPE_LONG:    return true;
-    case Sensor_VType::SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
-    default:
-      break;
-  }
-  byte valueCount = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType vtype = event->getSensorType();
+  if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
+      vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
+  ) return true;
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -114,7 +113,7 @@ bool validUserVar(struct EventStruct *event) {
 \*********************************************************************************************/
 
 // handle MQTT messages
-void incoming_mqtt_callback(char *c_topic, byte *b_payload, unsigned int length) {
+void incoming_mqtt_callback(char *c_topic, uint8_t *b_payload, unsigned int length) {
   statusLED(true);
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
 
@@ -171,7 +170,7 @@ void MQTTDisconnect()
 bool MQTTConnect(controllerIndex_t controller_idx)
 {
   ++mqtt_reconnect_count;
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
 
   if (!AllocatedControllerSettings()) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot connect, out of RAM"));
@@ -236,7 +235,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   delay(0);
 
 
-  byte controller_number = Settings.Protocol[controller_idx];
+  uint8_t controller_number = Settings.Protocol[controller_idx];
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
 
@@ -245,17 +244,21 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     updateMQTTclient_connected();
     return false;
   }
-  String log = F("MQTT : Connected to broker with client ID: ");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("MQTT : Connected to broker with client ID: ");
 
-  log += clientid;
-  addLog(LOG_LEVEL_INFO, log);
+    log += clientid;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   String subscribeTo = ControllerSettings.Subscribe;
 
   parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
-  log  = F("Subscribed to: ");
-  log += subscribeTo;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log  = F("Subscribed to: ");
+    log += subscribeTo;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 
   updateMQTTclient_connected();
   statusLED(true);
@@ -279,7 +282,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 String getMQTTclientID(const ControllerSettingsStruct& ControllerSettings) {
   String clientid = ControllerSettings.ClientID;
 
-  if (clientid.length() == 0) {
+  if (clientid.isEmpty()) {
     // Try to generate some default
     clientid = F(CONTROLLER_DEFAULT_CLIENTID);
   }
@@ -318,7 +321,7 @@ bool MQTTCheck(controllerIndex_t controller_idx)
     String LWTTopic, LWTMessageConnect;
     bool   willRetain = false;
     {
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot check, out of RAM"));
@@ -380,12 +383,12 @@ String getLWT_topic(const ControllerSettingsStruct& ControllerSettings) {
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTTopic = ControllerSettings.MQTTLwtTopic;
 
-    if (LWTTopic.length() == 0)
+    if (LWTTopic.isEmpty())
     {
       LWTTopic  = ControllerSettings.Subscribe;
       LWTTopic += F("/LWT");
     }
-    LWTTopic.replace(String(F("/#")), String(F("/status")));
+    LWTTopic.replace(F("/#"), F("/status"));
     parseSystemVariables(LWTTopic, false);
   }
   return LWTTopic;
@@ -397,7 +400,7 @@ String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings)
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTMessageConnect = ControllerSettings.LWTMessageConnect;
 
-    if (LWTMessageConnect.length() == 0) {
+    if (LWTMessageConnect.isEmpty()) {
       LWTMessageConnect = F(DEFAULT_MQTT_LWT_CONNECT_MESSAGE);
     }
     parseSystemVariables(LWTMessageConnect, false);
@@ -411,7 +414,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   if (ControllerSettings.mqtt_sendLWT()) {
     LWTMessageDisconnect = ControllerSettings.LWTMessageDisconnect;
 
-    if (LWTMessageDisconnect.length() == 0) {
+    if (LWTMessageDisconnect.isEmpty()) {
       LWTMessageDisconnect = F(DEFAULT_MQTT_LWT_DISCONNECT_MESSAGE);
     }
     parseSystemVariables(LWTMessageDisconnect, false);
@@ -448,7 +451,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
 
 void SendStatus(struct EventStruct *event, const String& status)
 {
-  if (status.length() == 0) { return; }
+  if (status.isEmpty()) { return; }
 
   switch (event->Source)
   {
@@ -505,6 +508,20 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex, const 
   return success;
 }
 
+bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  String&& topic, String&& payload, bool retained) {
+  if (MQTTDelayHandler == nullptr) {
+    return false;
+  }
+
+  if (MQTT_queueFull(controller_idx)) {
+    return false;
+  }
+  const bool success = MQTTDelayHandler->addToQueue(MQTT_queue_element(controller_idx, taskIndex, std::move(topic), std::move(payload), retained));
+
+  scheduleNextMQTTdelayQueue();
+  return success;
+}
+
 /*********************************************************************************************\
 * Send status info back to channel where request came from
 \*********************************************************************************************/
@@ -523,7 +540,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
     bool   mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
 
       if (!AllocatedControllerSettings()) {
         addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot send status, out of RAM"));
@@ -589,12 +606,21 @@ void SensorSendTask(taskIndex_t TaskIndex)
     struct EventStruct TempEvent(TaskIndex);
     checkDeviceVTypeForTask(&TempEvent);
 
-    // TempEvent.idx = Settings.TaskDeviceID[TaskIndex]; todo check
 
-    float preValue[VARS_PER_TASK]; // store values before change, in case we need it in the formula
-
-    for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++) {
-      preValue[varNr] = UserVar[TempEvent.BaseVarIndex + varNr];
+    const uint8_t valueCount = getValueCountForTask(TaskIndex);
+    // Store the previous value, in case %pvalue% is used in the formula
+    String preValue[VARS_PER_TASK];
+    if (Device[DeviceIndex].FormulaOption) {
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+      {
+        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        {
+          const String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
+          if (formula.indexOf(F("%pvalue%")) != -1) {
+            preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
+          }
+        }
+      }
     }
 
     if (Settings.TaskDeviceDataFeed[TaskIndex] == 0) // only read local connected sensorsfeeds
@@ -611,16 +637,18 @@ void SensorSendTask(taskIndex_t TaskIndex)
       if (Device[DeviceIndex].FormulaOption) {
         START_TIMER;
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
           if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
           {
+            // TD-er: Should we use the set nr of decimals here, or not round at all?
+            // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
             String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
-            formula.replace(F("%pvalue%"), String(preValue[varNr]));
-            formula.replace(F("%value%"),  String(UserVar[TempEvent.BaseVarIndex + varNr]));
+            formula.replace(F("%pvalue%"), preValue[varNr]);
+            formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
             double result = 0;
 
-            if (!isError(Calculate(formula, result))) {
+            if (!isError(Calculate(parseTemplate(formula), result))) {
               UserVar[TempEvent.BaseVarIndex + varNr] = result;
             }
           }

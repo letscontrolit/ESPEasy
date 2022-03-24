@@ -15,6 +15,10 @@
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
 #define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
 #define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
+#define DEVICE_TYPE_CUSTOM0                30 // Custom labels, Not using TaskDevicePin1 ... TaskDevicePin3
+#define DEVICE_TYPE_CUSTOM1                31 // Custom labels, 1 GPIO
+#define DEVICE_TYPE_CUSTOM2                32 // Custom labels, 2 GPIOs
+#define DEVICE_TYPE_CUSTOM3                33 // Custom labels, 3 GPIOs
 #define DEVICE_TYPE_DUMMY                  99 // Dummy device, has no physical connection
 
 #define I2C_MULTIPLEXER_NONE               -1 // None selected
@@ -28,7 +32,7 @@
 #define I2C_FLAGS_MUX_MULTICHANNEL          1 // Allow multiple multiplexer channels when set
 
 
-enum class Sensor_VType : byte {
+enum class Sensor_VType : uint8_t {
   SENSOR_TYPE_NONE            =    0,
   SENSOR_TYPE_SINGLE          =    1,
   SENSOR_TYPE_TEMP_HUM        =    2,
@@ -47,7 +51,7 @@ enum class Sensor_VType : byte {
   SENSOR_TYPE_NOT_SET         = 255
 };
 
-enum class Output_Data_type_t : byte {
+enum class Output_Data_type_t : uint8_t {
   Default = 0,
   Simple, // SENSOR_TYPE_SINGLE, _DUAL, _TRIPLE, _QUAD
   All
@@ -67,11 +71,17 @@ struct DeviceStruct
 
   bool configurableDecimals() const;
 
-  byte               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
-  byte               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
+  bool isSerial() const;
+
+  bool isSPI() const;
+
+  bool isCustom() const;
+
+  uint8_t               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
+  uint8_t               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-  byte               Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
-  byte               ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
+  uint8_t               Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
+  uint8_t               ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   Output_Data_type_t OutputDataType; // Subset of selectable output data types (Default = no selection)
                                      
   bool PullUpOption       : 1;       // Allow to set internal pull-up resistors.
@@ -83,6 +93,7 @@ struct DeviceStruct
   bool TimerOption        : 1;       // Allow to set the "Interval" timer for the plugin.
   bool TimerOptional      : 1;       // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
   bool DecimalsOnly       : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
+  bool ExitTaskBeforeSave : 1;       // Optimization in memory usage, Do not exit when task data is needed during save.
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 

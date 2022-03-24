@@ -10,10 +10,12 @@
 #define NODE_TYPE_ID_RPI_EASY_STD           5  // https://github.com/enesbcs/rpieasy
 #define NODE_TYPE_ID_ESP_EASYM_STD         17
 #define NODE_TYPE_ID_ESP_EASY32_STD        33
+#define NODE_TYPE_ID_ESP_EASY32S2_STD      34
+#define NODE_TYPE_ID_ESP_EASY32C3_STD      35
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
-String getNodeTypeDisplayString(byte nodeType);
+const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType);
 
 /*********************************************************************************************\
 * NodeStruct
@@ -25,11 +27,11 @@ struct NodeStruct
   String    nodeName;
   IPAddress ip;
   uint16_t  build;
-  byte      age;
-  byte      nodeType;
+  uint8_t   age;
+  uint8_t   nodeType;
   uint16_t  webgui_portnumber;
 };
-typedef std::map<byte, NodeStruct> NodesMap;
+typedef std::map<uint8_t, NodeStruct> NodesMap;
 
 
 #endif // DATASTRUCTS_NODESTRUCT_H

@@ -27,7 +27,7 @@ void handle_upload() {
             "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
-  printWebString = "";
+  printWebString = String();
   printToWeb     = false;
 }
 
@@ -64,7 +64,7 @@ void handle_upload_post() {
   addHtml(F("Upload finished"));
   sendHeadandTail_stdtemplate(true);
   TXBuffer.endStream();
-  printWebString = "";
+  printWebString = String();
   printToWeb     = false;
 }
 
@@ -79,7 +79,7 @@ void handle_upload_json() {
 
   TXBuffer.startJsonStream();
   addHtml('{');
-  stream_next_json_object_value(F("status"), String(result));
+  stream_next_json_object_value(F("status"), result);
   addHtml('}');
 
   TXBuffer.endStream();
@@ -113,7 +113,7 @@ void handleFileUpload() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: START, filename: ");
       log += upload.filename;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     valid        = false;
     uploadResult = uploadResult_e::UploadStarted;
@@ -132,8 +132,8 @@ void handleFileUpload() {
 
         for (unsigned int x = 0; x < sizeof(struct TempStruct); x++)
         {
-          byte b = upload.buf[x];
-          memcpy((byte *)&Temp + x, &b, 1);
+          uint8_t b = upload.buf[x];
+          memcpy(reinterpret_cast<uint8_t *>(&Temp) + x, &b, 1);
         }
 
         if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
@@ -167,7 +167,7 @@ void handleFileUpload() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: WRITE, Bytes: ");
       log += upload.currentSize;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   else if (upload.status == UPLOAD_FILE_END)
@@ -177,7 +177,7 @@ void handleFileUpload() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Upload: END, Size: ");
       log += upload.totalSize;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
 

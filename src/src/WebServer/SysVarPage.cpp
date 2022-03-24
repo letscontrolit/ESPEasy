@@ -59,6 +59,8 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SUBNET);
   addSysVar_enum_html(SystemVariables::GATEWAY);
   addSysVar_enum_html(SystemVariables::DNS);
+  addSysVar_enum_html(SystemVariables::DNS_1);
+  addSysVar_enum_html(SystemVariables::DNS_2);
   addSysVar_enum_html(SystemVariables::RSSI);
   addSysVar_enum_html(SystemVariables::SSID);
   addSysVar_enum_html(SystemVariables::BSSID);
@@ -80,6 +82,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSHEAP);
   addSysVar_enum_html(SystemVariables::SYSSTACK);
   addSysVar_enum_html(SystemVariables::SYSNAME);
+  addSysVar_enum_html(SystemVariables::BOOT_CAUSE);
 #if FEATURE_ADC_VCC
   addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
@@ -127,6 +130,10 @@ void handle_sysvars() {
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
   addSysVar_html(F("%sunrise+10m%"));
+  addSysVar_html(F("%s_sunset%"));
+  addSysVar_html(F("%s_sunrise%"));
+  addSysVar_html(F("%m_sunset%"));
+  addSysVar_html(F("%m_sunrise%"));
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 
@@ -203,6 +210,8 @@ void handle_sysvars() {
   addSysVar_html(F("{D}C to {D}F: %c_c2f%(20.4)"));
   addSysVar_html(F("m/s to Bft:   %c_ms2Bft%(5.1)"));
   addSysVar_html(F("Dew point(T,H): %c_dew_th%(18.6,67)"));
+  addSysVar_html(F("Altitude(air,sea): %c_alt_pres_sea%(850,1000)"));
+  addSysVar_html(F("PressureElevation(air,alt): %c_sea_pres_alt%(850,1350.03)"));
   addFormSeparator(3);
   addSysVar_html(F("cm to imperial: %c_cm2imp%(190)"));
   addSysVar_html(F("mm to imperial: %c_mm2imp%(1900)"));
@@ -222,29 +231,30 @@ void handle_sysvars() {
   TXBuffer.endStream();
 }
 
+void addSysVar_html_parsed(String input, bool URLencoded) {
+  // Make deepcopy for replacement, so parameter is a copy, not a const reference
+  parseSystemVariables(input, URLencoded); 
+  parseStandardConversions(input, URLencoded);
+  addHtml(input);
+}
+
+void addSysVar_html(const __FlashStringHelper * input) {
+  addSysVar_html(String(input));
+}
 
 void addSysVar_html(const String& input) {
   html_TR_TD();
   {
-    String html;
-    html.reserve(24 + input.length());
-    html += F("<pre>"); // Make monospaced (<tt> tag?)
-    html += F("<xmp>"); // Make sure HTML code is escaped. Tag depricated??
-    html += input;
-    html += F("</xmp>");
-    html += F("</pre>");
-    addHtml(html);
+    addHtml(F("<pre>")); // Make monospaced (<tt> tag?)
+    addHtml(F("<xmp>")); // Make sure HTML code is escaped. Tag depricated??
+    addHtml(input);
+    addHtml(F("</xmp>"));
+    addHtml(F("</pre>"));
   }
   html_TD();
-  String replacement(input);                // Make deepcopy for replacement
-  parseSystemVariables(replacement, false); // Not URL encoded
-  parseStandardConversions(replacement, false);
-  addHtml(replacement);
+  addSysVar_html_parsed(input, false); // Not URL encoded
   html_TD();
-  replacement = input;
-  parseSystemVariables(replacement, true); // URL encoded
-  parseStandardConversions(replacement, true);
-  addHtml(replacement);
+  addSysVar_html_parsed(input, true); // URL encoded
   delay(0);
 }
 

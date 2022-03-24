@@ -64,12 +64,12 @@
 #define PLUGIN_001_LONGPRESS_BOTH                3
 
 
-boolean Plugin_001(byte function, struct EventStruct *event, String& string)
+boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
-  // static byte switchstate[TASKS_MAX];
-  // static byte outputstate[TASKS_MAX];
+  // static uint8_t switchstate[TASKS_MAX];
+  // static uint8_t outputstate[TASKS_MAX];
   // static int8_t PinMonitor[GPIO_MAX];
   // static int8_t PinMonitorState[GPIO_MAX];
 
@@ -109,7 +109,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // FIXME TD-er: Split functionality of this plugin into 2 new ones:
       // - switch/dimmer input
       // - switch output (relays)
-      event->String1 = formatGpioName_bidirectional("");
+      event->String1 = formatGpioName_bidirectional(F(""));
       break;
     }
 
@@ -124,11 +124,9 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        String options[2];
-        options[0] = F("Switch");
-        options[1] = F("Dimmer");
+        const __FlashStringHelper * options[2] = { F("Switch"),  F("Dimmer") };
         int optionValues[2]   = { PLUGIN_001_TYPE_SWITCH, PLUGIN_001_TYPE_DIMMER };
-        const byte switchtype = P001_getSwitchType(event);
+        const uint8_t switchtype = P001_getSwitchType(event);
         addFormSelector(F("Switch Type"), F("p001_type"), 2, options, optionValues, switchtype);
 
         if (switchtype == PLUGIN_001_TYPE_DIMMER)
@@ -138,11 +136,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        byte   choice = PCONFIG(2);
-        String buttonOptions[3];
-        buttonOptions[0] = F("Normal Switch");
-        buttonOptions[1] = F("Push Button Active Low");
-        buttonOptions[2] = F("Push Button Active High");
+        uint8_t   choice = PCONFIG(2);
+        const __FlashStringHelper * buttonOptions[3] = {F("Normal Switch"), F("Push Button Active Low"),  F("Push Button Active High") };
         int buttonOptionValues[3] =
         { PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW, PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH };
         addFormSelector(F("Switch Button Type"), F("p001_button"), 3, buttonOptions, buttonOptionValues, choice);
@@ -161,12 +156,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        byte   choiceDC = PCONFIG(4);
-        String buttonDC[4];
-        buttonDC[0] = F("Disabled");
-        buttonDC[1] = F("Active only on LOW (EVENT=3)");
-        buttonDC[2] = F("Active only on HIGH (EVENT=3)");
-        buttonDC[3] = F("Active on LOW & HIGH (EVENT=3)");
+        uint8_t   choiceDC = PCONFIG(4);
+        const __FlashStringHelper * buttonDC[4] = {
+         F("Disabled"), 
+         F("Active only on LOW (EVENT=3)"),
+         F("Active only on HIGH (EVENT=3)"),
+         F("Active on LOW & HIGH (EVENT=3)")
+        };
         int buttonDCValues[4] = { PLUGIN_001_DC_DISABLED, PLUGIN_001_DC_LOW, PLUGIN_001_DC_HIGH, PLUGIN_001_DC_BOTH };
 
         addFormSelector(F("Doubleclick event"), F("p001_dc"), 4, buttonDC, buttonDCValues, choiceDC);
@@ -184,12 +180,13 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       }
 
       {
-        byte   choiceLP = PCONFIG(5);
-        String buttonLP[4];
-        buttonLP[0] = F("Disabled");
-        buttonLP[1] = F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])");
-        buttonLP[2] = F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])");
-        buttonLP[3] = F("Active on LOW & HIGH (EVENT= 10 or 11)");
+        uint8_t   choiceLP = PCONFIG(5);
+        const __FlashStringHelper * buttonLP[4] = {
+          F("Disabled"),
+          F("Active only on LOW (EVENT= 10 [NORMAL] or 11 [INVERSED])"),
+          F("Active only on HIGH (EVENT= 11 [NORMAL] or 10 [INVERSED])"),
+          F("Active on LOW & HIGH (EVENT= 10 or 11)")
+        };
         int buttonLPValues[4] =
         { PLUGIN_001_LONGPRESS_DISABLED, PLUGIN_001_LONGPRESS_LOW, PLUGIN_001_LONGPRESS_HIGH, PLUGIN_001_LONGPRESS_BOTH };
         addFormSelector(F("Longpress event"), F("p001_lp"), 4, buttonLP, buttonLPValues, choiceLP);
@@ -253,7 +250,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       // apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
-      if ((CONFIG_PIN1 >= 0) && (CONFIG_PIN1 <= PIN_D_MAX))
+      if (validGpio(CONFIG_PIN1))
       {
         portStatusStruct newStatus;
         const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
@@ -344,7 +341,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               for (std::map<uint32_t,portStatusStruct>::iterator it=globalMapPortStatus.begin(); it!=globalMapPortStatus.end(); ++it) {
                 if ((it->second.monitor || it->second.command || it->second.init) && getPluginFromKey(it->first)==PLUGIN_ID_001) {
                   const uint16_t port = getPortFromKey(it->first);
-                  byte state = Plugin_001_read_switch_state(port, it->second.mode);
+                  uint8_t state = Plugin_001_read_switch_state(port, it->second.mode);
                   if (it->second.state != state || it->second.forceMonitor) {
                     if (!it->second.task) it->second.state = state; //do not update state if task flag=1 otherwise it will not be picked up
                        by 10xSEC function
@@ -371,7 +368,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       const portStatusStruct currentStatus = globalMapPortStatus[key];
 
       // if (currentStatus.monitor || currentStatus.command || currentStatus.init) {
-      byte state = GPIO_Read_Switch_State(event->Par1, currentStatus.mode);
+      uint8_t state = GPIO_Read_Switch_State(event->Par1, currentStatus.mode);
 
       if ((currentStatus.state != state) || (currentStatus.forceMonitor && currentStatus.monitor)) {
         if (!currentStatus.task) globalMapPortStatus[key].state = state; //do not update state if task flag=1 otherwise it will not be picked up by 10xSEC function
@@ -414,7 +411,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
       const String monitorEventString = F("GPIO");
 
-      if ((CONFIG_PIN1 >= 0) && (CONFIG_PIN1 <= PIN_D_MAX))
+      if (validGpio(CONFIG_PIN1))
       {
         const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
         // WARNING operator [],creates an entry in map if key doesn't exist:
@@ -495,7 +492,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
               // send if output needs to be changed
               if (currentOutputState != new_outputState || currentStatus.forceEvent)
               {
-                byte output_value;
+                uint8_t output_value;
                 currentStatus.output = new_outputState;
                 boolean sendState = new_outputState;
 
@@ -529,7 +526,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   log += state ? '1' : '0';
                   log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
                   log += output_value;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 #endif
                 // send task event
@@ -579,8 +576,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
             if (deltaLP >= (unsigned long)lround(PCONFIG_FLOAT(2)))
             {
-              byte output_value;
-              byte needToSendEvent = false;
+              uint8_t output_value;
+              uint8_t needToSendEvent = false;
 
               PCONFIG(6) = true;
 
@@ -623,7 +620,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                   log += state ? '1' : '0';
                   log += F(" Output value=");
                   log += output_value;
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 #endif
                 // send task event
@@ -638,7 +635,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
             }
           } else {
             if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
-              const byte SAFE_BUTTON_EVENT = 4;
+              const uint8_t SAFE_BUTTON_EVENT = 4;
               // Reset SafeButton counter
               PCONFIG_LONG(3) = 0;
 
@@ -652,11 +649,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
                 log += CONFIG_PIN1;
                 log += F(" State=");
                 log += tempUserVar;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               #endif
-              // send task event
-              sendData(event);
+              // send task event: DO NOT SEND TASK EVENT
+              //sendData(event);
               // send monitor event
               if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, SAFE_BUTTON_EVENT);
 
@@ -706,7 +703,7 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("SW   : State ");
         log += UserVar[event->BaseVarIndex];
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       #endif
       success = true;
@@ -715,7 +712,6 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String log;
       String command = parseString(string, 1);
 
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
@@ -724,8 +720,11 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
       if (command == F("inputswitchstate")) {
         success = true;
         //@giig1967g deprecated since 2019-11-26
-        log = String(F("inputswitchstate is deprecated")) + string;
-        addLog(LOG_LEVEL_ERROR, log);
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("inputswitchstate is deprecated");
+          log += string;
+          addLogMove(LOG_LEVEL_ERROR, log);
+        }
 
 /*        portStatusStruct tempStatus;
         const uint32_t key = createKey(PLUGIN_ID_001, Settings.TaskDevicePin1[event->Par1]);
@@ -765,8 +764,8 @@ boolean Plugin_001(byte function, struct EventStruct *event, String& string)
 }
 
 // TD-er: Needed to fix a mistake in earlier fixes.
-byte P001_getSwitchType(struct EventStruct *event) {
-  byte choice = PCONFIG(0);
+uint8_t P001_getSwitchType(struct EventStruct *event) {
+  uint8_t choice = PCONFIG(0);
 
   switch (choice) {
     case 2: // Old implementation for Dimmer

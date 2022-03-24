@@ -10,8 +10,8 @@ struct NotificationStruct
   NotificationStruct() :
     Number(0), usesGPIO(0), usesMessaging(false) {}
 
-  byte Number;
-  byte usesGPIO;
+  uint8_t Number;
+  uint8_t usesGPIO;
   bool usesMessaging;
 };
 

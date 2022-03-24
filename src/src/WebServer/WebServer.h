@@ -9,21 +9,8 @@
 #include "../Globals/Plugins.h"
 #include "../Helpers/StringConverter.h"
 
-#define _HEAD false
-#define _TAIL true
+#include "../WebServer/WebTemplateParser.h"
 
-#define TASKS_PER_PAGE TASKS_MAX
-
-
-#define MENU_INDEX_MAIN          0
-#define MENU_INDEX_CONFIG        1
-#define MENU_INDEX_CONTROLLERS   2
-#define MENU_INDEX_HARDWARE      3
-#define MENU_INDEX_DEVICES       4
-#define MENU_INDEX_RULES         5
-#define MENU_INDEX_NOTIFICATIONS 6
-#define MENU_INDEX_TOOLS         7
-extern byte navMenuIndex;
 
 // Uncrustify must not be used on macros, so turn it off.
 // *INDENT-OFF*
@@ -33,14 +20,13 @@ extern byte navMenuIndex;
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 
-void sendHeadandTail(const String& tmplName,
+void sendHeadandTail(const __FlashStringHelper * tmplName,
                      boolean       Tail      = false,
                      boolean       rebooting = false);
 
 void   sendHeadandTail_stdtemplate(boolean Tail      = false,
                                    boolean rebooting = false);
 
-size_t streamFile_htmlEscape(const String& fileName);
 
 void   WebServerInit();
 
@@ -53,31 +39,20 @@ bool   captivePortal();
 void   setWebserverRunning(bool state);
 
 void   getWebPageTemplateDefault(const String& tmplName,
-                                 String      & tmpl);
+                                 WebTemplateParser& parser);
 
-void   getWebPageTemplateDefaultHead(String& tmpl,
+void   getWebPageTemplateDefaultHead(WebTemplateParser& parser,
                                      bool    addMeta,
                                      bool    addJS);
 
-void getWebPageTemplateDefaultHeader(String      & tmpl,
-                                     const String& title,
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser,
+                                     const __FlashStringHelper * title,
                                      bool          addMenu);
 
-void   getWebPageTemplateDefaultContentSection(String& tmpl);
+void   getWebPageTemplateDefaultContentSection(WebTemplateParser& parser);
 
-void   getWebPageTemplateDefaultFooter(String& tmpl);
+void   getWebPageTemplateDefaultFooter(WebTemplateParser& parser);
 
-void   getErrorNotifications();
-
-String getGpMenuIcon(byte index);
-
-String getGpMenuLabel(byte index);
-
-String getGpMenuURL(byte index);
-
-bool   GpMenuVisible(byte index);
-
-void   getWebPageTemplateVar(const String& varName);
 
 void   writeDefaultCSS(void);
 
@@ -91,13 +66,15 @@ void   writeDefaultCSS(void);
 extern int8_t level;
 extern int8_t lastLevel;
 
+void json_quote_name(const __FlashStringHelper * val);
 void json_quote_name(const String& val);
 
 void json_quote_val(const String& val);
 
-void json_open();
+void json_open(bool arr = false);
 
-void json_open(bool arr);
+void json_open(bool          arr,
+               const __FlashStringHelper * name);
 
 void json_open(bool          arr,
                const String& name);
@@ -136,18 +113,21 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin = true);
 
-String  getControllerSymbol(byte index);
+String  getControllerSymbol(uint8_t index);
 
 /*
-   String getValueSymbol(byte index);
+   String getValueSymbol(uint8_t index);
  */
-void    addSVG_param(const String& key,
+void    addSVG_param(const __FlashStringHelper * key,
+                     int         value);
+
+void    addSVG_param(const __FlashStringHelper * key,
                      float         value);
 
-void    addSVG_param(const String& key,
+void    addSVG_param(const __FlashStringHelper * key,
                      const String& value);
 
-void    createSvgRect_noStroke(const String& classname,
+void    createSvgRect_noStroke(const __FlashStringHelper * classname,
                                unsigned int fillColor,
                                float        xoffset,
                                float        yoffset,
@@ -179,12 +159,9 @@ void createSvgTextElement(const String& text,
                           float         textXoffset,
                           float         textYoffset);
 
-void write_SVG_image_header(int width,
-                            int height);
-
 void write_SVG_image_header(int  width,
                             int  height,
-                            bool useViewbox);
+                            bool useViewbox = false);
 
 /*
    void getESPeasyLogo(int width_pixels);
@@ -201,14 +178,31 @@ void getStorageTableSVG(SettingsType::Enum settingsType);
 
 #ifdef ESP32
 
-int  getPartionCount(byte pType);
+int  getPartionCount(uint8_t pType);
 
-void getPartitionTableSVG(byte         pType,
+void getPartitionTableSVG(uint8_t         pType,
                           unsigned int partitionColor);
 
 #endif // ifdef ESP32
 
 bool webArg2ip(const String& arg,
-               byte         *IP);
+               uint8_t         *IP);
+
+
+// Separate wrapper to get web_server.arg()
+// 1) To allow to have a __FlashStringHelper call -> reduce build size
+// 2) ESP32 does not return a const String &, but a temporary copy, thus we _must_ copy before using it.
+
+#ifdef ESP8266
+const String& webArg(const __FlashStringHelper * arg);
+const String& webArg(const String& arg);
+const String& webArg(int i);
+#endif 
+
+#ifdef ESP32
+String webArg(const __FlashStringHelper * arg);
+String webArg(const String& arg);
+String webArg(int i);
+#endif 
 
 #endif // ifndef WEBSERVER_WEBSERVER_H

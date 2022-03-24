@@ -1,15 +1,16 @@
 #include "../Commands/Blynk.h"
 
-#include "../../ESPEasy_fdwdecl.h"
 #include "../Commands/Common.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/Settings.h"
-#include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/_CPlugin_Helper.h"
 
+#include "../../ESPEasy_fdwdecl.h"
 
 #ifdef USES_C012
 
@@ -26,7 +27,7 @@ controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   return INVALID_CONTROLLER_INDEX;
 }
 
-String Command_Blynk_Get(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t first_enabled_blynk_controller = firstEnabledBlynk_ControllerIndex();
 
@@ -72,7 +73,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
 
   {
     // Place ControllerSettings in its own scope, as it is quite big.
-    MakeControllerSettings(ControllerSettings);
+    MakeControllerSettings(ControllerSettings); //-V522
     if (!AllocatedControllerSettings()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : Cannot run GET, out of RAM"));
       return false;
@@ -84,7 +85,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
     pass = getControllerPass(controllerIndex, ControllerSettings);
     ClientTimeout = ControllerSettings.ClientTimeout;
 
-    if (pass.length() == 0) {
+    if (pass.isEmpty()) {
       addLog(LOG_LEVEL_ERROR, F("Blynk : No password set"));
       return false;
     }
@@ -103,7 +104,9 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
               pass.c_str(),
               command.c_str(),
               hostname.c_str());
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, request);
+#endif
     client.print(request);
   }
   bool success = !MustCheckReply;
@@ -115,21 +118,28 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       delay(1);
     }
 
+    #ifndef BUILD_NO_DEBUG
     char log[80] = { 0 };
+    #endif
     timer = millis() + 1500;
 
     // Read all the lines of the reply from server and log them
     while (client_available(client) && !success && !timeOutReached(timer)) {
       String line;
       safeReadStringUntil(client, line, '\n');
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG_MORE, line);
+      #endif
 
       // success ?
       if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
+        #ifndef BUILD_NO_DEBUG
         strcpy_P(log, PSTR("HTTP : Success"));
+        #endif
 
         if (!data) { success = true; }
       }
+      #ifndef BUILD_NO_DEBUG
       else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
@@ -137,12 +147,13 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
       addLog(LOG_LEVEL_DEBUG, log);
+      #endif
 
       // data only
       if (data && line.startsWith("["))
       {
         String strValue = line;
-        byte   pos      = strValue.indexOf('"', 2);
+        uint8_t   pos      = strValue.indexOf('"', 2);
         strValue = strValue.substring(2, pos);
         strValue.trim();
         *data   = 0.0f;
@@ -151,8 +162,10 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
 
         char value_char[5] = { 0 };
         strValue.toCharArray(value_char, 5);
+        #ifndef BUILD_NO_DEBUG
         sprintf_P(log, PSTR("Blynk get - %s => %s"), command.c_str(), value_char);
         addLog(LOG_LEVEL_DEBUG, log);
+        #endif
       }
       delay(0);
     }

@@ -5,6 +5,7 @@
 
 #ifdef HAS_ETHERNET
 
+#include "../DataStructs/MAC_address.h"
 
 bool     ethUseStaticIP();
 void     ethSetupStaticIPconfig();
@@ -13,7 +14,7 @@ bool     ethPrepare();
 void     ethPrintSettings();
 bool     ETHConnectRelaxed();
 bool     ETHConnected();
-uint8_t* ETHMacAddress(uint8_t *mac);
+MAC_address ETHMacAddress();
 
 #endif // ifdef HAS_ETHERNET
 #endif // ifndef ESPEASY_ETH_H

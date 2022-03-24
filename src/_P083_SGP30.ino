@@ -24,7 +24,7 @@
 #define P083_ECO2_BASELINE (event->BaseVarIndex + 3)
 
 
-boolean Plugin_083(byte function, struct EventStruct *event, String& string)
+boolean Plugin_083(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -59,6 +59,12 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x58);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Sensor"));
@@ -90,7 +96,7 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
 
       if (nullptr != P083_data) {
         if (!P083_data->initialized) {
-          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"))
+          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"));
         } else {
           // Look at the stored base line values to see if we can restore them.
           uint16_t eco2_base = UserVar[P083_TVOC_BASELINE];
@@ -157,19 +163,19 @@ boolean Plugin_083(byte function, struct EventStruct *event, String& string)
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log = F("SGP30: TVOC: ");
               log += UserVar[P083_TVOC];
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
               log  = F("SGP30: eCO2: ");
               log += UserVar[P083_ECO2];
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             success = true;
             break;
           } else {
-            addLog(LOG_LEVEL_ERROR, F("SGP30: No new measured values"))
+            addLog(LOG_LEVEL_ERROR, F("SGP30: No new measured values"));
             break;
           }
         } else {
-          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"))
+          addLog(LOG_LEVEL_ERROR, F("SGP30: Sensor not found"));
           break;
         }
       }

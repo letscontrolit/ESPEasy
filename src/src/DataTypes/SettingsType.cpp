@@ -9,7 +9,7 @@
 #include "../Globals/Settings.h"
 
 
-String SettingsType::getSettingsTypeString(Enum settingsType) {
+const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {
     case Enum::BasicSettings_Type:             return F("Settings");
     case Enum::TaskSettings_Type:              return F("TaskSettings");
@@ -22,7 +22,7 @@ String SettingsType::getSettingsTypeString(Enum settingsType) {
 
     case Enum::SettingsType_MAX: break;
   }
-  return "";
+  return F("");
 }
 
 /********************************************************************************************\
@@ -204,14 +204,14 @@ String SettingsType::getSettingsFileName(Enum settingsType) {
   return getSettingsFileName(getSettingsFile(settingsType));
 }
 
-String SettingsType::getSettingsFileName(SettingsType::SettingsFileEnum file_type) {
+const __FlashStringHelper * SettingsType::getSettingsFileName(SettingsType::SettingsFileEnum file_type) {
   switch (file_type) {
     case SettingsFileEnum::FILE_CONFIG_type:        return F(FILE_CONFIG);
     case SettingsFileEnum::FILE_NOTIFICATION_type:  return F(FILE_NOTIFICATION);
     case SettingsFileEnum::FILE_SECURITY_type:      return F(FILE_SECURITY);
     case SettingsFileEnum::FILE_UNKNOWN_type:       break;
   }
-  return "";
+  return F("");
 }
 
 size_t SettingsType::getInitFileSize(SettingsType::SettingsFileEnum file_type) {

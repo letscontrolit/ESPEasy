@@ -67,19 +67,19 @@
 #define SER_SWITCH_LCTECH 3
 #define SER_SWITCH_WIFIDIMMER 4
 
-static byte Plugin_091_switchstate[4];
-static byte Plugin_091_ostate[4];
-byte Plugin_091_commandstate = 0; // 0:no,1:inprogress,2:finished
+static uint8_t Plugin_091_switchstate[4];
+static uint8_t Plugin_091_ostate[4];
+uint8_t Plugin_091_commandstate = 0; // 0:no,1:inprogress,2:finished
 Sensor_VType Plugin_091_type = Sensor_VType::SENSOR_TYPE_NONE;
-byte Plugin_091_numrelay = 1;
-byte Plugin_091_ownindex;
-byte Plugin_091_globalpar0;
-byte Plugin_091_globalpar1;
-byte Plugin_091_cmddbl = false;
-byte Plugin_091_ipd = false;
+uint8_t Plugin_091_numrelay = 1;
+uint8_t Plugin_091_ownindex;
+uint8_t Plugin_091_globalpar0;
+uint8_t Plugin_091_globalpar1;
+uint8_t Plugin_091_cmddbl = false;
+uint8_t Plugin_091_ipd = false;
 boolean Plugin_091_init = false;
 
-boolean Plugin_091(byte function, struct EventStruct *event, String& string)
+boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -120,20 +120,21 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         {
-          byte choice = PCONFIG(0);
-          String options[4];
-          options[0] = F("Yewelink/TUYA");
-          options[1] = F("Sonoff Dual");
-          options[2] = F("LC TECH");
-          options[3] = F("Moes Wifi Dimmer");
-          int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
+          uint8_t choice = PCONFIG(0);
+          const __FlashStringHelper * options[4] = {
+            F("Yewelink/TUYA"),
+            F("Sonoff Dual"),
+            F("LC TECH"),
+            F("Moes Wifi Dimmer")
+          };
+          const int optionValues[4] = { SER_SWITCH_YEWE, SER_SWITCH_SONOFFDUAL, SER_SWITCH_LCTECH, SER_SWITCH_WIFIDIMMER };
           addFormSelector(F("Switch Type"), F("plugin_091_type"), 4, options, optionValues, choice);
         }
 
         if (PCONFIG(0) == SER_SWITCH_YEWE)
         {
-          byte choice = PCONFIG(1);
-          String buttonOptions[4];
+          uint8_t choice = PCONFIG(1);
+          const __FlashStringHelper * buttonOptions[4];
           buttonOptions[0] = F("1");
           buttonOptions[1] = F("2/Dimmer#2");
           buttonOptions[2] = F("3/Dimmer#3");
@@ -144,8 +145,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
         if (PCONFIG(0) == SER_SWITCH_SONOFFDUAL)
         {
-          byte choice = PCONFIG(1);
-          String modeoptions[3];
+          uint8_t choice = PCONFIG(1);
+          const __FlashStringHelper * modeoptions[3];
           modeoptions[0] = F("Normal");
           modeoptions[1] = F("Exclude/Blinds mode");
           modeoptions[2] = F("Simultaneous mode");
@@ -156,8 +157,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         if (PCONFIG(0) == SER_SWITCH_LCTECH)
         {
           {
-            byte choice = PCONFIG(1);
-            String buttonOptions[4];
+            uint8_t choice = PCONFIG(1);
+            const __FlashStringHelper * buttonOptions[4];
             buttonOptions[0] = F("1");
             buttonOptions[1] = F("2");
             buttonOptions[2] = F("3");
@@ -167,8 +168,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           }
 
           {
-            byte choice = PCONFIG(2);
-            String speedOptions[8];
+            uint8_t choice = PCONFIG(2);
+            const __FlashStringHelper * speedOptions[8];
             speedOptions[0] = F("9600");
             speedOptions[1] = F("19200");
             speedOptions[2] = F("115200");
@@ -177,7 +178,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             speedOptions[5] = F("4800");
             speedOptions[6] = F("38400");
             speedOptions[7] = F("57600");
-            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, NULL, choice);
+            addFormSelector(F("Serial speed"), F("plugin_091_speed"), 8, speedOptions, nullptr, choice);
           }
 
           addFormCheckBox(F("Use command doubling"), F("plugin_091_dbl"), PCONFIG(3));
@@ -312,7 +313,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
             Plugin_091_type = Sensor_VType::SENSOR_TYPE_QUAD;
             break;
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
 
         success = true;
         Plugin_091_init = true;
@@ -323,7 +324,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
     case PLUGIN_SERIAL_IN:
       {
         int bytes_read = 0;
-        byte serial_buf[BUFFER_SIZE];
+        uint8_t serial_buf[BUFFER_SIZE];
         String log;
 
         if (Plugin_091_init)
@@ -338,14 +339,14 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                 Plugin_091_commandstate = 0;
                 switch (PCONFIG(0))
                 {
-                  case SER_SWITCH_YEWE: //decode first byte of package
+                  case SER_SWITCH_YEWE: //decode first uint8_t of package
                     {
                       if (serial_buf[bytes_read] == 0x55) {
                         Plugin_091_commandstate = 1;
                       }
                       break;
                     }
-                  case SER_SWITCH_SONOFFDUAL: //decode first byte of package
+                  case SER_SWITCH_SONOFFDUAL: //decode first uint8_t of package
                     {
                       if (serial_buf[bytes_read] == 0xA0) {
                         Plugin_091_commandstate = 1;
@@ -438,7 +439,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                       log += F(" r3:");
                       log += Plugin_091_switchstate[3];
                     }
-                    addLog(LOG_LEVEL_INFO, log);
+                    addLogMove(LOG_LEVEL_INFO, log);
                     if ( (Plugin_091_ostate[0] != Plugin_091_switchstate[0]) || (Plugin_091_ostate[1] != Plugin_091_switchstate[1]) || (Plugin_091_ostate[2] != Plugin_091_switchstate[2]) || (Plugin_091_ostate[3] != Plugin_091_switchstate[3]) ) {
                       event->sensorType = Plugin_091_type;
                       sendData(event);
@@ -452,7 +453,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                     }
                     if (bytes_read == 10) {
                       if (serial_buf[5] == 5) {
-                        byte btnnum = (serial_buf[6] - 1);
+                        uint8_t btnnum = (serial_buf[6] - 1);
                         Plugin_091_ostate[btnnum] = Plugin_091_switchstate[btnnum];
                         Plugin_091_switchstate[btnnum] = serial_buf[10];
                         Plugin_091_commandstate = 2; bytes_read = 0;
@@ -494,15 +495,15 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                               }
                           }
                           event->sensorType = Plugin_091_type;
-                          addLog(LOG_LEVEL_INFO, log);
+                          addLogMove(LOG_LEVEL_INFO, log);
                           sendData(event);
                         }
                       }
-                    } //10th byte end (Tuya switch)
+                    } //10th uint8_t end (Tuya switch)
 
                     if (bytes_read == 13) {
                       if (serial_buf[5] == 8) {
-                        byte btnnum = (serial_buf[6] - 1);
+                        uint8_t btnnum = (serial_buf[6] - 1);
                         Plugin_091_ostate[btnnum] = Plugin_091_switchstate[btnnum];
                         Plugin_091_switchstate[btnnum] = serial_buf[13];
                         Plugin_091_commandstate = 2; bytes_read = 0;
@@ -528,11 +529,11 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                               }
                           }
                           event->sensorType = Plugin_091_type;
-                          addLog(LOG_LEVEL_INFO, log);
+                          addLogMove(LOG_LEVEL_INFO, log);
                           sendData(event);
                         }
                       }
-                    } //13th byte end (Tuya dimmer)
+                    } //13th uint8_t end (Tuya dimmer)
 
                   } // yewe decode end
                 } // Plugin_091_commandstate 1 end
@@ -555,8 +556,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
         {
           if ((PCONFIG(0) == SER_SWITCH_YEWE) && (Plugin_091_commandstate != 1))
           { // check Tuya state if anybody ask for it
-            String log = F("SerSW   : ReadState");
-            addLog(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, F("SerSW   : ReadState"));
             getmcustate();
           }
           if (PCONFIG(0) == SER_SWITCH_WIFIDIMMER) {
@@ -577,9 +577,9 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
       {
         String log;
         String command = parseString(string, 1);
-        byte rnum = 0;
-        byte rcmd = 0;
-        byte par3 = 0;
+        uint8_t rnum = 0;
+        uint8_t rcmd = 0;
+        uint8_t par3 = 0;
 
         if (Plugin_091_init)
         {
@@ -624,11 +624,13 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                 sendData(event);
               }
             }
-            String log = F("SerSW   : SetSwitch r");
-            log += rnum;
-            log += F(":");
-            log += rcmd;
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SerSW   : SetSwitch r");
+              log += rnum;
+              log += ':';
+              log += rcmd;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
 
           if ( command == F("relaypulse") )
@@ -671,14 +673,16 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               }
             }
 
-            String log = F("SerSW   : SetSwitchPulse r");
-            log += rnum;
-            log += F(":");
-            log += rcmd;
-            log += F(" Pulsed for ");
-            log += String(event->Par3);
-            log += F(" mS");
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SerSW   : SetSwitchPulse r");
+              log += rnum;
+              log += ':';
+              log += rcmd;
+              log += F(" Pulsed for ");
+              log += String(event->Par3);
+              log += F(" mS");
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
 
           if ( command == F("relaylongpulse") )
@@ -722,18 +726,19 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
               }
             }
 
-            String log = F("SerSW   : SetSwitchPulse r");
-            log += rnum;
-            log += F(":");
-            log += rcmd;
-            log += F(" Pulse for ");
-            log += String(event->Par3);
-            log += F(" sec");
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SerSW   : SetSwitchPulse r");
+              log += rnum;
+              log += ':';
+              log += rcmd;
+              log += F(" Pulse for ");
+              log += String(event->Par3);
+              log += F(" sec");
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
           }
           if ( command == F("ydim") ) // deal with dimmer command
           {
-            String log = F("SerSW   : SetDim ");
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
 
@@ -753,11 +758,13 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
                 event->sensorType = Plugin_091_type;
                 sendData(event);
               }
-              log += event->Par1;
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SerSW   : SetDim ");
+                log += event->Par1;
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
             } else {
-              log = F("\nYDim not supported");
-              SendStatus(event, log);
+              SendStatus(event, F("\nYDim not supported"));
             }
           }
 
@@ -768,7 +775,7 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TIMER_IN:
       {
-        byte par3 = 0;
+        uint8_t par3 = 0;
 
         LoadTaskSettings(Plugin_091_ownindex); // get our own task values please
         event->setTaskIndex(Plugin_091_ownindex);
@@ -777,8 +784,8 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           par3 = Plugin_091_globalpar1;
         }
 
-        byte rnum = event->Par1;
-        byte rcmd = event->Par2;
+        uint8_t rnum = event->Par1;
+        uint8_t rcmd = event->Par2;
 
         sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // invert state
         if ( Plugin_091_globalpar0 > SER_SWITCH_YEWE) { // report state only if not Yewe
@@ -801,12 +808,14 @@ boolean Plugin_091(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        String log = F("SerSW   : SetSwitchPulse r");
-        log += rnum;
-        log += F(":");
-        log += rcmd;
-        log += F(" Pulse ended");
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SerSW   : SetSwitchPulse r");
+          log += rnum;
+          log += ':';
+          log += rcmd;
+          log += F(" Pulse ended");
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
 
         break;
       }
@@ -827,9 +836,9 @@ void getmcustate() {
   Serial.flush();
 }
 
-void sendmcucommand(byte btnnum, byte state, byte swtype, byte btnum_mode) // btnnum=0,1,2, state=0/1
+void sendmcucommand(uint8_t btnnum, uint8_t state, uint8_t swtype, uint8_t btnum_mode) // btnnum=0,1,2, state=0/1
 {
-  byte sstate;
+  uint8_t sstate;
 
   switch (swtype)
   {
@@ -872,12 +881,12 @@ void sendmcucommand(byte btnnum, byte state, byte swtype, byte btnum_mode) // bt
       }
     case SER_SWITCH_LCTECH:
       {
-        byte c_d = 1;
+        uint8_t c_d = 1;
         if (Plugin_091_cmddbl) {
           c_d = 2;
         }
         Plugin_091_switchstate[btnnum] = state;
-        for (byte x = 0; x < c_d; x++) // try twice to be sure
+        for (uint8_t x = 0; x < c_d; x++) // try twice to be sure
         {
           if (x > 0) {
             delay(1);
@@ -937,7 +946,7 @@ void sendmcucommand(byte btnnum, byte state, byte swtype, byte btnum_mode) // bt
   }
 }
 
-void sendmcudim(byte dimvalue, byte swtype)
+void sendmcudim(uint8_t dimvalue, uint8_t swtype)
 {
   switch (swtype)
   {
@@ -957,7 +966,7 @@ void sendmcudim(byte dimvalue, byte swtype)
         Serial.write(0x00); // ?
         Serial.write(0x00); // ?
         Serial.write( dimvalue ); // dim value (0-255)
-        Serial.write( byte(19 + Plugin_091_numrelay + dimvalue) ); // checksum:sum of all bytes in packet mod 256
+        Serial.write( uint8_t(19 + Plugin_091_numrelay + dimvalue) ); // checksum:sum of all bytes in packet mod 256
         Serial.flush();
         break;
       }

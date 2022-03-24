@@ -1,4 +1,4 @@
-#include "CRC_functions.h"
+#include "../Helpers/CRC_functions.h"
 
 
 int calc_CRC16(const String& text) {
@@ -13,7 +13,7 @@ int calc_CRC16(const char *ptr, int count)
 
   while (--count >= 0)
   {
-    crc = crc ^ (int)*ptr++ << 8;
+    crc = crc ^ static_cast<int>(*ptr++) << 8;
     char i = 8;
 
     do

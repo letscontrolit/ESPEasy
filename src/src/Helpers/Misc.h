@@ -10,10 +10,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef FEATURE_SD
-#include <SD.h>
-#endif
-
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 
@@ -87,7 +83,7 @@ void dump(uint32_t addr);
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
@@ -107,6 +103,12 @@ void dump(uint32_t addr);
  \*********************************************************************************************/
 String getTaskDeviceName(taskIndex_t TaskIndex);
 
+/********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   value names can be accessed with variable index; maxium number of variables == VARS_PER_TASK
+ \*********************************************************************************************/
+ String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex);
 
 /********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
@@ -151,18 +153,46 @@ void HSV2RGBW(float H,
 // Simple bitwise get/set functions
 
 uint8_t get8BitFromUL(uint32_t number,
-                      byte     bitnr);
+                      uint8_t     bitnr);
 
 void    set8BitToUL(uint32_t& number,
-                    byte      bitnr,
+                    uint8_t      bitnr,
                     uint8_t   value);
 
 uint8_t get4BitFromUL(uint32_t number,
-                      byte     bitnr);
+                      uint8_t     bitnr);
 
 void    set4BitToUL(uint32_t& number,
-                    byte      bitnr,
+                    uint8_t      bitnr,
                     uint8_t   value);
+
+uint8_t get3BitFromUL(uint32_t number,
+                      uint8_t     bitnr);
+
+void    set3BitToUL(uint32_t& number,
+                    uint8_t      bitnr,
+                    uint8_t   value);
+
+uint8_t get2BitFromUL(uint32_t number,
+                      uint8_t     bitnr);
+
+void    set2BitToUL(uint32_t& number,
+                    uint8_t      bitnr,
+                    uint8_t   value);
+
+
+float getCPUload();
+
+int getLoopCountPerSec();
+
+int getUptimeMinutes();
+
+bool intArrayContains(const int arraySize, const int array[], const int& value);
+bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t& value);
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper * function, int value = -1);
+#endif
 
 
 #endif // ifndef HELPERS_MISC_H

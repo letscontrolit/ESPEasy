@@ -9,7 +9,7 @@
 # define PLUGIN_ID_033         33
 # define PLUGIN_NAME_033       "Generic - Dummy Device"
 # define PLUGIN_VALUENAME1_033 "Dummy"
-boolean Plugin_033(byte function, struct EventStruct *event, String& string)
+boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -28,6 +28,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 4;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::All;
       break;
@@ -61,18 +62,24 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(0));
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        for (byte x = 0; x < getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(0))); x++)
+        for (uint8_t x = 0; x < getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0))); x++)
         {
           String log = F("Dummy: value ");
           log += x + 1;
           log += F(": ");
           log += formatUserVarNoCheck(event->TaskIndex, x);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       success = true;
@@ -99,7 +106,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
               log += event->Par2;
               log += F(" set to ");
               log += floatValue;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             UserVar[event->BaseVarIndex + event->Par2 - 1] = floatValue;
             success                                        = true;
@@ -113,7 +120,7 @@ boolean Plugin_033(byte function, struct EventStruct *event, String& string)
               log += F(" parameter3: ");
               log += parseStringKeepCase(string, 4);
               log += F(" not a float value!");
-              addLog(LOG_LEVEL_ERROR, log);
+              addLogMove(LOG_LEVEL_ERROR, log);
             }
           }
         }

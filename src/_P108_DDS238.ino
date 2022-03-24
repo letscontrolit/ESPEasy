@@ -70,6 +70,10 @@ DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see h
 
 #include <ESPeasySerial.h>
 #include "src/Helpers/Modbus_RTU.h"
+#include "src/DataStructs/ESPEasy_packed_raw_data.h"
+
+// Forward declaration of functions
+const __FlashStringHelper * Plugin_108_valuename(uint8_t value_nr, bool displayString);
 
 struct P108_data_struct : public PluginTaskData_base {
   P108_data_struct() {}
@@ -96,7 +100,7 @@ struct P108_data_struct : public PluginTaskData_base {
 
 unsigned int _plugin_108_last_measurement = 0;
 
-boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -121,10 +125,10 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P108_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P108_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_108_valuename(choice, false),
@@ -138,7 +142,7 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
 
     case PLUGIN_GET_DEVICEGPIONAMES: {
       serialHelper_getGpioNames(event);
-      event->String3 = formatGpioName_output_optional("DE");
+      event->String3 = formatGpioName_output_optional(F("DE"));
       break;
     }
 
@@ -173,7 +177,7 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
         for (int i = 0; i < 4; ++i) {
           options_baudrate[i] = String(p108_storageValueToBaudrate(i));
         }
-        addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, 4, options_baudrate, NULL, P108_BAUDRATE);
+        addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, 4, options_baudrate, nullptr, P108_BAUDRATE);
         addUnit(F("baud"));
         addFormNumericBox(F("Modbus Address"), P108_DEV_ID_LABEL, P108_DEV_ID, 1, 247);
       break;
@@ -222,14 +226,14 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
       {
         // In a separate scope to free memory of String array as soon as possible
         sensorTypeHelper_webformLoad_header();
-        String options[P108_NR_OUTPUT_OPTIONS];
+        const __FlashStringHelper * options[P108_NR_OUTPUT_OPTIONS];
 
         for (int i = 0; i < P108_NR_OUTPUT_OPTIONS; ++i) {
           options[i] = Plugin_108_valuename(i, true);
         }
 
-        for (byte i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
-          const byte pconfigIndex = i + P108_QUERY1_CONFIG_POS;
+        for (uint8_t i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
+          const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
           sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P108_NR_OUTPUT_OPTIONS, options);
         }
       }
@@ -246,9 +250,9 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
       }
 
       // Save output selector parameters.
-      for (byte i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P108_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
+      for (uint8_t i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_108_valuename(choice, false));
       }
       // Can't clear totals, maybe because of modbus library can't write DWORD?
@@ -317,11 +321,37 @@ boolean Plugin_108(byte function, struct EventStruct *event, String& string) {
       }
       break;
     }
+
+#ifdef USES_PACKED_RAW_DATA
+    case PLUGIN_GET_PACKED_RAW_DATA:
+    {
+      // FIXME TD-er: Same code as in P102, share in LoRa code.
+      P108_data_struct *P108_data =
+        static_cast<P108_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P108_data) && P108_data->isInitialized()) {
+        // Matching JS code:
+        // return decode(bytes, [header, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4, uint8, int32_1e4],
+        //   ['header', 'unit1', 'val_1', 'unit2', 'val_2', 'unit3', 'val_3', 'unit4', 'val_4']);
+        for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+          const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
+          const uint8_t choice       = PCONFIG(pconfigIndex);
+          string += LoRa_addInt(choice, PackedData_uint8);
+          string += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
+        }
+        event->Par1 = 8; // valuecount 
+        
+        success = true;
+      }
+      break;
+    }
+#endif // USES_PACKED_RAW_DATA
+
   }
   return success;
 }
 
-String Plugin_108_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_108_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P108_QUERY_V: return displayString ? F("Voltage (V)") : F("V");
     case P108_QUERY_A: return displayString ? F("Current (A)") : F("A");
@@ -333,10 +363,10 @@ String Plugin_108_valuename(byte value_nr, bool displayString) {
     case P108_QUERY_Wh_exp: return displayString ? F("Export Energy (Wh)") : F("Wh_exp");
     case P108_QUERY_Wh_tot: return displayString ? F("Total Energy (Wh)") : F("Wh_tot");
   }
-  return "";
+  return F("");
 }
 
-int p108_storageValueToBaudrate(byte baudrate_setting) {
+int p108_storageValueToBaudrate(uint8_t baudrate_setting) {
   switch (baudrate_setting) {
     case 0:
       return 1200;
@@ -350,40 +380,42 @@ int p108_storageValueToBaudrate(byte baudrate_setting) {
   return 9600;
 }
 
-float p108_readValue(byte query, struct EventStruct *event) {
-  byte errorcode     = -1; // DF - not present in P085
-  float value = 0; // DF - not present in P085
+float p108_readValue(uint8_t query, struct EventStruct *event) {
+  uint8_t errorcode     = -1; // DF - not present in P085
+  float value = 0.0f; // DF - not present in P085
   P108_data_struct *P108_data =
     static_cast<P108_data_struct *>(getPluginTaskData(event->TaskIndex));
 
   if ((nullptr != P108_data) && P108_data->isInitialized()) {
     switch (query) {
       case P108_QUERY_V:
-        value = P108_data->modbus.readHoldingRegister(0x0C ,errorcode) / 10.0; // 0.1 V => V
+        value = P108_data->modbus.readHoldingRegister(0x0C ,errorcode) / 10.0f; // 0.1 V => V
         break;
       case P108_QUERY_A:
-        value = P108_data->modbus.readHoldingRegister(0x0D, errorcode) / 100.0; // 0.01 A => A
+        value = P108_data->modbus.readHoldingRegister(0x0D, errorcode) / 100.0f; // 0.01 A => A
         break;
       case P108_QUERY_W:
-        value =  P108_data->modbus.readHoldingRegister(0x0E, errorcode) * 1.0 ;
+        value =  P108_data->modbus.readHoldingRegister(0x0E, errorcode);
+        if (value > 32767) { value -= 65535; }
         break;
       case P108_QUERY_VA:
-        value = P108_data->modbus.readHoldingRegister(0x0F, errorcode) * 1.0 ;
+        value = P108_data->modbus.readHoldingRegister(0x0F, errorcode);
+        if (value > 32767) { value -= 65535; }
         break;
       case P108_QUERY_PF:
-        value = P108_data->modbus.readHoldingRegister(0x10, errorcode) / 1000.0; // 0.001 Pf => Pf
+        value = P108_data->modbus.readHoldingRegister(0x10, errorcode) / 1000.0f; // 0.001 Pf => Pf
         break;
       case P108_QUERY_F:
-        value = P108_data->modbus.readHoldingRegister(0x11, errorcode) / 100.0 ; // 0.01 Hz => Hz
+        value = P108_data->modbus.readHoldingRegister(0x11, errorcode) / 100.0f; // 0.01 Hz => Hz
         break;
       case P108_QUERY_Wh_imp:
-        return P108_data->modbus.read_32b_HoldingRegister(0x0A) * 10.0;     // 0.01 kWh => Wh
+        return P108_data->modbus.read_32b_HoldingRegister(0x0A) * 10.0f;     // 0.01 kWh => Wh
         break;
       case P108_QUERY_Wh_exp:
-        return P108_data->modbus.read_32b_HoldingRegister(0x08) * 10.0;     // 0.01 kWh => Wh
+        return P108_data->modbus.read_32b_HoldingRegister(0x08) * 10.0f;     // 0.01 kWh => Wh
         break;
       case P108_QUERY_Wh_tot:
-        return P108_data->modbus.read_32b_HoldingRegister(0x00) * 10.0;     // 0.01 kWh => Wh
+        return P108_data->modbus.read_32b_HoldingRegister(0x00) * 10.0f;     // 0.01 kWh => Wh
         break;
     }
   }
@@ -391,7 +423,7 @@ float p108_readValue(byte query, struct EventStruct *event) {
   return 0.0f;
 }
 
-void p108_showValueLoadPage(byte query, struct EventStruct *event) {
+void p108_showValueLoadPage(uint8_t query, struct EventStruct *event) {
   addRowLabel(Plugin_108_valuename(query, true));
   addHtml(String(p108_readValue(query, event)));
 }

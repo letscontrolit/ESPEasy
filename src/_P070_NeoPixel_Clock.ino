@@ -129,11 +129,11 @@ struct P070_data_struct : public PluginTaskData_base {
   }
 
   boolean display_enabled;		// used to enable/disable the display.
-  byte brightness;	          // brightness of the clock "hands"
-  byte brightness_hour_marks;	// brightness of the hour marks
-  byte offset_12h_mark;		    // position of the 12 o'clock LED on the strip
+  uint8_t brightness;	          // brightness of the clock "hands"
+  uint8_t brightness_hour_marks;	// brightness of the hour marks
+  uint8_t offset_12h_mark;		    // position of the 12 o'clock LED on the strip
   boolean thick_12_mark;      // thicker marking of the 12h position
-  byte marks[14];             // Positions of the hour marks and dials
+  uint8_t marks[14];             // Positions of the hour marks and dials
 
   Adafruit_NeoPixel * Plugin_070_pixels = nullptr;
 
@@ -146,7 +146,7 @@ struct P070_data_struct : public PluginTaskData_base {
 #define PLUGIN_VALUENAME1_070 "Enabled"
 #define PLUGIN_VALUENAME2_070 "Brightness"
 #define PLUGIN_VALUENAME3_070 "Marks"
-boolean Plugin_070(byte function, struct EventStruct *event, String& string)
+boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -166,6 +166,8 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = false;
         Device[deviceCount].TimerOption = false;
         Device[deviceCount].GlobalSyncOption = false;
+        // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+        Device[deviceCount].ExitTaskBeforeSave = false;
         break;
       }
 
@@ -185,7 +187,7 @@ boolean Plugin_070(byte function, struct EventStruct *event, String& string)
 
 	case PLUGIN_GET_DEVICEGPIONAMES:
 	  {
-		    event->String1 = formatGpioName_output("LED");
+		    event->String1 = formatGpioName_output(F("LED"));
         break;
 	  }
 

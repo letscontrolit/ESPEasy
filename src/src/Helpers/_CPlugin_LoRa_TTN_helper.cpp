@@ -1,4 +1,4 @@
-#include "_CPlugin_LoRa_TTN_helper.h"
+#include "../Helpers/_CPlugin_LoRa_TTN_helper.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
@@ -15,7 +15,7 @@
 
 String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
 {
-  byte   value_count = getValueCountForTask(event->TaskIndex);
+  uint8_t   value_count = getValueCountForTask(event->TaskIndex);
   String raw_packed;
 
   if (PluginCall(PLUGIN_GET_PACKED_RAW_DATA, event, raw_packed)) {
@@ -34,7 +34,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
       log += F(" RAW: ");
       log += raw_packed;
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   if (raw_packed.length() > 0) {
@@ -51,7 +51,7 @@ String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
 
       default:
 
-        for (byte i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
+        for (uint8_t i = 0; i < value_count && i < VARS_PER_TASK; ++i) {
           // For now, just store the floats as an int32 by multiplying the value with 10000.
           packed += LoRa_addFloat(UserVar[event->BaseVarIndex + i], PackedData_int32_1e4);
         }

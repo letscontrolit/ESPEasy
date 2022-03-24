@@ -3,10 +3,9 @@
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
-#include <Regexp.h>
-
 
 #ifdef USES_P094
+#include <Regexp.h>
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Helpers/StringConverter.h"
@@ -78,7 +77,7 @@ void P094_data_struct::sendString(const String& data) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Proxy: Sending: ");
         log += data;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -115,7 +114,7 @@ bool P094_data_struct::loop() {
 
           for (size_t i = 0; i < length && valid; ++i) {
             if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = "";
+              sentence_part = String();
               ++sentences_received_error;
               valid = false;
             }
@@ -152,7 +151,7 @@ const String& P094_data_struct::peekSentence() const {
 
 void P094_data_struct::getSentence(String& string, bool appendSysTime) {
   string = std::move(sentence_part);
-  sentence_part = ""; // FIXME TD-er: Should not be needed as move already cleared it.
+  sentence_part = String(); // FIXME TD-er: Should not be needed as move already cleared it.
   if (appendSysTime) {
     // Unix timestamp = 10 decimals + separator
     if (string.reserve(sentence_part.length() + 11)) {
@@ -173,7 +172,7 @@ void P094_data_struct::setMaxLength(uint16_t maxlenght) {
   max_length = maxlenght;
 }
 
-void P094_data_struct::setLine(byte varNr, const String& line) {
+void P094_data_struct::setLine(uint8_t varNr, const String& line) {
   if (varNr < P94_Nlines) {
     _lines[varNr] = line;
   }
@@ -281,21 +280,22 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
-      log.reserve(128);
-      log  = F("CUL Reader: ");
-      log += F(" length: ");
-      log += packet_header[P094_packet_length];
-      log += F(" (header: ");
-      log += strlength - (packet_header[P094_packet_length] * 2);
-      log += F(") manu: ");
-      log += formatToHex_decimal(packet_header[P094_manufacturer]);
-      log += F(" serial: ");
-      log += formatToHex_decimal(packet_header[P094_serial_number]);
-      log += F(" mType: ");
-      log += formatToHex_decimal(packet_header[P094_meter_type]);
-      log += F(" RSSI: ");
-      log += formatToHex_decimal(packet_header[P094_rssi]);
-      addLog(LOG_LEVEL_INFO, log);
+      if (log.reserve(128)) {
+        log  = F("CUL Reader: ");
+        log += F(" length: ");
+        log += packet_header[P094_packet_length];
+        log += F(" (header: ");
+        log += strlength - (packet_header[P094_packet_length] * 2);
+        log += F(") manu: ");
+        log += formatToHex_decimal(packet_header[P094_manufacturer]);
+        log += F(" serial: ");
+        log += formatToHex_decimal(packet_header[P094_serial_number]);
+        log += F(" mType: ");
+        log += formatToHex_decimal(packet_header[P094_meter_type]);
+        log += F(" RSSI: ");
+        log += formatToHex_decimal(packet_header[P094_rssi]);
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
     }
 
     bool filter_matches[P094_NR_FILTERS];
@@ -336,29 +336,30 @@ bool P094_data_struct::parsePacket(const String& received) const {
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
-              log.reserve(64);
-              log  = F("CUL Reader: ");
-              log += P094_FilterValueType_toString(valueType_index[f]);
-              log += F(":  in:");
-              log += inputString;
-              log += ' ';
-              log += P094_FilterComp_toString(comparator);
-              log += ' ';
-              log += valueString;
+              if (log.reserve(64)) {
+                log  = F("CUL Reader: ");
+                log += P094_FilterValueType_toString(valueType_index[f]);
+                log += F(":  in:");
+                log += inputString;
+                log += ' ';
+                log += P094_FilterComp_toString(comparator);
+                log += ' ';
+                log += valueString;
 
-              switch (comparator) {
-                case P094_Filter_Comp::P094_Equal_OR:
-                case P094_Filter_Comp::P094_Equal_MUST:
+                switch (comparator) {
+                  case P094_Filter_Comp::P094_Equal_OR:
+                  case P094_Filter_Comp::P094_Equal_MUST:
 
-                  if (match) { log += F(" expected MATCH"); } 
-                  break;
-                case P094_Filter_Comp::P094_NotEqual_OR:
-                case P094_Filter_Comp::P094_NotEqual_MUST:
+                    if (match) { log += F(" expected MATCH"); } 
+                    break;
+                  case P094_Filter_Comp::P094_NotEqual_OR:
+                  case P094_Filter_Comp::P094_NotEqual_MUST:
 
-                  if (!match) { log += F(" expected NO MATCH"); }
-                  break;
+                    if (!match) { log += F(" expected NO MATCH"); }
+                    break;
+                }
+                addLogMove(LOG_LEVEL_INFO, log);
               }
-              addLog(LOG_LEVEL_INFO, log);
             }
 
             switch (comparator) {
@@ -424,17 +425,17 @@ bool P094_data_struct::parsePacket(const String& received) const {
   return match_result;
 }
 
-String P094_data_struct::MatchType_toString(P094_Match_Type matchType) {
+const __FlashStringHelper * P094_data_struct::MatchType_toString(P094_Match_Type matchType) {
   switch (matchType)
   {
     case P094_Match_Type::P094_Regular_Match:          return F("Regular Match");
     case P094_Match_Type::P094_Regular_Match_inverted: return F("Regular Match inverted");
     case P094_Match_Type::P094_Filter_Disabled:        return F("Filter Disabled");
   }
-  return "";
+  return F("");
 }
 
-String P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type valueType)
+const __FlashStringHelper * P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type valueType)
 {
   switch (valueType) {
     case P094_Filter_Value_Type::P094_not_used:      return F("---");
@@ -452,7 +453,7 @@ String P094_data_struct::P094_FilterValueType_toString(P094_Filter_Value_Type va
   return F("unknown");
 }
 
-String P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
+const __FlashStringHelper * P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
 {
   switch (comparator) {
     case P094_Filter_Comp::P094_Equal_OR:      return F("==");
@@ -460,7 +461,7 @@ String P094_data_struct::P094_FilterComp_toString(P094_Filter_Comp comparator)
     case P094_Filter_Comp::P094_Equal_MUST:    return F("== (must)");
     case P094_Filter_Comp::P094_NotEqual_MUST: return F("!= (must)");
   }
-  return "";
+  return F("");
 }
 
 bool P094_data_struct::max_length_reached() const {

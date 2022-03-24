@@ -51,7 +51,7 @@ enum MHZ19Types {
 };
 
 
-enum mhzCommands : byte { mhzCmdReadPPM,
+enum mhzCommands : uint8_t { mhzCmdReadPPM,
                           mhzCmdCalibrateZero,
                           mhzCmdABCEnable,
                           mhzCmdABCDisable,
@@ -64,14 +64,14 @@ enum mhzCommands : byte { mhzCmdReadPPM,
 #endif // ifdef ENABLE_DETECTION_RANGE_COMMANDS
 };
 
-// 9 byte commands:
+// 9 uint8_t commands:
 // mhzCmdReadPPM[]              = {0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79};
 // mhzCmdCalibrateZero[]        = {0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78};
 // mhzCmdABCEnable[]            = {0xFF,0x01,0x79,0xA0,0x00,0x00,0x00,0x00,0xE6};
 // mhzCmdABCDisable[]           = {0xFF,0x01,0x79,0x00,0x00,0x00,0x00,0x00,0x86};
 // mhzCmdReset[]                = {0xFF,0x01,0x8d,0x00,0x00,0x00,0x00,0x00,0x72};
 
-/* It seems the offsets [3]..[4] for the detection range setting (command byte 0x99) are wrong in the latest
+/* It seems the offsets [3]..[4] for the detection range setting (command uint8_t 0x99) are wrong in the latest
  * online data sheet: http://www.winsen-sensor.com/d/files/infrared-gas-sensor/mh-z19b-co2-ver1_0.pdf
  * According to the MH-Z19B datasheet version 1.2, valid from: 2017.03.22 (received 2018-03-07)
  * the offset should be [6]..[7] instead.
@@ -96,7 +96,7 @@ enum mhzCommands : byte { mhzCmdReadPPM,
 // mhzCmdMeasurementRange3000[] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x0B,0xB8,0xA3};
 // mhzCmdMeasurementRange5000[] = {0xFF,0x01,0x99,0x00,0x00,0x00,0x13,0x88,0xCB};
 // Removing redundant data, just keeping offsets [2], [6]..[7]:
-const PROGMEM byte mhzCmdData[][3] = {
+const PROGMEM uint8_t mhzCmdData[][3] = {
   { 0x86, 0x00, 0x00 },
   { 0x87, 0x00, 0x00 },
   { 0x79, 0xA0, 0x00 },
@@ -179,22 +179,22 @@ struct P049_data_struct : public PluginTaskData_base {
     }
   }
 
-  byte calculateChecksum() const {
-    byte checksum = 0;
+  uint8_t calculateChecksum() const {
+    uint8_t checksum = 0;
 
-    for (byte i = 1; i < 8; i++) {
+    for (uint8_t i = 1; i < 8; i++) {
       checksum += mhzResp[i];
     }
     checksum = 0xFF - checksum;
     return checksum + 1;
   }
 
-  size_t send_mhzCmd(byte CommandId)
+  size_t send_mhzCmd(uint8_t CommandId)
   {
     if (!isInitialized()) { return 0; }
 
     // The receive buffer "mhzResp" is re-used to send a command here:
-    mhzResp[0] = 0xFF; // Start byte, fixed
+    mhzResp[0] = 0xFF; // Start uint8_t, fixed
     mhzResp[1] = 0x01; // Sensor number, 0x01 by default
     memcpy_P(&mhzResp[2], mhzCmdData[CommandId], sizeof(mhzCmdData[0]));
     mhzResp[6] = mhzResp[3]; mhzResp[7] = mhzResp[4];
@@ -213,7 +213,7 @@ struct P049_data_struct : public PluginTaskData_base {
     if (!isInitialized()) { return false; }
 
     // send read PPM command
-    byte nbBytesSent = send_mhzCmd(mhzCmdReadPPM);
+    uint8_t nbBytesSent = send_mhzCmd(mhzCmdReadPPM);
 
     if (nbBytesSent != 9) {
       return false;
@@ -227,7 +227,7 @@ struct P049_data_struct : public PluginTaskData_base {
 
     while (!timeOutReached(timer) && (counter < 9)) {
       if (easySerial->available() > 0) {
-        byte value = easySerial->read();
+        uint8_t value = easySerial->read();
 
         if (((counter == 0) && (value == 0xFF)) || (counter > 0)) {
           mhzResp[counter++] = value;
@@ -287,7 +287,7 @@ struct P049_data_struct : public PluginTaskData_base {
           ++nrUnknownResponses;
           return false;
       }
-      byte checksum = calculateChecksum();
+      uint8_t checksum = calculateChecksum();
       return mhzResp[8] == checksum;
     }
     ++nrUnknownResponses;
@@ -320,7 +320,8 @@ struct P049_data_struct : public PluginTaskData_base {
   unsigned long lastInitTimestamp  = 0;
 
   ESPeasySerial *easySerial = nullptr;
-  byte           mhzResp[9]; // 9 byte response buffer
+  uint8_t        mhzResp[9] = {0}; // 9 uint8_t response buffer
+
   // Default of the sensor is to run ABC
   bool ABC_Disable     = false;
   bool ABC_MustApply   = false;
@@ -384,7 +385,7 @@ boolean Plugin_049_Check_and_ApplyFilter(unsigned int prevVal, unsigned int& new
   return true;
 }
 
-boolean Plugin_049(byte function, struct EventStruct *event, String& string)
+boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
@@ -437,14 +438,14 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        byte choice         = PCONFIG(0);
-        String options[2]   = { F("Normal"), F("ABC disabled") };
+        uint8_t choice         = PCONFIG(0);
+        const __FlashStringHelper * options[2]   = { F("Normal"), F("ABC disabled") };
         int optionValues[2] = { ABC_enabled, ABC_disabled };
         addFormSelector(F("Auto Base Calibration"), F("p049_abcdisable"), 2, options, optionValues, choice);
       }
       {
-        byte   choiceFilter     = PCONFIG(1);
-        String filteroptions[5] =
+        uint8_t   choiceFilter     = PCONFIG(1);
+        const __FlashStringHelper * filteroptions[5] =
         { F("Skip Unstable"), F("Use Unstable"), F("Fast Response"), F("Medium Response"), F("Slow Response") };
         int filteroptionValues[5] = {
           PLUGIN_049_FILTER_OFF,
@@ -570,18 +571,23 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
       float u           = 0;
 
       if (P049_data->read_ppm(ppm, temp, s, u)) {
-        String log = F("MHZ19: ");
+        const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
+        String log;
+        if (mustLog)
+          log = F("MHZ19: ");
 
         // During (and only ever at) sensor boot, 'u' is reported as 15000
         // We log but don't process readings during that time
         if (approximatelyEqual(u, 15000)) {
-          log += F("Bootup detected! ");
+          if (mustLog)
+            log += F("Bootup detected! ");
 
           if (P049_data->ABC_Disable) {
             // After bootup of the sensor the ABC will be enabled.
             // Thus only actively disable after bootup.
             P049_data->ABC_MustApply = true;
-            log                     += F("Will disable ABC when bootup complete. ");
+            if (mustLog)
+              log                     += F("Will disable ABC when bootup complete. ");
           }
           success = false;
 
@@ -590,9 +596,9 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           const int filterValue = PCONFIG(1);
 
           if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
-            UserVar[event->BaseVarIndex]     = (float)ppm;
-            UserVar[event->BaseVarIndex + 1] = (float)temp;
-            UserVar[event->BaseVarIndex + 2] = (float)u;
+            UserVar[event->BaseVarIndex]     = ppm;
+            UserVar[event->BaseVarIndex + 1] = temp;
+            UserVar[event->BaseVarIndex + 2] = u;
             success                          = true;
           } else {
             success = false;
@@ -614,16 +620,18 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        // Log values in all cases
-        log += F("PPM value: ");
-        log += ppm;
-        log += F(" Temp/S/U values: ");
-        log += temp;
-        log += '/';
-        log += s;
-        log += '/';
-        log += u;
-        addLog(LOG_LEVEL_INFO, log);
+        if (mustLog) {
+          // Log values in all cases
+          log += F("PPM value: ");
+          log += ppm;
+          log += F(" Temp/S/U values: ");
+          log += temp;
+          log += '/';
+          log += s;
+          log += '/';
+          log += u;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
         break;
 
         // #ifdef ENABLE_DETECTION_RANGE_COMMANDS
@@ -644,7 +652,7 @@ boolean Plugin_049(byte function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MHZ19: Unknown response:");
           log += P049_data->getBufferHexDump();
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         // Check for stable reads and allow unstable reads the first 3 minutes after reset.
@@ -705,7 +713,7 @@ void P049_html_show_stats(struct EventStruct *event) {
   switch (P049_data->getDetectedDevice()) {
     case MHZ19_A: addHtml(F("MH-Z19A")); break;
     case MHZ19_B: addHtml(F("MH-Z19B")); break;
-    default: addHtml("---"); break;
+    default: addHtml(F("---")); break;
   }
 }
 

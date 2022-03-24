@@ -27,7 +27,7 @@ void handle_log() {
 
   #ifdef WEBSERVER_LOG
   addHtml(F("<TR><TH id=\"headline\" align=\"left\">Log"));
-  addCopyButton(F("copyText"), "", F("Copy log to clipboard"));
+  addCopyButton(F("copyText"), EMPTY_STRING, F("Copy log to clipboard"));
   addHtml(F("</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
   addHtml(F("Autoscroll: "));
   addCheckBox(F("autoscroll"), true);
@@ -49,20 +49,20 @@ void handle_log_JSON() {
   if (!isLoggedIn()) { return; }
   #ifdef WEBSERVER_LOG
   TXBuffer.startJsonStream();
-  String webrequest = web_server.arg(F("view"));
+  String webrequest = webArg(F("view"));
   addHtml(F("{\"Log\": {"));
 
   if (webrequest == F("legend")) {
     addHtml(F("\"Legend\": ["));
 
-    for (byte i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
+    for (uint8_t i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
       if (i != 0) {
-        addHtml(",");
+        addHtml(',');
       }
       addHtml('{');
       int loglevel;
       stream_next_json_object_value(F("label"), getLogLevelDisplayStringFromIndex(i, loglevel));
-      stream_last_json_object_value(F("loglevel"), String(loglevel));
+      stream_last_json_object_value(F("loglevel"), loglevel);
     }
     addHtml(F("],\n"));
   }
@@ -73,11 +73,16 @@ void handle_log_JSON() {
   unsigned long lastTimeStamp  = 0;
 
   while (logLinesAvailable) {
-    String reply = Logging.get_logjson_formatted(logLinesAvailable, lastTimeStamp);
-
-    if (reply.length() > 0) {
-      addHtml(reply);
-
+    String message;
+    uint8_t loglevel;
+    if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
+      addHtml('{');
+      stream_next_json_object_value(F("timestamp"), lastTimeStamp);
+      stream_next_json_object_value(F("text"),  std::move(message));
+      stream_last_json_object_value(F("level"), loglevel);
+      if (logLinesAvailable) {
+        addHtml(',', '\n');
+      }
       if (nrEntries == 0) {
         firstTimeStamp = lastTimeStamp;
       }
@@ -104,11 +109,11 @@ void handle_log_JSON() {
     // Reload times no lower than 100 msec.
     refreshSuggestion = 100;
   }
-  stream_next_json_object_value(F("TTL"),                 String(refreshSuggestion));
-  stream_next_json_object_value(F("timeHalfBuffer"),      String(newOptimum));
-  stream_next_json_object_value(F("nrEntries"),           String(nrEntries));
-  stream_next_json_object_value(F("SettingsWebLogLevel"), String(Settings.WebLogLevel));
-  stream_last_json_object_value(F("logTimeSpan"), String(logTimeSpan));
+  stream_next_json_object_value(F("TTL"),                 refreshSuggestion);
+  stream_next_json_object_value(F("timeHalfBuffer"),      newOptimum);
+  stream_next_json_object_value(F("nrEntries"),           nrEntries);
+  stream_next_json_object_value(F("SettingsWebLogLevel"), Settings.WebLogLevel);
+  stream_last_json_object_value(F("logTimeSpan"),         logTimeSpan);
   addHtml(F("}\n"));
   TXBuffer.endStream();
   updateLogLevelCache();

@@ -105,7 +105,7 @@ bool    validatePort(const String& portStr);
 
 // ************************************************************************************************
 
-boolean Plugin_101(byte function, struct EventStruct *event, String& string)
+boolean Plugin_101(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -171,8 +171,8 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      char   ipString[IP_BUFF_SIZE_P101]   = "";
-      char   macString[MAC_BUFF_SIZE_P101] = "";
+      char   ipString[IP_BUFF_SIZE_P101]   = {0};
+      char   macString[MAC_BUFF_SIZE_P101] = {0};
       char   deviceTemplate[2][CUSTOMTASK_STR_SIZE_P101];
       String errorStr;
       String msgStr;
@@ -184,7 +184,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       uint8_t nameCode = safeName(event->TaskIndex);
 
       if ((nameCode == NAME_MISSING) || (nameCode == NAME_UNSAFE)) {               // Check to see if user submitted safe device name.
-        strcpy(ExtraTaskSettings.TaskDeviceName, (char *)(F(DEF_TASK_NAME_P101))); // Use default name.
+        strcpy(ExtraTaskSettings.TaskDeviceName, String(F(DEF_TASK_NAME_P101)).c_str()); // Use default name.
 
         if (nameCode == NAME_UNSAFE) {
           errorStr = F("ALERT, Renamed Unsafe Task Name. ");
@@ -192,7 +192,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       // Check IP Address.
-      if (!safe_strncpy(ipString, web_server.arg(getPluginCustomArgName(0)), IP_BUFF_SIZE_P101)) {
+      if (!safe_strncpy(ipString, webArg(getPluginCustomArgName(0)), IP_BUFF_SIZE_P101)) {
         // msgStr = getCustomTaskSettingsError(0); // Report string too long.
         // errorStr += msgStr;
         // msgStr    = wolStr + msgStr;
@@ -200,15 +200,15 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       if (strlen(ipString) == 0) { // IP Address missing, use default value (without webform warning).
-        strcpy_P(ipString, (char *)(F(IP_STR_DEF_P101)));
+        strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
 
         msgStr  = wolStr;
         msgStr += F("Loaded Default IP = ");
         msgStr += F(IP_STR_DEF_P101);
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
       else if (strlen(ipString) < IP_MIN_SIZE_P101) { // IP Address too short, load default value. Warn User.
-        strcpy_P(ipString, (char *)(F(IP_STR_DEF_P101)));
+        strcpy_P(ipString, String(F(IP_STR_DEF_P101)).c_str());
 
         msgStr    = F("Provided IP Invalid (Using Default). ");
         errorStr += msgStr;
@@ -216,7 +216,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         msgStr   += F("[");
         msgStr   += F(IP_STR_DEF_P101);
         msgStr   += F("]");
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
       else if (!validateIp(ipString)) { // Unexpected IP Address value. Leave as-is, but Warn User.
         msgStr    = F("WARNING, Please Review IP Address. ");
@@ -225,11 +225,11 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         msgStr   += F("[");
         msgStr   += ipString;
         msgStr   += F("]");
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
 
       // Check MAC Address.
-      if (!safe_strncpy(macString, web_server.arg(getPluginCustomArgName(1)), MAC_BUFF_SIZE_P101)) {
+      if (!safe_strncpy(macString, webArg(getPluginCustomArgName(1)), MAC_BUFF_SIZE_P101)) {
         // msgStr += getCustomTaskSettingsError(1); // Report string too long.
         // errorStr += msgStr;
         // msgStr    = wolStr + msgStr;
@@ -237,7 +237,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       if (strlen(macString) == 0) { // MAC Address missing, use default value.
-        strcpy_P(macString, (char *)(F(MAC_STR_DEF_P101)));
+        strcpy_P(macString, String(F(MAC_STR_DEF_P101)).c_str());
 
         msgStr    = F("MAC Address Not Provided, Populated with Zero Values. ");
         errorStr += msgStr;
@@ -250,7 +250,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         msgStr   += F("[");
         msgStr   += macString;
         msgStr   += F("]");
-        addLog(LOG_LEVEL_INFO, msgStr);
+        addLogMove(LOG_LEVEL_INFO, msgStr);
       }
 
       // Save the user's IP and MAC Address parameters into Custom Settings.
@@ -262,7 +262,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       }
 
       // Save all the Task parameters.
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       UDP_PORT_P101 = getFormItemInt(F(FORM_PORT_P101));
       success       = true;
       break;
@@ -282,7 +282,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
       char   ipString[IP_BUFF_SIZE_P101]   = "";
       char   macString[MAC_BUFF_SIZE_P101] = "";
       bool   taskEnable                    = false;
-      byte   parse_error                   = false;
+      uint8_t   parse_error                   = false;
       String msgStr;
       String strings[2];
       String tmpString    = string;
@@ -320,15 +320,15 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
         String paramPort = parseString(tmpString, 4); // UDP Port (optional)
 
         // Populate Parameters with default settings when missing from command line.
-        if (paramMac == "") {                         // Missing from command line, use default setting.
+        if (paramMac.isEmpty()) {                         // Missing from command line, use default setting.
           paramMac = macString;
         }
 
-        if (paramIp == "") { // Missing from command line, use default setting.
+        if (paramIp.isEmpty()) { // Missing from command line, use default setting.
           paramIp = ipString;
         }
 
-        if (paramPort == "") {
+        if (paramPort.isEmpty()) {
           int portNumber = UDP_PORT_P101; // Get default Port from user settings.
           paramPort = portNumber;
         }
@@ -340,7 +340,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
           msgStr     += F("Error, MAC Addr Invalid [");
           msgStr     += paramMac;
           msgStr     += F("]");
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
         }
 
         // Validate IP Address.
@@ -350,7 +350,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
           msgStr     += F("Error, IP Addr Invalid [");
           msgStr     += paramIp;
           msgStr     += F("]");
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
         }
 
         // Validate UDP Port.
@@ -360,7 +360,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
           msgStr     += F("Error, Port Invalid [");
           msgStr     += paramPort;
           msgStr     += F("]");
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
         }
 
         // If no errors we can send Magic Packet.
@@ -378,7 +378,7 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
           msgStr += paramIp;
           msgStr += F(", Port= ");
           msgStr += paramPort;
-          addLog(LOG_LEVEL_INFO, msgStr);
+          addLogMove(LOG_LEVEL_INFO, msgStr);
 
           // Send Magic Packet.
           if (WiFi.status() == WL_CONNECTED) {
@@ -391,13 +391,13 @@ boolean Plugin_101(byte function, struct EventStruct *event, String& string)
             if (!WOL.sendMagicPacket(paramMac, paramPort.toInt())) {
               msgStr  = wolStr;
               msgStr += F("Error, Magic Packet Failed (check parameters)");
-              addLog(LOG_LEVEL_INFO, msgStr);
+              addLogMove(LOG_LEVEL_INFO, msgStr);
             }
           }
           else {
             msgStr  = wolStr;
             msgStr += F("Error, WiFi Off-Line");
-            addLog(LOG_LEVEL_INFO, msgStr);
+            addLogMove(LOG_LEVEL_INFO, msgStr);
           }
         }
       }
@@ -422,7 +422,7 @@ uint8_t safeName(taskIndex_t index) {
 
   devName.toLowerCase();
 
-  if (devName == "") {
+  if (devName.isEmpty()) {
     safeCode = NAME_MISSING;
   }
 

@@ -4,8 +4,10 @@
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Misc.h"
+
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
@@ -27,18 +29,19 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
   {
     // Add the known SSIDs
     String ssid, key;
-    byte   index = 1; // Index 0 is the "unset" value
+    uint8_t   index = 1; // Index 0 is the "unset" value
 
     bool done = false;
 
     while (!done) {
       if (get_SSID_key(index, ssid, key)) {
         known.emplace_back(index, ssid, key);
-        if (index == WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX || 
-            index == WIFI_CUSTOM_SUPPORT_KEY_INDEX) {
-          known.back().lowPriority = true;
-        } else if (index == WIFI_CREDENTIALS_FALLBACK_SSID_INDEX) {
-          known.back().isEmergencyFallback = true;
+        if (SettingsIndexMatchCustomCredentials(index)) {
+          if (SettingsIndexMatchEmergencyFallback(index)) {
+            known.back().isEmergencyFallback = true;
+          } else {
+            known.back().lowPriority = true;
+          }
         }
         ++index;
       } else {
@@ -51,6 +54,7 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
     }
   }
   loadCandidatesFromScanned();
+  addFromRTC();
 }
 
 void WiFi_AP_CandidatesList::clearCache() {
@@ -85,27 +89,23 @@ void WiFi_AP_CandidatesList::process_WiFiscan(uint8_t scancount) {
   // Append or update found APs from scan.
   for (uint8_t i = 0; i < scancount; ++i) {
     const WiFi_AP_Candidate tmp(i);
-    // Remove previous scan result if present
-    for (auto it = scanned.begin(); it != scanned.end(); ) {
-      if (tmp == *it || it->expired()) {
-        it = scanned.erase(it);
-      } else {
-        ++it;
-      }
-    }
-//    if (Settings.IncludeHiddenSSID() || !tmp.isHidden) {
-      scanned.push_back(tmp);
-      #ifndef BUILD_NO_DEBUG
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("WiFi : Scan result: ");
-        log += tmp.toString();
-        addLog(LOG_LEVEL_DEBUG, log);
-      }
-      #endif // ifndef BUILD_NO_DEBUG
-//    }
+
+    scanned_new.push_back(tmp);
   }
-  scanned.sort();
-  loadCandidatesFromScanned();
+
+  after_process_WiFiscan();
+}
+
+#ifdef ESP8266
+void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
+  WiFi_AP_Candidate tmp(ap);
+  scanned_new.push_back(tmp);
+}
+#endif
+
+void WiFi_AP_CandidatesList::after_process_WiFiscan() {
+  scanned_new.sort();
+  _mustLoadCredentials = true;
   WiFi.scanDelete();
 }
 
@@ -139,23 +139,19 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
     }
   }
 
-
-  if (currentCandidate.usable()) {
-    // Store in RTC
-    RTC.lastWiFiChannel = currentCandidate.channel;
-
-    for (byte i = 0; i < 6; ++i) {
-      RTC.lastBSSID[i] = currentCandidate.bssid[i];
-    }
-    RTC.lastWiFiSettingsIndex = currentCandidate.index;
-  }
-
-
   if (mustPop) {
-    known_it = known.begin();
-    if (!candidates.empty()) {
-      candidates.pop_front();
+    if (currentCandidate.isHidden) {
+      // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
+      for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->isHidden; ) {
+        cand_it = candidates.erase(cand_it);
+      }
+    } else {
+      if (!candidates.empty()) {
+        candidates.pop_front();
+      }
     }
+
+    known_it = known.begin();
   }
   return currentCandidate.usable();
 }
@@ -189,6 +185,13 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
       }
     }
   }
+  if (currentCandidate.usable()) {
+    // Store in RTC
+    RTC.lastWiFiChannel = currentCandidate.channel;
+    currentCandidate.bssid.get(RTC.lastBSSID);
+    RTC.lastWiFiSettingsIndex = currentCandidate.index;
+  }
+
   candidates.clear();
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
 }
@@ -214,10 +217,39 @@ bool WiFi_AP_CandidatesList::SettingsIndexMatchCustomCredentials(uint8_t index)
 {
   return (WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     == index ||
           WIFI_CUSTOM_SUPPORT_KEY_INDEX        == index ||
-          WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
+          SettingsIndexMatchEmergencyFallback(index));
 }
 
+bool WiFi_AP_CandidatesList::SettingsIndexMatchEmergencyFallback(uint8_t index)
+{
+  return (WIFI_CREDENTIALS_FALLBACK_SSID_INDEX == index);
+}
+
+
 void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
+  if (scanned_new.size() > 0) {
+    // We have new scans to process.
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    // TD-er: Disabled for now as it is suspect for crashes
+    #endif
+    purge_expired();
+    for (auto scan = scanned_new.begin(); scan != scanned_new.end();) {
+      #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = F("WiFi : Scan result: ");
+        log += scan->toString();
+        addLogMove(LOG_LEVEL_DEBUG, log);
+      }
+      #endif // ifndef BUILD_NO_DEBUG
+
+      // We copy instead of move, to make sure it is stored on the 2nd heap.
+      scanned.push_back(*scan);
+      scan = scanned_new.erase(scan);
+    }
+    scanned.sort();
+  }
+
   if (candidates.size() > 1) {
     // Do not mess with the current candidates order if > 1 present
     return;
@@ -269,7 +301,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
     if (bestCandidate.usable()) {
       String log = F("WiFi : Best AP candidate: ");
       log += bestCandidate.toString();
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   candidates.sort();
@@ -278,7 +310,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
 }
 
 void WiFi_AP_CandidatesList::addFromRTC() {
-  if (!RTC.lastWiFi_set()) { return; }
+  if (!Settings.UseLastWiFiFromRTC() || !RTC.lastWiFi_set()) { return; }
 
   if (SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) 
   { 
@@ -292,8 +324,12 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   }
 
   WiFi_AP_Candidate fromRTC(RTC.lastWiFiSettingsIndex, ssid, key);
-  fromRTC.setBSSID(RTC.lastBSSID);
+  fromRTC.bssid   = RTC.lastBSSID;
   fromRTC.channel = RTC.lastWiFiChannel;
+
+  if (!fromRTC.usable()) {
+    return;
+  }
 
   if (candidates.size() > 0 && candidates.front().ssid.equals(fromRTC.ssid)) {
     // Front candidate was already from RTC.
@@ -362,7 +398,7 @@ void WiFi_AP_CandidatesList::purge_unusable() {
   candidates.unique();
 }
 
-bool WiFi_AP_CandidatesList::get_SSID_key(byte index, String& ssid, String& key) const {
+bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& key) const {
   switch (index) {
     case 1:
       ssid = SecuritySettings.WifiSSID;

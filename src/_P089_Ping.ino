@@ -1,5 +1,11 @@
 #include "_Plugin_Helper.h"
 #if defined(USES_P089) && defined(ESP8266)
+
+
+// FIXME TD-er: Support Ping in ESP32
+// Also remove check for ESP8266 in Helpers/_Plugin_init.h and .cpp
+
+
 //#######################################################################################################
 //#################### Plugin 089 ICMP Ping probing ##############
 //#######################################################################################################
@@ -19,6 +25,8 @@ extern "C"
 #include <lwip/sys.h> // needed for sys_now()
 #include <lwip/netif.h>
 }
+
+#include "src/ESPEasyCore/ESPEasyNetwork.h"
 
 
 #define PLUGIN_089
@@ -47,7 +55,7 @@ public:
       P089_data = new (std::nothrow) P089_icmp_pcb();
       if (P089_data != nullptr) {
         P089_data->m_IcmpPCB = raw_new(IP_PROTO_ICMP);
-        raw_recv(P089_data->m_IcmpPCB, PingReceiver, NULL);
+        raw_recv(P089_data->m_IcmpPCB, PingReceiver, nullptr);
         raw_bind(P089_data->m_IcmpPCB, IP_ADDR_ANY);
       }
     } else {
@@ -83,7 +91,7 @@ public:
     }
 
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
 
     /* This one lost as well, DNS dead? */
     if (WiFi.hostByName(hostname, ip) == false) {
@@ -96,7 +104,7 @@ public:
     u16_t ping_len = ICMP_PAYLOAD_LEN + sizeof(struct icmp_echo_hdr);
     struct pbuf *packetBuffer = pbuf_alloc(PBUF_IP, ping_len, PBUF_RAM);
     /* Lost for sure, TODO: Might be good to log such failures, this means we are short on ram? */
-    if (packetBuffer == NULL) {
+    if (packetBuffer == nullptr) {
       return true;
     }
 
@@ -128,7 +136,7 @@ public:
   }
 };
 
-boolean Plugin_089(byte function, struct EventStruct *event, String& string)
+boolean Plugin_089(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -165,8 +173,8 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
   case PLUGIN_WEBFORM_LOAD:
   {
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
-    LoadCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
-    addFormTextBox(String(F("Hostname")), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
+    LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    addFormTextBox(F("Hostname"), F("p089_ping_host"), hostname, PLUGIN_089_HOSTNAME_SIZE - 2);
     success = true;
     break;
   }
@@ -176,8 +184,8 @@ boolean Plugin_089(byte function, struct EventStruct *event, String& string)
     char hostname[PLUGIN_089_HOSTNAME_SIZE];
     // Reset "Fails" if settings updated
     UserVar[event->BaseVarIndex] = 0;
-    strncpy(hostname,  web_server.arg(F("p089_ping_host")).c_str() , sizeof(hostname));
-    SaveCustomTaskSettings(event->TaskIndex, (byte*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
+    strncpy(hostname,  webArg(F("p089_ping_host")).c_str() , sizeof(hostname));
+    SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&hostname, PLUGIN_089_HOSTNAME_SIZE);
     success = true;
     break;
   }

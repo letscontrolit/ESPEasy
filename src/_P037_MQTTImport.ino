@@ -27,7 +27,7 @@
 #define PLUGIN_VALUENAME4_037 "Value4"
 
 
-boolean Plugin_037(byte function, struct EventStruct *event, String& string)
+boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -67,9 +67,9 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
       {
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
         	addFormTextBox(String(F("MQTT Topic ")) + (varNr + 1), String(F("p037_template")) +
         			(varNr + 1), deviceTemplate[varNr], 40);
@@ -82,11 +82,11 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
       {
         String error;
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-        for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
         {
           String argName = F("p037_template");
           argName += varNr + 1;
-          if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
+          if (!safe_strncpy(deviceTemplate[varNr], webArg(argName).c_str(), sizeof(deviceTemplate[varNr]))) {
             error += getCustomTaskSettingsError(varNr);
           }
         }
@@ -94,7 +94,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
           addHtmlError(error);
         }
 
-        SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
         success = true;
         break;
@@ -148,13 +148,13 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
         char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
 
         LoadTaskSettings(event->TaskIndex);
-        LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+        LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
-        for (byte x = 0; x < VARS_PER_TASK; x++)
+        for (uint8_t x = 0; x < VARS_PER_TASK; x++)
         {
           String subscriptionTopic = deviceTemplate[x];
           subscriptionTopic.trim();
-          if (subscriptionTopic.length() == 0) continue;							// skip blank subscriptions
+          if (subscriptionTopic.isEmpty()) continue;							// skip blank subscriptions
 
           // Now check if the incoming topic matches one of our subscriptions
           parseSystemVariables(subscriptionTopic, false);
@@ -163,14 +163,18 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
             // FIXME TD-er: It may be useful to generate events with string values.
             float floatPayload;
             if (!string2float(event->String2, floatPayload)) {
-              String log = F("IMPT : Bad Import MQTT Command ");
-              log += event->String1;
-              addLog(LOG_LEVEL_ERROR, log);
-              log = F("ERR  : Illegal Payload ");
-              log += event->String2;
-              log += ' ';
-              log += getTaskDeviceName(event->TaskIndex);
-              addLog(LOG_LEVEL_INFO, log);
+              if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                String log = F("IMPT : Bad Import MQTT Command ");
+                log += event->String1;
+                addLogMove(LOG_LEVEL_ERROR, log);
+              }
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("ERR  : Illegal Payload ");
+                log += event->String2;
+                log += ' ';
+                log += getTaskDeviceName(event->TaskIndex);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
               success = false;
               break;
             }
@@ -185,7 +189,7 @@ boolean Plugin_037(byte function, struct EventStruct *event, String& string)
               log += ExtraTaskSettings.TaskDeviceValueNames[x];
               log += F("] : ");
               log += floatPayload;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
 
             // Generate event for rules processing - proposed by TridentTD
@@ -216,10 +220,10 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 {
   // We must subscribe to the topics.
   char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-  LoadCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+  LoadCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
 
   // Now loop over all import variables and subscribe to those that are not blank
-  for (byte x = 0; x < VARS_PER_TASK; x++)
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
     String subscribeTo = deviceTemplate[x];
 
@@ -236,7 +240,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
           log += ExtraTaskSettings.TaskDeviceValueNames[x];
           log += F("] subscribed to ");
           log += subscribeTo;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       else
@@ -244,9 +248,9 @@ bool MQTTSubscribe_037(struct EventStruct *event)
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("IMPT : Error subscribing to ");
           log += subscribeTo;
-          addLog(LOG_LEVEL_ERROR, log);
-          return false;
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
+        return false;
       }
     }
   }
@@ -257,7 +261,7 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 // Check to see if Topic matches the MQTT subscription
 //
 bool MQTTCheckSubscription_037(const String& Topic, const String& Subscription) {
-  if (Topic.length() == 0 || Subscription.length() == 0)  {
+  if (Topic.isEmpty() || Subscription.isEmpty())  {
     return false;
   }
 

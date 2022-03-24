@@ -15,7 +15,7 @@
 #define PLUGIN_VALUENAME1_032 "Temperature"
 #define PLUGIN_VALUENAME2_032 "Pressure"
 
-boolean Plugin_032(byte function, struct EventStruct *event, String& string)
+boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -50,13 +50,15 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
-
-      /*String options[2] = { F("0x77 - default I2C address"), F("0x76 - alternate I2C address") };*/
-      int optionValues[2] = { 0x77, 0x76 };
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
+      const uint8_t i2cAddressValues[] = { 0x77, 0x76 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -101,11 +103,11 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           P032_data->readout();
 
           UserVar[event->BaseVarIndex] = P032_data->ms5611_temperature / 100;
-          int elev = PCONFIG(1);
-
-          if (elev)
+          
+          const int elev = PCONFIG(1);
+          if (elev != 0)
           {
-            UserVar[event->BaseVarIndex + 1] = P032_data->pressureElevation(P032_data->ms5611_pressure, elev);
+            UserVar[event->BaseVarIndex + 1] = pressureElevation(P032_data->ms5611_pressure, elev);
           } else {
             UserVar[event->BaseVarIndex + 1] = P032_data->ms5611_pressure;
           }
@@ -113,10 +115,10 @@ boolean Plugin_032(byte function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("MS5611  : Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
             log  = F("MS5611  : Barometric Pressure: ");
             log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           success = true;
         }

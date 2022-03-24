@@ -19,7 +19,7 @@ unsigned long elapsed50ps       = 0;
 unsigned long loopCounter       = 0;
 unsigned long loopCounterLast   = 0;
 unsigned long loopCounterMax    = 1;
-unsigned long lastLoopStart     = 0;
+uint64_t      lastLoopStart     = 0;
 unsigned long shortestLoop      = 10000000;
 unsigned long longestLoop       = 0;
 unsigned long loopCounter_full  = 1;
@@ -28,3 +28,7 @@ float loop_usec_duration_total  = 0.0f;
 
 unsigned long dailyResetCounter                   = 0;
 volatile unsigned long sw_watchdog_callback_count = 0;
+
+
+I2C_bus_state I2C_state = I2C_bus_state::OK;
+unsigned long I2C_bus_cleared_count = 0;

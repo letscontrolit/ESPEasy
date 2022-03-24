@@ -1,7 +1,7 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P111
 //#######################################################################################################
-//################################ Plugin-214: RC522 SPI RFID reader ####################################
+//################################ Plugin-111: RC522 SPI RFID reader ####################################
 //#######################################################################################################
 
 // Changelog:
@@ -26,7 +26,7 @@
 
 // #define P111_USE_REMOVAL      // Enable (real) Tag Removal detection options
 
-boolean Plugin_111(byte function, struct EventStruct *event, String& string)
+boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -83,7 +83,7 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
         #else // P111_USE_REMOVAL
         #define P111_removaltypes 2
         #endif // P111_USE_REMOVAL
-        String removaltype[P111_removaltypes] = { 
+        const __FlashStringHelper * removaltype[P111_removaltypes] = { 
                                                  F("None")
                                                  ,F("Autoremove after Time-out")
                                                  #ifdef P111_USE_REMOVAL
@@ -167,7 +167,7 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
 
         unsigned long key        = P111_NO_KEY;
         bool          removedTag = false;
-        byte          error      = P111_data->readCardStatus(&key, &removedTag);
+        uint8_t          error      = P111_data->readCardStatus(&key, &removedTag);
 
         if (error == 0) {
           unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
@@ -196,7 +196,7 @@ boolean Plugin_111(byte function, struct EventStruct *event, String& string)
               log += F(" card: ");
               log += P111_data->getCardName();
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 
           if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any

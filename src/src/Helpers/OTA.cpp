@@ -1,19 +1,27 @@
-#include "OTA.h"
+#include "../Helpers/OTA.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
+
+#ifdef FEATURE_ARDUINO_OTA
+  //enable Arduino OTA updating.
+  //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
+  #include <ArduinoOTA.h>
+#endif
+
 
 bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #if defined(ESP8266)
 
   // Compute the current free space and sketch size, rounded to 4k blocks.
   // These block bounaries are needed for erasing a full block on flash.
-  const uint32_t freeSketchSpace            = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-  const uint32_t currentSketchSize          = (ESP.getSketchSize() + 0x1000) & 0xFFFFF000;
+  const uint32_t freeSketchSpace            = (getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
+  const uint32_t currentSketchSize          = (getSketchSize() + 0x1000) & 0xFFFFF000;
   const uint32_t smallestOtaImageSizeNeeded = (((SMALLEST_OTA_IMAGE + 16) + 0x1000) & 0xFFFFF000);
   const bool     otaPossible                = freeSketchSpace >= smallestOtaImageSizeNeeded;
   use2step = freeSketchSpace < currentSketchSize; // Assume the new image has the same size.
@@ -99,8 +107,13 @@ void ArduinoOTAInit()
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("OTA  : Arduino OTA enabled on port ");
     log += ARDUINO_OTA_PORT;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
+}
+
+void ArduinoOTA_handle()
+{
+  ArduinoOTA.handle();
 }
 
 #endif // ifdef FEATURE_ARDUINO_OTA

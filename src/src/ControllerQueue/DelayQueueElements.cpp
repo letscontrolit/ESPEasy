@@ -3,17 +3,22 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Helpers/PeriodicalActions.h"
 
 #ifdef USES_MQTT
 ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler = nullptr;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
-  MakeControllerSettings(ControllerSettings);
+  MakeControllerSettings(ControllerSettings); //-V522
   if (!AllocatedControllerSettings()) {
     return false;
   }
   LoadControllerSettings(ControllerIndex, ControllerSettings);
   if (MQTTDelayHandler == nullptr) {
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
+
     MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct<MQTT_queue_element>;
   }
   if (MQTTDelayHandler == nullptr) {
@@ -22,6 +27,8 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
   MQTTDelayHandler->configureControllerSettings(ControllerSettings);
   pubname = ControllerSettings.Publish;
   retainFlag = ControllerSettings.mqtt_retainFlag();
+  Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
+  scheduleNextMQTTdelayQueue();
   return true;
 }
 

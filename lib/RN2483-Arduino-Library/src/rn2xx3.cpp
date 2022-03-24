@@ -43,7 +43,7 @@ bool rn2xx3::autobaud()
     {
       delay(1000);
     }
-    _rn2xx3_handler._serial.write((byte)0x00);
+    _rn2xx3_handler._serial.write((uint8_t)0x00);
     _rn2xx3_handler._serial.write(0x55);
     _rn2xx3_handler._serial.println();
 
@@ -97,6 +97,11 @@ bool rn2xx3::setSF(uint8_t sf)
   return _rn2xx3_handler.setSF(sf);
 }
 
+bool rn2xx3::setAdaptiveDataRate(bool enabled)
+{
+  return _rn2xx3_handler.setAdaptiveDataRate(enabled);
+}
+
 bool rn2xx3::init()
 {
   return _rn2xx3_handler.init();
@@ -122,7 +127,7 @@ RN2xx3_datatypes::TX_return_type rn2xx3::tx(const String& data, uint8_t port)
   return txUncnf(data, port); // we are unsure which mode we're in. Better not to wait for acks.
 }
 
-RN2xx3_datatypes::TX_return_type rn2xx3::txBytes(const byte *data, uint8_t size, uint8_t port)
+RN2xx3_datatypes::TX_return_type rn2xx3::txBytes(const uint8_t *data, uint8_t size, uint8_t port)
 {
   const String dataToTx = rn2xx3_helper::base16encode(data, size);
   return txCommand(F("mac tx uncnf "), dataToTx, false, port);
@@ -196,12 +201,18 @@ int rn2xx3::getVbat()
 
 String rn2xx3::getDataRate()
 {
+  int dr;
+  int sf = _rn2xx3_handler.getSF(dr);
   String output;
 
-  output.reserve(9);
-  output  = sendRawCommand(F("radio get sf"));
-  output += "bw";
-  output += _rn2xx3_handler.readIntValue(F("radio get bw"));
+  output.reserve(24);
+  output  = F("sf:");
+  output += sf;
+  output += F(" dr:");
+  output += dr;
+
+  output += F(" ADR: ");
+  output += sendRawCommand(F("mac get adr"));
   return output;
 }
 
@@ -235,6 +246,11 @@ RN2xx3_datatypes::Model rn2xx3::moduleType()
 bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
 {
   return _rn2xx3_handler.setFrequencyPlan(fp);
+}
+
+bool rn2xx3::setTTNstack(RN2xx3_datatypes::TTN_stack_version version)
+{
+  return _rn2xx3_handler.setTTNstack(version);
 }
 
 String rn2xx3::peekLastError() const

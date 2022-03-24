@@ -22,7 +22,7 @@ bool validControllerVar(struct EventStruct *event, controllerIndex_t& controller
   return validControllerIndex(controllerIndex);
 }
 
-String Command_Controller_Disable(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Controller_Disable(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t controllerIndex;
 
@@ -32,7 +32,7 @@ String Command_Controller_Disable(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Controller_Enable(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Controller_Enable(struct EventStruct *event, const char *Line)
 {
   controllerIndex_t controllerIndex;
 

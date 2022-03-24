@@ -312,20 +312,21 @@ TEST(TestToshibaACClass, HumanReadableOutput) {
 
   ac.setRaw(initial_state);
   EXPECT_EQ("Temp: 17C, Power: On, Mode: 0 (Auto), Fan: 0 (Auto), "
-            "Turbo: Off, Econo: Off",
+            "Turbo: Off, Econo: Off, Filter: Off",
             ac.toString());
   ac.setRaw(modified_state);
   EXPECT_EQ("Temp: 17C, Power: On, Mode: 1 (Cool), Fan: 5 (High), "
-            "Turbo: Off, Econo: Off",
+            "Turbo: Off, Econo: Off, Filter: Off",
             ac.toString());
   ac.setTemp(25);
   ac.setFan(3);
   ac.setMode(kToshibaAcDry);
   EXPECT_EQ("Temp: 25C, Power: On, Mode: 2 (Dry), Fan: 3 (Medium), "
-            "Turbo: Off, Econo: Off",
+            "Turbo: Off, Econo: Off, Filter: Off",
             ac.toString());
   ac.off();
-  EXPECT_EQ("Temp: 25C, Power: Off, Fan: 3 (Medium), Turbo: Off, Econo: Off",
+  EXPECT_EQ("Temp: 25C, Power: Off, Fan: 3 (Medium), Turbo: Off, Econo: Off, "
+            "Filter: Off",
             ac.toString());
 }
 
@@ -379,7 +380,7 @@ TEST(TestDecodeToshibaAC, SyntheticExample) {
   EXPECT_STATE_EQ(expectedState, irsend.capture.state, irsend.capture.bits);
   EXPECT_EQ(
       "Temp: 17C, Power: On, Mode: 0 (Auto), Fan: 0 (Auto), Turbo: Off, "
-      "Econo: Off",
+      "Econo: Off, Filter: Off",
       IRAcUtils::resultAcToString(&irsend.capture));
   stdAc::state_t r, p;
   ASSERT_TRUE(IRAcUtils::decodeToState(&irsend.capture, &r, &p));
@@ -426,7 +427,7 @@ TEST(TestDecodeToshibaAC, RealExamples) {
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   ASSERT_EQ(TOSHIBA_AC, irsend.capture.decode_type);
   ASSERT_EQ(kToshibaACBits, irsend.capture.bits);
-  ac.setRaw(irsend.capture.state);
+  ac.setRaw(irsend.capture.state, irsend.capture.bits / 8);
   EXPECT_TRUE(ac.getPower());
   EXPECT_EQ(23, ac.getTemp());
   EXPECT_EQ(kToshibaAcFanAuto, ac.getFan());
@@ -465,7 +466,7 @@ TEST(TestDecodeToshibaAC, RealExamples) {
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   ASSERT_EQ(TOSHIBA_AC, irsend.capture.decode_type);
   ASSERT_EQ(kToshibaACBits, irsend.capture.bits);
-  ac.setRaw(irsend.capture.state);
+  ac.setRaw(irsend.capture.state, irsend.capture.bits / 8);
   EXPECT_TRUE(ac.getPower());
   EXPECT_EQ(17, ac.getTemp());
   EXPECT_EQ(3, ac.getFan());
@@ -504,7 +505,7 @@ TEST(TestDecodeToshibaAC, RealExamples) {
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   ASSERT_EQ(TOSHIBA_AC, irsend.capture.decode_type);
   ASSERT_EQ(kToshibaACBits, irsend.capture.bits);
-  ac.setRaw(irsend.capture.state);
+  ac.setRaw(irsend.capture.state, irsend.capture.bits / 8);
   EXPECT_TRUE(ac.getPower());
   EXPECT_EQ(24, ac.getTemp());
   EXPECT_EQ(kToshibaAcFanMax, ac.getFan());
@@ -543,18 +544,19 @@ TEST(TestDecodeToshibaAC, RealExamples) {
   EXPECT_TRUE(irrecv.decode(&irsend.capture));
   ASSERT_EQ(TOSHIBA_AC, irsend.capture.decode_type);
   ASSERT_EQ(kToshibaACBits, irsend.capture.bits);
-  ac.setRaw(irsend.capture.state);
+  ac.setRaw(irsend.capture.state, irsend.capture.bits / 8);
   EXPECT_FALSE(ac.getPower());
   EXPECT_EQ(22, ac.getTemp());
   EXPECT_EQ(4, ac.getFan());
 }
 
 TEST(TestToshibaACClass, toCommon) {
-  IRToshibaAC ac(0);
+  IRToshibaAC ac(kGpioUnused);
   ac.setPower(true);
   ac.setMode(kToshibaAcCool);
   ac.setTemp(20);
   ac.setFan(kToshibaAcFanMax);
+  ac.setFilter(true);
   // Now test it.
   ASSERT_EQ(decode_type_t::TOSHIBA_AC, ac.toCommon().protocol);
   ASSERT_EQ(-1, ac.toCommon().model);
@@ -563,13 +565,13 @@ TEST(TestToshibaACClass, toCommon) {
   ASSERT_EQ(20, ac.toCommon().degrees);
   ASSERT_EQ(stdAc::opmode_t::kCool, ac.toCommon().mode);
   ASSERT_EQ(stdAc::fanspeed_t::kMax, ac.toCommon().fanspeed);
+  ASSERT_TRUE(ac.toCommon().filter);
   // Unsupported.
   ASSERT_EQ(stdAc::swingv_t::kOff, ac.toCommon().swingv);
   ASSERT_EQ(stdAc::swingh_t::kOff, ac.toCommon().swingh);
   ASSERT_FALSE(ac.toCommon().turbo);
   ASSERT_FALSE(ac.toCommon().econo);
   ASSERT_FALSE(ac.toCommon().light);
-  ASSERT_FALSE(ac.toCommon().filter);
   ASSERT_FALSE(ac.toCommon().clean);
   ASSERT_FALSE(ac.toCommon().beep);
   ASSERT_FALSE(ac.toCommon().quiet);
@@ -626,15 +628,15 @@ TEST(TestDecodeToshibaAC, RealLongExample) {
   EXPECT_STATE_EQ(expectedState, irsend.capture.state, irsend.capture.bits);
   EXPECT_EQ(
       "Temp: 22C, Power: On, Mode: 0 (Auto), Fan: 0 (Auto), Turbo: On, "
-      "Econo: Off",
+      "Econo: Off, Filter: Off",
       IRAcUtils::resultAcToString(&irsend.capture));
 }
 
 
 /// Decode a synthetic long message.
 TEST(TestDecodeToshibaAC, SyntheticLongExample) {
-  IRsendTest irsend(0);
-  IRrecv irrecv(0);
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
 
   const uint8_t expectedState[kToshibaACStateLengthLong] = {
         0xF2, 0x0D, 0x04, 0xFB, 0x09, 0x50, 0x00, 0x00, 0x01, 0x58};
@@ -731,11 +733,132 @@ TEST(TestToshibaACClass, ConstructLongState) {
   ac.setEcono(true);
   EXPECT_EQ(
       "Temp: 29C, Power: On, Mode: 2 (Dry), Fan: 2 (UNKNOWN), "
-      "Turbo: Off, Econo: On",
+      "Turbo: Off, Econo: On, Filter: Off",
       ac.toString());
   EXPECT_EQ(kToshibaACStateLengthLong, ac.getStateLength());
   const uint8_t expectedState[kToshibaACStateLengthLong] = {
         0xF2, 0x0D, 0x04, 0xFB, 0x09, 0xC0, 0x62, 0x00, 0x03, 0xA8};
   EXPECT_STATE_EQ(expectedState, ac.getRaw(), kToshibaACBitsLong);
   EXPECT_EQ(kToshibaACStateLengthLong, ac.getStateLength());
+}
+
+// Decode a real WH-UB03NJ message.
+TEST(TestDecodeToshibaAC, RealExample_WHUB03NJ) {
+  IRsendTest irsend(kGpioUnused);
+  IRrecv irrecv(kGpioUnused);
+  irsend.begin();
+
+  irsend.reset();
+  // Data from:
+  //  https://github.com/crankyoldgit/IRremoteESP8266/issues/1420#issue-817430242
+  const uint16_t rawData[295] = {4438, 4364, 558, 1604, 558, 1580, 580, 1604,
+      558, 1580, 582, 522, 556, 500, 580, 1582, 580, 500, 580, 498, 582, 498,
+      582, 498, 580, 500, 582, 1582, 580, 1582, 582, 500, 582, 1580, 582, 520,
+      558, 522, 558, 496, 582, 524, 560, 520, 556, 500, 582, 1604, 558, 1584,
+      580, 1582, 580, 1582, 582, 1580, 582, 1580, 582, 1580, 582, 1582, 580,
+      522, 556, 524, 556, 500, 580, 522, 560, 498, 582, 522, 558, 500, 554, 524,
+      582, 498, 580, 1582, 580, 500, 582, 496, 582, 1582, 582, 1604, 558, 524,
+      558, 522, 560, 498, 580, 500, 582, 498, 582, 522, 558, 498, 582, 520, 558,
+      500, 528, 1634, 580, 1584, 578, 1582, 582, 496, 584, 496, 582, 498, 582,
+      498, 582, 498, 582, 500, 582, 522, 558, 498, 584, 498, 582, 496, 582,
+      1580, 582, 1604, 558, 500, 582, 1580, 554, 1608, 580, 500, 580,
+      4630, 4416, 4316, 606, 1604, 558, 1580, 580, 1606, 556, 1604, 558, 500,
+      580, 498, 554, 1606, 582, 498, 582, 498, 584, 496, 584, 498, 582, 522,
+      558, 1586, 556, 1608, 580, 498, 584, 1580, 580, 500, 582, 498, 582, 500,
+      582, 498, 580, 498, 582, 522, 558, 1580, 554, 1610, 580, 1604, 532, 1606,
+      582, 1604, 558, 1604, 560, 1582, 580, 1582, 554, 548, 560, 498, 582, 500,
+      580, 500, 580, 500, 582, 520, 558, 500, 580, 524, 558, 498, 582, 1582,
+      582, 498, 580, 522, 532, 1608, 582, 1604, 558, 498, 582, 522, 556, 500,
+      580, 500, 582, 498, 582, 522, 560, 496, 582, 500, 582, 498, 582, 1604,
+      558, 1604, 558, 1604, 560, 496, 582, 522, 558, 500, 580, 500, 582, 500,
+      554, 524, 582, 500, 580, 500, 582, 498, 554, 524, 582, 1604, 558, 1582,
+      582, 496, 582, 1582, 580, 1604, 558, 500, 580};  // TOSHIBA_AC
+
+  const uint8_t expectedState[kToshibaACStateLength] = {
+      0xF2, 0x0D, 0x03, 0xFC, 0x01, 0x30, 0x07, 0x00, 0x36};
+  irsend.sendRaw(rawData, 295, 38000);
+  irsend.makeDecodeResult();
+  ASSERT_TRUE(irrecv.decode(&irsend.capture));
+  EXPECT_EQ(decode_type_t::TOSHIBA_AC, irsend.capture.decode_type);
+  EXPECT_EQ(kToshibaACBits, irsend.capture.bits);
+  EXPECT_STATE_EQ(expectedState, irsend.capture.state, irsend.capture.bits);
+  EXPECT_EQ(
+      "Temp: 20C, Power: Off, Fan: 0 (Auto), Turbo: Off, Econo: Off, "
+      "Filter: Off",
+      IRAcUtils::resultAcToString(&irsend.capture));
+}
+
+TEST(TestUtils, Housekeeping) {
+  ASSERT_EQ("TOSHIBA_AC", typeToString(decode_type_t::TOSHIBA_AC));
+  ASSERT_EQ(decode_type_t::TOSHIBA_AC, strToDecodeType("TOSHIBA_AC"));
+  ASSERT_TRUE(hasACState(decode_type_t::TOSHIBA_AC));
+  ASSERT_TRUE(IRac::isProtocolSupported(decode_type_t::TOSHIBA_AC));
+  ASSERT_EQ(kToshibaACBits, IRsend::defaultBits(decode_type_t::TOSHIBA_AC));
+  ASSERT_EQ(kSingleRepeat, IRsend::minRepeats(decode_type_t::TOSHIBA_AC));
+}
+
+// For https://github.com/crankyoldgit/IRremoteESP8266/issues/1423
+TEST(TestToshibaACClass, SwingCodes) {
+  IRToshibaAC ac(kGpioUnused);
+  ac.setStateLength(kToshibaACStateLengthShort);
+  ac.setTemp(kToshibaAcMinTemp);
+  ac.setSwing(kToshibaAcSwingOn);
+
+  EXPECT_EQ(
+      "Temp: 17C, Swing(V): 1 (On)",
+      ac.toString());
+  EXPECT_EQ(kToshibaACStateLengthShort, ac.getStateLength());
+  const uint8_t swingOnState[kToshibaACStateLengthShort] = {
+        0xF2, 0x0D, 0x01, 0xFE, 0x21, 0x01, 0x20};
+  EXPECT_STATE_EQ(swingOnState, ac.getRaw(), kToshibaACBitsShort);
+  EXPECT_EQ(kToshibaACStateLengthShort, ac.getStateLength());
+
+  ac.setSwing(kToshibaAcSwingOff);
+  EXPECT_EQ(
+      "Temp: 17C, Swing(V): 2 (Off)",
+      ac.toString());
+  EXPECT_EQ(kToshibaACStateLengthShort, ac.getStateLength());
+  const uint8_t swingOffState[kToshibaACStateLengthShort] = {
+        0xF2, 0x0D, 0x01, 0xFE, 0x21, 0x02, 0x23};
+  EXPECT_STATE_EQ(swingOffState, ac.getRaw(), kToshibaACBitsShort);
+  EXPECT_EQ(kToshibaACStateLengthShort, ac.getStateLength());
+
+  const uint8_t swingToggleState[kToshibaACStateLengthShort] = {
+        0xF2, 0x0D, 0x01, 0xFE, 0x21, 0x04, 0x25};
+  ac.setRaw(swingToggleState, kToshibaACStateLengthShort);
+  EXPECT_EQ(kToshibaAcSwingToggle, ac.getSwing());
+  EXPECT_EQ(
+      "Temp: 17C, Swing(V): 4 (Toggle)",
+      ac.toString());
+}
+
+// For https://github.com/crankyoldgit/IRremoteESP8266/issues/1692
+TEST(TestToshibaACClass, Filter) {
+  IRToshibaAC ac(kGpioUnused);
+  ac.begin();
+  EXPECT_FALSE(ac.getFilter());
+
+  ac.setFilter(true);
+  EXPECT_TRUE(ac.getFilter());
+
+
+  ac.setFilter(false);
+  EXPECT_FALSE(ac.getFilter());
+
+  ac.setFilter(true);
+  EXPECT_TRUE(ac.getFilter());
+
+  const uint8_t pure_off[kToshibaACStateLength] = {
+      0xF2, 0x0D, 0x03, 0xFC, 0x01, 0x40, 0x03, 0x00, 0x42};
+  ac.setRaw(pure_off);
+  EXPECT_FALSE(ac.getFilter());
+
+  const uint8_t pure_on[kToshibaACStateLength] = {
+      0xF2, 0x0D, 0x03, 0xFC, 0x01, 0x40, 0x03, 0x10, 0x52};
+  ac.setRaw(pure_on);
+  EXPECT_TRUE(ac.getFilter());
+
+  // Convert a known filter/pure on state to a known off filter/pure state.
+  ac.setFilter(false);
+  EXPECT_STATE_EQ(pure_off, ac.getRaw(), ac.getStateLength() * 8);
 }

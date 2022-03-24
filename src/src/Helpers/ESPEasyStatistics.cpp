@@ -1,4 +1,4 @@
-#include "ESPEasyStatistics.h"
+#include "../Helpers/ESPEasyStatistics.h"
 
 
 #ifdef USES_TIMING_STATS
@@ -6,9 +6,10 @@
 #include "../DataStructs/TimingStats.h"
 #include "../WebServer/WebServer.h"
 #include "../Globals/Protocol.h"
+#include "../Helpers/Convert.h"
 
 /*
-   void logStatistics(byte loglevel, bool clearStats) {
+   void logStatistics(uint8_t loglevel, bool clearStats) {
    if (loglevelActiveFor(loglevel)) {
     String log;
     log.reserve(80);
@@ -51,15 +52,15 @@
  */
 
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  unsigned long minVal, maxVal;
-  unsigned int  count = stats.getMinMax(minVal, maxVal);
+  uint64_t minVal, maxVal;
+  uint64_t  count = stats.getMinMax(minVal, maxVal);
   float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0f;
 
-  json_number(F("count"), String(count));
-  json_number(F("call-per-sec"),   String(call_per_sec));
-  json_number(F("min"),   String(minVal));
-  json_number(F("max"),   String(maxVal));
-  json_number(F("avg"),   String(stats.getAvg()));
+  json_number(F("count"), ull2String(count));
+  json_number(F("call-per-sec"),   toString(call_per_sec, 2));
+  json_number(F("min"),   ull2String(minVal));
+  json_number(F("max"),   ull2String(maxVal));
+  json_number(F("avg"),   toString(stats.getAvg(), 2));
   json_prop(F("unit"), F("usec"));
 }
 

@@ -11,7 +11,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 
-String Command_System_NoSleep(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_System_NoSleep(struct EventStruct *event, const char* Line)
 {
 	if (event->Par1 > 0)
 		Settings.deepSleep_wakeTime = event->Par1; // set deep Sleep awake time
@@ -19,7 +19,7 @@ String Command_System_NoSleep(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
-String Command_System_deepSleep(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_System_deepSleep(struct EventStruct *event, const char* Line)
 {
 	if (event->Par1 >= 0) {
 		deepSleepStart(event->Par1); // call the second part of the function to avoid check and enable one-shot operation
@@ -27,7 +27,7 @@ String Command_System_deepSleep(struct EventStruct *event, const char* Line)
 	return return_command_success();
 }
 
-String Command_System_Reboot(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_System_Reboot(struct EventStruct *event, const char* Line)
 {
 	pinMode(0, INPUT);
 	pinMode(2, INPUT);

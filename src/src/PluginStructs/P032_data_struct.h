@@ -35,12 +35,6 @@ public:
   // **************************************************************************/
   void readout();
 
-  // **************************************************************************/
-  // MSL pressure formula
-  // **************************************************************************/
-  double pressureElevation(double atmospheric,
-                           int    altitude);
-
   uint8_t      i2cAddress;
   unsigned int ms5611_prom[8]     = { 0 };
   double       ms5611_pressure    = 0;

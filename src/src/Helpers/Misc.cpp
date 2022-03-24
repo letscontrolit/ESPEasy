@@ -1,15 +1,12 @@
-#include "Misc.h"
+#include "../Helpers/Misc.h"
 
-
+#include "../../ESPEasy-Globals.h"
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_fdwdecl.h"
-#include "../../ESPEasy-Globals.h"
-
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
-
 #include "../Globals/ESPEasy_time.h"
-
+#include "../Globals/Statistics.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
@@ -17,13 +14,17 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
   // FIXME TD-er: Why have an event here as argument? It is not used.
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("remoteConfig"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   bool   success = false;
   String command = parseString(string, 1);
 
@@ -39,7 +40,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       // tolerantParseStringKeepCase(Line, 4);
       String configCommand = parseStringToEndKeepCase(string, 4);
 
-      if ((configTaskName.length() == 0) || (configCommand.length() == 0)) {
+      if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
         return success; // TD-er: Should this be return false?
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
@@ -53,8 +54,6 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   }
   return success;
 }
-
-
 
 /********************************************************************************************\
    delay in milliseconds with background processing
@@ -76,7 +75,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
   if (!validControllerIndex(controllerIndex)) { return false; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setControllerEnableStatus"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
@@ -94,11 +93,12 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
   if (!validTaskIndex(event->TaskIndex)) { return false; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("setTaskEnableStatus"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.TaskDeviceNumber[event->TaskIndex]) || !enabled) {
     String dummy;
+
     if (!enabled) {
       PluginCall(PLUGIN_EXIT, event, dummy);
     }
@@ -108,6 +108,7 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
       if (!PluginCall(PLUGIN_INIT, event, dummy)) {
         return false;
       }
+
       // Schedule the task to be executed almost immediately
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
     }
@@ -124,7 +125,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   if (!validTaskIndex(taskIndex)) { return; }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("taskClear"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   Settings.clearTask(taskIndex);
   ExtraTaskSettings.clear(); // Invalidate any cached values.
   ExtraTaskSettings.TaskIndex = taskIndex;
@@ -158,7 +159,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
     serialPrint(String(pgm_read_byte(a), HEX));
     serialPrint(" ");
   }
-  serialPrintln("");
+  serialPrintln();
 }
 
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
@@ -188,7 +189,8 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
                 calcBuffer[buf] = pgm_read_dword((uint32_t*)i+buf);                                       // read 4 bytes
                 CRCValues.numberOfCRCBytes+=sizeof(calcBuffer[0]);
              }
-             md5.add((uint8_t *)&calcBuffer[0],(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );     // add buffer to md5.
+             md5.add(reinterpret_cast<const uint8_t *>(&calcBuffer[0]),(*ptrEnd-i)<sizeof(calcBuffer) ? (*ptrEnd-i):sizeof(calcBuffer) );
+                    // add buffer to md5.
                 At the end not the whole buffer. md5 ptr to data in ram.
         }
    }
@@ -212,6 +214,19 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
 }
 
 /********************************************************************************************\
+   Handler for getting Value Names from TaskIndex
+
+   - value names can be accessed with task variable index
+   - maximum number of variables <= defined number of variables in plugin
+ \*********************************************************************************************/
+String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
+  TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
+
+  LoadTaskSettings(TaskIndex);
+  return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
+}
+
+/********************************************************************************************\
    If RX and TX tied together, perform emergency reset to get the system out of boot loops
  \*********************************************************************************************/
 void emergencyReset()
@@ -231,7 +246,6 @@ void emergencyReset()
     }
   }
 }
-
 
 /********************************************************************************************\
    Delayed reboot, in case of issues, do not reboot with high frequency as it might not help...
@@ -262,7 +276,7 @@ void FeedSW_watchdog()
 {
   #ifdef ESP8266
   ESP.wdtFeed();
-  #endif
+  #endif // ifdef ESP8266
 }
 
 void SendValueLogger(taskIndex_t TaskIndex)
@@ -279,9 +293,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
     if (validDeviceIndex(DeviceIndex)) {
       LoadTaskSettings(TaskIndex);
-      const byte valueCount = getValueCountForTask(TaskIndex);
+      const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
-      for (byte varNr = 0; varNr < valueCount; varNr++)
+      for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
         logger += node_time.getDateString('-');
         logger += ' ';
@@ -294,7 +308,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
         logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
         logger += ',';
         logger += formatUserVarNoCheck(TaskIndex, varNr);
-        logger += "\r\n";
+        logger += F("\r\n");
       }
       addLog(LOG_LEVEL_DEBUG, logger);
     }
@@ -321,27 +335,27 @@ void SendValueLogger(taskIndex_t TaskIndex)
 void HSV2RGB(float H, float S, float I, int rgb[3]) {
   int r, g, b;
 
-  H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = fmod(H, 360);                           // cycle H around to 0-360 degrees
+  H = 3.14159f * H / static_cast<float>(180); // Convert to radians.
   S = S / 100;
-  S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
+  S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
   I = I / 100;
   I = I > 0 ? (I < 1 ? I : 1) : 0;
 
   // Math! Thanks in part to Kyle Miller.
   if (H < 2.09439f) {
-    r = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
-    g = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    r = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+    g = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
     b = 255 * I / 3 * (1 - S);
   } else if (H < 4.188787f) {
     H = H - 2.09439f;
-    g = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
-    b = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    g = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+    b = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
     r = 255 * I / 3 * (1 - S);
   } else {
     H = H - 4.188787f;
-    b = 255 * I / 3 * (1 + S * cos(H) / cos(1.047196667f - H));
-    r = 255 * I / 3 * (1 + S * (1 - cos(H) / cos(1.047196667f - H)));
+    b = 255 * I / 3 * (1 + S * cosf(H) / cosf(1.047196667f - H));
+    r = 255 * I / 3 * (1 + S * (1 - cosf(H) / cosf(1.047196667f - H)));
     g = 255 * I / 3 * (1 - S);
   }
   rgb[0] = r;
@@ -356,32 +370,32 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
   int   r, g, b, w;
   float cos_h, cos_1047_h;
 
-  H = fmod(H, 360);                // cycle H around to 0-360 degrees
-  H = 3.14159f * H / (float)180;   // Convert to radians.
+  H = fmod(H, 360);                           // cycle H around to 0-360 degrees
+  H = 3.14159f * H / static_cast<float>(180); // Convert to radians.
   S = S / 100;
-  S = S > 0 ? (S < 1 ? S : 1) : 0; // clamp S and I to interval [0,1]
+  S = S > 0 ? (S < 1 ? S : 1) : 0;            // clamp S and I to interval [0,1]
   I = I / 100;
   I = I > 0 ? (I < 1 ? I : 1) : 0;
 
   if (H < 2.09439f) {
-    cos_h      = cos(H);
-    cos_1047_h = cos(1.047196667f - H);
+    cos_h      = cosf(H);
+    cos_1047_h = cosf(1.047196667f - H);
     r          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
     g          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
     b          = 0;
     w          = 255 * (1 - S) * I;
   } else if (H < 4.188787f) {
     H          = H - 2.09439f;
-    cos_h      = cos(H);
-    cos_1047_h = cos(1.047196667f - H);
+    cos_h      = cosf(H);
+    cos_1047_h = cosf(1.047196667f - H);
     g          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
     b          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
     r          = 0;
     w          = 255 * (1 - S) * I;
   } else {
     H          = H - 4.188787f;
-    cos_h      = cos(H);
-    cos_1047_h = cos(1.047196667f - H);
+    cos_h      = cosf(H);
+    cos_1047_h = cosf(1.047196667f - H);
     b          = S * 255 * I / 3 * (1 + cos_h / cos_1047_h);
     r          = S * 255 * I / 3 * (1 + (1 - cos_h / cos_1047_h));
     g          = 0;
@@ -396,24 +410,108 @@ void HSV2RGBW(float H, float S, float I, int rgbw[4]) {
 
 // Simple bitwise get/set functions
 
-uint8_t get8BitFromUL(uint32_t number, byte bitnr) {
+uint8_t get8BitFromUL(uint32_t number, uint8_t bitnr) {
   return (number >> bitnr) & 0xFF;
 }
 
-void set8BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+void set8BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   uint32_t mask     = (0xFFUL << bitnr);
   uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
 
-uint8_t get4BitFromUL(uint32_t number, byte bitnr) {
+uint8_t get4BitFromUL(uint32_t number, uint8_t bitnr) {
   return (number >> bitnr) &  0x0F;
 }
 
-void set4BitToUL(uint32_t& number, byte bitnr, uint8_t value) {
+void set4BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
   uint32_t mask     = (0x0FUL << bitnr);
   uint32_t newvalue = ((value << bitnr) & mask);
 
   number = (number & ~mask) | newvalue;
 }
+
+uint8_t get3BitFromUL(uint32_t number, uint8_t bitnr) {
+  return (number >> bitnr) &  0x07;
+}
+
+void set3BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
+  uint32_t mask     = (0x07UL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
+
+uint8_t get2BitFromUL(uint32_t number, uint8_t bitnr) {
+  return (number >> bitnr) &  0x03;
+}
+
+void set2BitToUL(uint32_t& number, uint8_t bitnr, uint8_t value) {
+  uint32_t mask     = (0x03UL << bitnr);
+  uint32_t newvalue = ((value << bitnr) & mask);
+
+  number = (number & ~mask) | newvalue;
+}
+
+float getCPUload() {
+  return 100.0f - Scheduler.getIdleTimePct();
+}
+
+int getLoopCountPerSec() {
+  return loopCounterLast / 30;
+}
+
+int getUptimeMinutes() {
+  return wdcounter / 2;
+}
+
+/******************************************************************************
+ * scan an int array of specified size for a value
+ *****************************************************************************/
+bool intArrayContains(const int arraySize, const int array[], const int& value) {
+  for (int i = 0; i < arraySize; i++) {
+    if (array[i] == value) { return true; }
+  }
+  return false;
+}
+
+bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t& value) {
+  for (int i = 0; i < arraySize; i++) {
+    if (array[i] == value) { return true; }
+  }
+  return false;
+}
+
+#ifndef BUILD_NO_RAM_TRACKER
+void logMemUsageAfter(const __FlashStringHelper *function, int value) {
+  // Store free memory in an int, as subtracting may sometimes result in negative value.
+  // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
+  static int last_freemem = ESP.getFreeHeap();
+  const int  freemem_end  = ESP.getFreeHeap();
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log;
+    if (log.reserve(128)) {
+      log  = F("After ");
+      log += function;
+
+      if (value >= 0) {
+        log += value;
+      }
+
+      while (log.length() < 30) { log += ' '; }
+      log += F("Free mem after: ");
+      log += freemem_end;
+
+      while (log.length() < 55) { log += ' '; }
+      log += F("diff: ");
+      log += last_freemem - freemem_end;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+  }
+
+  last_freemem = freemem_end;
+}
+
+#endif // ifndef BUILD_NO_RAM_TRACKER

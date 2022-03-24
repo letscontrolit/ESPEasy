@@ -17,7 +17,7 @@
 
 int8_t Plugin_080_DallasPin;
 
-boolean Plugin_080(byte function, struct EventStruct *event, String& string)
+boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -64,7 +64,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       Plugin_080_DallasPin = CONFIG_PIN1;
 
-      if (Plugin_080_DallasPin != -1) {
+      if (validGpio(Plugin_080_DallasPin)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_080_DallasPin, Plugin_080_DallasPin);
       }
       success = true;
@@ -92,7 +92,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
     {
       Plugin_080_DallasPin = CONFIG_PIN1;
 
-      if (Plugin_080_DallasPin != -1) {
+      if (validGpio(Plugin_080_DallasPin)) {
         uint8_t addr[8];
         Dallas_plugin_get_addr(addr, event->TaskIndex);
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
@@ -122,6 +122,7 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
         }
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("DS   : iButton: ");
 
@@ -130,8 +131,9 @@ boolean Plugin_080(byte function, struct EventStruct *event, String& string)
           } else {
             log += F("Not Present!");
           }
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+        #endif
       }
       break;
     }

@@ -8,7 +8,7 @@
 
 
 struct GpioFactorySettingsStruct {
-  GpioFactorySettingsStruct(DeviceModel model = DeviceModel_default);
+  GpioFactorySettingsStruct(DeviceModel model = DeviceModel::DeviceModel_default);
 
   int8_t          button[4];
   int8_t          relais[4];

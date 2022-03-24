@@ -3,6 +3,8 @@
 // 2013-06-05 by Jeff Rowberg <jeff@rowberg.net>
 //
 // Changelog:
+//      2021-09-28 - allow custom Wire object as transaction function argument
+//      2020-01-20 - hardija : complete support for Teensy 3.x
 //      2015-10-30 - simondlevy : support i2c_t3 for Teensy3.1
 //      2013-05-06 - add Francesco Ferrara's Fastwire v0.24 implementation with small modifications
 //      2013-05-05 - fix issue with writing bit values to words (Sasquatch/Farzanegan)
@@ -48,10 +50,17 @@ THE SOFTWARE.
 #define _I2CDEV_H_
 
 // -----------------------------------------------------------------------------
+// Enable deprecated pgmspace typedefs in avr-libc
+// -----------------------------------------------------------------------------
+#define __PROG_TYPES_COMPAT__
+
+// -----------------------------------------------------------------------------
 // I2C interface implementation setting
 // -----------------------------------------------------------------------------
 #ifndef I2CDEV_IMPLEMENTATION
 #define I2CDEV_IMPLEMENTATION       I2CDEV_ARDUINO_WIRE
+//#define I2CDEV_IMPLEMENTATION       I2CDEV_TEENSY_3X_WIRE
+//#define I2CDEV_IMPLEMENTATION       I2CDEV_BUILTIN_SBWIRE
 //#define I2CDEV_IMPLEMENTATION       I2CDEV_BUILTIN_FASTWIRE
 #endif // I2CDEV_IMPLEMENTATION
 
@@ -67,6 +76,8 @@ THE SOFTWARE.
                                       // ^^^ NBWire implementation is still buggy w/some interrupts!
 #define I2CDEV_BUILTIN_FASTWIRE     3 // FastWire object from Francesco Ferrara's project
 #define I2CDEV_I2CMASTER_LIBRARY    4 // I2C object from DSSCircuits I2C-Master Library at https://github.com/DSSCircuits/I2C-Master-Library
+#define I2CDEV_BUILTIN_SBWIRE	    5 // I2C object from Shuning (Steve) Bian's SBWire Library at https://github.com/freespace/SBWire 
+#define I2CDEV_TEENSY_3X_WIRE       6 // Teensy 3.x support using i2c_t3 library
 
 // -----------------------------------------------------------------------------
 // Arduino-style "Serial.print" debug constant (uncomment to enable)
@@ -82,16 +93,38 @@ THE SOFTWARE.
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         #include <Wire.h>
     #endif
+    #if I2CDEV_IMPLEMENTATION == I2CDEV_TEENSY_3X_WIRE
+        #include <i2c_t3.h>
+    #endif
     #if I2CDEV_IMPLEMENTATION == I2CDEV_I2CMASTER_LIBRARY
         #include <I2C.h>
+    #endif
+    #if I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_SBWIRE
+        #include "SBWire.h"
     #endif
 #endif
 
 #ifdef SPARK
-    #include <spark_wiring_i2c.h>
+    #include "application.h"
     #define ARDUINO 101
+    #define BUFFER_LENGTH 32
 #endif
 
+#ifndef I2CDEVLIB_WIRE_BUFFER_LENGTH
+    #if defined(I2C_BUFFER_LENGTH)
+        // Arduino ESP32 core Wire uses this
+        #define I2CDEVLIB_WIRE_BUFFER_LENGTH I2C_BUFFER_LENGTH
+    #elif defined(BUFFER_LENGTH)
+        // Arduino AVR core Wire and many others use this
+        #define I2CDEVLIB_WIRE_BUFFER_LENGTH BUFFER_LENGTH
+    #elif defined(SERIAL_BUFFER_SIZE)
+        // Arduino SAMD core Wire uses this
+        #define I2CDEVLIB_WIRE_BUFFER_LENGTH SERIAL_BUFFER_SIZE
+    #else
+        // should be a safe fallback, though possibly inefficient
+        #define I2CDEVLIB_WIRE_BUFFER_LENGTH 32
+    #endif
+#endif
 
 // 1000ms default read timeout (modify with "I2Cdev::readTimeout = [ms];")
 #define I2CDEV_DEFAULT_READ_TIMEOUT     1000
@@ -100,23 +133,23 @@ class I2Cdev {
     public:
         I2Cdev();
 
-        static int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readWord(uint8_t devAddr, uint8_t regAddr, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout);
-        static int8_t readWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout);
+        static int8_t readBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readByte(uint8_t devAddr, uint8_t regAddr, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readWord(uint8_t devAddr, uint8_t regAddr, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
+        static int8_t readWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16_t *data, uint16_t timeout=I2Cdev::readTimeout, void *wireObj=0);
 
-        static bool writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t data);
-        static bool writeBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint16_t data);
-        static bool writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data);
-        static bool writeBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint16_t data);
-        static bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data);
-        static bool writeWord(uint8_t devAddr, uint8_t regAddr, uint16_t data);
-        static bool writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data);
-        static bool writeWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16_t *data);
+        static bool writeBit(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint8_t data, void *wireObj=0);
+        static bool writeBitW(uint8_t devAddr, uint8_t regAddr, uint8_t bitNum, uint16_t data, void *wireObj=0);
+        static bool writeBits(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint8_t data, void *wireObj=0);
+        static bool writeBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint8_t length, uint16_t data, void *wireObj=0);
+        static bool writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data, void *wireObj=0);
+        static bool writeWord(uint8_t devAddr, uint8_t regAddr, uint16_t data, void *wireObj=0);
+        static bool writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, void *wireObj=0);
+        static bool writeWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16_t *data, void *wireObj=0);
 
         static uint16_t readTimeout;
 };
@@ -156,12 +189,12 @@ class I2Cdev {
 
         public:
             static void setup(int khz, boolean pullup);
-            static byte beginTransmission(byte device);
-            static byte write(byte value);
-            static byte writeBuf(byte device, byte address, byte *data, byte num);
-            static byte readBuf(byte device, byte address, byte *data, byte num);
+            static uint8_t beginTransmission(uint8_t device);
+            static uint8_t write(uint8_t value);
+            static uint8_t writeBuf(uint8_t device, uint8_t address, uint8_t *data, uint8_t num);
+            static uint8_t readBuf(uint8_t device, uint8_t address, uint8_t *data, uint8_t num);
             static void reset();
-            static byte stop();
+            static uint8_t stop();
     };
 #endif
 
@@ -229,7 +262,7 @@ class I2Cdev {
 
     /* TWI Status is in TWSR, in the top 5 bits: TWS7 - TWS3 */
 
-    #define TW_STATUS_MASK              (_BV(TWS7)|_BV(TWS6)|_BV(TWS5)|_BV(TWS4)|_BV(TWS3))
+    #define TW_STATUS_MASK              ((1 << TWS7)|(1 << TWS6)|(1 << TWS5)|(1 << TWS4)|(1 << TWS3))
     #define TW_STATUS                   (TWSR & TW_STATUS_MASK)
     #define TW_START                    0x08
     #define TW_REP_START                0x10
@@ -264,11 +297,11 @@ class I2Cdev {
     //#define _SFR_BYTE(sfr) _MMIO_BYTE(_SFR_ADDR(sfr))
 
     #ifndef sbi // set bit
-        #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
+        #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= (1 << (bit)))
     #endif // sbi
 
     #ifndef cbi // clear bit
-        #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+        #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~(1 << (bit)))
     #endif // cbi
 
     extern TwoWire Wire;

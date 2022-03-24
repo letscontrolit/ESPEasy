@@ -38,16 +38,16 @@ public:
 
   void Clear ();
 
-  void AddData (byte b);
+  void AddData (uint8_t b);
 
-  void SetPacketLength (byte len);
+  void SetPacketLength (uint8_t len);
 
-  byte& operator[] (byte x);
+  uint8_t& operator[] (uint8_t x);
 
 private:
-  byte _buffer[SERIALBUFFER_SIZE];
-  byte _writeIndex;
-  byte _packetLength;
+  uint8_t _buffer[SERIALBUFFER_SIZE];
+  uint8_t _writeIndex;
+  uint8_t _packetLength;
 };
 
 #endif

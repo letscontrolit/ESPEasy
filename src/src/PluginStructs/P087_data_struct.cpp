@@ -9,6 +9,7 @@
 
 #ifdef USES_P087
 
+#include <vector>
 
 P087_data_struct::P087_data_struct() :  easySerial(nullptr) {}
 
@@ -41,7 +42,7 @@ void P087_data_struct::post_init() {
   for (uint8_t i = 0; i < P87_MAX_CAPTURE_INDEX; ++i) {
     capture_index_used[i] = false;
   }
-  regex_empty = _lines[P087_REGEX_POS].length() == 0;
+  regex_empty = _lines[P087_REGEX_POS].isEmpty();
   String log = F("P087_post_init:");
 
   for (uint8_t i = 0; i < P087_NR_FILTERS; ++i) {
@@ -59,7 +60,7 @@ void P087_data_struct::post_init() {
       capture_index_used[index] = true;
     }
   }
-  addLog(LOG_LEVEL_DEBUG, log);
+  addLogMove(LOG_LEVEL_DEBUG, log);
 }
 
 bool P087_data_struct::isInitialized() const {
@@ -75,7 +76,7 @@ void P087_data_struct::sendString(const String& data) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Proxy: Sending: ");
         log += data;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -108,7 +109,7 @@ bool P087_data_struct::loop() {
 
           for (size_t i = 0; i < length && valid; ++i) {
             if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = "";
+              sentence_part = String();
               ++sentences_received_error;
               valid = false;
             }
@@ -117,7 +118,7 @@ bool P087_data_struct::loop() {
           if (valid) {
             fullSentenceReceived = true;
             last_sentence = sentence_part;
-            sentence_part = "";
+            sentence_part = String();
           }
           break;
         }
@@ -143,10 +144,10 @@ bool P087_data_struct::loop() {
 
 bool P087_data_struct::getSentence(String& string) {
   string        = last_sentence;
-  if (string.length() == 0) {
+  if (string.isEmpty()) {
     return false;
   }
-  last_sentence = "";
+  last_sentence = String();
   return true;
 }
 
@@ -160,7 +161,7 @@ void P087_data_struct::setMaxLength(uint16_t maxlenght) {
   max_length = maxlenght;
 }
 
-void P087_data_struct::setLine(byte varNr, const String& line) {
+void P087_data_struct::setLine(uint8_t varNr, const String& line) {
   if (varNr < P87_Nlines) {
     _lines[varNr] = line;
   }
@@ -247,7 +248,7 @@ static std::vector<capture_tuple> capture_vector;
 // called for each match
 void P087_data_struct::match_callback(const char *match, const unsigned int length, const MatchState& ms)
 {
-  for (byte i = 0; i < ms.level; i++)
+  for (uint8_t i = 0; i < ms.level; i++)
   {
     capture_tuple tuple;
     tuple.first  = i;
@@ -288,7 +289,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
         for (uint8_t n = 0; n < P087_NR_FILTERS; ++n) {
           unsigned int lines_index = n * 3 + P087_FIRST_FILTER_POS + 2;
 
-          if ((capture_index[n] == capture_vector[i].first) && (_lines[lines_index].length() != 0)) {
+          if ((capture_index[n] == capture_vector[i].first) && !(_lines[lines_index].isEmpty())) {
             String log;
             log.reserve(32);
             log  = F("P087: Index: ");
@@ -303,7 +304,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
               // Found a match. Now check if it is supposed to be one or not.
               if (capture_index_must_not_match[n]) {
                 log += F(" (!=)");
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
                 return false;
               } else {
                 match_result = true;
@@ -319,7 +320,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
               }
               log += _lines[lines_index];
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
       }
@@ -329,20 +330,22 @@ bool P087_data_struct::matchRegexp(String& received) const {
     char result = ms.Match(_lines[P087_REGEX_POS].c_str());
 
     if (result == REGEXP_MATCHED) {
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("Match at: ");
         log += ms.MatchStart;
         log += F(" Match Length: ");
         log += ms.MatchLength;
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
+      #endif
       match_result = true;
     }
   }
   return match_result;
 }
 
-String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
+const __FlashStringHelper * P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
   switch (matchType)
   {
     case P087_Match_Type::Regular_Match:          return F("Regular Match");
@@ -351,7 +354,7 @@ String P087_data_struct::MatchType_toString(P087_Match_Type matchType) {
     case P087_Match_Type::Global_Match_inverted:  return F("Global Match inverted");
     case P087_Match_Type::Filter_Disabled:        return F("Filter Disabled");
   }
-  return "";
+  return F("");
 }
 
 bool P087_data_struct::max_length_reached() const {

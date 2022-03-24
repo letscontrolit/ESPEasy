@@ -268,7 +268,8 @@ private:
    char stagingBuffer[_GPS_MAX_FIELD_SIZE + 1] = {0};
    char buffer[_GPS_MAX_FIELD_SIZE + 1] = {0};
    unsigned long lastCommitTime = 0;
-   bool valid, updated = false;
+   bool valid = false;
+   bool updated = false;
    const char *sentenceName = nullptr;
    int termNumber = 0;
    friend class TinyGPSPlus;
@@ -296,7 +297,7 @@ public:
 
   static double distanceBetween(double lat1, double long1, double lat2, double long2);
   static double courseTo(double lat1, double long1, double lat2, double long2);
-  static const char *cardinal(double course);
+  static const char *cardinal(float course);
 
   static int32_t parseDecimal(const char *term);
   static void parseDegrees(const char *term, RawDegrees &deg);
@@ -314,6 +315,10 @@ private:
 
     GPS_SENTENCE_GPGSA,  // GSA - GPS DOP and active satellites
     GPS_SENTENCE_GPGSV,  // GSV - Satellites in view
+
+    GPS_SENTENCE_GPGLL,  // GLL - Latitude and longitude, with time of position fix and status
+
+    GPS_SENTENCE_GPTXT,  // Free format TXT field
 
     GPS_SENTENCE_OTHER};
 

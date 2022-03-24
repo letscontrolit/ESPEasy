@@ -15,7 +15,7 @@
 
 #define HDC1080_I2C_ADDRESS      0x40 // I2C address for the sensor
 
-boolean Plugin_072(byte function, struct EventStruct *event, String& string)
+boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -50,9 +50,21 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x40);
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      success = true;
+      break;
+    }
+
     case PLUGIN_READ:
     {
-      byte hdc1080_msb, hdc1080_lsb;
+      uint8_t hdc1080_msb, hdc1080_lsb;
       uint16_t hdc1080_rawtemp, hdc1080_rawhum;
       float    hdc1080_temp, hdc1080_hum;
 
@@ -71,7 +83,7 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
       hdc1080_msb     = Wire.read();
       hdc1080_lsb     = Wire.read();
       hdc1080_rawtemp = hdc1080_msb << 8 | hdc1080_lsb;
-      hdc1080_temp    = (hdc1080_rawtemp / pow(2, 16)) * 165 - 40;
+      hdc1080_temp    = (static_cast<float>(hdc1080_rawtemp) / 65526.0f) * 165.0f - 40.0f;
 
       Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
       Wire.write(0x01);                            // sends HDC1080_HUMIDITY
@@ -81,7 +93,7 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
       hdc1080_msb    = Wire.read();
       hdc1080_lsb    = Wire.read();
       hdc1080_rawhum = hdc1080_msb << 8 | hdc1080_lsb;
-      hdc1080_hum    = (hdc1080_rawhum / pow(2, 16)) * 100;
+      hdc1080_hum    = (static_cast<float>(hdc1080_rawhum) / 65536.0f) * 100.0f;
 
       UserVar[event->BaseVarIndex]     = hdc1080_temp;
       UserVar[event->BaseVarIndex + 1] = hdc1080_hum;
@@ -89,10 +101,10 @@ boolean Plugin_072(byte function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("HDC1080: Temperature: ");
         log += formatUserVarNoCheck(event->TaskIndex, 0);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         log  = F("HDC1080: Humidity: ");
         log += formatUserVarNoCheck(event->TaskIndex, 1);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;

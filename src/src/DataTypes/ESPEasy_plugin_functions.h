@@ -1,5 +1,5 @@
-#ifndef ESPEASY_PLUGIN_DEFS_H
-#define ESPEASY_PLUGIN_DEFS_H
+#ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
+#define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
 
 // ********************************************************************************
@@ -44,6 +44,8 @@
 #define PLUGIN_MQTT_CONNECTION_STATE       36 // Signal when connection to MQTT broker is re-established
 #define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 #define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
+#define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
+#define PLUGIN_I2C_HAS_ADDRESS             40 // Check the I2C addresses from the plugin, output in 'success'
 
 
 
@@ -103,4 +105,4 @@ public:
 };
 
 
-#endif // ESPEASY_PLUGIN_DEFS_H
+#endif // DATATYPES_ESPEASY_PLUGIN_DEFS_H

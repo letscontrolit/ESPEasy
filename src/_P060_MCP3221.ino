@@ -17,7 +17,7 @@
 #define PLUGIN_VALUENAME1_060 "Analog"
 
 
-boolean Plugin_060(byte function, struct EventStruct *event, String& string)
+boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -51,12 +51,15 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
-
-      int optionValues[8] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
-      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      const uint8_t i2cAddressValues[] = { 0x4D, 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4E, 0x4F };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -70,11 +73,11 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Point 1"), F("p060_adc1"), PCONFIG_LONG(0), 0, 4095);
       html_add_estimate_symbol();
-      addTextBox(F("p060_out1"), String(PCONFIG_FLOAT(0), 3), 10);
+      addTextBox(F("p060_out1"), toString(PCONFIG_FLOAT(0), 3), 10);
 
       addFormNumericBox(F("Point 2"), F("p060_adc2"), PCONFIG_LONG(1), 0, 4095);
       html_add_estimate_symbol();
-      addTextBox(F("p060_out2"), String(PCONFIG_FLOAT(1), 3), 10);
+      addTextBox(F("p060_out2"), toString(PCONFIG_FLOAT(1), 3), 10);
 
       success = true;
       break;
@@ -100,7 +103,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address = PCONFIG(0);
+      uint8_t address = PCONFIG(0);
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P060_data_struct(address));
       P060_data_struct *P060_data =
@@ -148,7 +151,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
 
           if (adc1 != adc2)
           {
-            float normalized = (float)(UserVar[event->BaseVarIndex] - adc1) / (float)(adc2 - adc1);
+            const float normalized = (UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
             UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
 
             log += F(" = ");
@@ -156,7 +159,7 @@ boolean Plugin_060(byte function, struct EventStruct *event, String& string)
           }
         }
 
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;

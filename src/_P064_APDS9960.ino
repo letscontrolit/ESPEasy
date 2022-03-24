@@ -54,7 +54,7 @@
 #include "src/PluginStructs/P064_data_struct.h"
 
 
-boolean Plugin_064(byte function, struct EventStruct *event, String& string)
+boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -97,19 +97,22 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = 0x39;                                         // P064_ADDR; chip has only 1 address
-
-      int optionValues[1] = { 0x39 };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, addr); // Only for display I2C address
+      const uint8_t i2cAddressValues[] = { 0x39 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, 0x39); // Only for display I2C address
+      } else {
+        success = (event->Par1 == 0x39);
+      }
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        String optionsPluginMode[2];
+        const __FlashStringHelper * optionsPluginMode[2];
         optionsPluginMode[0]           = F("Gesture/Proximity/Ambient Light Sensor");
         optionsPluginMode[1]           = F("R/G/B Colors");
         int optionsPluginModeValues[2] = { PLUGIN_MODE_GPL_064, PLUGIN_MODE_RGB_064 };
@@ -147,7 +150,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
 
       {
         // Gain options, multiple gain optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        String optionsGain[4];
+        const __FlashStringHelper * optionsGain[4];
         optionsGain[0] = F("1x");
         optionsGain[1] = F("2x");
         optionsGain[2] = F("4x (default)");
@@ -155,7 +158,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         int optionsGainValues[4] = { PGAIN_1X, PGAIN_2X, PGAIN_4X, PGAIN_8X }; // Also used for optionsALSGain
 
         // Led_Drive options, all Led_Drive optionsets in SparkFun_APDS9960.h have the same valueset, so only defined once here
-        String optionsLedDrive[4];
+        const __FlashStringHelper * optionsLedDrive[4];
         optionsLedDrive[0] = F("100 mA (default)");
         optionsLedDrive[1] = F("50 mA");
         optionsLedDrive[2] = F("25 mA");
@@ -174,7 +177,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
           addFormSelector(F("Gesture LED Drive"), F("p064_gldrive"), 4, optionsLedDrive, optionsLedDriveValues, P064_GLDRIVE);
           {
             // Gesture Led-boost values
-            String optionsLedBoost[4];
+            const __FlashStringHelper * optionsLedBoost[4];
             optionsLedBoost[0] = F("100 %");
             optionsLedBoost[1] = F("150 %");
             optionsLedBoost[2] = F("200 %");
@@ -197,7 +200,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
         }
         {
           // Ambient Light Sensor Gain options, values are equal to PGAIN values, so again avoid duplication
-          String optionsALSGain[4];
+          const __FlashStringHelper * optionsALSGain[4];
           optionsALSGain[0] = F("1x");
           optionsALSGain[1] = F("4x (default)");
           optionsALSGain[2] = F("16x");
@@ -263,7 +266,7 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
           log += F("Error during APDS-9960 init!");
         }
 
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
         success = true;
       }
       break;
@@ -293,28 +296,29 @@ boolean Plugin_064(byte function, struct EventStruct *event, String& string)
       // if ( 0 && P064_data->sensor.isGestureAvailable() )
       if (gesture >= 0)
       {
-        String log = F("APDS : Gesture=");
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("APDS : Gesture=");
 
-        switch (gesture)
-        {
-          case DIR_UP:      log += F("UP");      break;
-          case DIR_DOWN:    log += F("DOWN");    break;
-          case DIR_LEFT:    log += F("LEFT");    break;
-          case DIR_RIGHT:   log += F("RIGHT");   break;
-          case DIR_NEAR:    log += F("NEAR");    break;
-          case DIR_FAR:     log += F("FAR");     break;
-          default:          log += F("NONE");    break;
+          switch (gesture)
+          {
+            case DIR_UP:      log += F("UP");      break;
+            case DIR_DOWN:    log += F("DOWN");    break;
+            case DIR_LEFT:    log += F("LEFT");    break;
+            case DIR_RIGHT:   log += F("RIGHT");   break;
+            case DIR_NEAR:    log += F("NEAR");    break;
+            case DIR_FAR:     log += F("FAR");     break;
+            default:          log += F("NONE");    break;
+          }
+          log += F(" (");
+          log += gesture;
+          log += ')';
+          addLogMove(LOG_LEVEL_INFO, log);
         }
-        log += " (";
-        log += gesture;
-        log += ')';
 
         UserVar[event->BaseVarIndex] = static_cast<float>(gesture);
         event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         sendData(event);
-
-        addLog(LOG_LEVEL_INFO, log);
       }
 
       success = true;

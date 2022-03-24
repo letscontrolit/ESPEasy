@@ -9,13 +9,14 @@
 
 #ifndef LIMIT_BUILD_SIZE
 # define P082_SEND_GPS_TO_LOG
+//# define P082_USE_U_BLOX_SPECIFIC // TD-er: Disabled for now, as it is not working reliable/predictable
 #endif
 
 # define P082_TIMESTAMP_AGE       1500
 # define P082_DEFAULT_FIX_TIMEOUT 2500 // TTL of fix status in ms since last update
 
 
-enum class P082_query : byte {
+enum class P082_query : uint8_t {
   P082_QUERY_LONG        = 0,
   P082_QUERY_LAT         = 1,
   P082_QUERY_ALT         = 2,
@@ -31,11 +32,38 @@ enum class P082_query : byte {
   P082_NR_OUTPUT_OPTIONS
 };
 
-String Plugin_082_valuename(P082_query value_nr, bool displayString);
+const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
 
 
+enum class P082_PowerMode : uint8_t {
+  Max_Performance = 0,
+  Power_Save = 1,
+  Eco = 2
+};
+
+const __FlashStringHelper* toString(P082_PowerMode mode);
+
+
+enum class P082_DynamicModel : uint8_t {
+  Portable    = 0,
+  Stationary  = 2,
+  Pedestrian  = 3,
+  Automotive  = 4,
+  Sea         = 5,
+  Airborne_1g = 6, // airborne with <1g acceleration
+  Airborne_2g = 7, // airborne with <2g acceleration
+  Airborne_4g = 8, // airborne with <4g acceleration
+  Wrist       = 9, // Only recommended for wrist-worn applications. Receiver will filter out armmotion (just available for protocol version > 17).
+  Bike        = 10  // Used for applications with equivalent dynamics to those of a motor bike. Lowvertical acceleration assumed. (supported in protocol versions 19.2)
+};
+
+const __FlashStringHelper* toString(P082_DynamicModel model);
 
 struct P082_data_struct : public PluginTaskData_base {
+
+  // Enum is being stored, so don't change int values
+  
+
   P082_data_struct();
 
   ~P082_data_struct();
@@ -65,6 +93,34 @@ struct P082_data_struct : public PluginTaskData_base {
                    uint32_t & age,
                    bool     & pps_sync);
 
+  // Send command to GPS to put it in PMREQ backup mode (UBLOX only)
+  // @retval true when successful in sending command
+  bool powerDown();
+
+  // Send some characters to GPS to wake up
+  bool wakeUp();
+#ifdef P082_USE_U_BLOX_SPECIFIC
+  bool setPowerMode(P082_PowerMode mode);
+
+  bool setDynamicModel(P082_DynamicModel model);
+#endif
+
+private:
+#ifdef P082_USE_U_BLOX_SPECIFIC
+  // Compute checksum
+  // Caller should offset the data pointer to the correct start where the CRC should start.
+  // @param size  The length over which the CRC should be computed
+  // @param CK_A, CK_B The 2 checksum bytes.
+  static void computeUbloxChecksum(const uint8_t* data, size_t size, uint8_t & CK_A, uint8_t & CK_B);
+
+  // Set checksum.
+  // First 2 bytes of the array are skipped
+  static void setUbloxChecksum(uint8_t* data, size_t size);
+#endif
+
+  bool writeToGPS(const uint8_t* data, size_t size);
+public:
+
   TinyGPSPlus   *gps        = nullptr;
   ESPeasySerial *easySerial = nullptr;
 
@@ -83,7 +139,7 @@ struct P082_data_struct : public PluginTaskData_base {
   String _currentSentence;
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-  float _cache[static_cast<byte>(P082_query::P082_NR_OUTPUT_OPTIONS)] = { 0 };
+  float _cache[static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS)] = { 0 };
 };
 
 #endif // ifdef USES_P082

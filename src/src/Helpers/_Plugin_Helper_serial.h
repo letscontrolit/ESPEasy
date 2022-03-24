@@ -37,18 +37,18 @@ void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSeria
 
 void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef, bool allowSoftwareSerial);
 
-void serialHelper_webformSave(byte& port, int8_t &rxPin, int8_t &txPin);
+void serialHelper_webformSave(uint8_t& port, int8_t &rxPin, int8_t &txPin);
 
 void serialHelper_webformSave(struct EventStruct *event);
 
-bool serialHelper_isValid_serialconfig(byte serialconfig);
+bool serialHelper_isValid_serialconfig(uint8_t serialconfig);
 
-void serialHelper_serialconfig_webformLoad(struct EventStruct *event, byte currentSelection);
+void serialHelper_serialconfig_webformLoad(struct EventStruct *event, uint8_t currentSelection);
 
-byte serialHelper_serialconfig_webformSave();
+uint8_t serialHelper_serialconfig_webformSave();
 
 // Used by some plugins, which used several TaskDevicePluginConfigLong
-byte serialHelper_convertOldSerialConfig(byte newLocationConfig);
+uint8_t serialHelper_convertOldSerialConfig(uint8_t newLocationConfig);
 
 
 

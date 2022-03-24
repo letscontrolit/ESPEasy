@@ -23,39 +23,26 @@
 // ********************************************************************************
 // Web Interface custom page handler
 // ********************************************************************************
-boolean handle_custom(String path) {
-  // path is a deepcopy, since it will be changed.
+bool handle_custom(const String& path) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_custom"));
   #endif
 
   if (!clientIPallowed()) { return false; }
 
-#ifdef ESP8266
-  // For ESP32 remove the leading slash
-  path = path.substring(1);
-#endif
-
   // create a dynamic custom page, parsing task values into [<taskname>#<taskvalue>] placeholders and parsing %xx% system variables
   fs::File   dataFile      = tryOpenFile(path.c_str(), "r");
-#ifdef ESP8266
-  const bool dashboardPage = path.startsWith(F("dashboard"));
-#endif
-#ifdef ESP32
-  const bool dashboardPage = path.startsWith(F("/dashboard"));
-#endif
+  const bool dashboardPage = path.startsWith(F("dashboard")) || path.startsWith(F("/dashboard"));
 
   if (!dataFile && !dashboardPage) {
     return false;    // unknown file that does not exist...
   }
 
-  if (!isLoggedIn()) { return false; }
-
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
-    byte unit    = getFormItemInt(F("unit"));
-    byte btnunit = getFormItemInt(F("btnunit"));
+    uint8_t unit    = getFormItemInt(F("unit"));
+    uint8_t btnunit = getFormItemInt(F("btnunit"));
 
     if (!unit) { unit = btnunit; // unit element prevails, if not used then set to btnunit
     }
@@ -83,7 +70,7 @@ boolean handle_custom(String path) {
 
     // create unit selector dropdown
     addSelector_Head_reloadOnChange(F("unit"));
-    byte choice = Settings.Unit;
+    uint8_t choice = Settings.Unit;
 
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
     {
@@ -97,17 +84,17 @@ boolean handle_custom(String path) {
         else {
           name += Settings.Name;
         }
-        addSelector_Item(name, it->first, choice == it->first, false, "");
+        addSelector_Item(name, it->first, choice == it->first);
       }
     }
     addSelector_Foot();
 
     // create <> navigation buttons
-    byte prev = Settings.Unit;
-    byte next = Settings.Unit;
+    uint8_t prev = Settings.Unit;
+    uint8_t next = Settings.Unit;
     NodesMap::iterator it;
 
-    for (byte x = Settings.Unit - 1; x > 0; x--) {
+    for (uint8_t x = Settings.Unit - 1; x > 0; x--) {
       it = Nodes.find(x);
 
       if (it != Nodes.end()) {
@@ -115,7 +102,7 @@ boolean handle_custom(String path) {
       }
     }
 
-    for (byte x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
+    for (uint8_t x = Settings.Unit + 1; x < UNIT_NUMBER_MAX; x++) {
       it = Nodes.find(x);
 
       if (it != Nodes.end()) {
@@ -136,7 +123,7 @@ boolean handle_custom(String path) {
   }
 
   // handle commands from a custom page
-  String webrequest = web_server.arg(F("cmd"));
+  String webrequest = webArg(F("cmd"));
 
   if (webrequest.length() > 0) {
     ExecuteCommand_all_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
@@ -149,14 +136,35 @@ boolean handle_custom(String path) {
 
   if (dataFile)
   {
-    String page;
-    page.reserve(dataFile.size());
-
-    while (dataFile.available()) {
-      page += ((char)dataFile.read());
+    // Read the file per line and serve per line to reduce amount of memory needed.
+    int available = dataFile.available();
+    String line;
+    line.reserve(128);
+    while (available > 0) {
+      uint32_t chunksize = 64;
+      if (available < static_cast<int>(chunksize)) {
+        chunksize = available;
+      }
+      uint8_t buf[64] = {0};
+      const size_t read = dataFile.read(buf, chunksize);
+      if (read == chunksize) {
+        for (uint32_t i = 0; i < chunksize; ++i) {
+          const char c = (char)buf[i];
+          line += c;
+          if (c == '\n') {
+            addHtml(parseTemplate(line));
+            line.clear();
+            line.reserve(128);
+          }
+        }
+        available = dataFile.available();
+      } else {
+        available = 0;
+      }
     }
-
-    addHtml(parseTemplate(page));
+    if (!line.isEmpty()) {
+      addHtml(parseTemplate(line));
+    }
     dataFile.close();
   }
   else // if the requestef file does not exist, create a default action in case the page is named "dashboard*"
@@ -179,9 +187,9 @@ boolean handle_custom(String path) {
             html_TR_TD();
             addHtml(ExtraTaskSettings.TaskDeviceName);
 
-            const byte valueCount = getValueCountForTask(x);
+            const uint8_t valueCount = getValueCountForTask(x);
 
-            for (byte varNr = 0; varNr < VARS_PER_TASK; varNr++)
+            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
               if ((varNr < valueCount) &&
                   (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))

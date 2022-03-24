@@ -28,7 +28,7 @@
 # define P004_SENSOR_TYPE_INDEX  2
 # define P004_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P004_SENSOR_TYPE_INDEX)))
 
-String Plugin_004_valuename(byte value_nr, bool displayString) {
+String Plugin_004_valuename(uint8_t value_nr, bool displayString) {
   String name = F("Temperature");
 
   if (value_nr != 0) {
@@ -41,7 +41,7 @@ String Plugin_004_valuename(byte value_nr, bool displayString) {
   return name;
 }
 
-boolean Plugin_004(byte function, struct EventStruct *event, String& string)
+boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -72,7 +72,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P004_NR_OUTPUT_VALUES) {
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
@@ -103,8 +103,8 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      PCONFIG(P004_SENSOR_TYPE_INDEX) = static_cast<byte>(Sensor_VType::SENSOR_TYPE_SINGLE);
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      PCONFIG(P004_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
       }
 
@@ -128,7 +128,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      if (Plugin_004_DallasPin_RX != -1 && Plugin_004_DallasPin_TX != -1) {
+      if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
         {
@@ -145,7 +145,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
           int resolutionChoice = P004_RESOLUTION;
 
           if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
-          String resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
+          const __FlashStringHelper * resultsOptions[4]      = { F("9"), F("10"), F("11"), F("12") };
           int    resultsOptionValues[4] = { 9, 10, 11, 12 };
           addFormSelector(F("Device Resolution"), F("p004_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
           addHtml(F(" Bit"));
@@ -153,7 +153,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         {
           // Value in case of Error
-          String resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
+          const __FlashStringHelper * resultsOptions[5]      = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
           int    resultsOptionValues[5] = { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE, P004_ERROR_IGNORE };
           addFormSelector(F("Error State Value"), F("p004_err"), 5, resultsOptions, resultsOptionValues, P004_ERROR_STATE_OUTPUT);
         }
@@ -187,7 +187,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      if (Plugin_004_DallasPin_RX != -1 && Plugin_004_DallasPin_TX != -1) {
+      if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
         // save the address for selected device and store into extra tasksettings
         Dallas_addr_selector_webform_save(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, P004_NR_OUTPUT_VALUES);
 
@@ -210,7 +210,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
       LoadTaskSettings(event->TaskIndex);
       uint8_t addr[8];
 
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P004_NR_OUTPUT_VALUES) {
           Dallas_plugin_get_addr(addr, event->TaskIndex, i);
 
@@ -235,7 +235,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
 
-      if ((addr[0] != 0) && (Plugin_004_DallasPin_RX != -1) && (Plugin_004_DallasPin_TX != -1)) {
+      if ((addr[0] != 0) && (validGpio(Plugin_004_DallasPin_RX)) && (validGpio(Plugin_004_DallasPin_TX))) {
         const uint8_t res = P004_RESOLUTION;
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P004_data_struct(Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, addr, res));
         P004_data_struct *P004_data =
@@ -243,7 +243,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
         if (nullptr != P004_data) {
           // Address index 0 is already set
-          for (byte i = 1; i < P004_NR_OUTPUT_VALUES; ++i) {
+          for (uint8_t i = 1; i < P004_NR_OUTPUT_VALUES; ++i) {
             Dallas_plugin_get_addr(addr, event->TaskIndex, i);
             P004_data->add_addr(addr, i);
           }
@@ -273,7 +273,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
 
             P004_data->collect_values();
 
-            for (byte i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
+            for (uint8_t i = 0; i < P004_NR_OUTPUT_VALUES; ++i) {
               float value = 0;
 
               if (P004_data->read_temp(value, i))
@@ -308,7 +308,7 @@ boolean Plugin_004(byte function, struct EventStruct *event, String& string)
                 log += F(" (");
                 log += P004_data->get_formatted_address(i);
                 log += ')';
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
             }
             P004_data->set_measurement_inactive();

@@ -1,4 +1,4 @@
-#include "Dallas1WireHelper.h"
+#include "../Helpers/Dallas1WireHelper.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -7,21 +7,23 @@
 
 #include "../WebServer/JSON.h"
 
+#include "../../ESPEasy_common.h"
 
 #if defined(ESP32)
   # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
   # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
 #endif // if defined(ESP32)
 
+#include <vector>
 
 unsigned char ROM_NO[8];
 uint8_t LastDiscrepancy;
 uint8_t LastFamilyDiscrepancy;
 uint8_t LastDeviceFlag;
 
-long usec_release   = 0;
-long presence_start = 0;
-long presence_end   = 0;
+int64_t usec_release   = 0;
+int64_t presence_start = 0;
+int64_t presence_end   = 0;
 
 
 // References to 1-wire family codes:
@@ -46,7 +48,7 @@ String Dallas_format_address(const uint8_t addr[]) {
 
   result.reserve(40);
 
-  for (byte j = 0; j < 8; j++)
+  for (uint8_t j = 0; j < 8; j++)
   {
     if (addr[j] < 0x10) {
       result += '0';
@@ -65,7 +67,7 @@ String Dallas_format_address(const uint8_t addr[]) {
 uint64_t Dallas_addr_to_uint64(const uint8_t addr[]) {
   uint64_t tmpAddr_64 = 0;
 
-  for (byte i = 0; i < 8; ++i) {
+  for (uint8_t i = 0; i < 8; ++i) {
     tmpAddr_64 *= 256;
     tmpAddr_64 += addr[i];
   }
@@ -154,13 +156,13 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     }
     addRowLabel(rowLabel);
     addSelector_Head(id);
-    addSelector_Item(F("- None -"), -1, false, false, ""); // Empty choice
+    addSelector_Item(F("- None -"), -1, false); // Empty choice
     uint8_t tmpAddress[8];
 
     // get currently saved address
     uint8_t savedAddress[8];
 
-    for (byte index = 0; index < scan_res.size(); ++index) {
+    for (uint8_t index = 0; index < scan_res.size(); ++index) {
       Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index);
       Dallas_uint64_to_addr(scan_res[index], tmpAddress);
       String option = Dallas_format_address(tmpAddress);
@@ -171,7 +173,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
       }
 
       bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-      addSelector_Item(option, index, selected, false, "");
+      addSelector_Item(option, index, selected);
     }
     addSelector_Foot();
   }
@@ -248,7 +250,7 @@ void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
   // Load ROM address from tasksettings
   LoadTaskSettings(TaskIndex);
 
-  for (byte x = 0; x < 8; x++) {
+  for (uint8_t x = 0; x < 8; x++) {
     uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
     addr[x] = static_cast<uint8_t>((value >> (var_index * 8)) & 0xFF);
   }
@@ -262,7 +264,7 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
   LoadTaskSettings(TaskIndex);
   const uint32_t mask = ~(0xFF << (var_index * 8));
 
-  for (byte x = 0; x < 8; x++) {
+  for (uint8_t x = 0; x < 8; x++) {
     uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
     value                                          &= mask;
     value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
@@ -273,10 +275,10 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
 /*********************************************************************************************\
    Dallas Scan bus
 \*********************************************************************************************/
-byte Dallas_scan(byte getDeviceROM, uint8_t *ROM, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+uint8_t Dallas_scan(uint8_t getDeviceROM, uint8_t *ROM, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
-  byte tmpaddr[8];
-  byte devCount = 0;
+  uint8_t tmpaddr[8];
+  uint8_t devCount = 0;
 
   Dallas_reset(gpio_pin_rx, gpio_pin_tx);
 
@@ -285,7 +287,7 @@ byte Dallas_scan(byte getDeviceROM, uint8_t *ROM, int8_t gpio_pin_rx, int8_t gpi
   while (Dallas_search(tmpaddr, gpio_pin_rx, gpio_pin_tx))
   {
     if (getDeviceROM == devCount) {
-      for (byte  i = 0; i < 8; i++) {
+      for (uint8_t  i = 0; i < 8; i++) {
         ROM[i] = tmpaddr[i];
       }
     }
@@ -309,7 +311,7 @@ void Dallas_startConversion(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpi
   Dallas_reset(gpio_pin_rx, gpio_pin_tx);
   Dallas_write(0x55, gpio_pin_rx, gpio_pin_tx); // Choose ROM
 
-  for (byte i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; i++) {
     Dallas_write(ROM[i], gpio_pin_rx, gpio_pin_tx);
   }
   Dallas_write(0x44, gpio_pin_rx, gpio_pin_tx);
@@ -321,23 +323,24 @@ void Dallas_startConversion(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpi
 bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   int16_t DSTemp;
-  byte    ScratchPad[12];
+  uint8_t    ScratchPad[12];
 
   if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) {
     return false;
   }
   Dallas_write(0xBE, gpio_pin_rx, gpio_pin_tx);  // Read scratchpad
 
-  for (byte i = 0; i < 9; i++) { // read 9 bytes
+  for (uint8_t i = 0; i < 9; i++) { // read 9 bytes
     ScratchPad[i] = Dallas_read(gpio_pin_rx, gpio_pin_tx);
   }
 
   bool crc_ok = Dallas_crc8(ScratchPad);
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("DS: SP: ");
 
-    for (byte x = 0; x < 9; x++)
+    for (uint8_t x = 0; x < 9; x++)
     {
       if (x != 0) {
         log += ',';
@@ -353,13 +356,14 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
       log += F(",P");
     }
     log += ',';
-    log += String(usec_release, DEC);
+    log += ll2String(usec_release, DEC);
     log += ',';
-    log += String(presence_start, DEC);
+    log += ll2String(presence_start, DEC);
     log += ',';
-    log += String(presence_end, DEC);
-    addLog(LOG_LEVEL_DEBUG, log);
+    log += ll2String(presence_end, DEC);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 
   if (!crc_ok)
   {
@@ -374,7 +378,7 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     if (DSTemp == 0x550) { // power-on reset value
       return false;
     }
-    *value = (float(DSTemp) * 0.0625);
+    *value = (float(DSTemp) * 0.0625f);
   }
   else if (ROM[0] == 0x10)       // DS1820 DS18S20
   {
@@ -384,30 +388,30 @@ bool Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int
     DSTemp = (ScratchPad[1] << 11) | ScratchPad[0] << 3;
     DSTemp = ((DSTemp & 0xfff0) << 3) - 16 +
              (((ScratchPad[7] - ScratchPad[6]) << 7) / ScratchPad[7]);
-    *value = float(DSTemp) * 0.0078125;
+    *value = float(DSTemp) * 0.0078125f;
   }
   return true;
 }
 
-bool Dallas_readiButton(const byte addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   // maybe this is needed to trigger the reading
-  //    byte ScratchPad[12];
+  //    uint8_t ScratchPad[12];
 
   Dallas_reset(gpio_pin_rx, gpio_pin_tx);
   Dallas_write(0x55, gpio_pin_rx, gpio_pin_tx); // Choose ROM
 
-  for (byte i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; i++) {
     Dallas_write(addr[i], gpio_pin_rx, gpio_pin_tx);
   }
 
   Dallas_write(0xBE, gpio_pin_rx, gpio_pin_tx); // Read scratchpad
 
-  //    for (byte i = 0; i < 9; i++) // read 9 bytes
+  //    for (uint8_t i = 0; i < 9; i++) // read 9 bytes
   //        ScratchPad[i] = Dallas_read();
   // end maybe this is needed to trigger the reading
 
-  byte tmpaddr[8];
+  uint8_t tmpaddr[8];
   bool found = false;
 
   Dallas_reset(gpio_pin_rx, gpio_pin_tx);
@@ -435,7 +439,7 @@ bool Dallas_readiButton(const byte addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_
       found = true;
     }
   }
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   return found;
 }
 
@@ -476,7 +480,7 @@ bool Dallas_readCounter(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, 
   }
 
   uint16_t crc      = Dallas_crc16(data, 43, 0);
-  uint8_t *crcBytes = (uint8_t *)&crc;
+  const uint8_t *crcBytes = reinterpret_cast<const uint8_t *>(&crc);
   uint8_t  crcLo    = ~data[43];
   uint8_t  crcHi    = ~data[44];
   bool     error    = (crcLo != crcBytes[0]) || (crcHi != crcBytes[1]);
@@ -496,19 +500,19 @@ bool Dallas_readCounter(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, 
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-byte Dallas_getResolution(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+uint8_t Dallas_getResolution(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   // DS1820 and DS18S20 have no resolution configuration register
   if (ROM[0] == 0x10) { return 12; }
 
-  byte ScratchPad[12];
+  uint8_t ScratchPad[12];
 
   if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) {
     return 0;
   }
   Dallas_write(0xBE, gpio_pin_rx, gpio_pin_tx);  // Read scratchpad
 
-  for (byte i = 0; i < 9; i++) { // read 9 bytes
+  for (uint8_t i = 0; i < 9; i++) { // read 9 bytes
     ScratchPad[i] = Dallas_read(gpio_pin_rx, gpio_pin_tx);
   }
 
@@ -539,19 +543,19 @@ byte Dallas_getResolution(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-bool Dallas_setResolution(const uint8_t ROM[8], byte res, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   // DS1820 and DS18S20 have no resolution configuration register
   if (ROM[0] == 0x10) { return true; }
 
-  byte ScratchPad[12];
+  uint8_t ScratchPad[12];
 
   if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) {
     return false;
   }
   Dallas_write(0xBE, gpio_pin_rx, gpio_pin_tx);  // Read scratchpad
 
-  for (byte i = 0; i < 9; i++) { // read 9 bytes
+  for (uint8_t i = 0; i < 9; i++) { // read 9 bytes
     ScratchPad[i] = Dallas_read(gpio_pin_rx, gpio_pin_tx);
   }
 
@@ -561,7 +565,7 @@ bool Dallas_setResolution(const uint8_t ROM[8], byte res, int8_t gpio_pin_rx, in
   }
   else
   {
-    byte old_configuration = ScratchPad[4];
+    uint8_t old_configuration = ScratchPad[4];
 
     switch (res)
     {
@@ -654,8 +658,8 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     // - Presemce condition start (typ: 30 usec after release)
     // - Presence condition end   (minimal duration 60 usec, typ: 100 usec)
     // - Wait till 480 usec after release.
-    const unsigned long start = micros();
-    long usec_passed          = 0;
+    const uint64_t start = getMicros64();
+    int64_t usec_passed          = 0;
 
     while (usec_passed < 480) {
       usec_passed = usecPassedSince(start);
@@ -706,7 +710,7 @@ void Dallas_reset_search()
   LastDeviceFlag        = FALSE;
   LastFamilyDiscrepancy = 0;
 
-  for (byte i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; i++) {
     ROM_NO[i] = 0;
   }
 }
@@ -882,10 +886,10 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   if (gpio_pin_rx == -1) { return 0; }
   if (gpio_pin_tx == -1) { return 0; }
-  unsigned long start = micros();
+  const uint64_t start = getMicros64();
   uint8_t r = Dallas_read_bit_ISR(gpio_pin_rx, gpio_pin_tx, start);
 
-  while (usecPassedSince(start) < 70) {
+  while (usecPassedSince(start) < 70ll) {
     // Wait for another 55 usec
     // Complete read cycle:
     // LOW: 6 usec
@@ -896,7 +900,7 @@ uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   return r;
 }
 
-uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start)
+uint8_t IRAM_ATTR Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start)
 {
   uint8_t r;
   {
@@ -911,14 +915,14 @@ uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned lon
     while (usecPassedSince(start) < 6) {
       // Wait for 6 usec
     }
-    unsigned long startwait = micros();
+    const uint64_t startwait = getMicros64();
     if(gpio_pin_rx == gpio_pin_tx) {
       pinMode(gpio_pin_rx, INPUT); // let pin float, pull up will raise
     } else {
       digitalWrite(gpio_pin_tx, HIGH);
     }
 
-    while (usecPassedSince(startwait) < 9) {
+    while (usecPassedSince(startwait) < 9ll) {
       // Wait for another 9 usec
     }
     r = digitalRead(gpio_pin_rx);
@@ -943,7 +947,7 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   // write 0: low 60 usec, high 10 usec
   const long low_time  = (v & 1) ? 6 : 60;
   const long high_time = (v & 1) ? 64 : 10;
-  unsigned long start  = micros();
+  uint64_t start  = getMicros64();
 
   Dallas_write_bit_ISR(v, gpio_pin_rx, gpio_pin_tx, low_time, high_time, start);
 
@@ -952,12 +956,12 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   }
 }
 
-void Dallas_write_bit_ISR(uint8_t v,
+void IRAM_ATTR Dallas_write_bit_ISR(uint8_t v,
                       int8_t  gpio_pin_rx,
                       int8_t  gpio_pin_tx,
                       long low_time,
                       long high_time,
-                      unsigned long &start)
+                      uint64_t &start)
 {
   #if defined(ESP32)
   ESP32noInterrupts();
@@ -970,7 +974,7 @@ void Dallas_write_bit_ISR(uint8_t v,
   while (usecPassedSince(start) < low_time) {
     // output remains low
   }
-  start = micros();
+  start = getMicros64();
   digitalWrite(gpio_pin_tx, HIGH);
   #if defined(ESP32)
   ESP32interrupts();
@@ -985,7 +989,7 @@ bool Dallas_address_ROM(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pi
   if (!Dallas_reset(gpio_pin_rx, gpio_pin_tx)) { return false; }
   Dallas_write(0x55, gpio_pin_rx, gpio_pin_tx); // Choose ROM
 
-  for (byte i = 0; i < 8; i++) {
+  for (uint8_t i = 0; i < 8; i++) {
     Dallas_write(ROM[i], gpio_pin_rx, gpio_pin_tx);
   }
   return true;

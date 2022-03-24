@@ -21,10 +21,44 @@ Maintainer: |P033_maintainer|
 
 Used libraries: |P033_usedlibraries|
 
-Supported hardware
-------------------
+Description
+------------
 
-|P033_usedby|
+You can use a special dummy device within ESP Easy to provide additional features to the rules engine. A dummy device contains 1 (Single) to 4 (Quad) sensor values, depending on the Output Data Type selected, that can be used as variables to store custom numerical data. (floating point values, like 123.50)
+
+The dummy device can be used like any other sensor to send it's data to a Controller. But this is not mandatory if you only want to use it within your own rules section.
+
+The dummy device has it's own special command to set values from rules:
+
+.. code-block:: none
+
+  TaskValueSet <task nr/task name>,<value nr/value name>,<value|formula>
+
+A few examples:
+
+You run your dummy device from task number 3 and the first value should contain something calculated from a temperature sensor labeled "Outdoor":
+
+.. code-block:: none
+
+  TaskValueSet 3,1,[Outdoor#Temperature]-10
+
+To make the variable to set and the task number independent, the name of the task and/or value can be used instead of the numbers. 
+
+So for a Dummy device named ``Dummy``, Output Data Type set to Temp / Hum, and Values named ``Temp`` and ``Hum``, setting the Temperature value:
+
+.. code-block:: none
+
+  TaskValueSet,Dummy,temp,[Outdoor#Temperature]-10
+
+(task name and value name are not case sensitive)
+
+Note: You can use multiple Dummy devices if needed!
+
+
+.. Supported hardware
+.. ------------------
+
+.. .. |P033_usedby|
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
@@ -41,6 +75,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |improved|
+  2021-08-18 Make Interval optional, so no interval (0) can be used.
 
   |added|
   Major overhaul for 2.0 release.

@@ -20,9 +20,9 @@
 #define P026_SENSOR_TYPE_INDEX  (P026_QUERY1_CONFIG_POS + VARS_PER_TASK)
 #define P026_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P026_SENSOR_TYPE_INDEX)))
 
-#define P026_NR_OUTPUT_OPTIONS  13
+#define P026_NR_OUTPUT_OPTIONS  14
 
-String Plugin_026_valuename(byte value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_026_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case 0:  return displayString ? F("Uptime") : F("uptime");
     case 1:  return displayString ? F("Free RAM") : F("freeheap");
@@ -37,13 +37,14 @@ String Plugin_026_valuename(byte value_nr, bool displayString) {
     case 10: return displayString ? F("Free Stack") : F("freestack");
     case 11: return displayString ? F("None") : F("");
     case 12: return displayString ? F("WiFi TX pwr") : F("txpwr");
+    case 13: return displayString ? F("Free 2nd Heap") : F("free2ndheap");
     default:
       break;
   }
-  return "";
+  return F("");
 }
 
-boolean Plugin_026(byte function, struct EventStruct *event, String& string)
+boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -69,10 +70,10 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P026_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_026_valuename(choice, false),
@@ -104,21 +105,21 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     {
       PCONFIG(0) = 0;    // "Uptime"
 
-      for (byte i = 1; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 1; i < VARS_PER_TASK; ++i) {
         PCONFIG(i) = 11; // "None"
       }
-      PCONFIG(P026_SENSOR_TYPE_INDEX) = static_cast<byte>(Sensor_VType::SENSOR_TYPE_QUAD);
+      PCONFIG(P026_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
       success                         = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      String options[P026_NR_OUTPUT_OPTIONS];
+      const __FlashStringHelper * options[P026_NR_OUTPUT_OPTIONS];
       int indices[P026_NR_OUTPUT_OPTIONS];
 
       int index = 0;
-      for (byte option = 0; option < P026_NR_OUTPUT_OPTIONS; ++option) {
+      for (uint8_t option = 0; option < P026_NR_OUTPUT_OPTIONS; ++option) {
         if (option != 11) {
           options[index] = Plugin_026_valuename(option, true);
           indices[index] = option;
@@ -129,8 +130,8 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       options[index] = Plugin_026_valuename(11, true);
       indices[index] = 11;
 
-      for (byte i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P026_QUERY1_CONFIG_POS;
+      for (uint8_t i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
         sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P026_NR_OUTPUT_OPTIONS, options, indices);
       }
       success = true;
@@ -140,9 +141,9 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // Save output selector parameters.
-      for (byte i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
-        const byte pconfigIndex = i + P026_QUERY1_CONFIG_POS;
-        const byte choice       = PCONFIG(pconfigIndex);
+      for (uint8_t i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = i + P026_QUERY1_CONFIG_POS;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
         sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_026_valuename(choice, false));
       }
       success = true;
@@ -162,15 +163,19 @@ boolean Plugin_026(byte function, struct EventStruct *event, String& string)
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("SYS  : ");
+        String log;
+        if (log.reserve(7 * (P026_NR_OUTPUT_VALUES + 1)))
+        {
+          log += F("SYS  : ");
 
-        for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
-          if (i != 0) {
-            log += ',';
+          for (int i = 0; i < P026_NR_OUTPUT_VALUES; ++i) {
+            if (i != 0) {
+              log += ',';
+            }
+            log += formatUserVarNoCheck(event->TaskIndex, i);
           }
-          log += formatUserVarNoCheck(event->TaskIndex, i);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
-        addLog(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;
@@ -216,7 +221,7 @@ float P026_get_value(int type)
     }
     case 1:
     {
-      value = ESP.getFreeHeap();
+      value = FreeMem();
       break;
     }
     case 2:
@@ -261,6 +266,14 @@ float P026_get_value(int type)
       value = WiFiEventData.wifi_TX_pwr;
       break;
     }
+    case 13:
+    {
+      #ifdef USE_SECOND_HEAP
+      value = FreeMem2ndHeap();
+      #endif
+      break;
+    }
+
 
   }
   return value;

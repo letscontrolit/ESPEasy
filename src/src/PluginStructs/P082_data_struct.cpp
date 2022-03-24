@@ -8,7 +8,7 @@
 
 #ifdef USES_P082
 
-String Plugin_082_valuename(P082_query value_nr, bool displayString) {
+const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString) {
   switch (value_nr) {
     case P082_query::P082_QUERY_LONG:        return displayString ? F("Longitude")          : F("long");
     case P082_query::P082_QUERY_LAT:         return displayString ? F("Latitude")           : F("lat");
@@ -24,13 +24,38 @@ String Plugin_082_valuename(P082_query value_nr, bool displayString) {
     case P082_query::P082_QUERY_DIST_REF:    return displayString ? F("Distance from Reference Point") : F("dist_ref");
     case P082_query::P082_NR_OUTPUT_OPTIONS: break;
   }
-  return "";
+  return F("");
 }
 
+const __FlashStringHelper* toString(P082_PowerMode mode) {
+  switch (mode) {
+    case P082_PowerMode::Max_Performance: return F("Max Performance");
+    case P082_PowerMode::Power_Save:      return F("Power Save");
+    case P082_PowerMode::Eco:             return F("ECO");
+  }
+  return F("");
+}
+
+const __FlashStringHelper* toString(P082_DynamicModel model) {
+  switch (model) {
+    case P082_DynamicModel::Portable:    return F("Portable");
+    case P082_DynamicModel::Stationary:  return F("Stationary");
+    case P082_DynamicModel::Pedestrian:  return F("Pedestrian");
+    case P082_DynamicModel::Automotive:  return F("Automotive");
+    case P082_DynamicModel::Sea:         return F("Sea");
+    case P082_DynamicModel::Airborne_1g: return F("Airborne_1g");
+    case P082_DynamicModel::Airborne_2g: return F("Airborne_2g");
+    case P082_DynamicModel::Airborne_4g: return F("Airborne_4g");
+    case P082_DynamicModel::Wrist:       return F("Wrist");
+    case P082_DynamicModel::Bike:        return F("Bike");
+  }
+  return F("");
+}
 
 P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {}
 
 P082_data_struct::~P082_data_struct() {
+  powerDown();
   reset();
 }
 
@@ -51,11 +76,12 @@ bool P082_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
     return false;
   }
   reset();
-  gps             = new (std::nothrow) TinyGPSPlus();
+  gps        = new (std::nothrow) TinyGPSPlus();
   easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
   if (easySerial != nullptr) {
     easySerial->begin(9600);
+    wakeUp();
   }
   return isInitialized();
 }
@@ -76,24 +102,78 @@ bool P082_data_struct::loop() {
 
     while (available > 0 && timePassedSince(startLoop) < 10) {
       --available;
-      char c = easySerial->read();
+      int c = easySerial->read();
+      if (c >= 0) {
 # ifdef P082_SEND_GPS_TO_LOG
-      if (_currentSentence.length() <= 80) {
-        // No need to capture more than 80 bytes as a NMEA message is never that long.
-        _currentSentence += c;
-      }
+        if (_currentSentence.length() <= 80) {
+          // No need to capture more than 80 bytes as a NMEA message is never that long.
+          if (c != 0) {
+            _currentSentence += static_cast<char>(c);
+          }
+        }
 # endif // ifdef P082_SEND_GPS_TO_LOG
 
-      if (gps->encode(c)) {
-        // Full sentence received
+        if (c == 0x85) {
+          // Found possible start of u-blox message
+          unsigned long timeout = millis() + 200;
+          unsigned int bytesRead = 0;
+          bool done = false;
+          bool ack_nak_read = false;
+          while (!timeOutReached(timeout) && !done)
+          {
+            if (available == 0) {
+              available = easySerial->available();
+            } else {
+              const int c = easySerial->read();
+              if (c >= 0) {
+                switch (bytesRead) {
+                  case 0:
+                    if (c != 0x62) {
+                      done = true;
+                    }
+                    ++bytesRead;
+                    break;
+                  case 1:
+                    if (c != 0x05) {
+                      done = true;
+                    }
+                    ++bytesRead;
+                    break;
+                  case 2:
+                    if (c == 0x01) {
+                      ack_nak_read = true;
+                      addLog(LOG_LEVEL_INFO, F("GPS  : ACK-ACK"));
+                    } else if (c == 0x00) {
+                      ack_nak_read = true;
+                      addLog(LOG_LEVEL_ERROR, F("GPS  : ACK-NAK"));
+                    }
+                    done = true;
+                    break;
+                  default:
+                    done = true;                    
+                    break;
+                }
+              }
+            }
+          }
+          if (!done) {
+            addLog(LOG_LEVEL_ERROR, F("GPS  : Ack/Nack timeout"));
+          } else if (!ack_nak_read) {
+            addLog(LOG_LEVEL_ERROR, F("GPS  : Unexpected reply"));
+          }
+        }
+
+        if (gps->encode(c)) {
+          // Full sentence received
 # ifdef P082_SEND_GPS_TO_LOG
-        _lastSentence    = _currentSentence;
-        _currentSentence = "";
+          _lastSentence    = _currentSentence;
+          _currentSentence = String();
 # endif // ifdef P082_SEND_GPS_TO_LOG
-        completeSentence = true;
-      } else {
-        if (available == 0) {
-          available = easySerial->available();
+          completeSentence = true;
+        } else {
+          if (available == 0) {
+            available = easySerial->available();
+          }
         }
       }
     }
@@ -177,6 +257,104 @@ bool P082_data_struct::getDateTime(struct tm& dateTime, uint32_t& age, bool& pps
     age += (gps->time.centisecond() * 10);
   }
   return true;
+}
+
+bool P082_data_struct::powerDown() {
+  const uint8_t UBLOX_GPSStandby[] = {0xB5, 0x62, 0x02, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x4D, 0x3B}; 
+  return writeToGPS(UBLOX_GPSStandby, sizeof(UBLOX_GPSStandby));
+}
+
+bool P082_data_struct::wakeUp() {
+  if (isInitialized()) {
+    if (easySerial->isTxEnabled()) {
+      easySerial->println();   // Send some character to wake it up.
+    }
+  }
+  return false;
+}
+
+#ifdef P082_USE_U_BLOX_SPECIFIC
+bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
+  switch (mode) {
+    case P082_PowerMode::Max_Performance: 
+    {
+      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x00, 0x21, 0x91}; 
+      return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+    }
+    case P082_PowerMode::Power_Save:      
+    {
+      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x01, 0x22, 0x92}; 
+      return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+    }
+    case P082_PowerMode::Eco:             
+    {
+      const uint8_t UBLOX_command[] = {0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x04, 0x25, 0x95}; 
+      return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+    }
+  }
+  return false;
+}
+
+bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
+
+  const uint8_t dynModel = static_cast<uint8_t>(model);
+  if (dynModel == 1 || dynModel > 10) {
+    return false;
+  }
+
+  uint8_t UBLOX_command[] = {
+    0xB5, 0x62, // header
+    0x06, // class
+    0x24, // ID, UBX-CFG-NAV5
+    0x24, 0x00, // length
+    0x01, 0x00, // mask
+    dynModel, // dynModel
+    0x03, // fixMode auto 2D/3D
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+  };
+  setUbloxChecksum(UBLOX_command, sizeof(UBLOX_command));
+  return writeToGPS(UBLOX_command, sizeof(UBLOX_command));
+}
+#endif
+
+#ifdef P082_USE_U_BLOX_SPECIFIC
+void P082_data_struct::computeUbloxChecksum(const uint8_t* data, size_t size, uint8_t & CK_A, uint8_t & CK_B) {
+  CK_A = 0;
+  CK_B = 0;
+  for (size_t i = 0; i < size; ++i) {
+    CK_A = CK_A + data[i];
+    CK_B = CK_B + CK_A;
+  }
+}
+
+void P082_data_struct::setUbloxChecksum(uint8_t* data, size_t size) {
+  uint8_t CK_A;
+  uint8_t CK_B;
+  computeUbloxChecksum(data + 2, size - 4, CK_A, CK_B);
+  data[size - 2] = CK_A;
+  data[size - 1] = CK_B;
+}
+#endif
+
+bool P082_data_struct::writeToGPS(const uint8_t* data, size_t size) {
+  if (isInitialized()) {
+    if (easySerial->isTxEnabled()) {
+      if (size != easySerial->write(data, size)) {
+        addLog(LOG_LEVEL_ERROR, F("GPS  : Written less bytes than expected"));
+        return false;
+      } 
+      return true;
+    }
+  }
+  addLog(LOG_LEVEL_ERROR, F("GPS  : Cannot send to GPS"));
+  return false;
 }
 
 #endif // ifdef USES_P082

@@ -24,7 +24,7 @@
 
 #include <math.h> 
 
-boolean Plugin_066(byte function, struct EventStruct *event, String& string)
+boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -62,30 +62,35 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[1] = { VEML6040_ADDR };
-      addFormSelectorI2C(F("i2c_addr"), 1, optionValues, VEML6040_ADDR); // Only for display I2C address
+      const uint8_t i2cAddressValues[] = { VEML6040_ADDR };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 1, i2cAddressValues, VEML6040_ADDR); // Only for display I2C address
+      } else {
+        success = (event->Par1 == VEML6040_ADDR);
+      }
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        String optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F(
+        const __FlashStringHelper * optionsMode[6] = { F("40ms (16496)"), F("80ms (8248)"), F("160ms (4124)"), F("320ms (2062)"), F("640ms (1031)"), F(
                                     "1280ms (515)") };
-        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, NULL, PCONFIG(1));
+        addFormSelector(F("Integration Time (Max Lux)"), F("itime"), 6, optionsMode, nullptr, PCONFIG(1));
       }
 
       {
-        String optionsVarMap[6] = {
+        const __FlashStringHelper * optionsVarMap[6] = {
           F("R, G, B, W"),
           F("r, g, b, W - relative rgb [&#37;]"),
           F("r, g, b, W - relative rgb^Gamma [&#37;]"),
           F("R, G, B, Color Temperature [K]"),
           F("R, G, B, Ambient Light [Lux]"),
           F("Color Temperature [K], Ambient Light [Lux], Y, W") };
-        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, NULL, PCONFIG(2));
+        addFormSelector(F("Value Mapping"), F("map"), 6, optionsVarMap, nullptr, PCONFIG(2));
       }
 
       success = true;
@@ -140,9 +145,9 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
         }
         case 2:
         {
-          UserVar[event->BaseVarIndex + 0] = pow(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 1] = pow(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f;
-          UserVar[event->BaseVarIndex + 2] = pow(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 0] = powf(Plugin_066_CalcRelW(R, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 1] = powf(Plugin_066_CalcRelW(G, W), 0.4545) * 100.0f;
+          UserVar[event->BaseVarIndex + 2] = powf(Plugin_066_CalcRelW(B, W), 0.4545) * 100.0f;
           UserVar[event->BaseVarIndex + 3] = W;
           break;
         }
@@ -180,7 +185,7 @@ boolean Plugin_066(byte function, struct EventStruct *event, String& string)
 
 // VEML6040 /////////////////////////////////////////////////////////////
 
-void VEML6040_setControlReg(byte data)
+void VEML6040_setControlReg(uint8_t data)
 {
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(0);    // command 0=control register
@@ -189,7 +194,7 @@ void VEML6040_setControlReg(byte data)
   Wire.endTransmission();
 }
 
-float VEML6040_GetValue(byte reg)
+float VEML6040_GetValue(uint8_t reg)
 {
   Wire.beginTransmission(VEML6040_ADDR);
   Wire.write(reg);
@@ -200,12 +205,12 @@ float VEML6040_GetValue(byte reg)
   {
     uint16_t lsb = Wire.read();
     uint16_t msb = Wire.read();
-    return (float)((msb << 8) | lsb);
+    return static_cast<float>((msb << 8) | lsb);
   }
   return -1.0f;
 }
 
-void VEML6040_Init(byte it)
+void VEML6040_Init(uint8_t it)
 {
   VEML6040_setControlReg(it << 4); // IT=it, TRIG=0, AF=0, SD=0
 }
@@ -217,12 +222,12 @@ float Plugin_066_CalcCCT(float R, float G, float B)
   }
 
   float CCTi = (R - B) / G + 0.5f;
-  float CCT  = 4278.6f * pow(CCTi, -1.2455f);
+  float CCT  = 4278.6f * powf(CCTi, -1.2455f);
 
   return CCT;
 }
 
-float Plugin_066_CalcAmbientLight(float G, byte it)
+float Plugin_066_CalcAmbientLight(float G, uint8_t it)
 {
   float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f };
 

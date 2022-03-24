@@ -1,4 +1,4 @@
-#include "Audio.h"
+#include "../Helpers/Audio.h"
 
 #include "../Globals/RamTracker.h"
 #include "../Helpers/Hardware.h"
@@ -38,14 +38,14 @@ bool play_rtttl(uint8_t _pin, const char *p)
   };
 
 
-  byte default_dur = 4;
-  byte default_oct = 6;
+  uint8_t default_dur = 4;
+  uint8_t default_oct = 6;
   int  bpm         = 63;
   int  num;
   long wholenote;
   long duration;
-  byte note;
-  byte scale;
+  uint8_t note;
+  uint8_t scale;
 
   // format: d=N,o=N,b=NNN:
   // find the start (skip name, etc)

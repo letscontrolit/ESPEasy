@@ -21,7 +21,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event, const char *Line)
 {
   // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
@@ -40,11 +40,10 @@ String Command_MQTT_Publish(struct EventStruct *event, const char *Line)
     bool mqtt_retainFlag;
     {
       // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-      MakeControllerSettings(ControllerSettings);
+      MakeControllerSettings(ControllerSettings); //-V522
       if (!AllocatedControllerSettings()) {
-        String error = F("MQTT : Cannot publish, out of RAM");
-        addLog(LOG_LEVEL_ERROR, error);
-        return error;
+        addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot publish, out of RAM"));
+        return F("MQTT : Cannot publish, out of RAM");
       }
 
       LoadControllerSettings(enabledMqttController, ControllerSettings);
@@ -76,15 +75,19 @@ boolean MQTTsubscribe(controllerIndex_t controller_idx, const char* topic, boole
 {
   if (MQTTclient.subscribe(topic)) {
     Scheduler.setIntervalTimerOverride(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT, 10); // Make sure the MQTT is being processed as soon as possible.
-    String log = F("Subscribed to: ");  log += topic;
-    addLog(LOG_LEVEL_INFO, log);
+    scheduleNextMQTTdelayQueue();
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("Subscribed to: ");  
+      log += topic;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
     return true;
   }
   addLog(LOG_LEVEL_ERROR, F("MQTT : subscribe failed"));
   return false;
 }
 
-String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
 {
   if (MQTTclient.connected() ) {
     // ToDo TD-er: Not sure about this function, but at least it sends to an existing MQTTclient
@@ -93,11 +96,10 @@ String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
       bool mqtt_retainFlag;
       {
         // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
-        MakeControllerSettings(ControllerSettings);
+        MakeControllerSettings(ControllerSettings); //-V522
         if (!AllocatedControllerSettings()) {
-          String error = F("MQTT : Cannot subscribe, out of RAM");
-          addLog(LOG_LEVEL_ERROR, error);
-          return error;
+          addLog(LOG_LEVEL_ERROR, F("MQTT : Cannot subscribe, out of RAM"));
+          return F("MQTT : Cannot subscribe, out of RAM");
         }
         LoadControllerSettings(event->ControllerIndex, ControllerSettings);
         mqtt_retainFlag = ControllerSettings.mqtt_retainFlag();
@@ -106,8 +108,8 @@ String Command_MQTT_Subscribe(struct EventStruct *event, const char* Line)
       String eventName = Line;
       String topic = eventName.substring(10);
       if (!MQTTsubscribe(enabledMqttController, topic.c_str(), mqtt_retainFlag))
-         return_command_failed();
-      return_command_success();
+         return return_command_failed();
+      return return_command_success();
     }
     return F("No MQTT controller enabled");
   }

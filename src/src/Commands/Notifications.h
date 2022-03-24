@@ -5,9 +5,8 @@
 
 #ifdef USES_NOTIFIER
 
-class String;
 
-String Command_Notifications_Notify(struct EventStruct *event, const char* Line);
+const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *event, const char* Line);
 
 #endif
 

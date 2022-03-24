@@ -17,7 +17,7 @@
 #define PLUGIN_VALUENAME3_028 "Pressure"
 
 
-boolean Plugin_028(byte function, struct EventStruct *event, String& string)
+boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -67,10 +67,15 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int Plugin_28_i2c_addresses[2] = { 0x76, 0x77 };
-      addFormSelectorI2C(F("i2c_addr"), 2, Plugin_28_i2c_addresses, PCONFIG(0));
+      const uint8_t i2cAddressValues[] = { 0x76, 0x77 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -89,7 +94,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
       addFormNote(F("SDO Low=0x76, High=0x77"));
 
       addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), PCONFIG(1));
-      addUnit(F("m"));
+      addUnit('m');
 
       addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), PCONFIG(2));
       addUnit(F("x 0.1C"));
@@ -151,7 +156,7 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
         const int elev = PCONFIG(1);
 
         if (elev != 0) {
-          UserVar[event->BaseVarIndex + 2] = P028_data->pressureElevation(elev);
+          UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
         } else {
           UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
         }
@@ -162,22 +167,23 @@ boolean Plugin_028(byte function, struct EventStruct *event, String& string)
             log  = P028_data->getDeviceName();
             log += F(" : Address: 0x");
             log += String(PCONFIG(0), HEX);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
+            // addLogMove does also clear the string.
             log  = P028_data->getDeviceName();
             log += F(" : Temperature: ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
 
             if (P028_data->hasHumidity()) {
               log  = P028_data->getDeviceName();
               log += F(" : Humidity: ");
               log += formatUserVarNoCheck(event->TaskIndex, 1);
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
             log  = P028_data->getDeviceName();
             log += F(" : Barometric Pressure: ");
             log += formatUserVarNoCheck(event->TaskIndex, 2);
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
         success = true;

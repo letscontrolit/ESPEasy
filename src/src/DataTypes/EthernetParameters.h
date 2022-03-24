@@ -13,7 +13,7 @@ enum class EthClockMode_t : uint8_t {
 
 bool   isValid(EthClockMode_t clockMode);
 
-String toString(EthClockMode_t clockMode);
+const __FlashStringHelper * toString(EthClockMode_t clockMode);
 
 
 // Is stored in settings
@@ -24,7 +24,7 @@ enum class EthPhyType_t : uint8_t {
 
 bool   isValid(EthPhyType_t phyType);
 
-String toString(EthPhyType_t phyType);
+const __FlashStringHelper * toString(EthPhyType_t phyType);
 
 
 #endif // DATASTRUCTS_ETHERNETPARAMETERS_H

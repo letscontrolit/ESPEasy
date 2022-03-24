@@ -55,7 +55,7 @@ void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value
   _data[baseVarIndex + 1] = (value >> 16) & 0xFFFF;
 }
 
-uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, byte varNr) const
+uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, uint8_t varNr) const
 {
   if (!validTaskIndex(taskIndex) || (varNr >= VARS_PER_TASK)) {
     addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
@@ -67,7 +67,7 @@ uint32_t UserVarStruct::getUint32(taskIndex_t taskIndex, byte varNr) const
   return res;
 }
 
-void UserVarStruct::setUint32(taskIndex_t taskIndex, byte varNr, uint32_t value)
+void UserVarStruct::setUint32(taskIndex_t taskIndex, uint8_t varNr, uint32_t value)
 {
   if (!validTaskIndex(taskIndex) || (varNr >= VARS_PER_TASK)) {
     addLog(LOG_LEVEL_ERROR, F("UserVar index out of range"));
@@ -87,7 +87,7 @@ size_t UserVarStruct::getNrElements() const
   return _data.size();
 }
 
-byte * UserVarStruct::get()
+uint8_t * UserVarStruct::get()
 {
-  return (byte *)(&_data[0]);
+  return reinterpret_cast<uint8_t *>(&_data[0]);
 }

@@ -31,7 +31,7 @@ void ControllerSettingsStruct::reset() {
   SampleSetInitiator         = INVALID_TASK_INDEX;
   VariousFlags               = 0;
 
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     IP[i] = 0;
   }
   ZERO_FILL(HostName);
@@ -119,7 +119,7 @@ bool ControllerSettingsStruct::connectToHost(WiFiClient& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
-  byte retry     = 2;
+  uint8_t retry     = 2;
   bool connected = false;
 
   while (retry > 0 && !connected) {
@@ -139,7 +139,7 @@ bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
   if (!checkHostReachable(true)) {
     return false; // Host not reachable
   }
-  byte retry     = 2;
+  uint8_t retry     = 2;
   while (retry > 0) {
     --retry;
     FeedSW_watchdog();
@@ -158,13 +158,13 @@ bool ControllerSettingsStruct::beginPacket(WiFiUDP& client) {
 String ControllerSettingsStruct::getHostPortString() const {
   String result = getHost();
 
-  result += ":";
+  result += ':';
   result += Port;
   return result;
 }
 
 bool ControllerSettingsStruct::ipSet() const {
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     if (IP[i] != 0) { return true; }
   }
   return false;
@@ -179,7 +179,7 @@ bool ControllerSettingsStruct::updateIPcache() {
   IPAddress tmpIP;
 
   if (resolveHostByName(HostName, tmpIP, ClientTimeout)) {
-    for (byte x = 0; x < 4; x++) {
+    for (uint8_t x = 0; x < 4; x++) {
       IP[x] = tmpIP[x];
     }
     return true;
@@ -275,4 +275,14 @@ bool ControllerSettingsStruct::deduplicate() const
 void ControllerSettingsStruct::deduplicate(bool value)
 {
   bitWrite(VariousFlags, 10, value);
+}
+
+bool ControllerSettingsStruct::useLocalSystemTime() const
+{
+  return bitRead(VariousFlags, 11);
+}
+
+void ControllerSettingsStruct::useLocalSystemTime(bool value)
+{
+  bitWrite(VariousFlags, 11, value);
 }

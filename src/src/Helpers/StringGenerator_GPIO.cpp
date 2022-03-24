@@ -1,18 +1,19 @@
-#include "StringGenerator_GPIO.h"
+#include "../Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware.h"
+#include "../../ESPEasy_common.h"
 
 /*********************************************************************************************\
    Device GPIO name functions to share flash strings
 \*********************************************************************************************/
-String formatGpioDirection(gpio_direction direction) {
+const __FlashStringHelper* formatGpioDirection(gpio_direction direction) {
   switch (direction) {
     case gpio_input:         return F("&larr; ");
     case gpio_output:        return F("&rarr; ");
     case gpio_bidirectional: return F("&#8644; ");
   }
-  return "";
+  return F("");
 }
 
 String formatGpioLabel(int gpio, bool includeWarning) {
@@ -25,11 +26,11 @@ String formatGpioLabel(int gpio, bool includeWarning) {
     }
     return createGPIO_label(gpio, pinnr, input, output, warning);
   }
-  return "-";
+  return F("-");
 }
 
-String formatGpioName(const String& label, gpio_direction direction, bool optional) {
-  int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + label.length();
+String formatGpioName(const __FlashStringHelper * label, gpio_direction direction, bool optional) {
+  int reserveLength = 5 /* "GPIO " */ + 8 /* "&#8644; " */ + strlen_P((PGM_P)label);
 
   if (optional) {
     reserveLength += 11;
@@ -47,27 +48,23 @@ String formatGpioName(const String& label, gpio_direction direction, bool option
   return result;
 }
 
-String formatGpioName(const String& label, gpio_direction direction) {
-  return formatGpioName(label, direction, false);
-}
-
-String formatGpioName_input(const String& label) {
+String formatGpioName_input(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_input, false);
 }
 
-String formatGpioName_output(const String& label) {
+String formatGpioName_output(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_output, false);
 }
 
-String formatGpioName_bidirectional(const String& label) {
+String formatGpioName_bidirectional(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_bidirectional, false);
 }
 
-String formatGpioName_input_optional(const String& label) {
+String formatGpioName_input_optional(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_input, true);
 }
 
-String formatGpioName_output_optional(const String& label) {
+String formatGpioName_output_optional(const __FlashStringHelper * label) {
   return formatGpioName(label, gpio_output, true);
 }
 
@@ -139,14 +136,77 @@ String createGPIO_label(int gpio, int pinnr, bool input, bool output, bool warni
   if (warning) {
     result += ' ';
     result += F(HTML_SYMBOL_WARNING);
-
-    bool serialPinConflict = (Settings.UseSerial && (gpio == 1 || gpio == 3));
-
-    if (serialPinConflict) {
-      if (gpio == 1) { result += F(" TX0"); }
-
-      if (gpio == 3) { result += F(" RX0"); }
-    }
   }
   return result;
+}
+
+const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
+{
+  if (Settings.UseSerial) {
+    if (gpio == 1) { return F("TX0"); }
+
+    if (gpio == 3) { return F("RX0"); }
+  }
+  bool includeI2C = true;
+  bool includeSPI = true;
+
+  #ifdef HAS_ETHERNET
+  bool includeEthernet = true;
+  #endif // ifdef HAS_ETHERNET
+
+  switch (purpose) {
+    case PinSelectPurpose::I2C:
+      includeI2C = false;
+      break;
+    case PinSelectPurpose::SPI:
+      includeSPI = false;
+      break;
+    case PinSelectPurpose::Ethernet:
+      #ifdef HAS_ETHERNET
+      includeEthernet = false;
+      #endif // ifdef HAS_ETHERNET
+      break;
+    case PinSelectPurpose::Generic:
+    case PinSelectPurpose::Generic_input:
+    case PinSelectPurpose::Generic_output:
+    case PinSelectPurpose::Generic_bidir:
+      break;
+  }
+
+  if (includeI2C && Settings.isI2C_pin(gpio)) {
+    return (Settings.Pin_i2c_sda == gpio) ?  F("I2C SDA") : F("I2C SCL");
+  }
+
+  if (includeSPI && Settings.isSPI_pin(gpio)) {
+    return F("SPI");
+  }
+  #ifdef HAS_ETHERNET
+
+  if (Settings.isEthernetPin(gpio)) {
+    return F("Eth");
+  }
+
+  if (includeEthernet && Settings.isEthernetPinOptional(gpio)) {
+    if (Settings.ETH_Pin_mdc == gpio) { return F("Eth MDC"); }
+
+    if (Settings.ETH_Pin_mdio == gpio) { return F("Eth MDIO"); }
+
+    if (Settings.ETH_Pin_power == gpio) { return F("Eth Pwr"); }
+
+    return F("Eth");
+  }
+  #endif // ifdef HAS_ETHERNET
+  return F("");
+}
+
+String getConflictingUse_wrapped(int gpio, PinSelectPurpose purpose)
+{
+  String conflict = getConflictingUse(gpio, purpose);
+
+  if (conflict.isEmpty()) { return conflict; }
+  String res = F(" [");
+
+  res += conflict;
+  res += ']';
+  return res;
 }

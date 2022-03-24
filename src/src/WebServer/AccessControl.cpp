@@ -109,7 +109,7 @@ boolean clientIPallowed()
     response += formatIP(low);
     response += F(" - ");
     response += formatIP(high);
-    addLog(LOG_LEVEL_ERROR, response);
+    addLogMove(LOG_LEVEL_ERROR, response);
   }
   return false;
 }
@@ -124,7 +124,7 @@ void clearAccessBlock()
 // ********************************************************************************
 void addIPaccessControlSelect(const String& name, int choice)
 {
-  String options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
+  const __FlashStringHelper *  options[3] = { F("Allow All"), F("Allow Local Subnet"), F("Allow IP range") };
 
-  addSelector(name, 3, options, NULL, NULL, choice);
+  addSelector(name, 3, options, nullptr, nullptr, choice);
 }

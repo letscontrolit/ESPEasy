@@ -1,6 +1,9 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P002
 
+
+#include "src/Helpers/Hardware.h"
+
 // #######################################################################################################
 // #################################### Plugin 002: Analog ###############################################
 // #######################################################################################################
@@ -89,7 +92,7 @@ private:
   int16_t OversamplingMaxVal = 0;
 };
 
-boolean Plugin_002(byte function, struct EventStruct *event, String& string)
+boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -127,7 +130,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
     {
       #if defined(ESP32)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(false, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
       #endif // if defined(ESP32)
 
@@ -139,11 +142,11 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, P002_MAX_ADC_VALUE);
       html_add_estimate_symbol();
-      addTextBox(F("p002_out1"), String(P002_CALIBRATION_VALUE1, 3), 10);
+      addTextBox(F("p002_out1"), toString(P002_CALIBRATION_VALUE1, 3), 10);
 
       addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, P002_MAX_ADC_VALUE);
       html_add_estimate_symbol();
-      addTextBox(F("p002_out2"), String(P002_CALIBRATION_VALUE2, 3), 10);
+      addTextBox(F("p002_out2"), toString(P002_CALIBRATION_VALUE2, 3), 10);
 
       {
         // Output the statistics for the current settings.
@@ -233,7 +236,7 @@ boolean Plugin_002(byte function, struct EventStruct *event, String& string)
               log += P002_data->OversamplingCount;
               log += F(" samples)");
             }
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
           P002_data->reset();
           success = true;
@@ -295,11 +298,11 @@ void P002_performRead(struct EventStruct *event, int& value) {
   #endif // if defined(ESP32)
 }
 
-void P002_formatStatistics(const String& label, int raw, float float_value) {
+void P002_formatStatistics(const __FlashStringHelper * label, int raw, float float_value) {
   addRowLabel(label);
   addHtmlInt(raw);
   html_add_estimate_symbol();
-  addHtml(String(float_value, 3));
+  addHtml(toString(float_value, 3));
 }
 
 #endif // USES_P002

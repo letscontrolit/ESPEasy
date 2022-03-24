@@ -10,13 +10,13 @@ void ExtraTaskSettingsStruct::clear() {
   TaskIndex = INVALID_TASK_INDEX;
   ZERO_FILL(TaskDeviceName);
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
   }
 
-  for (byte i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
+  for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
     TaskDevicePluginConfigLong[i] = 0;
     TaskDevicePluginConfig[i]     = 0;
   }
@@ -25,7 +25,7 @@ void ExtraTaskSettingsStruct::clear() {
 void ExtraTaskSettingsStruct::validate() {
   ZERO_TERMINATE(TaskDeviceName);
 
-  for (byte i = 0; i < VARS_PER_TASK; ++i) {
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     ZERO_TERMINATE(TaskDeviceFormula[i]);
     ZERO_TERMINATE(TaskDeviceValueNames[i]);
   }
@@ -44,8 +44,8 @@ bool ExtraTaskSettingsStruct::checkUniqueValueNames() const {
   return true;
 }
 
-void ExtraTaskSettingsStruct::clearUnusedValueNames(byte usedVars) {
-  for (byte i = usedVars; i < VARS_PER_TASK; ++i) {
+void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
+  for (uint8_t i = usedVars; i < VARS_PER_TASK; ++i) {
     TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
@@ -56,26 +56,7 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames(const char *name) const {
   int pos = 0;
 
   while (*(name + pos) != 0) {
-    switch (*(name + pos)) {
-      case ',':
-      case ' ':
-      case '#':
-      case '-':
-      case '+':
-      case '/':
-      case '*':
-      case '=':
-      case '^':
-      case '%':
-      case '!':
-      case '[':
-      case ']':
-      case '{':
-      case '}':
-      case '(':
-      case ')':
-        return false;
-    }
+    if (!validCharForNames(*(name + pos))) { return false; }
     ++pos;
   }
   return true;
@@ -87,5 +68,33 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames() const {
   for (int i = 0; i < VARS_PER_TASK; ++i) {
     if (!checkInvalidCharInNames(&TaskDeviceValueNames[i][0])) { return false; }
   }
+  return true;
+}
+
+bool ExtraTaskSettingsStruct::validCharForNames(char c) {
+  // Smal optimization to check these chars as they are in sequence in the ASCII table
+  /*
+    case '(': // 40
+    case ')': // 41
+    case '*': // 42
+    case '+': // 43
+    case ',': // 44
+    case '-': // 45
+  */
+
+  if (c >= '(' && c <= '-') return false;
+  if (
+    (c == ' ') || 
+    (c == '!') || 
+    (c == '#') || 
+    (c == '%') || 
+    (c == '/') || 
+    (c == '=') || 
+    (c == '[') || 
+    (c == ']') || 
+    (c == '^') || 
+    (c == '{') || 
+    (c == '}'))
+      return false;
   return true;
 }

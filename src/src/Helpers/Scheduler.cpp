@@ -1,7 +1,7 @@
-#include "Scheduler.h"
+#include "../Helpers/Scheduler.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../../_Plugin_Helper.h"
@@ -12,6 +12,7 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/RTC.h"
+#include "../Globals/NPlugins.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Networking.h"
@@ -19,86 +20,96 @@
 #include "../Helpers/PortStatus.h"
 
 
-//#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
+#define TIMER_ID_SHIFT       28 // Must be decreased as soon as timers below reach 15
 
-#define TIMER_ID_SHIFT    28   // Must be decreased as soon as timers below reach 15
-#define SYSTEM_EVENT_QUEUE   0 // Not really a timer.
-#define CONST_INTERVAL_TIMER 1
-#define PLUGIN_TASK_TIMER    2
-#define TASK_DEVICE_TIMER    3
-#define GPIO_TIMER           4
-#define PLUGIN_TIMER         5
-#define RULES_TIMER          6
-#define REBOOT_TIMER         15 // Used to show intended reboot
 
+#ifndef BUILD_NO_DEBUG
+const __FlashStringHelper * toString_f(ESPEasy_Scheduler::IntervalTimer_e timer) {
+  switch (timer) {
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_20MSEC:           return F("TIMER_20MSEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_100MSEC:          return F("TIMER_100MSEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_1SEC:             return F("TIMER_1SEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_30SEC:            return F("TIMER_30SEC");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT:             return F("TIMER_MQTT");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_STATISTICS:       return F("TIMER_STATISTICS");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_GRATUITOUS_ARP:   return F("TIMER_GRATUITOUS_ARP");
+    case ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE: return F("TIMER_MQTT_DELAY_QUEUE");
+    default: 
+      break;
+  }
+  return F("unknown");
+}
+#endif
 
 String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
 #ifdef BUILD_NO_DEBUG
   return String(static_cast<int>(timer));
-#else
-  switch (timer) {
-    case IntervalTimer_e::TIMER_20MSEC:           return F("TIMER_20MSEC");
-    case IntervalTimer_e::TIMER_100MSEC:          return F("TIMER_100MSEC");
-    case IntervalTimer_e::TIMER_1SEC:             return F("TIMER_1SEC");
-    case IntervalTimer_e::TIMER_30SEC:            return F("TIMER_30SEC");
-    case IntervalTimer_e::TIMER_MQTT:             return F("TIMER_MQTT");
-    case IntervalTimer_e::TIMER_STATISTICS:       return F("TIMER_STATISTICS");
-    case IntervalTimer_e::TIMER_GRATUITOUS_ARP:   return F("TIMER_GRATUITOUS_ARP");
-    case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE: return F("TIMER_MQTT_DELAY_QUEUE");
-    case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C003_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C004_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C007_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C008_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C009_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C010_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C011_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C012_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C013_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C014_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C015_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C016_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C017_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C018_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C019_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C020_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C021_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C022_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C023_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C024_DELAY_QUEUE:
-    case IntervalTimer_e::TIMER_C025_DELAY_QUEUE:
-    {
-      String res;
-      res.reserve(24);
-      res = F("TIMER_C0");
-      const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
-      if (id < 10) { res += '0'; }
-      res += id;
-      res += F("_DELAY_QUEUE");
-      return res;
-    }
+#else // ifdef BUILD_NO_DEBUG
+
+  if (timer >= IntervalTimer_e::TIMER_C001_DELAY_QUEUE && 
+      timer <= IntervalTimer_e::TIMER_C025_DELAY_QUEUE) 
+  {
+    String res;
+    res.reserve(24);
+    res = F("TIMER_C0");
+    const int id = static_cast<int>(timer) - static_cast<int>(IntervalTimer_e::TIMER_C001_DELAY_QUEUE) + 1;
+
+    if (id < 10) { res += '0'; }
+    res += id;
+    res += F("_DELAY_QUEUE");
+    return res;
+  }
+  return toString_f(timer);
+#endif // ifdef BUILD_NO_DEBUG
+}
+
+const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::SchedulerTimerType_e timerType) {
+  switch (timerType) {
+    case SchedulerTimerType_e::SystemEventQueue:       return F("SystemEventQueue");
+    case SchedulerTimerType_e::ConstIntervalTimer:     return F("Const Interval");
+    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:      return F("PLUGIN_TIMER_IN");
+    case SchedulerTimerType_e::TaskDeviceTimer:        return F("PLUGIN_READ");
+    case SchedulerTimerType_e::GPIO_timer:             return F("GPIO_timer");
+    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e: return F("PLUGIN_ONLY_TIMER_IN");
+    case SchedulerTimerType_e::RulesTimer:             return F("Rules#Timer");
+    case SchedulerTimerType_e::IntendedReboot:         return F("Intended Reboot");
   }
   return F("unknown");
-#endif
+}
+
+const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::PluginPtrType pluginType) {
+  switch (pluginType) {
+    case PluginPtrType::TaskPlugin:         return F("Plugin");
+    case PluginPtrType::ControllerPlugin:   return F("Controller");
+    case PluginPtrType::NotificationPlugin: return F("Notification");
+  }
+  return F("unknown");
+}
+
+const __FlashStringHelper * toString_f(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
+  switch (reason) {
+    case ESPEasy_Scheduler::IntendedRebootReason_e::DeepSleep:              return F("DeepSleep");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::DelayedReboot:          return F("DelayedReboot");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactory:           return F("ResetFactory");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryPinActive:  return F("ResetFactoryPinActive");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ResetFactoryCommand:    return F("ResetFactoryCommand");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::CommandReboot:          return F("CommandReboot");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::RestoreSettings:        return F("RestoreSettings");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error:              return F("OTA_error");
+    case ESPEasy_Scheduler::IntendedRebootReason_e::ConnectionFailuresThreshold: return F("ConnectionFailuresThreshold");
+  }
+  return F("");
 }
 
 String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
-  switch(reason) {
-    case IntendedRebootReason_e::DeepSleep:              return F("DeepSleep");
-    case IntendedRebootReason_e::DelayedReboot:          return F("DelayedReboot");
-    case IntendedRebootReason_e::ResetFactory:           return F("ResetFactory");
-    case IntendedRebootReason_e::ResetFactoryPinActive:  return F("ResetFactoryPinActive");
-    case IntendedRebootReason_e::ResetFactoryCommand:    return F("ResetFactoryCommand");
-    case IntendedRebootReason_e::CommandReboot:          return F("CommandReboot");
-    case IntendedRebootReason_e::RestoreSettings:        return F("RestoreSettings");
-    case IntendedRebootReason_e::OTA_error:              return F("OTA_error");
-    case IntendedRebootReason_e::ConnectionFailuresThreshold: return F("ConnectionFailuresThreshold");
-  }
-  return String(static_cast<int>(reason));
+  String res = toString_f(reason);
+  if (res.isEmpty()) return String(static_cast<int>(reason));
+  return res;
 }
 
 void ESPEasy_Scheduler::markIntendedReboot(ESPEasy_Scheduler::IntendedRebootReason_e reason) {
-  const unsigned long mixed_id = getMixedId(REBOOT_TIMER, static_cast<unsigned long>(reason));
+  const unsigned long mixed_id = getMixedId(SchedulerTimerType_e::IntendedReboot, static_cast<unsigned long>(reason));
+
   RTC.lastMixedSchedulerId = mixed_id;
   saveToRTC();
 }
@@ -113,12 +124,12 @@ void ESPEasy_Scheduler::setNewTimerAt(unsigned long id, unsigned long timer) {
 }
 
 // Mix timer type int with an ID describing the scheduled job.
-unsigned long ESPEasy_Scheduler::getMixedId(unsigned long timerType, unsigned long id) {
-  return (timerType << TIMER_ID_SHIFT) + id;
+unsigned long ESPEasy_Scheduler::getMixedId(SchedulerTimerType_e timerType, unsigned long id) {
+  return (static_cast<unsigned long>(timerType) << TIMER_ID_SHIFT) + id;
 }
 
-unsigned long ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id, unsigned long& timerType) {
-  timerType = (mixed_id >> TIMER_ID_SHIFT);
+unsigned long ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id, SchedulerTimerType_e& timerType) {
+  timerType = static_cast<SchedulerTimerType_e>(mixed_id >> TIMER_ID_SHIFT);
   const unsigned long mask = (1 << TIMER_ID_SHIFT) - 1;
 
   return mixed_id & mask;
@@ -128,50 +139,66 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
   if (mixed_id == 0) {
     return F("Background Task");
   }
-  unsigned long timerType = 0;
-  const unsigned long id  = decodeSchedulerId(mixed_id, timerType);
-  String idStr = String(id);
-  String result = String(timerType);
+  SchedulerTimerType_e timerType = SchedulerTimerType_e::SystemEventQueue;
+  const unsigned long  id        = decodeSchedulerId(mixed_id, timerType);
+  String idStr                   = String(id);
+  String result                  = toString(timerType);
+
+  result += F(": ");
+
 #ifndef BUILD_NO_DEBUG
   result.reserve(64);
+
   switch (timerType) {
-    case CONST_INTERVAL_TIMER:
-      result = F("Const Interval: ");
+    case SchedulerTimerType_e::SystemEventQueue:
+    {
+      const PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
+      const uint8_t index          = (id >> 8) & 0xFF;
+      const uint8_t function       = id & 0xFF;
+      result += toString(ptr_type);
+      result += ',';
+      result += (index + 1); // TaskIndex / ControllerIndex / NotificationIndex
+      result += ',';
+      result += function;
+
+      return result;
+    }
+    case SchedulerTimerType_e::ConstIntervalTimer:
       result +=  toString(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id));
       return result;
-    case PLUGIN_TASK_TIMER:
+    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:
     {
-      result = F("PLUGIN_TIMER_IN: ");
       const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+
       if (validDeviceIndex(deviceIndex)) {
         idStr = getPluginNameFromDeviceIndex(deviceIndex);
       }
       result += idStr;
       return result;
     }
-    case PLUGIN_TIMER:
+    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e:
     {
-      result = F("PLUGIN_ONLY_TIMER_IN: ");
       const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+
       if (validDeviceIndex(deviceIndex)) {
         idStr = getPluginNameFromDeviceIndex(deviceIndex);
       }
       result += idStr;
       return result;
     }
-    case TASK_DEVICE_TIMER:
+    case SchedulerTimerType_e::TaskDeviceTimer:
     {
-      result = F("PLUGIN_READ: Task ");
+      result = F("Task ");
+
       // Id is taskIndex
       result += (id + 1);
       return result;
     }
-    case GPIO_TIMER:
+    case SchedulerTimerType_e::GPIO_timer:
     {
-      result = F("GPIO: ");
-      byte GPIOType = static_cast<byte>((id) & 0xFF);
-      byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
-      byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
+      uint8_t GPIOType      = static_cast<uint8_t>((id) & 0xFF);
+      uint8_t pinNumber     = static_cast<uint8_t>((id >> 8) & 0xFF);
+      uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
 
       switch (GPIOType)
       {
@@ -194,22 +221,21 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       result += pinStateValue;
       return result;
     }
-    case RULES_TIMER:
+    case SchedulerTimerType_e::RulesTimer:
     {
       result = F("Rules#Timer=");
-      const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
+      const unsigned long mask    = (1 << TIMER_ID_SHIFT) - 1;
       const unsigned long timerID = id & mask;
       result += timerID;
       return result;
     }
-    case REBOOT_TIMER:
+    case SchedulerTimerType_e::IntendedReboot:
     {
-      result = F("Intended Reboot: ");
       result += toString(static_cast<ESPEasy_Scheduler::IntendedRebootReason_e>(id));
       return result;
     }
   }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
   result += F(" timer, id: ");
   result += idStr;
   return result;
@@ -237,36 +263,43 @@ void ESPEasy_Scheduler::handle_schedule() {
     // No id ready to run right now.
     // Events are not that important to run immediately.
     // Make sure normal scheduled jobs run at higher priority.
-    //backgroundtasks();
+    // backgroundtasks();
     process_system_event_queue();
     last_system_event_run = millis();
     STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
   }
 
-  unsigned long timerType = 0;
-  const unsigned long id  = decodeSchedulerId(mixed_id, timerType);
+  SchedulerTimerType_e timerType = SchedulerTimerType_e::SystemEventQueue;
+  const unsigned long  id        = decodeSchedulerId(mixed_id, timerType);
 
   delay(0); // See: https://github.com/letscontrolit/ESPEasy/issues/1818#issuecomment-425351328
 
   switch (timerType) {
-    case CONST_INTERVAL_TIMER:
+    case SchedulerTimerType_e::ConstIntervalTimer:
       process_interval_timer(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id), timer);
       break;
-    case PLUGIN_TASK_TIMER:
+    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:
       process_plugin_task_timer(id);
       break;
-    case PLUGIN_TIMER:
+    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e:
       process_plugin_timer(id);
       break;
-    case RULES_TIMER:
+    case SchedulerTimerType_e::RulesTimer:
       process_rules_timer(id, timer);
       break;
-    case TASK_DEVICE_TIMER:
+    case SchedulerTimerType_e::TaskDeviceTimer:
       process_task_device_timer(id, timer);
       break;
-    case GPIO_TIMER:
+    case SchedulerTimerType_e::GPIO_timer:
       process_gpio_timer(id);
+      break;
+
+    case SchedulerTimerType_e::SystemEventQueue:
+    case SchedulerTimerType_e::IntendedReboot:
+      // TD-er: Not really something that needs to be processed here.
+      // - SystemEventQueue has its own ScheduledEventQueue which isn't time based.
+      // - IntendedReboot is just used to mark the intended reboot reason in RTC.
       break;
   }
   STOP_TIMER(HANDLE_SCHEDULER_TASK);
@@ -301,14 +334,14 @@ void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id) {
 }
 
 void ESPEasy_Scheduler::setIntervalTimerAt(IntervalTimer_e id, unsigned long newtimer) {
-  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, static_cast<unsigned long>(id)), newtimer);
+  setNewTimerAt(getMixedId(SchedulerTimerType_e::ConstIntervalTimer, static_cast<unsigned long>(id)), newtimer);
 }
 
 void ESPEasy_Scheduler::setIntervalTimerOverride(IntervalTimer_e id, unsigned long msecFromNow) {
   unsigned long timer = millis();
 
   setNextTimeInterval(timer, msecFromNow);
-  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, static_cast<unsigned long>(id)), timer);
+  setNewTimerAt(getMixedId(SchedulerTimerType_e::ConstIntervalTimer, static_cast<unsigned long>(id)), timer);
 }
 
 void ESPEasy_Scheduler::scheduleNextDelayQueue(IntervalTimer_e id, unsigned long nextTime) {
@@ -356,14 +389,14 @@ void ESPEasy_Scheduler::setIntervalTimer(IntervalTimer_e id, unsigned long lastt
     case IntervalTimer_e::TIMER_C023_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C024_DELAY_QUEUE:
     case IntervalTimer_e::TIMER_C025_DELAY_QUEUE:
-      // When extending this, search for EXTEND_CONTROLLER_IDS 
+      // When extending this, search for EXTEND_CONTROLLER_IDS
       // in the code to find all places that need to be updated too.
       interval = 1000; break;
   }
   unsigned long timer = lasttimer;
 
   setNextTimeInterval(timer, interval);
-  setNewTimerAt(getMixedId(CONST_INTERVAL_TIMER, static_cast<unsigned long>(id)), timer);
+  setNewTimerAt(getMixedId(SchedulerTimerType_e::ConstIntervalTimer, static_cast<unsigned long>(id)), timer);
 }
 
 void ESPEasy_Scheduler::sendGratuitousARP_now() {
@@ -555,8 +588,8 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
        */
       break;
 
-    // When extending this, search for EXTEND_CONTROLLER_IDS 
-    // in the code to find all places that need to be updated too.
+      // When extending this, search for EXTEND_CONTROLLER_IDS
+      // in the code to find all places that need to be updated too.
   }
 }
 
@@ -578,7 +611,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
 
   if (!validDeviceIndex(deviceIndex)) { return; }
 
-  const unsigned long mixedTimerId = getMixedId(PLUGIN_TASK_TIMER, createPluginTaskTimerId(deviceIndex, Par1));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, createPluginTaskTimerId(deviceIndex, Par1));
 
   systemTimerStruct timer_data;
 
@@ -593,9 +626,13 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
 }
 
 void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   START_TIMER;
 
-  const unsigned long mixedTimerId = getMixedId(PLUGIN_TASK_TIMER, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
@@ -603,11 +640,12 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
   struct EventStruct TempEvent(it->second.TaskIndex);
-  TempEvent.Par1         = it->second.Par1;
-  TempEvent.Par2         = it->second.Par2;
-  TempEvent.Par3         = it->second.Par3;
-  TempEvent.Par4         = it->second.Par4;
-  TempEvent.Par5         = it->second.Par5;
+
+  TempEvent.Par1 = it->second.Par1;
+  TempEvent.Par2 = it->second.Par2;
+  TempEvent.Par3 = it->second.Par3;
+  TempEvent.Par4 = it->second.Par4;
+  TempEvent.Par5 = it->second.Par5;
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
@@ -626,7 +664,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
 
   if (validDeviceIndex(deviceIndex)) {
     if (validUserVarIndex(TempEvent.BaseVarIndex)) {
-      //checkDeviceVTypeForTask(&TempEvent);
+      // checkDeviceVTypeForTask(&TempEvent);
       String dummy;
       Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
     }
@@ -649,7 +687,7 @@ static bool checkRulesTimerIndex(unsigned int timerIndex) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("TIMER: invalid timer number ");
       log += timerIndex;
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return false;
   }
@@ -659,7 +697,7 @@ static bool checkRulesTimerIndex(unsigned int timerIndex) {
 bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
 
-  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::RulesTimer, createRulesTimerId(timerIndex));
   const systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
 
   systemTimers[mixedTimerId] = timer_data;
@@ -668,7 +706,7 @@ bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int ti
 }
 
 void ESPEasy_Scheduler::process_rules_timer(unsigned long id, unsigned long lasttimer) {
-  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::RulesTimer, id);
 
   auto it = systemTimers.find(mixedTimerId);
 
@@ -714,7 +752,7 @@ void ESPEasy_Scheduler::process_rules_timer(unsigned long id, unsigned long last
 
 bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
-  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::RulesTimer, createRulesTimerId(timerIndex));
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) {
@@ -742,7 +780,7 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
 
 bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
-  const unsigned long mixedTimerId = getMixedId(RULES_TIMER, createRulesTimerId(timerIndex));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::RulesTimer, createRulesTimerId(timerIndex));
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return false; }
@@ -762,6 +800,8 @@ bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
 
 /*********************************************************************************************\
 * Plugin Timer
+* Essentially calling PLUGIN_ONLY_TIMER_IN
+* Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
 \*********************************************************************************************/
 unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
@@ -778,10 +818,10 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
 
   if (!validDeviceIndex(deviceIndex)) { return; }
 
-  const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, createPluginTimerId(deviceIndex, Par1));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
-  // PLUGIN_TIMER does not address a task, so don't set TaskIndex
+  // PLUGIN_ONLY_TIMER_IN does not address a task, so don't set TaskIndex
   timer_data.Par1            = Par1;
   timer_data.Par2            = Par2;
   timer_data.Par3            = Par3;
@@ -792,14 +832,19 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
 }
 
 void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   START_TIMER;
-  const unsigned long mixedTimerId = getMixedId(PLUGIN_TIMER, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
 
   struct EventStruct TempEvent;
-  // PLUGIN_TIMER does not address a task, so don't set TaskIndex
+
+  // PLUGIN_ONLY_TIMER_IN does not address a task, so don't set TaskIndex
 
   // extract deviceID from timer id:
   const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
@@ -837,7 +882,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 * GPIO Timer
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
-unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte GPIOType, byte pinNumber, int Par1) {
+unsigned long ESPEasy_Scheduler::createGPIOTimerId(uint8_t GPIOType, uint8_t pinNumber, int Par1) {
   const unsigned long mask = (1 << TIMER_ID_SHIFT) - 1;
 
   //  const unsigned long mixed = (Par1 << 8) + pinNumber;
@@ -848,7 +893,7 @@ unsigned long ESPEasy_Scheduler::createGPIOTimerId(byte GPIOType, byte pinNumber
 
 void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
-  byte GPIOType = GPIO_TYPE_INVALID;
+  uint8_t GPIOType = GPIO_TYPE_INVALID;
 
   switch (pluginID) {
     case PLUGIN_GPIO:
@@ -864,45 +909,46 @@ void ESPEasy_Scheduler::setGPIOTimer(unsigned long msecFromNow, pluginID_t plugi
 
   if (GPIOType != GPIO_TYPE_INVALID) {
     // Par1 & Par2 & GPIOType form a unique key
-    const unsigned long mixedTimerId = getMixedId(GPIO_TIMER, createGPIOTimerId(GPIOType, Par1, Par2));
+    const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::GPIO_timer, createGPIOTimerId(GPIOType, Par1, Par2));
     setNewTimerAt(mixedTimerId, millis() + msecFromNow);
   }
 }
 
-
 void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
-  byte GPIOType = static_cast<byte>((id) & 0xFF);
-  byte pinNumber = static_cast<byte>((id >> 8) & 0xFF);
-  byte pinStateValue = static_cast<byte>((id >> 16) & 0xFF);
+  uint8_t GPIOType      = static_cast<uint8_t>((id) & 0xFF);
+  uint8_t pinNumber     = static_cast<uint8_t>((id >> 8) & 0xFF);
+  uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
 
   bool success = true;
 
-  byte pluginID;
+  uint8_t pluginID;
 
   switch (GPIOType)
   {
     case GPIO_TYPE_INTERNAL:
       GPIO_Internal_Write(pinNumber, pinStateValue);
-      pluginID=PLUGIN_GPIO;
+      pluginID = PLUGIN_GPIO;
       break;
     case GPIO_TYPE_MCP:
       GPIO_MCP_Write(pinNumber, pinStateValue);
-      pluginID=PLUGIN_MCP;
+      pluginID = PLUGIN_MCP;
       break;
     case GPIO_TYPE_PCF:
       GPIO_PCF_Write(pinNumber, pinStateValue);
-      pluginID=PLUGIN_PCF;
+      pluginID = PLUGIN_PCF;
       break;
     default:
-      success=false;
+      success = false;
   }
+
   if (success) {
     const uint32_t key = createKey(pluginID, pinNumber);
+
     // WARNING: operator [] creates an entry in the map if key does not exist
     portStatusStruct tempStatus = globalMapPortStatus[key];
 
-    tempStatus.mode     = PIN_MODE_OUTPUT;
-    tempStatus.command  = 1; //set to 1 in order to display the status in the PinStatus page
+    tempStatus.mode    = PIN_MODE_OUTPUT;
+    tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
 
     if (tempStatus.state != pinStateValue) {
       tempStatus.state        = pinStateValue;
@@ -910,7 +956,7 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
       tempStatus.forceEvent   = 1;
       tempStatus.forceMonitor = 1;
     }
-    savePortStatus(key,tempStatus);
+    savePortStatus(key, tempStatus);
   }
 }
 
@@ -972,7 +1018,7 @@ void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, uns
    */
 
   if (Settings.TaskDeviceEnabled[task_index]) {
-    setNewTimerAt(getMixedId(TASK_DEVICE_TIMER, task_index), runAt);
+    setNewTimerAt(getMixedId(SchedulerTimerType_e::TaskDeviceTimer, task_index), runAt);
   }
 }
 
@@ -1000,71 +1046,71 @@ void ESPEasy_Scheduler::process_task_device_timer(unsigned long task_index, unsi
 * Thus only use these when the result is not needed immediately.
 * Proper use case is calling from a callback function, since those cannot use yield() or delay()
 \*********************************************************************************************/
-void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceIndex, uint8_t Function, struct EventStruct&& event) {
   if (validDeviceIndex(DeviceIndex)) {
-    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, event);
+    schedule_event_timer(PluginPtrType::TaskPlugin, DeviceIndex, Function, std::move(event));
   }
 }
 
-void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t   DeviceIndex,
-                                                                taskIndex_t     TaskIndex,
-                                                                byte            Function,
-                                                                char           *c_topic,
-                                                                byte           *b_payload,
-                                                                unsigned int    length) {
+void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
+                                                                taskIndex_t   TaskIndex,
+                                                                uint8_t       Function,
+                                                                char         *c_topic,
+                                                                uint8_t      *b_payload,
+                                                                unsigned int  length) {
   if (validDeviceIndex(DeviceIndex)) {
-    // Emplace empty event in the queue first and the fill it.
-    // This makes sure the relatively large event will not be in memory twice.
-    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<byte>(Function));
-    ScheduledEventQueue.emplace_back(mixedId, EventStruct(TaskIndex));
-    ScheduledEventQueue.back().event.String1 = c_topic;
+    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::TaskPlugin, DeviceIndex, static_cast<uint8_t>(Function));
+    EventStruct  event(TaskIndex);
+    const size_t topic_length = strlen_P(c_topic);
 
-    String& payload = ScheduledEventQueue.back().event.String2;
-    if (!payload.reserve(length)) {
+    if (!(event.String1.reserve(topic_length) && event.String2.reserve(length))) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
+      return;
+    }
+
+    for (size_t i = 0; i < topic_length; ++i) {
+      event.String1 += c_topic[i];
     }
 
     for (unsigned int i = 0; i < length; ++i) {
-      char c = static_cast<char>(*(b_payload + i));
-      payload += c;
+      const char c = static_cast<char>(*(b_payload + i));
+      event.String2 += c;
     }
+
+    // Emplace using move.
+    // This makes sure the relatively large event will not be in memory twice.
+    ScheduledEventQueue.emplace_back(mixedId, std::move(event));
   }
 }
 
-void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_controller_event_timer(protocolIndex_t ProtocolIndex, uint8_t Function, struct EventStruct&& event) {
   if (validProtocolIndex(ProtocolIndex)) {
-    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, event);
+    schedule_event_timer(PluginPtrType::ControllerPlugin, ProtocolIndex, Function, std::move(event));
   }
 }
 
-unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, uint16_t crc16) {
-  unsigned long subId = static_cast<unsigned long>(ptr_type);
-
-  subId = (subId << 16) + crc16;
-  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
-}
-
-unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, byte Index, byte Function) {
+unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type, uint8_t Index, uint8_t Function) {
   unsigned long subId = static_cast<unsigned long>(ptr_type);
 
   subId = (subId << 8) + Index;
   subId = (subId << 8) + Function;
-  return getMixedId(SYSTEM_EVENT_QUEUE, subId);
+  return getMixedId(SchedulerTimerType_e::SystemEventQueue, subId);
 }
 
-void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t ProtocolIndex,
+void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                                              CPlugin::Function Function,
-                                                             char           *c_topic,
-                                                             byte           *b_payload,
-                                                             unsigned int    length) {
+                                                             char             *c_topic,
+                                                             uint8_t          *b_payload,
+                                                             unsigned int      length) {
   if (validProtocolIndex(ProtocolIndex)) {
     // Emplace empty event in the queue first and the fill it.
     // This makes sure the relatively large event will not be in memory twice.
-    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::ControllerPlugin, ProtocolIndex, static_cast<byte>(Function));
+    const unsigned long mixedId = createSystemEventMixedId(PluginPtrType::ControllerPlugin, ProtocolIndex, static_cast<uint8_t>(Function));
     ScheduledEventQueue.emplace_back(mixedId, EventStruct());
     ScheduledEventQueue.back().event.String1 = c_topic;
 
     String& payload = ScheduledEventQueue.back().event.String2;
+
     if (!payload.reserve(length)) {
       addLog(LOG_LEVEL_ERROR, F("MQTT : Out of Memory! Cannot process MQTT message"));
     }
@@ -1076,23 +1122,36 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t Pro
   }
 }
 
-void ESPEasy_Scheduler::schedule_notification_event_timer(byte NotificationProtocolIndex, NPlugin::Function Function, struct EventStruct *event) {
-  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<byte>(Function), event);
+void ESPEasy_Scheduler::schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
+                                                          NPlugin::Function    Function,
+                                                          struct EventStruct&& event) {
+  schedule_event_timer(PluginPtrType::NotificationPlugin, NotificationProtocolIndex, static_cast<uint8_t>(Function), std::move(event));
 }
 
-void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, byte Index, byte Function, struct EventStruct *event) {
+void ESPEasy_Scheduler::schedule_event_timer(PluginPtrType ptr_type, uint8_t Index, uint8_t Function, struct EventStruct&& event) {
   const unsigned long mixedId = createSystemEventMixedId(ptr_type, Index, Function);
 
   //  EventStructCommandWrapper eventWrapper(mixedId, *event);
   //  ScheduledEventQueue.push_back(eventWrapper);
-  ScheduledEventQueue.emplace_back(mixedId, *event);
+  ScheduledEventQueue.emplace_back(mixedId, std::move(event));
 }
 
 void ESPEasy_Scheduler::process_system_event_queue() {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   if (ScheduledEventQueue.size() == 0) { return; }
-  unsigned long id       = ScheduledEventQueue.front().id;
-  byte Function          = id & 0xFF;
-  byte Index             = (id >> 8) & 0xFF;
+
+  const unsigned long id = ScheduledEventQueue.front().id;
+
+  if (RTC.lastMixedSchedulerId != id) {
+    RTC.lastMixedSchedulerId = id;
+    saveToRTC();
+  }
+
+  uint8_t Function       = id & 0xFF;
+  uint8_t Index          = (id >> 8) & 0xFF;
   PluginPtrType ptr_type = static_cast<PluginPtrType>((id >> 16) & 0xFF);
 
   // At this moment, the String is not being used in the plugin calls, so just supply a dummy String.
@@ -1103,8 +1162,11 @@ void ESPEasy_Scheduler::process_system_event_queue() {
 
   switch (ptr_type) {
     case PluginPtrType::TaskPlugin:
-      LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
-      Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+
+      if (validDeviceIndex(Index)) {
+        LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
+        Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
+      }
       break;
     case PluginPtrType::ControllerPlugin:
       CPluginCall(Index, static_cast<CPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);

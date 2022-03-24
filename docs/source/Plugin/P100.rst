@@ -30,10 +30,10 @@ The module supports upto four 32-bit counters, of which 2 are with external trig
 
 
 
-Events
-~~~~~~
-
-.. include:: P100_events.repl
+.. Events
+.. ~~~~~~
+.. 
+.. .. include:: P100_events.repl
 
 
 

@@ -1,4 +1,4 @@
-#include "ESPEasy_time_calc.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 #include <Arduino.h>
 #include <limits.h>
@@ -82,12 +82,12 @@ String timeLong2String(unsigned long lngTime)
   }
   String weekDays = F("AllSunMonTueWedThuFriSatWrkWkd");
   time  = weekDays.substring(x * 3, x * 3 + 3);
-  time += ",";
+  time += ',';
 
   x = (lngTime >> 12) & 0xf;
 
   if (x == 0xf) {
-    time += "*";
+    time += '*';
   }
   else if (x == 0xe) {
     time += '-';
@@ -99,7 +99,7 @@ String timeLong2String(unsigned long lngTime)
   x = (lngTime >> 8) & 0xf;
 
   if (x == 0xf) {
-    time += "*";
+    time += '*';
   }
   else if (x == 0xe) {
     time += '-';
@@ -108,12 +108,12 @@ String timeLong2String(unsigned long lngTime)
     time += x;
   }
 
-  time += ":";
+  time += ':';
 
   x = (lngTime >> 4) & 0xf;
 
   if (x == 0xf) {
-    time += "*";
+    time += '*';
   }
   else if (x == 0xe) {
     time += '-';
@@ -125,7 +125,7 @@ String timeLong2String(unsigned long lngTime)
   x = (lngTime) & 0xf;
 
   if (x == 0xf) {
-    time += "*";
+    time += '*';
   }
   else if (x == 0xe) {
     time += '-';
@@ -175,7 +175,7 @@ unsigned long string2TimeLong(const String& str)
     {
       w = TmpStr1[x];
 
-      if (((w >= '0') && (w <= '9')) || (w == '*'))
+      if (isDigit(w) || (w == '*'))
       {
         a        = 0xffffffff  ^ (0xfUL << y); // create mask to clean nibble position y
         lngTime &= a;                          // maak nibble leeg
@@ -209,7 +209,7 @@ bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
 {
   unsigned long Mask;
 
-  for (byte y = 0; y < 8; y++)
+  for (uint8_t y = 0; y < 8; y++)
   {
     if (((clockSet >> (y * 4)) & 0xf) == 0xf)         // if nibble y has the wildcard value 0xf
     {

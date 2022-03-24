@@ -1,6 +1,6 @@
 #include "../DataTypes/WiFiConnectionProtocol.h"
 
-String toString(WiFiConnectionProtocol proto) {
+const __FlashStringHelper * toString(WiFiConnectionProtocol proto) {
   switch (proto) {
     case WiFiConnectionProtocol::WiFi_Protocol_11b:
       return F("802.11b");

@@ -1,4 +1,4 @@
-#include "Networking.h"
+#include "../Helpers/Networking.h"
 
 #include "../../ESPEasy_common.h"
 #include "../Commands/InternalCommands.h"
@@ -18,6 +18,7 @@
 #include "../Helpers/Network.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringProvider.h"
 
 #include <IPAddress.h>
 
@@ -59,15 +60,16 @@ void etharp_gratuitous_r(struct netif *netif) {
 #  include <ESP8266HTTPClient.h>
 # endif // ifdef ESP8266
 # ifdef ESP32
-#  include "HTTPClient.h"
+#  include <HTTPClient.h>
 # endif // ifdef ESP32
 #endif  // USE_SETTINGS_ARCHIVE
 
+#include <vector>
 
 /*********************************************************************************************\
    Syslog client
 \*********************************************************************************************/
-void syslog(byte logLevel, const char *message)
+void sendSyslog(uint8_t logLevel, const String& message)
 {
   if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
   {
@@ -78,7 +80,7 @@ void syslog(byte logLevel, const char *message)
       // problem resolving the hostname or port
       return;
     }
-    byte prio = Settings.SyslogFacility * 8;
+    uint8_t prio = Settings.SyslogFacility * 8;
 
     if (logLevel == LOG_LEVEL_ERROR) {
       prio += 3; // syslog error
@@ -105,29 +107,21 @@ void syslog(byte logLevel, const char *message)
       header += hostname;
       header += F(" EspEasy: ");
       #ifdef ESP8266
-      portUDP.write(header.c_str(),            header.length());
+      portUDP.write(header.c_str(), header.length());
       #endif // ifdef ESP8266
       #ifdef ESP32
-      portUDP.write((uint8_t *)header.c_str(), header.length());
+      portUDP.write(reinterpret_cast<const uint8_t *>(header.c_str()), header.length());
       #endif // ifdef ESP32
     }
-    const char *c = message;
-    bool done     = false;
 
-    while (!done) {
-      // Must use PROGMEM aware functions here to process message
-      char ch = pgm_read_byte(c++);
-
-      if (ch == '\0') {
-        done = true;
-      } else {
-        #ifdef ESP8266
-        portUDP.write(ch);
-        #endif // ifdef ESP8266
-        #ifdef ESP32
-        portUDP.write((uint8_t)ch);
-        #endif // ifdef ESP32
-      }
+    const size_t messageLength = message.length();
+    for (size_t i = 0; i < messageLength; ++i) {
+      #ifdef ESP8266
+      portUDP.write(message[i]);
+      #endif // ifdef ESP8266
+      #ifdef ESP32
+      portUDP.write((uint8_t)message[i]);
+      #endif // ifdef ESP32
     }
     portUDP.endPacket();
     FeedSW_watchdog();
@@ -160,7 +154,7 @@ void updateUDPport()
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log = F("UDP : Cannot bind to ESPEasy p2p UDP port ");
         log += String(Settings.UDPPort);
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     } else {
       lastUsedUDPPort = Settings.UDPPort;
@@ -168,7 +162,7 @@ void updateUDPport()
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("UDP : Start listening on port ");
         log += String(Settings.UDPPort);
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
   }
@@ -220,7 +214,7 @@ void checkUDP()
         int len = portUDP.read(&packetBuffer[0], packetSize);
 
         if (len >= 2) {
-          if (reinterpret_cast<unsigned char&>(packetBuffer[0]) != 255)
+          if (static_cast<uint8_t>(packetBuffer[0]) != 255)
           {
             packetBuffer[len] = 0;
             addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
@@ -236,24 +230,31 @@ void checkUDP()
                 if (len < 13) {
                   break;
                 }
-                byte unit = packetBuffer[12];
+                uint8_t unit = packetBuffer[12];
 #ifndef BUILD_NO_DEBUG
-                byte mac[6];
-                byte ip[4];
+                MAC_address mac;
+                uint8_t ip[4];
 
-                for (byte x = 0; x < 6; x++) {
-                  mac[x] = packetBuffer[x + 2];
+                for (uint8_t x = 0; x < 6; x++) {
+                  mac.mac[x] = packetBuffer[x + 2];
                 }
 
-                for (byte x = 0; x < 4; x++) {
+                for (uint8_t x = 0; x < 4; x++) {
                   ip[x] = packetBuffer[x + 8];
                 }
 #endif // ifndef BUILD_NO_DEBUG
-                Nodes[unit].age = 0; // Create a new element when not present
+                {
+                  #ifdef USE_SECOND_HEAP
+                  HeapSelectIram ephemeral;
+                  // TD-er: Disabled for now as it is suspect for crashes.
+                  #endif
+
+                  Nodes[unit].age = 0; // Create a new element when not present
+                }
                 NodesMap::iterator it = Nodes.find(unit);
 
                 if (it != Nodes.end()) {
-                  for (byte x = 0; x < 4; x++) {
+                  for (uint8_t x = 0; x < 4; x++) {
                     it->second.ip[x] = packetBuffer[x + 8];
                   }
                   it->second.age = 0; // reset 'age counter'
@@ -262,10 +263,16 @@ void checkUDP()
                   {
                     it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
                     char tmpNodeName[26] = { 0 };
-                    memcpy(&tmpNodeName[0], reinterpret_cast<byte *>(&packetBuffer[15]), 25);
+                    memcpy(&tmpNodeName[0], reinterpret_cast<uint8_t *>(&packetBuffer[15]), 25);
                     tmpNodeName[25]     = 0;
-                    it->second.nodeName = tmpNodeName;
-                    it->second.nodeName.trim();
+                    {
+                      #ifdef USE_SECOND_HEAP
+                      HeapSelectIram ephemeral;
+                      #endif
+
+                      it->second.nodeName = tmpNodeName;
+                      it->second.nodeName.trim();
+                    }
                     it->second.nodeType          = packetBuffer[40];
                     it->second.webgui_portnumber = 80;
 
@@ -278,11 +285,14 @@ void checkUDP()
 #ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                  char macaddress[20];
-                  formatMAC(mac, macaddress);
-                  char log[80] = { 0 };
-                  sprintf_P(log, PSTR("UDP  : %s,%s,%u"), macaddress, formatIP(ip).c_str(), unit);
-                  addLog(LOG_LEVEL_DEBUG_MORE, log);
+                  String log;
+                  log += F("UDP  : ");
+                  log += mac.toString();
+                  log += ',';
+                  log += formatIP(ip);
+                  log += ',';
+                  log += unit;
+                  addLogMove(LOG_LEVEL_DEBUG_MORE, log);
                 }
 #endif // ifndef BUILD_NO_DEBUG
                 break;
@@ -291,7 +301,7 @@ void checkUDP()
               default:
               {
                 struct EventStruct TempEvent;
-                TempEvent.Data = reinterpret_cast<byte *>(&packetBuffer[0]);
+                TempEvent.Data = reinterpret_cast<uint8_t *>(&packetBuffer[0]);
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
                 String dummy;
@@ -317,7 +327,7 @@ void checkUDP()
 /*********************************************************************************************\
    Send event using UDP message
 \*********************************************************************************************/
-void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
+void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -325,12 +335,12 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
 
   if (destUnit != 0)
   {
-    sendUDP(destUnit, (const byte *)data, dataLength);
+    sendUDP(destUnit, (const uint8_t *)data, dataLength);
     delay(10);
   } else {
     for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
-        sendUDP(it->first, (const byte *)data, dataLength);
+        sendUDP(it->first, (const uint8_t *)data, dataLength);
         delay(10);
       }
     }
@@ -342,14 +352,14 @@ void SendUDPCommand(byte destUnit, const char *data, byte dataLength)
    Get formatted IP address for unit
    formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
 \*********************************************************************************************/
-String formatUnitToIPAddress(byte unit, byte formatCode) {
+String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
   IPAddress unitIPAddress = getIPAddressForUnit(unit);
 
   if (unitIPAddress[0] == 0) { // Invalid?
     switch (formatCode) {
       case 1:                  // Return empty string
       {
-        return F("");
+        return EMPTY_STRING;
       }
       case 2: // Return "0"
       {
@@ -363,7 +373,7 @@ String formatUnitToIPAddress(byte unit, byte formatCode) {
 /*********************************************************************************************\
    Get IP address for unit
 \*********************************************************************************************/
-IPAddress getIPAddressForUnit(byte unit) {
+IPAddress getIPAddressForUnit(uint8_t unit) {
   IPAddress remoteNodeIP;
 
   if (unit == 255) {
@@ -387,7 +397,7 @@ IPAddress getIPAddressForUnit(byte unit) {
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void sendUDP(byte unit, const byte *data, byte size)
+void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -404,7 +414,7 @@ void sendUDP(byte unit, const byte *data, byte size)
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
     log += unit;
-    addLog(LOG_LEVEL_DEBUG_MORE, log);
+    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
 
@@ -453,49 +463,50 @@ void refreshNodeList()
 /*********************************************************************************************\
    Broadcast system info to other nodes. (to update node lists)
 \*********************************************************************************************/
-void sendSysInfoUDP(byte repeats)
+void sendSysInfoUDP(uint8_t repeats)
 {
   if ((Settings.UDPPort == 0) || !NetworkConnected(10)) {
     return;
   }
 
   // TODO: make a nice struct of it and clean up
-  // 1 byte 'binary token 255'
-  // 1 byte id '1'
-  // 6 byte mac
-  // 4 byte ip
-  // 1 byte unit
-  // 2 byte build
+  // 1 uint8_t 'binary token 255'
+  // 1 uint8_t id '1'
+  // 6 uint8_t mac
+  // 4 uint8_t ip
+  // 1 uint8_t unit
+  // 2 uint8_t build
   // 25 char name
-  // 1 byte node type id
+  // 1 uint8_t node type id
 
   // send my info to the world...
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
 #endif // ifndef BUILD_NO_DEBUG
 
-  for (byte counter = 0; counter < repeats; counter++)
+  for (uint8_t counter = 0; counter < repeats; counter++)
   {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = NetworkMacAddressAsBytes(mac);
-
-    byte data[80] = { 0 };
+    uint8_t data[80] = { 0 };
     data[0] = 255;
     data[1] = 1;
 
-    for (byte x = 0; x < 6; x++) {
-      data[x + 2] = macread[x];
+    {
+      const MAC_address macread = NetworkMacAddress();
+      for (uint8_t x = 0; x < 6; x++) {
+        data[x + 2] = macread.mac[x];
+      }
     }
 
-    IPAddress ip = NetworkLocalIP();
-
-    for (byte x = 0; x < 4; x++) {
-      data[x + 8] = ip[x];
+    {
+      const IPAddress ip = NetworkLocalIP();
+      for (uint8_t x = 0; x < 4; x++) {
+        data[x + 8] = ip[x];
+      }
     }
     data[12] = Settings.Unit;
     data[13] =  lowByte(Settings.Build);
     data[14] = highByte(Settings.Build);
-    memcpy((byte *)data + 15, Settings.Name, 25);
+    memcpy(reinterpret_cast<uint8_t *>(data) + 15, Settings.Name, 25);
     data[40] = NODE_TYPE_ID;
     data[41] =  lowByte(Settings.WebserverPort);
     data[42] = highByte(Settings.WebserverPort);
@@ -513,7 +524,14 @@ void sendSysInfoUDP(byte repeats)
     }
   }
 
-  Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  {
+    #ifdef USE_SECOND_HEAP
+    // HeapSelectIram ephemeral;
+    // TD-er: disabled for now as it is suspect for crashes.
+    #endif
+
+    Nodes[Settings.Unit].age = 0; // Create new node when not already present.
+  }
   // store my own info also in the list
   NodesMap::iterator it = Nodes.find(Settings.Unit);
 
@@ -521,7 +539,7 @@ void sendSysInfoUDP(byte repeats)
   {
     IPAddress ip = NetworkLocalIP();
 
-    for (byte x = 0; x < 4; x++) {
+    for (uint8_t x = 0; x < 4; x++) {
       it->second.ip[x] = ip[x];
     }
     it->second.age      = 0;
@@ -551,7 +569,7 @@ void SSDP_schema(WiFiClient& client) {
             (uint16_t)((chipId >>  8) & 0xff),
             (uint16_t)chipId        & 0xff);
 
-  String ssdp_schema = F(
+  client.print(F(
     "HTTP/1.1 200 OK\r\n"
     "Content-Type: text/xml\r\n"
     "Connection: close\r\n"
@@ -563,33 +581,31 @@ void SSDP_schema(WiFiClient& client) {
     "<major>1</major>"
     "<minor>0</minor>"
     "</specVersion>"
-    "<URLBase>http://");
+    "<URLBase>http://"));
 
-  ssdp_schema += formatIP(ip);
-  ssdp_schema += F(":80/</URLBase>"
+  client.print(formatIP(ip));
+  client.print(F(":80/</URLBase>"
                    "<device>"
                    "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
-                   "<friendlyName>");
-  ssdp_schema += Settings.Name;
-  ssdp_schema += F("</friendlyName>"
+                   "<friendlyName>"));
+  client.print(Settings.Name);
+  client.print(F("</friendlyName>"
                    "<presentationURL>/</presentationURL>"
-                   "<serialNumber>");
-  ssdp_schema += ESP.getChipId();
-  ssdp_schema += F("</serialNumber>"
+                   "<serialNumber>"));
+  client.print(String(ESP.getChipId()));
+  client.print(F("</serialNumber>"
                    "<modelName>ESP Easy</modelName>"
-                   "<modelNumber>");
-  ssdp_schema += F(BUILD_GIT);
-  ssdp_schema += F("</modelNumber>"
+                   "<modelNumber>"));
+  client.print(getValue(LabelType::GIT_BUILD));
+  client.print(F("</modelNumber>"
                    "<modelURL>http://www.letscontrolit.com</modelURL>"
                    "<manufacturer>http://www.letscontrolit.com</manufacturer>"
                    "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
-                   "<UDN>uuid:");
-  ssdp_schema += uuid;
-  ssdp_schema += F("</UDN></device>"
+                   "<UDN>uuid:"));
+  client.print(String(uuid));
+  client.print(F("</UDN></device>"
                    "</root>\r\n"
-                   "\r\n");
-
-  client.printf("%s", ssdp_schema.c_str());
+                   "\r\n"));
 }
 
 /********************************************************************************************\
@@ -622,13 +638,17 @@ static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
 bool SSDP_begin() {
   _pending = false;
 
-  if (_server) {
+  if (_server != nullptr) {
     _server->unref();
+    // FIXME TD-er: Shouldn't this also call delete _server ?
 
-    _server = 0;
+    _server = nullptr; 
   }
 
-  _server = new UdpContext;
+  _server = new (std::nothrow) UdpContext;
+  if (_server == nullptr) {
+    return false;
+  }
   _server->ref();
 
   ip_addr_t ifaddr;
@@ -679,7 +699,7 @@ bool SSDP_begin() {
 /********************************************************************************************\
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
-void SSDP_send(byte method) {
+void SSDP_send(uint8_t method) {
   uint32_t ip = NetworkLocalIP();
 
   // FIXME TD-er: Why create String objects of these flashstrings?
@@ -899,7 +919,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
   high = ip;
 
   // Compute subnet range.
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     if (subnet[i] != 255) {
       low[i]  = low[i] & subnet[i];
       high[i] = high[i] | ~subnet[i];
@@ -968,7 +988,7 @@ bool hostReachable(const IPAddress& ip) {
 
   /*
      // Only do 1 ping at a time to return early
-     byte retry = 3;
+     uint8_t retry = 3;
      while (retry > 0) {
    #if defined(ESP8266)
       if (Ping.ping(ip, 1)) return true;
@@ -1062,10 +1082,12 @@ bool hostReachable(const String& hostname) {
   if (resolveHostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
   }
-  String log = F("Hostname cannot be resolved: ");
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("Hostname cannot be resolved: ");
 
-  log += hostname;
-  addLog(LOG_LEVEL_ERROR, log);
+    log += hostname;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }
 
@@ -1165,7 +1187,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
 bool downloadFile(const String& url, String file_save) {
   String error;
 
-  return downloadFile(url, file_save, "", "", error);
+  return downloadFile(url, file_save, EMPTY_STRING, EMPTY_STRING, error);
 }
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
@@ -1173,9 +1195,9 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   uint16_t port;
   String   uri = splitURL(url, host, port, file);
 
-  if (file_save.length() == 0) {
+  if (file_save.isEmpty()) {
     file_save = file;
-  } else if ((file.length() == 0) && uri.endsWith("/")) {
+  } else if ((file.isEmpty()) && uri.endsWith("/")) {
     // file = file_save;
     uri += file_save;
   }
@@ -1188,10 +1210,10 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     log += ':';
     log += port;
     log += uri;
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
   }
 
-  if (file_save.length() == 0) {
+  if (file_save.isEmpty()) {
     error = F("Empty filename");
     addLog(LOG_LEVEL_ERROR, error);
     return false;
@@ -1241,8 +1263,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
 
     // read all data from server
     while (http.connected() && (len > 0 || len == -1)) {
-      // read up to 128 byte
-      size_t c = stream->readBytes(buff, std::min((size_t)len, sizeof(buff)));
+      // read up to 128 uint8_t
+      size_t c = stream->readBytes(buff, std::min(static_cast<size_t>(len), sizeof(buff)));
 
       if (c > 0) {
         timeout = millis() + 2000;

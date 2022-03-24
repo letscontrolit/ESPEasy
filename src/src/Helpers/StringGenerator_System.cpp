@@ -1,4 +1,4 @@
-#include "StringGenerator_System.h"
+#include "../Helpers/StringGenerator_System.h"
 
 
 #include <Arduino.h>
@@ -14,7 +14,7 @@
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
 
-String getMQTT_state() {
+const __FlashStringHelper * getMQTT_state() {
   switch (MQTTclient.state()) {
     case MQTT_CONNECTION_TIMEOUT: return F("Connection timeout");
     case MQTT_CONNECTION_LOST: return F("Connection lost");
@@ -28,7 +28,7 @@ String getMQTT_state() {
     case MQTT_CONNECT_UNAUTHORIZED: return F("Connect unauthorized");
     default: break;
   }
-  return "";
+  return F("");
 }
 
 #endif // USES_MQTT
@@ -36,54 +36,109 @@ String getMQTT_state() {
 /********************************************************************************************\
    Get system information
  \*********************************************************************************************/
-String getLastBootCauseString() {
+const __FlashStringHelper * getLastBootCauseString() {
   switch (lastBootCause)
   {
-    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual reboot");
-    case BOOT_CAUSE_DEEP_SLEEP: // nobody should ever see this, since it should sleep again right away.
-      return F("Deep sleep");
-    case BOOT_CAUSE_COLD_BOOT:
-      return F("Cold boot");
-    case BOOT_CAUSE_EXT_WD:
-      return F("External Watchdog");
+    case BOOT_CAUSE_MANUAL_REBOOT: return F("Manual Reboot");
+    case BOOT_CAUSE_DEEP_SLEEP:    return F("Deep Sleep");
+    case BOOT_CAUSE_COLD_BOOT:     return F("Cold Boot");
+    case BOOT_CAUSE_EXT_WD:        return F("External Watchdog");
+    case BOOT_CAUSE_SOFT_RESTART:  return F("Soft Reboot");
+    case BOOT_CAUSE_SW_WATCHDOG:   return F("SW Watchdog");
+    case BOOT_CAUSE_EXCEPTION:     return F("Exception");
+    case BOOT_CAUSE_POWER_UNSTABLE: return F("PWR Unstable"); // ESP32 only
   }
-  return getUnknownString();
+  return F("Unknown");
 }
 
 #ifdef ESP32
+ #ifdef ESP32S2
+  #include <esp32s2/rom/rtc.h>
+ #else
+  #include <rom/rtc.h>
+ #endif
 
-#include <rom/rtc.h>
 
 // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
-String getResetReasonString(byte icore) {
-  bool isDEEPSLEEP_RESET(false);
+const __FlashStringHelper * getResetReasonString_f(uint8_t icore, bool& isDEEPSLEEP_RESET) {
+  isDEEPSLEEP_RESET = false;
 
+  #ifdef ESP32S2
+
+	// See tools\sdk\esp32\include\esp_rom\include\esp32s2\rom\rtc.h
+  switch (rtc_get_reset_reason(icore)) {
+    case POWERON_RESET:          return F("Vbat power on reset");                              // 1
+    case RTC_SW_SYS_RESET:       return F("Software reset digital core");                      // 3
+    case DEEPSLEEP_RESET:        isDEEPSLEEP_RESET = true; break;                              // 5
+    case TG0WDT_SYS_RESET:       return F("Timer Group0 Watch dog reset digital core");        // 7
+    case TG1WDT_SYS_RESET:       return F("Timer Group1 Watch dog reset digital core");        // 8
+    case RTCWDT_SYS_RESET:       return F("RTC Watch dog Reset digital core");                 // 9
+    case INTRUSION_RESET:        return F("Instrusion tested to reset CPU");                   // 10
+    case TG0WDT_CPU_RESET:       return F("Time Group0 reset CPU");                            // 11
+    case RTC_SW_CPU_RESET:       return F("Software reset CPU");                               // 12
+    case RTCWDT_CPU_RESET:       return F("RTC Watch dog Reset CPU");                          // 13
+    case RTCWDT_BROWN_OUT_RESET: return F("Reset when the vdd voltage is not stable");         // 15
+    case RTCWDT_RTC_RESET:       return F("RTC Watch dog reset digital core and rtc module");  // 16
+    case TG1WDT_CPU_RESET:       return F("Time Group1 reset CPU");                            // 17
+    case SUPER_WDT_RESET:        return F("Super watchdog reset digital core and rtc module"); // 18
+    case GLITCH_RTC_RESET:       return F("Glitch reset digital core and rtc module");         // 19
+  }
+
+  #else
+
+  // See https://github.com/espressif/esp-idf/blob/master/components/esp32/include/rom/rtc.h
   switch (rtc_get_reset_reason((RESET_REASON)icore)) {
-    case NO_MEAN: return F("NO_MEAN");
-    case POWERON_RESET: return F("Vbat power on reset");
-    case SW_RESET: return F("Software reset digital core");
-    case OWDT_RESET: return F("Legacy watch dog reset digital core");
-    case DEEPSLEEP_RESET: isDEEPSLEEP_RESET = true; break;
-    case SDIO_RESET: return F("Reset by SLC module, reset digital core");
-    case TG0WDT_SYS_RESET: return F("Timer Group0 Watch dog reset digital core");
-    case TG1WDT_SYS_RESET: return F("Timer Group1 Watch dog reset digital core");
-    case RTCWDT_SYS_RESET: return F("RTC Watch dog Reset digital core");
-    case INTRUSION_RESET: return F("Instrusion tested to reset CPU");
-    case TGWDT_CPU_RESET: return F("Time Group reset CPU");
-    case SW_CPU_RESET: return F("Software reset CPU");
-    case RTCWDT_CPU_RESET: return F("RTC Watch dog Reset CPU");
-    case EXT_CPU_RESET: return F("for APP CPU, reseted by PRO CPU");
+    case NO_MEAN:                return F("NO_MEAN");
+    case POWERON_RESET:          return F("Vbat power on reset");
+    case SW_RESET:               return F("Software reset digital core");
+    case OWDT_RESET:             return F("Legacy watch dog reset digital core");
+    case DEEPSLEEP_RESET:        isDEEPSLEEP_RESET = true; break;
+    case SDIO_RESET:             return F("Reset by SLC module, reset digital core");
+    case TG0WDT_SYS_RESET:       return F("Timer Group0 Watch dog reset digital core");
+    case TG1WDT_SYS_RESET:       return F("Timer Group1 Watch dog reset digital core");
+    case RTCWDT_SYS_RESET:       return F("RTC Watch dog Reset digital core");
+    case INTRUSION_RESET:        return F("Instrusion tested to reset CPU");
+    case TGWDT_CPU_RESET:        return F("Time Group reset CPU");
+    case SW_CPU_RESET:           return F("Software reset CPU");
+    case RTCWDT_CPU_RESET:       return F("RTC Watch dog Reset CPU");
+    case EXT_CPU_RESET:          return F("for APP CPU, reseted by PRO CPU");
     case RTCWDT_BROWN_OUT_RESET: return F("Reset when the vdd voltage is not stable");
-    case RTCWDT_RTC_RESET: return F("RTC Watch dog reset digital core and rtc module");
+    case RTCWDT_RTC_RESET:       return F("RTC Watch dog reset digital core and rtc module");
     default: break;
   }
+  #endif
+  return F("");
+}
+
+
+String getResetReasonString(uint8_t icore) {
+  bool isDEEPSLEEP_RESET(false);
+  const String res = getResetReasonString_f(icore, isDEEPSLEEP_RESET);
+  if (!res.isEmpty()) return res;
 
   if (isDEEPSLEEP_RESET) {
     String reason = F("Deep Sleep, Wakeup reason (");
     reason += rtc_get_wakeup_cause();
     reason += ')';
+
+/*
+  switch (reason) {
+  #if CONFIG_IDF_TARGET_ESP32
+    case POWERON_RESET:
+    case SW_CPU_RESET:
+    case DEEPSLEEP_RESET:
+    case SW_RESET:
+  #elif CONFIG_IDF_TARGET_ESP32S2
+    case POWERON_RESET:
+    case RTC_SW_CPU_RESET:
+    case DEEPSLEEP_RESET:
+    case RTC_SW_SYS_RESET:
+  #endif
+  }
+*/
     return reason;
   }
+
   return getUnknownString();
 }
 
@@ -93,8 +148,10 @@ String getResetReasonString() {
   #ifdef ESP32
   String reason = F("CPU0: ");
   reason += getResetReasonString(0);
-  reason += F(" CPU1: ");
-  reason += getResetReasonString(1);
+  if (getChipCores() > 1) { // Only report if we really have more than 1 core
+    reason += F(" CPU1: ");
+    reason += getResetReasonString(1);
+  }
   return reason;
   #else // ifdef ESP32
   return ESP.getResetReason();
@@ -123,7 +180,7 @@ String getPluginDescriptionString() {
   result += F(" [Development]");
   #endif // ifdef PLUGIN_BUILD_DEV
   #ifdef PLUGIN_DESCR
-  result += " [";
+  result += F(" [");
   result += F(PLUGIN_DESCR);
   result += ']';
   #endif // ifdef PLUGIN_DESCR

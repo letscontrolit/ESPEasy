@@ -1,7 +1,6 @@
 #ifndef GLOBALS_LOGGING_H
 #define GLOBALS_LOGGING_H
 
-
 #include <stdint.h>
 #include <deque>
 
@@ -15,5 +14,6 @@ extern LogStruct Logging;
  * Buffer for outputting logs via serial port.
 \*********************************************************************************************/
 extern std::deque<char> serialWriteBuffer;
+
 
 #endif // GLOBALS_LOGGING_H

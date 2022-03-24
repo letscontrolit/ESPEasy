@@ -6,6 +6,12 @@
 #include "../DataStructs/PortStatusStruct.h"
 #include "../Globals/Plugins.h"
 
+
+#ifdef ESP32
+void checkAndClearPWM(uint32_t key);
+#endif
+
+
 /**********************************************************
 *                                                         *
 * Helper Functions for managing the status data structure *
@@ -33,7 +39,7 @@ uint16_t getPortFromKey(uint32_t key);
    set pin mode & state (info table)
 \*********************************************************************************************/
 /*
-   void setPinState(byte plugin, byte index, byte mode, uint16_t value);
+   void setPinState(uint8_t plugin, uint8_t index, uint8_t mode, uint16_t value);
  */
 
 /*********************************************************************************************\
@@ -41,14 +47,14 @@ uint16_t getPortFromKey(uint32_t key);
 \*********************************************************************************************/
 
 /*
-   bool getPinState(byte plugin, byte index, byte *mode, uint16_t *value);
+   bool getPinState(uint8_t plugin, uint8_t index, uint8_t *mode, uint16_t *value);
 
  */
 /*********************************************************************************************\
    check if pin mode & state is known (info table)
 \*********************************************************************************************/
 /*
-   bool hasPinState(byte plugin, byte index);
+   bool hasPinState(uint8_t plugin, uint8_t index);
 
  */
 
@@ -61,6 +67,6 @@ String getPinStateJSON(bool          search,
                        const String& log,
                        int16_t       noSearchValue);
 
-String getPinModeString(byte mode);
+const __FlashStringHelper * getPinModeString(uint8_t mode);
 
 #endif

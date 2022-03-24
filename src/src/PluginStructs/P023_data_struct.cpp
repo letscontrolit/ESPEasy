@@ -205,11 +205,11 @@ const char Plugin_023_myFont[][8] PROGMEM = {
 };
 
 
-P023_data_struct::P023_data_struct(byte _address,   byte _type, P023_data_struct::Spacing _font_spacing, byte _displayTimer,byte _use_sh1106)
+P023_data_struct::P023_data_struct(uint8_t _address,   uint8_t _type, P023_data_struct::Spacing _font_spacing, uint8_t _displayTimer,uint8_t _use_sh1106)
   :  address(_address), type(_type),  font_spacing(_font_spacing),  displayTimer(_displayTimer), use_sh1106(_use_sh1106)
 {}
 
-void P023_data_struct::setDisplayTimer(byte _displayTimer) {
+void P023_data_struct::setDisplayTimer(uint8_t _displayTimer) {
   displayOn();
   displayTimer = _displayTimer;
 }
@@ -226,7 +226,7 @@ void P023_data_struct::checkDisplayTimer() {
 }
 
 // Perform some specific changes for OLED display
-String P023_data_struct::parseTemplate(String& tmpString, byte lineSize) {
+String P023_data_struct::parseTemplate(String& tmpString, uint8_t lineSize) {
   String result             = parseTemplate_padded(tmpString, lineSize);
   const char degree[3]      = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
   const char degree_oled[2] = { 0x7F, 0 };       // P023_OLED degree symbol
@@ -333,7 +333,7 @@ void P023_data_struct::setXY(unsigned char row, unsigned char col)
 
   sendCommand(0xb0 + row);                              // set page address
   sendCommand(0x00 + ((8 * col + col_offset) & 0x0f));  // set low col address
-  sendCommand(0x10 + ((8 * col >> 4) & 0x0f));          // set high col address
+  sendCommand(0x10 + (((8 * col) >> 4) & 0x0f));          // set high col address
 }
 
 // Prints a string regardless the cursor position.

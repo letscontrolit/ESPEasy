@@ -10,7 +10,7 @@
 /*********************************************************************************************\
    Syslog client
 \*********************************************************************************************/
-void syslog(byte logLevel, const char *message);
+void sendSyslog(uint8_t logLevel, const String& message);
 
 
 /*********************************************************************************************\
@@ -28,23 +28,23 @@ void checkUDP();
 /*********************************************************************************************\
    Send event using UDP message
 \*********************************************************************************************/
-void SendUDPCommand(byte destUnit, const char *data, byte dataLength);
+void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength);
 
 /*********************************************************************************************\
    Get formatted IP address for unit
    formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
 \*********************************************************************************************/
-String formatUnitToIPAddress(byte unit, byte formatCode);
+String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode);
 
 /*********************************************************************************************\
    Get IP address for unit
 \*********************************************************************************************/
-IPAddress getIPAddressForUnit(byte unit);
+IPAddress getIPAddressForUnit(uint8_t unit);
 
 /*********************************************************************************************\
    Send UDP message (unit 255=broadcast)
 \*********************************************************************************************/
-void sendUDP(byte unit, const byte *data, byte size);
+void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size);
 
 /*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
@@ -54,7 +54,7 @@ void refreshNodeList();
 /*********************************************************************************************\
    Broadcast system info to other nodes. (to update node lists)
 \*********************************************************************************************/
-void sendSysInfoUDP(byte repeats);
+void sendSysInfoUDP(uint8_t repeats);
 
 
 #if defined(ESP8266)
@@ -101,7 +101,7 @@ bool SSDP_begin();
 /********************************************************************************************\
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
-void SSDP_send(byte method);
+void SSDP_send(uint8_t method);
 
 /********************************************************************************************\
    SSDP message processing

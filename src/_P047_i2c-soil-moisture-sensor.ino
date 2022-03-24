@@ -24,8 +24,8 @@
 
 // Soil Moisture Sensor Register Addresses
 #define SOILMOISTURESENSOR_GET_CAPACITANCE      0x00 // (r)     2 bytes
-#define SOILMOISTURESENSOR_SET_ADDRESS          0x01 //	(w)     1 byte
-#define SOILMOISTURESENSOR_GET_ADDRESS          0x02 // (r)     1 byte
+#define SOILMOISTURESENSOR_SET_ADDRESS          0x01 //	(w)     1 uint8_t
+#define SOILMOISTURESENSOR_GET_ADDRESS          0x02 // (r)     1 uint8_t
 #define SOILMOISTURESENSOR_MEASURE_LIGHT        0x03 //	(w)     n/a
 #define SOILMOISTURESENSOR_GET_LIGHT            0x04 //	(r)     2 bytes
 #define SOILMOISTURESENSOR_GET_TEMPERATURE      0x05 //	(r)     2 bytes
@@ -41,7 +41,7 @@
 #define P047_CHANGE_ADDR    PCONFIG(4)
 
 
-boolean Plugin_047(byte function, struct EventStruct *event, String& string)
+boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -106,18 +106,24 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      String plugin1 = web_server.arg(F("i2c_addr"));
+      String plugin1 = webArg(F("i2c_addr"));
       P047_I2C_ADDR = (int)strtol(plugin1.c_str(), 0, 16);
 
       P047_SENSOR_SLEEP = isFormItemChecked(F("p047_sleep"));
 
       P047_CHECK_VERSION = isFormItemChecked(F("p047_version"));
 
-      String plugin4 = web_server.arg(F("p047_i2cSoilMoisture_changeAddr"));
+      String plugin4 = webArg(F("p047_i2cSoilMoisture_changeAddr"));
       P047_NEW_ADDR = (int)strtol(plugin4.c_str(), 0, 16);
 
       P047_CHANGE_ADDR = isFormItemChecked(F("p047_changeAddr"));
       success          = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      success = true;
       break;
     }
 
@@ -127,7 +133,9 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         // wake sensor
         Plugin_047_getVersion(P047_I2C_ADDR);
         delayBackground(20);
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->wake"));
+        #endif
       }
 
       uint8_t sensorVersion = 0;
@@ -149,8 +157,10 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 
       // check if we want to change the sensor address
       if (P047_CHANGE_ADDR) {
-        addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Change Address: 0x")) + String(P047_I2C_ADDR, HEX) + String(F("->0x")) +
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          addLog(LOG_LEVEL_INFO, String(F("SoilMoisture: Change Address: 0x")) + String(P047_I2C_ADDR, HEX) + String(F("->0x")) +
                String(P047_NEW_ADDR, HEX));
+        }
 
         if (Plugin_047_setAddress(P047_I2C_ADDR, P047_NEW_ADDR)) {
           P047_I2C_ADDR = P047_NEW_ADDR;
@@ -164,9 +174,9 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
       // 2 s delay ...we need this delay, otherwise we get only the last reading...
       delayBackground(2000);
 
-      float temperature = ((float)Plugin_047_readTemperature(P047_I2C_ADDR)) / 10;
-      float moisture    = ((float)Plugin_047_readMoisture(P047_I2C_ADDR));
-      float light       = ((float)Plugin_047_readLight(P047_I2C_ADDR));
+      const float temperature = Plugin_047_readTemperature(P047_I2C_ADDR) / 10.0f;
+      const float moisture    = Plugin_047_readMoisture(P047_I2C_ADDR);
+      const float light       = Plugin_047_readLight(P047_I2C_ADDR);
 
       if ((temperature > 100) || (temperature < -40) || (moisture > 800) || (moisture < 1) || (light > 65535) || (light < 0)) {
         addLog(LOG_LEVEL_INFO, F("SoilMoisture: Bad Reading, resetting Sensor..."));
@@ -179,28 +189,32 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 1] = moisture;
         UserVar[event->BaseVarIndex + 2] = light;
 
-        String log = F("SoilMoisture: Address: 0x");
-        log += String(P047_I2C_ADDR, HEX);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("SoilMoisture: Address: 0x");
+          log += String(P047_I2C_ADDR, HEX);
 
-        if (P047_CHECK_VERSION) {
-          log += F(" Version: 0x");
-          log += String(sensorVersion, HEX);
+          if (P047_CHECK_VERSION) {
+            log += F(" Version: 0x");
+            log += String(sensorVersion, HEX);
+          }
+          addLogMove(LOG_LEVEL_INFO, log);
+          log  = F("SoilMoisture: Temperature: ");
+          log += temperature;
+          addLogMove(LOG_LEVEL_INFO, log);
+          log  = F("SoilMoisture: Moisture: ");
+          log += moisture;
+          addLogMove(LOG_LEVEL_INFO, log);
+          log  = F("SoilMoisture: Light: ");
+          log += light;
+          addLogMove(LOG_LEVEL_INFO, log);
         }
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SoilMoisture: Temperature: ");
-        log += temperature;
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SoilMoisture: Moisture: ");
-        log += moisture;
-        addLog(LOG_LEVEL_INFO, log);
-        log  = F("SoilMoisture: Light: ");
-        log += light;
-        addLog(LOG_LEVEL_INFO, log);
 
         if (P047_SENSOR_SLEEP) {
           // send sensor to sleep
           I2C_write8(P047_I2C_ADDR, SOILMOISTURESENSOR_SLEEP);
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("SoilMoisture->sleep"));
+          #endif
         }
         success = true;
         break;
@@ -213,7 +227,7 @@ boolean Plugin_047(byte function, struct EventStruct *event, String& string)
 // **************************************************************************/
 // Read temperature
 // **************************************************************************/
-float Plugin_047_readTemperature(byte i2cAddr)
+float Plugin_047_readTemperature(uint8_t i2cAddr)
 {
   return I2C_readS16_reg(i2cAddr, SOILMOISTURESENSOR_GET_TEMPERATURE);
 }
@@ -221,19 +235,19 @@ float Plugin_047_readTemperature(byte i2cAddr)
 // **************************************************************************/
 // Read light
 // **************************************************************************/
-float Plugin_047_readLight(byte i2cAddr) {
+float Plugin_047_readLight(uint8_t i2cAddr) {
   return I2C_read16_reg(i2cAddr, SOILMOISTURESENSOR_GET_LIGHT);
 }
 
 // **************************************************************************/
 // Read moisture
 // **************************************************************************/
-unsigned int Plugin_047_readMoisture(byte i2cAddr) {
+unsigned int Plugin_047_readMoisture(uint8_t i2cAddr) {
   return I2C_read16_reg(i2cAddr, SOILMOISTURESENSOR_GET_CAPACITANCE);
 }
 
 // Read Sensor Version
-uint8_t Plugin_047_getVersion(byte i2cAddr) {
+uint8_t Plugin_047_getVersion(uint8_t i2cAddr) {
   return I2C_read8_reg(i2cAddr, SOILMOISTURESENSOR_GET_VERSION);
 }
 
@@ -243,7 +257,7 @@ uint8_t Plugin_047_getVersion(byte i2cAddr) {
 * effective if second parameter is true.                               *
 * Method returns true if the new address is set successfully on sensor.*
 *----------------------------------------------------------------------*/
-bool Plugin_047_setAddress(byte i2cAddr, int new_i2cAddr) {
+bool Plugin_047_setAddress(uint8_t i2cAddr, int new_i2cAddr) {
   I2C_write8_reg(i2cAddr, SOILMOISTURESENSOR_SET_ADDRESS, new_i2cAddr);
   I2C_write8_reg(i2cAddr, SOILMOISTURESENSOR_SET_ADDRESS, new_i2cAddr);
   I2C_write8(i2cAddr, SOILMOISTURESENSOR_RESET);

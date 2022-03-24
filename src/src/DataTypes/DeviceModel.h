@@ -1,12 +1,14 @@
-#ifndef DATASTRUCTS_DEVICEMODEL_H
-#define DATASTRUCTS_DEVICEMODEL_H
+#ifndef DATATYPES_DEVICEMODEL_H
+#define DATATYPES_DEVICEMODEL_H
 
 /********************************************************************************************\
   Pre defined settings for off-the-shelf hardware
   \*********************************************************************************************/
 
+#include <Arduino.h>
+
 // This enum will be stored, so do not change order or at least the values.
-enum DeviceModel {
+enum class DeviceModel : uint8_t {
   DeviceModel_default = 0,
   DeviceModel_Sonoff_Basic,
   DeviceModel_Sonoff_TH1x,
@@ -19,15 +21,15 @@ enum DeviceModel {
   DeviceModel_Sonoff_POWr2,
   DeviceModel_Shelly1,
   DeviceModel_ShellyPLUG_S,
-  DeviceMode_Olimex_ESP32_PoE,
-  DeviceMode_Olimex_ESP32_EVB,
-  DeviceMode_Olimex_ESP32_GATEWAY,
-  DeviceMode_wESP32,
-  DeviceMode_WT32_ETH01,
+  DeviceModel_Olimex_ESP32_PoE,
+  DeviceModel_Olimex_ESP32_EVB,
+  DeviceModel_Olimex_ESP32_GATEWAY,
+  DeviceModel_wESP32,
+  DeviceModel_WT32_ETH01,
   
 
   DeviceModel_MAX
 };
 
 
-#endif // DATASTRUCTS_DEVICEMODEL_H
+#endif // DATATYPES_DEVICEMODEL_H

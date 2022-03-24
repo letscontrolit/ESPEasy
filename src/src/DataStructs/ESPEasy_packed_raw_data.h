@@ -1,5 +1,5 @@
-#ifndef ESPEASY_PACKED_RAW_DATA_H
-#define ESPEASY_PACKED_RAW_DATA_H
+#ifndef DATASTRUCT_ESPEASY_PACKED_RAW_DATA_H
+#define DATASTRUCT_ESPEASY_PACKED_RAW_DATA_H
 
 #include "../../ESPEasy_common.h"
 
@@ -69,15 +69,15 @@ typedef uint32_t PackedData_enum;
 
 uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset);
 
-void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, byte *data, uint8_t& cursor);
+void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor);
 
-void LoRa_intToBytes(int64_t value, uint8_t byteSize, byte *data, uint8_t& cursor);
+void LoRa_intToBytes(int64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor);
 
-String LoRa_base16Encode(byte *data, size_t size);
+String LoRa_base16Encode(uint8_t *data, size_t size);
 
 String LoRa_addInt(uint64_t value, PackedData_enum datatype);
 
 String LoRa_addFloat(float value, PackedData_enum datatype);
 
 
-#endif // ESPEASY_PACKED_RAW_DATA_H
+#endif // DATASTRUCT_ESPEASY_PACKED_RAW_DATA_H

@@ -56,7 +56,7 @@
 // Timeout between sentences.
 
 
-boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -73,6 +73,8 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
 //      Device[deviceCount].DuplicateDetection = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -82,10 +84,10 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P094_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P094_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P094_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_094_valuename(choice, false),
@@ -110,7 +112,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
       if ((nullptr != P094_data) && P094_data->isInitialized()) {
         uint32_t success, error, length_last;
         P094_data->getSentencesReceived(success, error, length_last);
-        byte varNr = VARS_PER_TASK;
+        uint8_t varNr = VARS_PER_TASK;
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
@@ -167,9 +169,9 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P094_data) {
-        for (byte varNr = 0; varNr < P94_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P94_Nlines; varNr++)
         {
-          P094_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P094_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P094_data->_lines, P94_Nlines, 0));
@@ -231,12 +233,12 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
                     log += F("...");
                     log += event->String2.substring(messageLength - 40);
                   }
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
               }
               // Filter length options:
               // - 22 char, for hash-value then we filter the exact meter including serial and meter type, (that will also prevent very quit sending meters, which normaly is a fault)
-              // - 38 char, The exact message, because we have 2 byte from the value payload
+              // - 38 char, The exact message, because we have 2 uint8_t from the value payload
               //sendData_checkDuplicates(event, event->String2.substring(0, 22));
               sendData(event);
             }
@@ -255,7 +257,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
         if ((nullptr != P094_data)) {
           const uint32_t debug_count = P094_data->getDebugCounter();
           event->String2.reserve(P094_DEBUG_SENTENCE_LENGTH);
-          event->String2 = String(debug_count);
+          event->String2 += String(debug_count);
           event->String2 += '_';
           const char c = '0' + debug_count % 10;
           for (long i = event->String2.length(); i < P094_DEBUG_SENTENCE_LENGTH; ++i) {
@@ -265,7 +267,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
             String log = F("CUL Reader: Sending: ");
             log += event->String2.substring(0, 20);
             log += F("...");
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
 //          sendData_checkDuplicates(event, event->String2.substring(0, 22));
           sendData(event);
@@ -286,7 +288,7 @@ boolean Plugin_094(byte function, struct EventStruct *event, String& string) {
             String param1 = parseStringKeepCase(string, 2);
             parseSystemVariables(param1, false);
             P094_data->sendString(param1);
-            addLog(LOG_LEVEL_INFO, param1);
+            addLogMove(LOG_LEVEL_INFO, param1);
             success = true;
           }
         }
@@ -323,7 +325,7 @@ bool Plugin_094_match_all(taskIndex_t taskIndex, const String& received)
   return res;
 }
 
-String Plugin_094_valuename(byte value_nr, bool displayString) {
+String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P094_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
@@ -344,7 +346,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P094_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P094_Match_Type_NR_ELEMENTS];
       int    optionValues[P094_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P094_Match_Type_NR_ELEMENTS; ++i) {
@@ -363,18 +365,18 @@ void P094_html_show_matchForms(struct EventStruct *event) {
     }
 
 
-    byte filterSet                  = 0;
+    uint8_t filterSet                  = 0;
     uint32_t optional              = 0;
     P094_Filter_Value_Type capture = P094_Filter_Value_Type::P094_packet_length;
     P094_Filter_Comp comparator    = P094_Filter_Comp::P094_Equal_OR;
     String filter;
 
-    for (byte filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine)
+    for (uint8_t filterLine = 0; filterLine < P094_NR_FILTERS; ++filterLine)
     {
       // Filter parameter number on a filter line.
       bool newLine = (filterLine % P094_AND_FILTER_BLOCK) == 0;
 
-      for (byte filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
+      for (uint8_t filterLinePar = 0; filterLinePar < P094_ITEMS_PER_FILTER; ++filterLinePar)
       {
         String id = getPluginCustomArgName(P094_data_struct::P094_Get_filter_base_index(filterLine) + filterLinePar);
 
@@ -391,13 +393,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               label += String(filterSet);
               addRowLabel_tr_id(label, id);
             } else {
-              addHtml(F("<B>AND</>"));
+              html_B(F("AND"));
               html_BR();
             }
 
             // Combo box with filter types
             {
-              String options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+              const __FlashStringHelper * options[P094_FILTER_VALUE_Type_NR_ELEMENTS];
               int    optionValues[P094_FILTER_VALUE_Type_NR_ELEMENTS];
 
               for (int i = 0; i < P094_FILTER_VALUE_Type_NR_ELEMENTS; ++i) {
@@ -405,7 +407,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
                 options[i]      = P094_data_struct::P094_FilterValueType_toString(filterValueType);
                 optionValues[i] = filterValueType;
               }
-              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, NULL, capture, false, true, "");
+              addSelector(id, P094_FILTER_VALUE_Type_NR_ELEMENTS, options, optionValues, nullptr, capture, false, true, EMPTY_STRING);
             }
 
             break;
@@ -419,7 +421,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
           case 2:
           {
             // Comparator
-            String options[P094_FILTER_COMP_NR_ELEMENTS];
+            const __FlashStringHelper * options[P094_FILTER_COMP_NR_ELEMENTS];
             int    optionValues[P094_FILTER_COMP_NR_ELEMENTS];
 
             for (int i = 0; i < P094_FILTER_COMP_NR_ELEMENTS; ++i) {
@@ -427,13 +429,13 @@ void P094_html_show_matchForms(struct EventStruct *event) {
               options[i]      = P094_data_struct::P094_FilterComp_toString(enumValue);
               optionValues[i] = enumValue;
             }
-            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, NULL, comparator, false, true, "");
+            addSelector(id, P094_FILTER_COMP_NR_ELEMENTS, options, optionValues, nullptr, comparator, false, true, EMPTY_STRING);
             break;
           }
           case 3:
           {
             // Compare with
-            addTextBox(id, filter, 8, false, false, "", "");
+            addTextBox(id, filter, 8, false, false, EMPTY_STRING, EMPTY_STRING);
             break;
           }
         }
@@ -456,15 +458,13 @@ void P094_html_show_stats(struct EventStruct *event) {
 
   {
     addRowLabel(F("Sentences (pass/fail)"));
-    String   chksumStats;
     uint32_t success, error, length_last;
     P094_data->getSentencesReceived(success, error, length_last);
-    chksumStats  = success;
-    chksumStats += '/';
-    chksumStats += error;
-    addHtml(chksumStats);
+    addHtmlInt(success);
+    addHtml('/');
+    addHtmlInt(error);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

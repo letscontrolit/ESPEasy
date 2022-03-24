@@ -1,9 +1,9 @@
-#ifndef DATASTRUCTS_PROTOCOLINDEX_H
-#define DATASTRUCTS_PROTOCOLINDEX_H
+#ifndef DATATYPES_PROTOCOLINDEX_H
+#define DATATYPES_PROTOCOLINDEX_H
 
 #include <Arduino.h>
 
-typedef byte    protocolIndex_t;
+typedef uint8_t    protocolIndex_t;
 
 extern protocolIndex_t   INVALID_PROTOCOL_INDEX;
 

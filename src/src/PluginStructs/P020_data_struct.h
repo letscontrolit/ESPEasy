@@ -8,7 +8,7 @@
 # include <ESPeasySerial.h>
 
 # ifndef PLUGIN_020_DEBUG
-  #  define PLUGIN_020_DEBUG                 false // extra logging in serial out
+  #  define PLUGIN_020_DEBUG                 false  // extra logging in serial out
 # endif // ifndef PLUGIN_020_DEBUG
 
 # define P020_STATUS_LED                    12
@@ -23,20 +23,20 @@ struct P020_Task : public PluginTaskData_base {
   void               startServer(uint16_t portnumber);
 
   void               checkServer();
-  
+
   void               stopServer();
-  
+
   bool               hasClientConnected();
-  
+
   void               discardClientIn();
-  
+
   void               clearBuffer();
 
   void               serialBegin(const ESPEasySerialPort port,
                                  int16_t                 rxPin,
                                  int16_t                 txPin,
                                  unsigned long           baud,
-                                 byte                    config);
+                                 uint8_t                 config);
 
   void serialEnd();
 
@@ -58,7 +58,7 @@ struct P020_Task : public PluginTaskData_base {
   String         net_buffer;
   int            checkI            = 0;
   ESPeasySerial *ser2netSerial     = nullptr;
-  byte           serial_processing = 0;
+  uint8_t           serial_processing = 0;
   taskIndex_t    _taskIndex = INVALID_TASK_INDEX;
 };
 

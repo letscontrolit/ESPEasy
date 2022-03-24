@@ -6,6 +6,7 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
 
+
 // Used timings based on Maxim documentation.
 // See https://www.maximintegrated.com/en/design/technical-documents/app-notes/1/126.html
 // We use the "standard speed" timings, not the "Overdrive speed"
@@ -53,9 +54,9 @@ extern uint8_t LastDeviceFlag;
 /*********************************************************************************************\
    Timings for diagnostics regarding the reset + presence detection
 \*********************************************************************************************/
-extern long usec_release;   // Time needed for the line to rise (typ: < 1 usec)
-extern long presence_start; // Start presence condition after release by master (typ: 30 usec)
-extern long presence_end;   // End presence condition (minimal 60 usec, typ: 100 usec)
+extern int64_t usec_release;   // Time needed for the line to rise (typ: < 1 usec)
+extern int64_t presence_start; // Start presence condition after release by master (typ: 30 usec)
+extern int64_t presence_end;   // End presence condition (minimal 60 usec, typ: 100 usec)
 
 
 /*********************************************************************************************\
@@ -86,7 +87,7 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
 /*********************************************************************************************\
    Dallas Scan bus
 \*********************************************************************************************/
-byte   Dallas_scan(byte     getDeviceROM,
+uint8_t   Dallas_scan(uint8_t     getDeviceROM,
                    uint8_t *ROM,
                    int8_t   gpio_pin_rx,
                    int8_t   gpio_pin_tx);
@@ -108,7 +109,7 @@ bool Dallas_readTemp(const uint8_t ROM[8],
                      int8_t        gpio_pin_rx,
                      int8_t        gpio_pin_tx);
 
-bool Dallas_readiButton(const byte addr[8],
+bool Dallas_readiButton(const uint8_t addr[8],
                         int8_t     gpio_pin_rx,
                         int8_t     gpio_pin_tx);
 
@@ -121,7 +122,7 @@ bool Dallas_readCounter(const uint8_t ROM[8],
 /*********************************************************************************************\
 * Dallas Get Resolution
 \*********************************************************************************************/
-byte Dallas_getResolution(const uint8_t ROM[8],
+uint8_t Dallas_getResolution(const uint8_t ROM[8],
                           int8_t        gpio_pin_rx,
                           int8_t        gpio_pin_tx);
 
@@ -129,7 +130,7 @@ byte Dallas_getResolution(const uint8_t ROM[8],
 * Dallas Set Resolution
 \*********************************************************************************************/
 bool Dallas_setResolution(const uint8_t ROM[8],
-                          byte          res,
+                          uint8_t          res,
                           int8_t        gpio_pin_rx,
                           int8_t        gpio_pin_tx);
 
@@ -168,7 +169,7 @@ void    Dallas_write(uint8_t ByteToWrite,
 *  See https://github.com/espressif/arduino-esp32/issues/1335
 \*********************************************************************************************/
 uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx);
-uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start) ICACHE_RAM_ATTR;
+uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start);
 
 /*********************************************************************************************\
 *  Dallas Write bit
@@ -183,7 +184,7 @@ void Dallas_write_bit_ISR(uint8_t v,
                       int8_t  gpio_pin_tx,
                       long low_time,
                       long high_time,
-                      unsigned long &start) ICACHE_RAM_ATTR;
+                      uint64_t &start);
 
 /*********************************************************************************************\
 *  Standard function to initiate addressing a sensor.

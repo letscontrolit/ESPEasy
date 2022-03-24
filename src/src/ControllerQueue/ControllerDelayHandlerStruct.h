@@ -3,6 +3,7 @@
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
@@ -10,6 +11,7 @@
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/Memory.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Scheduler.h"
 #include "../Helpers/StringConverter.h"
@@ -37,7 +39,8 @@ struct ControllerDelayHandlerStruct {
     max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
     delete_oldest(false),
     must_check_reply(false),
-    deduplicate(false) {}
+    deduplicate(false),
+    useLocalSystemTime(false) {}
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
     minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
@@ -46,6 +49,7 @@ struct ControllerDelayHandlerStruct {
     delete_oldest          = settings.DeleteOldest;
     must_check_reply       = settings.MustCheckReply;
     deduplicate            = settings.deduplicate();
+    useLocalSystemTime          = settings.useLocalSystemTime();
     if (settings.allowExpire()) {
       expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
       if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
@@ -81,47 +85,62 @@ struct ControllerDelayHandlerStruct {
     if (sendQueue.size() >= max_queue_depth) { return true; }
 
     // Number of elements is not exceeding the limit, check memory
-    int freeHeap = ESP.getFreeHeap();
+    int freeHeap = FreeMem();
+    {
+      #ifdef USE_SECOND_HEAP
+      const int freeHeap2 = FreeMem2ndHeap();
+      if (freeHeap2 < freeHeap) {
+        freeHeap = freeHeap2;
+      }
+      #endif
+    }
 
-    if (freeHeap > 5000) { return false; // Memory is not an issue.
+    if (freeHeap > 5000) { 
+      return false; // Memory is not an issue.
     }
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = "Controller-";
+      String log = F("Controller-");
       log += element.controller_idx + 1;
-      log += " : Memory used: ";
+      log += F(" : Memory used: ");
       log += getQueueMemorySize();
-      log += " bytes ";
+      log += F(" bytes ");
       log += sendQueue.size();
-      log += " items ";
+      log += F(" items ");
       log += freeHeap;
-      log += " free";
-      addLog(LOG_LEVEL_DEBUG, log);
+      log += F(" free");
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
     return true;
   }
 
-  // Return true if last element was removed
-  bool removeLastIfDuplicate() {
+  // Return true if message is already present in the queue
+  bool isDuplicate(const T& element) const {
+    // Some controllers may receive duplicate messages, due to lost acknowledgement
+    // This is actually the same message, so this should not be processed.
+    if (!unitLastMessageCount.isNew(element.getUnitMessageCount())) {
+      return true;
+    }
+    // The unit message count is still stored to make sure a new one with the same count
+    // is considered a duplicate, even when the queue is empty.
+    unitLastMessageCount.add(element.getUnitMessageCount());
+
+    // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
     if (deduplicate && !sendQueue.empty()) {
-      auto back = sendQueue.back();
       // Use reverse iterator here, as it is more likely a duplicate is added shortly after another.
       auto it = sendQueue.rbegin(); // Same as back()
-      ++it;                         // The last element before back()
       for (; it != sendQueue.rend(); ++it) {
-        if (back.isDuplicate(*it)) {
+        if (element.isDuplicate(*it)) {
 #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(it->controller_idx);
             String log = get_formatted_Controller_number(cpluginID);
             log += F(" : Remove duplicate");
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
 #endif // ifndef BUILD_NO_DEBUG
-
-          sendQueue.pop_back();
           return true;
         }
       }
@@ -130,8 +149,12 @@ struct ControllerDelayHandlerStruct {
   }
 
   // Try to add to the queue, if permitted by "delete_oldest"
-  // Return false when no item was added.
-  bool addToQueue(T&& element, bool checkDuplicate = true) {
+  // Return true when item was added, or skipped as it was considered a duplicate
+  bool addToQueue(T&& element) {
+    if (isDuplicate(element)) {
+      return true;
+    }
+
     if (delete_oldest) {
       // Force add to the queue.
       // If max buffer is reached, the oldest in the queue (first to be served) will be removed.
@@ -139,20 +162,16 @@ struct ControllerDelayHandlerStruct {
         sendQueue.pop_front();
         attempt = 0;
       }
-      sendQueue.emplace_back(element);
-      if (checkDuplicate) {
-        // If message is already present consider adding to be a success.
-        removeLastIfDuplicate();
-      }
-      return true;
     }
 
     if (!queueFull(element)) {
-      sendQueue.emplace_back(element);
-      if (checkDuplicate) {
-        // If message is already present consider adding to be a success.
-        removeLastIfDuplicate();
-      }
+      #ifdef USE_SECOND_HEAP
+      HeapSelectIram ephemeral;
+      sendQueue.push_back(element);
+      #else
+      sendQueue.push_back(std::move(element));
+      #endif
+
       return true;
     }
 #ifndef BUILD_NO_DEBUG
@@ -160,8 +179,8 @@ struct ControllerDelayHandlerStruct {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       const cpluginID_t cpluginID = getCPluginID_from_ControllerIndex(element.controller_idx);
       String log = get_formatted_Controller_number(cpluginID);
-      log += " : queue full";
-      addLog(LOG_LEVEL_DEBUG, log);
+      log += F(" : queue full");
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
     return false;
@@ -170,7 +189,7 @@ struct ControllerDelayHandlerStruct {
   // Get the next element.
   // Remove front element when max_retries is reached.
   T* getNext() {
-    if (sendQueue.empty()) { return NULL; }
+    if (sendQueue.empty()) { return nullptr; }
 
     if (attempt > max_retries) {
       sendQueue.pop_front();
@@ -189,7 +208,7 @@ struct ControllerDelayHandlerStruct {
       }
     }
 
-    if (sendQueue.empty()) { return NULL; }
+    if (sendQueue.empty()) { return nullptr; }
     return &sendQueue.front();
   }
 
@@ -239,15 +258,17 @@ struct ControllerDelayHandlerStruct {
   }
 
   std::list<T>  sendQueue;
+  mutable UnitLastMessageCount_map unitLastMessageCount;
   unsigned long lastSend;
   unsigned int  minTimeBetweenMessages;
   unsigned long expire_timeout = 0;
-  byte          max_queue_depth;
-  byte          attempt;
-  byte          max_retries;
+  uint8_t          max_queue_depth;
+  uint8_t          attempt;
+  uint8_t          max_retries;
   bool          delete_oldest;
   bool          must_check_reply;
   bool          deduplicate;
+  bool          useLocalSystemTime;
 };
 
 
@@ -289,8 +310,8 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                           \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
-    if (element == NULL) return;                                                                                       \
-    MakeControllerSettings(ControllerSettings);                                                                        \
+    if (element == nullptr) return;                                                                                       \
+    MakeControllerSettings(ControllerSettings);                                                                         \
     bool ready = true;                                                                                                 \
     if (!AllocatedControllerSettings()) {                                                                              \
       ready = false;                                                                                                   \

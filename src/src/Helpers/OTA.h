@@ -14,6 +14,8 @@ bool OTA_possible(uint32_t& maxSketchSize,
 
 void ArduinoOTAInit();
 
+void ArduinoOTA_handle();
+
 #endif // ifdef FEATURE_ARDUINO_OTA
 
 

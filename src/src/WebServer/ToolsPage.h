@@ -16,6 +16,10 @@ void handle_tools();
 // ********************************************************************************
 // Web Interface debug page
 // ********************************************************************************
+void addWideButtonPlusDescription(const __FlashStringHelper * url,
+                                  const __FlashStringHelper * buttonText,
+                                  const __FlashStringHelper * description);
+
 void addWideButtonPlusDescription(const String& url,
                                   const String& buttonText,
                                   const String& description);

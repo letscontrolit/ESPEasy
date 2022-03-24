@@ -6,7 +6,7 @@
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
 \*********************************************************************************************/
-String getBearing(int degrees);
+const __FlashStringHelper * getBearing(int degrees);
 
 float CelsiusToFahrenheit(float celsius);
 
@@ -38,6 +38,19 @@ float compute_dew_point_temp(float temperature, float humidity_percentage);
 // f = 100 * ((112 - 0.1*T + Td) / (112 + 0.9 * T))^8
 float compute_humidity_from_dewpoint(float temperature, float dew_temperature);
 
+/********************************************************************************************\
+   Compensate air pressure for measured atmospheric
+      pressure (in hPa) and given altitude (in meters)
+ \*********************************************************************************************/
+float pressureElevation(float atmospheric, float altitude);
+
+/********************************************************************************************\
+  Calculates the altitude (in meters) from the specified atmospheric
+      pressure (in hPa), and sea-level pressure (in hPa).
+      @param  seaLevel      Sea-level pressure in hPa
+      @param  atmospheric   Atmospheric pressure in hPa
+ \*********************************************************************************************/
+float altitudeFromPressure(float atmospheric, float seaLevel);
 
 /********************************************************************************************\
    In memory convert float to long
@@ -52,9 +65,9 @@ float ul2float(unsigned long ul);
 /*********************************************************************************************\
    Workaround for removing trailing white space when String() converts a float with 0 decimals
 \*********************************************************************************************/
-String toString(const float& value, byte decimals);
+String toString(const float& value, unsigned int decimalPlaces = 2);
 
-String doubleToString(const double& value, int decimals = 2, bool trimTrailingZeros = false);
+String doubleToString(const double& value, unsigned int decimalPlaces = 2, bool trimTrailingZeros = false);
 
 
 #endif // HELPERS_CONVERT_H

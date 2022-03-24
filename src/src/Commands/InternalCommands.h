@@ -9,11 +9,12 @@
 
 bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum group);
 
-bool checkNrArguments(const char *cmd, const char *Line, int nrArguments);
+bool checkNrArguments(const char *cmd, const String& Line, int nrArguments);
 
 
 // Typedef for function pointer to be called for handling an internal command.
 typedef String (*command_function)(struct EventStruct *, const char *);
+typedef const __FlashStringHelper * (*command_function_fs)(struct EventStruct *, const char *);
 // Simple struct to be used in handling commands.
 // By packing all into a struct, the macro calling do_command_case generates a lot less code
 // resulting in a smaller binary.
@@ -25,13 +26,14 @@ struct command_case_data {
     String cmd_lc;
     const char  *cmd;
     struct EventStruct *event;
-    const char *line;
+    const String line;
     String status;
     bool retval = false;
 
 };
 
-bool do_command_case(command_case_data& data, const String& cmd_test, command_function pFunc, int nrArguments, EventValueSourceGroup::Enum group);
+bool do_command_case(command_case_data& data, const __FlashStringHelper * cmd_test, command_function_fs pFunc, int nrArguments, EventValueSourceGroup::Enum group);
+bool do_command_case(command_case_data& data, const __FlashStringHelper * cmd_test, command_function pFunc, int nrArguments, EventValueSourceGroup::Enum group);
 
 
 /*********************************************************************************************\

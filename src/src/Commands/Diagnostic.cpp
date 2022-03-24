@@ -1,13 +1,5 @@
 #include "../Commands/Diagnostic.h"
 
-/*
- #include "Common.h"
- #include "../../ESPEasy_common.h"
- 
- #include "../DataStructs/ESPEasy_EventStruct.h"
- */
-
-#include "../../ESPEasy_fdwdecl.h"
 
 #include "../Commands/Common.h"
 
@@ -15,6 +7,7 @@
 
 #include "../DataTypes/SettingsType.h"
 
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -52,7 +45,7 @@ String Command_Lowmem(struct EventStruct *event, const char *Line)
   return return_result(event, result);
 }
 
-String Command_Malloc(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Malloc(struct EventStruct *event, const char *Line)
 {
   char *ramtest;
   int size = parseCommandArgumentInt(Line, 1);
@@ -74,7 +67,7 @@ String Command_SysLoad(struct EventStruct *event, const char *Line)
   return return_result(event, result);
 }
 
-String Command_SerialFloat(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_SerialFloat(struct EventStruct *event, const char *Line)
 {
   pinMode(1, INPUT);
   pinMode(3, INPUT);
@@ -82,7 +75,7 @@ String Command_SerialFloat(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_MemInfo(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const char *Line)
 {
   serialPrint(F("SecurityStruct         | "));
   serialPrintln(String(sizeof(SecuritySettings)));
@@ -95,7 +88,7 @@ String Command_MemInfo(struct EventStruct *event, const char *Line)
   return return_see_serial(event);
 }
 
-String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 {
 #ifndef BUILD_MINIMAL_OTA
   showSettingsFileLayout = true;
@@ -130,7 +123,7 @@ String Command_MemInfo_detail(struct EventStruct *event, const char *Line)
   #endif // ifndef BUILD_MINIMAL_OTA
 }
 
-String Command_Background(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Background(struct EventStruct *event, const char *Line)
 {
   unsigned long timer = millis() + parseCommandArgumentInt(Line, 1);
 
@@ -144,7 +137,7 @@ String Command_Background(struct EventStruct *event, const char *Line)
 }
 #endif // BUILD_NO_DIAGNOSTIC_COMMANDS
 
-String Command_Debug(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char *Line)
 {
   if (HasArgv(Line, 2)) {
     setLogLevelFor(LOG_TO_SERIAL, parseCommandArgumentInt(Line, 1));
@@ -156,15 +149,17 @@ String Command_Debug(struct EventStruct *event, const char *Line)
   return return_see_serial(event);
 }
 
-String Command_logentry(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_logentry(struct EventStruct *event, const char *Line)
 {
-  // FIXME TD-er: Add an extra optional parameter to set log level.
-  addLog(LOG_LEVEL_INFO, tolerantParseStringKeepCase(Line, 2));
+  uint8_t level = LOG_LEVEL_INFO;
+  // An extra optional parameter to set log level.
+  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= LOG_LEVEL_DEBUG_MORE) { level = event->Par2; }
+  addLog(level, tolerantParseStringKeepCase(Line, 2));
   return return_command_success();
 }
 
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
-String Command_JSONPortStatus(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 {
   addLog(LOG_LEVEL_INFO, F("JSON Port Status: Command not implemented yet."));
   return return_command_success();
@@ -172,27 +167,29 @@ String Command_JSONPortStatus(struct EventStruct *event, const char *Line)
 
 void createLogPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 {  
-  String log = F("PortStatus detail: ");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("PortStatus detail: ");
 
-  log += F("Port=");
-  log += getPortFromKey(it->first);
-  log += F(" State=");
-  log += it->second.state;
-  log += F(" Output=");
-  log += it->second.output;
-  log += F(" Mode=");
-  log += it->second.mode;
-  log += F(" Task=");
-  log += it->second.task;
-  log += F(" Monitor=");
-  log += it->second.monitor;
-  log += F(" Command=");
-  log += it->second.command;
-  log += F(" Init=");
-  log += it->second.init;
-  log += F(" PreviousTask=");
-  log += it->second.previousTask;
-  addLog(LOG_LEVEL_INFO, log);
+    log += F("Port=");
+    log += getPortFromKey(it->first);
+    log += F(" State=");
+    log += it->second.state;
+    log += F(" Output=");
+    log += it->second.output;
+    log += F(" Mode=");
+    log += it->second.mode;
+    log += F(" Task=");
+    log += it->second.task;
+    log += F(" Monitor=");
+    log += it->second.monitor;
+    log += F(" Command=");
+    log += it->second.command;
+    log += F(" Init=");
+    log += it->second.init;
+    log += F(" PreviousTask=");
+    log += it->second.previousTask;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 }
 
 void debugPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
@@ -201,20 +198,22 @@ void debugPortStatus(std::map<uint32_t, portStatusStruct>::iterator it)
 }
 
 void logPortStatus(const String& from) {
-  String log;
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
 
-  log  = F("PortStatus structure: Called from=");
-  log += from;
-  log += F(" Count=");
-  log += globalMapPortStatus.size();
-  addLog(LOG_LEVEL_INFO, log);
+    log  = F("PortStatus structure: Called from=");
+    log += from;
+    log += F(" Count=");
+    log += globalMapPortStatus.size();
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 
   for (std::map<uint32_t, portStatusStruct>::iterator it = globalMapPortStatus.begin(); it != globalMapPortStatus.end(); ++it) {
     debugPortStatus(it);
   }
 }
 
-String Command_logPortStatus(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_logPortStatus(struct EventStruct *event, const char *Line)
 {
   logPortStatus("Rules");
   return return_command_success();

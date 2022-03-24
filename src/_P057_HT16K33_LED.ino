@@ -72,7 +72,7 @@
 
 #include "src/PluginStructs/P057_data_struct.h"
 
-boolean Plugin_057(byte function, struct EventStruct *event, String& string)
+boolean Plugin_057(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -101,23 +101,27 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte addr = PCONFIG(0);
-
-      int optionValues[8] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
-      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, addr);
+      const uint8_t i2cAddressValues[] = { 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
       break;
     }
-
 
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("7-Seg. Clock"));
 
-      int16_t choice     = PCONFIG(1);
-      String  options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
-      addFormSelector(F("Clock Type"), F("clocktype"), 3, options, NULL, choice);
+      {
+        int16_t choice     = PCONFIG(1);
+        const __FlashStringHelper * options[3] = { F("none"), F("7-Seg. HH:MM (24 hour)"), F("7-Seg. HH:MM (12 hour)") };
+        addFormSelector(F("Clock Type"), F("clocktype"), 3, options, nullptr, choice);
+      }
 
       addFormNumericBox(F("Seg. for <b>X</b>x:xx"), F("clocksegh10"), PCONFIG(2), 0,  7);
       addFormNumericBox(F("Seg. for x<b>X</b>:xx"), F("clocksegh1"),  PCONFIG(3), 0,  7);
@@ -151,7 +155,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      byte address = PCONFIG(0);
+      uint8_t address = PCONFIG(0);
 
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P057_data_struct(address));
       P057_data_struct *P057_data =
@@ -178,17 +182,21 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
       {
         String text = parseStringToEnd(string, 2);
 
-        if (text.length() > 0) {
-          byte seg = 0;
+        if (!text.isEmpty()) {
+          uint8_t seg = 0;
+          uint8_t txt = 0; // Separate indexers for text and segments
+          bool    setDot;
 
           P057_data->ledMatrix.ClearRowBuffer();
 
-          while (text[seg] && seg < 8)
+          while (txt < text.length() && text[txt] && seg < 8)
           {
-            // uint16_t value = 0;
-            char c = text[seg];
-            P057_data->ledMatrix.SetDigit(seg, c);
+            setDot = (txt < text.length() - 1 && text[txt + 1] == '.');
+            char c = text[txt];
+            P057_data->ledMatrix.SetDigit(seg, c, setDot);
             seg++;
+            txt++;
+            if (setDot) { txt++; } // extra increment to skip past the dot
           }
           P057_data->ledMatrix.TransmitRowBuffer();
           success = true;
@@ -210,7 +218,7 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         String   param;
         String   paramKey;
         String   paramVal;
-        byte     paramIdx = 2;
+        uint8_t     paramIdx = 2;
         uint8_t  seg      = 0;
         uint16_t value    = 0;
 
@@ -226,26 +234,28 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         {
           while (param.length())
           {
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG_MORE, param);
+            #endif
 
             if (param == F("log"))
             {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("MX   : ");
 
-                for (byte i = 0; i < 8; i++)
+                for (uint8_t i = 0; i < 8; i++)
                 {
                   log += String(P057_data->ledMatrix.GetRow(i), 16);
                   log += F("h, ");
                 }
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               success = true;
             }
 
             else if (param == F("test"))
             {
-              for (byte i = 0; i < 8; i++) {
+              for (uint8_t i = 0; i < 8; i++) {
                 P057_data->ledMatrix.SetRow(i, 1 << i);
               }
               success = true;
@@ -325,8 +335,8 @@ boolean Plugin_057(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      byte hours   = node_time.hour();
-      byte minutes = node_time.minute();
+      uint8_t hours   = node_time.hour();
+      uint8_t minutes = node_time.minute();
 
       // P057_data->ledMatrix.ClearRowBuffer();
       P057_data->ledMatrix.SetDigit(PCONFIG(5), minutes % 10);

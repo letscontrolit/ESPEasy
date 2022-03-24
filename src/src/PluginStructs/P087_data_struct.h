@@ -71,7 +71,7 @@ public:
 
   void            setMaxLength(uint16_t maxlenght);
 
-  void            setLine(byte          varNr,
+  void            setLine(uint8_t          varNr,
                           const String& line);
 
   String          getRegEx() const;
@@ -101,7 +101,7 @@ public:
 
   bool          matchRegexp(String& received) const;
 
-  static String MatchType_toString(P087_Match_Type matchType);
+  static const __FlashStringHelper * MatchType_toString(P087_Match_Type matchType);
 
 
   // Made public so we don't have to copy the values when loading/saving.
@@ -122,8 +122,8 @@ private:
 
   uint8_t capture_index[P87_MAX_CAPTURE_INDEX] = { 0 };
 
-  bool capture_index_used[P87_MAX_CAPTURE_INDEX];
-  bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX];
+  bool capture_index_used[P87_MAX_CAPTURE_INDEX] = { 0 };
+  bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX] = { 0 };
   bool regex_empty = false;
 };
 

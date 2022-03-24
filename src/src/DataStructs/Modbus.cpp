@@ -8,33 +8,57 @@
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
   TXRXstate(MODBUS_IDLE), RXavailable(0), payLoad(0) {}
 
+Modbus::~Modbus() {
+  if (ModbusClient) {
+    ModbusClient->flush();
+    ModbusClient->stop();
+    delete (ModbusClient);
+    delay(1);
+    ModbusClient = nullptr;
+  }
+}
+
 bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister,  MODBUS_registerTypes_t type, char *IPaddress)
 {
   currentRegister = ModbusRegister;
   currentFunction = function;
   incomingValue   = type;
   resultReceived  = false;
-  ModbusClient    = new WiFiClient();
+  ModbusClient    = new (std::nothrow) WiFiClient();
+  if (ModbusClient == nullptr) {
+    return false;
+  }
   ModbusClient->setNoDelay(true);
   ModbusClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
   timeout = millis();
   ModbusClient->flush();
 
   if (ModbusClient->connected()) {
+    #ifndef BUILD_NO_DEBUG
     LogString += F(" already connected. ");
+    #endif
   } else {
-    LogString += F("connect: ");      LogString += IPaddress;
+    #ifndef BUILD_NO_DEBUG
+    LogString += F("connect: ");
+    LogString += IPaddress;
+    #endif
 
     if (ModbusClient->connect(IPaddress, 502) != 1) {
+      #ifndef BUILD_NO_DEBUG
       LogString += F(" fail. ");
+      #endif
       TXRXstate  = MODBUS_IDLE;
       errcnt++;
 
+      #ifndef BUILD_NO_DEBUG
       if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
+      #endif
       return false;
     }
   }
+  #ifndef BUILD_NO_DEBUG
   LogString += F(" OK, sending read request: ");
+  #endif
 
   sendBuffer[6] = ModbusID;
   sendBuffer[7] = function;
@@ -55,20 +79,26 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   ModbusClient->flush();
   ModbusClient->write(&sendBuffer[0], sizeof(sendBuffer));
 
+  #ifndef BUILD_NO_DEBUG
   for (unsigned int i = 0; i < sizeof(sendBuffer); i++) {
     LogString += ((unsigned int)(sendBuffer[i]));
-    LogString += (" ");
+    LogString += ' ';
   }
+  #endif
   TXRXstate = MODBUS_RECEIVE;
-
+  
+  #ifndef BUILD_NO_DEBUG
   if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
+  #endif
   return true;
 }
 
 bool Modbus::handle() {
   unsigned int RXavailable = 0;
 
-  LogString = "";
+  #ifndef BUILD_NO_DEBUG
+  LogString = String();
+  #endif
   int64_t rxValue = 0;
 
   switch (TXRXstate) {
@@ -90,16 +120,25 @@ bool Modbus::handle() {
 
       if  (ModbusClient->available() < 9) { break; }
 
+      #ifndef BUILD_NO_DEBUG
       LogString += F("reading bytes: ");
+      #endif
 
       for (int a = 0; a < 9; a++) {
         payLoad    = ModbusClient->read();
-        LogString += (payLoad);  LogString += ' ';
+        #ifndef BUILD_NO_DEBUG
+        LogString += (payLoad);
+        LogString += ' ';
+        #endif
       }
+      #ifndef BUILD_NO_DEBUG
       LogString += F("> ");
+      #endif
 
       if (payLoad > 8) {
+        #ifndef BUILD_NO_DEBUG
         LogString += F("Payload too large !? ");
+        #endif
         errcnt++;
         TXRXstate = MODBUS_IDLE;
       }
@@ -118,7 +157,10 @@ bool Modbus::handle() {
         rxValue = rxValue << 8;
         char a = ModbusClient->read();
         rxValue    = rxValue | a;
-        LogString += ((int)a);  LogString += (" ");
+        #ifndef BUILD_NO_DEBUG
+        LogString += static_cast<int>(a);  
+        LogString += ' ';
+        #endif
       }
 
       switch (incomingValue) {
@@ -142,7 +184,10 @@ bool Modbus::handle() {
           break;
       }
 
-      LogString += "value: "; LogString += result;
+      #ifndef BUILD_NO_DEBUG
+      LogString += F("value: "); 
+      LogString += result;
+      #endif
 
       // if ((systemTimePresent()) && (hour() == 0)) errcnt = 0;
 
@@ -152,19 +197,25 @@ bool Modbus::handle() {
       break;
 
     default:
+      #ifndef BUILD_NO_DEBUG
       LogString += F("default. ");
+      #endif
       TXRXstate  = MODBUS_IDLE;
       break;
   }
-
+  #ifndef BUILD_NO_DEBUG
   if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
+  #endif
   return true;
 }
 
 bool Modbus::hasTimeout()
 {
   if   ((millis() - timeout) > 10000) { // too many bytes or timeout
-    LogString += F("Modbus RX timeout. "); LogString += String(ModbusClient->available());
+    #ifndef BUILD_NO_DEBUG
+    LogString += F("Modbus RX timeout. "); 
+    LogString += String(ModbusClient->available());
+    #endif
     errcnt++;
     TXRXstate = MODBUS_IDLE;
     return true;

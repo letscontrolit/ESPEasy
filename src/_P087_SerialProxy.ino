@@ -49,7 +49,7 @@
 // Timeout between sentences.
 
 
-boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
+boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
   switch (function) {
@@ -65,6 +65,8 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = false;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -74,10 +76,10 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
     }
 
     case PLUGIN_GET_DEVICEVALUENAMES: {
-      for (byte i = 0; i < VARS_PER_TASK; ++i) {
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P087_NR_OUTPUT_VALUES) {
-          const byte pconfigIndex = i + P087_QUERY1_CONFIG_POS;
-          byte choice             = PCONFIG(pconfigIndex);
+          const uint8_t pconfigIndex = i + P087_QUERY1_CONFIG_POS;
+          uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
             Plugin_087_valuename(choice, false),
@@ -102,7 +104,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       if ((nullptr != P087_data) && P087_data->isInitialized()) {
         uint32_t success, error, length_last;
         P087_data->getSentencesReceived(success, error, length_last);
-        byte varNr = VARS_PER_TASK;
+        uint8_t varNr = VARS_PER_TASK;
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
         pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
@@ -152,9 +154,9 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P087_data) {
-        for (byte varNr = 0; varNr < P87_Nlines; varNr++)
+        for (uint8_t varNr = 0; varNr < P87_Nlines; varNr++)
         {
-          P087_data->setLine(varNr, web_server.arg(getPluginCustomArgName(varNr)));
+          P087_data->setLine(varNr, webArg(getPluginCustomArgName(varNr)));
         }
 
         addHtmlError(SaveCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0));
@@ -208,7 +210,9 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
       if ((nullptr != P087_data) && P087_data->getSentence(event->String2)) {
         if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
 //          sendData(event);
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, event->String2);
+#endif
           success = true;
         }
       }
@@ -229,7 +233,7 @@ boolean Plugin_087(byte function, struct EventStruct *event, String& string) {
           String param1 = parseStringKeepCase(string, 2);
           parseSystemVariables(param1, false);
           P087_data->sendString(param1);
-          addLog(LOG_LEVEL_INFO, param1);
+          addLogMove(LOG_LEVEL_INFO, param1);
           success = true;
         }
       }
@@ -264,7 +268,7 @@ bool Plugin_087_match_all(taskIndex_t taskIndex, String& received)
   return res;
 }
 
-String Plugin_087_valuename(byte value_nr, bool displayString) {
+String Plugin_087_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P087_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
@@ -291,7 +295,7 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     addFormNote(F("0 = Do not turn off filter after sending to the connected device."));
 
     {
-      String options[P087_Match_Type_NR_ELEMENTS];
+      const __FlashStringHelper * options[P087_Match_Type_NR_ELEMENTS];
       int optionValues[P087_Match_Type_NR_ELEMENTS];
 
       for (int i = 0; i < P087_Match_Type_NR_ELEMENTS; ++i) {
@@ -305,12 +309,12 @@ void P087_html_show_matchForms(struct EventStruct *event) {
     }
 
 
-    byte lineNr                 = 0;
+    uint8_t lineNr                 = 0;
     uint8_t capture             = 0;
     P087_Filter_Comp comparator = P087_Filter_Comp::Equal;
     String filter;
 
-    for (byte varNr = P087_FIRST_FILTER_POS; varNr < P87_Nlines; ++varNr)
+    for (uint8_t varNr = P087_FIRST_FILTER_POS; varNr < P87_Nlines; ++varNr)
     {
       String id = getPluginCustomArgName(varNr);
 
@@ -331,17 +335,17 @@ void P087_html_show_matchForms(struct EventStruct *event) {
         case 1:
         {
           // Comparator
-          String options[2];
+          const __FlashStringHelper * options[2];
           options[P087_Filter_Comp::Equal]    = F("==");
           options[P087_Filter_Comp::NotEqual] = F("!=");
           int optionValues[2] = { P087_Filter_Comp::Equal, P087_Filter_Comp::NotEqual };
-          addSelector(id, 2, options, optionValues, NULL, comparator, false, "");
+          addSelector(id, 2, options, optionValues, nullptr, static_cast<int>(comparator), false, true, EMPTY_STRING);
           break;
         }
         case 2:
         {
           // Compare with
-          addTextBox(id, filter, 32, false, false, "", "");
+          addTextBox(id, filter, 32, false, false, EMPTY_STRING, EMPTY_STRING);
           break;
         }
       }
@@ -373,7 +377,7 @@ void P087_html_show_stats(struct EventStruct *event) {
     chksumStats += error;
     addHtml(chksumStats);
     addRowLabel(F("Length Last Sentence"));
-    addHtml(String(length_last));
+    addHtmlInt(length_last);
   }
 }
 

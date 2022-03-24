@@ -24,20 +24,21 @@
 # define P020_RX_WAIT              PCONFIG(4)
 # define P020_SERIAL_CONFIG        PCONFIG(1)
 # define P020_SERIAL_PROCESSING    PCONFIG(5)
-# define P020_RESET_TARGET_PIN     CONFIG_PIN1
+# define P020_RESET_TARGET_PIN     PCONFIG(6)
+# define P020_RX_BUFFER            PCONFIG(7)
 
 
 # define P020_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 # define P020_NR_OUTPUT_OPTIONS  1
-
-# define P020_NR_OUTPUT_VALUES   1
 # define P020_QUERY1_CONFIG_POS  3
 
 # define P020_DEFAULT_SERVER_PORT 1234
 # define P020_DEFAULT_BAUDRATE   115200
+# define P020_DEFAULT_RESET_TARGET_PIN -1
+# define P020_DEFAULT_RX_BUFFER 256
 
 
-boolean Plugin_020(byte function, struct EventStruct *event, String& string)
+boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -67,9 +68,11 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P020_BAUDRATE    = P020_DEFAULT_BAUDRATE;
-      P020_SERVER_PORT = P020_DEFAULT_SERVER_PORT;
-      success          = true;
+      P020_BAUDRATE         = P020_DEFAULT_BAUDRATE;
+      P020_SERVER_PORT      = P020_DEFAULT_SERVER_PORT;
+      P020_RESET_TARGET_PIN = P020_DEFAULT_RESET_TARGET_PIN;
+      P020_RX_BUFFER        = P020_DEFAULT_RX_BUFFER;
+      success               = true;
       break;
     }
 
@@ -81,30 +84,43 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES: 
+    case PLUGIN_GET_DEVICEGPIONAMES:
     {
       serialHelper_getGpioNames(event);
       break;
     }
 
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("RST: ");
+      string += formatGpioLabel(P020_RESET_TARGET_PIN, false);
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
-    { 
+    {
       addFormNumericBox(F("TCP Port"),  F("p020_port"), P020_SERVER_PORT, 0);
       addFormNumericBox(F("Baud Rate"), F("p020_baud"), P020_BAUDRATE,    0);
-      byte serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
+      uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
-        byte   choice = P020_SERIAL_PROCESSING;
-        String options[3];
-        options[0] = F("None");
-        options[1] = F("Generic");
-        options[2] = F("RFLink");
-        addFormSelector(F("Event processing"), F("p020_events"), 3, options, NULL, choice);
+        uint8_t   choice = P020_SERIAL_PROCESSING;
+        const __FlashStringHelper * options[3] = {
+          F("None"),
+          F("Generic"),
+          F("RFLink")
+        };
+        addFormSelector(F("Event processing"), F("p020_events"), 3, options, nullptr, choice);
       }
-      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0);
+      addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
+      addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
+
+      addFormNumericBox(F("RX buffer size (bytes)"), F("p020_rx_buffer"), P020_RX_BUFFER, 256, 1024);
+      addFormNote(F("Standard RX buffer 256B; higher values could be unstable; energy meters could require 1024B"));
+
       success = true;
-      break; 
+      break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
@@ -114,6 +130,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       P020_SERIAL_CONFIG     = serialHelper_serialconfig_webformSave();
       P020_SERIAL_PROCESSING = getFormItemInt(F("p020_events"));
       P020_RX_WAIT           = getFormItemInt(F("p020_rxwait"));
+      P020_RESET_TARGET_PIN  = getFormItemInt(F("p020_resetpin"));
+      P020_RX_BUFFER         = getFormItemInt(F("p020_rx_buffer"));
       success                = true;
       break;
     }
@@ -154,14 +172,27 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         CONFIG_PIN1 = rxPin;
         CONFIG_PIN2 = txPin;
       }
-      addLog(LOG_LEVEL_INFO,
-             String(F("Ser2net: TaskIndex=")) + event->TaskIndex + String(F(" port=")) + CONFIG_PORT + String(F(" rxPin=")) + rxPin +
-             String(F(" txPin=")) + txPin + String(F(" BAUDRATE=")) + P020_BAUDRATE + String(F(" SERVER_PORT=")) + P020_SERVER_PORT +
-             String(F(" SERIAL_PROCESSING=")) + P020_SERIAL_PROCESSING);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("Ser2net: TaskIndex=");
+        log += event->TaskIndex;
+        log += F(" port=");
+        log += CONFIG_PORT;
+        log += F(" rxPin=");
+        log += rxPin;
+        log += F(" txPin=");
+        log += txPin;
+        log += F(" BAUDRATE=");
+        log += P020_BAUDRATE;
+        log += F(" SERVER_PORT=");
+        log += P020_SERVER_PORT;
+        log += F(" SERIAL_PROCESSING=");
+        log += P020_SERIAL_PROCESSING;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
 
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
       // Ser2net: port=4 rxPin=16 txPin=17
-      byte serialconfig = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
+      uint8_t serialconfig = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       task->serialBegin(port, rxPin, txPin, P020_BAUDRATE, serialconfig);
       task->startServer(P020_SERVER_PORT);
 
@@ -170,13 +201,23 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (P020_RESET_TARGET_PIN != -1) {
+      if (validGpio(P020_RESET_TARGET_PIN)) {
+        #ifndef BUILD_NO_DEBUG
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log;
+          log.reserve(38);
+          log += F("Ser2net  : P020_RESET_TARGET_PIN : ");
+          log += P020_RESET_TARGET_PIN;
+          addLogMove(LOG_LEVEL_DEBUG, log);
+        }
+        #endif
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
         digitalWrite(P020_RESET_TARGET_PIN, LOW);
         delay(500);
         digitalWrite(P020_RESET_TARGET_PIN, HIGH);
         pinMode(P020_RESET_TARGET_PIN, INPUT_PULLUP);
       }
+
       task->serial_processing = P020_SERIAL_PROCESSING;
       success                 = true;
       break;
@@ -193,7 +234,7 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == task) {
-         break; 
+         break;
       }
       task->checkServer();
       success = true;
@@ -204,8 +245,8 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) { 
-        break; 
+      if (nullptr == task) {
+        break;
       }
 
       if (task->hasClientConnected()) {
@@ -220,14 +261,14 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
     {
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) { 
-        break; 
+      if (nullptr == task) {
+        break;
       }
 
-      if (task->hasClientConnected()) { 
-        task->handleSerialIn(event); 
-      } else { 
-        task->discardSerialIn(); 
+      if (task->hasClientConnected()) {
+        task->handleSerialIn(event);
+      } else {
+        task->discardSerialIn();
 
       }
       success = true;
@@ -239,13 +280,12 @@ boolean Plugin_020(byte function, struct EventStruct *event, String& string)
       String command  = parseString(string, 1);
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == task) { 
-        break; 
+      if (nullptr == task) {
+        break;
       }
-      
+
       if (command == F("serialsend")) {
-        const char *tmpBuf = string.substring(11).c_str();
-        task->ser2netSerial->write(tmpBuf);
+        task->ser2netSerial->write(string.substring(11).c_str());
         task->ser2netSerial->flush();
         success = true;
       }

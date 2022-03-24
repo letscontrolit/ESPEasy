@@ -85,7 +85,7 @@ public:
 
   void setMaxLength(uint16_t maxlenght);
 
-  void setLine(byte          varNr,
+  void setLine(uint8_t          varNr,
                const String& line);
 
 
@@ -108,9 +108,9 @@ public:
 
   bool          parsePacket(const String& received) const;
 
-  static String MatchType_toString(P094_Match_Type matchType);
-  static String P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
-  static String P094_FilterComp_toString(P094_Filter_Comp comparator);
+  static const __FlashStringHelper * MatchType_toString(P094_Match_Type matchType);
+  static const __FlashStringHelper * P094_FilterValueType_toString(P094_Filter_Value_Type valueType);
+  static const __FlashStringHelper * P094_FilterComp_toString(P094_Filter_Comp comparator);
 
 
   // Made public so we don't have to copy the values when loading/saving.
@@ -134,7 +134,7 @@ private:
   unsigned long  disable_filter_window    = 0;
   uint32_t       debug_counter            = 0;
 
-  bool                   valueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS];
+  bool                   valueType_used[P094_FILTER_VALUE_Type_NR_ELEMENTS] = {0};
   P094_Filter_Value_Type valueType_index[P094_NR_FILTERS];
   P094_Filter_Comp       filter_comp[P094_NR_FILTERS];
 };

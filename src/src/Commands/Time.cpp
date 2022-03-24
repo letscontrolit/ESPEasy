@@ -6,6 +6,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/ESPEasy_time.h"
@@ -27,11 +29,11 @@ String Command_NTPHost(struct EventStruct *event, const char *Line)
 String Command_useNTP(struct EventStruct *event, const char *Line)
 {
   if (HasArgv(Line, 2)) {
-    Settings.UseNTP = event->Par1;
+    Settings.UseNTP(event->Par1);
   } else {
     serialPrintln();
     String result = F("UseNTP:");
-    result += boolToString(Settings.UseNTP);
+    result += boolToString(Settings.UseNTP());
     return return_result(event, result);
   }
   return return_command_success();
@@ -87,8 +89,7 @@ String Command_DateTime(struct EventStruct *event, const char *Line)
       tm.tm_sec  = 0;
     }
 
-    node_time.sysTime    = makeTime(tm);
-    node_time.timeSource = Manual_set;
+    node_time.setExternalTimeSource(makeTime(tm), timeSource_t::Manual_set);
   } else  {
     // serialPrintln();
     String result = F("Datetime:");

@@ -1,35 +1,45 @@
 #include "../PluginStructs/P062_data_struct.h"
 
-// Needed also here for PlatformIO's library finder as the .h file 
+// Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
-# include <Adafruit_MPR121.h>
-
 #ifdef USES_P062
-#include "../Helpers/ESPEasy_Storage.h"
+
+# include <Adafruit_MPR121.h>
+# include "../Helpers/ESPEasy_Storage.h"
 
 P062_data_struct::P062_data_struct() {
-#ifdef PLUGIN_062_DEBUG
+  # ifdef PLUGIN_062_DEBUG
   addLog(LOG_LEVEL_INFO, F("P062_data_struct constructor"));
-#endif
+  # endif // ifdef PLUGIN_062_DEBUG
   clearCalibrationData(); // Reset
 }
 
+P062_data_struct::~P062_data_struct() {
+  if (keypad != nullptr) {
+    delete keypad;
+    keypad = nullptr;
+  }
+}
+
 bool P062_data_struct::init(taskIndex_t taskIndex,
-                            uint8_t i2c_addr,
-                            bool scancode,
-                            bool keepCalibrationData) {
-#ifdef PLUGIN_062_DEBUG
+                            uint8_t     i2c_addr,
+                            bool        scancode,
+                            bool        keepCalibrationData,
+                            uint8_t     sensitivity) {
+  # ifdef PLUGIN_062_DEBUG
   addLog(LOG_LEVEL_INFO, F("P062_data_struct init()"));
-#endif
+  # endif // ifdef PLUGIN_062_DEBUG
   _i2c_addr            = i2c_addr;
   _use_scancode        = scancode;
   _keepCalibrationData = keepCalibrationData;
+  _sensitivity         = sensitivity;
 
   if (!keypad) {
-    keypad = new Adafruit_MPR121();
+    keypad = new (std::nothrow) Adafruit_MPR121();
   }
+
   if (keypad) {
-    keypad->begin(_i2c_addr);
+    keypad->begin(_i2c_addr, _sensitivity);
     loadTouchObjects(taskIndex);
     return true;
   }
@@ -37,32 +47,36 @@ bool P062_data_struct::init(taskIndex_t taskIndex,
 }
 
 void P062_data_struct::updateCalibration(uint8_t t) {
-  if (t >= P062_MaxTouchObjects) return;
+  if (t >= P062_MaxTouchObjects) { return; }
+
   if (_keepCalibrationData) {
     uint16_t current = keypad->filteredData(t);
     CalibrationData.CalibrationValues[t].current = current;
-    if (CalibrationData.CalibrationValues[t].min == 0 || current < CalibrationData.CalibrationValues[t].min) {
+
+    if ((CalibrationData.CalibrationValues[t].min == 0) || (current < CalibrationData.CalibrationValues[t].min)) {
       CalibrationData.CalibrationValues[t].min = current;
     }
-    if (CalibrationData.CalibrationValues[t].max == 0 || current > CalibrationData.CalibrationValues[t].max) {
+
+    if ((CalibrationData.CalibrationValues[t].max == 0) || (current > CalibrationData.CalibrationValues[t].max)) {
       CalibrationData.CalibrationValues[t].max = current;
     }
   }
 }
 
 bool P062_data_struct::readKey(uint16_t& key) {
-  if (!keypad) return false;
+  if (!keypad) { return false; }
   key = keypad->touched();
 
   if (key)
   {
     uint16_t colMask = 0x01;
 
-    for (byte col = 1; col <= 12; col++)
+    for (uint8_t col = 1; col <= 12; col++)
     {
       if (key & colMask) // this key pressed?
       {
         updateCalibration(col - 1);
+
         if (_use_scancode) {
           key = col;
           break;
@@ -98,19 +112,19 @@ void P062_data_struct::setThreshold(uint8_t t, uint8_t touch, uint8_t release) {
  * Load the touch objects from the settings, and initialize then properly where needed.
  */
 void P062_data_struct::loadTouchObjects(taskIndex_t taskIndex) {
-#ifdef PLUGIN_062_DEBUG
+  # ifdef PLUGIN_062_DEBUG
   String log = F("P062 DEBUG loadTouchObjects size: ");
   log += sizeof(StoredSettings);
-  addLog(LOG_LEVEL_INFO, log);
-#endif // PLUGIN_062_DEBUG
-  LoadCustomTaskSettings(taskIndex, (uint8_t *)&(StoredSettings), sizeof(StoredSettings));
+  addLogMove(LOG_LEVEL_INFO, log);
+  # endif // PLUGIN_062_DEBUG
+  LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
 }
 
 /**
  * Get the Calibration data for 1 touch object, return false if all zeroes or invalid input for t.
  */
 bool P062_data_struct::getCalibrationData(uint8_t t, uint16_t *current, uint16_t *min, uint16_t *max) {
-  if (t >= P062_MaxTouchObjects) return false;
+  if (t >= P062_MaxTouchObjects) { return false; }
   *current = CalibrationData.CalibrationValues[t].current;
   *min     = CalibrationData.CalibrationValues[t].min;
   *max     = CalibrationData.CalibrationValues[t].max;
@@ -127,4 +141,5 @@ void P062_data_struct::clearCalibrationData() {
     CalibrationData.CalibrationValues[t].max     = 0;
   }
 }
+
 #endif // ifdef USES_P062

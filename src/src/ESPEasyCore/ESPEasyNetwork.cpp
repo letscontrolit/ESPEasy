@@ -24,6 +24,9 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       #ifdef HAS_ETHERNET
       // FIXME TD-er: How to 'end' ETH?
 //      ETH.end();
+      if (new_medium == NetworkMedium_t::WIFI) {
+        WiFiEventData.clearAll();
+      }
       #endif
       break;
     case NetworkMedium_t::WIFI:
@@ -123,32 +126,15 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
   return WiFi.dnsIP(dns_no);
 }
 
-String NetworkMacAddress() {
+MAC_address NetworkMacAddress() {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
-    if(!EthEventData.ethInitSuccess) {
-      addLog(LOG_LEVEL_ERROR, F("Call NetworkMacAddress() only on connected Ethernet!"));
-    } else {
-      return ETH.macAddress();
-    }
+    return ETHMacAddress();
   }
   #endif
-  
-  uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-  uint8_t *macread = NetworkMacAddressAsBytes(mac);
-  char     macaddress[20];
-  formatMAC(macread, macaddress);
-  
-  return String(macaddress);
-}
-
-uint8_t * NetworkMacAddressAsBytes(uint8_t* mac) {
-  #ifdef HAS_ETHERNET
-  if(active_network_medium == NetworkMedium_t::Ethernet) {
-    return ETHMacAddress(mac);
-  }
-  #endif
-  return WiFi.macAddress(mac);
+  MAC_address mac;
+  WiFi.macAddress(mac.mac);
+  return mac;
 }
 
 String NetworkGetHostname() {
@@ -181,22 +167,65 @@ String NetworkCreateRFCCompliantHostname(bool force_add_unitnr) {
 String createRFCCompliantHostname(const String& oldString) {
   String result(oldString);
 
-  result.replace(' ', '-');
-  result.replace('_', '-'); // See RFC952
+  // See RFC952.
+  // Allowed chars:
+  // * letters (a-z, A-Z)
+  // * numerals (0-9)
+  // * Hyphen (-)
+  replaceUnicodeByChar(result, '-');
+  for (size_t i = 0; i < result.length(); ++i) {
+    const char c = result[i];
+    if (!isAlphaNumeric(c)) {
+      result[i] = '-';
+    }
+  }
+
+
+  // May not start or end with a hyphen
+  while (result.startsWith(String('-'))) {
+    result = result.substring(1);
+  }
+  while (result.endsWith(String('-'))) {
+    result = result.substring(0, result.length() - 1);
+  }
+
+  // May not contain only numerals
+  bool onlyNumerals = true;
+  for (size_t i = 0; onlyNumerals && i < result.length(); ++i) {
+    const char c = result[i];
+    if (!isdigit(c)) {
+      onlyNumerals = false;
+    }
+  }
+  if (onlyNumerals) {
+    result = String(F("ESPEasy-")) + result;
+  }
+
+  if (result.length() > 24) {
+    result = result.substring(0, 24);
+  }
+
   return result;
 }
 
 String WifiSoftAPmacAddress() {
-    uint8_t  mac[]   = { 0, 0, 0, 0, 0, 0 };
-    uint8_t *macread = WiFi.softAPmacAddress(mac);
-    char     macaddress[20];
-    formatMAC(macread, macaddress);
-    return String(macaddress);
+  MAC_address mac;
+  WiFi.softAPmacAddress(mac.mac);
+  return mac.toString();
+}
+
+String WifiSTAmacAddress() {
+  MAC_address mac;
+  WiFi.macAddress(mac.mac);
+  return mac.toString();
 }
 
 void CheckRunningServices() {
   set_mDNS();
-  SetWiFiTXpower();
+  if (active_network_medium == NetworkMedium_t::WIFI) 
+  {
+    SetWiFiTXpower();
+  }
 }
 
 #ifdef HAS_ETHERNET

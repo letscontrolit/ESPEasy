@@ -106,13 +106,13 @@ enum BMx_state {
 struct P028_data_struct : public PluginTaskData_base {
   P028_data_struct(uint8_t addr);
 
-  byte    get_config_settings() const;
+  uint8_t    get_config_settings() const;
 
-  byte    get_control_settings() const;
+  uint8_t    get_control_settings() const;
 
   String  getFullDeviceName() const;
 
-  String  getDeviceName() const;
+  const __FlashStringHelper *  getDeviceName() const;
 
   boolean hasHumidity() const;
 
@@ -155,19 +155,6 @@ struct P028_data_struct : public PluginTaskData_base {
   // Read humidity
   // **************************************************************************/
   float readHumidity();
-
-  // **************************************************************************/
-  // Calculates the altitude (in meters) from the specified atmospheric
-  //    pressure (in hPa), and sea-level pressure (in hPa).
-  //    @param  seaLevel      Sea-level pressure in hPa
-  //    @param  atmospheric   Atmospheric pressure in hPa
-  // **************************************************************************/
-  float Plugin_028_readAltitude(float seaLevel);
-
-  // **************************************************************************/
-  // MSL pressure formula
-  // **************************************************************************/
-  float pressureElevation(int altitude);
 
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;

@@ -81,7 +81,7 @@ struct P077_data_struct : public PluginTaskData_base {
     //  if (energy_power_on) {  // Powered on
 
     if (adjustment & 0x40) { // Voltage valid
-      energy_voltage = (float)(PCONFIG(0) * CSE_UREF) / (float)voltage_cycle;
+      energy_voltage = static_cast<float>(PCONFIG(0) * CSE_UREF) / static_cast<float>(voltage_cycle);
     }
     if (adjustment & 0x10) {        // Power valid
       if ((header & 0xF2) == 0xF2) { // Power cycle exceeds range
@@ -91,7 +91,7 @@ struct P077_data_struct : public PluginTaskData_base {
           power_cycle_first = power_cycle; // Skip first incomplete power_cycle
         if (power_cycle_first != power_cycle) {
           power_cycle_first = -1;
-          energy_power = (float)(PCONFIG(2) * CSE_PREF) / (float)power_cycle;
+          energy_power = static_cast<float>(PCONFIG(2) * CSE_PREF) / static_cast<float>(power_cycle);
         } else {
           energy_power = 0;
         }
@@ -104,7 +104,7 @@ struct P077_data_struct : public PluginTaskData_base {
       if (0 == energy_power) {
         energy_current = 0;
       } else {
-        energy_current = (float)PCONFIG(1) / (float)current_cycle;
+        energy_current = static_cast<float>(PCONFIG(1)) / static_cast<float>(current_cycle);
       }
     }
 
@@ -155,7 +155,7 @@ struct P077_data_struct : public PluginTaskData_base {
 
   //  uint8_t cse_receive_flag = 0;
 
-  uint8_t serial_in_buffer[32];
+  uint8_t serial_in_buffer[32] = {0};
   long voltage_cycle = 0;
   long current_cycle = 0;
   long power_cycle = 0;
@@ -168,14 +168,20 @@ struct P077_data_struct : public PluginTaskData_base {
   float energy_power = 0;   // 123.1 W
 
   // stats
-  long t_max = 0, t_all = 0, t_pkt = 0, t_pkt_tmp = 0;
-  uint16_t count_bytes = 0, count_max = 0, count_pkt = 0;
-  uint8_t checksum = 0, adjustment = 0;
+  long t_max = 0;
+  long t_all = 0;
+  long t_pkt = 0;
+  long t_pkt_tmp = 0;
+  uint16_t count_bytes = 0;
+  uint16_t count_max = 0;
+  uint16_t count_pkt = 0;
+  uint8_t checksum = 0;
+  uint8_t adjustment = 0;
 };
 
 
 
-boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
+boolean Plugin_077(uint8_t function, struct EventStruct *event, String &string) {
   boolean success = false;
 
   switch (function) {
@@ -280,7 +286,9 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
   */
 
   case PLUGIN_READ: {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG_DEV, F("CSE: plugin read"));
+    #endif
     //        sendData(event);
     //        Variables set in PLUGIN_SERIAL_IN as soon as there are new values!
     //        UserVar[event->BaseVarIndex] = energy_voltage;
@@ -297,49 +305,50 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
       success = true;
       /* ONLINE CHECKSUMMING by Bartłomiej Zimoń */
       if (P077_data->processSerialData()) {
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("CSE: packet found"));
         if (CseReceived(event)) {
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
             String log = F("CSE: adjustment ");
             log += P077_data->adjustment;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: voltage_cycle ");
             log += P077_data->voltage_cycle;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: current_cycle ");
             log += P077_data->current_cycle;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: power_cycle ");
             log += P077_data->power_cycle;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
             log = F("CSE: cf_pulses ");
             log += P077_data->cf_pulses;
-            addLog(LOG_LEVEL_DEBUG_DEV, log);
+            addLogMove(LOG_LEVEL_DEBUG_DEV, log);
           }
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             String log = F("CSE voltage: ");
             log += P077_data->energy_voltage;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
             log = F("CSE power: ");
             log += P077_data->energy_power;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
             log = F("CSE current: ");
             log += P077_data->energy_current;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
             log = F("CSE pulses: ");
             log += P077_data->cf_pulses;
-            addLog(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG, log);
           }
         }
-
+        #endif
         // new packet received, update values
         UserVar[event->BaseVarIndex] = P077_data->energy_voltage;
         UserVar[event->BaseVarIndex + 1] = P077_data->energy_power;
         UserVar[event->BaseVarIndex + 2] = P077_data->energy_current;
         UserVar[event->BaseVarIndex + 3] = P077_data->cf_pulses;
 
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("CSE: time ");
           log += P077_data->t_max;
@@ -347,18 +356,19 @@ boolean Plugin_077(byte function, struct EventStruct *event, String &string) {
           log += P077_data->t_pkt;
           log += '/';
           log += P077_data->t_all;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
           log = F("CSE: bytes ");
           log += P077_data->count_bytes;
           log += '/';
           log += P077_data->count_max;
           log += '/';
           log += Serial.available();
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
           log = F("CSE: nr ");
           log += P077_data->count_pkt;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+#endif
         P077_data->t_all = 0;
         P077_data->count_bytes = 0;
       }
@@ -375,7 +385,9 @@ bool CseReceived(struct EventStruct *event) {
     return false;
   }
   if (!P077_data->processCseReceived(event)) {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("CSE: Abnormal hardware"));
+    #endif
     return false;
   }
   return true;

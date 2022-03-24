@@ -43,11 +43,11 @@
 #include "../Helpers/StringParser.h"
 
 
-bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
+bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
   if (nrArguments < 0) { return true; }
 
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
-  if (HasArgv(Line, nrArguments + 2)) {
+  if (HasArgv(Line.c_str(), nrArguments + 2)) {
     #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log;
@@ -70,7 +70,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
             } else {
               parameter = parseStringKeepCase(Line, i + 1);
             }
-            done = parameter.length() == 0;
+            done = parameter.isEmpty();
 
             if (!done) {
               if (i <= nrArguments) {
@@ -89,12 +89,12 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
           }
         }
         log += F(" lineLength=");
-        log += strlen(Line);
-        addLog(LOG_LEVEL_ERROR, log);
+        log += Line.length();
+        addLogMove(LOG_LEVEL_ERROR, log);
         log  = F("Line: _");
         log += Line;
         log += '_';
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
 
         if (!Settings.TolerantLastArgParse()) {
           log = F("Command not executed!");
@@ -102,7 +102,7 @@ bool checkNrArguments(const char *cmd, const char *Line, int nrArguments) {
           log = F("Command executed, but may fail.");
         }
         log += F(" See: https://github.com/letscontrolit/ESPEasy/issues/2724");
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #endif
@@ -131,16 +131,52 @@ command_case_data::command_case_data(const char *cmd, struct EventStruct *event,
 }
 
 
-bool do_command_case(command_case_data         & data,
-                     const String              & cmd_test,
-                     command_function            pFunc,
-                     int                         nrArguments,
-                     EventValueSourceGroup::Enum group)
+// Wrapper to reduce generated code by macro
+bool do_command_case_all(command_case_data         & data,
+                         const __FlashStringHelper * cmd_test,
+                         command_function_fs         pFunc,
+                         int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+}
+
+
+bool do_command_case_all(command_case_data         & data,
+                         const __FlashStringHelper * cmd_test,
+                         command_function            pFunc,
+                         int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::ALL);
+}
+
+// Wrapper to reduce generated code by macro
+bool do_command_case_all_restricted(command_case_data         & data,
+                                    const __FlashStringHelper * cmd_test,
+                                    command_function_fs         pFunc,
+                                    int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+}
+
+
+bool do_command_case_all_restricted(command_case_data         & data,
+                                    const __FlashStringHelper * cmd_test,
+                                    command_function            pFunc,
+                                    int                         nrArguments)
+{
+  return do_command_case(data, cmd_test, pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
+}
+
+
+bool do_command_case_check(command_case_data         & data,
+                           const __FlashStringHelper * cmd_test,
+                           int                         nrArguments,
+                           EventValueSourceGroup::Enum group)
 {
   // The data struct is re-used on each attempt to process an internal command.
   // Re-initialize the only two members that may have been altered by a previous call.
   data.retval = false;
-  data.status = "";
+  data.status = String();
   if (!data.cmd_lc.equals(cmd_test)) {
     return false;
   }
@@ -160,28 +196,59 @@ bool do_command_case(command_case_data         & data,
       data.retval = false;
       return true; // Command is handled
     }
-  } 
-  data.status = pFunc(data.event, data.line);
-  data.retval = true;
+  }
+  data.retval = true; // Mark the command should be executed.
   return true; // Command is handled
+}
+
+bool do_command_case(command_case_data         & data,
+                     const __FlashStringHelper * cmd_test,
+                     command_function_fs         pFunc,
+                     int                         nrArguments,
+                     EventValueSourceGroup::Enum group)
+{
+  if (do_command_case_check(data, cmd_test, nrArguments, group)) {
+    // It has been handled, check if we need to execute it.
+    // FIXME TD-er: Must change command function signature to use const String&
+    data.status = pFunc(data.event, data.line.c_str());
+    return true;
+  }
+  return false;
+}
+
+
+bool do_command_case(command_case_data         & data,
+                     const __FlashStringHelper * cmd_test,
+                     command_function            pFunc,
+                     int                         nrArguments,
+                     EventValueSourceGroup::Enum group)
+{
+  if (do_command_case_check(data, cmd_test, nrArguments, group)) {
+    // It has been handled, check if we need to execute it.
+    // FIXME TD-er: Must change command function signature to use const String&
+    data.status = pFunc(data.event, data.line.c_str());
+    return true;
+  }
+  return false;
 }
 
 bool executeInternalCommand(command_case_data & data)
 {
+  const size_t cmd_lc_length = data.cmd_lc.length();
+  if (cmd_lc_length < 2) return false; // No commands less than 2 characters
   // Simple macro to match command to function call.
 
   // EventValueSourceGroup::Enum::ALL
   #define COMMAND_CASE_A(S, C, NARGS) \
-  if (do_command_case(data, F(S), &C, NARGS, EventValueSourceGroup::Enum::ALL)) { return data.retval; }
+  if (do_command_case_all(data, F(S), &C, NARGS)) { return data.retval; }
 
   // EventValueSourceGroup::Enum::RESTRICTED
   #define COMMAND_CASE_R(S, C, NARGS) \
-  if (do_command_case(data, F(S), &C, NARGS, EventValueSourceGroup::Enum::RESTRICTED)) { return data.retval; }
+  if (do_command_case_all_restricted(data, F(S), &C, NARGS)) { return data.retval; }
 
   // FIXME TD-er: Should we execute command when number of arguments is wrong?
 
   // FIXME TD-er: must determine nr arguments where NARGS is set to -1
-
   switch (data.cmd_lc[0]) {
     case 'a': {
       COMMAND_CASE_A("accessinfo", Command_AccessInfo_Ls,       0); // Network Command
@@ -203,6 +270,7 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'c': {
       COMMAND_CASE_R( "clearaccessblock", Command_AccessInfo_Clear,   0); // Network Command
+      COMMAND_CASE_R(    "clearpassword", Command_Settings_Password_Clear,     1); // Settings.h
       COMMAND_CASE_R(      "clearrtcram", Command_RTC_Clear,          0); // RTC.h
       COMMAND_CASE_R(           "config", Command_Task_RemoteConfig, -1); // Tasks.h
       COMMAND_CASE_R("controllerdisable", Command_Controller_Disable, 1); // Controller.h
@@ -258,7 +326,7 @@ bool executeInternalCommand(command_case_data & data)
     case 'l': {
       COMMAND_CASE_A(            "let", Command_Rules_Let,         2); // Rules.h
       COMMAND_CASE_A(           "load", Command_Settings_Load,     0); // Settings.h
-      COMMAND_CASE_A(       "logentry", Command_logentry,          1); // Diagnostic.h
+      COMMAND_CASE_A(       "logentry", Command_logentry,         -1); // Diagnostic.h
       COMMAND_CASE_A(   "looptimerset", Command_Loop_Timer_Set,    3); // Timers.h
       COMMAND_CASE_A("looptimerset_ms", Command_Loop_Timer_Set_ms, 3); // Timers.h
       COMMAND_CASE_A(      "longpulse", Command_GPIO_LongPulse,    3);    // GPIO.h
@@ -270,7 +338,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
-      if (data.cmd_lc[3] == 'g') {
+      if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
         COMMAND_CASE_A( "mcpgpiopattern", Command_GPIO_McpGPIOPattern, -1); // Gpio.h
@@ -302,7 +370,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'p': {
-      if (data.cmd_lc[3] == 'g') {
+      if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
         COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
         COMMAND_CASE_A( "pcfgpiopattern", Command_GPIO_PcfGPIOPattern, -1); // Gpio.h
@@ -396,6 +464,7 @@ bool executeInternalCommand(command_case_data & data)
       #endif
 
       if (data.cmd_lc[1] == 'i') {
+        COMMAND_CASE_R(   "wifiallowap", Command_Wifi_AllowAP,    0); // WiFi.h
         COMMAND_CASE_R(    "wifiapmode", Command_Wifi_APMode,     0); // WiFi.h
         COMMAND_CASE_A(   "wificonnect", Command_Wifi_Connect,    0); // WiFi.h
         COMMAND_CASE_A("wifidisconnect", Command_Wifi_Disconnect, 0); // WiFi.h
@@ -508,24 +577,28 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   delay(0);
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("Command: ");
-    log += cmd;
-    addLog(LOG_LEVEL_DEBUG, log);
+    {
+      String log = F("Command: ");
+      log += cmd;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
-    String parameters;
-    parameters.reserve(64);
-    parameters += F("Par1: ");
-    parameters += TempEvent.Par1;
-    parameters += F(" Par2: ");
-    parameters += TempEvent.Par2;
-    parameters += F(" Par3: ");
-    parameters += TempEvent.Par3;
-    parameters += F(" Par4: ");
-    parameters += TempEvent.Par4;
-    parameters += F(" Par5: ");
-    parameters += TempEvent.Par5;
-    addLog(LOG_LEVEL_DEBUG, parameters);
+    {
+      String parameters;
+      parameters.reserve(64);
+      parameters += F("Par1: ");
+      parameters += TempEvent.Par1;
+      parameters += F(" Par2: ");
+      parameters += TempEvent.Par2;
+      parameters += F(" Par3: ");
+      parameters += TempEvent.Par3;
+      parameters += F(" Par4: ");
+      parameters += TempEvent.Par4;
+      parameters += F(" Par5: ");
+      parameters += TempEvent.Par5;
+      addLogMove(LOG_LEVEL_DEBUG, parameters);
+    }
 #endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -563,7 +636,7 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
         log += action;
         log += F(" to: ");
         log += tmpAction;
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #endif

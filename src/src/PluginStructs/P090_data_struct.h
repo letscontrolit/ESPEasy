@@ -86,8 +86,8 @@ public:
   uint16_t getCO2(void);
   float    getResistance(void);
   float    getTemperature(void);
-  String   getDriverError(CCS811Core::status);
-  String   getSensorError(void);
+  const __FlashStringHelper *   getDriverError(CCS811Core::status);
+  const __FlashStringHelper *   getSensorError(void);
 
 private:
 

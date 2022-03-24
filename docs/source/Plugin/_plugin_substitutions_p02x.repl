@@ -41,7 +41,7 @@
 .. |P023_type| replace:: :cyan:`Display`
 .. |P023_typename| replace:: :cyan:`Display - OLED SSD1306`
 .. |P023_porttype| replace:: `.`
-.. |P023_status| replace:: :green:`NORMAL`
+.. |P023_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P023_github| replace:: P023_OLED.ino
 .. _P023_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P023_OLED.ino
 .. |P023_usedby| replace:: `.`
@@ -67,7 +67,7 @@
 .. |P025_type| replace:: :cyan:`Analog input`
 .. |P025_typename| replace:: :cyan:`Analog input - ADS1115`
 .. |P025_porttype| replace:: `.`
-.. |P025_status| replace:: :green:`NORMAL`
+.. |P025_status| replace:: :green:`ENERGY, NORMAL`
 .. |P025_github| replace:: P025_ADS1115.ino
 .. _P025_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P025_ADS1115.ino
 .. |P025_usedby| replace:: `.`
@@ -93,7 +93,7 @@
 .. |P027_type| replace:: :cyan:`Energy (DC)`
 .. |P027_typename| replace:: :cyan:`Energy (DC) - INA219`
 .. |P027_porttype| replace:: `.`
-.. |P027_status| replace:: :green:`NORMAL`
+.. |P027_status| replace:: :green:`ENERGY, NORMAL`
 .. |P027_github| replace:: P027_INA219.ino
 .. _P027_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P027_INA219.ino
 .. |P027_usedby| replace:: `.`

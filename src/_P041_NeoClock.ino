@@ -8,9 +8,9 @@
 
 #define NUM_LEDS      114
 
-byte Plugin_041_red = 0;
-byte Plugin_041_green = 0;
-byte Plugin_041_blue = 0;
+uint8_t Plugin_041_red = 0;
+uint8_t Plugin_041_green = 0;
+uint8_t Plugin_041_blue = 0;
 
 Adafruit_NeoPixel *Plugin_041_pixels;
 
@@ -18,7 +18,7 @@ Adafruit_NeoPixel *Plugin_041_pixels;
 #define PLUGIN_ID_041         41
 #define PLUGIN_NAME_041       "Output - NeoPixel (Word Clock)"
 #define PLUGIN_VALUENAME1_041 "Clock"
-boolean Plugin_041(byte function, struct EventStruct *event, String& string)
+boolean Plugin_041(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -80,15 +80,26 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
       {
-        if (!Plugin_041_pixels)
+        if (Plugin_041_pixels == nullptr)
         {
-          Plugin_041_pixels = new Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
-          Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
+          Plugin_041_pixels = new (std::nothrow) Adafruit_NeoPixel(NUM_LEDS, CONFIG_PIN1, NEO_GRB + NEO_KHZ800);
+          if (Plugin_041_pixels != nullptr) {
+            Plugin_041_pixels->begin(); // This initializes the NeoPixel library.
+          }
         }
         Plugin_041_red = PCONFIG(0);
         Plugin_041_green = PCONFIG(1);
         Plugin_041_blue = PCONFIG(2);
-        success = true;
+        success = Plugin_041_pixels != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_041_pixels != nullptr) {
+          delete Plugin_041_pixels;
+          Plugin_041_pixels = nullptr;
+        }
         break;
       }
 
@@ -151,8 +162,8 @@ boolean Plugin_041(byte function, struct EventStruct *event, String& string)
 
 void Plugin_041_update()
 {
-  byte Hours = node_time.hour();
-  byte Minutes = node_time.minute();
+  uint8_t Hours = node_time.hour();
+  uint8_t Minutes = node_time.minute();
   resetAndBlack();
   timeToStrip(Hours, Minutes);
   Plugin_041_pixels->show(); // This sends the updated pixel color to the hardware.

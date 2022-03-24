@@ -19,6 +19,7 @@ P044_Task::P044_Task() {
 
 P044_Task::~P044_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P044_Task::serverActive(WiFiServer *server) {
@@ -121,7 +122,7 @@ void P044_Task::clearBuffer() {
     maxMessageSize = _min(serial_buffer.length(), P044_DATAGRAM_MAX_SIZE);
   }
 
-  serial_buffer = "";
+  serial_buffer = String();
   serial_buffer.reserve(maxMessageSize);
 }
 
@@ -155,7 +156,7 @@ bool P044_Task::checkDatagram() const {
 
   // calculate the CRC and check if it equals the hexadecimal one attached to the datagram
   unsigned int crc = CRC16(serial_buffer, checksumStartIndex);
-  return strtoul(serial_buffer.substring(checksumStartIndex).c_str(), NULL, 16) == crc;
+  return strtoul(serial_buffer.substring(checksumStartIndex).c_str(), nullptr, 16) == crc;
 }
 
 /*
@@ -191,7 +192,7 @@ unsigned int P044_Task::CRC16(const String& buf, int len)
        Returns false on a datagram start ('/'), end ('!') or invalid character
  */
 bool P044_Task::validP1char(char ch) {
-  if (((ch >= '0') && (ch <= '9')) || ((ch >= 'a') && (ch <= 'z')) || ((ch >= 'A') && (ch <= 'Z')))
+  if (isAlphaNumeric(ch))
   {
     return true;
   }
@@ -214,7 +215,7 @@ bool P044_Task::validP1char(char ch) {
 }
 
 void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin,
-                            unsigned long baud, byte config) {
+                            unsigned long baud, uint8_t config) {
   serialEnd();
 
   if (rxPin >= 0) {

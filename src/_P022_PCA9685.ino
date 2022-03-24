@@ -1,24 +1,27 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P022
 
-#include "src/DataStructs/PinMode.h"
-#include "src/Helpers/PortStatus.h"
-#include "src/PluginStructs/P022_data_struct.h"
+# include "src/DataStructs/PinMode.h"
+# include "src/Helpers/PortStatus.h"
+# include "src/PluginStructs/P022_data_struct.h"
+
+# include "ESPEasy-Globals.h" // For dummystring
+
 
 // #######################################################################################################
 // #################################### Plugin 022: PCA9685 ##############################################
 // #######################################################################################################
 
 
-#define PLUGIN_022
-#define PLUGIN_ID_022         22
-#define PLUGIN_NAME_022       "Extra IO - PCA9685"
-#define PLUGIN_VALUENAME1_022 "PWM"
+# define PLUGIN_022
+# define PLUGIN_ID_022         22
+# define PLUGIN_NAME_022       "Extra IO - PCA9685"
+# define PLUGIN_VALUENAME1_022 "PWM"
 
 
 // FIXME TD-er: This plugin uses a lot of calls to the P022_data_struct, which could be combined in single functions.
 
-boolean Plugin_022(byte function, struct EventStruct *event, String& string)
+boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean  success = false;
   int      address = 0;
@@ -26,7 +29,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
   uint16_t freq    = PCA9685_MAX_FREQUENCY;
   uint16_t range   = PCA9685_MAX_PWM;
 
-  if ((event != NULL) && (event->TaskIndex >= 0))
+  if ((event != nullptr) && (event->TaskIndex >= 0))
   {
     address = CONFIG_PORT;
     mode2   = PCONFIG(0);
@@ -60,6 +63,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 0;
       Device[deviceCount].Custom             = true;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       break;
     }
 
@@ -77,13 +81,19 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[PCA9685_NUMS_ADDRESS];
+      uint8_t optionValues[PCA9685_NUMS_ADDRESS];
 
-      for (int i = 0; i < PCA9685_NUMS_ADDRESS; i++)
+      for (uint8_t i = 0; i < PCA9685_NUMS_ADDRESS; i++)
       {
         optionValues[i] = PCA9685_ADDRESS + i;
       }
       addFormSelectorI2C(F("i2c_addr"), PCA9685_NUMS_ADDRESS, optionValues, address);
+      break;
+    }
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(0) = 0x10; // Default
       break;
     }
 
@@ -140,6 +150,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
+
       if (nullptr != P022_data) {
         P022_data->p022_clear_init(oldAddress);
 
@@ -181,31 +192,34 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         break;
       }
       String log;
-      String line           = string;
-      String command;
-      int    dotPos          = line.indexOf('.');
       bool   instanceCommand = false;
+      String command         = parseString(string, 1);
+      int8_t dotPos          = command.indexOf('.');
 
       if (dotPos > -1)
       {
         LoadTaskSettings(event->TaskIndex);
-        String name = line.substring(0, dotPos);
-        name.replace(F("["), F(""));
-        name.replace(F("]"), F(""));
+        String name = command.substring(0, dotPos);
+        name.replace(F("["), EMPTY_STRING);
+        name.replace(F("]"), EMPTY_STRING);
 
         if (name.equalsIgnoreCase(getTaskDeviceName(event->TaskIndex))) {
-          line            = line.substring(dotPos + 1);
+          command         = command.substring(dotPos + 1);
           instanceCommand = true;
         } else {
           break;
         }
       }
-      command = parseString(line, 1);
 
       if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
       {
         success = true;
-        log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": PWM ")) + String(event->Par1);
+
+        // "log" is also sent along with the SendStatusOnlyIfNeeded
+        log  = F("PCA 0x");
+        log += String(address, HEX);
+        log += F(": PWM ");
+        log += event->Par1;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
@@ -230,17 +244,23 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             newStatus.state   = event->Par2;
             savePortStatus(key, newStatus);
 
-            addLog(LOG_LEVEL_INFO, log);
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              addLog(LOG_LEVEL_INFO, log);
+            }
 
             // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par1, log, 0));
             SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
           }
           else {
-            addLog(LOG_LEVEL_ERROR, log + String(F(" the pwm value ")) + String(event->Par2) + String(F(" is invalid value.")));
+            if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+              addLog(LOG_LEVEL_ERROR, log + F(" the pwm value ") + String(event->Par2) + F(" is invalid value."));
+            }
           }
         }
         else {
-          addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
+          }
         }
       }
 
@@ -268,7 +288,10 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par1;
           savePortStatus(key, newStatus);
 
-          log = String(F("PCA 0x")) + String(address, HEX) + String(F(": FREQ ")) + String(event->Par1);
+          log  = F("PCA 0x");
+          log += String(address, HEX);
+          log += F(": FREQ ");
+          log += event->Par1;
           addLog(LOG_LEVEL_INFO, log);
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, 99, log, 0));
@@ -277,7 +300,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         else {
           addLog(LOG_LEVEL_ERROR,
                  String(F("PCA 0x")) +
-                 String(address, HEX) + String(F(" The frequency ")) + String(event->Par1) + String(F(" is out of range.")));
+                 String(address, HEX) + F(" The frequency ") + String(event->Par1) + F(" is out of range."));
         }
       }
 
@@ -293,19 +316,22 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-          log = String(F("PCA 0x")) + String(address, HEX) + String(F(": MODE2 0x")) + String(event->Par1, HEX);
+          log  = F("PCA 0x");
+          log += String(address, HEX);
+          log += F(": MODE2 0x");
+          log += String(event->Par1, HEX);
           addLog(LOG_LEVEL_INFO, log);
         }
         else {
           addLog(LOG_LEVEL_ERROR,
                  String(F("PCA 0x")) +
-                 String(address, HEX) + String(F(" MODE2 0x")) + String(event->Par1, HEX) + String(F(" is out of range.")));
+                 String(address, HEX) + F(" MODE2 0x") + String(event->Par1, HEX) + F(" is out of range."));
         }
       }
 
       if (command == F("status"))
       {
-        if (parseString(line, 2) == F("pca"))
+        if (parseString(string, 2) == F("pca"))
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -314,6 +340,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           success = true;
+          String dummyString;
 
           // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_022, event->Par2, dummyString, 0));
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, createKey(PLUGIN_ID_022, event->Par2), dummyString, 0);
@@ -323,7 +350,9 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
       if (instanceCommand && (command == F("gpio")))
       {
         success = true;
-        log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO "));
+        log     = F("PCA 0x");
+        log    += String(address, HEX);
+        log    += F(": GPIO ");
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
@@ -335,14 +364,14 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           }
           int pin = event->Par1;
 
-          if (parseString(line, 2) == "all")
+          if (parseString(string, 2) == F("all"))
           {
             pin  = -1;
-            log += String(F("all"));
+            log += F("all");
           }
           else
           {
-            log += String(pin);
+            log += pin;
           }
 
           if (event->Par2 == 0)
@@ -372,14 +401,17 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
+          addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
         }
       }
 
       if (instanceCommand && (command == F("pulse")))
       {
         success = true;
-        log     = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO ")) + String(event->Par1);
+        log     = F("PCA 0x");
+        log    += String(address, HEX);
+        log    += F(": GPIO ");
+        log    += event->Par1;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
@@ -400,16 +432,17 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
             log += F(" on");
             P022_data->Plugin_022_On(address, event->Par1);
           }
-          log += String(F(" Pulse set for ")) + event->Par3;
-          log += String(F("ms"));
+          log += F(" Pulse set for ");
+          log += event->Par3;
+          log += F("ms");
           int autoreset = 0;
 
           if (event->Par3 > 0)
           {
-            if (parseString(line, 5) == F("auto"))
+            if (parseString(string, 5) == F("auto"))
             {
               autoreset = -1;
-              log      += String(F(" with autoreset infinity"));
+              log      += F(" with autoreset infinity");
             }
             else
             {
@@ -417,8 +450,8 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
 
               if (autoreset > 0)
               {
-                log += String(F(" for "));
-                log += String(autoreset);
+                log += F(" for ");
+                log += autoreset;
               }
             }
           }
@@ -446,7 +479,7 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
           SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
         }
         else {
-          addLog(LOG_LEVEL_ERROR, log + String(F(" is invalid value.")));
+          addLog(LOG_LEVEL_ERROR, log + F(" is invalid value."));
         }
       }
 
@@ -458,8 +491,11 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P022_data) {
-        String log       = String(F("PCA 0x")) + String(address, HEX) + String(F(": GPIO ")) + String(event->Par1);
-        int    autoreset = event->Par4;
+        String log = F("PCA 0x");
+        log += String(address, HEX);
+        log += F(": GPIO ");
+        log += event->Par1;
+        int autoreset = event->Par4;
 
         if (event->Par2 == 0)
         {
@@ -476,16 +512,16 @@ boolean Plugin_022(byte function, struct EventStruct *event, String& string)
         {
           if (autoreset > -1)
           {
-            log += String(F(" Pulse auto restart for "));
-            log += String(autoreset);
+            log += F(" Pulse auto restart for ");
+            log += autoreset;
             autoreset--;
           }
           Scheduler.setPluginTaskTimer(event->Par3
-                                      , event->TaskIndex
-                                      , event->Par1
-                                      , !event->Par2
-                                      , event->Par3
-                                      , autoreset);
+                                       , event->TaskIndex
+                                       , event->Par1
+                                       , !event->Par2
+                                       , event->Par3
+                                       , autoreset);
         }
 
         // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_OUTPUT, event->Par2);

@@ -5,6 +5,7 @@
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -31,7 +32,7 @@ void handle_rules() {
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
-  const byte rulesSet = getFormItemInt(F("set"), 1);
+  const uint8_t rulesSet = getFormItemInt(F("set"), 1);
 
   # if defined(ESP8266)
   String fileName = F("rules");
@@ -50,7 +51,7 @@ void handle_rules() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Rules : Create new file: ");
       log += fileName;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     fs::File f = tryOpenFile(fileName, "w");
 
@@ -66,21 +67,33 @@ void handle_rules() {
   html_table_header(F("Rules"));
 
   html_TR_TD();
-  addHtml(F("<form name = 'frmselect'>"));
+
+  // Need a separate script to only include the 'set' attribute and not also
+  // send the 'rules' as that will need a lot of memory on the ESP to process.
+  addHtml(F("<form id='rulesselect' name='rulesselect' method='get'>"));
   {
     // Place combo box in its own scope to release these arrays as soon as possible
-    byte   choice = rulesSet;
+    uint8_t   choice = rulesSet;
     String options[RULESETS_MAX];
     int    optionValues[RULESETS_MAX];
 
-    for (byte x = 0; x < RULESETS_MAX; x++)
+    for (uint8_t x = 0; x < RULESETS_MAX; x++)
     {
       options[x]      = F("Rules Set ");
       options[x]     += x + 1;
       optionValues[x] = x + 1;
     }
 
-    addSelector(F("set"), RULESETS_MAX, options, optionValues, NULL, choice, true, true);
+    addSelector_reloadOnChange(
+      F("set"), 
+      RULESETS_MAX, 
+      options, 
+      optionValues, 
+      nullptr, 
+      choice, 
+      F("return rules_set_onchange(rulesselect)"), 
+      true,
+      F("wide"));
     addHelpButton(F("Tutorial_Rules"));
     addRTDHelpButton(F("Rules/Rules.html"));
   }
@@ -91,7 +104,7 @@ void handle_rules() {
   html_TR_TD();
   html_end_form();
   addHtml(F("<button id='save_button' class='button' onClick='saveRulesFile()'>Save</button>"));
-  addHtmlDiv(F(""), F("Saved!"), F("toastmessage"));
+  addHtmlDiv(EMPTY_STRING, F("Saved!"), F("toastmessage"));
 
   addButton(fileName, F("Download to file"));
   html_end_table();
@@ -138,7 +151,7 @@ void handle_rules_new() {
   const int rulesListPageSize = 25;
   int startIdx                = 0;
 
-  const String fstart = web_server.arg(F("start"));
+  const String fstart = webArg(F("start"));
 
   if (fstart.length() > 0)
   {
@@ -183,33 +196,25 @@ void handle_rules_new() {
                                    if (fi.isDirectory)
                                    {
                                      addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name)
                                                    , F("Backup")
                                                    );
                                    }
                                    else
                                    {
-                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
+                                     String encodedPath =  URLEncode(String(fi.Name + F(".txt")));
 
                                      // File Name
-                                     {
-                                       String html;
-                                       html.reserve(128);
+                                     addHtml(F("</TD><TD><a href='"));
+                                     addHtml(String(fi.Name));
+                                     addHtml(F(".txt'>"));
+                                     addHtml(String(fi.Name));
+                                     addHtml(F(".txt</a></TD>"));
 
-                                       html += F("</TD><TD><a href='");
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += "'>";
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += F("</a></TD>");
-
-                                       // File size
-                                       html += F("<TD>");
-                                       html += fi.Size;
-                                       html += F("</TD>");
-                                       addHtml(html);
-                                     }
+                                     // File size
+                                     html_TD();
+                                     addHtmlInt(fi.Size);
+                                     addHtml(F("</TD>"));
 
                                      // Actions
                                      html_TD();
@@ -280,8 +285,8 @@ void handle_rules_backup() {
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_backup"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
-  String directory = web_server.arg(F("directory"));
-  String fileName  = web_server.arg(F("fileName"));
+  String directory = webArg(F("directory"));
+  String fileName  = webArg(F("fileName"));
   String error;
 
   if (directory.length() > 0)
@@ -339,7 +344,7 @@ void handle_rules_delete() {
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules_delete"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
-  String fileName = web_server.arg(F("fileName"));
+  String fileName = webArg(F("fileName"));
   fileName = fileName.substring(0, fileName.length() - 4);
   bool removed = false;
   #  ifdef WEBSERVER_RULES_DEBUG
@@ -356,7 +361,7 @@ void handle_rules_delete() {
   if (removed)
   {
     web_server.sendHeader(F("Location"), F("/rules"), true);
-    web_server.send(302, F("text/plain"), F(""));
+    web_server.send(302, F("text/plain"), EMPTY_STRING);
   }
   else
   {
@@ -411,7 +416,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     if (isAddNew)
     {
-      eventName = web_server.arg(F("eventName"));
+      eventName = webArg(F("eventName"));
       fileName += EventToFileName(eventName);
     }
     else
@@ -433,8 +438,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     if (web_server.args() > 0)
     {
-      const String& rules = web_server.arg(F("rules"));
-      isNew = web_server.arg(F("IsNew")) == F("yes");
+      const String& rules = webArg(F("rules"));
+      isNew = webArg(F("IsNew")) == F("yes");
 
       // Overwrite verification
       if (isEdit && isNew) {
@@ -472,7 +477,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
         if (isAddNew) {
           web_server.sendHeader(F("Location"), F("/rules"), true);
-          web_server.send(302, F("text/plain"), F(""));
+          web_server.send(302, F("text/plain"), EMPTY_STRING);
           return true;
         }
       }
@@ -545,20 +550,16 @@ void Rule_showRuleTextArea(const String& fileName) {
   size_t size = 0;
 
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
-  size = streamFile_htmlEscape(fileName);
+  size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
 
   html_TR_TD();
   {
-    String html;
-    html.reserve(64);
-
-    html += F("Current size: <span id='size'>");
-    html += size;
-    html += F("</span> characters (Max ");
-    html += RULES_MAX_SIZE;
-    html += F(")");
-    addHtml(html);
+    addHtml(F("Current size: <span id='size'>"));
+    addHtmlInt(size);
+    addHtml(F("</span> characters (Max "));
+    addHtmlInt(RULES_MAX_SIZE);
+    addHtml(F(")"));
   }
 
   if (size > RULES_MAX_SIZE) {
@@ -594,7 +595,7 @@ bool Rule_Download(const String& path)
 
 void Goto_Rules_Root() {
   web_server.sendHeader(F("Location"), F("/rules"), true);
-  web_server.send(302, F("text/plain"), F(""));
+  web_server.send(302, F("text/plain"), EMPTY_STRING);
 }
 
 bool EnumerateFileAndDirectory(String          & rootPath

@@ -1,0 +1,84 @@
+.. include:: ../Plugin/_plugin_substitutions_p11x.repl
+.. _P115_page:
+
+|P115_typename|
+==================================================
+
+|P115_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P115_type|
+
+Name: |P115_name|
+
+Status: |P115_status|
+
+GitHub: |P115_github|_
+
+Maintainer: |P115_maintainer|
+
+Used libraries: |P115_usedlibraries|
+
+Description
+-----------
+
+The MAX1704x are ultra-compact, low-cost, host-side fuel-gauge systems for lithium-ion (Li+) batteries in handheld and portable equipment.
+
+* ``MAX17043``: single lithium cell 
+* ``MAX17044``: dual-cell 2S pack.
+* ``MAX17048``: single lithium cell
+* ``MAX17049``: dual-cell 2S pack.
+
+Datasheets:
+
+* `MAX17043-MAX17044.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17043-MAX17044.pdf>`_
+* `MAX17048-MAX17049.pdf <https://datasheets.maximintegrated.com/en/ds/MAX17048-MAX17049.pdf>`_
+
+The MAX17048 & MAX17049 are more sophisticated versions, which support a number of extra features like measuring the change rate in percent per hour to measure load or charge rate.
+
+
+Configuration
+--------------
+
+Device Settings
+^^^^^^^^^^^^^^^^
+
+
+**Device**: Select the version of the MAX1704x:
+
+* ``MAX17043``
+* ``MAX17044`` - 2-cell version of the MAX17043 (full-scale range of 10V)
+* ``MAX17048``
+* ``MAX17049`` - 2-cell version of the MAX17048
+
+**Alert threshold** : Set the MAX1704x's percentage threshold that will trigger an alert.
+
+**Send Event on Alert** : Send an event, to be used in rules, when the alert is set.  This can be cleared with ``max1704xclearalert``
+
+Values
+^^^^^^
+
+* Voltage: The measured voltage of the cell(s).
+* State of Charge (SoC): The percentage left of the cell.
+* Alert: Whether or not an alert was triggered (e.g. SoC below set threshold)
+* Rate: The change rate of the SoC in percent per hour. Negative value is a discharge, positive is charge rate. (MAX17048 & MAX17049 only)
+
+Events
+~~~~~~
+
+.. include:: P115_events.repl
+
+Command Summary
+---------------
+
+.. include:: P115_commands.repl
+
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+
+  |added| 2021-05-08 Added to main repository as Plugin 115 Energy - Fuel Gauge MAX1704x [TESTING]

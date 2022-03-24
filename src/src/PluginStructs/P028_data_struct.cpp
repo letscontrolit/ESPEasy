@@ -16,7 +16,7 @@ P028_data_struct::P028_data_struct(uint8_t addr) :
   state(BMx_Uninitialized) {}
 
 
-byte P028_data_struct::get_config_settings() const {
+uint8_t P028_data_struct::get_config_settings() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -26,7 +26,7 @@ byte P028_data_struct::get_config_settings() const {
   }
 }
 
-byte P028_data_struct::get_control_settings() const {
+uint8_t P028_data_struct::get_control_settings() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -47,7 +47,7 @@ String P028_data_struct::getFullDeviceName() const {
   return devicename;
 }
 
-String P028_data_struct::getDeviceName() const {
+const __FlashStringHelper * P028_data_struct::getDeviceName() const {
   switch (sensorID) {
     case BMP280_DEVICE_SAMPLE1:
     case BMP280_DEVICE_SAMPLE2:
@@ -127,8 +127,8 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   last_measurement = current_time;
   state            = BMx_New_values;
   last_temp_val    = readTemperature();
-  last_press_val   = ((float)readPressure()) / 100.0f;
-  last_hum_val     = ((float)readHumidity());
+  last_press_val   = readPressure() / 100.0f;
+  last_hum_val     = readHumidity();
 
 
   String log;
@@ -136,7 +136,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     log.reserve(120); // Prevent re-allocation
     log  = getDeviceName();
-    log += F(":");
+    log += ':';
   }
   boolean logAdded = false;
 
@@ -154,7 +154,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += F(" Apply temp offset ");
       log += tempOffset;
-      log += F("C");
+      log += 'C';
     }
 
     if (hasHumidity()) {
@@ -182,7 +182,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F("C => ");
       log     += last_temp_val;
-      log     += F("C");
+      log     += 'C';
       logAdded = true;
     }
   }
@@ -191,13 +191,13 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log     += F(" dew point ");
       log     += last_dew_temp_val;
-      log     += F("C");
+      log     += 'C';
       logAdded = true;
     }
   }
 
   if (logAdded && loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   return true;
 }
@@ -220,9 +220,11 @@ bool P028_data_struct::check() {
         if (sensorID != chip_id) {
           sensorID = static_cast<BMx_ChipId>(chip_id);
           setUninitialized();
-          String log = F("BMx280 : Detected ");
-          log += getFullDeviceName();
-          addLog(LOG_LEVEL_INFO, log);
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("BMx280 : Detected ");
+            log += getFullDeviceName();
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
         }
       } else {
         sensorID = Unknown_DEVICE;
@@ -241,7 +243,7 @@ bool P028_data_struct::check() {
       log += F(", failed");
     }
     log += ')';
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     return false;
   }
   return wire_status;
@@ -355,7 +357,7 @@ float P028_data_struct::readPressure()
   var2 = var2 + (((int64_t)calib.dig_P4) << 35);
   var1 = ((var1 * var1 * (int64_t)calib.dig_P3) >> 8) +
          ((var1 * (int64_t)calib.dig_P2) << 12);
-  var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)calib.dig_P1) >> 33;
+  var1 = ((((((int64_t)1) << 47) + var1)) * ((int64_t)calib.dig_P1)) >> 33;
 
   if (var1 == 0) {
     return 0; // avoid exception caused by division by zero
@@ -366,7 +368,7 @@ float P028_data_struct::readPressure()
   var2 = (((int64_t)calib.dig_P8) * p) >> 19;
 
   p = ((p + var1 + var2) >> 8) + (((int64_t)calib.dig_P7) << 4);
-  return (float)p / 256;
+  return static_cast<float>(p) / 256;
 }
 
 float P028_data_struct::readHumidity()
@@ -395,24 +397,6 @@ float P028_data_struct::readHumidity()
   float h = (v_x1_u32r >> 12);
 
   return h / 1024.0f;
-}
-
-float P028_data_struct::Plugin_028_readAltitude(float seaLevel)
-{
-  // Equation taken from BMP180 datasheet (page 16):
-  //  http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
-
-  // Note that using the equation from wikipedia can give bad results
-  // at high altitude.  See this thread for more information:
-  //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
-
-  float atmospheric = readPressure() / 100.0f;
-
-  return 44330.0f * (1.0f - pow(atmospheric / seaLevel, 0.1903f));
-}
-
-float P028_data_struct::pressureElevation(int altitude) {
-  return last_press_val / pow(1.0f - (altitude / 44330.0f), 5.255f);
 }
 
 #endif // ifdef USES_P028

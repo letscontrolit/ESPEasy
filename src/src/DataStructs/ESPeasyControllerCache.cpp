@@ -1,4 +1,4 @@
-#include "ESPEasyControllerCache.h"
+#include "../DataStructs/ESPEasyControllerCache.h"
 
 
 ControllerCache_struct::ControllerCache_struct() {}
@@ -11,7 +11,7 @@ ControllerCache_struct::~ControllerCache_struct() {
 }
 
 // Write a single sample set to the buffer
-bool ControllerCache_struct::write(uint8_t *data, unsigned int size) {
+bool ControllerCache_struct::write(const uint8_t *data, unsigned int size) {
   if (_RTC_cache_handler == nullptr) {
     return false;
   }

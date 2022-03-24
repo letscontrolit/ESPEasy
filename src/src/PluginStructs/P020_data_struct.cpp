@@ -11,6 +11,7 @@
 # include "../Helpers/Misc.h"
 
 # define P020_RX_WAIT              PCONFIG(4)
+# define P020_RX_BUFFER            PCONFIG(7)
 
 
 P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
@@ -19,6 +20,7 @@ P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
 
 P020_Task::~P020_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
@@ -78,7 +80,7 @@ bool P020_Task::hasClientConnected() {
     if (ser2netClient) { ser2netClient.stop(); }
     ser2netClient = ser2netServer->available();
     ser2netClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
-    sendConnectedEvent(false);
+    sendConnectedEvent(true);
     addLog(LOG_LEVEL_INFO, F("Ser2Net   : Client connected!"));
   }
 
@@ -107,11 +109,11 @@ void P020_Task::discardClientIn() {
 }
 
 void P020_Task::clearBuffer() {
-  serial_buffer = "";
+  serial_buffer = String();
   serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 
-void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, byte config) {
+void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, uint8_t config) {
   serialEnd();
 
   if (rxPin >= 0) {
@@ -161,7 +163,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
   do {
     if (ser2netSerial->available()) {
-      if (serial_buffer.length() >= P020_DATAGRAM_MAX_SIZE) {
+      if (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER)) {
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
         ser2netSerial->read();
       }

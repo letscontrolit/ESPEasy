@@ -13,7 +13,7 @@
 
 boolean Plugin_040_init = false;
 
-boolean Plugin_040(byte function, struct EventStruct *event, String& string)
+boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -71,11 +71,11 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
       {
         if (Plugin_040_init)
         {
-          byte val = 0;
-          byte code[6];
-          byte checksum = 0;
-          byte bytesread = 0;
-          byte tempbyte = 0;
+          uint8_t val = 0;
+          uint8_t code[6];
+          uint8_t checksum = 0;
+          uint8_t bytesread = 0;
+          uint8_t tempbyte = 0;
 
           if ((val = Serial.read()) == 2)
           { // check for header
@@ -89,20 +89,20 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
                 }
 
                 // Do Ascii/Hex conversion:
-                if ((val >= '0') && (val <= '9')) {
+                if (isDigit(val)) {
                   val = val - '0';
                 }
                 else if ((val >= 'A') && (val <= 'F')) {
                   val = 10 + val - 'A';
                 }
 
-                // Every two hex-digits, add byte to code:
+                // Every two hex-digits, add uint8_t to code:
                 if ( (bytesread & 1) == 1) {
                   // make some space for this hex-digit by
                   // shifting the previous hex-digit with 4 bits to the left:
                   code[bytesread >> 1] = (val | (tempbyte << 4));
 
-                  if (bytesread >> 1 != 5) {                // If we're at the checksum byte,
+                  if (bytesread >> 1 != 5) {                // If we're at the checksum uint8_t,
                     checksum ^= code[bytesread >> 1];       // Calculate the checksum... (XOR)
                   };
                 }
@@ -136,7 +136,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
 
               unsigned long key = 0, old_key = 0;
               old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-              for (byte i = 1; i < 5; i++) key = key | (((unsigned long) code[i] << ((4 - i) * 8)));
+              for (uint8_t i = 1; i < 5; i++) key = key | (((unsigned long) code[i] << ((4 - i) * 8)));
               bool new_key = false;              
               if (old_key != key) {
                 UserVar.setSensorTypeLong(event->TaskIndex, key);
@@ -151,7 +151,7 @@ boolean Plugin_040(byte function, struct EventStruct *event, String& string)
                   log += F("Old Tag: "); 
                 }
                 log += key;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               }
               
               if (new_key) sendData(event);

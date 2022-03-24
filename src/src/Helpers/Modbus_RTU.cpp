@@ -1,9 +1,9 @@
-#include "Modbus_RTU.h"
+#include "../Helpers/Modbus_RTU.h"
 
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "ESPEasy_time_calc.h"
-#include "StringConverter.h"
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 ModbusRTU_struct::ModbusRTU_struct() : easySerial(nullptr) {
@@ -19,7 +19,7 @@ void ModbusRTU_struct::reset() {
     delete easySerial;
     easySerial = nullptr;
   }
-  detected_device_description = "";
+  detected_device_description = String();
 
   for (int i = 0; i < 8; ++i) {
     _sendframe[i] = 0;
@@ -36,11 +36,11 @@ void ModbusRTU_struct::reset() {
   _reads_nodata     = 0;
 }
 
-bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address) {
+bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, uint8_t address) {
   return init(port, serial_rx, serial_tx, baudrate, address, -1);
 }
 
-bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, byte address, int8_t dere_pin) {
+bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, int16_t baudrate, uint8_t address, int8_t dere_pin) {
   if ((serial_rx < 0) || (serial_tx < 0)) {
     return false;
   }
@@ -62,7 +62,7 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log; // = F("Modbus detected: ");
     log += detected_device_description;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
     modbus_log_MEI(_modbus_address);
   }
   return true;
@@ -86,15 +86,15 @@ uint16_t ModbusRTU_struct::getModbusTimeout() const {
   return _modbus_timeout;
 }
 
-String ModbusRTU_struct::getDevice_description(byte slaveAddress) {
+String ModbusRTU_struct::getDevice_description(uint8_t slaveAddress) {
   bool more_follows     = true;
-  byte next_object_id   = 0;
-  byte conformity_level = 0;
+  uint8_t next_object_id   = 0;
+  uint8_t conformity_level = 0;
   unsigned int object_value_int;
   String description;
   String obj_text;
 
-  for (byte object_id = 0; object_id < 0x84; ++object_id) {
+  for (uint8_t object_id = 0; object_id < 0x84; ++object_id) {
     if (object_id == 6) {
       object_id = 0x82; // Skip to the serialnr/sensor type
     }
@@ -142,12 +142,12 @@ String ModbusRTU_struct::getDevice_description(byte slaveAddress) {
       if (label.length() > 0) {
         // description += MEI_objectid_to_name(object_id);
         description += label;
-        description += ": ";
+        description += F(": ");
       }
 
       if (obj_text.length() > 0) {
         description += obj_text;
-        description += " - ";
+        description += F(" - ");
       }
     }
   }
@@ -155,18 +155,18 @@ String ModbusRTU_struct::getDevice_description(byte slaveAddress) {
 }
 
 // Read from RAM or EEPROM
-void ModbusRTU_struct::buildRead_RAM_EEPROM(byte slaveAddress, byte functionCode,
-                                            short startAddress, byte number_bytes) {
+void ModbusRTU_struct::buildRead_RAM_EEPROM(uint8_t slaveAddress, uint8_t functionCode,
+                                            short startAddress, uint8_t number_bytes) {
   _sendframe[0]   = slaveAddress;
   _sendframe[1]   = functionCode;
-  _sendframe[2]   = (byte)(startAddress >> 8);
-  _sendframe[3]   = (byte)(startAddress & 0xFF);
+  _sendframe[2]   = (uint8_t)(startAddress >> 8);
+  _sendframe[3]   = (uint8_t)(startAddress & 0xFF);
   _sendframe[4]   = number_bytes;
   _sendframe_used = 5;
 }
 
 // Write to the Special Control Register (SCR)
-void ModbusRTU_struct::buildWriteCommandRegister(byte slaveAddress, byte value) {
+void ModbusRTU_struct::buildWriteCommandRegister(uint8_t slaveAddress, uint8_t value) {
   _sendframe[0]   = slaveAddress;
   _sendframe[1]   = MODBUS_CMD_WRITE_RAM;
   _sendframe[2]   = 0;    // Address-Hi SCR  (0x0060)
@@ -176,32 +176,32 @@ void ModbusRTU_struct::buildWriteCommandRegister(byte slaveAddress, byte value) 
   _sendframe_used = 6;
 }
 
-void ModbusRTU_struct::buildWriteMult16bRegister(byte slaveAddress, uint16_t startAddress, uint16_t value) {
+void ModbusRTU_struct::buildWriteMult16bRegister(uint8_t slaveAddress, uint16_t startAddress, uint16_t value) {
   _sendframe[0]   = slaveAddress;
   _sendframe[1]   = MODBUS_WRITE_MULTIPLE_REGISTERS;
-  _sendframe[2]   = (byte)(startAddress >> 8);
-  _sendframe[3]   = (byte)(startAddress & 0xFF);
+  _sendframe[2]   = (uint8_t)(startAddress >> 8);
+  _sendframe[3]   = (uint8_t)(startAddress & 0xFF);
   _sendframe[4]   = 0; // nr reg hi
   _sendframe[5]   = 1; // nr reg lo
   _sendframe[6]   = 2; // nr bytes to follow (2 bytes per register)
-  _sendframe[7]   = (byte)(value >> 8);
-  _sendframe[8]   = (byte)(value & 0xFF);
+  _sendframe[7]   = (uint8_t)(value >> 8);
+  _sendframe[8]   = (uint8_t)(value & 0xFF);
   _sendframe_used = 9;
 }
 
-void ModbusRTU_struct::buildFrame(byte slaveAddress, byte functionCode,
+void ModbusRTU_struct::buildFrame(uint8_t slaveAddress, uint8_t functionCode,
                                   short startAddress, short parameter) {
   _sendframe[0]   = slaveAddress;
   _sendframe[1]   = functionCode;
-  _sendframe[2]   = (byte)(startAddress >> 8);
-  _sendframe[3]   = (byte)(startAddress & 0xFF);
-  _sendframe[4]   = (byte)(parameter >> 8);
-  _sendframe[5]   = (byte)(parameter & 0xFF);
+  _sendframe[2]   = (uint8_t)(startAddress >> 8);
+  _sendframe[3]   = (uint8_t)(startAddress & 0xFF);
+  _sendframe[4]   = (uint8_t)(parameter >> 8);
+  _sendframe[5]   = (uint8_t)(parameter & 0xFF);
   _sendframe_used = 6;
 }
 
-void ModbusRTU_struct::build_modbus_MEI_frame(byte slaveAddress, byte device_id,
-                                              byte object_id) {
+void ModbusRTU_struct::build_modbus_MEI_frame(uint8_t slaveAddress, uint8_t device_id,
+                                              uint8_t object_id) {
   _sendframe[0] = slaveAddress;
   _sendframe[1] = 0x2B;
   _sendframe[2] = 0x0E;
@@ -216,7 +216,7 @@ void ModbusRTU_struct::build_modbus_MEI_frame(byte slaveAddress, byte device_id,
   _sendframe_used = 5;
 }
 
-String ModbusRTU_struct::MEI_objectid_to_name(byte object_id) {
+String ModbusRTU_struct::MEI_objectid_to_name(uint8_t object_id) {
   String result;
 
   switch (object_id) {
@@ -239,9 +239,9 @@ String ModbusRTU_struct::MEI_objectid_to_name(byte object_id) {
 }
 
 String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_int,
-                                                   byte        & next_object_id,
+                                                   uint8_t        & next_object_id,
                                                    bool        & more_follows,
-                                                   byte        & conformity_level) {
+                                                   uint8_t        & conformity_level) {
   String result;
 
   if (_recv_buf_used < 8) {
@@ -258,13 +258,13 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
   conformity_level = _recv_buf[pos++];
   more_follows     = _recv_buf[pos++] != 0;
   next_object_id   = _recv_buf[pos++];
-  const byte number_objects = _recv_buf[pos++];
-  byte object_id            = 0;
+  const uint8_t number_objects = _recv_buf[pos++];
+  uint8_t object_id            = 0;
 
   for (int i = 0; i < number_objects; ++i) {
     if ((pos + 3) < _recv_buf_used) {
       object_id = _recv_buf[pos++];
-      const byte object_length = _recv_buf[pos++];
+      const uint8_t object_length = _recv_buf[pos++];
 
       if ((pos + object_length) < _recv_buf_used) {
         String object_value;
@@ -290,7 +290,7 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
 
         if (i != 0) {
           // Append to existing description
-          result += ", ";
+          result += F(", ");
         }
         result += object_value;
       }
@@ -299,7 +299,7 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
   return result;
 }
 
-void ModbusRTU_struct::logModbusException(byte value) {
+void ModbusRTU_struct::logModbusException(uint8_t value) {
   if (value == 0) {
     return;
   }
@@ -397,41 +397,41 @@ void ModbusRTU_struct::logModbusException(byte value) {
 }
 
 /*
-   String log_buffer(byte *buffer, int length) {
+   String log_buffer(uint8_t *buffer, int length) {
     String log;
     log.reserve(3 * length + 5);
     for (int i = 0; i < length; ++i) {
       String hexvalue(buffer[i], HEX);
       hexvalue.toUpperCase();
       log += hexvalue;
-      log += F(" ");
+      log += ' ';
     }
-    log += F("(");
+    log += '(';
     log += length;
-    log += F(")");
+    log += ')';
     return log;
    }
  */
-byte ModbusRTU_struct::processCommand() {
+uint8_t ModbusRTU_struct::processCommand() {
   // CRC-calculation
   unsigned int crc =
     ModRTU_CRC(_sendframe, _sendframe_used);
 
   // Note, this number has low and high bytes swapped, so use it accordingly (or
   // swap bytes)
-  byte checksumHi = (byte)((crc >> 8) & 0xFF);
-  byte checksumLo = (byte)(crc & 0xFF);
+  uint8_t checksumHi = (uint8_t)((crc >> 8) & 0xFF);
+  uint8_t checksumLo = (uint8_t)(crc & 0xFF);
 
   _sendframe[_sendframe_used++] = checksumLo;
   _sendframe[_sendframe_used++] = checksumHi;
 
   int  nrRetriesLeft = 2;
-  byte return_value  = 0;
+  uint8_t return_value  = 0;
 
   while (nrRetriesLeft > 0) {
     return_value = 0;
 
-    // Send the byte array
+    // Send the uint8_t array
     startWrite();
     easySerial->write(_sendframe, _sendframe_used);
 
@@ -484,7 +484,7 @@ byte ModbusRTU_struct::processCommand() {
       ++_reads_crc_failed;
       return_value = MODBUS_BADCRC;
     } else {
-      const byte received_functionCode = _recv_buf[1];
+      const uint8_t received_functionCode = _recv_buf[1];
 
       if ((received_functionCode & 0x80) != 0) {
         return_value = _recv_buf[2];
@@ -513,7 +513,7 @@ byte ModbusRTU_struct::processCommand() {
 
 uint32_t ModbusRTU_struct::read_32b_InputRegister(short address) {
   uint32_t result = 0;
-  byte     errorcode;
+  uint8_t     errorcode;
   int idHigh = readInputRegister(address, errorcode);
 
   if (errorcode != 0) { return result; }
@@ -548,12 +548,12 @@ float ModbusRTU_struct::read_float_HoldingRegister(short address) {
   //    return fval;
 }
 
-int ModbusRTU_struct::readInputRegister(short address, byte& errorcode) {
+int ModbusRTU_struct::readInputRegister(short address, uint8_t& errorcode) {
   // Only read 1 register
   return process_16b_register(_modbus_address, MODBUS_READ_INPUT_REGISTERS, address, 1, errorcode);
 }
 
-int ModbusRTU_struct::readHoldingRegister(short address, byte& errorcode) {
+int ModbusRTU_struct::readHoldingRegister(short address, uint8_t& errorcode) {
   // Only read 1 register
   return process_16b_register(
     _modbus_address, MODBUS_READ_HOLDING_REGISTERS, address, 1, errorcode);
@@ -562,12 +562,12 @@ int ModbusRTU_struct::readHoldingRegister(short address, byte& errorcode) {
 // Write to holding register.
 int ModbusRTU_struct::writeSingleRegister(short address, short value) {
   // No check for the specific error code.
-  byte errorcode = 0;
+  uint8_t errorcode = 0;
 
   return writeSingleRegister(address, value, errorcode);
 }
 
-int ModbusRTU_struct::writeSingleRegister(short address, short value, byte& errorcode) {
+int ModbusRTU_struct::writeSingleRegister(short address, short value, uint8_t& errorcode) {
   // GN: Untested, will probably not work
   return process_16b_register(
     _modbus_address, MODBUS_WRITE_SINGLE_REGISTER, address, value, errorcode);
@@ -579,13 +579,13 @@ int ModbusRTU_struct::writeMultipleRegisters(short address, short value) {
     _modbus_address, address, value);
 }
 
-byte ModbusRTU_struct::modbus_get_MEI(byte slaveAddress, byte object_id,
+uint8_t ModbusRTU_struct::modbus_get_MEI(uint8_t slaveAddress, uint8_t object_id,
                                       String& result, unsigned int& object_value_int,
-                                      byte& next_object_id, bool& more_follows,
-                                      byte& conformity_level) {
+                                      uint8_t& next_object_id, bool& more_follows,
+                                      uint8_t& conformity_level) {
   // Force device_id to 4 = individual access (reading one ID object per call)
   build_modbus_MEI_frame(slaveAddress, 4, object_id);
-  const byte process_result = processCommand();
+  const uint8_t process_result = processCommand();
 
   if (process_result == 0) {
     result = parse_modbus_MEI_response(object_value_int,
@@ -597,19 +597,19 @@ byte ModbusRTU_struct::modbus_get_MEI(byte slaveAddress, byte object_id,
   return process_result;
 }
 
-void ModbusRTU_struct::modbus_log_MEI(byte slaveAddress) {
+void ModbusRTU_struct::modbus_log_MEI(uint8_t slaveAddress) {
   // Iterate over all Device identification items, using
   // Modbus command (0x2B / 0x0E) Read Device Identification
   // And add to log.
   bool more_follows     = true;
-  byte conformity_level = 0;
-  byte object_id        = 0;
-  byte next_object_id   = 0;
+  uint8_t conformity_level = 0;
+  uint8_t object_id        = 0;
+  uint8_t next_object_id   = 0;
 
   while (more_follows) {
     String result;
     unsigned int object_value_int;
-    const byte   process_result = modbus_get_MEI(
+    const uint8_t   process_result = modbus_get_MEI(
       slaveAddress, object_id, result, object_value_int, next_object_id,
       more_follows, conformity_level);
 
@@ -618,7 +618,7 @@ void ModbusRTU_struct::modbus_log_MEI(byte slaveAddress) {
         String log = MEI_objectid_to_name(object_id);
         log += F(": ");
         log += result;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
       switch (process_result) {
@@ -650,9 +650,9 @@ void ModbusRTU_struct::modbus_log_MEI(byte slaveAddress) {
   }
 }
 
-int ModbusRTU_struct::process_16b_register(byte slaveAddress, byte functionCode,
+int ModbusRTU_struct::process_16b_register(uint8_t slaveAddress, uint8_t functionCode,
                                            short startAddress, short parameter,
-                                           byte& errorcode) {
+                                           uint8_t& errorcode) {
   buildFrame(slaveAddress, functionCode, startAddress, parameter);
   errorcode = processCommand();
 
@@ -664,9 +664,9 @@ int ModbusRTU_struct::process_16b_register(byte slaveAddress, byte functionCode,
 }
 
 // Still writing single register, but calling it using "Preset Multiple Registers" function (FC=16)
-int ModbusRTU_struct::preset_mult16b_register(byte slaveAddress, uint16_t startAddress, uint16_t value) {
+int ModbusRTU_struct::preset_mult16b_register(uint8_t slaveAddress, uint16_t startAddress, uint16_t value) {
   buildWriteMult16bRegister(slaveAddress, startAddress, value);
-  const byte process_result = processCommand();
+  const uint8_t process_result = processCommand();
 
   if (process_result == 0) {
     return (_recv_buf[4] << 8) | (_recv_buf[5]);
@@ -675,15 +675,15 @@ int ModbusRTU_struct::preset_mult16b_register(byte slaveAddress, uint16_t startA
   return -1 * process_result;
 }
 
-bool ModbusRTU_struct::process_32b_register(byte slaveAddress, byte functionCode,
+bool ModbusRTU_struct::process_32b_register(uint8_t slaveAddress, uint8_t functionCode,
                                             short startAddress, uint32_t& result) {
   buildFrame(slaveAddress, functionCode, startAddress, 2);
-  const byte process_result = processCommand();
+  const uint8_t process_result = processCommand();
 
   if (process_result == 0) {
     result = 0;
 
-    for (byte i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < 4; ++i) {
       result  = result << 8;
       result += _recv_buf[i + 3];
     }
@@ -693,9 +693,9 @@ bool ModbusRTU_struct::process_32b_register(byte slaveAddress, byte functionCode
   return false;
 }
 
-int ModbusRTU_struct::writeSpecialCommandRegister(byte command) {
+int ModbusRTU_struct::writeSpecialCommandRegister(uint8_t command) {
   buildWriteCommandRegister(_modbus_address, command);
-  const byte process_result = processCommand();
+  const uint8_t process_result = processCommand();
 
   if (process_result == 0) {
     return 0;
@@ -704,9 +704,9 @@ int ModbusRTU_struct::writeSpecialCommandRegister(byte command) {
   return -1 * process_result;
 }
 
-unsigned int ModbusRTU_struct::read_RAM_EEPROM(byte command, byte startAddress,
-                                               byte nrBytes,
-                                               byte& errorcode) {
+unsigned int ModbusRTU_struct::read_RAM_EEPROM(uint8_t command, uint8_t startAddress,
+                                               uint8_t nrBytes,
+                                               uint8_t& errorcode) {
   buildRead_RAM_EEPROM(_modbus_address, command,
                        startAddress, nrBytes);
   errorcode = processCommand();
@@ -715,7 +715,7 @@ unsigned int ModbusRTU_struct::read_RAM_EEPROM(byte command, byte startAddress,
     unsigned int result = 0;
 
     for (int i = 0; i < _recv_buf[2]; ++i) {
-      // Most significant byte at lower address
+      // Most significant uint8_t at lower address
       result = (result << 8) | _recv_buf[i + 3];
     }
     return result;
@@ -725,11 +725,11 @@ unsigned int ModbusRTU_struct::read_RAM_EEPROM(byte command, byte startAddress,
 }
 
 // Compute the MODBUS RTU CRC
-unsigned int ModbusRTU_struct::ModRTU_CRC(byte *buf, int len) {
+unsigned int ModbusRTU_struct::ModRTU_CRC(uint8_t *buf, int len) {
   unsigned int crc = 0xFFFF;
 
   for (int pos = 0; pos < len; pos++) {
-    crc ^= (unsigned int)buf[pos]; // XOR byte into least sig. byte of crc
+    crc ^= (unsigned int)buf[pos]; // XOR uint8_t into least sig. uint8_t of crc
 
     for (int i = 8; i != 0; i--) { // Loop over each bit
       if ((crc & 0x0001) != 0) {   // If the LSB is set

@@ -1,5 +1,5 @@
-#ifndef I2C_TYPES_H
-#define I2C_TYPES_H I2C_TYPES_H
+#ifndef DATASTRUCTS_I2C_TYPES_H
+#define DATASTRUCTS_I2C_TYPES_H
 
 #include <Arduino.h>
 #include <vector>
@@ -56,4 +56,18 @@ private:
 typedef I2Cdata<uint8_t> I2Cdata_bytes;
 typedef I2Cdata<uint16_t>I2Cdata_words;
 
-#endif // I2C_TYPES_H
+enum class I2C_bus_state {
+    NotConfigured,
+    OK,
+    BusCleared,
+    ClearingProcessActive,
+    SCL_Low,             // I2C bus error. Could not clear. SCL clock line held low
+    SDA_Low_over_2_sec,  // I2C bus error. Could not clear. SCL clock line held low by slave clock stretch for >2sec
+    SDA_Low_20_clocks   // I2C bus error. Could not clear. SDA data line held low
+};
+
+const __FlashStringHelper * toString(I2C_bus_state state);
+
+
+
+#endif // DATASTRUCTS_I2C_TYPES_H

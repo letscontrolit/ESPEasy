@@ -5,12 +5,12 @@
 
 #ifdef USES_MQTT
 
-class String;
+#include <Arduino.h>
 
-String Command_MQTT_Publish(struct EventStruct *event,
+const __FlashStringHelper * Command_MQTT_Publish(struct EventStruct *event,
                             const char         *Line);
 
-String Command_MQTT_Subscribe(struct EventStruct *event,
+const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event,
                               const char* Line);
 
 #endif // ifdef USES_MQTT

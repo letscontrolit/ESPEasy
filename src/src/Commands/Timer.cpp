@@ -17,7 +17,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 
-String command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount) {
+const __FlashStringHelper * command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount) {
   if (msecFromNow < 0)
   {
     addLog(LOG_LEVEL_ERROR, F("TIMER: time must be positive"));
@@ -32,7 +32,7 @@ String command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount
   return return_command_failed();
 }
 
-String Command_Timer_Set(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Timer_Set(struct EventStruct *event, const char *Line)
 {
   return command_setRulesTimer(
     event->Par2 * 1000, // msec from now
@@ -41,7 +41,7 @@ String Command_Timer_Set(struct EventStruct *event, const char *Line)
     );
 }
 
-String Command_Timer_Set_ms (struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_Timer_Set_ms (struct EventStruct *event, const char* Line)
 {
   return command_setRulesTimer(
     event->Par2, // interval
@@ -50,7 +50,7 @@ String Command_Timer_Set_ms (struct EventStruct *event, const char* Line)
     );
 }
 
-String Command_Loop_Timer_Set (struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_Loop_Timer_Set (struct EventStruct *event, const char* Line)
 {
   int recurringCount = event->Par3;
   if (recurringCount == 0) {
@@ -64,7 +64,7 @@ String Command_Loop_Timer_Set (struct EventStruct *event, const char* Line)
     );
 }
 
-String Command_Loop_Timer_Set_ms (struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_Loop_Timer_Set_ms (struct EventStruct *event, const char* Line)
 {
   int recurringCount = event->Par3;
   if (recurringCount == 0) {
@@ -78,7 +78,7 @@ String Command_Loop_Timer_Set_ms (struct EventStruct *event, const char* Line)
     );
 }
 
-String Command_Timer_Pause(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Timer_Pause(struct EventStruct *event, const char *Line)
 {
   if (Scheduler.pause_rules_timer(event->Par1)) {
     String eventName = F("Rules#TimerPause=");
@@ -89,7 +89,7 @@ String Command_Timer_Pause(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Timer_Resume(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Timer_Resume(struct EventStruct *event, const char *Line)
 {
   if (Scheduler.resume_rules_timer(event->Par1)) {
     String eventName = F("Rules#TimerResume=");
@@ -100,7 +100,7 @@ String Command_Timer_Resume(struct EventStruct *event, const char *Line)
   return return_command_failed();
 }
 
-String Command_Delay(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Delay(struct EventStruct *event, const char *Line)
 {
   delayBackground(event->Par1);
   return return_command_success();

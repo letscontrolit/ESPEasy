@@ -60,9 +60,9 @@ struct pinStatesStruct
 {
   pinStatesStruct() : value(0), plugin(0), index(0), mode(0) {}
   uint16_t value;
-  byte plugin;
-  byte index;
-  byte mode;
+  uint8_t plugin;
+  uint8_t index;
+  uint8_t mode;
 } pinStates[PINSTATE_TABLE_MAX];
 */
 
@@ -91,13 +91,6 @@ extern unsigned long timerAwakeFromDeepSleep;
 #if FEATURE_ADC_VCC
 extern float vcc;
 #endif
-
-extern boolean WebLoggedIn;
-extern int WebLoggedInTimer;
-
-
-extern String dummyString;  // FIXME @TD-er  This may take a lot of memory over time, since long-lived Strings only tend to grow.
-
 
 
 

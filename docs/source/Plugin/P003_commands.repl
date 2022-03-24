@@ -3,20 +3,55 @@
         :widths: 20, 30
 
         "
-        ``ResetPulseCounter,<taskIndex>``
+        ``ResetPulseCounter``
+
+        legacy method:
+ 
+        ``ResetPulseCounter,<taskNumber>``
+
         ","
         Reset the counters (pulse counter and total counter) of P003 Pulse Counter.
-        The taskIndex parameter is optional.  When not given, only the first task with this plugin will be cleared.
+        
+        When using multiple instances of Pulse Counter tasks, use a prefix to address the right one. E.g. ``2.ResetPulseCounter``, ``[GasZaehler].ResetPulseCounter`` or ``GasZaehler.ResetPulseCounter`` to address task number 2 or the task with the name ``GasZaehler``.
+        When task is neither identified as prefix nor as parameter, the first active Pulse Counter task will be affected.
 
-        A call to reset the value will also trigger a call to ``PLUGIN_READ`` as if it processes a normal successful read.
+        The command will also trigger a call to ``PLUGIN_READ`` as if it processes a normal successful read.
         "
         "
-        ``SetPulseCounterTotal,value,<taskIndex>``
+        ``SetPulseCounterTotal,value``
+
+        legacy method:   
+
+        ``SetPulseCounterTotal,value,<taskNumber>``
+
         ","
         Set the value of the total count of P003 Pulse Counter.
-        The taskIndex parameter is optional.  When not given, only the total count of the first task with this plugin will be set.
+        
+        When using multiple instances of Pulse Counter tasks, use a prefix to address the right one. E.g. ``2.SetPulseCounter,1000``, ``[GasZaehler].SetPulseCounter,1000`` or ``GasZaehler.SetPulseCounter,1000`` to address task number 2 or the task with the name ``GasZaehler``.
+        When task is neither identified as prefix nor as parameter, the first active Pulse Counter task will be affected.
         
         A call to set the counter total will also trigger a call to ``PLUGIN_READ`` as if it processes a normal successful read.
 
         N.B. The set value is the internal value, so any present formula will be processed after this value is set.
+        "
+        "
+        ``LogPulseStatistic,<subcommand>``
+
+        Optional subcommands:
+
+        * ``r`` reset error and overdue counters.
+
+        * ``i`` temporary increases the log level for regular statisticel log entries from ``Debug`` to ``Info``
+
+        ","
+        Initiate a single log entry with statistical information of current PULSE counter parameters (only if PULSE mode type is being used. Cf. special chapter about ``Statistical logging`` in P003 plugin documentation).
+        
+        The <subcommand> is executed AFTER writing to logfile, so you see the result of the reset in consecutive loggings.
+        
+        The ``i`` subcommand allows you to increase the log level to ``Info`` and still see the Pulse Counter's statistical logings without other not needed ``Debug`` messages. This setting is valid until next reset.
+
+        When using multiple instances of Pulse Counter tasks, use a prefix to address the right one. E.g. ``2.LogPulseStatistic,i``, ``[GasZaehler].LogPulseStatistic,i`` or ``GasZaehler.LogPulseStatistic,i`` to address task number 2 or the task with the name ``GasZaehler``.
+        When the task-prefix is omitted, the first active Pulse Counter task will be affected.
+        
+        N.B. Note that this single log entry is done, when Log Level is set to ``Info``. Only the regular statistical logging is done by default on level ``Debug``, but can be temporary increased to ``Info`` with the above ``i`` command.
         "

@@ -18,40 +18,39 @@
 #define LOG_TO_SDCARD         4
 
 
+// Move the log String so it does not have to be copied in the web log
+#define addLogMove(L, S)  addToLogMove(L, std::move(S))
+
 /********************************************************************************************\
   Logging
   \*********************************************************************************************/
 void initLog();
 
-String getLogLevelDisplayString(int logLevel);
+const __FlashStringHelper * getLogLevelDisplayString(int logLevel);
 
-String getLogLevelDisplayStringFromIndex(byte index, int& logLevel);
+const __FlashStringHelper * getLogLevelDisplayStringFromIndex(uint8_t index, int& logLevel);
 
 void disableSerialLog();
 
-void setLogLevelFor(byte destination, byte logLevel);
+void setLogLevelFor(uint8_t destination, uint8_t logLevel);
 
 void updateLogLevelCache();
 
-bool loglevelActiveFor(byte logLevel);
+bool loglevelActiveFor(uint8_t logLevel);
 
-byte getSerialLogLevel();
+uint8_t getSerialLogLevel();
 
-byte getWebLogLevel();
+uint8_t getWebLogLevel();
 
-bool loglevelActiveFor(byte destination, byte logLevel);
+bool loglevelActiveFor(uint8_t destination, uint8_t logLevel);
 
 
-bool loglevelActive(byte logLevel, byte logLevelSettings);
+void addLog(uint8_t logLevel, const __FlashStringHelper *str);
+void addLog(uint8_t logLevel, const char *line);
+void addLog(uint8_t logLevel, String&& string);
 
-void addToLog(byte loglevel, const __FlashStringHelper *str);
-
-void addToLog(byte loglevel, const String& string);
-
-void addToLog(byte logLevel, const char *line);
-
-// Do this in a template to prevent casting to String when not needed.
-#define addLog(L,S) if (loglevelActiveFor(L)) { addToLog(L,S); }
+void addLog(uint8_t logLevel, const String& string);
+void addToLogMove(uint8_t logLevel, String&& string);
 
 
 #endif 

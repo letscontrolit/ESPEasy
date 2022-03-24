@@ -171,7 +171,7 @@ void P036_data_struct::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersi
   }
   else {
     // read data of version 1 (beginning from 22.11.2019)
-    LoadCustomTaskSettings(taskIndex, (uint8_t *)&(DisplayLinesV1), sizeof(DisplayLinesV1));
+    LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&DisplayLinesV1), sizeof(DisplayLinesV1));
 
     for (int i = 0; i < P36_Nlines; ++i) {
       DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
@@ -521,22 +521,23 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines)
 
 # ifdef PLUGIN_036_DEBUG
   String log;
-  log.reserve(128); // estimated
-  log = F("CalculateFontSettings: FontIndex:");
-  log += iFontIndex;
-  log += F(" Top:");
-  log += result.Top;
-  log += F(" FontHeight:");
-  log += result.Height;
-  log += F(" Space:");
-  log += result.Space;
-  log += F(" Height:");
-  log += iHeight;
-  log += F(" LinesPerFrame:");
-  log += iLinesPerFrame;
-  log += F(" DefaultLines:");
-  log += lDefaultLines;
-  addLog(LOG_LEVEL_INFO, log);
+  if (log.reserve(128)) { // estimated
+    log = F("CalculateFontSettings: FontIndex:");
+    log += iFontIndex;
+    log += F(" Top:");
+    log += result.Top;
+    log += F(" FontHeight:");
+    log += result.Height;
+    log += F(" Space:");
+    log += result.Space;
+    log += F(" Height:");
+    log += iHeight;
+    log += F(" LinesPerFrame:");
+    log += iLinesPerFrame;
+    log += F(" DefaultLines:");
+    log += lDefaultLines;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 # endif // PLUGIN_036_DEBUG
   
   if (lDefaultLines == 0) 
@@ -579,11 +580,14 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   int iCharToRemove;
 
 # ifdef PLUGIN_036_DEBUG
-  String log;
-  log.reserve(128); // estimated
-  log = F("Start Scrolling: Speed: ");
-  log += ((int) lscrollspeed);
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    if (log.reserve(128)) { // estimated
+      log = F("Start Scrolling: Speed: ");
+      log += static_cast<int>(lscrollspeed);
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+  }
 # endif // PLUGIN_036_DEBUG
 
   display->setFont(ScrollingPages.Font);
@@ -597,12 +601,15 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
   } else {
     iPageScrollTime = (P36_MaxDisplayWidth / (P36_PageScrollPix * static_cast<int>(lscrollspeed))) * P36_PageScrollTick;
   }
-  int iScrollTime = (float)(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100; // scrollTime in ms
+  int iScrollTime = static_cast<float>(lTaskTimer * 1000 - iPageScrollTime - 2 * P36_WaitScrollLines * 100) / 100; // scrollTime in ms
 
 # ifdef PLUGIN_036_DEBUG
-  log  = F("PageScrollTime: ");
-  log += iPageScrollTime;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log;
+    log  = F("PageScrollTime: ");
+    log += iPageScrollTime;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 # endif // PLUGIN_036_DEBUG
 
   uint16_t MaxPixWidthForPageScrolling = P36_MaxDisplayWidth;
@@ -625,8 +632,8 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     if (PixLengthLineIn > 255) {
       // shorten string because OLED controller can not handle such long strings
       int   strlen         = ScrollingPages.LineIn[j].length();
-      float fAvgPixPerChar = ((float)PixLengthLineIn) / strlen;
-      iCharToRemove            = ceil(((float)(PixLengthLineIn - 255)) / fAvgPixPerChar);
+      float fAvgPixPerChar = static_cast<float>(PixLengthLineIn) / strlen;
+      iCharToRemove            = ceil((static_cast<float>(PixLengthLineIn - 255)) / fAvgPixPerChar);
       ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
       PixLengthLineIn          = display->getStringWidth(ScrollingPages.LineIn[j]);
     }
@@ -634,8 +641,8 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     if (PixLengthLineOut > 255) {
       // shorten string because OLED controller can not handle such long strings
       int   strlen         = ScrollingPages.LineOut[j].length();
-      float fAvgPixPerChar = ((float)PixLengthLineOut) / strlen;
-      iCharToRemove             = ceil(((float)(PixLengthLineOut - 255)) / fAvgPixPerChar);
+      float fAvgPixPerChar = static_cast<float>(PixLengthLineOut) / strlen;
+      iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - 255)) / fAvgPixPerChar);
       ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
       PixLengthLineOut          = display->getStringWidth(ScrollingPages.LineOut[j]);
     }
@@ -652,18 +659,23 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         ScrollingLines.Line[j].LineContent = ScrollingPages.LineIn[j];
         ScrollingLines.Line[j].Width       = PixLengthLineIn; // while page scrolling this line is left aligned
         ScrollingLines.Line[j].CurrentLeft = getDisplaySizeSettings(disp_resolution).PixLeft;
-        ScrollingLines.Line[j].fPixSum     = (float)getDisplaySizeSettings(disp_resolution).PixLeft;
+        ScrollingLines.Line[j].fPixSum     = getDisplaySizeSettings(disp_resolution).PixLeft;
 
         // pix change per scrolling line tick
-        ScrollingLines.Line[j].dPix = ((float)(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / iScrollTime;
+        ScrollingLines.Line[j].dPix = (static_cast<float>(PixLengthLineIn - getDisplaySizeSettings(disp_resolution).Width)) / iScrollTime;
 
 # ifdef PLUGIN_036_DEBUG
-        log  = String(F("Line: ")) + String(j + 1);
-        log += F(" width: ");
-        log += ScrollingLines.Line[j].Width;
-        log += F(" dPix: ");
-        log += ScrollingLines.Line[j].dPix;
-        addLog(LOG_LEVEL_INFO, log);
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log;
+          if (log.reserve(128)) { // estimated
+            log  = String(F("Line: ")) + String(j + 1);
+            log += F(" width: ");
+            log += ScrollingLines.Line[j].Width;
+            log += F(" dPix: ");
+            log += ScrollingLines.Line[j].dPix;
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
+        }
 # endif // PLUGIN_036_DEBUG
       }
     }
@@ -674,33 +686,38 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 # ifdef PLUGIN_036_DEBUG
       String LineInStr = ScrollingPages.LineIn[j];
 # endif // PLUGIN_036_DEBUG
-      float fAvgPixPerChar = ((float)PixLengthLineIn) / strlen;
+      float fAvgPixPerChar = static_cast<float>(PixLengthLineIn) / strlen;
 
       if (bLineScrollEnabled) {
         // shorten string on right side because line is displayed left aligned while scrolling
         // using floor() because otherwise empty space on right side
-        iCharToRemove            = floor(((float)(PixLengthLineIn - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
+        iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
         ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
       }
       else {
         // shorten string on both sides because line is displayed centered
         // using floor() because otherwise empty space on both sides
-        iCharToRemove            = floor(((float)(PixLengthLineIn - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
+        iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
         ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
         ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(iCharToRemove);
       }
 # ifdef PLUGIN_036_DEBUG
-      log  = String(F("Line: ")) + String(j + 1);
-      log += String(F(" LineIn: ")) + String(LineInStr);
-      log += String(F(" Length: ")) + String(strlen);
-      log += String(F(" PixLength: ")) + String(PixLengthLineIn);
-      log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
-      log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
-      addLog(LOG_LEVEL_INFO, log);
-      log  = String(F(" -> Changed to: ")) + String(ScrollingPages.LineIn[j]);
-      log += String(F(" Length: ")) + String(ScrollingPages.LineIn[j].length());
-      log += String(F(" PixLength: ")) + String(display->getStringWidth(ScrollingPages.LineIn[j]));
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
+        if (log.reserve(128)) { // estimated
+          log  = String(F("Line: ")) + String(j + 1);
+          log += String(F(" LineIn: ")) + String(LineInStr);
+          log += String(F(" Length: ")) + String(strlen);
+          log += String(F(" PixLength: ")) + String(PixLengthLineIn);
+          log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
+          log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
+          addLogMove(LOG_LEVEL_INFO, log);
+          log  = String(F(" -> Changed to: ")) + String(ScrollingPages.LineIn[j]);
+          log += String(F(" Length: ")) + String(ScrollingPages.LineIn[j].length());
+          log += String(F(" PixLength: ")) + String(display->getStringWidth(ScrollingPages.LineIn[j]));
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+      }
 # endif // PLUGIN_036_DEBUG
     }
 
@@ -710,12 +727,12 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
 # ifdef PLUGIN_036_DEBUG
       String LineOutStr = ScrollingPages.LineOut[j];
 # endif // PLUGIN_036_DEBUG
-      float fAvgPixPerChar = ((float)PixLengthLineOut) / strlen;
+      float fAvgPixPerChar = static_cast<float>(PixLengthLineOut) / strlen;
 
       if (bLineScrollEnabled) {
         // shorten string on left side because line is displayed right aligned while scrolling
         // using ceil() because otherwise overlapping the new text
-        iCharToRemove             = ceil(((float)(PixLengthLineOut - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
+        iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
         ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
 
         if (display->getStringWidth(ScrollingPages.LineOut[j]) > MaxPixWidthForPageScrolling) {
@@ -726,22 +743,27 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
       else {
         // shorten string on both sides because line is displayed centered
         // using ceil() because otherwise overlapping the new text
-        iCharToRemove             = ceil(((float)(PixLengthLineOut - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
+        iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
         ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
         ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
       }
 # ifdef PLUGIN_036_DEBUG
-      log  = String(F("Line: ")) + String(j + 1);
-      log += String(F(" LineOut: ")) + String(LineOutStr);
-      log += String(F(" Length: ")) + String(strlen);
-      log += String(F(" PixLength: ")) + String(PixLengthLineOut);
-      log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
-      log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
-      addLog(LOG_LEVEL_INFO, log);
-      log  = String(F(" -> Changed to: ")) + String(ScrollingPages.LineOut[j]);
-      log += String(F(" Length: ")) + String(ScrollingPages.LineOut[j].length());
-      log += String(F(" PixLength: ")) + String(display->getStringWidth(ScrollingPages.LineOut[j]));
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log;
+        if (log.reserve(128)) { // estimated
+          log  = String(F("Line: ")) + String(j + 1);
+          log += String(F(" LineOut: ")) + String(LineOutStr);
+          log += String(F(" Length: ")) + String(strlen);
+          log += String(F(" PixLength: ")) + String(PixLengthLineOut);
+          log += String(F(" AvgPixPerChar: ")) + String(fAvgPixPerChar);
+          log += String(F(" CharsRemoved: ")) + String(iCharToRemove);
+          addLogMove(LOG_LEVEL_INFO, log);
+          log  = String(F(" -> Changed to: ")) + String(ScrollingPages.LineOut[j]);
+          log += String(F(" Length: ")) + String(ScrollingPages.LineOut[j].length());
+          log += String(F(" PixLength: ")) + String(display->getStringWidth(ScrollingPages.LineOut[j]));
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+      }
 # endif // PLUGIN_036_DEBUG
     }
   }
@@ -808,8 +830,7 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     ScrollingPages.Scrolling = 0; // allow following line scrolling
   }
 # ifdef PLUGIN_036_DEBUG
-  log = F("Scrolling finished");
-  addLog(LOG_LEVEL_INFO, log);
+  addLog(LOG_LEVEL_INFO, F("Scrolling finished"));
 # endif // PLUGIN_036_DEBUG
   return ScrollingPages.Scrolling;
 }
@@ -1035,7 +1056,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
   int NFrames; // the number of frames
 
-  if (UserVar[event->BaseVarIndex] == 1) {
+  if (essentiallyEqual(UserVar[event->BaseVarIndex], 1.0f)) {
     // Display is on.
     ScrollingPages.Scrolling = 1;                                                              // page scrolling running -> no
     // line scrolling allowed
@@ -1044,15 +1065,10 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
     HeaderContentAlternative = static_cast<eHeaderContent>(get8BitFromUL(PCONFIG_LONG(0), 0)); // Bit 7-0
     // HeaderContentAlternative
 
-    //      Now create the string for the outgoing and incoming frames
-    String tmpString;
-    tmpString.reserve(P36_NcharsV1);
-
     //      Construct the outgoing string
     for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
     {
-      tmpString =
-        String(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+      String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
       ScrollingPages.LineOut[i] = P36_parseTemplate(tmpString, 20);
     }
 
@@ -1085,8 +1101,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       //        Contruct incoming strings
       for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
       {
-        tmpString =
-          String(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+        String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
         ScrollingPages.LineIn[i] = P36_parseTemplate(tmpString, 20);
 
         if (ScrollingPages.LineIn[i].length() > 0) { foundText = true; }
@@ -1109,7 +1124,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       for (uint8_t i = 0; i < NFrames; i++) {
         for (uint8_t k = 0; k < ScrollingPages.linesPerFrame; k++)
         {
-          tmpString = String(DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
+          String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
           tmpString = P36_parseTemplate(tmpString, 20);
 
           if (tmpString.length() > 0) {

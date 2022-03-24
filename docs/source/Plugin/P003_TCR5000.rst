@@ -8,6 +8,7 @@ TCR5000
 |P003_status|
 
 .. image:: P003_TCR5000_1.jpg
+    :scale: 25 %
 
 Introduction
 ------------
@@ -39,6 +40,7 @@ Setup
 -----
 
 .. image:: P003_Setup_TCR5000_1.png
+    :scale: 40 %
 
 .. danger:: Only task number 1..4 is currently supported for the pulse plugin!
 
@@ -55,16 +57,20 @@ Sensor
 * **GPIO <-- Pulse**: Pulse input is generally set to **GPIO 14 (D5)**.
 * **Debounce time**: Debounce time is generally set to **100**.
 * **Counter type**: In this example the type is set to **Delta/Total/Time**.
-* **Mode type**: Pulse input is generally set to **Falling**
-
-  ``LOW`` = count when signal go from not low to low (0.8+V to 0.8-V)
+* **Mode type**: Pulse input is generally set to **Falling** or **PULSE low**
 
   ``CHANGE`` = count on signal being changed, low to high (0.8-V to 2.4+V) or high to low (2.4+V to 0.8-V)
 
   ``RISING`` = count if signal is rising, from low to not low (0.8-V to 0.8+V)
 
   ``FALLING`` = count if signal is falling, from high to not high (2.4+V to 2.4-V)
+  
+  ``PULSE low`` = count if a stable low signal ended followed by a stable high signal
+  
+  ``PULSE high`` = count if a stable high signal ended followed by a stable low signal.
 
+  ``PULSE change`` = count if the stable signal changes from high to low or from low to high
+  
 
 .. warning:: GPIO 16 (D0) is not compatible with pulse counters.
 
@@ -138,10 +144,13 @@ slowly until it start to detect pulses, this is the level you want to have.
 
 
 .. image:: P003_TCR5000_3.jpg
+    :scale: 25 %
 
 .. image:: P003_TCR5000_4.jpg
+    :scale: 25 %
 
 It is sometimes good to mask the LED used to measure distance/pulses since the reflection could
 trigger a pulse.
 
 .. image:: P003_TCR5000_5.jpg
+    :scale: 25 %

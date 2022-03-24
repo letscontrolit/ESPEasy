@@ -19,7 +19,7 @@
 ServoPinMap_t ServoPinMap;
 #endif // ifdef USE_SERVO
 
-String Command_Servo(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char *Line)
 {
 #ifdef USE_SERVO
 

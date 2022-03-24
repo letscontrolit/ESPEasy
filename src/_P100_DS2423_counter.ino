@@ -14,7 +14,7 @@
 # define PLUGIN_NAME_100       "Pulse Counter - DS2423 [TESTING]"
 # define PLUGIN_VALUENAME1_100 "CountDelta"
 
-boolean Plugin_100(byte function, struct EventStruct *event, String& string)
+boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -61,11 +61,11 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
       // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
       int8_t Plugin_100_DallasPin = CONFIG_PIN1;
 
-      if (Plugin_100_DallasPin != -1) {
+      if (validGpio(Plugin_100_DallasPin)) {
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_100_DallasPin, Plugin_100_DallasPin);
 
         // Counter select
-        String resultsOptions[2]      = { F("A"), F("B") };
+        const __FlashStringHelper * resultsOptions[2]      = { F("A"), F("B") };
         int    resultsOptionValues[2] = { 0, 1 };
         addFormSelector(F("Counter"), F("p100_counter"), 2, resultsOptions, resultsOptionValues, PCONFIG(0));
         addFormNote(F("Counter value is incremental"));
@@ -112,7 +112,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
       Dallas_plugin_get_addr(addr, event->TaskIndex);
 
       if (addr[0] != 0) {
-        if (CONFIG_PIN1 != -1) {
+        if (validGpio(CONFIG_PIN1)) {
           float value = 0;
 
           if (Dallas_readCounter(addr, &value, CONFIG_PIN1, CONFIG_PIN1, PCONFIG(0)))
@@ -142,7 +142,7 @@ boolean Plugin_100(byte function, struct EventStruct *event, String& string)
             log += F(" (");
             log += Dallas_format_address(addr);
             log += ')';
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
           }
         }
       }

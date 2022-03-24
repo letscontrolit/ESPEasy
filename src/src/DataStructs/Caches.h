@@ -6,7 +6,7 @@
 #include "../Globals/Plugins.h"
 
 typedef std::map<String, taskIndex_t>TaskIndexNameMap;
-typedef std::map<String, byte>       TaskIndexValueNameMap;
+typedef std::map<String, uint8_t>       TaskIndexValueNameMap;
 typedef std::map<String, bool>       FilePresenceMap;
 
 struct Caches {

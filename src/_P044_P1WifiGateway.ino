@@ -28,7 +28,7 @@
  
 
 
-boolean Plugin_044(byte function, struct EventStruct *event, String& string)
+boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -56,7 +56,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
       	addFormNumericBox(F("TCP Port"), F("p044_port"), P044_WIFI_SERVER_PORT, 0);
       	addFormNumericBox(F("Baud Rate"), F("p044_baud"), P044_BAUDRATE, 0);
 
-        byte serialConfChoice = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
+        uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
         serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
@@ -108,7 +108,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
         int txPin;
         // FIXME TD-er: Must use proper pin settings and standard ESPEasySerial wrapper
         ESPeasySerialType::getSerialTypePins(ESPEasySerialPort::serial0, rxPin, txPin);
-        byte serialconfig = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
+        uint8_t serialconfig = serialHelper_convertOldSerialConfig(P044_SERIAL_CONFIG);
         task->serialBegin(ESPEasySerialPort::not_set,  rxPin, txPin, P044_BAUDRATE, serialconfig);
         task->startServer(P044_WIFI_SERVER_PORT);
 
@@ -117,7 +117,7 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
           break;
         }
 
-        if (P044_RESET_TARGET_PIN != -1) {
+        if (validGpio(P044_RESET_TARGET_PIN)) {
           pinMode(P044_RESET_TARGET_PIN, OUTPUT);
           digitalWrite(P044_RESET_TARGET_PIN, LOW);
           delay(500);
@@ -127,10 +127,14 @@ boolean Plugin_044(byte function, struct EventStruct *event, String& string)
 
         task->blinkLED();
         if (P044_BAUDRATE == 115200) {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC on"));
+          #endif
           task->CRCcheck = true;
         } else {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("P1   : DSMR version 4 meter, CRC off"));
+          #endif
           task->CRCcheck = false;
         }
 

@@ -76,15 +76,15 @@ void handle_setup() {
     } else {    
   //    if (active_network_medium == NetworkMedium_t::WIFI)
   //    {
-        static byte status       = HANDLE_SETUP_SCAN_STAGE;
-        static byte refreshCount = 0;
+        static uint8_t status       = HANDLE_SETUP_SCAN_STAGE;
+        static uint8_t refreshCount = 0;
 
-        String ssid              = web_server.arg(F("ssid"));
-        String other             = web_server.arg(F("other"));
+        String ssid              = webArg(F("ssid"));
+        String other             = webArg(F("other"));
         String password;
         bool passwordGiven = getFormPassword(F("pass"), password);
         if (passwordGiven) {
-          passwordGiven = password.length() != 0;
+          passwordGiven = !password.isEmpty();
         }
         const bool emptyPassAllowed = isFormItemChecked(F("emptypass"));
         const bool performRescan = web_server.hasArg(F("performrescan"));
@@ -93,14 +93,14 @@ void handle_setup() {
           WifiScan(false);
         }
 
-        if (other.length() != 0)
+        if (!other.isEmpty())
         {
           ssid = other;
         }
 
         if (!performRescan) {
           // if ssid config not set and params are both provided
-          if ((status == HANDLE_SETUP_SCAN_STAGE) && (ssid.length() != 0) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
+          if ((status == HANDLE_SETUP_SCAN_STAGE) && (!ssid.isEmpty()) /*&& strcasecmp(SecuritySettings.WifiSSID, "ssid") == 0 */)
           {
             if (clearButtonPressed) {
               addHtmlError(F("Warning: Need to confirm to clear WiFi credentials"));
@@ -119,7 +119,7 @@ void handle_setup() {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
                 reconnectlog += ssid;
-                addLog(LOG_LEVEL_INFO, reconnectlog);
+                addLogMove(LOG_LEVEL_INFO, reconnectlog);
               }
               status       = HANDLE_SETUP_CONNECTING_STAGE;
               refreshCount = 0;
@@ -359,12 +359,12 @@ void handle_setup_scan_and_show(const String& ssid, const String& other, const S
   html_TR_TD();
   html_TD();
   html_BR();
-  addSubmitButton(F("Connect"), "");
+  addSubmitButton(F("Connect"), EMPTY_STRING);
 
   html_end_table();
 }
 
-bool handle_setup_connectingStage(byte refreshCount) {
+bool handle_setup_connectingStage(uint8_t refreshCount) {
   if (refreshCount > 0)
   {
     //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
@@ -380,22 +380,22 @@ bool handle_setup_connectingStage(byte refreshCount) {
   if (refreshCount != 0) {
     wait = 3;
   }
-  addHtml(F("Please wait for <h1 id='countdown'>20..</h1>"));
-  addHtml(F("<script type='text/JavaScript'>"));
-  addHtml(F("function timedRefresh(timeoutPeriod) {"));
-  addHtml(F("var timer = setInterval(function() {"));
-  addHtml(F("if (timeoutPeriod > 0) {"));
-  addHtml(F("timeoutPeriod -= 1;"));
-  addHtml(F("document.getElementById('countdown').innerHTML = timeoutPeriod + '..' + '<br />';"));
-  addHtml(F("} else {"));
-  addHtml(F("clearInterval(timer);"));
-  addHtml(F("window.location.href = window.location.href;"));
-  addHtml(F("};"));
-  addHtml(F("}, 1000);"));
-  addHtml(F("};"));
-  addHtml(F("timedRefresh("));
+  addHtml(F("Please wait for <h1 id='countdown'>20..</h1>" 
+            "<script type='text/JavaScript'>"
+            "function timedRefresh(timeoutPeriod) {"
+            "var timer = setInterval(function() {"
+            "if (timeoutPeriod > 0) {"
+            "timeoutPeriod -= 1;"
+            "document.getElementById('countdown').innerHTML = timeoutPeriod + '..' + '<br />';"
+            "} else {"
+            "clearInterval(timer);"
+            "window.location.href = window.location.href;"
+            "};"
+            "}, 1000);"
+            "};"
+            "timedRefresh("));
   addHtmlInt(wait);
-  addHtml(F(");"));
+  addHtml(')', ';');
   html_add_script_end();
   addHtml(F("seconds while trying to connect"));
   return true;

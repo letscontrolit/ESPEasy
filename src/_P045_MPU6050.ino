@@ -72,7 +72,7 @@
 #define PLUGIN_VALUENAME1_045               ""
 
 
-boolean Plugin_045(byte function, struct EventStruct *event, String& string)
+boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -102,41 +102,36 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
-
-      // Setup webform for address selection
-
-      /*
-         String options[10];
-         options[0] = F("0x68 - default settings (ADDR Low)");
-         options[1] = F("0x69 - alternate settings (ADDR High)");
-       */
-      int optionValues[2];
-      optionValues[0] = 0x68;
-      optionValues[1] = 0x69;
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
-      addFormNote(F("ADDR Low=0x68, High=0x69"));
+      const uint8_t i2cAddressValues[] = { 0x68, 0x69 };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+        addFormNote(F("ADDR Low=0x68, High=0x69"));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      byte choice = PCONFIG(1);
+      uint8_t choice = PCONFIG(1);
       {
-        String options[10];
-        options[0] = F("Movement detection");
-        options[1] = F("Range acceleration X");
-        options[2] = F("Range acceleration Y");
-        options[3] = F("Range acceleration Z");
-        options[4] = F("Acceleration X");
-        options[5] = F("Acceleration Y");
-        options[6] = F("Acceleration Z");
-        options[7] = F("G-force X");
-        options[8] = F("G-force Y");
-        options[9] = F("G-force Z");
-        addFormSelector(F("Function"), F("p045_function"), 10, options, NULL, choice);
+        const __FlashStringHelper * options[10] = {
+          F("Movement detection"),
+          F("Range acceleration X"),
+          F("Range acceleration Y"),
+          F("Range acceleration Z"),
+          F("Acceleration X"),
+          F("Acceleration Y"),
+          F("Acceleration Z"),
+          F("G-force X"),
+          F("G-force Y"),
+          F("G-force Z")
+        };
+        addFormSelector(F("Function"), F("p045_function"), 10, options, nullptr, choice);
       }
 
       if (choice == 0) {
@@ -236,9 +231,9 @@ boolean Plugin_045(byte function, struct EventStruct *event, String& string)
           {
             // Check if all (enabled, so !=0) thresholds are exceeded, if one fails then thresexceed (thesholds exceeded) is reset to false;
             boolean thresexceed = true;
-            byte    count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
+            uint8_t    count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
 
-            for (byte i = 0; i < 3; i++)
+            for (uint8_t i = 0; i < 3; i++)
             {
               // for each axis:
               if (PCONFIG(i + 2) != 0) { // not disabled, check threshold

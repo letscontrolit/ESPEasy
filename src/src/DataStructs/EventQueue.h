@@ -3,7 +3,7 @@
 
 
 #include <list>
-#include "../../ESPEasy_common.h"
+
 
 #include "../Globals/Plugins.h"
 
@@ -12,6 +12,8 @@ struct EventQueueStruct {
   EventQueueStruct();
 
   void add(const String& event);
+
+  void add(const __FlashStringHelper * event);
 
   void addMove(String&& event);
 

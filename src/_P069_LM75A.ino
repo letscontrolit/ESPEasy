@@ -22,7 +22,7 @@
 #include "src/PluginStructs/P069_data_struct.h"
 
 
-boolean Plugin_069(byte function, struct EventStruct *event, String& string)
+boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -56,10 +56,15 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      int optionValues[8] = { 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
-      addFormSelectorI2C(F("i2c_addr"), 8, optionValues, PCONFIG(0));
+      const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(8, i2cAddressValues, event->Par1);
+      }
       break;
     }
 
@@ -108,14 +113,13 @@ boolean Plugin_069(byte function, struct EventStruct *event, String& string)
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         if (!success) {
-          String log = F("LM75A: No reading!");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("LM75A: No reading!"));
         }
         else
         {
           String log = F("LM75A: Temperature: ");
           log += tempC;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       break;

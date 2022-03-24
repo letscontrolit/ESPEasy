@@ -1,4 +1,4 @@
-#include "C016_ControllerCache.h"
+#include "../Globals/C016_ControllerCache.h"
 
 #ifdef USES_C016
 
@@ -22,10 +22,10 @@ bool C016_deleteOldestCacheBlock() {
 
 bool C016_getCSVline(
   unsigned long& timestamp,
-  byte& controller_idx,
-  byte& TaskIndex,
+  uint8_t& controller_idx,
+  uint8_t& TaskIndex,
   Sensor_VType& sensorType,
-  byte& valueCount,
+  uint8_t& valueCount,
   float& val1,
   float& val2,
   float& val3,

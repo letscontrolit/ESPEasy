@@ -363,7 +363,7 @@ void OLEDDisplayUi::drawIndicator() {
     uint16_t frameStartPos = (12 * frameCount / 2);
     const char *image;
     uint16_t x = 0, y = 0;
-    for (byte i = 0; i < this->frameCount; i++) {
+    for (uint8_t i = 0; i < this->frameCount; i++) {
 
       switch (this->indicatorPosition){
         case TOP:

@@ -10,6 +10,7 @@
 #include "../WebServer/WebServer.h"
 
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/MQTT.h"
 #include "../Globals/SecuritySettings.h"
@@ -21,6 +22,8 @@
 #include "../Helpers/StringConverter.h"
 
 
+
+#include "../DataStructs/MAC_address.h"
 
 // ********************************************************************************
 // Web Interface config page
@@ -38,7 +41,7 @@ void handle_config() {
 
   if (web_server.args() != 0)
   {
-    String name = web_server.arg(F("name"));
+    String name = webArg(F("name"));
     name.trim();
 
     Settings.Delay              = getFormItemInt(F("delay"), Settings.Delay);
@@ -66,7 +69,7 @@ void handle_config() {
     copyFormPassword(F("password"), SecuritySettings.Password, sizeof(SecuritySettings.Password));
 
     // SSID 1
-    safe_strncpy(SecuritySettings.WifiSSID, web_server.arg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
+    safe_strncpy(SecuritySettings.WifiSSID, webArg(F("ssid")).c_str(), sizeof(SecuritySettings.WifiSSID));
     copyFormPassword(F("key"), SecuritySettings.WifiKey, sizeof(SecuritySettings.WifiKey));
 
     // SSID 2
@@ -82,6 +85,9 @@ void handle_config() {
     // When set you can use the Sensor in AP-Mode without being forced to /setup
     Settings.ApDontForceSetup(isFormItemChecked(F("ApDontForceSetup")));
 
+    // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
+    Settings.DoNotStartAP(isFormItemChecked(F("DoNotStartAP")));
+
 
     // TD-er Read access control from form.
     SecuritySettings.IPblockLevel = getFormItemInt(F("ipblocklevel"));
@@ -92,7 +98,7 @@ void handle_config() {
         IPAddress low, high;
         getSubnetRange(low, high);
 
-        for (byte i = 0; i < 4; ++i) {
+        for (uint8_t i = 0; i < 4; ++i) {
           SecuritySettings.AllowedIPrangeLow[i]  = low[i];
           SecuritySettings.AllowedIPrangeHigh[i] = high[i];
         }
@@ -128,6 +134,7 @@ void handle_config() {
   Settings.Name[25]             = 0;
   SecuritySettings.Password[25] = 0;
   addFormTextBox(F("Unit Name"), F("name"), Settings.Name, 25);
+  addFormNote(String(F("Hostname: ")) + NetworkCreateRFCCompliantHostname());
   addFormNumericBox(F("Unit Number"), F("unit"), Settings.Unit, 0, UNIT_NUMBER_MAX);
   addFormCheckBox(F("Append Unit Number to hostname"), F("appendunittohostname"), Settings.appendUnitToHostname());
   addFormPasswordBox(F("Admin Password"), F("password"), SecuritySettings.Password, 25);
@@ -138,25 +145,35 @@ void handle_config() {
   addFormPasswordBox(F("WPA Key"), F("key"), SecuritySettings.WifiKey, 63);
   addFormTextBox(F("Fallback SSID"), F("ssid2"), SecuritySettings.WifiSSID2, 31);
   addFormPasswordBox(F("Fallback WPA Key"), F("key2"), SecuritySettings.WifiKey2, 63);
+  addFormNote(F("WPA Key must be at least 8 characters long"));
 
   addFormCheckBox(F("Include Hidden SSID"), F("hiddenssid"), Settings.IncludeHiddenSSID());
   addFormNote(F("Must be checked to connect to a hidden SSID"));
 
   addFormSeparator(2);
   addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
+  addFormNote(F("WPA Key must be at least 8 characters long"));
 
   addFormCheckBox(F("Don't force /setup in AP-Mode"), F("ApDontForceSetup"), Settings.ApDontForceSetup());
   addFormNote(F("When set you can use the Sensor in AP-Mode without being forced to /setup. /setup can still be called."));
+
+  addFormCheckBox(F("Do Not Start AP"), F("DoNotStartAP"), Settings.DoNotStartAP());
+  #ifdef HAS_ETHERNET
+  addFormNote(F("Do not allow to start an AP when unable to connect to configured LAN/WiFi"));
+  #else
+  addFormNote(F("Do not allow to start an AP when configured WiFi cannot be found"));
+  #endif
+
 
   // TD-er add IP access box F("ipblocklevel")
   addFormSubHeader(F("Client IP filtering"));
   {
     IPAddress low, high;
     getIPallowedRange(low, high);
-    byte iplow[4];
-    byte iphigh[4];
+    uint8_t iplow[4];
+    uint8_t iphigh[4];
 
-    for (byte i = 0; i < 4; ++i) {
+    for (uint8_t i = 0; i < 4; ++i) {
       iplow[i]  = low[i];
       iphigh[i] = high[i];
     }

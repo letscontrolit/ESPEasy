@@ -46,7 +46,7 @@
 // Pin 2: DMX- (cold)
 // Pin 3: DMX+ (hot)
 
-// Note: The ESP serial FIFO has size of 128 byte. Therefore it is rcommented to use DMX buffer sizes below 128
+// Note: The ESP serial FIFO has size of 128 uint8_t. Therefore it is rcommented to use DMX buffer sizes below 128
 
 
 //#include <*.h>   //no lib needed
@@ -56,7 +56,7 @@
 #define PLUGIN_ID_054         54
 #define PLUGIN_NAME_054       "Communication - DMX512 TX [TESTING]"
 
-byte* Plugin_054_DMXBuffer = 0;
+uint8_t* Plugin_054_DMXBuffer = 0;
 int16_t Plugin_054_DMXSize = 32;
 
 static inline void PLUGIN_054_Limit(int16_t& value, int16_t min, int16_t max)
@@ -68,7 +68,7 @@ static inline void PLUGIN_054_Limit(int16_t& value, int16_t min, int16_t max)
 }
 
 
-boolean Plugin_054(byte function, struct EventStruct *event, String& string)
+boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -124,12 +124,23 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
         CONFIG_PIN1 = 2;   //TX1 fix to GPIO2 (D4) == onboard LED
         Plugin_054_DMXSize = PCONFIG(0);
 
-        if (Plugin_054_DMXBuffer)
+        if (Plugin_054_DMXBuffer) {
           delete [] Plugin_054_DMXBuffer;
-        Plugin_054_DMXBuffer = new byte[Plugin_054_DMXSize];
-        memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
+        }
+        Plugin_054_DMXBuffer = new (std::nothrow) uint8_t[Plugin_054_DMXSize];
+        if (Plugin_054_DMXBuffer != nullptr) {
+          memset(Plugin_054_DMXBuffer, 0, Plugin_054_DMXSize);
+        }
 
-        success = true;
+        success = Plugin_054_DMXBuffer != nullptr;
+        break;
+      }
+
+    case PLUGIN_EXIT:
+      {
+        if (Plugin_054_DMXBuffer) {
+          delete [] Plugin_054_DMXBuffer;
+        }
         break;
       }
 
@@ -144,7 +155,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           String param;
           String paramKey;
           String paramVal;
-          byte paramIdx = 2;
+          uint8_t paramIdx = 2;
           int16_t channel = 1;
           int16_t value = 0;
           //FIXME TD-er: Same code in _P057
@@ -157,7 +168,9 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
           {
             while (param.length())
             {
+              #ifndef BUILD_NO_DEBUG
               addLog(LOG_LEVEL_DEBUG_MORE, param);
+              #endif
 
               if (param == F("log"))
               {
@@ -168,7 +181,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
                     log += Plugin_054_DMXBuffer[i];
                     log += F(", ");
                   }
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 }
                 success = true;
               }
@@ -248,7 +261,7 @@ boolean Plugin_054(byte function, struct EventStruct *event, String& string)
 
           //send DMX data
           Serial1.begin(250000, SERIAL_8N2);
-          Serial1.write(0);   //start byte
+          Serial1.write(0);   //start uint8_t
           Serial1.write(Plugin_054_DMXBuffer, Plugin_054_DMXSize);
         }
         break;

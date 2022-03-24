@@ -32,7 +32,7 @@
 #define VEML6070_base_value ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (1)
 #define VEML6070_max_value  ((VEML6070_RSET_DEFAULT / VEML6070_TABLE_COEFFCIENT) / VEML6070_UV_MAX_DEFAULT) * (VEML6070_UV_MAX_INDEX)
 
-boolean Plugin_084(byte function, struct EventStruct *event, String& string)
+boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -69,10 +69,16 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
+    {
+      success = (event->Par1 == 0x38);
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      String optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
-      addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, NULL, PCONFIG(0));
+      const __FlashStringHelper * optionsMode[4] = { F("1/2T"), F("1T"), F("2T"), F("4T (Default)") };
+      addFormSelector(F("Refresh Time Determination"), F("itime"), 4, optionsMode, nullptr, PCONFIG(0));
 
       success = true;
       break;
@@ -122,7 +128,7 @@ boolean Plugin_084(byte function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("VEML6070: UV: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         success = true;
@@ -153,7 +159,7 @@ uint16_t VEML6070_ReadUv(bool *status)
   return uv_raw;
 }
 
-bool VEML6070_Init(byte it)
+bool VEML6070_Init(uint8_t it)
 {
   boolean succes = I2C_write8(VEML6070_ADDR_L, ((it << 2) | 0x02));
 
@@ -179,7 +185,7 @@ double VEML6070_UvRiskLevel(uint16_t uv_level)
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("VEML6070 out of range: ");
       log += risk;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
 
     return 99;

@@ -20,7 +20,7 @@
 #define PLUGIN_NAME_023       "Display - OLED SSD1306"
 #define PLUGIN_VALUENAME1_023 "OLED"
 
-boolean Plugin_023(byte function, struct EventStruct *event, String& string)
+boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -53,13 +53,23 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      byte choice = PCONFIG(0);
+      const uint8_t i2cAddressValues[] = { 0x3C, 0x3D };
+      if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+      } else {
+        success = intArrayContains(2, i2cAddressValues, event->Par1);
+      }
+      break;
+    }
 
-      /*String options[2] = { F("3C"), F("3D") };*/
-      int optionValues[2] = { 0x3C, 0x3D };
-      addFormSelectorI2C(F("i2c_addr"), 2, optionValues, choice);
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("Btn: ");
+      string += formatGpioLabel(CONFIG_PIN3, false);
+      success = true;
       break;
     }
 
@@ -68,20 +78,20 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       addFormCheckBox(F("Use SH1106 controller"), F("p023_use_sh1106"), PCONFIG(5));
 
       {
-        byte choice2         = PCONFIG(1);
-        String options2[2]   = { F("Normal"), F("Rotated") };
+        uint8_t choice2         = PCONFIG(1);
+        const __FlashStringHelper * options2[2]   = { F("Normal"), F("Rotated") };
         int optionValues2[2] = { 1, 2 };
         addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
       }
       {
-        byte   choice3          = PCONFIG(3);
-        String options3[3]      = { F("128x64"), F("128x32"), F("64x48") };
+        uint8_t   choice3          = PCONFIG(3);
+        const __FlashStringHelper * options3[3]      = { F("128x64"), F("128x32"), F("64x48") };
         int    optionValues3[3] = { 1, 3, 2 };
         addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
       }
       {
-        byte   choice4          = PCONFIG(4);
-        String options4[2]      = { F("Normal"), F("Optimized") };
+        uint8_t   choice4          = PCONFIG(4);
+        const __FlashStringHelper * options4[2]      = { F("Normal"), F("Optimized") };
         int    optionValues4[2] = { 1, 2 };
         addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, choice4);
       }
@@ -89,14 +99,14 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (byte varNr = 0; varNr < 8; varNr++)
+        for (uint8_t varNr = 0; varNr < 8; varNr++)
         {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }
       }
 
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
-      addFormPinSelect(F("Display button"), F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Display button")), F("taskdevicepin3"), CONFIG_PIN3);
 
       addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), PCONFIG(2));
 
@@ -118,9 +128,9 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       char   deviceTemplate[P23_Nlines][P23_Nchars];
       String error;
 
-      for (byte varNr = 0; varNr < P23_Nlines; varNr++)
+      for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++)
       {
-        if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P23_Nchars)) {
+        if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P23_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
       }
@@ -128,18 +138,18 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&deviceTemplate, sizeof(deviceTemplate));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&deviceTemplate), sizeof(deviceTemplate));
       success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      byte address                           = PCONFIG(0);
-      byte type                              = 0;
+      uint8_t address                           = PCONFIG(0);
+      uint8_t type                              = 0;
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
-      byte displayTimer                      = PCONFIG(2);
-      byte use_sh1106                        = PCONFIG(5);
+      uint8_t displayTimer                      = PCONFIG(2);
+      uint8_t use_sh1106                        = PCONFIG(5);
 
 
       switch (PCONFIG(3)) {
@@ -183,7 +193,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
         P023_data->sendStrXY("ESP Easy ", 0, 0);
 
-        if (CONFIG_PIN3 != -1) {
+        if (validGpio(CONFIG_PIN3)) {
           pinMode(CONFIG_PIN3, INPUT_PULLUP);
         }
         success = true;
@@ -193,7 +203,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (CONFIG_PIN3 != -1)
+      if (validGpio(CONFIG_PIN3))
       {
         if (!digitalRead(CONFIG_PIN3))
         {
@@ -228,7 +238,7 @@ boolean Plugin_023(byte function, struct EventStruct *event, String& string)
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (byte x = 0; x < 8; x++)
+        for (uint8_t x = 0; x < 8; x++)
         {
           if (strings[x].length())
           {

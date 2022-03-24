@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 
@@ -18,7 +19,15 @@ struct EventStruct;
 class C018_queue_element {
 public:
 
-  C018_queue_element();
+  C018_queue_element() = default;
+
+#ifdef USE_SECOND_HEAP
+  C018_queue_element(const C018_queue_element& other) = default;
+#else
+  C018_queue_element(const C018_queue_element& other) = delete;
+#endif
+
+  C018_queue_element(C018_queue_element&& other) = default;
 
   C018_queue_element(struct EventStruct *event,
                      uint8_t             sampleSetCount);
@@ -26,6 +35,8 @@ public:
   size_t getSize() const;
 
   bool isDuplicate(const C018_queue_element& other) const;
+
+  const UnitMessageCount_t* getUnitMessageCount() const { return nullptr; }
 
   String packed;
   unsigned long _timestamp         = millis();

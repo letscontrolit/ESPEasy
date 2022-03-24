@@ -90,26 +90,26 @@ public:
 
   TimingStats();
 
-  void         add(unsigned long time);
+  void         add(int64_t time);
   void         reset();
   bool         isEmpty() const;
   float        getAvg() const;
-  unsigned int getMinMax(unsigned long& minVal,
-                         unsigned long& maxVal) const;
-  bool         thresholdExceeded(unsigned long threshold) const;
+  uint32_t     getMinMax(uint64_t& minVal,
+                         uint64_t& maxVal) const;
+  bool         thresholdExceeded(const uint64_t& threshold) const;
 
 private:
 
   float _timeTotal;
-  unsigned int _count;
-  unsigned long _maxVal;
-  unsigned long _minVal;
+  uint32_t _count;
+  uint64_t _maxVal;
+  uint64_t _minVal;
 };
 
 
-String getPluginFunctionName(int function);
+const __FlashStringHelper * getPluginFunctionName(int function);
 bool   mustLogFunction(int function);
-String getCPluginCFunctionName(CPlugin::Function function);
+const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function);
 bool   mustLogCFunction(CPlugin::Function function);
 String getMiscStatsName(int stat);
 
@@ -119,17 +119,17 @@ extern std::map<int, TimingStats> controllerStats;
 extern std::map<int, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
-# define START_TIMER const unsigned long statisticsTimerStart(micros());
+# define START_TIMER const uint64_t statisticsTimerStart(getMicros64());
 # define STOP_TIMER_TASK(T, F) \
   if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
 # define STOP_TIMER_CONTROLLER(T, F) \
   if (mustLogCFunction(F)) controllerStats[(T) * 256 + static_cast<int>(F)].add(usecPassedSince(statisticsTimerStart));
 
 // #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
-# define STOP_TIMER(L) miscStats[L].add(usecPassedSince(statisticsTimerStart));
+# define STOP_TIMER(L) if (Settings.EnableTimingStats()) { miscStats[L].add(usecPassedSince(statisticsTimerStart)); }
 
 // Add a timer statistic value in usec.
-# define ADD_TIMER_STAT(L, T) miscStats[L].add(T);
+# define ADD_TIMER_STAT(L, T) if (Settings.EnableTimingStats()) { miscStats[L].add(T); }
 
 #else // ifdef USES_TIMING_STATS
 

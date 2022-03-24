@@ -14,7 +14,7 @@
  * Get data from Serial Interface
  \*********************************************************************************************/
 
-byte SerialInByte;
+uint8_t SerialInByte;
 int  SerialInByteCounter = 0;
 char InputBuffer_Serial[INPUT_BUFFER_SIZE + 2];
 
@@ -77,8 +77,12 @@ void serial()
   }
 }
 
-void addToSerialBuffer(const char *line) {
-  process_serialWriteBuffer(); // Try to make some room first.
+int getRoomLeft() {
+  #ifdef USE_SECOND_HEAP
+  // If stored in 2nd heap, we must check this for space
+  HeapSelectIram ephemeral;
+  #endif
+
   int roomLeft = getMaxFreeBlock();
 
   if (roomLeft < 1000) {
@@ -88,26 +92,38 @@ void addToSerialBuffer(const char *line) {
   } else {
     roomLeft -= 4000;                          // leave some free for normal use.
   }
+  return roomLeft;
+}
 
-  const char *c = line;
+void addToSerialBuffer(const String& line) {
+  process_serialWriteBuffer(); // Try to make some room first.
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
+    int roomLeft = getRoomLeft();
 
-  while (roomLeft > 0) {
-    // Must use PROGMEM aware functions here.
-    char ch = pgm_read_byte(c++);
-
-    if (ch == '\0') {
-      return;
-    } else {
-      serialWriteBuffer.push_back(ch);
+    auto it = line.begin();
+    while (roomLeft > 0 && it != line.end()) {
+      serialWriteBuffer.push_back(*it);
       --roomLeft;
+      ++it;
     }
   }
 }
 
 void addNewlineToSerialBuffer() {
   process_serialWriteBuffer(); // Try to make some room first.
-  serialWriteBuffer.push_back('\r');
-  serialWriteBuffer.push_back('\n');
+  {
+    #ifdef USE_SECOND_HEAP
+    // Allow to store the logs in 2nd heap if present.
+    HeapSelectIram ephemeral;
+    #endif
+
+    serialWriteBuffer.push_back('\r');
+    serialWriteBuffer.push_back('\n');
+  }
 }
 
 void process_serialWriteBuffer() {
@@ -132,13 +148,24 @@ void process_serialWriteBuffer() {
 
 // For now, only send it to the serial buffer and try to process it.
 // Later we may want to wrap it into a log.
+void serialPrint(const __FlashStringHelper * text) {
+  addToSerialBuffer(String(text));
+  process_serialWriteBuffer();
+}
+
 void serialPrint(const String& text) {
-  addToSerialBuffer(text.c_str());
+  addToSerialBuffer(text);
+  process_serialWriteBuffer();
+}
+
+void serialPrintln(const __FlashStringHelper * text) {
+  addToSerialBuffer(String(text));
+  addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }
 
 void serialPrintln(const String& text) {
-  addToSerialBuffer(text.c_str());
+  addToSerialBuffer(text);
   addNewlineToSerialBuffer();
   process_serialWriteBuffer();
 }

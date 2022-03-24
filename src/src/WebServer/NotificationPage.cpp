@@ -12,7 +12,6 @@
 #include "../Helpers/ESPEasy_Storage.h"
 
 #include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/NPlugins.h"
 #include "../Globals/Settings.h"
 
 
@@ -41,7 +40,7 @@ void handle_notifications() {
   // char tmpString[64];
 
 
-  byte notificationindex          = getFormItemInt(F("index"), 0);
+  uint8_t notificationindex          = getFormItemInt(F("index"), 0);
   boolean notificationindexNotSet = notificationindex == 0;
   --notificationindex;
 
@@ -81,7 +80,7 @@ void handle_notifications() {
     }
 
     // Save the settings.
-    addHtmlError(SaveNotificationSettings(notificationindex, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct)));
+    addHtmlError(SaveNotificationSettings(notificationindex, reinterpret_cast<const uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct)));
     addHtmlError(SaveSettings());
 
     if (web_server.hasArg(F("test"))) {
@@ -92,7 +91,7 @@ void handle_notifications() {
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
-        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, &TempEvent);
+        Scheduler.schedule_notification_event_timer(NotificationProtocolIndex, NPlugin::Function::NPLUGIN_NOTIFY, std::move(TempEvent));
       }
     }
   }
@@ -103,7 +102,7 @@ void handle_notifications() {
   {
     html_table_class_multirow();
     html_TR();
-    html_table_header("",           70);
+    html_table_header(F(""),           70);
     html_table_header(F("Nr"),      50);
     html_table_header(F("Enabled"), 100);
     html_table_header(F("Service"));
@@ -112,9 +111,9 @@ void handle_notifications() {
 
     MakeNotificationSettings(NotificationSettings);
 
-    for (byte x = 0; x < NOTIFICATION_MAX; x++)
+    for (uint8_t x = 0; x < NOTIFICATION_MAX; x++)
     {
-      LoadNotificationSettings(x, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      LoadNotificationSettings(x, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
       html_TR_TD();
       html_add_button_prefix();
@@ -130,7 +129,7 @@ void handle_notifications() {
         addEnabled(Settings.NotificationEnabled[x]);
 
         html_TD();
-        byte   NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[x]);
+        uint8_t   NotificationProtocolIndex = getNProtocolIndex(Settings.Notification[x]);
         String NotificationName          = F("(plugin not found?)");
 
         if (validNProtocolIndex(NotificationProtocolIndex))
@@ -155,19 +154,17 @@ void handle_notifications() {
     html_table_class_normal();
     addFormHeader(F("Notification Settings"));
     addRowLabel(F("Notification"));
-    byte choice = Settings.Notification[notificationindex];
+    uint8_t choice = Settings.Notification[notificationindex];
     addSelector_Head_reloadOnChange(F("notification"));
-    addSelector_Item(F("- None -"), 0, false, false, "");
+    addSelector_Item(F("- None -"), 0, false);
 
-    for (byte x = 0; x <= notificationCount; x++)
+    for (uint8_t x = 0; x <= notificationCount; x++)
     {
       String NotificationName;
       NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addSelector_Item(NotificationName,
                        Notification[x].Number,
-                       choice == Notification[x].Number,
-                       false,
-                       "");
+                       choice == Notification[x].Number);
     }
     addSelector_Foot();
 
@@ -176,7 +173,7 @@ void handle_notifications() {
     if (Settings.Notification[notificationindex])
     {
       MakeNotificationSettings(NotificationSettings);
-      LoadNotificationSettings(notificationindex, (byte *)&NotificationSettings, sizeof(NotificationSettingsStruct));
+      LoadNotificationSettings(notificationindex, reinterpret_cast<uint8_t *>(&NotificationSettings), sizeof(NotificationSettingsStruct));
       NotificationSettings.validate();
 
       nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
@@ -205,7 +202,7 @@ void handle_notifications() {
         if (Notification[NotificationProtocolIndex].usesGPIO > 0)
         {
           addRowLabel(F("1st GPIO"));
-          addPinSelect(false, "pin1", NotificationSettings.Pin1);
+          addPinSelect(PinSelectPurpose::Generic, F("pin1"), NotificationSettings.Pin1);
         }
 
         addRowLabel(F("Enabled"));

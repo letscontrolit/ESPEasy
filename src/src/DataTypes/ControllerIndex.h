@@ -1,9 +1,9 @@
-#ifndef DATASTRUCTS_CONTROLLERINDEX_H
-#define DATASTRUCTS_CONTROLLERINDEX_H
+#ifndef DATATYPES_CONTROLLERINDEX_H
+#define DATATYPES_CONTROLLERINDEX_H
 
 #include <Arduino.h>
 
-typedef byte    controllerIndex_t;
+typedef uint8_t    controllerIndex_t;
 
 extern controllerIndex_t INVALID_CONTROLLER_INDEX;
 

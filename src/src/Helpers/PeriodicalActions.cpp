@@ -1,7 +1,7 @@
 #include "../Helpers/PeriodicalActions.h"
 
 #include "../../ESPEasy_common.h"
-#include "../../ESPEasy_fdwdecl.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../ControllerQueue/DelayQueueElements.h"
@@ -27,6 +27,7 @@
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Memory.h"
@@ -35,6 +36,11 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 #include "../Helpers/StringProvider.h"
+
+#ifdef USES_C015
+#include "../../ESPEasy_fdwdecl.h"
+#endif
+
 
 
 #define PLUGIN_ID_MQTT_IMPORT         37
@@ -144,13 +150,13 @@ void runOncePerSecond()
       event.reserve(21);
       event  = F("Clock#Time=");
       event += node_time.weekday_str();
-      event += ",";
+      event += ',';
 
       if (node_time.hour() < 10) {
         event += '0';
       }
       event += node_time.hour();
-      event += ":";
+      event += ':';
 
       if (node_time.minute() < 10) {
         event += '0';
@@ -166,14 +172,6 @@ void runOncePerSecond()
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
 //  unsigned long elapsed = micros() - start;
 
-
-  if (SecuritySettings.Password[0] != 0)
-  {
-    if (WebLoggedIn)
-      WebLoggedInTimer++;
-    if (WebLoggedInTimer > 300)
-      WebLoggedIn = false;
-  }
 
   // I2C Watchdog feed
   if (Settings.WDI2CAddress != 0)
@@ -198,33 +196,34 @@ void runEach30Seconds()
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    log.reserve(80);
-    log = F("WD   : Uptime ");
-    log += getUptimeMinutes();
-    log += F(" ConnectFailures ");
-    log += WiFiEventData.connectionFailures;
-    log += F(" FreeMem ");
-    log += FreeMem();
-    #ifdef HAS_ETHERNET
-    if(active_network_medium == NetworkMedium_t::Ethernet) {
-      log += F( " EthSpeedState ");
-      log += getValue(LabelType::ETH_SPEED_STATE);
-    } else {
+    if (log.reserve(80)) {
+      log = F("WD   : Uptime ");
+      log += getUptimeMinutes();
+      log += F(" ConnectFailures ");
+      log += WiFiEventData.connectionFailures;
+      log += F(" FreeMem ");
+      log += FreeMem();
+      #ifdef HAS_ETHERNET
+      if(active_network_medium == NetworkMedium_t::Ethernet) {
+        log += F( " EthSpeedState ");
+        log += getValue(LabelType::ETH_SPEED_STATE);
+      } else {
+        log += F(" WiFiStatus ");
+        log += ArduinoWifiStatusToString(WiFi.status());
+      }
+      #else
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
-    }
-    #else
-    log += F(" WiFiStatus ");
-    log += ArduinoWifiStatusToString(WiFi.status());
-    #endif
-    log += F(" ESPeasy internal wifi status: ");
-    log += ESPeasyWifiStatusToString();
+      #endif
+      log += F(" ESPeasy internal wifi status: ");
+      log += ESPeasyWifiStatusToString();
 
-//    log += F(" ListenInterval ");
-//    log += WiFi.getListenInterval();
-    addLog(LOG_LEVEL_INFO, log);
+  //    log += F(" ListenInterval ");
+  //    log += WiFi.getListenInterval();
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
   }
-  WiFiScanPeriodical();
+  WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);
   refreshNodeList();
 
@@ -254,10 +253,12 @@ void runEach30Seconds()
 
 
 void scheduleNextMQTTdelayQueue() {
-  Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+  if (MQTTDelayHandler != nullptr) {
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE, MQTTDelayHandler->getNextScheduleTime());
+  }
 }
 
-void schedule_all_tasks_using_MQTT_controller() {
+void schedule_all_MQTTimport_tasks() {
   controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
 
   if (!validControllerIndex(ControllerIndex)) { return; }
@@ -269,30 +270,26 @@ void schedule_all_tasks_using_MQTT_controller() {
         // Schedule a call to each MQTT import plugin to notify the broker connection state
         EventStruct event(task);
         event.Par1 = MQTTclient_connected ? 1 : 0;
-        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, &event);
+        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, std::move(event));
       }
-    }
-  }
-
-  for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
-    if (Settings.TaskDeviceSendData[ControllerIndex][task] &&
-        Settings.ControllerEnabled[ControllerIndex] &&
-        Settings.Protocol[ControllerIndex])
-    {
-      Scheduler.schedule_task_device_timer_at_init(task);
     }
   }
 }
 
 void processMQTTdelayQueue() {
-  if (MQTTDelayHandler == nullptr || !MQTTclient_connected) {
+  if (MQTTDelayHandler == nullptr) {
+    return;
+  }
+  runPeriodicalMQTT(); // Update MQTT connected state.
+  if (!MQTTclient_connected) {
+    scheduleNextMQTTdelayQueue();
     return;
   }
 
   START_TIMER;
   MQTT_queue_element *element(MQTTDelayHandler->getNext());
 
-  if (element == NULL) { return; }
+  if (element == nullptr) { return; }
 
   if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
     if (WiFiEventData.connectionFailures > 0) {
@@ -307,7 +304,7 @@ void processMQTTdelayQueue() {
       String log = F("MQTT : process MQTT queue not published, ");
       log += MQTTDelayHandler->sendQueue.size();
       log += F(" items left in queue");
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -323,12 +320,12 @@ void updateMQTTclient_connected() {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String connectionError = F("MQTT : Connection lost, state: ");
         connectionError += getMQTT_state();
-        addLog(LOG_LEVEL_ERROR, connectionError);
+        addLogMove(LOG_LEVEL_ERROR, connectionError);
       }
       MQTTclient_must_send_LWT_connected = false;
     } else {
       // Now schedule all tasks using the MQTT controller.
-      schedule_all_tasks_using_MQTT_controller();
+      schedule_all_MQTTimport_tasks();
     }
     if (Settings.UseRules) {
       if (MQTTclient_connected) {
@@ -347,6 +344,7 @@ void updateMQTTclient_connected() {
     timermqtt_interval = 250;
   }
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
+  scheduleNextMQTTdelayQueue();
 }
 
 void runPeriodicalMQTT() {
@@ -391,19 +389,19 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 
 
 void logTimerStatistics() {
-  byte loglevel = LOG_LEVEL_DEBUG;
+  uint8_t loglevel = LOG_LEVEL_DEBUG;
   updateLoopStats_30sec(loglevel);
 #ifndef BUILD_NO_DEBUG
 //  logStatistics(loglevel, true);
   if (loglevelActiveFor(loglevel)) {
     String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
     queueLog += Scheduler.getQueueStats();
-    addLog(loglevel, queueLog);
+    addLogMove(loglevel, queueLog);
   }
 #endif
 }
 
-void updateLoopStats_30sec(byte loglevel) {
+void updateLoopStats_30sec(uint8_t loglevel) {
   loopCounterLast = loopCounter;
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
@@ -423,7 +421,7 @@ void updateLoopStats_30sec(byte loglevel) {
     log += loopCounterMax;
     log += F(" loopCounterLast: ");
     log += loopCounterLast;
-    addLog(loglevel, log);
+    addLogMove(loglevel, log);
   }
 #endif
   loop_usec_duration_total = 0;
@@ -434,6 +432,34 @@ void updateLoopStats_30sec(byte loglevel) {
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.
  \*********************************************************************************************/
+void flushAndDisconnectAllClients() {
+  if (anyControllerEnabled()) {
+#ifdef USES_MQTT
+    bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
+#endif //USES_MQTT
+    unsigned long timer = millis() + 1000;
+    while (!timeOutReached(timer)) {
+      // call to all controllers (delay queue) to flush all data.
+      CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);
+#ifdef USES_MQTT      
+      if (mqttControllerEnabled && MQTTclient.connected()) {
+        MQTTclient.loop();
+      }
+#endif //USES_MQTT
+    }
+#ifdef USES_MQTT
+    if (mqttControllerEnabled && MQTTclient.connected()) {
+      MQTTclient.disconnect();
+      updateMQTTclient_connected();
+    }
+#endif //USES_MQTT
+    saveToRTC();
+    delay(100); // Flush anything in the network buffers.
+  }
+  process_serialWriteBuffer();
+}
+
+
 void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
 #ifdef USES_MQTT
@@ -442,6 +468,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
+  setWifiMode(WIFI_OFF);
   ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();

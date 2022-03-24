@@ -2,11 +2,12 @@
 #define DATASTRUCTS_RTC_CACHE_HANDLER_STRUCT_H
 
 
-#include "RTCCacheStruct.h"
+#include "../DataStructs/RTCCacheStruct.h"
 
 #include "../../ESPEasy_common.h"
 
 #include <FS.h>
+#include <vector>
 
 
 // Locations where to store the cached data
@@ -23,6 +24,8 @@
 #define CACHE_STORAGE_BEHIND_SPIFFS 3
 
 
+//#define RTC_STRUCT_DEBUG
+
 /********************************************************************************************\
    RTC located cache
  \*********************************************************************************************/
@@ -38,7 +41,7 @@ struct RTC_cache_handler_struct
                     unsigned int size);
 
   // Write a single sample set to the buffer
-  bool write(uint8_t     *data,
+  bool write(const uint8_t     *data,
              unsigned int size);
 
   // Mark all content as being processed and empty buffer.
@@ -79,15 +82,17 @@ private:
                          size_t        nrBytes);
 #endif // ifdef RTC_STRUCT_DEBUG
 
+#ifdef ESP8266
   RTC_cache_struct    RTC_cache;
   std::vector<uint8_t>RTC_cache_data;
-  File                fw;
-  File                fr;
-  File                fp;
+#endif
+  fs::File            fw;
+  fs::File            fr;
+  fs::File            fp;
   size_t              peekfilenr  = 0;
   size_t              peekreadpos = 0;
 
-  byte storageLocation = CACHE_STORAGE_SPIFFS;
+  uint8_t storageLocation = CACHE_STORAGE_SPIFFS;
   bool writeerror      = false;
 };
 

@@ -1,16 +1,16 @@
 #ifndef GLOBALS_PLUGIN_H
 #define GLOBALS_PLUGIN_H
 
+#include "../../ESPEasy_common.h"
+
 #include <map>
 #include <vector>
 #include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/TaskIndex.h"
 
-#include "../../ESPEasy_common.h"
 
 
 /********************************************************************************************\
@@ -41,21 +41,21 @@
    - USERVAR_MAX_INDEX = (TASKS_MAX * VARS_PER_TASK)
  \*********************************************************************************************/
 
-
+struct EventStruct;
 
 extern int deviceCount;
 
 // Array of function pointers to call plugins.
-extern boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+extern boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
                                          struct EventStruct *,
                                          String&);
 
+// Vector to match a "DeviceIndex" to a plugin ID.
+// INVALID_DEVICE_INDEX may be used as index for this array, thus one larger
+extern pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
 
 // Map to match a plugin ID to a "DeviceIndex"
 extern std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-
-// Vector to match a "DeviceIndex" to a plugin ID.
-extern std::vector<pluginID_t> DeviceIndex_to_Plugin_id;
 
 // Vector containing "DeviceIndex" alfabetically sorted.
 extern std::vector<deviceIndex_t> DeviceIndex_sorted;
@@ -74,6 +74,11 @@ bool validTaskVarIndex(taskVarIndex_t index);
 bool          supportedPluginID(pluginID_t pluginID);
 
 deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex);
+
 
 
 /********************************************************************************************\
@@ -82,18 +87,23 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex);
 deviceIndex_t getDeviceIndex(pluginID_t Number);
 
 String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
+#if USE_I2C_DEVICE_SCAN
+bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
+#endif // if USE_I2C_DEVICE_SCAN
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();
 
 
-void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+// Prepare I2C bus for next call to task
+// Return false if task is I2C, but I2C bus is not ready
+bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-bool PluginCall(byte Function, struct EventStruct *event, String& str);
+bool PluginCall(uint8_t Function, struct EventStruct *event, String& str);
 
 
 /*********************************************************************************************\

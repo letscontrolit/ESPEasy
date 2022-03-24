@@ -30,7 +30,7 @@ void P004_data_struct::add_addr(const uint8_t addr[], uint8_t index) {
 bool P004_data_struct::initiate_read() {
   _measurementStart = millis();
 
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     if (_sensors[i].initiate_read(_gpio_rx, _gpio_tx, _res)) {
       if (!measurement_active()) {
         // Set the timer right after initiating the first sensor
@@ -58,7 +58,7 @@ bool P004_data_struct::initiate_read() {
 bool P004_data_struct::collect_values() {
   bool success = false;
 
-  for (byte i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     if (_sensors[i].collect_value(_gpio_rx, _gpio_tx)) {
       success = true;
     }

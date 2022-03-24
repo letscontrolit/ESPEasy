@@ -1,5 +1,4 @@
-#include "StringParser.h"
-
+#include "../Helpers/StringParser.h"
 
 #include "../../_Plugin_Helper.h"
 
@@ -19,7 +18,8 @@
 #include "../Helpers/Rules_calculate.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
-#include "../Helpers/StringParser.h"
+
+#include <Arduino.h>
 
 /********************************************************************************************\
    Parse string template
@@ -34,20 +34,20 @@ String parseTemplate(String& tmpString, bool useURLencode)
   return parseTemplate_padded(tmpString, 0, useURLencode);
 }
 
-String parseTemplate_padded(String& tmpString, byte minimal_lineSize)
+String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize)
 {
   return parseTemplate_padded(tmpString, minimal_lineSize, false);
 }
 
-String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useURLencode)
+String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool useURLencode)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("parseTemplate_padded"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  START_TIMER
+  START_TIMER;
 
   // Keep current loaded taskSettings to restore at the end.
-  byte   currentTaskIndex = ExtraTaskSettings.TaskIndex;
+  uint8_t   currentTaskIndex = ExtraTaskSettings.TaskIndex;
   String newString;
 
   newString.reserve(minimal_lineSize); // Our best guess of the new size.
@@ -62,100 +62,102 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
   int startpos = 0;
   int lastStartpos = 0;
   int endpos = 0;
-  String deviceName, valueName, format;
+  {
+    String deviceName, valueName, format;
 
-  while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
-    // First copy all upto the start of the [...#...] part to be replaced.
-    newString += tmpString.substring(lastStartpos, startpos);
+    while (findNextDevValNameInString(tmpString, startpos, endpos, deviceName, valueName, format)) {
+      // First copy all upto the start of the [...#...] part to be replaced.
+      newString += tmpString.substring(lastStartpos, startpos);
 
-    // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
-    if (deviceName.equals(F("plugin")))
-    {
-      // Handle a plugin request.
-      // For example: "[Plugin#GPIO#Pinstate#N]"
-      // The command is stored in valueName & format
-      String command;
-      command.reserve(valueName.length() + format.length() + 1);
-      command  = valueName;
-      command += '#';
-      command += format;
-      command.replace('#', ',');
-
-      if (getGPIOPinStateValues(command)) {
-        newString += command;
-      }
-/* @giig1967g
-      if (PluginCall(PLUGIN_REQUEST, 0, command))
+      // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
+      if (deviceName.equals(F("plugin")))
       {
-        // Do not call transformValue here.
-        // The "format" is not empty so must not call the formatter function.
-        newString += command;
-      }
-*/
-    }
-    else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
-    {
-      // Address an internal variable either as float or as int
-      // For example: Let,10,[VAR#9]
-      unsigned int varNum;
+        // Handle a plugin request.
+        // For example: "[Plugin#GPIO#Pinstate#N]"
+        // The command is stored in valueName & format
+        String command;
+        command.reserve(valueName.length() + format.length() + 1);
+        command  = valueName;
+        command += '#';
+        command += format;
+        command.replace('#', ',');
 
-      if (validUIntFromString(valueName, varNum)) {
-        unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
-        bool trimTrailingZeros    = true;
-
-        if (deviceName.equals(F("int"))) {
-          nr_decimals = 0;
-        } else if (format.length() != 0)
+        if (getGPIOPinStateValues(command)) {
+          newString += command;
+        }
+  /* @giig1967g
+        if (PluginCall(PLUGIN_REQUEST, 0, command))
         {
-          // There is some formatting here, so do not throw away decimals
-          trimTrailingZeros = false;
+          // Do not call transformValue here.
+          // The "format" is not empty so must not call the formatter function.
+          newString += command;
         }
-        String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
-        value.trim();
-        transformValue(newString, minimal_lineSize, value, format, tmpString);
+  */
       }
-    }
-    else
-    {
-      // Address a value from a plugin.
-      // For example: "[bme#temp]"
-      // If value name is unknown, run a PLUGIN_GET_CONFIG command.
-      // For example: "[<taskname>#getLevel]"
-      taskIndex_t taskIndex = findTaskIndexByName(deviceName);
+      else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
+      {
+        // Address an internal variable either as float or as int
+        // For example: Let,10,[VAR#9]
+        unsigned int varNum;
 
-      if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
-        byte valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+        if (validUIntFromString(valueName, varNum)) {
+          unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
+          bool trimTrailingZeros    = true;
 
-        if (valueNr != VARS_PER_TASK) {
-          // here we know the task and value, so find the uservar
-          // Try to format and transform the values
-          bool   isvalid;
-          String value = formatUserVar(taskIndex, valueNr, isvalid);
-
-          if (isvalid) {
-            transformValue(newString, minimal_lineSize, value, format, tmpString);
-          }
-        } else {
-          // try if this is a get config request
-          struct EventStruct TempEvent(taskIndex);
-          String tmpName = valueName;
-
-          if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+          if (deviceName.equals(F("int"))) {
+            nr_decimals = 0;
+          } else if (!format.isEmpty())
           {
-            transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
+            // There is some formatting here, so do not throw away decimals
+            trimTrailingZeros = false;
+          }
+          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          value.trim();
+          transformValue(newString, minimal_lineSize, value, format, tmpString);
+        }
+      }
+      else
+      {
+        // Address a value from a plugin.
+        // For example: "[bme#temp]"
+        // If value name is unknown, run a PLUGIN_GET_CONFIG command.
+        // For example: "[<taskname>#getLevel]"
+        taskIndex_t taskIndex = findTaskIndexByName(deviceName);
+
+        if (validTaskIndex(taskIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
+          uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
+
+          if (valueNr != VARS_PER_TASK) {
+            // here we know the task and value, so find the uservar
+            // Try to format and transform the values
+            bool   isvalid;
+            String value = formatUserVar(taskIndex, valueNr, isvalid);
+
+            if (isvalid) {
+              transformValue(newString, minimal_lineSize, value, format, tmpString);
+            }
+          } else {
+            // try if this is a get config request
+            struct EventStruct TempEvent(taskIndex);
+            String tmpName = valueName;
+
+            if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+            {
+              transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
+            }
           }
         }
       }
+
+
+      // Conversion is done (or impossible) for the found "[...#...]"
+      // Continue with the next one.
+      lastStartpos = endpos + 1;
+      startpos     = endpos + 1;
+
+      // This may have taken some time, so call delay()
+      delay(0);
     }
-
-
-    // Conversion is done (or impossible) for the found "[...#...]"
-    // Continue with the next one.
-    lastStartpos = endpos + 1;
-    startpos     = endpos + 1;
-
-    // This may have taken some time, so call delay()
-    delay(0);
   }
 
   // Copy the rest of the string (or all if no replacements were done)
@@ -195,7 +197,7 @@ String parseTemplate_padded(String& tmpString, byte minimal_lineSize, bool useUR
 // valueFormat="transformation#justification"
 void transformValue(
   String      & newString,
-  byte          lineSize,
+  uint8_t          lineSize,
   String        value,
   String      & valueFormat,
   const String& tmpString)
@@ -276,7 +278,7 @@ void transformValue(
             }
 
             if (value == F("0")) {
-              value = "";
+              value = String();
             } else {
               const int valueLength = value.length();
 
@@ -299,7 +301,7 @@ void transformValue(
             value = logicVal == 0 ? F("AUTO") : F(" MAN");
             break;
           case 'm':
-            value = logicVal == 0 ? F("A") : F("M");
+            value = logicVal == 0 ? 'A' : 'M';
             break;
           case 'H':
             value = logicVal == 0 ? F("COLD") : F(" HOT");
@@ -308,16 +310,16 @@ void transformValue(
             value = logicVal == 0 ? F("DOWN") : F("  UP");
             break;
           case 'u':
-            value = logicVal == 0 ? F("D") : F("U");
+            value = logicVal == 0 ? 'D' : 'U';
             break;
           case 'Y':
             value = logicVal == 0 ? F(" NO") : F("YES");
             break;
           case 'y':
-            value = logicVal == 0 ? F("N") : F("Y");
+            value = logicVal == 0 ? 'N' : 'Y';
             break;
           case 'X':
-            value = logicVal == 0 ? F("O") : F("X");
+            value = logicVal == 0 ? 'O' : 'X';
             break;
           case 'I':
             value = logicVal == 0 ? F("OUT") : F(" IN");
@@ -326,10 +328,10 @@ void transformValue(
             value = logicVal == 0 ? F(" LEFT") : F("RIGHT");
             break;
           case 'l':
-            value = logicVal == 0 ? F("L") : F("R");
+            value = logicVal == 0 ? 'L' : 'R';
             break;
           case 'Z': // return "0" or "1"
-            value = logicVal == 0 ? "0" : "1";
+            value = logicVal == 0 ? '0' : '1';
             break;
           case 'D': // Dx.y min 'x' digits zero filled & 'y' decimal fixed digits
           case 'd': // like above but with spaces padding
@@ -345,22 +347,22 @@ void transformValue(
 
                 if (isDigit(tempValueFormat[1]))
                 {
-                  x = (int)tempValueFormat[1] - '0';
+                  x = static_cast<int>(tempValueFormat[1]) - '0';
                 }
                 break;
               case 3: // D.y
 
                 if ((tempValueFormat[1] == '.') && isDigit(tempValueFormat[2]))
                 {
-                  y = (int)tempValueFormat[2] - '0';
+                  y = static_cast<int>(tempValueFormat[2]) - '0';
                 }
                 break;
               case 4: // Dx.y
 
                 if (isDigit(tempValueFormat[1]) && (tempValueFormat[2] == '.') && isDigit(tempValueFormat[3]))
                 {
-                  x = (int)tempValueFormat[1] - '0';
-                  y = (int)tempValueFormat[3] - '0';
+                  x = static_cast<int>(tempValueFormat[1]) - '0';
+                  y = static_cast<int>(tempValueFormat[3]) - '0';
                 }
                 break;
               case 1:  // D
@@ -375,16 +377,16 @@ void transformValue(
               indexDot = value.length();
             }
 
-            for (byte f = 0; f < (x - indexDot); f++) {
+            for (uint8_t f = 0; f < (x - indexDot); f++) {
               value = (tempValueFormat[0] == 'd' ? ' ' : '0') + value;
             }
             break;
           }
           case 'F': // FLOOR (round down)
-            value = (int)floorf(valFloat);
+            value = static_cast<int>(floorf(valFloat));
             break;
           case 'E': // CEILING (round up)
-            value = (int)ceilf(valFloat);
+            value = static_cast<int>(ceilf(valFloat));
             break;
           default:
             value = F("ERR");
@@ -408,7 +410,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0'; // char '0' = 48; char '9' = 58
 
-                  for (byte f = 0; f < filler; f++) {
+                  for (uint8_t f = 0; f < filler; f++) {
                     newString += ' ';
                   }
                 }
@@ -422,7 +424,7 @@ void transformValue(
                 {
                   int filler = valueJust[1] - value.length() - '0'; // 48
 
-                  for (byte f = 0; f < filler; f++) {
+                  for (uint8_t f = 0; f < filler; f++) {
                     value += ' ';
                   }
                 }
@@ -434,7 +436,7 @@ void transformValue(
               {
                 if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(0, (int)valueJust[1] - '0');
+                  value = value.substring(0, static_cast<int>(valueJust[1]) - '0');
                 }
               }
               break;
@@ -444,7 +446,7 @@ void transformValue(
               {
                 if (isDigit(valueJust[1])) // Check n where n is between 0 and 9
                 {
-                  value = value.substring(std::max(0, (int)value.length() - ((int)valueJust[1] - '0')));
+                  value = value.substring(std::max(0, static_cast<int>(value.length()) - (static_cast<int>(valueJust[1]) - '0')));
                 }
               }
               break;
@@ -454,8 +456,8 @@ void transformValue(
               {
                 if (isDigit(valueJust[1]) && (valueJust[2] == '.') && isDigit(valueJust[3]) && (valueJust[1] > '0') && (valueJust[3] > '0'))
                 {
-                  value = value.substring(std::min((int)value.length(), (int)valueJust[1] - '0' - 1),
-                                          (int)valueJust[1] - '0' - 1 + (int)valueJust[3] - '0');
+                  value = value.substring(std::min(static_cast<int>(value.length()), static_cast<int>(valueJust[1]) - '0' - 1),
+                                          static_cast<int>(valueJust[1]) - '0' - 1 + static_cast<int>(valueJust[3]) - '0');
                 }
                 else
                 {
@@ -494,7 +496,7 @@ void transformValue(
       {
         int filler = lineSize - newString.length() - value.length() - tmpString.length();
 
-        for (byte f = 0; f < filler; f++) {
+        for (uint8_t f = 0; f < filler; f++) {
           newString += ' ';
         }
       }
@@ -506,7 +508,7 @@ void transformValue(
           logFormatted += newString;
           logFormatted += value;
           logFormatted += '\'';
-          addLog(LOG_LEVEL_DEBUG, logFormatted);
+          addLogMove(LOG_LEVEL_DEBUG, logFormatted);
         }
 #endif // ifndef BUILD_NO_DEBUG
       }
@@ -523,7 +525,7 @@ void transformValue(
       String logParsed = F("DEBUG DEV: Parsed String='");
       logParsed += newString;
       logParsed += '\'';
-      addLog(LOG_LEVEL_DEBUG_DEV, logParsed);
+      addLogMove(LOG_LEVEL_DEBUG_DEV, logParsed);
     }
 #endif // ifndef BUILD_NO_DEBUG
   }
@@ -537,7 +539,13 @@ void transformValue(
 taskIndex_t findTaskIndexByName(const String& deviceName)
 {
   // cache this, since LoadTaskSettings does take some time.
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  auto result = Cache.taskIndexName.find(String(deviceName));
+  #else
   auto result = Cache.taskIndexName.find(deviceName);
+  #endif
+
 
   if (result != Cache.taskIndexName.end()) {
     return result->second;
@@ -548,12 +556,16 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
     if (Settings.TaskDeviceEnabled[taskIndex]) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
-      if (taskDeviceName.length() != 0)
+      if (!taskDeviceName.isEmpty())
       {
         // Use entered taskDeviceName can have any case, so compare case insensitive.
         if (deviceName.equalsIgnoreCase(taskDeviceName))
         {
+          #ifdef USE_SECOND_HEAP
+          Cache.taskIndexName[String(deviceName)] = taskIndex;
+          #else
           Cache.taskIndexName[deviceName] = taskIndex;
+          #endif
           return taskIndex;
         }
       }
@@ -564,11 +576,16 @@ taskIndex_t findTaskIndexByName(const String& deviceName)
 
 // Find the first device value index of a taskIndex.
 // Return VARS_PER_TASK if none found.
-byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
+uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
 {
   const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   if (!validDeviceIndex(deviceIndex)) { return VARS_PER_TASK; }
+
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
 
   // cache this, since LoadTaskSettings does take some time.
   // We need to use a cache search key including the taskIndex,
@@ -588,9 +605,9 @@ byte findDeviceValueIndexByName(const String& valueName, taskIndex_t taskIndex)
   }
   LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
 
-  const byte valCount = getValueCountForTask(taskIndex);
+  const uint8_t valCount = getValueCountForTask(taskIndex);
 
-  for (byte valueNr = 0; valueNr < valCount; valueNr++)
+  for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
     if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
@@ -649,7 +666,7 @@ bool findNextDevValNameInString(const String& input, int& startpos, int& endpos,
     format    = valueName.substring(hashpos + 1);
     valueName = valueName.substring(0, hashpos);
   } else {
-    format = "";
+    format = String();
   }
   deviceName.toLowerCase();
   valueName.toLowerCase();

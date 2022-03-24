@@ -1,0 +1,10 @@
+
+.. csv-table::
+   :header: "Event", "Description"
+   :widths: 30, 20
+
+   "
+   ``<taskname>#AlertTriggered``
+   ","
+   Alert is triggered for a task running ``MAX1704x``.  This alert state can be cleared with the ``max1704xclearalert`` command.
+   "

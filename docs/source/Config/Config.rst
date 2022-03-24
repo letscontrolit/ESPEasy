@@ -111,6 +111,28 @@ This is often used to perform the initial configuration like connecting to the l
 Can also be set via the command ``WiFiAPKey``.
 
 
+Don't force /setup in AP-Mode
+-----------------------------
+
+Allow optional usage of ESPEasy without WIFI avaiable.
+
+When checked you can use ESPEasy in AP-Mode without beeing forced to ``/setup``.
+
+
+Do Not Start AP
+---------------
+
+Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. 
+This flag may prevent to start an AP.
+
+Since this flag can lock out a user, there is a restricted command to uncheck this.
+
+``WifiAllowAP`` will uncheck this flag in the settings until a reboot.
+If the settings are saved, this flag will remain unchecked.
+
+N.B. Restricted means, not accepted from a remote source, only local or via serial.
+
+
 Custom Build WiFi credentials
 -----------------------------
 

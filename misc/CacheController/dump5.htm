@@ -1,0 +1,263 @@
+
+<html>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js"></script>
+<script>
+const TASKS_MAX = 12;
+const VARS_PER_TASK = 4;
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+class DataParser {
+    constructor(data) {
+        this.view = new DataView(data);
+        this.offset = 0;
+        this.bitbyte = 0;
+        this.bitbytepos = 7;
+    }
+
+    pad(nr) {
+        while (this.offset % nr) {
+            this.offset++;
+        }
+    }
+
+    bit(signed = false, write = false, val) {
+        if (this.bitbytepos === 7) {
+            if (!write) {
+                this.bitbyte = this.byte();
+                this.bitbytepos = 0;
+            } else {
+                this.byte(signed, write, this.bitbyte);
+            }
+        }
+        if (!write) {
+            return (this.bitbyte >> this.bitbytepos++) & 1;
+        } else {
+            this.bitbyte = val ? (this.bitbyte | (1 << this.bitbytepos++)) : (this.bitbyte & ~(1 << this.bitbytepos++));
+        }
+    }
+
+    byte(signed = false, write = false, val) {
+        this.pad(1);
+        const fn = `${write ? 'set' : 'get'}${signed ? 'Int8' : 'Uint8'}`;
+        const res = this.view[fn](this.offset, val);
+        this.offset += 1;
+        return res;
+    }
+
+    int16(signed = false, write = false, val) {
+        this.pad(2);
+        let fn = signed ? 'Int16' : 'Uint16';
+        const res =  write ? this.view[`set${fn}`](this.offset, val, true) : this.view[`get${fn}`](this.offset, true);
+        this.offset += 2;
+        return res;
+    }
+
+    int32(signed = false, write = false, val) {
+        this.pad(4);
+        let fn = signed ? 'Int32' : 'Uint32';
+        const res =  write ? this.view[`set${fn}`](this.offset, val, true) : this.view[`get${fn}`](this.offset, true);
+        this.offset += 4;
+        return res;
+    }
+    float(signed = false, write = false, val) {
+        this.pad(4);
+        const res =  write ? this.view.setFloat32(this.offset, val, true) : this.view.getFloat32(this.offset, true);
+        this.offset += 4;
+        return res;
+    }
+    bytes(nr, signed = false, write = false, vals) {
+        const res = [];
+        for (var x = 0; x < nr; x++) {
+            res.push(this.byte(signed, write, vals ? vals[x] : null));
+        }
+        return res;
+    }
+    ints(nr, signed = false, write = false, vals) {
+        const res = [];
+        for (var x = 0; x < nr; x++) {
+            res.push(this.int16(signed, write, vals ? vals[x] : null));
+        }
+        return res;
+    }
+    longs(nr, signed = false, write = false, vals) {
+        const res = [];
+        for (var x = 0; x < nr; x++) {
+            res.push(this.int32(signed, write, vals ? vals[x] : null));
+        }
+        return res;
+    }
+    floats(nr, signed = false, write = false, vals) {
+        const res = [];
+        for (var x = 0; x < nr; x++) {
+            res.push(this.float(write, vals ? vals[x] : null));
+        }
+        return res;
+    }
+    string(nr, signed = false, write = false, val) {
+        if (write) {
+            for (var i = 0; i < nr; ++i) {
+                var code = val.charCodeAt(i) || '\0';
+                this.byte(false, true, code);
+            }
+        } else {
+            const res = this.bytes(nr);
+            return String.fromCharCode.apply(null, res).replace(/\x00/g, '');
+        }
+    }
+}
+
+const parseConfig = (data, config, start) => {
+    const p = new DataParser(data);
+    if (start) p.offset = start;
+    const result = {};
+    config.map(value => {
+        const prop = value.length ? value.length : value.signed;
+        _.set(result, value.prop, p[value.type](prop, value.signed));
+    });
+    return result;
+}
+/*
+const fileFormat = [
+    [...Array(1000)].map((x, i) => ({ prop: `samples[${i}].values`, type:'floats', length: VARS_PER_TASK  })),
+    [...Array(1000)].map((x, i) => ({ prop: `samples[${i}].timestamp`, type: 'longs', signed: false  })),
+    [...Array(1000)].map((x, i) => ({ prop: `samples[${i}].taskIndex`, type: 'byte'  })),
+    [...Array(1000)].map((x, i) => ({ prop: `samples[${i}].controllerIndex`, type: 'byte'  })),
+    [...Array(1000)].map((x, i) => ({ prop: `samples[${i}].sensorType`, type: 'byte'  })),
+    [...Array(1000)].map((x, i) => ({ prop: `samples[${i}].valueCount`, type: 'byte'  })),
+];
+*/
+const fileFormat = [
+    { prop: 'values', type:'floats', length: VARS_PER_TASK },
+    { prop: 'timestamp', type: 'int32', signed: false },
+    { prop: 'taskIndex', type: 'byte' },
+    { prop: 'controllerIndex', type: 'byte' },
+    { prop: 'sensorType', type: 'byte' },
+    { prop: 'valueCount', type: 'byte' },
+];
+
+/*
+loadConfig = () => {
+    return fetch('http://192.168.1.182/cache_json').then(response => response.arrayBuffer()).then(async response => {
+        document.body.innerText = parseConfig(response, fileFormat);
+    });
+}
+*/
+
+loadConfig = async () => {
+    const floatvalues = {};
+    const info = await fetch('/cache_json').then(response => response.json());
+	let csv = info.columns.join(';') + '\n';
+	for (var j = 0; j < (VARS_PER_TASK * TASKS_MAX); j++) {
+		// TODO make "unused" value configurable
+		floatvalues[j] = 0;
+	}
+	
+	// TODO must also read partial files (< 24k)
+	var maxFileNr = info.files.length;
+	for (var filenr = 0; filenr < maxFileNr; filenr++) {
+	    var elem = document.getElementById("bar");
+		var width = Math.round(100.0 * (filenr / (maxFileNr - 1 )));
+		elem.style.width = width + '%'; 
+        elem.innerHTML = width * 1 + '%';
+		const binary = await fetch(info.files[filenr]).then(response => response.arrayBuffer()).then(async response => { 
+			const samples = {};
+			var arrayLength = Math.floor(response.byteLength / 24);
+			//1000;//samples.length;
+			
+			[...Array(arrayLength)].map((x, i) => {
+				samples[i] = parseConfig(response, fileFormat, 24 * i);
+			});
+			
+			// TODO Fetch number of samples.
+			for (var i = 0; i < arrayLength; i++) {
+			  var floatIndex = VARS_PER_TASK * samples[i].taskIndex;
+			  samples[i].values.forEach(item => {
+				floatvalues[floatIndex] = item;
+				floatIndex++;		  
+			  });
+			  // TODO quick fix to remove damaged samples due to writing to closed files.
+			  if (samples[i].timestamp > 1500000000) {
+			      const utc_date = new Date(samples[i].timestamp * 1000);
+				  csv += samples[i].timestamp + ';' + utc_date.toISOString() + ';' + samples[i].taskIndex;
+				  for (var j = 0; j < (VARS_PER_TASK * TASKS_MAX); j++) {
+					csv += ';' + floatvalues[j];
+				  }
+				  csv += '\n';  
+			  }
+			}
+			await sleep(100); // Wait to prevent the ESPeasy node from rebooting.			
+		});
+	}
+//	document.body.innerText = csv;
+//    document.body.innerHTML = `<a href='data:text/plain;charset=utf-8,${encodeURIComponent(csv)}' download='test.csv'>click me</a>`;
+
+	const a = document.createElement('a');
+	const aText = document.createTextNode('Download');
+	a.href = window.URL.createObjectURL(new Blob([csv]), {type: 'text/csv'});
+	a.download = 'test.csv';
+	a.appendChild(aText);
+	a.classList.add("button");
+	document.getElementById("downloadLink").appendChild(a);
+//	document.body.appendChild(a);
+}
+</script>
+
+<style>
+#progress {
+  width: 100%;
+  background-color: #ddd;
+}
+
+#bar {
+  width: 0%;
+  height: 30px;
+  background-color: #4CAF50;
+  text-align: center;
+  line-height: 30px;
+  color: white;
+}
+
+h1, h2 {
+    font-size: 16pt;
+    margin: 8px 0;
+}
+
+h1, h2 {
+    color: #07D;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: sans-serif;
+    font-size: 12pt;
+    margin: 0;
+    padding: 0;
+}
+
+.button {
+    background-color: #07D;
+    border: none;
+    border-radius: 4px;
+    color: #FFF;
+    margin: 4px;
+    padding: 4px 16px;
+}
+
+</style>
+<body>
+
+<h2>ESPeasy cache to CSV</h2>
+<BR>
+
+<button class="button" type="button" onclick="loadConfig()">Fetch cache files</button>
+
+<div id="progress">
+  <div id="bar">0%</div>
+</div>
+<BR>
+<p id="downloadLink"></p>
+</body>
+</html>

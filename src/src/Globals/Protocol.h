@@ -3,7 +3,9 @@
 
 #include "../DataStructs/ProtocolStruct.h"
 
-extern ProtocolVector Protocol;
+#include "../CustomBuild/ESPEasyLimits.h"
+
+extern ProtocolStruct Protocol[CPLUGIN_MAX];
 extern int protocolCount;
 
 #endif // GLOBALS_PROTOCOL_H

@@ -1,4 +1,4 @@
-#include "Plugins.h"
+#include "../Globals/Plugins.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
@@ -19,6 +19,7 @@
 #include "../Globals/EventQueue.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Statistics.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -28,20 +29,17 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-
-
-std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
-std::vector<pluginID_t>    DeviceIndex_to_Plugin_id;
-std::vector<deviceIndex_t> DeviceIndex_sorted;
+#include <vector>
 
 int deviceCount = -1;
 
-boolean (*Plugin_ptr[PLUGIN_MAX])(byte,
+boolean (*Plugin_ptr[PLUGIN_MAX])(uint8_t,
                                   struct EventStruct *,
                                   String&);
 
-
-
+pluginID_t DeviceIndex_to_Plugin_id[PLUGIN_MAX + 1];
+std::map<pluginID_t, deviceIndex_t> Plugin_id_to_DeviceIndex;
+std::vector<deviceIndex_t> DeviceIndex_sorted;
 
 
 bool validDeviceIndex(deviceIndex_t index) {
@@ -87,6 +85,20 @@ deviceIndex_t getDeviceIndex_from_TaskIndex(taskIndex_t taskIndex) {
   return INVALID_DEVICE_INDEX;
 }
 
+/*********************************************************************************************
+ * get the taskPluginID with required checks, INVALID_PLUGIN_ID when invalid
+ ********************************************************************************************/
+pluginID_t getPluginID_from_TaskIndex(taskIndex_t taskIndex) {
+  if (validTaskIndex(taskIndex)) {
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+    if (validDeviceIndex(DeviceIndex)) {
+      return DeviceIndex_to_Plugin_id[DeviceIndex];
+    }
+  }
+  return INVALID_PLUGIN_ID;
+}
+
 deviceIndex_t getDeviceIndex(pluginID_t pluginID)
 {
   if (pluginID != INVALID_PLUGIN_ID) {
@@ -95,7 +107,6 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
     if (it != Plugin_id_to_DeviceIndex.end())
     {
       if (!validDeviceIndex(it->second)) { return INVALID_DEVICE_INDEX; }
-
       if (Device[it->second].Number != pluginID) {
         // FIXME TD-er: Just a check for now, can be removed later when it does not occur.
         addLog(LOG_LEVEL_ERROR, F("getDeviceIndex error in Device Vector"));
@@ -110,7 +121,11 @@ deviceIndex_t getDeviceIndex(pluginID_t pluginID)
    Find name of plugin given the plugin device index..
  \*********************************************************************************************/
 String getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex) {
-  String deviceName = "";
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
+  String deviceName;
 
   if (validDeviceIndex(deviceIndex)) {
     Plugin_ptr[deviceIndex](PLUGIN_GET_DEVICENAME, nullptr, deviceName);
@@ -130,31 +145,19 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
 
-// ********************************************************************************
-// Device Sort routine, compare two array entries
-// ********************************************************************************
-bool arrayLessThan(const String& ptr_1, const String& ptr_2)
-{
-  unsigned int i = 0;
+#if USE_I2C_DEVICE_SCAN
+bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress) {
+  bool hasI2CAddress = false;
 
-  while (i < ptr_1.length()) // For each character in string 1, starting with the first:
-  {
-    if (ptr_2.length() < i)  // If string 2 is shorter, then switch them
-    {
-      return true;
-    }
-    const char check1 = static_cast<char>(ptr_1[i]); // get the same char from string 1 and string 2
-    const char check2 = static_cast<char>(ptr_2[i]);
-
-    if (check1 == check2) {
-      // they're equal so far; check the next char !!
-      i++;
-    } else {
-      return check2 > check1;
-    }
+  if (validDeviceIndex(deviceIndex)) {
+    String dummy;
+    struct EventStruct TempEvent;
+    TempEvent.Par1 = i2cAddress;
+    hasI2CAddress = Plugin_ptr[deviceIndex](PLUGIN_I2C_HAS_ADDRESS, &TempEvent, dummy);
   }
-  return false;
+  return hasI2CAddress;
 }
+#endif // if USE_I2C_DEVICE_SCAN
 
 // ********************************************************************************
 // Device Sort routine, actual sorting alfabetically by plugin name.
@@ -182,10 +185,9 @@ void sortDeviceIndexArray() {
 
     while (innerLoop  >= 1)
     {
-      if (arrayLessThan(
-            getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]),
-            getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1])))
-      {
+      const String cur(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop]));
+      const String prev(getPluginNameFromDeviceIndex(DeviceIndex_sorted[innerLoop - 1]));
+      if (cur < prev) {
         deviceIndex_t temp = DeviceIndex_sorted[innerLoop - 1];
         DeviceIndex_sorted[innerLoop - 1] = DeviceIndex_sorted[innerLoop];
         DeviceIndex_sorted[innerLoop]     = temp;
@@ -200,12 +202,15 @@ void sortDeviceIndexArray() {
 // when addressing a task
 // ********************************************************************************
 
-void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
+bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
-    return;
+    return false;
   }
   if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
-    return;
+    return true; // No I2C task, so consider all-OK
+  }
+  if (I2C_state != I2C_bus_state::OK) {
+    return false; // Bus state is not OK, so do not consider task runnable
   }
 #ifdef FEATURE_I2CMULTIPLEXER
   I2CMultiplexerSelectByTaskIndex(taskIndex);
@@ -214,8 +219,9 @@ void prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
 #endif
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(true); // Set to slow
+    I2CSelectLowClockSpeed(); // Set to slow
   }
+  return true;
 }
 
 
@@ -231,7 +237,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 #endif
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectClockSpeed(false);  // Reset
+    I2CSelectHighClockSpeed();  // Reset
   }
 }
 
@@ -258,7 +264,11 @@ void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) 
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
-bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   bool retval = false;
   if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
@@ -272,7 +282,10 @@ bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEv
           TempEvent->OriginTaskIndex = event->TaskIndex;
         }
 
-        prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
+        if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
+          return false;
+        }
+        #ifndef BUILD_NO_RAM_TRACKER
         switch (Function) {
           case PLUGIN_WRITE:          // First set
           case PLUGIN_REQUEST:
@@ -284,12 +297,11 @@ bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEv
           case PLUGIN_EVENT_OUT:
           case PLUGIN_TIME_CHANGE:
             {
-              #ifndef BUILD_NO_RAM_TRACKER
               checkRAM(F("PluginCall_s"), taskIndex);
-              #endif
               break;
             }
         }
+        #endif
         START_TIMER;
         retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
         STOP_TIMER_TASK(DeviceIndex, Function);
@@ -311,15 +323,19 @@ bool PluginCallForTask(taskIndex_t taskIndex, byte Function, EventStruct *TempEv
 /*********************************************************************************************\
 * Function call to all or specific plugins
 \*********************************************************************************************/
-bool PluginCall(byte Function, struct EventStruct *event, String& str)
+bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 {
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
+
   struct EventStruct TempEvent;
 
   if (event == nullptr) {
     event = &TempEvent;
   }
   else {
-    TempEvent = (*event);
+    TempEvent.deep_copy(*event);
   }
 
   #ifndef BUILD_NO_RAM_TRACKER
@@ -335,6 +351,11 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
       for (deviceIndex_t x = 0; x < PLUGIN_MAX; x++) {
         if (validPluginID(DeviceIndex_to_Plugin_id[x])) {
           if (Function == PLUGIN_DEVICE_ADD) {
+            #ifdef USE_SECOND_HEAP
+            //HeapSelectIram ephemeral;
+            // TD-er: Disabled for now, as it is suspect for crashes.
+            #endif
+
             if ((deviceCount + 2) > static_cast<int>(Device.size())) {
               // Increase with 16 to get some compromise between number of resizes and wasted space
               unsigned int newSize = Device.size();
@@ -344,24 +365,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
               // FIXME TD-er: Also resize DeviceIndex_to_Plugin_id ?
             }
           }
-          // FIXME TD-er: This is not correct as we don't have a taskIndex here when addressing a plugin
-          /*
-          taskIndex_t  taskIndex = INVALID_TASK_INDEX;
-          if (Function != PLUGIN_DEVICE_ADD && Device[x].Type == DEVICE_TYPE_I2C) {
-            unsigned int varNr;
-            validTaskVars(event, taskIndex, varNr);
-            prepare_I2C_by_taskIndex(taskIndex, x);
-          }
-          */
           START_TIMER;
           Plugin_ptr[x](Function, event, str);
           STOP_TIMER_TASK(x, Function);
-          /*
-          // FIXME TD-er: This is not correct as we don't have a taskIndex here when addressing a plugin
-          if (Function != PLUGIN_DEVICE_ADD) {
-            post_I2C_by_taskIndex(taskIndex, x);
-          }
-          */
           delay(0); // SMY: call delay(0) unconditionally
         }
       }
@@ -379,19 +385,9 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
           const deviceIndex_t DeviceIndex = it->second.x;
           if (validDeviceIndex(DeviceIndex))  {
-            // FIXME TD-er: This is not correct, as the event is NULL for calls to PLUGIN_MONITOR
-            /*
-            taskIndex_t  taskIndex = INVALID_TASK_INDEX;
-            if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
-              unsigned int varNr;  
-              validTaskVars(event, taskIndex, varNr);
-              prepare_I2C_by_taskIndex(taskIndex, DeviceIndex);
-            }
-            */
             START_TIMER;
             Plugin_ptr[DeviceIndex](Function, &TempEvent, str);
             STOP_TIMER_TASK(DeviceIndex, Function);
-            // post_I2C_by_taskIndex(taskIndex, DeviceIndex);
           }
         }
       }
@@ -412,8 +408,8 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
-          thisTaskName.replace(F("["), F(""));                      // Remove the optional square brackets
-          thisTaskName.replace(F("]"), F(""));
+          thisTaskName.replace(F("["), EMPTY_STRING);                      // Remove the optional square brackets
+          thisTaskName.replace(F("]"), EMPTY_STRING);
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
             if (!validTaskIndex(thisTask)) {                  // Taskname not found or invalid, check for a task number?
@@ -510,7 +506,40 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
 
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
+        #ifndef BUILD_NO_DEBUG
+        const int freemem_begin = ESP.getFreeHeap();
+        #endif
+
         PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
+
+        #ifndef BUILD_NO_DEBUG
+        if (Function == PLUGIN_INIT) {
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            // See also logMemUsageAfter()
+            const int freemem_end = ESP.getFreeHeap();
+            String log;
+            if (log.reserve(128)) {
+              log  = F("After PLUGIN_INIT ");
+              log += F(" task: ");
+              if (taskIndex < 9) log += ' ';
+              log += taskIndex + 1;
+              while (log.length() < 30) log += ' ';
+              log += F("Free mem after: ");
+              log += freemem_end;
+              while (log.length() < 53) log += ' ';
+              log += F("plugin: ");
+              log += freemem_begin - freemem_end;
+              while (log.length() < 67) log += ' ';
+
+              log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+              while (log.length() < 73) log += ' ';
+              log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
+
+              addLogMove(LOG_LEVEL_DEBUG, log);
+            }
+          }
+        }
+        #endif
       }
       if (Function == PLUGIN_INIT) {
         updateTaskCaches();
@@ -526,6 +555,14 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
+      if (!validTaskIndex(event->TaskIndex)) {
+        return false;
+      }
+      if (Function == PLUGIN_READ || Function == PLUGIN_INIT) {
+        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
+          return false;
+        }
+      }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
@@ -538,12 +575,18 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
-          descr += event->TaskIndex;
+          descr  = F("PluginCall_task_");
+          descr += (event->TaskIndex + 1);
+          #ifdef USES_TIMING_STATS
+          checkRAM(descr, getPluginFunctionName(Function));
+          #else
           checkRAM(descr, String(Function));
           #endif
+          #endif
         }
-        prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
+        if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
+          return false;
+        }
         START_TIMER;
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
@@ -582,9 +625,11 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
+    case PLUGIN_I2C_HAS_ADDRESS:
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:
@@ -600,10 +645,15 @@ bool PluginCall(byte Function, struct EventStruct *event, String& str)
           #ifndef BUILD_NO_RAM_TRACKER
           String descr;
           descr.reserve(20);
-          descr  = String(F("PluginCall_task_"));
-          descr += event->TaskIndex;
+          descr  = F("PluginCall_task_");
+          descr += (event->TaskIndex + 1);
+          #ifdef USES_TIMING_STATS
+          checkRAM(descr, getPluginFunctionName(Function));
+          #else
           checkRAM(descr, String(Function));
           #endif
+          #endif
+
         }
         if (Function == PLUGIN_SET_DEFAULTS) {
           for (int i = 0; i < VARS_PER_TASK; ++i) {
@@ -653,8 +703,10 @@ bool addPlugin(pluginID_t pluginID, deviceIndex_t x) {
     Plugin_id_to_DeviceIndex[pluginID] = x;
     return true;
   }
-  String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
-  log += PLUGIN_MAX;
-  addLog(LOG_LEVEL_ERROR, log);
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log = F("System: Error - Too many Plugins. PLUGIN_MAX = ");
+    log += PLUGIN_MAX;
+    addLogMove(LOG_LEVEL_ERROR, log);
+  }
   return false;
 }

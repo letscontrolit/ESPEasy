@@ -11,7 +11,7 @@
 //#######################################################################################################
 //
 // Updated: Oct-03-2018, ThomasB.
-// Added DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
+// Added P075_DEBUG_LOG define to reduce info log messages and prevent serial log flooding.
 // Added SendStatus() to post log message on browser to acknowledge HTTP write.
 // Added reserve() to minimize string memory allocations.
 //
@@ -23,7 +23,7 @@
 // Defines start here
 // *****************************************************************************************************
 
-//#define DEBUG_LOG             // Enable this to include additional info messages in log output.
+//#define P075_DEBUG_LOG             // Enable this to include additional info messages in log output.
 
 
 // Plug-In defines
@@ -101,7 +101,7 @@ struct P075_data_struct : public PluginTaskData_base {
 // PlugIn starts here
 // *****************************************************************************************************
 
-boolean Plugin_075(byte function, struct EventStruct *event, String& string)
+boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 //  static boolean AdvHwSerial = false;                   // Web GUI checkbox flag; false = softserial mode, true = hardware UART serial.
@@ -121,6 +121,9 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption = true;
       Device[deviceCount].TimerOptional = true;         // Allow user to disable interval function.
       Device[deviceCount].GlobalSyncOption = true;
+      // FIXME TD-er: Not sure if access to any existing task data is needed when saving
+      Device[deviceCount].ExitTaskBeforeSave = false;
+
       break;
     }
 
@@ -153,11 +156,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      String options[4];
-      options[0] = F("9600");
-      options[1] = F("38400");
-      options[2] = F("57600");
-      options[3] = F("115200");
+      const __FlashStringHelper * options[4] = {
+        F("9600"),
+        F("38400"),
+        F("57600"),
+        F("115200")
+      };
 
       addFormSelector(F("Baud Rate"), F("p075_baud"), 4, options, nullptr, P075_BaudRate);
       addUnit(F("baud"));
@@ -167,7 +171,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD: {
 
 //    ** DEVELOPER DEBUG MESSAGE AREA **
-//    int datax = (int)(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
+//    int datax = static_cast<int>(Settings.TaskDeviceEnabled[event->TaskIndex]); // Debug value.
 //    String Data = "Debug. Plugin Enable State: ";
 //    Data += String(datax);
 //    addFormNote(Data);
@@ -177,7 +181,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
       P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(event->TaskIndex));
       if (nullptr != P075_data) {
         P075_data->loadDisplayLines(event->TaskIndex);
-        for (byte varNr = 0; varNr < P75_Nlines; varNr++) {
+        for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++) {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), P075_data->displayLines[varNr], P75_Nchars-1);
         }
       }
@@ -205,19 +209,19 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
           // FIXME TD-er: This is a huge object allocated on the Stack.
           char deviceTemplate[P75_Nlines][P75_Nchars];
           String error;
-          for (byte varNr = 0; varNr < P75_Nlines; varNr++)
+          for (uint8_t varNr = 0; varNr < P75_Nlines; varNr++)
           {
-            if (!safe_strncpy(deviceTemplate[varNr], web_server.arg(getPluginCustomArgName(varNr)), P75_Nchars)) {
+            if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P75_Nchars)) {
               error += getCustomTaskSettingsError(varNr);
             }
           }
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, (byte*)&deviceTemplate, sizeof(deviceTemplate));
+          SaveCustomTaskSettings(event->TaskIndex, (uint8_t*)&deviceTemplate, sizeof(deviceTemplate));
         }
 
-        if(getTaskDeviceName(event->TaskIndex) == "") {         // Check to see if user entered device name.
+        if(getTaskDeviceName(event->TaskIndex).isEmpty()) {         // Check to see if user entered device name.
             strcpy(ExtraTaskSettings.TaskDeviceName,PLUGIN_DEFAULT_NAME); // Name missing, populate default name.
         }
 //        PCONFIG(0) = isFormItemChecked(F("AdvHwSerial"));
@@ -258,7 +262,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         String UcTmpString;
 
         // Get optional LINE command statements. Special RSSIBAR bargraph keyword is supported.
-        for (byte x = 0; x < P75_Nlines; x++) {
+        for (uint8_t x = 0; x < P75_Nlines; x++) {
           if (P075_data->displayLines[x].length()) {
             String tmpString = P075_data->displayLines[x];
             UcTmpString = P075_data->displayLines[x];
@@ -267,7 +271,8 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             if(RssiIndex >= 0) {
               int barVal=0;
               newString.reserve(P75_Nchars+10);               // Prevent re-allocation
-              newString = P075_data->displayLines[x].substring(0, RssiIndex);
+              newString.clear();
+              newString += P075_data->displayLines[x].substring(0, RssiIndex);
               int nbars = WiFi.RSSI();
               if (nbars < -100 || nbars >= 0)
                  barVal=0;
@@ -299,36 +304,35 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
             }
 
             P075_sendCommand(event->TaskIndex, newString.c_str());
-            #ifdef DEBUG_LOG
+            #ifdef P075_DEBUG_LOG
               String log;
               log.reserve(P75_Nchars+50);                 // Prevent re-allocation
               log = F("NEXTION075 : Cmd Statement Line-");
               log += String(x+1);
               log += F(" Sent: ");
               log += newString;
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             #endif
           }
         }
 
         // At Interval timer, send idx & value data only if user enabled "values" interval mode.
         if(P075_IncludeValues) {
-            #ifdef DEBUG_LOG
+            #ifdef P075_DEBUG_LOG
              String log;
              log.reserve(120);                          // Prevent re-allocation
              log = F("NEXTION075: Interval values data enabled, resending idx=");
              log += formatUserVarNoCheck(event->TaskIndex, 0);
              log += F(", value=");
              log += formatUserVarNoCheck(event->TaskIndex, 1);
-             addLog(LOG_LEVEL_INFO, log);
+             addLogMove(LOG_LEVEL_INFO, log);
             #endif
 
             success = true;
         }
         else {
-            #ifdef DEBUG_LOG
-             String log = F("NEXTION075: Interval values data disabled, idx & value not resent");
-             addLog(LOG_LEVEL_INFO, log);
+            #ifdef P075_DEBUG_LOG
+             addLog(LOG_LEVEL_INFO, F("NEXTION075: Interval values data disabled, idx & value not resent"));
             #endif
 
             success = false;
@@ -386,8 +390,7 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         break;
       }
       if(P075_data->rxPin < 0) {
-        String log = F("NEXTION075 : Missing RxD Pin, aborted serial receive");
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing RxD Pin, aborted serial receive"));
         break;
       }
       if(P075_data->easySerial == nullptr) break;                   // P075_data->easySerial missing, exit.
@@ -404,10 +407,10 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
         if(charCount >= RXBUFFWARN) {
             String log;
             log.reserve(70);                           // Prevent re-allocation
-            log = F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
+            log += F("NEXTION075 : RxD P075_data->easySerial Buffer capacity warning, ");
             log += String(charCount);
             log += F(" bytes");
-            addLog(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, log);
         }
         uint32_t baudrate_delay_unit = P075_data->baudrate / 9600;
         if (baudrate_delay_unit == 0) {
@@ -434,16 +437,16 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                 UserVar[event->BaseVarIndex + 1] = __buffer[3];
                 sendData(event);
 
-                #ifdef DEBUG_LOG
+                #ifdef P075_DEBUG_LOG
                   String log;
                   log.reserve(70);                        // Prevent re-allocation
-                  log = F("NEXTION075 : code: ");
+                  log += F("NEXTION075 : code: ");
                   log += __buffer[1];
-                  log += ",";
+                  log += ',';
                   log += __buffer[2];
-                  log += ",";
+                  log += ',';
                   log += __buffer[3];
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                 #endif
               }
             }
@@ -467,12 +470,12 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
 
               String tmpString = __buffer;
 
-              #ifdef DEBUG_LOG
+              #ifdef P075_DEBUG_LOG
                 String log;
                 log.reserve(50);                          // Prevent re-allocation
                 log = F("NEXTION075 : Code = ");
                 log += tmpString;
-                addLog(LOG_LEVEL_INFO, log);
+                addLogMove(LOG_LEVEL_INFO, log);
               #endif
 
               int argIndex = tmpString.indexOf(F(",i"));
@@ -507,19 +510,18 @@ boolean Plugin_075(byte function, struct EventStruct *event, String& string)
                   validFloatFromString(Svalue, UserVar[event->BaseVarIndex+1]);
                   sendData(event);
 
-                  #ifdef DEBUG_LOG
+                  #ifdef P075_DEBUG_LOG
                   String log;
                   log.reserve(80);                       // Prevent re-allocation
                   log = F("NEXTION075 : Pipe Command Sent: ");
                   log += __buffer;
                   log += formatUserVarNoCheck(event->TaskIndex, 0);
-                  addLog(LOG_LEVEL_INFO, log);
+                  addLogMove(LOG_LEVEL_INFO, log);
                   #endif
               }
               else {
-                  #ifdef DEBUG_LOG
-                  String log = F("NEXTION075 : Unknown Pipe Command, skipped");
-                  addLog(LOG_LEVEL_INFO, log);
+                  #ifdef P075_DEBUG_LOG
+                  addLog(LOG_LEVEL_INFO, F("NEXTION075 : Unknown Pipe Command, skipped"));
                   #endif
               }
             }
@@ -541,8 +543,7 @@ void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
   P075_data_struct* P075_data = static_cast<P075_data_struct*>(getPluginTaskData(taskIndex));
   if (!P075_data) return;
   if (P075_data->txPin < 0) {
-      String log = F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand");
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO, F("NEXTION075 : Missing TxD Pin Number, aborted sendCommand"));
   }
   else
   {
@@ -553,8 +554,7 @@ void P075_sendCommand(taskIndex_t taskIndex, const char *cmd)
           P075_data->easySerial->write(0xff);
       }
       else {
-          String log = F("NEXTION075 : P075_data->easySerial error, aborted sendCommand");
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, F("NEXTION075 : P075_data->easySerial error, aborted sendCommand"));
       }
   }
 }

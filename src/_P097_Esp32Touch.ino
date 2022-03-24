@@ -31,10 +31,13 @@
 // Share this bitmap among all instances of this plugin
 DRAM_ATTR uint32_t p097_pinTouched     = 0;
 DRAM_ATTR uint32_t p097_pinTouchedPrev = 0;
+#ifdef ESP32S2
+DRAM_ATTR uint32_t p097_timestamp[15]  = { 0 };
+#else
 DRAM_ATTR uint32_t p097_timestamp[10]  = { 0 };
+#endif
 
-
-boolean Plugin_097(byte function, struct EventStruct *event, String& string)
+boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -53,6 +56,7 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].DecimalsOnly       = false;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
       break;
     }
@@ -80,7 +84,7 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(true, F("taskdevicepin1"), CONFIG_PIN1);
+      addADC_PinSelect(AdcPinSelectPurpose::TouchOnly, F("taskdevicepin1"), CONFIG_PIN1);
 
       addFormSubHeader(F("Touch Settings"));
 
@@ -149,10 +153,10 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
                 if (Settings.UseRules) {
                   String eventString;
                   eventString.reserve(32);
-                  eventString  = getTaskDeviceName(event->TaskIndex);
+                  eventString += getTaskDeviceName(event->TaskIndex);
                   eventString += F("#Duration=");
                   eventString += timePassedSince(p097_timestamp[t]);
-                  eventQueue.add(eventString);
+                  eventQueue.addMove(std::move(eventString));
                 }
               }
               bitClear(p097_pinTouchedPrev, t);
@@ -175,7 +179,7 @@ boolean Plugin_097(byte function, struct EventStruct *event, String& string)
         log += formatGpioName_ADC(CONFIG_PIN1);
         log += F(": ");
         log += raw_value;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       success = true;
       break;
@@ -192,7 +196,9 @@ void P097_setEventParams(int pin, uint16_t threshold) {
 
   if (getADC_gpio_info(pin, adc, ch, t)) {
     switch (t) {
+#ifndef ESP32S2
       case 0: touchAttachInterrupt(T0, P097_got_T0, threshold); break;
+#endif
       case 1: touchAttachInterrupt(T1, P097_got_T1, threshold); break;
       case 2: touchAttachInterrupt(T2, P097_got_T2, threshold); break;
       case 3: touchAttachInterrupt(T3, P097_got_T3, threshold); break;
@@ -202,26 +208,46 @@ void P097_setEventParams(int pin, uint16_t threshold) {
       case 7: touchAttachInterrupt(T7, P097_got_T7, threshold); break;
       case 8: touchAttachInterrupt(T8, P097_got_T8, threshold); break;
       case 9: touchAttachInterrupt(T9, P097_got_T9, threshold); break;
+#ifdef ESP32S2
+/*
+      case 10: touchAttachInterrupt(T10, P097_got_T10, threshold); break;
+      case 11: touchAttachInterrupt(T11, P097_got_T11, threshold); break;
+      case 12: touchAttachInterrupt(T12, P097_got_T12, threshold); break;
+      case 13: touchAttachInterrupt(T13, P097_got_T13, threshold); break;
+      case 14: touchAttachInterrupt(T14, P097_got_T14, threshold); break;
+*/
+#endif
     }
   }
 }
 
-void P097_got_T0() ICACHE_RAM_ATTR;
-void P097_got_T1() ICACHE_RAM_ATTR;
-void P097_got_T2() ICACHE_RAM_ATTR;
-void P097_got_T3() ICACHE_RAM_ATTR;
-void P097_got_T4() ICACHE_RAM_ATTR;
-void P097_got_T5() ICACHE_RAM_ATTR;
-void P097_got_T6() ICACHE_RAM_ATTR;
-void P097_got_T7() ICACHE_RAM_ATTR;
-void P097_got_T8() ICACHE_RAM_ATTR;
-void P097_got_T9() ICACHE_RAM_ATTR;
+#ifndef ESP32S2
+void P097_got_T0() IRAM_ATTR;
+#endif
+void P097_got_T1() IRAM_ATTR;
+void P097_got_T2() IRAM_ATTR;
+void P097_got_T3() IRAM_ATTR;
+void P097_got_T4() IRAM_ATTR;
+void P097_got_T5() IRAM_ATTR;
+void P097_got_T6() IRAM_ATTR;
+void P097_got_T7() IRAM_ATTR;
+void P097_got_T8() IRAM_ATTR;
+void P097_got_T9() IRAM_ATTR;
+#ifdef ESP32S2
+void P097_got_T10() IRAM_ATTR;
+void P097_got_T11() IRAM_ATTR;
+void P097_got_T12() IRAM_ATTR;
+void P097_got_T13() IRAM_ATTR;
+void P097_got_T14() IRAM_ATTR;
+#endif
 
+#ifndef ESP32S2
 void P097_got_T0() {
   bitSet(p097_pinTouched, 0);
 
   if (p097_timestamp[0] == 0) { p097_timestamp[0] = millis(); }
 }
+#endif
 
 void P097_got_T1() {
   bitSet(p097_pinTouched, 1);
@@ -276,6 +302,39 @@ void P097_got_T9() {
 
   if (p097_timestamp[9] == 0) { p097_timestamp[9] = millis(); }
 }
+
+#ifdef ESP32S2
+void P097_got_T10() {
+  bitSet(p097_pinTouched, 10);
+
+  if (p097_timestamp[10] == 0) { p097_timestamp[10] = millis(); }
+}
+
+void P097_got_T11() {
+  bitSet(p097_pinTouched, 11);
+
+  if (p097_timestamp[11] == 0) { p097_timestamp[11] = millis(); }
+}
+
+void P097_got_T12() {
+  bitSet(p097_pinTouched, 12);
+
+  if (p097_timestamp[12] == 0) { p097_timestamp[12] = millis(); }
+}
+
+void P097_got_T13() {
+  bitSet(p097_pinTouched, 13);
+
+  if (p097_timestamp[13] == 0) { p097_timestamp[13] = millis(); }
+}
+
+void P097_got_T14() {
+  bitSet(p097_pinTouched, 14);
+
+  if (p097_timestamp[14] == 0) { p097_timestamp[14] = millis(); }
+}
+
+#endif
 
 #endif // ifdef ESP32
 

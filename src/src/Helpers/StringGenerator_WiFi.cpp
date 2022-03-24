@@ -1,35 +1,42 @@
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#include "../Helpers/StringConverter.h"
+
 #include "../Globals/ESPEasyWiFiEvent.h"
 
-String WiFi_encryptionType(byte encryptionType) {
-    String result;
+const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType) {
 switch (encryptionType) {
   #ifdef ESP32
-    case WIFI_AUTH_OPEN: result            += F("open"); break;
-    case WIFI_AUTH_WEP:  result            += F("WEP"); break;
-    case WIFI_AUTH_WPA_PSK: result         += F("WPA/PSK"); break;
-    case WIFI_AUTH_WPA2_PSK: result        += F("WPA2/PSK"); break;
-    case WIFI_AUTH_WPA_WPA2_PSK: result    += F("WPA/WPA2/PSK"); break;
-    case WIFI_AUTH_WPA2_ENTERPRISE: result += F("WPA2 Enterprise"); break;
+    case WIFI_AUTH_OPEN:             return F("open"); 
+    case WIFI_AUTH_WEP:              return F("WEP"); 
+    case WIFI_AUTH_WPA_PSK:          return F("WPA/PSK"); 
+    case WIFI_AUTH_WPA2_PSK:         return F("WPA2/PSK"); 
+    case WIFI_AUTH_WPA_WPA2_PSK:     return F("WPA/WPA2/PSK"); 
+    case WIFI_AUTH_WPA2_ENTERPRISE:  return F("WPA2 Enterprise"); 
   #else // ifdef ESP32
-    case ENC_TYPE_WEP: result  += F("WEP"); break;
-    case ENC_TYPE_TKIP: result += F("WPA/PSK"); break;
-    case ENC_TYPE_CCMP: result += F("WPA2/PSK"); break;
-    case ENC_TYPE_NONE: result += F("open"); break;
-    case ENC_TYPE_AUTO: result += F("WPA/WPA2/PSK"); break;
+    case ENC_TYPE_WEP:   return F("WEP"); 
+    case ENC_TYPE_TKIP:  return F("WPA/PSK"); 
+    case ENC_TYPE_CCMP:  return F("WPA2/PSK"); 
+    case ENC_TYPE_NONE:  return F("open"); 
+    case ENC_TYPE_AUTO:  return F("WPA/WPA2/PSK"); 
   #endif // ifdef ESP32
     default:
-      break;
+	break;
+      
   }
-  return result;
+  return F("-");
 }
 
-#ifndef ESP32
-String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
-  #ifdef LIMIT_BUILD_SIZE
+
+#ifdef ESP8266
+#ifdef LIMIT_BUILD_SIZE
+String SDKwifiStatusToString(uint8_t sdk_wifistatus)
+{
   return String(sdk_wifistatus);
-  #else
+}
+#else
+const __FlashStringHelper * SDKwifiStatusToString(uint8_t sdk_wifistatus)
+{
   switch (sdk_wifistatus) {
     case STATION_IDLE:           return F("STATION_IDLE");
     case STATION_CONNECTING:     return F("STATION_CONNECTING");
@@ -38,72 +45,78 @@ String SDKwifiStatusToString(uint8_t sdk_wifistatus) {
     case STATION_CONNECT_FAIL:   return F("STATION_CONNECT_FAIL");
     case STATION_GOT_IP:         return F("STATION_GOT_IP");
   }
-  return getUnknownString();
-  #endif
+  return F("Unknown");
 }
+#endif
+#endif
 
-#endif // ifndef ESP32
+const __FlashStringHelper * ArduinoWifiStatusToFlashString(uint8_t arduino_corelib_wifistatus) {
+  switch (arduino_corelib_wifistatus) {
+    case WL_NO_SHIELD:       return F("WL_NO_SHIELD");
+    case WL_IDLE_STATUS:     return F("WL_IDLE_STATUS");
+    case WL_NO_SSID_AVAIL:   return F("WL_NO_SSID_AVAIL");
+    case WL_SCAN_COMPLETED:  return F("WL_SCAN_COMPLETED");
+    case WL_CONNECTED:       return F("WL_CONNECTED");
+    case WL_CONNECT_FAILED:  return F("WL_CONNECT_FAILED");
+    case WL_CONNECTION_LOST: return F("WL_CONNECTION_LOST");
+    case WL_DISCONNECTED:    return F("WL_DISCONNECTED");
+  }
+  return F("-");
+}
 
 String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus) {
   #ifdef LIMIT_BUILD_SIZE
   return String(arduino_corelib_wifistatus);
   #else
-  String log;
-
-  switch (arduino_corelib_wifistatus) {
-    case WL_NO_SHIELD:       log += F("WL_NO_SHIELD"); break;
-    case WL_IDLE_STATUS:     log += F("WL_IDLE_STATUS"); break;
-    case WL_NO_SSID_AVAIL:   log += F("WL_NO_SSID_AVAIL"); break;
-    case WL_SCAN_COMPLETED:  log += F("WL_SCAN_COMPLETED"); break;
-    case WL_CONNECTED:       log += F("WL_CONNECTED"); break;
-    case WL_CONNECT_FAILED:  log += F("WL_CONNECT_FAILED"); break;
-    case WL_CONNECTION_LOST: log += F("WL_CONNECTION_LOST"); break;
-    case WL_DISCONNECTED:    log += F("WL_DISCONNECTED"); break;
-    default:  log                += arduino_corelib_wifistatus; break;
-  }
+  String log = ArduinoWifiStatusToFlashString(arduino_corelib_wifistatus);
+  log += ' ';
+  log += arduino_corelib_wifistatus;
   return log;
   #endif
 }
 
 
-String getLastDisconnectReason() {
-  String reason = "(";
-
-  reason += WiFiEventData.lastDisconnectReason;
-  reason += F(") ");
-
-  #ifndef LIMIT_BUILD_SIZE
-  switch (WiFiEventData.lastDisconnectReason) {
-    case WIFI_DISCONNECT_REASON_UNSPECIFIED:                reason += F("Unspecified");              break;
-    case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                reason += F("Auth expire");              break;
-    case WIFI_DISCONNECT_REASON_AUTH_LEAVE:                 reason += F("Auth leave");               break;
-    case WIFI_DISCONNECT_REASON_ASSOC_EXPIRE:               reason += F("Assoc expire");             break;
-    case WIFI_DISCONNECT_REASON_ASSOC_TOOMANY:              reason += F("Assoc toomany");            break;
-    case WIFI_DISCONNECT_REASON_NOT_AUTHED:                 reason += F("Not authed");               break;
-    case WIFI_DISCONNECT_REASON_NOT_ASSOCED:                reason += F("Not assoced");              break;
-    case WIFI_DISCONNECT_REASON_ASSOC_LEAVE:                reason += F("Assoc leave");              break;
-    case WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED:           reason += F("Assoc not authed");         break;
-    case WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD:        reason += F("Disassoc pwrcap bad");      break;
-    case WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD:       reason += F("Disassoc supchan bad");     break;
-    case WIFI_DISCONNECT_REASON_IE_INVALID:                 reason += F("IE invalid");               break;
-    case WIFI_DISCONNECT_REASON_MIC_FAILURE:                reason += F("Mic failure");              break;
-    case WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT:     reason += F("4way handshake timeout");   break;
-    case WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT:   reason += F("Group key update timeout"); break;
-    case WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS:         reason += F("IE in 4way differs");       break;
-    case WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID:       reason += F("Group cipher invalid");     break;
-    case WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID:    reason += F("Pairwise cipher invalid");  break;
-    case WIFI_DISCONNECT_REASON_AKMP_INVALID:               reason += F("AKMP invalid");             break;
-    case WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION:      reason += F("Unsupp RSN IE version");    break;
-    case WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP:         reason += F("Invalid RSN IE cap");       break;
-    case WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED:         reason += F("802 1X auth failed");       break;
-    case WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED:      reason += F("Cipher suite rejected");    break;
-    case WIFI_DISCONNECT_REASON_BEACON_TIMEOUT:             reason += F("Beacon timeout");           break;
-    case WIFI_DISCONNECT_REASON_NO_AP_FOUND:                reason += F("No AP found");              break;
-    case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  reason += F("Auth fail");                break;
-    case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 reason += F("Assoc fail");               break;
-    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          reason += F("Handshake timeout");        break;
-    default:  reason                                               += getUnknownString();       break;
+const __FlashStringHelper * getLastDisconnectReason(WiFiDisconnectReason reason) {
+  switch (reason) {
+    case WIFI_DISCONNECT_REASON_UNSPECIFIED:                return F("Unspecified");              
+    case WIFI_DISCONNECT_REASON_AUTH_EXPIRE:                return F("Auth expire");              
+    case WIFI_DISCONNECT_REASON_AUTH_LEAVE:                 return F("Auth leave");               
+    case WIFI_DISCONNECT_REASON_ASSOC_EXPIRE:               return F("Assoc expire");             
+    case WIFI_DISCONNECT_REASON_ASSOC_TOOMANY:              return F("Assoc toomany");            
+    case WIFI_DISCONNECT_REASON_NOT_AUTHED:                 return F("Not authed");               
+    case WIFI_DISCONNECT_REASON_NOT_ASSOCED:                return F("Not assoced");              
+    case WIFI_DISCONNECT_REASON_ASSOC_LEAVE:                return F("Assoc leave");              
+    case WIFI_DISCONNECT_REASON_ASSOC_NOT_AUTHED:           return F("Assoc not authed");         
+    case WIFI_DISCONNECT_REASON_DISASSOC_PWRCAP_BAD:        return F("Disassoc pwrcap bad");      
+    case WIFI_DISCONNECT_REASON_DISASSOC_SUPCHAN_BAD:       return F("Disassoc supchan bad");     
+    case WIFI_DISCONNECT_REASON_IE_INVALID:                 return F("IE invalid");               
+    case WIFI_DISCONNECT_REASON_MIC_FAILURE:                return F("Mic failure");              
+    case WIFI_DISCONNECT_REASON_4WAY_HANDSHAKE_TIMEOUT:     return F("4way handshake timeout");   
+    case WIFI_DISCONNECT_REASON_GROUP_KEY_UPDATE_TIMEOUT:   return F("Group key update timeout"); 
+    case WIFI_DISCONNECT_REASON_IE_IN_4WAY_DIFFERS:         return F("IE in 4way differs");       
+    case WIFI_DISCONNECT_REASON_GROUP_CIPHER_INVALID:       return F("Group cipher invalid");     
+    case WIFI_DISCONNECT_REASON_PAIRWISE_CIPHER_INVALID:    return F("Pairwise cipher invalid");  
+    case WIFI_DISCONNECT_REASON_AKMP_INVALID:               return F("AKMP invalid");             
+    case WIFI_DISCONNECT_REASON_UNSUPP_RSN_IE_VERSION:      return F("Unsupp RSN IE version");    
+    case WIFI_DISCONNECT_REASON_INVALID_RSN_IE_CAP:         return F("Invalid RSN IE cap");       
+    case WIFI_DISCONNECT_REASON_802_1X_AUTH_FAILED:         return F("802 1X auth failed");       
+    case WIFI_DISCONNECT_REASON_CIPHER_SUITE_REJECTED:      return F("Cipher suite rejected");    
+    case WIFI_DISCONNECT_REASON_BEACON_TIMEOUT:             return F("Beacon timeout");           
+    case WIFI_DISCONNECT_REASON_NO_AP_FOUND:                return F("No AP found");              
+    case WIFI_DISCONNECT_REASON_AUTH_FAIL:                  return F("Auth fail");                
+    case WIFI_DISCONNECT_REASON_ASSOC_FAIL:                 return F("Assoc fail");               
+    case WIFI_DISCONNECT_REASON_HANDSHAKE_TIMEOUT:          return F("Handshake timeout");        
+    default:  return F("Unknown");
   }
-  #endif
+}
+
+String getLastDisconnectReason() {
+  #ifndef LIMIT_BUILD_SIZE
+  String reason = wrap_braces(String(WiFiEventData.lastDisconnectReason));
+  reason += ' ';
+  reason += getLastDisconnectReason(WiFiEventData.lastDisconnectReason);
   return reason;
+  #else
+  return wrap_braces(String(WiFiEventData.lastDisconnectReason));
+  #endif
 }

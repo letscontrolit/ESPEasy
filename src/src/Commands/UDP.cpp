@@ -13,9 +13,9 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-String Command_UDP_Test(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const char *Line)
 {
-  for (byte x = 0; x < event->Par2; x++)
+  for (uint8_t x = 0; x < event->Par2; x++)
   {
     String eventName = "Test ";
     eventName += x;
@@ -32,7 +32,7 @@ String Command_UDP_Port(struct EventStruct *event, const char *Line)
                               1);
 }
 
-String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 {
   int destUnit = parseCommandArgumentInt(Line, 1);
   if ((destUnit > 0) && (destUnit < 255))
@@ -43,7 +43,7 @@ String Command_UPD_SendTo(struct EventStruct *event, const char *Line)
   return return_command_success();
 }
 
-String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
+const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
 {
   if (NetworkConnected()) {
     String ip      = parseString(Line, 2);
@@ -62,7 +62,7 @@ String Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
       portUDP.write(message.c_str(),            message.length());
       #endif // if defined(ESP8266)
       #if defined(ESP32)
-      portUDP.write((uint8_t *)message.c_str(), message.length());
+      portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
       #endif // if defined(ESP32)
       portUDP.endPacket();
       FeedSW_watchdog();

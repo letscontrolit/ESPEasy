@@ -13,7 +13,7 @@
 #include <SD.h>
 
 
-void printDirectory(File dir, int numTabs)
+void printDirectory(fs::File dir, int numTabs)
 {
   while (true) {
     File entry = dir.openNextFile();
@@ -41,7 +41,7 @@ void printDirectory(File dir, int numTabs)
 }
 
 
-String Command_SD_LS(struct EventStruct *event, const char* Line)
+const __FlashStringHelper * Command_SD_LS(struct EventStruct *event, const char* Line)
 {
   File root = SD.open("/");
   root.rewindDirectory();
@@ -56,7 +56,7 @@ String Command_SD_Remove(struct EventStruct *event, const char* Line)
   String fname = Line;
   fname = fname.substring(9);
   String result = F("Removing:");
-  result += fname.c_str();
+  result += fname;
   SD.remove((char*)fname.c_str());
   return return_result(event, result);
 }
