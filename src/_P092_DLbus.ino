@@ -22,7 +22,7 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
-    @tonhuisman 2022-03-26 Add support for UVR42 (Very seimilar to an UVR31, has 1 extra sensor value)
+    @tonhuisman 2022-03-26 Add support for UVR42 (Very similar to an UVR31, has 1 extra sensor value)
 
     @uwekaditz 2020-12-028 documentation for UVR61-3 (v8.3 or higher)
 
@@ -209,6 +209,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             break;
           case 42:               // UVR42
             P092_MaxIdx[1] = 4;  // Sensor
+            P092_MaxIdx[3] = 2;  // Digital output
             break;
           case 1611:             // UVR1611
             P092_MaxIdx[1] = 16; // Sensor
