@@ -61,7 +61,7 @@ Inputs
   :widths: 16, 8, 8, 5, 5
 
   "Temp1 ... Temp4", "2 ... 9", "Sensor", "1 - 4", "1"
-  "Output byte", "10", "Digital Output", "", "0"
+  "Output byte", "10", "Digital Output", "1 - 2", "0"
 
 Data acquisition
 ^^^^^^^^^^^^^^^^
