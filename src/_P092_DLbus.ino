@@ -22,6 +22,8 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @tonhuisman 2022-03-26 Add support for UVR42 (Very seimilar to an UVR31, has 1 extra sensor value)
+
     @uwekaditz 2020-12-028 documentation for UVR61-3 (v8.3 or higher)
 
     @uwekaditz 2020-10-28 P092_data->init() is always done if P092_init == false, not depending on P092_data == nullptr
@@ -147,9 +149,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
       }
       {
-        const __FlashStringHelper *Devices[P092_DLbus_DeviceCount] = { F("ESR21"), F("UVR31"), F("UVR1611"), F("UVR 61-3 (up to v8.2)"), F(
-                                                                         "UVR 61-3 (v8.3 or higher)") };
-        const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 1611, 6132, 6133 };
+        const __FlashStringHelper *Devices[P092_DLbus_DeviceCount] = {
+          F("ESR21"),
+          F("UVR31"),
+          F("UVR42"),
+          F("UVR1611"),
+          F("UVR 61-3 (up to v8.2)"),
+          F("UVR 61-3 (v8.3 or higher)") };
+        const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 42, 1611, 6132, 6133 };
 
         addFormSelector(F("DL-Bus Type"), F("p092_dlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
       }
@@ -199,6 +206,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             P092_MaxIdx[5] = 1;  // Analog output
             P092_MaxIdx[6] = 1;  // Heat power (kW)
             P092_MaxIdx[7] = 1;  // Heat meter (MWh)
+            break;
+          case 42:               // UVR42
+            P092_MaxIdx[1] = 4;  // Sensor
             break;
           case 1611:             // UVR1611
             P092_MaxIdx[1] = 16; // Sensor
@@ -471,6 +481,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (success) {
           P092_data->P092_LastReceived = millis();
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("Received data OK TI:");
             log += event->TaskIndex;
