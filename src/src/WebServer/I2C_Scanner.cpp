@@ -265,7 +265,7 @@ String getKnownI2Cdevice(uint8_t address) {
       result +=  F("PCF8563");
       break;
     case 0x53:
-      result +=  F("ADXL345");
+      result +=  F("ADXL345,LTR390");
       break;
     case 0x58:
       result +=  F("SGP30");
