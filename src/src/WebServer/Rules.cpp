@@ -631,11 +631,11 @@ bool EnumerateFileAndDirectory(String          & rootPath
   hasMore = dir.next();
   # endif // ifdef ESP8266
   # ifdef ESP32
-  File root = ESPEASY_FS.open(rootPath);
+  fs::File root = ESPEASY_FS.open(rootPath);
 
   if (root)
   {
-    File file = root.openNextFile();
+    fs::File file = root.openNextFile();
 
     while (next && file) {
       if (count >= skip) {

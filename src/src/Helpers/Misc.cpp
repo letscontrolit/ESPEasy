@@ -317,7 +317,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
 
 #ifdef FEATURE_SD
   String filename = F("VALUES.CSV");
-  File   logFile  = SD.open(filename, FILE_WRITE);
+  fs::File   logFile  = SD.open(filename, FILE_WRITE);
 
   if (logFile) {
     logFile.print(logger);
