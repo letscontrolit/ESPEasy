@@ -6,6 +6,8 @@
 
 # include "../Globals/EventQueue.h"
 
+# include <vector>
+
 # include <Wire.h> // Needed for I2C
 // https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library
 # include <SparkFun_ADXL345.h>

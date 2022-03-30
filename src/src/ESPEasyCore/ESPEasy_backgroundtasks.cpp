@@ -13,6 +13,12 @@
 #include "../Helpers/Networking.h"
 
 
+#ifdef FEATURE_ARDUINO_OTA
+#include "../Helpers/OTA.h"
+#endif
+
+
+
 /*********************************************************************************************\
 * run background tasks
 \*********************************************************************************************/
@@ -80,7 +86,7 @@ void backgroundtasks()
   #ifdef FEATURE_ARDUINO_OTA
 
   if (Settings.ArduinoOTAEnable) {
-    ArduinoOTA.handle();
+    ArduinoOTA_handle();
   }
 
   // once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
@@ -88,7 +94,7 @@ void backgroundtasks()
   {
     delay(0);
 
-    ArduinoOTA.handle();
+    ArduinoOTA_handle();
   }
 
   #endif // ifdef FEATURE_ARDUINO_OTA
