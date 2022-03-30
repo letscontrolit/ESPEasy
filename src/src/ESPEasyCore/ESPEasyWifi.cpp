@@ -367,6 +367,10 @@ void AttemptWiFiConnect() {
     return;
   }
 
+  if (WiFiEventData.wifiConnectInProgress) {
+    return;
+  }
+
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
     RTC.clearLastWiFi(); // Force slow connect
@@ -376,8 +380,6 @@ void AttemptWiFiConnect() {
       WiFiEventData.timerAPoff.setMillisFromNow(WIFI_RECONNECT_WAIT + WIFI_AP_OFF_TIMER_DURATION);
     }
   }
-
-  WiFiEventData.markWiFiTurnOn();
 
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
     const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
@@ -400,6 +402,7 @@ void AttemptWiFiConnect() {
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
+      WiFiEventData.wifiConnectInProgress = true;
       if (candidate.allowQuickConnect() && !candidate.isHidden) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
