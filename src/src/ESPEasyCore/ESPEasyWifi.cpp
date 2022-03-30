@@ -325,9 +325,6 @@ void WiFiConnectRelaxed() {
     return;
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
-    handle_unprocessedNetworkEvents();
-  }
-  if (WiFiEventData.unprocessedWifiEvents()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Connecting not possible, unprocessed WiFi events: ");
       if (!WiFiEventData.processedConnect) {
