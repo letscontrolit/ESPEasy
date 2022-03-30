@@ -1,4 +1,298 @@
 -------------------------------------------------
+Changes in release mega-20220328 (since mega-20211224)
+-------------------------------------------------
+
+Release date: ma 28 mrt 2022  9:02:48 CEST
+
+Leonardo Rizzi (1):
+      Typo in comment of P074
+
+Sven Briesen (1):
+      Add docs for the lib
+
+TD-er (189):
+      [PWM motor] Add _P098_PWM_motor.ino
+      [PWM motor] Minor tweaks
+      [PWM Motor] Add proper debounce to limit switches
+      [PWM motor] Move P098 to "testing A" due to iRAM usage
+      [PWM Motor] Uncrustify
+      [PWM Motor] Restore positions at boot & format GPIO overview
+      [PWM Motor] Cleanup GPIO selection code
+      [GPIO selection] Make conflicting pins more clear in the web interface
+      [PWM Motor] Fix setting GPIO state when start/stop motor
+      [PWM Motor] Temp disable interrupts when processing ISR
+      [GPIO selection] Filter possible GPIO pins based on needed properties
+      [PWM Motor] Fix crash on handling limit switch pulse
+      [PWM Motor] Simplify processing debounce on limit switches
+      [Core 3.0.0] Allow building using esp8266/Arduino core 3.0.0
+      [Core 3.0.0] Rename deprecated ICACHE_RAM_ATTR to IRAM_ATTR
+      [WiFi] Allow longer scan time per channel
+      [Memory] Move controller queue elements to IRAM heap
+      [Memory] Store event queue in IRAM 2nd heap
+      [Memory] Move web log entries to IRAM 2nd heap
+      [Memory] Fix crashes using IRAM 2nd heap
+      [Memory] Do not switch heap from .ino or .h files.
+      [memory] Store p2p Nodes information in 2nd heap
+      [ESP32] Fix build issues
+      [Memory] Fix build issues when using 2nd heap (PIO define issue)
+      [Libs] Explicit define Adafruit BusIO library + version
+      [Cleanup] Keep flash string when executing internal commands
+      [Memory] Fix strange crashes due to not using correct heap
+      [Memory] Switch to DRAM heap on every loop and when adding plugins
+      [Reduce size] Add build flag to remove the 4-bytes alignment for PSTR()
+      [Webserver]  Fix unneeded copy of object when serving data(#3693)
+      [Mutex] Fix no longer using fishy assembly for ESP8266 mutex
+      [PIO libs] Update Adafruit BusIO to 1.8.1
+      [2nd heap] Make sure DRAM heap is selected when making [CN]Plugin calls
+      [WiFi scan] Push scans to temp list first to store in 2nd heap
+      [Framed OLED] Fix crashes when using 2nd heap
+      [Numerical] Fix bug where "-" is considered numerical
+      [Cleanup] Wrap strings in F()
+      [Web UI] Update served static files
+      [Memory] Fix crashes on serving flash strings with 2nd heap active
+      [Memory] Core 3.0.0 = SDK3, Beta = staging + 2nd heap
+      [PIO] Set build_unflags for all esp8266 build envs
+      [WebUI] Allow slightly longer flash strings to be sent in a single chunk
+      [PIO] Cleanup use of build_unflags
+      [Memory] Fix web log buffer using 2nd heap
+      [Memory] Store more runtime data in 2nd heap
+      Move to esp8266/Arduino @ 3.0.1
+      [Cleanup] Fix some possible uninitialised members & other loose ends
+      [Cleanup] Fix bugs reported by PVS Studio
+      [Memory] Fix reboot on 2nd heap sorting plugins
+      [Cleanup] Fix return value in MQTT Publish command
+      [Cleanup] Use of "byte" as a type. uint8_t or (C++17) std::byte are better
+      [LoRaWAN] Fix crash when LoRa or serial could not be allocated
+      [Libs] Don't use "byte" as type anymore
+      [Cleanup] Don't use "byte" as type anymore (.ino files)
+      Fix uninitialised members of RegExp
+      [Memory] Allow to disable collecting timing stats to save RAM
+      [Framed OLED] Reduce memory usage slightly.
+      [ESP32] Fix merge issue
+      Add custom_beta_IR_ESP8266_4M1M build env
+      Fix build issue with updated Adafruit BusIO library
+      [PIO] Fix merge issue
+      [core 3.0.2] Update to esp8266/Arduino 3.0.2
+      Let toString(UnaryOperator op) output FlashString
+      [Core 3.0.x] Update all references to core_3_0_2
+      [ser2net] Remove tricky temp char pointer use
+      [Commands] Make sure commands are converted to String before executing
+      [Logging] Don't use const char* as function argument
+      [Framed OLED] Fix build issues with PLUGIN_036_DEBUG defined
+      [Cleanup] Do not use const char* as function argument for URLEncode
+      [SD log] Fix  merge issue on log to SD
+      [Build] Add  -fno-strict-aliasing as build flag make builds more stable
+      [PIO] adafruit/Adafruit BusIO @ ~1.9.0
+      [PWM motor] Add plugin to "testing D"
+      [PWM motor] Add encoder timeout
+      [PWM motor] Add PWM soft start/stop
+      [PWM motor] Add configurable duty cycle
+      [Web UI] Update tasks with no configurable interval every 1 second
+      [Web UI] Suggest reset flash write count command in error message
+      [GCC] Use GCC 10.3 bugfix for ESP8266 core 3.0.2
+      [Webserver] Change chunked buffer size to 1360 bytes
+      [Web UI] Small tweaks improving speed serving pages
+      [Webserver] Fix serving CSS
+      [Web] Allow to stream from file system (e.g. CSS inline)
+      [Webserver] Reduce resources when serving file from file system
+      [Dashboard] Use less resources when serving dashboard.esp
+      [Cleanup] Cache some more constant flash chip values
+      [Cleanup Cleanup] Add missing include
+      [Bugfix] Fix possible crash when printing floating point values
+      [Cleanup] Remove some unneeded conversion to float P073 7DGT
+      [ESP8266 v3.0.2] Update lib_deps
+      [Cleanup] Fix missing paths on #include statements + update I2Cdev lib
+      [Cleanup] Fix define paths on .h files
+      [ESP8266 2nd Heap] Store log buffers in 2nd heap
+      [2nd heap] Load webpage template and string load in 2nd heap
+      [Cleanup] Improve readability for lowest memory usage
+      [Cleanup] Fix merge issue, remove forward declaration duplicate
+      [I2Cdev lib] Change `byte` to `uint8_t`
+      [P016] Reduce memory usage during load/save
+      [P016] Convert settings on the fly, using less memory
+      [P016] Cleanup settings convert and save routine
+      [P016] Make sure to always convert settings on load
+      [P016] Uncrustify P016_data_struct
+      [Task Save] Delete task data before saving when possible
+      [Task Save] Make sure to explicitly PLUGIN_EXIT on saving settings
+      [Web UI] Serve web template immediately to client (less RAM usage)
+      [Web UI] Serve web template immediately to client (less RAM usage)
+      [Web] Add missing include
+      [usec timing] Use 64 bit variables when comparing usec timing
+      [HCSR04] Remove loglevel depending timing showing useless log
+      [Static files] Update link to CDN delivered content to latest build
+      Do include degree symbol on limited build sizes
+      [Cleanup] Serve 2 char flash strings as 2 chars on web pages
+      [Cleanup] Fix signed/unsigned compare warning
+      [Cache] Cache nr of task value decimals
+      [SDK3.0] Disable normal_302_ESP8266_1M due to build size
+      [SSDP] reduce memory usage on SSDP schema
+      [Cleanup] Reduce bin size handling large switch statement
+      [Cleanup] Reduce bin size on longTermTimer by implementing in .cpp
+      [JSON] Improve speed serving JSON + make parsing numericals better
+      [Cleanup] Slightly reduce bin size using chars instead of flash strings
+      Revert caching nr decimals due to strange issues.
+      [JSON] Remove some code duplication generating JSON
+      [Cleanup] Replace some short flash strings with chars
+      Keep "getDeviceIndex error in Device Vector" check
+      [INO to CPP] Adapt __Plugin.ino to .h/.cpp
+      [INO to CPP] Adapt __CPlugin.ino to .h/.cpp
+      [INO to CPP] Rename Cnnn.ino to Cnnn.cpp
+      [INO to CPP] Mark  ESP8266/ESP32 specific plugins in _Plugin_init.h/.cpp
+      [INO to CPP] Adapt __NPlugin.ino to .h/.cpp
+      [INO to CPP] Rename Nxxx.ino to .h/.cpp
+      [INO to CPP] Fix missing forward declarations in C018.cpp
+      [Build] Unflag -fexceptions and build flag -Os to reduce bin size
+      [SendToHTTP] Add some checks for timeout to send to HTTP
+      [2nd Heap] Disable using 2nd heap for non-String objects
+      [Webserver] Fix "Templ: Unknown Var : content"
+      [Low Mem] Add checks for successful String memory allocation
+      [WebServer] Speed up serving pages and slight reduction of RAM usage
+      [RAM Tracking] Disable detailed RAM tracking + make it a setting
+      Fix build error WiFiClient doesn't have getTimeout()
+      [CSV] Stream CSV directly to the client, not using RAM
+      [Cleanup] Replace empty string assignment with .clear()
+      [Cleanup] Write single char units as char instead of flash string
+      [Cleanup] Do not generate temp strings that can be streamed to client
+      [Cleanup] Use flash strings where needed or chars for single char string
+      [Cleanup] Direct initialise selection options where possible
+      [Cleanup] Misc cleanup to reduce build size
+      [WiFi] No longer destruct and recreate WiFi object on init
+      [Build Flag] Add -s flag on ESP8266 to explicit strip unused parts
+      Fix build error on ESP32
+      [WebServer] Do not use substring to serve larger strings
+      [Cleanup] Change NULL to nullptr
+      [Cleanup] Use F() macro where possible and less String conversions
+      [WebServer] Tune to faster serving pages using less memory
+      [Build] Fix build error after change to use flash string
+      [RAM tracker] Not logging ram tracker when not enabled.
+      [PLUGIN_READ] Do not call PLUGIN_READ when not enabled.
+      [Webserver] Use move operator when possible to prevent copy strings
+      [Webserver] Fix crashes on 1 heap setups with serving flash strings.
+      [Cleanup] Uncrustify P118 ltho
+      [P118 ltho] Fix some very basic const issues.
+      Disable P118 Itho for 2nd heap builds to make it fit
+      [Log] Prevent String copy when adding log
+      [Log] Make sure to allocate 2nd heap when available
+      [Log] Call addLogMove where log Strings can be moved instead of copied
+      [Log] Fix cleaning up Web log buffers + buffer efficiency
+      [Log] Fix freeing memory in the log struct.
+      [Memory] Free allocated memory in Strings .clear() does not free it
+      [Cleanup] Simple fixes to prevent String reallocation.
+      [ESP8266 2nd heap]  Reduce nr of mem allocations and use 2nd heap
+      [Sysinfo] Fix strange ESP Chip ID on sysinfo web page
+      [Web UI] Serve web p[age template based on head or footer part of page
+      [RAM tracker] fix potential multiple calls to std::move on the same str
+      [Build] Make sure SDFS and LittleFS are not linked in the build
+      Use FS_NO_GLOBALS only on esp8266/Arduino v3.0.x
+      Fix build errors due to fwd declaration and typo
+      [Build] Add missing #include <vector>
+      [Build] Using PlatformIO Espressif32 v3.3.2
+      [Build] ignore SD(esp8266), SDFS and LittleFS(esp8266) for 'normal'
+      [Build] Update changed lib_ignore SD library name (from SD(esp8266) )
+      [Build] Remove PlatformIO LDF deep+ mode
+      [Build] Fix ESP32 build
+      [Build] fix build issue using fs:: namespace
+      [Build] Fix IR builds and ESP32 builds due to missing includes.
+      [Build] Also include previous lib name SD(esp8266) for lib_ignore
+      [Build] Make minimal IRext 1M build fit again
+      [Build] Clean-up PlatformIO ESP32 build envs
+      [PVS-Studio] Fix some tricky code noticed by PVS Studio
+      [Notifiers] Fix NPlugins not showing up in build.
+      [Webserver] Fix serving GZipped files
+
+Ton Huisman (60):
+      [P119] Add library for ITG3205
+      [P119] Add ITG3205 to I2C scanner
+      [P119] Improvements and fixes for ITG3205 library, source reformatted
+      [P119] Add plugin for ITG3205 gyro sensor
+      [P119] Fix ESP32 build issue
+      [P119] Fix ESP32 build issue
+      [P119] Improvements as suggested in feedback
+      [P119] Eliminate unneeded variable
+      [P119] Use intialized() function where possible
+      [P120] ADXL345 Accelerometer basic plugin structure
+      [P120] Add ADXL345 to I2CScanner
+      [P120] Add Sparkfun ADXL345 library to enable secondary I2C address
+      [P120] Sparkfun ADXL345 library source formatted (uncrustify)
+      [P120] Sparkfun ADXL345 library add getDevID() (from github pull request)
+      [P120] Sparkfun ADXL345 library add getDevID() (from github pull request)
+      [P120] Sparkfun ADXL345 library add powerOff() (from github pull request)
+      [P120] Sparkfun ADXL345 library fix compiler warning (cast)
+      [Misc.cpp/h] Add get/set 3 and 3 bits from/to UL support functions, uncrustify Misc.cpp
+      [P120] Add ADXL345 Accelerometer plugin
+      [P119] Add to TESTING_C set, fix some compilation issues
+      [P119] Add documentation
+      [P119] Fix some missed replacements
+      [P008] Wiegand bugfix for 32 bit or larger frames (casting issue)
+      [P008] Wiegand bugfix for swapped GPIO mapping
+      [P008] Add compatibility mode for swapped GPIOs, use 'ull' postfix instead of static_cast for uint64_t values
+      [P008] Update documentation
+      [P008] Update documentation
+      [P119] Move from Development to Testing
+      [P120] Add documentation
+      [P120] Move from Development to Testing, some corrections
+      [P120] Add to TEST_D builds
+      [P120] Refactor to enable I2C and SPI implementation (in plugin P125)
+      [P120] Fix some comment typos
+      [P120] Disable SPI init in library, small code optimization
+      [Build] Add TEST_E set of build configurations, update plugin doc and readme.md
+      [P120] Move to TEST_E build, prepare for P125
+      [P120] Minor documentation corrections
+      [P125] Add ADXL345 SPI plugin, sharing most code with P120 I2C plugin
+      [P125] Add documentation (also mostly shared with P120 I2C plugin)
+      [P021] Fix config-save issue and some improvements
+      [P021] Add documentation (partially migrated from the wiki)
+      [P021] Add setting for saving during config change, update docs
+      [P021] Updated changelog in source
+      [P062] Add Panel sensitivity option
+      [P062] Uncrustify source
+      [P062] Add documentation
+      [Build, MAX] Increase max. plugin count from 125 to 135
+      [P073] Fix rounding errors on 7dt and 7ddt commands
+      [Build] Move P119 ITG3205, P121 HMC5883 and P125 ADXL345 SPI to TEST_E set
+      [P035] Enable multi-instance use for IR Transmit
+      [P035] Review corrections
+      [LIB] IRremoteESP8266 update to v2.8.1
+      [P035] Correct struct init (also needs lib fix)
+      [Build] Set LIMIT_BUILD_SIZE also for ESP32 on DISPLAY builds (and pre-IDF4.x) to fix build-size issue
+      [Build] Enhanced condition
+      [P035] Make some parts optional at compiletime to save a few bytes
+      [Build] IRext 1M build: had to disable P088 Heatpump IR because of max. bin size
+      [P022] Correct dot handling in command parsing
+      [Formatting] Fix issue with unexpected leading space
+      [P073] Code de-duplication and optimization
+
+soif (4):
+      keeps minified version of css file (to get the espeasy_default.min.css up to date)
+      Separate generated variables by blank lines in data_h_temp (to ease copy/paste)
+      Udate minifiers site URLs, as announced at https://html-minifier.com/
+      CSS now use cssminifier (instead of html-minifier) and results in smaller minified CSS files
+
+stefan (1):
+      [ESP32] Add GPIO37/38 as input
+
+svn2208 (11):
+      Init commit. Add support for HMC5883
+      ready to use commit
+      Improve code, because of code review
+      Improvements due to code review
+      Usage of proper storage of a float conf value
+      Remove debug statement; shotens float faction to 2
+      Wrap Logentry in condition Add taskindex instead of hardcoded sensorid
+      Extend DeclinationAngle to 5 decimal places.
+      Simplify Logentry Add pluginsubpage to pluginpage.
+      Change Inputvalue from Radian to Degree
+      Change Category to position Change input to degree and add formula to convert to rand
+
+svollebregt (1):
+      [P118] Add documentation
+
+uwekaditz (1):
+      [P016] Accept decode_type_t::UNKNOWN as valid IR code
+
+
+-------------------------------------------------
 Changes in release mega-20211224 (since mega-20211105)
 -------------------------------------------------
 
