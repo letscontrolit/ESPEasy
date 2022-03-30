@@ -1200,7 +1200,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   long len = http.getSize();
-  File f   = tryOpenFile(file_save, "w");
+  fs::File f   = tryOpenFile(file_save, "w");
 
   if (f) {
     const size_t downloadBuffSize = 256;

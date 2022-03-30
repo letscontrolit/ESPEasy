@@ -84,7 +84,7 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 }
 
 bool WiFi_AP_Candidate::operator==(const WiFi_AP_Candidate& other) const {
-  return bssid_match(other.bssid) && ssid.equals(other.ssid) && key.equals(other.key);
+  return bssid_match(other.bssid) && ssid.equals(other.ssid);// && key.equals(other.key);
 }
 
 bool WiFi_AP_Candidate::usable() const {
