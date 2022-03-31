@@ -106,7 +106,7 @@
 .. |P119_type| replace:: :cyan:`Gyro`
 .. |P119_typename| replace:: :cyan:`Gyro - ITG3205`
 .. |P119_porttype| replace:: `.`
-.. |P119_status| replace:: :yellow:`TESTING C`
+.. |P119_status| replace:: :yellow:`TESTING E`
 .. |P119_github| replace:: _P119_ITG3205_Gyro.ino
 .. _P119_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P119_ITG3205_Gyro.ino
 .. |P119_usedby| replace:: `.`
