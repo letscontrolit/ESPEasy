@@ -1183,6 +1183,7 @@ To create/register a plugin, you have to :
     #define USES_P118  // Itho ventilation control
     #endif
     #define USES_P124  // I2C MultiRelay
+    #define USES_P127  // CDM7160
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
@@ -1190,6 +1191,7 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
+    #define USES_P126  // 74HC595 Shift register
 #endif
 
 
@@ -1500,10 +1502,10 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI Acceleration / Gravity
   #endif
   #ifndef USES_P126
-//    #define USES_P126   //
+    #define USES_P126   // 74HC595 Shift register
   #endif
   #ifndef USES_P127
-//    #define USES_P127   //
+    #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
 //    #define USES_P128   //
@@ -1701,7 +1703,7 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifndef PLUGIN_SET_TESTING
+  #if !defined(PLUGIN_SET_TESTING) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
       #undef USES_P076   // HWL8012   in POW r1
     #endif
