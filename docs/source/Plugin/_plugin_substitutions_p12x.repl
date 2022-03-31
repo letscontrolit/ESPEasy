@@ -50,6 +50,19 @@
 .. |P125_compileinfo| replace:: `.`
 .. |P125_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
 
+.. |P126_name| replace:: :cyan:`Shift registers (74HC595)`
+.. |P126_type| replace:: :cyan:`Output`
+.. |P126_typename| replace:: :cyan:`Output - Shift registers (74HC595)`
+.. |P126_porttype| replace:: `.`
+.. |P126_status| replace:: :yellow:`TESTING E`
+.. |P126_github| replace:: P126_74HC595.ino
+.. _P126_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P126_74HC595.ino
+.. |P126_usedby| replace:: `.`
+.. |P126_shortinfo| replace:: `Output shift registers`
+.. |P126_maintainer| replace:: `tonhuisman`
+.. |P126_compileinfo| replace:: `.`
+.. |P126_usedlibraries| replace:: `https://timodenk.com/blog/shift-register-arduino-library/ (Un-Templated, modified local copy)`
+
 .. |P127_name| replace:: :cyan:`CO2 CDM7160`
 .. |P127_type| replace:: :cyan:`Gases`
 .. |P127_typename| replace:: :cyan:`Gases - CO2 CDM7160`
@@ -62,4 +75,3 @@
 .. |P127_maintainer| replace:: `tonhuisman, V0JT4`
 .. |P127_compileinfo| replace:: `.`
 .. |P127_usedlibraries| replace:: `.`
-
