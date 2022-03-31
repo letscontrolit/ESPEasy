@@ -1183,6 +1183,7 @@ To create/register a plugin, you have to :
     #define USES_P118  // Itho ventilation control
     #endif
     #define USES_P124  // I2C MultiRelay
+    #define USES_P127  // CDM7160
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
@@ -1502,7 +1503,7 @@ To create/register a plugin, you have to :
 //    #define USES_P126   //
   #endif
   #ifndef USES_P127
-//    #define USES_P127   //
+    #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
 //    #define USES_P128   //
