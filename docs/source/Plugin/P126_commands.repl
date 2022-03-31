@@ -1,0 +1,58 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``ShiftOut,Set,<pin>,<0|1>``
+    ","
+    | Set ``<pin>`` to the state provided. Pin numbers start at 1 and continue up to no. of chips * 8. The shift registers are updated immediately
+    "
+    "
+    | ``ShiftOut,SetNoUpdate,<pin>,<0|1>``
+    ","
+    | Set ``<pin>`` to the state provided. Pin numbers start at 1 and continue up to no. of chips * 8. The shift registers are **not** updated. See ``ShiftOut,Update`` command.
+    "
+    "
+    | ``ShiftOut,Update``
+    ","
+    | Update the current buffered state to the shift registers.
+    "
+    "
+    | ``ShiftOut,SetAll,[chip:][width:]<value>...``
+    ","
+    | Set the addressed chip(s) with the value provided. Values should be max. 32 bit. Chip starts at 1 by default, and width is 4 by default. Shift registers are updated immediately.
+    
+    | To select a single chip with 8 bits of data, use a ``width`` of 1, use 2 for updating 2 adjacent chips with a 16 bit value, etc.
+    "
+    "
+    | ``ShiftOut,SetAllNoUpdate,[chip:][width:]<value>...``
+    ","
+    | See ``ShiftOut,SetAll`` command, but without immediate update to the shift registers. See ``ShiftOut,Update`` command to set the output to the shift registers.
+    "
+    "
+    | ``ShiftOut,SetAllLow``
+    ","
+    | Switch all shift register outputs to off (low). Immediately updates the shift registers.
+    "
+    "
+    | ``ShiftOut,SetAllHigh``
+    ","
+    | Switch all shift register outputs to on (high). Immediately updates the shift registers.
+    "
+    "
+    | ``ShiftOut,SetChipCount,<chip count>``
+    ","
+    | Change the number of chips configured. Will adjust the configuration immediately, and set in Device configuration, but not store the setting, use the ``save`` command for storing the setting.
+    
+    | When increasing the number of chips, the extra outputs will all be set to low/off.
+    "
+    "
+    | ``ShiftOut,SetOffset,<chip offset>``
+    ","
+    | Change the ``Offset for display`` configuration setting. Does not save the setting, use the ``save`` command for storing the setting.
+    "
+    "
+    | ``ShiftOut,SetHexBin,<0|1>``
+    ","
+    | Change the **Values display (Off=hex/On=Bin)** setting to on (1) or off (0). Does not save the setting, use the ``save`` command for storing the setting.
+    "

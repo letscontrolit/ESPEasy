@@ -333,7 +333,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P071   // Kamstrup401
 // #define USES_P072   // HDC1080
 // #define USES_P073   // 7DG
-// #define USES_P074   // TSL2561
+// #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
 // #define USES_P076   // HWL8012   in POW r1
 // #define USES_P077   // CSE7766   in POW R2
@@ -382,6 +382,8 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
+// #define USES_P126   // 74HC595 Shift register
+// #define USES_P127   // CDM7160
 
 
 // Special plugins needing IR library
