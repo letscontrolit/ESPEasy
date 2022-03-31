@@ -28,6 +28,11 @@
 #include <rom/spi_flash.h>
 #endif
 
+
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -1009,7 +1014,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   if (gpio == 37 || gpio == 38) {
     // Pins are not present on the ESP32
-    input  = false;
+    input  = true;
     output = false;
   }
 
