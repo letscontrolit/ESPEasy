@@ -264,6 +264,9 @@ void ESPEasy_Scheduler::handle_schedule() {
     // Make sure normal scheduled jobs run at higher priority.
     // backgroundtasks();
     process_system_event_queue();
+
+    // System events may have added one or more rule events, try to process those
+    processNextEvent();
     last_system_event_run = millis();
     STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
