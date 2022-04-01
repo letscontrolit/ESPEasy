@@ -1,0 +1,47 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``NeoPixel,<led nr>,<red>,<green>,<blue>[,<brightness>]``
+    ","
+    | Set the LED to the provided R/G/B[/W] color value.
+    
+    | led nr: 1..<Led Count>
+    | red: 0..255
+    | green: 0..255
+    | blue: 0..255
+    | brightness: 0..255 (only applicable when using GRBW LEDs)
+    "
+    "
+    | ``NeoPixelAll,<red>,<green>,<blue>[,<brightness>]``
+    ","
+    | Set all LEDs to the provided R/G/B[/W] color value.
+    "
+    "
+    | ``NeoPixelLine,<start led nr>,<stop led nr>,<red>,<green>,<blue>[,<brightness>]``
+    ","
+    | Set a group of LEDs to the provided R/G/B[/W] color value.
+    | Start LED nr and Stop LED nr should be within range 1..<Led Count>.
+    "
+    "
+    | ``NeoPixelHSV,<led nr>,<hue>,<saturation>,<value>``
+    ","
+    | Set the LED to the provided H/S/V color value.
+    
+    | led nr: 1..<Led Count>
+    | hue: 0..255
+    | saturation: 0..255
+    | value: 0..255
+    "
+    "
+    | ``NeoPixelAllHSV,<hue>,<saturation>,<value>``
+    ","
+    | Set all LEDs to the provided H/S/V color value.
+    "
+    "
+    | ``NeoPixelLineHSV,<start led nr>,<stop led nr>,<hue>,<saturation>,<value>``
+    ","
+    | Set a group of LEDs to the provided H/S/V color value.
+    | Start LED nr and Stop LED nr should be within range 1..<Led Count>.
+    "
