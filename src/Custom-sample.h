@@ -177,6 +177,9 @@
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+// #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
+// #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
+// #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 
 /*
  #######################################################################################################
@@ -333,7 +336,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P071   // Kamstrup401
 // #define USES_P072   // HDC1080
 // #define USES_P073   // 7DG
-// #define USES_P074   // TSL2561
+// #define USES_P074   // TSL2591
 // #define USES_P075   // Nextion
 // #define USES_P076   // HWL8012   in POW r1
 // #define USES_P077   // CSE7766   in POW R2
@@ -371,17 +374,21 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
+
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
 // #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
 // #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P116   // ST77xx
 // #define USES_P117   // SCD30
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
+// #define USES_P126   // 74HC595 Shift register
+// #define USES_P127   // CDM7160
 
 
 // Special plugins needing IR library
