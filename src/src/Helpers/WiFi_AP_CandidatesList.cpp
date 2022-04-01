@@ -105,6 +105,7 @@ void WiFi_AP_CandidatesList::process_WiFiscan(const bss_info& ap) {
 
 void WiFi_AP_CandidatesList::after_process_WiFiscan() {
   scanned_new.sort();
+  scanned_new.unique();
   _mustLoadCredentials = true;
   WiFi.scanDelete();
 }
@@ -243,11 +244,21 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
       }
       #endif // ifndef BUILD_NO_DEBUG
 
+      // Check to see if it is already present, if so, remove existing one.
+      for (auto tmp = scanned.begin(); tmp != scanned.end();) {
+        if (*tmp == *scan) {
+          tmp = scanned.erase(tmp);
+        } else {
+          ++tmp;
+        }
+      }
+
       // We copy instead of move, to make sure it is stored on the 2nd heap.
       scanned.push_back(*scan);
       scan = scanned_new.erase(scan);
     }
     scanned.sort();
+    scanned.unique();
   }
 
   if (candidates.size() > 1) {
@@ -305,6 +316,7 @@ void WiFi_AP_CandidatesList::loadCandidatesFromScanned() {
     }
   }
   candidates.sort();
+  candidates.unique();
   addFromRTC();
   purge_unusable();
 }

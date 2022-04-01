@@ -63,8 +63,15 @@ public:
   LOLIN_EPD(int width, int height, int8_t SID, int8_t SCLK, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
   LOLIN_EPD(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
 
-  ~LOLIN_EPD();
-  void begin(bool reset = true);
+  virtual ~LOLIN_EPD();
+  virtual void begin(bool reset = true);
+
+	virtual void display();
+	virtual void clearBuffer();
+	virtual void deepSleep();
+	virtual void clearDisplay();
+
+	virtual void fillbuffer(const unsigned char *black_image, const unsigned char *red_image);
 
 protected:
   int8_t sid, ///< sid pin
@@ -80,8 +87,8 @@ protected:
       red_bufsize;     ///< size of the red buffer
   bool singleByteTxns; ///< if true CS will go high after every data byte transferred
 
-  uint8_t *bw_buf;  ///< the pointer to the black and white buffer if using on-chip ram
-  uint8_t *red_buf; ///< the pointer to the red buffer if using on-chip ram
+  uint8_t *bw_buf  = nullptr;  ///< the pointer to the black and white buffer if using on-chip ram
+  uint8_t *red_buf = nullptr; ///< the pointer to the red buffer if using on-chip ram
 
   void sendCmd(uint8_t c);
   void sendData(uint8_t data);
@@ -107,5 +114,8 @@ private:
 };
 
 #include "LOLIN_IL3897.h"
+#include "LOLIN_UC8151D.h"
+#include "LOLIN_SSD1680.h"
+#include "Waveshare_2in7.h"
 
 #endif
