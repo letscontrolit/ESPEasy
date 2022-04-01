@@ -1235,6 +1235,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
+   #ifndef USES_ADAFRUITGFX_HELPER
+    #define USES_ADAFRUITGFX_HELPER
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1274,8 +1277,11 @@ To create/register a plugin, you have to :
    #ifndef USES_P104
     #define USES_P104   // MAX7219 dot matrix
    #endif
-   #ifndef USES_P109
-    #define USES_P109   // ThermoOLED
+  //  #ifndef USES_P109
+  //    #define USES_P109   // ThermoOLED
+  //  #endif
+   #ifndef USES_P116
+     #define USES_P116   // ST77xx
    #endif
 #endif
 
@@ -1472,7 +1478,7 @@ To create/register a plugin, you have to :
     #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-//    #define USES_P116   //
+    #define USES_P116   // ST77xx
   #endif
   #ifndef USES_P117
     #define USES_P117   // SCD30
@@ -1589,6 +1595,11 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
+  #ifndef PLUGIN_USES_ADAFRUITGFX
+    #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
+  #endif
+#endif
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)

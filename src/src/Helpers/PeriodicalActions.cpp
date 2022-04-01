@@ -76,6 +76,7 @@ void run50TimesPerSecond() {
   }
   #endif
 
+  processNextEvent();
 }
 
 /*********************************************************************************************\
@@ -105,7 +106,6 @@ void run10TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_TEN_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_10PS);
   }
-  processNextEvent();
   
   #ifdef USES_C015
   if (NetworkConnected())

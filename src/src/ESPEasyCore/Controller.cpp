@@ -196,7 +196,12 @@ void MQTTDisconnect()
 \*********************************************************************************************/
 bool MQTTConnect(controllerIndex_t controller_idx)
 {
+  if (MQTTclient_next_connect_attempt.isSet() && !MQTTclient_next_connect_attempt.timeoutReached(timermqtt_interval)) {
+    return false;
+  }
+  MQTTclient_next_connect_attempt.setNow();
   ++mqtt_reconnect_count;
+
   MakeControllerSettings(ControllerSettings); //-V522
 
   if (!AllocatedControllerSettings()) {
@@ -237,8 +242,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
   bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
+  if (MQTTclient_should_reconnect) {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
+  }
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
-
   if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
     MQTTresult =
       MQTTclient.connect(clientid.c_str(),
@@ -269,6 +276,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (!MQTTresult) {
     MQTTclient.disconnect();
     updateMQTTclient_connected();
+
     return false;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -383,9 +391,6 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
     if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
-      if (MQTTclient_should_reconnect) {
-        addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
-      }
       return MQTTConnect(controller_idx);
     }
 
