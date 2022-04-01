@@ -12,10 +12,10 @@
 .. |P120_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
 
 .. |P121_name| replace:: :cyan:`HCM5883L`
-.. |P121_type| replace:: :cyan:`Output`
+.. |P121_type| replace:: :cyan:`Position`
 .. |P121_typename| replace:: :cyan:`Position - HMC5883L`
 .. |P121_porttype| replace:: `.`
-.. |P121_status| replace:: :yellow:`TESTING D`
+.. |P121_status| replace:: :yellow:`TESTING E`
 .. |P121_github| replace:: P121_HMC5883L.ino
 .. _P121_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P121_HMC5883L.ino
 .. |P121_usedby| replace:: `.`
@@ -50,6 +50,32 @@
 .. |P125_compileinfo| replace:: `.`
 .. |P125_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library (local copy)`
 
+.. |P126_name| replace:: :cyan:`Shift registers (74HC595)`
+.. |P126_type| replace:: :cyan:`Output`
+.. |P126_typename| replace:: :cyan:`Output - Shift registers (74HC595)`
+.. |P126_porttype| replace:: `.`
+.. |P126_status| replace:: :yellow:`TESTING E`
+.. |P126_github| replace:: P126_74HC595.ino
+.. _P126_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P126_74HC595.ino
+.. |P126_usedby| replace:: `.`
+.. |P126_shortinfo| replace:: `Output shift registers`
+.. |P126_maintainer| replace:: `tonhuisman`
+.. |P126_compileinfo| replace:: `.`
+.. |P126_usedlibraries| replace:: `https://timodenk.com/blog/shift-register-arduino-library/ (Un-Templated, modified local copy)`
+
+.. |P127_name| replace:: :cyan:`CO2 CDM7160`
+.. |P127_type| replace:: :cyan:`Gases`
+.. |P127_typename| replace:: :cyan:`Gases - CO2 CDM7160`
+.. |P127_porttype| replace:: `.`
+.. |P127_status| replace:: :yellow:`TESTING D`
+.. |P127_github| replace:: P127_CDM7160.ino
+.. _P127_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P127_CDM7160.ino
+.. |P127_usedby| replace:: `.`
+.. |P127_shortinfo| replace:: `CO2 sensor`
+.. |P127_maintainer| replace:: `tonhuisman, V0JT4`
+.. |P127_compileinfo| replace:: `.`
+.. |P127_usedlibraries| replace:: `.`
+
 .. |P129_name| replace:: :cyan:`Shift registers (74HC165)`
 .. |P129_type| replace:: :cyan:`Input`
 .. |P129_typename| replace:: :cyan:`Input - Shift registers (74HC165)`
@@ -62,4 +88,3 @@
 .. |P129_maintainer| replace:: `tonhuisman`
 .. |P129_compileinfo| replace:: `.`
 .. |P129_usedlibraries| replace:: `.`
-
