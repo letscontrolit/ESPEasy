@@ -26,10 +26,42 @@ Supported hardware
 
 |P038_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+.. image:: P038_NeoPixelLEDs.png
+  :alt: A few examples of NeoPixel LEDs and strips
 
-.. .. include:: P038_commands.repl
+A few examples of NeoPixel LEDs and strips (Image sourced from Aliexpress)
+
+Configuration
+-------------
+
+.. image:: P038_DeviceConfiguration.png
+  :alt: Device configuration
+
+* **Name** A unique name should be entered here.
+
+* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+Actuator
+^^^^^^^^
+
+* **GPIO -> DIN**: Select the GPIO pin that the LED stripe is connected to.
+
+* **Led Count**: The number of LEDs available. This is the amount of LEDs that will be allowed for the ``NeoPixel*`` commands to be set, and that will be set using the ``NeoPixelAll*`` commands.
+
+* **Strip Type**: Select the type of the LEDs mounted on the strip:
+
+.. image:: P038_StripTypeOptions.png
+  :alt: The Strip type options
+
+*GRB* : Most commonly, the LEDs are of GRB type.
+
+*GRBW* : If the LEDs also support Brightness control, then the GRBW type should be selected, and the Brightness can be added in the ``NeoPixel*`` commands.
+
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P038_commands.repl
 
 .. Events
 .. ~~~~~~
@@ -41,6 +73,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |improved|
+  2022-01: Make plugin multi-instance compatible, improve/fix pin selection, allow RGBW color selection for ``NeoPixelLine*`` commands.
 
   |added|
   Major overhaul for 2.0 release.
