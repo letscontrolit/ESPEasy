@@ -87,14 +87,14 @@ bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int
    Load array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t offset_in_block = 0);
 
 
 /********************************************************************************************\
    Save array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock = 0);
 
 
 /********************************************************************************************\
@@ -110,13 +110,13 @@ String LoadTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Save Custom Task settings to file system
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize);
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, int datasize, uint32_t posInBlock = 0);
 
 /********************************************************************************************\
    Save array of Strings to Custom Task settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock = 0);
 
 String getCustomTaskSettingsError(uint8_t varNr);
 
@@ -128,13 +128,13 @@ String ClearCustomTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Load Custom Task settings from file system
  \*********************************************************************************************/
-String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize);
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int datasize, int offset_in_block = 0);
 
 /********************************************************************************************\
    Load array of Strings from Custom Task settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength);
+String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t offset_in_block = 0);
 
 /********************************************************************************************\
    Save Controller settings to file system
@@ -216,13 +216,9 @@ String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType
 
 String getSettingsFileDatasizeError(bool read, SettingsType::Enum settingsType, int index, int datasize, int max_size);
 
-String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int offset_in_block);
+String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize, int offset_in_block = 0);
 
-String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddress, int datasize);
-
-String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize);
-
-String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock);
+String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock = 0);
 
 String ClearInFile(SettingsType::Enum settingsType, int index);
 
