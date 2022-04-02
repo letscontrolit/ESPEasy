@@ -265,7 +265,7 @@ void addToSDLog(uint8_t logLevel, const String& string)
 {
 #ifdef FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
-    File logFile = SD.open("log.dat", FILE_WRITE);
+    fs::File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile) {
       const size_t stringLength = string.length();
       for (size_t i = 0; i < stringLength; ++i) {
