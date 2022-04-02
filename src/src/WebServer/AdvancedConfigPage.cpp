@@ -191,7 +191,7 @@ void handle_advanced() {
 
 
   addFormSubHeader(F("Inter-ESPEasy Network"));
-  if (Settings.UDPPort != 8266 ) addFormNote(F("Preffered P2P port is 8266"));
+  if (Settings.UDPPort != 8266 ) addFormNote(F("Preferred P2P port is 8266"));
   addFormNumericBox(F("UDP port"), F("udpport"), Settings.UDPPort, 0, 65535);
 
   // TODO sort settings in groups or move to other pages/groups
