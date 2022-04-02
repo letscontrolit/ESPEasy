@@ -136,7 +136,7 @@ private:
   uint8_t             _rotation       = 0;
   uint8_t             _fontscaling    = 1;
   AdaGFXTextPrintMode _textmode       = AdaGFXTextPrintMode::ContinueToNextLine;
-  String              _commandTrigger = F("neomatrix");
+  String              _commandTrigger;
   uint8_t             _brightness     = 40;
   uint8_t             _maxbright      = 255;
   uint16_t            _fgcolor        = ADAGFX_WHITE;
