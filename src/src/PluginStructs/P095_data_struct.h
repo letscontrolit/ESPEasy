@@ -131,26 +131,26 @@ private:
 
   AdafruitGFX_helper *gfxHelper = nullptr;
 
-  ILI9xxx_type_e _displayType;
-  uint16_t       _xpix;
-  uint16_t       _ypix;
-  uint16_t       _textcols;
-  uint16_t       _textrows;
+  ILI9xxx_type_e _displayType  = ILI9xxx_type_e::ILI9341_240x320;
+  uint16_t       _xpix         = 240;
+  uint16_t       _ypix         = 320;
+  uint16_t       _textcols     = 0;
+  uint16_t       _textrows     = 0;
   uint8_t        _fontwidth    = 6; // Default font characteristics
   uint8_t        _fontheight   = 10;
   uint8_t        _heightOffset = 0;
 
-  uint8_t             _rotation;
-  uint8_t             _fontscaling;
-  AdaGFXTextPrintMode _textmode;
-  int8_t              _backlightPin;
-  uint8_t             _backlightPercentage;
-  uint32_t            _displayTimer;
-  uint32_t            _displayTimeout;
+  uint8_t             _rotation            = 0;
+  uint8_t             _fontscaling         = 1;
+  AdaGFXTextPrintMode _textmode            = AdaGFXTextPrintMode::ClearThenTruncate;
+  int8_t              _backlightPin        = -1;
+  uint8_t             _backlightPercentage = 100;
+  uint32_t            _displayTimer        = 0;
+  uint32_t            _displayTimeout      = 0;
   String              _commandTrigger;
-  uint16_t            _fgcolor;
-  uint16_t            _bgcolor;
-  bool                _textBackFill;
+  uint16_t            _fgcolor      = ADAGFX_WHITE;
+  uint16_t            _bgcolor      = ADAGFX_BLACK;
+  bool                _textBackFill = false;
 
   String _commandTriggerCmd;
 
