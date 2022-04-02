@@ -21,7 +21,7 @@ import sphinx_bootstrap_theme
 # -- Project information -----------------------------------------------------
 
 project = u'ESP Easy'
-copyright = u'2018-2021, ESP Easy'
+copyright = u'2018-2022, ESP Easy'
 author = u'Grovkillen, TD-er & Friends'
 
 # The short X.Y version

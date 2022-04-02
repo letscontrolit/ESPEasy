@@ -62,8 +62,8 @@ void handle_filelist_json() {
   addHtml('[', '{');
   bool firstentry = true;
   # if defined(ESP32)
-  File root  = ESPEASY_FS.open("/");
-  File file  = root.openNextFile();
+  fs::File root  = ESPEASY_FS.open("/");
+  fs::File file  = root.openNextFile();
   int  count = -1;
 
   while (file and count < endIdx)
@@ -208,8 +208,8 @@ void handle_filelist() {
   moreFilesPresent = dir.next();
 # endif // if defined(ESP8266)
 # if defined(ESP32)
-  File root = ESPEASY_FS.open("/");
-  File file = root.openNextFile();
+  fs::File root = ESPEASY_FS.open("/");
+  fs::File file = root.openNextFile();
 
   while (file && count < endIdx)
   {
@@ -363,9 +363,9 @@ void handle_SDfilelist() {
     current_dir = "/";
   }
 
-  File root = SD.open(current_dir.c_str());
+  fs::File root = SD.open(current_dir.c_str());
   root.rewindDirectory();
-  File entry = root.openNextFile();
+  fs::File entry = root.openNextFile();
   parent_dir = current_dir;
 
   if (!current_dir.equals("/"))
@@ -407,8 +407,8 @@ void handle_SDfilelist() {
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
       child_dir.toCharArray(SDcardChildDir, child_dir.length() + 1);
-      File child         = SD.open(SDcardChildDir);
-      File dir_has_entry = child.openNextFile();
+      fs::File child         = SD.open(SDcardChildDir);
+      fs::File dir_has_entry = child.openNextFile();
 
       // when the directory is empty, display the button to delete them
       if (!dir_has_entry)

@@ -16,7 +16,7 @@
 void printDirectory(fs::File dir, int numTabs)
 {
   while (true) {
-    File entry = dir.openNextFile();
+    fs::File entry = dir.openNextFile();
 
     if (!entry) {
       // no more files
@@ -43,7 +43,7 @@ void printDirectory(fs::File dir, int numTabs)
 
 const __FlashStringHelper * Command_SD_LS(struct EventStruct *event, const char* Line)
 {
-  File root = SD.open("/");
+  fs::File root = SD.open("/");
   root.rewindDirectory();
   printDirectory(root, 0);
   root.close();
