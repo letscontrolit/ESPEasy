@@ -72,12 +72,12 @@ enum class P131_CommandTrigger : uint8_t {
 const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd);
 
 struct P131_content_struct {
-  int16_t start       = 0; //
-  int16_t length      = 0; //
-  int16_t position    = 0; // position within the string to display (characters)
-  int16_t pixelPos    = 0; // current left-offset on display
-  int16_t speed       = 0; // 0.1 sec. steps
-  int16_t loop       = -1; // steps before we go, -1 = restart from speed
+  int16_t start       = 0;  //
+  int16_t length      = 0;  //
+  int16_t position    = 0;  // position within the string to display (characters)
+  int16_t pixelPos    = 0;  // current left-offset on display
+  int16_t speed       = 0;  // 0.1 sec. steps
+  int16_t loop        = -1; // steps before we go, -1 = restart from speed
   bool    active      = false;
   bool    rightScroll = false;
   bool    pixelMode   = false;
@@ -126,24 +126,24 @@ private:
   Adafruit_NeoMatrix *matrix    = nullptr;
   AdafruitGFX_helper *gfxHelper = nullptr;
 
-  uint8_t             _matrixWidth;
-  uint8_t             _matrixHeight;
-  uint8_t             _tileWidth;
-  uint8_t             _tileHeight;
-  int8_t              _pin;
-  uint8_t             _matrixType;
-  uint8_t             _ledType;
-  uint8_t             _rotation;
-  uint8_t             _fontscaling;
-  AdaGFXTextPrintMode _textmode;
-  String              _commandTrigger;
-  uint8_t             _brightness;
-  uint8_t             _maxbright;
-  uint16_t            _fgcolor;
-  uint16_t            _bgcolor;
+  uint8_t             _matrixWidth    = 8;
+  uint8_t             _matrixHeight   = 8;
+  uint8_t             _tileWidth      = 1;
+  uint8_t             _tileHeight     = 1;
+  int8_t              _pin            = -1;
+  uint8_t             _matrixType     = NEO_MATRIX_TOP | NEO_MATRIX_LEFT | NEO_MATRIX_ROWS | NEO_MATRIX_PROGRESSIVE;
+  uint8_t             _ledType        = NEO_TILE_TOP | NEO_TILE_LEFT | NEO_TILE_ROWS | NEO_TILE_PROGRESSIVE;
+  uint8_t             _rotation       = 0;
+  uint8_t             _fontscaling    = 1;
+  AdaGFXTextPrintMode _textmode       = AdaGFXTextPrintMode::ContinueToNextLine;
+  String              _commandTrigger = F("neomatrix");
+  uint8_t             _brightness     = 40;
+  uint8_t             _maxbright      = 255;
+  uint16_t            _fgcolor        = ADAGFX_WHITE;
+  uint16_t            _bgcolor        = ADAGFX_BLACK;
 
-  uint16_t _textcols;
-  uint16_t _textrows;
+  uint16_t _textcols     = 0;
+  uint16_t _textrows     = 0;
   uint16_t _xpix         = 0u;
   uint16_t _ypix         = 0u;
   uint8_t  _fontwidth    = 6; // Default font characteristics
