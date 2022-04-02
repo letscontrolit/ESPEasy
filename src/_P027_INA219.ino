@@ -5,6 +5,11 @@
 // ######################### Plugin 027: INA219 DC Voltage/Current sensor ################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2022-04-02 tonhuisman: Add all technically possible I2C addresses (16), instead of only the 4 most common
+ *                        As requested in the forum: https://www.letscontrolit.com/forum/viewtopic.php?t=9079
+ * (No previous changelog registered)
+ *************************************************************************************************/
 
 #include "src/PluginStructs/P027_data_struct.h"
 
@@ -56,11 +61,14 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { INA219_ADDRESS, INA219_ADDRESS2, INA219_ADDRESS3, INA219_ADDRESS4 };
+      const uint8_t i2cAddressValues[] = { INA219_ADDRESS,   INA219_ADDRESS2,  INA219_ADDRESS3,  INA219_ADDRESS4,
+                                           INA219_ADDRESS5,  INA219_ADDRESS6,  INA219_ADDRESS7,  INA219_ADDRESS8,
+                                           INA219_ADDRESS9,  INA219_ADDRESS10, INA219_ADDRESS11, INA219_ADDRESS12,
+                                           INA219_ADDRESS13, INA219_ADDRESS14, INA219_ADDRESS15, INA219_ADDRESS16 };
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 4, i2cAddressValues, P027_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), 16, i2cAddressValues, P027_I2C_ADDR);
       } else {
-        success = intArrayContains(4, i2cAddressValues, event->Par1);
+        success = intArrayContains(16, i2cAddressValues, event->Par1);
       }
       break;
     }
@@ -172,7 +180,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // for backward compability we allow the user to select if only one measurement should be returned
-        // or all 3 measurement at once
+        // or all 3 measurements at once
         switch (PCONFIG(2))
         {
           case 0:
@@ -222,8 +230,9 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             break;
           }
         }
-        if (mustLog)
+        if (mustLog) {
           addLogMove(LOG_LEVEL_INFO, log);
+        }
         success = true;
       }
       break;
