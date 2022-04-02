@@ -255,7 +255,7 @@ void handle_root() {
       html_end_table();
 
       html_BR();
-      if (Settings.Unit == 0) addFormNote(F("Warning: Unit number is 0, please change it if you want to send it to other units."));
+      if (Settings.Unit == 0 && Settings.UDPPort != 0) addFormNote(F("Warning: Unit number is 0, please change it if you want to send it to other units."));
       html_BR();
       html_table_class_multirow_noborder();
       html_TR();
