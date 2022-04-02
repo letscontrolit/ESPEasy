@@ -1,0 +1,13 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``cdmrst``
+
+    ","
+
+    | Resets the sensor. (Documentation does not state *what* is actually reset, but it is assumed that the Altitude setting is reset to it's default value 0.)
+
+    "
