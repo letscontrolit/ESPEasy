@@ -61,8 +61,8 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { INA219_ADDRESS,   INA219_ADDRESS2,   INA219_ADDRESS3,   INA219_ADDRESS4,
-                                           INA219_ADDRESS5,  INA219_ADDRESS6,   INA219_ADDRESS7,   INA219_ADDRESS8,
+      const uint8_t i2cAddressValues[] = { INA219_ADDRESS,   INA219_ADDRESS2,   INA219_ADDRESS5,   INA219_ADDRESS6,
+                                           INA219_ADDRESS3,  INA219_ADDRESS4,   INA219_ADDRESS7,   INA219_ADDRESS8,
                                            INA219_ADDRESS9,  INA219_ADDRESS10,  INA219_ADDRESS11,  INA219_ADDRESS12,
                                            INA219_ADDRESS13, INA219_ADDRESS14,  INA219_ADDRESS15,  INA219_ADDRESS16 };
 

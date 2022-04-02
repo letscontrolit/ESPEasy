@@ -27,16 +27,15 @@ Supported hardware
 Selectable I2C addresses:
 
 .. csv-table::
-    :header: "Address", "A0", "A1", "Remark"
+    :header: "Address", "A0", "A1", ""
     :widths: 10, 10, 10, 70
 
-    "0x40","GND","GND","Most common addresses"
+    "0x40","GND","GND",""
     "0x41","VS+","GND",""
+    "0x42","SDA","GND",""
+    "0x43","SCL","GND",""
     "0x44","GND","VS+",""
     "0x45","VS+","VS+",""
-    "","","",""
-    "0x42","SDA","GND","Unusual addresses"
-    "0x43","SCL","GND",""
     "0x46","SDA","VS+",""
     "0x47","SCL","VS+",""
     "0x48","GND","SDA",""
