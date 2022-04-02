@@ -11,16 +11,16 @@
  * (No previous changelog registered)
  *************************************************************************************************/
 
-#include "src/PluginStructs/P027_data_struct.h"
+# include "src/PluginStructs/P027_data_struct.h"
 
-#define PLUGIN_027
-#define PLUGIN_ID_027         27
-#define PLUGIN_NAME_027       "Energy (DC) - INA219"
-#define PLUGIN_VALUENAME1_027 "Voltage"
-#define PLUGIN_VALUENAME2_027 "Current"
-#define PLUGIN_VALUENAME3_027 "Power"
+# define PLUGIN_027
+# define PLUGIN_ID_027         27
+# define PLUGIN_NAME_027       "Energy (DC) - INA219"
+# define PLUGIN_VALUENAME1_027 "Voltage"
+# define PLUGIN_VALUENAME2_027 "Current"
+# define PLUGIN_VALUENAME3_027 "Power"
 
-#define P027_I2C_ADDR    (uint8_t)PCONFIG(1)
+# define P027_I2C_ADDR    (uint8_t)PCONFIG(1)
 
 boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -61,10 +61,11 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { INA219_ADDRESS,   INA219_ADDRESS2,  INA219_ADDRESS3,  INA219_ADDRESS4,
-                                           INA219_ADDRESS5,  INA219_ADDRESS6,  INA219_ADDRESS7,  INA219_ADDRESS8,
-                                           INA219_ADDRESS9,  INA219_ADDRESS10, INA219_ADDRESS11, INA219_ADDRESS12,
-                                           INA219_ADDRESS13, INA219_ADDRESS14, INA219_ADDRESS15, INA219_ADDRESS16 };
+      const uint8_t i2cAddressValues[] = { INA219_ADDRESS,   INA219_ADDRESS2,   INA219_ADDRESS3,   INA219_ADDRESS4,
+                                           INA219_ADDRESS5,  INA219_ADDRESS6,   INA219_ADDRESS7,   INA219_ADDRESS8,
+                                           INA219_ADDRESS9,  INA219_ADDRESS10,  INA219_ADDRESS11,  INA219_ADDRESS12,
+                                           INA219_ADDRESS13, INA219_ADDRESS14,  INA219_ADDRESS15,  INA219_ADDRESS16 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 16, i2cAddressValues, P027_I2C_ADDR);
       } else {
@@ -76,20 +77,14 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        uint8_t choiceMode = PCONFIG(0);
-        const __FlashStringHelper * optionsMode[3];
-        optionsMode[0] = F("32V, 2A");
-        optionsMode[1] = F("32V, 1A");
-        optionsMode[2] = F("16V, 0.4A");
-        int optionValuesMode[3];
-        optionValuesMode[0] = 0;
-        optionValuesMode[1] = 1;
-        optionValuesMode[2] = 2;
+        uint8_t choiceMode                       = PCONFIG(0);
+        const __FlashStringHelper *optionsMode[] = { F("32V, 2A"), F("32V, 1A"), F("16V, 0.4A") };
+        int optionValuesMode[]                   = { 0, 1, 2 };
         addFormSelector(F("Measure range"), F("p027_range"), 3, optionsMode, optionValuesMode, choiceMode);
       }
       {
-        uint8_t   choiceMeasureType = PCONFIG(2);
-        const __FlashStringHelper * options[4]        = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
+        uint8_t choiceMeasureType             = PCONFIG(2);
+        const __FlashStringHelper *options[4] = { F("Voltage"), F("Current"), F("Power"), F("Voltage/Current/Power") };
         addFormSelector(F("Measurement Type"), F("p027_measuretype"), 4, options, nullptr, choiceMeasureType);
       }
 
@@ -116,39 +111,44 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P027_data) {
         const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
-        String log;
+        String     log;
+
         if (mustLog) {
-          log = F("INA219 0x");
+          log  = F("INA219 0x");
           log += String(i2caddr, HEX);
           log += F(" setting Range to: ");
         }
 
-        switch (PCONFIG(0))
-        {
+        switch (PCONFIG(0)) {
           case 0:
           {
-            if (mustLog)
+            if (mustLog) {
               log += F("32V, 2A");
+            }
             P027_data->setCalibration_32V_2A();
             break;
           }
           case 1:
           {
-            if (mustLog)
+            if (mustLog) {
               log += F("32V, 1A");
+            }
             P027_data->setCalibration_32V_1A();
             break;
           }
           case 2:
           {
-            if (mustLog)
+            if (mustLog) {
               log += F("16V, 400mA");
+            }
             P027_data->setCalibration_16V_400mA();
             break;
           }
         }
-        if (mustLog)
+
+        if (mustLog) {
           addLogMove(LOG_LEVEL_INFO, log);
+        }
         success = true;
       }
       break;
@@ -173,23 +173,24 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         UserVar[event->BaseVarIndex + 2] = power;
 
         const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
-        String log;
+        String     log;
+
         if (mustLog) {
-          log = F("INA219 0x");
+          log  = F("INA219 0x");
           log += String(P027_I2C_ADDR, HEX);
         }
 
         // for backward compability we allow the user to select if only one measurement should be returned
         // or all 3 measurements at once
-        switch (PCONFIG(2))
-        {
+        switch (PCONFIG(2)) {
           case 0:
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = voltage;
+
             if (mustLog) {
-              log                         += F(": Voltage: ");
-              log                         += voltage;
+              log += F(": Voltage: ");
+              log += voltage;
             }
             break;
           }
@@ -197,9 +198,10 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = current;
+
             if (mustLog) {
-              log                         += F(" Current: ");
-              log                         += current;
+              log += F(" Current: ");
+              log += current;
             }
             break;
           }
@@ -207,9 +209,10 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
           {
             event->sensorType            = Sensor_VType::SENSOR_TYPE_SINGLE;
             UserVar[event->BaseVarIndex] = power;
+
             if (mustLog) {
-              log                         += F(" Power: ");
-              log                         += power;
+              log += F(" Power: ");
+              log += power;
             }
             break;
           }
@@ -219,17 +222,19 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
             UserVar[event->BaseVarIndex]     = voltage;
             UserVar[event->BaseVarIndex + 1] = current;
             UserVar[event->BaseVarIndex + 2] = power;
+
             if (mustLog) {
-              log                             += F(": Voltage: ");
-              log                             += voltage;
-              log                             += F(" Current: ");
-              log                             += current;
-              log                             += F(" Power: ");
-              log                             += power;
+              log += F(": Voltage: ");
+              log += voltage;
+              log += F(" Current: ");
+              log += current;
+              log += F(" Power: ");
+              log += power;
             }
             break;
           }
         }
+
         if (mustLog) {
           addLogMove(LOG_LEVEL_INFO, log);
         }
