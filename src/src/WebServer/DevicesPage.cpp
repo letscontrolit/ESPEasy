@@ -1276,7 +1276,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
     if (Device[DeviceIndex].configurableDecimals())
     {
-       addHtml(F("<TD style='width:30px;''><H3>Decimals</H3></TD>"));
+       addHtml(F("<TD style='width:30px;'><H3>Decimals</H3></TD>"));
     } 
 
     // table body
