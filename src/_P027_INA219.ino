@@ -61,10 +61,28 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { INA219_ADDRESS,   INA219_ADDRESS2,   INA219_ADDRESS5,   INA219_ADDRESS6,
-                                           INA219_ADDRESS3,  INA219_ADDRESS4,   INA219_ADDRESS7,   INA219_ADDRESS8,
-                                           INA219_ADDRESS9,  INA219_ADDRESS10,  INA219_ADDRESS11,  INA219_ADDRESS12,
-                                           INA219_ADDRESS13, INA219_ADDRESS14,  INA219_ADDRESS15,  INA219_ADDRESS16 };
+      // Many boards, like Adafruit INA219: https://learn.adafruit.com/adafruit-ina219-current-sensor-breakout/assembly
+      // A0 and A1 are default connected to GND with 10k pull-down resistor.
+      // To select another address, bridge either A0 and/or A1 to set to VS+, SDA or SCL signale.
+      //  (0x40) 1000000 (A0=GND, A1=GND)
+      //  (0x41) 1000001 (A0=VS+, A1=GND)
+      //  (0x44) 1000100 (A0=GND, A1=VS+)
+      //  (0x45) 1000101 (A0=VS+, A1=VS+)
+      //  (0x42) 1000010 (A0=SDA, A1=GND)
+      //  (0x43) 1000011 (A0=SCL, A1=GND)
+      //  (0x46) 1000110 (A0=SDA, A1=VS+)
+      //  (0x47) 1000111 (A0=SCL, A1=VS+)
+      //  (0x48) 1001000 (A0=GND, A1=SDA)
+      //  (0x49) 1001001 (A0=VS+, A1=SDA)
+      //  (0x4A) 1001010 (A0=SDA, A1=SDA)
+      //  (0x4B) 1001011 (A0=SCL, A1=SDA)
+      //  (0x4C) 1001100 (A0=GND, A1=SCL)
+      //  (0x4D) 1001101 (A0=VS+, A1=SCL)
+      //  (0x4E) 1001110 (A0=SDA, A1=SCL)
+      //  (0x4F) 1001111 (A0=SCL, A1=SCL)
+
+      const uint8_t i2cAddressValues[] = { 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47,
+                                           0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 16, i2cAddressValues, P027_I2C_ADDR);
