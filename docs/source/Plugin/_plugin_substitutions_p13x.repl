@@ -1,0 +1,13 @@
+.. |P130_name| replace:: :cyan:`Current Irms via ADS1015 I2C`
+.. |P130_type| replace:: :cyan:`Current`
+.. |P130_typename| replace:: :cyan:`Current - ADS1015 (I2C)`
+.. |P130_porttype| replace:: `.`
+.. |P130_status| replace:: :yellow:`TESTING E`
+.. |P130_github| replace:: P130_IRMS_ADS1015.ino
+.. _P130_github: https://github.com/handfreezer/ESPEasy/blob/P130_01/src/_P130_IRMS_ADS1015.ino
+.. |P130_usedby| replace:: `.`
+.. |P130_shortinfo| replace:: `Current Irms sensor`
+.. |P130_maintainer| replace:: `handfreezer`
+.. |P130_compileinfo| replace:: `.`
+.. |P130_usedlibraries| replace:: `(none)`
+
