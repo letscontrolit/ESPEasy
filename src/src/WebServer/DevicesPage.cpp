@@ -1262,23 +1262,22 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
   if (!Device[DeviceIndex].Custom && (valueCount > 0))
   {
-    addFormSubHeader(F("Values"));
     html_end_table();
     html_table_class_normal();
-
     // table header
-    addHtml(F("<TR><TH style='width:30px;' align='center'>#"));
-    html_table_header(F("Name"));
+    addFormHeader(F("Values"));
+
+    addHtml(F("<TR><TD><H3>#</H3></TD><TD><H3>Name</H3></TD>"));
 
     if (Device[DeviceIndex].FormulaOption)
     {
-      html_table_header(F("Formula"), F("EasyFormula"), 0);
+       addHtml(F("<TD><H3>Formula</H3></TD>"));
     }
 
     if (Device[DeviceIndex].configurableDecimals())
     {
-      html_table_header(F("Decimals"), 30);
-    }
+       addHtml(F("<TD style='width:30px;''><H3>Decimals</H3></TD>"));
+    } 
 
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)

@@ -199,11 +199,12 @@ void html_table_header(const __FlashStringHelper * label, const String& helpButt
 void html_table_header(const String& label, const String& helpButton, const String& rtdHelpButton, int width) {
   addHtml(F("<TH"));
 
-  if (width > 0) {
+  if (width > 0 && width < 99999) {
     addHtml(F(" style='width:"));
     addHtmlInt(width);
     addHtml(F("px;'"));
   }
+  if (width == 99999){addHtml(F(" colspan='100%' style='text-align: left'"));}
   addHtml('>');
   addHtml(label);
 

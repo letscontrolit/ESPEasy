@@ -559,8 +559,7 @@ void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *rtdHelpButton)
 {
   html_TR();
-  html_table_header(header, helpButton, rtdHelpButton, 225);
-  html_table_header(F(""));
+  html_table_header(header, helpButton, rtdHelpButton, 99999);
 }
 
 /*
