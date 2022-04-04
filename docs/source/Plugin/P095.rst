@@ -44,6 +44,7 @@ Commands available
 ^^^^^^^^^^^^^^^^^^
 
 .. include:: P095_commands.repl
+.. include:: AdaGFX_commands.repl
 
 
 

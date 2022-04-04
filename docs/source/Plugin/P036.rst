@@ -47,7 +47,7 @@ All user defined texts may contain references to system variables or task values
 
 For example: ``[bme#T#D2.1] {D}C [bme#H]%``
 
-Depending on the build used (NORMAL and CUSTOM), an option to generate events can be set, that will generate an event if the display is turned on or off, the contrast setting is changed, a new frame is shown, or a line is updated using the ``oledframedcmd,<line>,<text>`` command is sent.
+Depending on the build used (NORMAL and CUSTOM), an option to generate events can be set, that will generate an event if the display is turned on or off, the contrast setting is changed, a new frame is shown, the number of lines per frame is changed or a line is updated using the ``oledframedcmd,<line>,<text>`` command.
 
 The device setting:
 
