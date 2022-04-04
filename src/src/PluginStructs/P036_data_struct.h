@@ -191,7 +191,7 @@ typedef struct {
   uint8_t     Height;   // font height in pix
   int8_t      Space;    // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
-  String      FontName() const;
+  const __FlashStringHelper FontName() const;
 # endif
 } tFontSettings;
 
@@ -280,13 +280,14 @@ struct P036_data_struct : public PluginTaskData_base {
   String  P36_parseTemplate(String& tmpString,
                             uint8_t lineSize);
 
-  void          registerButtonState(uint8_t newButtonState,
+  void    registerButtonState(uint8_t newButtonState,
                                     bool    bPin3Invers);
 
   void    markButtonStateProcessed();
 
   # ifdef P036_ENABLE_LEFT_ALIGN
   void          setTextAlignment(eAlignment aAlignment);
+  OLEDDISPLAY_TEXT_ALIGNMENT getTextAlignment(eAlignment aAlignment);
   uint8_t       GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment);
 # endif // ifdef P036_ENABLE_LEFT_ALIGN
 

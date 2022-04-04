@@ -32,19 +32,19 @@ void P036_data_struct::reset() {
 }
 
 # ifdef P036_FONT_CALC_LOG
-String tFontSettings::FontName() const {
+const __FlashStringHelper tFontSettings::FontName() const {
   if (fontData == ArialMT_Plain_24)
-    return "Arial_24";
+    return F("Arial_24");
   if (fontData == Dialog_plain_18)
-    return "Dialog_18";
+    return F("Dialog_18");
   if (fontData == ArialMT_Plain_16)
-    return "Arial_16";
+    return F("Arial_16");
   if (fontData == Dialog_plain_12)
-    return "Dialog_12";
+    return F("Dialog_12");
   if (fontData == ArialMT_Plain_10)
-    return "Arial_10";
+    return F("Arial_10");
   else
-    return "Unknown font";
+    return F("Unknown font");
 }
 #endif
 
@@ -398,7 +398,7 @@ void P036_data_struct::display_logo() {
   display->drawString(65, iFontsettings.Top + iFontsettings.Height + iFontsettings.Space + TopLineOffset, F("Easy"));
 
   if (getDisplaySizeSettings(disp_resolution).PixLeft < left) { left = getDisplaySizeSettings(disp_resolution).PixLeft; }
-  top = (getDisplaySizeSettings(disp_resolution).Height-espeasy_logo_height)/2;
+  top = (getDisplaySizeSettings(disp_resolution).Height - espeasy_logo_height) / 2;
 
   if (top < 0) { top = 0; }
   display->drawXbm(left,
@@ -1128,12 +1128,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       ScrollingPages.LineOut[i] = P36_parseTemplate(tmpString, 20);
       iAlignment=0;
       iAlignment=get3BitFromUL(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
-      switch (static_cast<eAlignment>(iAlignment)) {
-        case eAlignment::eGlobal: ScrollingPages.TxtAlignmentOut[i]=textAlignment; break;
-        case eAlignment::eLeft:   ScrollingPages.TxtAlignmentOut[i]=TEXT_ALIGN_LEFT; break;
-        case eAlignment::eCenter: ScrollingPages.TxtAlignmentOut[i]=TEXT_ALIGN_CENTER; break;
-        case eAlignment::eRight:  ScrollingPages.TxtAlignmentOut[i]=TEXT_ALIGN_RIGHT; break;
-      }
+      ScrollingPages.TxtAlignmentOut[i]=getTextAlignment(static_cast<eAlignment>(iAlignment));
     }
 
     // now loop round looking for the next frame with some content
@@ -1169,12 +1164,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         ScrollingPages.LineIn[i] = P36_parseTemplate(tmpString, 20);
         iAlignment=0;
         iAlignment=get3BitFromUL(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
-        switch (static_cast<eAlignment>(iAlignment)) {
-          case eAlignment::eGlobal: ScrollingPages.TxtAlignmentIn[i]=textAlignment; break;
-          case eAlignment::eLeft:   ScrollingPages.TxtAlignmentIn[i]=TEXT_ALIGN_LEFT; break;
-          case eAlignment::eCenter: ScrollingPages.TxtAlignmentIn[i]=TEXT_ALIGN_CENTER; break;
-          case eAlignment::eRight:  ScrollingPages.TxtAlignmentIn[i]=TEXT_ALIGN_RIGHT; break;
-        }
+        ScrollingPages.TxtAlignmentIn[i]=getTextAlignment(static_cast<eAlignment>(iAlignment));
         if (ScrollingPages.LineIn[i].length() > 0) { foundText = true; }
       }
 
@@ -1299,6 +1289,15 @@ void P036_data_struct::setTextAlignment(eAlignment aAlignment) {
 
   MaxFramesToDisplay = 0xFF; // Recalculate page indicator
   nextFrameToDisplay = 0;    // Reset to first page
+}
+
+OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignment) {
+  switch (aAlignment) {
+    case eAlignment::eGlobal: return textAlignment; break;
+    case eAlignment::eLeft:   return TEXT_ALIGN_LEFT; break;
+    case eAlignment::eRight:  return TEXT_ALIGN_RIGHT; break;
+    default: return TEXT_ALIGN_CENTER;
+  }
 }
 
 uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) {
