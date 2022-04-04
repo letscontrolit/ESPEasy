@@ -60,5 +60,10 @@
         "
         ``oledframedcmd,leftalign,<0|1>``
         ","
-        Set the Left-align option for content off (0) or on (1).
+        Set the global Left-align option for content off (0) or on (1).
+        "
+        "
+        ``oledframedcmd,align,<0|1|2>``
+        ","
+        Set the global align option for content to centre (0), left (1) or right (2).
         "
