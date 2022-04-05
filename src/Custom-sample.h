@@ -177,6 +177,9 @@
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+// #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
+// #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
+// #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 
 /*
  #######################################################################################################
@@ -293,6 +296,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
 // #define USES_P037   // MQTTImport
+//   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
+//   #define P037_FILTER_SUPPORT  1 // Enable filtering support
+//   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
 // #define USES_P039   // Environment - Thermocouple
 
@@ -371,12 +377,14 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
+
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
 // #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
 // #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P116   // ST77xx
 // #define USES_P117   // SCD30
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
