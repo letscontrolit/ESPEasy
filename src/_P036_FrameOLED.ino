@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-05
+// FIX: wrong alignment (only centered) for long, non-scrolling lines
+// FIX: definition of the debug function FontName() was wrong
 // @uwekaditz: 2022-04-04
 // ADD: global alignment setting includes now also TEXT_ALIGN_RIGHT, paramter moved to PCONFIG_LONG(1)=P036_FLAGS_1 because it needs 2 bits
 // CHG: item DisplayLinesV1[].FontHeight renamed into DisplayLinesV1[].ModifyLayout

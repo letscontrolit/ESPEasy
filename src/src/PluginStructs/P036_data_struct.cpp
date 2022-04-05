@@ -32,7 +32,7 @@ void P036_data_struct::reset() {
 }
 
 # ifdef P036_FONT_CALC_LOG
-const __FlashStringHelper tFontSettings::FontName() const {
+const __FlashStringHelper *tFontSettings::FontName() const {
   if (fontData == ArialMT_Plain_24) {
     return F("Arial_24");
   }
@@ -806,11 +806,27 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
         iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
         ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
       } else {
-        // shorten string on both sides because line is displayed centered
-        // using floor() because otherwise empty space on both sides
-        iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
-        ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
-        ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(iCharToRemove);
+        switch (ScrollingPages.TxtAlignmentIn[j]) {
+          case TEXT_ALIGN_LEFT:
+            // shorten string on right side because line is left aligned
+            // using floor() because otherwise empty space on right side
+            iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
+            ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
+            break;
+          case TEXT_ALIGN_RIGHT:
+            // shorten string on left side because line is right aligned
+            // using floor() because otherwise empty space on left side
+            iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
+            ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(iCharToRemove);
+            break;
+          default:
+            // shorten string on both sides because line is displayed centered
+            // using floor() because otherwise empty space on both sides
+            iCharToRemove            = floor((static_cast<float>(PixLengthLineIn - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
+            ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(0, strlen - iCharToRemove);
+            ScrollingPages.LineIn[j] = ScrollingPages.LineIn[j].substring(iCharToRemove);
+            break;
+        }
       }
 # ifdef P036_SCROLL_CALC_LOG
       String log;
@@ -852,11 +868,27 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
           ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(1, iCharToRemove - 1);
         }
       } else {
-        // shorten string on both sides because line is displayed centered
-        // using ceil() because otherwise overlapping the new text
-        iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
-        ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
-        ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
+        switch (ScrollingPages.TxtAlignmentIn[j]) {
+          case TEXT_ALIGN_LEFT:
+            // shorten string on right side because line is left aligned
+            // using ceil() because otherwise overlapping the new text
+            iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
+            ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
+            break;
+          case TEXT_ALIGN_RIGHT:
+            // shorten string on left side because line is right aligned
+            // using ceil() because otherwise overlapping the new text
+            iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - MaxPixWidthForPageScrolling)) / fAvgPixPerChar);
+            ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
+            break;
+          default:
+            // shorten string on both sides because line is displayed centered
+            // using ceil() because otherwise overlapping the new text
+            iCharToRemove             = ceil((static_cast<float>(PixLengthLineOut - MaxPixWidthForPageScrolling)) / (2 * fAvgPixPerChar));
+            ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(0, strlen - iCharToRemove);
+            ScrollingPages.LineOut[j] = ScrollingPages.LineOut[j].substring(iCharToRemove);
+            break;
+        }
       }
 # ifdef P036_SCROLL_CALC_LOG
       String log;

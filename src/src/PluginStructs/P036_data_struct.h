@@ -191,7 +191,7 @@ typedef struct {
   uint8_t     Height;   // font height in pix
   int8_t      Space;    // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
-  const __FlashStringHelper FontName() const;
+  const __FlashStringHelper *FontName() const;
 # endif // ifdef P036_FONT_CALC_LOG
 } tFontSettings;
 
