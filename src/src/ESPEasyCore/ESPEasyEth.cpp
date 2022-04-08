@@ -3,6 +3,7 @@
 #ifdef HAS_ETHERNET
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -113,6 +114,7 @@ bool ETHConnectRelaxed() {
     EthEventData.ethInitSuccess = false;
     return false;
   }
+  ethPower(true);
   EthEventData.markEthBegin();
   EthEventData.ethInitSuccess = ETH.begin( 
     Settings.ETH_Phy_Addr,
@@ -125,6 +127,26 @@ bool ETHConnectRelaxed() {
     EthEventData.ethConnectAttemptNeeded = false;
   }
   return EthEventData.ethInitSuccess;
+}
+
+void ethPower(bool enable) {
+  if (Settings.ETH_Pin_power != -1) {
+    if (GPIO_Internal_Read(Settings.ETH_Pin_power) == enable) {
+      // Already the desired state
+      return;
+    }
+    EthEventData.ethInitSuccess = false;
+    ETH = ETHClass();
+    GPIO_Write(1, Settings.ETH_Pin_power, enable ? 1 : 0);
+    if (!enable) {
+      if (Settings.ETH_Clock_Mode == EthClockMode_t::Ext_crystal_osc) {
+        delay(600); // Give some time to discharge any capacitors
+        // Delay is needed to make sure no clock signal remains present which may cause the ESP to boot into flash mode.
+      }
+    } else {
+      delay(400); // LAN chip needs to initialize before calling Eth.begin()
+    }
+  }
 }
 
 bool ETHConnected() {

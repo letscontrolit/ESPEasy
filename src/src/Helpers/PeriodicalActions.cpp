@@ -562,6 +562,9 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
   setWifiMode(WIFI_OFF);
+  #ifdef HAS_ETHERNET
+  ethPower(false);
+  #endif
   ESPEASY_FS.end();
   delay(100); // give the node time to flush all before reboot or sleep
   node_time.now();

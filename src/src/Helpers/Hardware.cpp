@@ -185,6 +185,9 @@ void hardwareInit()
     }
   }
 #endif // ifdef FEATURE_SD
+#ifdef HAS_ETHERNET
+  ethPower(false);
+#endif
 }
 
 void initI2C() {

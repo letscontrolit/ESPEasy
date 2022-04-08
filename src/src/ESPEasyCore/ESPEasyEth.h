@@ -14,6 +14,7 @@ bool     ethPrepare();
 void     ethPrintSettings();
 bool     ETHConnectRelaxed();
 bool     ETHConnected();
+void     ethPower(bool enable);
 MAC_address ETHMacAddress();
 
 #endif // ifdef HAS_ETHERNET
