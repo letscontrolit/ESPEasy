@@ -62,44 +62,7 @@ String P037_getMQTTLastTopicPart(const String& topic) {
 
 bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
   if (newEvent.isEmpty()) { return false; }
-  bool result    = true;
-  uint8_t reason = 0;
-
-  if (result && P037_DEDUPLICATE_EVENTS) { // Check if event is already queued
-    String queuedEvent;
-    reason = 1;                            // Deduping started, so that might be the reason
-    # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-    String log;
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      addLog(LOG_LEVEL_DEBUG, F("P037: addEvent deduping"));
-      addLog(LOG_LEVEL_DEBUG, newEvent);
-      log.reserve(64);
-    }
-    # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-
-    for (auto iter = eventQueue.begin(); iter != eventQueue.end() && result; ++iter) {
-      queuedEvent = String(*iter);
-      # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        log += queuedEvent;
-        log += ';';
-      }
-      # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-
-      result = !queuedEvent.equalsIgnoreCase(newEvent); // IgnoreCase-compare!
-
-      # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        log += result ? '+' : '-';
-        addLog(LOG_LEVEL_DEBUG, log);
-        log.clear();
-      }
-      # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-    }
-  }
+  bool result = true;
 
   if (result) {
     if ((P037_QUEUEDEPTH_EVENTS == 0) ||
@@ -115,7 +78,6 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
       eventQueue.add(newEvent, P037_DEDUPLICATE_EVENTS);
     } else {
       result = false;
-      reason = 2; // Queue limit reached
     }
   }
 
@@ -125,13 +87,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     if (result) {
       log +=  F("yes");
     } else {
-      log += F("NO! ");
-
-      if (reason == 1) {
-        log += F("Duplicate event");
-      } else { // Must be 2
-        log += F("Event-queue limit reached");
-      }
+      log += F("NO!");
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
