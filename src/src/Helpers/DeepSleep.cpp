@@ -60,7 +60,7 @@ bool isDeepSleepEnabled()
   //                    short 1-2 for normal deep sleep / wakeup loop
   //                    short 2-3 to cancel sleep loop for modifying settings
 
-#ifndef ESP32 // pinMode() crashes the ESP33 when PSRAM is enabled and available. So don't check for ESP32.
+#ifndef ESP32 // pinMode() crashes the ESP32 when PSRAM is enabled and available. So don't check for ESP32.
   pinMode(16, INPUT_PULLUP);
 
   if (!digitalRead(16))
