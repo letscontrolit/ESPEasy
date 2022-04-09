@@ -11,31 +11,28 @@
 struct EventQueueStruct {
   EventQueueStruct();
 
-  void add(const String& event);
+  void        add(const String& event,
+                  bool          deduplicate = false);
 
-  void add(const __FlashStringHelper * event);
+  void        add(const __FlashStringHelper *event,
+                  bool                       deduplicate = false);
 
-  void addMove(String&& event);
+  void        addMove(String&& event,
+                      bool     deduplicate = false);
 
-  bool getNext(String& event);
+  bool        getNext(String& event);
 
-  void clear();
+  void        clear();
 
-  bool isEmpty() const;
+  bool        isEmpty() const;
 
   std::size_t size() {
     return _eventQueue.size();
   }
 
-  std::list<String>::iterator begin() {
-    return _eventQueue.begin();
-  }
-
-  std::list<String>::iterator end() {
-    return _eventQueue.end();
-  }
-
 private:
+
+  bool isDuplicate(const String& event);
 
   std::list<String>_eventQueue;
 };
