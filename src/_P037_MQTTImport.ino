@@ -11,6 +11,8 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-04-09, tonhuisman: Add features Deduplicate Events, and Max event-queue size
+ * 2022-04-09, tonhuisman: Bugfix sending (extra) events only when enabled
  * 2021-10-23, tonhuisman: Fix stability issues when parsing JSON payloads
  * 2021-10-18, tonhuisman: Add Global topic-prefix to accomodate long topics (with a generic prefix)
  *                         (See forum request: https://www.letscontrolit.com/forum/viewtopic.php?f=6&t=8800)
@@ -33,10 +35,14 @@
 # define PLUGIN_VALUENAME4_037 "Value4"
 
 
-# define P037_PARSE_JSON      PCONFIG(1) // Parse/process json messages
-# define P037_APPLY_MAPPINGS  PCONFIG(2) // Apply mapping strings to numbers
-# define P037_APPLY_FILTERS   PCONFIG(3) // Apply filtering on data values
-# define P037_SEND_EVENTS     PCONFIG(4) // Send event for each received topic
+# define P037_PARSE_JSON          PCONFIG(1) // Parse/process json messages
+# define P037_APPLY_MAPPINGS      PCONFIG(2) // Apply mapping strings to numbers
+# define P037_APPLY_FILTERS       PCONFIG(3) // Apply filtering on data values
+# define P037_SEND_EVENTS         PCONFIG(4) // Send event for each received topic
+# define P037_DEDUPLICATE_EVENTS  PCONFIG(5) // Deduplicate events while still in the queue
+# define P037_QUEUEDEPTH_EVENTS   PCONFIG(6) // Max. eventqueue-depth to avoid overflow, extra events will be discarded
+
+# define P037_MAX_QUEUEDEPTH      150
 
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 String P037_getMQTTLastTopicPart(const String& topic) {
@@ -52,6 +58,75 @@ String P037_getMQTTLastTopicPart(const String& topic) {
 }
 
 # endif // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
+
+bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
+  if (newEvent.isEmpty()) { return false; }
+  bool result    = true;
+  uint8_t reason = 0;
+
+  if (result && P037_DEDUPLICATE_EVENTS) { // Check if event is already queued
+    String queuedEvent;
+    reason = 1;                            // Deduping started, so that might be the reason
+    # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+    String log;
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, F("P037: addEvent deduping"));
+      addLog(LOG_LEVEL_DEBUG, newEvent);
+      log.reserve(64);
+    }
+    # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+
+    for (auto iter = eventQueue.begin(); iter != eventQueue.end() && result; ++iter) {
+      queuedEvent = String(*iter);
+      # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        log += queuedEvent;
+        log += ';';
+      }
+      # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+
+      result = !queuedEvent.equalsIgnoreCase(newEvent); // IgnoreCase-compare!
+
+      # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        log += result ? '+' : '-';
+        addLog(LOG_LEVEL_DEBUG, log);
+        log.clear();
+      }
+      # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+    }
+  }
+
+  if (result) {
+    if ((P037_QUEUEDEPTH_EVENTS == 0) || (eventQueue.size() <= P037_QUEUEDEPTH_EVENTS)) {
+      eventQueue.add(newEvent);
+    } else {
+      result = false;
+      reason = 2; // Queue limit reached
+    }
+  }
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("MQTT: Event added: ");
+
+    if (result) {
+      log +=  F("yes");
+    } else {
+      log += F("NO! ");
+
+      if (reason == 1) {
+        log += F("Duplicate event");
+      } else { // Must be 2
+        log += F("Event-queue limit reached");
+      }
+    }
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  return result;
+}
 
 boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -120,6 +195,28 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       #  endif // if P037_JSON_SUPPORT
       # endif  // if !defined(LIMIT_BUILD_SIZE)
 
+      {
+        addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS);
+        # if !defined(LIMIT_BUILD_SIZE)
+        addFormNote(F("When enabled will not (re-)generate events that are already in the queue."));
+        # endif  // if !defined(LIMIT_BUILD_SIZE)
+      }
+
+      {
+        # if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        String toolTip = F("0..");
+        toolTip += P037_MAX_QUEUEDEPTH;
+        toolTip += F(" entries");
+        addFormNumericBox(F("Max. # entries in event buffer"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
+        # else // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        addFormNumericBox(F("Max. # entries in event buffer"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
+        # endif // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        addUnit(F("0 = no check"));
+        # if !defined(LIMIT_BUILD_SIZE)
+        addFormNote(F("New events will be discarded if the event buffer has more entries queued."));
+        # endif  // if !defined(LIMIT_BUILD_SIZE)
+      }
+
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
       if (nullptr == P037_data) {
@@ -157,7 +254,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # if P037_FILTER_SUPPORT
       P037_APPLY_FILTERS = getFormItemInt(F("p037_apply_filters"));
       # endif // if P037_FILTER_SUPPORT
-      P037_SEND_EVENTS = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
+      P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
+      P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("p037_deduplicate")) ? 1 : 0;
+      P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("p037_queuedepth"));
 
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
@@ -224,7 +323,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (P037_MQTTImport_connected != currentConnectedState) {
         P037_MQTTImport_connected = currentConnectedState;
 
-        if (Settings.UseRules) {
+        if (Settings.UseRules) { // No eventQueue guarding for this event
           eventQueue.add(currentConnectedState ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected"));
         }
       }
@@ -531,7 +630,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   RuleEvent += event->String1;
                   RuleEvent += '=';
                   RuleEvent += unparsedPayload;
-                  eventQueue.addMove(std::move(RuleEvent));
+                  P037_addEventToQueue(event, RuleEvent);
                 }
 
                 // Log the event
@@ -555,7 +654,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
                 // Generate event for rules processing - proposed by TridentTD
 
-                if (Settings.UseRules) {
+                if (Settings.UseRules && P037_SEND_EVENTS) {
                   if (checkJson) {
                     // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
                     String RuleEvent;
@@ -578,7 +677,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     } else {
                       RuleEvent += Payload; // Pass mapped result
                     }
-                    eventQueue.addMove(std::move(RuleEvent));
+                    P037_addEventToQueue(event, RuleEvent);
                   }
 
                   // (Always) Generate <Taskname>#<Valuename>=<Payload> event
@@ -594,7 +693,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   } else {
                     RuleEvent += Payload;
                   }
-                  eventQueue.addMove(std::move(RuleEvent));
+                  P037_addEventToQueue(event, RuleEvent);
                 }
                 # if P037_JSON_SUPPORT
 

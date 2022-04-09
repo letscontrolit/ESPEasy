@@ -23,6 +23,18 @@ struct EventQueueStruct {
 
   bool isEmpty() const;
 
+  std::size_t size() {
+    return _eventQueue.size();
+  }
+
+  std::list<String>::iterator begin() {
+    return _eventQueue.begin();
+  }
+
+  std::list<String>::iterator end() {
+    return _eventQueue.end();
+  }
+
 private:
 
   std::list<String>_eventQueue;
