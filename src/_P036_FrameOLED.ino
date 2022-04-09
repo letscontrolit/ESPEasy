@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-09
+// FIX: wrong pixel calculation for alignment for non-scrolling lines on 64x48 display (the first shown left pixel on 64x48 displays is 32!)
+// CHG: new class P036_LineContent(), just for loading the DisplayLinesV1
 // @uwekaditz: 2022-04-05
 // FIX: wrong alignment (only centered) for long, non-scrolling lines
 // FIX: definition of the debug function FontName() was wrong
@@ -365,10 +368,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // For load and save of the display lines, we must not rely on the data in memory.
         // This data in memory can be altered through write commands.
         // Therefore we must read the lines from flash in a temporary object.
-        P036_data_struct *P036_data = new (std::nothrow) P036_data_struct();
+        P036_LineContent *P036_lines = new (std::nothrow) P036_LineContent();
 
-        if (nullptr != P036_data) {
-          P036_data->loadDisplayLines(event->TaskIndex, get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION)); // Bit23-20 Version
+        if (nullptr != P036_lines) {
+          P036_lines->loadDisplayLines(event->TaskIndex, get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION)); // Bit23-20 Version
                                                                                                                   // CustomTaskSettings
 
           String strID;
@@ -396,7 +399,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           addFormSubHeader(F("Lines"));
           html_table(EMPTY_STRING); // Sub-table
           html_table_header(F("Line #&nbsp;"));
-          html_table_header(F("Content"), 300);
+          html_table_header(F("Content"), 500);
           html_table_header(F("Modify font"));
           html_table_header(F("Alignment"));
 
@@ -407,6 +410,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1);
 
             html_TD(); // content
+            // not working, column is too narrow
             //            addTextBox( getPluginCustomArgName(varNr),
             //                        String(P036_data->DisplayLinesV1[varNr].Content),
             //                        P36_NcharsV1 - 1,
@@ -414,14 +418,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             //                        false,          // required,
             //                        EMPTY_STRING,   // pattern,
             //                        EMPTY_STRING);  // class name
-            addTextBox(getPluginCustomArgName(varNr),
-                       String(P036_data->DisplayLinesV1[varNr].Content),
+            addTextBox(getPluginCustomArgName(varNr),    // column oly 80% width!
+                       String(P036_lines->DisplayLinesV1[varNr].Content),
                        P36_NcharsV1 - 1
                        );
             html_TD(); // font
             strID             = F("FontID");
             strID            += (varNr + 1);
-            FontChoice[varNr] = get3BitFromUL(P036_data->DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
+            FontChoice[varNr] = get3BitFromUL(P036_lines->DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
             addSelector(strID,
                         5,
                         optionsFont,
@@ -435,7 +439,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             html_TD();                     // alignment
             strID                  = F("AlignmentID");
             strID                 += (varNr + 1);
-            AlignmentChoice[varNr] = get3BitFromUL(P036_data->DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+            AlignmentChoice[varNr] = get3BitFromUL(P036_lines->DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
             addSelector(strID,
                         4,
                         optionsAlignment,
@@ -450,8 +454,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           html_end_table();
 
           // Need to delete the allocated object here
-          delete P036_data;
+          delete P036_lines;
         }
+        else
+          addLog(LOG_LEVEL_ERROR, F("P036_PLUGIN_WEBFORM_LOAD: P036_lines are zero!"));
       }
 
       success = true;
@@ -526,20 +532,20 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         // For load and save of the display lines, we must not rely on the data in memory.
         // This data in memory can be altered through write commands.
         // Therefore we must use a temporary version to store the settings.
-        P036_data_struct *P036_data = new (std::nothrow) P036_data_struct();
+        P036_LineContent *P036_lines = new (std::nothrow) P036_LineContent();
 
-        if (nullptr != P036_data) {
+      if (nullptr != P036_lines) {
           String   error, strID;
           uint32_t lModifyLayout;
 
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            if (!safe_strncpy(P036_data->DisplayLinesV1[varNr].Content, webArg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+            if (!safe_strncpy(P036_lines->DisplayLinesV1[varNr].Content, webArg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
               error += getCustomTaskSettingsError(varNr);
             }
-            P036_data->DisplayLinesV1[varNr].Content[P36_NcharsV1 - 1] = 0;                                      // Terminate in case of
+            P036_lines->DisplayLinesV1[varNr].Content[P36_NcharsV1 - 1] = 0;                                      // Terminate in case of
                                                                                                                  // uninitalized data
-            P036_data->DisplayLinesV1[varNr].FontType                  = 0xff;
+            P036_lines->DisplayLinesV1[varNr].FontType                  = 0xff;
             lModifyLayout                                              = 0xC0;                                   // keep 2 upper bits
                                                                                                                  // untouched
             strID                                                      = F("FontID");
@@ -548,20 +554,22 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             strID  = F("AlignmentID");
             strID += (varNr + 1);
             set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(strID) & 0xff)); // Alignment
-            P036_data->DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
-            P036_data->DisplayLinesV1[varNr].FontSpace    = 0xff;
-            P036_data->DisplayLinesV1[varNr].reserved     = 0xff;
+            P036_lines->DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
+            P036_lines->DisplayLinesV1[varNr].FontSpace    = 0xff;
+            P036_lines->DisplayLinesV1[varNr].reserved     = 0xff;
           }
 
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_data->DisplayLinesV1)),
-                                 sizeof(P036_data->DisplayLinesV1));
+          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_lines->DisplayLinesV1)),
+                                 sizeof(P036_lines->DisplayLinesV1));
 
           // Need to delete the allocated object here
-          delete P036_data;
+          delete P036_lines;
         }
+        else
+          addLog(LOG_LEVEL_ERROR, F("P036_PLUGIN_WEBFORM_SAVE: P036_lines are zero!"));
       }
 
 # ifdef PLUGIN_036_DEBUG
@@ -578,6 +586,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == P036_data) {
+        addLog(LOG_LEVEL_ERROR, F("P036_PLUGIN_INIT: P036_data are zero!"));
         return success;
       }
 
@@ -1107,15 +1116,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           String NewContent = parseStringKeepCase(string, 3);
           NewContent = P036_data->P36_parseTemplate(NewContent, 20);
 
-          if (!safe_strncpy(P036_data->DisplayLinesV1[LineNo - 1].Content, NewContent, P36_NcharsV1)) {
+          if (!safe_strncpy(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content, NewContent, P36_NcharsV1)) {
             addHtmlError(getCustomTaskSettingsError(LineNo - 1));
           }
-          P036_data->DisplayLinesV1[LineNo - 1].Content[P36_NcharsV1 - 1] = 0;                    // Terminate in case of uninitalized data
-          P036_data->DisplayLinesV1[LineNo - 1].reserved                  = (event->Par3 & 0xFF); // not implemented yet
+          P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content[P36_NcharsV1 - 1] = 0;                    // Terminate in case of uninitalized data
+          P036_data->LineContent->DisplayLinesV1[LineNo - 1].reserved                  = (event->Par3 & 0xFF); // not implemented yet
 
           // calculate Pix length of new Content
           P036_data->display->setFont(P036_data->ScrollingPages.Font);
-          uint16_t PixLength = P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
+          uint16_t PixLength = P036_data->display->getStringWidth(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content);
 
           if (PixLength > 255) {
             String str_error = F("Pixel length of ");
@@ -1124,14 +1133,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             addHtmlError(str_error);
 
             const int strlen =
-              strnlen_P(P036_data->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->DisplayLinesV1[LineNo - 1].Content));
+              strnlen_P(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content, sizeof(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content));
 
             if (strlen > 0) {
               const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
               const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
-              P036_data->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
+              P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
             }
           }
           P036_data->MaxFramesToDisplay = 0xff; // update frame count

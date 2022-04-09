@@ -13,7 +13,7 @@
 
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
- # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
+// # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
 
 # ifndef P036_LIMIT_BUILD_SIZE
 #  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
@@ -204,6 +204,16 @@ typedef struct {
   uint8_t WiFiIndicatorWidth; // width of WiFi indicator
 } tSizeSettings;
 
+class P036_LineContent 
+{
+  public:
+  void loadDisplayLines(taskIndex_t taskIndex,
+                        uint8_t     LoadVersion);
+
+  // CustomTaskSettings
+  tDisplayLines DisplayLinesV1[P36_Nlines]; // holds the CustomTaskSettings for V1
+};
+
 struct P036_data_struct : public PluginTaskData_base {
   P036_data_struct();
 
@@ -227,9 +237,6 @@ struct P036_data_struct : public PluginTaskData_base {
 
   bool isInitialized() const;
 
-
-  void loadDisplayLines(taskIndex_t taskIndex,
-                        uint8_t     LoadVersion);
 
   // Set the display contrast
   // really low brightness & contrast: contrast = 10, precharge = 5, comdetect = 0
@@ -298,7 +305,7 @@ struct P036_data_struct : public PluginTaskData_base {
   tScrollingPages ScrollingPages;
 
   // CustomTaskSettings
-  tDisplayLines DisplayLinesV1[P36_Nlines]; // holds the CustomTaskSettings for V1
+  P036_LineContent *LineContent = nullptr;
 
   int8_t lastWiFiState   = 0;
   bool   bDisplayingLogo = false;

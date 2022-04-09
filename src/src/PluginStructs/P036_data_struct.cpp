@@ -16,6 +16,30 @@
 # include <Dialog_Plain_18_font.h>
 # include <OLED_SSD1306_SH1106_images.h>
 
+void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
+  if (LoadVersion == 0) {
+    // read data of version 0 (up to 22.11.2019)
+    String DisplayLinesV0[P36_Nlines];                                           // used to load the CustomTaskSettings for V0
+    LoadCustomTaskSettings(taskIndex, DisplayLinesV0, P36_Nlines, P36_NcharsV0); // max. length 1024 Byte  (DAT_TASKS_CUSTOM_SIZE)
+
+    for (int i = 0; i < P36_Nlines; ++i) {
+      safe_strncpy(DisplayLinesV1[i].Content, DisplayLinesV0[i], P36_NcharsV1);
+      DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
+      DisplayLinesV1[i].FontType                  = 0xff;
+      DisplayLinesV1[i].ModifyLayout              = 0xff;
+      DisplayLinesV1[i].FontSpace                 = 0xff;
+      DisplayLinesV1[i].reserved                  = 0xff;
+    }
+  } else {
+    // read data of version 1 (beginning from 22.11.2019)
+    LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&DisplayLinesV1), sizeof(DisplayLinesV1));
+
+    for (int i = 0; i < P36_Nlines; ++i) {
+      DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
+    }
+  }
+}
+
 P036_data_struct::P036_data_struct() : display(nullptr) {}
 
 P036_data_struct::~P036_data_struct() {
@@ -29,6 +53,9 @@ void P036_data_struct::reset() {
     delete display;
     display = nullptr;
   }
+  if (LineContent != nullptr) {
+    delete LineContent;
+    LineContent = nullptr;  }
 }
 
 # ifdef P036_FONT_CALC_LOG
@@ -137,7 +164,9 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
       return false;
   }
 
-  if (display != nullptr) {
+  LineContent = new (std::nothrow) P036_LineContent();
+
+  if ((display != nullptr)&&(LineContent != nullptr)) {
     display->init(); // call to local override of init function
 
     // disp_resolution = Disp_resolution;
@@ -150,7 +179,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
     }
 
     display->displayOn();
-    loadDisplayLines(taskIndex, LoadVersion);
+    LineContent->loadDisplayLines(taskIndex, LoadVersion);
 
     // Flip screen if required
     setOrientationRotated(Rotated);
@@ -183,31 +212,7 @@ bool P036_data_struct::init(taskIndex_t     taskIndex,
 }
 
 bool P036_data_struct::isInitialized() const {
-  return display != nullptr;
-}
-
-void P036_data_struct::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
-  if (LoadVersion == 0) {
-    // read data of version 0 (up to 22.11.2019)
-    String DisplayLinesV0[P36_Nlines];                                           // used to load the CustomTaskSettings for V0
-    LoadCustomTaskSettings(taskIndex, DisplayLinesV0, P36_Nlines, P36_NcharsV0); // max. length 1024 Byte  (DAT_TASKS_CUSTOM_SIZE)
-
-    for (int i = 0; i < P36_Nlines; ++i) {
-      safe_strncpy(DisplayLinesV1[i].Content, DisplayLinesV0[i], P36_NcharsV1);
-      DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
-      DisplayLinesV1[i].FontType                  = 0xff;
-      DisplayLinesV1[i].ModifyLayout              = 0xff;
-      DisplayLinesV1[i].FontSpace                 = 0xff;
-      DisplayLinesV1[i].reserved                  = 0xff;
-    }
-  } else {
-    // read data of version 1 (beginning from 22.11.2019)
-    LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&DisplayLinesV1), sizeof(DisplayLinesV1));
-
-    for (int i = 0; i < P36_Nlines; ++i) {
-      DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
-    }
-  }
+  return ((display != nullptr)&&(LineContent != nullptr));
 }
 
 void P036_data_struct::setContrast(uint8_t OLED_contrast) {
@@ -959,7 +964,7 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
                             ScrollingPages.ypos[j],
                             ScrollingPages.LineOut[j]);
       } else {
-        // line is centered while scrolling page
+        // line is kept aligned while scrolling page
         display->setTextAlignment(ScrollingPages.TxtAlignmentOut[j]);
         display->drawString(GetTextLeftMargin(ScrollingPages.TxtAlignmentOut[j]) + ScrollingPages.dPixSum,
                             ScrollingPages.ypos[j],
@@ -974,10 +979,10 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
                           ScrollingPages.ypos[j],
                           ScrollingPages.LineIn[j]);
     } else {
-      // line is centered while scrolling page
+      // line is kept aligned while scrolling page
       display->setTextAlignment(ScrollingPages.TxtAlignmentIn[j]);
-      display->drawString((-1 * getDisplaySizeSettings(disp_resolution).Width) + GetTextLeftMargin(
-                            ScrollingPages.TxtAlignmentIn[j]) + ScrollingPages.dPixSum,
+      // for non-scrolling pages ScrollingPages.dPixSum=P36_MaxDisplayWidth -> therefore the calculation must use P36_MaxDisplayWidth, too
+      display->drawString(-P36_MaxDisplayWidth + GetTextLeftMargin(ScrollingPages.TxtAlignmentIn[j]) + ScrollingPages.dPixSum,
                           ScrollingPages.ypos[j],
                           ScrollingPages.LineIn[j]);
     }
@@ -1171,10 +1176,10 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
     //      Construct the outgoing string
     for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
     {
-      String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+      String tmpString(LineContent->DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
       ScrollingPages.LineOut[i] = P36_parseTemplate(tmpString, 20);
       iAlignment                = 0;
-      iAlignment                = get3BitFromUL(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].ModifyLayout,
+      iAlignment                = get3BitFromUL(LineContent->DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].ModifyLayout,
                                                 P036_FLAG_ModifyLayout_Alignment);
       ScrollingPages.TxtAlignmentOut[i] = getTextAlignment(static_cast<eAlignment>(iAlignment));
     }
@@ -1208,10 +1213,10 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       //        Contruct incoming strings
       for (uint8_t i = 0; i < ScrollingPages.linesPerFrame; i++)
       {
-        String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
+        String tmpString(LineContent->DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].Content);
         ScrollingPages.LineIn[i] = P36_parseTemplate(tmpString, 20);
         iAlignment               = 0;
-        iAlignment               = get3BitFromUL(DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].ModifyLayout,
+        iAlignment               = get3BitFromUL(LineContent->DisplayLinesV1[(ScrollingPages.linesPerFrame * frameCounter) + i].ModifyLayout,
                                                  P036_FLAG_ModifyLayout_Alignment);
         ScrollingPages.TxtAlignmentIn[i] = getTextAlignment(static_cast<eAlignment>(iAlignment));
 
@@ -1235,7 +1240,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       // not updated yet
       for (uint8_t i = 0; i < NFrames; i++) {
         for (uint8_t k = 0; k < ScrollingPages.linesPerFrame; k++) {
-          String tmpString(DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
+          String tmpString(LineContent->DisplayLinesV1[(ScrollingPages.linesPerFrame * i) + k].Content);
           tmpString = P36_parseTemplate(tmpString, 20);
 
           if (tmpString.length() > 0) {
@@ -1351,12 +1356,19 @@ OLEDDISPLAY_TEXT_ALIGNMENT P036_data_struct::getTextAlignment(eAlignment aAlignm
 }
 
 uint8_t P036_data_struct::GetTextLeftMargin(OLEDDISPLAY_TEXT_ALIGNMENT _textAlignment) {
-  if (_textAlignment == TEXT_ALIGN_LEFT) { return 0; }
+  // left margin must be offset with PixLeft (the first shown left pixel on 64x48 displays is 32!)
+  if (_textAlignment == TEXT_ALIGN_LEFT) {
+    return getDisplaySizeSettings(disp_resolution).PixLeft;
+  }
 
-  if (_textAlignment == TEXT_ALIGN_CENTER) { return getDisplaySizeSettings(disp_resolution).Width / 2; }
+  if (_textAlignment == TEXT_ALIGN_CENTER) {
+    return (getDisplaySizeSettings(disp_resolution).Width / 2) + getDisplaySizeSettings(disp_resolution).PixLeft;
+  }
 
-  if (_textAlignment == TEXT_ALIGN_RIGHT) { return getDisplaySizeSettings(disp_resolution).Width; }
-  else { return 0; }
+  if (_textAlignment == TEXT_ALIGN_RIGHT) {
+    return getDisplaySizeSettings(disp_resolution).Width + getDisplaySizeSettings(disp_resolution).PixLeft;
+  }
+  else { return getDisplaySizeSettings(disp_resolution).PixLeft; }
 }
 
 # endif // ifdef P036_ENABLE_LEFT_ALIGN
