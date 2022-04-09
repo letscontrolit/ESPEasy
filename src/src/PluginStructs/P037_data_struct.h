@@ -15,7 +15,7 @@
 
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
-# ifdef PLUGIN_BUILD_CUSTOM
+# if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 #  ifndef P037_MAPPING_SUPPORT
 #   define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
 #  endif // ifndef P037_MAPPING_SUPPORT
@@ -25,31 +25,33 @@
 #  ifndef P037_JSON_SUPPORT
 #   define P037_JSON_SUPPORT    1 // Enable Json support
 #  endif // ifndef P037_JSON_SUPPORT
-# endif // ifdef PLUGIN_BUILD_CUSTOM
+# endif // if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
 
-# if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE) // Leave out the fancy stuff if available flash is tight
-#  ifdef PLUGIN_037_DEBUG
-#   undef PLUGIN_037_DEBUG
-#  endif // ifdef PLUGIN_037_DEBUG
-#  if P037_MAPPING_SUPPORT
-#   undef P037_MAPPING_SUPPORT
-#  endif // if P037_MAPPING_SUPPORT
-#  if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
-#   undef P037_FILTER_SUPPORT
-#  endif // if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
+# ifndef PLUGIN_BUILD_MAX_ESP32
+#  if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE) // Leave out the fancy stuff if available flash is tight
+#   ifdef PLUGIN_037_DEBUG
+#    undef PLUGIN_037_DEBUG
+#   endif // ifdef PLUGIN_037_DEBUG
+#   if P037_MAPPING_SUPPORT
+#    undef P037_MAPPING_SUPPORT
+#   endif // if P037_MAPPING_SUPPORT
+#   if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
+#    undef P037_FILTER_SUPPORT
+#   endif // if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
 
 // #if P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
 // #endif
-# endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
+#  endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
 
-# ifdef PLUGIN_DISPLAY_COLLECTION
-#  if P037_FILTER_SUPPORT
-#   undef P037_FILTER_SUPPORT
-#  endif // if P037_FILTER_SUPPORT
-# endif  // ifdef PLUGIN_DISPLAY_COLLECTION
+#  ifdef PLUGIN_DISPLAY_COLLECTION
+#   if P037_FILTER_SUPPORT
+#    undef P037_FILTER_SUPPORT
+#   endif // if P037_FILTER_SUPPORT
+#  endif  // ifdef PLUGIN_DISPLAY_COLLECTION
+# endif // ifndef PLUGIN_BUILD_MAX_ESP32
 
 # define P037_MAX_MAPPINGS  25
 # define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
