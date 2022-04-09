@@ -276,6 +276,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
       P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("p037_deduplicate")) ? 1 : 0;
       P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("p037_queuedepth"));
+      # if P037_REPLACE_BY_COMMA_SUPPORT
+      String character = web_server.arg(F("p037_replace_char"));
+      P037_REPLACE_BY_COMMA = character[0];
+
+      if (P037_REPLACE_BY_COMMA == 0x20) { // Space -> 0
+        P037_REPLACE_BY_COMMA = 0x0;
+      }
+      # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
