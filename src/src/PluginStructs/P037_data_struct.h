@@ -17,14 +17,17 @@
 
 # if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 #  ifndef P037_MAPPING_SUPPORT
-#   define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
+#   define P037_MAPPING_SUPPORT 1           // Enable Value mapping support
 #  endif // ifndef P037_MAPPING_SUPPORT
 #  ifndef P037_FILTER_SUPPORT
-#   define P037_FILTER_SUPPORT  1 // Enable filtering support
+#   define P037_FILTER_SUPPORT  1           // Enable filtering support
 #  endif // ifndef P037_FILTER_SUPPORT
 #  ifndef P037_JSON_SUPPORT
-#   define P037_JSON_SUPPORT    1 // Enable Json support
+#   define P037_JSON_SUPPORT    1           // Enable Json support
 #  endif // ifndef P037_JSON_SUPPORT
+#  ifndef P037_REPLACE_BY_COMMA_SUPPORT
+#   define P037_REPLACE_BY_COMMA_SUPPORT  1 // Enable Replace by comnma support
+#  endif // ifndef P037_REPLACE_BY_COMMA_SUPPORT
 # endif // if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
@@ -50,6 +53,9 @@
 #   if P037_FILTER_SUPPORT
 #    undef P037_FILTER_SUPPORT
 #   endif // if P037_FILTER_SUPPORT
+#   if P037_REPLACE_BY_COMMA_SUPPORT
+#    undef P037_REPLACE_BY_COMMA_SUPPORT
+#   endif // if P037_REPLACE_BY_COMMA_SUPPORT
 #  endif  // ifdef PLUGIN_DISPLAY_COLLECTION
 # endif // ifndef PLUGIN_BUILD_MAX_ESP32
 
