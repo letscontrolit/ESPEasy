@@ -59,12 +59,15 @@ bool isDeepSleepEnabled()
   // recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
   //                    short 1-2 for normal deep sleep / wakeup loop
   //                    short 2-3 to cancel sleep loop for modifying settings
+
+#ifndef ESP32 // pinMode() crashes the ESP33 when PSRAM is enabled and available. So don't check for ESP32.
   pinMode(16, INPUT_PULLUP);
 
   if (!digitalRead(16))
   {
     return false;
   }
+#endif
   return true;
 }
 
