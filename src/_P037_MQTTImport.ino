@@ -101,7 +101,8 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
   }
 
   if (result) {
-    if ((P037_QUEUEDEPTH_EVENTS == 0) || (eventQueue.size() <= P037_QUEUEDEPTH_EVENTS)) {
+    if ((P037_QUEUEDEPTH_EVENTS == 0) ||
+        (eventQueue.size() <= static_cast<std::size_t>(P037_QUEUEDEPTH_EVENTS))) {
       eventQueue.add(newEvent);
     } else {
       result = false;
