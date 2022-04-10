@@ -25,15 +25,16 @@ public:
   
 
 private:
+#ifdef ESP8266
   size_t read(const String& filename,
               size_t      & pos,
               uint8_t      *buffer,
               size_t        length);
-
-  String doReadLn(const String& filename,
-                    size_t      & pos,
-                    bool &moreAvailable);
   
+#endif
+
+  bool addChar(char c, String& line,   bool& firstNonSpaceRead,  bool& commentFound);
+
 public:
   String readLn(const String& filename,
               size_t      & pos,
@@ -44,7 +45,8 @@ private:
 #ifdef ESP32
 
   // Cache the entire rules file contents in memory
-  typedef std::map<String, String> FileHandleMap;
+  typedef std::vector<String> RulesLines;
+  typedef std::map<String, RulesLines> FileHandleMap;
 #else // ifdef ESP32
 
   // Keep a handle to a file for low-memory systems

@@ -20,45 +20,6 @@ void RulesHelperClass::closeAllFiles() {
   }
 }
 
-size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buffer, size_t length)
-{
-  if (!Settings.UseRules || !fileExists(filename)) {
-    return 0;
-  }
-  auto it = _fileHandleMap.find(filename);
-
-  if (it == _fileHandleMap.end()) {
-    // No open file handle found, so try to open it.
-    fs::File f = tryOpenFile(filename, "r+");
-
-    if (f) {
-      String fileContent;
-
-      if (fileContent.reserve(f.size())) {
-        while (f.available()) {
-          fileContent += static_cast<char>(f.read());
-        }
-        _fileHandleMap.emplace(std::make_pair(filename, std::move(fileContent)));
-        it = _fileHandleMap.find(filename);
-      }
-      f.close();
-    }
-  }
-
-  if (it == _fileHandleMap.end()) {
-    return 0;
-  }
-
-  size_t bytesRead = 0;
-
-  while (pos < it->second.length() && bytesRead < length) {
-    buffer[bytesRead] = it->second[pos];
-    ++pos;
-    ++bytesRead;
-  }
-  return bytesRead;
-}
-
 #else // ifdef ESP32
 
 void RulesHelperClass::closeAllFiles() {
@@ -96,10 +57,111 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
 
 #endif // ifdef ESP32
 
+bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead,  bool& commentFound)
+{
+  switch (c)
+  {
+    case '\n':
+    {
+      // Line end, parse rule
+      line.trim();
 
-String RulesHelperClass::doReadLn(const String& filename,
-                                  size_t      & pos,
-                                  bool        & moreAvailable)
+      if ((line.length() > 0) && !line.startsWith(F("//"))) {
+        return true;
+      }
+
+      // Prepare for new line
+      line.clear();
+      firstNonSpaceRead = false;
+      commentFound      = false;
+      break;
+    }
+    case '\r': // Just skip this character
+      break;
+    case '\t': // tab
+    case ' ':  // space
+    {
+      // Strip leading spaces.
+      if (firstNonSpaceRead) {
+        line += ' ';
+      }
+      break;
+    }
+    case '/':
+    {
+      if (!commentFound) {
+        line += '/';
+
+        if (line.endsWith(F("//"))) {
+          // consider the rest of the line a comment
+          commentFound = true;
+        }
+      }
+      break;
+    }
+    default: // Any other character
+    {
+      firstNonSpaceRead = true;
+
+      if (!commentFound) {
+        line += c;
+      }
+      break;
+    }
+  }
+  return false;
+}
+
+#ifdef ESP32
+String RulesHelperClass::readLn(const String& filename,
+                                size_t      & pos,
+                                bool        & moreAvailable)
+{
+  auto it = _fileHandleMap.find(filename);
+
+  if (it == _fileHandleMap.end()) {
+    // Read lines from the file
+    fs::File f = tryOpenFile(filename, "r+");
+
+    if (f) {
+      RulesLines lines;
+      String     tmpStr;
+      bool firstNonSpaceRead = false;
+      bool commentFound      = false;
+
+      while (f.available()) {
+        if (addChar(char(f.read()), tmpStr, firstNonSpaceRead, commentFound)) {
+          lines.push_back(tmpStr);
+          firstNonSpaceRead = false;
+          commentFound      = false;
+          tmpStr.clear();
+        }
+      }
+
+      if (tmpStr.length() > 0) {
+        lines.push_back(tmpStr);
+        tmpStr.clear();
+      }
+      _fileHandleMap.emplace(std::make_pair(filename, std::move(lines)));
+      it = _fileHandleMap.find(filename);
+    }
+  }
+
+  if (it != _fileHandleMap.end()) {
+    if (pos < it->second.size()) {
+      ++pos;
+      moreAvailable = pos < it->second.size();
+      return it->second[pos - 1];
+    }
+  }
+  return EMPTY_STRING;
+}
+
+#else // ifdef ESP32
+
+String RulesHelperClass::readLn(const String& filename,
+                                size_t      & pos,
+                                bool        & moreAvailable)
 {
   std::vector<uint8_t> buf;
 
@@ -126,88 +188,16 @@ String RulesHelperClass::doReadLn(const String& filename,
     for (int x = 0; x < len; x++) {
       int data = buf[x];
 
-      switch (static_cast<char>(data))
-      {
-        case '\n':
-        {
-          // Line end, parse rule
-          const size_t lineLength = line.length();
-          line.trim();
+      if (addChar(char(data), line, firstNonSpaceRead, commentFound)) {
+        pos  = startPos + x;
+        done = true;
 
-          //          check_rules_line_user_errors(line);
-
-          if (lineLength > longestLineSize) {
-            longestLineSize = lineLength;
-          }
-
-          if ((lineLength > 0) && !line.startsWith(F("//"))) {
-            // The line end may be at any point in the buffer
-            // But for the next line we must start at the correct position.
-            pos = startPos + x;
-            return line;
-          }
-
-          // Prepare for new line
-          line.clear();
-          line.reserve(longestLineSize);
-          firstNonSpaceRead = false;
-          commentFound      = false;
-          break;
-        }
-        case '\r': // Just skip this character
-          break;
-        case '\t': // tab
-        case ' ':  // space
-        {
-          // Strip leading spaces.
-          if (firstNonSpaceRead) {
-            line += ' ';
-          }
-          break;
-        }
-        case '/':
-        {
-          if (!commentFound) {
-            line += '/';
-
-            if (line.endsWith(F("//"))) {
-              // consider the rest of the line a comment
-              commentFound = true;
-            }
-          }
-          break;
-        }
-        default: // Any other character
-        {
-          firstNonSpaceRead = true;
-
-          if (!commentFound) {
-            line += char(data);
-          }
-          break;
-        }
+        if (line.length() > longestLineSize) { longestLineSize = line.length(); }
+        return line;
       }
     }
   }
   return line;
-}
-
-#ifdef ESP32
-String RulesHelperClass::readLn(const String& filename,
-                                size_t      & pos,
-                                bool        & moreAvailable)
-{
-  // ToDo TD-er: Must read from the cached lines
-  return doReadLn(filename, pos, moreAvailable);
-}
-
-#else // ifdef ESP32
-
-String RulesHelperClass::readLn(const String& filename,
-                                size_t      & pos,
-                                bool        & moreAvailable)
-{
-  return doReadLn(filename, pos, moreAvailable);
 }
 
 #endif // ifdef ESP32
