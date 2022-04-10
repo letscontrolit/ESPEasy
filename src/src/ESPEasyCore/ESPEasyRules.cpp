@@ -5,6 +5,7 @@
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
+#include "../Globals/Cache.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
@@ -196,8 +197,6 @@ String rulesProcessingFile(const String& fileName, const String& event) {
     return EMPTY_STRING;
   }
 
-  fs::File f = tryOpenFile(fileName, "r+");
-  SPIFFS_CHECK(f, fileName.c_str());
 
   // Try to get the best possible estimate on line length based on earlier parsing of the rules.
   static size_t longestLineSize = RULES_BUFFER_SIZE;
@@ -217,8 +216,13 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   bool firstNonSpaceRead = false;
   bool commentFound      = false;
 
-  while (f.available()) {
-    int len = f.read(&buf[0], RULES_BUFFER_SIZE);
+  // File handle may be shared among several recursive (nested) calls.
+  // Thus we must keep track of the reading position.
+  uint32_t pos = 0;
+  bool done = false;
+  while (!done) {
+    int len = Cache.rulesHelper.read(fileName, pos, &buf[0], RULES_BUFFER_SIZE);
+    done = len == 0;
 
     for (int x = 0; x < len; x++) {
       int data = buf[x];
@@ -295,9 +299,11 @@ String rulesProcessingFile(const String& fileName, const String& event) {
     }
   }
 
+/*
   if (f) {
     f.close();
   }
+*/
 
   nestingLevel--;
   #ifndef BUILD_NO_RAM_TRACKER
