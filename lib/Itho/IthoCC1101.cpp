@@ -321,6 +321,14 @@ bool IthoCC1101::parseMessageCommand() {
   bool isRVJoinCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes);
   bool isLeaveCommand    = checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes);
 
+  bool isOrconStandByCommand  = checkIthoCommand(&inIthoPacket, orconMessageStandByCommandBytes);
+  bool isOrconLowCommand      = checkIthoCommand(&inIthoPacket, orconMessageLowCommandBytes);
+  bool isOrconMediumCommand   = checkIthoCommand(&inIthoPacket, orconMessageMediumCommandBytes);
+  bool isOrconFullCommand     = checkIthoCommand(&inIthoPacket, orconMessageFullCommandBytes);
+  bool isOrconAutoCommand     = checkIthoCommand(&inIthoPacket, orconMessageAutoCommandBytes);
+
+
+
   // determine command
   inIthoPacket.command = IthoUnknown;
 
@@ -353,6 +361,12 @@ bool IthoCC1101::parseMessageCommand() {
   if (isRVJoinCommand) { inIthoPacket.command = IthoJoin; }
 
   if (isLeaveCommand) { inIthoPacket.command = IthoLeave; }
+
+  if (isOrconStandByCommand) { inIthoPacket.command = IthoStandby; }
+  if (isOrconLowCommand) { inIthoPacket.command = IthoLow; }
+  if (isOrconMediumCommand) { inIthoPacket.command = IthoMedium; }
+  if (isOrconFullCommand) { inIthoPacket.command = IthoHigh; }
+  if (isOrconAutoCommand) { inIthoPacket.command = IthoStandby; }
 
 #if defined(CRC_FILTER)
   uint8_t mLen = 0;

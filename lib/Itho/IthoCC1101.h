@@ -15,6 +15,16 @@ const uint8_t ithoPaTableSend[8]    = { 0x6F, 0x26, 0x2E, 0x8C, 0x87, 0xCD, 0xC7
 const uint8_t ithoPaTableReceive[8] = { 0x6F, 0x26, 0x2E, 0x7F, 0x8A, 0x84, 0xCA, 0xC4 };
 
 // message command bytes
+const uint8_t orconMessageStandByCommandBytes[] = { 34, 241, 3, 0, 0, 4};
+const uint8_t orconMessageLowCommandBytes[] =     { 34, 241, 3, 0, 1, 4};
+const uint8_t orconMessageMediumCommandBytes[] =  { 34, 241, 3, 0, 2, 4};
+const uint8_t orconMessageFullCommandBytes[] =    { 34, 241, 3, 0, 3, 4};
+const uint8_t orconMessageAutoCommandBytes[] =    { 34, 241, 3, 0, 4, 4};
+const uint8_t orconMessageTimer1CommandBytes[] =  { 34, 243, 18, 60, 1, 4, 4, 4 };      //  Timer 60 minuten @ speed 1
+const uint8_t orconMessageTimer2CommandBytes[] =  { 34, 243, 82, 13, 2, 4, 4, 4 };      //  Timer 13*60 minuten @ speed 2
+const uint8_t orconMessageTimer3CommandBytes[] =  { 34, 243, 18, 60, 3, 4, 4, 4 };      //  Timer 60 minuten @ speed 3
+
+
 const uint8_t ithoMessageRVHighCommandBytes[]   = { 49, 224, 4, 0, 0, 200 };
 const uint8_t ithoMessageHighCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
 const uint8_t ithoMessageFullCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
@@ -31,6 +41,8 @@ const uint8_t ithoMessageJoinCommandBytes[]     = { 31, 201, 12, 0, 34, 241 };
 const uint8_t ithoMessageJoin2CommandBytes[]    = { 31, 201, 12, 99, 34, 248 }; // join command of RFT AUTO Co2 remote
 const uint8_t ithoMessageRVJoinCommandBytes[]   = { 31, 201, 24, 0, 49, 224 };   // join command of RFT-RV
 const uint8_t ithoMessageLeaveCommandBytes[]    = { 31, 201, 6, 0, 31, 201 };
+
+
 
 // itho rft-rv
 // unknown, high
