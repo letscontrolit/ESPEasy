@@ -326,7 +326,9 @@ bool IthoCC1101::parseMessageCommand() {
   bool isOrconMediumCommand   = checkIthoCommand(&inIthoPacket, orconMessageMediumCommandBytes);
   bool isOrconFullCommand     = checkIthoCommand(&inIthoPacket, orconMessageFullCommandBytes);
   bool isOrconAutoCommand     = checkIthoCommand(&inIthoPacket, orconMessageAutoCommandBytes);
-
+  bool isOrconTimer1Command   = checkIthoCommand(&inIthoPacket, orconMessageTimer1CommandBytes);
+  bool isOrconTimer2Command   = checkIthoCommand(&inIthoPacket, orconMessageTimer2CommandBytes);
+  bool isOrconTimer3Command   = checkIthoCommand(&inIthoPacket, orconMessageTimer3CommandBytes);
 
 
   // determine command
@@ -367,6 +369,9 @@ bool IthoCC1101::parseMessageCommand() {
   if (isOrconMediumCommand) { inIthoPacket.command = IthoMedium; }
   if (isOrconFullCommand) { inIthoPacket.command = IthoHigh; }
   if (isOrconAutoCommand) { inIthoPacket.command = IthoStandby; }
+  if (isOrconTimer1Command) { inIthoPacket.command = OrconTimer1; }
+  if (isOrconTimer2Command) { inIthoPacket.command = OrconTimer2; }
+  if (isOrconTimer3Command) { inIthoPacket.command = OrconTimer3; }
 
 #if defined(CRC_FILTER)
   uint8_t mLen = 0;

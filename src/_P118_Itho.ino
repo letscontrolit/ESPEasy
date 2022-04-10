@@ -545,6 +545,16 @@ void PLUGIN_118_ITHOcheck()
 
           if (PLUGIN_118_Log) { log2 += F("leave"); }
           break;
+        case OrconTimer1:
+        case OrconTimer2:
+        case OrconTimer3:
+
+          if (PLUGIN_118_Log) { log2 += +F("OrconTimer123"); }
+          PLUGIN_118_State       = 13;
+          PLUGIN_118_Timer       = PLUGIN_118_Time1;
+          PLUGIN_118_LastIDindex = index;
+          break;
+
       }
     }
     else {
