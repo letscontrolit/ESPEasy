@@ -254,7 +254,7 @@ bool rulesProcessingFile(const String& fileName, const String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return eventHandled && nestingLevel == 0;
+  return eventHandled; // && nestingLevel == 0;
 }
 
 
