@@ -64,21 +64,18 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
   if (newEvent.isEmpty()) { return false; }
   bool result = true;
 
-  if (result) {
-    if ((P037_QUEUEDEPTH_EVENTS == 0) ||
-        (eventQueue.size() <= static_cast<std::size_t>(P037_QUEUEDEPTH_EVENTS))) {
-      # if P037_REPLACE_BY_COMMA_SUPPORT
+  if ((P037_QUEUEDEPTH_EVENTS == 0) ||
+      (eventQueue.size() <= static_cast<std::size_t>(P037_QUEUEDEPTH_EVENTS))) {
+    # if P037_REPLACE_BY_COMMA_SUPPORT
 
-      if (P037_REPLACE_BY_COMMA != 0x0) {
-        String character = F(" ");
-        character[0] = static_cast<uint8_t>(P037_REPLACE_BY_COMMA);
-        newEvent.replace(character, F(","));
-      }
-      # endif // if P037_REPLACE_BY_COMMA_SUPPORT
-      eventQueue.add(newEvent, P037_DEDUPLICATE_EVENTS);
-    } else {
-      result = false;
+    if (P037_REPLACE_BY_COMMA != 0x0) {
+      const String character = String(static_cast<char>(P037_REPLACE_BY_COMMA));
+      newEvent.replace(character, F(","));
     }
+    # endif // if P037_REPLACE_BY_COMMA_SUPPORT
+    eventQueue.add(newEvent, P037_DEDUPLICATE_EVENTS);
+  } else {
+    result = false;
   }
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -187,8 +184,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         String character = F(" ");
         character[0] = (P037_REPLACE_BY_COMMA == 0 ? 0x20 : static_cast<uint8_t>(P037_REPLACE_BY_COMMA));
         addRowLabel(F("To replace by comma in event"));
-        addTextBox(F("p037_replace_char"), character, 1, false, false, F("[!@$%^ &*;:.]"), F("widenumber"));
-        addUnit(F("Single character only, limited to: <b>!@$%^&*;:.</b> is replaced by: <b>,</b> "));
+        addTextBox(F("p037_replace_char"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
+        addUnit(F("Single character only, limited to: <b>! @ $ % ^ & * ; : . | / \\</b> is replaced by: <b>,</b> "));
       }
       # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
@@ -264,7 +261,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      success = false;
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P037_data_struct(event->TaskIndex));
 
       // When we edit the subscription data from the webserver, the plugin is called again with init.
