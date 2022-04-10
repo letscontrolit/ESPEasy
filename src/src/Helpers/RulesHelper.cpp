@@ -1,8 +1,73 @@
 #include "../Helpers/RulesHelper.h"
 
+#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
 
+
+/********************************************************************************************\
+   Test for common mistake
+   Return true if mistake was found (and corrected)
+ \*********************************************************************************************/
+bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
+{
+  if (line.indexOf(from) == -1) {
+    return false; // Nothing replaced
+  }
+
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    String log;
+
+    if (log.reserve(32 + from.length() + to.length() + line.length())) {
+      log  = F("Rules (Syntax Error, auto-corrected): '");
+      log += from;
+      log += F("' => '");
+      log += to;
+      log += F("' in: '");
+      log += line;
+      log += '\'';
+      addLogMove(LOG_LEVEL_ERROR, log);
+    }
+  }
+  line.replace(from, to);
+  return true;
+}
+
+/********************************************************************************************\
+   Check for common mistakes
+   Return true if nothing strange found
+ \*********************************************************************************************/
+bool check_rules_line_user_errors(String& line)
+{
+  bool res = true;
+
+  if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
+    res = false;
+  }
+
+  if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
+    res = false;
+  }
+
+  return res;
+}
+
+/********************************************************************************************\
+   Strip comment from the line.
+   Return true when comment was stripped.
+ \*********************************************************************************************/
+bool rules_strip_trailing_comments(String& line)
+{
+  // Strip trailing comments
+  int comment = line.indexOf(F("//"));
+
+  if (comment >= 0) {
+    line = line.substring(0, comment);
+    line.trim();
+    return true;
+  }
+  return false;
+}
 
 RulesHelperClass::RulesHelperClass()
 {}
@@ -67,6 +132,8 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
       line.trim();
 
       if ((line.length() > 0) && !line.startsWith(F("//"))) {
+        rules_strip_trailing_comments(line);
+        check_rules_line_user_errors(line);
         return true;
       }
 
@@ -115,7 +182,8 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
 #ifdef ESP32
 String RulesHelperClass::readLn(const String& filename,
                                 size_t      & pos,
-                                bool        & moreAvailable)
+                                bool        & moreAvailable,
+                                bool          searchNextOnBlock)
 {
   auto it = _fileHandleMap.find(filename);
 
@@ -139,8 +207,18 @@ String RulesHelperClass::readLn(const String& filename,
       }
 
       if (tmpStr.length() > 0) {
+        rules_strip_trailing_comments(tmpStr);
+        check_rules_line_user_errors(tmpStr);
         lines.push_back(tmpStr);
         tmpStr.clear();
+      }
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("Rules : Read ");
+        log += lines.size();
+        log += F(" lines from ");
+        log += filename;
+        addLogMove(LOG_LEVEL_INFO, log);
       }
       _fileHandleMap.emplace(std::make_pair(filename, std::move(lines)));
       it = _fileHandleMap.find(filename);
@@ -148,10 +226,14 @@ String RulesHelperClass::readLn(const String& filename,
   }
 
   if (it != _fileHandleMap.end()) {
-    if (pos < it->second.size()) {
+    while (pos < it->second.size()) {
       ++pos;
       moreAvailable = pos < it->second.size();
-      return it->second[pos - 1];
+
+      if (!searchNextOnBlock ||
+          it->second[pos - 1].substring(0, 3).equalsIgnoreCase(F("on "))) {
+        return it->second[pos - 1];
+      }
     }
   }
   return EMPTY_STRING;
@@ -161,7 +243,8 @@ String RulesHelperClass::readLn(const String& filename,
 
 String RulesHelperClass::readLn(const String& filename,
                                 size_t      & pos,
-                                bool        & moreAvailable)
+                                bool        & moreAvailable,
+                                bool          searchNextOnBlock)
 {
   std::vector<uint8_t> buf;
 
@@ -189,14 +272,29 @@ String RulesHelperClass::readLn(const String& filename,
       int data = buf[x];
 
       if (addChar(char(data), line, firstNonSpaceRead, commentFound)) {
-        pos  = startPos + x;
-        done = true;
+        if (line.length() > longestLineSize) {
+          longestLineSize = line.length();
+        }
 
-        if (line.length() > longestLineSize) { longestLineSize = line.length(); }
-        return line;
+        // A line may end on every position in the buffer,
+        // so we must make sure the position is reflecting the end of the line.
+        pos = startPos + x;
+
+        if (!searchNextOnBlock ||
+            line.substring(0, 3).equalsIgnoreCase(F("on ")))
+        {
+          done = true;
+
+          return line;
+        } else {
+          // Not starting with "on " which we need, so continue to search for a matching line
+          line.clear();
+        }
       }
     }
   }
+  rules_strip_trailing_comments(line);
+  check_rules_line_user_errors(line);
   return line;
 }
 

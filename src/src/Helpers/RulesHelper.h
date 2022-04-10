@@ -21,32 +21,37 @@ public:
 
   ~RulesHelperClass();
 
-  void   closeAllFiles();
-  
+  void closeAllFiles();
 
 private:
+
 #ifdef ESP8266
   size_t read(const String& filename,
               size_t      & pos,
               uint8_t      *buffer,
               size_t        length);
-  
-#endif
 
-  bool addChar(char c, String& line,   bool& firstNonSpaceRead,  bool& commentFound);
+#endif // ifdef ESP8266
+
+  bool addChar(char    c,
+               String& line,
+               bool  & firstNonSpaceRead,
+               bool  & commentFound);
 
 public:
+
   String readLn(const String& filename,
-              size_t      & pos,
-              bool &moreAvailable);
+                size_t      & pos,
+                bool        & moreAvailable,
+                bool          searchNextOnBlock);
 
 private:
 
 #ifdef ESP32
 
   // Cache the entire rules file contents in memory
-  typedef std::vector<String> RulesLines;
-  typedef std::map<String, RulesLines> FileHandleMap;
+  typedef std::vector<String>         RulesLines;
+  typedef std::map<String, RulesLines>FileHandleMap;
 #else // ifdef ESP32
 
   // Keep a handle to a file for low-memory systems

@@ -31,30 +31,11 @@ void   rulesProcessing(const String& event);
 
 /********************************************************************************************\
    Rules processing
+   Return true when event was handled.
  \*********************************************************************************************/
-String rulesProcessingFile(const String& fileName,
+bool rulesProcessingFile(const String& fileName,
                            const String& event);
 
-
-/********************************************************************************************\
-   Strip comment from the line.
-   Return true when comment was stripped.
- \*********************************************************************************************/
-bool rules_strip_trailing_comments(String& line);
-
-/********************************************************************************************\
-   Test for common mistake
-   Return true if mistake was found (and corrected)
- \*********************************************************************************************/
-bool rules_replace_common_mistakes(const String& from,
-                                   const String& to,
-                                   String      & line);
-
-/********************************************************************************************\
-   Check for common mistakes
-   Return true if nothing strange found
- \*********************************************************************************************/
-bool check_rules_line_user_errors(String& line);
 
 
 /********************************************************************************************\

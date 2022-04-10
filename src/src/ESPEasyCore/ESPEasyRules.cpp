@@ -130,9 +130,10 @@ void rulesProcessing(const String& event) {
   }
 
   if (Settings.OldRulesEngine()) {
-    for (uint8_t x = 0; x < RULESETS_MAX; x++) {
+    bool eventHandled = false;
+    for (uint8_t x = 0; x < RULESETS_MAX && !eventHandled; x++) {
       if (activeRuleSets[x]) {
-        rulesProcessingFile(getRulesFileName(x), event);
+        eventHandled = rulesProcessingFile(getRulesFileName(x), event);
       }
     }
   } else {
@@ -171,9 +172,9 @@ void rulesProcessing(const String& event) {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-String rulesProcessingFile(const String& fileName, const String& event) {
+bool rulesProcessingFile(const String& fileName, const String& event) {
   if (!Settings.UseRules || !fileExists(fileName)) {
-    return EMPTY_STRING;
+    return false;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
@@ -194,7 +195,7 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
     addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
-    return EMPTY_STRING;
+    return false;
   }
 
 
@@ -211,20 +212,33 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   // Thus we must keep track of the reading position.
   uint32_t pos = 0;
   bool moreAvailable = true;
-  while (moreAvailable) {
-    String line = Cache.rulesHelper.readLn(fileName, pos, moreAvailable);
-    check_rules_line_user_errors(line);
+  bool eventHandled = false;
+  while (moreAvailable && !eventHandled) {
+    const bool searchNextOnBlock = !codeBlock && !match;
+    String line = Cache.rulesHelper.readLn(fileName, pos, moreAvailable, searchNextOnBlock);
 
     // Parse the line and extract the action (if there is any)
     String action;
-    parseCompleteNonCommentLine(line, event, action, match, codeBlock,
-                                isCommand, condition, ifBranche, ifBlock,
-                                fakeIfBlock);
+    {
+      START_TIMER
+      const bool matched_before_parse = match;
+      parseCompleteNonCommentLine(line, event, action, match, codeBlock,
+                                  isCommand, condition, ifBranche, ifBlock,
+                                  fakeIfBlock);
+      if (matched_before_parse && !match) {
+        // We were processing a matching event and now crossed the "endon"
+        // So we're done processing
+        eventHandled = true;
+      }
+      STOP_TIMER(RULES_PARSE_LINE);
+    }
 
     if (match) // rule matched for one action or a block of actions
     {
+      START_TIMER
       processMatchedRule(action, event, match, codeBlock,
                           isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
+      STOP_TIMER(RULES_PROCESS_MATCHED);
     }
 
     backgroundtasks();
@@ -240,71 +254,9 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return EMPTY_STRING;
+  return eventHandled && nestingLevel == 0;
 }
 
-/********************************************************************************************\
-   Strip comment from the line.
-   Return true when comment was stripped.
- \*********************************************************************************************/
-bool rules_strip_trailing_comments(String& line)
-{
-  // Strip trailing comments
-  int comment = line.indexOf(F("//"));
-
-  if (comment >= 0) {
-    line = line.substring(0, comment);
-    line.trim();
-    return true;
-  }
-  return false;
-}
-
-/********************************************************************************************\
-   Test for common mistake
-   Return true if mistake was found (and corrected)
- \*********************************************************************************************/
-bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
-{
-  if (line.indexOf(from) == -1) {
-    return false; // Nothing replaced
-  }
-
-  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log;
-    if (log.reserve(32 + from.length() + to.length() + line.length())) {
-      log  = F("Rules (Syntax Error, auto-corrected): '");
-      log += from;
-      log += F("' => '");
-      log += to;
-      log += F("' in: '");
-      log += line;
-      log += '\'';
-      addLogMove(LOG_LEVEL_ERROR, log);
-    }
-  }
-  line.replace(from, to);
-  return true;
-}
-
-/********************************************************************************************\
-   Check for common mistakes
-   Return true if nothing strange found
- \*********************************************************************************************/
-bool check_rules_line_user_errors(String& line)
-{
-  bool res = true;
-
-  if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
-    res = false;
-  }
-
-  if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
-    res = false;
-  }
-
-  return res;
-}
 
 /********************************************************************************************\
    Parse string commands
@@ -664,8 +616,6 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 
   isCommand = true;
 
-  rules_strip_trailing_comments(line);
-
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
     // "on" (no codeBlock)
@@ -703,7 +653,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 
       if (split != -1) {
         eventTrigger = line.substring(0, split);
-        action       = lineOrg.substring(split + 7);
+        action       = lineOrg.substring(split + 7); // "on " + " do" + " " = 7 chars
 
         // Remove trailing and leadin spaces on the eventTrigger and action.
         eventTrigger.trim();
@@ -714,7 +664,9 @@ void parseCompleteNonCommentLine(String& line, const String& event,
         match = true;
       }
       else {
+        START_TIMER
         match = ruleMatch(event, eventTrigger);
+        STOP_TIMER(RULES_MATCH);
       }
 
       if (action.length() > 0) // single on/do/action line, no block
