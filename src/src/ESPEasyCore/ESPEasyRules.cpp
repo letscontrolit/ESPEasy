@@ -198,10 +198,6 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   }
 
 
-  // Try to get the best possible estimate on line length based on earlier parsing of the rules.
-  static size_t longestLineSize = RULES_BUFFER_SIZE;
-  String line;
-  line.reserve(longestLineSize);
   bool match     = false;
   bool codeBlock = false;
   bool isCommand = false;
@@ -210,93 +206,28 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   uint8_t ifBlock     = 0;
   uint8_t fakeIfBlock = 0;
 
-  std::vector<uint8_t> buf;
-  buf.resize(RULES_BUFFER_SIZE);
-
-  bool firstNonSpaceRead = false;
-  bool commentFound      = false;
 
   // File handle may be shared among several recursive (nested) calls.
   // Thus we must keep track of the reading position.
   uint32_t pos = 0;
-  bool done = false;
-  while (!done) {
-    int len = Cache.rulesHelper.read(fileName, pos, &buf[0], RULES_BUFFER_SIZE);
-    done = len == 0;
+  bool moreAvailable = true;
+  while (moreAvailable) {
+    String line = Cache.rulesHelper.readLn(fileName, pos, moreAvailable);
+    check_rules_line_user_errors(line);
 
-    for (int x = 0; x < len; x++) {
-      int data = buf[x];
+    // Parse the line and extract the action (if there is any)
+    String action;
+    parseCompleteNonCommentLine(line, event, action, match, codeBlock,
+                                isCommand, condition, ifBranche, ifBlock,
+                                fakeIfBlock);
 
-      switch (static_cast<char>(data))
-      {
-        case '\n':
-        {
-          // Line end, parse rule
-          line.trim();
-          check_rules_line_user_errors(line);
-          const size_t lineLength = line.length();
-
-          if (lineLength > longestLineSize) {
-            longestLineSize = lineLength;
-          }
-
-          if ((lineLength > 0) && !line.startsWith(F("//"))) {
-            // Parse the line and extract the action (if there is any)
-            String action;
-            parseCompleteNonCommentLine(line, event, action, match, codeBlock,
-                                        isCommand, condition, ifBranche, ifBlock,
-                                        fakeIfBlock);
-
-            if (match) // rule matched for one action or a block of actions
-            {
-              processMatchedRule(action, event, match, codeBlock,
-                                 isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
-            }
-
-            backgroundtasks();
-          }
-
-          // Prepare for new line
-          line.clear();
-          line.reserve(longestLineSize);
-          firstNonSpaceRead = false;
-          commentFound      = false;
-          break;
-        }
-        case '\r': // Just skip this character
-          break;
-        case '\t': // tab
-        case ' ':  // space
-        {
-          // Strip leading spaces.
-          if (firstNonSpaceRead) {
-            line += ' ';
-          }
-          break;
-        }
-        case '/':
-        {
-          if (!commentFound) {
-            line += '/';
-
-            if (line.endsWith(F("//"))) {
-              // consider the rest of the line a comment
-              commentFound = true;
-            }
-          }
-          break;
-        }
-        default: // Any other character
-        {
-          firstNonSpaceRead = true;
-
-          if (!commentFound) {
-            line += char(data);
-          }
-          break;
-        }
-      }
+    if (match) // rule matched for one action or a block of actions
+    {
+      processMatchedRule(action, event, match, codeBlock,
+                          isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
     }
+
+    backgroundtasks();
   }
 
 /*

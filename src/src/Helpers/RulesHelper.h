@@ -22,11 +22,22 @@ public:
   ~RulesHelperClass();
 
   void   closeAllFiles();
+  
 
+private:
   size_t read(const String& filename,
               size_t      & pos,
               uint8_t      *buffer,
               size_t        length);
+
+  String doReadLn(const String& filename,
+                    size_t      & pos,
+                    bool &moreAvailable);
+  
+public:
+  String readLn(const String& filename,
+              size_t      & pos,
+              bool &moreAvailable);
 
 private:
 
