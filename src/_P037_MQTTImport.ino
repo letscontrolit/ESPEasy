@@ -159,7 +159,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # endif  // if !defined(LIMIT_BUILD_SIZE)
 
       {
-        addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS);
+        addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS == 1);
         # if !defined(LIMIT_BUILD_SIZE)
         addFormNote(F("When enabled will not (re-)generate events that are already in the queue."));
         # endif  // if !defined(LIMIT_BUILD_SIZE)
@@ -170,13 +170,13 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         String toolTip = F("0..");
         toolTip += P037_MAX_QUEUEDEPTH;
         toolTip += F(" entries");
-        addFormNumericBox(F("Max. # entries in event buffer"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
+        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
         # else // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
-        addFormNumericBox(F("Max. # entries in event buffer"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
+        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
         # endif // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
         addUnit(F("0 = no check"));
         # if !defined(LIMIT_BUILD_SIZE)
-        addFormNote(F("New events will be discarded if the event buffer has more entries queued."));
+        addFormNote(F("New events will be discarded if the event queue has more entries queued."));
         # endif  // if !defined(LIMIT_BUILD_SIZE)
       }
       # if P037_REPLACE_BY_COMMA_SUPPORT
