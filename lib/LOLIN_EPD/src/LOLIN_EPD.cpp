@@ -48,7 +48,9 @@ LOLIN_EPD::~LOLIN_EPD()
 {
 
   free(bw_buf);
-  free(red_buf);
+  if (red_buf) {
+    free(red_buf);
+  }
 }
 
 /**************************************************************************/
@@ -113,6 +115,29 @@ void LOLIN_EPD::begin(bool reset)
   {
     pinMode(busy, INPUT);
   }
+}
+
+/***************************************************************************
+ * Virtual methods, implemented empty
+ **************************************************************************/
+void LOLIN_EPD::display() {
+  // No action here
+}
+
+void LOLIN_EPD::clearBuffer() {
+  // No action here
+}
+
+void LOLIN_EPD::deepSleep() {
+  // No action here
+}
+
+void LOLIN_EPD::clearDisplay() {
+  // No action here
+}
+
+void LOLIN_EPD::fillbuffer(const unsigned char *black_image, const unsigned char *red_image) {
+  // No action here
 }
 
 /**************************************************************************/
