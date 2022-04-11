@@ -41,6 +41,8 @@ The options that can be included or excluded are:
 
 * Apply mappings
 
+* To replace by comma in event
+
 Initial setup after adding the plugin:
 
 .. image:: P037_DeviceSetup_Initial.png
@@ -178,6 +180,20 @@ Option: Generate events for accepted topics
 * **Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``.
 
 When this option is disabled it has the backward-compatible behavior of discarding that message as invalid.
+
+Option: Limit events being generated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **Deduplicate events**: When receiving many MQTT messages, especially in JSON format, can cause a lot of events to be generated. To somewhat limit this amount, new events can be de-duplicated while still in the event queue, meaning that an event that is already queued, will not be inserted in the queue, but discarded.
+
+* **Max. # events in event queue**: As a protection against event-overflow this is a check for the queue-length, so if more than the selected number of events is still in the buffer, any new event will be discarded, until events are processed, and the remaining is less than this count. When set to 0 this check is disabled.
+
+Option: Modify separater character in events
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* **To replace by comma in event**: Select a character that is to be replaced by a comma, before it is put into the event-queue. There is a limited set of characters that can be replaced, to avoid ending up with malformed events.
+
+This can be used to 'transform' the content of a JSON message so the used separator is a comma, for easier use in rules.
 
 Topic Subscriptions
 -------------------
