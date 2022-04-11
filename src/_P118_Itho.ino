@@ -101,6 +101,10 @@ volatile bool PLUGIN_118_Int = false;
 #define PLUGIN_118_Time1      (10 * 60)
 #define PLUGIN_118_Time2      (20 * 60)
 #define PLUGIN_118_Time3      (30 * 60)
+#define PLUGIN_118_OrconTime0      (12 * 60 * 60)
+#define PLUGIN_118_OrconTime1      (60 * 60)
+#define PLUGIN_118_OrconTime2      (13 * 60 * 60)
+#define PLUGIN_118_OrconTime3      (60 * 60)
 
 // Forward declarations
 void PLUGIN_118_ITHOcheck();
@@ -384,6 +388,17 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             success = true;
             break;
           }
+          case 113: //  Timer 60 minuten @ speed 1
+          {
+            PLUGIN_118_rf.sendCommand(OrconTimer1);
+            PLUGIN_118_State       = 113;
+            PLUGIN_118_Timer       = PLUGIN_118_OrconTime1;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("orconTimer 1"));
+            success = true;
+            break;
+          }
           default:
           {
             PLUGIN_118_PluginWriteLog(F("INVALID"));
@@ -545,15 +560,35 @@ void PLUGIN_118_ITHOcheck()
 
           if (PLUGIN_118_Log) { log2 += F("leave"); }
           break;
-        case OrconTimer1:
-        case OrconTimer2:
-        case OrconTimer3:
+        case OrconTimer0:
 
-          if (PLUGIN_118_Log) { log2 += +F("OrconTimer123"); }
-          PLUGIN_118_State       = 13;
-          PLUGIN_118_Timer       = PLUGIN_118_Time1;
+          if (PLUGIN_118_Log) { log2 += +F("OrconTimer0"); }
+          PLUGIN_118_State       = 103;
+          PLUGIN_118_Timer       = PLUGIN_118_OrconTime0;
           PLUGIN_118_LastIDindex = index;
           break;
+        case OrconTimer1:
+
+          if (PLUGIN_118_Log) { log2 += +F("OrconTimer1"); }
+          PLUGIN_118_State       = 113;
+          PLUGIN_118_Timer       = PLUGIN_118_OrconTime1;
+          PLUGIN_118_LastIDindex = index;
+          break;
+        case OrconTimer2:
+
+          if (PLUGIN_118_Log) { log2 += +F("OrconTimer2"); }
+          PLUGIN_118_State       = 123;
+          PLUGIN_118_Timer       = PLUGIN_118_OrconTime2;
+          PLUGIN_118_LastIDindex = index;
+          break;
+        case OrconTimer3:
+
+          if (PLUGIN_118_Log) { log2 += +F("OrconTimer3"); }
+          PLUGIN_118_State       = 133;
+          PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
+          PLUGIN_118_LastIDindex = index;
+          break;
+
 
       }
     }

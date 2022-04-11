@@ -26,12 +26,14 @@ enum IthoCommand
   DucoStandby = 11,
   DucoLow = 12,
   DucoMedium = 13,
-  DucoHigh = 14
   DucoHigh = 14,
 
-  OrconTimer1 = 15,
-  OrconTimer2 = 16,
-  OrconTimer3 = 17,
+  // OrconAuto = 18,
+  OrconTimer0 = 19,
+  OrconTimer1 = 20,
+  OrconTimer2 = 21,
+  OrconTimer3 = 22
+
 };
 
 
@@ -51,4 +53,4 @@ class IthoPacket
 };
 
 
-#endif /* ITHOPACKET_H_ */
+#endif /* ITHOPACKET_H_ */#endif /* ITHOPACKET_H_ */
