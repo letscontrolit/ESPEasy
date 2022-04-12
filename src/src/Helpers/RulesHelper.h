@@ -50,7 +50,8 @@ private:
 #ifdef ESP32
 
   // Cache the entire rules file contents in memory
-  typedef std::vector<String>          RulesLines;
+  typedef std::pair<bool, String>      RulesLine;
+  typedef std::vector<RulesLine>       RulesLines;
   typedef std::map<String, RulesLines> FileHandleMap;
 #else // ifdef ESP32
 

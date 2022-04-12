@@ -622,6 +622,18 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     }
   }
 
+  if (line.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
+                                           // wait for a new "on" rule
+  {
+    isCommand   = false;
+    codeBlock   = false;
+    match       = false;
+    ifBlock     = 0;
+    fakeIfBlock = 0;
+    return;
+  }
+
+
   isCommand = true;
 
   if (match || !codeBlock) {
@@ -691,16 +703,6 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     #else
     action = std::move(line);
     #endif
-  }
-
-  if (action.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
-                                           // wait for a new "on" rule
-  {
-    isCommand   = false;
-    codeBlock   = false;
-    match       = false;
-    ifBlock     = 0;
-    fakeIfBlock = 0;
   }
 
 #ifndef BUILD_NO_DEBUG

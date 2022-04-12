@@ -132,7 +132,9 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
       line.trim();
 
       if ((line.length() > 0) && !line.startsWith(F("//"))) {
-        rules_strip_trailing_comments(line);
+        if (commentFound) {
+            rules_strip_trailing_comments(line);
+        }
         check_rules_line_user_errors(line);
         return true;
       }
@@ -199,7 +201,8 @@ String RulesHelperClass::readLn(const String& filename,
 
       while (f.available()) {
         if (addChar(char(f.read()), tmpStr, firstNonSpaceRead, commentFound)) {
-          lines.push_back(tmpStr);
+          const bool isOnDoLine = tmpStr.substring(0, 3).equalsIgnoreCase(F("on "));
+          lines.push_back(std::make_pair(isOnDoLine, tmpStr));
           firstNonSpaceRead = false;
           commentFound      = false;
           tmpStr.clear();
@@ -207,9 +210,10 @@ String RulesHelperClass::readLn(const String& filename,
       }
 
       if (tmpStr.length() > 0) {
+        const bool isOnDoLine = tmpStr.substring(0, 3).equalsIgnoreCase(F("on "));
         rules_strip_trailing_comments(tmpStr);
         check_rules_line_user_errors(tmpStr);
-        lines.push_back(tmpStr);
+        lines.push_back(std::make_pair(isOnDoLine, tmpStr));
         tmpStr.clear();
       }
 
@@ -230,9 +234,8 @@ String RulesHelperClass::readLn(const String& filename,
       ++pos;
       moreAvailable = pos < it->second.size();
 
-      if (!searchNextOnBlock ||
-          it->second[pos - 1].substring(0, 3).equalsIgnoreCase(F("on "))) {
-        return it->second[pos - 1];
+      if (!searchNextOnBlock || it->second[pos - 1].first) {
+        return it->second[pos - 1].second;
       }
     }
   }
