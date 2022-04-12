@@ -184,9 +184,9 @@ When this option is disabled it has the backward-compatible behavior of discardi
 Option: Limit events being generated
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Deduplicate events**: When receiving many MQTT messages, especially in JSON format, can cause a lot of events to be generated. To somewhat limit this amount, new events can be de-duplicated while still in the event queue, meaning that an event that is already queued, will not be inserted in the queue, but discarded.
+* **Deduplicate events**: Receiving many MQTT messages, especially in JSON format, can cause a lot of events to be generated. To somewhat limit the system-load, caused by the amount of events, new events can be de-duplicated while still in the event queue, meaning that an event that is already queued, will *not* be inserted in the queue, but discarded.
 
-* **Max. # events in event queue**: As a protection against event-overflow this is a check for the queue-length, so if more than the selected number of events is still in the buffer, any new event will be discarded, until events are processed, and the remaining is less than this count. When set to 0 this check is disabled.
+* **Max. # events in event queue**: As a protection against event-overflow this configures a check for the queue-length, so if more than the selected number of events is still in the queue, new events will be discarded until some events are processed, and the remaining is less than this count. When set to 0 this check is disabled.
 
 Option: Modify separater character in events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
