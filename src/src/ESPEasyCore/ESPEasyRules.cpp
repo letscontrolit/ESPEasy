@@ -229,6 +229,7 @@ bool rulesProcessingFile(const String& fileName, const String& event) {
         // We were processing a matching event and now crossed the "endon"
         // So we're done processing
         eventHandled = true;
+        backgroundtasks();
       }
       STOP_TIMER(RULES_PARSE_LINE);
     }
@@ -240,8 +241,6 @@ bool rulesProcessingFile(const String& fileName, const String& event) {
                           isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
       STOP_TIMER(RULES_PROCESS_MATCHED);
     }
-
-    backgroundtasks();
   }
 
 /*
@@ -254,6 +253,7 @@ bool rulesProcessingFile(const String& fileName, const String& event) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+  backgroundtasks();
   return eventHandled; // && nestingLevel == 0;
 }
 
@@ -443,6 +443,8 @@ void parse_string_commands(String& line) {
   int startIndex = 0;
   int closingIndex;
 
+  bool mustReplaceMaskedChars = false;
+
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
     const String fullCommand = line.substring(startIndex + 1, closingIndex);
@@ -532,6 +534,7 @@ void parse_string_commands(String& line) {
         replacement = line.substring(startIndex, closingIndex + 1);
         replacement.replace('{', static_cast<char>(0x02));
         replacement.replace('}', static_cast<char>(0x03));
+        mustReplaceMaskedChars = true;
       }
 
       // Replace the full command including opening and closing brackets.
@@ -545,10 +548,12 @@ void parse_string_commands(String& line) {
     }
   }
 
-  // We now have to check if we did mask some parts and unmask them.
-  // Let's hope we don't mess up any Unicode here.
-  line.replace(static_cast<char>(0x02), '{');
-  line.replace(static_cast<char>(0x03), '}');
+  if (mustReplaceMaskedChars) {
+    // We now have to check if we did mask some parts and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    line.replace(static_cast<char>(0x02), '{');
+    line.replace(static_cast<char>(0x03), '}');
+  }
 }
 
 void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
@@ -604,6 +609,9 @@ void parseCompleteNonCommentLine(String& line, const String& event,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
                                  uint8_t& ifBlock, uint8_t& fakeIfBlock) {
+  if (line.length() == 0) {
+    return;
+  }
   const bool lineStartsWith_on = line.substring(0, 3).equalsIgnoreCase(F("on "));
 
   if (!codeBlock && !match) {
@@ -634,39 +642,33 @@ void parseCompleteNonCommentLine(String& line, const String& event,
   }
 
 
-  String lineOrg = line; // store original line for future use
-
-  line.toLowerCase();    // convert all to lower case to make checks easier
-
-  String eventTrigger;
-
-  action = EMPTY_STRING;
-
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
   {
+    action.clear();
     if (lineStartsWith_on) {
+      String lineOrg = line; // store original line for future use
+      line.toLowerCase();    // convert all to lower case to make checks easier
+
       ifBlock     = 0;
       fakeIfBlock = 0;
-      line        = line.substring(3);
-      int split = line.indexOf(F(" do"));
+      const int split = line.indexOf(F(" do"), 3);
+
+      String eventTrigger;
 
       if (split != -1) {
-        eventTrigger = line.substring(0, split);
-        action       = lineOrg.substring(split + 7); // "on " + " do" + " " = 7 chars
+        eventTrigger = line.substring(3, split); // Skipping "on "
+        action       = lineOrg.substring(split + 4); // " do" + " " = 4 chars
 
         // Remove trailing and leadin spaces on the eventTrigger and action.
         eventTrigger.trim();
         action.trim();
-      }
 
-      if (eventTrigger == "*") { // wildcard, always process
-        match = true;
-      }
-      else {
         START_TIMER
         match = ruleMatch(event, eventTrigger);
         STOP_TIMER(RULES_MATCH);
+      } else {
+        match = false;
       }
 
       if (action.length() > 0) // single on/do/action line, no block
@@ -679,7 +681,16 @@ void parseCompleteNonCommentLine(String& line, const String& event,
       }
     }
   } else {
-    action = lineOrg;
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+      // keep the line for the log
+      action = line;
+    } else {
+      action = std::move(line);  
+    }
+    #else
+    action = std::move(line);
+    #endif
   }
 
   if (action.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
@@ -846,6 +857,11 @@ bool ruleMatch(const String& event, const String& rule) {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ruleMatch"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (rule.equals("*")) {
+    // wildcard, always process
+    return true;
+  }
 
   String tmpEvent = event;
   String tmpRule  = rule;
