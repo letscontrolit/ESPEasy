@@ -1,5 +1,5 @@
 /*
- * Author: Klusjesman, supersjimmie, modified and reworked by arjenhiemstra 
+ * Author: Klusjesman, supersjimmie, modified and reworked by arjenhiemstra
  */
 
 #ifndef ITHOPACKET_H_
@@ -53,4 +53,4 @@ class IthoPacket
 };
 
 
-#endif /* ITHOPACKET_H_ */#endif /* ITHOPACKET_H_ */
+#endif /* ITHOPACKET_H_ */

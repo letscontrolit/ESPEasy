@@ -388,6 +388,17 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             success = true;
             break;
           }
+          case 103: //  Timer 12*60 minuten @ speed 0
+          {
+            PLUGIN_118_rf.sendCommand(OrconTimer0);
+            PLUGIN_118_State       = 103;
+            PLUGIN_118_Timer       = PLUGIN_118_OrconTime0;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("orconTimer 0"));
+            success = true;
+            break;
+          }
           case 113: //  Timer 60 minuten @ speed 1
           {
             PLUGIN_118_rf.sendCommand(OrconTimer1);
@@ -396,6 +407,28 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
             PLUGIN_118_PluginWriteLog(F("orconTimer 1"));
+            success = true;
+            break;
+          }
+          case 123: //  Timer 13*60 minuten @ speed 2
+          {
+            PLUGIN_118_rf.sendCommand(OrconTimer2);
+            PLUGIN_118_State       = 123;
+            PLUGIN_118_Timer       = PLUGIN_118_OrconTime2;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("orconTimer 2"));
+            success = true;
+            break;
+          }
+          case 133: //  Timer 60 minuten @ speed 3
+          {
+            PLUGIN_118_rf.sendCommand(OrconTimer3);
+            PLUGIN_118_State       = 133;
+            PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("orconTimer 3"));
             success = true;
             break;
           }
@@ -600,7 +633,7 @@ void PLUGIN_118_ITHOcheck()
       }
     }
 
-    if (PLUGIN_118_Log) { 
+    if (PLUGIN_118_Log) {
       addLogMove(LOG_LEVEL_DEBUG, log2);
     }
   }

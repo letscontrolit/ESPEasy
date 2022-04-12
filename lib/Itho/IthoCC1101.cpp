@@ -627,7 +627,7 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
 {
   switch (command)
   {
-    case IthoStandby:
+    /*case IthoStandby:
       return &ithoMessageStandByCommandBytes[0];
     case IthoHigh:
       return &ithoMessageHighCommandBytes[0];
@@ -636,7 +636,7 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
     case IthoMedium:
       return &ithoMessageMediumCommandBytes[0];
     case IthoLow:
-      return &ithoMessageLowCommandBytes[0];
+      return &ithoMessageLowCommandBytes[0];*/
     case IthoTimer1:
       return &ithoMessageTimer1CommandBytes[0];
     case IthoTimer2:
@@ -647,6 +647,27 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
       return &ithoMessageJoinCommandBytes[0];
     case IthoLeave:
       return &ithoMessageLeaveCommandBytes[0];
+
+    //case IthoStandby:
+    //  return &orconMessageStandByCommandBytes[0];
+    case IthoLow:
+      return &orconMessageLowCommandBytes[0];
+    case IthoMedium:
+      return &orconMessageMediumCommandBytes[0];
+    case IthoHigh:
+      return &orconMessageFullCommandBytes[0];
+    case IthoStandby:
+      return &orconMessageAutoCommandBytes[0];
+    case OrconTimer0:
+      return &orconMessageTimer0CommandBytes[0];
+    case OrconTimer1:
+      return &orconMessageTimer1CommandBytes[0];
+    case OrconTimer2:
+      return &orconMessageTimer2CommandBytes[0];
+    case OrconTimer3:
+      return &orconMessageTimer3CommandBytes[0];
+
+
     default:
       return &ithoMessageLowCommandBytes[0];
   }
