@@ -471,7 +471,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       _counter_mode_step = 0;
 
       randomSeed(analogRead(A0));
-      pixelNum = random(numPixels); // Begin at random point
+      pixelNum = random(NUMPixels); // Begin at random point
 
       startpixel = str3.isEmpty()
           ? 0
@@ -899,7 +899,7 @@ void P128_data_struct::faketv(void) {
       ftv_hi = pgm_read_byte(&ftv_colors[pixelNum * 2]);
       ftv_lo = pgm_read_byte(&ftv_colors[pixelNum * 2 + 1]);
 
-      if (++pixelNum >= numPixels) { pixelNum = 0; }
+      if (++pixelNum >= NUMPixels) { pixelNum = 0; }
 
       // Expand to 24-bit (8/8/8)
       ftv_r8 = (ftv_hi & 0xF8) | (ftv_hi >> 5);
@@ -1363,7 +1363,7 @@ void P128_data_struct::fire_flicker() {
     byte b   = 12;  // (SEGMENT.colors[0]        & 0xFF);
     byte lum = max(w, max(r, max(g, b))) / rev_intensity;
 
-    for (uint16_t i = 0; i <= numPixels - 1; i++) {
+    for (uint16_t i = 0; i <= NUMPixels - 1; i++) {
       int flicker = random8(lum);
 
       # if defined(RGBW) || defined(GRBW)

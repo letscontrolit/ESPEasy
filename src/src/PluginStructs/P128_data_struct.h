@@ -2254,7 +2254,7 @@ const uint8_t PROGMEM ftv_gamma8[] = {
   #  define FEATURE NeoGrbFeature
 # endif // if defined GRB
 
-# define  numPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
+# define  NUMPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
 
 enum class P128_modetype {
   Off, On, Fade, ColorFade, Rainbow, Kitt, Comet,
