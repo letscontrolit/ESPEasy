@@ -296,6 +296,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
 // #define USES_P037   // MQTTImport
+//   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
+//   #define P037_FILTER_SUPPORT  1 // Enable filtering support
+//   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
 // #define USES_P039   // Environment - Thermocouple
 
