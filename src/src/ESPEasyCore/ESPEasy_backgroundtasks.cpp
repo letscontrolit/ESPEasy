@@ -45,6 +45,12 @@ void backgroundtasks()
   {
     return;
   }
+
+  // Rate limit calls to run backgroundtasks
+  static uint32_t lastRunBackgroundTasks = 0;
+  if (timePassedSince(lastRunBackgroundTasks) < 2) return;
+  lastRunBackgroundTasks = millis();
+
   START_TIMER
   #ifdef FEATURE_MDNS
   const bool networkConnected = NetworkConnected();
