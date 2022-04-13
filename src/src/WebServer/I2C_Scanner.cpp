@@ -243,23 +243,23 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x44:
     case 0x45:
-      result +=  F("SHT30/31/35");
+      result +=  F("SHT30/31/35,INA219");
       break;
     case 0x48:
     case 0x4A:
     case 0x4B:
-      result +=  F("PCF8591,ADS1115,LM75A");
+      result +=  F("PCF8591,ADS1115,LM75A,INA219");
       break;
     case 0x49:
-      result +=  F("PCF8591,ADS1115,TSL2561,LM75A");
+      result +=  F("PCF8591,ADS1115,TSL2561,LM75A,INA219");
       break;
     case 0x4C:
     case 0x4E:
     case 0x4F:
-      result +=  F("PCF8591,LM75A");
+      result +=  F("PCF8591,LM75A,INA219");
       break;
     case 0x4D:
-      result +=  F("PCF8591,MCP3221,LM75A");
+      result +=  F("PCF8591,MCP3221,LM75A,INA219");
       break;
     case 0x51:
       result +=  F("PCF8563");
