@@ -9,6 +9,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 
