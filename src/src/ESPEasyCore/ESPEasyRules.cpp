@@ -18,6 +18,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/Rules_calculate.h"
+#include "../Helpers/RulesHelper.h"
 #include "../Helpers/RulesMatcher.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
@@ -110,7 +111,7 @@ void rulesProcessing(const String& event) {
     if (Settings.EnableRulesCaching()) {
       String filename;
       size_t pos = 0;
-      while (!eventHandled && Cache.rulesHelper.findMatchingRule(event, filename, pos)) {
+      if (Cache.rulesHelper.findMatchingRule(event, filename, pos)) {
         eventHandled = rulesProcessingFile(filename, event, pos);
       }
     } else {
