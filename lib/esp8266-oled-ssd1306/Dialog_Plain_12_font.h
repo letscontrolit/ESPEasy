@@ -23,8 +23,8 @@ SOFTWARE.
 See more at http://blog.squix.ch
 */
 
-#ifndef DIALOG_PLAIN_FONT_H
-#define DIALOG_PLAIN_FONT_H
+#ifndef DIALOG_PLAIN_12_FONT_H
+#define DIALOG_PLAIN_12_FONT_H
 
 // OLED library version >= 3.0.0
 // Created by http://oleddisplay.squix.ch/ Consider a donation
