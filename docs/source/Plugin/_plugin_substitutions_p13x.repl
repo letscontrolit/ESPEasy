@@ -1,0 +1,12 @@
+.. |P133_name| replace:: :cyan:`LTR390 UV`
+.. |P133_type| replace:: :cyan:`UV`
+.. |P133_typename| replace:: :cyan:`UV - LTR390`
+.. |P133_porttype| replace:: `.`
+.. |P133_status| replace:: :yellow:`TESTING E`
+.. |P133_github| replace:: P133_LTR390.ino
+.. _P133_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P133_LTR390.ino
+.. |P133_usedby| replace:: `.`
+.. |P133_shortinfo| replace:: `Ultra violet and Ambient sensor`
+.. |P133_maintainer| replace:: `tonhuisman`
+.. |P133_compileinfo| replace:: `.`
+.. |P133_usedlibraries| replace:: `https://github.com/RAKWireless/RAK12019_LTR390 (modified local copy)`
