@@ -77,23 +77,18 @@ RulesHelperClass::~RulesHelperClass()
   closeAllFiles();
 }
 
-#ifdef ESP32
-
-void RulesHelperClass::closeAllFiles() {
-  for (auto it = _fileHandleMap.begin(); it != _fileHandleMap.end();) {
-    it = _fileHandleMap.erase(it);
+bool RulesHelperClass::findMatchingRule(const String& event, String& filename, size_t& pos)
+{
+  if (!_eventCache.isInitialized()) {
+    init();
   }
-  _eventCache.clear();
-}
+  RulesEventCache_vector::const_iterator it = _eventCache.findMatchingRule(event);
 
-#else // ifdef ESP32
+  if (it == _eventCache.end()) { return false; }
 
-void RulesHelperClass::closeAllFiles() {
-  for (auto it = _fileHandleMap.begin(); it != _fileHandleMap.end();) {
-    it->second.close();
-    it = _fileHandleMap.erase(it);
-  }
-  _eventCache.clear();
+  filename = it->_filename;
+  pos      = it->_posInFile;
+  return true;
 }
 
 void RulesHelperClass::init()
@@ -132,20 +127,19 @@ void RulesHelperClass::init()
   _eventCache.initialize();
 }
 
-bool RulesHelperClass::findMatchingRule(const String& event, String& filename, size_t& pos)
-{
-  if (!_eventCache.isInitialized()) {
-    init();
+void RulesHelperClass::closeAllFiles() {
+  for (auto it = _fileHandleMap.begin(); it != _fileHandleMap.end();) {
+    #ifdef CACHE_RULES_IN_MEMORY
+    it = _fileHandleMap.erase(it);
+    #else // ifdef CACHE_RULES_IN_MEMORY
+    it->second.close();
+    it = _fileHandleMap.erase(it);
+    #endif // ifdef CACHE_RULES_IN_MEMORY
   }
-  RulesEventCache_vector::const_iterator it = _eventCache.findMatchingRule(event);
-
-  if (it == _eventCache.end()) { return false; }
-
-  filename = it->_filename;
-  pos      = it->_posInFile;
-  return true;
+  _eventCache.clear();
 }
 
+#ifndef CACHE_RULES_IN_MEMORY
 size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buffer, size_t length)
 {
   if (!Settings.UseRules || !fileExists(filename)) {
@@ -182,7 +176,7 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
   return ret;
 }
 
-#endif // ifdef ESP32
+#endif // ifndef CACHE_RULES_IN_MEMORY
 
 bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead,  bool& commentFound)
 {
@@ -243,7 +237,7 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
   return false;
 }
 
-#ifdef ESP32
+#ifdef CACHE_RULES_IN_MEMORY
 String RulesHelperClass::readLn(const String& filename,
                                 size_t      & pos,
                                 bool        & moreAvailable,
@@ -309,7 +303,7 @@ String RulesHelperClass::readLn(const String& filename,
   return EMPTY_STRING;
 }
 
-#else // ifdef ESP32
+#else // ifdef CACHE_RULES_IN_MEMORY
 
 String RulesHelperClass::readLn(const String& filename,
                                 size_t      & pos,
@@ -368,4 +362,4 @@ String RulesHelperClass::readLn(const String& filename,
   return line;
 }
 
-#endif // ifdef ESP32
+#endif // ifdef CACHE_RULES_IN_MEMORY

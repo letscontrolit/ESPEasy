@@ -16,6 +16,11 @@
 // Thus we must also provide some kind of caching of handled in the rules files.
 
 
+#ifdef ESP32
+# define CACHE_RULES_IN_MEMORY
+#endif // ifdef ESP32
+
+
 class RulesHelperClass {
 public:
 
@@ -33,13 +38,13 @@ public:
 
 private:
 
-#ifdef ESP8266
+#ifndef CACHE_RULES_IN_MEMORY
   size_t read(const String& filename,
               size_t      & pos,
               uint8_t      *buffer,
               size_t        length);
 
-#endif // ifdef ESP8266
+#endif // ifndef CACHE_RULES_IN_MEMORY
 
   bool addChar(char    c,
                String& line,
@@ -55,16 +60,16 @@ public:
 
 private:
 
-#ifdef ESP32
+#ifdef CACHE_RULES_IN_MEMORY
 
   // Cache the entire rules file contents in memory
   typedef std::vector<String>         RulesLines;
   typedef std::map<String, RulesLines>FileHandleMap;
-#else // ifdef ESP32
+#else // ifdef CACHE_RULES_IN_MEMORY
 
   // Keep a handle to a file for low-memory systems
   typedef std::map<String, fs::File> FileHandleMap;
-#endif // ifdef ESP32
+#endif // ifdef CACHE_RULES_IN_MEMORY
 
   RulesEventCache _eventCache;
 
