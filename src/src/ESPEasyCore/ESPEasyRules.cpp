@@ -96,7 +96,7 @@ void rulesProcessing(const String& event) {
   checkRAM(F("rulesProcessing"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
-  unsigned long timer = millis();
+  const unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -112,7 +112,8 @@ void rulesProcessing(const String& event) {
       String filename;
       size_t pos = 0;
       if (Cache.rulesHelper.findMatchingRule(event, filename, pos)) {
-        eventHandled = rulesProcessingFile(filename, event, pos);
+        const bool startOnMatched = true; // We already matched the event
+        eventHandled = rulesProcessingFile(filename, event, pos, startOnMatched);
       }
     } else {
       for (uint8_t x = 0; x < RULESETS_MAX && !eventHandled; x++) {
@@ -155,7 +156,10 @@ void rulesProcessing(const String& event) {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-bool rulesProcessingFile(const String& fileName, const String& event, size_t pos) {
+bool rulesProcessingFile(const String& fileName, 
+                         const String& event, 
+                         size_t pos,
+                         bool   startOnMatched) {
   if (!Settings.UseRules || !fileExists(fileName)) {
     return false;
   }
@@ -204,7 +208,7 @@ bool rulesProcessingFile(const String& fileName, const String& event, size_t pos
       const bool matched_before_parse = match;
       parseCompleteNonCommentLine(line, event, action, match, codeBlock,
                                   isCommand, condition, ifBranche, ifBlock,
-                                  fakeIfBlock);
+                                  fakeIfBlock, startOnMatched);
       if (matched_before_parse && !match) {
         // We were processing a matching event and now crossed the "endon"
         // So we're done processing
@@ -588,7 +592,8 @@ void parseCompleteNonCommentLine(String& line, const String& event,
                                  String& action, bool& match,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
-                                 uint8_t& ifBlock, uint8_t& fakeIfBlock) {
+                                 uint8_t& ifBlock, uint8_t& fakeIfBlock,
+                                 bool   startOnMatched) {
   if (line.length() == 0) {
     return;
   }
@@ -657,7 +662,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
         action.trim();
 
         START_TIMER
-        match = ruleMatch(event, eventTrigger);
+        match = startOnMatched || ruleMatch(event, eventTrigger);
         STOP_TIMER(RULES_MATCH);
       } else {
         match = false;

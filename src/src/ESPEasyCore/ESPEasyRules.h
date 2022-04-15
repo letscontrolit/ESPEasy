@@ -33,7 +33,8 @@ void   rulesProcessing(const String& event);
  \*********************************************************************************************/
 bool rulesProcessingFile(const String& fileName,
                          const String& event,
-                         size_t pos = 0);
+                         size_t pos = 0,
+                         bool   startOnMatched = false);
 
 
 
@@ -81,7 +82,8 @@ void parseCompleteNonCommentLine(String& line,
                                  bool    condition[],
                                  bool    ifBranche[],
                                  uint8_t  & ifBlock,
-                                 uint8_t  & fakeIfBlock);
+                                 uint8_t  & fakeIfBlock,
+                                 bool   startOnMatched);
 
 void processMatchedRule(String& action,
                         const String& event,

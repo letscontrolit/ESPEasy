@@ -134,6 +134,8 @@ void handle_advanced() {
   #ifdef WEBSERVER_NEW_RULES
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
   #endif // WEBSERVER_NEW_RULES
+  addFormCheckBox(LabelType::ENABLE_RULES_CACHING, Settings.EnableRulesCaching());
+
   addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
@@ -236,8 +238,6 @@ void handle_advanced() {
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
   #endif
-
-  addFormCheckBox(LabelType::ENABLE_RULES_CACHING, Settings.EnableRulesCaching());
 
 
   #ifdef USES_SSDP
