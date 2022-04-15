@@ -8,6 +8,11 @@
 #include <FS.h>
 #include <map>
 
+#ifdef ESP32
+# define CACHE_RULES_IN_MEMORY
+#endif // ifdef ESP32
+
+
 // Helper class to handle reading from the rules file(s).
 // Opening a file on ESP32 with a relatively large LittleFS file system
 // takes a considerable amount of time.
@@ -15,10 +20,9 @@
 // not be handled at all as they are not described in the rules files.
 // Thus we must also provide some kind of caching of handled in the rules files.
 
-
-#ifdef ESP32
-# define CACHE_RULES_IN_MEMORY
-#endif // ifdef ESP32
+#ifdef CACHE_RULES_IN_MEMORY
+# include <vector>
+#endif // ifdef CACHE_RULES_IN_MEMORY
 
 
 class RulesHelperClass {

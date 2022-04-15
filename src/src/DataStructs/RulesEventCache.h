@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include <vector>
+
 struct RulesEventCache_element {
   RulesEventCache_element(const String& filename, size_t pos, const String& event, const String& action)
     : _filename(filename), _posInFile(pos), _event(event), _action(action)
