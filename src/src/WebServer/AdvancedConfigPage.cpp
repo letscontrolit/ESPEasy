@@ -113,6 +113,9 @@ void handle_advanced() {
     Settings.UseAlternativeDeepSleep(isFormItemChecked(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL));
     #endif
 
+    Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
+
+
     addHtmlError(SaveSettings());
 
     if (node_time.systemTimePresent()) {
@@ -233,6 +236,8 @@ void handle_advanced() {
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
   #endif
+
+  addFormCheckBox(LabelType::ENABLE_RULES_CACHING, Settings.EnableRulesCaching());
 
 
   #ifdef USES_SSDP

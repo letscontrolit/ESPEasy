@@ -9,6 +9,8 @@
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#include "../Globals/Settings.h"
+
 # include <Arduino.h>
 # include <map>
 

@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/RulesEventCache.h"
+
 #include <FS.h>
 #include <map>
 
@@ -22,6 +24,12 @@ public:
   ~RulesHelperClass();
 
   void closeAllFiles();
+
+  void init();
+
+  bool findMatchingRule(const String& event,
+                        String      & filename,
+                        size_t      & pos);
 
 private:
 
@@ -50,14 +58,15 @@ private:
 #ifdef ESP32
 
   // Cache the entire rules file contents in memory
-  typedef std::pair<bool, String>      RulesLine;
-  typedef std::vector<RulesLine>       RulesLines;
-  typedef std::map<String, RulesLines> FileHandleMap;
+  typedef std::vector<String>         RulesLines;
+  typedef std::map<String, RulesLines>FileHandleMap;
 #else // ifdef ESP32
 
   // Keep a handle to a file for low-memory systems
   typedef std::map<String, fs::File> FileHandleMap;
 #endif // ifdef ESP32
+
+  RulesEventCache _eventCache;
 
   FileHandleMap _fileHandleMap;
 };

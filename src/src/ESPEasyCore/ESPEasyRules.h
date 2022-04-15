@@ -9,8 +9,6 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 
 
-extern boolean activeRuleSets[RULESETS_MAX];
-
 
 String EventToFileName(const String& eventName);
 
@@ -34,7 +32,8 @@ void   rulesProcessing(const String& event);
    Return true when event was handled.
  \*********************************************************************************************/
 bool rulesProcessingFile(const String& fileName,
-                           const String& event);
+                         const String& event,
+                         size_t pos = 0);
 
 
 
@@ -94,31 +93,12 @@ void processMatchedRule(String& action,
                         uint8_t  & ifBlock,
                         uint8_t  & fakeIfBlock);
 
-/********************************************************************************************\
-   Check if an event matches to a given rule
- \*********************************************************************************************/
-bool ruleMatch(const String& event,
-               const String& rule);
 
 /********************************************************************************************\
    Check expression
  \*********************************************************************************************/
 bool conditionMatchExtended(String& check);
 
-// Find the compare condition.
-// @param posStart = first position of the compare condition in the string
-// @param posEnd   = first position rest of the string, right after the compare condition.
-bool findCompareCondition(const String& check,
-                          char        & compare,
-                          int         & posStart,
-                          int         & posEnd);
-
-bool compareIntValues(char       compare,
-                      const int& Value1,
-                      const int& Value2);
-bool compareDoubleValues(char          compare,
-                         const double& Value1,
-                         const double& Value2);
 
 bool conditionMatch(const String& check);
 

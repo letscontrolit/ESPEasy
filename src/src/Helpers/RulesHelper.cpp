@@ -3,7 +3,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
-
+#include "../Helpers/StringProvider.h"
 
 /********************************************************************************************\
    Test for common mistake
@@ -83,6 +83,7 @@ void RulesHelperClass::closeAllFiles() {
   for (auto it = _fileHandleMap.begin(); it != _fileHandleMap.end();) {
     it = _fileHandleMap.erase(it);
   }
+  _eventCache.clear();
 }
 
 #else // ifdef ESP32
@@ -92,6 +93,57 @@ void RulesHelperClass::closeAllFiles() {
     it->second.close();
     it = _fileHandleMap.erase(it);
   }
+  _eventCache.clear();
+}
+
+void RulesHelperClass::init()
+{
+  if (_eventCache.isInitialized()) { return; }
+
+  // Read all files to populate caches.
+
+  for (uint8_t x = 0; x < RULESETS_MAX; x++) {
+    // Read files
+    const String filename        = getRulesFileName(x);
+    size_t pos                   = 0;
+    bool   moreAvailable         = true;
+    const bool searchNextOnBlock = false;
+
+    while (moreAvailable) {
+      const size_t pos_start_line = pos;
+      const String rulesLine      = readLn(filename, pos, moreAvailable, searchNextOnBlock);
+
+      if (_eventCache.addLine(
+            rulesLine,
+            filename,
+            pos_start_line)) {
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("Cache rules event: ");
+          log += filename;
+          log += F(" pos: ");
+          log += pos_start_line;
+          log += ' ';
+          log += rulesLine;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+      }
+    }
+  }
+  _eventCache.initialize();
+}
+
+bool RulesHelperClass::findMatchingRule(const String& event, String& filename, size_t& pos)
+{
+  if (!_eventCache.isInitialized()) {
+    init();
+  }
+  RulesEventCache_vector::const_iterator it = _eventCache.findMatchingRule(event);
+
+  if (it == _eventCache.end()) { return false; }
+
+  filename = it->_filename;
+  pos      = it->_posInFile;
+  return true;
 }
 
 size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buffer, size_t length)
@@ -99,7 +151,17 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
   if (!Settings.UseRules || !fileExists(filename)) {
     return 0;
   }
-  auto it = _fileHandleMap.find(filename);
+  auto it = _fileHandleMap.begin();
+
+  if (it != _fileHandleMap.end()) {
+    if (!it->first.equals(filename)) {
+      // Switched to a new file.
+      // Close this handle first to make sure we don't keep too many file handles open.
+      it->second.close();
+      _fileHandleMap.erase(it);
+      it = _fileHandleMap.end();
+    }
+  }
 
   if (it == _fileHandleMap.end()) {
     // No open file handle found, so try to open it.
@@ -133,7 +195,7 @@ bool RulesHelperClass::addChar(char c, String& line,   bool& firstNonSpaceRead, 
 
       if ((line.length() > 0) && !line.startsWith(F("//"))) {
         if (commentFound) {
-            rules_strip_trailing_comments(line);
+          rules_strip_trailing_comments(line);
         }
         check_rules_line_user_errors(line);
         return true;
@@ -187,6 +249,7 @@ String RulesHelperClass::readLn(const String& filename,
                                 bool        & moreAvailable,
                                 bool          searchNextOnBlock)
 {
+  moreAvailable = false;
   auto it = _fileHandleMap.find(filename);
 
   if (it == _fileHandleMap.end()) {
@@ -199,10 +262,14 @@ String RulesHelperClass::readLn(const String& filename,
       bool firstNonSpaceRead = false;
       bool commentFound      = false;
 
+      // Keep track of which line we're reading for the event cache.
+      size_t readPos = 0;
+
       while (f.available()) {
         if (addChar(char(f.read()), tmpStr, firstNonSpaceRead, commentFound)) {
-          const bool isOnDoLine = tmpStr.substring(0, 3).equalsIgnoreCase(F("on "));
-          lines.push_back(std::make_pair(isOnDoLine, tmpStr));
+          lines.push_back(tmpStr);
+          ++readPos;
+
           firstNonSpaceRead = false;
           commentFound      = false;
           tmpStr.clear();
@@ -210,10 +277,9 @@ String RulesHelperClass::readLn(const String& filename,
       }
 
       if (tmpStr.length() > 0) {
-        const bool isOnDoLine = tmpStr.substring(0, 3).equalsIgnoreCase(F("on "));
         rules_strip_trailing_comments(tmpStr);
         check_rules_line_user_errors(tmpStr);
-        lines.push_back(std::make_pair(isOnDoLine, tmpStr));
+        lines.push_back(tmpStr);
         tmpStr.clear();
       }
 
@@ -234,8 +300,9 @@ String RulesHelperClass::readLn(const String& filename,
       ++pos;
       moreAvailable = pos < it->second.size();
 
-      if (!searchNextOnBlock || it->second[pos - 1].first) {
-        return it->second[pos - 1].second;
+      if (!searchNextOnBlock ||
+          it->second[pos - 1].substring(0, 3).equalsIgnoreCase(F("on "))) {
+        return it->second[pos - 1];
       }
     }
   }

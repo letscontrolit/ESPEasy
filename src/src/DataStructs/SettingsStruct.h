@@ -121,6 +121,9 @@ class SettingsStruct_tmpl
   bool EnableRAMTracking() const;
   void EnableRAMTracking(bool value);
 
+  // Enable caching of rules, to speed up rules processing
+  bool EnableRulesCaching() const;
+  void EnableRulesCaching(bool value);
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
