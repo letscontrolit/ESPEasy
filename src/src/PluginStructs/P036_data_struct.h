@@ -11,22 +11,29 @@
 #  define P036_LIMIT_BUILD_SIZE
 # endif // ifdef LIMIT_BUILD_SIZE
 
+// Macros
+# define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
+# define P036_SetDisplayOn(uint8_t) (UserVar[event->BaseVarIndex] = uint8_t)
+
+// # define P036_USE_XWIDE // CSS needs to be changed for 'xWide'
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)
+// # define P036_CHECK_HEAP        // Enable to add extra logging during Plugin_036()
+// # define P036_CHECK_INDIVIDUAL_FONT // /Enable to add extra logging for individual font calculation
 
 # ifndef P036_LIMIT_BUILD_SIZE
-#  define P036_SEND_EVENTS       // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
-#  define P036_ENABLE_LINECOUNT  // Enable the linecount subcommand
+#  define P036_SEND_EVENTS           // Enable sending events on Display On/Off, Contrast Low/Med/High, Frame and Line
+#  define P036_ENABLE_LINECOUNT      // Enable the linecount subcommand
 # endif // ifndef P036_LIMIT_BUILD_SIZE
-# define P036_ENABLE_HIDE_FOOTER // Enable the Hide indicator (footer) option
-# define P036_ENABLE_LEFT_ALIGN  // Enable the Left-align content option and leftalign subcommand
+# define P036_ENABLE_HIDE_FOOTER     // Enable the Hide indicator (footer) option
+# define P036_ENABLE_LEFT_ALIGN      // Enable the Left-align content option and leftalign subcommand
 
-# define P36_Nlines 12           // The number of different lines which can be displayed - each line is 64 chars max
-# define P36_NcharsV0 32         // max chars per line up to 22.11.2019 (V0)
-# define P36_NcharsV1 64         // max chars per line from 22.11.2019 (V1)
-# define P36_MaxSizesCount 3     // number of different OLED sizes
-# define P36_MaxFontCount 5      // number of different fonts
+# define P36_Nlines 12               // The number of different lines which can be displayed - each line is 64 chars max
+# define P36_NcharsV0 32             // max chars per line up to 22.11.2019 (V0)
+# define P36_NcharsV1 64             // max chars per line from 22.11.2019 (V1)
+# define P36_MaxSizesCount 3         // number of different OLED sizes
+# define P36_MaxFontCount 5          // number of different fonts
 
 # define P36_MaxDisplayWidth 128
 # define P36_MaxDisplayHeight 64
@@ -83,6 +90,7 @@
 
 // P036_FLAGS_1
 # define P036_FLAG_LEFT_ALIGNED        0  // Bit1-0 Layout left aligned
+# define P036_FLAG_REDUCE_LINE_NO      2  // Bit 2 Reduce line number to fit individual line font settings
 
 enum class eHeaderContent {
   eSSID     = 1,
@@ -122,47 +130,47 @@ enum class eP036pinmode {
 };
 
 typedef struct {
-  String   LineContent;        // content
+  String   SLcontent;          // content
   int      CurrentLeft = 0;    // current left pix position
   float    dPix        = 0.0f; // pix change per scroll time (100ms)
   float    fPixSum     = 0.0f; // pix sum while scrolling (100ms)
   uint16_t LastWidth   = 0;    // width of last line in pix
   uint16_t Width       = 0;    // width in pix
-  uint8_t  Height      = 0;    // Height in Pix
-  uint8_t  ypos        = 0;    // y position in pix
+  uint8_t  SLidx;              // index to DisplayLinesV1
 } tScrollLine;
 
 typedef struct {
-  tScrollLine Line[P36_MAX_LinesPerPage];
-  const char *Font  = nullptr; // font for this line setting
-  uint16_t    wait  = 0;       // waiting time before scrolling
-  uint8_t     Space = 0;       // space in pix between lines for this line setting
+  tScrollLine SLine[P36_MAX_LinesPerPage];
+  uint16_t    wait = 0; // waiting time before scrolling
 } tScrollingLines;
 
 typedef struct {
-  String LineIn[P36_MAX_LinesPerPage];
-  String LineOut[P36_MAX_LinesPerPage];
-  int    ypos[P36_MAX_LinesPerPage] = { 0 };          // ypos contains the heights of the various lines - this depends on the font and the
-                                                      // number of lines
-  OLEDDISPLAY_TEXT_ALIGNMENT TxtAlignmentIn[P36_MAX_LinesPerPage];
-  OLEDDISPLAY_TEXT_ALIGNMENT TxtAlignmentOut[P36_MAX_LinesPerPage];
-  int                        dPixSum       = 0;       // act pix change
-  const char                *Font          = nullptr; // font for this line setting
-  uint8_t                    Scrolling     = 0;       // 0=Ready, 1=Scrolling
-  uint8_t                    dPix          = 0;       // pix change per scroll time (25ms)
-  uint8_t                    linesPerFrame = 0;       // the number of lines in each frame
+  String                     SPLcontent; // content
+  OLEDDISPLAY_TEXT_ALIGNMENT Alignment;
+  uint8_t                    SPLidx;     // index to DisplayLinesV1
+} tScrollingPageLines;
+
+typedef struct {
+  tScrollingPageLines In[P36_MAX_LinesPerPage];
+  tScrollingPageLines Out[P36_MAX_LinesPerPage];
+  int                 dPixSum          = 0; // act pix change
+  uint8_t             Scrolling        = 0; // 0=Ready, 1=Scrolling
+  uint8_t             dPix             = 0; // pix change per scroll time (25ms)
+  uint8_t             linesPerFrameDef = 0; // the default number of lines in frame in/out
+  uint8_t             linesPerFrameIn  = 0; // the number of lines in frame in
+  uint8_t             linesPerFrameOut = 0; // the number of lines in frame out
 } tScrollingPages;
 
 enum class eModifyFont {
   eMinimize = 4,
   eReduce   = 3,
-  eNone     = 7,
+  eNone     = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
   eEnlarge  = 1,
   eMaximize = 2
 };
 
 enum class eAlignment {
-  eGlobal = 7,
+  eGlobal = 7, // because of compatibility to previously saved DisplayLinesV1[].ModifyLayout with 0xff
   eLeft   = 1,
   eCenter = 0,
   eRight  = 2
@@ -186,12 +194,12 @@ typedef struct {
 } tFontSizes;
 
 typedef struct {
-  const char *fontData; // font for this line setting
-  uint8_t     Top;      // top in pix for this line setting
-  uint8_t     Height;   // font height in pix
-  int8_t      Space;    // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
+  uint8_t fontIdx; // font index for this line setting
+  uint8_t Top;     // top in pix for this line setting
+  uint8_t Height;  // font height in pix
+  int8_t  Space;   // space in pix between lines for this line setting, allow negative values to squeeze the lines closer!
 # ifdef P036_FONT_CALC_LOG
-  const __FlashStringHelper *FontName() const;
+  const __FlashStringHelper* FontName() const;
 # endif // ifdef P036_FONT_CALC_LOG
 } tFontSettings;
 
@@ -204,9 +212,22 @@ typedef struct {
   uint8_t WiFiIndicatorWidth; // width of WiFi indicator
 } tSizeSettings;
 
-class P036_LineContent 
-{
-  public:
+typedef struct {
+  uint8_t frame;           // frame for this line
+  uint8_t DisplayedPageNo; // number of shown pages for this line, set in CalcMaxPageCount()
+  uint8_t ypos;            // ypos for this line
+  uint8_t fontIdx;         // font index for this line
+  uint8_t FontHeight;      // font height for this line
+} tLineSettings;
+
+typedef struct {
+  uint8_t NextLineNo;            // number of next line or 0xFF if settings do not fit
+  uint8_t IdxForBiggestFontUsed; // ypos for this line
+} tIndividualFontSettings;
+
+class P036_LineContent {
+public:
+
   void loadDisplayLines(taskIndex_t taskIndex,
                         uint8_t     LoadVersion);
 
@@ -281,6 +302,8 @@ struct P036_data_struct : public PluginTaskData_base {
   void                       P036_JumpToPage(struct EventStruct *event,
                                              uint8_t             nextFrame);
 
+  void                       P036_JumpToPageOfLine(struct EventStruct *event,
+                                                   uint8_t             LineNo);
   void                       P036_DisplayPage(struct EventStruct *event);
 
   // Perform some specific changes for OLED display
@@ -328,6 +351,7 @@ struct P036_data_struct : public PluginTaskData_base {
   bool           bHideHeader              = false;
   bool           bHideFooter              = false;
   bool           bAlternativHeader        = false;
+  bool           bReduceLinesPerFrame     = false;
 
   // frames
   uint8_t MaxFramesToDisplay    = 0;    // total number of frames to display
@@ -338,6 +362,17 @@ struct P036_data_struct : public PluginTaskData_base {
   bool    bPageScrollDisabled   = true; // first page after INIT or after JumpToPage without scrolling
 
   OLEDDISPLAY_TEXT_ALIGNMENT textAlignment = TEXT_ALIGN_CENTER;
+
+  tLineSettings LineSettings[P36_Nlines];
+  uint16_t                CalcPixLength(uint8_t LineNo);
+
+  tIndividualFontSettings CalculateIndividualFontSettings(uint8_t LineNo,
+                                                          uint8_t FontIndex,
+                                                          uint8_t LinesPerFrame,
+                                                          uint8_t FrameNo,
+                                                          int8_t  MaxHeight,
+                                                          uint8_t IdxForBiggestFont);
+  void CalcMaxPageCount(void);
 };
 
 #endif // ifdef USES_P036
