@@ -1,0 +1,26 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    This plugin allows dynamic configuration of the command-trigger. Available triggers are:
+
+    * ``neomatrix``
+    * ``neo``
+
+    The default trigger is ``neomatrix``
+    ","
+    Some commands are postfixed with ``cmd``, indicating device specific commands. Not device-specific commands are genericly applicable to all *Adafruit Graphics Helper* enabled devices, using the ESPEasy ``AdafruitGFX_helper`` module.
+    "
+    "
+    | ``neomatrixcmd,clear``
+    ","
+    | Clear the display, using the default background color.
+    "
+    "
+    | ``neomatrixcmd,bright[,<brightness>]``
+    ","
+    | Set the level of display brightness, range: 1..255. If no brightness or 0 is provided, the Initial brightness setting is used.
+
+    | The maximum brightness allowed is determined by the Maximum allowed brightness setting.
+    "

@@ -1,0 +1,13 @@
+.. |P131_name| replace:: :cyan:`NeoPixel Matrix`
+.. |P131_type| replace:: :cyan:`Display`
+.. |P131_typename| replace:: :cyan:`Display - NeoPixel Matrix`
+.. |P131_porttype| replace:: `.`
+.. |P131_status| replace:: :yellow:`DISPLAY`
+.. |P131_github| replace:: P131_NeoPixelMatrix.ino
+.. _P131_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P131_NeoPixelMatrix.ino
+.. |P131_usedby| replace:: `.`
+.. |P131_shortinfo| replace:: `NeoPixel Matrix display`
+.. |P131_maintainer| replace:: `tonhuisman`
+.. |P131_compileinfo| replace:: `.`
+.. |P131_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_NeoMatrix`
+
