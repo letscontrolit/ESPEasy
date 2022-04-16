@@ -859,9 +859,6 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     return 0;
   }
 
-  // LineOut[] contain the outgoing strings in this frame
-  // LineIn[] contain the incoming strings in this frame
-
   int iPageScrollTime;
   int iCharToRemove;
 
@@ -913,32 +910,12 @@ uint8_t P036_data_struct::display_scroll(ePageScrollSpeed lscrollspeed, int lTas
     ScrollingLines.SLine[j].Width     = 0;
 
     // get last and new line width
-    if ((j < ScrollingPages.linesPerFrameIn) && (ScrollingPages.In[j].SPLcontent.length() > 0)) {
-      display->setFont(FontSizes[LineSettings[ScrollingPages.In[j].SPLidx].fontIdx].fontData);
-      PixLengthLineIn = display->getStringWidth(ScrollingPages.In[j].SPLcontent);
-
-      if (PixLengthLineIn > 255) {
-        // shorten string because OLED controller can not handle such long strings
-        int   strlen         = ScrollingPages.In[j].SPLcontent.length();
-        float fAvgPixPerChar = static_cast<float>(PixLengthLineIn) / strlen;
-        iCharToRemove                   = ceil((static_cast<float>(PixLengthLineIn - 255)) / fAvgPixPerChar);
-        ScrollingPages.In[j].SPLcontent = ScrollingPages.In[j].SPLcontent.substring(0, strlen - iCharToRemove);
-        PixLengthLineIn                 = display->getStringWidth(ScrollingPages.In[j].SPLcontent);
-      }
+    if (j < ScrollingPages.linesPerFrameIn) {
+      PixLengthLineIn = TrimStringTo255Chars(&ScrollingPages.In[j]);
     }
 
-    if ((j < ScrollingPages.linesPerFrameOut) && (ScrollingPages.Out[j].SPLcontent.length() > 0)) {
-      display->setFont(FontSizes[LineSettings[ScrollingPages.Out[j].SPLidx].fontIdx].fontData);
-      PixLengthLineOut = display->getStringWidth(ScrollingPages.Out[j].SPLcontent);
-
-      if (PixLengthLineOut > 255) {
-        // shorten string because OLED controller can not handle such long strings
-        int   strlen         = ScrollingPages.Out[j].SPLcontent.length();
-        float fAvgPixPerChar = static_cast<float>(PixLengthLineOut) / strlen;
-        iCharToRemove                    = ceil((static_cast<float>(PixLengthLineOut - 255)) / fAvgPixPerChar);
-        ScrollingPages.Out[j].SPLcontent = ScrollingPages.Out[j].SPLcontent.substring(0, strlen - iCharToRemove);
-        PixLengthLineOut                 = display->getStringWidth(ScrollingPages.Out[j].SPLcontent);
-      }
+    if (j < ScrollingPages.linesPerFrameIn) {
+      PixLengthLineOut = TrimStringTo255Chars(&ScrollingPages.Out[j]);
     }
 
     if (bLineScrollEnabled) {
@@ -1184,43 +1161,13 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
     if ((initialScroll && (lscrollspeed < ePageScrollSpeed::ePSS_Instant)) ||
         !initialScroll) {
       // scrolling, prepare scrolling out to right
-      display->setFont(FontSizes[LineSettings[ScrollingPages.Out[j].SPLidx].fontIdx].fontData);
-
-      if (ScrollingLines.SLine[j].LastWidth > 0) {
-        // width of LineOut[j] > display width -> line is right aligned while scrolling page
-        display->setTextAlignment(TEXT_ALIGN_RIGHT);
-        display->drawString(P36_MaxDisplayWidth - getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
-                            LineSettings[ScrollingPages.Out[j].SPLidx].ypos,
-                            ScrollingPages.Out[j].SPLcontent);
-      } else {
-        // line is kept aligned while scrolling page
-        display->setTextAlignment(ScrollingPages.Out[j].Alignment);
-        display->drawString(GetTextLeftMargin(ScrollingPages.Out[j].Alignment) + ScrollingPages.dPixSum,
-                            LineSettings[ScrollingPages.Out[j].SPLidx].ypos,
-                            ScrollingPages.Out[j].SPLcontent);
-      }
+      DrawScrollingPageLine(&ScrollingPages.Out[j], ScrollingLines.SLine[j].LastWidth, TEXT_ALIGN_RIGHT);
     }
   }
 
   for (uint8_t j = 0; j < ScrollingPages.linesPerFrameIn; j++) {
     // non-scrolling or scrolling prepare scrolling in from left
-    display->setFont(FontSizes[LineSettings[ScrollingPages.In[j].SPLidx].fontIdx].fontData);
-
-    if (ScrollingLines.SLine[j].Width > 0) {
-      // width of LineIn[j] > display width -> line is left aligned while scrolling page
-      display->setTextAlignment(TEXT_ALIGN_LEFT);
-      display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
-                          LineSettings[ScrollingPages.In[j].SPLidx].ypos,
-                          ScrollingPages.In[j].SPLcontent);
-    } else {
-      // line is kept aligned while scrolling page
-      display->setTextAlignment(ScrollingPages.In[j].Alignment);
-
-      // for non-scrolling pages ScrollingPages.dPixSum=P36_MaxDisplayWidth -> therefore the calculation must use P36_MaxDisplayWidth, too
-      display->drawString(-P36_MaxDisplayWidth + GetTextLeftMargin(ScrollingPages.In[j].Alignment) + ScrollingPages.dPixSum,
-                          LineSettings[ScrollingPages.In[j].SPLidx].ypos,
-                          ScrollingPages.In[j].SPLcontent);
-    }
+    DrawScrollingPageLine(&ScrollingPages.In[j], ScrollingLines.SLine[j].Width, TEXT_ALIGN_LEFT);
   }
 
   update_display();
@@ -1406,8 +1353,6 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
   uint8_t NFrames; // the number of frames
   uint8_t lineCounter = 0;
 
-  uint32_t iAlignment;
-
   if (P036_DisplayIsOn) {
     // Display is on.
     ScrollingPages.Scrolling = 1;                                                              // page scrolling running -> no
@@ -1432,13 +1377,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         continue;
       }
       ScrollingPages.linesPerFrameOut = i + 1;
-      String tmpString(LineContent->DisplayLinesV1[lineCounter + i].Content);
-      ScrollingPages.Out[i].SPLcontent = P36_parseTemplate(tmpString, 20);
-      iAlignment                       = 0;
-      iAlignment                       = get3BitFromUL(LineContent->DisplayLinesV1[lineCounter + i].ModifyLayout,
-                                                       P036_FLAG_ModifyLayout_Alignment);
-      ScrollingPages.Out[i].Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
-      ScrollingPages.Out[i].SPLidx    = lineCounter + i; // index to LineSettings[]
+      CreateScrollingPageLine(&ScrollingPages.Out[i], lineCounter + i);
     }
 
     // now loop round looking for the next frame with some content
@@ -1490,13 +1429,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
           continue;
         }
         ScrollingPages.linesPerFrameIn = i + 1;
-        String tmpString(LineContent->DisplayLinesV1[lineCounter + i].Content);
-        ScrollingPages.In[i].SPLcontent = P36_parseTemplate(tmpString, 20);
-        iAlignment                      = 0;
-        iAlignment                      =
-          get3BitFromUL(LineContent->DisplayLinesV1[lineCounter + i].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
-        ScrollingPages.In[i].Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
-        ScrollingPages.In[i].SPLidx    = lineCounter + i; // index to LineSettings[]
+        CreateScrollingPageLine(&ScrollingPages.In[i], lineCounter + i);
 
         if (ScrollingPages.In[i].SPLcontent.length() > 0) { foundText = true; }
       }
@@ -1672,6 +1605,7 @@ void P036_data_struct::CalcMaxPageCount(void) {
       } else {
         LineSettings[i].DisplayedPageNo = 0xff; // line is not shown
       }
+
       if (LineSettings[i].frame != iFrame) { continue; } // line is not yet on the next page
 
       for (uint8_t k = 0; k < ScrollingPages.linesPerFrameDef; k++) {
@@ -1684,6 +1618,7 @@ void P036_data_struct::CalcMaxPageCount(void) {
 
         if (LineContent->DisplayLinesV1[i + k].Content[0] != 0) { // line is not empty
           iFrame++; // next frame to check
+
           if (MaxFramesToDisplay == 0xFF) {
             MaxFramesToDisplay = 0;
           } else {
@@ -1718,6 +1653,71 @@ void P036_data_struct::CalcMaxPageCount(void) {
     }
 # endif // ifdef P036_CHECK_INDIVIDUAL_FONT
   }
+}
+
+uint16_t P036_data_struct::TrimStringTo255Chars(tScrollingPageLines *ScrollingPageLine) {
+  uint16_t PixLengthLine = 0;
+
+  if (ScrollingPageLine->SPLcontent.length() > 0) {
+    display->setFont(FontSizes[LineSettings[ScrollingPageLine->SPLidx].fontIdx].fontData);
+    PixLengthLine = display->getStringWidth(ScrollingPageLine->SPLcontent);
+
+    if (PixLengthLine > 255) {
+      // shorten string because OLED controller can not handle such long strings
+      int   strlen         = ScrollingPageLine->SPLcontent.length();
+      float fAvgPixPerChar = static_cast<float>(PixLengthLine) / strlen;
+      int   iCharToRemove  = ceil((static_cast<float>(PixLengthLine - 255)) / fAvgPixPerChar);
+      ScrollingPageLine->SPLcontent = ScrollingPageLine->SPLcontent.substring(0, strlen - iCharToRemove);
+      PixLengthLine                 = display->getStringWidth(ScrollingPageLine->SPLcontent);
+    }
+  }
+  return PixLengthLine;
+}
+
+void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines *ScrollingPageLine, uint16_t Width,
+                                             OLEDDISPLAY_TEXT_ALIGNMENT textAlignment) {
+  int LeftOffset;
+
+  switch (textAlignment) {
+    case TEXT_ALIGN_LEFT: LeftOffset = -P36_MaxDisplayWidth;
+      break;
+    case TEXT_ALIGN_RIGHT: LeftOffset = 0;
+      break;
+    default:
+      LeftOffset = 0;
+      break;
+  }
+  display->setFont(FontSizes[LineSettings[ScrollingPageLine->SPLidx].fontIdx].fontData);
+
+  if (Width > 0) {
+    // textAlignment=TEXT_ALIGN_LEFT:  width of LineIn[j] > display width -> line is left aligned while scrolling page
+    // textAlignment=TEXT_ALIGN_RIGHT: width of LineOut[j] > display width -> line is right aligned while scrolling page
+    display->setTextAlignment(textAlignment);
+    display->drawString(-P36_MaxDisplayWidth + getDisplaySizeSettings(disp_resolution).PixLeft + ScrollingPages.dPixSum,
+                        LineSettings[ScrollingPageLine->SPLidx].ypos,
+                        ScrollingPageLine->SPLcontent);
+  } else {
+    // line is kept aligned while scrolling page
+    display->setTextAlignment(ScrollingPageLine->Alignment);
+
+    // textAlignment=TEXT_ALIGN_LEFT: for non-scrolling pages ScrollingPages.dPixSum=P36_MaxDisplayWidth -> therefore the calculation must
+    // use P36_MaxDisplayWidth, too
+    display->drawString(LeftOffset + GetTextLeftMargin(ScrollingPageLine->Alignment) + ScrollingPages.dPixSum,
+                        LineSettings[ScrollingPageLine->SPLidx].ypos,
+                        ScrollingPageLine->SPLcontent);
+  }
+}
+
+void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine, uint8_t Counter) {
+  String tmpString(LineContent->DisplayLinesV1[Counter].Content);
+
+  ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, 20);
+  uint32_t iAlignment = 0;
+
+  iAlignment =
+    get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+  ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
+  ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]
 }
 
 #endif // ifdef USES_P036

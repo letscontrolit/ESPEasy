@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-16
+// MSG: code reduced by 530 bytes to fit the build size for 'esp8266, normal_ESP8266_1M' (equal code put into functions)
 // @uwekaditz: 2022-04-15
 // NEW: individual font settings for each line
 // NEW: simple structur tLineSettings to hold all font and page settings

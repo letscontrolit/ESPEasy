@@ -366,6 +366,8 @@ struct P036_data_struct : public PluginTaskData_base {
   tLineSettings LineSettings[P36_Nlines];
   uint16_t                CalcPixLength(uint8_t LineNo);
 
+private:
+
   tIndividualFontSettings CalculateIndividualFontSettings(uint8_t LineNo,
                                                           uint8_t FontIndex,
                                                           uint8_t LinesPerFrame,
@@ -373,6 +375,12 @@ struct P036_data_struct : public PluginTaskData_base {
                                                           int8_t  MaxHeight,
                                                           uint8_t IdxForBiggestFont);
   void CalcMaxPageCount(void);
+  uint16_t TrimStringTo255Chars(tScrollingPageLines *ScrollingPageLine);
+  void     DrawScrollingPageLine(tScrollingPageLines       *ScrollingPageLine,
+                                 uint16_t                   Width,
+                                 OLEDDISPLAY_TEXT_ALIGNMENT textAlignment);
+  void     CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine,
+                                   uint8_t              Counter);
 };
 
 #endif // ifdef USES_P036
