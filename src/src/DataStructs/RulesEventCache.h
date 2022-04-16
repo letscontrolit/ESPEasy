@@ -33,13 +33,6 @@ public:
 
   void initialize();
 
-  // Split a rules line into 2 parts:
-  // - event: The part between on ... do
-  // - action: The optional part after the " do"
-  static bool getEventFromRulesLine(const String& line,
-                                    String      & event,
-                                    String      & action);
-
   bool addLine(const String& line,
                const String& filename,
                size_t        pos);

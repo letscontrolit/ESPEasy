@@ -16,15 +16,9 @@ bool ruleMatch(const String& event, const String& rule) {
   }
 
   String tmpEvent = event;
-  String tmpRule  = rule;
   tmpEvent.trim();
-  tmpRule.trim();
 
-  // Ignore escape char
-  tmpRule.replace(F("["), EMPTY_STRING);
-  tmpRule.replace(F("]"), EMPTY_STRING);
-
-  if (tmpEvent.equalsIgnoreCase(tmpRule)) {
+  if (tmpEvent.equalsIgnoreCase(rule)) {
     return true;
   }
 
@@ -45,7 +39,7 @@ bool ruleMatch(const String& event, const String& rule) {
         return event.substring(0, rule.length()).equalsIgnoreCase(rule);
       }
     }
-    return tmpEvent.equalsIgnoreCase(tmpRule);
+    return tmpEvent.equalsIgnoreCase(rule);
   }
 
   // clock events need different handling...
@@ -202,4 +196,40 @@ bool findCompareCondition(const String& check, char& compare, int& posStart, int
     found    = true;
   }
   return found;
+}
+
+bool getEventFromRulesLine(const String& line, String& event, String& action)
+{
+  if (line.length() == 0) {
+    return false;
+  }
+
+  if (!line.substring(0, 3).equalsIgnoreCase(F("on "))) {
+    return false;
+  }
+
+  String line_lc = line;
+
+  line_lc.toLowerCase();
+
+  // Need to look for the " do" part starting after "on " (3 chars)
+  // and the event needs to be at least 1 char. => start at pos 4.
+  const int pos_do = line_lc.indexOf(F(" do"), 4);
+
+  if (pos_do == -1) {
+    return false;
+  }
+
+  // event: The part between on ... do
+  event = line.substring(3, pos_do);
+  event.trim();
+
+  // Ignore escape char
+  event.replace(F("["), EMPTY_STRING);
+  event.replace(F("]"), EMPTY_STRING);
+
+  // action: The optional part after the " do"
+  action = line.substring(pos_do + 3);
+  action.trim();
+  return true;
 }

@@ -23,4 +23,12 @@ bool findCompareCondition(const String& check,
                           int         & posStart,
                           int         & posEnd);
 
+
+// Split a rules line into 2 parts:
+// - event: The part between on ... do
+// - action: The optional part after the " do"
+bool getEventFromRulesLine(const String& line,
+                           String      & event,
+                           String      & action);
+
 #endif // ifndef HELPERS_RULESMATCHER_H

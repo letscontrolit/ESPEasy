@@ -15,35 +15,6 @@ void RulesEventCache::initialize()
   _initialized = true;
 }
 
-bool RulesEventCache::getEventFromRulesLine(const String& line, String& event, String& action)
-{
-  if (line.length() == 0) {
-    return false;
-  }
-
-  if (!line.substring(0, 3).equalsIgnoreCase(F("on "))) {
-    return false;
-  }
-
-  String line_lc = line;
-
-  line_lc.toLowerCase();
-  const int pos_do = line_lc.indexOf(F(" do"));
-
-  if (pos_do == -1) {
-    return false;
-  }
-
-  // event: The part between on ... do
-  event = line.substring(3, pos_do);
-  event.trim();
-
-  // action: The optional part after the " do"
-  action = line.substring(pos_do + 3);
-  action.trim();
-  return true;
-}
-
 bool RulesEventCache::addLine(const String& line, const String& filename, size_t pos)
 {
   String event, action;

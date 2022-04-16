@@ -644,25 +644,13 @@ void parseCompleteNonCommentLine(String& line, const String& event,
   {
     action.clear();
     if (lineStartsWith_on) {
-      String lineOrg = line; // store original line for future use
-      line.toLowerCase();    // convert all to lower case to make checks easier
-
       ifBlock     = 0;
       fakeIfBlock = 0;
-      const int split = line.indexOf(F(" do"), 3);
 
-      String eventTrigger;
-
-      if (split != -1) {
-        eventTrigger = line.substring(3, split); // Skipping "on "
-        action       = lineOrg.substring(split + 4); // " do" + " " = 4 chars
-
-        // Remove trailing and leadin spaces on the eventTrigger and action.
-        eventTrigger.trim();
-        action.trim();
-
+      String ruleEvent;
+      if (getEventFromRulesLine(line, ruleEvent, action)) {
         START_TIMER
-        match = startOnMatched || ruleMatch(event, eventTrigger);
+        match = startOnMatched || ruleMatch(event, ruleEvent);
         STOP_TIMER(RULES_MATCH);
       } else {
         match = false;
