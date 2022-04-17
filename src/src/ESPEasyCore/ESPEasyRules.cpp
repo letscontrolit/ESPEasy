@@ -555,6 +555,10 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
     eventvalue += argc;
   }
   eventvalue += '%';
+  if (line.indexOf(eventvalue) == -1) {
+    // Not present in the line.
+    return;
+  }
   String tmpParam;
 
   if (GetArgv(argString.c_str(), tmpParam, argc)) {
@@ -567,22 +571,35 @@ void substitute_eventvalue(String& line, const String& event) {
     substitute_eventvalue_CallBack_ptr(line, event);
   }
 
-  if (line.indexOf(F("%eventvalue")) != -1) {
+  if (line.indexOf(F("%event")) != -1) {
     if (event.charAt(0) == '!') {
       line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
                                               // literal event string if
                                               // starting with '!'
     } else {
-      int equalsPos = event.indexOf('=');
+      const int equalsPos = event.indexOf('=');
 
       if (equalsPos > 0) {
-        // Replace %eventvalueX% with the actual value of the event.
-        // For compatibility reasons also replace %eventvalue%  (argc = 0)
-        String argString = event.substring(equalsPos + 1);
+        {
+          // Replace %eventvalueX% with the actual value of the event.
+          // For compatibility reasons also replace %eventvalue%  (argc = 0)
+          String argString = event.substring(equalsPos + 1);
 
-        for (unsigned int argc = 0; argc <= 4; ++argc) {
-          replace_EventValueN_Argv(line, argString, argc);
+          for (unsigned int argc = 0; argc <= 4; ++argc) {
+            replace_EventValueN_Argv(line, argString, argc);
+          }
         }
+      }
+
+      if (line.indexOf(F("%eventname%")) != -1 || 
+          line.indexOf(F("%eventpar%")) != -1) {
+        const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
+        // Replace %eventname% with the literal event
+        line.replace(F("%eventname%"), eventName);
+
+        // Part of %eventname% after the # char
+        const int hash_pos = eventName.indexOf('#');
+        line.replace(F("%eventpar%"), hash_pos == -1 ? EMPTY_STRING : eventName.substring(hash_pos + 1));
       }
     }
   }

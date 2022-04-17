@@ -22,26 +22,6 @@ bool ruleMatch(const String& event, const String& rule) {
     return true;
   }
 
-
-  // Special handling of literal string events, they should start with '!'
-  if (event.charAt(0) == '!') {
-    const int pos = rule.indexOf('*');
-
-    if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
-    {
-      return event.substring(0, pos).equalsIgnoreCase(rule.substring(0, pos));
-    } else {
-      const bool pound_char_found = rule.indexOf('#') != -1;
-
-      if (!pound_char_found)
-      {
-        // no # sign in rule, use 'wildcard' match on event 'source'
-        return event.substring(0, rule.length()).equalsIgnoreCase(rule);
-      }
-    }
-    return tmpEvent.equalsIgnoreCase(rule);
-  }
-
   // clock events need different handling...
   if (event.substring(0, 10).equalsIgnoreCase(F("Clock#Time")))
   {
@@ -62,17 +42,40 @@ bool ruleMatch(const String& event, const String& rule) {
     }
   }
 
+  // Handling wildcard in event
+  {
+    const int asterisk_pos = rule.indexOf('*');
+
+    if (asterisk_pos != -1) // a * sign in rule, so use a 'wildcard' match on message
+    {
+      return event.substring(0, asterisk_pos).equalsIgnoreCase(rule.substring(0, asterisk_pos));
+    }
+  }
+
+  // Special handling of literal string events, they should start with '!'
+  if (event.charAt(0) == '!') {
+    const bool pound_char_found = rule.indexOf('#') != -1;
+
+    if (!pound_char_found)
+    {
+      // no # sign in rule, use 'wildcard' match on event 'source'
+      return event.substring(0, rule.length()).equalsIgnoreCase(rule);
+    }
+    return tmpEvent.equalsIgnoreCase(rule);
+  }
+
+
   // parse event into verb and value
   double value = 0;
-  int    pos   = event.indexOf('=');
+  int    equal_pos   = event.indexOf('=');
 
-  if (pos >= 0) {
-    if (!validDoubleFromString(event.substring(pos + 1), value)) {
+  if (equal_pos >= 0) {
+    if (!validDoubleFromString(event.substring(equal_pos + 1), value)) {
       return false;
 
       // FIXME TD-er: What to do when trying to match NaN values?
     }
-    tmpEvent = event.substring(0, pos);
+    tmpEvent = event.substring(0, equal_pos);
   }
 
   // parse rule
@@ -208,20 +211,25 @@ bool getEventFromRulesLine(const String& line, String& event, String& action)
     return false;
   }
 
+  // Make sure to skip any number of spaces between 'on' and the event.
+  int startpos_event = 2;
+  while (line.length() > startpos_event && line[startpos_event] == ' ') {
+    ++startpos_event;
+  }
+
+  // Need to look for the " do" part starting after "on " (3 chars)
+  // and the event needs to be at least 1 char.
   String line_lc = line;
 
   line_lc.toLowerCase();
-
-  // Need to look for the " do" part starting after "on " (3 chars)
-  // and the event needs to be at least 1 char. => start at pos 4.
-  const int pos_do = line_lc.indexOf(F(" do"), 4);
+  const int pos_do = line_lc.indexOf(F(" do"), startpos_event + 1);
 
   if (pos_do == -1) {
     return false;
   }
 
   // event: The part between on ... do
-  event = line.substring(3, pos_do);
+  event = line.substring(startpos_event, pos_do);
   event.trim();
 
   // Ignore escape char
