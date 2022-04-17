@@ -83,11 +83,12 @@
 # define GRAT_ARP_STATS          60
 # define SAVE_TO_RTC             61
 # define BACKGROUND_TASKS        62
-# define HANDLE_SCHEDULER_IDLE   63
-# define HANDLE_SCHEDULER_TASK   64
-# define HANDLE_SERVING_WEBPAGE  65
-# define WIFI_SCAN_ASYNC         66
-# define WIFI_SCAN_SYNC          67
+# define PROCESS_SYSTEM_EVENT_QUEUE 63
+# define HANDLE_SCHEDULER_IDLE   64
+# define HANDLE_SCHEDULER_TASK   65
+# define HANDLE_SERVING_WEBPAGE  66
+# define WIFI_SCAN_ASYNC         67
+# define WIFI_SCAN_SYNC          68
 
 
 class TimingStats {
