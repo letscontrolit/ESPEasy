@@ -82,7 +82,7 @@ bool RulesHelperClass::findMatchingRule(const String& event, String& filename, s
   if (!_eventCache.isInitialized()) {
     init();
   }
-  RulesEventCache_vector::const_iterator it = _eventCache.findMatchingRule(event);
+  RulesEventCache_vector::const_iterator it = _eventCache.findMatchingRule(event, Settings.EnableRulesEventReorder());
 
   if (it == _eventCache.end()) { return false; }
 

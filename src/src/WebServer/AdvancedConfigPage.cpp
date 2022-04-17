@@ -114,6 +114,7 @@ void handle_advanced() {
     #endif
 
     Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
+    Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER));
 
 
     addHtmlError(SaveSettings());
@@ -135,6 +136,7 @@ void handle_advanced() {
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
   #endif // WEBSERVER_NEW_RULES
   addFormCheckBox(LabelType::ENABLE_RULES_CACHING, Settings.EnableRulesCaching());
+  addFormCheckBox(LabelType::ENABLE_RULES_EVENT_REORDER, Settings.EnableRulesEventReorder());
 
   addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));

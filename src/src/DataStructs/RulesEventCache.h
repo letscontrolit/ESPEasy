@@ -37,7 +37,7 @@ public:
                const String& filename,
                size_t        pos);
 
-  RulesEventCache_vector::const_iterator findMatchingRule(const String& event);
+  RulesEventCache_vector::const_iterator findMatchingRule(const String& event, bool optimize);
 
   RulesEventCache_vector::const_iterator end() const {
     return _eventCache.end();

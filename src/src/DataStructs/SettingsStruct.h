@@ -125,6 +125,11 @@ class SettingsStruct_tmpl
   bool EnableRulesCaching() const;
   void EnableRulesCaching(bool value);
 
+  // Allow the cached event entries to be sorted based on how frequent they occur.
+  // This may speed up rules processing, especially on large rule sets with lots of rules blocks.
+  bool EnableRulesEventReorder() const;
+  void EnableRulesEventReorder(bool value);
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);

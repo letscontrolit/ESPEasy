@@ -26,7 +26,7 @@ bool RulesEventCache::addLine(const String& line, const String& filename, size_t
   return false;
 }
 
-RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const String& event)
+RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const String& event, bool optimize)
 {
   RulesEventCache_vector::iterator it   = _eventCache.begin();
   RulesEventCache_vector::iterator prev = _eventCache.end();
@@ -38,25 +38,29 @@ RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const S
     STOP_TIMER(RULES_MATCH);
 
     if (match) {
-      it->_nrTimesMatched++;
+      if (optimize) {
+        it->_nrTimesMatched++;
 
-      if (prev != _eventCache.end()) {
-        // Check to see if we need to place this one more to the front of the vector
-        // to speed up parsing.
-        if (prev->_nrTimesMatched < it->_nrTimesMatched) {
-          std::swap(*prev, *it);
-          return prev;
+        if (prev != _eventCache.end()) {
+          // Check to see if we need to place this one more to the front of the vector
+          // to speed up parsing.
+          if (prev->_nrTimesMatched < it->_nrTimesMatched) {
+            std::swap(*prev, *it);
+            return prev;
+          }
         }
       }
       return it;
     }
 
-    if (prev == _eventCache.end()) {
-      prev = it;
-    }
-    else if (prev->_nrTimesMatched > it->_nrTimesMatched) {
-      // Found one that's having a lower match rate
-      prev = it;
+    if (optimize) {
+      if (prev == _eventCache.end()) {
+        prev = it;
+      }
+      else if (prev->_nrTimesMatched > it->_nrTimesMatched) {
+        // Found one that's having a lower match rate
+        prev = it;
+      }
     }
   }
   return it;
