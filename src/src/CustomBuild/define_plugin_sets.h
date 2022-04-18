@@ -1182,6 +1182,7 @@ To create/register a plugin, you have to :
     #define USES_P118  // Itho ventilation control
     #endif
     #define USES_P124  // I2C MultiRelay
+    #define USES_P127  // CDM7160
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
@@ -1189,6 +1190,7 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
+    #define USES_P126  // 74HC595 Shift register
     #define USES_P130   // Current Sensor Irms - ADS1015
 #endif
 
@@ -1233,6 +1235,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
+   #ifndef USES_ADAFRUITGFX_HELPER
+    #define USES_ADAFRUITGFX_HELPER
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1272,8 +1277,11 @@ To create/register a plugin, you have to :
    #ifndef USES_P104
     #define USES_P104   // MAX7219 dot matrix
    #endif
-   #ifndef USES_P109
-    #define USES_P109   // ThermoOLED
+  //  #ifndef USES_P109
+  //    #define USES_P109   // ThermoOLED
+  //  #endif
+   #ifndef USES_P116
+     #define USES_P116   // ST77xx
    #endif
 #endif
 
@@ -1469,7 +1477,7 @@ To create/register a plugin, you have to :
     #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-//    #define USES_P116   //
+    #define USES_P116   // ST77xx
   #endif
   #ifndef USES_P117
     #define USES_P117   // SCD30
@@ -1499,10 +1507,10 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI Acceleration / Gravity
   #endif
   #ifndef USES_P126
-//    #define USES_P126   //
+    #define USES_P126   // 74HC595 Shift register
   #endif
   #ifndef USES_P127
-//    #define USES_P127   //
+    #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
 //    #define USES_P128   //
@@ -1586,6 +1594,11 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
+  #ifndef PLUGIN_USES_ADAFRUITGFX
+    #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
+  #endif
+#endif
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)
@@ -1694,7 +1707,7 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifndef PLUGIN_SET_TESTING
+  #if !defined(PLUGIN_SET_TESTING) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
       #undef USES_P076   // HWL8012   in POW r1
     #endif
