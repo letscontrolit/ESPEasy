@@ -422,9 +422,11 @@ Event value (%eventvalue%)
 Rules engine specific:
 
 ``%eventvalueN%`` - substitutes the event value (everything that comes after
-the '=' sign, up to four values are possible).
+the '=' sign).
 
 Changed: 2022/04/17 Removed the limit of upto 4 event values and using wildcard one may even use string eventvalues.
+
+Added: 2022/04/18 ``%eventvalue0%`` will be substituded with all event values.
 
 Matching event named ``eventvalues`` to use more than 4 eventvalues:
 
@@ -432,15 +434,18 @@ Matching event named ``eventvalues`` to use more than 4 eventvalues:
 
  on eventvalues* do
   logentry,"test eventvalues: 0:%eventvalue% 1:%eventvalue1% 2:%eventvalue2% 3:%eventvalue3% 4:%eventvalue4% 5:%eventvalue5% 6:%eventvalue6%"
+  logentry,"All eventvalues: %eventvalue0%"
  endon
 
-Test event:
+Log output of a test event:
 
 .. code-block:: none
 
-  186496 : Info   : EVENT: eventvalues=1,2,3,4,5,6
-  186506 : Info   : ACT  : logentry,"test eventvalues: 0:1 1:1 2:2 3:3 4:4 5:5 6:6"
-  186509 : Info   : test eventvalues: 0:1 1:1 2:2 3:3 4:4 5:5 6:6
+ 572832 : Info   : EVENT: eventvalues=1,2,3,4,5,6
+ 572840 : Info   : ACT  : logentry,"test eventvalues: 0:1 1:1 2:2 3:3 4:4 5:5 6:6"
+ 572843 : Info   : test eventvalues: 0:1 1:1 2:2 3:3 4:4 5:5 6:6
+ 572845 : Info   : ACT  : logentry,"All eventvalues: 1,2,3,4,5,6"
+ 572847 : Info   : All eventvalues: 1,2,3,4,5,6
 
 .. note::
   This can use strings as well as numericals.  To match events with string values, one must include the wildcard (``*``) as it will otherwise not be matched since there is a check for numerical values.
