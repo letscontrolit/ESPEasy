@@ -540,7 +540,6 @@ void parse_string_commands(String& line) {
   }
 }
 
-
 void substitute_eventvalue(String& line, const String& event) {
   if (substitute_eventvalue_CallBack_ptr != nullptr) {
     substitute_eventvalue_CallBack_ptr(line, event);
@@ -559,12 +558,15 @@ void substitute_eventvalue(String& line, const String& event) {
       if (equalsPos > 0) {
         argString = event.substring(equalsPos + 1);
       }
+
       // Replace %eventvalueX% with the actual value of the event.
       // For compatibility reasons also replace %eventvalue%  (argc = 0)
       line.replace(F("%eventvalue%"), F("%eventvalue1%"));
       int eventvalue_pos = line.indexOf(F("%eventvalue"));
+
       while (eventvalue_pos != -1) {
         const int percent_pos = line.indexOf('%', eventvalue_pos + 1);
+
         if (percent_pos == -1) {
           // Found "%eventvalue" without closing %
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -572,30 +574,44 @@ void substitute_eventvalue(String& line, const String& event) {
           }
           line.replace(F("%eventvalue"), F(""));
         } else {
-          int argc = line.substring(eventvalue_pos + 11, percent_pos).toInt();
+          const String nr         = line.substring(eventvalue_pos + 11, percent_pos);
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
-          if (argc <= 0) {
-            // Replace %eventvalue0% with the entire list of arguments.
-            line.replace(
-              eventvalue, 
-              argc == 0 ? argString : EMPTY_STRING);
-          } else {
-            String tmpParam;
+          int argc                = -1;
 
-            if (!GetArgv(argString.c_str(), tmpParam, argc)) {
-              // FIXME TD-er: Must add some default value for non existing values
-              // Now just replace it with "0"
-              tmpParam = '0';
+          if (nr.equals(F("0"))) {
+            // Replace %eventvalue0% with the entire list of arguments.
+            line.replace(eventvalue, argString);
+          } else {
+            argc = nr.toInt();
+            
+            // argc will be 0 on invalid int (0 was already handled)
+            if (argc > 0) {
+              String tmpParam;
+
+              if (!GetArgv(argString.c_str(), tmpParam, argc)) {
+                // FIXME TD-er: Must add some default value for non existing values
+                // Now just replace it with "0"
+                tmpParam = '0';
+              }
+              line.replace(eventvalue, tmpParam);
+            } else {
+              // Just remove the invalid eventvalue variable
+              if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                String log = F("Rules : Syntax error, invalid variable: ");
+                log += eventvalue;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
+              line.replace(eventvalue, EMPTY_STRING);
             }
-            line.replace(eventvalue, tmpParam);
           }
         }
         eventvalue_pos = line.indexOf(F("%eventvalue"));
       }
 
-      if (line.indexOf(F("%eventname%")) != -1 || 
-          line.indexOf(F("%eventpar%")) != -1) {
+      if ((line.indexOf(F("%eventname%")) != -1) ||
+          (line.indexOf(F("%eventpar%")) != -1)) {
         const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
+
         // Replace %eventname% with the literal event
         line.replace(F("%eventname%"), eventName);
 
