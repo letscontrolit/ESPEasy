@@ -14,6 +14,9 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-18
+// ADD: Setting and support for user defined contrast: oledframedcmd,display,user,contrast,precharge,comdetect (contrast, precharge and comdetect are integers)
+// CHG: setting for low contrast modified, low was invisible!
 // @uwekaditz: 2022-04-16
 // MSG: code reduced by 530 bytes to fit the build size for 'esp8266, normal_ESP8266_1M' (equal code put into functions)
 // @uwekaditz: 2022-04-15
@@ -1112,6 +1115,27 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
             if (sendEvents) {
               P036_SendEvent(event, P036_EVENT_CONTRAST, 2);
+
+              if (!P036_DisplayIsOn) {
+                P036_SendEvent(event, P036_EVENT_DISPLAY, 1);
+              }
+            }
+            # endif // ifdef P036_SEND_EVENTS
+            P036_SetDisplayOn(1); //  Save the fact that the display is now ON
+          }
+          if ((para1 == F("user")) &&
+            (event->Par2 >= 0) &&
+            (event->Par3 >= 0) &&
+            (event->Par4 >= 0)) {
+            String contrast = parseString(string, 4);
+            String precharge = parseString(string, 5);
+            String comdetect = parseString(string, 5);
+            success = true;
+            P036_data->display->setContrast(contrast.toInt(),precharge.toInt(),comdetect.toInt());
+            # ifdef P036_SEND_EVENTS
+
+            if (sendEvents) {
+              P036_SendEvent(event, P036_EVENT_CONTRAST, 3);
 
               if (!P036_DisplayIsOn) {
                 P036_SendEvent(event, P036_EVENT_DISPLAY, 1);

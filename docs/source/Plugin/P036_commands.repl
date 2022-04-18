@@ -12,6 +12,7 @@
         * ``low`` will dim the display to low.
         * ``med`` will dim the display to medium.
         * ``high`` will set the brightness to maximum.
+        * ``user`` will set the contrast, precharge and comdetect to user defined values.
 
         ","
         OLED displays will age quite fast, so it is not adviced to run them continously at max brightness.
@@ -21,6 +22,9 @@
         
         The display controller itself does support more brightness levels, but these are chosen to give noticable change in brightness levels and also to help in choosing the best values for the 2 brightness control registers.
         As there are 2 brightness control registers, there is some overlap in their range, but some combinations may lead to issues like coil whining noise or sometimes not even working displays as not all of these displays are wired to support both controls to be used.        
+
+        For the parameter of the user setting refer to the data sheet of the display.
+        An example for very low brightness with an user setting is ``<oledframedcmd,display,user,100,0,64>``.
         "
         "
         ``oledframedcmd,<line>,<text>``

@@ -230,7 +230,7 @@ void P036_data_struct::setContrast(uint8_t OLED_contrast) {
       display->displayOff();
       return;
     case P36_CONTRAST_LOW:
-      contrast = 10; precharge = 5; comdetect = 0;
+      contrast = P36_CONTRAST_LOW; precharge = 5; comdetect = 64;
       break;
     case P36_CONTRAST_MED:
       contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;

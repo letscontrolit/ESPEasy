@@ -43,7 +43,7 @@
 # define P036_IndicatorHeight   8
 
 # define P36_CONTRAST_OFF  0x01
-# define P36_CONTRAST_LOW  0x40
+# define P36_CONTRAST_LOW  0x70
 # define P36_CONTRAST_MED  0xCF
 # define P36_CONTRAST_HIGH 0xFF
 
