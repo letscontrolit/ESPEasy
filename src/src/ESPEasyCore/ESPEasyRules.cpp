@@ -540,34 +540,6 @@ void parse_string_commands(String& line) {
   }
 }
 
-void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
-{
-  String eventvalue;
-
-  eventvalue.reserve(16);
-  eventvalue = F("%eventvalue");
-
-  if (argc == 0) {
-    // Used for compatibility reasons
-    // it still needs to call the "1st" argument
-    argc = 1;
-  } else {
-    eventvalue += argc;
-  }
-  eventvalue += '%';
-  if (line.indexOf(eventvalue) == -1) {
-    // Not present in the line.
-    return;
-  }
-  String tmpParam;
-
-  if (!GetArgv(argString.c_str(), tmpParam, argc)) {
-    // FIXME TD-er: Must add some default value for non existing values
-    // Now just replace it with "0"
-    tmpParam = '0';
-  }
-  line.replace(eventvalue, tmpParam);
-}
 
 void substitute_eventvalue(String& line, const String& event) {
   if (substitute_eventvalue_CallBack_ptr != nullptr) {
@@ -585,15 +557,39 @@ void substitute_eventvalue(String& line, const String& event) {
       String argString;
 
       if (equalsPos > 0) {
-          argString = event.substring(equalsPos + 1);
+        argString = event.substring(equalsPos + 1);
       }
       // Replace %eventvalueX% with the actual value of the event.
       // For compatibility reasons also replace %eventvalue%  (argc = 0)
+      line.replace(F("%eventvalue%"), F("%eventvalue1%"));
       int eventvalue_pos = line.indexOf(F("%eventvalue"));
       while (eventvalue_pos != -1) {
         const int percent_pos = line.indexOf('%', eventvalue_pos + 1);
-        int argc = line.substring(eventvalue_pos + 11, percent_pos).toInt();
-        replace_EventValueN_Argv(line, argString, argc);
+        if (percent_pos == -1) {
+          // Found "%eventvalue" without closing %
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            addLog(LOG_LEVEL_ERROR, F("Rules : Syntax error, missing '%' in '%eventvalue%'"));
+          }
+          line.replace(F("%eventvalue"), F(""));
+        } else {
+          int argc = line.substring(eventvalue_pos + 11, percent_pos).toInt();
+          const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
+          if (argc <= 0) {
+            // Replace %eventvalue0% with the entire list of arguments.
+            line.replace(
+              eventvalue, 
+              argc == 0 ? argString : EMPTY_STRING);
+          } else {
+            String tmpParam;
+
+            if (!GetArgv(argString.c_str(), tmpParam, argc)) {
+              // FIXME TD-er: Must add some default value for non existing values
+              // Now just replace it with "0"
+              tmpParam = '0';
+            }
+            line.replace(eventvalue, tmpParam);
+          }
+        }
         eventvalue_pos = line.indexOf(F("%eventvalue"));
       }
 

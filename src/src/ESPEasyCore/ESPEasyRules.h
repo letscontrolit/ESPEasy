@@ -66,10 +66,6 @@ bool parse_math_functions(const String& cmd_s_lower,
 void parse_string_commands(String& line);
 
 
-void replace_EventValueN_Argv(String      & line,
-                              const String& argString,
-                              unsigned int  argc);
-
 void substitute_eventvalue(String      & line,
                            const String& event);
 
