@@ -1129,7 +1129,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             (event->Par4 >= 0)) {
             String contrast = parseString(string, 4);
             String precharge = parseString(string, 5);
-            String comdetect = parseString(string, 5);
+            String comdetect = parseString(string, 6);
             success = true;
             P036_data->display->setContrast(contrast.toInt(),precharge.toInt(),comdetect.toInt());
             # ifdef P036_SEND_EVENTS
