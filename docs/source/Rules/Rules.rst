@@ -424,7 +424,26 @@ Rules engine specific:
 ``%eventvalueN%`` - substitutes the event value (everything that comes after
 the '=' sign, up to four values are possible).
 
-Changed: 2022/04/17 Removed the limit of upto 4 event values.
+Changed: 2022/04/17 Removed the limit of upto 4 event values and using wildcard one may even use string eventvalues.
+
+Matching event named ``eventvalues`` to use more than 4 eventvalues:
+
+.. code-block:: none
+
+ on eventvalues* do
+  logentry,"test eventvalues: 0:%eventvalue% 1:%eventvalue1% 2:%eventvalue2% 3:%eventvalue3% 4:%eventvalue4% 5:%eventvalue5% 6:%eventvalue6%"
+ endon
+
+Test event:
+
+.. code-block:: none
+
+  186496 : Info   : EVENT: eventvalues=1,2,3,4,5,6
+  186506 : Info   : ACT  : logentry,"test eventvalues: 0:1 1:1 2:2 3:3 4:4 5:5 6:6"
+  186509 : Info   : test eventvalues: 0:1 1:1 2:2 3:3 4:4 5:5 6:6
+
+.. note::
+  This can use strings as well as numericals.  To match events with string values, one must include the wildcard (``*``) as it will otherwise not be matched since there is a check for numerical values.
 
 For historic reasons, ``%eventvalue%`` without a number, can also be used to access the first event value.
 Thus it will be the same when using ``%eventvalue1%``.
