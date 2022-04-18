@@ -213,7 +213,7 @@ bool getEventFromRulesLine(const String& line, String& event, String& action)
 
   // Make sure to skip any number of spaces between 'on' and the event.
   int startpos_event = 2;
-  while (line.length() > startpos_event && line[startpos_event] == ' ') {
+  while (static_cast<int>(line.length()) > startpos_event && line[startpos_event] == ' ') {
     ++startpos_event;
   }
 
