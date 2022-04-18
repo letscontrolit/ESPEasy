@@ -561,9 +561,12 @@ void replace_EventValueN_Argv(String& line, const String& argString, unsigned in
   }
   String tmpParam;
 
-  if (GetArgv(argString.c_str(), tmpParam, argc)) {
-    line.replace(eventvalue, tmpParam);
+  if (!GetArgv(argString.c_str(), tmpParam, argc)) {
+    // FIXME TD-er: Must add some default value for non existing values
+    // Now just replace it with "0"
+    tmpParam = '0';
   }
+  line.replace(eventvalue, tmpParam);
 }
 
 void substitute_eventvalue(String& line, const String& event) {
@@ -579,16 +582,19 @@ void substitute_eventvalue(String& line, const String& event) {
     } else {
       const int equalsPos = event.indexOf('=');
 
-      if (equalsPos > 0) {
-        {
-          // Replace %eventvalueX% with the actual value of the event.
-          // For compatibility reasons also replace %eventvalue%  (argc = 0)
-          String argString = event.substring(equalsPos + 1);
+      String argString;
 
-          for (unsigned int argc = 0; argc <= 4; ++argc) {
-            replace_EventValueN_Argv(line, argString, argc);
-          }
-        }
+      if (equalsPos > 0) {
+          argString = event.substring(equalsPos + 1);
+      }
+      // Replace %eventvalueX% with the actual value of the event.
+      // For compatibility reasons also replace %eventvalue%  (argc = 0)
+      int eventvalue_pos = line.indexOf(F("%eventvalue"));
+      while (eventvalue_pos != -1) {
+        const int percent_pos = line.indexOf('%', eventvalue_pos + 1);
+        int argc = line.substring(eventvalue_pos + 11, percent_pos).toInt();
+        replace_EventValueN_Argv(line, argString, argc);
+        eventvalue_pos = line.indexOf(F("%eventvalue"));
       }
 
       if (line.indexOf(F("%eventname%")) != -1 || 

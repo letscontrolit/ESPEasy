@@ -424,6 +424,8 @@ Rules engine specific:
 ``%eventvalueN%`` - substitutes the event value (everything that comes after
 the '=' sign, up to four values are possible).
 
+Changed: 2022/04/17 Removed the limit of upto 4 event values.
+
 For historic reasons, ``%eventvalue%`` without a number, can also be used to access the first event value.
 Thus it will be the same when using ``%eventvalue1%``.
 
