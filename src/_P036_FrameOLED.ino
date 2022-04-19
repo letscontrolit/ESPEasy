@@ -15,6 +15,10 @@
 // Al long as the device is not selected, no RAM is waisted.
 //
 // @uwekaditz: 2022-04-19
+// NEW: use the split token <|> to split lines into left and right part
+//      the split token is replaced by a number of space chars to fit the display width
+//      if the modified line is longer than the display width (even with only one space as replacement), the modified line will be scrolled, if line scrolling is enabled
+//      no need to use a special alignment for displaying the line left and right aligned
 // CHG: Setting for user defined contrast simplified (parse int from event->Par3..5)
 // @uwekaditz: 2022-04-18
 // ADD: Setting and support for user defined contrast: oledframedcmd,display,user,contrast,precharge,comdetect (contrast, precharge and comdetect are integers)

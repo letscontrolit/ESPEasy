@@ -1712,6 +1712,28 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
   String tmpString(LineContent->DisplayLinesV1[Counter].Content);
 
   ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, 20);
+
+  if (ScrollingPageLine->SPLcontent.length() > 0) {
+    int splitIdx = ScrollingPageLine->SPLcontent.indexOf("<|>"); // check for split token
+
+    if (splitIdx >= 0) {
+      // split line into left and right part
+      tmpString = ScrollingPageLine->SPLcontent;
+      tmpString.replace(F("<|>"), " ");                         // replace in tmpString the split token with one space char
+      display->setFont(FontSizes[LineSettings[Counter].fontIdx].fontData);
+      uint16_t pixlength = display->getStringWidth(tmpString);  // pixlength without split token but with one space char
+      tmpString = " ";
+      uint16_t charlength = display->getStringWidth(tmpString); // pix length for a space char
+      pixlength += charlength;
+
+      while (pixlength <= getDisplaySizeSettings(disp_resolution).Width) {
+        // add more space chars until pixlength of the final line is almost the display width
+        tmpString += " ";                                         // add another space char
+        pixlength += charlength;
+      }
+      ScrollingPageLine->SPLcontent.replace(F("<|>"), tmpString); // replace in final line the split token with space chars
+    }
+  }
   uint32_t iAlignment = 0;
 
   iAlignment =
