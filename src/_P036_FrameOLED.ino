@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-19
+// CHG: Setting for user defined contrast simplified (parse int from event->Par3..5)
 // @uwekaditz: 2022-04-18
 // ADD: Setting and support for user defined contrast: oledframedcmd,display,user,contrast,precharge,comdetect (contrast, precharge and comdetect are integers)
 // CHG: setting for low contrast modified, low was invisible!
@@ -1123,15 +1125,15 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
+
           if ((para1 == F("user")) &&
-            (event->Par2 >= 0) &&
-            (event->Par3 >= 0) &&
-            (event->Par4 >= 0)) {
-            String contrast = parseString(string, 4);
-            String precharge = parseString(string, 5);
-            String comdetect = parseString(string, 6);
+              (event->Par3 >= 1) && (event->Par3 <= 255) && // contrast
+              (event->Par4 >= 0) && (event->Par4 <= 255) && // precharge
+              (event->Par5 >= 0) && (event->Par5 <= 255))   // comdetect
+          {
             success = true;
-            P036_data->display->setContrast(contrast.toInt(),precharge.toInt(),comdetect.toInt());
+            P036_data->display->setContrast(static_cast<uint8_t>(event->Par3), static_cast<uint8_t>(event->Par4),
+                                            static_cast<uint8_t>(event->Par5));
             # ifdef P036_SEND_EVENTS
 
             if (sendEvents) {
