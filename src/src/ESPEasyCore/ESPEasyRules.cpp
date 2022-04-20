@@ -574,7 +574,17 @@ void substitute_eventvalue(String& line, const String& event) {
           }
           line.replace(F("%eventvalue"), F(""));
         } else {
-          const String nr         = line.substring(eventvalue_pos + 11, percent_pos);
+          // Find the optional part for a default value when the asked for eventvalue does not exist.
+          // Syntax: %eventvalueX|Y%
+          // With: X = event value nr, Y = default value when eventvalue does not exist.
+          String defaultValue('0');
+          int or_else_pos = line.indexOf('|', eventvalue_pos);
+          if (or_else_pos > percent_pos) {
+            or_else_pos = percent_pos;
+          } else {
+            defaultValue = line.substring(or_else_pos + 1, percent_pos);
+          }
+          const String nr         = line.substring(eventvalue_pos + 11, or_else_pos);
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
           int argc                = -1;
 
@@ -589,9 +599,8 @@ void substitute_eventvalue(String& line, const String& event) {
               String tmpParam;
 
               if (!GetArgv(argString.c_str(), tmpParam, argc)) {
-                // FIXME TD-er: Must add some default value for non existing values
-                // Now just replace it with "0"
-                tmpParam = '0';
+                // Replace with default value for non existing event values
+                tmpParam = parseTemplate(defaultValue);
               }
               line.replace(eventvalue, tmpParam);
             } else {

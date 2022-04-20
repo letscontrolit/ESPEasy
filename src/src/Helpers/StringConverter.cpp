@@ -526,7 +526,7 @@ String to_json_value(const String& value, bool wrapInQuotes) {
    Strip wrapping chars (e.g. quotes)
 \*********************************************************************************************/
 String stripWrappingChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
     return text.substring(1, length - 1);
@@ -535,12 +535,11 @@ String stripWrappingChar(const String& text, char wrappingChar) {
 }
 
 bool stringWrappedWithChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if (length < 2) { return false; }
-
-  if (text.charAt(0) != wrappingChar) { return false; }
-  return text.charAt(length - 1) == wrappingChar;
+  return (text.charAt(0) == wrappingChar) && 
+         (text.charAt(length - 1) == wrappingChar);
 }
 
 bool isQuoteChar(char c) {

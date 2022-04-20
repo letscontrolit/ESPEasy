@@ -421,12 +421,24 @@ Event value (%eventvalue%)
 
 Rules engine specific:
 
-``%eventvalueN%`` - substitutes the event value (everything that comes after
+``%eventvalueN%`` - substitutes the N-th event value (everything that comes after
 the '=' sign).
 
-Changed: 2022/04/17 Removed the limit of upto 4 event values and using wildcard one may even use string eventvalues.
+``%eventvalue%`` will be replaced by 
 
-Added: 2022/04/18 ``%eventvalue0%`` will be substituded with all event values.
+Changed/Added: 2022/04/20:
+
+* Removed the limit of upto 4 event values and using wildcard one may even use string eventvalues.
+* ``%eventvalue0%`` - will be substituded with all event values.
+* ``%eventvalueX%`` - will be substituded by ``0`` if there is no X-th event value.
+* ``%eventvalueX|Y%`` X = event value nr > 0, Y = default value when eventvalue does not exist. N.B. default value can be a string, thus ``%eventvalue3|[int#3]%`` should be possible as long as the default value not contains neither ``|`` nor ``%``.
+* Empty event values are now also possible. e.g. this event call with 6 event values: ``event,MyEvent=1,,3,4,,6``
+* Event values can now also be strings, just make sure to use the wildcard when matching the event name in the rules.
+
+.. note::
+  Be careful to only use event values as a parameter and not to substitute for commands.
+  e.g. ``event,myevent=%eventvalue100|factoryreset%`` might be considered tricky as there is no check on the source of such commands.
+  There is very likely no 100-th eventvalue, so this example will evaluate to ``factoryreset`` and that's not a command you want to execute.
 
 Matching event named ``eventvalues`` to use more than 4 eventvalues:
 
@@ -455,6 +467,24 @@ Thus it will be the same when using ``%eventvalue1%``.
 
 There is one exception; When the event starts with an ``!``,  ``%eventvalue%`` does refer to the literal event, or the part of the event after the ``#`` character.
 This was introduced for the Serial Server plugin (P020) which sends events like ``!Serial#`` followed by the received string.
+
+
+Using default value for non-existing event values:
+
+.. code-block:: none
+
+ on eventvalues* do
+   logentry,"Not existing eventvalue: %eventvalue10|NaN%"
+ endon
+
+Log output for ``event,eventvalues=1,2, ,4,5,6`` :
+
+.. code-block:: none
+
+ 1086458 : Info   : EVENT: eventvalues=1,2, ,4,5,6
+ 1086484 : Info   : ACT  : logentry,"Not existing eventvalue: NaN"
+ 1086485 : Info   : Not existing eventvalue: NaN
+
 
 Sample rules section:
 
