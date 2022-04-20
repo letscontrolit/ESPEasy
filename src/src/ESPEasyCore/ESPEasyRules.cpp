@@ -662,6 +662,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     return;
   }
 
+  const bool lineStartsWith_pct_event = line.startsWith(F("%event"));;
 
   isCommand = true;
 
@@ -720,6 +721,15 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     #else
     action = std::move(line);
     #endif
+  }
+
+  if (isCommand && lineStartsWith_pct_event) {
+    action = String(F("restrict,")) + action;
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("Rules : Prefix command with 'restrict': ");
+      log += action;
+      addLogMove(LOG_LEVEL_ERROR, log);
+    }
   }
 
 #ifndef BUILD_NO_DEBUG
@@ -858,13 +868,19 @@ void processMatchedRule(String& action, const String& event,
   if (isCommand) {
     substitute_eventvalue(action, event);
 
+    const bool executeRestricted = parseString(action, 1).equals(F("restrict"));
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String actionlog = F("ACT  : ");
+      String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");
       actionlog += action;
       addLogMove(LOG_LEVEL_INFO, actionlog);
     }
 
-    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
+    if (executeRestricted) {
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2).c_str());
+    } else {
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
+    }
     delay(0);
   }
 }

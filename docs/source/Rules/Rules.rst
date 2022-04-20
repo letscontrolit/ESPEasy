@@ -434,11 +434,13 @@ Changed/Added: 2022/04/20:
 * ``%eventvalueX|Y%`` X = event value nr > 0, Y = default value when eventvalue does not exist. N.B. default value can be a string, thus ``%eventvalue3|[int#3]%`` should be possible as long as the default value not contains neither ``|`` nor ``%``.
 * Empty event values are now also possible. e.g. this event call with 6 event values: ``event,MyEvent=1,,3,4,,6``
 * Event values can now also be strings, just make sure to use the wildcard when matching the event name in the rules.
+* Add option to restrict which commands can be executed using the ``restrict`` command prefix, to safely execute commands handed via eventvalues.
 
 .. note::
   Be careful to only use event values as a parameter and not to substitute for commands.
   e.g. ``event,myevent=%eventvalue100|factoryreset%`` might be considered tricky as there is no check on the source of such commands.
   There is very likely no 100-th eventvalue, so this example will evaluate to ``factoryreset`` and that's not a command you want to execute.
+  If you need to pass commands via events, then prefix those in the rules like this: ``restrict %eventvalue1|%``
 
 Matching event named ``eventvalues`` to use more than 4 eventvalues:
 
