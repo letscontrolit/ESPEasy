@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-21
+// FIX: last frame was not shown (frameCounter check was wrong)
 // @uwekaditz: 2022-04-19
 // NEW: use the split token <|> to split lines into left and right part
 //      the split token is replaced by a number of space chars to fit the display width

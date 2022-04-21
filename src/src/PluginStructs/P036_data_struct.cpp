@@ -1396,7 +1396,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
         // Increment the frame counter
         frameCounter++;
 
-        if (frameCounter > NFrames - 1) {
+        if (frameCounter > NFrames) {
           frameCounter          = 0;
           currentFrameToDisplay = 0;
         }
