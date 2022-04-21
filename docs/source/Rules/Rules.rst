@@ -424,7 +424,12 @@ Rules engine specific:
 ``%eventvalueN%`` - substitutes the N-th event value (everything that comes after
 the '=' sign).
 
-``%eventvalue%`` will be replaced by 
+For historic reasons, ``%eventvalue%`` without a number, can also be used to access the first event value.
+Thus it will be the same when using ``%eventvalue1%``.
+
+There is one exception; When the event starts with an ``!``,  ``%eventvalue%`` does refer to the literal event, or the part of the event after the ``#`` character.
+This was introduced for the Serial Server plugin (P020) which sends events like ``!Serial#`` followed by the received string.
+
 
 Changed/Added: 2022/04/20:
 
@@ -436,11 +441,51 @@ Changed/Added: 2022/04/20:
 * Event values can now also be strings, just make sure to use the wildcard when matching the event name in the rules.
 * Add option to restrict which commands can be executed using the ``restrict`` command prefix, to safely execute commands handed via eventvalues.
 
+Using Event Values as command
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2022/04/20
+
+With the possibility to use strings as event values, one can also use it to send complete commands via events.
+
+To execute an event value as a command, it is best to also set an empty string as default value, for when the event is called without event values.
+If no empty default value is given, it will be replaced by ``0`` , which is not a valid command in ESPEasy.
+
+e.g. This event: ``event,eventvalues='logentry,test'``
+
+.. code-block:: none
+
+ on eventvalues* do
+   %eventvalue1|%
+ endon
+
+Log output:
+
+.. code-block:: none
+
+ 11233271 : Info   : EVENT: eventvalues='logentry,test'
+ 11233280 : Error  : Rules : Prefix command with 'restrict': restrict,logentry,test
+ 11233283 : Info   : ACT  : (restricted) restrict,logentry,test
+ 11233285 : Info   : test
+
+As can be seen, the rules parser will try to prefix lines starting with ``eventvalue`` 
+with the ``restrict`` attribute, and log an error to warn the user about this.
+
+This ``restrict`` attribute will not allow all commands to be executed.
+By default, there are no restrictions on which commands can be executed via rules.
+However, when handling events, the intentions of the sender may not always be honest.
+
+For example, ``event,myevent=%eventvalue100|factoryreset%`` might be considered tricky.
+
+As there is very likely no 100-th eventvalue, so this example will evaluate to ``factoryreset`` and that's not a command you want to execute.
+
 .. note::
-  Be careful to only use event values as a parameter and not to substitute for commands.
-  e.g. ``event,myevent=%eventvalue100|factoryreset%`` might be considered tricky as there is no check on the source of such commands.
-  There is very likely no 100-th eventvalue, so this example will evaluate to ``factoryreset`` and that's not a command you want to execute.
-  If you need to pass commands via events, then prefix those in the rules like this: ``restrict %eventvalue1|%``
+
+  Be careful when using event values as a command. Always use the ``restrict`` attribute.
+  
+
+Examples
+^^^^^^^^
 
 Matching event named ``eventvalues`` to use more than 4 eventvalues:
 
@@ -463,12 +508,6 @@ Log output of a test event:
 
 .. note::
   This can use strings as well as numericals.  To match events with string values, one must include the wildcard (``*``) as it will otherwise not be matched since there is a check for numerical values.
-
-For historic reasons, ``%eventvalue%`` without a number, can also be used to access the first event value.
-Thus it will be the same when using ``%eventvalue1%``.
-
-There is one exception; When the event starts with an ``!``,  ``%eventvalue%`` does refer to the literal event, or the part of the event after the ``#`` character.
-This was introduced for the Serial Server plugin (P020) which sends events like ``!Serial#`` followed by the received string.
 
 
 Using default value for non-existing event values:
