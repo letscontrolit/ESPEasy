@@ -1228,6 +1228,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P115
      #define USES_P115   // Fuel Gauge MAX1704x
    #endif
+   #ifndef USES_P132
+     #define USES_P132   // INA3221
+   #endif
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
@@ -1525,7 +1528,7 @@ To create/register a plugin, you have to :
 //    #define USES_P131   //
   #endif
   #ifndef USES_P132
-//    #define USES_P132   //
+    #define USES_P132   // INA3221
   #endif
   #ifndef USES_P133
 //    #define USES_P133   //
