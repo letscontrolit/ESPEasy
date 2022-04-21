@@ -43,9 +43,13 @@ The plugin allows for a header and footer line, which may show some user selecta
 
 Checkbox 'Wake display on receiving text' (default: on) allows to not wake up the display when a text is sent from a remote source, and Display Timeout is set.
 
+'Align content (global)' can be used to align all lines, but there are also individual align and font settings for each line. 
+
 All user defined texts may contain references to system variables or task values which will be interpreted when displayed on screen.
 
 For example: ``[bme#T#D2.1] {D}C [bme#H]%``
+
+The user defined texts may also contain a split token '<|>' to display the line splitted, one part on the left the other one on the right side of the display.
 
 Depending on the build used (NORMAL and CUSTOM), an option to generate events can be set, that will generate an event if the display is turned on or off, the contrast setting is changed, a new frame is shown, the number of lines per frame is changed or a line is updated using the ``oledframedcmd,<line>,<text>`` command.
 

@@ -33,6 +33,7 @@
 
         The <text> parameter must be a single command parameter. 
         Meaning, it must be wrapped in quotes when using a space or comma as text.
+        A split token ``<|>`` can be used to display the line splitted, one part on the left the other one on the right side of the display.
 
         If double quote characters are needed, wrap the parameter in single quotes or back quotes.
 
