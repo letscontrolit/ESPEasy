@@ -570,7 +570,11 @@ void substitute_eventvalue(String& line, const String& event) {
         if (percent_pos == -1) {
           // Found "%eventvalue" without closing %
           if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            addLog(LOG_LEVEL_ERROR, F("Rules : Syntax error, missing '%' in '%eventvalue%'"));
+            String log = F("Rules : Syntax error, missing '%' in '%eventvalue%': '");
+            log += line;
+            log += F("' %-pos: ");
+            log += percent_pos;
+            addLog(LOG_LEVEL_ERROR, log);
           }
           line.replace(F("%eventvalue"), F(""));
         } else {
@@ -582,7 +586,9 @@ void substitute_eventvalue(String& line, const String& event) {
           if (or_else_pos > percent_pos) {
             or_else_pos = percent_pos;
           } else {
-            defaultValue = line.substring(or_else_pos + 1, percent_pos);
+            if (or_else_pos != -1) {
+              defaultValue = line.substring(or_else_pos + 1, percent_pos);
+            }
           }
           const String nr         = line.substring(eventvalue_pos + 11, or_else_pos);
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
