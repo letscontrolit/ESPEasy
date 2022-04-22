@@ -1,0 +1,70 @@
+.. csv-table::
+  :header: "Command", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``pcapwm,<pcagpio>,<value>[,<duration>]``
+
+  ``[<taskname>].pwm,<pcagpio>,<value>[,<duration>]``
+
+  pcagpio: 0 ... 255
+
+  value: 0 ... 4096
+
+  duration: 100 ... 15000 msec (optional)
+
+  ","
+  **To set a certain PWM level.**
+  If you have set a certain pcagpio to a PWM level and want to use it as a regular HIGH/LOW pin you need to reset by setting the PWM level to 0.
+
+  Duration (in msec) parameter will create a fading.
+  Value of 0 will not set a duration.
+
+  Next to the ``pcapwm`` command, also the ``pwm`` command can be used, but then it *must* be prefixed with the taskname, optionally in square brackets, and a period.
+  "
+  "
+  ``[<taskname>].gpio,<pcagpio>,<value>``
+
+  pcagpio: 0 ... 255/all
+
+  value: 0/1
+  ","
+  **To set 1 or all pins to on or off.** 
+
+  The ``gpio`` command *must* be prefixed with the taskname, optionally in square brackets, and a period.
+  "
+  "
+  ``[<taskname>].pulse,<pcagpio>,<value>,<duration>[,<resettimeout>|auto]``
+
+  pcagpio: 0 ... 255
+
+  value: 0/1
+
+  duration: 100 ... 15000 msec
+
+  resettimeout: (todo) when 'auto' is used, the reset is infinite. (todo) (optional)
+  ","
+  **To set a pin temporarily to on or off for duration msec. with optional reset option.**
+
+  (todo)
+
+  The ``pulse`` command *must* be prefixed with the taskname, optionally in square brackets, and a period.
+  "
+  "
+  ``pcafrq,<frequency>``
+
+  ``[<taskname>].frq,<frequency>``
+
+  frequency: 23 ... 1500
+  ","
+  **Set the chip to the frequency specified**, in the MODE2 setting configured.
+
+  Next to the ``pcafrq`` command, also the ``frq`` command can be used, but then it *must* be prefixed with the taskname, optionally in square brackets, and a period.
+  "
+  "
+  ``mode2,<mode>``
+
+  mode: 0 ... 32
+  ","
+  **Set the MODE2 configuration in the chip** (not in the Device Configuration), using the frequency setting as configured.
+  "
