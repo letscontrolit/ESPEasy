@@ -345,8 +345,6 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
   bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
-  mqtt_last_connect_attempt.setNow();
-
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
