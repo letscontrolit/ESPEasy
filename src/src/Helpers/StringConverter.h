@@ -140,7 +140,9 @@ String wrapIfContains(const String& value,
                       char          contains,
                       char          wrap = '\"');
 
-String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text, bool ignoreSeparatorChars = false);
+String wrapWithQuotes(const String& text);
+
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text);
 
 /*********************************************************************************************\
    Format an object value pair for use in JSON.

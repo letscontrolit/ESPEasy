@@ -465,22 +465,29 @@ String wrapIfContains(const String& value, char contains, char wrap) {
   return value;
 }
 
-String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text, bool ignoreSeparatorChars) {
+String wrapWithQuotes(const String& text) {
   if (isWrappedWithQuotes(text)) {
     return text;
   }
-  if (ignoreSeparatorChars || stringContainsSeparatorChar(text)) {
-    // Try to find unused quote char and wrap
-    char quotechar = '_';
-    if (!findUnusedQuoteChar(text, quotechar)) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        String log = F("No unused quote to wrap: _");
-        log += text;
-        log += '_';
-        addLogMove(LOG_LEVEL_ERROR, log);
-      }
+  // Try to find unused quote char and wrap
+  char quotechar = '_';
+  if (!findUnusedQuoteChar(text, quotechar)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("No unused quote to wrap: _");
+      log += text;
+      log += '_';
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
-    return wrap_String(text, quotechar);
+  }
+  return wrap_String(text, quotechar);
+}
+
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  if (stringContainsSeparatorChar(text)) {
+    return wrapWithQuotes(text);
   }
   return text;
 }
