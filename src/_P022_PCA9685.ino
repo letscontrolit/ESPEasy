@@ -220,10 +220,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         log += String(address, HEX);
         log += F(": PWM ");
         log += event->Par1;
+        const uint32_t dutyCycle       = event->Par2;
+        const uint32_t fadeDuration_ms = event->Par3;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
-          if ((event->Par2 >= 0) && (event->Par2 <= range))
+          if ((dutyCycle >= 0) && (dutyCycle <= range))
           {
             if (!P022_data->p022_is_init(address))
             {
@@ -231,17 +233,49 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
               P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
               P022_data->Plugin_022_Frequency(address, freq);
             }
-            P022_data->Plugin_022_Write(address, event->Par1, map(event->Par2, 0, range, 0, PCA9685_MAX_PWM));
 
             // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
             portStatusStruct newStatus;
             const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
 
             // WARNING: operator [] creates an entry in the map if key does not exist
-            newStatus         = globalMapPortStatus[key];
-            newStatus.command = 1;
-            newStatus.mode    = PIN_MODE_PWM;
-            newStatus.state   = event->Par2;
+            newStatus = globalMapPortStatus[key];
+
+            // Code 'borrowed' from set_Gpio_PWM() in Hardware.cpp, keeping variable names
+            if (fadeDuration_ms != 0)
+            {
+              const int32_t resolution_factor = (1 << 12);
+              const uint8_t prev_mode         = newStatus.mode;
+              int32_t prev_value              = newStatus.getDutyCycle();
+
+              // getPinState(pluginID, gpio, &prev_mode, &prev_value);
+              if (prev_mode != PIN_MODE_PWM) {
+                prev_value = 0;
+              }
+
+              const int32_t step_value = ((static_cast<int32_t>(dutyCycle) - prev_value) * resolution_factor) /
+                                         static_cast<int32_t>(fadeDuration_ms);
+              int32_t curr_value = prev_value * resolution_factor;
+
+              log += F(", fade: ");
+              log += fadeDuration_ms;
+              log += F("ms");
+
+              int i = fadeDuration_ms;
+
+              while (i--) {
+                curr_value += step_value;
+                const int16_t new_value = curr_value / resolution_factor;
+
+                P022_data->Plugin_022_Write(address, event->Par1, map(new_value, 0, range, 0, PCA9685_MAX_PWM));
+                delay(1);
+              }
+            }
+            P022_data->Plugin_022_Write(address, event->Par1, map(dutyCycle, 0, range, 0, PCA9685_MAX_PWM));
+
+            newStatus.command   = 1;
+            newStatus.mode      = PIN_MODE_PWM;
+            newStatus.dutyCycle = dutyCycle; // state was the wrong field...
             savePortStatus(key, newStatus);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
