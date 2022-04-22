@@ -9,6 +9,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 
@@ -45,6 +46,12 @@ void backgroundtasks()
   {
     return;
   }
+
+  // Rate limit calls to run backgroundtasks
+  static uint32_t lastRunBackgroundTasks = 0;
+  if (timePassedSince(lastRunBackgroundTasks) < 5) return;
+  lastRunBackgroundTasks = millis();
+
   START_TIMER
   #ifdef FEATURE_MDNS
   const bool networkConnected = NetworkConnected();
