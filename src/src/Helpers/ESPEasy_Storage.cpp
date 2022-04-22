@@ -164,8 +164,8 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
-    bool res = ESPEASY_FS.remove(patch_fname(fname));
     clearAllCaches();
+    bool res = ESPEASY_FS.remove(patch_fname(fname));
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.

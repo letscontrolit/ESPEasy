@@ -59,6 +59,8 @@ struct LabelType {
 
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
+    ENABLE_RULES_CACHING,
+    ENABLE_RULES_EVENT_REORDER,
     TASKVALUESET_ALL_PLUGINS,
     ENABLE_CLEAR_HUNG_I2C_BUS,
 #ifndef BUILD_NO_RAM_TRACKER
@@ -211,6 +213,7 @@ String getFileName(FileType::Enum filetype,
 
 // filenr = 0...3 for files rules1.txt ... rules4.txt
 String getRulesFileName(unsigned int filenr);
+
 void   addDownloadFiletypeCheckbox(FileType::Enum filetype,
                                    unsigned int   filenr = 0);
 void   storeDownloadFiletypeCheckbox(FileType::Enum filetype,
