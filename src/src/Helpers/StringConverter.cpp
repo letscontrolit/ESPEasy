@@ -465,11 +465,11 @@ String wrapIfContains(const String& value, char contains, char wrap) {
   return value;
 }
 
-String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text, bool ignoreSeparatorChars) {
   if (isWrappedWithQuotes(text)) {
     return text;
   }
-  if (stringContainsSeparatorChar(text)) {
+  if (ignoreSeparatorChars || stringContainsSeparatorChar(text)) {
     // Try to find unused quote char and wrap
     char quotechar = '_';
     if (!findUnusedQuoteChar(text, quotechar)) {
