@@ -9,6 +9,7 @@
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../ESPEasyCore/Controller.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
