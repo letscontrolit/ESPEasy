@@ -257,7 +257,7 @@ class OLEDDisplay : public Print {
     OLEDDISPLAY_TEXT_ALIGNMENT   textAlignment = TEXT_ALIGN_LEFT;
     OLEDDISPLAY_COLOR            color         = WHITE;
 
-    const char          *fontData              = ArialMT_Plain_10;
+    const char          *fontData              = getArialMT_Plain_10();
 
     // State values for logBuffer
     uint16_t   logBufferSize                   = 0;
