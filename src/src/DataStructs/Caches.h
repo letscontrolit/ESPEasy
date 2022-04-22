@@ -4,6 +4,7 @@
 #include <map>
 #include "../../ESPEasy_common.h"
 #include "../Globals/Plugins.h"
+#include "../Helpers/RulesHelper.h"
 
 typedef std::map<String, taskIndex_t> TaskIndexNameMap;
 typedef std::map<String, uint8_t>     TaskIndexValueNameMap;
@@ -19,6 +20,7 @@ struct Caches {
   TaskIndexNameMap      taskIndexName;
   TaskIndexValueNameMap taskIndexValueName;
   FilePresenceMap       fileExistsMap;  // Filesize. -1 if not present
+  RulesHelperClass      rulesHelper;
   bool                  activeTaskUseSerial0 = false;
 };
 

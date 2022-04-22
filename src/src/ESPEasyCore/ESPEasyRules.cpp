@@ -5,6 +5,7 @@
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/Serial.h"
+#include "../Globals/Cache.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
@@ -17,6 +18,8 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/Rules_calculate.h"
+#include "../Helpers/RulesHelper.h"
+#include "../Helpers/RulesMatcher.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
@@ -27,7 +30,6 @@
 #include <math.h>
 #include <vector>
 
-boolean activeRuleSets[RULESETS_MAX];
 
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
@@ -60,32 +62,7 @@ String FileNameToEvent(const String& fileName) {
 }
 
 void checkRuleSets() {
-  for (uint8_t x = 0; x < RULESETS_MAX; x++) {
-#if defined(ESP8266)
-    String fileName = F("rules");
-#endif // if defined(ESP8266)
-#if defined(ESP32)
-    String fileName = F("/rules");
-#endif // if defined(ESP32)
-    fileName += x + 1;
-    fileName += F(".txt");
-
-    if (fileExists(fileName)) {
-      activeRuleSets[x] = true;
-    }
-    else {
-      activeRuleSets[x] = false;
-    }
-
-#ifndef BUILD_NO_DEBUG
-
-    if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
-      serialPrint(fileName);
-      serialPrint(" ");
-      serialPrintln(String(activeRuleSets[x] ? 0 : 1));
-    }
-#endif // ifndef BUILD_NO_DEBUG
-  }
+  Cache.rulesHelper.closeAllFiles();
 }
 
 /********************************************************************************************\
@@ -119,7 +96,7 @@ void rulesProcessing(const String& event) {
   checkRAM(F("rulesProcessing"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
-  unsigned long timer = millis();
+  const unsigned long timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -129,9 +106,18 @@ void rulesProcessing(const String& event) {
   }
 
   if (Settings.OldRulesEngine()) {
-    for (uint8_t x = 0; x < RULESETS_MAX; x++) {
-      if (activeRuleSets[x]) {
-        rulesProcessingFile(getRulesFileName(x), event);
+    bool eventHandled = false;
+
+    if (Settings.EnableRulesCaching()) {
+      String filename;
+      size_t pos = 0;
+      if (Cache.rulesHelper.findMatchingRule(event, filename, pos)) {
+        const bool startOnMatched = true; // We already matched the event
+        eventHandled = rulesProcessingFile(filename, event, pos, startOnMatched);
+      }
+    } else {
+      for (uint8_t x = 0; x < RULESETS_MAX && !eventHandled; x++) {
+        eventHandled = rulesProcessingFile(getRulesFileName(x), event);
       }
     }
   } else {
@@ -170,9 +156,12 @@ void rulesProcessing(const String& event) {
 /********************************************************************************************\
    Rules processing
  \*********************************************************************************************/
-String rulesProcessingFile(const String& fileName, const String& event) {
+bool rulesProcessingFile(const String& fileName, 
+                         const String& event, 
+                         size_t pos,
+                         bool   startOnMatched) {
   if (!Settings.UseRules || !fileExists(fileName)) {
-    return EMPTY_STRING;
+    return false;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile"));
@@ -193,16 +182,10 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
     addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
     nestingLevel--;
-    return EMPTY_STRING;
+    return false;
   }
 
-  fs::File f = tryOpenFile(fileName, "r+");
-  SPIFFS_CHECK(f, fileName.c_str());
 
-  // Try to get the best possible estimate on line length based on earlier parsing of the rules.
-  static size_t longestLineSize = RULES_BUFFER_SIZE;
-  String line;
-  line.reserve(longestLineSize);
   bool match     = false;
   bool codeBlock = false;
   bool isCommand = false;
@@ -211,163 +194,53 @@ String rulesProcessingFile(const String& fileName, const String& event) {
   uint8_t ifBlock     = 0;
   uint8_t fakeIfBlock = 0;
 
-  std::vector<uint8_t> buf;
-  buf.resize(RULES_BUFFER_SIZE);
 
-  bool firstNonSpaceRead = false;
-  bool commentFound      = false;
+  bool moreAvailable = true;
+  bool eventHandled = false;
+  while (moreAvailable && !eventHandled) {
+    const bool searchNextOnBlock = !codeBlock && !match;
+    String line = Cache.rulesHelper.readLn(fileName, pos, moreAvailable, searchNextOnBlock);
 
-  while (f.available()) {
-    int len = f.read(&buf[0], RULES_BUFFER_SIZE);
-
-    for (int x = 0; x < len; x++) {
-      int data = buf[x];
-
-      switch (static_cast<char>(data))
-      {
-        case '\n':
-        {
-          // Line end, parse rule
-          line.trim();
-          check_rules_line_user_errors(line);
-          const size_t lineLength = line.length();
-
-          if (lineLength > longestLineSize) {
-            longestLineSize = lineLength;
-          }
-
-          if ((lineLength > 0) && !line.startsWith(F("//"))) {
-            // Parse the line and extract the action (if there is any)
-            String action;
-            parseCompleteNonCommentLine(line, event, action, match, codeBlock,
-                                        isCommand, condition, ifBranche, ifBlock,
-                                        fakeIfBlock);
-
-            if (match) // rule matched for one action or a block of actions
-            {
-              processMatchedRule(action, event, match, codeBlock,
-                                 isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
-            }
-
-            backgroundtasks();
-          }
-
-          // Prepare for new line
-          line.clear();
-          line.reserve(longestLineSize);
-          firstNonSpaceRead = false;
-          commentFound      = false;
-          break;
-        }
-        case '\r': // Just skip this character
-          break;
-        case '\t': // tab
-        case ' ':  // space
-        {
-          // Strip leading spaces.
-          if (firstNonSpaceRead) {
-            line += ' ';
-          }
-          break;
-        }
-        case '/':
-        {
-          if (!commentFound) {
-            line += '/';
-
-            if (line.endsWith(F("//"))) {
-              // consider the rest of the line a comment
-              commentFound = true;
-            }
-          }
-          break;
-        }
-        default: // Any other character
-        {
-          firstNonSpaceRead = true;
-
-          if (!commentFound) {
-            line += char(data);
-          }
-          break;
-        }
+    // Parse the line and extract the action (if there is any)
+    String action;
+    {
+      START_TIMER
+      const bool matched_before_parse = match;
+      parseCompleteNonCommentLine(line, event, action, match, codeBlock,
+                                  isCommand, condition, ifBranche, ifBlock,
+                                  fakeIfBlock, startOnMatched);
+      if (matched_before_parse && !match) {
+        // We were processing a matching event and now crossed the "endon"
+        // So we're done processing
+        eventHandled = true;
+        backgroundtasks();
       }
+      STOP_TIMER(RULES_PARSE_LINE);
+    }
+
+    if (match) // rule matched for one action or a block of actions
+    {
+      START_TIMER
+      processMatchedRule(action, event, match, codeBlock,
+                          isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
+      STOP_TIMER(RULES_PROCESS_MATCHED);
     }
   }
 
+/*
   if (f) {
     f.close();
   }
+*/
 
   nestingLevel--;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("rulesProcessingFile2"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  return EMPTY_STRING;
+  backgroundtasks();
+  return eventHandled; // && nestingLevel == 0;
 }
 
-/********************************************************************************************\
-   Strip comment from the line.
-   Return true when comment was stripped.
- \*********************************************************************************************/
-bool rules_strip_trailing_comments(String& line)
-{
-  // Strip trailing comments
-  int comment = line.indexOf(F("//"));
-
-  if (comment >= 0) {
-    line = line.substring(0, comment);
-    line.trim();
-    return true;
-  }
-  return false;
-}
-
-/********************************************************************************************\
-   Test for common mistake
-   Return true if mistake was found (and corrected)
- \*********************************************************************************************/
-bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
-{
-  if (line.indexOf(from) == -1) {
-    return false; // Nothing replaced
-  }
-
-  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    String log;
-    if (log.reserve(32 + from.length() + to.length() + line.length())) {
-      log  = F("Rules (Syntax Error, auto-corrected): '");
-      log += from;
-      log += F("' => '");
-      log += to;
-      log += F("' in: '");
-      log += line;
-      log += '\'';
-      addLogMove(LOG_LEVEL_ERROR, log);
-    }
-  }
-  line.replace(from, to);
-  return true;
-}
-
-/********************************************************************************************\
-   Check for common mistakes
-   Return true if nothing strange found
- \*********************************************************************************************/
-bool check_rules_line_user_errors(String& line)
-{
-  bool res = true;
-
-  if (rules_replace_common_mistakes(F("if["), F("if ["), line)) {
-    res = false;
-  }
-
-  if (rules_replace_common_mistakes(F("if%"), F("if %"), line)) {
-    res = false;
-  }
-
-  return res;
-}
 
 /********************************************************************************************\
    Parse string commands
@@ -554,6 +427,8 @@ void parse_string_commands(String& line) {
   int startIndex = 0;
   int closingIndex;
 
+  bool mustReplaceMaskedChars = false;
+
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
     const String fullCommand = line.substring(startIndex + 1, closingIndex);
@@ -643,6 +518,7 @@ void parse_string_commands(String& line) {
         replacement = line.substring(startIndex, closingIndex + 1);
         replacement.replace('{', static_cast<char>(0x02));
         replacement.replace('}', static_cast<char>(0x03));
+        mustReplaceMaskedChars = true;
       }
 
       // Replace the full command including opening and closing brackets.
@@ -656,31 +532,11 @@ void parse_string_commands(String& line) {
     }
   }
 
-  // We now have to check if we did mask some parts and unmask them.
-  // Let's hope we don't mess up any Unicode here.
-  line.replace(static_cast<char>(0x02), '{');
-  line.replace(static_cast<char>(0x03), '}');
-}
-
-void replace_EventValueN_Argv(String& line, const String& argString, unsigned int argc)
-{
-  String eventvalue;
-
-  eventvalue.reserve(16);
-  eventvalue = F("%eventvalue");
-
-  if (argc == 0) {
-    // Used for compatibility reasons
-    // it still needs to call the "1st" argument
-    argc = 1;
-  } else {
-    eventvalue += argc;
-  }
-  eventvalue += '%';
-  String tmpParam;
-
-  if (GetArgv(argString.c_str(), tmpParam, argc)) {
-    line.replace(eventvalue, tmpParam);
+  if (mustReplaceMaskedChars) {
+    // We now have to check if we did mask some parts and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    line.replace(static_cast<char>(0x02), '{');
+    line.replace(static_cast<char>(0x03), '}');
   }
 }
 
@@ -689,22 +545,94 @@ void substitute_eventvalue(String& line, const String& event) {
     substitute_eventvalue_CallBack_ptr(line, event);
   }
 
-  if (line.indexOf(F("%eventvalue")) != -1) {
+  if (line.indexOf(F("%event")) != -1) {
     if (event.charAt(0) == '!') {
       line.replace(F("%eventvalue%"), event); // substitute %eventvalue% with
                                               // literal event string if
                                               // starting with '!'
     } else {
-      int equalsPos = event.indexOf('=');
+      const int equalsPos = event.indexOf('=');
+
+      String argString;
 
       if (equalsPos > 0) {
-        // Replace %eventvalueX% with the actual value of the event.
-        // For compatibility reasons also replace %eventvalue%  (argc = 0)
-        String argString = event.substring(equalsPos + 1);
+        argString = event.substring(equalsPos + 1);
+      }
 
-        for (unsigned int argc = 0; argc <= 4; ++argc) {
-          replace_EventValueN_Argv(line, argString, argc);
+      // Replace %eventvalueX% with the actual value of the event.
+      // For compatibility reasons also replace %eventvalue%  (argc = 0)
+      line.replace(F("%eventvalue%"), F("%eventvalue1%"));
+      int eventvalue_pos = line.indexOf(F("%eventvalue"));
+
+      while (eventvalue_pos != -1) {
+        const int percent_pos = line.indexOf('%', eventvalue_pos + 1);
+
+        if (percent_pos == -1) {
+          // Found "%eventvalue" without closing %
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+            String log = F("Rules : Syntax error, missing '%' in '%eventvalue%': '");
+            log += line;
+            log += F("' %-pos: ");
+            log += percent_pos;
+            addLog(LOG_LEVEL_ERROR, log);
+          }
+          line.replace(F("%eventvalue"), F(""));
+        } else {
+          // Find the optional part for a default value when the asked for eventvalue does not exist.
+          // Syntax: %eventvalueX|Y%
+          // With: X = event value nr, Y = default value when eventvalue does not exist.
+          String defaultValue('0');
+          int or_else_pos = line.indexOf('|', eventvalue_pos);
+          if (or_else_pos > percent_pos) {
+            or_else_pos = percent_pos;
+          } else {
+            if (or_else_pos != -1) {
+              defaultValue = line.substring(or_else_pos + 1, percent_pos);
+            }
+          }
+          const String nr         = line.substring(eventvalue_pos + 11, or_else_pos);
+          const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
+          int argc                = -1;
+
+          if (nr.equals(F("0"))) {
+            // Replace %eventvalue0% with the entire list of arguments.
+            line.replace(eventvalue, argString);
+          } else {
+            argc = nr.toInt();
+            
+            // argc will be 0 on invalid int (0 was already handled)
+            if (argc > 0) {
+              String tmpParam;
+
+              if (!GetArgv(argString.c_str(), tmpParam, argc)) {
+                // Replace with default value for non existing event values
+                tmpParam = parseTemplate(defaultValue);
+              }
+              line.replace(eventvalue, tmpParam);
+            } else {
+              // Just remove the invalid eventvalue variable
+              if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+                String log = F("Rules : Syntax error, invalid variable: ");
+                log += eventvalue;
+                addLog(LOG_LEVEL_ERROR, log);
+              }
+              line.replace(eventvalue, EMPTY_STRING);
+            }
+          }
         }
+        eventvalue_pos = line.indexOf(F("%eventvalue"));
+      }
+
+      if ((line.indexOf(F("%eventname%")) != -1) ||
+          (line.indexOf(F("%eventpar%")) != -1)) {
+        const String eventName = equalsPos == -1 ? event : event.substring(0, equalsPos);
+
+        // Replace %eventname% with the literal event
+        line.replace(F("%eventname%"), eventName);
+
+        // Part of %eventname% after the # char
+        const int hash_pos = eventName.indexOf('#');
+        line.replace(F("%eventpar%"), hash_pos == -1 ? EMPTY_STRING : eventName.substring(hash_pos + 1));
       }
     }
   }
@@ -714,7 +642,11 @@ void parseCompleteNonCommentLine(String& line, const String& event,
                                  String& action, bool& match,
                                  bool& codeBlock, bool& isCommand,
                                  bool condition[], bool ifBranche[],
-                                 uint8_t& ifBlock, uint8_t& fakeIfBlock) {
+                                 uint8_t& ifBlock, uint8_t& fakeIfBlock,
+                                 bool   startOnMatched) {
+  if (line.length() == 0) {
+    return;
+  }
   const bool lineStartsWith_on = line.substring(0, 3).equalsIgnoreCase(F("on "));
 
   if (!codeBlock && !match) {
@@ -725,9 +657,20 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     }
   }
 
-  isCommand = true;
+  if (line.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
+                                           // wait for a new "on" rule
+  {
+    isCommand   = false;
+    codeBlock   = false;
+    match       = false;
+    ifBlock     = 0;
+    fakeIfBlock = 0;
+    return;
+  }
 
-  rules_strip_trailing_comments(line);
+  const bool lineStartsWith_pct_event = line.startsWith(F("%event"));;
+
+  isCommand = true;
 
   if (match || !codeBlock) {
     // only parse [xxx#yyy] if we have a matching ruleblock or need to eval the
@@ -746,38 +689,21 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     }
   }
 
-
-  String lineOrg = line; // store original line for future use
-
-  line.toLowerCase();    // convert all to lower case to make checks easier
-
-  String eventTrigger;
-
-  action.clear();
-
   if (!codeBlock) // do not check "on" rules if a block of actions is to be
                   // processed
   {
+    action.clear();
     if (lineStartsWith_on) {
       ifBlock     = 0;
       fakeIfBlock = 0;
-      line        = line.substring(3);
-      int split = line.indexOf(F(" do"));
 
-      if (split != -1) {
-        eventTrigger = line.substring(0, split);
-        action       = lineOrg.substring(split + 7);
-
-        // Remove trailing and leadin spaces on the eventTrigger and action.
-        eventTrigger.trim();
-        action.trim();
-      }
-
-      if (eventTrigger == "*") { // wildcard, always process
-        match = true;
-      }
-      else {
-        match = ruleMatch(event, eventTrigger);
+      String ruleEvent;
+      if (getEventFromRulesLine(line, ruleEvent, action)) {
+        START_TIMER
+        match = startOnMatched || ruleMatch(event, ruleEvent);
+        STOP_TIMER(RULES_MATCH);
+      } else {
+        match = false;
       }
 
       if (action.length() > 0) // single on/do/action line, no block
@@ -790,17 +716,25 @@ void parseCompleteNonCommentLine(String& line, const String& event,
       }
     }
   } else {
-    action = lineOrg;
+    #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
+      // keep the line for the log
+      action = line;
+    } else {
+      action = std::move(line);  
+    }
+    #else
+    action = std::move(line);
+    #endif
   }
 
-  if (action.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
-                                           // wait for a new "on" rule
-  {
-    isCommand   = false;
-    codeBlock   = false;
-    match       = false;
-    ifBlock     = 0;
-    fakeIfBlock = 0;
+  if (isCommand && lineStartsWith_pct_event) {
+    action = String(F("restrict,")) + action;
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("Rules : Prefix command with 'restrict': ");
+      log += action;
+      addLogMove(LOG_LEVEL_ERROR, log);
+    }
   }
 
 #ifndef BUILD_NO_DEBUG
@@ -939,13 +873,19 @@ void processMatchedRule(String& action, const String& event,
   if (isCommand) {
     substitute_eventvalue(action, event);
 
+    const bool executeRestricted = parseString(action, 1).equals(F("restrict"));
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String actionlog = F("ACT  : ");
+      String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");
       actionlog += action;
       addLogMove(LOG_LEVEL_INFO, actionlog);
     }
 
-    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
+    if (executeRestricted) {
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2).c_str());
+    } else {
+      ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str());
+    }
     delay(0);
   }
 }
@@ -953,105 +893,7 @@ void processMatchedRule(String& action, const String& event,
 /********************************************************************************************\
    Check if an event matches to a given rule
  \*********************************************************************************************/
-bool ruleMatch(const String& event, const String& rule) {
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("ruleMatch"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  String tmpEvent = event;
-  String tmpRule  = rule;
-  tmpEvent.trim();
-  tmpRule.trim();
-
-  // Ignore escape char
-  tmpRule.replace(F("["), EMPTY_STRING);
-  tmpRule.replace(F("]"), EMPTY_STRING);
-
-  if (tmpEvent.equalsIgnoreCase(tmpRule)) {
-    return true;
-  }
-
-
-  // Special handling of literal string events, they should start with '!'
-  if (event.charAt(0) == '!') {
-    const int pos = rule.indexOf('*');
-
-    if (pos != -1) // a * sign in rule, so use a'wildcard' match on message
-    {
-      return event.substring(0, pos).equalsIgnoreCase(rule.substring(0, pos));
-    } else {
-      const bool pound_char_found = rule.indexOf('#') != -1;
-
-      if (!pound_char_found)
-      {
-        // no # sign in rule, use 'wildcard' match on event 'source'
-        return event.substring(0, rule.length()).equalsIgnoreCase(rule);
-      }
-    }
-    return tmpEvent.equalsIgnoreCase(tmpRule);
-  }
-
-  // clock events need different handling...
-  if (event.substring(0, 10).equalsIgnoreCase(F("Clock#Time")))
-  {
-    int pos1 = event.indexOf('=');
-    int pos2 = rule.indexOf('=');
-
-    if ((pos1 > 0) && (pos2 > 0)) {
-      if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
-      {
-        unsigned long clockEvent = string2TimeLong(event.substring(pos1 + 1));
-        unsigned long clockSet   = string2TimeLong(rule.substring(pos2 + 1));
-
-        return matchClockEvent(clockEvent, clockSet);
-      }
-    } else {
-      // Not supported yet, see: https://github.com/letscontrolit/ESPEasy/issues/2640
-      return false;
-    }
-  }
-
-  // parse event into verb and value
-  double value = 0;
-  int    pos   = event.indexOf('=');
-
-  if (pos >= 0) {
-    if (!validDoubleFromString(event.substring(pos + 1), value)) {
-      return false;
-
-      // FIXME TD-er: What to do when trying to match NaN values?
-    }
-    tmpEvent = event.substring(0, pos);
-  }
-
-  // parse rule
-  int  posStart, posEnd;
-  char compare;
-
-  if (!findCompareCondition(rule, compare, posStart, posEnd)) {
-    // No compare condition found, so just check if the event- and rule string match.
-    return tmpEvent.equalsIgnoreCase(rule);
-  }
-
-  const bool stringMatch = tmpEvent.equalsIgnoreCase(rule.substring(0, posStart));
-  double     ruleValue   = 0;
-
-  if (!validDoubleFromString(rule.substring(posEnd), ruleValue)) {
-    return false;
-
-    // FIXME TD-er: What to do when trying to match NaN values?
-  }
-
-  bool match = false;
-
-  if (stringMatch) {
-    match = compareDoubleValues(compare, value, ruleValue);
-  }
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("ruleMatch2"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-  return match;
-}
 
 /********************************************************************************************\
    Check expression
@@ -1128,99 +970,6 @@ bool conditionMatchExtended(String& check) {
   return leftcond;
 }
 
-// Find the compare condition.
-// @param posStart = first position of the compare condition in the string
-// @param posEnd   = first position rest of the string, right after the compare condition.
-bool findCompareCondition(const String& check, char& compare, int& posStart, int& posEnd)
-{
-  posStart = check.length();
-  posEnd   = posStart;
-  int  comparePos = 0;
-  bool found      = false;
-
-  if (((comparePos = check.indexOf(F("!="))) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 2;
-    compare  = '<' + '>';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf(F("<>"))) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 2;
-    compare  = '<' + '>';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf(F(">="))) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 2;
-    compare  = '>' + '=';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf(F("<="))) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 2;
-    compare  = '<' + '=';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf(F("=="))) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 2;
-    compare  = '=';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf('<')) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 1;
-    compare  = '<';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf('>')) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 1;
-    compare  = '>';
-    found    = true;
-  }
-
-  if (((comparePos = check.indexOf('=')) > 0) && (comparePos < posStart)) {
-    posStart = comparePos;
-    posEnd   = posStart + 1;
-    compare  = '=';
-    found    = true;
-  }
-  return found;
-}
-
-bool compareIntValues(char compare, const int& Value1, const int& Value2)
-{
-  switch (compare) {
-    case '>' + '=': return Value1 >= Value2;
-    case '<' + '=': return Value1 <= Value2;
-    case '<' + '>': return Value1 != Value2;
-    case '>':       return Value1 > Value2;
-    case '<':       return Value1 < Value2;
-    case '=':       return Value1 == Value2;
-  }
-  return false;
-}
-
-bool compareDoubleValues(char compare, const double& Value1, const double& Value2)
-{
-  switch (compare) {
-    case '>' + '=': return !definitelyLessThan(Value1, Value2);
-    case '<' + '=': return !definitelyGreaterThan(Value1, Value2);
-    case '<' + '>': return !essentiallyEqual(Value1, Value2);
-    case '>':       return definitelyGreaterThan(Value1, Value2);
-    case '<':       return definitelyLessThan(Value1, Value2);
-    case '=':       return essentiallyEqual(Value1, Value2);
-  }
-  return false;
-}
 
 void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds, bool valid)
 {
