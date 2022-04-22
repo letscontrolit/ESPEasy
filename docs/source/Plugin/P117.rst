@@ -24,7 +24,7 @@ Used libraries: |P117_usedlibraries|
 Description
 -----------
 
-The SCD30 is a CO2 sensor unit that also provides Humidity and Temperature measurement, supports auto-calibration, and has temperature and altitude compensation settings.
+The SCD30 is a CO2 sensor unit that also provides Humidity and Temperature measurement, supports auto-calibration, allows forced recalibration, and has temperature and altitude compensation settings.
 
 Configuration
 -------------
@@ -53,9 +53,15 @@ Device Settings
 
 * **Temp offset** Offset for temperature correction. Can be set to compensate any self-heating of the device, by comparing the temperature measurement with another calibrated temperature measured close to the device. The difference can be set here, and is (also) stored in the sensor (but re-written every time ESPEasy initializes the sensor).
 
+* **Measurement Interval**: The default interval for continuous measuring is 2 sec. Here this interval can be increased, if so desired.
+
+* **Automatic Self Calibration**: When enabled, the automatic self-calibration will be activated when the plugin is started. If the calibration is set via the ``scdsetfrc,<co2_ppm>`` command, the calibration is reset to manual, as the ASC overwrites the manually set calibration.
+
+.. warning:: Automatic Self Calibration is a tedious process, that at first run takes at least 7 days to complete, and requires the sensor to be in fresh air for at least 1 hour daily, during the self-calibration period.
+
 The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 60 sec. The data will be measured and optionally sent to any configured controllers using this interval.
+* **Interval** By default, Interval will be set to 60 sec. The data will be measured and optionally sent to any configured controllers using this interval.
 
 Values
 ^^^^^^
@@ -76,6 +82,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added|
+  2022-02-26 Added commands and settings for measurement interval, automatic calibration and forced recalibration.
 
   |added|
   2021-11-20 Initial release version.
