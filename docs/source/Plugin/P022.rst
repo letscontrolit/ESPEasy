@@ -21,15 +21,20 @@ Maintainer: |P022_maintainer|
 
 Used libraries: |P022_usedlibraries|
 
+Introduction
+------------
+
+The number of GPIO pins on the ESP module can be expanded with a IO Expander. This plugin supports the PCF9685 that provides 16 more pins that can be used as input or output, and also support PWM signal generation. This way it becomes possible to control 16 dimmable LED's.
+
 Supported hardware
 ------------------
 
 |P022_usedby|
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P022_commands.repl
+.. include:: P022_commands.repl
 
 .. Events
 .. ~~~~~~
