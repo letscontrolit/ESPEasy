@@ -30,6 +30,9 @@ void P036_data_struct::reset() {
   }
 }
 
+// FIXME TD-er: with using functions to get the font, this object is stored in .dram0.data
+// The same as when using the DRAM_ATTR attribute used for interrupt code.
+// This is very precious memory, so we must find something other way to define this.
 const tFontSizes FontSizes[P36_MaxFontCount] = {
   { getArialMT_Plain_24(), 24,    28                 }, // 9643
   { getArialMT_Plain_16(), 16,    19                 }, // 5049
