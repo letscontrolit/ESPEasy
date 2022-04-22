@@ -31,10 +31,10 @@ void P036_data_struct::reset() {
 }
 
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24, 24,    28                 }, // 9643
-  { ArialMT_Plain_16, 16,    19                 }, // 5049
-  { Dialog_plain_12,  13,    15                 }, // 3707
-  { ArialMT_Plain_10, 10,    13                 }, // 2731
+  { getArialMT_Plain_24(), 24,    28                 }, // 9643
+  { getArialMT_Plain_16(), 16,    19                 }, // 5049
+  { getDialog_plain_12(),  13,    15                 }, // 3707
+  { getArialMT_Plain_10(), 10,    13                 }, // 2731
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -331,7 +331,7 @@ void P036_data_struct::display_time() {
 
   parseSystemVariables(dtime, false);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
+  display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, 28, GetHeaderHeight() - 2);
   display->setColor(WHITE);
@@ -342,7 +342,7 @@ void P036_data_struct::display_title(const String& title) {
   if (!isInitialized()) {
     return;
   }
-  display->setFont(ArialMT_Plain_10);
+  display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, GetHeaderHeight()); // don't clear line under title.
   display->setColor(WHITE);
