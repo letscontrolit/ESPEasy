@@ -175,7 +175,6 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec        = 0;
   String result;
-  result.reserve(bufLength);
 
   while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
     ++firstDec;
@@ -249,6 +248,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   }
 
   bool done = false;
+  result.reserve(bufLength - firstDec + result.length());
 
   for (unsigned int x = firstDec; !done && x < bufLength; ++x) {
     c = tBuf.charAt(x);
