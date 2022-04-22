@@ -150,7 +150,7 @@ void handle_tools() {
         }
       } else {
         html_B(F("WARNING"));
-        addHtml(F(" OTA not possible."));
+        addHtml(F(" Not enough space to safely update. Update might fail. "));
       }
       addHtml(F(" Max sketch size: "));
       addHtmlInt(maxSketchSize / 1024);
