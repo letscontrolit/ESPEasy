@@ -227,6 +227,14 @@ bool WiFiConnected() {
 
   static bool recursiveCall = false;
 
+  static uint32_t lastCheckedTime = 0;
+  static bool lastState = false;
+
+  if (timePassedSince(lastCheckedTime) < 10) {
+    // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+    return lastState;
+  }
+
 
   if (WiFiEventData.unprocessedWifiEvents()) { return false; }
 
@@ -282,7 +290,9 @@ bool WiFiConnected() {
     recursiveCall = false;
     // Only return true after some time since it got connected.
     SetWiFiTXpower();
-    return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
+    lastState = WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
+    lastCheckedTime = millis();
+    return lastState;
   }
 
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {

@@ -261,6 +261,25 @@ void SettingsStruct_tmpl<N_TASKS>::EnableRAMTracking(bool value) {
   bitWrite(VariousBits1, 23, value);
 }
 
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableRulesCaching() const {
+  return !bitRead(VariousBits1, 24);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableRulesCaching(bool value) {
+  bitWrite(VariousBits1, 24, !value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableRulesEventReorder() const {
+  return !bitRead(VariousBits1, 25);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableRulesEventReorder(bool value) {
+  bitWrite(VariousBits1, 25, !value);
+}
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {

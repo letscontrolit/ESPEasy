@@ -225,9 +225,13 @@ const __FlashStringHelper * getMiscStatsName_F(int stat) {
     case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
+    case RULES_PARSE_LINE:        return F("parseCompleteNonCommentLine()");
+    case RULES_PROCESS_MATCHED:   return F("processMatchedRule()");
+    case RULES_MATCH:             return F("rulesMatch()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
     case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
+    case PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
     case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");

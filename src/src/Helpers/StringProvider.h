@@ -59,6 +59,8 @@ struct LabelType {
 
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
+    ENABLE_RULES_CACHING,
+    ENABLE_RULES_EVENT_REORDER,
     TASKVALUESET_ALL_PLUGINS,
     ENABLE_CLEAR_HUNG_I2C_BUS,
 #ifndef BUILD_NO_RAM_TRACKER
@@ -199,9 +201,6 @@ String getInternalLabel(LabelType::Enum label,
 const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
-
-
-
 
 
 #endif // STRING_PROVIDER_TYPES_H

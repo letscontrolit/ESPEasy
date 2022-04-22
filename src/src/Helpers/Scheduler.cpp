@@ -1144,6 +1144,8 @@ void ESPEasy_Scheduler::process_system_event_queue() {
 
   if (ScheduledEventQueue.size() == 0) { return; }
 
+  START_TIMER
+
   const unsigned long id = ScheduledEventQueue.front().id;
 
   if (RTC.lastMixedSchedulerId != id) {
@@ -1177,6 +1179,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
       break;
   }
   ScheduledEventQueue.pop_front();
+  STOP_TIMER(PROCESS_SYSTEM_EVENT_QUEUE);
 }
 
 String ESPEasy_Scheduler::getQueueStats() {
