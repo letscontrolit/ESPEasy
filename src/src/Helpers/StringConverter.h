@@ -140,6 +140,8 @@ String wrapIfContains(const String& value,
                       char          contains,
                       char          wrap = '\"');
 
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text);
+
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
@@ -173,7 +175,13 @@ bool   stringWrappedWithChar(const String& text,
 
 bool   isQuoteChar(char c);
 
+bool   findUnusedQuoteChar(const String& text, char& quotechar) ;
+
 bool   isParameterSeparatorChar(char c);
+
+bool   stringContainsSeparatorChar(const String& text);
+
+bool   isWrappedWithQuotes(const String& text);
 
 String stripQuotes(const String& text);
 

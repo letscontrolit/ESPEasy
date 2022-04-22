@@ -608,7 +608,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   RuleEvent += '#';
                   RuleEvent += event->String1;
                   RuleEvent += '=';
-                  RuleEvent += unparsedPayload;
+                  RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload);
                   P037_addEventToQueue(event, RuleEvent);
                 }
 
@@ -650,11 +650,11 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     if (numericPayload && !hasSemicolon) {
                       RuleEvent += doublePayload;
                     } else if (numericPayload && hasSemicolon) { // semicolon separated list, pass unparsed
-                      RuleEvent += Payload;
+                      RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload);
                       RuleEvent += ',';
-                      RuleEvent += unparsedPayload;
+                      RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload);
                     } else {
-                      RuleEvent += Payload; // Pass mapped result
+                      RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload); // Pass mapped result
                     }
                     P037_addEventToQueue(event, RuleEvent);
                   }
@@ -670,7 +670,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   if (numericPayload) {
                     RuleEvent += doublePayload;
                   } else {
-                    RuleEvent += Payload;
+                    RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload);
                   }
                   P037_addEventToQueue(event, RuleEvent);
                 }
