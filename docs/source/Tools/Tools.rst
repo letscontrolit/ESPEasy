@@ -375,8 +375,18 @@ If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on i
 
 Default: unchecked
 
+Allow OTA without size-check
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Added: 2022-04-22
 
+On ESP's with 1MB or 2MB Flash, updates via OTA *may* be disabled because of a lack of free flash memory to store the new image during OTA update.
+
+Enabling this setting will allow OTA updates even when there is not enough free Flash space to perform the update by allowing to overwrite the file-system, probably trashing the settings and other files like rules.
+
+This should best only be enabled if the configuration, and other files like rules, can be restored from an external source, or be re-entered manually.
+
+NB: If the OTA update is bigger than available flash + file-system size, the OTA update will fail, but as the file-system is already overwritten, any configuration and files are overwritten irreversibly!
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
