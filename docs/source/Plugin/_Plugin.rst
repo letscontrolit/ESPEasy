@@ -15,7 +15,7 @@ There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
 
-:yellow:`TESTING` (split into A/B/C/D sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 4 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
+:yellow:`TESTING` (split into A/B/C/D/E sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 5 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
 
 .. comment :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
 
@@ -140,6 +140,16 @@ There are different released versions of ESP Easy:
    ":ref:`P113_page`","|P113_status|","P113"
    ":ref:`P114_page`","|P114_status|","P114"
    ":ref:`P115_page`","|P115_status|","P115"
+   ":ref:`P116_page`","|P116_status|","P116"
+   ":ref:`P117_page`","|P117_status|","P117"
+   ":ref:`P118_page`","|P118_status|","P118"
+   ":ref:`P119_page`","|P119_status|","P119"
+   ":ref:`P120_page`","|P120_status|","P120"
+   ":ref:`P121_page`","|P121_status|","P121"
+   ":ref:`P124_page`","|P124_status|","P124"
+   ":ref:`P125_page`","|P125_status|","P125"
+   ":ref:`P126_page`","|P126_status|","P126"
+   ":ref:`P127_page`","|P127_status|","P125"
 
 
 Internal GPIO handling
@@ -153,6 +163,11 @@ Analog input
 ------------
 
 Plugins: |Plugin_Analog_input|
+
+Acceleration
+------------
+
+Plugins: |Plugin_Acceleration|
 
 Communication
 -------------

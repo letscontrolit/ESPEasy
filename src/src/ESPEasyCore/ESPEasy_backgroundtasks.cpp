@@ -9,8 +9,15 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
+
+
+#ifdef FEATURE_ARDUINO_OTA
+#include "../Helpers/OTA.h"
+#endif
+
 
 
 /*********************************************************************************************\
@@ -39,6 +46,12 @@ void backgroundtasks()
   {
     return;
   }
+
+  // Rate limit calls to run backgroundtasks
+  static uint32_t lastRunBackgroundTasks = 0;
+  if (timePassedSince(lastRunBackgroundTasks) < 5) return;
+  lastRunBackgroundTasks = millis();
+
   START_TIMER
   #ifdef FEATURE_MDNS
   const bool networkConnected = NetworkConnected();
@@ -80,7 +93,7 @@ void backgroundtasks()
   #ifdef FEATURE_ARDUINO_OTA
 
   if (Settings.ArduinoOTAEnable) {
-    ArduinoOTA.handle();
+    ArduinoOTA_handle();
   }
 
   // once OTA is triggered, only handle that and dont do other stuff. (otherwise it fails)
@@ -88,7 +101,7 @@ void backgroundtasks()
   {
     delay(0);
 
-    ArduinoOTA.handle();
+    ArduinoOTA_handle();
   }
 
   #endif // ifdef FEATURE_ARDUINO_OTA

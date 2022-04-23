@@ -10,10 +10,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef FEATURE_SD
-#include <SD.h>
-#endif
-
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 
@@ -167,6 +163,20 @@ uint8_t get4BitFromUL(uint32_t number,
                       uint8_t     bitnr);
 
 void    set4BitToUL(uint32_t& number,
+                    uint8_t      bitnr,
+                    uint8_t   value);
+
+uint8_t get3BitFromUL(uint32_t number,
+                      uint8_t     bitnr);
+
+void    set3BitToUL(uint32_t& number,
+                    uint8_t      bitnr,
+                    uint8_t   value);
+
+uint8_t get2BitFromUL(uint32_t number,
+                      uint8_t     bitnr);
+
+void    set2BitToUL(uint32_t& number,
                     uint8_t      bitnr,
                     uint8_t   value);
 

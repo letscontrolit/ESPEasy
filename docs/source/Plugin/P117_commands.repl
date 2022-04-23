@@ -1,0 +1,75 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``scdgetabc``
+
+    ","
+
+    | Shows automatic calibration period in days, 0 = disable.
+
+    "
+    "
+
+    | ``scdgetalt``
+
+    ","
+
+    | Shows altitude compensation configuration in meters above sea level.
+
+    "
+    "
+
+    | ``scdgettmp``
+
+    ","
+
+    | Shows temperature offset in degrees C.
+
+    "
+    "
+    | ``scdsetcalibration,<0|1>``
+    ","
+    | Set the sensor calibration mode to manual (0) or automatic (1).
+
+    | The Device configuration setting is also updated, but not saved, when using this command.
+
+    | About activating the Automatic Self Calibration (from the manual):
+
+    | Continuous automatic self-calibration can be (de-)activated with the following command. When activated for the first time a period of minimum 7 days is needed so that the algorithm can find its initial parameter set for ASC. The sensor has to be exposed to fresh air for at least 1 hour every day. Also during that period, the sensor may not be disconnected from the power supply, otherwise the procedure to find calibration parameters is aborted and has to be restarted from the beginning. The successfully calculated parameters are stored in non-volatile memory of the SCD30 having the effect that after a restart the previously found parameters for ASC are still present. Note that the most recently found self-calibration parameters will be actively used for self-calibration disregarding the status of this feature. Finding a new parameter set by the here described method will always overwrite the settings from external recalibration (see chapter 1.3.7) and vice-versa. The feature is switched off by default.
+
+    | To work properly SCD30 has to see fresh air on a regular basis. Optimal working conditions are given when the sensor sees fresh air for one hour every day so that ASC can constantly re-calibrate. ASC only works in continuous measurement mode. ASC status is saved in non-volatile memory. When the sensor is powered down while ASC is activated SCD30 will continue with automatic self-calibration after repowering without sending the command.
+
+    .. warning:: Automatic Self Calibration is a tedious process, that at first run takes at least 7 days to complete, and requires the sensor to be in fresh air for at least 1 hour daily, during the self-calibration period.
+
+    .. note:: After enabling, and completing, ASC, do not apply a forced recalibration (FRC) as that will overwrite the carefully built up calibration.
+    "
+    "
+    | ``scdsetfrc,<co2_ppm>``
+    ","
+    | Set the sensor forced recalibration value. The ``<co2_ppm>`` is validated to be between 400 and 2000 (as per the manual). When using this command, the sensor is switched to Manual Calibration, as Automatic Self Calibration overwrites this setting.
+
+    | Forced Re-Calibration instructions (from the manual):
+
+    | Forced recalibration (FRC) is used to compensate for sensor drifts when a reference value of the CO2 concentration in close proximity to the SCD30 is available. For best results the sensor has to be run in a stable environment in continuous mode at a measurement rate of 2s for at least two minutes before applying the calibration command and sending the reference value. Setting a reference CO2 concentration by the here described method will always overwrite the settings from ASC (Automatic Calibration) and vice-versa. The reference CO2 concentration has to be within the range 400 ppm ≤ cref(CO2) ≤ 2000 ppm.
+
+    | FRC value is saved in non-volatile memory, the last set FRC value will be used for field-calibration after repowering.
+
+    .. warning:: Setting the sensor forced recalibration requires a reliable reference, in close vincinity of the sensor, to be useful.
+
+    .. note:: Setting a forced recalibration value will **overwrite** any earlier set, or automatically built via ASC, calibration.
+    "
+    "
+    | ``scdgetinterval``
+    ","
+    | Shows the current Measurement Interval of the sensor.
+    "
+    "
+    | ``scdsetinterval,<interval>``
+    ","
+    | Set the Measurement Interval to ``<interval>`` seconds. Factory default is 2 sec. Range from 2 to 1800 seconds.
+
+    | The Device configuration setting is also updated, but not saved, when using this command.
+    "

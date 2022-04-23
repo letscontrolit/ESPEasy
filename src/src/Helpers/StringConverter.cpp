@@ -68,6 +68,18 @@ String ull2String(uint64_t value, uint8_t base) {
   return res;
 }
 
+String ll2String(int64_t value, uint8_t  base) {
+  if (value < 0) {
+    String res;
+    res = '-';
+    res += ull2String(value * -1ll, base);
+    return res;
+  } else {
+    return ull2String(value, base);
+  }
+}
+
+
 /********************************************************************************************\
    Check if valid float and convert string to float.
  \*********************************************************************************************/
@@ -223,7 +235,7 @@ String formatToHex_decimal(unsigned long value) {
 String formatToHex_decimal(unsigned long value, unsigned long factor) {
   String result = formatToHex(value);
 
-  result += " (";
+  result += F(" (");
 
   if (factor > 1) {
     result += formatHumanReadable(value, factor);
@@ -251,7 +263,7 @@ void addNewLine(String& line) {
   line += F("\r\n");
 }
 
-size_t UTF8_charLength(char firstByte) {
+size_t UTF8_charLength(uint8_t firstByte) {
   if (firstByte <= 0x7f) {
     return 1;
   }
@@ -279,7 +291,7 @@ size_t UTF8_charLength(char firstByte) {
 void replaceUnicodeByChar(String& line, char replChar) {
   size_t pos = 0;
   while (pos < line.length()) {
-    const size_t charLength = UTF8_charLength(line[pos]);
+    const size_t charLength = UTF8_charLength((uint8_t)line[pos]);
 
     if (charLength > 1) {
       // Is unicode char in UTF-8 format
@@ -304,7 +316,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   if (!validDeviceIndex(DeviceIndex)) {
     isvalid = false;
-    return F("0");
+    return EMPTY_STRING;
   }
 
   {
@@ -335,7 +347,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       log += rel_index + 1;
       log += F(" type: ");
       log += getSensorTypeLabel(sensorType);
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     #endif // ifndef BUILD_NO_DEBUG
     return EMPTY_STRING;
@@ -362,17 +374,16 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       log += event->TaskIndex;
       log += F(" varnumber: ");
       log += rel_index;
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
     f = 0;
   }
-  LoadTaskSettings(event->TaskIndex);
 
-  uint8_t nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
-
-  if (!Device[DeviceIndex].configurableDecimals()) {
-    nrDecimals = 0;
+  uint8_t nrDecimals = 0;
+  if (Device[DeviceIndex].configurableDecimals()) {
+    LoadTaskSettings(event->TaskIndex);
+    nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
   }
 
   String result = toString(f, nrDecimals);
@@ -412,7 +423,8 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
   if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
-  String result = F("C");
+  String result;
+  result += 'C';
 
   if (cpluginID < 100) { result += '0'; }
 
@@ -424,6 +436,10 @@ String get_formatted_Controller_number(cpluginID_t cpluginID) {
 /*********************************************************************************************\
    Wrap a string with given pre- and postfix string.
 \*********************************************************************************************/
+String wrap_braces(const String& string) {
+  return wrap_String(string, '(', ')');
+}
+
 String wrap_String(const String& string, char wrap) {
   String result;
   result.reserve(string.length() + 2);
@@ -433,19 +449,18 @@ String wrap_String(const String& string, char wrap) {
   return result;
 }
 
-
-void wrap_String(const String& string, const String& wrap, String& result) {
-  result += wrap;
+String wrap_String(const String& string, char char1, char char2) {
+  String result;
+  result.reserve(string.length() + 2);
+  result += char1;
   result += string;
-  result += wrap;
+  result += char2;
+  return result;
 }
 
 String wrapIfContains(const String& value, char contains, char wrap) {
   if (value.indexOf(contains) != -1) {
-    String result(wrap);
-    result += value;
-    result += wrap;
-    return result;
+    return wrap_String(value, wrap, wrap);
   }
   return value;
 }
@@ -468,21 +483,28 @@ String to_json_object_value(const __FlashStringHelper * object,
   return to_json_object_value(String(object), value, wrapInQuotes);
 }
 
+String to_json_object_value(const __FlashStringHelper * object,
+                            String&& value,
+                            bool wrapInQuotes) 
+{
+  return to_json_object_value(String(object), value, wrapInQuotes);
+}
 
 String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
   String result;
-  bool   isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
-
   result.reserve(object.length() + value.length() + 6);
-  wrap_String(object, F("\""), result);
-  result += F(":");
+  result = wrap_String(object, '"');
+  result += ':';
+  result += to_json_value(value, wrapInQuotes);
+  return result;
+}
 
+String to_json_value(const String& value, bool wrapInQuotes) {
   if (value.isEmpty()) {
     // Empty string
-    result += F("\"\"");
-    return result;
+    return F("\"\"");
   }
-  if (wrapInQuotes || (!isBool && mustConsiderAsString(value))) {
+  if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
     if ((value.indexOf('\n') != -1) || (value.indexOf('\r') != -1) || (value.indexOf('"') != -1)) {
       // Must replace characters, so make a deepcopy
@@ -490,22 +512,21 @@ String to_json_object_value(const String& object, const String& value, bool wrap
       tmpValue.replace('\n', '^');
       tmpValue.replace('\r', '^');
       tmpValue.replace('"',  '\'');
-      wrap_String(tmpValue, F("\""), result);
+      return wrap_String(tmpValue, '"');
     } else {
-      wrap_String(value, F("\""), result);
+      return wrap_String(value, '"');
     }
-  } else {
-    // It is a numerical
-    result += value;
-  }
-  return result;
+  } 
+  // It is a numerical
+  return value;
 }
+
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
 \*********************************************************************************************/
 String stripWrappingChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
     return text.substring(1, length - 1);
@@ -514,12 +535,11 @@ String stripWrappingChar(const String& text, char wrappingChar) {
 }
 
 bool stringWrappedWithChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if (length < 2) { return false; }
-
-  if (text.charAt(0) != wrappingChar) { return false; }
-  return text.charAt(length - 1) == wrappingChar;
+  return (text.charAt(0) == wrappingChar) && 
+         (text.charAt(length - 1) == wrappingChar);
 }
 
 bool isQuoteChar(char c) {
@@ -555,9 +575,9 @@ bool safe_strncpy(char *dest, const String& source, size_t max_size) {
 bool safe_strncpy(char *dest, const char *source, size_t max_size) {
   if (max_size < 1) { return false; }
 
-  if (dest == NULL) { return false; }
+  if (dest == nullptr) { return false; }
 
-  if (source == NULL) { return false; }
+  if (source == nullptr) { return false; }
   bool result = true;
 
   memset(dest, 0, max_size);
@@ -633,7 +653,7 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
     ++nextArgument;
   }
 
-  if (!hasArgument || (pos_begin < 0)) {
+  if (!hasArgument || (pos_begin < 0) || ((pos_begin >= 0) && (pos_begin == pos_end))) {
     return EMPTY_STRING;
   }
   String result = string.substring(pos_begin, pos_end);
@@ -641,6 +661,14 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
   result.trim();
   return stripQuotes(result);
 }
+
+String tolerantParseStringKeepCase(const char * string,
+                                   uint8_t          indexFind,
+                                   char          separator)
+{
+  return tolerantParseStringKeepCase(String(string), indexFind, separator);
+}
+
 
 String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator)
 {
@@ -717,24 +745,26 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 // URNEncode char string to string object
 // ********************************************************************************
-String URLEncode(const char *msg)
+String URLEncode(const String& msg)
 {
   const char *hex = "0123456789abcdef";
   String encodedMsg;
 
-  encodedMsg.reserve(strlen(msg));
+  const size_t msg_length = msg.length();
 
-  while (*msg != '\0') {
-    if (isAlphaNumeric(*msg)
-        || ('-' == *msg) || ('_' == *msg)
-        || ('.' == *msg) || ('~' == *msg)) {
-      encodedMsg += *msg;
+  encodedMsg.reserve(msg_length);
+
+  for (size_t i = 0; i < msg_length; ++i) {
+    const char ch = msg[i];
+    if (isAlphaNumeric(ch)
+        || ('-' == ch) || ('_' == ch)
+        || ('.' == ch) || ('~' == ch)) {
+      encodedMsg += ch;
     } else {
       encodedMsg += '%';
-      encodedMsg += hex[*msg >> 4];
-      encodedMsg += hex[*msg & 15];
+      encodedMsg += hex[ch >> 4];
+      encodedMsg += hex[ch & 15];
     }
-    msg++;
   }
   return encodedMsg;
 }
@@ -760,13 +790,12 @@ void repl(const String& key, const String& val, String& s, bool useURLencode)
   if (useURLencode) {
     // URLEncode does take resources, so check first if needed.
     if (s.indexOf(key) == -1) { return; }
-    s.replace(key, URLEncode(val.c_str()));
+    s.replace(key, URLEncode(val));
   } else {
     s.replace(key, val);
   }
 }
 
-#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 void parseSpecialCharacters(String& s, bool useURLencode)
 {
   const bool no_accolades   = s.indexOf('{') == -1 || s.indexOf('}') == -1;
@@ -784,6 +813,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     repl(F("&deg;"), degree,   s, useURLencode);
     repl(degreeC,    degree_C, s, useURLencode);
   }
+  // Degree symbol is often used on displays, so still support that one.
+#ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   {
     // Angle quotes
     const char laquo[3] = { 0xc2, 0xab, 0 }; // Unicode left angle quotes symbol
@@ -844,9 +875,9 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     repl(F("{..}"),     divide, s, useURLencode);
     repl(F("&divide;"), divide, s, useURLencode);
   }
+#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 }
 
-#endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
 /********************************************************************************************\
    replace other system variables like %sysname%, %systime%, %ip%
@@ -874,9 +905,7 @@ void parseSingleControllerVariable(String            & s,
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
 void parseSystemVariables(String& s, bool useURLencode)
 {
-  #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   parseSpecialCharacters(s, useURLencode);
-  #endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 
   SystemVariables::parseSystemVariables(s, useURLencode);
 }
@@ -1062,7 +1091,7 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
   int  pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
 
-  argvString = "";
+  argvString = String();
 
   if (!hasArgument) { return false; }
 
@@ -1072,10 +1101,10 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
     for (int i = pos_begin; i < pos_end; ++i) {
       argvString += string[i];
     }
+    argvString.trim();
+    argvString = stripQuotes(argvString);
   }
-  argvString.trim();
-  argvString = stripQuotes(argvString);
-  return argvString.length() > 0;
+  return true;
 }
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
@@ -1088,21 +1117,37 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
 
   while (string_pos < string_len)
   {
-    char c, d; // c = current char, d = next char (if available)
+    char c, d, e; // c = current char, d,e = next char (if available)
     c = string[string_pos];
     d = 0;
+    e = 0;
 
     if ((string_pos + 1) < string_len) {
       d = string[string_pos + 1];
     }
+    if ((string_pos + 2) < string_len) {
+      e = string[string_pos + 2];
+    }
 
-    if       (!parenthesis && (c == ' ') && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d == separator)) {}
-    else if  (!parenthesis && (c == separator) && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
-    else if  (!parenthesis && (c == separator) && (d >= 33) && (d <= 126)) {}
+    if  (!parenthesis && (((c == ' ') && (d == ' ')) || 
+                          ((c == separator) && (d == ' ')))) {
+      // Consider multiple consequitive spaces as one.
+    }
+    else if  (!parenthesis && ((d == ' ') && (e == separator))) {
+      // Skip the space.      
+    }
     else
     {
+      // Found the start of the new argument.
+      if (pos_begin == -1 && !parenthesis && !((c == separator) || isParameterSeparatorChar(c))) {
+        pos_begin = string_pos;
+        pos_end   = string_pos;
+      }
+      if (pos_end != -1) {
+        ++pos_end;
+      }
+
+      // Check if we're in a set of parenthesis (any quote char or [])
       if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
         parenthesis          = true;
         matching_parenthesis = c;
@@ -1114,23 +1159,16 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
         parenthesis = false;
       }
 
-      if (pos_begin == -1) {
-        pos_begin = string_pos;
-        pos_end   = string_pos;
-      }
-      ++pos_end;
-
       if (!parenthesis && (isParameterSeparatorChar(d) || (d == separator) || (d == 0))) // end of word
       {
         argc_pos++;
-
         if (argc_pos == argc)
         {
           return true;
         }
+        // new Argument separator found
         pos_begin = -1;
         pos_end   = -1;
-        string_pos++;
       }
     }
     string_pos++;

@@ -9,6 +9,8 @@
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#include "../Globals/Settings.h"
+
 # include <Arduino.h>
 # include <map>
 
@@ -75,14 +77,18 @@
 # define PARSE_SYSVAR_NOCHANGE   54
 # define PARSE_TEMPLATE_PADDED   55
 # define RULES_PROCESSING        56
-# define GRAT_ARP_STATS          57
-# define SAVE_TO_RTC             58
-# define BACKGROUND_TASKS        59
-# define HANDLE_SCHEDULER_IDLE   60
-# define HANDLE_SCHEDULER_TASK   61
-# define HANDLE_SERVING_WEBPAGE  62
-# define WIFI_SCAN_ASYNC         63
-# define WIFI_SCAN_SYNC          64
+# define RULES_PARSE_LINE        57
+# define RULES_PROCESS_MATCHED   58
+# define RULES_MATCH             59
+# define GRAT_ARP_STATS          60
+# define SAVE_TO_RTC             61
+# define BACKGROUND_TASKS        62
+# define PROCESS_SYSTEM_EVENT_QUEUE 63
+# define HANDLE_SCHEDULER_IDLE   64
+# define HANDLE_SCHEDULER_TASK   65
+# define HANDLE_SERVING_WEBPAGE  66
+# define WIFI_SCAN_ASYNC         67
+# define WIFI_SCAN_SYNC          68
 
 
 class TimingStats {
@@ -90,20 +96,20 @@ public:
 
   TimingStats();
 
-  void         add(unsigned long time);
+  void         add(int64_t time);
   void         reset();
   bool         isEmpty() const;
   float        getAvg() const;
-  unsigned int getMinMax(unsigned long& minVal,
-                         unsigned long& maxVal) const;
-  bool         thresholdExceeded(unsigned long threshold) const;
+  uint32_t     getMinMax(uint64_t& minVal,
+                         uint64_t& maxVal) const;
+  bool         thresholdExceeded(const uint64_t& threshold) const;
 
 private:
 
   float _timeTotal;
-  unsigned int _count;
-  unsigned long _maxVal;
-  unsigned long _minVal;
+  uint32_t _count;
+  uint64_t _maxVal;
+  uint64_t _minVal;
 };
 
 
@@ -119,7 +125,7 @@ extern std::map<int, TimingStats> controllerStats;
 extern std::map<int, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
-# define START_TIMER const unsigned long statisticsTimerStart(micros());
+# define START_TIMER const uint64_t statisticsTimerStart(getMicros64());
 # define STOP_TIMER_TASK(T, F) \
   if (mustLogFunction(F)) pluginStats[(T) * 256 + (F)].add(usecPassedSince(statisticsTimerStart));
 # define STOP_TIMER_CONTROLLER(T, F) \

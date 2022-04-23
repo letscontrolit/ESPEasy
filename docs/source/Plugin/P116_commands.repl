@@ -1,0 +1,37 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    This plugin allows dynamic configuration of the command-trigger. Available triggers are:
+
+    * ``tft``
+    * ``st77xx``
+    * ``st7735``
+    * ``st7789``
+    * ``st7796``
+
+    The default trigger is ``st77xx``
+    ","
+    Some commands are postfixed with ``cmd``, indicating device specific commands. Not device-specific commands are genericly applicable to all *Adafruit Graphics* enabled devices, using the ESPEasy ``AdafruitGFX_helper`` module.
+    "
+    "
+    | ``st77xxcmd,on``
+    ","
+    | Switch the display on.
+    "
+    "
+    | ``st77xxcmd,off``
+    ","
+    | Switch the display off. If the Backlight is connected and configured, that will also be turned off.
+    "
+    "
+    | ``st77xxcmd,clear``
+    ","
+    | Clear the display, using the default background color.
+    "
+    "
+    | ``st77xxcmd,backlight,<percentage>``
+    ","
+    | Set the level of backlight brightness, from 1..100%. Only applicable if a backlight pin is configured.
+    "

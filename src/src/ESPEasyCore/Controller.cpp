@@ -75,7 +75,7 @@ void sendData(struct EventStruct *event)
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Invalid value detected for controller ");
           log += getCPluginNameFromProtocolIndex(ProtocolIndex);
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       }
 #endif // ifndef BUILD_NO_DEBUG
@@ -92,13 +92,11 @@ void sendData(struct EventStruct *event)
 }
 
 bool validUserVar(struct EventStruct *event) {
-  switch (event->getSensorType()) {
-    case Sensor_VType::SENSOR_TYPE_LONG:    return true;
-    case Sensor_VType::SENSOR_TYPE_STRING:  return true; // FIXME TD-er: Must look at length of event->String2 ?
-    default:
-      break;
-  }
-  uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+  const Sensor_VType vtype = event->getSensorType();
+  if (vtype == Sensor_VType::SENSOR_TYPE_LONG || 
+      vtype == Sensor_VType::SENSOR_TYPE_STRING  // FIXME TD-er: Must look at length of event->String2 ?
+  ) return true;
+  const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   for (int i = 0; i < valueCount; ++i) {
     const float f(UserVar[event->BaseVarIndex + i]);
@@ -171,7 +169,12 @@ void MQTTDisconnect()
 \*********************************************************************************************/
 bool MQTTConnect(controllerIndex_t controller_idx)
 {
+  if (MQTTclient_next_connect_attempt.isSet() && !MQTTclient_next_connect_attempt.timeoutReached(timermqtt_interval)) {
+    return false;
+  }
+  MQTTclient_next_connect_attempt.setNow();
   ++mqtt_reconnect_count;
+
   MakeControllerSettings(ControllerSettings); //-V522
 
   if (!AllocatedControllerSettings()) {
@@ -212,8 +215,10 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
   bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
+  if (MQTTclient_should_reconnect) {
+    addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
+  }
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
-
   if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
     MQTTresult =
       MQTTclient.connect(clientid.c_str(),
@@ -244,19 +249,24 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (!MQTTresult) {
     MQTTclient.disconnect();
     updateMQTTclient_connected();
+
     return false;
   }
-  String log = F("MQTT : Connected to broker with client ID: ");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("MQTT : Connected to broker with client ID: ");
 
-  log += clientid;
-  addLog(LOG_LEVEL_INFO, log);
+    log += clientid;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   String subscribeTo = ControllerSettings.Subscribe;
 
   parseSystemVariables(subscribeTo, false);
   MQTTclient.subscribe(subscribeTo.c_str());
-  log  = F("Subscribed to: ");
-  log += subscribeTo;
-  addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log  = F("Subscribed to: ");
+    log += subscribeTo;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
 
   updateMQTTclient_connected();
   statusLED(true);
@@ -354,9 +364,6 @@ bool MQTTCheck(controllerIndex_t controller_idx)
 
     if (MQTTclient_should_reconnect || !MQTTclient.connected())
     {
-      if (MQTTclient_should_reconnect) {
-        addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
-      }
       return MQTTConnect(controller_idx);
     }
 

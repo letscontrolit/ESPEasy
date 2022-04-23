@@ -202,7 +202,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("CCS811 : Begin exited with: ");
         log += P090_data->myCCS811.getDriverError(returnCode);
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
       #endif // ifndef BUILD_NO_DEBUG
       UserVar[event->BaseVarIndex]     = NAN;
@@ -222,7 +222,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("CCS811 : Mode request exited with: ");
           log += P090_data->myCCS811.getDriverError(returnCode);
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       #endif // ifndef BUILD_NO_DEBUG
       } else {
@@ -262,7 +262,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
               log += P090_data->myCCS811.getTVOC();
               log += F(", eCO2: ");
               log += P090_data->myCCS811.getCO2();
-              addLog(LOG_LEVEL_INFO, log);
+              addLogMove(LOG_LEVEL_INFO, log);
             }
           }
         }
@@ -289,7 +289,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
         float temperature  = UserVar[BaseVarIndex]; // in degrees C
         // convert to celsius if required
         int temperature_in_fahrenheit = P090_TEMPERATURE_SCALE;
-        String temp                   = F("C");
+        String temp;
+        temp += 'C';
 
         if (temperature_in_fahrenheit)
         {
@@ -305,8 +306,8 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("CCS811 : Compensating for Temperature: ");
-          log += String(temperature) + temp + F(" & Humidity: ") + String(humidity) + F("%");
-          addLog(LOG_LEVEL_DEBUG, log);
+          log += toString(temperature) + temp + F(" & Humidity: ") + toString(humidity) + F("%");
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
       #endif // ifndef BUILD_NO_DEBUG
 
@@ -327,7 +328,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
           // If the CCS811 found an internal error, print it.
           String log = F("CCS811 : Error: ");
           log += errorMsg;
-          addLog(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
       }
 

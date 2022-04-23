@@ -320,7 +320,8 @@ struct P049_data_struct : public PluginTaskData_base {
   unsigned long lastInitTimestamp  = 0;
 
   ESPeasySerial *easySerial = nullptr;
-  uint8_t           mhzResp[9] = {0}; // 9 uint8_t response buffer
+  uint8_t        mhzResp[9] = {0}; // 9 uint8_t response buffer
+
   // Default of the sensor is to run ABC
   bool ABC_Disable     = false;
   bool ABC_MustApply   = false;
@@ -629,7 +630,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
           log += s;
           log += '/';
           log += u;
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
         break;
 
@@ -651,7 +652,7 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("MHZ19: Unknown response:");
           log += P049_data->getBufferHexDump();
-          addLog(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, log);
         }
 
         // Check for stable reads and allow unstable reads the first 3 minutes after reset.

@@ -17,6 +17,10 @@
 #include "../Globals/C016_ControllerCache.h"
 #endif
 
+#ifdef FEATURE_SD
+#include <SD.h>
+#endif
+
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -55,11 +59,11 @@ void handle_filelist_json() {
   }
   int endIdx = startIdx + pageSize - 1;
 
-  addHtml(F("[{"));
+  addHtml('[', '{');
   bool firstentry = true;
   # if defined(ESP32)
-  File root  = ESPEASY_FS.open("/");
-  File file  = root.openNextFile();
+  fs::File root  = ESPEASY_FS.open("/");
+  fs::File file  = root.openNextFile();
   int  count = -1;
 
   while (file and count < endIdx)
@@ -72,11 +76,11 @@ void handle_filelist_json() {
         if (firstentry) {
           firstentry = false;
         } else {
-          addHtml(F(",{"));
+          addHtml(',', '{');
         }
         stream_next_json_object_value(F("fileName"), String(file.name()));
-        stream_next_json_object_value(F("index"),    String(startIdx));
-        stream_last_json_object_value(F("size"), String(file.size()));
+        stream_next_json_object_value(F("index"),    startIdx);
+        stream_last_json_object_value(F("size"), file.size());
       }
     }
     file = root.openNextFile();
@@ -99,7 +103,7 @@ void handle_filelist_json() {
     if (firstentry) {
       firstentry = false;
     } else {
-      addHtml(F(",{"));
+      addHtml(',', '{');
     }
 
     stream_next_json_object_value(F("fileName"), String(dir.fileName()));
@@ -107,11 +111,11 @@ void handle_filelist_json() {
     fs::File f = dir.openFile("r");
 
     if (f) {
-      stream_next_json_object_value(F("size"), String(f.size()));
+      stream_next_json_object_value(F("size"), f.size());
       f.close();
     }
 
-    stream_last_json_object_value(F("index"), String(startIdx));
+    stream_last_json_object_value(F("index"), startIdx);
 
     if (count >= endIdx)
     {
@@ -204,8 +208,8 @@ void handle_filelist() {
   moreFilesPresent = dir.next();
 # endif // if defined(ESP8266)
 # if defined(ESP32)
-  File root = ESPEASY_FS.open("/");
-  File file = root.openNextFile();
+  fs::File root = ESPEASY_FS.open("/");
+  fs::File file = root.openNextFile();
 
   while (file && count < endIdx)
   {
@@ -257,19 +261,15 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
     addHtml(F("'>Del</a>"));
   }
   {
-    String html;
-    html.reserve(30 + 2 * filename.length());
-
-    html += F("<TD><a href=\"");
-    html += filename;
-    html += "\">";
-    html += filename;
-    html += F("</a><TD>");
+    addHtml(F("<TD><a href=\""));
+    addHtml(filename);
+    addHtml('"', '>');
+    addHtml(filename);
+    addHtml(F("</a><TD>"));
 
     if (filesize >= 0) {
-      html += filesize;
+      addHtmlInt(filesize);
     }
-    addHtml(html);
   }
 }
 
@@ -282,24 +282,17 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
   if (start_prev >= 0)
   {
     html_add_button_prefix();
-    String html;
-    html.reserve(36);
-    html += F("/filelist?start=");
-    html += start_prev;
-    html += F("'>Previous</a>");
-    addHtml(html);
+    addHtml(F("/filelist?start="));
+    addHtmlInt(start_prev);
+    addHtml(F("'>Previous</a>"));
   }
 
   if (start_next >= 0)
   {
     html_add_button_prefix();
-    String html;
-    html.reserve(36);
-
-    html += F("/filelist?start=");
-    html += start_next;
-    html += F("'>Next</a>");
-    addHtml(html);
+    addHtml(F("/filelist?start="));
+    addHtmlInt(start_next);
+    addHtml(F("'>Next</a>"));
   }
 
   if (cacheFilesPresent) {
@@ -370,9 +363,9 @@ void handle_SDfilelist() {
     current_dir = "/";
   }
 
-  File root = SD.open(current_dir.c_str());
+  fs::File root = SD.open(current_dir.c_str());
   root.rewindDirectory();
-  File entry = root.openNextFile();
+  fs::File entry = root.openNextFile();
   parent_dir = current_dir;
 
   if (!current_dir.equals("/"))
@@ -398,13 +391,9 @@ void handle_SDfilelist() {
   html_table_header(F("Size"));
   html_TR_TD();
   {
-    String html;
-    html.reserve(50 + parent_dir.length());
-    html += F("<TD><a href=\"SDfilelist?chgto=");
-    html += parent_dir;
-    html += F("\">..");
-    html += F("</a><TD>");
-    addHtml(html);
+    addHtml(F("<TD><a href=\"SDfilelist?chgto="));
+    addHtml(parent_dir);
+    addHtml(F("\">..</a><TD>"));
   }
 
   while (entry)
@@ -418,36 +407,28 @@ void handle_SDfilelist() {
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
       child_dir.toCharArray(SDcardChildDir, child_dir.length() + 1);
-      File child         = SD.open(SDcardChildDir);
-      File dir_has_entry = child.openNextFile();
+      fs::File child         = SD.open(SDcardChildDir);
+      fs::File dir_has_entry = child.openNextFile();
 
       // when the directory is empty, display the button to delete them
       if (!dir_has_entry)
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this directory?')\" href=\"SDfilelist?deletedir="));
-        String html;
-        html.reserve(20 + 2 * current_dir.length() + entrynameLength);
-        html += current_dir;
-        html += entry.name();
-        html += '/';
-        html += F("&chgto=");
-        html += current_dir;
-        html += F("\">Del</a>");
-        addHtml(html);
+        addHtml(current_dir);
+        addHtml(entry.name());
+        addHtml('/');
+        addHtml(F("&chgto="));
+        addHtml(current_dir);
+        addHtml(F("\">Del</a>"));
       }
       {
-        String html;
-        html.reserve(48 + current_dir.length() + 2 * entrynameLength);
-
-        html += F("<TD><a href=\"SDfilelist?chgto=");
-        html += current_dir;
-        html += entry.name();
-        html += '/';
-        html += "\">";
-        html += entry.name();
-        html += F("</a><TD>");
-        html += F("dir");
-        addHtml(html);
+        addHtml(F("<TD><a href=\"SDfilelist?chgto="));
+        addHtml(current_dir);
+        addHtml(entry.name());
+        addHtml('/');
+        addHtml('"', '>');
+        addHtml(entry.name());
+        addHtml(F("</a><TD>dir"));
       }
       dir_has_entry.close();
     }
@@ -457,27 +438,21 @@ void handle_SDfilelist() {
       if ((entry.name() != String(F(FILE_CONFIG)).c_str()) && (entry.name() != String(F(FILE_SECURITY)).c_str()))
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete="));
-        String html;
-        html.reserve(20 + 2 * current_dir.length() + entrynameLength);
-
-        html += current_dir;
-        html += entry.name();
-        html += F("&chgto=");
-        html += current_dir;
-        html += F("\">Del</a>");
-        addHtml(html);
+        addHtml(current_dir);
+        addHtml(entry.name());
+        addHtml(F("&chgto="));
+        addHtml(current_dir);
+        addHtml(F("\">Del</a>"));
       }
       {
-        String html;
-        html.reserve(48 + current_dir.length() + 2 * entrynameLength);
-        html += F("<TD><a href=\"");
-        html += current_dir;
-        html += entry.name();
-        html += "\">";
-        html += entry.name();
-        html += F("</a><TD>");
-        html += entry.size();
-        addHtml(html);
+        // FIXME TD-er: There's a lot of code duplication here.
+        addHtml(F("<TD><a href=\""));
+        addHtml(current_dir);
+        addHtml(entry.name());
+        addHtml('"', '>');
+        addHtml(entry.name());
+        addHtml(F("</a><TD>"));
+        addHtml(entry.size());
       }
     }
     entry.close();

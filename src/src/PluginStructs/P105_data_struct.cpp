@@ -52,7 +52,7 @@ bool AHTx_Device::softReset() {
 }
 
 uint8_t AHTx_Device::readStatus() {
-  return I2C_read8(i2cAddress, NULL);
+  return I2C_read8(i2cAddress, nullptr);
 }
 
 bool AHTx_Device::readData() {
@@ -115,14 +115,14 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     log.reserve(30);
 
     if (!device.initialize()) {
-      log  = getDeviceName();
+      log += getDeviceName();
       log += F(" : unable to initialize");
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
       return false;
     }
     log  = getDeviceName();
     log += F(" : initialized");
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
 
     trigger_time = current_time;
     state        = AHTx_state::AHTx_Trigger_measurement;
@@ -158,17 +158,19 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     last_measurement = current_time;
     state            = AHTx_state::AHTx_New_values;
 
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
       String log;
       log.reserve(50);                        // Prevent re-allocation
-      log  = getDeviceName();
+      log += getDeviceName();
       log += F(" : humidity ");
       log += device.getHumidity();
       log += F("% temperature ");
       log += device.getTemperature();
       log += 'C';
-      addLog(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
+    #endif
 
     return true;
   }
@@ -177,9 +179,9 @@ bool P105_data_struct::updateMeasurements(unsigned long task_index) {
     // should not happen
     String log;
     log.reserve(15); // Prevent re-allocation
-    log  = getDeviceName();
+    log += getDeviceName();
     log += F(" : reset");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
     device.softReset();
 
     state = AHTx_state::AHTx_Uninitialized;

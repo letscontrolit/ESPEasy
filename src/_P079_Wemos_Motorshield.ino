@@ -334,8 +334,8 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
         if (parse_error == true) {
           String ErrorStr = ModeStr;
           ErrorStr += F(": CMD Syntax Error");
-          addLog(LOG_LEVEL_INFO, ErrorStr);
           SendStatus(event, ErrorStr + F(" <br>")); // Reply (echo) to sender. This will print message on browser.
+          addLogMove(LOG_LEVEL_INFO, ErrorStr);
         }
         else {
           switch (motor_dir) {
@@ -409,7 +409,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           ModeStr += paramDirection;
           ModeStr += F(", Spd=");
           ModeStr += paramSpeed;
-          addLog(LOG_LEVEL_INFO, ModeStr);          
+          addLogMove(LOG_LEVEL_INFO, ModeStr);          
         }
 
         success = true;

@@ -24,6 +24,7 @@
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -64,7 +65,7 @@ void handle_sysinfo_json() {
   json_number(F("unit"), String(Settings.Unit));
   json_prop(F("time"),   node_time.getDateTimeString('-', ':', ' '));
   json_prop(F("uptime"), getExtendedValue(LabelType::UPTIME));
-  json_number(F("cpu_load"),   String(getCPUload()));
+  json_number(F("cpu_load"),   toString(getCPUload()));
   json_number(F("loop_count"), String(getLoopCountPerSec()));
   json_close();
 
@@ -168,7 +169,7 @@ void handle_sysinfo_json() {
   json_open(false, F("storage"));
 
   # if defined(ESP8266)
-  uint32_t flashChipId = ESP.getFlashChipId();
+  uint32_t flashChipId = getFlashChipId();
 
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
@@ -206,8 +207,8 @@ void handle_sysinfo_json() {
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
-  json_number(F("sketch_size"),   String(ESP.getSketchSize() / 1024));
-  json_number(F("sketch_free"),   String(ESP.getFreeSketchSpace() / 1024));
+  json_number(F("sketch_size"),   String(getSketchSize() / 1024));
+  json_number(F("sketch_free"),   String(getFreeSketchSpace() / 1024));
 
   json_number(F("spiffs_size"),   String(SpiffsTotalBytes() / 1024));
   json_number(F("spiffs_free"),   String(SpiffsFreeSpace() / 1024));
@@ -304,27 +305,20 @@ void handle_sysinfo_basicInfo() {
 
   if (wdcounter > 0)
   {
-    String html;
-    html.reserve(32);
-    html += getCPUload();
-    html += F("% (LC=");
-    html += getLoopCountPerSec();
-    html += ')';
-    addHtml(html);
+    addHtml(String(getCPUload()));
+    addHtml(F("% (LC="));
+    addHtmlInt(getLoopCountPerSec());
+    addHtml(')');
   }
   addRowLabelValue(LabelType::CPU_ECO_MODE);
 
 
   addRowLabel(F("Boot"));
   {
-    String html;
-    html.reserve(64);
-
-    html += getLastBootCauseString();
-    html += " (";
-    html += RTC.bootCounter;
-    html += ')';
-    addHtml(html);
+    addHtml(getLastBootCauseString());
+    addHtml(F(" ("));
+    addHtmlInt(static_cast<uint32_t>(RTC.bootCounter));
+    addHtml(')');
   }
   addRowLabelValue(LabelType::RESET_REASON);
   addRowLabelValue(LabelType::LAST_TASK_BEFORE_REBOOT);
@@ -342,18 +336,14 @@ void handle_sysinfo_memory() {
   int freeMem = ESP.getFreeHeap();
   addRowLabel(LabelType::FREE_MEM);
   {
-    String html;
-    html.reserve(64);
-
-    html += freeMem;
+    addHtmlInt(freeMem);
 # ifndef BUILD_NO_RAM_TRACKER
-    html += " (";
-    html += lowestRAM;
-    html += F(" - ");
-    html += lowestRAMfunction;
-    html += ')';
+    addHtml(F(" ("));
+    addHtmlInt(lowestRAM);
+    addHtml(F(" - "));
+    addHtml(lowestRAMfunction);
+    addHtml(')');
 # endif // ifndef BUILD_NO_RAM_TRACKER
-    addHtml(html);
   }
 # if defined(CORE_POST_2_5_0) || defined(ESP32)
  #  ifndef LIMIT_BUILD_SIZE
@@ -365,22 +355,24 @@ void handle_sysinfo_memory() {
   addRowLabelValue(LabelType::HEAP_FRAGMENTATION);
   addHtml('%');
   #  endif // ifndef LIMIT_BUILD_SIZE
+  {
+    #ifdef USE_SECOND_HEAP
+    addRowLabelValue(LabelType::FREE_HEAP_IRAM);
+    #endif
+  }
 # endif // if defined(CORE_POST_2_5_0)
 
 
   addRowLabel(LabelType::FREE_STACK);
   {
-    String html;
-    html.reserve(64);
-    html += getCurrentFreeStack();
+    addHtmlInt(getCurrentFreeStack());
 # ifndef BUILD_NO_RAM_TRACKER
-    html += " (";
-    html += lowestFreeStack;
-    html += F(" - ");
-    html += lowestFreeStackfunction;
-    html += ')';
+    addHtml(F(" ("));
+    addHtmlInt(lowestFreeStack);
+    addHtml(F(" - "));
+    addHtml(lowestFreeStackfunction);
+    addHtml(')');
 # endif // ifndef BUILD_NO_RAM_TRACKER
-    addHtml(html);
   }
 
 # if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
@@ -443,14 +435,10 @@ void handle_sysinfo_Network() {
   addRowLabel(LabelType::SSID);
   if (showWiFiConnectionInfo)
   {
-    String html;
-    html.reserve(64);
-
-    html += WiFi.SSID();
-    html += " (";
-    html += WiFi.BSSIDstr();
-    html += ')';
-    addHtml(html);
+    addHtml(WiFi.SSID());
+    addHtml(F(" ("));
+    addHtml(WiFi.BSSIDstr());
+    addHtml(')');
   } else addHtml('-');
 
   addRowLabel(getLabel(LabelType::CHANNEL));
@@ -557,15 +545,12 @@ void handle_sysinfo_ESP_Board() {
 
   addRowLabel(LabelType::ESP_CHIP_ID);
   {
-    String html;
-    html.reserve(32);
-    html += getChipId();
-    html += F(" (0x");
+    addHtmlInt(getChipId());
+    addHtml(F(" (0x"));
     String espChipId(getChipId(), HEX);
     espChipId.toUpperCase();
-    html += espChipId;
-    html += ')';
-    addHtml(html);
+    addHtml(espChipId);
+    addHtml(')');
   }
 
   addRowLabel(LabelType::ESP_CHIP_FREQ);
@@ -614,8 +599,8 @@ void handle_sysinfo_Storage() {
     uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
     addHtml(formatToHex(flashDevice));
   }
-  uint32_t realSize = getFlashRealSizeInBytes();
-  uint32_t ideSize  = ESP.getFlashChipSize();
+  const uint32_t realSize = getFlashRealSizeInBytes();
+  const uint32_t ideSize  = ESP.getFlashChipSize();
 
   addRowLabel(LabelType::FLASH_CHIP_REAL_SIZE);
   addHtmlInt(realSize / 1024);
@@ -634,42 +619,33 @@ void handle_sysinfo_Storage() {
   FlashMode_t ideMode = ESP.getFlashChipMode();
   addRowLabel(LabelType::FLASH_IDE_MODE);
   {
-    String html;
-
     switch (ideMode) {
-      case FM_QIO:   html += F("QIO");  break;
-      case FM_QOUT:  html += F("QOUT"); break;
-      case FM_DIO:   html += F("DIO");  break;
-      case FM_DOUT:  html += F("DOUT"); break;
+      case FM_QIO:   addHtml(F("QIO"));  break;
+      case FM_QOUT:  addHtml(F("QOUT")); break;
+      case FM_DIO:   addHtml(F("DIO"));  break;
+      case FM_DOUT:  addHtml(F("DOUT")); break;
       default:
-        html += getUnknownString(); break;
+        addHtml(getUnknownString()); break;
     }
-    addHtml(html);
   }
   # endif // if defined(ESP8266)
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {
-    String html;
-    html.reserve(32);
-    html += RTC.flashDayCounter;
-    html += F(" daily / ");
-    html += RTC.flashCounter;
-    html += F(" boot");
-    addHtml(html);
+    addHtmlInt(RTC.flashDayCounter);
+    addHtml(F(" daily / "));
+    addHtmlInt(static_cast<int>(RTC.flashCounter));
+    addHtml(F(" boot"));
   }
 
   {
     // FIXME TD-er: Must also add this for ESP32.
     addRowLabel(LabelType::SKETCH_SIZE);
     {
-      String html;
-      html.reserve(32);
-      html += ESP.getSketchSize() / 1024;
-      html += F(" kB (");
-      html += ESP.getFreeSketchSpace() / 1024;
-      html += F(" kB free)");
-      addHtml(html);
+      addHtmlInt(getSketchSize() / 1024);
+      addHtml(F(" kB ("));
+      addHtmlInt(getFreeSketchSpace() / 1024);
+      addHtml(F(" kB free)"));
     }
 
     uint32_t maxSketchSize;
@@ -680,14 +656,10 @@ void handle_sysinfo_Storage() {
     OTA_possible(maxSketchSize, use2step);
     addRowLabel(LabelType::MAX_OTA_SKETCH_SIZE);
     {
-      String html;
-      html.reserve(32);
-
-      html += maxSketchSize / 1024;
-      html += F(" kB (");
-      html += maxSketchSize;
-      html += F(" bytes)");
-      addHtml(html);
+      addHtmlInt(maxSketchSize / 1024);
+      addHtml(F(" kB ("));
+      addHtmlInt(maxSketchSize);
+      addHtml(F(" bytes)"));
     }
 
     # if defined(ESP8266)
@@ -701,14 +673,10 @@ void handle_sysinfo_Storage() {
 
   addRowLabel(LabelType::FS_SIZE);
   {
-    String html;
-    html.reserve(32);
-
-    html += SpiffsTotalBytes() / 1024;
-    html += F(" kB (");
-    html += SpiffsFreeSpace() / 1024;
-    html += F(" kB free)");
-    addHtml(html);
+    addHtmlInt(SpiffsTotalBytes() / 1024);
+    addHtml(F(" kB ("));
+    addHtmlInt(SpiffsFreeSpace() / 1024);
+    addHtml(F(" kB free)"));
   }
   # ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));

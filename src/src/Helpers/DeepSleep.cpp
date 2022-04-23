@@ -59,12 +59,15 @@ bool isDeepSleepEnabled()
   // recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
   //                    short 1-2 for normal deep sleep / wakeup loop
   //                    short 2-3 to cancel sleep loop for modifying settings
+
+#ifndef ESP32 // pinMode() crashes the ESP32 when PSRAM is enabled and available. So don't check for ESP32.
   pinMode(16, INPUT_PULLUP);
 
   if (!digitalRead(16))
   {
     return false;
   }
+#endif
   return true;
 }
 
@@ -141,7 +144,7 @@ void deepSleepStart(int dsdelay)
 
   if (Settings.UseAlternativeDeepSleep()) {
     // See: https://github.com/esp8266/Arduino/issues/6318#issuecomment-711389479
-    #include "c_types.h"
+    #include <c_types.h>
     // system_phy_set_powerup_option:
     // 1 = RF initialization only calibrate VDD33 and Tx power which will take about 18 ms
     // 2 = RF initialization only calibrate VDD33 which will take about 2 ms

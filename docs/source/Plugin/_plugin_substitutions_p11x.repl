@@ -62,3 +62,55 @@
 .. |P115_maintainer| replace:: `TD-er`
 .. |P115_compileinfo| replace:: `.`
 .. |P115_usedlibraries| replace:: `https://github.com/sparkfun/SparkFun_MAX1704x_Fuel_Gauge_Arduino_Library`
+
+.. |P116_name| replace:: :cyan:`ST77xx TFT`
+.. |P116_type| replace:: :cyan:`Display`
+.. |P116_typename| replace:: :cyan:`Display - ST77xx TFT`
+.. |P116_porttype| replace:: `.`
+.. |P116_status| replace:: :yellow:`DISPLAY`
+.. |P116_github| replace:: _P116_ST77xx.ino
+.. _P116_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P116_ST77xx.ino
+.. |P116_usedby| replace:: `.`
+.. |P116_shortinfo| replace:: `.`
+.. |P116_maintainer| replace:: `TD-er, tonhuisman, (WDS)`
+.. |P116_compileinfo| replace:: `.`
+.. |P116_usedlibraries| replace:: `Adafruit GFX, Adafruit ST77xx, prenticedavid/Adafruit_ST7796S_kbv (local copy)`
+
+.. |P117_name| replace:: :cyan:`SCD30`
+.. |P117_type| replace:: :cyan:`Gases`
+.. |P117_typename| replace:: :cyan:`Gases - SCD30 CO2, Humidity, Temperature`
+.. |P117_porttype| replace:: `.`
+.. |P117_status| replace:: :yellow:`TESTING D`
+.. |P117_github| replace:: _P117_SCD30.ino
+.. _P117_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P117_SCD30.ino
+.. |P117_usedby| replace:: `.`
+.. |P117_shortinfo| replace:: `SCD30 CO2 sensor`
+.. |P117_maintainer| replace:: `tonhuisman`
+.. |P117_compileinfo| replace:: `.`
+.. |P117_usedlibraries| replace:: `https://github.com/Frogmore42/Sonoff-Tasmota/tree/development/lib/FrogmoreScd30 (corrected local copy)`
+
+.. |P118_name| replace:: :cyan:`Itho`
+.. |P118_type| replace:: :cyan:`Communication`
+.. |P118_typename| replace:: :cyan:`Communication - Itho`
+.. |P118_porttype| replace:: `.`
+.. |P118_status| replace:: :yellow:`TESTING D`
+.. |P118_github| replace:: _P118_Itho.ino
+.. _P118_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P118_Itho.ino
+.. |P118_usedby| replace:: `.`
+.. |P118_shortinfo| replace:: `Itho RFT fan control using a CC1101 transceiver`
+.. |P118_maintainer| replace:: `svollebregt`
+.. |P118_compileinfo| replace:: `.`
+.. |P118_usedlibraries| replace:: `https://github.com/arjenhiemstra/IthoEcoFanRFT/tree/master/Master (currently using v2.0.0 due to v2.1.0 recieve issues i.c.w. plugin)`
+
+.. |P119_name| replace:: :cyan:`ITG3205`
+.. |P119_type| replace:: :cyan:`Gyro`
+.. |P119_typename| replace:: :cyan:`Gyro - ITG3205`
+.. |P119_porttype| replace:: `.`
+.. |P119_status| replace:: :yellow:`TESTING E`
+.. |P119_github| replace:: _P119_ITG3205_Gyro.ino
+.. _P119_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P119_ITG3205_Gyro.ino
+.. |P119_usedby| replace:: `.`
+.. |P119_shortinfo| replace:: `ITG3205 Gyro sensor`
+.. |P119_maintainer| replace:: `tonhuisman`
+.. |P119_compileinfo| replace:: `.`
+.. |P119_usedlibraries| replace:: `https://github.com/ikiselev/ITG3205`

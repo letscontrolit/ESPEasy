@@ -106,11 +106,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
         uint8_t   choice = P020_SERIAL_PROCESSING;
-        const __FlashStringHelper * options[3];
-        options[0] = F("None");
-        options[1] = F("Generic");
-        options[2] = F("RFLink");
-        addFormSelector(F("Event processing"), F("p020_events"), 3, options, NULL, choice);
+        const __FlashStringHelper * options[3] = {
+          F("None"),
+          F("Generic"),
+          F("RFLink")
+        };
+        addFormSelector(F("Event processing"), F("p020_events"), 3, options, nullptr, choice);
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
       addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
@@ -186,7 +187,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         log += P020_SERVER_PORT;
         log += F(" SERIAL_PROCESSING=");
         log += P020_SERIAL_PROCESSING;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
@@ -201,13 +202,15 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (validGpio(P020_RESET_TARGET_PIN)) {
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log;
           log.reserve(38);
-          log  = F("Ser2net  : P020_RESET_TARGET_PIN : ");
+          log += F("Ser2net  : P020_RESET_TARGET_PIN : ");
           log += P020_RESET_TARGET_PIN;
-          addLog(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+        #endif
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
         digitalWrite(P020_RESET_TARGET_PIN, LOW);
         delay(500);
@@ -282,8 +285,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (command == F("serialsend")) {
-        const char *tmpBuf = string.substring(11).c_str();
-        task->ser2netSerial->write(tmpBuf);
+        task->ser2netSerial->write(string.substring(11).c_str());
         task->ser2netSerial->flush();
         success = true;
       }

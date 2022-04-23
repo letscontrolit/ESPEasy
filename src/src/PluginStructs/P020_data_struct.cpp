@@ -20,6 +20,7 @@ P020_Task::P020_Task(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
 
 P020_Task::~P020_Task() {
   stopServer();
+  serialEnd();
 }
 
 bool P020_Task::serverActive(WiFiServer *server) {
@@ -108,7 +109,7 @@ void P020_Task::discardClientIn() {
 }
 
 void P020_Task::clearBuffer() {
-  serial_buffer = "";
+  serial_buffer = String();
   serial_buffer.reserve(P020_DATAGRAM_MAX_SIZE);
 }
 

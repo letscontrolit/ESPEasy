@@ -36,6 +36,8 @@
 #include "../WebServer/UploadPage.h"
 #include "../WebServer/WiFiScanner.h"
 
+#include "../WebServer/WebTemplateParser.h"
+
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
@@ -66,45 +68,6 @@
 
 #include "../Static/WebStaticData.h"
 
-// Determine what pages should be visible
-#ifndef MENU_INDEX_MAIN_VISIBLE
-  # define MENU_INDEX_MAIN_VISIBLE true
-#endif // ifndef MENU_INDEX_MAIN_VISIBLE
-
-#ifndef MENU_INDEX_CONFIG_VISIBLE
-  # define MENU_INDEX_CONFIG_VISIBLE true
-#endif // ifndef MENU_INDEX_CONFIG_VISIBLE
-
-#ifndef MENU_INDEX_CONTROLLERS_VISIBLE
-  # define MENU_INDEX_CONTROLLERS_VISIBLE true
-#endif // ifndef MENU_INDEX_CONTROLLERS_VISIBLE
-
-#ifndef MENU_INDEX_HARDWARE_VISIBLE
-  # define MENU_INDEX_HARDWARE_VISIBLE true
-#endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
-
-#ifndef MENU_INDEX_DEVICES_VISIBLE
-  # define MENU_INDEX_DEVICES_VISIBLE true
-#endif // ifndef MENU_INDEX_DEVICES_VISIBLE
-
-#ifndef MENU_INDEX_RULES_VISIBLE
-  # define MENU_INDEX_RULES_VISIBLE true
-#endif // ifndef MENU_INDEX_RULES_VISIBLE
-
-#ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
-  # define MENU_INDEX_NOTIFICATIONS_VISIBLE true
-#endif // ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
-
-#ifndef MENU_INDEX_TOOLS_VISIBLE
-  # define MENU_INDEX_TOOLS_VISIBLE true
-#endif // ifndef MENU_INDEX_TOOLS_VISIBLE
-
-
-#if defined(NOTIFIER_SET_NONE) && defined(MENU_INDEX_NOTIFICATIONS_VISIBLE)
-  #undef MENU_INDEX_NOTIFICATIONS_VISIBLE
-  #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
-#endif
-
 
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) {
@@ -113,32 +76,30 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) 
   }
 }
 
-void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
+void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
   #ifdef USES_TIMING_STATS
-  static unsigned statisticsTimerStart = 0;
+  static uint64_t statisticsTimerStart = 0;
 
   if (!Tail) {
-    statisticsTimerStart = micros();
+    statisticsTimerStart = getMicros64();
   }
   #endif // ifdef USES_TIMING_STATS
   {
-    String pageTemplate;
-    String fileName = tmplName;
-
-    fileName += F(".htm");
+    const String fileName = String(tmplName) + F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
 
+    WebTemplateParser templateParser(Tail, rebooting);
     if (f) {
-      pageTemplate.reserve(f.size());
-
-      while (f.available()) { pageTemplate += (char)f.read(); }
+      bool success = true;
+      while (f.available() && success) { 
+        success = templateParser.process((char)f.read());
+      }
       f.close();
     } else {
-      // TODO TD-er: Should send data directly to TXBuffer instead of using large strings.
-      getWebPageTemplateDefault(tmplName, pageTemplate);
+      getWebPageTemplateDefault(tmplName, templateParser);
     }
     #ifndef BUILD_NO_RAM_TRACKER
     checkRAM(F("sendWebPage"));
@@ -146,55 +107,6 @@ void sendHeadandTail(const String& tmplName, boolean Tail, boolean rebooting) {
 
     // web activity timer
     lastWeb = millis();
-
-    if (Tail) {
-      int pos = pageTemplate.indexOf(F("{{content}}"));
-      if (pos >= 0) {
-        pos += 11; // Size of "{{content}}"
-        const int length = pageTemplate.length();
-        // Prevent copy'ing the string, just stream directly to the buffer.
-        for (int i = pos; i < length; ++i) {
-          addHtml(pageTemplate[i]);
-        }
-      }
-    } else {
-      int indexStart = 0;
-      int indexEnd   = 0;
-      int readPos    = 0; // Position of data sent to TXBuffer
-      String varName;     // , varValue;
-
-      while ((indexStart = pageTemplate.indexOf(F("{{"), indexStart)) >= 0) {
-        for (int i = readPos; i < indexStart; ++i) {
-          addHtml(pageTemplate[i]);
-        }
-        readPos = indexStart;
-
-        if ((indexEnd = pageTemplate.indexOf(F("}}"), indexStart)) > 0) {
-          varName    = pageTemplate.substring(indexStart + 2, indexEnd);
-          indexStart = indexEnd + 2;
-          readPos    = indexEnd + 2;
-          varName.toLowerCase();
-
-          if (varName == F("content")) { // is var == page content?
-            break;                       // send first part of result only
-          } else if (varName == F("error")) {
-            getErrorNotifications();
-          }
-          else if (varName == F("meta")) {
-            if (rebooting) {
-              addHtml(F("<meta http-equiv='refresh' content='10 url=/'>"));
-            }
-          }
-          else {
-            getWebPageTemplateVar(varName);
-          }
-        } else { // no closing "}}"
-          // eat "{{"
-          readPos    += 2;
-          indexStart += 2;
-        }
-      }
-    }
   }
 
   if (shouldReboot) {
@@ -228,38 +140,12 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
           log += F("' length: ");
           log += webArg(i).length();
         }
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     }
     #endif // ifndef BUILD_NO_DEBUG
   }
 }
-
-size_t streamFile_htmlEscape(const String& fileName)
-{
-  fs::File f    = tryOpenFile(fileName, "r");
-  size_t   size = 0;
-
-  if (f)
-  {
-    while (f.available())
-    {
-      char c = (char)f.read();
-
-      String escaped;
-
-      if (htmlEscapeChar(c, escaped)) {
-        addHtml(escaped);
-      } else {
-        addHtml(c);
-      }
-      ++size;
-    }
-    f.close();
-  }
-  return size;
-}
-
 
 bool captivePortal() {
   const bool fromAP = web_server.client().localIP() == apIP;
@@ -416,8 +302,8 @@ void WebServerInit()
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
-
-    if (OTA_possible(maxSketchSize, use2step)) {
+    // allow OTA to smaller version of ESPEasy/other firmware
+    if (Settings.AllowOTAUnlimited() || OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&web_server);
     }
     # endif // ifndef NO_HTTP_UPDATER
@@ -458,132 +344,113 @@ void setWebserverRunning(bool state) {
   CheckRunningServices(); // Uses webserverRunning state.
 }
 
-void getWebPageTemplateDefault(const String& tmplName, String& tmpl)
+void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
 {
   const bool addJS   = true;
   const bool addMeta = true;
 
   if (tmplName == F("TmplAP"))
   {
-    static size_t expectedSize = 200;
 
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
+    getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
 
-    #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-    tmpl += F("<body><header class='apheader'>"
-              "<h1>Welcome to ESP Easy Mega AP</h1>");
-    #else
-    tmpl += F(WEBPAGE_TEMPLATE_AP_HEADER);
-    #endif
+    if (!parser.isTail()) {
+      #ifndef WEBPAGE_TEMPLATE_AP_HEADER
+      parser.process(F("<body><header class='apheader'>"
+                "<h1>Welcome to ESP Easy Mega AP</h1>"));
+      #else
+      parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
+      #endif
 
-    tmpl += F("</header>");
-    getWebPageTemplateDefaultContentSection(tmpl);
-    getWebPageTemplateDefaultFooter(tmpl);
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
+      parser.process(F("</header>"));
     }
+    getWebPageTemplateDefaultContentSection(parser);
+    getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplMsg"))
   {
-    static size_t expectedSize = 200;
-
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, !addMeta, !addJS);
-    tmpl += F("<body>");
-    getWebPageTemplateDefaultHeader(tmpl, F("{{name}}"), false);
-    getWebPageTemplateDefaultContentSection(tmpl);
-    getWebPageTemplateDefaultFooter(tmpl);
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
+    getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
+    if (!parser.isTail()) {
+      parser.process(F("<body>"));
     }
+    getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
+    getWebPageTemplateDefaultContentSection(parser);
+    getWebPageTemplateDefaultFooter(parser);
   }
   else if (tmplName == F("TmplDsh"))
   {
-    static size_t expectedSize = 200;
-
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, !addMeta, addJS);
-    tmpl += F(
+    getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
+    parser.process(F(
       "<body>"
       "{{content}}"
       "</body></html>"
-      );
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
-    }
+      ));
   }
   else // all other template names e.g. TmplStd
   {
-    static size_t expectedSize = 200;
-
-    tmpl.reserve(expectedSize);
-    getWebPageTemplateDefaultHead(tmpl, addMeta, addJS);
-    tmpl += F("<body class='bodymenu'>"
-              "<span class='message' id='rbtmsg'></span>");
-    getWebPageTemplateDefaultHeader(tmpl, F("{{name}} {{logo}}"), true);
-    getWebPageTemplateDefaultContentSection(tmpl);
-    getWebPageTemplateDefaultFooter(tmpl);
-    if (tmpl.length() > expectedSize) {
-      expectedSize = tmpl.length();
+    getWebPageTemplateDefaultHead(parser, addMeta, addJS);
+    if (!parser.isTail()) {
+      parser.process(F("<body class='bodymenu'>"
+                "<span class='message' id='rbtmsg'></span>"));
     }
+    getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
+    getWebPageTemplateDefaultContentSection(parser);
+    getWebPageTemplateDefaultFooter(parser);
   }
 //  addLog(LOG_LEVEL_INFO, String(F("tmpl.length(): ")) + String(tmpl.length()));
 }
 
-void getWebPageTemplateDefaultHead(String& tmpl, bool addMeta, bool addJS) {
-  tmpl += F("<!DOCTYPE html><html lang='en'>"
+void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool addJS) {
+  if (parser.isTail()) return;
+  parser.process(F("<!DOCTYPE html><html lang='en'>"
             "<head>"
             "<meta charset='utf-8'/>"
             "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-            "<title>{{name}}</title>");
+            "<title>{{name}}</title>"));
 
-  if (addMeta) { tmpl += F("{{meta}}"); }
+  if (addMeta) { parser.process(F("{{meta}}")); }
 
-  if (addJS) { tmpl += F("{{js}}"); }
+  if (addJS) { parser.process(F("{{js}}")); }
 
-  tmpl += F("{{css}}"
-            "</head>");
+  parser.process(F("{{css}}"
+                   "</head>"));
 }
 
-void getWebPageTemplateDefaultHeader(String& tmpl, const String& title, bool addMenu) {
+void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStringHelper * title, bool addMenu) {
   {
-    String tmp;
+    if (parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F("<header class='headermenu'><h1>ESP Easy Mega: {{title}}"
-            #if BUILD_IN_WEBHEADER
-            "<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"
-            #endif // #if BUILD_IN_WEBHEADER
-            "</h1><BR>"
-            );
-  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
-  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-
-    tmp.replace(F("{{title}}"), title);
+    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(title);
     #if BUILD_IN_WEBHEADER
-    tmp.replace(F("{{date}}"), get_build_date());
+    parser.process(F("<div style='float:right;font-size:10pt'>Build: " GITHUB_RELEASES_LINK_PREFIX "{{date}}" GITHUB_RELEASES_LINK_SUFFIX "</div>"));
     #endif // #if BUILD_IN_WEBHEADER
-    tmpl += tmp;
+    parser.process(F("</h1><BR>"));
+  #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
+    String tmp = F(WEBPAGE_TEMPLATE_DEFAULT_HEADER);
+    tmp.replace(F("{{title}}"), title);
+    parser.process(tmp);
+  #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
   }
 
-  if (addMenu) { tmpl += F("{{menu}}"); }
-  tmpl += F("</header>");
+  if (addMenu) { parser.process(F("{{menu}}")); }
+  parser.process(F("</header>"));
 }
 
-void getWebPageTemplateDefaultContentSection(String& tmpl) {
-  tmpl += F("<section>"
+void getWebPageTemplateDefaultContentSection(WebTemplateParser& parser) {
+  parser.process(F("<section>"
             "<span class='message error'>"
             "{{error}}"
             "</span>"
             "{{content}}"
             "</section>"
-            );
+            ));
 }
 
-void getWebPageTemplateDefaultFooter(String& tmpl) {
+void getWebPageTemplateDefaultFooter(WebTemplateParser& parser) {
+  if (!parser.isTail()) return;
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
-  tmpl += F("<footer>"
+  parser.process(F("<footer>"
             "<br>"
             "<h6>Powered by <a href='http://www.letscontrolit.com' style='font-size: 15px; text-decoration: none'>Let's Control It</a> community"
             #if BUILD_IN_WEBFOOTER
@@ -592,193 +459,13 @@ void getWebPageTemplateDefaultFooter(String& tmpl) {
             "</h6>"
             "</footer>"
             "</body></html>"
-            );
+            ));
 #else // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
-  tmpl += F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER);
+  parser.process(F(WEBPAGE_TEMPLATE_DEFAULT_FOOTER));
 #endif // ifndef WEBPAGE_TEMPLATE_DEFAULT_FOOTER
-  #if BUILD_IN_WEBFOOTER
-  tmpl.replace(F("{{build}}"), get_binary_filename()); // In the footer, show full build binary name, will be 'firmware.bin' when compiled using Arduino IDE.
-  tmpl.replace(F("{{date}}"),  get_build_date());      // And the compile-date
-  #endif // #if BUILD_IN_WEBFOOTER
-}
-
-void getErrorNotifications() {
-  // Check number of MQTT controllers active.
-  int nrMQTTenabled = 0;
-
-  for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-    if (Settings.Protocol[x] != 0) {
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
-
-      if (validProtocolIndex(ProtocolIndex) && Settings.ControllerEnabled[x] && Protocol[ProtocolIndex].usesMQTT) {
-        ++nrMQTTenabled;
-      }
-    }
-  }
-
-  if (nrMQTTenabled > 1) {
-    // Add warning, only one MQTT protocol should be used.
-    addHtmlError(F("Only one MQTT controller should be active."));
-  }
-
-  // Check checksum of stored settings.
-}
-
-uint8_t navMenuIndex = MENU_INDEX_MAIN;
-
-// See https://github.com/letscontrolit/ESPEasy/issues/1650
-const __FlashStringHelper * getGpMenuIcon(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return F("&#8962;");
-    case MENU_INDEX_CONFIG: return F("&#9881;");
-    case MENU_INDEX_CONTROLLERS: return F("&#128172;");
-    case MENU_INDEX_HARDWARE: return F("&#128204;");
-    case MENU_INDEX_DEVICES: return F("&#128268;");
-    case MENU_INDEX_RULES: return F("&#10740;");
-    case MENU_INDEX_NOTIFICATIONS: return F("&#9993;");
-    case MENU_INDEX_TOOLS: return F("&#128295;");
-  }
-  return F("");
-}
-
-const __FlashStringHelper * getGpMenuLabel(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return F("Main");
-    case MENU_INDEX_CONFIG: return F("Config");
-    case MENU_INDEX_CONTROLLERS: return F("Controllers");
-    case MENU_INDEX_HARDWARE: return F("Hardware");
-    case MENU_INDEX_DEVICES: return F("Devices");
-    case MENU_INDEX_RULES: return F("Rules");
-    case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
-    case MENU_INDEX_TOOLS: return F("Tools");
-  }
-  return F("");
-}
-
-const __FlashStringHelper * getGpMenuURL(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return F("/");
-    case MENU_INDEX_CONFIG: return F("/config");
-    case MENU_INDEX_CONTROLLERS: return F("/controllers");
-    case MENU_INDEX_HARDWARE: return F("/hardware");
-    case MENU_INDEX_DEVICES: return F("/devices");
-    case MENU_INDEX_RULES: return F("/rules");
-    case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
-    case MENU_INDEX_TOOLS: return F("/tools");
-  }
-  return F("");
 }
 
 
-bool GpMenuVisible(uint8_t index) {
-  switch (index) {
-    case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
-    case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;
-    case MENU_INDEX_CONTROLLERS: return MENU_INDEX_CONTROLLERS_VISIBLE;
-    case MENU_INDEX_HARDWARE: return MENU_INDEX_HARDWARE_VISIBLE;
-    case MENU_INDEX_DEVICES: return MENU_INDEX_DEVICES_VISIBLE;
-    case MENU_INDEX_RULES: return MENU_INDEX_RULES_VISIBLE;
-    case MENU_INDEX_NOTIFICATIONS: return MENU_INDEX_NOTIFICATIONS_VISIBLE;
-    case MENU_INDEX_TOOLS: return MENU_INDEX_TOOLS_VISIBLE;
-  }
-  return false;
-}
-
-void getWebPageTemplateVar(const String& varName)
-{
-  // serialPrint(varName); serialPrint(" : free: "); serialPrint(ESP.getFreeHeap());   serialPrint("var len before:  "); serialPrint
-  // (varValue.length()) ;serialPrint("after:  ");
-  // varValue = "";
-
-  if (varName == F("name"))
-  {
-    addHtml(Settings.Name);
-  }
-
-  else if (varName == F("unit"))
-  {
-    addHtmlInt(Settings.Unit);
-  }
-
-  else if (varName == F("menu"))
-  {
-    addHtml(F("<div class='menubar'>"));
-
-    for (uint8_t i = 0; i < 8; i++)
-    {
-      if (!GpMenuVisible(i)) {
-        // hide menu item
-        continue;
-      }
-      if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
-        continue;
-      }
-#ifndef USES_NOTIFIER
-
-      if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
-        continue;
-      }
-#endif // ifndef USES_NOTIFIER
-
-      addHtml(F("<a "));
-
-      addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
-      addHtmlAttribute(F("href"),  getGpMenuURL(i));
-      addHtml('>');
-      addHtml(getGpMenuIcon(i));
-      addHtml(F("<span class='showmenulabel'>"));
-      addHtml(getGpMenuLabel(i));
-      addHtml(F("</span></a>"));
-    }
-
-    addHtml(F("</div>"));
-  }
-
-  else if (varName == F("logo"))
-  {
-    if (fileExists(F("esp.png")))
-    {
-      addHtml(F("<img src=\"esp.png\" width=48 height=48 align=right>"));
-    }
-  }
-
-  else if (varName == F("css"))
-  {
-    serve_favicon();
-    serve_CSS();
-  }
-
-
-  else if (varName == F("js"))
-  {
-    html_add_autosubmit_form();
-    serve_JS(JSfiles_e::Toasting);
-  }
-
-  else if (varName == F("error"))
-  {
-    // print last error - not implemented yet
-  }
-
-  else if (varName == F("debug"))
-  {
-    // print debug messages - not implemented yet
-  }
-
-  else
-  {
-    #ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("Templ: Unknown Var : ");
-      log += varName;
-      addLog(LOG_LEVEL_ERROR, log);
-    }
-    #endif // ifndef BUILD_NO_DEBUG
-
-    // no return string - eat var name
-  }
-}
 
 void writeDefaultCSS(void)
 {
@@ -1039,11 +726,21 @@ String getControllerSymbol(uint8_t index)
    return ret;
    }
  */
-void addSVG_param(const String& key, float value) {
-  addSVG_param(key, String(value, 2));
+
+void addSVG_param(const __FlashStringHelper * key, int value) {
+  addHtml(' ');
+  addHtml(key);
+  addHtml('=');
+  addHtml('\"');
+  addHtmlInt(value);
+  addHtml('\"');
 }
 
-void addSVG_param(const String& key, const String& value) {
+void addSVG_param(const __FlashStringHelper * key, float value) {
+  addSVG_param(key, toString(value, 2));
+}
+
+void addSVG_param(const __FlashStringHelper * key, const String& value) {
   addHtml(' ');
   addHtml(key);
   addHtml('=');
@@ -1076,8 +773,8 @@ void createSvgRect(const String& classname,
     addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#")));
     addSVG_param(F("stroke-width"), strokeWidth);
   }
-  addSVG_param("x",         xoffset);
-  addSVG_param("y",         yoffset);
+  addSVG_param(F("x"),      xoffset);
+  addSVG_param(F("y"),      yoffset);
   addSVG_param(F("width"),  width);
   addSVG_param(F("height"), height);
   addSVG_param(F("rx"),     rx);
@@ -1113,17 +810,13 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml(F("\">"));
+  addHtml('"', '>');
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
 
 #define SVG_BAR_HEIGHT 16
 #define SVG_BAR_WIDTH 400
-
-void write_SVG_image_header(int width, int height) {
-  write_SVG_image_header(width, height, false);
-}
 
 void write_SVG_image_header(int width, int height, bool useViewbox) {
   addHtml(F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""));
@@ -1259,7 +952,9 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
   float textYoffset = yOffset + 0.9f * SVG_BAR_HEIGHT;
 
   if (struct_size != 0) {
-    String text = formatHumanReadable(struct_size, 1024);
+    String text;
+    text.reserve(32);
+    text += formatHumanReadable(struct_size, 1024);
     text += '/';
     text += formatHumanReadable(max_size, 1024);
     text += F(" per item");
@@ -1278,13 +973,13 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 int getPartionCount(uint8_t pType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
   int nrPartitions                         = 0;
 
   if (_mypartiterator) {
     do {
       ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
   return nrPartitions;
@@ -1299,7 +994,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   uint32_t realSize                      = getFlashRealSizeInBytes();
   esp_partition_type_t     partitionType = static_cast<esp_partition_type_t>(pType);
   const esp_partition_t   *_mypart;
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
 
   write_SVG_image_header(SVG_BAR_WIDTH + 250, nrPartitions * SVG_BAR_HEIGHT + shiftY);
   float yOffset = shiftY;
@@ -1317,7 +1012,7 @@ void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
       textXoffset = SVG_BAR_WIDTH + 130;
       createSvgTextElement(getPartitionType(_mypart->type, _mypart->subtype), textXoffset, textYoffset);
       yOffset += SVG_BAR_HEIGHT;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != NULL);
+    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   addHtml(F("</svg>\n"));
   esp_partition_iterator_release(_mypartiterator);

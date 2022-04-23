@@ -1,7 +1,7 @@
 #include "../Helpers/StringProvider.h"
 
 #ifdef HAS_ETHERNET
-# include "ETH.h"
+# include <ETH.h>
 #endif // ifdef HAS_ETHERNET
 
 #include "../../ESPEasy-Globals.h"
@@ -22,6 +22,7 @@
 #include "../Globals/Settings.h"
 #include "../Globals/WiFi_AP_Candidates.h"
 
+#include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_Build_Description.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
@@ -32,6 +33,8 @@
 
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
+
+#include "../../ESPEasy_common.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -60,6 +63,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::FREE_MEM:               return F("Free RAM");
     case LabelType::FREE_STACK:             return F("Free Stack");
+#ifdef USE_SECOND_HEAP
+    case LabelType::FREE_HEAP_IRAM:         return F("Free 2nd Heap");
+#endif
+
 #if defined(CORE_POST_2_5_0) || defined(ESP32)
   #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return F("Heap Max Free Block");
@@ -82,10 +89,16 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     #endif // ESP32_ENABLE_PSRAM
 #endif // ifdef ESP32
 
-    case LabelType::JSON_BOOL_QUOTES:       return F("JSON bool output without quotes");
-    case LabelType::ENABLE_TIMING_STATISTICS:  return F("Collect Timing Statistics");
-    case LabelType::TASKVALUESET_ALL_PLUGINS:  return F("Allow TaskValueSet on all plugins");
-    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return F("Try clear I2C bus when stuck");
+    case LabelType::JSON_BOOL_QUOTES:           return F("JSON bool output without quotes");
+    case LabelType::ENABLE_TIMING_STATISTICS:   return F("Collect Timing Statistics");
+    case LabelType::ENABLE_RULES_CACHING:       return F("Enable Rules Cache");
+    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order");
+    case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
+    case LabelType::ALLOW_OTA_UNLIMITED:        return F("Allow OTA without size-check");
+    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:  return F("Try clear I2C bus when stuck");
+#ifndef BUILD_NO_RAM_TRACKER
+    case LabelType::ENABLE_RAM_TRACKING:    return F("Enable RAM Tracker");
+#endif
 
     case LabelType::BOOT_TYPE:              return F("Last Boot Cause");
     case LabelType::BOOT_COUNT:             return F("Boot Count");
@@ -225,18 +238,23 @@ String getValue(LabelType::Enum label) {
     case LabelType::TIME_SOURCE:            return toString(node_time.timeSource);
     case LabelType::TIME_WANDER:            return String(node_time.timeWander, 3);
     case LabelType::UPTIME:                 return String(getUptimeMinutes());
-    case LabelType::LOAD_PCT:               return String(getCPUload());
+    case LabelType::LOAD_PCT:               return toString(getCPUload(), 2);
     case LabelType::LOOP_COUNT:             return String(getLoopCountPerSec());
     case LabelType::CPU_ECO_MODE:           return jsonBool(Settings.EcoPowerMode());
-    case LabelType::WIFI_TX_MAX_PWR:        return String(Settings.getWiFi_TX_power(), 2);
-    case LabelType::WIFI_CUR_TX_PWR:        return String(WiFiEventData.wifi_TX_pwr, 2);
+    case LabelType::WIFI_TX_MAX_PWR:        return toString(Settings.getWiFi_TX_power(), 2);
+    case LabelType::WIFI_CUR_TX_PWR:        return toString(WiFiEventData.wifi_TX_pwr, 2);
     case LabelType::WIFI_SENS_MARGIN:       return String(Settings.WiFi_sensitivity_margin);
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:return jsonBool(Settings.UseMaxTXpowerForSending());
     case LabelType::WIFI_NR_EXTRA_SCANS:    return String(Settings.NumberExtraWiFiScans);
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC: return jsonBool(Settings.UseLastWiFiFromRTC());
 
-    case LabelType::FREE_MEM:               return String(ESP.getFreeHeap());
+    case LabelType::FREE_MEM:               return String(FreeMem());
     case LabelType::FREE_STACK:             return String(getCurrentFreeStack());
+
+#ifdef USE_SECOND_HEAP
+    case LabelType::FREE_HEAP_IRAM:         return String(FreeMem2ndHeap());
+#endif
+
 #if defined(CORE_POST_2_5_0)
   #ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:    return String(ESP.getMaxFreeBlockSize());
@@ -264,10 +282,17 @@ String getValue(LabelType::Enum label) {
 #endif // ifdef ESP32
 
 
-    case LabelType::JSON_BOOL_QUOTES:       return jsonBool(Settings.JSONBoolWithoutQuotes());
-    case LabelType::ENABLE_TIMING_STATISTICS:  return jsonBool(Settings.EnableTimingStats());
-    case LabelType::TASKVALUESET_ALL_PLUGINS:  return jsonBool(Settings.AllowTaskValueSetAllPlugins());
-    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS: return jsonBool(Settings.EnableClearHangingI2Cbus());
+    case LabelType::JSON_BOOL_QUOTES:           return jsonBool(Settings.JSONBoolWithoutQuotes());
+    case LabelType::ENABLE_TIMING_STATISTICS:   return jsonBool(Settings.EnableTimingStats());
+    case LabelType::ENABLE_RULES_CACHING:       return jsonBool(Settings.EnableRulesCaching());
+    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder());
+    case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
+    case LabelType::ALLOW_OTA_UNLIMITED:        return jsonBool(Settings.AllowOTAUnlimited());
+    case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:  return jsonBool(Settings.EnableClearHangingI2Cbus());
+#ifndef BUILD_NO_RAM_TRACKER
+    case LabelType::ENABLE_RAM_TRACKING:        return jsonBool(Settings.EnableRAMTracking());
+#endif
+
 
     case LabelType::BOOT_TYPE:              return getLastBootCauseString();
     case LabelType::BOOT_COUNT:             break;
@@ -453,25 +478,18 @@ String getExtendedValue(LabelType::Enum label) {
   return "";
 }
 
-String getFileName(FileType::Enum filetype) {
-  String result;
+const __FlashStringHelper * getFileName(FileType::Enum filetype) {
 
   switch (filetype)
   {
-    case FileType::CONFIG_DAT:
-      result += F("config.dat");
-      break;
-    case FileType::NOTIFICATION_DAT:
-      result += F("notification.dat");
-      break;
-    case FileType::SECURITY_DAT:
-      result += F("security.dat");
-      break;
+    case FileType::CONFIG_DAT:       return F("config.dat");
+    case FileType::NOTIFICATION_DAT: return F("notification.dat");
+    case FileType::SECURITY_DAT:     return F("security.dat");
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
   }
-  return result;
+  return F("");
 }
 
 String getFileName(FileType::Enum filetype, unsigned int filenr) {

@@ -560,6 +560,7 @@ uint16_t IRsend::minRepeats(const decode_type_t protocol) {
     case AIWA_RC_T501:
     case AMCOR:
     case COOLIX:
+    case COOLIX48:
     case ELITESCREENS:
     case GICABLE:
     case INAX:
@@ -661,11 +662,13 @@ uint16_t IRsend::defaultBits(const decode_type_t protocol) {
       return kDoshishaBits;  // 40
     case SANYO_LC7461:
       return kSanyoLC7461Bits;  // 42
+    case COOLIX48:
     case GOODWEATHER:
     case KELON:
     case MIDEA:
     case PANASONIC:
       return 48;
+    case AIRTON:
     case ECOCLIM:
     case MAGIQUEST:
     case VESTEL_AC:
@@ -784,6 +787,11 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
   uint16_t min_repeat __attribute__((unused)) =
       std::max(IRsend::minRepeats(type), repeat);
   switch (type) {
+#if SEND_AIRTON
+    case AIRTON:
+      sendAirton(data, nbits, min_repeat);
+      break;
+#endif  // SEND_AIRTON
 #if SEND_AIRWELL
     case AIRWELL:
       sendAirwell(data, nbits, min_repeat);
@@ -823,7 +831,12 @@ bool IRsend::send(const decode_type_t type, const uint64_t data,
     case COOLIX:
       sendCOOLIX(data, nbits, min_repeat);
       break;
-#endif
+#endif  // SEND_COOLIX
+#if SEND_COOLIX48
+    case COOLIX48:
+      sendCoolix48(data, nbits, min_repeat);
+      break;
+#endif  // SEND_COOLIX48
 #if SEND_DAIKIN64
     case DAIKIN64:
       sendDaikin64(data, nbits, min_repeat);

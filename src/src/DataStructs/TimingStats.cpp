@@ -20,13 +20,13 @@ unsigned long timingstats_last_reset(0);
 
 TimingStats::TimingStats() : _timeTotal(0.0f), _count(0), _maxVal(0), _minVal(4294967295) {}
 
-void TimingStats::add(unsigned long time) {
+void TimingStats::add(int64_t time) {
   _timeTotal += static_cast<float>(time);
   ++_count;
 
-  if (time > _maxVal) { _maxVal = time; }
+  if (time > static_cast<int64_t>(_maxVal)) { _maxVal = time; }
 
-  if (time < _minVal) { _minVal = time; }
+  if (time < static_cast<int64_t>(_minVal)) { _minVal = time; }
 }
 
 void TimingStats::reset() {
@@ -45,7 +45,7 @@ float TimingStats::getAvg() const {
   return _timeTotal / static_cast<float>(_count);
 }
 
-unsigned int TimingStats::getMinMax(unsigned long& minVal, unsigned long& maxVal) const {
+uint32_t TimingStats::getMinMax(uint64_t& minVal, uint64_t& maxVal) const {
   if (_count == 0) {
     minVal = 0;
     maxVal = 0;
@@ -56,7 +56,7 @@ unsigned int TimingStats::getMinMax(unsigned long& minVal, unsigned long& maxVal
   return _count;
 }
 
-bool TimingStats::thresholdExceeded(unsigned long threshold) const {
+bool TimingStats::thresholdExceeded(const uint64_t& threshold) const {
   if (_count == 0) {
     return false;
   }
@@ -194,7 +194,8 @@ bool mustLogCFunction(CPlugin::Function function) {
   return false;
 }
 
-String getMiscStatsName(int stat) {
+// Return flash string type to reduce bin size
+const __FlashStringHelper * getMiscStatsName_F(int stat) {
   switch (stat) {
     case LOADFILE_STATS:          return F("Load File");
     case SAVEFILE_STATS:          return F("Save File");
@@ -224,9 +225,13 @@ String getMiscStatsName(int stat) {
     case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
+    case RULES_PARSE_LINE:        return F("parseCompleteNonCommentLine()");
+    case RULES_PROCESS_MATCHED:   return F("processMatchedRule()");
+    case RULES_MATCH:             return F("rulesMatch()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
     case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
+    case PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
     case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");
@@ -236,35 +241,19 @@ String getMiscStatsName(int stat) {
     case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
     case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");
-    case C001_DELAY_QUEUE:
-    case C002_DELAY_QUEUE:
-    case C003_DELAY_QUEUE:
-    case C004_DELAY_QUEUE:
-    case C005_DELAY_QUEUE:
-    case C006_DELAY_QUEUE:
-    case C007_DELAY_QUEUE:
-    case C008_DELAY_QUEUE:
-    case C009_DELAY_QUEUE:
-    case C010_DELAY_QUEUE:
-    case C011_DELAY_QUEUE:
-    case C012_DELAY_QUEUE:
-    case C013_DELAY_QUEUE:
-    case C014_DELAY_QUEUE:
-    case C015_DELAY_QUEUE:
-    case C016_DELAY_QUEUE:
-    case C017_DELAY_QUEUE:
-    case C018_DELAY_QUEUE:
-    case C019_DELAY_QUEUE:
-    case C020_DELAY_QUEUE:
-    {
-      String result;
-      result.reserve(16);
-      result  = F("Delay queue ");
-      result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
-      return result;
-    }
   }
-  return getUnknownString();
+  return F("Unknown");
+}
+
+String getMiscStatsName(int stat) {
+  if (stat >= C001_DELAY_QUEUE && stat <= C025_DELAY_QUEUE) {
+    String result;
+    result.reserve(16);
+    result  = F("Delay queue ");
+    result += get_formatted_Controller_number(static_cast<cpluginID_t>(stat - C001_DELAY_QUEUE + 1));
+    return result;
+  }
+  return getMiscStatsName_F(stat);
 }
 
 #endif

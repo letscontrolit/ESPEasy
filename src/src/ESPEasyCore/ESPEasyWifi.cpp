@@ -223,6 +223,14 @@ bool WiFiConnected() {
 
   static bool recursiveCall = false;
 
+  static uint32_t lastCheckedTime = 0;
+  static bool lastState = false;
+
+  if (timePassedSince(lastCheckedTime) < 10) {
+    // Try to rate-limit the nr of calls to this function or else it will be called 1000's of times a second.
+    return lastState;
+  }
+
 
   if (WiFiEventData.unprocessedWifiEvents()) { return false; }
 
@@ -278,7 +286,9 @@ bool WiFiConnected() {
     recursiveCall = false;
     // Only return true after some time since it got connected.
     SetWiFiTXpower();
-    return WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
+    lastState = WiFiEventData.wifi_considered_stable || WiFiEventData.lastConnectMoment.timeoutReached(100);
+    lastCheckedTime = millis();
+    return lastState;
   }
 
   if ((WiFiEventData.timerAPstart.isSet()) && WiFiEventData.timerAPstart.timeReached()) {
@@ -325,9 +335,6 @@ void WiFiConnectRelaxed() {
     return;
   }
   if (WiFiEventData.unprocessedWifiEvents()) {
-    handle_unprocessedNetworkEvents();
-  }
-  if (WiFiEventData.unprocessedWifiEvents()) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
       String log = F("WiFi : Connecting not possible, unprocessed WiFi events: ");
       if (!WiFiEventData.processedConnect) {
@@ -343,7 +350,7 @@ void WiFiConnectRelaxed() {
         log += F(" DHCP_t/o");
       }
       
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return;
   }
@@ -370,6 +377,10 @@ void AttemptWiFiConnect() {
     return;
   }
 
+  if (WiFiEventData.wifiConnectInProgress) {
+    return;
+  }
+
   if (WiFiEventData.wifiSetupConnect) {
     // wifiSetupConnect is when run from the setup page.
     RTC.clearLastWiFi(); // Force slow connect
@@ -380,8 +391,6 @@ void AttemptWiFiConnect() {
     }
   }
 
-  WiFiEventData.markWiFiTurnOn();
-
   if (WiFi_AP_Candidates.getNext(WiFiScanAllowed())) {
     const WiFi_AP_Candidate candidate = WiFi_AP_Candidates.getCurrent();
 
@@ -390,7 +399,7 @@ void AttemptWiFiConnect() {
       log += candidate.toString();
       log += F(" attempt #");
       log += WiFiEventData.wifi_connect_attempt;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     WiFiEventData.markWiFiBegin();
     if (prepareWiFi()) {
@@ -403,6 +412,7 @@ void AttemptWiFiConnect() {
       SetWiFiTXpower(tx_pwr, candidate.rssi);
       // Start connect attempt now, so no longer needed to attempt new connection.
       WiFiEventData.wifiConnectAttemptNeeded = false;
+      WiFiEventData.wifiConnectInProgress = true;
       if (candidate.allowQuickConnect() && !candidate.isHidden) {
         WiFi.begin(candidate.ssid.c_str(), candidate.key.c_str(), candidate.channel, candidate.bssid.mac);
       } else {
@@ -511,7 +521,7 @@ bool checkAndResetWiFi() {
 
   // Call for reset first, to make sure a syslog call will not try to send.
   resetWiFi();
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   return true;
 }
 
@@ -540,8 +550,8 @@ void initWiFi()
 
   // See https://github.com/esp8266/Arduino/issues/5527#issuecomment-460537616
   // FIXME TD-er: Do not destruct WiFi object, it may cause crashes with queued UDP traffic.
-  WiFi.~ESP8266WiFiClass();
-  WiFi = ESP8266WiFiClass();
+//  WiFi.~ESP8266WiFiClass();
+//  WiFi = ESP8266WiFiClass();
 #endif // ifdef ESP8266
 
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
@@ -677,17 +687,17 @@ void SetWiFiTXpower(float dBm, float rssi) {
       if (TX_pwr_int != last_log) {
         last_log = TX_pwr_int;
         String log = F("WiFi : Set TX power to ");
-        log += String(dBm, 0);
+        log += toString(dBm, 0);
         log += F("dBm");
         log += F(" sensitivity: ");
-        log += String(threshold, 0);
+        log += toString(threshold, 0);
         log += F("dBm");
         if (rssi < 0) {
           log += F(" RSSI: ");
-          log += String(rssi, 0);
+          log += toString(rssi, 0);
           log += F("dBm");
         }
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
     }
   }
@@ -805,7 +815,7 @@ bool WiFiScanAllowed() {
         log += F(" DHCP_t/o");
       }
       
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return false;
   }
@@ -851,7 +861,7 @@ void WifiScan(bool async, uint8_t channel) {
       String log;
       log = F("WiFi : Start network scan channel ");
       log += channel;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   bool show_hidden         = true;
@@ -1019,7 +1029,7 @@ void setAPinternal(bool enable)
         log += softAPSSID;
         log += F(" with address ");
         log += WiFi.softAPIP().toString();
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -1027,7 +1037,7 @@ void setAPinternal(bool enable)
         log += softAPSSID;
         log += F(" IP: ");
         log += apIP.toString();
-        addLog(LOG_LEVEL_ERROR, log);
+        addLogMove(LOG_LEVEL_ERROR, log);
       }
     }
     #ifdef ESP32
@@ -1290,7 +1300,7 @@ void setupStaticIPconfig() {
     log += formatIP(subnet);
     log += F(" DNS: ");
     log += formatIP(dns);
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   WiFi.config(ip, gw, subnet, dns);
 }
@@ -1346,7 +1356,7 @@ void logConnectionStatus() {
       log += SDKwifiStatusToString(sdk_wifistatus);
       log += F(" Arduino status: ");
       log += ArduinoWifiStatusToString(arduino_corelib_wifistatus);
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
   }
   #endif
@@ -1356,7 +1366,7 @@ void logConnectionStatus() {
     log += ArduinoWifiStatusToString(WiFi.status());
     log += F(" ESPeasy internal wifi status: ");
     log += ESPeasyWifiStatusToString();
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 /*
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

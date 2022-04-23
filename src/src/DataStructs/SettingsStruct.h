@@ -117,6 +117,23 @@ class SettingsStruct_tmpl
   bool EnableClearHangingI2Cbus() const;
   void EnableClearHangingI2Cbus(bool value);
 
+  // Enable RAM Tracking (may consume a few kB of RAM and cause some performance hit)
+  bool EnableRAMTracking() const;
+  void EnableRAMTracking(bool value);
+
+  // Enable caching of rules, to speed up rules processing
+  bool EnableRulesCaching() const;
+  void EnableRulesCaching(bool value);
+
+  // Allow the cached event entries to be sorted based on how frequent they occur.
+  // This may speed up rules processing, especially on large rule sets with lots of rules blocks.
+  bool EnableRulesEventReorder() const;
+  void EnableRulesEventReorder(bool value);
+
+  // Allow OTA to use 'unlimited' bin sized files, possibly overwriting the file-system, and trashing files
+  // Can be used if the configuration is later retrieved/restored manually
+  bool AllowOTAUnlimited() const;
+  void AllowOTAUnlimited(bool value);
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;

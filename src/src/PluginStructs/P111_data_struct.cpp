@@ -11,9 +11,20 @@
 P111_data_struct::P111_data_struct(uint8_t csPin, uint8_t rstPin) : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
 {}
 
+P111_data_struct::~P111_data_struct() {
+  if (mfrc522 != nullptr) {
+    delete mfrc522;
+    mfrc522 = nullptr;
+  }
+}
+
 void P111_data_struct::init() {
-  if (mfrc522 == nullptr){
-    mfrc522 = new MFRC522 (_csPin, _rstPin);   // Instantiate a MFRC522
+  if (mfrc522 != nullptr) {
+    delete mfrc522;
+    mfrc522 = nullptr;
+  }
+  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin);   // Instantiate a MFRC522
+  if (mfrc522 != nullptr) {
     mfrc522->PCD_Init();  // Initialize MFRC522 reader
   }
 }
@@ -35,9 +46,11 @@ uint8_t P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
     {
       errorCount++;
       removedState = false;
-      String log = F("MFRC522: Read error: ");
-      log += errorCount;
-      addLog(LOG_LEVEL_ERROR, log);
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        String log = F("MFRC522: Read error: ");
+        log += errorCount;
+        addLogMove(LOG_LEVEL_ERROR, log);
+      }
       break;
     } 
     case 2: // No tag found
@@ -79,9 +92,11 @@ String P111_data_struct::getCardName() {
 \*********************************************************************************************/
 bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
   if (resetPin != -1) {
-    String log = F("MFRC522: Reset on pin: ");
-    log += resetPin;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("MFRC522: Reset on pin: ");
+      log += resetPin;
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     delay(100);
@@ -107,19 +122,20 @@ bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
     
     // When 0x00 or 0xFF is returned, communication probably failed
     if ((v == 0x00) || (v == 0xFF)) {
-      String log=F("MFRC522: Communication failure, is the MFRC522 properly connected?");
-      addLog(LOG_LEVEL_ERROR,log);
+      addLog(LOG_LEVEL_ERROR, F("MFRC522: Communication failure, is the MFRC522 properly connected?"));
       return false;
     } else {
-      String log=F("MFRC522: Software Version: ");
-      if (v == 0x91)
-        log+=F(" = v1.0");
-      else if (v == 0x92)
-        log+=F(" = v2.0");
-      else
-        log+=F(" (unknown),probably a chinese clone?");
-            
-      addLog(LOG_LEVEL_INFO, log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log=F("MFRC522: Software Version: ");
+        if (v == 0x91)
+          log+=F(" = v1.0");
+        else if (v == 0x92)
+          log+=F(" = v2.0");
+        else
+          log+=F(" (unknown),probably a chinese clone?");
+              
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
     }
     return true;
   }

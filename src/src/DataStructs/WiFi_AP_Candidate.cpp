@@ -62,8 +62,6 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(const bss_info& ap) :
 #endif
 
 
-WiFi_AP_Candidate::WiFi_AP_Candidate() {}
-
 bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
   if (isEmergencyFallback != other.isEmergencyFallback) {
     return isEmergencyFallback;
@@ -85,7 +83,7 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
 }
 
 bool WiFi_AP_Candidate::operator==(const WiFi_AP_Candidate& other) const {
-  return bssid_match(other.bssid) && ssid.equals(other.ssid) && key.equals(other.key);
+  return bssid_match(other.bssid) && ssid.equals(other.ssid);// && key.equals(other.key);
 }
 
 bool WiFi_AP_Candidate::usable() const {
@@ -148,7 +146,7 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
   if (rssi == -1) {
     result += F(" (RTC) ");
   } else {
-    result += " (";
+    result += F(" (");
     result += rssi;
     result += F("dBm) ");
   }

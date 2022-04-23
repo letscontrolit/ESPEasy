@@ -5,6 +5,7 @@
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -50,7 +51,7 @@ void handle_rules() {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Rules : Create new file: ");
       log += fileName;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     fs::File f = tryOpenFile(fileName, "w");
 
@@ -88,7 +89,7 @@ void handle_rules() {
       RULESETS_MAX, 
       options, 
       optionValues, 
-      NULL, 
+      nullptr, 
       choice, 
       F("return rules_set_onchange(rulesselect)"), 
       true,
@@ -195,33 +196,25 @@ void handle_rules_new() {
                                    if (fi.isDirectory)
                                    {
                                      addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name.c_str())
+                                     addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name)
                                                    , F("Backup")
                                                    );
                                    }
                                    else
                                    {
-                                     String encodedPath =  URLEncode((fi.Name + F(".txt")).c_str());
+                                     String encodedPath =  URLEncode(String(fi.Name + F(".txt")));
 
                                      // File Name
-                                     {
-                                       String html;
-                                       html.reserve(128);
+                                     addHtml(F("</TD><TD><a href='"));
+                                     addHtml(String(fi.Name));
+                                     addHtml(F(".txt'>"));
+                                     addHtml(String(fi.Name));
+                                     addHtml(F(".txt</a></TD>"));
 
-                                       html += F("</TD><TD><a href='");
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += "'>";
-                                       html += fi.Name;
-                                       html += F(".txt");
-                                       html += F("</a></TD>");
-
-                                       // File size
-                                       html += F("<TD>");
-                                       html += fi.Size;
-                                       html += F("</TD>");
-                                       addHtml(html);
-                                     }
+                                     // File size
+                                     html_TD();
+                                     addHtmlInt(fi.Size);
+                                     addHtml(F("</TD>"));
 
                                      // Actions
                                      html_TD();
@@ -557,20 +550,16 @@ void Rule_showRuleTextArea(const String& fileName) {
   size_t size = 0;
 
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
-  size = streamFile_htmlEscape(fileName);
+  size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
 
   html_TR_TD();
   {
-    String html;
-    html.reserve(64);
-
-    html += F("Current size: <span id='size'>");
-    html += size;
-    html += F("</span> characters (Max ");
-    html += RULES_MAX_SIZE;
-    html += F(")");
-    addHtml(html);
+    addHtml(F("Current size: <span id='size'>"));
+    addHtmlInt(size);
+    addHtml(F("</span> characters (Max "));
+    addHtmlInt(RULES_MAX_SIZE);
+    addHtml(F(")"));
   }
 
   if (size > RULES_MAX_SIZE) {
@@ -642,11 +631,11 @@ bool EnumerateFileAndDirectory(String          & rootPath
   hasMore = dir.next();
   # endif // ifdef ESP8266
   # ifdef ESP32
-  File root = ESPEASY_FS.open(rootPath);
+  fs::File root = ESPEASY_FS.open(rootPath);
 
   if (root)
   {
-    File file = root.openNextFile();
+    fs::File file = root.openNextFile();
 
     while (next && file) {
       if (count >= skip) {

@@ -46,17 +46,17 @@ P053_data_struct::P053_data_struct(
   int8_t                  pwrPin,
   PMSx003_type            sensortype,
   uint32_t                delay_read_after_wakeup_ms
-# ifdef                   PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef                 PLUGIN_053_ENABLE_EXTRA_SENSORS
   , bool                  oversample
   , bool                  splitCntBins
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   )
   : _taskIndex(TaskIndex),
   _sensortype(sensortype),
-# ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _oversample(oversample),
   _splitCntBins(splitCntBins),
-# endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
   _delay_read_after_wakeup_ms(delay_read_after_wakeup_ms),
   _resetPin(resetPin), _pwrPin(pwrPin)
 {
@@ -73,7 +73,7 @@ P053_data_struct::P053_data_struct(
     log += _resetPin;
     log += ' ';
     log += _pwrPin;
-    addLog(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
@@ -129,17 +129,19 @@ void P053_data_struct::SerialRead16(uint16_t& value, uint16_t *checksum)
     *checksum += data_low;
   }
 
-# ifdef P053_LOW_LEVEL_DEBUG
+  # ifdef P053_LOW_LEVEL_DEBUG
 
-  // Low-level logging to see data from sensor
-  String log = F("PMSx003 : uint8_t high=0x");
-  log += String(data_high, HEX);
-  log += F(" uint8_t low=0x");
-  log += String(data_low, HEX);
-  log += F(" result=0x");
-  log += String(value, HEX);
-  addLog(LOG_LEVEL_INFO, log);
-# endif // ifdef P053_LOW_LEVEL_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    // Low-level logging to see data from sensor
+    String log = F("PMSx003 : uint8_t high=0x");
+    log += String(data_high, HEX);
+    log += F(" uint8_t low=0x");
+    log += String(data_low, HEX);
+    log += F(" result=0x");
+    log += String(value, HEX);
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
+  # endif // ifdef P053_LOW_LEVEL_DEBUG
 }
 
 void P053_data_struct::SerialFlush() {
@@ -243,7 +245,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       log.reserve(34);
       log  = F("PMSx003 : invalid framelength - ");
       log += framelength;
-      addLog(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, log);
     }
     return false;
   }
@@ -260,68 +262,81 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     SerialRead16(data[i], &checksum);
   }
 
-# ifndef BUILD_NO_DEBUG
-#  ifdef P053_LOW_LEVEL_DEBUG
+  # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  if (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_T) {
+    data[PMS_Temp_C]  = data[PMS_T_Temp_C]; // Move data to the 'usual' location for Temp/Hum
+    data[PMS_Hum_pct] = data[PMS_T_Hum_pct];
+  }
+  # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+
+  # ifndef BUILD_NO_DEBUG
+  #  ifdef P053_LOW_LEVEL_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Available on all supported sensor models
     String log;
-    log.reserve(87);
-    log  = F("PMSx003 : pm1.0=");
-    log += data[PMS_PM1_0_ug_m3_factory];
-    log += F(", pm2.5=");
-    log += data[PMS_PM2_5_ug_m3_factory];
-    log += F(", pm10=");
-    log += data[PMS_PM10_0_ug_m3_factory];
-    log += F(", pm1.0a=");
-    log += data[PMS_PM1_0_ug_m3_normal];
-    log += F(", pm2.5a=");
-    log += data[PMS_PM2_5_ug_m3_normal];
-    log += F(", pm10a=");
-    log += data[PMS_PM10_0_ug_m3_normal];
-    addLog(LOG_LEVEL_DEBUG, log);
+    if (log.reserve(87)) {
+      log  = F("PMSx003 : pm1.0=");
+      log += data[PMS_PM1_0_ug_m3_factory];
+      log += F(", pm2.5=");
+      log += data[PMS_PM2_5_ug_m3_factory];
+      log += F(", pm10=");
+      log += data[PMS_PM10_0_ug_m3_factory];
+      log += F(", pm1.0a=");
+      log += data[PMS_PM1_0_ug_m3_normal];
+      log += F(", pm2.5a=");
+      log += data[PMS_PM2_5_ug_m3_normal];
+      log += F(", pm10a=");
+      log += data[PMS_PM10_0_ug_m3_normal];
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
   }
 
-#   ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #   ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
       && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR != PMSx003_type::PMS2003_3003)) { // 'Count' values not available on
     // PMS2003/PMS3003 models
     // (handled as 1 model in code)
     String log;
-    log.reserve(96);
-    log  = F("PMSx003 : count/0.1L : 0.3um=");
-    log += data[PMS_cnt0_3_100ml];
-    log += F(", 0.5um=");
-    log += data[PMS_cnt0_5_100ml];
-    log += F(", 1.0um=");
-    log += data[PMS_cnt1_0_100ml];
-    log += F(", 2.5um=");
-    log += data[PMS_cnt2_5_100ml];
-    log += F(", 5.0um=");
-    log += data[PMS_cnt5_0_100ml];
-    log += F(", 10um=");
-    log += data[PMS_cnt10_0_100ml];
-    addLog(LOG_LEVEL_DEBUG, log);
+    if (log.reserve(96)) {
+      log  = F("PMSx003 : count/0.1L : 0.3um=");
+      log += data[PMS_cnt0_3_100ml];
+      log += F(", 0.5um=");
+      log += data[PMS_cnt0_5_100ml];
+      log += F(", 1.0um=");
+      log += data[PMS_cnt1_0_100ml];
+      log += F(", 2.5um=");
+      log += data[PMS_cnt2_5_100ml];
+      log += F(", 5.0um=");
+      log += data[PMS_cnt5_0_100ml];
+      log += F(", 10um=");
+      log += data[PMS_cnt10_0_100ml];
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
   }
 
-  #    ifdef PLUGIN_053_ENABLE_S_AND_T
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)
-      && (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)) { // Values only available on PMS5003ST
+      && ((GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST)
+          || (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_T))) { // Values only available on PMS5003ST & PMS5003T
     String log;
-    log.reserve(45);
-    log  = F("PMSx003 : temp=");
-    log += static_cast<float>(data[PMS_Temp_C]) / 10.0f;
-    log += F(", humi=");
-    log += static_cast<float>(data[PMS_Hum_pct]) / 10.0f;
-    log += F(", hcho=");
-    log += static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f;
-    addLog(LOG_LEVEL_DEBUG, log);
+    if (log.reserve(45)) {
+      log  = F("PMSx003 : temp=");
+      log += static_cast<float>(data[PMS_Temp_C]) / 10.0f;
+      log += F(", humi=");
+      log += static_cast<float>(data[PMS_Hum_pct]) / 10.0f;
+
+      if (GET_PLUGIN_053_SENSOR_MODEL_SELECTOR == PMSx003_type::PMS5003_ST) {
+        log += F(", hcho=");
+        log += static_cast<float>(data[PMS_Formaldehyde_mg_m3]) / 1000.0f;
+      }
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
   }
-  #    endif // ifdef PLUGIN_053_ENABLE_S_AND_T
-  #   endif  // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-#  endif     // ifdef P053_LOW_LEVEL_DEBUG
-# endif      // ifndef BUILD_NO_DEBUG
+  #   endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  #  endif     // ifdef P053_LOW_LEVEL_DEBUG
+  # endif      // ifndef BUILD_NO_DEBUG
 
   // Compare checksums
   SerialRead16(checksum2, nullptr);
@@ -334,10 +349,13 @@ bool P053_data_struct::processData(struct EventStruct *event) {
 
   if (_last_wakeup_moment.isSet() && !_last_wakeup_moment.timeReached()) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("PMSx003 : Less than ");
-      log += _delay_read_after_wakeup_ms / 1000ul;
-      log += F(" sec since sensor wakeup => Ignoring sample");
-      addLog(LOG_LEVEL_INFO, log);
+      String log;
+      if (log.reserve(80)) {
+        log = F("PMSx003 : Less than ");
+        log += _delay_read_after_wakeup_ms / 1000ul;
+        log += F(" sec since sensor wakeup => Ignoring sample");
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
     }
     return false;
   }
@@ -350,14 +368,14 @@ bool P053_data_struct::processData(struct EventStruct *event) {
       # endif // ifndef BUILD_NO_DEBUG
     return false;
   }
-# ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Data is checked and good, fill in output
   UserVar[event->BaseVarIndex]     = data[PMS_PM1_0_ug_m3_normal];
   UserVar[event->BaseVarIndex + 1] = data[PMS_PM2_5_ug_m3_normal];
   UserVar[event->BaseVarIndex + 2] = data[PMS_PM10_0_ug_m3_normal];
   _values_received                 = 1;
-# else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # else // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
   // Store in the averaging buffer to process later
   if (!_oversample) {
@@ -368,7 +386,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
     _data[i] += data[i];
   }
   ++_values_received;
-# endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
+  # endif // ifndef PLUGIN_053_ENABLE_EXTRA_SENSORS
 
 
   // Store new checksum, to help detect duplicates.
@@ -475,7 +493,7 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
       String log = F("PMSx003: Oversampling using ");
       log += _values_received;
       log += F(" samples");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
   }
   # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
@@ -606,11 +624,14 @@ bool P053_data_struct::getValue(uint8_t index, float& value) {
       if (!hasFormaldehyde()) { return false; }
       value = _data[index] / 1000.0f;
       break;
+    case PMS_cnt5_0_100ml:
+    case PMS_cnt10_0_100ml: // this option was missing :-|
+
+      if (_sensortype == PMSx003_type::PMS5003_T) { return false; } // else: fall through
     case PMS_cnt0_3_100ml:
     case PMS_cnt0_5_100ml:
     case PMS_cnt1_0_100ml:
     case PMS_cnt2_5_100ml:
-    case PMS_cnt5_0_100ml:
       value = _data[index];
 
       if (_splitCntBins) {
