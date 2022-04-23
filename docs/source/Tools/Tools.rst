@@ -226,6 +226,8 @@ Rules Settings
 
 * Rules - Check to enable rules functionality (on next page load, extra Rules tab will appear)
 * Old Engine - Default checked.
+* Enable Rules Cache - Rules cache will keep track of where in the rules files each ``on ... do`` block is located. This significantly improves the time it takes to handle events. (Enabled by default, Added 2022/04/17)
+* Allow Rules Event Reorder - It is best to have the rules blocks for the most frequently occuring events placed at the top of the first rules file. (also for frequently happening events, which you don't want to act on) The cached event positions can be reordered in memory based on how often an event was matched.  (Enabled by default, Added 2022/04/17)
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
 
@@ -373,8 +375,18 @@ If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on i
 
 Default: unchecked
 
+Allow OTA without size-check
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Added: 2022-04-22
 
+On ESP's with 1MB or 2MB Flash, updates via OTA *may* be disabled because of a lack of free flash memory to store the new image during OTA update.
+
+Enabling this setting will allow OTA updates even when there is not enough free Flash space to perform the update by allowing to overwrite the file-system, probably trashing the settings and other files like rules.
+
+This should best only be enabled if the configuration, and other files like rules, can be restored from an external source, or be re-entered manually.
+
+NB: If the OTA update is bigger than available flash + file-system size, the OTA update will fail, but as the file-system is already overwritten, any configuration and files are overwritten irreversibly!
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^

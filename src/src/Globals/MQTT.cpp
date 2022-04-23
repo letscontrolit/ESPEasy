@@ -12,6 +12,7 @@ bool MQTTclient_should_reconnect        = true;
 bool MQTTclient_must_send_LWT_connected = false;
 bool MQTTclient_connected               = false;
 int  mqtt_reconnect_count               = 0;
+LongTermTimer MQTTclient_next_connect_attempt;
 #endif // USES_MQTT
 
 #ifdef USES_P037

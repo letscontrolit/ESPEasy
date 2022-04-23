@@ -9,8 +9,6 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 
 
-extern boolean activeRuleSets[RULESETS_MAX];
-
 
 String EventToFileName(const String& eventName);
 
@@ -31,30 +29,13 @@ void   rulesProcessing(const String& event);
 
 /********************************************************************************************\
    Rules processing
+   Return true when event was handled.
  \*********************************************************************************************/
-String rulesProcessingFile(const String& fileName,
-                           const String& event);
+bool rulesProcessingFile(const String& fileName,
+                         const String& event,
+                         size_t pos = 0,
+                         bool   startOnMatched = false);
 
-
-/********************************************************************************************\
-   Strip comment from the line.
-   Return true when comment was stripped.
- \*********************************************************************************************/
-bool rules_strip_trailing_comments(String& line);
-
-/********************************************************************************************\
-   Test for common mistake
-   Return true if mistake was found (and corrected)
- \*********************************************************************************************/
-bool rules_replace_common_mistakes(const String& from,
-                                   const String& to,
-                                   String      & line);
-
-/********************************************************************************************\
-   Check for common mistakes
-   Return true if nothing strange found
- \*********************************************************************************************/
-bool check_rules_line_user_errors(String& line);
 
 
 /********************************************************************************************\
@@ -85,10 +66,6 @@ bool parse_math_functions(const String& cmd_s_lower,
 void parse_string_commands(String& line);
 
 
-void replace_EventValueN_Argv(String      & line,
-                              const String& argString,
-                              unsigned int  argc);
-
 void substitute_eventvalue(String      & line,
                            const String& event);
 
@@ -101,7 +78,8 @@ void parseCompleteNonCommentLine(String& line,
                                  bool    condition[],
                                  bool    ifBranche[],
                                  uint8_t  & ifBlock,
-                                 uint8_t  & fakeIfBlock);
+                                 uint8_t  & fakeIfBlock,
+                                 bool   startOnMatched);
 
 void processMatchedRule(String& action,
                         const String& event,
@@ -113,31 +91,12 @@ void processMatchedRule(String& action,
                         uint8_t  & ifBlock,
                         uint8_t  & fakeIfBlock);
 
-/********************************************************************************************\
-   Check if an event matches to a given rule
- \*********************************************************************************************/
-bool ruleMatch(const String& event,
-               const String& rule);
 
 /********************************************************************************************\
    Check expression
  \*********************************************************************************************/
 bool conditionMatchExtended(String& check);
 
-// Find the compare condition.
-// @param posStart = first position of the compare condition in the string
-// @param posEnd   = first position rest of the string, right after the compare condition.
-bool findCompareCondition(const String& check,
-                          char        & compare,
-                          int         & posStart,
-                          int         & posEnd);
-
-bool compareIntValues(char       compare,
-                      const int& Value1,
-                      const int& Value2);
-bool compareDoubleValues(char          compare,
-                         const double& Value1,
-                         const double& Value2);
 
 bool conditionMatch(const String& check);
 
