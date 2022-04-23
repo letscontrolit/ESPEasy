@@ -130,6 +130,11 @@ class SettingsStruct_tmpl
   bool EnableRulesEventReorder() const;
   void EnableRulesEventReorder(bool value);
 
+  // Allow OTA to use 'unlimited' bin sized files, possibly overwriting the file-system, and trashing files
+  // Can be used if the configuration is later retrieved/restored manually
+  bool AllowOTAUnlimited() const;
+  void AllowOTAUnlimited(bool value);
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);

@@ -302,10 +302,10 @@ void WebServerInit()
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
-  //allow OTA to smaller version of ESPEasy/other firmware
-    //if (OTA_possible(maxSketchSize, use2step)) {
+    // allow OTA to smaller version of ESPEasy/other firmware
+    if (Settings.AllowOTAUnlimited() || OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&web_server);
-    //}
+    }
     # endif // ifndef NO_HTTP_UPDATER
   }
   #endif    // if defined(ESP8266)
