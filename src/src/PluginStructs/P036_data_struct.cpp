@@ -1433,7 +1433,11 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
       //        Stop after framecount loops if no data found
       ntries += 1;
 
-      if (ntries > NFrames) { break; }
+      if (ntries > (NFrames + 1)) {
+        // do not leave the while loop to early
+        // it needs to loop back to frameCounter=0 if just one frame is having text
+        break;
+      }
 
       if (nextFrameToDisplay == 0xff) {
         // Increment the frame counter
