@@ -109,7 +109,7 @@
 .. |P038_status| replace:: :green:`DISPLAY, NORMAL`
 .. |P038_github| replace:: P038_NeoPixel.ino
 .. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
-.. |P038_usedby| replace:: `.`
+.. |P038_usedby| replace:: `NeoPixel RGB and RGBW LEDs and LED Strips`
 .. |P038_shortinfo| replace:: `.`
 .. |P038_maintainer| replace:: `.`
 .. |P038_compileinfo| replace:: `.`

@@ -12,6 +12,7 @@ void Caches::clearAllCaches()
   fileExistsMap.clear();
   updateTaskCaches();
   WiFi_AP_Candidates.clearCache();
+  rulesHelper.closeAllFiles();
 }
 
 void Caches::updateTaskCaches() {

@@ -1,0 +1,9 @@
+ShiftRegister74HC595_NonTemplate	KEYWORD1
+setAll	KEYWORD2
+getAll	KEYWORD2
+set	KEYWORD2
+setNoUpdate	KEYWORD2
+updateRegisters	KEYWORD2
+setAllLow	KEYWORD2
+setAllHigh	KEYWORD2
+get	KEYWORD2
