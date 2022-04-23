@@ -32,9 +32,12 @@ void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersi
     }
   } else {
     // read data of version 1 (beginning from 22.11.2019)
-    LoadCustomTaskSettings(taskIndex, reinterpret_cast<uint8_t *>(&DisplayLinesV1), sizeof(DisplayLinesV1));
-
     for (int i = 0; i < P36_Nlines; ++i) {
+      LoadCustomTaskSettings(
+        taskIndex, 
+        reinterpret_cast<uint8_t *>(&DisplayLinesV1[i]), 
+        sizeof(tDisplayLines), 
+        i * sizeof(tDisplayLines));
       DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
     }
   }

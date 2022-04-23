@@ -240,13 +240,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("SSD1306 (128x64 dot controller)"),
           F("SH1106 (132x64 dot controller)")
         };
-        int optionValues[2] = { 1, 2 };
+        const int optionValues[2] = { 1, 2 };
         addFormSelector(F("Controller"), F("p036_controller"), 2, options, optionValues, P036_CONTROLLER);
       }
 
       {
         const __FlashStringHelper *options[P36_MaxSizesCount] = { F("128x64"), F("128x32"), F("64x48") };
-        int optionValues[P36_MaxSizesCount]                   =
+        const int optionValues[P36_MaxSizesCount]                   =
         { static_cast<int>(p036_resolution::pix128x64),
           static_cast<int>(p036_resolution::pix128x32),
           static_cast<int>(p036_resolution::pix64x48) };
@@ -255,7 +255,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *options[2] = { F("Normal"), F("Rotated") };
-        int optionValues[2]                   = { 1, 2 };
+        const int optionValues[2]             = { 1, 2 };
         addFormSelector(F("Rotation"), F("p036_rotate"), 2, options, optionValues, P036_ROTATE);
       }
 
@@ -281,7 +281,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("Very Fast"),
           F("Instant")
         };
-        int optionValues[5] =
+        const int optionValues[5] =
         { static_cast<int>(ePageScrollSpeed::ePSS_VerySlow),
           static_cast<int>(ePageScrollSpeed::ePSS_Slow),
           static_cast<int>(ePageScrollSpeed::ePSS_Fast),
@@ -305,7 +305,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         Opcount = 3;
 # endif // ifdef INPUT_PULLDOWN
         const __FlashStringHelper *options[3] = { F("Input"), F("Input pullup"), F("Input pulldown") };
-        int optionValues[3]                   =
+        const int optionValues[3]             =
         { static_cast<int>(eP036pinmode::ePPM_Input),
           static_cast<int>(eP036pinmode::ePPM_InputPullUp),
           static_cast<int>(eP036pinmode::ePPM_InputPullDown) };
@@ -323,7 +323,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
         if (choice == 0) { choice = P36_CONTRAST_HIGH; }
         const __FlashStringHelper *options[3] = { F("Low"), F("Medium"), F("High") };
-        int optionValues[3]                   = { P36_CONTRAST_LOW, P36_CONTRAST_MED, P36_CONTRAST_HIGH };
+        const int optionValues[3]             = { P36_CONTRAST_LOW, P36_CONTRAST_MED, P36_CONTRAST_HIGH };
         addFormSelector(F("Contrast"), F("p036_contrast"), 3, options, optionValues, choice);
       }
 
@@ -341,7 +341,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           F("Display &amp; Contrast"),
           F("Display, Contrast, Frame, Line &amp; Linecount")
         };
-        int optionValues[3] = { 0, 1, 3 }; // Bitmap
+        const int optionValues[3] = { 0, 1, 3 }; // Bitmap
         addFormSelector(F("Generate events"), F("p036_generateEvents"), 3, options, optionValues, choice);
 
         addFormNote(F("Events: &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high),"));
@@ -365,7 +365,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         { F("SSID"),         F("SysName"),         F("IP"),                 F("MAC"),                 F("RSSI"),                 F("BSSID"),
           F("WiFi channel"), F("Unit"),            F("SysLoad"),            F("SysHeap"),             F("SysStack"),             F("Date"),
           F("Time"),         F("PageNumbers") };
-        int optionValues9[14] =
+        const int optionValues9[14] =
         { static_cast<int>(eHeaderContent::eSSID),
           static_cast<int>(eHeaderContent::eSysName),
           static_cast<int>(eHeaderContent::eIP),
@@ -393,15 +393,17 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
 # ifdef P036_ENABLE_LEFT_ALIGN
-      const __FlashStringHelper *optionsAlignment[3] =
-      { F("left"), F("center"), F("right") };
-      int optionValuesAlignment[3] =
-      { static_cast<int>(eAlignment::eLeft),
-        static_cast<int>(eAlignment::eCenter),
-        static_cast<int>(eAlignment::eRight)
-      };
-      addFormSelector(F("Align content (global)"), F("p036_LeftAlign"), 3, optionsAlignment, optionValuesAlignment,
-                      get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED));
+      {
+        const __FlashStringHelper *optionsAlignment[3] =
+        { F("left"), F("center"), F("right") };
+        const int optionValuesAlignment[3] =
+        { static_cast<int>(eAlignment::eLeft),
+          static_cast<int>(eAlignment::eCenter),
+          static_cast<int>(eAlignment::eRight)
+        };
+        addFormSelector(F("Align content (global)"), F("p036_LeftAlign"), 3, optionsAlignment, optionValuesAlignment,
+                        get2BitFromUL(P036_FLAGS_1, P036_FLAG_LEFT_ALIGNED));
+      }
 # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
       {
@@ -411,13 +413,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # ifdef P036_CHECK_HEAP
         P036_CheckHeap(F("_LOAD: Before (*P036_lines = new)"));
 # endif // P036_CHECK_HEAP
-        P036_LineContent *P036_lines = new (std::nothrow) P036_LineContent();
 
-        if (nullptr != P036_lines) {
+        {
+          P036_LineContent P036_lines;
 # ifdef P036_CHECK_HEAP
           P036_CheckHeap(F("_LOAD: Before loadDisplayLines()"));
 # endif // P036_CHECK_HEAP
-          P036_lines->loadDisplayLines(event->TaskIndex, get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION)); // Bit23-20 Version
+          P036_lines.loadDisplayLines(event->TaskIndex, get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION)); // Bit23-20 Version
                                                                                                                    // CustomTaskSettings
 # ifdef P036_CHECK_HEAP
           P036_CheckHeap(F("_LOAD: After loadDisplayLines()"));
@@ -426,7 +428,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           String strID;
           const __FlashStringHelper *optionsFont[5] =
           { F("Use smallest"), F("Reduce to smaller"), F("None"), F("Enlarge to bigger"), F("Use biggest") };
-          int optionValuesFont[5] =
+          const int optionValuesFont[5] =
           { static_cast<int>(eModifyFont::eMinimize),
             static_cast<int>(eModifyFont::eReduce),
             static_cast<int>(eModifyFont::eNone),
@@ -437,7 +439,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           const __FlashStringHelper *optionsAlignment[4] =
           { F("Use global"), F("left"), F("center"), F("right") };
-          int optionValuesAlignment[4] =
+          const int optionValuesAlignment[4] =
           { static_cast<int>(eAlignment::eGlobal),
             static_cast<int>(eAlignment::eLeft),
             static_cast<int>(eAlignment::eCenter),
@@ -460,7 +462,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # ifdef P036_USE_XWIDE
             html_TD(F("padding-right: 8px")); // text box is (100% - 8 pixel) on right side wide
             addTextBox(getPluginCustomArgName(varNr),
-                       String(P036_lines->DisplayLinesV1[varNr].Content),
+                       String(P036_lines.DisplayLinesV1[varNr].Content),
                        P36_NcharsV1 - 1,
                        false,                         // readonly,
                        false,                         // required,
@@ -470,14 +472,14 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # else // ifdef P036_CSS_Changed
             html_TD();                                // content
             addTextBox(getPluginCustomArgName(varNr), // column oly 80% width!
-                       String(P036_lines->DisplayLinesV1[varNr].Content),
+                       String(P036_lines.DisplayLinesV1[varNr].Content),
                        P36_NcharsV1 - 1
                        );
 # endif // ifdef P036_CSS_Changed
             html_TD(); // font
             strID             = F("FontID");
             strID            += (varNr + 1);
-            FontChoice[varNr] = get3BitFromUL(P036_lines->DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
+            FontChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Font);
             addSelector(strID,
                         5,
                         optionsFont,
@@ -491,7 +493,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             html_TD();                     // alignment
             strID                  = F("AlignmentID");
             strID                 += (varNr + 1);
-            AlignmentChoice[varNr] = get3BitFromUL(P036_lines->DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+            AlignmentChoice[varNr] = get3BitFromUL(P036_lines.DisplayLinesV1[varNr].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
             addSelector(strID,
                         4,
                         optionsAlignment,
@@ -504,12 +506,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                         );
           }
           html_end_table();
-
-          // Need to delete the allocated object here
-          delete P036_lines;
-        }
-        else {
-          addLog(LOG_LEVEL_ERROR, F("P036_PLUGIN_WEBFORM_LOAD: P036_lines are zero!"));
         }
       }
 
@@ -595,9 +591,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 # ifdef P036_CHECK_HEAP
         P036_CheckHeap(F("_SAVE: Before (*P036_lines = new)"));
 # endif // P036_CHECK_HEAP
-        P036_LineContent *P036_lines = new (std::nothrow) P036_LineContent();
 
-        if (nullptr != P036_lines) {
+        {
+          P036_LineContent P036_lines;
           String   error, strID;
           uint32_t lModifyLayout;
 
@@ -607,12 +603,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            if (!safe_strncpy(P036_lines->DisplayLinesV1[varNr].Content, webArg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
+            if (!safe_strncpy(P036_lines.DisplayLinesV1[varNr].Content, webArg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
               error += getCustomTaskSettingsError(varNr);
             }
-            P036_lines->DisplayLinesV1[varNr].Content[P36_NcharsV1 - 1] = 0;                                     // Terminate in case of
+            P036_lines.DisplayLinesV1[varNr].Content[P36_NcharsV1 - 1] = 0;                                     // Terminate in case of
                                                                                                                  // uninitalized data
-            P036_lines->DisplayLinesV1[varNr].FontType = 0xff;
+            P036_lines.DisplayLinesV1[varNr].FontType = 0xff;
             lModifyLayout                              = 0xC0;                                                   // keep 2 upper bits
                                                                                                                  // untouched
             strID  = F("FontID");
@@ -621,22 +617,21 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             strID  = F("AlignmentID");
             strID += (varNr + 1);
             set3BitToUL(lModifyLayout, P036_FLAG_ModifyLayout_Alignment, uint8_t(getFormItemInt(strID) & 0xff)); // Alignment
-            P036_lines->DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
-            P036_lines->DisplayLinesV1[varNr].FontSpace    = 0xff;
-            P036_lines->DisplayLinesV1[varNr].reserved     = 0xff;
+            P036_lines.DisplayLinesV1[varNr].ModifyLayout = uint8_t(lModifyLayout & 0xff);
+            P036_lines.DisplayLinesV1[varNr].FontSpace    = 0xff;
+            P036_lines.DisplayLinesV1[varNr].reserved     = 0xff;
           }
 
           if (error.length() > 0) {
             addHtmlError(error);
           }
-          SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P036_lines->DisplayLinesV1)),
-                                 sizeof(P036_lines->DisplayLinesV1));
-
-          // Need to delete the allocated object here
-          delete P036_lines;
-        }
-        else {
-          addLog(LOG_LEVEL_ERROR, F("P036_PLUGIN_WEBFORM_SAVE: P036_lines are zero!"));
+          for (int i = 0; i < P36_Nlines; ++i) {
+            SaveCustomTaskSettings(
+              event->TaskIndex, 
+              reinterpret_cast<uint8_t *>(&P036_lines.DisplayLinesV1[i]), 
+              sizeof(tDisplayLines), 
+              i * sizeof(tDisplayLines));
+          }
         }
       }
 

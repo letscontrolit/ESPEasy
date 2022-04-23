@@ -7,6 +7,8 @@
 # include <SSD1306.h>
 # include <SH1106Wire.h>
 
+# include <vector>
+
 # ifdef LIMIT_BUILD_SIZE
 #  define P036_LIMIT_BUILD_SIZE
 # endif // ifdef LIMIT_BUILD_SIZE
@@ -228,11 +230,15 @@ typedef struct {
 class P036_LineContent {
 public:
 
+  P036_LineContent() {
+    DisplayLinesV1.resize(P36_Nlines);
+  }
+
   void loadDisplayLines(taskIndex_t taskIndex,
                         uint8_t     LoadVersion);
 
   // CustomTaskSettings
-  tDisplayLines DisplayLinesV1[P36_Nlines]; // holds the CustomTaskSettings for V1
+  std::vector<tDisplayLines> DisplayLinesV1; // holds the CustomTaskSettings for V1
 };
 
 struct P036_data_struct : public PluginTaskData_base {
