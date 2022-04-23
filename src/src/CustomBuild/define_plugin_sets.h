@@ -1283,6 +1283,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+   #ifndef USES_P123
+     #define USES_P123   // FT6206
+   #endif
 #endif
 
 
@@ -1498,7 +1501,7 @@ To create/register a plugin, you have to :
 //    #define USES_P122   //
   #endif
   #ifndef USES_P123
-//    #define USES_P123   //
+    #define USES_P123   // FT6206
   #endif
   #ifndef USES_P124
     #define USES_P124   //

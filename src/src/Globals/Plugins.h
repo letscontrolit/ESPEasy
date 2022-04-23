@@ -90,6 +90,11 @@ String        getPluginNameFromDeviceIndex(deviceIndex_t deviceIndex);
 #if USE_I2C_DEVICE_SCAN
 bool          checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress);
 #endif // if USE_I2C_DEVICE_SCAN
+bool          getPluginDisplayParametersFromTaskIndex(taskIndex_t taskIndex,
+                                                      uint16_t  & x,
+                                                      uint16_t  & y,
+                                                      uint16_t  & r,
+                                                      uint16_t  & colorDepth);
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
 void          sortDeviceIndexArray();

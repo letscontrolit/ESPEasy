@@ -278,6 +278,8 @@ void addTextBox(const String& id,
                 ,
                 const String& tooltip = EMPTY_STRING
                 #endif // ifdef ENABLE_TOOLTIPS
+                ,
+                const String& datalist = EMPTY_STRING
                 );
 
 // ********************************************************************************

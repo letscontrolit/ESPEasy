@@ -147,17 +147,39 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
 
 #if USE_I2C_DEVICE_SCAN
 bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress) {
-  bool hasI2CAddress = false;
-
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
     struct EventStruct TempEvent;
     TempEvent.Par1 = i2cAddress;
-    hasI2CAddress = Plugin_ptr[deviceIndex](PLUGIN_I2C_HAS_ADDRESS, &TempEvent, dummy);
+    return Plugin_ptr[deviceIndex](PLUGIN_I2C_HAS_ADDRESS, &TempEvent, dummy);
   }
-  return hasI2CAddress;
+  return false;
 }
 #endif // if USE_I2C_DEVICE_SCAN
+
+bool getPluginDisplayParametersFromTaskIndex(taskIndex_t taskIndex, uint16_t& x, uint16_t& y, uint16_t& r, uint16_t& colorDepth) {
+  if (!validTaskIndex(taskIndex)) { return false; }
+  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+  if (validDeviceIndex(deviceIndex)) {
+    const pluginID_t pluginID = DeviceIndex_to_Plugin_id[deviceIndex];
+
+    if (validPluginID(pluginID)) {
+      String dummy;
+      struct EventStruct TempEvent;
+      TempEvent.setTaskIndex(taskIndex);
+
+      if (Plugin_ptr[deviceIndex](PLUGIN_GET_DISPLAY_PARAMETERS, &TempEvent, dummy)) {
+        x          = TempEvent.Par1;
+        y          = TempEvent.Par2;
+        r          = TempEvent.Par3;
+        colorDepth = TempEvent.Par4;
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 // ********************************************************************************
 // Device Sort routine, actual sorting alfabetically by plugin name.

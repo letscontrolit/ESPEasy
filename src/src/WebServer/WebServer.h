@@ -98,7 +98,8 @@ void json_prop(LabelType::Enum label);
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
 void addTaskSelect(const String& name,
-                   taskIndex_t   choice);
+                   taskIndex_t   choice,
+                   const String& cssclass = "wide");
 
 // ********************************************************************************
 // Add a Value select dropdown list, based on TaskIndex
