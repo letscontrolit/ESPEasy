@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-04-23, tonhuisman: Add separate settings for Conversion rate Voltage and Current
  * 2022-04-21, tonhuisman: Move source into PluginStructs
  * 2022-04-20, tonhuisman: Add averaging of samples and conversion rate settings
  * 2022-04-19, tonhuisman: Adapt to general ESPEasy coding standards
@@ -83,8 +84,9 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       P132_VALUE_3 = 2;
       P132_VALUE_4 = 3;
       uint32_t lSettings = 0;
-      set3BitToUL(lSettings, P132_FLAG_AVERAGE,    0x00);
-      set3BitToUL(lSettings, P132_FLAG_CONVERSION, 0x04);
+      set3BitToUL(lSettings, P132_FLAG_AVERAGE,      0x00);
+      set3BitToUL(lSettings, P132_FLAG_CONVERSION_B, 0x04); // Voltage
+      set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, 0x04); // Current
       P132_CONFIG_FLAGS = lSettings;
       break;
     }
@@ -163,12 +165,19 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
 
         //                         140us  204us  332us  588us  1.1ms  2.1ms  4.1ms  8.2ms
         int conversionValues[] = { 0b000, 0b001, 0b010, 0b011, 0b100, 0b101, 0b110, 0b111 };
-        addFormSelector(F("Conversion rate"),
-                        F("p132_conversion"),
+        addFormSelector(F("Conversion rate Voltage"),
+                        F("p132_conversion_v"),
                         INA3221_conversion_OPTION,
                         conversionRates,
                         conversionValues,
-                        P132_GET_CONVERSION);
+                        P132_GET_CONVERSION_B);
+
+        addFormSelector(F("Conversion rate Current"),
+                        F("p132_conversion_c"),
+                        INA3221_conversion_OPTION,
+                        conversionRates,
+                        conversionValues,
+                        P132_GET_CONVERSION_S);
       }
 
       success = true;
@@ -185,8 +194,9 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       P132_SHUNT = getFormItemInt(F("p132_shunt"));
 
       uint32_t lSettings = 0;
-      set3BitToUL(lSettings, P132_FLAG_AVERAGE,    getFormItemInt(F("p132_average")));
-      set3BitToUL(lSettings, P132_FLAG_CONVERSION, getFormItemInt(F("p132_conversion")));
+      set3BitToUL(lSettings, P132_FLAG_AVERAGE,      getFormItemInt(F("p132_average")));
+      set3BitToUL(lSettings, P132_FLAG_CONVERSION_B, getFormItemInt(F("p132_conversion_v")));
+      set3BitToUL(lSettings, P132_FLAG_CONVERSION_S, getFormItemInt(F("p132_conversion_c")));
       P132_CONFIG_FLAGS = lSettings;
 
       success = true;

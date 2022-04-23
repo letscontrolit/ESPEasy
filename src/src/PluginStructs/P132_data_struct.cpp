@@ -117,8 +117,8 @@ void P132_data_struct::setCalibration_INA3221(struct EventStruct *event) {
   uint16_t mfgid  = I2C_read16_reg(_i2c_address, 0xFE); // read manufacturer ID, should be 0x5449
 
   set3BitToUL(config, INA3221_AVERAGE_BIT,          P132_GET_AVERAGE);
-  set3BitToUL(config, INA3221_CONVERSION_BUS_BIT,   P132_GET_CONVERSION);
-  set3BitToUL(config, INA3221_CONVERSION_SHUNT_BIT, P132_GET_CONVERSION);
+  set3BitToUL(config, INA3221_CONVERSION_BUS_BIT,   P132_GET_CONVERSION_B);
+  set3BitToUL(config, INA3221_CONVERSION_SHUNT_BIT, P132_GET_CONVERSION_S);
 
   # ifndef BUILD_NO_DEBUG
 
