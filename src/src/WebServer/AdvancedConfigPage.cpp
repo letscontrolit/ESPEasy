@@ -121,6 +121,8 @@ void handle_advanced() {
     Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
     Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER));
 
+    Settings.AllowOTAUnlimited(isFormItemChecked(LabelType::ALLOW_OTA_UNLIMITED));
+
     addHtmlError(SaveSettings());
 
     if (node_time.systemTimePresent()) {
@@ -240,6 +242,12 @@ void handle_advanced() {
 
   addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
   addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
+
+  # ifndef NO_HTTP_UPDATER
+  addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());
+  addFormNote(F("When enabled, OTA updating can overwrite the filesystem and settings!"));
+  addFormNote(F("Requires reboot to activate"));
+  # endif // ifndef NO_HTTP_UPDATER
 
   #ifdef ESP8266
   addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
