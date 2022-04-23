@@ -141,7 +141,7 @@ class OLEDDisplayUi {
     // Loading screen
     LoadingDrawFunction loadingDrawFunction       = [](OLEDDisplay *display, LoadingStage* stage, uint8_t progress) {
       display->setTextAlignment(TEXT_ALIGN_CENTER);
-      display->setFont(ArialMT_Plain_10);
+      display->setFont(getArialMT_Plain_10());
       display->drawString(64, 18, stage->process);
       display->drawProgressBar(4, 32, 120, 8, progress);
     };
