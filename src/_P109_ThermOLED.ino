@@ -675,7 +675,7 @@ void P109_display_time() {
   String newString = parseTemplate(dtime, 10);
 
   P109_display->setTextAlignment(TEXT_ALIGN_LEFT);
-  P109_display->setFont(Dialog_plain_12);
+  P109_display->setFont(getDialog_plain_12());
   P109_display->setColor(BLACK);
   P109_display->fillRect(0, 0, 28, 13);
   P109_display->setColor(WHITE);
@@ -684,7 +684,7 @@ void P109_display_time() {
 
 void P109_display_title(String& title) {
   P109_display->setTextAlignment(TEXT_ALIGN_CENTER);
-  P109_display->setFont(Dialog_plain_12);
+  P109_display->setFont(getDialog_plain_12());
   P109_display->setColor(BLACK);
   P109_display->fillRect(0, 0, 128, 15); // Underscores use a extra lines, clear also.
   P109_display->setColor(WHITE);
@@ -754,7 +754,7 @@ void P109_display_current_temp() {
       P109_display->fillRect(3, 19, 47, 25);
       P109_display->setColor(WHITE);
       tmpString = toString(atemp, 1);
-      P109_display->setFont(ArialMT_Plain_24);
+      P109_display->setFont(getArialMT_Plain_24());
       P109_display->drawString(3, 19, tmpString.substring(0, 5));
       Plugin_109_prev_temp = atemp;
     }
@@ -770,7 +770,7 @@ void P109_display_setpoint_temp(byte force) {
       P109_display->fillRect(86, 35, 41, 21);
       P109_display->setColor(WHITE);
       String tmpString = toString(stemp, 1);
-      P109_display->setFont(Dialog_plain_18);
+      P109_display->setFont(getDialog_plain_18());
       P109_display->drawString(86, 35, tmpString.substring(0, 5));
       Plugin_109_prev_setpoint = stemp;
       Plugin_109_changed       = 1;
@@ -793,7 +793,7 @@ void P109_display_timeout() {
       P109_display->setColor(BLACK);
       P109_display->fillRect(86, 35, 41, 21);
       P109_display->setColor(WHITE);
-      P109_display->setFont(Dialog_plain_18);
+      P109_display->setFont(getDialog_plain_18());
       P109_display->drawString(86, 35, thour.substring(0, 5));
       Plugin_109_prev_timeout = UserVar[Plugin_109_varindex + 3];
     }
@@ -825,7 +825,7 @@ void P109_display_mode() {
     P109_display->setColor(BLACK);
     P109_display->fillRect(61, 49, 12, 17);
     P109_display->setColor(WHITE);
-    P109_display->setFont(ArialMT_Plain_16);
+    P109_display->setFont(getArialMT_Plain_16());
     P109_display->drawString(61, 49, tmpString.substring(0, 5));
     Plugin_109_prev_mode = UserVar[Plugin_109_varindex + 2];
   }
@@ -856,7 +856,7 @@ void P109_display_page() {
   Plugin_109_prev_mode     = 255;
   Plugin_109_prev_timeout  = 32768;
 
-  P109_display->setFont(Dialog_plain_12);
+  P109_display->setFont(getDialog_plain_12());
   P109_display->setTextAlignment(TEXT_ALIGN_LEFT);
   String tstr      = F("{D}C");
   String newString = parseTemplate(tstr, 10);

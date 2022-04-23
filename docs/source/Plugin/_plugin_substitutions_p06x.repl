@@ -11,9 +11,9 @@
 .. |P060_compileinfo| replace:: `.`
 .. |P060_usedlibraries| replace:: `.`
 
-.. |P061_name| replace:: :cyan:`PCF8574/MCP23017`
+.. |P061_name| replace:: :cyan:`PCF8574 / MCP23017 / PCA8575`
 .. |P061_type| replace:: :cyan:`Keypad`
-.. |P061_typename| replace:: :cyan:`Keypad - PCF8574/MCP23017`
+.. |P061_typename| replace:: :cyan:`Keypad - PCF8574 / MCP23017 / PCA8575`
 .. |P061_porttype| replace:: `.`
 .. |P061_status| replace:: :yellow:`TESTING`
 .. |P061_github| replace:: P061_KeyPad.ino
