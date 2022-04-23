@@ -524,7 +524,7 @@ uint16_t OLEDDisplay::getStringWidth(const char* text, uint16_t length) {
   return max(maxWidth, stringWidth);
 }
 
-uint16_t OLEDDisplay::getStringWidth(String strUser) {
+uint16_t OLEDDisplay::getStringWidth(const String& strUser) {
   char* text = utf8ascii(strUser);
   uint16_t length = strlen(text);
   uint16_t width = getStringWidth(text, length);

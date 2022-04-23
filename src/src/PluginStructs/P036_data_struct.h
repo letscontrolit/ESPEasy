@@ -182,12 +182,46 @@ enum class eAlignment {
 # define P036_FLAG_ModifyLayout_Alignment   3 // Bit 5-3 eAlignment
 
 typedef struct {
-  char    Content[P36_NcharsV1] = { 0 };
+  String  Content;
   uint8_t FontType              = 0;
   uint8_t ModifyLayout          = 0; // Bit 2-0 eModifyFont, Bit 5-3 eAlignment
   uint8_t FontSpace             = 0;
   uint8_t reserved              = 0;
 } tDisplayLines;
+
+struct tDisplayLines_storage {
+  tDisplayLines_storage() = default;
+
+  tDisplayLines_storage(const tDisplayLines& memory) :
+    FontType(memory.FontType),
+    ModifyLayout(memory.ModifyLayout),
+    FontSpace(memory.FontSpace),
+    reserved(memory.reserved) 
+  {
+    safe_strncpy(Content, memory.Content, P36_NcharsV1);
+    ZERO_TERMINATE(Content);
+  }
+
+  tDisplayLines get() const {
+    tDisplayLines res;
+    res.Content      = String(Content);
+    res.FontType     = FontType;
+    res.ModifyLayout = ModifyLayout;
+    res.FontSpace    = FontSpace;
+    res.reserved     = reserved;
+    return res;
+  }
+
+  char    Content[P36_NcharsV1] = { 0 };
+  uint8_t FontType              = 0;
+  uint8_t ModifyLayout          = 0; // Bit 2-0 eModifyFont, Bit 5-3 eAlignment
+  uint8_t FontSpace             = 0;
+  uint8_t reserved              = 0;
+};
+
+struct tDisplayLines_storage_full {
+  tDisplayLines_storage lines[P36_Nlines];
+};
 
 typedef struct {
   const char *fontData; // font
@@ -236,6 +270,8 @@ public:
 
   void loadDisplayLines(taskIndex_t taskIndex,
                         uint8_t     LoadVersion);
+  
+  String saveDisplayLines(taskIndex_t taskIndex);
 
   // CustomTaskSettings
   std::vector<tDisplayLines> DisplayLinesV1; // holds the CustomTaskSettings for V1

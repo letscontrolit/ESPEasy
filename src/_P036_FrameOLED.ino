@@ -603,13 +603,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
           for (uint8_t varNr = 0; varNr < P36_Nlines; varNr++)
           {
-            if (!safe_strncpy(P036_lines.DisplayLinesV1[varNr].Content, webArg(getPluginCustomArgName(varNr)), P36_NcharsV1)) {
-              error += getCustomTaskSettingsError(varNr);
-            }
-            P036_lines.DisplayLinesV1[varNr].Content[P36_NcharsV1 - 1] = 0;                                     // Terminate in case of
-                                                                                                                 // uninitalized data
+            P036_lines.DisplayLinesV1[varNr].Content  = webArg(getPluginCustomArgName(varNr));
             P036_lines.DisplayLinesV1[varNr].FontType = 0xff;
-            lModifyLayout                              = 0xC0;                                                   // keep 2 upper bits
+            lModifyLayout                             = 0xC0;                                                   // keep 2 upper bits
                                                                                                                  // untouched
             strID  = F("FontID");
             strID += (varNr + 1);
@@ -622,15 +618,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_lines.DisplayLinesV1[varNr].reserved     = 0xff;
           }
 
+          error = P036_lines.saveDisplayLines(event->TaskIndex);
           if (error.length() > 0) {
             addHtmlError(error);
-          }
-          for (int i = 0; i < P36_Nlines; ++i) {
-            SaveCustomTaskSettings(
-              event->TaskIndex, 
-              reinterpret_cast<uint8_t *>(&P036_lines.DisplayLinesV1[i]), 
-              sizeof(tDisplayLines), 
-              i * sizeof(tDisplayLines));
           }
         }
       }
@@ -1224,15 +1214,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                  (LineNo <= P36_Nlines)) {
           // content functions
           success = true;
-          String NewContent = parseStringKeepCase(string, 3);
-          NewContent = P036_data->P36_parseTemplate(NewContent, 20);
-
-          if (!safe_strncpy(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content, NewContent, P36_NcharsV1)) {
-            addHtmlError(getCustomTaskSettingsError(LineNo - 1));
-          }
-          P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content[P36_NcharsV1 - 1] = 0;   // Terminate in case of
-                                                                                              // uninitalized data
-          P036_data->LineContent->DisplayLinesV1[LineNo - 1].reserved = (event->Par3 & 0xFF); // not implemented yet
+          String* currentLine = &P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content;
+          *currentLine = parseStringKeepCase(string, 3);
+          *currentLine = P036_data->P36_parseTemplate(*currentLine, 20);
 
           // calculate Pix length of new Content
           uint16_t PixLength = P036_data->CalcPixLength(LineNo - 1);
@@ -1243,16 +1227,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             str_error += F(" too long for line! Max. 255 pix!");
             addHtmlError(str_error);
 
-            const int strlen =
-              strnlen_P(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content,
-                        sizeof(P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content));
-
+            const int strlen = currentLine->length();
             if (strlen > 0) {
               const float fAvgPixPerChar = static_cast<float>(PixLength) / strlen;
               const int   iCharToRemove  = ceil((static_cast<float>(PixLength - 255)) / fAvgPixPerChar);
 
               // shorten string because OLED controller can not handle such long strings
-              P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content[strlen - iCharToRemove] = 0;
+              *currentLine = currentLine->substring(0, strlen - iCharToRemove);
             }
           }
           P036_data->MaxFramesToDisplay = 0xff; // update frame count
@@ -1299,9 +1280,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             log += F(" NewContent:");
             log += NewContent;
             log += F(" Content:");
-            log += String(P036_data->DisplayLinesV1[LineNo - 1].Content);
+            log += P036_data->DisplayLinesV1[LineNo - 1].Content;
             log += F(" Length:");
-            log += String(P036_data->DisplayLinesV1[LineNo - 1].Content).length();
+            log += P036_data->DisplayLinesV1[LineNo - 1].Content.length();
             log += F(" Pix: ");
             log += P036_data->display->getStringWidth(P036_data->DisplayLinesV1[LineNo - 1].Content);
             log += F(" Reserved:");

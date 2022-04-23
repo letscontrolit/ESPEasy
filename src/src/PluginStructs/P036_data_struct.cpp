@@ -5,7 +5,9 @@
 # include <Arduino.h>
 
 # include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../Globals/RTC.h"
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Memory.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/Scheduler.h"
 # include "../Helpers/StringConverter.h"
@@ -23,24 +25,59 @@ void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersi
     LoadCustomTaskSettings(taskIndex, DisplayLinesV0, P36_Nlines, P36_NcharsV0); // max. length 1024 Byte  (DAT_TASKS_CUSTOM_SIZE)
 
     for (int i = 0; i < P36_Nlines; ++i) {
-      safe_strncpy(DisplayLinesV1[i].Content, DisplayLinesV0[i], P36_NcharsV1);
-      DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
-      DisplayLinesV1[i].FontType                  = 0xff;
-      DisplayLinesV1[i].ModifyLayout              = 0xff;
-      DisplayLinesV1[i].FontSpace                 = 0xff;
-      DisplayLinesV1[i].reserved                  = 0xff;
+      DisplayLinesV1[i].Content      = std::move(DisplayLinesV0[i]);
+      DisplayLinesV1[i].FontType     = 0xff;
+      DisplayLinesV1[i].ModifyLayout = 0xff;
+      DisplayLinesV1[i].FontSpace    = 0xff;
+      DisplayLinesV1[i].reserved     = 0xff;
     }
   } else {
     // read data of version 1 (beginning from 22.11.2019)
     for (int i = 0; i < P36_Nlines; ++i) {
+      tDisplayLines_storage tmp;
       LoadCustomTaskSettings(
         taskIndex, 
-        reinterpret_cast<uint8_t *>(&DisplayLinesV1[i]), 
-        sizeof(tDisplayLines), 
-        i * sizeof(tDisplayLines));
-      DisplayLinesV1[i].Content[P36_NcharsV1 - 1] = 0; // Terminate in case of uninitalized data
+        reinterpret_cast<uint8_t *>(&tmp), 
+        sizeof(tDisplayLines_storage), 
+        i * sizeof(tDisplayLines_storage));
+      DisplayLinesV1[i] = tmp.get();
     }
   }
+}
+
+String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
+  String error;
+  if (FreeMem() > 8000) {
+    // Write in one single chunk.
+    tDisplayLines_storage_full *tmp = new (std::nothrow) tDisplayLines_storage_full;
+    if (tmp != nullptr) {
+      for (int i = 0; i < P36_Nlines; ++i) {
+        safe_strncpy(tmp->lines[i].Content, DisplayLinesV1[i].Content, P36_NcharsV1);
+        tmp->lines[i].FontType     = DisplayLinesV1[i].FontType;
+        tmp->lines[i].ModifyLayout = DisplayLinesV1[i].ModifyLayout;
+        tmp->lines[i].FontSpace    = DisplayLinesV1[i].FontSpace;
+        tmp->lines[i].reserved     = DisplayLinesV1[i].reserved;
+      }
+      error = SaveCustomTaskSettings(
+        taskIndex, 
+        reinterpret_cast<uint8_t *>(tmp), 
+        sizeof(tDisplayLines_storage_full));
+      delete tmp;
+      return error;
+    }
+  }
+  // Since we're making several calls to save, make sure to consider this as a single save call.
+  const uint8_t flashCounter = RTC.flashDayCounter;
+  for (int i = 0; i < P36_Nlines && error.length() == 0; ++i) {
+    tDisplayLines_storage tmp(DisplayLinesV1[i]);
+    RTC.flashDayCounter = flashCounter;
+    error = SaveCustomTaskSettings(
+      taskIndex, 
+      reinterpret_cast<uint8_t *>(&tmp), 
+      sizeof(tDisplayLines_storage), 
+      i * sizeof(tDisplayLines_storage));
+  }
+  return error;
 }
 
 P036_data_struct::P036_data_struct() : display(nullptr) {}

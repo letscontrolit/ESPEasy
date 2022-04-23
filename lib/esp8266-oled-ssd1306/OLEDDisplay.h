@@ -188,7 +188,7 @@ class OLEDDisplay : public Print {
     uint16_t getStringWidth(const char* text, uint16_t length);
 
     // Convencience method for the const char version
-    uint16_t getStringWidth(String text);
+    uint16_t getStringWidth(const String& text);
 
     // Specifies relative to which anchor point
     // the text is rendered. Available constants:
