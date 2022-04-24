@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-04-24 tonhuisman: Add event arguments for OnOff button objects, fix addLog statements, minor improvements
  * 2022-04-23 tonhuisman: Rename struct TS_Point in FT6206 library to FT_Point to avoid conflict with XPT2048 library (P099)
  * 2021-11-07 tonhuisman: Initial plugin, based on _P099_XPT2046_Touchscreen.ino plugin and Adafruit FT6206 Library
  */
@@ -76,8 +77,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      // if already configured take it from settings, else use default values
-      P123_CONFIG_DISPLAY_TASK = event->TaskIndex; // Preselect current task to acvoid pointing to Task 1 by default
+      P123_CONFIG_DISPLAY_TASK = event->TaskIndex; // Preselect current task to avoid pointing to Task 1 by default
       P123_CONFIG_ROTATION     = P123_TS_ROTATION;
       P123_CONFIG_X_RES        = P123_TS_X_RES;
       P123_CONFIG_Y_RES        = P123_TS_Y_RES;

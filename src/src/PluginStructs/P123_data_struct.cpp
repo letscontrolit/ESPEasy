@@ -45,7 +45,7 @@ P123_data_struct::~P123_data_struct() {
  */
 void P123_data_struct::reset() {
   # ifdef PLUGIN_123_DEBUG
-  addLog(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen reset."));
+  addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen reset."));
   # endif // PLUGIN_123_DEBUG
 
   if (isInitialized()) {
@@ -78,10 +78,21 @@ bool P123_data_struct::init(const EventStruct *event,
 
     touchscreen->begin(P123_Settings.treshold);
 
+    if (bitRead(P123_Settings.flags, P123_FLAGS_SEND_OBJECTNAME) &&
+        bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT)) {
+      for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
+        if (!TouchObjects[objectNr].objectName.isEmpty()
+            && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)
+            && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON)) {
+          generateObjectEvent(event, TouchObjects[objectNr].objectName, objectNr, -1);
+        }
+      }
+    }
+
     # ifdef PLUGIN_123_DEBUG
-    addLog(LOG_LEVEL_INFO, F("P123 DEBUG Plugin & touchscreen initialized."));
+    addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Plugin & touchscreen initialized."));
   } else {
-    addLog(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialisation FAILED."));
+    addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialisation FAILED."));
     # endif // PLUGIN_123_DEBUG
   }
   return isInitialized();
@@ -136,6 +147,8 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     };
     int optionValues3[P123_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
     addFormSelector(F("Events"), F("p123_events"), P123_EVENTS_OPTIONS, options3, optionValues3, choice3);
+    addFormCheckBox(F("Initial Objectnames events"), F("p123_init_objectevent"), bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT));
+    addFormNote(F("Will send state -1 but only for enabled On/Off button objects."));
   }
 
   addFormCheckBox(F("Prevent duplicate events"), F("p123_deduplicate"), bitRead(P123_Settings.flags, P123_FLAGS_DEDUPLICATE));
@@ -449,6 +462,7 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
   bitWrite(lSettings, P123_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("p123_events")), P123_FLAGS_SEND_OBJECTNAME));
   bitWrite(lSettings, P123_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("p123_rotation_flipped")));
   bitWrite(lSettings, P123_FLAGS_DEDUPLICATE,      isFormItemChecked(F("p123_deduplicate")));
+  bitWrite(lSettings, P123_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("p123_init_objectevent")));
 
   config += getFormItemInt(F("p123_use_calibration"));
   config += P123_SETTINGS_SEPARATOR;
@@ -474,7 +488,7 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
     String log = F("Save settings: ");
     config.replace(P123_SETTINGS_SEPARATOR, ',');
     log += config;
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
 
   String error;
@@ -550,7 +564,7 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
       log += F(" settings: ");
       config.replace(P123_SETTINGS_SEPARATOR, ',');
       log += config;
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifdef PLUGIN_123_DEBUG
   }
@@ -613,7 +627,7 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         log += ox;
         log += F(", oy= ");
         log += oy;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, log);
       }
 
       if (Settings.UseRules) {                                                                     // No events to handle if rules not
@@ -643,7 +657,7 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
               if ((TouchObjects[selectedObjectIndex].TouchTimers == 0) ||
 
                   // Not touched yet or too long ago
-                  (TouchObjects[selectedObjectIndex].TouchTimers < (millis() - (2 * P123_Settings.debounceMs)))) {
+                  (TouchObjects[selectedObjectIndex].TouchTimers < (millis() - (1.5 * P123_Settings.debounceMs)))) {
                 // From now wait the debounce time
                 TouchObjects[selectedObjectIndex].TouchTimers = millis() + P123_Settings.debounceMs;
               } else {
@@ -651,20 +665,7 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
                 if (TouchObjects[selectedObjectIndex].TouchTimers <= millis()) {
                   TouchObjects[selectedObjectIndex].TouchStates = !TouchObjects[selectedObjectIndex].TouchStates;
                   TouchObjects[selectedObjectIndex].TouchTimers = 0;
-                  String eventCommand;
-                  eventCommand.reserve(48);
-                  eventCommand  = getTaskDeviceName(event->TaskIndex);
-                  eventCommand += '#';
-                  eventCommand += selectedObjectName;
-                  eventCommand += '=';                                                         // Add arguments
-
-                  if (bitRead(TouchObjects[selectedObjectIndex].flags, P123_OBJECT_FLAG_INVERTED)) {
-                    eventCommand += TouchObjects[selectedObjectIndex].TouchStates ? '0' : '1'; // Act like an inverted button, 0 = On,
-                    // 1 = Off
-                  } else {
-                    eventCommand += TouchObjects[selectedObjectIndex].TouchStates ? '1' : '0'; // Act like a button, 1 = On, 0 = Off
-                  }
-                  eventQueue.add(eventCommand);
+                  generateObjectEvent(event, selectedObjectName, selectedObjectIndex, TouchObjects[selectedObjectIndex].TouchStates ? 1 : 0);
                 }
               }
             } else {
@@ -680,7 +681,7 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
               eventCommand += y;
               eventCommand += ',';
               eventCommand += z;
-              eventQueue.add(eventCommand);
+              eventQueue.addMove(std::move(eventCommand));
             }
           }
         }
@@ -691,8 +692,49 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 }
 
 /**
+ * generate an event for a touch object
+ **************************************************************************/
+void P123_data_struct::generateObjectEvent(const EventStruct *event,
+                                           const String     & objectName,
+                                           const int8_t       objectIndex,
+                                           const int8_t       onOffState) {
+  String eventCommand;
+
+  eventCommand.reserve(48);
+  eventCommand  = getTaskDeviceName(event->TaskIndex);
+  eventCommand += '#';
+  eventCommand += objectName;
+  eventCommand += '=';                             // Add arguments
+
+  if (onOffState < 0) {                            // Negative value: pass on unaltered
+    eventCommand += onOffState;
+  } else {                                         // Check for inverted output
+    if (bitRead(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_INVERTED)) {
+      eventCommand += onOffState == 1 ? '0' : '1'; // Act like an inverted button, 0 = On, 1 = Off
+    } else {
+      eventCommand += onOffState == 1 ? '1' : '0'; // Act like a button, 1 = On, 0 = Off
+    }
+  }
+
+  if (P123_CONFIG_DISPLAY_TASK != event->TaskIndex) {
+    // When a display is configured add x,y coordinate, width,height of the object, and TaskIndex of display
+    eventCommand += ',';
+    eventCommand += TouchObjects[objectIndex].top_left.x;
+    eventCommand += ',';
+    eventCommand += TouchObjects[objectIndex].top_left.y;
+    eventCommand += ',';
+    eventCommand += TouchObjects[objectIndex].width_height.x;
+    eventCommand += ',';
+    eventCommand += TouchObjects[objectIndex].width_height.y;
+    eventCommand += ',';
+    eventCommand += P123_CONFIG_DISPLAY_TASK + 1; // What TaskIndex?
+  }
+  eventQueue.addMove(std::move(eventCommand));
+}
+
+/**
  * draw a button using the mode and state
- * TODO: Complete implementation
+ * //TODO: Complete implementation
  * will probably need:
  * - Access to the AdafruitGFX_Helper object
  * - Access to the Display object in the AdafruitGFX_Helper
@@ -802,7 +844,7 @@ void P123_data_struct::drawButton(DrawButtonMode_e   buttonMode,
  */
 void P123_data_struct::loadTouchObjects(const EventStruct *event) {
   # ifdef PLUGIN_123_DEBUG
-  addLog(LOG_LEVEL_INFO, F("P123 DEBUG loadTouchObjects"));
+  addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG loadTouchObjects"));
   # endif // PLUGIN_123_DEBUG
   LoadCustomTaskSettings(event->TaskIndex, settingsArray, P123_ARRAY_SIZE, 0);
 
@@ -955,7 +997,7 @@ void P123_data_struct::setRotation(uint8_t n) {
   # ifdef PLUGIN_123_DEBUG
   String log = F("P123 DEBUG Rotation set: ");
   log += n;
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   # endif // PLUGIN_123_DEBUG
 }
 
@@ -967,7 +1009,7 @@ void P123_data_struct::setRotationFlipped(bool flipped) {
   # ifdef PLUGIN_123_DEBUG
   String log = F("P123 DEBUG RotationFlipped set: ");
   log += flipped;
-  addLog(LOG_LEVEL_INFO, log);
+  addLogMove(LOG_LEVEL_INFO, log);
   # endif // PLUGIN_123_DEBUG
 }
 
@@ -1039,7 +1081,7 @@ bool P123_data_struct::isValidAndTouchedTouchObject(int16_t x,
         log += selectedObjectIndex;
         log += '/';
         log += selected ? 'T' : 'f';
-        addLog(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
       # endif // PLUGIN_123_DEBUG
     }
@@ -1091,7 +1133,7 @@ bool P123_data_struct::setTouchObjectState(const String& touchObject, bool state
       } else {
         log += F("failed!");
       }
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
       # endif // PLUGIN_123_DEBUG
     }
   }

@@ -3,6 +3,7 @@
 
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
+#include "../Helpers/AdafruitGFX_helper.h"
 
 #ifdef USES_P123
 
@@ -18,10 +19,13 @@
 #  ifdef P123_USE_TOOLTIPS
 #   undef P123_USE_TOOLTIPS
 #  endif // ifdef P123_USE_TOOLTIPS
+#  ifdef P123_USE_EXTENDED_TOUCH
+#   undef P123_USE_EXTENDED_TOUCH
+#  endif // ifdef P123_USE_EXTENDED_TOUCH
 # endif  // ifdef LIMIT_BUILD_SIZE
-# if defined(P1123_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
+# if defined(P123_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
 #  undef P123_USE_TOOLTIPS
-# endif  // if defined(P1123_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
+# endif  // if defined(P123_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
 
 # define P123_FLAGS_SEND_XY          0 // Set in Global Settings flags
 # define P123_FLAGS_SEND_Z           1 // Set in Global Settings flags
@@ -30,6 +34,7 @@
 # define P123_FLAGS_LOG_CALIBRATION  4 // Set in Global Settings flags
 # define P123_FLAGS_ROTATION_FLIPPED 5 // Set in P123_CONFIG_FLAGS
 # define P123_FLAGS_DEDUPLICATE      6 // Set in Global Settings flags
+# define P123_FLAGS_INIT_OBJECTEVENT 7 // Set in Global Settings flags
 
 # define P123_CONFIG_DISPLAY_TASK PCONFIG(0)
 
@@ -58,17 +63,16 @@
 # define P123_TS_ROTATION_FLIPPED   false // Enable/Disable rotation flipped 180 deg.
 # define P123_TS_X_RES              320   // Pixels, should match with the screen it is mounted on
 # define P123_TS_Y_RES              480
-# define P123_DEBOUNCE_MILLIS       150   // Debounce delay for On/Off button function
+# define P123_DEBOUNCE_MILLIS       100   // Debounce delay for On/Off button function
 
 # define P123_TOUCH_X_NATIVE        320   // Native touchscreen resolution
 # define P123_TOUCH_Y_NATIVE        480
 
-# define P123_MAX_COLOR_INPUTLENGTH 11    // 11 Characters is enough to type in all recognized names
+# define P123_MAX_COLOR_INPUTLENGTH 11    // 11 Characters is enough to type in all recognized color names and values
 # define P123_MaxObjectNameLength   15    // 14 character objectnames + terminating 0
 # define P123_MAX_CALIBRATION_COUNT 1     //
 # define P123_MAX_OBJECT_COUNT      40    // This count of touchobjects should be enough, because of limited
-                                          // settings storage, 960 bytes + 8
-                                          // bytes calibration coordinates
+                                          // settings storage, 960 bytes + 8 bytes calibration coordinates
 # define P123_EXTRA_OBJECT_COUNT    5     // The number of empty objects to show if max not reached
 # define P123_ARRAY_SIZE (P123_MAX_OBJECT_COUNT + P123_MAX_CALIBRATION_COUNT)
 
@@ -97,26 +101,28 @@
 // Settings array field offsets: Touch objects
 # define P123_OBJECT_INDEX_START      (P123_CALIBRATION_START + 1)
 # define P123_OBJECT_INDEX_END        (P123_ARRAY_SIZE - (P123_CALIBRATION_START + 1))
-# define P123_OBJECT_NAME             1  // Name (String 14) (parseString index starts at 1)
-# define P123_OBJECT_FLAGS            2  // Flags (uint32_t)
-# define P123_OBJECT_COORD_TOP_X      3  // Top X (uint16_t)
-# define P123_OBJECT_COORD_TOP_Y      4  // Top Y
-# define P123_OBJECT_COORD_WIDTH      5  // Width
-# define P123_OBJECT_COORD_HEIGHT     6  // Height
-# define P123_OBJECT_COLOR_ON         7  // Color ON (rgb565, uint16_t)
-# define P123_OBJECT_COLOR_OFF        8  // Color OFF
-# define P123_OBJECT_COLOR_CAPTION    9  // Color Caption
-# define P123_OBJECT_COLOR_HIGHLIGHT  10 // Color Highlight
-# define P123_OBJECT_CAPTION_ON       11 // Caption ON (String 12, quoted)
-# define P123_OBJECT_CAPTION_OFF      12 // Caption OFF (String 12, quoted)
-# define P123_OBJECT_COLOR_BACKGROUND 13 // Color Background
+# define P123_OBJECT_NAME             1    // Name (String 14) (parseString index starts at 1)
+# define P123_OBJECT_FLAGS            2    // Flags (uint32_t)
+# define P123_OBJECT_COORD_TOP_X      3    // Top X (uint16_t)
+# define P123_OBJECT_COORD_TOP_Y      4    // Top Y
+# define P123_OBJECT_COORD_WIDTH      5    // Width
+# define P123_OBJECT_COORD_HEIGHT     6    // Height
+# ifdef P123_USE_EXTENDED_TOUCH
+#  define P123_OBJECT_COLOR_ON          7  // Color ON (rgb565, uint16_t)
+#  define P123_OBJECT_COLOR_OFF         8  // Color OFF
+#  define P123_OBJECT_COLOR_CAPTION     9  // Color Caption
+#  define P123_OBJECT_COLOR_HIGHLIGHT   10 // Color Highlight
+#  define P123_OBJECT_CAPTION_ON        11 // Caption ON (String 12, quoted)
+#  define P123_OBJECT_CAPTION_OFF       12 // Caption OFF (String 12, quoted)
+#  define P123_OBJECT_COLOR_BACKGROUND  13 // Color Background
+# endif // ifdef P123_USE_EXTENDED_TOUCH
 
-# define P123_OBJECT_FLAG_ENABLED     0  // Enabled
-# define P123_OBJECT_FLAG_BUTTON      1  // Button behavior
-# define P123_OBJECT_FLAG_INVERTED    2  // Inverted button
+# define P123_OBJECT_FLAG_ENABLED     0    // Enabled
+# define P123_OBJECT_FLAG_BUTTON      1    // Button behavior
+# define P123_OBJECT_FLAG_INVERTED    2    // Inverted button
 // # define P123_OBJECT_FLAG_COLORED     3  // Colored button (unused)
 // # define P123_OBJECT_FLAG_CAPTION     4  // Use caption on button (unused)
-# define P123_OBJECT_FLAG_BUTTONTYPE  8  // 8 bits used as button type
+# define P123_OBJECT_FLAG_BUTTONTYPE  8    // 8 bits used as button type
 
 # ifdef P123_USE_EXTENDED_TOUCH
 enum class DrawButtonMode_e : uint8_t {
@@ -210,7 +216,11 @@ private:
                        uint8_t       indexFind,
                        char          separator    = ',',
                        int           defaultValue = 0);
-  String enquoteString(const String& input);
+  String enquoteString(const String& input); // TODO: Replace by wrapWithQuotes
+  void   generateObjectEvent(const EventStruct *event,
+                             const String     & objectName,
+                             const int8_t       objectIndex,
+                             const int8_t       onOffState);
 
   // This is initialized by calling init()
   Adafruit_FT6206 *touchscreen     = nullptr;
