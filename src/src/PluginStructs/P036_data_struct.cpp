@@ -15,7 +15,9 @@
 # include "../Helpers/SystemVariables.h"
 
 # include <Dialog_Plain_12_font.h>
+# ifndef P036_LIMIT_BUILD_SIZE
 # include <Dialog_Plain_18_font.h>
+# endif // ifdef P036_LIMIT_BUILD_SIZE
 # include <OLED_SSD1306_SH1106_images.h>
 
 void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersion) {
@@ -110,9 +112,11 @@ const __FlashStringHelper * tFontSettings::FontName() const {
     return F("Arial_24");
   }
 
+#  ifndef P036_LIMIT_BUILD_SIZE
   if (fontData == Dialog_plain_18) {
     return F("Dialog_18");
   }
+#  endif // ifndef P036_LIMIT_BUILD_SIZE
 
   if (fontData == ArialMT_Plain_16) {
     return F("Arial_16");
