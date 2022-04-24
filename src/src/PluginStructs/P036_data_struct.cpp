@@ -47,9 +47,11 @@ void P036_LineContent::loadDisplayLines(taskIndex_t taskIndex, uint8_t LoadVersi
 
 String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
   String error;
+
   if (FreeMem() > 8000) {
     // Write in one single chunk.
     tDisplayLines_storage_full *tmp = new (std::nothrow) tDisplayLines_storage_full;
+
     if (tmp != nullptr) {
       for (int i = 0; i < P36_Nlines; ++i) {
         safe_strncpy(tmp->lines[i].Content, DisplayLinesV1[i].Content, P36_NcharsV1);
@@ -66,8 +68,10 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
       return error;
     }
   }
+
   // Since we're making several calls to save, make sure to consider this as a single save call.
   const uint8_t flashCounter = RTC.flashDayCounter;
+
   for (int i = 0; i < P36_Nlines && error.length() == 0; ++i) {
     tDisplayLines_storage tmp(DisplayLinesV1[i]);
     RTC.flashDayCounter = flashCounter;
@@ -133,7 +137,9 @@ const __FlashStringHelper * tFontSettings::FontName() const {
 // This is very precious memory, so we must find something other way to define this.
 const tFontSizes FontSizes[P36_MaxFontCount] = {
   { getArialMT_Plain_24(), 24,  28                                           }, // 9643
+# ifndef P036_LIMIT_BUILD_SIZE
   { getDialog_plain_18(),  19,  22                                           },
+# endif // ifndef P036_LIMIT_BUILD_SIZE
   { getArialMT_Plain_16(), 16,  19                                           }, // 5049
   { getDialog_plain_12(),  13,  15                                           }, // 3707
   { getArialMT_Plain_10(), 10,  13                                           }, // 2731

@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-04-24
+// CHG: font Dialog_plain_18 is optional (not using LIMIT_BUILD_SIZE)
 // @uwekaditz: 2022-04-23
 // FIX: empty page was shown if just one frame has text
 // @uwekaditz: 2022-04-21
