@@ -218,7 +218,6 @@ private:
                        int           defaultValue = 0);
   String enquoteString(const String& input); // TODO: Replace by wrapWithQuotes
   void   generateObjectEvent(const EventStruct *event,
-                             const String     & objectName,
                              const int8_t       objectIndex,
                              const int8_t       onOffState);
 

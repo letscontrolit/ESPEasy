@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-04-24 tonhuisman: Code improvements, increased button response speed
  * 2022-04-24 tonhuisman: Add event arguments for OnOff button objects, fix addLog statements, minor improvements
  * 2022-04-23 tonhuisman: Rename struct TS_Point in FT6206 library to FT_Point to avoid conflict with XPT2048 library (P099)
  * 2021-11-07 tonhuisman: Initial plugin, based on _P099_XPT2046_Touchscreen.ino plugin and Adafruit FT6206 Library
@@ -246,7 +247,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: // Should be often/fast enough, as this is user-interaction driven
+    case PLUGIN_FIFTY_PER_SECOND: // Increased response
     {
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 

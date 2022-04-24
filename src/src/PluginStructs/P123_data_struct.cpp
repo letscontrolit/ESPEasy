@@ -84,7 +84,7 @@ bool P123_data_struct::init(const EventStruct *event,
         if (!TouchObjects[objectNr].objectName.isEmpty()
             && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)
             && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON)) {
-          generateObjectEvent(event, TouchObjects[objectNr].objectName, objectNr, -1);
+          generateObjectEvent(event, objectNr, -1);
         }
       }
     }
@@ -665,7 +665,7 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
                 if (TouchObjects[selectedObjectIndex].TouchTimers <= millis()) {
                   TouchObjects[selectedObjectIndex].TouchStates = !TouchObjects[selectedObjectIndex].TouchStates;
                   TouchObjects[selectedObjectIndex].TouchTimers = 0;
-                  generateObjectEvent(event, selectedObjectName, selectedObjectIndex, TouchObjects[selectedObjectIndex].TouchStates ? 1 : 0);
+                  generateObjectEvent(event, selectedObjectIndex, TouchObjects[selectedObjectIndex].TouchStates ? 1 : 0);
                 }
               }
             } else {
@@ -693,9 +693,9 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 
 /**
  * generate an event for a touch object
+ * When a display is configured add x,y coordinate, width,height of the object, objectIndex, and TaskIndex of display
  **************************************************************************/
 void P123_data_struct::generateObjectEvent(const EventStruct *event,
-                                           const String     & objectName,
                                            const int8_t       objectIndex,
                                            const int8_t       onOffState) {
   String eventCommand;
@@ -703,7 +703,7 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
   eventCommand.reserve(48);
   eventCommand  = getTaskDeviceName(event->TaskIndex);
   eventCommand += '#';
-  eventCommand += objectName;
+  eventCommand += TouchObjects[objectIndex].objectName;
   eventCommand += '=';                             // Add arguments
 
   if (onOffState < 0) {                            // Negative value: pass on unaltered
@@ -716,8 +716,7 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
     }
   }
 
-  if (P123_CONFIG_DISPLAY_TASK != event->TaskIndex) {
-    // When a display is configured add x,y coordinate, width,height of the object, and TaskIndex of display
+  if (P123_CONFIG_DISPLAY_TASK != event->TaskIndex) { // Add arguments for display
     eventCommand += ',';
     eventCommand += TouchObjects[objectIndex].top_left.x;
     eventCommand += ',';
@@ -726,6 +725,8 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
     eventCommand += TouchObjects[objectIndex].width_height.x;
     eventCommand += ',';
     eventCommand += TouchObjects[objectIndex].width_height.y;
+    eventCommand += ',';
+    eventCommand += objectIndex + 1;              // Adjust to displayed index
     eventCommand += ',';
     eventCommand += P123_CONFIG_DISPLAY_TASK + 1; // What TaskIndex?
   }
