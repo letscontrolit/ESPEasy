@@ -109,12 +109,12 @@
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // ifdef PLUGIN_SET_MAX
 
-# define ADAGFX_PARSE_PREFIX      F("~")            // Subcommand-trigger prefix and postfix strings
+# define ADAGFX_PARSE_PREFIX      F("~")              // Subcommand-trigger prefix and postfix strings
 # define ADAGFX_PARSE_PREFIX_LEN  1
-# define ADAGFX_PARSE_POSTFIX     F("~")            // Will be removed before the normal template parsing is done
+# define ADAGFX_PARSE_POSTFIX     F("~")              // Will be removed before the normal template parsing is done
 # define ADAGFX_PARSE_POSTFIX_LEN 1
 
-# define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_write") // Universal command trigger
+# define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_trigger") // Universal command trigger
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 

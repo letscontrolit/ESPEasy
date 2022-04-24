@@ -503,7 +503,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   String cmd        = parseString(string, 1); // lower case
   String subcommand = parseString(string, 2);
 
-  if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
+  if (!(cmd.equals(_trigger) ||
+        isAdaGFXTrigger(cmd)) ||
+      subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
   String log;
   String sParams[ADAGFX_PARSE_MAX_ARGS + 1];
