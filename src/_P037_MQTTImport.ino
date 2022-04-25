@@ -275,17 +275,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr == P037_data) {
-        return success;
-      }
-
-      delete P037_data;
-
+      // FIXME TD-er: Must unsubscribe
       break;
     }
-
 
     case PLUGIN_READ:
     {
@@ -315,12 +307,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_MQTT_IMPORT:
     {
-      LoadTaskSettings(event->TaskIndex);
-
       // Resolved tonhuisman: TD-er: It may be useful to generate events with string values.
       // Get the payload and check it out
       String Payload = event->String2;
-      String unparsedPayload; // To keep an unprocessed copy
 
       # ifdef PLUGIN_037_DEBUG
 
@@ -339,6 +328,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
+      LoadTaskSettings(event->TaskIndex);
+      String unparsedPayload; // To keep an unprocessed copy
+
       bool checkJson = false;
 
       String subscriptionTopicParsed;
@@ -351,14 +343,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t x = 0; x < VARS_PER_TASK; x++)
       {
-        if (P037_data->deviceTemplate[x].length() == 0) {
+        if (P037_data->mqttTopics[x].length() == 0) {
           continue; // skip blank subscriptions
         }
 
         // Now check if the incoming topic matches one of our subscriptions
-        subscriptionTopicParsed += P037_data->StoredSettings.globalTopicPrefix;
-        subscriptionTopicParsed.trim();
-        subscriptionTopicParsed += P037_data->deviceTemplate[x];
+        subscriptionTopicParsed = P037_data->getFullMQTTTopic(x);
         parseSystemVariables(subscriptionTopicParsed, false);
 
         if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
@@ -407,7 +397,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       #  ifdef P037_FILTER_PER_TOPIC
 
       for (uint8_t x = 0; x < VARS_PER_TASK && matchedTopic; x++) {
-        if (P037_data->deviceTemplate[x].length() == 0) {
+        if (P037_data->mqttTopics[x].length() == 0) {
           continue; // skip blank subscriptions
         }
       #  else // ifdef P037_FILTER_PER_TOPIC
@@ -466,15 +456,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       // Get the Topic and see if it matches any of the subscriptions
       for (uint8_t x = 0; x < VARS_PER_TASK && processData; x++)
       {
-        if (P037_data->deviceTemplate[x].length() == 0) {
+        if (P037_data->mqttTopics[x].length() == 0) {
           continue; // skip blank subscriptions
         }
 
         // Now check if the incoming topic matches one of our subscriptions
-        subscriptionTopicParsed.reserve(80);
-        subscriptionTopicParsed = P037_data->StoredSettings.globalTopicPrefix;
-        subscriptionTopicParsed.trim();
-        subscriptionTopicParsed += P037_data->deviceTemplate[x];
+        subscriptionTopicParsed = P037_data->getFullMQTTTopic(x);
         parseSystemVariables(subscriptionTopicParsed, false);
 
         if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
@@ -511,8 +498,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               # if P037_JSON_SUPPORT
 
               if (checkJson && (P037_data->iter != P037_data->doc.end())) {
-                String jsonIndex     = parseString(P037_data->StoredSettings.jsonAttributes[x], 2, ';');
-                String jsonAttribute = parseStringKeepCase(P037_data->StoredSettings.jsonAttributes[x], 1, ';');
+                String jsonIndex     = parseString(P037_data->jsonAttributes[x], 2, ';');
+                String jsonAttribute = parseStringKeepCase(P037_data->jsonAttributes[x], 1, ';');
                 jsonAttribute.trim();
 
                 if (!jsonAttribute.isEmpty()) {
@@ -710,25 +697,20 @@ bool MQTTSubscribe_037(struct EventStruct *event)
     return false;
   }
 
-  // char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-  LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&P037_data->StoredSettings), sizeof(P037_data->StoredSettings));
+  // FIXME TD-er: Should not be needed to load, as it is loaded when constructing it.
+  P037_data->loadSettings();
 
-  String topicPrefix = P037_data->StoredSettings.globalTopicPrefix;
+  String topicPrefix = P037_data->globalTopicPrefix;
 
   topicPrefix.trim();
 
   // Now loop over all import variables and subscribe to those that are not blank
   for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
-    String subscribeTo = P037_data->StoredSettings.deviceTemplate[x];
-    subscribeTo.trim();
-
+    String subscribeTo = P037_data->getFullMQTTTopic(x);
+    
     if (!subscribeTo.isEmpty())
     {
-      if (!topicPrefix.isEmpty()) {
-        subscribeTo.reserve(topicPrefix.length() + subscribeTo.length());
-        subscribeTo = topicPrefix + subscribeTo;
-      }
       parseSystemVariables(subscribeTo, false);
 
       if (MQTTclient.subscribe(subscribeTo.c_str())) {

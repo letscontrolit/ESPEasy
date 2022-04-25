@@ -143,17 +143,6 @@ struct P037_data_struct : public PluginTaskData_base
   #  endif // PLUGIN_037_DEBUG
   # endif  // if P037_FILTER_SUPPORT
 
-  // The settings structures
-  // The stuff we want to save between settings
-  struct tP037_StoredSettings_struct {
-    char deviceTemplate[VARS_PER_TASK][41]; // variable for saving the subscription topics, leave as first element for
-                                            // backward compatibility
-    char jsonAttributes[VARS_PER_TASK][21]; // variable for saving the json attribute to use
-    char globalTopicPrefix[41];             // variable for saving the global topic prefix
-  };
-
-  // Stored settings data:
-  tP037_StoredSettings_struct StoredSettings;
 
   # if P037_JSON_SUPPORT
   bool parseJSONMessage(const String& message);
@@ -162,16 +151,20 @@ struct P037_data_struct : public PluginTaskData_base
   JsonObject::iterator iter;
   # endif // if P037_JSON_SUPPORT
 
-  std::map<uint8_t, String>deviceTemplate;
-  std::map<uint8_t, String>jsonAttributes;
-
+  // The settings structures
+  // The stuff we want to save between settings
+  String mqttTopics[VARS_PER_TASK];
+  String jsonAttributes[VARS_PER_TASK];
+  String globalTopicPrefix;
   String valueArray[P037_ARRAY_SIZE]; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
                                       // P037_START_FILTERS..P037_END_FILTERS = filters
 
-private:
+  String getFullMQTTTopic(uint8_t taskValueIndex) const;
 
-  // Private methods and vars
   bool loadSettings();
+
+private:
+  String saveSettings();
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   void parseMappings();

@@ -23,23 +23,69 @@ P037_data_struct::~P037_data_struct() {}
  */
 bool P037_data_struct::loadSettings() {
   if (_taskIndex < TASKS_MAX) {
-    String tmp;
-    tmp.reserve(45);
-    LoadCustomTaskSettings(_taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings)); // Part 1
-    LoadCustomTaskSettings(_taskIndex, valueArray,
-                           P037_ARRAY_SIZE, 0, sizeof(StoredSettings) + 1);                                   // Part 2, after part 1
+    size_t offset = 0;
+    LoadCustomTaskSettings(_taskIndex, mqttTopics,
+                           VARS_PER_TASK, 41, offset);
+    offset += VARS_PER_TASK * 41;
 
-    for (uint8_t i = 0; i < VARS_PER_TASK; i++) {
-      tmp = StoredSettings.deviceTemplate[i];
-      tmp.trim();
-      deviceTemplate[i] = tmp;
-      tmp               = StoredSettings.jsonAttributes[i];
-      tmp.trim();
-      jsonAttributes[i] = tmp;
+    LoadCustomTaskSettings(_taskIndex, jsonAttributes,
+                           VARS_PER_TASK, 21, offset);
+    offset += VARS_PER_TASK * 21;
+
+    {
+      String tmp[1];
+
+      LoadCustomTaskSettings(_taskIndex, tmp,
+                            1, 41, offset);
+      globalTopicPrefix  = std::move(tmp[0]);
+      offset += 41;
     }
+
+
+    LoadCustomTaskSettings(_taskIndex, valueArray,
+                           P037_ARRAY_SIZE, 0, offset + 1);
     return true;
   }
   return false;
+}
+
+String P037_data_struct::saveSettings() {
+  String res;
+  if (_taskIndex < TASKS_MAX) {
+    size_t offset = 0;
+    res += SaveCustomTaskSettings(_taskIndex, mqttTopics,
+                           VARS_PER_TASK, 41, offset);
+    offset += VARS_PER_TASK * 41;
+
+    res += SaveCustomTaskSettings(_taskIndex, jsonAttributes,
+                           VARS_PER_TASK, 21, offset);
+    offset += VARS_PER_TASK * 21;
+
+    {
+      String tmp[1];
+      tmp[0] = globalTopicPrefix;
+      res += SaveCustomTaskSettings(_taskIndex, tmp,
+                            1, 41, offset);
+      offset += 41;
+    }
+
+
+    res += SaveCustomTaskSettings(_taskIndex, valueArray,
+                           P037_ARRAY_SIZE, 0, offset + 1);
+  }
+  return res;
+}
+
+String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
+  String topic;
+  if (taskValueIndex < VARS_PER_TASK) {
+    topic.reserve(globalTopicPrefix.length() + mqttTopics[taskValueIndex].length());
+    topic = globalTopicPrefix;
+    topic.trim();
+    topic += mqttTopics[taskValueIndex];
+    topic.trim();
+  }
+  return topic;
 }
 
 # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
@@ -120,7 +166,7 @@ bool P037_data_struct::webform_load(
   addFormSubHeader(F("Topic subscriptions"));
 
   // Global topic prefix
-  addFormTextBox(F("Prefix for all topics"), F("p037_topicprefix"), StoredSettings.globalTopicPrefix, 40);
+  addFormTextBox(F("Prefix for all topics"), F("p037_topicprefix"), globalTopicPrefix, 40);
 
   # ifdef P037_JSON_SUPPORT
 
@@ -146,14 +192,14 @@ bool P037_data_struct::webform_load(
       id  = F("p037_template");
       id += (varNr + 1);
       addTextBox(id,
-                 StoredSettings.deviceTemplate[varNr],
+                 mqttTopics[varNr],
                  40,
                  false, false, EMPTY_STRING, F("wide"));
       html_TD();
       id  = F("p037_attribute");
       id += (varNr + 1);
       addTextBox(id,
-                 StoredSettings.jsonAttributes[varNr],
+                 jsonAttributes[varNr],
                  20,
                  false, false, EMPTY_STRING, EMPTY_STRING);
       html_TD();
@@ -164,7 +210,7 @@ bool P037_data_struct::webform_load(
       label += (varNr + 1);
       id     = F("p037_template");
       id    += (varNr + 1);
-      addFormTextBox(label, id, StoredSettings.deviceTemplate[varNr], 40);
+      addFormTextBox(label, id, mqttTopics[varNr], 40);
     }
   }
   # ifdef P037_JSON_SUPPORT
@@ -440,27 +486,19 @@ bool P037_data_struct::webform_save(
     String argName = F("p037_template");
     argName += (varNr + 1);
 
-    if (!safe_strncpy(StoredSettings.deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(StoredSettings.deviceTemplate[varNr]))) {
-      error += getCustomTaskSettingsError(varNr);
-    }
+    mqttTopics[varNr] = web_server.arg(argName);
+
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
       argName  = F("p037_attribute");
       argName += (varNr + 1);
-
-      if (!safe_strncpy(StoredSettings.jsonAttributes[varNr], web_server.arg(argName).c_str(),
-                        sizeof(StoredSettings.jsonAttributes[varNr]))) {
-        error += getCustomTaskSettingsError(varNr);
-      }
+      jsonAttributes[varNr] = web_server.arg(argName);
     }
     # endif // P037_JSON_SUPPORT
   }
 
-  if (!safe_strncpy(StoredSettings.globalTopicPrefix, web_server.arg(F("p037_topicprefix")).c_str(),
-                    sizeof(StoredSettings.globalTopicPrefix))) {
-    error += F("Prefix for all topics");
-  }
+  globalTopicPrefix = web_server.arg(F("p037_topicprefix"));
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
@@ -564,9 +602,7 @@ bool P037_data_struct::webform_save(
   #  endif // ifndef P037_FILTER_PER_TOPIC
   # endif  // if P037_FILTER_SUPPORT
 
-  error += SaveCustomTaskSettings(_taskIndex, (uint8_t *)&StoredSettings, sizeof(StoredSettings)); // Part 1
-  error += SaveCustomTaskSettings(_taskIndex, valueArray,
-                                  P037_ARRAY_SIZE, 0, sizeof(StoredSettings) + 1);                 // Part 2, after part 1
+  error += saveSettings();
 
   if (!error.isEmpty()) {
     addHtmlError(error);
