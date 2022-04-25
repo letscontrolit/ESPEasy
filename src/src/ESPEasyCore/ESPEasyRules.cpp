@@ -583,12 +583,10 @@ void substitute_eventvalue(String& line, const String& event) {
           // With: X = event value nr, Y = default value when eventvalue does not exist.
           String defaultValue('0');
           int or_else_pos = line.indexOf('|', eventvalue_pos);
-          if (or_else_pos > percent_pos) {
+          if ((or_else_pos == -1) || (or_else_pos > percent_pos)) {
             or_else_pos = percent_pos;
           } else {
-            if (or_else_pos != -1) {
-              defaultValue = line.substring(or_else_pos + 1, percent_pos);
-            }
+            defaultValue = line.substring(or_else_pos + 1, percent_pos);
           }
           const String nr         = line.substring(eventvalue_pos + 11, or_else_pos);
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
