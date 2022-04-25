@@ -142,7 +142,6 @@ struct P037_data_struct : public PluginTaskData_base
                         const String& match);
   #  endif // PLUGIN_037_DEBUG
   # endif  // if P037_FILTER_SUPPORT
-  String enquoteString(const String& input);
 
   // The settings structures
   // The stuff we want to save between settings

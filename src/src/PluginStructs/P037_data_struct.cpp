@@ -417,32 +417,6 @@ bool P037_data_struct::webform_load(
   return success;
 } // webform_load
 
-/******************************************
- * enquoteString wrap in ", ' or ` unless all 3 quote types are used
- *****************************************/
-String P037_data_struct::enquoteString(const String& input) {
-  char quoteChar = '"';
-
-  if (input.indexOf(quoteChar) > -1) {
-    quoteChar = '\'';
-
-    if (input.indexOf(quoteChar) > -1) {
-      quoteChar = '`';
-
-      if (input.indexOf(quoteChar) > -1) {
-        return input; // All types of supported quotes used, return original string
-      }
-    }
-  }
-  String result;
-
-  result.reserve(input.length() + 2);
-  result += quoteChar;
-  result += input;
-  result += quoteChar;
-
-  return result;
-}
 
 bool P037_data_struct::webform_save(
   # if P037_FILTER_SUPPORT
@@ -511,12 +485,12 @@ bool P037_data_struct::webform_save(
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()) {
-      valueArray[mappingOffset]  = enquoteString(left);
+      valueArray[mappingOffset]  = wrapWithQuotes(left);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
       uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 1));
       valueArray[mappingOffset] += operands.substring(oper, oper + 1);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
-      valueArray[mappingOffset] += enquoteString(right);
+      valueArray[mappingOffset] += wrapWithQuotes(right);
     } else {
       valueArray[mappingOffset] = EMPTY_STRING;
     }
@@ -558,12 +532,12 @@ bool P037_data_struct::webform_save(
         || true // Store all filters and in the same order, including empty filters
         #  endif // ifdef P037_FILTER_PER_TOPIC
         ) {
-      valueArray[filterOffset]  = enquoteString(left);
+      valueArray[filterOffset]  = wrapWithQuotes(left);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
       uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 100 + 1));
       valueArray[filterOffset] += filters.substring(oper, oper + 1);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
-      valueArray[filterOffset] += enquoteString(right);
+      valueArray[filterOffset] += wrapWithQuotes(right);
     } else {
       valueArray[filterOffset] = EMPTY_STRING;
     }
