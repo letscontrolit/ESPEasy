@@ -161,6 +161,8 @@ struct P037_data_struct : public PluginTaskData_base
 
   String getFullMQTTTopic(uint8_t taskValueIndex) const;
 
+  bool shouldSubscribeToMQTTtopic(const String& topic) const;
+
   bool loadSettings();
 
 private:

@@ -45,6 +45,10 @@
 
 # define P037_MAX_QUEUEDEPTH      150
 
+
+bool MQTT_unsubscribe_037(struct EventStruct *event);
+bool MQTTSubscribe_037(struct EventStruct *event);
+
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 String P037_getMQTTLastTopicPart(const String& topic) {
   const int16_t lastSlash = topic.lastIndexOf('/');
@@ -275,7 +279,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      // FIXME TD-er: Must unsubscribe
+      MQTT_unsubscribe_037(event);
       break;
     }
 
@@ -688,6 +692,57 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+bool MQTT_unsubscribe_037(struct EventStruct *event) 
+{
+  P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if (nullptr == P037_data) {
+    return false;
+  }
+
+  String topic;
+
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
+  {
+    String tmp = P037_data->getFullMQTTTopic(x);
+    if (topic.equalsIgnoreCase(tmp)) {
+      // Don't unsubscribe from the same topic twice
+      continue;
+    }
+    topic = std::move(tmp);
+
+    // We must check whether other MQTT import tasks are enabled which may be subscribed to the same topic.
+    // Only if we're the only one (left) being subscribed to that topic, unsubscribe
+    bool canUnsubscribe = true;
+    for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
+      if (task != event->TaskIndex) {
+        if (Settings.TaskDeviceEnabled[task] && 
+            Settings.TaskDeviceNumber[task] == PLUGIN_ID_037) 
+        {
+          P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
+          if (nullptr != P037_data_other) {
+            if (P037_data_other->shouldSubscribeToMQTTtopic(topic)) {
+              canUnsubscribe = false;
+            }
+          }
+        }
+      }
+    }
+    if (canUnsubscribe && topic.length() > 0 && MQTTclient.unsubscribe(topic.c_str())) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("IMPT : [");
+        log += getTaskDeviceName(event->TaskIndex);
+        log += '#';
+        log += ExtraTaskSettings.TaskDeviceValueNames[x];
+        log += F("] : Unsubscribe topic: ");
+        log += topic;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+    }
+  }
+  return true;
+}
+
 bool MQTTSubscribe_037(struct EventStruct *event)
 {
   // We must subscribe to the topics.
@@ -699,10 +754,6 @@ bool MQTTSubscribe_037(struct EventStruct *event)
 
   // FIXME TD-er: Should not be needed to load, as it is loaded when constructing it.
   P037_data->loadSettings();
-
-  String topicPrefix = P037_data->globalTopicPrefix;
-
-  topicPrefix.trim();
 
   // Now loop over all import variables and subscribe to those that are not blank
   for (uint8_t x = 0; x < VARS_PER_TASK; x++)

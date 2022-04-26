@@ -78,7 +78,7 @@ String P037_data_struct::saveSettings() {
 
 String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
   String topic;
-  if (taskValueIndex < VARS_PER_TASK) {
+  if (taskValueIndex < VARS_PER_TASK && mqttTopics[taskValueIndex].length() > 0) {
     topic.reserve(globalTopicPrefix.length() + mqttTopics[taskValueIndex].length());
     topic = globalTopicPrefix;
     topic.trim();
@@ -86,6 +86,18 @@ String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
     topic.trim();
   }
   return topic;
+}
+
+
+bool P037_data_struct::shouldSubscribeToMQTTtopic(const String& topic) const {
+  if (topic.length() == 0) return false;
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
+  {
+    if (topic.equalsIgnoreCase(getFullMQTTTopic(x))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
