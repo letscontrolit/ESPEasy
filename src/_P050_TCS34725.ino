@@ -254,12 +254,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      P050_data_struct *P050_data = static_cast<P050_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P050_data) {
-        delete P050_data; // call destructor
-        success = true;
-      }
+      success = true;
       break;
     }
 

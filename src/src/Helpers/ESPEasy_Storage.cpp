@@ -673,7 +673,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
   String   result;
   uint32_t readPos       = offset_in_block;
-  uint32_t nextStringPos = 0;
+  uint32_t nextStringPos = readPos;
   uint32_t stringCount   = 0;
 
   const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
@@ -754,7 +754,7 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
   int      writePos        = posInBlock;
   uint16_t stringCount     = 0;
   uint16_t stringReadPos   = 0;
-  uint16_t nextStringPos   = 0;
+  uint16_t nextStringPos   = writePos;
   uint16_t curStringLength = 0;
 
   if (maxStringLength != 0) {
