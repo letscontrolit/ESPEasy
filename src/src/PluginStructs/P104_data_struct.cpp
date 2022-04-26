@@ -1535,32 +1535,6 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
   }
 }
 
-/******************************************
- * enquoteString wrap in ", ' or ` unless all 3 quote types are used
- *****************************************/
-String P104_data_struct::enquoteString(const String& input) {
-  char quoteChar = '"';
-
-  if (input.indexOf(quoteChar) > -1) {
-    quoteChar = '\'';
-
-    if (input.indexOf(quoteChar) > -1) {
-      quoteChar = '`';
-
-      if (input.indexOf(quoteChar) > -1) {
-        return input; // All types of supported quotes used, return original string
-      }
-    }
-  }
-  String result;
-
-  result.reserve(input.length() + 2);
-  result  = quoteChar;
-  result += input;
-  result += quoteChar;
-
-  return result;
-}
 
 /***************************************
  * saveSettings gather the zones data from the UI and store in customsettings
@@ -1623,7 +1597,7 @@ bool P104_data_struct::saveSettings() {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
       zones[zoneIndex].size          = getFormItemIntCustomArgName(index + P104_OFFSET_SIZE);
-      zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
+      zones[zoneIndex].text          = wrapWithQuotes(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
       zones[zoneIndex].content       = getFormItemIntCustomArgName(index + P104_OFFSET_CONTENT);
       zones[zoneIndex].alignment     = getFormItemIntCustomArgName(index + P104_OFFSET_ALIGNMENT);
       zones[zoneIndex].animationIn   = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_IN);
