@@ -723,6 +723,17 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
           if (nullptr != P037_data_other) {
             if (P037_data_other->shouldSubscribeToMQTTtopic(topic)) {
               canUnsubscribe = false;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("IMPT : Cannot unsubscribe topic: ");
+                log += topic;
+                log += F(" used by: [");
+                log += getTaskDeviceName(event->TaskIndex);
+                log += '#';
+                log += ExtraTaskSettings.TaskDeviceValueNames[x];
+                log += ']';
+                log += topic;
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
             }
           }
         }
