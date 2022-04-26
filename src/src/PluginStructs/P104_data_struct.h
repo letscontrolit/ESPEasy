@@ -405,7 +405,6 @@ private:
   void   displayOneZoneText(uint8_t                 currentZone,
                             const P104_zone_struct& idx,
                             const String          & text);
-  String enquoteString(const String& input);
 
   String error;
 
