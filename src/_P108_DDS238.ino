@@ -302,7 +302,6 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_EXIT: {
-//       clearPluginTaskData(event->TaskIndex); // DF - not present in P085
       success = true;
       break;
     }
