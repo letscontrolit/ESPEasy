@@ -1365,7 +1365,9 @@ void setConnectionSpeed() {
   }
   */
   #endif // ifdef ESP32
+  #ifdef ESP8266
   SetWiFiTXpower();
+  #endif
 }
 
 void setupStaticIPconfig() {

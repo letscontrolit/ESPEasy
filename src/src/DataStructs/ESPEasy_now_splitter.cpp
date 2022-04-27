@@ -2,6 +2,7 @@
 
 #ifdef USES_ESPEASY_NOW
 
+# include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../DataStructs/ESPEasy_now_hdr.h"
@@ -187,11 +188,13 @@ bool ESPEasy_now_splitter::send(const ESPEasy_Now_packet& packet, int channel)
   bool res = false;
   START_TIMER;
   if (ESPEasy_now_peermanager.addPeer(packet._mac, channel)) {
+    #ifdef ESP8266
     // Set TX power based on RSSI of other ESPEasy-NOW node.
     // For broadcast messages power must be max.
     float tx_pwr = 30; // Will be set higher based on RSSI when needed.
     int8_t rssi = -99; // Assume worst RSSI for broadcast
     SetWiFiTXpower(tx_pwr, rssi);
+    #endif
     if (packet.valid()) {
       res = WifiEspNow.send(packet._mac, packet[0], packet.getSize());
     }
