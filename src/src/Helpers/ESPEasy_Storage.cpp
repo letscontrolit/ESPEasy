@@ -164,8 +164,8 @@ bool tryRenameFile(const String& fname_old, const String& fname_new) {
 bool tryDeleteFile(const String& fname) {
   if (fname.length() > 0)
   {
-    bool res = ESPEASY_FS.remove(patch_fname(fname));
     clearAllCaches();
+    bool res = ESPEASY_FS.remove(patch_fname(fname));
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
@@ -640,7 +640,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
 
   String   result;
   uint32_t readPos       = offset_in_block;
-  uint32_t nextStringPos = 0;
+  uint32_t nextStringPos = readPos;
   uint32_t stringCount   = 0;
 
   const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
@@ -721,7 +721,7 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
   int      writePos        = posInBlock;
   uint16_t stringCount     = 0;
   uint16_t stringReadPos   = 0;
-  uint16_t nextStringPos   = 0;
+  uint16_t nextStringPos   = writePos;
   uint16_t curStringLength = 0;
 
   if (maxStringLength != 0) {
