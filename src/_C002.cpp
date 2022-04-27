@@ -12,7 +12,6 @@
 # define CPLUGIN_NAME_002       "Domoticz MQTT"
 
 # include "src/Commands/InternalCommands.h"
-# include "src/Commands/GPIO.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
 # include "src/ESPEasyCore/ESPEasyRules.h"
 # include "src/Globals/Settings.h"

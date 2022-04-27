@@ -46,7 +46,7 @@ String Command_Subnet (struct EventStruct *event, const char* Line)
 #ifdef HAS_ETHERNET
 String Command_ETH_Phy_Addr (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("ETH_Phy_Addr:"), Line, reinterpret_cast<uint8_t*>(&Settings.ETH_Phy_Addr),1);
+  return Command_GetORSetInt8_t(event, F("ETH_Phy_Addr:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Phy_Addr),1);
 }
 
 String Command_ETH_Pin_mdc (struct EventStruct *event, const char* Line)

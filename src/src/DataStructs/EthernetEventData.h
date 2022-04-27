@@ -40,6 +40,8 @@ struct EthernetEventData_t {
   void markDisconnect();
   void markConnected();
 
+  String ESPEasyEthStatusToString() const;
+
 
   // Eth related data
   bool          ethSetup        = false;

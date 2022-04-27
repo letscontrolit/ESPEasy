@@ -152,14 +152,14 @@ size_t streamFromFS(String path, bool htmlEscape) {
   int available = f.available();
   String escaped;
   while (available > 0) {
-    uint32_t chunksize = 64;
-    if (available < static_cast<int>(chunksize)) {
+    int32_t chunksize = 64;
+    if (available < chunksize) {
       chunksize = available;
     }
     uint8_t buf[64] = {0};
-    const size_t read = f.read(buf, chunksize);
+    const int read = f.read(buf, chunksize);
     if (read == chunksize) {
-      for (uint32_t i = 0; i < chunksize; ++i) {
+      for (int32_t i = 0; i < chunksize; ++i) {
         const char c = (char)buf[i];
         if (htmlEscape && htmlEscapeChar(c, escaped)) {
           addHtml(escaped);

@@ -11,6 +11,7 @@ colorama==0.4.4
 commonmark==0.9.1        
 cryptography==35.0.0
 docutils==0.17.1
+esptool==3.2
 idna==3.3
 imagesize==1.2.0
 Jinja2==3.0.2

@@ -4,7 +4,9 @@
 #include "../DataStructs/SettingsStruct.h"
 
 // include the source file since it is a template class.
-#include "../DataStructs/SettingsStruct.cpp"
+// Moved to a separate folder to allow concatenating all *.cpp files 
+// in the DataStructs folder to make Windows builds work again.
+#include "../DataStructs_templ/SettingsStruct.cpp"
 
 extern SettingsStruct Settings;
 
