@@ -1,6 +1,5 @@
 #include "../Helpers/Hardware.h"
 
-#include "../Commands/GPIO.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
@@ -23,9 +22,26 @@
 //#include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
-#include <soc/soc.h>
-#include <soc/efuse_reg.h>
-#include <rom/spi_flash.h>
+  #include <soc/soc.h>
+  #include <soc/efuse_reg.h>
+
+  #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
+    #if CONFIG_IDF_TARGET_ESP32       // ESP32/PICO-D4
+      #include <esp32/rom/spi_flash.h>
+      #include <esp32/spiram.h>
+    #elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+      #include <esp32s2/rom/spi_flash.h>
+      #include <esp32s2/spiram.h>
+    #elif CONFIG_IDF_TARGET_ESP32C3   // ESP32-C3
+      #include <esp32c3/rom/spi_flash.h>
+      #include <esp32c3/spiram.h>
+    #else
+      #error Target CONFIG_IDF_TARGET is not supported
+    #endif
+  #else // ESP32 Before IDF 4.0
+    #include <rom/spi_flash.h>
+  #endif
+
 #endif
 
 
@@ -49,7 +65,20 @@ void hardwareInit()
       checkAndClearPWM(key);
       #endif
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
-        const PinBootState bootState = Settings.getPinBootState(gpio);
+        PinBootState bootState = Settings.getPinBootState(gpio);
+      #ifdef HAS_ETHERNET
+        if (Settings.ETH_Pin_power == gpio)
+        {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("ETH  : Reset ETH module on pin ");
+            log += Settings.ETH_Pin_power;
+            addLog(LOG_LEVEL_INFO, log);
+          }
+          bootState = PinBootState::Output_low;
+        }
+
+      #endif
+
         if (bootState != PinBootState::Default_state) {
           int8_t state = -1;
           uint8_t mode = PIN_MODE_UNDEFINED;
@@ -490,7 +519,12 @@ uint32_t getFlashChipId() {
   static uint32_t flashChipId = 0;
   if (flashChipId == 0) {
   #ifdef ESP32
-    flashChipId = g_rom_flashchip.device_id;
+    uint32_t tmp = g_rom_flashchip.device_id;
+    for (int i = 0; i < 3; ++i) {
+      flashChipId = flashChipId << 8;
+      flashChipId |= (tmp & 0xFF);
+      tmp = tmp >> 8;
+    }
 //    esp_flash_read_id(nullptr, &flashChipId);
   #elif defined(ESP8266)
     flashChipId = ESP.getFlashChipId();
@@ -504,7 +538,7 @@ uint32_t getFlashRealSizeInBytes() {
   static uint32_t res = 0;
   if (res == 0) {
     #if defined(ESP32)
-    res = ESP.getFlashChipSize();
+    res = (1 << ((getFlashChipId() >> 16) & 0xFF));
     #else // if defined(ESP32)
     res = ESP.getFlashChipRealSize(); // ESP.getFlashChipSize();
     #endif // if defined(ESP32)
@@ -512,6 +546,9 @@ uint32_t getFlashRealSizeInBytes() {
   return res;
 }
 
+uint32_t getFlashChipSpeed() {
+  return ESP.getFlashChipSpeed();
+}
 
 bool puyaSupport() {
   bool supported = false;
@@ -580,28 +617,179 @@ uint8_t getChipCores() {
 
 const __FlashStringHelper * getChipModel() {
 #ifdef ESP32
-  #ifdef ESP32S2
-    return F("ESP32S2");
-  #else
-  {
+  // https://www.espressif.com/en/products/socs
+  // https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L579
+
+/*
+Source: esp-idf esp_system.h and esptool
+typedef enum {
+    CHIP_ESP32   = 1,  //!< ESP32
+    CHIP_ESP32S2 = 2,  //!< ESP32-S2
+    CHIP_ESP32S3 = 4,  //!< ESP32-S3
+    CHIP_ESP32C3 = 5,  //!< ESP32-C3
+} esp_chip_model_t;
+// Chip feature flags, used in esp_chip_info_t
+#define CHIP_FEATURE_EMB_FLASH      BIT(0)      //!< Chip has embedded flash memory
+#define CHIP_FEATURE_WIFI_BGN       BIT(1)      //!< Chip has 2.4GHz WiFi
+#define CHIP_FEATURE_BLE            BIT(4)      //!< Chip has Bluetooth LE
+#define CHIP_FEATURE_BT             BIT(5)      //!< Chip has Bluetooth Classic
+// The structure represents information about the chip
+typedef struct {
+    esp_chip_model_t model;  //!< chip model, one of esp_chip_model_t
+    uint32_t features;       //!< bit mask of CHIP_FEATURE_x feature flags
+    uint8_t cores;           //!< number of CPU cores
+    uint8_t revision;        //!< chip revision number
+} esp_chip_info_t;
+*/
+  esp_chip_info_t chip_info;
+  esp_chip_info(&chip_info);
+
+  uint32_t chip_model = chip_info.model;
+  uint32_t chip_revision = chip_info.revision;
+//  uint32_t chip_revision = ESP.getChipRevision();
+  bool rev3 = (3 == chip_revision);
+//  bool single_core = (1 == ESP.getChipCores());
+  bool single_core = (1 == chip_info.cores);
+
+  if (chip_model < 2) {  // ESP32
+#ifdef CONFIG_IDF_TARGET_ESP32
+/* esptool:
+    def get_pkg_version(self):
+        word3 = self.read_efuse(3)
+        pkg_version = (word3 >> 9) & 0x07
+        pkg_version += ((word3 >> 2) & 0x1) << 3
+        return pkg_version
+*/
     uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
-    uint32_t pkg_ver = chip_ver & 0x7;
-    switch (pkg_ver) {
-      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6 :
-        return F("ESP32-D0WDQ6");
-      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5 :
-        return F("ESP32-D0WDQ5");
-      case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5 :
-        return F("ESP32-D2WDQ5");
-      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD2 :
-        return F("ESP32-PICO-D2");
-      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4 :
-        return F("ESP32-PICO-D4");
-      default:
-        break;
+    uint32_t pkg_version = chip_ver & 0x7;
+
+//    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision, chip_info.cores, chip_ver);
+
+    switch (pkg_version) {
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ6:
+        if (single_core) { return F("ESP32-S0WDQ6"); }     // Max 240MHz, Single core, QFN 6*6
+        else if (rev3)   { return F("ESP32-D0WDQ6-V3"); }  // Max 240MHz, Dual core, QFN 6*6
+        else {             return F("ESP32-D0WDQ6"); }     // Max 240MHz, Dual core, QFN 6*6
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D0WDQ5:
+        if (single_core) { return F("ESP32-S0WD"); }       // Max 160MHz, Single core, QFN 5*5, ESP32-SOLO-1, ESP32-DevKitC
+        else if (rev3)   { return F("ESP32-D0WDQ5-V3"); }  // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32E, ESP32_WROVER-E, ESP32-DevKitC
+        else {             return F("ESP32-D0WDQ5"); }     // Max 240MHz, Dual core, QFN 5*5, ESP32-WROOM-32D, ESP32_WROVER-B, ESP32-DevKitC
+      case EFUSE_RD_CHIP_VER_PKG_ESP32D2WDQ5:
+        return F("ESP32-D2WDQ5");                          // Max 160MHz, Dual core, QFN 5*5, 2MB embedded flash
+      case 3:
+        if (single_core) { return F("ESP32-S0WD-OEM"); }   // Max 160MHz, Single core, QFN 5*5, Xiaomi Yeelight
+        else {             return F("ESP32-D0WD-OEM"); }   // Max 240MHz, Dual core, QFN 5*5
+      case EFUSE_RD_CHIP_VER_PKG_ESP32U4WDH:
+        return F("ESP32-U4WDH");                           // Max 160MHz, Single core, QFN 5*5, 4MB embedded flash, ESP32-MINI-1, ESP32-DevKitM-1
+      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOD4:
+        if (rev3)        { return F("ESP32-PICO-V3"); }    // Max 240MHz, Dual core, LGA 7*7, ESP32-PICO-V3-ZERO, ESP32-PICO-V3-ZERO-DevKit
+        else {             return F("ESP32-PICO-D4"); }    // Max 240MHz, Dual core, LGA 7*7, 4MB embedded flash, ESP32-PICO-KIT
+      case EFUSE_RD_CHIP_VER_PKG_ESP32PICOV302:
+        return F("ESP32-PICO-V3-02");                      // Max 240MHz, Dual core, LGA 7*7, 8MB embedded flash, 2MB embedded PSRAM, ESP32-PICO-MINI-02, ESP32-PICO-DevKitM-2
     }
+#endif  // CONFIG_IDF_TARGET_ESP32
+    return F("ESP32");
   }
-  #endif
+  else if (2 == chip_model) {  // ESP32-S2
+#ifdef CONFIG_IDF_TARGET_ESP32S2
+/* esptool:
+    def get_pkg_version(self):
+        num_word = 3
+        block1_addr = self.EFUSE_BASE + 0x044
+        word3 = self.read_reg(block1_addr + (4 * num_word))
+        pkg_version = (word3 >> 21) & 0x0F
+        return pkg_version
+*/
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    uint32_t pkg_version = chip_ver & 0x7;
+//    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+
+//    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision, chip_info.cores, chip_ver);
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-S2");           // Max 240MHz, Single core, QFN 7*7, ESP32-S2-WROOM, ESP32-S2-WROVER, ESP32-S2-Saola-1, ESP32-S2-Kaluga-1
+      case 1:              return F("ESP32-S2FH2");        // Max 240MHz, Single core, QFN 7*7, 2MB embedded flash, ESP32-S2-MINI-1, ESP32-S2-DevKitM-1
+      case 2:              return F("ESP32-S2FH4");        // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash
+      case 3:              return F("ESP32-S2FN4R2");      // Max 240MHz, Single core, QFN 7*7, 4MB embedded flash, 2MB embedded PSRAM, , ESP32-S2-MINI-1U, ESP32-S2-DevKitM-1U
+    }
+#endif  // CONFIG_IDF_TARGET_ESP32S2
+    return F("ESP32-S2");
+  }
+  else if (4 == chip_model) {  // ESP32-S3
+    return F("ESP32-S3");                                  // Max 240MHz, Dual core, QFN 7*7, ESP32-S3-WROOM-1, ESP32-S3-DevKitC-1
+  }
+  else if (5 == chip_model) {  // ESP32-C3
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+/* esptool:
+    def get_pkg_version(self):
+        num_word = 3
+        block1_addr = self.EFUSE_BASE + 0x044
+        word3 = self.read_reg(block1_addr + (4 * num_word))
+        pkg_version = (word3 >> 21) & 0x0F
+        return pkg_version
+*/
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    uint32_t pkg_version = chip_ver & 0x7;
+//    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+
+//    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision, chip_info.cores, chip_ver);
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-C3");           // Max 160MHz, Single core, QFN 5*5, ESP32-C3-WROOM-02, ESP32-C3-DevKitC-02
+      case 1:              return F("ESP32-C3FH4");        // Max 160MHz, Single core, QFN 5*5, 4MB embedded flash, ESP32-C3-MINI-1, ESP32-C3-DevKitM-1
+    }
+#endif  // CONFIG_IDF_TARGET_ESP32C3
+    return F("ESP32-C3");
+  }
+  else if (6 == chip_model) {  // ESP32-S3(beta3)
+    return F("ESP32-S3");
+  }
+  else if (7 == chip_model) {  // ESP32-C6(beta)
+#ifdef CONFIG_IDF_TARGET_ESP32C6
+/* esptool:
+    def get_pkg_version(self):
+        num_word = 3
+        block1_addr = self.EFUSE_BASE + 0x044
+        word3 = self.read_reg(block1_addr + (4 * num_word))
+        pkg_version = (word3 >> 21) & 0x0F
+        return pkg_version
+*/
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    uint32_t pkg_version = chip_ver & 0x7;
+//    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+
+//    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision, chip_info.cores, chip_ver);
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-C6");
+    }
+#endif  // CONFIG_IDF_TARGET_ESP32C6
+    return F("ESP32-C6");
+  }
+  else if (10 == chip_model) {  // ESP32-H2
+#ifdef CONFIG_IDF_TARGET_ESP32H2
+/* esptool:
+    def get_pkg_version(self):
+        num_word = 3
+        block1_addr = self.EFUSE_BASE + 0x044
+        word3 = self.read_reg(block1_addr + (4 * num_word))
+        pkg_version = (word3 >> 21) & 0x0F
+        return pkg_version
+*/
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_RD_MAC_SPI_SYS_3_REG, EFUSE_PKG_VERSION);
+    uint32_t pkg_version = chip_ver & 0x7;
+//    uint32_t pkg_version = esp_efuse_get_pkg_ver();
+
+//    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision, chip_info.cores, chip_ver);
+
+    switch (pkg_version) {
+      case 0:              return F("ESP32-H2");
+    }
+#endif  // CONFIG_IDF_TARGET_ESP32H2
+    return F("ESP32-H2");
+  }
+  return F("ESP32");
+
 #elif defined(ESP8285)
   return F("ESP8285");
 #elif defined(ESP8266)
@@ -629,6 +817,96 @@ uint32_t getFreeSketchSpace() {
   static uint32_t res = ESP.getFreeSketchSpace();
   return res;
 }
+
+
+/********************************************************************************************\
+   PSRAM support
+ \*********************************************************************************************/
+
+#ifdef ESP32
+
+// this function is a replacement for `psramFound()`.
+// `psramFound()` can return true even if no PSRAM is actually installed
+// This new version also checks `esp_spiram_is_initialized` to know if the PSRAM is initialized
+// Original Tasmota: 
+// https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L470
+bool FoundPSRAM() {
+#if CONFIG_IDF_TARGET_ESP32C3
+  return psramFound();
+#else
+  return psramFound() && esp_spiram_is_initialized();
+#endif
+}
+
+// new function to check whether PSRAM is present and supported (i.e. required pacthes are present)
+bool UsePSRAM() {
+  static bool can_use_psram = CanUsePSRAM();
+  return FoundPSRAM() && can_use_psram;
+}
+
+
+/*
+ * ESP32 v1 and v2 needs some special patches to use PSRAM.
+ * Original function used from Tasmota: 
+ * https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L762
+ * 
+ * If using ESP32 v1, please add: `-mfix-esp32-psram-cache-issue -lc-psram-workaround -lm-psram-workaround`
+ *
+ * This function returns true if the chip supports PSRAM natively (v3) or if the
+ * patches are present.
+ */
+bool CanUsePSRAM() {
+  if (!FoundPSRAM()) return false;
+#ifdef HAS_PSRAM_FIX
+  return true;
+#endif
+#ifdef CONFIG_IDF_TARGET_ESP32
+  esp_chip_info_t chip_info;
+  esp_chip_info(&chip_info);
+  if ((CHIP_ESP32 == chip_info.model) && (chip_info.revision < 3)) {
+    return false;
+  }
+#if ESP_IDF_VERSION_MAJOR < 4
+  uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+  uint32_t pkg_version = chip_ver & 0x7;
+  if ((CHIP_ESP32 == chip_info.model) && (pkg_version >= 6)) {
+    return false;   // support for embedded PSRAM of ESP32-PICO-V3-02 requires esp-idf 4.4
+  }
+#endif // ESP_IDF_VERSION_MAJOR < 4
+
+#endif // CONFIG_IDF_TARGET_ESP32
+  return true;
+}
+
+#endif // ESP32
+
+
+/*********************************************************************************************\
+ * High entropy hardware random generator
+ * Thanks to DigitalAlchemist
+\*********************************************************************************************/
+// Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
+// https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L805
+uint32_t HwRandom() {
+#if ESP8266
+  // https://web.archive.org/web/20160922031242/http://esp8266-re.foogod.com/wiki/Random_Number_Generator
+  #define _RAND_ADDR 0x3FF20E44UL
+#endif  // ESP8266
+#ifdef ESP32
+  #define _RAND_ADDR 0x3FF75144UL
+#endif  // ESP32
+  static uint32_t last_ccount = 0;
+  uint32_t ccount;
+  uint32_t result = 0;
+  do {
+    ccount = ESP.getCycleCount();
+    result ^= *(volatile uint32_t *)_RAND_ADDR;
+  } while (ccount - last_ccount < 64);
+  last_ccount = ccount;
+  return result ^ *(volatile uint32_t *)_RAND_ADDR;
+#undef _RAND_ADDR
+}
+
 
 
 #ifdef ESP8266
@@ -1071,6 +1349,19 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   # endif // ifdef HAS_ETHERNET
 
 #endif
+  if (UsePSRAM()) {
+    // PSRAM can use GPIO 16 and 17
+    // There will be a high frequency signal on those pins (flash frequency) 
+    // which makes them unusable for other purposes.
+    // WROVER does not even have these pins made available on the outside.
+    switch (gpio) {
+      case 16:
+      case 17:
+        warning = true;
+        break;
+    }
+
+  }
   return true;
 }
 
@@ -1315,9 +1606,8 @@ void initAnalogWrite()
 {
   #if defined(ESP32)
   for(uint8_t x = 0; x < 16; x++) {
-    ledcSetup(x, 0, 10); // Clear the channel
     ledChannelPin[x] = -1;
-    ledChannelFreq[x] = 0;
+    ledChannelFreq[x] = ledcSetup(x, 0, 10); // Clear the channel
   }
   #endif
   #ifdef ESP8266
@@ -1347,7 +1637,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
     for (uint8_t x = 0; x < 16; x++) { // find free channel
       if (ledChannelPin[x] == -1)
       {
-        if (!ledcRead(x)) {
+        if (static_cast<uint32_t>(ledcReadFreq(x)) == ledChannelFreq[x]) {
           // Channel is not used by some other piece of code.
           ledChannel = x;
           mustSetup = true;
@@ -1375,6 +1665,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency)
     ledChannelFreq[ledChannel] = ledcSetup(ledChannel, ledChannelFreq[ledChannel], 10);
     ledChannelPin[ledChannel] = pin; // store pin nr
     ledcAttachPin(pin, ledChannel);  // attach to this pin
+    pinMode(pin, OUTPUT);
   }
 
   return ledChannel;
