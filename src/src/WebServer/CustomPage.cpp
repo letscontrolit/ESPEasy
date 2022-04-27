@@ -141,14 +141,14 @@ bool handle_custom(const String& path) {
     String line;
     line.reserve(128);
     while (available > 0) {
-      uint32_t chunksize = 64;
-      if (available < static_cast<int>(chunksize)) {
+      int32_t chunksize = 64;
+      if (available < chunksize) {
         chunksize = available;
       }
       uint8_t buf[64] = {0};
-      const size_t read = dataFile.read(buf, chunksize);
+      const int read = dataFile.read(buf, chunksize);
       if (read == chunksize) {
-        for (uint32_t i = 0; i < chunksize; ++i) {
+        for (int32_t i = 0; i < chunksize; ++i) {
           const char c = (char)buf[i];
           line += c;
           if (c == '\n') {
