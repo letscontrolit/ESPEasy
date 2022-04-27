@@ -1,4 +1,331 @@
 -------------------------------------------------
+Changes in release mega-20220427 (since mega-20220328)
+-------------------------------------------------
+
+Release date: wo 27 apr 2022 16:40:07 CEST
+
+Blazej222 (1):
+      Allow OTA attempt even when not enough space
+
+Gijs Noorlander (2):
+      [MQTT commands] Support commands with arbitrary argument position
+      [MQTT commands] Fix parsing full command
+
+Leonardo Rizzi (1):
+      Update _controller_substitutions.repl
+
+Peter Kretz (1):
+      Check of x and y against height and width has to be done before
+
+TD-er (49):
+      [MQTT commands] Add command via MQTT with variable parameters
+      [Build] Make sure to add fs:: namespace to  fs::File
+      [Pip] Remove conflicting version limit on semantic-version
+      [WiFi] Prevent stack overflow when WiFi connection isn't successful
+      [WiFi] Properly clear duplicates from WiFi scans
+      [WiFi] Fix connecting to the strongest WiFi AP
+      [MQTT] Reduce rate of MQTT reconnects when failing to reconnect
+      [Build] Disable test_X_beta_ESP8266 builds due to build size
+      [Rules cache] Add handler for speeding up rules parsing
+      [Rules] Let the RulesHelper parse line by line
+      [Rules] Cache rules per line on ESP32
+      [Rules] Only parse lines that need to be parsed
+      [Rules] Nesting level does not matter to stop parsing rules file
+      [WiFi] Rate limit checking WiFi.isConnected()
+      [Rules] Small tweaks to speed up processing rules
+      [Rules] Rate limit calls to background tasks
+      [Rules] Minor tweaks to improve rules execution speed
+      [Rules] Cache which rules lines start with "on " for ESP32
+      [Rules] Fix missing include
+      [Rules] Add caching to speed up rules processing
+      [Rules] Fix build issue on ESP32
+      [Rules] Fix build on ESP32
+      [Rules] Fix missing include on ESP32
+      [Rules] Improve speed processing rules + option to disable rules cache
+      [PlatformIO] Update ESP32 PIO platform to 3.5.0
+      [Rules] fix parsing events starting with " do"
+      [Rules] Add %eventname% and %eventpar% to allow for simpler rules
+      Rate limit the number of background task calls to improve speed
+      [Timing Stats] Add process_system_event_queue() to the timing stats
+      [Rules] Add setting to disable cached event reorder
+      [Rules] Allow for more than 4 %eventvalueN%
+      [Rules] Document using > 4 eventvalues + using string type eventvalues
+      [Rules] Add %eventvalue0% to get all arguments at once.
+      [Rules] Fix compiler warning compare signed/unsigned
+      [Rules] Check for invalid %eventvalueN% occurences
+      [Rules] Add documentation on %eventvalue0%
+      [Rules] Allow for empty event values
+      [Rules] Add option for default values on non-existing eventvalues
+      [Rules] Add 'restrict' keyword to safely allow executing %eventvalueN%
+      [Rules] Fix issue when processing eventvalue without default value
+      [Rules] Update documentation regarding event values.
+      Wrap eventvalues in quotes when needed for generated events
+      [Fonts] Only include font data once in built bin file.
+      Add Fixme for later reducing IRAM usage on font size struct
+      [Cleanup] Remove duplicate code to wrap text in quotes
+      [MQT import] Reduce memory usage, especially during load/save
+      [Cleanup] Fix tricky PLUGIN_EXIT calls
+      [MQTT Import] Unsubscribe from MQTT topics on exit
+      [MQTT import] Add log when task cannot unsubscribe as others use it
+
+Ton Huisman (247):
+      [P037] Add mapping, filtering and json support - Mapping string to numeric/other string - Filtering to limit processed data - json support to process complex messages
+      [P037] Fix build issues (missing include, testing size)
+      [P037] Fix some bugs, add filtering with list, some code optimization
+      [P037] Bugfixes, improvements, filter per Topic, re-org Device setup
+      [P037] Some minor corrections
+      [P037] Add documentation
+      [P037] MQTT Topic match multi-level standards compliant
+      [P037] MQTT Wildcard handling improvement
+      [P037] Proceed with invalid numeric value as NaN
+      [P037] Code cleanup and improvements, documentation improvements
+      [P037] Actually store the NaN value if applicable
+      [P037] Adjust for changed compare function
+      [P037] Use proper double variables for comparisons
+      [P037] Reduce String re-allocations and memory use
+      [P037] Additional merge fixes
+      [P037] Optimize string handling/passing
+      [P037] Source formatting (uncrustify)
+      [P037] Disable development logging
+      [P037] Add conditional flag to force all features
+      [P037] Merge changes for byte to uint8_t change
+      [P037] Optimizations and some source reformatting
+      [P116] ST7735/ST7789 TFT Plugin and AdafruitGFX helper
+      [Build] Add ST7735 library to libdeps for ESP32
+      [Build] Fix ST7735 library libdeps for ESP32
+      [Build] Fix ST7735 library libdeps for ESP8266
+      [Build] Fix ST7735 library libdeps for ESP8266
+      [Build] Fix ST7735 library libdeps
+      [Build] Fix ST7735 library libdeps
+      [Build] Fix Adafruit_ST77xx library libdeps
+      [AdaGFX helper] Only compile when used/needed
+      [AdaGFX helper] Treat like an optional 'plugin'
+      [AdaGFX helper] Fix for custom_ir build
+      [AdaGFX helper] Add validation check (optional, if build size permits)
+      [P116] Small code improvements
+      [AdaGFX helper] Add debug logging to validation check
+      [AdaGFX helper] Small improvements
+      [P116] Textual changes, only generic type names shown
+      [AdaGFX helper] Add color conversions, improved validation and compile-time defines
+      [AdaGFX helper] Missed a file for compile-time defines
+      [AdaGFX helper] Implement TextPrintMode, get cursor coordinates, fixes
+      [P116] Use new features of AdafruitGFX_helper
+      [P116] Reorder some device settings
+      [P116] Add triggerCmd 'backlight,<percentage>' command
+      [P116] Reorder more device settings
+      [AdaGFX helper] Corrections and improvements
+      [P116] Add default color settings
+      [AdaGFX helper] Argument validation corrections
+      [Docs] Fix small typo in tools.rst
+      [P116] Add documentation, including AdafruitGFX_helper commands
+      [AdaGFX helper] Fix a missing conditional compilation check
+      [AdaGFX helper] Improve 'clear' command, add 'rot' command
+      [P116] Refactor some generic functions to AdaGFX helper
+      [AdaGFX helper] [P116] Fix: Restore intended transparent background feature
+      [AdaGFX helper] Improvements for compatibility with P095 ILI9341
+      [P095] Initial implementation of AdaGFX Helper, work in progress
+      [AdaGFX helper] Moved more generic code here, improvements
+      [P116] Less conditional compilation, improvements
+      [P095] Complete overhaul w. AdaGFX Helper, settings like P116, Use PluginStructs for multi-instance, some work in progress
+      [AdaGFX helper] Add/update unicode-char conversions
+      [AdaGFX helper] Add/update unicode-char conv, add txz and asciitable commands
+      [P116] [P095] Minor update for AdaGFX helper update
+      [P116] Documentation corrections
+      [AdaGFX helper] Bugfix,apply txp/txz compatibility correction
+      [P095] Remove duplicate clear handler
+      [P096] Initial implementation of AdaGFX Helper, work in progress
+      [AdaGFX helper] Fix typos in unicode character conversions
+      [AdaGFX helper] Enable subcmd proc. from template
+      [AdaGFX helper] Change subcmd trigger, bugfixes [P095][P116] Allow longer template lines, always process subcmds
+      [P095][P116] Improvements in template processing
+      [AdaGFX helper] Improvements and corrections
+      [P095] Re-order settings, minor improvements
+      [P116] Re-order settings, minor improvements
+      [P096] Complete overhaul w. AdaGFX Helper, settings like P116, Use PluginStructs for multi-instance, some work in progress [LOLIN_EPD] Update library to support extra devices
+      [P037] Reformatted using Uncrustify, string & logging optimizations
+      [P037] Fix filter input validation, use string.isEmpty() where possible
+      [P037] Small source reformsatting
+      [P037] Small improvements
+      [P037] Restore required include
+      [P037] Reduce info-logging somewhat
+      [P037] Fix JSON filtering & resizing bugs
+      [AdaGFX helper] Fix color parsing bug
+      [P116] Explicitly initialize all ST7789 resolutions
+      [P116] Add support for ST7789 240x135 resolution
+      [AdaGFX helper] Rename color(depth) enum values
+      [P096] Fix compiler warning on 'delete eInkScreen'
+      [AdaGFX helper] Add setting for Fill text background
+      [P116] Update documentation
+      [P116] Simplify initialization
+      [P095] Simplify initialization
+      [P096] Simplify initialization
+      [P095/P096/P116] No 'read' action if all Line fields empty, log Exit, optional splash text
+      [P116] Swap resolution for 135x240 display
+      [P096] Fixes to Lolin EPD library, fix bg color conversion
+      [Lolin EPD lib] Fix class destructor issues
+      [Lolin EPD lib] Fix class destructor issues
+      [AdaGFX helper][P095][P096][P116] Fix many bugs (init, rotation, destructors)
+      [AdaGFX helper] Don't remove trailing spaces
+      [P116] Fix displaybutton handling (based on P036)
+      [P095] Fix displaybutton handling (based on P036)
+      [AdaGFX helper] Move settings to generic functions
+      [AdaGFX helper] Fix row/col recalculation on rotation change
+      [AdaGFX helper] Restore text-end trimming
+      [AdaGFX helper] Add vert. font offset where needed, add 16pt font, include all fonts in MAX builds
+      [AdaGFX helper] Fix font issues, add some fonts, remove 1 font
+      [AdaGFX helper] Handle proportional font widths correctly
+      [AdaGFX helper] Disable fonts used during debugging
+      [AdaGFX helper] Bugfix monospaced fonts
+      [AdaGFX helper] Fix for fonts with 0-width space
+      [P037] Documentation improvements
+      [P116] ifdef error fixed
+      [Storage] Add optional offset argument to Load/SaveCustomTaskSettings functions
+      [P037] Redesigned settings storage req. much less RAM, add topic prefix, bugfixes and improvements
+      [P037] Reduce buildsize for DISPLAY builds
+      [P037] Update documentation
+      pP116] Add support for ST7796, change plugin description
+      [P116] Updated documentation
+      [P116] Fix typo in include name
+      [P116] Fix a typo and removed unneeded comments
+      [P037] Disable new features by default, enable all in Custom builds
+      [P116] Move from DEVELOPMENT to TESTING, implement PLUGIN_GET_DISPLAY_PARAMETERS function
+      [P095] Implement PLUGIN_GET_DISPLAY_PARAMETERS function, cleanup source
+      [AdafruitGFX_Helper] Refactorings and minor extensions
+      [P096] Implement PLUGIN_GET_DISPLAY_PARAMETERS function and AdafruitGFX_Helper refactoring
+      [P095][P096][P116] Definition PLUGIN_GET_DISPLAY_PARAMETERS function
+      [AdafruitGFX] Reduce buildsize a bit [P1116] Temporary disable P109 to fit ESP32 Display build
+      [AdafruitGFX_helper] Add multi-line subcommand 'lm' for drawing a multi-segment line, incl. docs
+      [AdafruitGFX] Add multi-line, relative, subcommand 'lmr' for drawing a multi-segment line, incl. docs
+      [AdaGFX] Bugfix with Background fill for text option
+      [AdaGFX] Add Color depth selector and generic command-trigger
+      [P116] Fix documentation typo
+      [P116] Add support for generic command-trigger
+      [P095] Add support for generic command-trigger
+      [P096] Add support for generic command-trigger
+      [AdaGFX] Fix white color recognition for non-full-color colordepths
+      [P096] Remove splash compile-time option, some source cleanup
+      [AdaGFX] Correct bool argument definition
+      [P096] Minor correction missing comma
+      [AdaGFX] Correct DisplayTimeout setting not allow negative, and > 255 seconds
+      [P116] Refactor displayOnOff
+      [P095] Refactor displayOnOff
+      [P037] Minor corrections, fix a typo
+      [P127] CDM7160 I2C Co2 sensor plugin
+      [P127] Add entry to Custom-sample.h
+      [P038] Enable multi-instance use
+      [P038] Fix initialization order
+      [P127] Don't send data during initialization, change status to Testing
+      [P127] Fix typo
+      [P126] Add 74HC595 Shiftregisters plugin
+      [P126] Move plugin to TEST_E set
+      [P126] Apply feedback, fix bugs, add SHOW_VALUES and some commands, improve 74hcSetAll for setting multiple output pins
+      [P126] Bugfixes, code optimization, hex values display in uppercase
+      [P126] Bugfix for display range
+      [Lib] ShiftRegister74HC595_NT: Add setSize() method, cleanup constructor
+      [P126] Optionally restore State on warm boot, code improvements
+      [P126] Add command 74hcSetChipCount for changing the number of active chips at runtime
+      [P126] Correct Values display and event generation, disable Formula and Decimals, update Device parameters
+      [P061] Enable multi-instance use
+      [P061] Add support for PCF8575 16 bit IO expander (and in I2C scanner) [P061] Add support for MCP23017 Direct mode (16 buttons with common gnd) [P061] Add optional dev. logging during read, max. 1x /sec
+      [P061] Disable PCF8575 support on LIMIT_BUILD_SIZE builds
+      [P038] Resolve code duplications, other optimizations
+      [P038] Also support RGBW for NeoPixelLine command (in addition to RGB)
+      [P038] Initialize to 0
+      [P076] Build: Restore plugin in POW builds
+      [P126] Move log before next, unprocessed, argument
+      [Docs] Update copyright year in documentation  footer
+      [P126] Minor updates and corrections while writing documentation
+      [P126] Add documentation
+      [P127] Add documentation
+      [Docs] Update copyright year in documentation footer
+      [P127] Remove build info from screenshot
+      [P126] Remove build info from screenshot
+      [P038] Add documentation
+      [P038] Resolve pin selection FIXME, adjust comments about RGBW support for NeoPixelLine command
+      [P061] Add documentation
+      [P061] Fix some comment typos
+      [P126] Documentation improvements
+      [P036] Bugfix: Enable the use of 4-line frames again
+      [Build] Disable P109 from DISPLAY build because of build size issue
+      [P036] Add linecount subcommand for changing lines per frame
+      [P036] Update documentation for linecount subcommand
+      [P036] Uncrustify & source reformatting
+      [P036] - Some refactoring and code improvements [P036] - add setting to hide indicator (footer) [P036] - optimization of font selection
+      [P036] Add Left-align option for content, code optimizations
+      [P036] Update documentation for leftalign subcommand
+      [P061] Fix merge
+      [Build] Exclude Adafruit_ST77xx from new custom_beta_IR environment
+      [P036] String allocation improvements
+      [P038] Log and string optimization
+      [P061] Log optimization
+      [P127] Log optimization
+      [P126] Log optimization
+      [P037] Remove unused variable
+      [P037] Log and string allocation impeovements
+      [AdaGFX] Add Datalist support function, logging improvements
+      [P116] Logging improvements
+      [P095] Add data_struct destructor, logging improvements
+      [P096] Small code- and logging- improvements
+      [AdaGFX] Add destructor
+      [P095] Destroy also gfxHelper in destructor
+      [P116] Add destructor
+      [P096] Add destructor
+      [P116] Add destructor, also in .h file
+      [P036] Change 8pt font (4-lines) for better readability, add extra font compile-time option
+      [P036] String allocation improvements
+      [P116] Rework destructor to act the same as plugin_exit handler
+      [P036] Partially reverted previous changes, now tweaked for fitting in 4-lines display like in 2020 builds
+      [P126] Rename command-prefix from 74hc to 74hc595, and update documentation
+      [P126] Add output selection option, improve values display
+      [P126] Update documentation
+      [P126] Rename command to ShiftOut, and promote rest of command to second argument
+      [P126] Update documentation using new command name
+      [P117] Add Automatic Calibration option and commands
+      [P117] Update documentation
+      [P117] Add setting and commands for measurement interval. Also a bugfix for command scdsetfrc.
+      [P117] Update documentation
+      [P117] Code improvements replacing PCONFIG settings by define names
+      [P117] Add extra warnings and notes about calibration to documentation
+      [P126] Rename plugin title, update documentation other minor doc. improvements
+      [P126] Always show formatted output, even when plugin is not active.
+      [Docs] Add P121 to Plugin overview page
+      [P022] Add fade duration argument to 'pcapwm' command
+      [AdaGFX] Add support for display of bmp files, some minor improvements
+      [P096] Add support for Waveshare 2in7 264x176 pixel monochrome ePaper display
+      [P096] Correction to rotation calculation by kretzp for Waveshare 2.7"
+      [P096] WS2in7: Prefix all compile-time defines, remove unused constructor
+      [P027] Enable all possible chip addresses
+      [P027] Uncrustify the source
+      [P027] Put I2C address list in natural order
+      [P027] Move I2C address documentation to appropriate place and remove unneeded defines
+      [P022] Add minimal documentation (commands)
+      [P037] Fix event generation bug, add event-limit options
+      [P037] Only generate event MQTTImport#(dis)connected if plugin-task is enabled
+      [P037] Enable all optional features in MAX builds
+      [P037] Fix Linux compilation issue (tighter type-checks)
+      [P037] Add option to replace value (special) characters by a comma
+      [P037] Add option to replace value (special) characters by a comma
+      [P037] Add option to replace value (special) characters by a comma
+      [EventQueue] Optionally deduplicate event against current event list (case-sensitive)
+      [P037] Use EventQueue deduplicate feature, case-sensitive
+      [P037] Code optimizations, allow a few extra replace-characters
+      [P037] Small UI adjustments
+      [P037] Update documentation
+      [P037] Improvements of documentation
+      [Helpers] Enable unconditional quote-wrapping of a String value
+      [Helpers] Refactor quote-wrapping of a String value
+      [OTA] Add setting for allowing unrestricted (size) OTA update
+      [Rules] Fix handling of %eventvalue0% without default value
+
+blazej222 (1):
+      Fix typo
+
+stefan (2):
+      [ESP32] pinMode() crashes ESP32 with PSRAM
+      [ESP32] fix typo in comment
+
+
+-------------------------------------------------
 Changes in release mega-20220328 (since mega-20211224)
 -------------------------------------------------
 
