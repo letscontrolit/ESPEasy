@@ -23,11 +23,13 @@ struct LabelType {
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
     CPU_ECO_MODE,        // true
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
     WIFI_TX_MAX_PWR,     // Unit: 0.25 dBm, 0 = use default (do not set)
     WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
-    WIFI_NR_EXTRA_SCANS,
+#endif
+    WIFI_NR_EXTRA_SCANS,    
     WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
@@ -49,12 +51,12 @@ struct LabelType {
 #ifdef ESP32
     HEAP_SIZE,
     HEAP_MIN_FREE,
-    #ifdef ESP32_ENABLE_PSRAM
+    #ifdef BOARD_HAS_PSRAM
     PSRAM_SIZE,
     PSRAM_FREE,
     PSRAM_MIN_FREE,
     PSRAM_MAX_FREE_BLOCK,
-    #endif // ESP32_ENABLE_PSRAM
+    #endif // BOARD_HAS_PSRAM
 #endif // ifdef ESP32
 
     JSON_BOOL_QUOTES,
@@ -62,6 +64,7 @@ struct LabelType {
     ENABLE_RULES_CACHING,
     ENABLE_RULES_EVENT_REORDER,
     TASKVALUESET_ALL_PLUGINS,
+    ALLOW_OTA_UNLIMITED,
     ENABLE_CLEAR_HUNG_I2C_BUS,
 #ifndef BUILD_NO_RAM_TRACKER
     ENABLE_RAM_TRACKING,
@@ -141,6 +144,7 @@ struct LabelType {
 
     FLASH_CHIP_ID,
     FLASH_CHIP_REAL_SIZE,
+    FLASH_CHIP_SPEED,
     FLASH_IDE_SIZE,
     FLASH_IDE_SPEED,
     FLASH_IDE_MODE,

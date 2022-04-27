@@ -107,15 +107,17 @@ bool prepareWiFi();
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
+#ifdef ESP8266
 void SetWiFiTXpower();
 void SetWiFiTXpower(float dBm); // 0-20.5
 void SetWiFiTXpower(float dBm, float rssi);
+#endif
 float GetRSSIthreshold(float& maxTXpwr);
 WiFiConnectionProtocol getConnectionProtocol();
 void WifiDisconnect();
 bool WiFiScanAllowed();
 void WifiScan(bool async, uint8_t channel = 0);
-void WifiScan();
+void WiFiScan_log_to_serial();
 void setSTA(bool enable);
 void setAP(bool enable);
 const __FlashStringHelper * getWifiModeString(WiFiMode_t wifimode);
@@ -130,7 +132,6 @@ void setupStaticIPconfig();
 String formatScanResult(int i, const String& separator);
 String formatScanResult(int i, const String& separator, int32_t& rssi);
 
-String ESPeasyWifiStatusToString();
 void logConnectionStatus();
 
 

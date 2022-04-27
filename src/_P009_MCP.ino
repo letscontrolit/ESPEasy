@@ -3,7 +3,6 @@
 
 
 # include "src/DataStructs/PinMode.h"
-# include "src/Commands/GPIO.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################

@@ -83,7 +83,11 @@ void SettingsStruct_tmpl<N_TASKS>::EcoPowerMode(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::WifiNoneSleep() const {
+  #ifdef ESP32
+  return true;
+  #else
   return bitRead(VariousBits1, 7);
+  #endif
 }
 
 template<unsigned int N_TASKS>
@@ -279,6 +283,16 @@ bool SettingsStruct_tmpl<N_TASKS>::EnableRulesEventReorder() const {
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EnableRulesEventReorder(bool value) {
   bitWrite(VariousBits1, 25, !value);
+}
+
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::AllowOTAUnlimited() const {
+  return bitRead(VariousBits1, 26);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::AllowOTAUnlimited(bool value) {
+  bitWrite(VariousBits1, 26, value);
 }
 
 template<unsigned int N_TASKS>
