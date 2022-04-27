@@ -40,6 +40,7 @@
 #ifdef ESP32
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
+#include <soc/efuse_reg.h>
 #endif
 
 
@@ -102,16 +103,35 @@ void ESPEasy_setup()
 #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
 #endif
-  initWiFi();
+#ifdef ESP32
+#ifdef DISABLE_ESP32_BROWNOUT
+  DisableBrownout();      // Workaround possible weak LDO resulting in brownout detection during Wifi connection
+#endif  // DISABLE_ESP32_BROWNOUT
 
-  run_compiletime_checks();
-#ifdef ESP32_ENABLE_PSRAM
+#ifdef BOARD_HAS_PSRAM
   psramInit();
 #endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32
+  // restore GPIO16/17 if no PSRAM is found
+  if (!FoundPSRAM()) {
+    // test if the CPU is not pico
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t pkg_version = chip_ver & 0x7;
+    if (pkg_version <= 3) {   // D0WD, S0WD, D2WD
+      gpio_reset_pin(GPIO_NUM_16);
+      gpio_reset_pin(GPIO_NUM_17);
+    }
+  }
+#endif  // CONFIG_IDF_TARGET_ESP32
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
+#endif  // ESP32
+  initWiFi();
+
+  run_compiletime_checks();
 #ifdef ESP8266
 
   //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
@@ -143,13 +163,15 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("initLog()"));
   #endif
-  #ifdef ESP32_ENABLE_PSRAM
-  if (psramFound()) {
-    addLog(LOG_LEVEL_INFO, F("Found PSRAM"));
+  #ifdef BOARD_HAS_PSRAM
+  if (FoundPSRAM()) {
+    if (UsePSRAM()) {
+      addLog(LOG_LEVEL_INFO, F("Using PSRAM"));
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("PSRAM found, unable to use"));
+    }
   }
   #endif
-
-
 
   if (SpiffsSectors() < 32)
   {

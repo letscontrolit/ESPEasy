@@ -200,3 +200,22 @@ void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
 void WiFiEventData_t::setAuthMode(uint8_t newMode) {
   auth_mode = newMode;
 }
+
+
+String WiFiEventData_t::ESPeasyWifiStatusToString() const {
+  String log;
+  if (WiFiDisconnected()) {
+    log = F("DISCONNECTED");
+  } else {
+    if (WiFiConnected()) {
+      log += F("Conn. ");
+    }
+    if (WiFiGotIP()) {
+      log += F("IP ");
+    }
+    if (WiFiServicesInitialized()) {
+      log += F("Init");
+    }
+  }
+  return log;
+}

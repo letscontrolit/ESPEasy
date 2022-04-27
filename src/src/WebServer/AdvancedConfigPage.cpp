@@ -95,9 +95,11 @@ void handle_advanced() {
 #ifdef SUPPORT_ARP
     Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
 #endif // ifdef SUPPORT_ARP
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
     Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
     Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
     Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
+#endif
     Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
     Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
@@ -271,13 +273,14 @@ void handle_advanced() {
   addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
 #ifdef ESP8266
   addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
-#endif // ifdef ESP8266
   addFormNote(F("Change WiFi sleep settings requires reboot to activate"));
+#endif
 #ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
 #endif // ifdef SUPPORT_ARP
   addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
   addFormNote(F("Node may miss receiving packets with Eco mode enabled"));
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
   {
     float maxTXpwr;
     float threshold = GetRSSIthreshold(maxTXpwr);
@@ -297,6 +300,7 @@ void handle_advanced() {
     addFormNote(note);
   }
   addFormCheckBox(LabelType::WIFI_SEND_AT_MAX_TX_PWR, Settings.UseMaxTXpowerForSending());
+#endif
   {
     addFormNumericBox(LabelType::WIFI_NR_EXTRA_SCANS, Settings.NumberExtraWiFiScans, 0, 5);
     String note = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");

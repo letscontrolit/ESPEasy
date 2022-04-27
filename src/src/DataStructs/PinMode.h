@@ -13,6 +13,16 @@
 #define PIN_MODE_INPUT_PULLDOWN             7
 
 
+#define PLUGIN_GPIO          1
+#define PLUGIN_MCP           9
+#define PLUGIN_PCF          19
+
+#define GPIO_TYPE_INVALID   0
+#define GPIO_TYPE_INTERNAL  1
+#define GPIO_TYPE_MCP       2
+#define GPIO_TYPE_PCF       3
+
+
 #define SEARCH_PIN_STATE                 true
 #define NO_SEARCH_PIN_STATE             false
 

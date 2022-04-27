@@ -653,7 +653,7 @@ float ESPEasy_time::diurnalArc(float dec, float lat) {
   float height = -50.0f / 60.0f * rad;
   float latRad = lat * rad;
 
-  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
+  return 12.0f * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
 }
 
 float ESPEasy_time::equationOfTime(int doy) {

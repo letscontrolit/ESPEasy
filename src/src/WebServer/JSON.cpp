@@ -180,12 +180,12 @@ void handle_json()
     #ifdef ESP32
         LabelType::HEAP_SIZE,
         LabelType::HEAP_MIN_FREE,
-        #ifdef ESP32_ENABLE_PSRAM
+        #ifdef BOARD_HAS_PSRAM
         LabelType::PSRAM_SIZE,
         LabelType::PSRAM_FREE,
         LabelType::PSRAM_MIN_FREE,
         LabelType::PSRAM_MAX_FREE_BLOCK,
-        #endif // ESP32_ENABLE_PSRAM
+        #endif // BOARD_HAS_PSRAM
     #endif // ifdef ESP32
 
         LabelType::SUNRISE,
@@ -240,10 +240,12 @@ void handle_json()
         LabelType::FORCE_ESPEASY_NOW_CHANNEL,
 #endif
         LabelType::CONNECTION_FAIL_THRESH,
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
         LabelType::WIFI_TX_MAX_PWR,
         LabelType::WIFI_CUR_TX_PWR,
         LabelType::WIFI_SENS_MARGIN,
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
+#endif
         LabelType::WIFI_NR_EXTRA_SCANS,
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
