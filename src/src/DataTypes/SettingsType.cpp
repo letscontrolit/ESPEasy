@@ -1,4 +1,4 @@
-#include "SettingsType.h"
+#include "../DataTypes/SettingsType.h"
 
 #include "../CustomBuild/StorageLayout.h"
 #include "../DataStructs/NotificationSettingsStruct.h"

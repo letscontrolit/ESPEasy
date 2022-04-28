@@ -55,6 +55,11 @@
 # endif // ifdef CPLUGIN_015_SSL
 
 
+// Forward declarations:
+boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeout);
+boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings);
+
+
 static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = { 0, 0, 0 };
 
 void CPlugin_015_handleInterrupt() {

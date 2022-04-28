@@ -155,7 +155,7 @@ void handle_unprocessedNetworkEvents()
           lastDisconnectMoment_log.set(WiFiEventData.lastDisconnectMoment.get());
           lastWiFiStatus_log = cur_wifi_status;
           String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-          wifilog += ESPeasyWifiStatusToString();
+          wifilog += WiFiEventData.ESPeasyWifiStatusToString();
           wifilog += F(" RSSI: ");
           wifilog += String(WiFi.RSSI());
           wifilog += F(" status: ");
@@ -252,6 +252,7 @@ void processDisconnect() {
 
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
+    WifiScan(false);
     delay(100);
     setWifiMode(WIFI_OFF);
     initWiFi();
@@ -259,8 +260,6 @@ void processDisconnect() {
     if (WiFiEventData.unprocessedWifiEvents()) {
       handle_unprocessedNetworkEvents();
     }
-
-    WifiScan(false);
   }
   logConnectionStatus();
   WiFiEventData.processedDisconnect = true;
@@ -557,6 +556,7 @@ void processEthernetConnected() {
 }
 
 void processEthernetDisconnected() {
+  if (EthEventData.processedDisconnect) return;
   EthEventData.setEthDisconnected();
   EthEventData.processedDisconnect = true;
   EthEventData.ethConnectAttemptNeeded = true;
