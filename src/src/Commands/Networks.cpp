@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../Globals/Settings.h"
 #include "../WebServer/AccessControl.h"
 
@@ -72,7 +73,12 @@ String Command_ETH_Phy_Type (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Clock_Mode (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("ETH_Clock_Mode:"), Line, reinterpret_cast<uint8_t*>(&Settings.ETH_Clock_Mode),1);
+  return Command_GetORSetETH(event, 
+                             F("ETH_Clock_Mode:"), 
+                             toString(Settings.ETH_Clock_Mode),
+                             Line, 
+                             reinterpret_cast<uint8_t*>(&Settings.ETH_Clock_Mode),
+                             1);
 }
 
 String Command_ETH_IP (struct EventStruct *event, const char* Line)
@@ -97,7 +103,24 @@ String Command_ETH_DNS (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Wifi_Mode (struct EventStruct *event, const char* Line)
 {
-  return Command_GetORSetUint8_t(event, F("NetworkMedium:"), Line, reinterpret_cast<uint8_t*>(&Settings.NetworkMedium),1);
+
+  return Command_GetORSetETH(event, 
+                             F("NetworkMedium:"), 
+                             toString(Settings.NetworkMedium),
+                             Line, 
+                             reinterpret_cast<uint8_t*>(&Settings.NetworkMedium), 
+                             1);
+}
+
+String Command_ETH_Disconnect (struct EventStruct *event, const char* Line)
+{
+
+  ethPower(0);
+  ethPower(1);
+  setNetworkMedium(NetworkMedium_t::Ethernet);
+  ETHConnectRelaxed();
+
+  return return_command_success();
 }
 
 #endif

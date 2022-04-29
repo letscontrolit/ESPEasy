@@ -145,6 +145,7 @@ void ethPower(bool enable) {
       return;
     }
     EthEventData.ethInitSuccess = false;
+    EthEventData.clearAll();
     ETH = ETHClass();
     GPIO_Write(1, Settings.ETH_Pin_power, enable ? 1 : 0);
     if (!enable) {

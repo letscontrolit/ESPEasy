@@ -301,6 +301,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
       COMMAND_CASE_R(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
       COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
+      COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
       COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
     #endif // HAS_ETHERNET
 #ifdef USES_ESPEASY_NOW
