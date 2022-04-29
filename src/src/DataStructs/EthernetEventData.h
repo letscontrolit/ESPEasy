@@ -50,6 +50,7 @@ struct EthernetEventData_t {
   unsigned int  eth_connect_attempt   = 0;
   bool          eth_considered_stable = false;
   int           eth_reconnects        = -1; // First connection attempt is not a reconnect.
+  unsigned int  eth_dhcp_retries      = 0;
 
   LongTermTimer           lastConnectMoment;
   LongTermTimer           lastDisconnectMoment;
@@ -57,6 +58,8 @@ struct EthernetEventData_t {
   LongTermTimer           lastGetIPmoment;
   LongTermTimer::Duration lastConnectedDuration_us = 0ll;
 
+  IPAddress dns0_cache;
+  IPAddress dns1_cache;
 
   // Semaphore like bools for processing data gathered from Eth events.
   bool processedConnect          = true;

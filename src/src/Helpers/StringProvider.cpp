@@ -339,10 +339,22 @@ String getValue(LabelType::Enum label) {
     case LabelType::CHANNEL:                return String(WiFi.channel());
     case LabelType::ENCRYPTION_TYPE_STA:    return // WiFi_AP_Candidates.getCurrent().encryption_type();
                                                    WiFi_encryptionType(WiFiEventData.auth_mode);
-    case LabelType::CONNECTED:              return format_msec_duration(WiFiEventData.lastConnectMoment.millisPassedSince());
+    case LabelType::CONNECTED:
+      #ifdef HAS_ETHERNET
+      if(active_network_medium == NetworkMedium_t::Ethernet) {
+        return format_msec_duration(EthEventData.lastConnectMoment.millisPassedSince());
+      }
+      #endif
+      return format_msec_duration(WiFiEventData.lastConnectMoment.millisPassedSince());
 
     // Use only the nr of seconds to fit it in an int32, plus append '000' to have msec format again.
-    case LabelType::CONNECTED_MSEC:         return String(static_cast<int32_t>(WiFiEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
+    case LabelType::CONNECTED_MSEC:         
+      #ifdef HAS_ETHERNET
+      if(active_network_medium == NetworkMedium_t::Ethernet) {
+        return String(static_cast<int32_t>(EthEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
+      }
+      #endif
+      return String(static_cast<int32_t>(WiFiEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
     case LabelType::LAST_DISCONNECT_REASON: return String(WiFiEventData.lastDisconnectReason);
     case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason();
     case LabelType::NUMBER_RECONNECTS:      return String(WiFiEventData.wifi_reconnects);

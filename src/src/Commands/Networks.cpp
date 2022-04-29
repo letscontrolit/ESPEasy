@@ -4,6 +4,7 @@
 #include "../Commands/Common.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
+#include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../WebServer/AccessControl.h"
 
@@ -103,20 +104,30 @@ String Command_ETH_DNS (struct EventStruct *event, const char* Line)
 
 String Command_ETH_Wifi_Mode (struct EventStruct *event, const char* Line)
 {
-
-  return Command_GetORSetETH(event, 
+  const NetworkMedium_t orig_medium = Settings.NetworkMedium;
+  const String result = Command_GetORSetETH(event, 
                              F("NetworkMedium:"), 
-                             toString(Settings.NetworkMedium),
+                             toString(active_network_medium),
                              Line, 
                              reinterpret_cast<uint8_t*>(&Settings.NetworkMedium), 
                              1);
+  if (orig_medium != Settings.NetworkMedium) {
+    if (!isValid(Settings.NetworkMedium)) {
+      Settings.NetworkMedium = orig_medium;
+      return return_command_failed();
+    }
+    setNetworkMedium(Settings.NetworkMedium);
+  }
+  
+  return result;
 }
 
 String Command_ETH_Disconnect (struct EventStruct *event, const char* Line)
 {
 
   ethPower(0);
-  ethPower(1);
+  delay(400);
+//  ethPower(1);
   setNetworkMedium(NetworkMedium_t::Ethernet);
   ETHConnectRelaxed();
 
