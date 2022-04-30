@@ -555,9 +555,7 @@ void removeWiFiEventHandler()
 
 void registerWiFiEventHandler()
 {
-#if defined(ESP32)
   wm_event_id = WiFi.onEvent(WiFiEvent);
-#endif
 }
 #endif
 

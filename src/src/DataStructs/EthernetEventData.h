@@ -50,7 +50,6 @@ struct EthernetEventData_t {
   unsigned int  eth_connect_attempt   = 0;
   bool          eth_considered_stable = false;
   int           eth_reconnects        = -1; // First connection attempt is not a reconnect.
-  unsigned int  eth_dhcp_retries      = 0;
 
   LongTermTimer           lastConnectMoment;
   LongTermTimer           lastDisconnectMoment;
