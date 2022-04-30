@@ -50,7 +50,6 @@ void EthernetEventData_t::markEthBegin() {
   last_eth_connect_attempt_moment.setNow();
   eth_considered_stable = false;
   ethConnectInProgress  = true;
-  eth_dhcp_retries = 0;
   ++eth_connect_attempt;
 }
 
