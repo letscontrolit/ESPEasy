@@ -107,6 +107,12 @@ bool prepareWiFi();
 bool checkAndResetWiFi();
 void resetWiFi();
 void initWiFi();
+
+#ifdef ESP32
+void removeWiFiEventHandler();
+void registerWiFiEventHandler();
+#endif
+
 #ifdef ESP8266
 void SetWiFiTXpower();
 void SetWiFiTXpower(float dBm); // 0-20.5
