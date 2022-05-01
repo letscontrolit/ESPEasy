@@ -417,7 +417,7 @@ bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]
   return true;
 }
 
-void IthoCC1101::sendCommand(IthoCommand command)
+void IthoCC1101::sendCommand(IthoCommand command, uint8_t srcId[3], uint8_t destId[3])
 {
   CC1101Packet outMessage;
   uint8_t maxTries  = sendTries;
@@ -440,6 +440,17 @@ void IthoCC1101::sendCommand(IthoCommand command)
       // the leave command needs to be transmitted for 1 second according the manual
       maxTries  = 30;
       delaytime = 4;
+      break;
+
+    case OrconTimer0:
+    case OrconTimer1:
+    case OrconTimer2:
+    case OrconTimer3:
+    case IthoLow:
+    case IthoMedium:
+    case IthoHigh:
+      maxTries  = 1;
+      createOrconMessageCommand(&outIthoPacket, &outMessage, srcId, destId);
       break;
 
     default:
@@ -476,6 +487,90 @@ void IthoCC1101::createMessageStart(IthoPacket *itho, CC1101Packet *packet)
   packet->data[13] = 42;
 
   // [start of command specific data]
+}
+
+void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packet, uint8_t srcId[3], uint8_t destId[3])
+{
+  // set start message structure
+  createMessageStart(itho, packet);
+
+  // set deviceType? (or messageType?), not sure what this is
+  // itho->dataDecoded[0] = itho->deviceType;
+  uint8_t header = 0b00011100;
+  itho->dataDecoded[0] = header; // 00TTAAPP
+  // set deviceID
+  itho->dataDecoded[1] = srcId[0];
+  itho->dataDecoded[2] = srcId[1];
+  itho->dataDecoded[3] = srcId[2];
+  // set deviceID
+  itho->dataDecoded[4] = itho->deviceId[0];
+  itho->dataDecoded[5] = itho->deviceId[1];
+  itho->dataDecoded[6] = itho->deviceId[2];
+
+  //itho->dataDecoded[7] = itho->deviceId[0];
+  //itho->dataDecoded[8] = itho->deviceId[1];
+  //itho->dataDecoded[9] = itho->deviceId[2];
+
+  // set counter1
+  // itho->dataDecoded[4] = itho->counter;
+
+  // set command bytes on dataDecoded[5 - 10]
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+
+  for (uint8_t i = 0; i < getMessageCommandLength(itho->command); i++) {
+    itho->dataDecoded[i + 7] = commandBytes[i];
+  }
+
+  itho->length = 7 + 1 + getMessageCommandLength(itho->command);
+
+  itho->dataDecoded[itho->length-1] = getCRC(itho, itho->length-1); // 44;
+  itho->length += 1;
+
+  //itho->dataDecoded[itho->length-1] = 0x35;
+  //itho->length += 1;
+
+  //itho->dataDecoded[itho->length-1] = 0x7F;
+  //itho->length += 1;
+
+  //itho->dataDecoded[itho->length-1] = 0xFE;
+  //itho->length += 1;
+
+  packet->length  = messageEncode(itho, packet) - 2; // delete the last two itho bytes (0x55, 0x95)
+
+  // set end byte
+  packet->data[packet->length] = 0xAC;
+  packet->length              += 1;
+  packet->data[packet->length] = 0xAA;
+  packet->length              += 1;
+  packet->data[packet->length] = 0xBF;
+  packet->length              += 1;
+  packet->data[packet->length] = 0x0E;
+  packet->length              += 1;
+  // packet->length += 1;
+  //set counter2
+  //packet->data[packet->length-1] = 44; //getCRC(itho, itho->length);
+
+  //packet->length += 1;
+  // set end byte
+  //packet->data[packet->length] = 53;
+
+  //packet->length              += 1;
+
+  // set end 'noise'
+  //for (uint8_t i = packet->length; i < packet->length + 7; i++) {
+  //  packet->data[i] = 170;
+  //}
+  //packet->length += 7;
+}
+
+uint8_t IthoCC1101::getCRC(IthoPacket *itho, uint8_t len) {
+  uint8_t val = 0;
+
+  for (uint8_t i = 0; i < len; i++) {
+    val += itho->dataDecoded[i];
+  }
+
+  return 0x100 - ( val & 0xFF );
 }
 
 void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
@@ -519,6 +614,9 @@ void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
   }
   packet->length += 7;
 }
+
+
+
 
 void IthoCC1101::createMessageJoin(IthoPacket *itho, CC1101Packet *packet)
 {
@@ -672,6 +770,57 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
       return &ithoMessageLowCommandBytes[0];
   }
 }
+
+uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
+{
+  switch (command)
+  {
+    /*case IthoStandby:
+      return &ithoMessageStandByCommandBytes[0];
+    case IthoHigh:
+      return &ithoMessageHighCommandBytes[0];
+    case IthoFull:
+      return &ithoMessageFullCommandBytes[0];
+    case IthoMedium:
+      return &ithoMessageMediumCommandBytes[0];
+    case IthoLow:
+      return &ithoMessageLowCommandBytes[0];*/
+    case IthoTimer1:
+      return sizeof(ithoMessageTimer1CommandBytes)/sizeof(uint8_t);
+    case IthoTimer2:
+      return sizeof(ithoMessageTimer2CommandBytes)/sizeof(uint8_t);
+    case IthoTimer3:
+      return sizeof(ithoMessageTimer3CommandBytes)/sizeof(uint8_t);
+    case IthoJoin:
+      return sizeof(ithoMessageJoinCommandBytes)/sizeof(uint8_t);
+    case IthoLeave:
+      return sizeof(ithoMessageLeaveCommandBytes)/sizeof(uint8_t);
+
+    //case IthoStandby:
+    //  return sizeof(orconMessageStandByCommandBytes)/sizeof(uint8_t);
+    case IthoLow:
+      return sizeof(orconMessageLowCommandBytes)/sizeof(uint8_t);
+    case IthoMedium:
+      return sizeof(orconMessageMediumCommandBytes)/sizeof(uint8_t);
+    case IthoHigh:
+      return sizeof(orconMessageFullCommandBytes)/sizeof(uint8_t);
+    case IthoStandby:
+      return sizeof(orconMessageAutoCommandBytes)/sizeof(uint8_t);
+    case OrconTimer0:
+      return sizeof(orconMessageTimer0CommandBytes)/sizeof(uint8_t);
+    case OrconTimer1:
+      return sizeof(orconMessageTimer1CommandBytes)/sizeof(uint8_t);
+    case OrconTimer2:
+      return sizeof(orconMessageTimer2CommandBytes)/sizeof(uint8_t);
+    case OrconTimer3:
+      return sizeof(orconMessageTimer3CommandBytes)/sizeof(uint8_t);
+
+
+    default:
+      return sizeof(ithoMessageLowCommandBytes)/sizeof(uint8_t);
+  }
+}
+
 
 /*
    Counter2 is the decimal sum of all bytes in decoded form from

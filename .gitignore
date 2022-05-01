@@ -53,3 +53,5 @@ build_output/
 **/__tmpfile.cpp
 
 src/_Custom.h
+tools/pio/pre_custom_esp82xx.py
+platformio.ini
