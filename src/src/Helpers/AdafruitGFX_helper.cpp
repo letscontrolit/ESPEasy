@@ -8,6 +8,7 @@
 # if defined(FEATURE_SD) && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 #  include <SD.h>
 # endif // if defined(FEATURE_SD) && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+# include <vector>
 
 # if ADAGFX_FONTS_INCLUDED
 #  include "src/Static/Fonts/Seven_Segment24pt7b.h"
@@ -98,6 +99,49 @@ const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth) {
   }
   return F("None");
 }
+
+# if ADAGFX_ENABLE_BUTTON_DRAW
+
+/******************************************************************************************
+ * get the display text for a button type enum value
+ *****************************************************************************************/
+const __FlashStringHelper* toString(Button_type_e button) {
+  switch (button) {
+    case Button_type_e::None: return F("None");
+    case Button_type_e::Square: return F("Square");
+    case Button_type_e::Rounded: return F("Rounded");
+    case Button_type_e::Circle: return F("Circle");
+    case Button_type_e::ArrowLeft: return F("Arrow, left");
+    case Button_type_e::ArrowUp: return F("Arrow, up");
+    case Button_type_e::ArrowRight: return F("Arrow, right");
+    case Button_type_e::ArrowDown: return F("Arrow, down");
+    case Button_type_e::Button_MAX: break;
+  }
+  return F("Unsupported!");
+}
+
+/******************************************************************************************
+ * get the display text for a button layout enum value
+ *****************************************************************************************/
+const __FlashStringHelper* toString(Button_layout_e layout) {
+  switch (layout) {
+    case Button_layout_e::CenterAligned: return F("Centered");
+    case Button_layout_e::LeftAligned: return F("Left-aligned");
+    case Button_layout_e::TopAligned: return F("Top-aligned");
+    case Button_layout_e::RightAligned: return F("Right-aligned");
+    case Button_layout_e::BottomAligned: return F("Bottom-aligned");
+    case Button_layout_e::LeftTopAligned: return F("Left-Top-aligned");
+    case Button_layout_e::RightTopAligned: return F("Right-Top-aligned");
+    case Button_layout_e::RightBottomAligned: return F("Right-Bottom-aligned");
+    case Button_layout_e::LeftBottomAligned: return F("Left-Bottom-aligned");
+    case Button_layout_e::NoCaption: return F("No Caption");
+    case Button_layout_e::Bitmap: return F("Bitmap image");
+    case Button_layout_e::Alignment_MAX: break;
+  }
+  return F("Unsupported!");
+}
+
+# endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
 /*****************************************************************************************
  * Show a selector for all available 'Text print mode' options, for use in PLUGIN_WEBFORM_LOAD
@@ -261,7 +305,7 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
 /****************************************************************************
  * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
  ***************************************************************************/
-String AdaGFXparseTemplate(String            & tmpString,
+String AdaGFXparseTemplate(const String      & tmpString,
                            uint8_t             lineSize,
                            AdafruitGFX_helper *gfxHelper) {
   // Änderung WDS: Tabelle vorerst Abgeschaltet !!!!
@@ -469,7 +513,10 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT    *display,
   _useValidation(useValidation), _textBackFill(textBackFill)
 {
   _display = _tft;
-  addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
+  String log = F("AdaGFX_helper: TFT Init. ");
+
+  log += getFeatures();
+  addLog(LOG_LEVEL_INFO, log);
   initialize();
 }
 
@@ -493,6 +540,8 @@ void AdafruitGFX_helper::initialize() {
     log += static_cast<uint16_t>(_colorDepth);
     log += F(", trigger: ");
     log += _trigger;
+    log += F(", ");
+    log += getFeatures();
     addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
@@ -507,6 +556,24 @@ void AdafruitGFX_helper::initialize() {
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
     _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
   }
+}
+
+String AdafruitGFX_helper::getFeatures() {
+  String log = F("Features:");
+
+  # if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+  log += F(" asciitable,");
+  # endif // if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+  # if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+  log += F(" lm/lmr,");
+  # endif // if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+  # if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+  log += F(" bmp,");
+  # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+  # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
+  log += F(" btn,");
+  # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
+  return log;
 }
 
 /****************************************************************************
@@ -538,13 +605,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
   String log;
-  String sParams[ADAGFX_PARSE_MAX_ARGS + 1];
-  int    nParams[ADAGFX_PARSE_MAX_ARGS + 1];
-  int    argCount = 0;
-  bool   loop     = true;
+  std::vector<String> sParams;
+  std::vector<int>    nParams;
+  int  argCount = 0;
+  bool loop     = true;
 
-  while (argCount <= ADAGFX_PARSE_MAX_ARGS && loop) {
-    sParams[argCount] = parseStringKeepCase(string, argCount + 3); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+  while (loop) {                                                  // Process all provided arguments
+    sParams.push_back(parseStringKeepCase(string, argCount + 3)); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+    nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
     loop = !sParams[argCount].isEmpty();
 
@@ -560,6 +628,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // ifndef BUILD_NO_DEBUG
 
     if (loop) { argCount++; }
+  }
+  { // Guarantee minimal nParams/sParams size
+    int args = argCount;
+
+    while (args <= ADAGFX_PARSE_MAX_ARGS) {
+      sParams.push_back(EMPTY_STRING);
+      nParams.push_back(0);
+      args++;
+    }
   }
   success = true; // If we get this far, we'll flip the flag if something wrong is found
 
@@ -1265,6 +1342,240 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
   }
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BUTTON_DRAW
+  else if (subcommand.equals(F("btn")) && (argCount >= 7) && (nParams[6] != 0))
+  { // btn,state,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
+    // ev: 1     2 3 4 5 6  7     8     9      10         11        12        13      14        15       16            17,18,19,20
+    // nP: 0     1 2 3 4 5  6     7     8      9          10        11        12      13        14       15            16,17,18,19
+    // : Draw a button
+    // state: -2 = disabled, -1 = initial (off), 0 = off, 1 = on
+    // type & 0x0F: 0 = none, < 0 = clear area, 1 = rectangle, 2 = rounded rect., 3 = circle,
+    // type & 0xF0 = CenterAligned, LeftAligned, TopAligned, RightAligned, BottomAligned, LeftTopAligned, RightTopAligned,
+    //               RightBottomAligned, LeftBottomAligned, NoCaption
+    // (*clr = color, TaskIndex, Group and SelGrp are ignored)
+    #  if ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[1], nParams[2]) ||
+        invalidCoordinates(nParams[1] + nParams[3], nParams[2] + nParams[4])) {
+      success = false;
+    } else
+    #  endif  // if ADAGFX_ARGUMENT_VALIDATION
+    {
+      // All checked out OK
+      // Default values
+      uint16_t onColor              = ADAGFX_GREEN;
+      uint16_t offColor             = ADAGFX_RED;
+      uint16_t captionColor         = ADAGFX_WHITE;
+      uint8_t  fontScale            = 2;
+      uint16_t borderColor          = ADAGFX_WHITE;
+      uint16_t disabledColor        = 0x9410;
+      uint16_t disabledCaptionColor = 0x5A69;
+
+      if (!sParams[7].isEmpty()) { onColor = AdaGFXparseColor(sParams[7], _colorDepth); }
+
+      if (!sParams[8].isEmpty()) { offColor = AdaGFXparseColor(sParams[8], _colorDepth); }
+
+      if (!sParams[9].isEmpty()) { captionColor = AdaGFXparseColor(sParams[9], _colorDepth); }
+
+      if (nParams[12] > 0) { fontScale = nParams[12]; }
+
+      if (!sParams[13].isEmpty()) { borderColor = AdaGFXparseColor(sParams[13], _colorDepth); }
+
+      if (!sParams[14].isEmpty()) { disabledColor = AdaGFXparseColor(sParams[14], _colorDepth); }
+
+      if (!sParams[15].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[15], _colorDepth); }
+
+      uint16_t fillColor = onColor;
+      uint16_t textColor = captionColor;
+      bool     clearArea = nParams[6] < 0;
+      nParams[6] = std::abs(nParams[6]);
+
+      // Check state: -2, -1, 0, 1 to select used colors
+      if ((nParams[0] == 0) || (nParams[0] == -1)) {
+        fillColor = offColor;
+      } else if (nParams[0] == -2) {
+        fillColor = disabledColor;
+        textColor = disabledCaptionColor;
+      } else if (clearArea) {
+        fillColor   = _bgcolor; //
+        borderColor = _bgcolor;
+      }
+
+      if ((static_cast<Button_type_e>(nParams[6] & 0x0F) != Button_type_e::None) ||
+          clearArea) {
+        _display->fillRect(nParams[1], nParams[2], nParams[3], nParams[4], _bgcolor);
+      }
+
+      // Check button-type bits (mask: 0x0F) to draw correct shape
+      if (!clearArea) {
+        switch (static_cast<Button_type_e>(nParams[6] & 0x0F)) {
+          case Button_type_e::Square: // Rectangle
+          {
+            _display->fillRect(nParams[1], nParams[2], nParams[3], nParams[4], fillColor);
+            _display->drawRect(nParams[1], nParams[2], nParams[3], nParams[4], borderColor);
+            break;
+          }
+          case Button_type_e::Rounded:                       // Rounded Rectangle
+          {
+            int16_t radius = (nParams[3] + nParams[4]) / 20; // 10 % corner radius
+            _display->fillRoundRect(nParams[1], nParams[2], nParams[3], nParams[4], radius, fillColor);
+            _display->drawRoundRect(nParams[1], nParams[2], nParams[3], nParams[4], radius, borderColor);
+            break;
+          }
+          case Button_type_e::Circle:                       // Circle
+          {
+            int16_t radius = (nParams[3] + nParams[4]) / 4; // average radius
+            _display->fillCircle(nParams[1] + (nParams[3] / 2), nParams[2] + (nParams[4] / 2), radius, fillColor);
+            _display->drawCircle(nParams[1] + (nParams[3] / 2), nParams[2] + (nParams[4] / 2), radius, borderColor);
+            break;
+          }
+          case Button_type_e::ArrowLeft:
+          { // draw: left-center, right-top, right-bottom
+            _display->fillTriangle(nParams[1], nParams[2] + nParams[4] / 2, nParams[1] + nParams[3], nParams[2],
+                                   nParams[1] + nParams[3], nParams[2] + nParams[4], fillColor);
+            _display->drawTriangle(nParams[1], nParams[2] + nParams[4] / 2, nParams[1] + nParams[3], nParams[2],
+                                   nParams[1] + nParams[3], nParams[2] + nParams[4], borderColor);
+            break;
+          }
+          case Button_type_e::ArrowUp:
+          { // draw: top-center, right-bottom, left-bottom
+            _display->fillTriangle(nParams[1] + nParams[3] / 2, nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4],
+                                   nParams[1], nParams[2] + nParams[4], fillColor);
+            _display->drawTriangle(nParams[1] + nParams[3] / 2, nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4],
+                                   nParams[1], nParams[2] + nParams[4], borderColor);
+            break;
+          }
+          case Button_type_e::ArrowRight:
+          { // draw: left-top, right-center, left-bottom
+            _display->fillTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4] / 2,
+                                   nParams[1], nParams[2] + nParams[4], fillColor);
+            _display->drawTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4] / 2,
+                                   nParams[1], nParams[2] + nParams[4], borderColor);
+            break;
+          }
+          case Button_type_e::ArrowDown:
+          { // draw: left-top, right-top, bottom-center
+            _display->fillTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2],
+                                   nParams[1] + nParams[3] / 2, nParams[2] + nParams[4], fillColor);
+            _display->drawTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2],
+                                   nParams[1] + nParams[3] / 2, nParams[2] + nParams[4], borderColor);
+            break;
+          }
+          case Button_type_e::None:
+          case Button_type_e::Button_MAX:
+            break;
+        }
+      }
+
+      // Display caption? (or bitmap)
+      if (!clearArea &&
+          !(static_cast<Button_layout_e>(nParams[6] & 0xF0) == Button_layout_e::NoCaption)) {
+        int16_t  x1, y1;
+        uint16_t w1, h1, w2, h2;
+        String   newString;
+
+        // Determine alignment parameters
+        if (nParams[0] == 1) {
+          newString = sParams[11].isEmpty() ? sParams[5] : sParams[11];
+        } else {
+          newString = sParams[12].isEmpty() ? sParams[5] : sParams[12];
+        }
+        newString = AdaGFXparseTemplate(newString, 20);
+
+        if ((nParams[10] > 0) && (nParams[10] <= 10)) { _display->setTextSize(nParams[10]); } // set scaling
+        _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // get caption length and height in pixels
+        _display->getTextBounds(F(" "),    0, 0, &x1, &y1, &w2, &h2); // measure space width for little margins
+
+        // Check button-alignment bits (mask 0xF0) for caption placement, modifies the x/y arguments passed!
+        // Little margin is: from left/right: half of the width of a space, from top/bottom: half of height of the font used
+        Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[6] & 0xF0);
+
+        switch (buttonLayout) {
+          case Button_layout_e::CenterAligned:
+            nParams[1] += (nParams[3] / 2 - w1 / 2);  // center horizontically
+            nParams[2] += (nParams[4] / 2 - h1 / 2);  // center vertically
+            break;
+          case Button_layout_e::LeftAligned:
+            nParams[1] += w2 / 2;                     // A little margin from left
+            nParams[2] += (nParams[4] / 2 - h1 / 2);  // center vertically
+            break;
+          case Button_layout_e::TopAligned:
+            nParams[1] += (nParams[3] / 2 - w1 / 2);  // center horizontically
+            nParams[2] += h1 / 2;                     // A little margin from top
+            break;
+          case Button_layout_e::RightAligned:
+            nParams[1] += (nParams[3] - w1) - w2 / 2; // right-align + a little margin
+            nParams[2] += (nParams[4] / 2 - h1 / 2);  // center vertically
+            break;
+          case Button_layout_e::BottomAligned:
+            nParams[1] += (nParams[3] / 2 - w1 / 2);  // center horizontically
+            nParams[2] += (nParams[4] - h1 * 1.5);    // bottom align + a little margin
+            break;
+          case Button_layout_e::LeftTopAligned:
+            nParams[1] += w2 / 2;                     // A little margin from left
+            nParams[2] += h1 / 2;                     // A little margin from top
+            break;
+          case Button_layout_e::RightTopAligned:
+            nParams[1] += (nParams[3] - w1) - w2 / 2; // right-align + a little margin
+            nParams[2] += h1 / 2;                     // A little margin from top
+            break;
+          case Button_layout_e::RightBottomAligned:
+            nParams[1] += (nParams[3] - w1) - w2 / 2; // right-align + a little margin
+            nParams[2] += (nParams[4] - h1 * 1.5);    // bottom align + a little margin
+            break;
+          case Button_layout_e::LeftBottomAligned:
+            nParams[1] += w2 / 2;                     // A little margin from left
+            nParams[2] += (nParams[4] - h1 * 1.5);    // bottom align + a little margin
+            break;
+          case Button_layout_e::Bitmap:
+          {                                           // Use ON/OFF caption to specify (full) bitmap filename
+            #  if ADAGFX_ENABLE_BMP_DISPLAY
+
+            if (!newString.isEmpty()) {
+              int offX = 0; // Allow optional arguments for x and y offset values, usage:
+              int offY = 0; // [x,[y,]]filename.bmp
+
+              if (newString.indexOf(',') > -1) {
+                String tmp = parseString(newString, 1);
+                validIntFromString(tmp, offX);
+                newString = parseStringToEndKeepCase(newString, 2);
+
+                if (newString.indexOf(',') > -1) {
+                  tmp = parseString(newString, 1);
+                  validIntFromString(tmp, offY);
+                  newString = parseStringToEndKeepCase(newString, 2);
+                }
+              }
+              success = showBmp(newString, nParams[1] + offX, nParams[2] + offY);
+            } else
+            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+            {
+              success = false;
+            }
+            break;
+          }
+          case Button_layout_e::NoCaption:
+          case Button_layout_e::Alignment_MAX:
+            break;
+        }
+
+        if ((buttonLayout != Button_layout_e::NoCaption) &&
+            (buttonLayout != Button_layout_e::Bitmap)) {
+          // Set position and colors, then print
+          _display->setCursor(nParams[1], nParams[2]);
+          _display->setTextColor(captionColor, captionColor); // transparent bg results in button color
+          _display->print(newString);
+
+          // restore colors
+          _display->setTextColor(_fgcolor, _bgcolor);
+        }
+
+        // restore font scaling
+        if ((nParams[10] > 0) && (nParams[10] <= 10)) { _display->setTextSize(_fontscaling); }
+      }
+    }
+  }
+  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
   else {
     success = false;
   }

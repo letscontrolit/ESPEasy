@@ -22,28 +22,31 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
+# define ADAGFX_PARSE_MAX_ARGS        7  // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION
-#  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
+#  define ADAGFX_ARGUMENT_VALIDATION  1  // Validate command arguments
 # endif // ifndef ADAGFX_ARGUMENT_VALIDATION
 # ifndef ADAGFX_USE_ASCIITABLE
-#  define ADAGFX_USE_ASCIITABLE       1 // Enable 'asciitable' command (useful for debugging/development)
+#  define ADAGFX_USE_ASCIITABLE       1  // Enable 'asciitable' command (useful for debugging/development)
 # endif // ifndef ADAGFX_USE_ASCIITABLE
 # ifndef ADAGFX_SUPPORT_7COLOR
-#  define ADAGFX_SUPPORT_7COLOR       1 // Do we support 7-Color displays?
+#  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_7COLOR
 # ifndef ADAGFX_FONTS_INCLUDED
-#  define ADAGFX_FONTS_INCLUDED       1 // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+#  define ADAGFX_FONTS_INCLUDED       1  // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
 # ifndef ADAGFX_PARSE_SUBCOMMAND
-#  define ADAGFX_PARSE_SUBCOMMAND     1 // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
+#  define ADAGFX_PARSE_SUBCOMMAND     1  // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 # ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#  define ADAGFX_ENABLE_EXTRA_CMDS    1 // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
+#  define ADAGFX_ENABLE_EXTRA_CMDS    1  // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
 # endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
 # ifndef ADAGFX_ENABLE_BMP_DISPLAY
-#  define ADAGFX_ENABLE_BMP_DISPLAY   1 // Enable subcommands for displaying .bmp files on supported displays (color)
+#  define ADAGFX_ENABLE_BMP_DISPLAY   1  // Enable subcommands for displaying .bmp files on supported displays (color)
 # endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
+# ifndef ADAGFX_ENABLE_BUTTON_DRAW
+#  define ADAGFX_ENABLE_BUTTON_DRAW    1 // Enable subcommands for displaying button-like shapes
+# endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
@@ -101,6 +104,9 @@
 // #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
 // #   undef ADAGFX_ENABLE_BMP_DISPLAY
 // #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+// #  ifdef ADAGFX_ENABLE_BUTTON_DRAW
+// #   undef ADAGFX_ENABLE_BUTTON_DRAW
+// #  endif // ifdef ADAGFX_ENABLE_BUTTON_DRAW
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
@@ -199,7 +205,45 @@ enum class AdaGFXColorDepth : uint16_t {
   FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
 };
 
-class AdafruitGFX_helper;     // Forward declaration
+# if ADAGFX_ENABLE_BUTTON_DRAW
+
+// Only bits 0..3 can be used, masked with: 0x0F
+// stored combined with Button_layout_e value
+enum class Button_type_e : uint8_t {
+  None       = 0x00,
+  Square     = 0x01,
+  Rounded    = 0x02,
+  Circle     = 0x03,
+  ArrowLeft  = 0x04,
+  ArrowUp    = 0x05,
+  ArrowRight = 0x06,
+  ArrowDown  = 0x07,
+  Button_MAX // must be last value in enum, max possible values: 16
+};
+
+// Only bits 4..7 can be used, masked with: 0xF0
+// stored combined with Button_type_e value
+enum class Button_layout_e : uint8_t {
+  CenterAligned      = 0x00,
+  LeftAligned        = 0x10,
+  TopAligned         = 0x20,
+  RightAligned       = 0x30,
+  BottomAligned      = 0x40,
+  LeftTopAligned     = 0x50,
+  RightTopAligned    = 0x60,
+  RightBottomAligned = 0x70,
+  LeftBottomAligned  = 0x80,
+  NoCaption          = 0x90,
+  Bitmap             = 0xA0,
+  Alignment_MAX      = 11u // options-count
+};
+
+const __FlashStringHelper* toString(Button_type_e button);
+const __FlashStringHelper* toString(Button_layout_e layout);
+
+# endif // if ADAGFX_ENABLE_BUTTON_DRAW
+
+class AdafruitGFX_helper; // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
 const __FlashStringHelper* toString(AdaGFXTextPrintMode mode);
@@ -235,7 +279,7 @@ void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
 void     AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
                                uint8_t                    fontScaling,
                                uint8_t                    maxScale = 10);
-String   AdaGFXparseTemplate(String            & tmpString,
+String   AdaGFXparseTemplate(const String      & tmpString,
                              uint8_t             lineSize,
                              AdafruitGFX_helper *gfxHelper = nullptr);
 uint16_t AdaGFXparseColor(String         & s,
@@ -280,7 +324,9 @@ public:
   # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
-  bool processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
+  String getFeatures();
+
+  bool   processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
 
   void printText(const char *string,
                  int16_t     X,
