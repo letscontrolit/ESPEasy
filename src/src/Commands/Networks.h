@@ -21,5 +21,6 @@ String Command_ETH_Gateway (struct EventStruct *event, const char* Line);
 String Command_ETH_Subnet (struct EventStruct *event, const char* Line);
 String Command_ETH_DNS (struct EventStruct *event, const char* Line);
 String Command_ETH_Wifi_Mode (struct EventStruct *event, const char* Line);
+String Command_ETH_Disconnect (struct EventStruct *event, const char* Line);
 
 #endif // COMMAND_NETWORKS_H
