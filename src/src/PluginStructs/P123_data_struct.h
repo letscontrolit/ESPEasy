@@ -9,11 +9,11 @@
 
 # include <Adafruit_FT6206.h>
 
-# define PLUGIN_123_DEBUG  // Additional debugging information
+# define PLUGIN_123_DEBUG        // Additional debugging information
 
-# define P123_USE_TOOLTIPS // Enable tooltips in UI
+# define P123_USE_TOOLTIPS       // Enable tooltips in UI
 
-// # define P123_USE_EXTENDED_TOUCH // Enable extended touch settings
+# define P123_USE_EXTENDED_TOUCH // Enable extended touch settings
 
 # ifdef LIMIT_BUILD_SIZE
 #  ifdef P123_USE_TOOLTIPS
@@ -27,14 +27,15 @@
 #  undef P123_USE_TOOLTIPS
 # endif  // if defined(P123_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
 
-# define P123_FLAGS_SEND_XY          0 // Set in Global Settings flags
-# define P123_FLAGS_SEND_Z           1 // Set in Global Settings flags
-# define P123_FLAGS_SEND_OBJECTNAME  2 // Set in Global Settings flags
-# define P123_FLAGS_USE_CALIBRATION  3 // Set in Global Settings flags
-# define P123_FLAGS_LOG_CALIBRATION  4 // Set in Global Settings flags
-# define P123_FLAGS_ROTATION_FLIPPED 5 // Set in P123_CONFIG_FLAGS
-# define P123_FLAGS_DEDUPLICATE      6 // Set in Global Settings flags
-# define P123_FLAGS_INIT_OBJECTEVENT 7 // Set in Global Settings flags
+# define P123_FLAGS_SEND_XY           0 // Set in Global Settings flags
+# define P123_FLAGS_SEND_Z            1 // Set in Global Settings flags
+# define P123_FLAGS_SEND_OBJECTNAME   2 // Set in Global Settings flags
+# define P123_FLAGS_USE_CALIBRATION   3 // Set in Global Settings flags
+# define P123_FLAGS_LOG_CALIBRATION   4 // Set in Global Settings flags
+# define P123_FLAGS_ROTATION_FLIPPED  5 // Set in P123_CONFIG_FLAGS
+# define P123_FLAGS_DEDUPLICATE       6 // Set in Global Settings flags
+# define P123_FLAGS_INIT_OBJECTEVENT  7 // Set in Global Settings flags
+# define P123_FLAGS_INITIAL_GROUP     8 // Initial group to activate, 8 bits uses only 6
 
 # define P123_CONFIG_DISPLAY_TASK PCONFIG(0)
 
@@ -76,6 +77,8 @@
 # define P123_EXTRA_OBJECT_COUNT    5     // The number of empty objects to show if max not reached
 # define P123_ARRAY_SIZE (P123_MAX_OBJECT_COUNT + P123_MAX_CALIBRATION_COUNT)
 
+# define P123_MAX_BUTTON_GROUPS     63    // Max. allowed button groups, technically limited to 6 bits = 0..63!
+
 # define P123_FLAGS_ON_OFF_BUTTON 0       // TouchObjects.flags On/Off Button function
 # define P123_FLAGS_INVERT_BUTTON 1       // TouchObjects.flags Inverted On/Off Button function
 
@@ -87,16 +90,24 @@
 # define P123_SETTINGS_SEPARATOR      '\x02'
 
 // Settings array field offsets: Calibration
-# define P123_CALIBRATION_START       0 // Index into settings array
-# define P123_CALIBRATION_ENABLED     1 // Enabled 0/1 (parseString index starts at 1)
-# define P123_CALIBRATION_LOG_ENABLED 2 // Calibration Log Enabled 0/1
-# define P123_CALIBRATION_TOP_X       3 // Top X offset (uint16_t)
-# define P123_CALIBRATION_TOP_Y       4 // Top Y
-# define P123_CALIBRATION_BOTTOM_X    5 // Bottom X
-# define P123_CALIBRATION_BOTTOM_Y    6 // Bottom Y
-# define P123_COMMON_DEBOUNCE_MS      7 // Debounce milliseconds
-# define P123_COMMON_TOUCH_TRESHOLD   8 // Treshold setting
-# define P123_COMMON_FLAGS            9 // Common flags
+# define P123_CALIBRATION_START             0  // Index into settings array
+# define P123_CALIBRATION_ENABLED           1  // Enabled 0/1 (parseString index starts at 1)
+# define P123_CALIBRATION_LOG_ENABLED       2  // Calibration Log Enabled 0/1
+# define P123_CALIBRATION_TOP_X             3  // Top X offset (uint16_t)
+# define P123_CALIBRATION_TOP_Y             4  // Top Y
+# define P123_CALIBRATION_BOTTOM_X          5  // Bottom X
+# define P123_CALIBRATION_BOTTOM_Y          6  // Bottom Y
+# define P123_COMMON_DEBOUNCE_MS            7  // Debounce milliseconds
+# define P123_COMMON_TOUCH_TRESHOLD         8  // Treshold setting
+# define P123_COMMON_FLAGS                  9  // Common flags
+# ifdef P123_USE_EXTENDED_TOUCH
+#  define P123_COMMON_DEF_COLOR_ON          10 // Default Color ON (rgb565, uint16_t)
+#  define P123_COMMON_DEF_COLOR_OFF         11 // Default Color OFF
+#  define P123_COMMON_DEF_COLOR_BORDER      12 // Default Color Border
+#  define P123_COMMON_DEF_COLOR_CAPTION     13 // Default Color Caption
+#  define P123_COMMON_DEF_COLOR_DISABLED    14 // Default Disabled Color
+#  define P123_COMMON_DEF_COLOR_DISABCAPT   15 // Default Disabled Caption Color
+# endif // ifdef P123_USE_EXTENDED_TOUCH
 
 // Settings array field offsets: Touch objects
 # define P123_OBJECT_INDEX_START      (P123_CALIBRATION_START + 1)
@@ -111,34 +122,20 @@
 #  define P123_OBJECT_COLOR_ON          7  // Color ON (rgb565, uint16_t)
 #  define P123_OBJECT_COLOR_OFF         8  // Color OFF
 #  define P123_OBJECT_COLOR_CAPTION     9  // Color Caption
-#  define P123_OBJECT_COLOR_HIGHLIGHT   10 // Color Highlight
-#  define P123_OBJECT_CAPTION_ON        11 // Caption ON (String 12, quoted)
-#  define P123_OBJECT_CAPTION_OFF       12 // Caption OFF (String 12, quoted)
-#  define P123_OBJECT_COLOR_BACKGROUND  13 // Color Background
+#  define P123_OBJECT_CAPTION_ON        10 // Caption ON (String 12, quoted)
+#  define P123_OBJECT_CAPTION_OFF       11 // Caption OFF (String 12, quoted)
+#  define P123_OBJECT_COLOR_BORDER      12 // Color Border
+#  define P123_OBJECT_COLOR_DISABLED    13 // Disabled Color
+#  define P123_OBJECT_COLOR_DISABCAPT   14 // Disabled Caption Color
 # endif // ifdef P123_USE_EXTENDED_TOUCH
 
 # define P123_OBJECT_FLAG_ENABLED     0    // Enabled
 # define P123_OBJECT_FLAG_BUTTON      1    // Button behavior
 # define P123_OBJECT_FLAG_INVERTED    2    // Inverted button
-// # define P123_OBJECT_FLAG_COLORED     3  // Colored button (unused)
-// # define P123_OBJECT_FLAG_CAPTION     4  // Use caption on button (unused)
-# define P123_OBJECT_FLAG_BUTTONTYPE  8    // 8 bits used as button type
-
-# ifdef P123_USE_EXTENDED_TOUCH
-enum class DrawButtonMode_e : uint8_t {
-  Initialize = 0, // Draw the base button
-  State,          // Set the button state (on/off)
-  Highlight       // Use Highlight option(s)
-};
-
-enum class Button_type_e : uint8_t {
-  None = 0,
-  Square,
-  Rounded,
-  Circle,
-  Button_MAX // must be last value in enum
-};
-# endif // ifdef P123_USE_EXTENDED_TOUCH
+# define P123_OBJECT_FLAG_FONTSCALE   3    // 4 bits used as button alignment
+# define P123_OBJECT_FLAG_BUTTONTYPE  7    // 8 bits used as button type
+# define P123_OBJECT_FLAG_GROUP       15   // 8 bits used as button group
+# define P123_OBJECT_FLAG_ACTIONGROUP 23   // 8 bits, 6 bits used as action group 0..63, 2 bits used as action option
 
 // Lets define our own coordinate point
 struct tP123_Point
@@ -159,14 +156,26 @@ struct tP123_TouchObjects
   tP123_Point top_left;
   tP123_Point width_height;
   # ifdef P123_USE_EXTENDED_TOUCH
-  uint16_t colorOn         = 0u;
-  uint16_t colorOff        = 0u;
-  uint16_t colorCaption    = 0u;
-  uint16_t colorHighlight  = 0u;
-  uint16_t colorBackground = 0u;
+  uint16_t colorOn              = 0u;
+  uint16_t colorOff             = 0u;
+  uint16_t colorCaption         = 0u;
+  uint16_t colorBorder          = 0u;
+  uint16_t colorDisabled        = 0u;
+  uint16_t colorDisabledCaption = 0u;
   # endif // ifdef P123_USE_EXTENDED_TOUCH
   bool TouchStates = false;
 };
+
+// Touch actions, use with mask 0xC0, other 6 bits are group/code to activate
+enum class P123_touch_action_e : uint8_t {
+  Default         = 0b00000000, // 0x00
+  ActivateGroup   = 0b01000000, // 0x40
+  IncrementGroup  = 0b10000000, // 0x80
+  DecrementGroup  = 0b11000000, // 0xC0
+  TouchAction_MAX = 4           // Last item is count, max 4!
+};
+
+const __FlashStringHelper* toString(P123_touch_action_e action);
 
 
 // Data structure
@@ -197,29 +206,36 @@ struct P123_data_struct : public PluginTaskData_base
                                     int16_t y,
                                     String& selectedObjectName,
                                     int8_t& selectedObjectIndex);
-  bool setTouchObjectState(const String& touchObject,
-                           bool          state);
+  bool setTouchObjectState(struct EventStruct *event,
+                           const String      & touchObject,
+                           bool                state);
+  bool setTouchButtonOnOff(struct EventStruct *event,
+                           const String      & touchObject,
+                           bool                state);
   void scaleRawToCalibrated(int16_t& x,
                             int16_t& y);
   bool plugin_webform_load(struct EventStruct *event);
   bool plugin_webform_save(struct EventStruct *event);
-  bool plugin_ten_per_second(struct EventStruct *event);
+  bool plugin_fifty_per_second(struct EventStruct *event);
+  bool setButtonGroup(const EventStruct *event,
+                      int8_t             buttonGroup);
+  bool incrementButtonGroup(const EventStruct *event);
+  bool decrementButtonGroup(const EventStruct *event);
+  void displayButtons(const EventStruct *event,
+                      int8_t             buttonGroup,
+                      int8_t             mode = 0);
 
 private:
 
-  # ifdef P123_USE_EXTENDED_TOUCH
-  void drawButton(DrawButtonMode_e   buttonMode,
-                  int8_t             buttonIndex,
-                  const EventStruct *event);
-  # endif // ifdef P123_USE_EXTENDED_TOUCH
   int parseStringToInt(const String& string,
                        uint8_t       indexFind,
                        char          separator    = ',',
                        int           defaultValue = 0);
-  String enquoteString(const String& input); // TODO: Replace by wrapWithQuotes
-  void   generateObjectEvent(const EventStruct *event,
-                             const int8_t       objectIndex,
-                             const int8_t       onOffState);
+  void generateObjectEvent(const EventStruct *event,
+                           const int8_t       objectIndex,
+                           const int8_t       onOffState,
+                           const bool         groupSwitch = false,
+                           const int8_t       factor      = 1);
 
   // This is initialized by calling init()
   Adafruit_FT6206 *touchscreen     = nullptr;
@@ -239,15 +255,27 @@ private:
     uint32_t    flags = 0u;
     tP123_Point top_left;
     tP123_Point bottom_right;
-    uint16_t    treshold           = 0u;
-    uint8_t     debounceMs         = 0u;
-    bool        calibrationEnabled = false;
-    bool        logEnabled         = false;
+    uint16_t    treshold = 0u;
+    # ifdef P123_USE_EXTENDED_TOUCH
+    uint16_t colorOn              = 0u;
+    uint16_t colorOff             = 0u;
+    uint16_t colorCaption         = 0u;
+    uint16_t colorBorder          = 0u;
+    uint16_t colorDisabled        = 0u;
+    uint16_t colorDisabledCaption = 0u;
+    # endif // ifdef P123_USE_EXTENDED_TOUCH
+    uint8_t debounceMs         = 0u;
+    bool    calibrationEnabled = false;
+    bool    logEnabled         = false;
   };
 
   tP123_Globals P123_Settings;
 
   std::vector<tP123_TouchObjects>TouchObjects;
+
+  int8_t _buttonGroup    = 0;
+  int8_t _minButtonGroup = 0;
+  int8_t _maxButtonGroup = 0;
 
 public:
 

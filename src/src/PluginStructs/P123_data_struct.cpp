@@ -12,16 +12,16 @@
 # include "../Commands/InternalCommands.h"
 
 /****************************************************************************
- * toString: Display-value for the button selected
+ * toString: Display-value for the touch action
  ***************************************************************************/
 # ifdef P123_USE_EXTENDED_TOUCH
-const __FlashStringHelper* toString(Button_type_e button) {
-  switch (button) {
-    case Button_type_e::None: return F("None");
-    case Button_type_e::Square: return F("Square");
-    case Button_type_e::Rounded: return F("Rounded");
-    case Button_type_e::Circle: return F("Circle");
-    case Button_type_e::Button_MAX: break;
+const __FlashStringHelper* toString(P123_touch_action_e action) {
+  switch (action) {
+    case P123_touch_action_e::Default: return F("Default");
+    case P123_touch_action_e::ActivateGroup: return F("Activate Group");
+    case P123_touch_action_e::IncrementGroup: return F("Next Group");
+    case P123_touch_action_e::DecrementGroup: return F("Previous Group");
+    case P123_touch_action_e::TouchAction_MAX: break;
   }
   return F("Unsupported!");
 }
@@ -80,13 +80,21 @@ bool P123_data_struct::init(const EventStruct *event,
 
     if (bitRead(P123_Settings.flags, P123_FLAGS_SEND_OBJECTNAME) &&
         bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT)) {
-      for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
-        if (!TouchObjects[objectNr].objectName.isEmpty()
-            && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)
-            && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON)) {
-          generateObjectEvent(event, objectNr, -1);
-        }
+      if (_maxButtonGroup > 0) {                 // Multiple groups?
+        displayButtons(event, _buttonGroup, -3); // Clear all groups
       }
+      _buttonGroup = get8BitFromUL(P123_Settings.flags, P123_FLAGS_INITIAL_GROUP);
+      # ifdef PLUGIN_123_DEBUG
+      String log = F("P123 DEBUG group: ");
+      log += _buttonGroup;
+      log += F(", max group: ");
+      log += _maxButtonGroup;
+      addLogMove(LOG_LEVEL_INFO, log);
+      # endif // ifdef PLUGIN_123_DEBUG
+      displayButtons(event, _buttonGroup); // Initialize selected group and group 0
+      # ifdef PLUGIN_123_DEBUG
+      addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG group done."));
+      # endif // ifdef PLUGIN_123_DEBUG
     }
 
     # ifdef PLUGIN_123_DEBUG
@@ -99,6 +107,72 @@ bool P123_data_struct::init(const EventStruct *event,
 }
 
 /**
+ * mode: -2 = clear buttons in group, -3 = clear all buttongroups, -1 = draw buttons in group, 0 = initialize buttons
+ */
+void P123_data_struct::displayButtons(const EventStruct *event,
+                                      int8_t             buttonGroup,
+                                      int8_t             mode) {
+  for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
+    int8_t state = 99;
+    int8_t group = get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP);
+
+    if (!TouchObjects[objectNr].objectName.isEmpty() &&
+        ((bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED) && (group == 0)) || (group > 0)) &&
+        bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON) &&
+        ((group == buttonGroup) ||
+         ((mode != -2) && (group == 0)) ||
+         (mode == -3))) {
+      if (bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)) {
+        if (mode == 0) {
+          state = -1;
+        } else {
+          if (bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_INVERTED)) {
+            state = TouchObjects[objectNr].TouchStates ? 0 : 1; // Act like an inverted button, 0 = On, 1 = Off
+          } else {
+            state = TouchObjects[objectNr].TouchStates ? 1 : 0; // Act like a button, 1 = On, 0 = Off
+          }
+        }
+      } else {
+        state = -2;
+      }
+      generateObjectEvent(event, objectNr, state, mode < 0, mode <= -2 ? -1 : 1);
+    }
+    # ifdef XX_PLUGIN_123_DEBUG
+
+    // TODO: remove log?
+    String log = F("P123: button init, state: ");
+    log += state;
+    log += F(", group: ");
+    log += buttonGroup;
+    log += F(", mode: ");
+    log += mode;
+    log += F(", group: ");
+    log += get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP);
+    log += F(", en: ");
+    log += bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON);
+    log += F(", object: ");
+    log += objectNr;
+    addLog(LOG_LEVEL_INFO, log);
+    # endif // ifdef PLUGIN_123_DEBUG
+    delay(0);
+  }
+
+  // Send an event <taskname>#Group,<group>,<mode> with the selected group and the mode (-3..0)
+  String eventCommand;
+  eventCommand.reserve(24);
+  eventCommand += getTaskDeviceName(event->TaskIndex);
+  eventCommand += '#';
+  eventCommand += F("Group");
+  eventCommand += '='; // Add arguments
+  eventCommand += buttonGroup;
+  eventCommand += ',';
+  eventCommand += mode;
+  eventQueue.addMove(std::move(eventCommand));
+
+  delay(0);
+}
+
+/**
  * Properly initialized? then true
  */
 bool P123_data_struct::isInitialized() const {
@@ -108,9 +182,6 @@ bool P123_data_struct::isInitialized() const {
 int P123_data_struct::parseStringToInt(const String& string, uint8_t indexFind, char separator, int defaultValue) {
   String parsed = parseStringKeepCase(string, indexFind, separator);
 
-  // if (parsed.isEmpty()) {
-  //   return defaultValue;
-  // }
   int result = defaultValue;
 
   validIntFromString(parsed, result);
@@ -124,10 +195,10 @@ int P123_data_struct::parseStringToInt(const String& string, uint8_t indexFind, 
 bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
   addFormSubHeader(F("Touch configuration"));
 
-  addFormCheckBox(F("Flip rotation 180&deg;"), F("p123_rotation_flipped"), bitRead(P123_Settings.flags, P123_FLAGS_ROTATION_FLIPPED));
+  addFormCheckBox(F("Flip rotation 180&deg;"), F("touch_rotation_flipped"), bitRead(P123_Settings.flags, P123_FLAGS_ROTATION_FLIPPED));
   addFormNote(F("Some touchscreens are mounted 180&deg; rotated on the display."));
 
-  addFormNumericBox(F("Touch minimum pressure"), F("p123_treshold"),
+  addFormNumericBox(F("Touch minimum pressure"), F("touch_treshold"),
                     P123_Settings.treshold, 0, 255);
 
   uint8_t choice3 = 0u;
@@ -146,12 +217,12 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
       F("Objectnames, X, Y and Z")
     };
     int optionValues3[P123_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-    addFormSelector(F("Events"), F("p123_events"), P123_EVENTS_OPTIONS, options3, optionValues3, choice3);
-    addFormCheckBox(F("Initial Objectnames events"), F("p123_init_objectevent"), bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT));
+    addFormSelector(F("Events"), F("touch_events"), P123_EVENTS_OPTIONS, options3, optionValues3, choice3);
+    addFormCheckBox(F("Initial Objectnames events"), F("touch_init_objectevent"), bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT));
     addFormNote(F("Will send state -1 but only for enabled On/Off button objects."));
   }
 
-  addFormCheckBox(F("Prevent duplicate events"), F("p123_deduplicate"), bitRead(P123_Settings.flags, P123_FLAGS_DEDUPLICATE));
+  addFormCheckBox(F("Prevent duplicate events"), F("touch_deduplicate"), bitRead(P123_Settings.flags, P123_FLAGS_DEDUPLICATE));
 
   if (!Settings.UseRules) {
     addFormNote(F("Tools / Advanced / Rules must be enabled for events to be fired."));
@@ -163,7 +234,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
     int noYesOptionValues[2]                   = { 0, 1 };
     addFormSelector(F("Calibrate to screen resolution"),
-                    F("p123_use_calibration"),
+                    F("touch_use_calibration"),
                     2,
                     noYesOptions,
                     noYesOptionValues,
@@ -184,24 +255,24 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     html_TR_TD();
     addHtml(F("Top-left"));
     html_TD();
-    addNumericBox(F("p123_cal_tl_x"),
+    addNumericBox(F("touch_cal_tl_x"),
                   P123_Settings.top_left.x,
                   0,
                   65535);
     html_TD();
-    addNumericBox(F("p123_cal_tl_y"),
+    addNumericBox(F("touch_cal_tl_y"),
                   P123_Settings.top_left.y,
                   0,
                   65535);
     html_TD();
     addHtml(F("Bottom-right"));
     html_TD();
-    addNumericBox(F("p123_cal_br_x"),
+    addNumericBox(F("touch_cal_br_x"),
                   P123_Settings.bottom_right.x,
                   0,
                   65535);
     html_TD();
-    addNumericBox(F("p123_cal_br_y"),
+    addNumericBox(F("touch_cal_br_y"),
                   P123_Settings.bottom_right.y,
                   0,
                   65535);
@@ -211,57 +282,196 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     // addFormNote(F("At least 1 x/y value must be <> 0 to enable calibration."));
   }
 
-  addFormCheckBox(F("Enable logging for calibration"), F("p123_log_calibration"),
+  addFormCheckBox(F("Enable logging for calibration"), F("touch_log_calibration"),
                   P123_Settings.logEnabled);
 
   addFormSubHeader(F("Touch objects"));
 
   {
-    addRowLabel(F("Object"));
     # ifdef P123_USE_EXTENDED_TOUCH
-    html_table(F("multirow"), false); // Sub-table
-    # else // ifdef P123_USE_EXTENDED_TOUCH
-    html_table(EMPTY_STRING,  false); // Sub-table
-    # endif // ifdef P123_USE_EXTENDED_TOUCH
-    html_table_header(F("&nbsp;#&nbsp;"));
-    html_table_header(F("On"));
-    html_table_header(F("Objectname"));
-    html_table_header(F("Top-left x"));
-    html_table_header(F("Top-left y"));
-    html_table_header(F("On/Off button"));
-    # ifdef P123_USE_EXTENDED_TOUCH
+    String parsed;
+    addRowLabel(F("Default On/Off button colors"));
+    html_table(EMPTY_STRING, false); // Sub-table
     html_table_header(F("ON color"));
-    html_table_header(F("ON caption"));
-    html_table_header(F("Buttontype"));
-    html_table_header(F("Background"));
-    # endif // ifdef P123_USE_EXTENDED_TOUCH
-    html_TR(); // New row
-    html_table_header(EMPTY_STRING);
-    html_table_header(EMPTY_STRING);
-    html_table_header(EMPTY_STRING);
-    html_table_header(F("Width"));
-    html_table_header(F("Height"));
-    html_table_header(F("Inverted"));
-    # ifdef P123_USE_EXTENDED_TOUCH
     html_table_header(F("OFF color"));
-    html_table_header(F("OFF caption"));
+    html_table_header(F("Border color"));
     html_table_header(F("Caption color"));
-    html_table_header(F("Highlight color"));
-    # endif // ifdef P123_USE_EXTENDED_TOUCH
+    html_table_header(F("Disabled color"));
+    html_table_header(F("Disabled caption color"));
 
+    html_TR_TD(); // ON color
+    parsed = AdaGFXcolorToString(P123_Settings.colorOn, _colorDepth, true);
+    addTextBox(getPluginCustomArgName(3000), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+               EMPTY_STRING, F("widenumber")
+               #  ifdef P123_USE_TOOLTIPS
+               , F("ON color")
+               #  endif // ifdef P123_USE_TOOLTIPS
+               , F("adagfx65kcolors")
+               );
+    html_TD(); // OFF color
+    parsed = AdaGFXcolorToString(P123_Settings.colorOff, _colorDepth, true);
+    addTextBox(getPluginCustomArgName(3001), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+               EMPTY_STRING, F("widenumber")
+               #  ifdef P123_USE_TOOLTIPS
+               , F("OFF color")
+               #  endif // ifdef P123_USE_TOOLTIPS
+               , F("adagfx65kcolors")
+               );
+    html_TD(); // Border color
+    parsed = AdaGFXcolorToString(P123_Settings.colorBorder, _colorDepth, true);
+    addTextBox(getPluginCustomArgName(3002), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+               EMPTY_STRING, F("widenumber")
+               #  ifdef P123_USE_TOOLTIPS
+               , F("Border color")
+               #  endif // ifdef P123_USE_TOOLTIPS
+               , F("adagfx65kcolors")
+               );
+    html_TD(); // Caption color
+    parsed = AdaGFXcolorToString(P123_Settings.colorCaption, _colorDepth, true);
+    addTextBox(getPluginCustomArgName(3003), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+               EMPTY_STRING, F("widenumber")
+               #  ifdef P123_USE_TOOLTIPS
+               , F("Caption color")
+               #  endif // ifdef P123_USE_TOOLTIPS
+               , F("adagfx65kcolors")
+               );
+    html_TD(); // Disabled color
+    parsed = AdaGFXcolorToString(P123_Settings.colorDisabled, _colorDepth, true);
+    addTextBox(getPluginCustomArgName(3004), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+               EMPTY_STRING, F("widenumber")
+               #  ifdef P123_USE_TOOLTIPS
+               , F("Disabled color")
+               #  endif // ifdef P123_USE_TOOLTIPS
+               , F("adagfx65kcolors")
+               );
+    html_TD(); // Disabled caption color
+    parsed = AdaGFXcolorToString(P123_Settings.colorDisabledCaption, _colorDepth, true);
+    addTextBox(getPluginCustomArgName(3005), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+               EMPTY_STRING, F("widenumber")
+               #  ifdef P123_USE_TOOLTIPS
+               , F("Disabled caption color")
+               #  endif // ifdef P123_USE_TOOLTIPS
+               , F("adagfx65kcolors")
+               );
+    html_end_table();
+    # endif // ifdef P123_USE_EXTENDED_TOUCH
+  }
+  {
+    # ifdef P123_USE_EXTENDED_TOUCH
+    addFormNumericBox(F("Initial button group"), F("touch_initial_group"),
+                      get8BitFromUL(P123_Settings.flags, P123_FLAGS_INITIAL_GROUP), 0, P123_MAX_BUTTON_GROUPS
+                      #  ifdef P123_USE_TOOLTIPS
+                      , F("Initial group")
+                      #  endif // ifdef P123_USE_TOOLTIPS
+                      );
+    # endif // ifdef P123_USE_EXTENDED_TOUCH
+  }
+  {
+    addRowLabel(F("Object"));
+
+    {
+      html_table(EMPTY_STRING, false); // Sub-table
+      html_table_header(F("&nbsp;#&nbsp;"));
+      html_table_header(F("On"));
+      html_table_header(F("Objectname"));
+      html_table_header(F("Top-left x"));
+      html_table_header(F("Top-left y"));
+      # ifdef P123_USE_EXTENDED_TOUCH
+      html_table_header(F("Button"));
+      html_table_header(F("Layout"));
+      html_table_header(F("ON color"));
+      html_table_header(F("ON caption"));
+      html_table_header(F("Border color"));
+      html_table_header(F("Disab. cap. clr"));
+      html_table_header(F("Touch action"));
+      # else // ifdef P123_USE_EXTENDED_TOUCH
+      html_table_header(F("On/Off button"));
+      # endif // ifdef P123_USE_EXTENDED_TOUCH
+      html_TR(); // New row
+      html_table_header(EMPTY_STRING);
+      html_table_header(EMPTY_STRING);
+      # ifdef P123_USE_EXTENDED_TOUCH
+      html_table_header(F("Button-group"));
+      # else // ifdef P123_USE_EXTENDED_TOUCH
+      html_table_header(EMPTY_STRING);
+      # endif // ifdef P123_USE_EXTENDED_TOUCH
+      html_table_header(F("Width"));
+      html_table_header(F("Height"));
+      html_table_header(F("Inverted"));
+      # ifdef P123_USE_EXTENDED_TOUCH
+      html_table_header(F("Font scale"));
+      html_table_header(F("OFF color"));
+      html_table_header(F("OFF caption"));
+      html_table_header(F("Caption color"));
+      html_table_header(F("Disabled clr"));
+      html_table_header(F("Action group"));
+      # endif // ifdef P123_USE_EXTENDED_TOUCH
+    }
     # ifdef P123_USE_EXTENDED_TOUCH
     const __FlashStringHelper *buttonTypeOptions[] = {
       toString(Button_type_e::None),
       toString(Button_type_e::Square),
       toString(Button_type_e::Rounded),
-      toString(Button_type_e::Circle)
+      toString(Button_type_e::Circle),
+      toString(Button_type_e::ArrowLeft),
+      toString(Button_type_e::ArrowUp),
+      toString(Button_type_e::ArrowRight),
+      toString(Button_type_e::ArrowDown),
     };
-    const int buttonTypeValues[] = {
+
+    int buttonTypeValues[] = {
       static_cast<int>(Button_type_e::None),
       static_cast<int>(Button_type_e::Square),
       static_cast<int>(Button_type_e::Rounded),
-      static_cast<int>(Button_type_e::Circle)
+      static_cast<int>(Button_type_e::Circle),
+      static_cast<int>(Button_type_e::ArrowLeft),
+      static_cast<int>(Button_type_e::ArrowUp),
+      static_cast<int>(Button_type_e::ArrowRight),
+      static_cast<int>(Button_type_e::ArrowDown),
     };
+
+    const __FlashStringHelper *buttonLayoutOptions[] = {
+      toString(Button_layout_e::CenterAligned),
+      toString(Button_layout_e::LeftAligned),
+      toString(Button_layout_e::TopAligned),
+      toString(Button_layout_e::RightAligned),
+      toString(Button_layout_e::BottomAligned),
+      toString(Button_layout_e::LeftTopAligned),
+      toString(Button_layout_e::RightTopAligned),
+      toString(Button_layout_e::LeftBottomAligned),
+      toString(Button_layout_e::RightBottomAligned),
+      toString(Button_layout_e::NoCaption),
+      toString(Button_layout_e::Bitmap),
+    };
+
+    const int buttonLayoutValues[] = {
+      static_cast<int>(Button_layout_e::CenterAligned),
+      static_cast<int>(Button_layout_e::LeftAligned),
+      static_cast<int>(Button_layout_e::TopAligned),
+      static_cast<int>(Button_layout_e::RightAligned),
+      static_cast<int>(Button_layout_e::BottomAligned),
+      static_cast<int>(Button_layout_e::LeftTopAligned),
+      static_cast<int>(Button_layout_e::RightTopAligned),
+      static_cast<int>(Button_layout_e::LeftBottomAligned),
+      static_cast<int>(Button_layout_e::RightBottomAligned),
+      static_cast<int>(Button_layout_e::NoCaption),
+      static_cast<int>(Button_layout_e::Bitmap),
+    };
+
+    const __FlashStringHelper *touchActionOptions[] = {
+      toString(P123_touch_action_e::Default),
+      toString(P123_touch_action_e::ActivateGroup),
+      toString(P123_touch_action_e::IncrementGroup),
+      toString(P123_touch_action_e::DecrementGroup),
+    };
+
+    const int touchActionValues[] = {
+      static_cast<int>(P123_touch_action_e::Default),
+      static_cast<int>(P123_touch_action_e::ActivateGroup),
+      static_cast<int>(P123_touch_action_e::IncrementGroup),
+      static_cast<int>(P123_touch_action_e::DecrementGroup),
+    };
+
     # endif // ifdef P123_USE_EXTENDED_TOUCH
 
     uint8_t maxIdx = std::min(static_cast<int>(TouchObjects.size() + P123_EXTRA_OBJECT_COUNT), P123_MAX_OBJECT_COUNT);
@@ -303,12 +513,36 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                     # endif // ifdef P123_USE_TOOLTIPS
                     );
       html_TD(); // on/off button
+      # ifdef P123_USE_EXTENDED_TOUCH
+      addSelector(getPluginCustomArgName(objectNr + 800),
+                  static_cast<int>(Button_type_e::Button_MAX),
+                  buttonTypeOptions,
+                  buttonTypeValues,
+                  nullptr,
+                  get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTONTYPE) & 0x0F, false, true, F("widenumber")
+                  #  ifdef P123_USE_TOOLTIPS
+                  , F("Buttontype")
+                  #  endif // ifdef P123_USE_TOOLTIPS
+                  );
+      html_TD(); // button alignment
+      addSelector(getPluginCustomArgName(objectNr + 900),
+                  static_cast<int>(Button_layout_e::Alignment_MAX),
+                  buttonLayoutOptions,
+                  buttonLayoutValues,
+                  nullptr,
+                  get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTONTYPE) & 0xF0, false, true, F("widenumber")
+                  #  ifdef P123_USE_TOOLTIPS
+                  , F("Button alignment")
+                  #  endif // ifdef P123_USE_TOOLTIPS
+                  );
+      # else // ifdef P123_USE_EXTENDED_TOUCH
       addCheckBox(getPluginCustomArgName(objectNr + 600),
                   bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON), false
-                  # ifdef P123_USE_TOOLTIPS
+                  #  ifdef P123_USE_TOOLTIPS
                   , F("On/Off button")
-                  # endif // ifdef P123_USE_TOOLTIPS
+                  #  endif // ifdef P123_USE_TOOLTIPS
                   );
+      # endif // ifdef P123_USE_EXTENDED_TOUCH
       # ifdef P123_USE_EXTENDED_TOUCH
       html_TD();                               // ON color
       parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorOn, _colorDepth, true);
@@ -331,32 +565,54 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                  , F("ON caption")
                   #  endif // ifdef P123_USE_TOOLTIPS
                  );
-      html_TD(); // button-type
-      addSelector(getPluginCustomArgName(objectNr + 800),
-                  static_cast<int>(Button_type_e::Button_MAX),
-                  buttonTypeOptions,
-                  buttonTypeValues,
-                  nullptr,
-                  get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTONTYPE), false, true, F("widenumber")
-                  #  ifdef P123_USE_TOOLTIPS
-                  , F("Buttontype")
-                  #  endif // ifdef P123_USE_TOOLTIPS
-                  );
-      html_TD(); // Background color
-      parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorBackground, _colorDepth, true);
+      html_TD(); // Border color
+      parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorBorder, _colorDepth, true);
       addTextBox(getPluginCustomArgName(objectNr + 1700), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
                  EMPTY_STRING, F("widenumber")
                  #  ifdef P123_USE_TOOLTIPS
-                 , F("Background color")
+                 , F("Border color")
                  #  endif // ifdef P123_USE_TOOLTIPS
                  , F("adagfx65kcolors")
                  );
+      html_TD(); // Disabled caption color
+      parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorDisabledCaption, _colorDepth, true);
+      addTextBox(getPluginCustomArgName(objectNr + 1900), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+                 EMPTY_STRING, F("widenumber")
+                 #  ifdef P123_USE_TOOLTIPS
+                 , F("Disabled caption color")
+                 #  endif // ifdef P123_USE_TOOLTIPS
+                 , F("adagfx65kcolors")
+                 );
+      html_TD(); // button action
+      addSelector(getPluginCustomArgName(objectNr + 2000),
+                  static_cast<int>(P123_touch_action_e::TouchAction_MAX),
+                  touchActionOptions,
+                  touchActionValues,
+                  nullptr,
+                  get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ACTIONGROUP) & 0xC0, false, true, F("widenumber")
+                  #  ifdef P123_USE_TOOLTIPS
+                  , F("Touch action")
+                  #  endif // ifdef P123_USE_TOOLTIPS
+                  );
       # endif // ifdef P123_USE_EXTENDED_TOUCH
 
       html_TR_TD(); // Start new row
 
-      html_TD(3);   // Start with some blank columns
-      // html_TD();
+      html_TD(2);   // Start with some blank columns
+      # ifdef P123_USE_EXTENDED_TOUCH
+      {
+        String buttonGroupToolTip = F("Button-group [0..");
+        buttonGroupToolTip += P123_MAX_BUTTON_GROUPS;
+        buttonGroupToolTip += ']';
+        addNumericBox(getPluginCustomArgName(objectNr + 1600),
+                      get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP), 0, P123_MAX_BUTTON_GROUPS
+                      #  ifdef P123_USE_TOOLTIPS
+                      , F("widenumber"), buttonGroupToolTip
+                      #  endif // ifdef P123_USE_TOOLTIPS
+                      );
+      }
+      # endif // ifdef P123_USE_EXTENDED_TOUCH
+      html_TD(); // Next column
       // Width
       addNumericBox(getPluginCustomArgName(objectNr + 400),
                     TouchObjects[objectNr].width_height.x, 0, 65535
@@ -371,24 +627,6 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                     , F("widenumber"), F("Height")
                     # endif // ifdef P123_USE_TOOLTIPS
                     );
-
-      # ifdef P123_USE_EXTENDED_TOUCH
-
-      // Colored
-      // addCheckBox(getPluginCustomArgName(objectNr + 900),
-      //             bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_COLORED), false
-      //             # ifdef P123_USE_TOOLTIPS
-      //             , F("Colored")
-      //             # endif // ifdef P123_USE_TOOLTIPS
-      //             );
-      // html_TD(); // Use caption
-      // addCheckBox(getPluginCustomArgName(objectNr + 1200),
-      //             bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_CAPTION), false
-      //             # ifdef P123_USE_TOOLTIPS
-      //             , F("Use Caption")
-      //             # endif // ifdef P123_USE_TOOLTIPS
-      //             );
-      # endif // ifdef P123_USE_EXTENDED_TOUCH
       html_TD(); // inverted
       addCheckBox(getPluginCustomArgName(objectNr + 700),
                   bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_INVERTED), false
@@ -397,6 +635,13 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                   # endif // ifdef P123_USE_TOOLTIPS
                   );
       # ifdef P123_USE_EXTENDED_TOUCH
+      html_TD(); // font scale
+      addNumericBox(getPluginCustomArgName(objectNr + 1200),
+                    get4BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_FONTSCALE), 1, 10
+                    #  ifdef P123_USE_TOOLTIPS
+                    , F("widenumber"), F("Font scaling [1x..10x]")
+                    #  endif // ifdef P123_USE_TOOLTIPS
+                    );
       html_TD(); // OFF color
       parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorOff, _colorDepth, true);
       addTextBox(getPluginCustomArgName(objectNr + 1100), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
@@ -427,20 +672,27 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                  #  endif // ifdef P123_USE_TOOLTIPS
                  , F("adagfx65kcolors")
                  );
-      html_TD(); // Highlight color
-      parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorHighlight, _colorDepth, true);
-      addTextBox(getPluginCustomArgName(objectNr + 1600), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
+      html_TD(); // Disabled color
+      parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorDisabled, _colorDepth, true);
+      addTextBox(getPluginCustomArgName(objectNr + 1800), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
                  EMPTY_STRING, F("widenumber")
                  #  ifdef P123_USE_TOOLTIPS
-                 , F("Highlight color")
+                 , F("Disabled color")
                  #  endif // ifdef P123_USE_TOOLTIPS
                  , F("adagfx65kcolors")
                  );
+      html_TD(); // Action Group
+      addNumericBox(getPluginCustomArgName(objectNr + 2100),
+                    get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ACTIONGROUP) & 0x3F, 0, P123_MAX_BUTTON_GROUPS
+                    #  ifdef P123_USE_TOOLTIPS
+                    , F("widenumber"), F("Action group")
+                    #  endif // ifdef P123_USE_TOOLTIPS
+                    );
       # endif // ifdef P123_USE_EXTENDED_TOUCH
     }
     html_end_table();
 
-    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("p123_debounce"),
+    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("touch_debounce"),
                       P123_Settings.debounceMs, 0, 255);
     addUnit(F("0-255 msec."));
   }
@@ -453,35 +705,61 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
 bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
   String config;
 
+  # ifdef P123_USE_EXTENDED_TOUCH
+  String colorInput;
+  # endif // ifdef P123_USE_EXTENDED_TOUCH
   config.reserve(80);
 
   uint32_t lSettings = 0u;
 
-  bitWrite(lSettings, P123_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("p123_events")), P123_FLAGS_SEND_XY));
-  bitWrite(lSettings, P123_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("p123_events")), P123_FLAGS_SEND_Z));
-  bitWrite(lSettings, P123_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("p123_events")), P123_FLAGS_SEND_OBJECTNAME));
-  bitWrite(lSettings, P123_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("p123_rotation_flipped")));
-  bitWrite(lSettings, P123_FLAGS_DEDUPLICATE,      isFormItemChecked(F("p123_deduplicate")));
-  bitWrite(lSettings, P123_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("p123_init_objectevent")));
+  bitWrite(lSettings, P123_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("touch_events")), P123_FLAGS_SEND_XY));
+  bitWrite(lSettings, P123_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("touch_events")), P123_FLAGS_SEND_Z));
+  bitWrite(lSettings, P123_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("touch_events")), P123_FLAGS_SEND_OBJECTNAME));
+  bitWrite(lSettings, P123_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("touch_rotation_flipped")));
+  bitWrite(lSettings, P123_FLAGS_DEDUPLICATE,      isFormItemChecked(F("touch_deduplicate")));
+  bitWrite(lSettings, P123_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("touch_init_objectevent")));
+  # ifdef P123_USE_EXTENDED_TOUCH
+  set8BitToUL(lSettings, P123_FLAGS_INITIAL_GROUP, getFormItemInt(F("touch_initial_group"))); // Button group
+  # endif // ifdef P123_USE_EXTENDED_TOUCH
 
-  config += getFormItemInt(F("p123_use_calibration"));
+  config += getFormItemInt(F("touch_use_calibration"));
   config += P123_SETTINGS_SEPARATOR;
-  config += isFormItemChecked(F("p123_log_calibration")) ? 1 : 0;
+  config += isFormItemChecked(F("touch_log_calibration")) ? 1 : 0;
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("p123_cal_tl_x"));
+  config += getFormItemInt(F("touch_cal_tl_x"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("p123_cal_tl_y"));
+  config += getFormItemInt(F("touch_cal_tl_y"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("p123_cal_br_x"));
+  config += getFormItemInt(F("touch_cal_br_x"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("p123_cal_br_y"));
+  config += getFormItemInt(F("touch_cal_br_y"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("p123_treshold"));
+  config += getFormItemInt(F("touch_debounce"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("p123_debounce"));
+  config += getFormItemInt(F("touch_treshold"));
   config += P123_SETTINGS_SEPARATOR;
   config += lSettings;
   config += P123_SETTINGS_SEPARATOR;
+  # ifdef P123_USE_EXTENDED_TOUCH
+  colorInput = webArg(getPluginCustomArgName(3000)); // Default Color ON
+  config    += AdaGFXparseColor(colorInput, _colorDepth);
+  config    += P123_SETTINGS_SEPARATOR;
+  colorInput = webArg(getPluginCustomArgName(3001)); // Default Color OFF
+  config    += AdaGFXparseColor(colorInput, _colorDepth, false);
+  config    += P123_SETTINGS_SEPARATOR;
+  colorInput = webArg(getPluginCustomArgName(3002)); // Default Color Border
+  config    += AdaGFXparseColor(colorInput, _colorDepth, false);
+  config    += P123_SETTINGS_SEPARATOR;
+  colorInput = webArg(getPluginCustomArgName(3003)); // Default Color caption
+  config    += AdaGFXparseColor(colorInput, _colorDepth, false);
+  config    += P123_SETTINGS_SEPARATOR;
+  colorInput = webArg(getPluginCustomArgName(3004)); // Default Disabled Color
+  config    += AdaGFXparseColor(colorInput, _colorDepth);
+  config    += P123_SETTINGS_SEPARATOR;
+  colorInput = webArg(getPluginCustomArgName(3005)); // Default Disabled Caption Color
+  config    += AdaGFXparseColor(colorInput, _colorDepth, false);
+  config    += P123_SETTINGS_SEPARATOR;
+  # endif // ifdef P123_USE_EXTENDED_TOUCH
 
   settingsArray[P123_CALIBRATION_START] = config;
   {
@@ -506,44 +784,55 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
       config += P123_SETTINGS_SEPARATOR;
       uint32_t flags = 0u;
       bitWrite(flags, P123_OBJECT_FLAG_ENABLED,  isFormItemChecked(getPluginCustomArgName(objectNr + 0)));   // Enabled
-      bitWrite(flags, P123_OBJECT_FLAG_BUTTON,   isFormItemChecked(getPluginCustomArgName(objectNr + 600))); // On/Off button
       bitWrite(flags, P123_OBJECT_FLAG_INVERTED, isFormItemChecked(getPluginCustomArgName(objectNr + 700))); // Inverted
       # ifdef P123_USE_EXTENDED_TOUCH
-
-      // bitWrite(flags, P123_OBJECT_FLAG_COLORED,  isFormItemChecked(getPluginCustomArgName(objectNr + 900)));   // Colored
-      // bitWrite(flags, P123_OBJECT_FLAG_CAPTION,  isFormItemChecked(getPluginCustomArgName(objectNr + 1200)));  // Use caption
-      set8BitToUL(flags, P123_OBJECT_FLAG_BUTTONTYPE, getFormItemInt(getPluginCustomArgName(objectNr + 800))); // Buttontype
+      uint8_t buttonType   = getFormItemInt(getPluginCustomArgName(objectNr + 800));
+      uint8_t buttonLayout = getFormItemInt(getPluginCustomArgName(objectNr + 900));
+      set8BitToUL(flags, P123_OBJECT_FLAG_BUTTONTYPE, buttonType | buttonLayout);                                       // Buttontype
+      bitWrite(flags, P123_OBJECT_FLAG_BUTTON, (static_cast<Button_type_e>(buttonType & 0x07) != Button_type_e::None)); // On/Off button
+      uint8_t buttonAction      = getFormItemInt(getPluginCustomArgName(objectNr + 2000));
+      uint8_t buttonSelectGroup = getFormItemInt(getPluginCustomArgName(objectNr + 2100));
+      set8BitToUL(flags, P123_OBJECT_FLAG_ACTIONGROUP, buttonAction | buttonSelectGroup);                               // ButtonAction
+      uint8_t fontScale = getFormItemInt(getPluginCustomArgName(objectNr + 1200));
+      set4BitToUL(flags, P123_OBJECT_FLAG_FONTSCALE, fontScale);                                                        // Font scaling
+      uint8_t buttonGroup = getFormItemInt(getPluginCustomArgName(objectNr + 1600));
+      set8BitToUL(flags, P123_OBJECT_FLAG_GROUP, buttonGroup);                                                          // Button group
+      # else // ifdef P123_USE_EXTENDED_TOUCH
+      bitWrite(flags, P123_OBJECT_FLAG_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 600)));              // On/Off button
       # endif // ifdef P123_USE_EXTENDED_TOUCH
-      config += flags;                                                                                         // Flags
+
+      config += String(flags);                                                                                          // Flags
       config += P123_SETTINGS_SEPARATOR;
-      config += getFormItemInt(getPluginCustomArgName(objectNr + 200));                                        // Top x
+      config += getFormItemInt(getPluginCustomArgName(objectNr + 200));                                                 // Top x
       config += P123_SETTINGS_SEPARATOR;
-      config += getFormItemInt(getPluginCustomArgName(objectNr + 300));                                        // Top y
+      config += getFormItemInt(getPluginCustomArgName(objectNr + 300));                                                 // Top y
       config += P123_SETTINGS_SEPARATOR;
-      config += getFormItemInt(getPluginCustomArgName(objectNr + 400));                                        // Bottom x
+      config += getFormItemInt(getPluginCustomArgName(objectNr + 400));                                                 // Bottom x
       config += P123_SETTINGS_SEPARATOR;
-      config += getFormItemInt(getPluginCustomArgName(objectNr + 500));                                        // Bottom y
+      config += getFormItemInt(getPluginCustomArgName(objectNr + 500));                                                 // Bottom y
       config += P123_SETTINGS_SEPARATOR;
 
       # ifdef P123_USE_EXTENDED_TOUCH
-      String colorInput;
-      colorInput = webArg(getPluginCustomArgName(objectNr + 1000));                // Color ON
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1000)); // Color ON
       config    += AdaGFXparseColor(colorInput, _colorDepth, true);
       config    += P123_SETTINGS_SEPARATOR;
-      colorInput = webArg(getPluginCustomArgName(objectNr + 1100));                // Color OFF
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1100)); // Color OFF
       config    += AdaGFXparseColor(colorInput, _colorDepth, true);
       config    += P123_SETTINGS_SEPARATOR;
-      colorInput = webArg(getPluginCustomArgName(objectNr + 1500));                // Color caption
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1500)); // Color caption
+      config    += AdaGFXparseColor(colorInput, _colorDepth, true);
+      config    += P123_SETTINGS_SEPARATOR;                         // Caption ON
+      config    += wrapWithQuotesIfContainsParameterSeparatorChar(webArg(getPluginCustomArgName(objectNr + 1300)));
+      config    += P123_SETTINGS_SEPARATOR;                         // Caption OFF
+      config    += wrapWithQuotesIfContainsParameterSeparatorChar(webArg(getPluginCustomArgName(objectNr + 1400)));
+      config    += P123_SETTINGS_SEPARATOR;
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1700)); // Color Border
       config    += AdaGFXparseColor(colorInput, _colorDepth, true);
       config    += P123_SETTINGS_SEPARATOR;
-      colorInput = webArg(getPluginCustomArgName(objectNr + 1600));                // Color Highlight
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1800)); // Disabled Color
       config    += AdaGFXparseColor(colorInput, _colorDepth, true);
       config    += P123_SETTINGS_SEPARATOR;
-      config    += enquoteString(webArg(getPluginCustomArgName(objectNr + 1300))); // Caption ON
-      config    += P123_SETTINGS_SEPARATOR;
-      config    += enquoteString(webArg(getPluginCustomArgName(objectNr + 1400))); // Caption OFF
-      config    += P123_SETTINGS_SEPARATOR;
-      colorInput = webArg(getPluginCustomArgName(objectNr + 1700));                // Color Background
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1900)); // Disabled Caption Color
       config    += AdaGFXparseColor(colorInput, _colorDepth, true);
       config    += P123_SETTINGS_SEPARATOR;
       # endif // ifdef P123_USE_EXTENDED_TOUCH
@@ -558,7 +847,8 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
 
     # ifdef PLUGIN_123_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+        !config.isEmpty()) {
       String log = F("Save object #");
       log += objectNr;
       log += F(" settings: ");
@@ -585,7 +875,7 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
 /**
  * Every 10th second we check if the screen is touched
  */
-bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   bool success = false;
 
   if (isInitialized()) {
@@ -622,7 +912,6 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         log += x;
         log += F(", y= ");
         log += y;
-
         log += F("; ox= ");
         log += ox;
         log += F(", oy= ");
@@ -697,7 +986,9 @@ bool P123_data_struct::plugin_ten_per_second(struct EventStruct *event) {
  **************************************************************************/
 void P123_data_struct::generateObjectEvent(const EventStruct *event,
                                            const int8_t       objectIndex,
-                                           const int8_t       onOffState) {
+                                           const int8_t       onOffState,
+                                           const bool         groupSwitch,
+                                           const int8_t       factor) {
   String eventCommand;
 
   eventCommand.reserve(48);
@@ -706,9 +997,9 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
   eventCommand += TouchObjects[objectIndex].objectName;
   eventCommand += '=';                             // Add arguments
 
-  if (onOffState < 0) {                            // Negative value: pass on unaltered
-    eventCommand += onOffState;
-  } else {                                         // Check for inverted output
+  if (onOffState < 0) {                            // Negative value: pass on unaltered (1)
+    eventCommand += onOffState;                    // (%eventvalue#%)
+  } else {                                         // Check for inverted output (1)
     if (bitRead(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_INVERTED)) {
       eventCommand += onOffState == 1 ? '0' : '1'; // Act like an inverted button, 0 = On, 1 = Off
     } else {
@@ -716,129 +1007,91 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
     }
   }
 
-  if (P123_CONFIG_DISPLAY_TASK != event->TaskIndex) { // Add arguments for display
+  if (P123_CONFIG_DISPLAY_TASK != event->TaskIndex) {         // Add arguments for display
     eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].top_left.x;
+    eventCommand += TouchObjects[objectIndex].top_left.x;     // (2)
     eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].top_left.y;
+    eventCommand += TouchObjects[objectIndex].top_left.y;     // (3)
     eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].width_height.x;
+    eventCommand += TouchObjects[objectIndex].width_height.x; // (4)
     eventCommand += ',';
-    eventCommand += TouchObjects[objectIndex].width_height.y;
+    eventCommand += TouchObjects[objectIndex].width_height.y; // (5)
     eventCommand += ',';
-    eventCommand += objectIndex + 1;              // Adjust to displayed index
-    eventCommand += ',';
-    eventCommand += P123_CONFIG_DISPLAY_TASK + 1; // What TaskIndex?
-  }
-  eventQueue.addMove(std::move(eventCommand));
-}
-
-/**
- * draw a button using the mode and state
- * //TODO: Complete implementation
- * will probably need:
- * - Access to the AdafruitGFX_Helper object
- * - Access to the Display object in the AdafruitGFX_Helper
- * - Access to the list of available fonts, to be able to change the font for button captions, and to center the caption on the button
- */
+    eventCommand += objectIndex + 1;                          // Adjust to displayed index (6)
+    eventCommand += ',';                                      // (7)
+    eventCommand += get8BitFromUL(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_BUTTONTYPE) * factor;
 # ifdef P123_USE_EXTENDED_TOUCH
-void P123_data_struct::drawButton(DrawButtonMode_e   buttonMode,
-                                  int8_t             buttonIndex,
-                                  const EventStruct *event) {
-  if ((buttonIndex < 0) || (buttonIndex >= static_cast<int8_t>(TouchObjects.size()))) { return; } // Selfprotection
+    eventCommand += ',';                                      // (8)
+    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorOn == 0
+                                        ? P123_Settings.colorOn
+                                        : TouchObjects[objectIndex].colorOn,
+                                        _colorDepth);
+    eventCommand += ','; // (9)
+    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorOff == 0
+                                        ? P123_Settings.colorOff
+                                        : TouchObjects[objectIndex].colorOff,
+                                        _colorDepth);
+    eventCommand += ','; // (10)
+    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorCaption == 0
+                                        ? P123_Settings.colorCaption
+                                        : TouchObjects[objectIndex].colorCaption,
+                                        _colorDepth);
+    eventCommand += ','; // (11)
+    eventCommand += get4BitFromUL(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_FONTSCALE);
+    eventCommand += ','; // (12)
+    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(TouchObjects[objectIndex].captionOn.isEmpty() ?
+                                                                   TouchObjects[objectIndex].objectName :
+                                                                   TouchObjects[objectIndex].captionOn);
+    eventCommand += ','; // (13)
+    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(TouchObjects[objectIndex].captionOff.isEmpty() ?
+                                                                   TouchObjects[objectIndex].objectName :
+                                                                   TouchObjects[objectIndex].captionOff);
+    eventCommand += ','; // (14)
+    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorBorder == 0
+                                        ? P123_Settings.colorBorder
+                                        : TouchObjects[objectIndex].colorBorder,
+                                        _colorDepth);
+    eventCommand += ','; // (15)
+    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorDisabled == 0
+                                        ? P123_Settings.colorDisabled
+                                        : TouchObjects[objectIndex].colorDisabled,
+                                        _colorDepth);
+    eventCommand += ','; // (16)
+    eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorDisabledCaption == 0
+                                        ? P123_Settings.colorDisabledCaption
+                                        : TouchObjects[objectIndex].colorDisabledCaption,
+                                        _colorDepth);
+    # endif // ifdef P123_USE_EXTENDED_TOUCH
+    eventCommand += ',';
+    eventCommand += P123_CONFIG_DISPLAY_TASK + 1; // What TaskIndex? (17) or (8)
+    eventCommand += ',';                          // Group (18) or (9)
+    eventCommand += get8BitFromUL(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_GROUP);
+    eventCommand += ',';                          // Select Group (19) or (10)
+    uint8_t action = get8BitFromUL(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_ACTIONGROUP);
 
-  if (!Settings.TaskDeviceEnabled[_displayTask]) { return; }                 // No active DisplayTask is no drawing buttons
-
-  Button_type_e bType = static_cast<Button_type_e>(get8BitFromUL(TouchObjects[buttonIndex].flags, P123_OBJECT_FLAG_BUTTONTYPE));
-  String cmdPrefix;
-  String btnDrawShape;
-  int8_t xa = 0, ya = 0, wa = 0, ha = 0;
-
-  cmdPrefix.reserve(30);
-  cmdPrefix  = getTaskDeviceName(_displayTask);
-  cmdPrefix += '.'; // a period
-  cmdPrefix += ADAGFX_UNIVERSAL_TRIGGER;
-  cmdPrefix += ',';
-
-  btnDrawShape.reserve(50);
-
-  if (bType != Button_type_e::None) {
-    switch (buttonMode) {
-      case DrawButtonMode_e::Initialize:
-        break;
-      case DrawButtonMode_e::State:
-      {
-        xa = 1; ya = 1;
-        wa = -2; ha = -2;
-        break;
+    if (!groupSwitch && (static_cast<P123_touch_action_e>(action & 0xC0) != P123_touch_action_e::Default)) {
+      switch (static_cast<P123_touch_action_e>(action & 0xC0)) {
+        case P123_touch_action_e::ActivateGroup:
+          eventCommand += action & 0x3F;
+          break;
+        case P123_touch_action_e::IncrementGroup:
+          eventCommand += -2;
+          break;
+        case P123_touch_action_e::DecrementGroup:
+          eventCommand += -3;
+          break;
+        case P123_touch_action_e::Default:
+        case P123_touch_action_e::TouchAction_MAX:
+          eventCommand += -1; // Ignore
+          break;
       }
-      case DrawButtonMode_e::Highlight:
-        break;
+    } else {
+      eventCommand += -1; // No group to activate
     }
   }
-
-  switch (bType) {
-    case Button_type_e::None:
-      break;
-    case Button_type_e::Square:
-      btnDrawShape = F("r");
-      break;
-    case Button_type_e::Rounded:
-      btnDrawShape = F("rr");
-      break;
-    case Button_type_e::Circle:
-      btnDrawShape = F("c");
-      break;
-    case Button_type_e::Button_MAX:
-      break;
-  }
-
-  if ((bType != Button_type_e::None) &&
-      (buttonMode == DrawButtonMode_e::Initialize)) { btnDrawShape += 'f'; }
-
-  switch (bType) {
-    case Button_type_e::None:
-      break;
-    case Button_type_e::Square:
-      btnDrawShape += ',';
-      btnDrawShape += TouchObjects[buttonIndex].top_left.x + xa;
-      btnDrawShape += ',';
-      btnDrawShape += TouchObjects[buttonIndex].top_left.y + ya;
-      btnDrawShape += ',';
-      btnDrawShape += TouchObjects[buttonIndex].width_height.x + wa;
-      btnDrawShape += ',';
-      btnDrawShape += TouchObjects[buttonIndex].width_height.y + ha;
-      btnDrawShape += ',';
-
-      if (buttonMode == DrawButtonMode_e::Initialize) {
-        btnDrawShape += AdaGFXcolorToString(TouchObjects[buttonIndex].colorCaption, _colorDepth);
-      } else {
-        btnDrawShape += AdaGFXcolorToString(TouchObjects[buttonIndex].colorBackground, _colorDepth);
-      }
-
-      if (buttonMode == DrawButtonMode_e::Initialize) {
-        btnDrawShape += ',';
-        btnDrawShape += AdaGFXcolorToString(TouchObjects[buttonIndex].colorBackground, _colorDepth);
-      }
-      break;
-    case Button_type_e::Rounded:
-      break;
-    case Button_type_e::Circle:
-      break;
-    case Button_type_e::Button_MAX:
-      break;
-  }
-
-  if (bType != Button_type_e::None) {
-    String btnDrawCmd;
-    btnDrawCmd.reserve(80);
-    btnDrawCmd  = cmdPrefix;
-    btnDrawCmd += btnDrawShape;
-    ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_RULES, btnDrawCmd.c_str());
-  }
+  eventQueue.addMove(std::move(eventCommand));
+  delay(0);
 }
-
-# endif // ifdef P123_USE_EXTENDED_TOUCH
 
 /**
  * Load the touch objects from the settings, and initialize then properly where needed.
@@ -851,7 +1104,9 @@ void P123_data_struct::loadTouchObjects(const EventStruct *event) {
 
   lastObjectIndex = P123_OBJECT_INDEX_START - 1; // START must be > 0!!!
 
-  objectCount = 0;
+  objectCount     = 0;
+  _minButtonGroup = 0;
+  _maxButtonGroup = 0;
 
   for (uint8_t i = P123_OBJECT_INDEX_END; i >= P123_OBJECT_INDEX_START; i--) {
     if (!settingsArray[i].isEmpty() && (lastObjectIndex < P123_OBJECT_INDEX_START)) {
@@ -880,6 +1135,34 @@ void P123_data_struct::loadTouchObjects(const EventStruct *event) {
                                                   P123_DEBOUNCE_MILLIS);
   P123_Settings.treshold = parseStringToInt(settingsArray[P123_CALIBRATION_START], P123_COMMON_TOUCH_TRESHOLD, P123_SETTINGS_SEPARATOR,
                                             P123_TS_TRESHOLD);
+  # ifdef P123_USE_EXTENDED_TOUCH
+  P123_Settings.colorOn = parseStringToInt(settingsArray[P123_CALIBRATION_START],
+                                           P123_COMMON_DEF_COLOR_ON, P123_SETTINGS_SEPARATOR);
+  P123_Settings.colorOff = parseStringToInt(settingsArray[P123_CALIBRATION_START],
+                                            P123_COMMON_DEF_COLOR_OFF, P123_SETTINGS_SEPARATOR);
+  P123_Settings.colorBorder = parseStringToInt(settingsArray[P123_CALIBRATION_START],
+                                               P123_COMMON_DEF_COLOR_BORDER, P123_SETTINGS_SEPARATOR);
+  P123_Settings.colorCaption = parseStringToInt(settingsArray[P123_CALIBRATION_START],
+                                                P123_COMMON_DEF_COLOR_CAPTION, P123_SETTINGS_SEPARATOR);
+  P123_Settings.colorDisabled = parseStringToInt(settingsArray[P123_CALIBRATION_START],
+                                                 P123_COMMON_DEF_COLOR_DISABLED, P123_SETTINGS_SEPARATOR);
+  P123_Settings.colorDisabledCaption = parseStringToInt(settingsArray[P123_CALIBRATION_START],
+                                                        P123_COMMON_DEF_COLOR_DISABCAPT, P123_SETTINGS_SEPARATOR);
+
+  if ((P123_Settings.colorOn              == 0u) &&
+      (P123_Settings.colorOff             == 0u) &&
+      (P123_Settings.colorCaption         == 0u) &&
+      (P123_Settings.colorBorder          == 0u) &&
+      (P123_Settings.colorDisabled        == 0u) &&
+      (P123_Settings.colorDisabledCaption == 0u)) {
+    P123_Settings.colorOn              = ADAGFX_GREEN;
+    P123_Settings.colorOff             = ADAGFX_RED;
+    P123_Settings.colorCaption         = ADAGFX_WHITE;
+    P123_Settings.colorBorder          = ADAGFX_WHITE;
+    P123_Settings.colorDisabled        = 0x9410;
+    P123_Settings.colorDisabledCaption = 0x5A69;
+  }
+  # endif // ifdef P123_USE_EXTENDED_TOUCH
 
   settingsArray[P123_CALIBRATION_START].clear(); // Free a little memory
 
@@ -903,13 +1186,18 @@ void P123_data_struct::loadTouchObjects(const EventStruct *event) {
         TouchObjects[t].width_height.x = parseStringToInt(settingsArray[i], P123_OBJECT_COORD_WIDTH, P123_SETTINGS_SEPARATOR);
         TouchObjects[t].width_height.y = parseStringToInt(settingsArray[i], P123_OBJECT_COORD_HEIGHT, P123_SETTINGS_SEPARATOR);
         # ifdef P123_USE_EXTENDED_TOUCH
-        TouchObjects[t].colorOn         = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_ON, P123_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorOff        = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_OFF, P123_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorCaption    = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_CAPTION, P123_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorHighlight  = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_HIGHLIGHT, P123_SETTINGS_SEPARATOR);
-        TouchObjects[t].captionOn       = parseStringKeepCase(settingsArray[i], P123_OBJECT_CAPTION_ON, P123_SETTINGS_SEPARATOR);
-        TouchObjects[t].captionOff      = parseStringKeepCase(settingsArray[i], P123_OBJECT_CAPTION_OFF, P123_SETTINGS_SEPARATOR);
-        TouchObjects[t].colorBackground = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_BACKGROUND, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].colorOn              = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_ON, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].colorOff             = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_OFF, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].colorCaption         = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_CAPTION, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].captionOn            = parseStringKeepCase(settingsArray[i], P123_OBJECT_CAPTION_ON, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].captionOff           = parseStringKeepCase(settingsArray[i], P123_OBJECT_CAPTION_OFF, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].colorBorder          = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_BORDER, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].colorDisabled        = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_DISABLED, P123_SETTINGS_SEPARATOR);
+        TouchObjects[t].colorDisabledCaption = parseStringToInt(settingsArray[i], P123_OBJECT_COLOR_DISABCAPT, P123_SETTINGS_SEPARATOR);
+
+        if (get8BitFromUL(TouchObjects[t].flags, P123_OBJECT_FLAG_GROUP) > _maxButtonGroup) {
+          _maxButtonGroup = get8BitFromUL(TouchObjects[t].flags, P123_OBJECT_FLAG_GROUP);
+        }
         # endif // ifdef P123_USE_EXTENDED_TOUCH
 
         TouchObjects[t].SurfaceAreas = 0; // Reset runtime stuff
@@ -921,6 +1209,10 @@ void P123_data_struct::loadTouchObjects(const EventStruct *event) {
         settingsArray[i].clear(); // Free a little memory
       }
     }
+  }
+
+  if (_maxButtonGroup > 0) {
+    _minButtonGroup = 1;
   }
 }
 
@@ -1038,11 +1330,14 @@ bool P123_data_struct::isValidAndTouchedTouchObject(int16_t x,
   bool     selected       = false;
 
   for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
+    uint8_t group = get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP);
+
     if (!TouchObjects[objectNr].objectName.isEmpty()
         && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)
         && (TouchObjects[objectNr].width_height.x != 0)
-        && (TouchObjects[objectNr].width_height.y != 0)) { // Not initial could be valid
-      if (TouchObjects[objectNr].SurfaceAreas == 0) {      // Need to calculate the surface area
+        && (TouchObjects[objectNr].width_height.y != 0) // Not initial could be valid
+        && ((group == 0) || (group == _buttonGroup))) { // Group 0 is always active
+      if (TouchObjects[objectNr].SurfaceAreas == 0) {   // Need to calculate the surface area
         TouchObjects[objectNr].SurfaceAreas = TouchObjects[objectNr].width_height.x * TouchObjects[objectNr].width_height.y;
       }
 
@@ -1091,41 +1386,29 @@ bool P123_data_struct::isValidAndTouchedTouchObject(int16_t x,
 }
 
 /**
- * Set the enabled/disabled state by inserting or deleting an underscore '_' as the first character of the object name.
- * Checks if the name doesn't exceed the max. length.
+ * Set the enabled/disabled state of an object.
  */
-bool P123_data_struct::setTouchObjectState(const String& touchObject, bool state) {
+bool P123_data_struct::setTouchObjectState(struct EventStruct *event, const String& touchObject, bool state) {
   if (touchObject.isEmpty()) { return false; }
-  String findObject; // = (state ? F("_") : F("")); // When enabling, try to find a disabled object
-
-  findObject += touchObject;
-  String thisObject;
-  bool   success = false;
-
-  thisObject.reserve(P123_MaxObjectNameLength);
+  bool success = false;
 
   for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
     if ((!TouchObjects[objectNr].objectName.isEmpty())
-        && findObject.equalsIgnoreCase(TouchObjects[objectNr].objectName)) {
-      // uint32_t objectFlags = parseStringToInt(settingsArray[objectNr], P123_OBJECT_FLAGS, P123_SETTINGS_SEPARATOR);
-      bool enabled = bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED);
+        && touchObject.equalsIgnoreCase(TouchObjects[objectNr].objectName)) {
+      bool currentState = bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED);
 
-      if (state != enabled) {
+      if (state != currentState) {
         bitWrite(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED, state);
         success = true;
 
-        // String config;
-        // config.reserve(settingsArray[objectNr].length() + 1);
-        // config += objectFlags;
-        // config += P123_SETTINGS_SEPARATOR;
-
-        // // Rest of the string
-        // config                 += parseStringToEndKeepCase(settingsArray[objectNr], P123_OBJECT_NAME, P123_SETTINGS_SEPARATOR);
-        // settingsArray[objectNr] = config; // Store
+        if (bitRead(P123_Settings.flags, P123_FLAGS_SEND_OBJECTNAME) &&
+            bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT)) {
+          generateObjectEvent(event, objectNr, state ? (TouchObjects[objectNr].TouchStates ? 1 : -1) : -2);
+        }
       }
       # ifdef PLUGIN_123_DEBUG
       String log = F("P123 setTouchObjectState: obj: ");
-      log += thisObject;
+      log += touchObject;
 
       if (success) {
         log += F(", new state: ");
@@ -1134,6 +1417,42 @@ bool P123_data_struct::setTouchObjectState(const String& touchObject, bool state
       } else {
         log += F("failed!");
       }
+      addLogMove(LOG_LEVEL_INFO, log);
+      # endif // PLUGIN_123_DEBUG
+    }
+  }
+  return success;
+}
+
+/**
+ * Set the on/off state of a touch-button object.
+ */
+bool P123_data_struct::setTouchButtonOnOff(struct EventStruct *event, const String& touchObject, bool state) {
+  if (touchObject.isEmpty()) { return false; }
+  bool success = false;
+
+  for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
+    if ((!TouchObjects[objectNr].objectName.isEmpty())
+        && touchObject.equalsIgnoreCase(TouchObjects[objectNr].objectName)
+        && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)
+        && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON)) {
+      bool currentState = TouchObjects[objectNr].TouchStates;
+
+      success = true; // Always success if matched button
+
+      if (state != currentState) {
+        TouchObjects[objectNr].TouchStates = state;
+
+        if (bitRead(P123_Settings.flags, P123_FLAGS_SEND_OBJECTNAME) &&
+            bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT)) {
+          generateObjectEvent(event, objectNr, state ? 1 : 0);
+        }
+      }
+      # ifdef PLUGIN_123_DEBUG
+      String log = F("P123 setTouchButtonOnOff: obj: ");
+      log += touchObject;
+      log += F(", (new) state: ");
+      log += (state ? F("on") : F("off"));
       addLogMove(LOG_LEVEL_INFO, log);
       # endif // PLUGIN_123_DEBUG
     }
@@ -1172,32 +1491,46 @@ void P123_data_struct::scaleRawToCalibrated(int16_t& x, int16_t& y) {
   }
 }
 
-/******************************************
- * enquoteString wrap in ", ' or ` unless all 3 quote types are used
- * TODO: Replace with wrapWithQuotes() once available
- *****************************************/
-String P123_data_struct::enquoteString(const String& input) {
-  char quoteChar = '"';
-
-  if (input.indexOf(quoteChar) > -1) {
-    quoteChar = '\'';
-
-    if (input.indexOf(quoteChar) > -1) {
-      quoteChar = '`';
-
-      if (input.indexOf(quoteChar) > -1) {
-        return input; // All types of supported quotes used, return original string
-      }
+/**
+ * Set the desired button group, muxt be between the minimum and maximum found values
+ */
+bool P123_data_struct::setButtonGroup(const EventStruct *event,
+                                      int8_t             buttonGroup) {
+  if ((buttonGroup >= 0) && (buttonGroup <= _maxButtonGroup)) {
+    if (buttonGroup != _buttonGroup) {
+      displayButtons(event, _buttonGroup, -2);
+      _buttonGroup = buttonGroup;
+      displayButtons(event, _buttonGroup, -1);
     }
+    return true;
   }
-  String result;
+  return false;
+}
 
-  result.reserve(input.length() + 2);
-  result  = quoteChar;
-  result += input;
-  result += quoteChar;
+/**
+ * increment button group, if max. group > 0 then min. group = 1
+ */
+bool P123_data_struct::incrementButtonGroup(const EventStruct *event) {
+  if (_buttonGroup < _maxButtonGroup) {
+    displayButtons(event, _buttonGroup, -2);
+    _buttonGroup++;
+    displayButtons(event, _buttonGroup, -1);
+    return true;
+  }
+  return false;
+}
 
-  return result;
+/**
+ * decrement button group, if max. group > 0 then min. group = 1
+ */
+bool P123_data_struct::decrementButtonGroup(const EventStruct *event) {
+  if (_buttonGroup > _minButtonGroup) {
+    displayButtons(event, _buttonGroup, -2);
+    _buttonGroup--;
+    displayButtons(event, _buttonGroup, -1);
+    return true;
+  }
+  return false;
 }
 
 #endif // ifdef USES_P123

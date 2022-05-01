@@ -1,11 +1,16 @@
 #ifdef USES_P123
 
 // #######################################################################################################
-// #################################### Plugin 123: FT6206 Touchscreen #################################
+// #################################### Plugin 123: FT6206 Touchscreen ###################################
 // #######################################################################################################
 
 /**
  * Changelog:
+ * 2022-04-30 tonhuisman: Add support for AdaGFX btn subcommand use and (local) button groups
+ *                        Start preparations for refactoring touch objects into separate helper class
+ * 2022-04-25 tonhuisman: Code cleanup, initialize object event -2 for disabled objects, -1 for enabled objects
+ *                        Add on and off subcommands to switch a touchbutton object. Generate init-event for enable
+ *                        disable, on and off states when init events option enabled
  * 2022-04-24 tonhuisman: Code improvements, increased button response speed
  * 2022-04-24 tonhuisman: Add event arguments for OnOff button objects, fix addLog statements, minor improvements
  * 2022-04-23 tonhuisman: Rename struct TS_Point in FT6206 library to FT_Point to avoid conflict with XPT2048 library (P099)
@@ -19,6 +24,11 @@
  * touch,flip,<0|1>             : Set rotation normal(0) or flipped by 180 degrees(1)
  * touch,enable,<objectName>    : Enables a disabled objectname (removes a leading underscore)
  * touch,disable,<objectName>   : Disables an enabled objectname (adds a leading underscore)
+ * touch,on,<buttonObjectName>  : Switch a TouchButton on (must be enabled)
+ * touch,off,<buttonObjectName> : Switch a TouchButton off (must be enabled)
+ * touch,setgrp,<group>         : Switch to button group
+ * touch,incgrp                 : Switch to next button group
+ * touch,decgrp                 : Switch to previous button group
  */
 
 #define PLUGIN_123
@@ -230,17 +240,27 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
             P123_data->setRotation(rot_);
             success = true;
-          } else if (subcommand.equals(F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
-            bool flip_ = (event->Par2 > 0);
-
-            P123_data->setRotationFlipped(flip_);
+          } else if (subcommand.equals(F("flip"))) {    // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
+            P123_data->setRotationFlipped(event->Par2 > 0);
             success = true;
           } else if (subcommand.equals(F("enable"))) {  // touch,enable,<objectName> : Enables a disabled objectname
             arguments = parseString(string, 3);
-            success   = P123_data->setTouchObjectState(arguments, true);
+            success   = P123_data->setTouchObjectState(event, arguments, true);
           } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname
             arguments = parseString(string, 3);
-            success   = P123_data->setTouchObjectState(arguments, false);
+            success   = P123_data->setTouchObjectState(event, arguments, false);
+          } else if (subcommand.equals(F("on"))) {      // touch,on,<buttonObjectName> : Switch a TouchButton on
+            arguments = parseString(string, 3);
+            success   = P123_data->setTouchButtonOnOff(event, arguments, true);
+          } else if (subcommand.equals(F("off"))) {     // touch,off,<buttonObjectName> : Switch a TouchButton off
+            arguments = parseString(string, 3);
+            success   = P123_data->setTouchButtonOnOff(event, arguments, false);
+          } else if (subcommand.equals(F("setgrp"))) {  // touch,setgrp,<group> : Activate button group
+            success = P123_data->setButtonGroup(event, event->Par2);
+          } else if (subcommand.equals(F("incgrp"))) {  // touch,incgrp : increment group and Activate
+            success = P123_data->incrementButtonGroup(event);
+          } else if (subcommand.equals(F("decgrp"))) {  // touch,decgrp : Decrement group and Activate
+            success = P123_data->decrementButtonGroup(event);
           }
         }
       }
@@ -255,7 +275,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      success = P123_data->plugin_ten_per_second(event);
+      success = P123_data->plugin_fifty_per_second(event);
 
       break;
     }
