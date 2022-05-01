@@ -59,12 +59,13 @@
 // See https://gathering.tweakers.net/forum/list_messages/1690945 for more information
 // code/idea was inspired by first release of code from 'Thinkpad'
 
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P118
 
 #include <SPI.h>
 #include "IthoCC1101.h"
 #include "IthoPacket.h"
-#include "_Plugin_Helper.h"
 
 // This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN__ExtraSettingsStruct

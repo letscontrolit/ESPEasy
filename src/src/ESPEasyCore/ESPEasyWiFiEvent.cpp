@@ -54,7 +54,7 @@ void setUseStaticIP(bool enabled) {
 static bool ignoreDisconnectEvent = false;
 
 #if ESP_IDF_VERSION_MAJOR > 3
-void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
+void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
   switch (event) {
     case ARDUINO_EVENT_WIFI_READY:
       // ESP32 WiFi ready
@@ -149,32 +149,32 @@ void WiFiEvent(WiFiEvent_t event, WiFiEventInfo_t info) {
 #ifdef HAS_ETHERNET
     case ARDUINO_EVENT_ETH_START:
       if (ethPrepare()) {
-        addLog(LOG_LEVEL_INFO, F("ETH  : Started"));
+        addLog(LOG_LEVEL_INFO, F("ETH event: Started"));
       } else {
-        addLog(LOG_LEVEL_ERROR, F("ETH  : Could not prepare ETH!"));
+        addLog(LOG_LEVEL_ERROR, F("ETH event: Could not prepare ETH!"));
       }
       break;
     case ARDUINO_EVENT_ETH_CONNECTED:
-      addLog(LOG_LEVEL_INFO, F("ETH  : Connected"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Connected"));
       EthEventData.markConnected();
       break;
     case ARDUINO_EVENT_ETH_GOT_IP:
       EthEventData.markGotIP();
-      addLog(LOG_LEVEL_INFO, F("ETH  : Got IP"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Got IP"));
       break;
     case ARDUINO_EVENT_ETH_DISCONNECTED:
-      addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
+      addLog(LOG_LEVEL_ERROR, F("ETH event: Disconnected"));
       EthEventData.markDisconnect();
       break;
     case ARDUINO_EVENT_ETH_STOP:
-      addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Stopped"));
       break;
     #if ESP_IDF_VERSION_MAJOR > 3
     case ARDUINO_EVENT_ETH_GOT_IP6:
     #else
     case ARDUINO_EVENT_GOT_IP6:
     #endif
-      addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
       break;
 #endif //HAS_ETHERNET
     default:
@@ -282,28 +282,28 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
 #ifdef HAS_ETHERNET
     case SYSTEM_EVENT_ETH_START:
       if (ethPrepare()) {
-        addLog(LOG_LEVEL_INFO, F("ETH  : Started"));
+        addLog(LOG_LEVEL_INFO, F("ETH event: Started"));
       } else {
-        addLog(LOG_LEVEL_ERROR, F("ETH  : Could not prepare ETH!"));
+        addLog(LOG_LEVEL_ERROR, F("ETH event: Could not prepare ETH!"));
       }
       break;
     case SYSTEM_EVENT_ETH_CONNECTED:
-      addLog(LOG_LEVEL_INFO, F("ETH  : Connected"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Connected"));
       EthEventData.markConnected();
       break;
     case SYSTEM_EVENT_ETH_GOT_IP:
       EthEventData.markGotIP();
-      addLog(LOG_LEVEL_INFO, F("ETH  : Got IP"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Got IP"));
       break;
     case SYSTEM_EVENT_ETH_DISCONNECTED:
-      addLog(LOG_LEVEL_ERROR, F("ETH Disconnected"));
+      addLog(LOG_LEVEL_ERROR, F("ETH event: Disconnected"));
       EthEventData.markDisconnect();
       break;
     case SYSTEM_EVENT_ETH_STOP:
-      addLog(LOG_LEVEL_INFO, F("ETH Stopped"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Stopped"));
       break;
     case SYSTEM_EVENT_GOT_IP6:
-      addLog(LOG_LEVEL_INFO, F("ETH Got IP6"));
+      addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
       break;
 #endif //HAS_ETHERNET
     default:
