@@ -121,7 +121,7 @@ public:
   String  LastMessageDecoded();
 
   // send
-  void    sendCommand(IthoCommand command, uint8_t srcId[3] = 000000, uint8_t destId[3] = 000000);
+  void    sendCommand(IthoCommand command);
 
 protected:
 
@@ -147,20 +147,11 @@ private:
                               CC1101Packet *packet);
   void     createMessageCommand(IthoPacket   *itho,
                                 CC1101Packet *packet);
-  void     createOrconMessageCommand(IthoPacket   *itho,
-                                     CC1101Packet *packet,
-                                     uint8_t srcId[3],
-                                     uint8_t destId[3]);
-  uint8_t  getCRC(IthoPacket *itho,
-                  uint8_t     len);
   void     createMessageJoin(IthoPacket   *itho,
                              CC1101Packet *packet);
   void     createMessageLeave(IthoPacket   *itho,
                               CC1101Packet *packet);
   const uint8_t* getMessageCommandBytes(IthoCommand command);
-
-  uint8_t getMessageCommandLength(IthoCommand command);
-
   uint8_t  getCounter2(IthoPacket *itho,
                        uint8_t     len);
 

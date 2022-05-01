@@ -313,10 +313,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 1: // Fan low
           {
-            uint8_t srcID[3] = { 118,164,187 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(IthoLow, srcID, destID);
-            // PLUGIN_118_rf.sendCommand(IthoLow);
+            PLUGIN_118_rf.sendCommand(IthoLow);
             PLUGIN_118_State       = 1;
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
@@ -327,10 +324,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 2: // Fan medium
           {
-            uint8_t srcID[3] = { 118,164,187 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(IthoMedium, srcID, destID);
-            // PLUGIN_118_rf.sendCommand(IthoMedium);
+            PLUGIN_118_rf.sendCommand(IthoMedium);
             PLUGIN_118_State       = 2;
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
@@ -341,10 +335,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 3: // Fan high
           {
-            uint8_t srcID[3] = { 118,164,187 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(IthoHigh, srcID, destID);
-            // PLUGIN_118_rf.sendCommand(IthoHigh);
+            PLUGIN_118_rf.sendCommand(IthoHigh);
             PLUGIN_118_State       = 3;
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
@@ -399,9 +390,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 103: //  Timer 12*60 minuten @ speed 0
           {
-            uint8_t srcID[3] = { 148, 12, 79 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(OrconTimer0, srcID, destID);
+            PLUGIN_118_rf.sendCommand(OrconTimer0);
             PLUGIN_118_State       = 103;
             PLUGIN_118_Timer       = PLUGIN_118_OrconTime0;
             PLUGIN_118_LastIDindex = 0;
@@ -412,9 +401,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 113: //  Timer 60 minuten @ speed 1
           {
-            uint8_t srcID[3] = { 148, 12, 79 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(OrconTimer1, srcID, destID);
+            PLUGIN_118_rf.sendCommand(OrconTimer1);
             PLUGIN_118_State       = 113;
             PLUGIN_118_Timer       = PLUGIN_118_OrconTime1;
             PLUGIN_118_LastIDindex = 0;
@@ -425,9 +412,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 123: //  Timer 13*60 minuten @ speed 2
           {
-            uint8_t srcID[3] = { 148, 12, 79 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(OrconTimer2, srcID, destID);
+            PLUGIN_118_rf.sendCommand(OrconTimer2);
             PLUGIN_118_State       = 123;
             PLUGIN_118_Timer       = PLUGIN_118_OrconTime2;
             PLUGIN_118_LastIDindex = 0;
@@ -438,9 +423,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 133: //  Timer 60 minuten @ speed 3
           {
-            uint8_t srcID[3] = { 148, 12, 79 };
-            uint8_t destID[3] = { 65, 43, 21 };
-            PLUGIN_118_rf.sendCommand(OrconTimer3, srcID, destID);
+            PLUGIN_118_rf.sendCommand(OrconTimer3);
             PLUGIN_118_State       = 133;
             PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
             PLUGIN_118_LastIDindex = 0;
