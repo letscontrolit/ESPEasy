@@ -239,5 +239,9 @@ bool getEventFromRulesLine(const String& line, String& event, String& action)
   // action: The optional part after the " do"
   action = line.substring(pos_do + 3);
   action.trim();
+  // Remove optional "endon"
+  if (action.endsWith(F("endon"))) {
+    action = action.substring(0, action.lastIndexOf(F("endon")));
+  }
   return true;
 }
