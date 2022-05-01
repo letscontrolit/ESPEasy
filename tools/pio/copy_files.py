@@ -93,6 +93,7 @@ def generate_webflash_json_manifest(variant, file_suffix):
 
         manifest = {}
         manifest['name'] = bin_file
+        manifest['new_install_prompt_erase'] = True
         parts = dict([('path', bin_file), ('offset', 0)])
         if add_improve:
             builds = dict([('chipFamily', chipFamily), ('improv', False), ('parts', [parts])])

@@ -92,6 +92,7 @@ struct WiFiEventData_t {
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
 
+
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.
   LongTermTimer           processingDisconnect;
