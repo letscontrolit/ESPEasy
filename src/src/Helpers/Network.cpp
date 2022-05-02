@@ -25,7 +25,9 @@ void statusLED(bool traffic)
   }
 
   if (gnStatusValueCurrent < 0) {
+#ifndef ESP32
     pinMode(Settings.Pin_status_led, OUTPUT);
+#endif // ESP32
   }
 
   int nStatusValue = gnStatusValueCurrent;
