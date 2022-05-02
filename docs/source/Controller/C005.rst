@@ -58,6 +58,31 @@ These topics used to receive commands do rely on the topic wildcard ``/#`` at th
 This wildcard is used in the default subscription topic for this MQTT controller.
 If the format of the subscription topic is changed by the user, make sure to keep this wildcard in place for the command handling to work.
 
+.. note:: The value of N in ``cmd_argN`` can also be 0. 
+          The sent message is then the command, where the values in the topic are parameters.
+
+Sending Events
+--------------
+
+Added: 2022/05/02
+
+It can be useful to send events with 0 or more event values in the topic and the message as one of the event values.
+For example with a message like these sent as a retained message, one can let the broker send out a message to the ESPEasy node as soon as it connects.
+
+* Topic: ``ESP_Easy/Bathroom_pir_env/cmd_arg2/event/myevent/2/3``
+* Message: ``1``
+* Full event:  ``myevent=1,2,3``
+
+Since a MQTT topic cannot contain a ``#`` sign in topics (at least, you shouldn't use it), the event sent via MQTT cannot contain a ``#`` character.
+
+Please note that the nr in ``cmd_argN`` is the argument of the command, not the event.
+
+For example sending an event with the event name as message and the values part of the topic:
+
+* Topic: ``ESP_Easy/Bathroom_pir_env/cmd_arg1/event/1/2/3``
+* Message: ``myevent``
+* Full event:  ``myevent=1,2,3``
+
 
 
 
