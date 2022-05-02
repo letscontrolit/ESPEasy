@@ -232,7 +232,22 @@ bool C005_parse_command(struct EventStruct *event) {
 
     if ((command.equals(F("event"))) || (command.equals(F("asyncevent")))) {
       if (Settings.UseRules) {
-        eventQueue.addMove(parseStringToEnd(cmd, 2));
+        // Need to sanitize the event a bit to allow for sending event values as MQTT messages.
+        // For example:
+        // Publish topic: espeasy_node/cmd_arg2/event/myevent/2
+        // Message: 1
+        // Actual event:  myevent=1,2
+        cmd = parseStringToEndKeepCase(cmd, 2);
+        String eventName = parseStringKeepCase(cmd, 1);
+        const int equal_pos = eventName.indexOf('=');
+        if (equal_pos == -1) {
+          eventName += '=';
+        }
+        // Need to reconstruct the event to get rid of calls like these:
+        // myevent=,1,2
+        cmd = eventName + parseStringToEndKeepCase(cmd, 2);
+        
+        eventQueue.addMove(std::move(cmd));
       }
     } else {
       ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());

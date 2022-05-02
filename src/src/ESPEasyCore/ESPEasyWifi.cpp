@@ -547,6 +547,19 @@ void resetWiFi() {
   initWiFi();
 }
 
+#ifdef ESP32
+void removeWiFiEventHandler()
+{
+  WiFi.removeEvent(wm_event_id);
+}
+
+void registerWiFiEventHandler()
+{
+  wm_event_id = WiFi.onEvent(WiFiEvent);
+}
+#endif
+
+
 void initWiFi()
 {
 #ifdef ESP8266
