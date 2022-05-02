@@ -64,6 +64,8 @@ uint32_t getFlashChipId();
 
 uint32_t getFlashRealSizeInBytes();
 
+uint32_t getFlashChipSpeed();
+
 bool    puyaSupport();
 
 uint8_t getFlashChipVendorId();
@@ -82,6 +84,44 @@ uint8_t getChipRevision();
 uint32_t getSketchSize();
 
 uint32_t getFreeSketchSpace();
+
+
+/********************************************************************************************\
+   PSRAM support
+ \*********************************************************************************************/
+#ifdef ESP32
+
+// this function is a replacement for `psramFound()`.
+// `psramFound()` can return true even if no PSRAM is actually installed
+// This new version also checks `esp_spiram_is_initialized` to know if the PSRAM is initialized
+// Original Tasmota: 
+// https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L470
+bool FoundPSRAM();
+
+// new function to check whether PSRAM is present and supported (i.e. required pacthes are present)
+bool UsePSRAM();
+
+/*
+ * ESP32 v1 and v2 needs some special patches to use PSRAM.
+ * Original function used from Tasmota: 
+ * https://github.com/arendst/Tasmota/blob/1e6b78a957be538cf494f0e2dc49060d1cb0fe8b/tasmota/support_esp.ino#L762
+ * 
+ * If using ESP32 v1, please add: `-mfix-esp32-psram-cache-issue -lc-psram-workaround -lm-psram-workaround`
+ *
+ * This function returns true if the chip supports PSRAM natively (v3) or if the
+ * patches are present.
+ */
+bool CanUsePSRAM();
+
+#endif  // ESP32
+
+/*********************************************************************************************\
+ * High entropy hardware random generator
+ * Thanks to DigitalAlchemist
+\*********************************************************************************************/
+// Based on code from https://raw.githubusercontent.com/espressif/esp-idf/master/components/esp32/hw_random.c
+uint32_t HwRandom();
+
 
 /********************************************************************************************\
    Boot information
