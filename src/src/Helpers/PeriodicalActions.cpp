@@ -196,32 +196,33 @@ void runEach30Seconds()
   wdcounter++;
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
-    if (log.reserve(80)) {
-      log = F("WD   : Uptime ");
-      log += getUptimeMinutes();
-      log += F(" ConnectFailures ");
-      log += WiFiEventData.connectionFailures;
-      log += F(" FreeMem ");
-      log += FreeMem();
-      #ifdef HAS_ETHERNET
-      if(active_network_medium == NetworkMedium_t::Ethernet) {
-        log += F( " EthSpeedState ");
-        log += getValue(LabelType::ETH_SPEED_STATE);
-      } else {
-        log += F(" WiFiStatus ");
-        log += ArduinoWifiStatusToString(WiFi.status());
-      }
-      #else
+    log.reserve(80);
+    log = F("WD   : Uptime ");
+    log += getUptimeMinutes();
+    log += F(" ConnectFailures ");
+    log += WiFiEventData.connectionFailures;
+    log += F(" FreeMem ");
+    log += FreeMem();
+    bool logWiFiStatus = true;
+    #ifdef HAS_ETHERNET
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
+      logWiFiStatus = false;
+      log += F( " EthSpeedState ");
+      log += getValue(LabelType::ETH_SPEED_STATE);
+      log += F(" ETH status: ");
+      log += EthEventData.ESPEasyEthStatusToString();
+    }
+    #endif
+    if (logWiFiStatus) {
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
-      #endif
       log += F(" ESPeasy internal wifi status: ");
-      log += ESPeasyWifiStatusToString();
-
-  //    log += F(" ListenInterval ");
-  //    log += WiFi.getListenInterval();
-      addLogMove(LOG_LEVEL_INFO, log);
+      log += WiFiEventData.ESPeasyWifiStatusToString();
     }
+
+//    log += F(" ListenInterval ");
+//    log += WiFi.getListenInterval();
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   WiFi_AP_Candidates.purge_expired();
   sendSysInfoUDP(1);
@@ -266,8 +267,9 @@ void schedule_all_MQTTimport_tasks() {
   deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_ID_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
   if (validDeviceIndex(DeviceIndex)) {
     for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
-      if (Settings.TaskDeviceNumber[task] == PLUGIN_ID_MQTT_IMPORT) {
-        // Schedule a call to each MQTT import plugin to notify the broker connection state
+      if ((Settings.TaskDeviceNumber[task] == PLUGIN_ID_MQTT_IMPORT) &&
+          (Settings.TaskDeviceEnabled[task])) {
+        // Schedule a call to each enabled MQTT import plugin to notify the broker connection state
         EventStruct event(task);
         event.Par1 = MQTTclient_connected ? 1 : 0;
         Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, std::move(event));

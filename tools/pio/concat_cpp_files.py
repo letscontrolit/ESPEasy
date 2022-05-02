@@ -52,6 +52,8 @@ def concat_cpp_files(path_to_concat):
 
 concat_cpp_files('./src/src/Commands')
 concat_cpp_files('./src/src/ControllerQueue')
+concat_cpp_files('./src/src/DataStructs')
+concat_cpp_files('./src/src/DataTypes')
 concat_cpp_files('./src/src/Globals')
 concat_cpp_files('./src/src/Helpers')
 concat_cpp_files('./src/src/PluginStructs')
