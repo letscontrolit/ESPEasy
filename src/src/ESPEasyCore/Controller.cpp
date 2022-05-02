@@ -258,7 +258,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       }
       */
 
-      if (mqtt_rootCA.isEmpty()) {
+      if (mqtt_rootCA.isEmpty() && mqtt_tls != nullptr) {
         LoadCertificate(ControllerSettings.getCertificateFilename(), mqtt_rootCA);
         if (mqtt_rootCA.isEmpty()) {
           // Fingerprint must be of some minimal length to continue.
@@ -296,17 +296,21 @@ bool MQTTConnect(controllerIndex_t controller_idx)
         addLog(LOG_LEVEL_ERROR, mqtt_tls_last_errorstr);
         return false;
       }
-      mqtt_tls->setInsecure();
+      if (mqtt_tls != nullptr) {
+        mqtt_tls->setInsecure();
+      }
       break;
     }
     case TLS_types::TLS_insecure:
     {
       mqtt_rootCA.clear();
-      mqtt_tls->setInsecure();
+      if (mqtt_tls != nullptr) {
+        mqtt_tls->setInsecure();
+      }
       break;
     }
   }
-  if (TLS_type != TLS_types::NoTLS) {
+  if (TLS_type != TLS_types::NoTLS && mqtt_tls != nullptr) {
     // Certificate expiry not enabled in Mbed TLS.
 //    mqtt_tls->setX509Time(node_time.getUnixTime());
     mqtt_tls->setTimeout(ControllerSettings.ClientTimeout);
@@ -377,6 +381,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
   #ifdef USE_MQTT_TLS
+  if (mqtt_tls != nullptr)
   {
     char buf[128] = {0};
     #ifdef ESP8266
@@ -452,7 +457,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   #ifdef USE_MQTT_TLS
   #ifdef ESP32
-  if (loglevelActiveFor(LOG_LEVEL_INFO))
+  if (mqtt_tls != nullptr && loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log = F("MQTT : Peer certificate info: ");
     log += ControllerSettings.getHost();
