@@ -34,17 +34,22 @@ For this, there are several syntax formats to receive these commands:
 
 * Subscribe to the configured subscription topic, with ``/cmd`` as the last part of the topic. 
   For example:
+
   * Topic: ``ESP_Easy/Bathroom_pir_env/cmd``
   * Message: ``gpio,14,0``
   * Full command:  ``gpio,14,0``
+
 * Format the command as part of the topic, with the last parameter as data.
   For example:
+
   * Topic: ``ESP_Easy/Bathroom_pir_env/GPIO/14``
   * Message: ``0`` or ``1``
   * Full command:  ``gpio,14,0``
+
 * Format the command as part of the topic, with a specific parameter as data. (added: 2022-03-01)
   This format allows the message to be a single parameter which will be inserted at the indicated position.
   For example:
+
   * Topic: ``ESP_Easy/Bathroom_pir_env/cmd_arg1/GPIO/0``
   * Message: ``14``
   * Full command:  ``gpio,14,0``
