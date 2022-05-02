@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-05-02 tonhuisman: Small updates and improvements
  * 2022-04-30 tonhuisman: Add support for AdaGFX btn subcommand use and (local) button groups
  *                        Start preparations for refactoring touch objects into separate helper class
  * 2022-04-25 tonhuisman: Code cleanup, initialize object event -2 for disabled objects, -1 for enabled objects

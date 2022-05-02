@@ -80,18 +80,23 @@ bool P123_data_struct::init(const EventStruct *event,
 
     if (bitRead(P123_Settings.flags, P123_FLAGS_SEND_OBJECTNAME) &&
         bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT)) {
-      if (_maxButtonGroup > 0) {                 // Multiple groups?
-        displayButtons(event, _buttonGroup, -3); // Clear all groups
+      if (_maxButtonGroup > 0) {                     // Multiple groups?
+        displayButtonGroup(event, _buttonGroup, -3); // Clear all groups
       }
       _buttonGroup = get8BitFromUL(P123_Settings.flags, P123_FLAGS_INITIAL_GROUP);
       # ifdef PLUGIN_123_DEBUG
-      String log = F("P123 DEBUG group: ");
-      log += _buttonGroup;
-      log += F(", max group: ");
-      log += _maxButtonGroup;
-      addLogMove(LOG_LEVEL_INFO, log);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("P123 DEBUG group: ");
+        log += _buttonGroup;
+        log += F(", max group: ");
+        log += _maxButtonGroup;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       # endif // ifdef PLUGIN_123_DEBUG
-      displayButtons(event, _buttonGroup); // Initialize selected group and group 0
+
+      displayButtonGroup(event, _buttonGroup); // Initialize selected group and group 0
+
       # ifdef PLUGIN_123_DEBUG
       addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG group done."));
       # endif // ifdef PLUGIN_123_DEBUG
@@ -109,9 +114,9 @@ bool P123_data_struct::init(const EventStruct *event,
 /**
  * mode: -2 = clear buttons in group, -3 = clear all buttongroups, -1 = draw buttons in group, 0 = initialize buttons
  */
-void P123_data_struct::displayButtons(const EventStruct *event,
-                                      int8_t             buttonGroup,
-                                      int8_t             mode) {
+void P123_data_struct::displayButtonGroup(const EventStruct *event,
+                                          int8_t             buttonGroup,
+                                          int8_t             mode) {
   for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
     int8_t state = 99;
     int8_t group = get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP);
@@ -137,23 +142,25 @@ void P123_data_struct::displayButtons(const EventStruct *event,
       }
       generateObjectEvent(event, objectNr, state, mode < 0, mode <= -2 ? -1 : 1);
     }
-    # ifdef XX_PLUGIN_123_DEBUG
+    # ifdef XX_PLUGIN_123_DEBUG // Temporarily disabled
 
-    // TODO: remove log?
-    String log = F("P123: button init, state: ");
-    log += state;
-    log += F(", group: ");
-    log += buttonGroup;
-    log += F(", mode: ");
-    log += mode;
-    log += F(", group: ");
-    log += get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP);
-    log += F(", en: ");
-    log += bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON);
-    log += F(", object: ");
-    log += objectNr;
-    addLog(LOG_LEVEL_INFO, log);
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("P123: button init, state: ");
+      log += state;
+      log += F(", group: ");
+      log += buttonGroup;
+      log += F(", mode: ");
+      log += mode;
+      log += F(", group: ");
+      log += get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP);
+      log += F(", en: ");
+      log += bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON);
+      log += F(", object: ");
+      log += objectNr;
+      addLog(LOG_LEVEL_INFO, log);
+    }
     # endif // ifdef PLUGIN_123_DEBUG
+
     delay(0);
   }
 
@@ -218,6 +225,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     };
     int optionValues3[P123_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
     addFormSelector(F("Events"), F("touch_events"), P123_EVENTS_OPTIONS, options3, optionValues3, choice3);
+
     addFormCheckBox(F("Initial Objectnames events"), F("touch_init_objectevent"), bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT));
     addFormNote(F("Will send state -1 but only for enabled On/Off button objects."));
   }
@@ -278,8 +286,6 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                   65535);
 
     html_end_table();
-
-    // addFormNote(F("At least 1 x/y value must be <> 0 to enable calibration."));
   }
 
   addFormCheckBox(F("Enable logging for calibration"), F("touch_log_calibration"),
@@ -287,8 +293,11 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
 
   addFormSubHeader(F("Touch objects"));
 
+  # ifdef P123_USE_EXTENDED_TOUCH
+
+  AdaGFXHtmlColorDepthDataList(F("adagfx65kcolors"), static_cast<AdaGFXColorDepth>(P123_COLOR_DEPTH));
+
   {
-    # ifdef P123_USE_EXTENDED_TOUCH
     String parsed;
     addRowLabel(F("Default On/Off button colors"));
     html_table(EMPTY_STRING, false); // Sub-table
@@ -354,18 +363,16 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                , F("adagfx65kcolors")
                );
     html_end_table();
-    # endif // ifdef P123_USE_EXTENDED_TOUCH
   }
   {
-    # ifdef P123_USE_EXTENDED_TOUCH
     addFormNumericBox(F("Initial button group"), F("touch_initial_group"),
                       get8BitFromUL(P123_Settings.flags, P123_FLAGS_INITIAL_GROUP), 0, P123_MAX_BUTTON_GROUPS
                       #  ifdef P123_USE_TOOLTIPS
                       , F("Initial group")
                       #  endif // ifdef P123_USE_TOOLTIPS
                       );
-    # endif // ifdef P123_USE_EXTENDED_TOUCH
   }
+  # endif // ifdef P123_USE_EXTENDED_TOUCH
   {
     addRowLabel(F("Object"));
 
@@ -419,7 +426,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
       toString(Button_type_e::ArrowDown),
     };
 
-    int buttonTypeValues[] = {
+    const int buttonTypeValues[] = {
       static_cast<int>(Button_type_e::None),
       static_cast<int>(Button_type_e::Square),
       static_cast<int>(Button_type_e::Rounded),
@@ -478,10 +485,6 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     String  parsed;
     TouchObjects.resize(maxIdx, tP123_TouchObjects());
 
-    # ifdef P123_USE_EXTENDED_TOUCH
-    AdaGFXHtmlColorDepthDataList(F("adagfx65kcolors"), static_cast<AdaGFXColorDepth>(P123_COLOR_DEPTH));
-    # endif // ifdef P123_USE_EXTENDED_TOUCH
-
     for (int objectNr = 0; objectNr < maxIdx; objectNr++) {
       html_TR_TD();
       addHtml(F("&nbsp;"));
@@ -492,7 +495,11 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
       // Enable new entries
       bool enabled = bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED) || TouchObjects[objectNr].objectName.isEmpty();
       addCheckBox(getPluginCustomArgName(objectNr + 0),
-                  enabled, false);
+                  enabled, false
+                  # ifdef P123_USE_TOOLTIPS
+                  , F("Enabled")
+                  # endif // ifdef P123_USE_TOOLTIPS
+                  );
       html_TD(); // Name
       addTextBox(getPluginCustomArgName(objectNr + 100),
                  TouchObjects[objectNr].objectName,
@@ -512,7 +519,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                     , F("widenumber"), F("Top-left y")
                     # endif // ifdef P123_USE_TOOLTIPS
                     );
-      html_TD(); // on/off button
+      html_TD(); // (on/off) button (type)
       # ifdef P123_USE_EXTENDED_TOUCH
       addSelector(getPluginCustomArgName(objectNr + 800),
                   static_cast<int>(Button_type_e::Button_MAX),
@@ -544,10 +551,10 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                   );
       # endif // ifdef P123_USE_EXTENDED_TOUCH
       # ifdef P123_USE_EXTENDED_TOUCH
-      html_TD();                               // ON color
+      html_TD(); // ON color
       parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorOn, _colorDepth, true);
       addTextBox(getPluginCustomArgName(objectNr + 1000), parsed, P123_MAX_COLOR_INPUTLENGTH, false, false,
-                 EMPTY_STRING, F("widenumber") // |list=\"adagfx65kcolors\"
+                 EMPTY_STRING, F("widenumber")
                  #  ifdef P123_USE_TOOLTIPS
                  , F("ON color")
                  #  endif // ifdef P123_USE_TOOLTIPS
@@ -561,9 +568,9 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                  false,
                  EMPTY_STRING,
                  F("wide")
-                  #  ifdef P123_USE_TOOLTIPS
+                 #  ifdef P123_USE_TOOLTIPS
                  , F("ON caption")
-                  #  endif // ifdef P123_USE_TOOLTIPS
+                 #  endif // ifdef P123_USE_TOOLTIPS
                  );
       html_TD(); // Border color
       parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorBorder, _colorDepth, true);
@@ -612,8 +619,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                       );
       }
       # endif // ifdef P123_USE_EXTENDED_TOUCH
-      html_TD(); // Next column
-      // Width
+      html_TD(); // Width
       addNumericBox(getPluginCustomArgName(objectNr + 400),
                     TouchObjects[objectNr].width_height.x, 0, 65535
                     # ifdef P123_USE_TOOLTIPS
@@ -659,9 +665,9 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
                  false,
                  EMPTY_STRING,
                  F("wide")
-                  #  ifdef P123_USE_TOOLTIPS
+                 #  ifdef P123_USE_TOOLTIPS
                  , F("OFF caption")
-                  #  endif // ifdef P123_USE_TOOLTIPS
+                 #  endif // ifdef P123_USE_TOOLTIPS
                  );
       html_TD(); // Caption color
       parsed = AdaGFXcolorToString(TouchObjects[objectNr].colorCaption, _colorDepth, true);
@@ -738,7 +744,7 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
   config += P123_SETTINGS_SEPARATOR;
   config += getFormItemInt(F("touch_treshold"));
   config += P123_SETTINGS_SEPARATOR;
-  config += lSettings;
+  config += ull2String(lSettings);
   config += P123_SETTINGS_SEPARATOR;
   # ifdef P123_USE_EXTENDED_TOUCH
   colorInput = webArg(getPluginCustomArgName(3000)); // Default Color ON
@@ -762,12 +768,16 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
   # endif // ifdef P123_USE_EXTENDED_TOUCH
 
   settingsArray[P123_CALIBRATION_START] = config;
-  {
+
+  # ifdef PLUGIN_123_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("Save settings: ");
     config.replace(P123_SETTINGS_SEPARATOR, ',');
     log += config;
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  # endif // ifdef PLUGIN_123_DEBUG
 
   String error;
 
@@ -801,7 +811,7 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
       bitWrite(flags, P123_OBJECT_FLAG_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 600)));              // On/Off button
       # endif // ifdef P123_USE_EXTENDED_TOUCH
 
-      config += String(flags);                                                                                          // Flags
+      config += ull2String(flags);                                                                                      // Flags
       config += P123_SETTINGS_SEPARATOR;
       config += getFormItemInt(getPluginCustomArgName(objectNr + 200));                                                 // Top x
       config += P123_SETTINGS_SEPARATOR;
@@ -902,7 +912,7 @@ bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
           loglevelActiveFor(LOG_LEVEL_INFO)) { // REQUIRED for calibration and setting up objects, so do not make this optional!
         String log;
         log.reserve(72);
-        log  = F("Touch calibration rx= ");    // Space before the logged values was added for readability
+        log  = F("Touch calibration rx= ");    // Space before the logged values added for readability
         log += rx;
         log += F(", ry= ");
         log += ry;
@@ -919,13 +929,13 @@ bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
         addLogMove(LOG_LEVEL_INFO, log);
       }
 
-      if (Settings.UseRules) {                                                                     // No events to handle if rules not
-                                                                                                   // enabled
-        if (success && bitRead(P123_Settings.flags, P123_FLAGS_SEND_XY)) {                         // Send events for each touch
+      // No events to handle if rules not enabled
+      if (Settings.UseRules) {
+        if (success && bitRead(P123_Settings.flags, P123_FLAGS_SEND_XY)) { // Send events for each touch
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
-          if (!bitRead(P123_Settings.flags, P123_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Do NOT send a Z event for each
-            // touch?
+          // Do NOT send a Z event for each touch?
+          if (!bitRead(P123_Settings.flags, P123_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) {
             Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
             Device[DeviceIndex].ValueCount = 2;
           }
@@ -943,9 +953,8 @@ bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
           if (isValidAndTouchedTouchObject(x, y, selectedObjectName, selectedObjectIndex)) {
             if ((selectedObjectIndex > -1) && bitRead(TouchObjects[selectedObjectIndex].flags, P123_OBJECT_FLAG_BUTTON)) {
+              // Not touched yet or too long ago
               if ((TouchObjects[selectedObjectIndex].TouchTimers == 0) ||
-
-                  // Not touched yet or too long ago
                   (TouchObjects[selectedObjectIndex].TouchTimers < (millis() - (1.5 * P123_Settings.debounceMs)))) {
                 // From now wait the debounce time
                 TouchObjects[selectedObjectIndex].TouchTimers = millis() + P123_Settings.debounceMs;
@@ -989,6 +998,7 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
                                            const int8_t       onOffState,
                                            const bool         groupSwitch,
                                            const int8_t       factor) {
+  if ((objectIndex < 0) || (objectIndex >= TouchObjects.size())) { return; } // Range check
   String eventCommand;
 
   eventCommand.reserve(48);
@@ -1020,7 +1030,7 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
     eventCommand += objectIndex + 1;                          // Adjust to displayed index (6)
     eventCommand += ',';                                      // (7)
     eventCommand += get8BitFromUL(TouchObjects[objectIndex].flags, P123_OBJECT_FLAG_BUTTONTYPE) * factor;
-# ifdef P123_USE_EXTENDED_TOUCH
+    # ifdef P123_USE_EXTENDED_TOUCH
     eventCommand += ',';                                      // (8)
     eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorOn == 0
                                         ? P123_Settings.colorOn
@@ -1089,7 +1099,9 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
       eventCommand += -1; // No group to activate
     }
   }
+
   eventQueue.addMove(std::move(eventCommand));
+
   delay(0);
 }
 
@@ -1117,7 +1129,7 @@ void P123_data_struct::loadTouchObjects(const EventStruct *event) {
 
   // Get calibration and common settings
   P123_Settings.calibrationEnabled = parseStringToInt(settingsArray[P123_CALIBRATION_START],
-                                                      P123_CALIBRATION_ENABLED,     P123_SETTINGS_SEPARATOR) == 1;
+                                                      P123_CALIBRATION_ENABLED, P123_SETTINGS_SEPARATOR) == 1;
   P123_Settings.logEnabled = parseStringToInt(settingsArray[P123_CALIBRATION_START],
                                               P123_CALIBRATION_LOG_ENABLED, P123_SETTINGS_SEPARATOR) == 1;
   int lSettings = 0;
@@ -1288,9 +1300,12 @@ void P123_data_struct::readData(int16_t& x, int16_t& y, int16_t& z, int16_t& ox,
 void P123_data_struct::setRotation(uint8_t n) {
   _rotation = n;
   # ifdef PLUGIN_123_DEBUG
-  String log = F("P123 DEBUG Rotation set: ");
-  log += n;
-  addLogMove(LOG_LEVEL_INFO, log);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("P123 DEBUG Rotation set: ");
+    log += n;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   # endif // PLUGIN_123_DEBUG
 }
 
@@ -1300,9 +1315,12 @@ void P123_data_struct::setRotation(uint8_t n) {
 void P123_data_struct::setRotationFlipped(bool flipped) {
   _flipped = flipped;
   # ifdef PLUGIN_123_DEBUG
-  String log = F("P123 DEBUG RotationFlipped set: ");
-  log += flipped;
-  addLogMove(LOG_LEVEL_INFO, log);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("P123 DEBUG RotationFlipped set: ");
+    log += flipped;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
   # endif // PLUGIN_123_DEBUG
 }
 
@@ -1311,10 +1329,10 @@ void P123_data_struct::setRotationFlipped(bool flipped) {
  */
 bool P123_data_struct::isCalibrationActive() {
   return _useCalibration
-         && (P123_Settings.top_left.x != 0
-             || P123_Settings.top_left.y != 0
-             || P123_Settings.bottom_right.x != 0
-             || P123_Settings.bottom_right.y != 0); // Enabled and any value != 0 => Active
+         && (P123_Settings.top_left.x != 0 ||
+             P123_Settings.top_left.y != 0 ||
+             P123_Settings.bottom_right.x != 0 ||
+             P123_Settings.bottom_right.y != 0); // Enabled and any value != 0 => Active
 }
 
 /**
@@ -1392,8 +1410,8 @@ bool P123_data_struct::setTouchObjectState(struct EventStruct *event, const Stri
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
-  for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
-    if ((!TouchObjects[objectNr].objectName.isEmpty())
+  for (size_t objectNr = 0; objectNr < TouchObjects.size(); objectNr++) {
+    if (!TouchObjects[objectNr].objectName.isEmpty()
         && touchObject.equalsIgnoreCase(TouchObjects[objectNr].objectName)) {
       bool currentState = bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED);
 
@@ -1407,17 +1425,20 @@ bool P123_data_struct::setTouchObjectState(struct EventStruct *event, const Stri
         }
       }
       # ifdef PLUGIN_123_DEBUG
-      String log = F("P123 setTouchObjectState: obj: ");
-      log += touchObject;
 
-      if (success) {
-        log += F(", new state: ");
-        log += (state ? F("en") : F("dis"));
-        log += F("abled.");
-      } else {
-        log += F("failed!");
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("P123 setTouchObjectState: obj: ");
+        log += touchObject;
+
+        if (success) {
+          log += F(", new state: ");
+          log += (state ? F("en") : F("dis"));
+          log += F("abled.");
+        } else {
+          log += F("failed!");
+        }
+        addLogMove(LOG_LEVEL_INFO, log);
       }
-      addLogMove(LOG_LEVEL_INFO, log);
       # endif // PLUGIN_123_DEBUG
     }
   }
@@ -1431,8 +1452,8 @@ bool P123_data_struct::setTouchButtonOnOff(struct EventStruct *event, const Stri
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
-  for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
-    if ((!TouchObjects[objectNr].objectName.isEmpty())
+  for (size_t objectNr = 0; objectNr < TouchObjects.size(); objectNr++) {
+    if (!TouchObjects[objectNr].objectName.isEmpty()
         && touchObject.equalsIgnoreCase(TouchObjects[objectNr].objectName)
         && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_ENABLED)
         && bitRead(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_BUTTON)) {
@@ -1449,11 +1470,14 @@ bool P123_data_struct::setTouchButtonOnOff(struct EventStruct *event, const Stri
         }
       }
       # ifdef PLUGIN_123_DEBUG
-      String log = F("P123 setTouchButtonOnOff: obj: ");
-      log += touchObject;
-      log += F(", (new) state: ");
-      log += (state ? F("on") : F("off"));
-      addLogMove(LOG_LEVEL_INFO, log);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("P123 setTouchButtonOnOff: obj: ");
+        log += touchObject;
+        log += F(", (new) state: ");
+        log += (state ? F("on") : F("off"));
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
       # endif // PLUGIN_123_DEBUG
     }
   }
@@ -1492,15 +1516,15 @@ void P123_data_struct::scaleRawToCalibrated(int16_t& x, int16_t& y) {
 }
 
 /**
- * Set the desired button group, muxt be between the minimum and maximum found values
+ * Set the desired button group, must be between the minimum and maximum found values
  */
 bool P123_data_struct::setButtonGroup(const EventStruct *event,
                                       int8_t             buttonGroup) {
   if ((buttonGroup >= 0) && (buttonGroup <= _maxButtonGroup)) {
     if (buttonGroup != _buttonGroup) {
-      displayButtons(event, _buttonGroup, -2);
+      displayButtonGroup(event, _buttonGroup, -2);
       _buttonGroup = buttonGroup;
-      displayButtons(event, _buttonGroup, -1);
+      displayButtonGroup(event, _buttonGroup, -1);
     }
     return true;
   }
@@ -1508,26 +1532,26 @@ bool P123_data_struct::setButtonGroup(const EventStruct *event,
 }
 
 /**
- * increment button group, if max. group > 0 then min. group = 1
+ * Increment button group, if max. group > 0 then min. group = 1
  */
 bool P123_data_struct::incrementButtonGroup(const EventStruct *event) {
   if (_buttonGroup < _maxButtonGroup) {
-    displayButtons(event, _buttonGroup, -2);
+    displayButtonGroup(event, _buttonGroup, -2);
     _buttonGroup++;
-    displayButtons(event, _buttonGroup, -1);
+    displayButtonGroup(event, _buttonGroup, -1);
     return true;
   }
   return false;
 }
 
 /**
- * decrement button group, if max. group > 0 then min. group = 1
+ * Decrement button group, if max. group > 0 then min. group = 1
  */
 bool P123_data_struct::decrementButtonGroup(const EventStruct *event) {
   if (_buttonGroup > _minButtonGroup) {
-    displayButtons(event, _buttonGroup, -2);
+    displayButtonGroup(event, _buttonGroup, -2);
     _buttonGroup--;
-    displayButtons(event, _buttonGroup, -1);
+    displayButtonGroup(event, _buttonGroup, -1);
     return true;
   }
   return false;

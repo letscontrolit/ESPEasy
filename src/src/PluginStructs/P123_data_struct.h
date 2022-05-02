@@ -221,9 +221,9 @@ struct P123_data_struct : public PluginTaskData_base
                       int8_t             buttonGroup);
   bool incrementButtonGroup(const EventStruct *event);
   bool decrementButtonGroup(const EventStruct *event);
-  void displayButtons(const EventStruct *event,
-                      int8_t             buttonGroup,
-                      int8_t             mode = 0);
+  void displayButtonGroup(const EventStruct *event,
+                          int8_t             buttonGroup,
+                          int8_t             mode = 0);
 
 private:
 
