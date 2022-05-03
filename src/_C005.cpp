@@ -236,14 +236,18 @@ bool C005_parse_command(struct EventStruct *event) {
         cmd = parseStringToEndKeepCase(cmd, 2);
         String eventName = parseStringKeepCase(cmd, 1);
         const int equal_pos = eventName.indexOf('=');
-        if (equal_pos == -1) {
+        cmd = parseStringToEndKeepCase(cmd, 2);
+        if (equal_pos == -1 && cmd.length() != 0) {
+          // Only append an = if there are eventvalues.
           eventName += '=';
         }
         // Need to reconstruct the event to get rid of calls like these:
         // myevent=,1,2
-        cmd = eventName + parseStringToEndKeepCase(cmd, 2);
-        
-        eventQueue.addMove(std::move(cmd));
+        cmd = eventName + cmd;
+
+        // Check for duplicates, as sometimes a node may have multiple subscriptions to the same topic.
+        // Then it may add several of the same events in a burst.
+        eventQueue.addMove(std::move(cmd), true);
       }
     } else {
       ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_MQTT, cmd.c_str());

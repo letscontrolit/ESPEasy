@@ -69,6 +69,7 @@ bool WiFi_AP_Candidate::operator<(const WiFi_AP_Candidate& other) const {
   if (lowPriority != other.lowPriority) {
     return !lowPriority;
   }
+  // Prefer non hidden over hidden.
   if (isHidden != other.isHidden) {
     return !isHidden;
   }
@@ -102,6 +103,7 @@ bool WiFi_AP_Candidate::usable() const {
     }
   }
   if (!isHidden && (ssid.isEmpty())) { return false; }
+  if (ssid.length() < 8) {return false; }
   return true;
 }
 

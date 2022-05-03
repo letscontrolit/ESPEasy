@@ -2,7 +2,6 @@
 
 #include "../../ESPEasy_common.h"
 
-EventQueueStruct::EventQueueStruct() {}
 
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
