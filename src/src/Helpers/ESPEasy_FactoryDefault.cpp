@@ -82,9 +82,9 @@ void ResetFactory()
   saveToRTC();
 
   // always format on factory reset, in case of corrupt FS
-  ESPEASY_FS.end();
+//  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
-  ESPEASY_FS.format();
+  FS_format();
   serialPrintln(F("RESET: formatting done..."));
 
   if (!ESPEASY_FS.begin())

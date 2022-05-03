@@ -28,12 +28,4 @@
   #endif
 #endif
 
-#if defined(ESP32)
-  #ifdef USE_LITTLEFS
-    #include "LITTLEFS.h"
-  #else
-    #include "SPIFFS.h"
-  #endif
-#endif
-
 #endif
