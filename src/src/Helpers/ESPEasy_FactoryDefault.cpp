@@ -113,7 +113,7 @@ void ResetFactory()
   InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
   #endif
 
-  InitFile(getFileName(FileType::RULES_TXT, 0), 0);
+  InitFile(getRulesFileName(0), 0);
 
   Settings.clearMisc();
 

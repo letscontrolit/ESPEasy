@@ -216,7 +216,8 @@ String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int d
 // Open for reading and writing.  
 // The file is created if it does not exist, otherwise it is truncated.
 // The stream is positioned at the beginning of the file.
-String SaveToFile_trunc(const char *fname, int index, const byte *memAddress, int datasize);
+
+String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress, int datasize);
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
 String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize, const char *mode);
