@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
+
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
   #ifdef USE_SECOND_HEAP

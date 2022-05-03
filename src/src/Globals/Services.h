@@ -57,4 +57,3 @@
 
 
 #endif // GLOBALS_SERVICES_H
-  
