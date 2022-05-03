@@ -39,7 +39,7 @@ void handle_settingsarchive() {
     for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
       const FileType::Enum ft = static_cast<FileType::Enum>(i);
       if (ft == FileType::RULES_TXT) {
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < RULESETS_MAX; ++i) {
           storeDownloadFiletypeCheckbox(FileType::RULES_TXT, i);
         }
       } else {
@@ -100,7 +100,7 @@ void handle_settingsarchive() {
       }
     }
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < RULESETS_MAX; ++i) {
       if (getDownloadFiletypeChecked(FileType::RULES_TXT, i)) {
         if (tryDownloadFileType(url, user, pass, FileType::RULES_TXT, i)) { 
           somethingDownloaded = true; 
@@ -181,7 +181,7 @@ void handle_settingsarchive() {
       }
     }
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < RULESETS_MAX; ++i) {
       addDownloadFiletypeCheckbox(FileType::RULES_TXT, i);
     }
 

@@ -575,6 +575,7 @@ String LoadSettings()
    */
 
   err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
+
   md5.begin();
   md5.add(reinterpret_cast< uint8_t *>(&SecuritySettings), sizeof(SecuritySettings) - 16);
   md5.calculate();

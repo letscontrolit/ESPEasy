@@ -851,7 +851,7 @@ This would corrupt the settings file.
 With only ``USE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
 For this the build must be made with ``USE_CUSTOM_PROVISIONING`` defined.
 
-N.B. ``USE_CUSTOM_PROVISIONING`` is added on 2021-05-16.
+N.B. ``USE_CUSTOM_PROVISIONING`` is added on 2022/05/03.
 
 
 URL with Settings
@@ -859,7 +859,8 @@ URL with Settings
 
 This holds the full URL without file name where the files must be fetched from.
 
-Since builds made after 2021-05-16, the URL may also contain system variables.
+Since builds made after 2022/05/03, the URL may also contain system variables.
+
 This allows for an URL like: ``http://192.168.10.127/%mac%``
 
 System variables will be converted into an URL encoded form, which may end up like this:
@@ -887,7 +888,7 @@ This can render both inaccessible.
 Provisioning
 ============
 
-Added: 2021-05-16
+Added: 2022/05/03
 
 When the build is made with ``USE_CUSTOM_PROVISIONING`` defined, this Settings Archive screen does allow for more settings helping deployment and remote administration of ESPEasy nodes.
 

@@ -507,5 +507,3 @@ String getExtendedValue(LabelType::Enum label) {
   }
   return "";
 }
-
-
