@@ -201,24 +201,4 @@ String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
 
 
-
-
-const __FlashStringHelper * getFileName(FileType::Enum filetype);
-String getFileName(FileType::Enum filetype,
-                   unsigned int   filenr);
-
-// filenr = 0...3 for files rules1.txt ... rules4.txt
-String getRulesFileName(unsigned int filenr);
-
-void   addDownloadFiletypeCheckbox(FileType::Enum filetype,
-                                   unsigned int   filenr = 0);
-void   storeDownloadFiletypeCheckbox(FileType::Enum filetype,
-                                     unsigned int   filenr = 0);
-bool   tryDownloadFileType(const String & url,
-                           const String & user,
-                           const String & pass,
-                           FileType::Enum filetype,
-                           unsigned int   filenr = 0);
-
-
 #endif // STRING_PROVIDER_TYPES_H
