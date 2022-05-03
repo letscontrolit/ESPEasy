@@ -103,7 +103,6 @@ bool WiFi_AP_Candidate::usable() const {
     }
   }
   if (!isHidden && (ssid.isEmpty())) { return false; }
-  if (ssid.length() < 8) {return false; }
   return true;
 }
 
