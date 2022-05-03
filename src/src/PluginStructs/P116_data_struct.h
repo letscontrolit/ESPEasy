@@ -58,8 +58,8 @@
 # else // ifdef ESP32
 
 // Was: for D1 Mini with shield connection
-  #  define P116_TFT_CS        D3 //  0   // D0
-  #  define P116_TFT_DC        D2 //  4   // D8
+  #  define P116_TFT_CS        0 // D3
+  #  define P116_TFT_DC        4 // D2
   #  define P116_TFT_RST       -1 // D4 // -1
   #  define P116_BACKLIGHT_PIN -1 // D6 // 15 // D8 -> Blocks Wemos
 # endif // ifdef ESP32

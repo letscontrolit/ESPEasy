@@ -685,7 +685,7 @@ void addNumericBox(const String& id, int value, int min, int max)
 
 #endif // ifdef ENABLE_TOOLTIPS
 
-void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize
+void addFloatNumberBox(const String& id, float value, float min, float max, unsigned int nrDecimals, float stepsize
                        #ifdef ENABLE_TOOLTIPS
                        , const String& tooltip
                        #endif // ifdef ENABLE_TOOLTIPS
