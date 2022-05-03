@@ -1,5 +1,7 @@
 #include "../DataTypes/ESPEasyFileType.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../Globals/ResetFactoryDefaultPref.h"
 
 bool matchFileType(const String& filename, FileType::Enum filetype)
@@ -47,7 +49,7 @@ String getFileName(FileType::Enum filetype, unsigned int filenr) {
 String getRulesFileName(unsigned int filenr) {
   String result;
 
-  if (filenr < 4) {
+  if (filenr < RULESETS_MAX) {
     result += F("rules");
     result += filenr + 1;
     result += F(".txt");

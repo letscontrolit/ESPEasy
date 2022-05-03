@@ -120,10 +120,6 @@ namespace std
   #if ESP_IDF_VERSION_MAJOR < 3
     #define ICACHE_RAM_ATTR IRAM_ATTR
   #endif
-  #define FILE_CONFIG       "/config.dat"
-  #define FILE_SECURITY     "/security.dat"
-  #define FILE_NOTIFICATION "/notification.dat"
-  #define FILE_RULES        "/rules1.txt"
   #include <WiFi.h>
 //  #include  "esp32_ping.h"
 
