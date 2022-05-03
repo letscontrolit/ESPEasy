@@ -159,7 +159,7 @@ struct ControllerSettingsStruct
   String    getCertificateFilename(TLS_types tls_type) const;
   
 
-  boolean      UseDNS;
+  bool         UseDNS;
   uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];
