@@ -301,18 +301,14 @@ void addFormMACBox(const String& label, const String& id, const MAC_address mac)
 {
   addRowLabel_tr_id(label, id);
 
-  String html;
-  html.reserve(80 + id.length());
-
-  html += F("<input class='wide' type='text' name='");
-  html += id;
-  html += F("' value='");
+  addHtml(F("<input class='wide' type='text' name='"));
+  addHtml(id);
+  addHtml(F("' value='"));
 
   if (!mac.all_zero()) {
-    html += mac.toString();
+    addHtml(mac.toString());
   }
-  html += "'>";
-  addHtml(html);
+  addHtml(F("'>"));
 }
 
 // ********************************************************************************
