@@ -1,5 +1,5 @@
-#ifndef DATASTRUCTS_ESPEASY_LIMITS_H
-#define DATASTRUCTS_ESPEASY_LIMITS_H
+#ifndef CUSTOMBUILD_ESPEASY_LIMITS_H
+#define CUSTOMBUILD_ESPEASY_LIMITS_H
 
 #include "../../ESPEasy_common.h"
 
@@ -164,4 +164,4 @@
 #define DOMOTICZ_MAX_IDX            999999999 // Looks like it is an unsigned int, so could be up to 4 bln.
 
 
-#endif // DATASTRUCTS_ESPEASY_LIMITS_H
+#endif // CUSTOMBUILD_ESPEASY_LIMITS_H

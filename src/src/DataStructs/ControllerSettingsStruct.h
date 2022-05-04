@@ -147,7 +147,7 @@ struct ControllerSettingsStruct
   void      useLocalSystemTime(bool value);
   
 
-  boolean      UseDNS;
+  bool         UseDNS;
   uint8_t      IP[4];
   unsigned int Port;
   char         HostName[65];

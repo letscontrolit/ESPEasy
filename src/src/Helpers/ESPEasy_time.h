@@ -7,44 +7,55 @@
 
 #include <time.h>
 
+
 class ESPEasy_time {
 public:
 
-ESPEasy_time();
+  ESPEasy_time();
 
-struct tm addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const;
-static void breakTime(unsigned long timeInput, struct tm& tm);
+  struct tm   addSeconds(const struct tm& ts,
+                         int              seconds,
+                         bool             toLocalTime) const;
+  static void breakTime(unsigned long timeInput,
+                        struct tm   & tm);
 
+  // Restore the last known system time
+  // This may be useful to get some idea of what time it is.
+  // This way the unit can do things based on local time even when NTP servers may not respond.
+  // Do not use this when booting from deep sleep.
+  // Only call this once during boot.
+  void restoreFromRTC();
 
-// Restore the last known system time
-// This may be useful to get some idea of what time it is.
-// This way the unit can do things based on local time even when NTP servers may not respond.
-// Do not use this when booting from deep sleep.
-// Only call this once during boot.
-void restoreFromRTC();
+  // Restore the last known system time
+  // This may be useful to get some idea of what time it is.
+  // This way the unit can do things based on local time even when NTP servers may not respond.
+  // Do not use this when booting from deep sleep.
+  // Only call this once during boot.
+  void restoreLastKnownUnixTime(unsigned long lastSysTime, uint8_t deepSleepState);
 
-void setExternalTimeSource(double time, timeSource_t source);
+  void          setExternalTimeSource(double       time,
+                                      timeSource_t source);
 
-uint32_t getUnixTime() const;
+  uint32_t      getUnixTime() const;
 
-void initTime();
+  void          initTime();
 
-// Update and get the current systime
-unsigned long now();
+  // Update and get the current systime
+  unsigned long now();
 
-// Update time and return whether the minute has changed since last check.
-bool reportNewMinute();
+  // Update time and return whether the minute has changed since last check.
+  bool          reportNewMinute();
 
-bool systemTimePresent() const;
+  bool          systemTimePresent() const;
 
-bool getNtpTime(double& unixTime_d);
+  bool          getNtpTime(double& unixTime_d);
 
-
-/********************************************************************************************\
+   /********************************************************************************************\
      Date/Time string formatters
    \*********************************************************************************************/
 
 public:
+
 
 // Format the current Date separated by the given delimiter
 // Default date format example: 20161231 (YYYYMMDD)
