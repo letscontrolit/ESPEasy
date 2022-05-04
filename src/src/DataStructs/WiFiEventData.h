@@ -55,6 +55,8 @@ struct WiFiEventData_t {
 
   void setAuthMode(uint8_t newMode);
 
+  String ESPeasyWifiStatusToString() const;
+
 
   // WiFi related data
   bool          wifiSetup        = false;
@@ -89,6 +91,7 @@ struct WiFiEventData_t {
   bool                    intent_to_reboot             = false;
   MAC_address             lastMacConnectedAPmode;
   MAC_address             lastMacDisconnectedAPmode;
+
 
   // processDisconnect() may clear all WiFi settings, resulting in clearing processedDisconnect
   // This can cause recursion, so a semaphore is needed here.

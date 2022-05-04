@@ -23,6 +23,7 @@
 
 #include "../Commands/Networks.h"
 #include "../Commands/Notifications.h"
+#include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
 #include "../Commands/SDCARD.h"
@@ -299,6 +300,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
       COMMAND_CASE_R(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
       COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
+      COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
       COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
     #endif // HAS_ETHERNET
       COMMAND_CASE_R("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
@@ -383,6 +385,13 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
+#ifdef USE_CUSTOM_PROVISIONING
+      COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
+      COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
+      COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
+      COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
+      COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
+#endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #ifdef USES_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h

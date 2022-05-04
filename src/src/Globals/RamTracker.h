@@ -59,7 +59,7 @@ void checkRAM(const String& flashString,
 
 
 void checkRAM(const __FlashStringHelper *  descr);
-void checkRAM(String&& descr);
+void checkRAM(const String& descr);
 #endif
 
 

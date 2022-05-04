@@ -202,18 +202,28 @@ Select the used PHY controller type:
 
 * LAN8710  (LAN8720 is also supported, but none of the newer features are supported)
 * TLK110  
+* RTL8201 (since ESP32 IDF 4.4)
+* DP83848 (since ESP32 IDF 4.4)
+* DM9051  (since ESP32 IDF 4.4)
+
+.. note:: The LAN8710 and LAN8720 are also available with an "A" suffix.
+          These are the same chips, only produced after the brand SMSC was taken over by Microchip Technology.
 
 Ethernet PHY Address
 ^^^^^^^^^^^^^^^^^^^^
 
 The PHY address depends on the hardware and the PHY configuration. 
+On some chips, like the LAN8720, the board designer may set this address by pulling some pins either high or low at power on.
+In theory, one could use multiple PHY adapters on the same RMII bus, but this is not supported by ESPEasy.
 
 * Espressif's Ethernet board with TLK110 PHY use PHY address 31.
-* Common Waveshare LAN8720 PHY breakout use PHY address 1.
+* Common Waveshare LAN8720 PHY breakout board (and clones) use PHY address 1.
 * Olimex ESP32 EVB REV B IoT LAN8710 PHY Board with CAN use PHY address 0.
 * Other LAN8720 breakouts often use PHY address 0.
 
 If the PHY address is incorrect then the EMAC will initialise but all attempts to read/write configuration registers on the PHY will fail.
+
+N.B. There is support for an auto detect of this PHY address, by setting it to -1, but at least on the LAN8720 this does not seem to work.
 
 GPIO pins
 ^^^^^^^^^
@@ -238,6 +248,8 @@ Another option is to let the ESP provide the clock to the PHY.
 * 50MHz APLL Output on GPIO16
 * 50MHz APLL Inverted Output on GPIO17
 
+.. note:: When using an external crystal oscillator, this is connected to GPIO-0. Make sure this crystal is not active, or connected to GPIO-0, during boot or else the ESP32 may boot into flash mode.
+
 Power pin
 """""""""
 
@@ -249,6 +261,12 @@ Most boards use a specific GPIO pin to control the power to the PHY.
 The Olimex ESP32-EVB does have a specific delay circuit to only allow power to the PHY after boot and therefore does not need to control the PHY power.
 
 For other boards, the default is often GPIO-17, but this may change per board.
+
+(Changed: 2022-01-20)
+
+If the power pin is defined, ESPEasy will toggle the ethernet module off and on at boot.
+Some Ethernet modules, like the LAN8720, may sometimes get stuck and need to be reset to get it to work again.
+
 
 RMII PHY Wiring
 """""""""""""""
