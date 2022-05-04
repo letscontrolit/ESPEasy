@@ -130,6 +130,11 @@ class SettingsStruct_tmpl
   bool EnableRulesEventReorder() const;
   void EnableRulesEventReorder(bool value);
 
+  // Allow OTA to use 'unlimited' bin sized files, possibly overwriting the file-system, and trashing files
+  // Can be used if the configuration is later retrieved/restored manually
+  bool AllowOTAUnlimited() const;
+  void AllowOTAUnlimited(bool value);
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -311,7 +316,7 @@ class SettingsStruct_tmpl
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 //  uint8_t       md5[16];
-  uint8_t         ETH_Phy_Addr;
+  int8_t          ETH_Phy_Addr;
   int8_t          ETH_Pin_mdc;
   int8_t          ETH_Pin_mdio;
   int8_t          ETH_Pin_power;

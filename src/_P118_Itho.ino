@@ -65,6 +65,8 @@
 // See https://gathering.tweakers.net/forum/list_messages/1690945 for more information
 // code/idea was inspired by first release of code from 'Thinkpad'
 
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P118
 
 #include "_Plugin_Helper.h"
