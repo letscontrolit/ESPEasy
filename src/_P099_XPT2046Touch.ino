@@ -406,15 +406,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr == P099_data) {
-        return success;
-      }
-      clearPluginTaskData(event->TaskIndex);
-      P099_data = nullptr;
       success = true;
-
       break;
     }
 

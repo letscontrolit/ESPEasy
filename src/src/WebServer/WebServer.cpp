@@ -302,10 +302,10 @@ void WebServerInit()
     # ifndef NO_HTTP_UPDATER
     uint32_t maxSketchSize;
     bool     use2step;
-  //allow OTA to smaller version of ESPEasy/other firmware
-    //if (OTA_possible(maxSketchSize, use2step)) {
+    // allow OTA to smaller version of ESPEasy/other firmware
+    if (Settings.AllowOTAUnlimited() || OTA_possible(maxSketchSize, use2step)) {
       httpUpdater.setup(&web_server);
-    //}
+    }
     # endif // ifndef NO_HTTP_UPDATER
   }
   #endif    // if defined(ESP8266)
@@ -971,19 +971,6 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 # include <esp_partition.h>
 
-int getPartionCount(uint8_t pType) {
-  esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
-  int nrPartitions                         = 0;
-
-  if (_mypartiterator) {
-    do {
-      ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
-  }
-  esp_partition_iterator_release(_mypartiterator);
-  return nrPartitions;
-}
 
 void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   int nrPartitions = getPartionCount(pType);

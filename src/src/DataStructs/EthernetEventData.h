@@ -40,6 +40,8 @@ struct EthernetEventData_t {
   void markDisconnect();
   void markConnected();
 
+  String ESPEasyEthStatusToString() const;
+
 
   // Eth related data
   bool          ethSetup        = false;
@@ -55,6 +57,8 @@ struct EthernetEventData_t {
   LongTermTimer           lastGetIPmoment;
   LongTermTimer::Duration lastConnectedDuration_us = 0ll;
 
+  IPAddress dns0_cache;
+  IPAddress dns1_cache;
 
   // Semaphore like bools for processing data gathered from Eth events.
   bool processedConnect          = true;

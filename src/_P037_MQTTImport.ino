@@ -11,6 +11,8 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-04-09, tonhuisman: Add features Deduplicate Events, and Max event-queue size
+ * 2022-04-09, tonhuisman: Bugfix sending (extra) events only when enabled
  * 2021-10-23, tonhuisman: Fix stability issues when parsing JSON payloads
  * 2021-10-18, tonhuisman: Add Global topic-prefix to accomodate long topics (with a generic prefix)
  *                         (See forum request: https://www.letscontrolit.com/forum/viewtopic.php?f=6&t=8800)
@@ -33,10 +35,19 @@
 # define PLUGIN_VALUENAME4_037 "Value4"
 
 
-# define P037_PARSE_JSON      PCONFIG(1) // Parse/process json messages
-# define P037_APPLY_MAPPINGS  PCONFIG(2) // Apply mapping strings to numbers
-# define P037_APPLY_FILTERS   PCONFIG(3) // Apply filtering on data values
-# define P037_SEND_EVENTS     PCONFIG(4) // Send event for each received topic
+# define P037_PARSE_JSON          PCONFIG(1) // Parse/process json messages
+# define P037_APPLY_MAPPINGS      PCONFIG(2) // Apply mapping strings to numbers
+# define P037_APPLY_FILTERS       PCONFIG(3) // Apply filtering on data values
+# define P037_SEND_EVENTS         PCONFIG(4) // Send event for each received topic
+# define P037_DEDUPLICATE_EVENTS  PCONFIG(5) // Deduplicate events while still in the queue
+# define P037_QUEUEDEPTH_EVENTS   PCONFIG(6) // Max. eventqueue-depth to avoid overflow, extra events will be discarded
+# define P037_REPLACE_BY_COMMA    PCONFIG(7) // Character in events to replace by a comma
+
+# define P037_MAX_QUEUEDEPTH      150
+
+
+bool MQTT_unsubscribe_037(struct EventStruct *event);
+bool MQTTSubscribe_037(struct EventStruct *event);
 
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
 String P037_getMQTTLastTopicPart(const String& topic) {
@@ -52,6 +63,37 @@ String P037_getMQTTLastTopicPart(const String& topic) {
 }
 
 # endif // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
+
+bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
+  if (newEvent.isEmpty()) { return false; }
+  bool result = true;
+
+  if ((P037_QUEUEDEPTH_EVENTS == 0) ||
+      (eventQueue.size() <= static_cast<std::size_t>(P037_QUEUEDEPTH_EVENTS))) {
+    # if P037_REPLACE_BY_COMMA_SUPPORT
+
+    if (P037_REPLACE_BY_COMMA != 0x0) {
+      const String character = String(static_cast<char>(P037_REPLACE_BY_COMMA));
+      newEvent.replace(character, F(","));
+    }
+    # endif // if P037_REPLACE_BY_COMMA_SUPPORT
+    eventQueue.add(newEvent, P037_DEDUPLICATE_EVENTS);
+  } else {
+    result = false;
+  }
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("MQTT: Event added: ");
+
+    if (result) {
+      log +=  F("yes");
+    } else {
+      log += F("NO!");
+    }
+    addLog(LOG_LEVEL_DEBUG, log);
+  }
+  return result;
+}
 
 boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -120,6 +162,37 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       #  endif // if P037_JSON_SUPPORT
       # endif  // if !defined(LIMIT_BUILD_SIZE)
 
+      {
+        addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS == 1);
+        # if !defined(LIMIT_BUILD_SIZE)
+        addFormNote(F("When enabled will not (re-)generate events that are already in the queue."));
+        # endif  // if !defined(LIMIT_BUILD_SIZE)
+      }
+
+      {
+        # if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        String toolTip = F("0..");
+        toolTip += P037_MAX_QUEUEDEPTH;
+        toolTip += F(" entries");
+        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
+        # else // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
+        # endif // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        addUnit(F("0 = no check"));
+        # if !defined(LIMIT_BUILD_SIZE)
+        addFormNote(F("New events will be discarded if the event queue has more entries queued."));
+        # endif  // if !defined(LIMIT_BUILD_SIZE)
+      }
+      # if P037_REPLACE_BY_COMMA_SUPPORT
+      {
+        String character = F(" ");
+        character[0] = (P037_REPLACE_BY_COMMA == 0 ? 0x20 : static_cast<uint8_t>(P037_REPLACE_BY_COMMA));
+        addRowLabel(F("To replace by comma in event"));
+        addTextBox(F("p037_replace_char"), character, 1, false, false, F("[!@$%^ &*;:.|/\\]"), F("widenumber"));
+        addUnit(F("Single character only, limited to: <b>! @ $ % ^ & * ; : . | / \\</b> is replaced by: <b>,</b> "));
+      }
+      # endif // if P037_REPLACE_BY_COMMA_SUPPORT
+
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
       if (nullptr == P037_data) {
@@ -157,7 +230,17 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       # if P037_FILTER_SUPPORT
       P037_APPLY_FILTERS = getFormItemInt(F("p037_apply_filters"));
       # endif // if P037_FILTER_SUPPORT
-      P037_SEND_EVENTS = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
+      P037_SEND_EVENTS        = isFormItemChecked(F("p037_send_events")) ? 1 : 0;
+      P037_DEDUPLICATE_EVENTS = isFormItemChecked(F("p037_deduplicate")) ? 1 : 0;
+      P037_QUEUEDEPTH_EVENTS  = getFormItemInt(F("p037_queuedepth"));
+      # if P037_REPLACE_BY_COMMA_SUPPORT
+      String character = web_server.arg(F("p037_replace_char"));
+      P037_REPLACE_BY_COMMA = character[0];
+
+      if (P037_REPLACE_BY_COMMA == 0x20) { // Space -> 0
+        P037_REPLACE_BY_COMMA = 0x0;
+      }
+      # endif // if P037_REPLACE_BY_COMMA_SUPPORT
 
       P037_data_struct *P037_data = new (std::nothrow) P037_data_struct(event->TaskIndex);
 
@@ -182,7 +265,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      success = false;
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P037_data_struct(event->TaskIndex));
 
       // When we edit the subscription data from the webserver, the plugin is called again with init.
@@ -197,17 +279,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
-      P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr == P037_data) {
-        return success;
-      }
-
-      delete P037_data;
-
+      MQTT_unsubscribe_037(event);
       break;
     }
-
 
     case PLUGIN_READ:
     {
@@ -224,7 +298,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       if (P037_MQTTImport_connected != currentConnectedState) {
         P037_MQTTImport_connected = currentConnectedState;
 
-        if (Settings.UseRules) {
+        if (Settings.UseRules) { // No eventQueue guarding for this event
           eventQueue.add(currentConnectedState ? F("MQTTimport#Connected") : F("MQTTimport#Disconnected"));
         }
       }
@@ -237,12 +311,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_MQTT_IMPORT:
     {
-      LoadTaskSettings(event->TaskIndex);
-
       // Resolved tonhuisman: TD-er: It may be useful to generate events with string values.
       // Get the payload and check it out
       String Payload = event->String2;
-      String unparsedPayload; // To keep an unprocessed copy
 
       # ifdef PLUGIN_037_DEBUG
 
@@ -261,6 +332,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
+      LoadTaskSettings(event->TaskIndex);
+      String unparsedPayload; // To keep an unprocessed copy
+
       bool checkJson = false;
 
       String subscriptionTopicParsed;
@@ -273,14 +347,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t x = 0; x < VARS_PER_TASK; x++)
       {
-        if (P037_data->deviceTemplate[x].length() == 0) {
+        if (P037_data->mqttTopics[x].length() == 0) {
           continue; // skip blank subscriptions
         }
 
         // Now check if the incoming topic matches one of our subscriptions
-        subscriptionTopicParsed += P037_data->StoredSettings.globalTopicPrefix;
-        subscriptionTopicParsed.trim();
-        subscriptionTopicParsed += P037_data->deviceTemplate[x];
+        subscriptionTopicParsed = P037_data->getFullMQTTTopic(x);
         parseSystemVariables(subscriptionTopicParsed, false);
 
         if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
@@ -329,7 +401,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       #  ifdef P037_FILTER_PER_TOPIC
 
       for (uint8_t x = 0; x < VARS_PER_TASK && matchedTopic; x++) {
-        if (P037_data->deviceTemplate[x].length() == 0) {
+        if (P037_data->mqttTopics[x].length() == 0) {
           continue; // skip blank subscriptions
         }
       #  else // ifdef P037_FILTER_PER_TOPIC
@@ -388,15 +460,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       // Get the Topic and see if it matches any of the subscriptions
       for (uint8_t x = 0; x < VARS_PER_TASK && processData; x++)
       {
-        if (P037_data->deviceTemplate[x].length() == 0) {
+        if (P037_data->mqttTopics[x].length() == 0) {
           continue; // skip blank subscriptions
         }
 
         // Now check if the incoming topic matches one of our subscriptions
-        subscriptionTopicParsed.reserve(80);
-        subscriptionTopicParsed = P037_data->StoredSettings.globalTopicPrefix;
-        subscriptionTopicParsed.trim();
-        subscriptionTopicParsed += P037_data->deviceTemplate[x];
+        subscriptionTopicParsed = P037_data->getFullMQTTTopic(x);
         parseSystemVariables(subscriptionTopicParsed, false);
 
         if (MQTTCheckSubscription_037(event->String1, subscriptionTopicParsed)) {
@@ -433,8 +502,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
               # if P037_JSON_SUPPORT
 
               if (checkJson && (P037_data->iter != P037_data->doc.end())) {
-                String jsonIndex     = parseString(P037_data->StoredSettings.jsonAttributes[x], 2, ';');
-                String jsonAttribute = parseStringKeepCase(P037_data->StoredSettings.jsonAttributes[x], 1, ';');
+                String jsonIndex     = parseString(P037_data->jsonAttributes[x], 2, ';');
+                String jsonAttribute = parseStringKeepCase(P037_data->jsonAttributes[x], 1, ';');
                 jsonAttribute.trim();
 
                 if (!jsonAttribute.isEmpty()) {
@@ -530,8 +599,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   RuleEvent += '#';
                   RuleEvent += event->String1;
                   RuleEvent += '=';
-                  RuleEvent += unparsedPayload;
-                  eventQueue.addMove(std::move(RuleEvent));
+                  RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload);
+                  P037_addEventToQueue(event, RuleEvent);
                 }
 
                 // Log the event
@@ -555,7 +624,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
                 // Generate event for rules processing - proposed by TridentTD
 
-                if (Settings.UseRules) {
+                if (Settings.UseRules && P037_SEND_EVENTS) {
                   if (checkJson) {
                     // For JSON payloads generate <Topic>#<Attribute>=<Payload> event
                     String RuleEvent;
@@ -572,13 +641,13 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     if (numericPayload && !hasSemicolon) {
                       RuleEvent += doublePayload;
                     } else if (numericPayload && hasSemicolon) { // semicolon separated list, pass unparsed
-                      RuleEvent += Payload;
+                      RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload);
                       RuleEvent += ',';
-                      RuleEvent += unparsedPayload;
+                      RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload);
                     } else {
-                      RuleEvent += Payload; // Pass mapped result
+                      RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload); // Pass mapped result
                     }
-                    eventQueue.addMove(std::move(RuleEvent));
+                    P037_addEventToQueue(event, RuleEvent);
                   }
 
                   // (Always) Generate <Taskname>#<Valuename>=<Payload> event
@@ -592,9 +661,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   if (numericPayload) {
                     RuleEvent += doublePayload;
                   } else {
-                    RuleEvent += Payload;
+                    RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload);
                   }
-                  eventQueue.addMove(std::move(RuleEvent));
+                  P037_addEventToQueue(event, RuleEvent);
                 }
                 # if P037_JSON_SUPPORT
 
@@ -623,6 +692,68 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+bool MQTT_unsubscribe_037(struct EventStruct *event) 
+{
+  P037_data_struct *P037_data = static_cast<P037_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+  if (nullptr == P037_data) {
+    return false;
+  }
+
+  String topic;
+
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
+  {
+    String tmp = P037_data->getFullMQTTTopic(x);
+    if (topic.equalsIgnoreCase(tmp)) {
+      // Don't unsubscribe from the same topic twice
+      continue;
+    }
+    topic = std::move(tmp);
+
+    // We must check whether other MQTT import tasks are enabled which may be subscribed to the same topic.
+    // Only if we're the only one (left) being subscribed to that topic, unsubscribe
+    bool canUnsubscribe = true;
+    for (taskIndex_t task = 0; task < INVALID_TASK_INDEX && canUnsubscribe; ++task) {
+      if (task != event->TaskIndex) {
+        if (Settings.TaskDeviceEnabled[task] && 
+            Settings.TaskDeviceNumber[task] == PLUGIN_ID_037) 
+        {
+          P037_data_struct *P037_data_other = static_cast<P037_data_struct *>(getPluginTaskData(task));
+          if (nullptr != P037_data_other) {
+            if (P037_data_other->shouldSubscribeToMQTTtopic(topic)) {
+              canUnsubscribe = false;
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("IMPT : Cannot unsubscribe topic: ");
+                log += topic;
+                log += F(" used by: [");
+                log += getTaskDeviceName(event->TaskIndex);
+                log += '#';
+                log += ExtraTaskSettings.TaskDeviceValueNames[x];
+                log += ']';
+                log += topic;
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+            }
+          }
+        }
+      }
+    }
+    if (canUnsubscribe && topic.length() > 0 && MQTTclient.unsubscribe(topic.c_str())) {
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("IMPT : [");
+        log += getTaskDeviceName(event->TaskIndex);
+        log += '#';
+        log += ExtraTaskSettings.TaskDeviceValueNames[x];
+        log += F("] : Unsubscribe topic: ");
+        log += topic;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+    }
+  }
+  return true;
+}
+
 bool MQTTSubscribe_037(struct EventStruct *event)
 {
   // We must subscribe to the topics.
@@ -632,25 +763,16 @@ bool MQTTSubscribe_037(struct EventStruct *event)
     return false;
   }
 
-  // char deviceTemplate[VARS_PER_TASK][41];		// variable for saving the subscription topics
-  LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&P037_data->StoredSettings), sizeof(P037_data->StoredSettings));
-
-  String topicPrefix = P037_data->StoredSettings.globalTopicPrefix;
-
-  topicPrefix.trim();
+  // FIXME TD-er: Should not be needed to load, as it is loaded when constructing it.
+  P037_data->loadSettings();
 
   // Now loop over all import variables and subscribe to those that are not blank
   for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
-    String subscribeTo = P037_data->StoredSettings.deviceTemplate[x];
-    subscribeTo.trim();
-
+    String subscribeTo = P037_data->getFullMQTTTopic(x);
+    
     if (!subscribeTo.isEmpty())
     {
-      if (!topicPrefix.isEmpty()) {
-        subscribeTo.reserve(topicPrefix.length() + subscribeTo.length());
-        subscribeTo = topicPrefix + subscribeTo;
-      }
       parseSystemVariables(subscribeTo, false);
 
       if (MQTTclient.subscribe(subscribeTo.c_str())) {

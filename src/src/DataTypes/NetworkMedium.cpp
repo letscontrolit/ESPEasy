@@ -1,4 +1,4 @@
-#include "NetworkMedium.h"
+#include "../DataTypes/NetworkMedium.h"
 
 bool isValid(NetworkMedium_t medium) {
   switch (medium) {
