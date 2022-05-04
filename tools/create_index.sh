@@ -65,47 +65,47 @@ echo "<!DOCTYPE html>
       </p>
       <select>
         <optgroup label=\"ESP8285\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i esp8285|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i esp8285|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP8266-1M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _1M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _1M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP8266-2M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _2M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _2M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP8266-4M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _4M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _4M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP8266-16M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _16M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -iv esp32|grep -iv esp8285|grep _16M|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP32-4M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _4M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _4M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP32-16M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _16M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _16M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP32-4M ETH\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _4M|grep ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _4M|grep ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP32-16M ETH\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _16M|grep ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i esp32|grep -iv esp32s2|grep _16M|grep ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"ESP32-S2-4M\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i esp32s2|grep _4M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i esp32s2|grep _4M|grep -v ETH|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 echo "  <optgroup label=\"Hardware Specific\">"
-find . |grep ${BUILD}|grep manifest.json|grep -i hard_|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/-factory</</g'|sed 's/\ bin\//\ /g'
+find . |grep ${BUILD}|grep manifest.json|grep -i hard_|sort -n|grep -v dummy|cut -d '/' -f2-|xargs -n1 -I {} echo "<option value=\"{}\" > {}</option>" |sed 's/\ static\// /g'|sed 's/.manifest.json</</g'|sed 's/.factory</</g'|sed 's/\ bin\//\ /g'
 
 echo "        </optgroup>"
 

@@ -1341,7 +1341,7 @@ void max7219_ShowTime(struct EventStruct *event,
 
   const uint8_t idx_list[] = { 7, 6, 4, 3, 1, 0 }; // Digits in reversed order, as the loop is backward
 
-  for (uint8_t i = 5; i >= 0; i--) {
+  for (int8_t i = 5; i >= 0; i--) {
     max7219_SetDigit(event, din_pin, clk_pin, cs_pin, idx_list[i], P073_data->showbuffer[i], false);
   }
 
