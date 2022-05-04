@@ -7,6 +7,9 @@
 
 #include <Arduino.h>
 
+# ifdef LIMIT_BUILD_SIZE
+#  define P092_LIMIT_BUILD_SIZE
+# endif // ifdef LIMIT_BUILD_SIZE
 
 /*********************************************************************************************\
    DLBus subs to get values from the receiving bitstream
@@ -82,7 +85,9 @@ private:
   void        Trim(int start_bit);
   boolean     CheckDevice(void);
   static DLBus *__instance;
+# ifndef P092_LIMIT_BUILD_SIZE
   void        AddToInfoLog(const String& string);
+#endif // ifndef P092_LIMIT_BUILD_SIZE
   void        AddToErrorLog(const String& string);
 };
 #endif // ifndef DLBus_H

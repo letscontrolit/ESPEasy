@@ -22,7 +22,10 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
-    @uwekaditz 2020-12-028 documentation for UVR61-3 (v8.3 or higher)
+    @uwekaditz 2022-05-04
+    CHG: Logging reduced for LIMIT_BUILD_SIZE
+
+    @uwekaditz 2020-12-28 documentation for UVR61-3 (v8.3 or higher)
 
     @uwekaditz 2020-10-28 P092_data->init() is always done if P092_init == false, not depending on P092_data == nullptr
     CHG: changes variable name DeviceIndex to P092DeviceIndex
@@ -305,7 +308,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           // interrupt was already attached to P092_DLB_Pin
           P092_data->DLbus_Data->IsISRset = false; // to ensure that a new interrupt is attached in P092_data->init()
           detachInterrupt(digitalPinToInterrupt(P092_data->DLbus_Data->ISR_DLB_Pin));
+# ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("P092_save: detachInterrupt"));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
         }
       }
 
@@ -388,18 +393,24 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+# ifndef P092_LIMIT_BUILD_SIZE
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("PLUGIN_092_INIT Task:");
         log += event->TaskIndex;
         addLogMove(LOG_LEVEL_INFO, log);
       }
+#endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (P092_init) {
+# ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("INIT -> Already done!"));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
       }
       else {
         if (P092_data == nullptr) {
+# ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
 
           P092_data = new (std::nothrow) P092_data_struct();
           initPluginTaskData(event->TaskIndex, P092_data);
@@ -410,12 +421,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           }
         }
         else {
+# ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
         }
         P092_data_struct *P092_data =
           static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
+# ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
 
         if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), eP092pinmode PCONFIG(2))) {
           addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
@@ -448,7 +463,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       if (!P092_data->DLbus_Data->IsISRset) {
         // on a CHANGE on the data pin P092_Pin_changed is called
         P092_data->DLbus_Data->attachDLBusInterrupt();
-        addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
+# ifndef P092_LIMIT_BUILD_SIZE
+       addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
       }
 
       if (P092_data->DLbus_Data->ISR_Receiving) {
@@ -471,11 +488,13 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (success) {
           P092_data->P092_LastReceived = millis();
+# ifndef P092_LIMIT_BUILD_SIZE
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("Received data OK TI:");
             log += event->TaskIndex;
             addLogMove(LOG_LEVEL_INFO, log);
           }
+#endif // ifndef P092_LIMIT_BUILD_SIZE
         }
         P092_data->P092_ReceivedOK = success;
       }
@@ -494,11 +513,13 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+# ifndef P092_LIMIT_BUILD_SIZE
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("PLUGIN_092_READ Task:");
         log += event->TaskIndex;
         addLogMove(LOG_LEVEL_INFO, log);
       }
+#endif // ifndef P092_LIMIT_BUILD_SIZE
 
       if (!NetworkConnected()) {
         // too busy for DLbus while wifi connect is running
@@ -542,7 +563,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       success = P092_data->P092_ReceivedOK;
 
       if (P092_data->P092_ReceivedOK == false) {
+# ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("P092_read: Still receiving DL-Bus bits!"));
+#endif // ifndef P092_LIMIT_BUILD_SIZE
         return true;
       }
       else {
