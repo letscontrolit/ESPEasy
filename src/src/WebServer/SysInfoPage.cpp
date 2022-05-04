@@ -189,7 +189,6 @@ void handle_sysinfo_json() {
   json_number(F("ide_size"),  String(ESP.getFlashChipSize() / 1024));
 
   // Please check what is supported for the ESP32
-  # if defined(ESP8266)
   json_number(F("flash_speed"), String(ESP.getFlashChipSpeed() / 1000000));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
@@ -202,7 +201,6 @@ void handle_sysinfo_json() {
     default:
       json_prop(F("mode"), getUnknownString()); break;
   }
-  # endif // if defined(ESP8266)
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
@@ -374,15 +372,15 @@ void handle_sysinfo_memory() {
 # endif // ifndef BUILD_NO_RAM_TRACKER
   }
 
-# if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
+# if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 
-  if (ESP.getPsramSize() > 0) {
-    addRowLabelValue(LabelType::PSRAM_SIZE);
+  addRowLabelValue(LabelType::PSRAM_SIZE);
+  if (UsePSRAM()) {
     addRowLabelValue(LabelType::PSRAM_FREE);
     addRowLabelValue(LabelType::PSRAM_MIN_FREE);
     addRowLabelValue(LabelType::PSRAM_MAX_FREE_BLOCK);
-  }
-# endif // if defined(ESP32) && defined(ESP32_ENABLE_PSRAM)
+  } 
+# endif // if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 }
 
 # ifdef HAS_ETHERNET
@@ -474,10 +472,12 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::PERIODICAL_GRAT_ARP);
 # endif // ifdef SUPPORT_ARP
   addRowLabelValue(LabelType::CONNECTION_FAIL_THRESH);
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
   addRowLabelValue(LabelType::WIFI_TX_MAX_PWR);
   addRowLabelValue(LabelType::WIFI_CUR_TX_PWR);
   addRowLabelValue(LabelType::WIFI_SENS_MARGIN);
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
+#endif
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
@@ -607,6 +607,10 @@ void handle_sysinfo_Storage() {
   addRowLabel(LabelType::FLASH_IDE_SIZE);
   addHtmlInt(ideSize / 1024);
   addHtml(F(" kB"));
+
+  addRowLabel(LabelType::FLASH_CHIP_SPEED);
+  addHtmlInt(getFlashChipSpeed() / 1000000);
+  addHtml(F(" MHz"));
 
   // Please check what is supported for the ESP32
   # if defined(ESP8266)
