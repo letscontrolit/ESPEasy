@@ -145,6 +145,9 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), PCONFIG(3), 0, 65535);
         addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), PCONFIG(4), 0, 65535);
 
+        addFormCheckBox(F("Detection on all 3 axes"),F("p045_multiaxes"), PCONFIG_LONG(2) == 0);
+        addFormNote(F("When unchecked, movement detection will trigger on ANY axis"));
+
         addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
         addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
         addHtml(F("Each period, defined by the [detection window], the counter is checked against<br>"));
@@ -169,6 +172,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(4) = getFormItemInt(F("p045_threshold_z"));
       PCONFIG(5) = getFormItemInt(F("p045_threshold_counter"));
       PCONFIG(6) = getFormItemInt(F("p045_threshold_window"));
+      PCONFIG_LONG(2) = isFormItemChecked(F("p045_multiaxes")) ? 0 : 1; // Inverted setting, default is backward compatible, 3 axis
 
       if (PCONFIG(6) < PCONFIG(5)) {
         PCONFIG(6) = PCONFIG(5);
@@ -230,15 +234,21 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           case 0:
           {
             // Check if all (enabled, so !=0) thresholds are exceeded, if one fails then thresexceed (thesholds exceeded) is reset to false;
-            boolean thresexceed = true;
-            uint8_t    count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
+            bool    thresexceed = true;
+            uint8_t count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
+            uint8_t threscount  = 0; // Counter to check how many tresholds have been exceeded
 
             for (uint8_t i = 0; i < 3; i++)
             {
               // for each axis:
               if (PCONFIG(i + 2) != 0) { // not disabled, check threshold
-                if (P045_data->_axis[i][2] < PCONFIG(i + 2)) { thresexceed = false; }
+                if (P045_data->_axis[i][2] >= PCONFIG(i + 2)) { threscount++; } // Logic inverted
               } else { count++; }        // If disabled count + 1
+            }
+            if (PCONFIG_LONG(2) == 0) { // All (enabled) axes triggered
+              thresexceed = ((threscount > 0) && (count + threscount == 3));
+            } else {
+              thresexceed = threscount > 0; // At least 1 axis triggered
             }
 
             if (count == 3) { thresexceed = false; } // If we counted to three, all three axis are disabled.
