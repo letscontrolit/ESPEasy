@@ -365,11 +365,11 @@ bool IthoCC1101::parseMessageCommand() {
 
   if (isLeaveCommand) { inIthoPacket.command = IthoLeave; }
 
-  if (isOrconStandByCommand) { inIthoPacket.command = IthoStandby; }
-  if (isOrconLowCommand) { inIthoPacket.command = IthoLow; }
-  if (isOrconMediumCommand) { inIthoPacket.command = IthoMedium; }
-  if (isOrconFullCommand) { inIthoPacket.command = IthoHigh; }
-  if (isOrconAutoCommand) { inIthoPacket.command = IthoStandby; }
+  if (isOrconStandByCommand) { inIthoPacket.command = OrconStandBy; }
+  if (isOrconLowCommand) { inIthoPacket.command = OrconLow; }
+  if (isOrconMediumCommand) { inIthoPacket.command = OrconMedium; }
+  if (isOrconFullCommand) { inIthoPacket.command = OrconHigh; }
+  if (isOrconAutoCommand) { inIthoPacket.command = OrconStandBy; }
   if (isOrconTimer0Command) { inIthoPacket.command = OrconTimer0; }
   if (isOrconTimer1Command) { inIthoPacket.command = OrconTimer1; }
   if (isOrconTimer2Command) { inIthoPacket.command = OrconTimer2; }

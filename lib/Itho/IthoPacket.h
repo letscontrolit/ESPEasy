@@ -6,12 +6,12 @@
 #define ITHOPACKET_H_
 
 enum IthoCommand
-{    
+{
   IthoUnknown = 0,
-    
+
   IthoJoin = 1,
   IthoLeave = 2,
-        
+
   IthoStandby = 3,
   IthoLow = 4,
   IthoMedium = 5,
@@ -28,11 +28,14 @@ enum IthoCommand
   DucoMedium = 13,
   DucoHigh = 14,
 
-  // OrconAuto = 18,
-  OrconTimer0 = 19,
-  OrconTimer1 = 20,
-  OrconTimer2 = 21,
-  OrconTimer3 = 22
+  OrconStandBy = 100,
+  OrconLow = 101,
+  OrconMedium = 102,
+  OrconHigh = 103,
+  OrconTimer0 = 110,
+  OrconTimer1 = 111,
+  OrconTimer2 = 112,
+  OrconTimer3 = 113
 
 };
 
