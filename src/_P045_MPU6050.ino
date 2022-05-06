@@ -148,11 +148,11 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Detection on all 3 axes"),F("p045_multiaxes"), PCONFIG_LONG(2) == 0);
         addFormNote(F("When unchecked, movement detection will trigger on ANY axis"));
 
-        addHtml(F("<TR><TD><TD>Each 30 seconds a counter for the detection window is increased plus all axis<br>"));
-        addHtml(F("are checked and if they *all* exceeded the threshold values, a counter is increased.<br>"));
+        addHtml(F("<TR><TD><TD>Every 30 seconds a counter for the detection window is increased plus all axis<br>"));
+        addHtml(F("are checked and if they *all* (or any) exceeded the threshold values, a counter is increased.<br>"));
         addHtml(F("Each period, defined by the [detection window], the counter is checked against<br>"));
         addHtml(F("the [min. detection count] and if found equal or larger, movement is detected.<br>"));
-        addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped."));
+        addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped.<br>"));
         addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
 
         addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), PCONFIG(5), 0, 999999);
