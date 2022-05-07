@@ -14,8 +14,8 @@
 # include "../Helpers/StringParser.h"
 # include "../Helpers/SystemVariables.h"
 
-# include <Dialog_Plain_12_font.h>
 # ifndef P036_LIMIT_BUILD_SIZE
+#  include <Dialog_Plain_12_font.h>
 # include <Dialog_Plain_18_font.h>
 # endif // ifdef P036_LIMIT_BUILD_SIZE
 # include <OLED_SSD1306_SH1106_images.h>
@@ -122,9 +122,11 @@ const __FlashStringHelper * tFontSettings::FontName() const {
     return F("Arial_16");
   }
 
+#  ifndef P036_LIMIT_BUILD_SIZE
   if (fontData == Dialog_plain_12) {
     return F("Dialog_12");
   }
+#  endif // ifndef P036_LIMIT_BUILD_SIZE
 
   if (fontData == ArialMT_Plain_10) {
     return F("Arial_10");
@@ -145,7 +147,9 @@ const tFontSizes FontSizes[P36_MaxFontCount] = {
   { getDialog_plain_18(),  19,  22                                           },
 # endif // ifndef P036_LIMIT_BUILD_SIZE
   { getArialMT_Plain_16(), 16,  19                                           }, // 5049
+# ifndef P036_LIMIT_BUILD_SIZE
   { getDialog_plain_12(),  13,  15                                           }, // 3707
+# endif // ifndef P036_LIMIT_BUILD_SIZE
   { getArialMT_Plain_10(), 10,  13                                           }, // 2731
 };
 
