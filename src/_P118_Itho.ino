@@ -111,7 +111,6 @@ volatile bool PLUGIN_118_Int = false;
 void PLUGIN_118_ITHOcheck();
 void PLUGIN_118_Publishdata(struct EventStruct *event);
 void PLUGIN_118_PluginWriteLog(const String& command);
-void PLUGIN_118_PluginSetDestIDSrcID(struct EventStruct *event, uint8_t (&srcID)[3], uint8_t (&destID)[3], char(& tmpID) [9]);
 
 ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
 {
@@ -392,12 +391,50 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 101: // Fan low
           {
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
-            PLUGIN_118_rf.sendCommand(OrconLow, srcID, destID);
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
+
+            const char *delimiter = ",";
+            char *token;
+            char tmpID[9] = PLUGIN_118_ExtraSettings.ID1; // copy needed otherwise we modify PLUGIN_118_ExtraSettings.ID1 itself
+            token = strtok(tmpID, delimiter); // select the first part
+            if (token) {
+              tmp1 = strtol(token, NULL, 16); // convert first string part (hex) to int
+            } else {
+              tmp1 = 0;
+            }
+
+            String log = (F("tmp1: "));
+            log += String(tmp1);
+            addLogMove(LOG_LEVEL_INFO, log);
+
+            token=strtok(NULL, delimiter);
+            if (token) {
+              tmp2 = strtol(token, NULL, 16); // convert first string part (hex) to int
+            } else {
+              tmp2 = 0;
+            }
+
+            log = (F("tmp2: "));
+            log += String(tmp2);
+            addLogMove(LOG_LEVEL_INFO, log);
+
+            token=strtok(NULL, delimiter);
+            if (token) {
+              tmp3 = strtol(token, NULL, 16); // convert first string part (hex) to int
+            } else {
+              tmp3 = 0;
+            }
+
+            log = (F("tmp3: "));
+            log += String(tmp3);
+            addLogMove(LOG_LEVEL_INFO, log);
+
+            uint8_t srcID[3] = { tmp1, tmp2, tmp3 };
+
+            PLUGIN_118_rf.sendCommand(IthoLow, srcID, destID);
             PLUGIN_118_State       = 101;
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
@@ -408,9 +445,12 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 102: // Fan medium
           {
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
-            PLUGIN_118_rf.sendCommand(OrconMedium, srcID, destID);
+            uint8_t srcID[3] = { 118,164,187 };
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
+            PLUGIN_118_rf.sendCommand(IthoMedium, srcID, destID);
             PLUGIN_118_State       = 102;
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
@@ -421,9 +461,12 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 103: // Fan high
           {
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
-            PLUGIN_118_rf.sendCommand(OrconHigh, srcID, destID);
+            uint8_t srcID[3] = { 118,164,187 };
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
+            PLUGIN_118_rf.sendCommand(IthoHigh, srcID, destID);
             PLUGIN_118_State       = 103;
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
@@ -434,8 +477,11 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 150: //  Timer 12*60 minuten @ speed 0
           {
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            uint8_t srcID[3] = { 148, 12, 79 };
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
             PLUGIN_118_rf.sendCommand(OrconTimer0, srcID, destID);
             PLUGIN_118_State       = 150;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime0;
@@ -447,8 +493,11 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 151: //  Timer 60 minuten @ speed 1
           {
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            uint8_t srcID[3] = { 148, 12, 79 };
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
             PLUGIN_118_rf.sendCommand(OrconTimer1, srcID, destID);
             PLUGIN_118_State       = 151;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime1;
@@ -460,8 +509,11 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 152: //  Timer 13*60 minuten @ speed 2
           {
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            uint8_t srcID[3] = { 148, 12, 79 };
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
             PLUGIN_118_rf.sendCommand(OrconTimer2, srcID, destID);
             PLUGIN_118_State       = 152;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime2;
@@ -473,8 +525,11 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
           }
           case 153: //  Timer 60 minuten @ speed 3
           {
-            uint8_t srcID[3], destID[3];
-            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            uint8_t srcID[3] = { 148, 12, 79 };
+            uint8_t tmp1 = PCONFIG(1) - 0;
+            uint8_t tmp2 = PCONFIG(2) - 0;
+            uint8_t tmp3 = PCONFIG(3) - 0;
+            uint8_t destID[3] = { tmp1, tmp2, tmp3 };
             PLUGIN_118_rf.sendCommand(OrconTimer3, srcID, destID);
             PLUGIN_118_State       = 153;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime3;
@@ -579,7 +634,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoStandby:
         case DucoStandby:
-        case OrconStandBy:
 
           if (PLUGIN_118_Log) { log2 += F("standby"); }
           PLUGIN_118_State       = 0;
@@ -588,7 +642,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoLow:
         case DucoLow:
-        case OrconLow:
 
           if (PLUGIN_118_Log) { log2 += F("low"); }
           PLUGIN_118_State       = 1;
@@ -597,7 +650,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoMedium:
         case DucoMedium:
-        case OrconMedium:
 
           if (PLUGIN_118_Log) { log2 += F("medium"); }
           PLUGIN_118_State       = 2;
@@ -606,7 +658,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoHigh:
         case DucoHigh:
-        case OrconHigh:
 
           if (PLUGIN_118_Log) { log2 += F("high"); }
           PLUGIN_118_State       = 3;
@@ -724,53 +775,6 @@ void PLUGIN_118_PluginWriteLog(const String& command)
   log += command;
   printWebString += log;
   addLogMove(LOG_LEVEL_INFO, log);
-}
-
-void PLUGIN_118_PluginSetDestIDSrcID(struct EventStruct *event, uint8_t (& srcID) [3], uint8_t (& destID) [3], char(& tmpTmpID) [9])
-{
-  // CRAP DOES NOT WORK
-  destID[0] = PCONFIG(1) - 0;
-  destID[1] = PCONFIG(2) - 0;
-  destID[2] = PCONFIG(3) - 0;
-
-  const char *delimiter = ",";
-  char *token;
-  //char tmpID[9] = PLUGIN_118_ExtraSettings.ID1; // copy needed otherwise we modify PLUGIN_118_ExtraSettings.ID1 itself
-  char tmpID[9];
-  memcpy(tmpID, tmpTmpID, 9);
-  token = strtok(tmpID, delimiter); // select the first part
-  if (token) {
-    srcID[0] = strtol(token, NULL, 16); // convert first string part (hex) to int
-  } else {
-    srcID[0] = 0;
-  }
-
-  String log = (F("srcID[1]: "));
-  log += String(srcID[1]);
-  addLogMove(LOG_LEVEL_INFO, log);
-
-  token=strtok(NULL, delimiter);
-  if (token) {
-    srcID[1] = strtol(token, NULL, 16); // convert first string part (hex) to int
-  } else {
-    srcID[1] = 0;
-  }
-
-  log = (F("srcID[2]: "));
-  log += String(srcID[2]);
-  addLogMove(LOG_LEVEL_INFO, log);
-
-  token=strtok(NULL, delimiter);
-  if (token) {
-    srcID[2] = strtol(token, NULL, 16); // convert first string part (hex) to int
-  } else {
-    srcID[2]  = 0;
-  }
-
-  log = (F("srcID[3] : "));
-  log += String(srcID[3] );
-  addLogMove(LOG_LEVEL_INFO, log);
-  return;
 }
 
 #endif // USES_P118

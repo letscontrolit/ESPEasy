@@ -121,7 +121,7 @@ public:
   String  LastMessageDecoded();
 
   // send
-  void    sendCommand(IthoCommand command, uint8_t srcId[3] = 0, uint8_t destId[3] = 0);
+  void    sendCommand(IthoCommand command, uint8_t srcId[3] = 000000, uint8_t destId[3] = 000000);
 
 protected:
 

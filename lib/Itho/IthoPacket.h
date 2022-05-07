@@ -17,11 +17,11 @@ enum IthoCommand
   IthoMedium = 5,
   IthoHigh = 6,
   IthoFull = 7,
-
+  
   IthoTimer1 = 8,
   IthoTimer2 = 9,
   IthoTimer3 = 10,
-
+  
   //duco c system remote
   DucoStandby = 11,
   DucoLow = 12,
@@ -48,10 +48,10 @@ class IthoPacket
     uint8_t dataDecoded[32];
     uint8_t dataDecodedChk[32];
     uint8_t length;
-
+    
     uint8_t deviceType;
     uint8_t deviceId[3];
-
+    
     uint8_t counter;    //0-255, counter is increased on every remote button press
 };
 
