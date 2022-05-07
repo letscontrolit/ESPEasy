@@ -100,9 +100,15 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::LCLTIME);
   addSysVar_enum_html(SystemVariables::LCLTIME_AM);
   addSysVar_enum_html(SystemVariables::SYSTM_HM);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_0);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_SP);
   addSysVar_enum_html(SystemVariables::SYSTM_HM_AM);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_AM_0);
+  addSysVar_enum_html(SystemVariables::SYSTM_HM_AM_SP);
   addSysVar_enum_html(SystemVariables::SYSTIME);
   addSysVar_enum_html(SystemVariables::SYSTIME_AM);
+  addSysVar_enum_html(SystemVariables::SYSTIME_AM_0);
+  addSysVar_enum_html(SystemVariables::SYSTIME_AM_SP);
   addSysVar_enum_html(SystemVariables::SYSBUILD_DATE);
   addSysVar_enum_html(SystemVariables::SYSBUILD_TIME);
   addSysVar_enum_html(SystemVariables::SYSBUILD_FILENAME);

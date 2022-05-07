@@ -493,42 +493,45 @@ String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
   return DateString;
 }
 
-String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/) const
+String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, false, show_seconds);
+  return getTimeString(tm, delimiter, false, show_seconds, hour_prefix);
 }
 
-String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/) const
+String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, true, show_seconds);
+  return getTimeString(tm, delimiter, true, show_seconds, hour_prefix);
 }
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String ESPEasy_time::getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds)
+String ESPEasy_time::getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix /*='\0'*/)
 {
   char TimeString[20]; // 19 digits plus the null char
+  char hour_prefix_s[2] = { 0 };
 
   if (am_pm) {
     uint8_t hour(ts.tm_hour % 12);
 
     if (hour == 0) { hour = 12; }
     const char a_or_p = ts.tm_hour < 12 ? 'A' : 'P';
+    if (hour < 10) { hour_prefix_s[0] = hour_prefix; }
 
     if (show_seconds) {
-      sprintf_P(TimeString, PSTR("%d%c%02d%c%02d %cM"),
-                hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
+      sprintf_P(TimeString, PSTR("%s%d%c%02d%c%02d %cM"),
+                hour_prefix_s, hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
     } else {
-      sprintf_P(TimeString, PSTR("%d%c%02d %cM"),
-                hour, delimiter, ts.tm_min, a_or_p);
+      sprintf_P(TimeString, PSTR("%s%d%c%02d %cM"),
+                hour_prefix_s, hour, delimiter, ts.tm_min, a_or_p);
     }
   } else {
     if (show_seconds) {
       sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
                 ts.tm_hour, delimiter, ts.tm_min, delimiter, ts.tm_sec);
     } else {
-      sprintf_P(TimeString, PSTR("%d%c%02d"),
-                ts.tm_hour, delimiter, ts.tm_min);
+      if (ts.tm_hour < 10) { hour_prefix_s[0] = hour_prefix; }
+      sprintf_P(TimeString, PSTR("%s%d%c%02d"),
+                hour_prefix_s, ts.tm_hour, delimiter, ts.tm_min);
     }
   }
   return TimeString;
