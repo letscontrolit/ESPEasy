@@ -46,16 +46,40 @@ More uses of these system variables can be seen in the rules section and formula
      - Current time if NTP is enabled (hh:mm:ss, hh:mm prior to v2.0).
      - 
    * - ``%systm_hm%``
-     - 01:23
+     - 1:23
      - Current time if NTP is enabled (hh:mm "old behavior").
+     - 
+   * - ``%systm_hm_0%``
+     - 01:23
+     - Current time if NTP is enabled (0-prefixed if hour < 10).
+     - 
+   * - ``%systm_hm_sp%``
+     - ` 1:23`
+     - Current time if NTP is enabled (space-prefixed if hour < 10).
      - 
    * - ``%systime_am%``
      - 1:23:54 AM
      - Current AM/PM time if NTP is enabled (hh:mm:ss xM).
      - 
+   * - ``%systime_am_0%``
+     - 01:23:54 AM
+     - Current AM/PM time if NTP is enabled (0-prefixed if hour < 10).
+     - 
+   * - ``%systime_am_sp%``
+     - ` 1:23:54 AM`
+     - Current AM/PM time if NTP is enabled (space-prefixed if hour < 10).
+     - 
    * - ``%systm_hm_am%``
      - 1:23 AM
      - Current AM/PM time if NTP is enabled (hh:mm:ss xM).
+     - 
+   * - ``%systm_hm_am_0%``
+     - 01:23 AM
+     - Current AM/PM time if NTP is enabled (0-prefixed if hour < 10).
+     - 
+   * - ``%systm_hm_am_sp%``
+     - ` 1:23 AM`
+     - Current AM/PM time if NTP is enabled (space-prefixed if hour < 10).
      - 
    * - ``%lcltime%``
      - 2020-03-16 01:23:54
