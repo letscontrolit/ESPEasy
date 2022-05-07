@@ -75,14 +75,20 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (validControllerIndex(ControllerID)) {
         unsigned int idx;
-        float nvalue;
-        long nvaluealt;
+        float  nvalue;
+        long   nvaluealt;
         String svalue1, switchtype;
+
         if (deserializeDomoticzJson(event->String2, idx, nvalue, nvaluealt, svalue1, switchtype)) {
           for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
             // We need the index of the controller we are: 0...CONTROLLER_MAX
-            if (Settings.TaskDeviceEnabled[x] && 
-                Settings.TaskDeviceSendData[ControllerID][x] && 
+            if (Settings.TaskDeviceEnabled[x] &&
+                (Settings.TaskDeviceSendData[ControllerID][x]
+                 || (Settings.TaskDeviceNumber[x] == 29)         // Domoticz helper doesn't have controller checkboxes...
+                 # if defined(USES_P088)
+                 || (Settings.TaskDeviceNumber[x] == 88)         // Heatpump IR doesn't have controller checkboxes...
+                 # endif // if defined(USES_P088)
+                ) &&
                 (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
             {
               String action;
@@ -142,9 +148,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                   }
                   break;
                 }
-# if defined(USES_P088)// || defined(USES_P115)
-                case 88:             // Send heatpump IR (P088) if IDX matches
-//                case 115:            // Send heatpump IR (P115) if IDX matches
+# if defined(USES_P088)  // || defined(USES_P115)
+                case 88: // Send heatpump IR (P088) if IDX matches
+                  //                case 115:            // Send heatpump IR (P115) if IDX matches
                 {
                   action  = F("heatpumpir,");
                   action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
@@ -186,6 +192,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       {
         String json = serializeDomoticzJson(event);
 # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("MQTT : ");
           log += json;
