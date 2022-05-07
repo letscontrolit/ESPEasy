@@ -442,13 +442,15 @@ void IthoCC1101::sendCommand(IthoCommand command, uint8_t srcId[3], uint8_t dest
       delaytime = 4;
       break;
 
-    case OrconTimer0:
-    case OrconTimer1:
-    case OrconTimer2:
-    case OrconTimer3:
-    case IthoLow:
-    case IthoMedium:
-    case IthoHigh:
+      case OrconStandBy:
+      case OrconLow:
+      case OrconMedium:
+      case OrconHigh:
+      case OrconTimer0:
+      case OrconTimer1:
+      case OrconTimer2:
+      case OrconTimer3:
+
       maxTries  = 1;
       createOrconMessageCommand(&outIthoPacket, &outMessage, srcId, destId);
       break;
@@ -503,9 +505,9 @@ void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packe
   itho->dataDecoded[2] = srcId[1];
   itho->dataDecoded[3] = srcId[2];
   // set deviceID
-  itho->dataDecoded[4] = itho->deviceId[0];
-  itho->dataDecoded[5] = itho->deviceId[1];
-  itho->dataDecoded[6] = itho->deviceId[2];
+  itho->dataDecoded[4] = destId[0];
+  itho->dataDecoded[5] = destId[1];
+  itho->dataDecoded[6] = destId[2];
 
   //itho->dataDecoded[7] = itho->deviceId[0];
   //itho->dataDecoded[8] = itho->deviceId[1];
@@ -725,7 +727,7 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
 {
   switch (command)
   {
-    /*case IthoStandby:
+    case IthoStandby:
       return &ithoMessageStandByCommandBytes[0];
     case IthoHigh:
       return &ithoMessageHighCommandBytes[0];
@@ -734,7 +736,7 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
     case IthoMedium:
       return &ithoMessageMediumCommandBytes[0];
     case IthoLow:
-      return &ithoMessageLowCommandBytes[0];*/
+      return &ithoMessageLowCommandBytes[0];
     case IthoTimer1:
       return &ithoMessageTimer1CommandBytes[0];
     case IthoTimer2:
@@ -746,16 +748,16 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
     case IthoLeave:
       return &ithoMessageLeaveCommandBytes[0];
 
-    //case IthoStandby:
-    //  return &orconMessageStandByCommandBytes[0];
-    case IthoLow:
+    case OrconStandBy:
+      return &orconMessageStandByCommandBytes[0];
+    case OrconLow:
       return &orconMessageLowCommandBytes[0];
-    case IthoMedium:
+    case OrconMedium:
       return &orconMessageMediumCommandBytes[0];
-    case IthoHigh:
+    case OrconHigh:
       return &orconMessageFullCommandBytes[0];
-    case IthoStandby:
-      return &orconMessageAutoCommandBytes[0];
+    //case OrconStandby:
+    //  return &orconMessageAutoCommandBytes[0];
     case OrconTimer0:
       return &orconMessageTimer0CommandBytes[0];
     case OrconTimer1:
@@ -775,16 +777,16 @@ uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
 {
   switch (command)
   {
-    /*case IthoStandby:
-      return &ithoMessageStandByCommandBytes[0];
+    case IthoStandby:
+      return sizeof(ithoMessageStandByCommandBytes)/sizeof(uint8_t);
     case IthoHigh:
-      return &ithoMessageHighCommandBytes[0];
+      return sizeof(ithoMessageHighCommandBytes)/sizeof(uint8_t);
     case IthoFull:
-      return &ithoMessageFullCommandBytes[0];
+      return sizeof(ithoMessageFullCommandBytes)/sizeof(uint8_t);
     case IthoMedium:
-      return &ithoMessageMediumCommandBytes[0];
+      return sizeof(ithoMessageMediumCommandBytes)/sizeof(uint8_t);
     case IthoLow:
-      return &ithoMessageLowCommandBytes[0];*/
+      return sizeof(ithoMessageLowCommandBytes)/sizeof(uint8_t);
     case IthoTimer1:
       return sizeof(ithoMessageTimer1CommandBytes)/sizeof(uint8_t);
     case IthoTimer2:
@@ -796,16 +798,16 @@ uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
     case IthoLeave:
       return sizeof(ithoMessageLeaveCommandBytes)/sizeof(uint8_t);
 
-    //case IthoStandby:
-    //  return sizeof(orconMessageStandByCommandBytes)/sizeof(uint8_t);
-    case IthoLow:
+    case OrconStandBy:
+      return sizeof(orconMessageStandByCommandBytes)/sizeof(uint8_t);
+    case OrconLow:
       return sizeof(orconMessageLowCommandBytes)/sizeof(uint8_t);
-    case IthoMedium:
+    case OrconMedium:
       return sizeof(orconMessageMediumCommandBytes)/sizeof(uint8_t);
-    case IthoHigh:
+    case OrconHigh:
       return sizeof(orconMessageFullCommandBytes)/sizeof(uint8_t);
-    case IthoStandby:
-      return sizeof(orconMessageAutoCommandBytes)/sizeof(uint8_t);
+    //case OrconStandby:
+    //  return sizeof(orconMessageAutoCommandBytes)/sizeof(uint8_t);
     case OrconTimer0:
       return sizeof(orconMessageTimer0CommandBytes)/sizeof(uint8_t);
     case OrconTimer1:
