@@ -1552,8 +1552,8 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 }
 
 // Perform some specific changes for OLED display
-String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineSize) {
-  String result = parseTemplate_padded(tmpString, lineSize);
+String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
+  String result = parseTemplate_padded(tmpString, 20);
 
   // OLED lib uses this routine to convert UTF8 to extended ASCII
   // http://playground.arduino.cc/Main/Utf8ascii
@@ -1564,7 +1564,9 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineSize) 
      const char euro_oled[3] = {0xc2, 0x80, 0}; // Euro symbol OLED display font
      result.replace(euro, euro_oled);
    */
-  if (textAlignment == TEXT_ALIGN_LEFT) {
+  uint32_t iAlignment =
+    get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
+  if (getTextAlignment(static_cast<eAlignment>(iAlignment)) == TEXT_ALIGN_LEFT) {
     // result.rtrim();
     for (int16_t l = result.length() - 1; l >= 0; l--) {
       if (result[l] != ' ') {
@@ -1772,7 +1774,7 @@ void P036_data_struct::DrawScrollingPageLine(tScrollingPageLines *ScrollingPageL
 void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPageLine, uint8_t Counter) {
   String tmpString(LineContent->DisplayLinesV1[Counter].Content);
 
-  ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, 20);
+  ScrollingPageLine->SPLcontent = P36_parseTemplate(tmpString, Counter);
 
   if (ScrollingPageLine->SPLcontent.length() > 0) {
     int splitIdx = ScrollingPageLine->SPLcontent.indexOf("<|>"); // check for split token
@@ -1795,9 +1797,7 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
       ScrollingPageLine->SPLcontent.replace(F("<|>"), tmpString); // replace in final line the split token with space chars
     }
   }
-  uint32_t iAlignment = 0;
-
-  iAlignment =
+  uint32_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[Counter].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
   ScrollingPageLine->Alignment = getTextAlignment(static_cast<eAlignment>(iAlignment));
   ScrollingPageLine->SPLidx    = Counter; // index to LineSettings[]

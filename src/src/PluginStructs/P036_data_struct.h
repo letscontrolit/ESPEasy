@@ -355,7 +355,7 @@ struct P036_data_struct : public PluginTaskData_base {
 
   // Perform some specific changes for OLED display
   String                     P36_parseTemplate(String& tmpString,
-                                               uint8_t lineSize);
+                                  uint8_t lineIdx);
 
   void                       registerButtonState(uint8_t newButtonState,
                                                  bool    bPin3Invers);

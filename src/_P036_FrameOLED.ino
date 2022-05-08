@@ -14,8 +14,13 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-05-08
+// FIX: left alignment again with leading spaces
+// CHG: UI suggestions from tonhuisman
+// @uwekaditz: 2022-05-07
+// CHG: font Dialog_plain_12 is optional (not used with LIMIT_BUILD_SIZE) 
 // @uwekaditz: 2022-04-24
-// CHG: font Dialog_plain_18 is optional (not using LIMIT_BUILD_SIZE)
+// CHG: font Dialog_plain_18 is optional (not used with LIMIT_BUILD_SIZE)
 // @uwekaditz: 2022-04-23
 // FIX: empty page was shown if just one frame has text
 // @uwekaditz: 2022-04-21
@@ -396,6 +401,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
 
+      addFormSubHeader(F("Lines"));
 # ifdef P036_ENABLE_LEFT_ALIGN
       {
         const __FlashStringHelper *optionsAlignment[3] =
@@ -451,9 +457,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           };
           uint8_t AlignmentChoice[P36_Nlines];
 
-          addFormSubHeader(F("Lines"));
+          addRowLabel(F("Line"));
           html_table(EMPTY_STRING); // Sub-table
-          html_table_header(F("Line #&nbsp;"));
+          html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Content"), 500);
           html_table_header(F("Modify font"));
           html_table_header(F("Alignment"));
@@ -1220,7 +1226,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           success = true;
           String* currentLine = &P036_data->LineContent->DisplayLinesV1[LineNo - 1].Content;
           *currentLine = parseStringKeepCase(string, 3);
-          *currentLine = P036_data->P36_parseTemplate(*currentLine, 20);
+          *currentLine = P036_data->P36_parseTemplate(*currentLine, LineNo - 1);
 
           // calculate Pix length of new Content
           uint16_t PixLength = P036_data->CalcPixLength(LineNo - 1);
