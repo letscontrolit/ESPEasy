@@ -64,12 +64,12 @@
 // https://github.com/letscontrolit/ESPEasy/commit/6400c495e24f39ebac88eb634f29cfb73137fa2b#diff-ec860ac195fffa61ec11dd419fefa5b9
 
 
-#include "src/PluginStructs/P045_data_struct.h"
+# include "src/PluginStructs/P045_data_struct.h"
 
-#define PLUGIN_045
-#define PLUGIN_ID_045                       45
-#define PLUGIN_NAME_045                     "Gyro - MPU 6050 [TESTING]"
-#define PLUGIN_VALUENAME1_045               ""
+# define PLUGIN_045
+# define PLUGIN_ID_045                       45
+# define PLUGIN_NAME_045                     "Gyro - MPU 6050 [TESTING]"
+# define PLUGIN_VALUENAME1_045               ""
 
 
 boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
@@ -106,6 +106,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x68, 0x69 };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
         addFormNote(F("ADDR Low=0x68, High=0x69"));
@@ -119,7 +120,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t choice = PCONFIG(1);
       {
-        const __FlashStringHelper * options[10] = {
+        const __FlashStringHelper *options[10] = {
           F("Movement detection"),
           F("Range acceleration X"),
           F("Range acceleration Y"),
@@ -137,26 +138,19 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       if (choice == 0) {
         // If this is instance function 0, setup webform for additional vars
         // Show some user information about the webform and what the vars mean.
-        addHtml(F("<TR><TD><TD>The thresholdvalues (0-65535) can be used to set a threshold for one or more<br>"));
-        addHtml(F("axis. The axis will trigger when the range for that axis exceeds the threshold<br>"));
-        addHtml(F("value. A value of 0 disables movement detection for that axis."));
 
         addFormNumericBox(F("Detection threshold X"), F("p045_threshold_x"), PCONFIG(2), 0, 65535);
         addFormNumericBox(F("Detection threshold Y"), F("p045_threshold_y"), PCONFIG(3), 0, 65535);
         addFormNumericBox(F("Detection threshold Z"), F("p045_threshold_z"), PCONFIG(4), 0, 65535);
+        addFormNote(F("A Detection threshold value of 0 disables movement detection for that axis."));
 
-        addFormCheckBox(F("Detection on all 3 axes"),F("p045_multiaxes"), PCONFIG_LONG(2) == 0);
+        addFormCheckBox(F("Detection on all 3 axes"), F("p045_multiaxes"), PCONFIG_LONG(2) == 0);
         addFormNote(F("When unchecked, movement detection will trigger on ANY axis"));
-
-        addHtml(F("<TR><TD><TD>Every 30 seconds a counter for the detection window is increased plus all axis<br>"));
-        addHtml(F("are checked and if they *all* (or any) exceeded the threshold values, a counter is increased.<br>"));
-        addHtml(F("Each period, defined by the [detection window], the counter is checked against<br>"));
-        addHtml(F("the [min. detection count] and if found equal or larger, movement is detected.<br>"));
-        addHtml(F("If in the next window the [min. detection count] value is not met, movement has stopped.<br>"));
-        addHtml(F("The [detection window] cannot be smaller than the [min. detection count]."));
 
         addFormNumericBox(F("Min. detection count"), F("p045_threshold_counter"), PCONFIG(5), 0, 999999);
         addFormNumericBox(F("Detection window"),     F("p045_threshold_window"),  PCONFIG(6), 0, 999999);
+
+        addFormNote(F("Details are in the 'ReadTheDocs' documentation."));
       }
       success = true;
       break;
@@ -165,13 +159,13 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       // Save the vars
-      PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("p045_function"));
-      PCONFIG(2) = getFormItemInt(F("p045_threshold_x"));
-      PCONFIG(3) = getFormItemInt(F("p045_threshold_y"));
-      PCONFIG(4) = getFormItemInt(F("p045_threshold_z"));
-      PCONFIG(5) = getFormItemInt(F("p045_threshold_counter"));
-      PCONFIG(6) = getFormItemInt(F("p045_threshold_window"));
+      PCONFIG(0)      = getFormItemInt(F("i2c_addr"));
+      PCONFIG(1)      = getFormItemInt(F("p045_function"));
+      PCONFIG(2)      = getFormItemInt(F("p045_threshold_x"));
+      PCONFIG(3)      = getFormItemInt(F("p045_threshold_y"));
+      PCONFIG(4)      = getFormItemInt(F("p045_threshold_z"));
+      PCONFIG(5)      = getFormItemInt(F("p045_threshold_counter"));
+      PCONFIG(6)      = getFormItemInt(F("p045_threshold_window"));
       PCONFIG_LONG(2) = isFormItemChecked(F("p045_multiaxes")) ? 0 : 1; // Inverted setting, default is backward compatible, 3 axis
 
       if (PCONFIG(6) < PCONFIG(5)) {
@@ -207,7 +201,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND:  // FIXME TD-er: Is this fast enough? Earlier comments in the code suggest 10x per sec.
+    case PLUGIN_ONCE_A_SECOND: // FIXME TD-er: Is this fast enough? Earlier comments in the code suggest 10x per sec.
     {
       P045_data_struct *P045_data =
         static_cast<P045_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -226,7 +220,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
         static_cast<const P045_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P045_data) {
-        int  _P045_Function = PCONFIG(1);
+        int _P045_Function = PCONFIG(1);
 
         switch (_P045_Function)
         {
@@ -234,18 +228,19 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           case 0:
           {
             // Check if all (enabled, so !=0) thresholds are exceeded, if one fails then thresexceed (thesholds exceeded) is reset to false;
-            bool    thresexceed = true;
-            uint8_t count       = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
-            uint8_t threscount  = 0; // Counter to check how many tresholds have been exceeded
+            bool thresexceed   = true;
+            uint8_t count      = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
+            uint8_t threscount = 0; // Counter to check how many tresholds have been exceeded
 
             for (uint8_t i = 0; i < 3; i++)
             {
               // for each axis:
-              if (PCONFIG(i + 2) != 0) { // not disabled, check threshold
+              if (PCONFIG(i + 2) != 0) {    // not disabled, check threshold
                 if (P045_data->_axis[i][2] >= PCONFIG(i + 2)) { threscount++; } // Logic inverted
-              } else { count++; }        // If disabled count + 1
+              } else { count++; }           // If disabled count + 1
             }
-            if (PCONFIG_LONG(2) == 0) { // All (enabled) axes triggered
+
+            if (PCONFIG_LONG(2) == 0) {     // All (enabled) axes triggered
               thresexceed = ((threscount > 0) && (count + threscount == 3));
             } else {
               thresexceed = threscount > 0; // At least 1 axis triggered

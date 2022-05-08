@@ -59,7 +59,7 @@ Movement detection
 
 When selecting the **Movement detection** function, additional configuration is required for setting up the threshold and movement- and 'silence'- windows.
 
-The threshold can be configured per X, Y and Z axis, where the axis is ignored if the threshold is set to 0. An actual threshold can be determined by selecting one of the Acceleration X/Y/Z functions, and making note of the value measured while an expected movement is applied to the sensor.
+The Detection threshold can be configured per X, Y and Z axis (range 0..65535) and will be triggered when it exceeds the set threshold, where the axis is ignored if the threshold is set to 0. An actual threshold can be determined by selecting one of the Acceleration X/Y/Z functions, and making note of the value measured while an expected movement is applied to the sensor.
 
 * **Detection on all 3 axes** When this option is enabled, all 3 axes need to exceed the configured threshold for the counter to be increased. When disabled, only one of the axis need to exceed the threshold to cause an increment.
 
@@ -67,6 +67,11 @@ The threshold can be configured per X, Y and Z axis, where the axis is ignored i
 
 * **Detection window** The number of interval passes before the counter is actually increased.
 
+Every 30 seconds a counter for the detection window is increased plus all axis are checked and if they *all* (or any when **Detection on all 3 axes** is unchecked) that are enabled exceeded the threshold values, a counter is increased.
+
+Each period, defined by the **Detection window**, the counter is checked against the **Min. detection count** and if found equal or larger, movement is detected.
+
+If in the next window the **Min. detection count** value is not met, movement has stopped. The **Detection window** cannot be smaller than the **Min. detection count**.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^
