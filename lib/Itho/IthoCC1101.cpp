@@ -330,6 +330,7 @@ bool IthoCC1101::parseMessageCommand() {
   bool isOrconTimer1Command   = checkIthoCommand(&inIthoPacket, orconMessageTimer1CommandBytes);
   bool isOrconTimer2Command   = checkIthoCommand(&inIthoPacket, orconMessageTimer2CommandBytes);
   bool isOrconTimer3Command   = checkIthoCommand(&inIthoPacket, orconMessageTimer3CommandBytes);
+  bool isOrconAutoCO2Command   = checkIthoCommand(&inIthoPacket, orconMessageAutoCO2CommandBytes);
 
 
   // determine command
@@ -369,13 +370,15 @@ bool IthoCC1101::parseMessageCommand() {
   if (isOrconLowCommand) { inIthoPacket.command = OrconLow; }
   if (isOrconMediumCommand) { inIthoPacket.command = OrconMedium; }
   if (isOrconFullCommand) { inIthoPacket.command = OrconHigh; }
-  if (isOrconAutoCommand) { inIthoPacket.command = OrconStandBy; }
+  if (isOrconAutoCommand) { inIthoPacket.command = OrconAuto; }
   if (isOrconTimer0Command) { inIthoPacket.command = OrconTimer0; }
   if (isOrconTimer1Command) { inIthoPacket.command = OrconTimer1; }
   if (isOrconTimer2Command) { inIthoPacket.command = OrconTimer2; }
   if (isOrconTimer3Command) { inIthoPacket.command = OrconTimer3; }
+  if (isOrconAutoCO2Command) { inIthoPacket.command = OrconAutoCO2; }
 
 #if defined(CRC_FILTER)
+  // TODO make this orcon proof
   uint8_t mLen = 0;
 
   if (isPowerCommand || isHighCommand || isMediumCommand || isLowCommand || isStandByCommand || isTimer1Command || isTimer2Command ||
@@ -446,10 +449,12 @@ void IthoCC1101::sendCommand(IthoCommand command, uint8_t srcId[3], uint8_t dest
       case OrconLow:
       case OrconMedium:
       case OrconHigh:
+      case OrconAuto:
       case OrconTimer0:
       case OrconTimer1:
       case OrconTimer2:
       case OrconTimer3:
+      case OrconAutoCO2:
 
       maxTries  = 1;
       createOrconMessageCommand(&outIthoPacket, &outMessage, srcId, destId);
@@ -756,8 +761,8 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
       return &orconMessageMediumCommandBytes[0];
     case OrconHigh:
       return &orconMessageFullCommandBytes[0];
-    //case OrconStandby:
-    //  return &orconMessageAutoCommandBytes[0];
+    case OrconAuto:
+      return &orconMessageAutoCommandBytes[0];
     case OrconTimer0:
       return &orconMessageTimer0CommandBytes[0];
     case OrconTimer1:
@@ -766,6 +771,8 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
       return &orconMessageTimer2CommandBytes[0];
     case OrconTimer3:
       return &orconMessageTimer3CommandBytes[0];
+    case OrconAutoCO2:
+      return &orconMessageAutoCO2CommandBytes[0];
 
 
     default:
@@ -806,8 +813,8 @@ uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
       return sizeof(orconMessageMediumCommandBytes)/sizeof(uint8_t);
     case OrconHigh:
       return sizeof(orconMessageFullCommandBytes)/sizeof(uint8_t);
-    //case OrconStandby:
-    //  return sizeof(orconMessageAutoCommandBytes)/sizeof(uint8_t);
+    case OrconAuto:
+      return sizeof(orconMessageAutoCommandBytes)/sizeof(uint8_t);
     case OrconTimer0:
       return sizeof(orconMessageTimer0CommandBytes)/sizeof(uint8_t);
     case OrconTimer1:
@@ -816,6 +823,8 @@ uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
       return sizeof(orconMessageTimer2CommandBytes)/sizeof(uint8_t);
     case OrconTimer3:
       return sizeof(orconMessageTimer3CommandBytes)/sizeof(uint8_t);
+    case OrconAutoCO2:
+      return sizeof(orconMessageAutoCO2CommandBytes)/sizeof(uint8_t);
 
 
     default:

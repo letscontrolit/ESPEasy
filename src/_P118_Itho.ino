@@ -390,11 +390,21 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             success = true;
             break;
           }
+          case 100: // Fan StandBy
+          {
+            uint8_t srcID[3], destID[3];
+            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            PLUGIN_118_rf.sendCommand(OrconStandBy, srcID, destID);
+            PLUGIN_118_State       = 100;
+            PLUGIN_118_Timer       = 0;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("Orcon standBy"));
+            success = true;
+            break;
+          }
           case 101: // Fan low
           {
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             uint8_t srcID[3], destID[3];
             PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
             PLUGIN_118_rf.sendCommand(OrconLow, srcID, destID);
@@ -402,7 +412,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("low speed"));
+            PLUGIN_118_PluginWriteLog(F("Orcon low speed"));
             success = true;
             break;
           }
@@ -415,7 +425,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("medium speed"));
+            PLUGIN_118_PluginWriteLog(F("Orcon medium speed"));
             success = true;
             break;
           }
@@ -428,59 +438,85 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
             PLUGIN_118_Timer       = 0;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("high speed"));
+            PLUGIN_118_PluginWriteLog(F("Orcon high speed"));
             success = true;
             break;
           }
-          case 150: //  Timer 12*60 minuten @ speed 0
+          case 104: // Fan auto
+          {
+            uint8_t srcID[3], destID[3];
+            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            PLUGIN_118_rf.sendCommand(OrconAuto, srcID, destID);
+            PLUGIN_118_State       = 104;
+            PLUGIN_118_Timer       = 0;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("Orcon auto speed"));
+            success = true;
+            break;
+          }
+          case 110: //  Timer 12*60 minuten @ speed 0
           {
             uint8_t srcID[3], destID[3];
             PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
             PLUGIN_118_rf.sendCommand(OrconTimer0, srcID, destID);
-            PLUGIN_118_State       = 150;
+            PLUGIN_118_State       = 110;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime0;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("orconTimer 0"));
+            PLUGIN_118_PluginWriteLog(F("Orcon Timer 0"));
             success = true;
             break;
           }
-          case 151: //  Timer 60 minuten @ speed 1
+          case 111: //  Timer 60 minuten @ speed 1
           {
             uint8_t srcID[3], destID[3];
             PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
             PLUGIN_118_rf.sendCommand(OrconTimer1, srcID, destID);
-            PLUGIN_118_State       = 151;
+            PLUGIN_118_State       = 111;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime1;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("orconTimer 1"));
+            PLUGIN_118_PluginWriteLog(F("Orcon Timer 1"));
             success = true;
             break;
           }
-          case 152: //  Timer 13*60 minuten @ speed 2
+          case 112: //  Timer 13*60 minuten @ speed 2
           {
             uint8_t srcID[3], destID[3];
             PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
             PLUGIN_118_rf.sendCommand(OrconTimer2, srcID, destID);
-            PLUGIN_118_State       = 152;
+            PLUGIN_118_State       = 112;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime2;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("orconTimer 2"));
+            PLUGIN_118_PluginWriteLog(F("Orcon Timer 2"));
             success = true;
             break;
           }
-          case 153: //  Timer 60 minuten @ speed 3
+          case 113: //  Timer 60 minuten @ speed 3
           {
             uint8_t srcID[3], destID[3];
             PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
             PLUGIN_118_rf.sendCommand(OrconTimer3, srcID, destID);
-            PLUGIN_118_State       = 153;
+            PLUGIN_118_State       = 113;
             PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime3;
             PLUGIN_118_LastIDindex = 0;
             PLUGIN_118_rf.initReceive();
-            PLUGIN_118_PluginWriteLog(F("orconTimer 3"));
+            PLUGIN_118_PluginWriteLog(F("Orcon Timer 3"));
+            success = true;
+            break;
+          }
+          case 114:
+          {
+            uint8_t srcID[3], destID[3];
+            PLUGIN_118_PluginSetDestIDSrcID(event, srcID, destID, PLUGIN_118_ExtraSettings.ID1);
+            PLUGIN_118_rf.sendCommand(OrconAutoCO2, srcID, destID);
+            PLUGIN_118_State       = 114;
+            PLUGIN_118_Timer       = 0;//PLUGIN_118_OrconTime3;
+            PLUGIN_118_LastIDindex = 0;
+            PLUGIN_118_rf.initReceive();
+            PLUGIN_118_PluginWriteLog(F("Orcon Auto CO2"));
             success = true;
             break;
           }
@@ -579,7 +615,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoStandby:
         case DucoStandby:
-        case OrconStandBy:
 
           if (PLUGIN_118_Log) { log2 += F("standby"); }
           PLUGIN_118_State       = 0;
@@ -588,7 +623,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoLow:
         case DucoLow:
-        case OrconLow:
 
           if (PLUGIN_118_Log) { log2 += F("low"); }
           PLUGIN_118_State       = 1;
@@ -597,7 +631,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoMedium:
         case DucoMedium:
-        case OrconMedium:
 
           if (PLUGIN_118_Log) { log2 += F("medium"); }
           PLUGIN_118_State       = 2;
@@ -606,7 +639,6 @@ void PLUGIN_118_ITHOcheck()
           break;
         case IthoHigh:
         case DucoHigh:
-        case OrconHigh:
 
           if (PLUGIN_118_Log) { log2 += F("high"); }
           PLUGIN_118_State       = 3;
@@ -649,36 +681,76 @@ void PLUGIN_118_ITHOcheck()
 
           if (PLUGIN_118_Log) { log2 += F("leave"); }
           break;
+        case OrconStandBy:
+
+          if (PLUGIN_118_Log) { log2 += F("Orcon standby"); }
+          PLUGIN_118_State       = 100;
+          PLUGIN_118_Timer       = 0;
+          PLUGIN_118_LastIDindex = index;
+          break;
+        case OrconLow:
+
+          if (PLUGIN_118_Log) { log2 += F("Orcon low"); }
+          PLUGIN_118_State       = 101;
+          PLUGIN_118_Timer       = 0;
+          PLUGIN_118_LastIDindex = index;
+          break;
+        case OrconMedium:
+
+          if (PLUGIN_118_Log) { log2 += F("Orcon medium"); }
+          PLUGIN_118_State       = 102;
+          PLUGIN_118_Timer       = 0;
+          PLUGIN_118_LastIDindex = index;
+          break;
+        case OrconHigh:
+
+          if (PLUGIN_118_Log) { log2 += F("Orcon high"); }
+          PLUGIN_118_State       = 103;
+          PLUGIN_118_Timer       = 0;
+          PLUGIN_118_LastIDindex = index;
+          break;
+        case OrconAuto:
+
+          if (PLUGIN_118_Log) { log2 += F("Orcon auto"); }
+          PLUGIN_118_State       = 104;
+          PLUGIN_118_Timer       = 0;
+          PLUGIN_118_LastIDindex = index;
+          break;
         case OrconTimer0:
 
-          if (PLUGIN_118_Log) { log2 += +F("OrconTimer0"); }
-          PLUGIN_118_State       = 103;
+          if (PLUGIN_118_Log) { log2 += +F("Orcon Timer0"); }
+          PLUGIN_118_State       = 110;
           PLUGIN_118_Timer       = PLUGIN_118_OrconTime0;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconTimer1:
 
-          if (PLUGIN_118_Log) { log2 += +F("OrconTimer1"); }
-          PLUGIN_118_State       = 113;
+          if (PLUGIN_118_Log) { log2 += +F("Orcon Timer1"); }
+          PLUGIN_118_State       = 111;
           PLUGIN_118_Timer       = PLUGIN_118_OrconTime1;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconTimer2:
 
-          if (PLUGIN_118_Log) { log2 += +F("OrconTimer2"); }
-          PLUGIN_118_State       = 123;
+          if (PLUGIN_118_Log) { log2 += +F("Orcon Timer2"); }
+          PLUGIN_118_State       = 112;
           PLUGIN_118_Timer       = PLUGIN_118_OrconTime2;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconTimer3:
 
-          if (PLUGIN_118_Log) { log2 += +F("OrconTimer3"); }
-          PLUGIN_118_State       = 133;
+          if (PLUGIN_118_Log) { log2 += +F("Orcon Timer3"); }
+          PLUGIN_118_State       = 113;
           PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
           PLUGIN_118_LastIDindex = index;
           break;
+        case OrconAutoCO2:
 
-
+          if (PLUGIN_118_Log) { log2 += +F("Orcon AutoCO2"); }
+          PLUGIN_118_State       = 114;
+          PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
+          PLUGIN_118_LastIDindex = index;
+          break;
       }
     }
     else {
@@ -728,7 +800,7 @@ void PLUGIN_118_PluginWriteLog(const String& command)
 
 void PLUGIN_118_PluginSetDestIDSrcID(struct EventStruct *event, uint8_t (& srcID) [3], uint8_t (& destID) [3], char(& tmpTmpID) [9])
 {
-  // CRAP DOES NOT WORK
+
   destID[0] = PCONFIG(1) - 0;
   destID[1] = PCONFIG(2) - 0;
   destID[2] = PCONFIG(3) - 0;
@@ -744,22 +816,12 @@ void PLUGIN_118_PluginSetDestIDSrcID(struct EventStruct *event, uint8_t (& srcID
   } else {
     srcID[0] = 0;
   }
-
-  String log = (F("srcID[1]: "));
-  log += String(srcID[1]);
-  addLogMove(LOG_LEVEL_INFO, log);
-
   token=strtok(NULL, delimiter);
   if (token) {
     srcID[1] = strtol(token, NULL, 16); // convert first string part (hex) to int
   } else {
     srcID[1] = 0;
   }
-
-  log = (F("srcID[2]: "));
-  log += String(srcID[2]);
-  addLogMove(LOG_LEVEL_INFO, log);
-
   token=strtok(NULL, delimiter);
   if (token) {
     srcID[2] = strtol(token, NULL, 16); // convert first string part (hex) to int
@@ -767,9 +829,24 @@ void PLUGIN_118_PluginSetDestIDSrcID(struct EventStruct *event, uint8_t (& srcID
     srcID[2]  = 0;
   }
 
-  log = (F("srcID[3] : "));
-  log += String(srcID[3] );
-  addLogMove(LOG_LEVEL_INFO, log);
+  #ifndef BUILD_NO_DEBUG
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        String log = (F("srcID: "));
+        log += String(srcID[0]);
+        log += (F(","));
+        log += String(srcID[1]);
+        log += (F(","));
+        log += String(srcID[2]);
+        log += (F(" destID: "));
+        log += String(destID[0]);
+        log += (F(","));
+        log += String(destID[1]);
+        log += (F(","));
+        log += String(destID[2]);
+        addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+  #endif // ifndef BUILD_NO_DEBUG
+
   return;
 }
 
