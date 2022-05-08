@@ -406,6 +406,7 @@ bool IthoCC1101::parseMessageCommand() {
 
 bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]) {
   uint8_t offset = 0;
+  // this is quite hacky as not even the opcode is checked. Now orcon 31E0 messages are wrongly recognised as itho standby messages.
 
   if ((itho->deviceType == 28) || (itho->deviceType == 24)) { offset = 2; }
 
@@ -501,27 +502,23 @@ void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packe
   // set start message structure
   createMessageStart(itho, packet);
 
-  // set deviceType? (or messageType?), not sure what this is
-  // itho->dataDecoded[0] = itho->deviceType;
+  // first byte is the header of the message, this determines the structure of the rest of the message
+  // The bits are used as follows <00TTAAPP>
+  // 00 - Unused
+  // TT - Message type
+  // AA - Present DeviceID fields
+  // PP - Present Params
   uint8_t header = 0b00011100;
   itho->dataDecoded[0] = header; // 00TTAAPP
-  // set deviceID
+  // set source deviceID
   itho->dataDecoded[1] = srcId[0];
   itho->dataDecoded[2] = srcId[1];
   itho->dataDecoded[3] = srcId[2];
-  // set deviceID
+  // set destination deviceID
   itho->dataDecoded[4] = destId[0];
   itho->dataDecoded[5] = destId[1];
   itho->dataDecoded[6] = destId[2];
 
-  //itho->dataDecoded[7] = itho->deviceId[0];
-  //itho->dataDecoded[8] = itho->deviceId[1];
-  //itho->dataDecoded[9] = itho->deviceId[2];
-
-  // set counter1
-  // itho->dataDecoded[4] = itho->counter;
-
-  // set command bytes on dataDecoded[5 - 10]
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < getMessageCommandLength(itho->command); i++) {
@@ -530,21 +527,12 @@ void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packe
 
   itho->length = 7 + 1 + getMessageCommandLength(itho->command);
 
-  itho->dataDecoded[itho->length-1] = getCRC(itho, itho->length-1); // 44;
+  itho->dataDecoded[itho->length-1] = getCRC(itho, itho->length-1);
   itho->length += 1;
 
-  //itho->dataDecoded[itho->length-1] = 0x35;
-  //itho->length += 1;
+  packet->length  = messageEncode(itho, packet) - 2; // delete the last two itho bytes (0x55, 0x95) so we can reuse messageEncode() without modifications
 
-  //itho->dataDecoded[itho->length-1] = 0x7F;
-  //itho->length += 1;
-
-  //itho->dataDecoded[itho->length-1] = 0xFE;
-  //itho->length += 1;
-
-  packet->length  = messageEncode(itho, packet) - 2; // delete the last two itho bytes (0x55, 0x95)
-
-  // set end byte
+  // set compex orcon specific end bytes
   packet->data[packet->length] = 0xAC;
   packet->length              += 1;
   packet->data[packet->length] = 0xAA;
@@ -553,21 +541,6 @@ void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packe
   packet->length              += 1;
   packet->data[packet->length] = 0x0E;
   packet->length              += 1;
-  // packet->length += 1;
-  //set counter2
-  //packet->data[packet->length-1] = 44; //getCRC(itho, itho->length);
-
-  //packet->length += 1;
-  // set end byte
-  //packet->data[packet->length] = 53;
-
-  //packet->length              += 1;
-
-  // set end 'noise'
-  //for (uint8_t i = packet->length; i < packet->length + 7; i++) {
-  //  packet->data[i] = 170;
-  //}
-  //packet->length += 7;
 }
 
 uint8_t IthoCC1101::getCRC(IthoPacket *itho, uint8_t len) {

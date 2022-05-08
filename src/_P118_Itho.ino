@@ -102,10 +102,12 @@ volatile bool PLUGIN_118_Int = false;
 #define PLUGIN_118_Time1      (10 * 60)
 #define PLUGIN_118_Time2      (20 * 60)
 #define PLUGIN_118_Time3      (30 * 60)
+/* For reference only as the Orcon ventilation unit runs the timer inside
 #define PLUGIN_118_OrconTime0      (12 * 60 * 60)
 #define PLUGIN_118_OrconTime1      (60 * 60)
 #define PLUGIN_118_OrconTime2      (13 * 60 * 60)
 #define PLUGIN_118_OrconTime3      (60 * 60)
+*/
 
 // Forward declarations
 void PLUGIN_118_ITHOcheck();
@@ -212,10 +214,13 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
     {
       // decrement timer when timermode is running
-      if (PLUGIN_118_State >= 10) { PLUGIN_118_Timer--; }
+      if ((PLUGIN_118_State >= 10) && (PLUGIN_118_State < 100))
+      {
+        PLUGIN_118_Timer--;
+      }
 
       // if timer has elapsed set Fan state to low
-      if ((PLUGIN_118_State >= 10) && (PLUGIN_118_Timer <= 0))
+      if ((PLUGIN_118_State >= 10) && (PLUGIN_118_State < 100) && (PLUGIN_118_Timer <= 0))
       {
         PLUGIN_118_State = 1;
         PLUGIN_118_Timer = 0;
@@ -536,6 +541,7 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
     {
       addFormSubHeader(F("Remote RF Controls"));
       addFormTextBox(F("Unit ID remote 1"), F("PLUGIN_118_ID1"), PLUGIN_118_ExtraSettings.ID1, 8);
+      addFormNote(F("For Orcon: The addres of remote 1 will be used as source/sender address"));
       addFormTextBox(F("Unit ID remote 2"), F("PLUGIN_118_ID2"), PLUGIN_118_ExtraSettings.ID2, 8);
       addFormTextBox(F("Unit ID remote 3"), F("PLUGIN_118_ID3"), PLUGIN_118_ExtraSettings.ID3, 8);
       addFormCheckBox(F("Enable RF receive log"), F("p118_log"), PCONFIG(0)); // Makes RF logging optional to reduce clutter in the lof file
@@ -543,8 +549,8 @@ boolean Plugin_118(byte function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Device ID byte 1"), F("p118_deviceid1"), PCONFIG(1), 0, 255);
       addFormNumericBox(F("Device ID byte 2"), F("p118_deviceid2"), PCONFIG(2), 0, 255);
       addFormNumericBox(F("Device ID byte 3"), F("p118_deviceid3"), PCONFIG(3), 0, 255);
-      addFormNote(F(
-                    "Device ID of your ESP, should not be the same as your neighbours ;-). Defaults to 10,87,81 which corresponds to the old Itho library"));
+      addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). Defaults to 10,87,81 which corresponds to the old Itho library."));
+      addFormNote(F("For Orcon: This is the destination ID a.k.a. the ID of the Ventilation unit."));
       success = true;
       break;
     }
@@ -720,35 +726,35 @@ void PLUGIN_118_ITHOcheck()
 
           if (PLUGIN_118_Log) { log2 += +F("Orcon Timer0"); }
           PLUGIN_118_State       = 110;
-          PLUGIN_118_Timer       = PLUGIN_118_OrconTime0;
+          PLUGIN_118_Timer       = 0; // PLUGIN_118_OrconTime0;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconTimer1:
 
           if (PLUGIN_118_Log) { log2 += +F("Orcon Timer1"); }
           PLUGIN_118_State       = 111;
-          PLUGIN_118_Timer       = PLUGIN_118_OrconTime1;
+          PLUGIN_118_Timer       = 0; // PLUGIN_118_OrconTime1;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconTimer2:
 
           if (PLUGIN_118_Log) { log2 += +F("Orcon Timer2"); }
           PLUGIN_118_State       = 112;
-          PLUGIN_118_Timer       = PLUGIN_118_OrconTime2;
+          PLUGIN_118_Timer       = 0; // PLUGIN_118_OrconTime2;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconTimer3:
 
           if (PLUGIN_118_Log) { log2 += +F("Orcon Timer3"); }
           PLUGIN_118_State       = 113;
-          PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
+          PLUGIN_118_Timer       = 0; // PLUGIN_118_OrconTime3;
           PLUGIN_118_LastIDindex = index;
           break;
         case OrconAutoCO2:
 
           if (PLUGIN_118_Log) { log2 += +F("Orcon AutoCO2"); }
           PLUGIN_118_State       = 114;
-          PLUGIN_118_Timer       = PLUGIN_118_OrconTime3;
+          PLUGIN_118_Timer       = 0;
           PLUGIN_118_LastIDindex = index;
           break;
       }
@@ -762,7 +768,7 @@ void PLUGIN_118_ITHOcheck()
     }
 
     if (PLUGIN_118_Log) {
-      addLogMove(LOG_LEVEL_DEBUG, log2);
+      addLogMove(LOG_LEVEL_INFO, log2);
     }
   }
 }
