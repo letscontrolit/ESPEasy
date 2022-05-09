@@ -387,8 +387,10 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         log     = F("PCA 0x");
         log    += String(address, HEX);
         log    += F(": GPIO ");
+        const bool allPins = parseString(string, 2) == F("all");
 
-        if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
+        if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
+            allPins)
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -398,7 +400,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           int pin = event->Par1;
 
-          if (parseString(string, 2) == F("all"))
+          if (allPins)
           {
             pin  = -1;
             log += F("all");
