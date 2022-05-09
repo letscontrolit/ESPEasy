@@ -114,7 +114,7 @@ The chip documentation describes it like this:
 
 * **Enable Analog output (AOUT)** Enabling the Analog output has 2 effects:
 
-1) The AOUT pin can be set to a lineair value in the range 0..255 between 0V and Vref (Vref can sometimes be set using a potentiometer on the board) using the ``analogout`` command (see below).
+1) The AOUT pin can be set to a linear value in the range 0..255 between 0V and Vref (Vref can sometimes be set using a potentiometer on the board) using the ``analogout`` command (see below).
 
 2) The internal oscillator will be enabled continuesly, causing higher power usage, but also improved measurements when reading an analog input as it avoids the startup time of the oscillator that can cause inaccurate readings.
 

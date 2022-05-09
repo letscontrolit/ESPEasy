@@ -13,7 +13,7 @@
  ********************************************************************************************************/
 
 // commands:
-// analogout,<value>    : If the Analog output is enabled, the value range is 0..255, and lineair to Vref
+// analogout,<value>    : If the Analog output is enabled, the value range is 0..255, and linear to Vref
 
 # define PLUGIN_007
 # define PLUGIN_ID_007         7
