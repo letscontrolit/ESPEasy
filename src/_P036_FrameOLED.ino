@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-05-09
+// NEW: right alignment with trailing spaces
 // @uwekaditz: 2022-05-08
 // FIX: left alignment again with leading spaces
 // CHG: UI suggestions from tonhuisman

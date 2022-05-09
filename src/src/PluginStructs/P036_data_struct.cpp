@@ -1553,7 +1553,12 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
 // Perform some specific changes for OLED display
 String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
+  if (tmpString.length() == 0) {
+    return EMPTY_STRING;
+  }
   String result = parseTemplate_padded(tmpString, 20);
+
+  result.trim();
 
   // OLED lib uses this routine to convert UTF8 to extended ASCII
   // http://playground.arduino.cc/Main/Utf8ascii
@@ -1566,16 +1571,30 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
    */
   uint32_t iAlignment =
     get3BitFromUL(LineContent->DisplayLinesV1[lineIdx].ModifyLayout, P036_FLAG_ModifyLayout_Alignment);
-  if (getTextAlignment(static_cast<eAlignment>(iAlignment)) == TEXT_ALIGN_LEFT) {
-    // result.rtrim();
-    for (int16_t l = result.length() - 1; l >= 0; l--) {
-      if (result[l] != ' ') {
-        break;
+
+  switch (getTextAlignment(static_cast<eAlignment>(iAlignment))) {
+    case TEXT_ALIGN_LEFT:
+
+      // add leading spaces from tmpString to the result
+      for (uint16_t l = 0; l < tmpString.length(); l++) {
+        if (tmpString[l] != ' ') {
+          break;
+        }
+        result = " " + result;
       }
-      result.remove(l);
-    }
-  } else {
-    result.trim();
+      break;
+    case TEXT_ALIGN_RIGHT:
+
+      // add trailing spaces from tmpString to the result
+      for (int16_t l = tmpString.length() - 1; l >= 0; l--) {
+        if (tmpString[l] != ' ') {
+          break;
+        }
+        result = result + " ";
+      }
+      break;
+    default:
+      break;
   }
   return result;
 }
