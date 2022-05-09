@@ -31,6 +31,9 @@ const __FlashStringHelper * getFileName(FileType::Enum filetype) {
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
+    case FileType::FIRMWARE:
+      // File name may differ each time.
+      break;
 
     case FileType::MAX_FILETYPE:
       break;

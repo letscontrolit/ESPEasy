@@ -39,4 +39,15 @@ String Command_Provisioning_Rules(struct EventStruct *event, const char *Line)
   return downloadFileType(FileType::RULES_TXT, event->Par1 - 1);
 }
 
+String Command_Provisioning_Firmware(struct EventStruct *event, const char *Line)
+{
+  const String url = parseStringToEndKeepCase(Line, 2);
+  String error;
+  if (downloadFirmware(url, error)) {
+    // TODO TD-er: send events
+  }
+  return error;
+}
+
+
 #endif // ifdef USE_CUSTOM_PROVISIONING
