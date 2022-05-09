@@ -10,7 +10,7 @@ struct FileType {
     RULES_TXT,
     NOTIFICATION_DAT,
     PROVISIONING_DAT,
-
+    FIRMWARE,
 
     MAX_FILETYPE
   };

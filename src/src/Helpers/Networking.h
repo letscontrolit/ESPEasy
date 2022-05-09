@@ -163,6 +163,8 @@ bool downloadFile(const String& url, String file_save);
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error);
 
+bool downloadFirmware(const String& url, String& error);
+
 #endif
 
 

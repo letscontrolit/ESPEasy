@@ -63,6 +63,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 # endif // ifdef ESP8266
 # ifdef ESP32
 #  include <HTTPClient.h>
+#  include <Update.h>
 # endif // ifdef ESP32
 #endif
 
@@ -1133,7 +1134,7 @@ bool downloadFile(const String& url, String file_save) {
   return downloadFile(url, file_save, EMPTY_STRING, EMPTY_STRING, error);
 }
 
-bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
+bool start_downloadFile(WiFiClient& client, HTTPClient& http, const String& url, String& file_save, const String& user, const String& pass, String& error) {
   String   host, file;
   uint16_t port;
   String   uri = splitURL(url, host, port, file);
@@ -1162,16 +1163,6 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     return false;
   }
 
-  if (fileExists(file_save)) {
-    error = F("File exists: ");
-    error += file_save;
-    addLog(LOG_LEVEL_ERROR, error);
-    return false;
-  }
-  unsigned long timeout = millis() + 2000;
-  WiFiClient    client;
-  HTTPClient    http;
-
   http.begin(client, host, port, uri);
   {
     if ((user.length() > 0) && (pass.length() > 0)) {
@@ -1198,6 +1189,24 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     http.end();
     return false;
   }
+  return true;
+}
+
+bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
+  WiFiClient    client;
+  HTTPClient    http;
+
+  if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
+    return false;
+  }
+
+  if (fileExists(file_save)) {
+    http.end();
+    error = F("File exists: ");
+    error += file_save;
+    addLog(LOG_LEVEL_ERROR, error);
+    return false;
+  }
 
   long len = http.getSize();
   fs::File f   = tryOpenFile(file_save, "w");
@@ -1206,6 +1215,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     const size_t downloadBuffSize = 256;
     uint8_t buff[downloadBuffSize];
     size_t  bytesWritten = 0;
+    unsigned long timeout = millis() + 2000;
 
     // get tcp stream
     WiFiClient *stream = &client;
@@ -1249,13 +1259,102 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       String log = F("downloadFile: ");
       log += file_save;
       log += F(" Success");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     return true;
   }
+  http.end();
   error = F("Failed to open file for writing: ");
   error += file_save;
   addLog(LOG_LEVEL_ERROR, error);
+  return false;
+}
+
+bool downloadFirmware(const String& url, String& error)
+{
+  String     file_save;
+  String     user;
+  String     pass;
+  WiFiClient client;
+  HTTPClient http;
+  client.setTimeout(2000);
+
+  if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
+    return false;
+  }
+
+  size_t len = http.getSize();
+
+  if (Update.begin(len, U_FLASH, Settings.Pin_status_led, Settings.Pin_status_led_Inversed ? LOW : HIGH)) {
+    const size_t downloadBuffSize = 256;
+    uint8_t buff[downloadBuffSize];
+    size_t  bytesWritten = 0;
+    unsigned long timeout = millis() + 2000;
+
+    // get tcp stream
+    WiFiClient *stream = &client;
+    while (http.connected() && (len > 0 || len == -1)) {
+      // read up to downloadBuffSize at a time.
+      const size_t c = stream->readBytes(buff, std::min(static_cast<size_t>(len), downloadBuffSize));
+
+      if (c > 0) {
+        timeout = millis() + 2000;
+        if (Update.write(buff, c) != c) {
+          error  = F("Error saving firmware update: ");
+          error += file_save;
+          error += ' ';
+          error += bytesWritten;
+          error += F(" Bytes written");
+          addLog(LOG_LEVEL_ERROR, error);
+          Update.end();
+          http.end();
+          return false;
+        }
+        bytesWritten += c;
+        if (len > 0) { len -= c; }
+      }
+
+      if (timeOutReached(timeout)) {
+        error = F("Timeout: ");
+        error += file_save;
+        addLog(LOG_LEVEL_ERROR, error);
+        delay(0);
+        Update.end();
+        http.end();
+        return false;
+      }
+      if (!UseRTOSMultitasking) {
+        // On ESP32 the schedule is executed on the 2nd core.
+        Scheduler.handle_schedule();
+      }
+      backgroundtasks();
+    }
+    http.end();
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("downloadFile: ");
+      log += file_save;
+      log += F(" Success");
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+    if (Update.end()) {
+      if (Settings.UseRules) {
+        String event = F("ProvisionFirmware#success=");
+        event += file_save;
+        eventQueue.addMove(std::move(event));        
+      }
+    }
+    return true;
+  }
+  http.end();
+  Update.end();
+  error = F("Failed update firmware: ");
+  error += file_save;
+  addLog(LOG_LEVEL_ERROR, error);
+  if (Settings.UseRules) {
+    String event = F("ProvisionFirmware#failed=");
+    event += file_save;
+    eventQueue.addMove(std::move(event));        
+  }
   return false;
 }
 
