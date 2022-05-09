@@ -140,10 +140,10 @@ public:
   void sendCommand(const uint8_t cmd)
   {
     sendCommandTime = millis();
-    pinMode(_dataPin, OUTPUT);
-
+    
     // Transmission Start sequence
     digitalWrite(_dataPin, HIGH);
+    pinMode(_dataPin, OUTPUT);
     digitalWrite(_clockPin, HIGH);
     P031_DELAY_LONGER_CABLES
     digitalWrite(_dataPin, LOW);
@@ -159,10 +159,11 @@ public:
     p031_shiftOut(_dataPin, _clockPin, MSBFIRST, cmd);
 
     // Wait for ACK
+    pinMode(_dataPin, input_mode);
     bool ackerror = false;
     digitalWrite(_clockPin, HIGH);
     P031_DELAY_LONGER_CABLES
-    pinMode(_dataPin, input_mode);
+
     if (digitalRead(_dataPin) != LOW) ackerror = true;
     digitalWrite(_clockPin, LOW);
     P031_DELAY_LONGER_CABLES
