@@ -11,6 +11,10 @@ int calc_CRC16(const char *ptr, int count)
 
   crc = 0;
 
+  if (ptr == nullptr) {
+    return crc;
+  }
+
   while (--count >= 0)
   {
     crc = crc ^ static_cast<int>(*ptr++) << 8;
@@ -32,19 +36,21 @@ int calc_CRC16(const char *ptr, int count)
 uint32_t calc_CRC32(const uint8_t *data, size_t length) {
   uint32_t crc = 0xffffffff;
 
-  while (length--) {
-    uint8_t c = *data++;
+  if (data != nullptr) {
+    while (length--) {
+      uint8_t c = *data++;
 
-    for (uint32_t i = 0x80; i > 0; i >>= 1) {
-      bool bit = crc & 0x80000000;
+      for (uint32_t i = 0x80; i > 0; i >>= 1) {
+        bool bit = crc & 0x80000000;
 
-      if (c & i) {
-        bit = !bit;
-      }
-      crc <<= 1;
+        if (c & i) {
+          bit = !bit;
+        }
+        crc <<= 1;
 
-      if (bit) {
-        crc ^= 0x04c11db7;
+        if (bit) {
+          crc ^= 0x04c11db7;
+        }
       }
     }
   }

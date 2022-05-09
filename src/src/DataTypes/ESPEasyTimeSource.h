@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <Arduino.h>
 
+class String;
 
 // Time Source type, sort by priority.
 // Enum values are sent via NodeStruct, so only add new ones and don't change existing values
