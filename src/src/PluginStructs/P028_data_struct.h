@@ -50,6 +50,17 @@
 # define BME280_HUMIDITY_CALIB_DATA_LEN          7
 # define BME280_P_T_H_DATA_LEN                   8
 
+# define P028_ERROR_IGNORE        0
+# define P028_ERROR_MIN_RANGE     1
+# define P028_ERROR_ZERO          2
+# define P028_ERROR_MAX_RANGE     3
+# define P028_ERROR_NAN           4
+
+# define P028_I2C_ADDRESS         PCONFIG(0)
+# define P028_ALTITUDE            PCONFIG(1)
+# define P028_TEMPERATURE_OFFSET  PCONFIG(2)
+# define P028_ERROR_STATE_OUTPUT  PCONFIG(3)
+
 typedef struct
 {
   uint16_t dig_T1 = 0;
@@ -99,30 +110,31 @@ enum BMx_state {
   BMx_Initialized,
   BMx_Wait_for_samples,
   BMx_New_values,
-  BMx_Values_read
+  BMx_Values_read,
+  BMx_Error
 };
 
 
 struct P028_data_struct : public PluginTaskData_base {
   P028_data_struct(uint8_t addr);
 
-  uint8_t    get_config_settings() const;
+  uint8_t                    get_config_settings() const;
 
-  uint8_t    get_control_settings() const;
+  uint8_t                    get_control_settings() const;
 
-  String  getFullDeviceName() const;
+  String                     getFullDeviceName() const;
 
-  const __FlashStringHelper *  getDeviceName() const;
+  const __FlashStringHelper* getDeviceName() const;
 
-  boolean hasHumidity() const;
+  boolean                    hasHumidity() const;
 
-  bool    initialized() const;
+  bool                       initialized() const;
 
-  void    setUninitialized();
+  void                       setUninitialized();
 
   // Only perform the measurements with big interval to prevent the sensor from warming up.
-  bool    updateMeasurements(float         tempOffset,
-                             unsigned long task_index);
+  bool                       updateMeasurements(float         tempOffset,
+                                                unsigned long task_index);
 
   // **************************************************************************/
   // Check BME280 presence
