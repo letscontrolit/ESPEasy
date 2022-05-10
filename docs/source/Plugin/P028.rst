@@ -77,7 +77,7 @@ Device Settings
 
 * **Temperatire offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set per 0.1 degree. When using a BME280 sensor, this also adds a compensation to the **Humidity** reading.
 
-* **Error State Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the value to report in that situation can be set here.
+* **Error State Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the **Temperature** value to report in that situation can be set here. Both **Humidity** and **Pressure** will be set to -1 when read errors occur.
 
 .. image:: P028_ErrorStateValueOptions.png
   :alt: Error State Value options

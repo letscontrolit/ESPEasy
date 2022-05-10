@@ -171,8 +171,8 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
                 break;
             }
             UserVar[event->BaseVarIndex]     = errorValue;
-            UserVar[event->BaseVarIndex + 1] = errorValue;
-            UserVar[event->BaseVarIndex + 2] = errorValue;
+            UserVar[event->BaseVarIndex + 1] = -1.0f;
+            UserVar[event->BaseVarIndex + 2] = -1.0f;
           }
         } else {
           P028_data->state = BMx_Values_read;
