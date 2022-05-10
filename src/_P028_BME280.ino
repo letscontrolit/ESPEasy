@@ -74,6 +74,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P028_I2C_ADDRESS);
+        addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -92,7 +93,6 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           addUnit(detectedString);
         }
       }
-      addFormNote(F("SDO Low=0x76, High=0x77"));
 
       addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), P028_ALTITUDE);
       addUnit('m');
