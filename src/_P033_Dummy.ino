@@ -62,8 +62,72 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD:
+    {
+      addFormCheckBox(F("Restore state after power lost"), F("p033_restore"), static_cast<bool>(PCONFIG(1)));
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SAVE:
+    {
+      PCONFIG(1) = isFormItemChecked(F("p033_restore"));
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("Dummy: set Restore state after power lost to ");
+        log += PCONFIG(1);
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+
+      success    = true;
+      break;
+    }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      if (PCONFIG(1)) {
+        for (uint8_t x = 0, cnt = getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0))); x < cnt; x++) {
+          if (PCONFIG_FLOAT(x) != UserVar[event->BaseVarIndex + x]) {
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("Dummy: detected update value ");
+              log += x + 1;
+              //log += F(" from ");
+              //log += PCONFIG_FLOAT(x);
+              log += F(" to ");
+              log += UserVar[event->BaseVarIndex + x];
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
+            PCONFIG_FLOAT(x) = UserVar[event->BaseVarIndex + x];
+            success = true;
+          }
+        }
+        if (success) {
+          //SaveTaskSettings(event->TaskIndex);
+          String res = SaveSettings();
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Dummy: flush changes: ");
+            log += res;
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
+        }
+      }
+      break;
+    }
+
     case PLUGIN_INIT:
     {
+      if (PCONFIG(1)) {
+        for (uint8_t x = 0, cnt = getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0))); x < cnt; x++) {
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log = F("Dummy: restore value ");
+            log += x + 1;
+            log += F(" to ");
+            log += PCONFIG_FLOAT(x);
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
+          UserVar[event->BaseVarIndex + x] = PCONFIG_FLOAT(x);
+        }
+      }
       success = true;
       break;
     }
