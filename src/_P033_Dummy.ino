@@ -72,13 +72,6 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(1) = isFormItemChecked(F("p033_restore"));
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("Dummy: set Restore state after power lost to ");
-        log += PCONFIG(1);
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-
       success    = true;
       break;
     }
