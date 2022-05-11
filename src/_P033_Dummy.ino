@@ -66,6 +66,15 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Restore state after power lost"), F("p033_restore"), static_cast<bool>(PCONFIG(1)));
+#ifdef SIZE_1M
+      addFormNote(F("May afect on flash health!"));
+#else
+      addFormNote(F("When enabled, the task will automatically monitor changes of variables every second and write changes to the filesystem.<br/>"
+        "If your rules will too hard use this task, it may be dangerous for your storage.<br/>"
+        "For this reason, the writings to the flash storage has daily limit, that also affect on this feature.<br/>"
+        "So, you should use such task very carefully. For example for sloughly process, like heating boiler at winter-summer season."
+        ));
+#endif /*SIZE_1M*/
       success = true;
       break;
     }
