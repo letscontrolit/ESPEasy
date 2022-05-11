@@ -62,6 +62,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+#if PLUGIN_CONFIGFLOATVAR_MAX >= VARS_PER_TASK
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Restore state after power lost"), F("p033_restore"), static_cast<bool>(PCONFIG(1)));
@@ -97,9 +98,11 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+#endif /* PLUGIN_CONFIGFLOATVAR_MAX >= VARS_PER_TASK */
 
     case PLUGIN_INIT:
     {
+#if PLUGIN_CONFIGFLOATVAR_MAX >= VARS_PER_TASK
       if (PCONFIG(1))
       {
         unsigned count = getValueCountFromSensorType(static_cast < Sensor_VType > (PCONFIG(0)));
@@ -110,6 +113,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
           addLogMove(LOG_LEVEL_INFO, log);
         }
       }
+#endif /* PLUGIN_CONFIGFLOATVAR_MAX >= VARS_PER_TASK */
       success = true;
       break;
     }
