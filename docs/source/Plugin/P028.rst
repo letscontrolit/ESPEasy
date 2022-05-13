@@ -77,19 +77,22 @@ Device Settings
 
 * **Temperatire offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set per 0.1 degree. When using a BME280 sensor, this also adds a compensation to the **Humidity** reading.
 
-* **Error State Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the **Temperature** value to report in that situation can be set here. Both **Humidity** and **Pressure** will be set to -1 when read errors occur.
-
-.. image:: P028_ErrorStateValueOptions.png
-  :alt: Error State Value options
-
-* *Ignore* Do not return any value (does log the error once per second at INFO level).
-* *-127* Set to the out-of-range value of -127.
-* *0* Set to the unknown value of 0.
-* *125* Set to the out-of-range value of 125.
-* *NaN* Set to the error value of NaN (Not a number).
-
 Data Acquisition
 ^^^^^^^^^^^^^^^^
+
+* **Temperature Error Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the **Temperature** value to report in that situation can be set here. Both **Humidity** and **Pressure** will be set to -1 when read errors occur.
+
+.. image:: P028_TemperatureErrorValueOptions.png
+  :alt: Temperature Error Value options
+
+* *Ignore* : Do not return any value (does log the error once per second at INFO level).
+* *Min -1 (-41C°)* : Set to the out-of-range value of -41°C.
+* *0* : Set to an unknown value of 0.
+* *max +1 (+85°C)* : Set to the out-of-range value of 86°C.
+* *NaN* : Set to the error value of NaN (Not a number).
+* *-1°K (-274°C)* : Set to the impossible temperature value of -1° Kelvin.
+
+The Temperature range of the sensor, according to the datasheet, is -40 to +85 °C, so the out of range values of -41 and +86 can be selected as error state values.
 
 Single event with all values, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
