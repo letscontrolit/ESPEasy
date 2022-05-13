@@ -124,7 +124,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_CONFIG:
+    case PLUGIN_GET_CONFIG_VALUE:
     {
       String command = parseString(string, 1);
 
