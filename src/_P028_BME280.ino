@@ -10,7 +10,7 @@
 // #include <math.h>
 
 # define PLUGIN_028
-# define PLUGIN_ID_028        28
+# define PLUGIN_ID_028         28
 # define PLUGIN_NAME_028       "Environment - BMx280"
 # define PLUGIN_VALUENAME1_028 "Temperature"
 # define PLUGIN_VALUENAME2_028 "Humidity"
@@ -36,6 +36,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].ErrorStateValues   = true;
       break;
     }
 
@@ -51,6 +52,42 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_028));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_028));
       break;
+    }
+
+    case PLUGIN_INIT_VALUE_RANGES:
+    {
+      // Min/Max values obtained from the BMP280/BME280 datasheets (both have equal ranges)
+      ExtraTaskSettings.TaskDeviceMinValue[0] = -40.0f; // Temperature min/max
+      ExtraTaskSettings.TaskDeviceMaxValue[0] = 85.0f;
+      ExtraTaskSettings.TaskDeviceMinValue[1] = 0.0f;   // Humidity min/max
+      ExtraTaskSettings.TaskDeviceMaxValue[1] = 100.0f;
+      ExtraTaskSettings.TaskDeviceMinValue[2] = 300.0f; // Barometric Pressure min/max
+      ExtraTaskSettings.TaskDeviceMaxValue[2] = 1100.0f;
+
+      switch (P028_ERROR_STATE_OUTPUT) {                // Only temperature error is configurable
+        case P028_ERROR_MIN_RANGE:
+          ExtraTaskSettings.TaskDeviceErrorValue[0] = ExtraTaskSettings.TaskDeviceMinValue[0] - 1.0f;
+          break;
+        case P028_ERROR_ZERO:
+          ExtraTaskSettings.TaskDeviceErrorValue[0] = 0.0f;
+          break;
+        case P028_ERROR_MAX_RANGE:
+          ExtraTaskSettings.TaskDeviceErrorValue[0] = ExtraTaskSettings.TaskDeviceMaxValue[0] + 1.0f;
+          break;
+        case P028_ERROR_NAN:
+          ExtraTaskSettings.TaskDeviceErrorValue[0] = NAN;
+          break;
+        case P028_ERROR_MIN_K:
+          ExtraTaskSettings.TaskDeviceErrorValue[0] = -274.0f;
+          break;
+        default:
+          break;
+      }
+
+      ExtraTaskSettings.TaskDeviceErrorValue[1] = -1.0f; // Humidity error
+      ExtraTaskSettings.TaskDeviceErrorValue[2] = -1.0f; // Pressure error
+
+      break;                                             // No return state needed
     }
 
     case PLUGIN_INIT:
@@ -108,15 +145,40 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       }
       addFormNote(offsetNote);
 
-      {
-        // Value in case of Error
-        const __FlashStringHelper *resultsOptions[5] = { F("Ignore"), F("-127"), F("0"), F("125"), F("NaN") };
-        int resultsOptionValues[5]                   =
-        { P028_ERROR_IGNORE, P028_ERROR_MIN_RANGE, P028_ERROR_ZERO, P028_ERROR_MAX_RANGE, P028_ERROR_NAN };
-        addFormSelector(F("Error State Value"), F("p028_err"), 5, resultsOptions, resultsOptionValues, P028_ERROR_STATE_OUTPUT);
-      }
-
       success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
+    {
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("BMx280: SHOW_ERRORSTATE_OPT"));
+      # endif // ifndef BUILD_NO_DEBUG
+
+      // Value in case of Error
+      const __FlashStringHelper *resultsOptions[] = {
+        F("Ignore"),
+        F("Min -1 (-41&deg;C)"),
+        F("0"),
+        F("Max +1 (+86&deg;C)"),
+        F("NaN"),
+        F("-1&deg;K (-274&deg;C)") };
+      int resultsOptionValues[] =
+      { P028_ERROR_IGNORE, P028_ERROR_MIN_RANGE, P028_ERROR_ZERO, P028_ERROR_MAX_RANGE, P028_ERROR_NAN, P028_ERROR_MIN_K };
+      addFormSelector(F("Temperature Error Value"), F("p028_err"), 6, resultsOptions, resultsOptionValues, P028_ERROR_STATE_OUTPUT);
+
+      break;
+    }
+
+    case PLUGIN_GET_ERROR_VALUE_STATE:                          // Called if PLUGIN_READ returns false
+    {
+      success = (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE); // return state
+
+      if (success) {
+        UserVar[event->BaseVarIndex]     = ExtraTaskSettings.TaskDeviceErrorValue[0];
+        UserVar[event->BaseVarIndex + 1] = ExtraTaskSettings.TaskDeviceErrorValue[1];
+        UserVar[event->BaseVarIndex + 2] = ExtraTaskSettings.TaskDeviceErrorValue[2];
+      }
       break;
     }
 
@@ -151,47 +213,26 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        if ((P028_data->state != BMx_New_values) &&
-            (P028_data->state != BMx_Error)) {
-          success = false;
+        if (P028_data->state != BMx_New_values) {
           break;
         }
 
-        if (P028_data->state == BMx_Error) {
-          if (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE) {
-            float errorValue = NAN;
+        P028_data->state = BMx_Values_read;
 
-            success = true; // Act if like we measured something
-
-            switch (P028_ERROR_STATE_OUTPUT) {
-              case P028_ERROR_MIN_RANGE: errorValue = -127; break;
-              case P028_ERROR_ZERO:      errorValue = 0; break;
-              case P028_ERROR_MAX_RANGE: errorValue = 125; break;
-              default:
-                break;
-            }
-            UserVar[event->BaseVarIndex]     = errorValue;
-            UserVar[event->BaseVarIndex + 1] = -1.0f;
-            UserVar[event->BaseVarIndex + 2] = -1.0f;
-          }
-        } else {
-          P028_data->state = BMx_Values_read;
-
-          if (!P028_data->hasHumidity()) {
-            // Patch the sensor type to output only the measured values.
-            event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
-          }
-          UserVar[event->BaseVarIndex]     = P028_data->last_temp_val;
-          UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
-          const int elev = P028_ALTITUDE;
-
-          if (elev != 0) {
-            UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
-          } else {
-            UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
-          }
-          success = true;
+        if (!P028_data->hasHumidity()) {
+          // Patch the sensor type to output only the measured values.
+          event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
         }
+        UserVar[event->BaseVarIndex]     = P028_data->last_temp_val;
+        UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
+        const int elev = P028_ALTITUDE;
+
+        if (elev != 0) {
+          UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
+        } else {
+          UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
+        }
+        success = true;
 
         if (success &&
             loglevelActiveFor(LOG_LEVEL_INFO)) {

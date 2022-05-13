@@ -55,6 +55,7 @@
 # define P028_ERROR_ZERO          2
 # define P028_ERROR_MAX_RANGE     3
 # define P028_ERROR_NAN           4
+# define P028_ERROR_MIN_K         5
 
 # define P028_I2C_ADDRESS         PCONFIG(0)
 # define P028_ALTITUDE            PCONFIG(1)
