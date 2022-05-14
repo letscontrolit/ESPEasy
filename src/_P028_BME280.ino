@@ -77,9 +77,11 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         case P028_ERROR_NAN:
           ExtraTaskSettings.TaskDeviceErrorValue[0] = NAN;
           break;
+        # ifndef LIMIT_BUILD_SIZE
         case P028_ERROR_MIN_K:
           ExtraTaskSettings.TaskDeviceErrorValue[0] = -274.0f;
           break;
+        # endif // ifndef LIMIT_BUILD_SIZE
         default:
           break;
       }
@@ -131,10 +133,10 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormNumericBox(F("Altitude"), F("p028_bme280_elev"), P028_ALTITUDE);
+      addFormNumericBox(F("Altitude"), F("p028_elev"), P028_ALTITUDE);
       addUnit('m');
 
-      addFormNumericBox(F("Temperature offset"), F("p028_bme280_tempoffset"), P028_TEMPERATURE_OFFSET);
+      addFormNumericBox(F("Temperature offset"), F("p028_tempoffset"), P028_TEMPERATURE_OFFSET);
       addUnit(F("x 0.1C"));
       String offsetNote = F("Offset in units of 0.1 degree Celsius");
 
@@ -156,16 +158,33 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifndef BUILD_NO_DEBUG
 
       // Value in case of Error
-      const __FlashStringHelper *resultsOptions[] = {
+      # ifndef LIMIT_BUILD_SIZE
+      #  define P028_ERROR_STATE_COUNT 6
+      # else // ifndef LIMIT_BUILD_SIZE
+      #  define P028_ERROR_STATE_COUNT 5
+      # endif // ifndef LIMIT_BUILD_SIZE
+      const __FlashStringHelper *resultsOptions[P028_ERROR_STATE_COUNT] = {
         F("Ignore"),
         F("Min -1 (-41&deg;C)"),
         F("0"),
         F("Max +1 (+86&deg;C)"),
         F("NaN"),
-        F("-1&deg;K (-274&deg;C)") };
-      int resultsOptionValues[] =
-      { P028_ERROR_IGNORE, P028_ERROR_MIN_RANGE, P028_ERROR_ZERO, P028_ERROR_MAX_RANGE, P028_ERROR_NAN, P028_ERROR_MIN_K };
-      addFormSelector(F("Temperature Error Value"), F("p028_err"), 6, resultsOptions, resultsOptionValues, P028_ERROR_STATE_OUTPUT);
+        # ifndef LIMIT_BUILD_SIZE
+        F("-1&deg;K (-274&deg;C)")
+        # endif // ifndef LIMIT_BUILD_SIZE
+      };
+      int resultsOptionValues[P028_ERROR_STATE_COUNT] = {
+        P028_ERROR_IGNORE, P028_ERROR_MIN_RANGE, P028_ERROR_ZERO, P028_ERROR_MAX_RANGE, P028_ERROR_NAN,
+        # ifndef LIMIT_BUILD_SIZE
+        P028_ERROR_MIN_K
+        # endif // ifndef LIMIT_BUILD_SIZE
+      };
+      addFormSelector(F("Temperature Error Value"),
+                      F("p028_err"),
+                      P028_ERROR_STATE_COUNT,
+                      resultsOptions,
+                      resultsOptionValues,
+                      P028_ERROR_STATE_OUTPUT);
 
       break;
     }
@@ -175,9 +194,9 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       success = (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE); // return state
 
       if (success) {
-        UserVar[event->BaseVarIndex]     = ExtraTaskSettings.TaskDeviceErrorValue[0];
-        UserVar[event->BaseVarIndex + 1] = ExtraTaskSettings.TaskDeviceErrorValue[1];
-        UserVar[event->BaseVarIndex + 2] = ExtraTaskSettings.TaskDeviceErrorValue[2];
+        for (uint8_t i = 0; i < 3; i++) {
+          UserVar[event->BaseVarIndex + i] = ExtraTaskSettings.TaskDeviceErrorValue[i];
+        }
       }
       break;
     }
@@ -185,8 +204,8 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P028_I2C_ADDRESS        = getFormItemInt(F("i2c_addr"));
-      P028_ALTITUDE           = getFormItemInt(F("p028_bme280_elev"));
-      P028_TEMPERATURE_OFFSET = getFormItemInt(F("p028_bme280_tempoffset"));
+      P028_ALTITUDE           = getFormItemInt(F("p028_elev"));
+      P028_TEMPERATURE_OFFSET = getFormItemInt(F("p028_tempoffset"));
       P028_ERROR_STATE_OUTPUT = getFormItemInt(F("p028_err"));
       success                 = true;
       break;
@@ -232,10 +251,10 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         } else {
           UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
         }
-        success = true;
 
-        if (success &&
-            loglevelActiveFor(LOG_LEVEL_INFO)) {
+        # ifndef LIMIT_BUILD_SIZE
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log;
 
           if (log.reserve(40)) { // Prevent re-allocation
@@ -262,6 +281,8 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
             addLogMove(LOG_LEVEL_INFO, log);
           }
         }
+        # endif // ifndef LIMIT_BUILD_SIZE
+        success = true;
       }
       break;
     }
