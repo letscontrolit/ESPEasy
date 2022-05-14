@@ -295,6 +295,23 @@ void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 }
 
 // ********************************************************************************
+// Add a MAC Box form
+// ********************************************************************************
+void addFormMACBox(const String& label, const String& id, const MAC_address mac)
+{
+  addRowLabel_tr_id(label, id);
+
+  addHtml(F("<input class='wide' type='text' name='"));
+  addHtml(id);
+  addHtml(F("' value='"));
+
+  if (!mac.all_zero()) {
+    addHtml(mac.toString());
+  }
+  addHtml(F("'>"));
+}
+
+// ********************************************************************************
 // Add a IP Access Control select dropdown list
 // ********************************************************************************
 void addFormIPaccessControlSelect(const String& label, const String& id, int choice)
