@@ -465,7 +465,8 @@ table.multirow tr:nth-child(even) {
 	border-width: 4px 1px 1px;
 	color: #444;
 	padding: 4px 16px 8px;
-	white-space: nowrap
+	white-space: nowrap;
+	line-height: 20px;
 }
 
 .menu.active {
