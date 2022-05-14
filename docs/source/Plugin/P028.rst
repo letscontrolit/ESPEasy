@@ -31,11 +31,11 @@ Introduction
 
 Specifications:
  * Temperature (-40C to +85C)
- * Relative humidity (0-100 %RH)
+ * Relative humidity (0-100 %RH) (Only available from BME280 sensor)
  * Barometric pressure (300-1100 hPa)
 
 .. warning:: 
-  The BME280 is easily mistaken for its sibling the **BMP280**. Sometimes the PCB have both BME *and* BMP280
+  The **BME280** is easily mistaken for its sibling the **BMP280**. Sometimes the PCB have both BME *and* BMP280
   written on it, it's probably because the footprint is the same for BME and BMP = the same PCB board is used
   by both. Luckily, this plugin supports both types of sensors.
 
@@ -52,7 +52,8 @@ Wiring
  3.3V       <-->   VIN
  GND        <-->   GND
 
-.. note:: If you have changed the I2C settings in the hardware setup you need to connect to those instead of GPIO 4 and 5.
+.. note:: 
+  If you have changed the I2C settings in the hardware setup you need to connect to those instead of GPIO 4 and 5.
 
 Configuration
 -------------
@@ -75,28 +76,28 @@ Device Settings
 
 * **Altitude** When not at sea-level, the plugin can apply an altitude compensation on the **Pressure** value.
 
-* **Temperatire offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set per 0.1 degree. When using a BME280 sensor, this also adds a compensation to the **Humidity** reading.
+* **Temperature offset** Depending on the sensor and the location of the sensor, it may be required to apply some temperature compensation. This can be set in steps of 0.1 degree. When using a BME280 sensor, this also applies a compensation to the **Humidity** reading.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
-* **Temperature Error Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the **Temperature** value to report in that situation can be set here. Both **Humidity** and **Pressure** will be set to -1 when read errors occur.
+* **Temperature Error Value** If no sensor is connected, or the sensor suffers from read errors for some reason, the **Temperature** value to report in that situation can be set here. Both **Humidity** and **Pressure** will be set to -1 when such read errors occur.
 
 .. image:: P028_TemperatureErrorValueOptions.png
   :alt: Temperature Error Value options
 
 * *Ignore* : Do not return any value (does log the error once per second at INFO level).
-* *Min -1 (-41C°)* : Set to the out-of-range value of -41°C.
+* *Min -1 (-41C°)* : Set to the out-of-range value, below sensor minimum, of -41°C.
 * *0* : Set to an unknown value of 0.
-* *max +1 (+85°C)* : Set to the out-of-range value of 86°C.
-* *NaN* : Set to the error value of NaN (Not a number).
+* *max +1 (+85°C)* : Set to the out-of-range value, above sensor maximum, of 86°C.
+* *NaN* : Set to the error value ``NaN`` (Not a number).
 * *-1°K (-274°C)* : Set to the impossible temperature value of -1° Kelvin.
 
 The Temperature range of the sensor, according to the datasheet, is -40 to +85 °C, so the out of range values of -41 and +86 can be selected as error state values.
 
 Single event with all values, Send to Controller and Interval settings are standard available configuration items. Send to Controller only when one or more Controllers are configured.
 
-**Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
+* **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec.
 
 Values
 ^^^^^^
@@ -118,10 +119,10 @@ Rules examples
 
 .. code-block:: none
 
-    on BME#pressure do
-     if %eventvalue1%>999
-       Publish,%sysname%/pressure,Is normal
-     endif
+    on BME#Pressure do
+      if %eventvalue1%>999
+        Publish,%sysname%/pressure,Is normal
+      endif
     endon
 
 Change I2C address
