@@ -52,12 +52,12 @@
 #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
 #    include "src/Static/Fonts/Roboto_Regular16pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
 #    include "src/Static/Fonts/RobotoCondensed_Regular16pt7b.h"
-#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #    include "src/Static/Fonts/RobotoMono_Regular16pt7b.h"
-#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #   include "src/Static/Fonts/whitrabt18pt7b.h"
