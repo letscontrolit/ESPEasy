@@ -108,7 +108,12 @@ textarea {
 
 .button.help {
 	border-radius: 50%;
-	padding: 2px 4px
+	padding: 0;
+	width: 25px;
+	height: 25px;
+	display: inline-block;
+	vertical-align: middle;
+	margin: auto;
 }
 
 .checkmark,
