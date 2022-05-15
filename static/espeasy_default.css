@@ -110,7 +110,7 @@ textarea {
 	border-radius: 50%;
 	padding: 0;
 	width: 25px;
-	height: 25px;
+	line-height: 22px;
 	display: inline-block;
 	vertical-align: middle;
 	margin: auto;
