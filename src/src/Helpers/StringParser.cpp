@@ -126,7 +126,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       {
         // Address a value from a plugin.
         // For example: "[bme#temp]"
-        // If value name is unknown, run a PLUGIN_GET_CONFIG command.
+        // If value name is unknown, run a PLUGIN_GET_CONFIG_VALUE command.
         // For example: "[<taskname>#getLevel]"
         taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
@@ -147,7 +147,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             struct EventStruct TempEvent(taskIndex);
             String tmpName = valueName;
 
-            if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+            if (PluginCall(PLUGIN_GET_CONFIG_VALUE, &TempEvent, tmpName))
             {
               transformValue(newString, minimal_lineSize, std::move(tmpName), format, tmpString);
             }
