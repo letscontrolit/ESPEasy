@@ -211,10 +211,8 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
     reply += F("{\n\"log\": \"");
     {
       // truncate to 25 chars, max MQTT message size = 128 including header...
-      int colonPos = log.indexOf(':');
-      if (colonPos == -1) {
-        colonPos = 0;
-      }
+      int colonPos = 1 + log.indexOf(':');
+
       String tmp = log.substring(colonPos, colonPos + 25);
       tmp.trim();      
       reply += tmp;

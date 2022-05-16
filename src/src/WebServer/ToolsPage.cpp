@@ -43,7 +43,7 @@ void handle_tools() {
   addHtmlAttribute(F("style"), F("width: 98%"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  F("cmd"));
-  addHtmlAttribute(F("value"), webrequest);
+  addHtmlAttribute(F("value"), webArg(F("cmd")));
   addHtml('>');
 
   html_TR_TD();

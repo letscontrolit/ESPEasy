@@ -92,7 +92,7 @@ const __FlashStringHelper * getPluginFunctionName(int function) {
     case PLUGIN_SET_CONFIG:            return F("SET_CONFIG");
     case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
     case PLUGIN_EXIT:                  return F("EXIT");
-    case PLUGIN_GET_CONFIG:            return F("GET_CONFIG");
+    case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
   }
@@ -126,7 +126,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_SET_CONFIG:            return false;
     case PLUGIN_GET_DEVICEGPIONAMES:   return false;
     case PLUGIN_EXIT:                  return false;
-    case PLUGIN_GET_CONFIG:            return false;
+    case PLUGIN_GET_CONFIG_VALUE:      return false;
     case PLUGIN_UNCONDITIONAL_POLL:    return false;
     case PLUGIN_REQUEST:               return true;
   }
