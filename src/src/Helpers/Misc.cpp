@@ -30,8 +30,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
 
   if (command == F("config"))
   {
-    success = true;
-
+    // Command: "config,task,<taskname>,<actual Set Config command>"
     if (parseString(string, 2) == F("task"))
     {
       String configTaskName = parseStringKeepCase(string, 3);
@@ -41,7 +40,7 @@ bool remoteConfig(struct EventStruct *event, const String& string)
       String configCommand = parseStringToEndKeepCase(string, 4);
 
       if ((configTaskName.isEmpty()) || (configCommand.isEmpty())) {
-        return success; // TD-er: Should this be return false?
+        return success;
       }
       taskIndex_t index = findTaskIndexByName(configTaskName);
 
@@ -50,6 +49,8 @@ bool remoteConfig(struct EventStruct *event, const String& string)
         event->setTaskIndex(index);
         success = PluginCall(PLUGIN_SET_CONFIG, event, configCommand);
       }
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("Expected syntax: config,task,<taskname>,<config command>"));
     }
   }
   return success;
