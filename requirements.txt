@@ -19,7 +19,7 @@ MarkupSafe==2.0.1
 marshmallow==3.14.0
 packaging==21.0
 pathtools==0.1.2
-platformio<6
+platformio>=6.0.1
 port-for==0.6.1
 pycparser==2.20
 pyelftools==0.27
