@@ -22,6 +22,8 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
+#include "../../ESPEasy-Globals.h"
+
 #include <IPAddress.h>
 
 // Generic Networking routines
