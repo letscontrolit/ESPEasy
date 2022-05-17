@@ -9,6 +9,7 @@
 # include "../DataTypes/ESPEasyFileType.h"
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Networking.h"
 # include "../Helpers/StringConverter.h"
 
 
