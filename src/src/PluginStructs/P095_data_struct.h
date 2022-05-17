@@ -4,17 +4,19 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P095
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_ILI9341.h>              // include Adafruit ILI9341 TFT library
+# include <Adafruit_GFX.h>                              // include Adafruit graphics library
+# include <Adafruit_ILI9341.h>                          // include Adafruit ILI9341 TFT library
 
-# include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
+# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
 
-# define P095_Nlines           24           // The number of different lines which can be displayed
+# define P095_Nlines           24                       // The number of different lines which can be displayed
 # define P095_Nchars           60
-# define P095_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
+# define P095_DebounceTreshold  5                       // number of 20 msec (fifty per second) ticks before the button has settled
 
-// # define P095_SHOW_SPLASH                               // Enable to show initial splash (text)
+# ifndef LIMIT_BUILD_SIZE
+#  define P095_SHOW_SPLASH                              // Enable to show initial splash (text)
+# endif // ifndef LIMIT_BUILD_SIZE
 
 # define P095_CONFIG_VERSION            PCONFIG(0)      // Settings version
 # define P095_CONFIG_ROTATION           PCONFIG(1)      // Rotation
@@ -31,6 +33,7 @@
 # define P095_CONFIG_FLAG_USE_COL_ROW   3               // Flag: Use Col/Row text addressing in commands
 # define P095_CONFIG_FLAG_COMPAT_P095   4               // Flag: Compatibility -1 offset like original P095
 # define P095_CONFIG_FLAG_BACK_FILL     5               // Flag: Background fill when printing text
+# define P095_CONFIG_FLAG_SHOW_SPLASH   6               // Flag: Show splash during startup of the plugin
 # define P095_CONFIG_FLAG_CMD_TRIGGER   8               // Flag-offset to store 4 bits for Command trigger, uses bits 8, 9, 10 and 11
 # define P095_CONFIG_FLAG_FONTSCALE     12              // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
 # define P095_CONFIG_FLAG_MODE          16              // Flag-offset to store 4 bits for Mode, uses bits 16, 17, 18 and 19
@@ -43,6 +46,7 @@
 # define P095_CONFIG_FLAG_GET_FONTSCALE     (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_FONTSCALE))
 # define P095_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_MODE))
 # define P095_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_TYPE))
+# define P095_CONFIG_FLAG_GET_SHOW_SPLASH   (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_SHOW_SPLASH)) // Inverted setting, default on
 
 # ifdef ESP32
 
@@ -55,8 +59,8 @@
 # else // ifdef ESP32
 
 // Was: for D1 Mini with shield connection
-  #  define P095_TFT_CS        0 // D3
-  #  define P095_TFT_DC        4 // D2
+  #  define P095_TFT_CS        0  // D3
+  #  define P095_TFT_DC        4  // D2
   #  define P095_TFT_RST       -1 // D4 // -1
   #  define P095_BACKLIGHT_PIN -1 // D6 // 15 // D8 -> Blocks Wemos
 # endif // ifdef ESP32

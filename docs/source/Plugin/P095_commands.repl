@@ -15,6 +15,8 @@
     The default trigger is ``tft``
     ","
     Some commands are postfixed with ``cmd``, indicating device specific commands. Not device-specific commands are genericly applicable to all *Adafruit Graphics* enabled devices, using the ESPEasy ``AdafruitGFX_helper`` module.
+
+    If one of the alternative **Write Command trigger** options is selected, then also the plugin specific commands change from ``tftcmd`` to f.e. ``ili9481cmd``.
     "
     "
     | ``tftcmd,on``

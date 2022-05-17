@@ -19,6 +19,7 @@
 
 /**
  * Changelog:
+ * 2022-05-17 tonhuisman: Add setting for Splash during plugin startup, default on, when compiled in
  * 2022-01-09 tonhuisman: Add support for ILI9342 (M5Stack, 240x320), ILI9481, ILI9486 and ILI9488 (320x480) displays
  * 2021-11-16 tonhuisman: Add support for PLUGIN_GET_DISPLAY_PARAMETERS, removed commented old source
  * 2021-08-17 tonhuisman: Reformatted source using Uncrustify, small cleanups
@@ -251,7 +252,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                         hardwareOptions,
                         P095_CONFIG_FLAG_GET_TYPE);
       }
-      
+
       addFormSubHeader(F("Layout"));
 
       AdaGFXFormRotation(F("p095_rotate"), P095_CONFIG_ROTATION);
@@ -259,6 +260,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       AdaGFXFormTextPrintMode(F("p095_mode"), P095_CONFIG_FLAG_GET_MODE);
 
       AdaGFXFormFontScaling(F("p095_fontscale"), P095_CONFIG_FLAG_GET_FONTSCALE);
+
+      # ifdef P095_SHOW_SPLASH
+      addFormCheckBox(F("Show splash on start"),  F("p095_splash"),      P095_CONFIG_FLAG_GET_SHOW_SPLASH);
+      # endif // ifdef P095_SHOW_SPLASH
 
       addFormCheckBox(F("Clear display on exit"), F("p095_clearOnExit"), bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT));
 
@@ -351,6 +356,9 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P095_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("p095_colrow")));        // Bit 3 Col/Row addressing
       bitWrite(lSettings, P095_CONFIG_FLAG_COMPAT_P095,   !isFormItemChecked(F("p095_compat")));       // Bit 4 Compat_P095 (inv)
       bitWrite(lSettings, P095_CONFIG_FLAG_BACK_FILL,     !isFormItemChecked(F("p095_backfill")));     // Bit 5 Back fill text (inv)
+      # ifdef P095_SHOW_SPLASH
+      bitWrite(lSettings, P095_CONFIG_FLAG_SHOW_SPLASH,   !isFormItemChecked(F("p095_splash")));       // Bit 6 Show splash on startup (inv)
+      # endif // ifdef P095_SHOW_SPLASH
 
       set4BitToUL(lSettings, P095_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("p095_commandtrigger")));  // Bit 8..11 Command trigger
       set4BitToUL(lSettings, P095_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("p095_fontscale")));       // Bit 12..15 Font scale

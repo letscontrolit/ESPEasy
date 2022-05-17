@@ -117,6 +117,8 @@ Default setting is *Continue to next line*.
 
 * **Font scaling** The scaling factor for the currently active font. Select a factor between 1 and 10.
 
+* **Show splash on start** When available, and enabled, will show an ESPEasy & plugin name text-splash during start of the plugin. If also some content is configured, this will be written over the splash, as that is not cleared after being displayed.
+
 * **Clear display on exit** When checked, will clear the display when the task is disabled, either from settings or via the ``TaskDisable`` command. The screen will be turned off, and when a backlight pin is configured, also the backlight is turned off.
 
 * **Write Command trigger** The command to handle any commands for this device can be selected here. This can make the commands compatible with other (tft) displays, using the same command structure via the ESPEasy Adafruit Graphics helper class.

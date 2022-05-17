@@ -98,15 +98,8 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
  * Destructor
  ***************************************************************************/
 P095_data_struct::~P095_data_struct() {
-  if (nullptr != gfxHelper) {
-    delete gfxHelper;
-    gfxHelper = nullptr;
-  }
-
-  if (nullptr != tft) {
-    delete tft;
-    tft = nullptr;
-  }
+  delete gfxHelper;
+  delete tft;
 }
 
 /****************************************************************************
@@ -166,17 +159,20 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
     }
     updateFontMetrics();
-    tft->fillScreen(_bgcolor);             // fill screen with black color
-    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+    tft->fillScreen(_bgcolor);             // fill screen with background color
+    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and configured background
     tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
     tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
     displayOnOff(true);
     # ifdef P095_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
-    yPos += (3 * _fontheight);
-    gfxHelper->printText(String(F("ILI9341")).c_str(), 0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
-    delay(100); // Splash
+
+    if (P095_CONFIG_FLAG_GET_SHOW_SPLASH) {
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(),         0, yPos, 3, ADAGFX_WHITE, ADAGFX_BLUE);
+      yPos += (3 * _fontheight);
+      gfxHelper->printText(String(F("ILI934x/ILI948x")).c_str(), 0, yPos, 2, ADAGFX_BLUE,  ADAGFX_WHITE);
+      delay(100); // Splash
+    }
     # endif // ifdef P095_SHOW_SPLASH
     updateFontMetrics();
 
@@ -213,13 +209,10 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
     displayOnOff(false);
   }
 
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != tft) {
-    // delete tft; // Library is not properly inherited so no destructor called
-    free(tft); // Free up some memory without calling the destructor chain
-  }
+  delete tft;
   tft = nullptr;
   return true;
 }
