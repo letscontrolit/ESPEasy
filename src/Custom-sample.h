@@ -252,7 +252,7 @@
  */
 
 #define WEBSERVER_USE_CDN_JS_CSS  //When set, the followig URL will be used as a prefix for CSS, JS and favicon files, else they will be directly included into the HTML
-#define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20210503/static/"
+#define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20220427/static/"
 
 /*
  #######################################################################################################
