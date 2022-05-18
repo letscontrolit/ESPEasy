@@ -590,7 +590,7 @@ bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefi
 }
 
 struct range_pattern_helper_data {
-  const __FlashStringHelper *  logPrefix;
+  const __FlashStringHelper *  logPrefix = F("GPIO");
   uint32_t write = 0;
   uint32_t mask  = 0;
 
