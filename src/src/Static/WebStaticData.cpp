@@ -77,6 +77,12 @@ void serve_JS(JSfiles_e JSfile) {
     {
         #ifndef WEBSERVER_INCLUDE_JS
         url = generate_external_URL(url);
+        addHtml(F("<script"));
+        addHtml(F(" defer"));
+        addHtmlAttribute(F("src"), url);
+        addHtml('>');
+        html_add_script_end();
+        return;
         #else
         html_add_script(true);
         switch (JSfile) {
@@ -114,12 +120,6 @@ void serve_JS(JSfiles_e JSfile) {
         html_add_script_end();
         return;
         #endif
-        addHtml(F("<script"));
-        addHtml(F(" defer"));
-        addHtmlAttribute(F("src"), url);
-        addHtml('>');
-        html_add_script_end();
-        return;
     }
     // Now stream the file directly from the file system.
     html_add_script(false);
