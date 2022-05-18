@@ -31,7 +31,6 @@
 #include "../Helpers/StringProvider.h"
 
 
-
 String getReplacementString(const String& format, String& s) {
   int startpos = s.indexOf(format);
   int endpos   = s.indexOf('%', startpos + 1);
@@ -62,15 +61,16 @@ void replSunSetTimeString(const String& format, String& s, boolean useURLencode)
   repl(R, node_time.getSunsetTimeString(':', ESPEasy_time::getSecOffset(R)), s, useURLencode);
 }
 
-
-String timeReplacement_leadZero(int value) 
+String timeReplacement_leadZero(int value)
 {
   char valueString[5] = { 0 };
+
   sprintf_P(valueString, PSTR("%02d"), value);
   return valueString;
 }
 
-#define SMART_REPL_T(T, S)   if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
+#define SMART_REPL_T(T, S) \
+  if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 
 // FIXME TD-er: Try to match these with  StringProvider::getValue
 
@@ -95,7 +95,7 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
       case CR:                value = '\r'; break;
       case IP:                value = getValue(LabelType::IP_ADDRESS); break;
-      case IP4:               value = String( static_cast<int>(NetworkLocalIP()[3]) ); break; // 4th IP octet
+      case IP4:               value = String(static_cast<int>(NetworkLocalIP()[3])); break; // 4th IP octet
       case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
       case DNS:               value = getValue(LabelType::DNS); break;
       case DNS_1:             value = getValue(LabelType::DNS_1); break;
@@ -116,17 +116,18 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
 
       case ISNTP:             value = String(statusNTPInitialized ? 1 : 0); break;
-      case ISWIFI:            value = String(WiFiEventData.wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services initialized
-      // TODO: PKR: Add ETH Objects
+      case ISWIFI:            value = String(WiFiEventData.wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services
+                                                                               // initialized
+        // TODO: PKR: Add ETH Objects
       #ifdef HAS_ETHERNET
-      
+
       case ETHWIFIMODE:       value = getValue(LabelType::ETH_WIFI_MODE); break; // 0=WIFI, 1=ETH
       case ETHCONNECTED:      value = getValue(LabelType::ETH_CONNECTED); break; // 0=disconnected, 1=connected
       case ETHDUPLEX:         value = getValue(LabelType::ETH_DUPLEX); break;
       case ETHSPEED:          value = getValue(LabelType::ETH_SPEED); break;
       case ETHSTATE:          value = getValue(LabelType::ETH_STATE); break;
       case ETHSPEEDSTATE:     value = getValue(LabelType::ETH_SPEED_STATE); break;
-      #endif
+      #endif // ifdef HAS_ETHERNET
       case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
       case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
       case LF:                value = '\n'; break;
@@ -184,6 +185,20 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
       case VCC:               value = String(-1); break;
       #endif // if FEATURE_ADC_VCC
       case WI_CH:             value = String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel()); break;
+      case FLASH_FREQ:        value = getValue(LabelType::FLASH_CHIP_SPEED); break;
+      case FLASH_SIZE:        value = getValue(LabelType::FLASH_CHIP_REAL_SIZE); break;
+      case FLASH_CHIP_VENDOR: value = getValue(LabelType::FLASH_CHIP_VENDOR); break;
+      case FLASH_CHIP_MODEL:  value = getValue(LabelType::FLASH_CHIP_MODEL); break;
+      case FS_SIZE:           value = getValue(LabelType::FS_SIZE); break;
+      case FS_FREE:           value = getValue(LabelType::FS_FREE); break;
+
+      case ESP_CHIP_ID:       value = getValue(LabelType::ESP_CHIP_ID); break;
+      case ESP_CHIP_FREQ:     value = getValue(LabelType::ESP_CHIP_FREQ); break;
+      case ESP_CHIP_MODEL:    value = getValue(LabelType::ESP_CHIP_MODEL); break;
+      case ESP_CHIP_REVISION: value = getValue(LabelType::ESP_CHIP_REVISION); break;
+      case ESP_CHIP_CORES:    value = getValue(LabelType::ESP_CHIP_CORES); break;
+      case ESP_BOARD_NAME:    value = getValue(LabelType::ESP_BOARD_NAME); break;
+
 
       case UNKNOWN:
         break;
@@ -209,13 +224,15 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
   while ((v_index != -1)) {
     unsigned int i;
+
     if (validUIntFromString(s.substring(v_index + 2), i)) {
       String key = F("%v");
       key += i;
       key += '%';
+
       if (s.indexOf(key) != -1) {
-        const bool trimTrailingZeros = true;
-        const String value = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
+        const bool   trimTrailingZeros = true;
+        const String value             = doubleToString(getCustomFloatVar(i), 6, trimTrailingZeros);
         repl(key, value, s, useURLencode);
       }
     }
@@ -244,14 +261,15 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
     return Enum::UNKNOWN;
   }
 
-  String str_prefix        = SystemVariables::toString(nextTested);
-  str_prefix               = str_prefix.substring(0, 2);
-  bool   str_prefix_exists = str.indexOf(str_prefix) != -1;
+  String str_prefix = SystemVariables::toString(nextTested);
+
+  str_prefix = str_prefix.substring(0, 2);
+  bool str_prefix_exists = str.indexOf(str_prefix) != -1;
 
   for (int i = nextTested; i < Enum::UNKNOWN; ++i) {
     SystemVariables::Enum enumval = static_cast<SystemVariables::Enum>(i);
     String new_str_prefix         = SystemVariables::toString(enumval);
-    new_str_prefix                = new_str_prefix.substring(0, 2);
+    new_str_prefix = new_str_prefix.substring(0, 2);
 
     if ((str_prefix == new_str_prefix) && !str_prefix_exists) {
       // Just continue
@@ -273,82 +291,95 @@ SystemVariables::Enum SystemVariables::nextReplacementEnum(const String& str, Sy
 const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enumval)
 {
   switch (enumval) {
-    case Enum::BOOT_CAUSE:      return F("%bootcause%");
-    case Enum::BSSID:           return F("%bssid%");
-    case Enum::CR:              return F("%CR%");
-    case Enum::IP4:             return F("%ip4%");
-    case Enum::IP:              return F("%ip%");
-    case Enum::SUBNET:          return F("%subnet%");
-    case Enum::DNS:             return F("%dns%");
-    case Enum::DNS_1:           return F("%dns1%");
-    case Enum::DNS_2:           return F("%dns2%");
-    case Enum::GATEWAY:         return F("%gateway%");
-    case Enum::CLIENTIP:        return F("%clientip%");
-    case Enum::ISMQTT:          return F("%ismqtt%");
-    case Enum::ISMQTTIMP:       return F("%ismqttimp%");
-    case Enum::ISNTP:           return F("%isntp%");
-    case Enum::ISWIFI:          return F("%iswifi%");
+    case Enum::BOOT_CAUSE:         return F("%bootcause%");
+    case Enum::BSSID:              return F("%bssid%");
+    case Enum::CR:                 return F("%CR%");
+    case Enum::IP4:                return F("%ip4%");
+    case Enum::IP:                 return F("%ip%");
+    case Enum::SUBNET:             return F("%subnet%");
+    case Enum::DNS:                return F("%dns%");
+    case Enum::DNS_1:              return F("%dns1%");
+    case Enum::DNS_2:              return F("%dns2%");
+    case Enum::GATEWAY:            return F("%gateway%");
+    case Enum::CLIENTIP:           return F("%clientip%");
+    case Enum::ISMQTT:             return F("%ismqtt%");
+    case Enum::ISMQTTIMP:          return F("%ismqttimp%");
+    case Enum::ISNTP:              return F("%isntp%");
+    case Enum::ISWIFI:             return F("%iswifi%");
     #ifdef HAS_ETHERNET
-    case Enum::ETHWIFIMODE:   return F("%ethwifimode%");
-    case Enum::ETHCONNECTED:   return F("%ethconnected%");
-    case Enum::ETHDUPLEX:      return F("%ethduplex%");
-    case Enum::ETHSPEED:       return F("%ethspeed%");
-    case Enum::ETHSTATE:       return F("%ethstate%");
-    case Enum::ETHSPEEDSTATE:       return F("%ethspeedstate%");
-    #endif
-    case Enum::LCLTIME:         return F("%lcltime%");
-    case Enum::LCLTIME_AM:      return F("%lcltime_am%");
-    case Enum::LF:              return F("%LF%");
-    case Enum::MAC:             return F("%mac%");
-    case Enum::MAC_INT:         return F("%mac_int%");
-    case Enum::RSSI:            return F("%rssi%");
-    case Enum::SPACE:           return F("%SP%");
-    case Enum::SSID:            return F("%ssid%");
-    case Enum::SUNRISE:         return F("%sunrise");
-    case Enum::SUNSET:          return F("%sunset");
-    case Enum::SUNRISE_S:       return F("%s_sunrise%");
-    case Enum::SUNSET_S:        return F("%s_sunset%");
-    case Enum::SUNRISE_M:       return F("%m_sunrise%");
-    case Enum::SUNSET_M:        return F("%m_sunset%");
-    case Enum::SYSBUILD_DATE:   return F("%sysbuild_date%");
-    case Enum::SYSBUILD_DESCR:  return F("%sysbuild_desc%");
+    case Enum::ETHWIFIMODE:        return F("%ethwifimode%");
+    case Enum::ETHCONNECTED:       return F("%ethconnected%");
+    case Enum::ETHDUPLEX:          return F("%ethduplex%");
+    case Enum::ETHSPEED:           return F("%ethspeed%");
+    case Enum::ETHSTATE:           return F("%ethstate%");
+    case Enum::ETHSPEEDSTATE:      return F("%ethspeedstate%");
+    #endif // ifdef HAS_ETHERNET
+    case Enum::LCLTIME:            return F("%lcltime%");
+    case Enum::LCLTIME_AM:         return F("%lcltime_am%");
+    case Enum::LF:                 return F("%LF%");
+    case Enum::MAC:                return F("%mac%");
+    case Enum::MAC_INT:            return F("%mac_int%");
+    case Enum::RSSI:               return F("%rssi%");
+    case Enum::SPACE:              return F("%SP%");
+    case Enum::SSID:               return F("%ssid%");
+    case Enum::SUNRISE:            return F("%sunrise");
+    case Enum::SUNSET:             return F("%sunset");
+    case Enum::SUNRISE_S:          return F("%s_sunrise%");
+    case Enum::SUNSET_S:           return F("%s_sunset%");
+    case Enum::SUNRISE_M:          return F("%m_sunrise%");
+    case Enum::SUNSET_M:           return F("%m_sunset%");
+    case Enum::SYSBUILD_DATE:      return F("%sysbuild_date%");
+    case Enum::SYSBUILD_DESCR:     return F("%sysbuild_desc%");
     case Enum::SYSBUILD_FILENAME:  return F("%sysbuild_filename%");
-    case Enum::SYSBUILD_GIT:    return F("%sysbuild_git%");
-    case Enum::SYSBUILD_TIME:   return F("%sysbuild_time%");
-    case Enum::SYSDAY:          return F("%sysday%");
-    case Enum::SYSDAY_0:        return F("%sysday_0%");
-    case Enum::SYSHEAP:         return F("%sysheap%");
-    case Enum::SYSHOUR:         return F("%syshour%");
-    case Enum::SYSHOUR_0:       return F("%syshour_0%");
-    case Enum::SYSLOAD:         return F("%sysload%");
-    case Enum::SYSMIN:          return F("%sysmin%");
-    case Enum::SYSMIN_0:        return F("%sysmin_0%");
-    case Enum::SYSMONTH:        return F("%sysmonth%");
-    case Enum::SYSNAME:         return F("%sysname%");
-    case Enum::SYSSEC:          return F("%syssec%");
-    case Enum::SYSSEC_0:        return F("%syssec_0%");
-    case Enum::SYSSEC_D:        return F("%syssec_d%");
-    case Enum::SYSSTACK:        return F("%sysstack%");
-    case Enum::SYSTIME:         return F("%systime%");
-    case Enum::SYSTIME_AM:      return F("%systime_am%");
-    case Enum::SYSTM_HM:        return F("%systm_hm%");
-    case Enum::SYSTM_HM_AM:     return F("%systm_hm_am%");
-    case Enum::SYSWEEKDAY:      return F("%sysweekday%");
-    case Enum::SYSWEEKDAY_S:    return F("%sysweekday_s%");
-    case Enum::SYSYEAR:         return F("%sysyear%");
-    case Enum::SYSYEARS:        return F("%sysyears%");
-    case Enum::SYSYEAR_0:       return F("%sysyear_0%");
-    case Enum::SYS_MONTH_0:     return F("%sysmonth_0%");
-    case Enum::S_CR:            return F("%R%");
-    case Enum::S_LF:            return F("%N%");
-    case Enum::UNIT_sysvar:     return F("%unit%");
-    case Enum::UNIXDAY:         return F("%unixday%");
-    case Enum::UNIXDAY_SEC:     return F("%unixday_sec%");
-    case Enum::UNIXTIME:        return F("%unixtime%");
-    case Enum::UPTIME:          return F("%uptime%");
-    case Enum::UPTIME_MS:       return F("%uptime_ms%");
-    case Enum::VCC:             return F("%vcc%");
-    case Enum::WI_CH:           return F("%wi_ch%");
+    case Enum::SYSBUILD_GIT:       return F("%sysbuild_git%");
+    case Enum::SYSBUILD_TIME:      return F("%sysbuild_time%");
+    case Enum::SYSDAY:             return F("%sysday%");
+    case Enum::SYSDAY_0:           return F("%sysday_0%");
+    case Enum::SYSHEAP:            return F("%sysheap%");
+    case Enum::SYSHOUR:            return F("%syshour%");
+    case Enum::SYSHOUR_0:          return F("%syshour_0%");
+    case Enum::SYSLOAD:            return F("%sysload%");
+    case Enum::SYSMIN:             return F("%sysmin%");
+    case Enum::SYSMIN_0:           return F("%sysmin_0%");
+    case Enum::SYSMONTH:           return F("%sysmonth%");
+    case Enum::SYSNAME:            return F("%sysname%");
+    case Enum::SYSSEC:             return F("%syssec%");
+    case Enum::SYSSEC_0:           return F("%syssec_0%");
+    case Enum::SYSSEC_D:           return F("%syssec_d%");
+    case Enum::SYSSTACK:           return F("%sysstack%");
+    case Enum::SYSTIME:            return F("%systime%");
+    case Enum::SYSTIME_AM:         return F("%systime_am%");
+    case Enum::SYSTM_HM:           return F("%systm_hm%");
+    case Enum::SYSTM_HM_AM:        return F("%systm_hm_am%");
+    case Enum::SYSWEEKDAY:         return F("%sysweekday%");
+    case Enum::SYSWEEKDAY_S:       return F("%sysweekday_s%");
+    case Enum::SYSYEAR:            return F("%sysyear%");
+    case Enum::SYSYEARS:           return F("%sysyears%");
+    case Enum::SYSYEAR_0:          return F("%sysyear_0%");
+    case Enum::SYS_MONTH_0:        return F("%sysmonth_0%");
+    case Enum::S_CR:               return F("%R%");
+    case Enum::S_LF:               return F("%N%");
+    case Enum::UNIT_sysvar:        return F("%unit%");
+    case Enum::UNIXDAY:            return F("%unixday%");
+    case Enum::UNIXDAY_SEC:        return F("%unixday_sec%");
+    case Enum::UNIXTIME:           return F("%unixtime%");
+    case Enum::UPTIME:             return F("%uptime%");
+    case Enum::UPTIME_MS:          return F("%uptime_ms%");
+    case Enum::VCC:                return F("%vcc%");
+    case Enum::WI_CH:              return F("%wi_ch%");
+    case Enum::FLASH_FREQ:         return F("%flash_freq%");
+    case Enum::FLASH_SIZE:         return F("%flash_size%");
+    case Enum::FLASH_CHIP_VENDOR:  return F("%flash_chip_vendor%");
+    case Enum::FLASH_CHIP_MODEL:   return F("%flash_chip_model%");
+    case Enum::FS_FREE:            return F("%fs_free%");
+    case Enum::FS_SIZE:            return F("%fs_size%");
+    case Enum::ESP_CHIP_ID:        return F("%cpu_id%");
+    case Enum::ESP_CHIP_FREQ:      return F("%cpu_freq%");
+    case Enum::ESP_CHIP_MODEL:     return F("%cpu_model%");
+    case Enum::ESP_CHIP_REVISION:  return F("%cpu_rev%");
+    case Enum::ESP_CHIP_CORES:     return F("%cpu_cores%");
+    case Enum::ESP_BOARD_NAME:     return F("%board_name%");
+
     case Enum::UNKNOWN: break;
   }
   return F("Unknown");
