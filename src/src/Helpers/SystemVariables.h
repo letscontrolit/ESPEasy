@@ -112,9 +112,9 @@ public:
 
   static const __FlashStringHelper * toString(Enum enumval);
 
+  static String getSystemVariable(Enum enumval);
+
   static void parseSystemVariables(String& s, boolean useURLencode);
-
-
 
 };
 

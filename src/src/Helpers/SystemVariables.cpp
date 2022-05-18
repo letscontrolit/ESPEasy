@@ -69,10 +69,137 @@ String timeReplacement_leadZero(int value)
   return valueString;
 }
 
-#define SMART_REPL_T(T, S) \
-  if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 
 // FIXME TD-er: Try to match these with  StringProvider::getValue
+
+
+String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
+  LabelType::Enum label = LabelType::MAX_LABEL;
+
+  switch (enumval)
+  {
+    case IP:                label = LabelType::IP_ADDRESS; break;
+    case SUBNET:            label = LabelType::IP_SUBNET; break;
+    case DNS:               label = LabelType::DNS; break;
+    case DNS_1:             label = LabelType::DNS_1; break;
+    case DNS_2:             label = LabelType::DNS_2; break;
+    case GATEWAY:           label = LabelType::GATEWAY; break;
+    case CLIENTIP:          label = LabelType::CLIENT_IP; break;
+
+    #ifdef HAS_ETHERNET
+
+    case ETHWIFIMODE:       label = LabelType::ETH_WIFI_MODE; break; // 0=WIFI, 1=ETH
+    case ETHCONNECTED:      label = LabelType::ETH_CONNECTED; break; // 0=disconnected, 1=connected
+    case ETHDUPLEX:         label = LabelType::ETH_DUPLEX; break;
+    case ETHSPEED:          label = LabelType::ETH_SPEED; break;
+    case ETHSTATE:          label = LabelType::ETH_STATE; break;
+    case ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
+    #endif // ifdef HAS_ETHERNET
+    case LCLTIME:           label = LabelType::LOCAL_TIME; break;
+    case MAC:               label = LabelType::STA_MAC; break;
+    case RSSI:              label = LabelType::WIFI_RSSI; break;
+    case SUNRISE_S:         label = LabelType::SUNRISE_S; break;
+    case SUNSET_S:          label = LabelType::SUNSET_S; break;
+    case SUNRISE_M:         label = LabelType::SUNRISE_M; break;
+    case SUNSET_M:          label = LabelType::SUNSET_M; break;
+    case SYSBUILD_DESCR:    label = LabelType::BUILD_DESC; break;
+    case SYSBUILD_FILENAME: label = LabelType::BINARY_FILENAME; break;
+    case SYSBUILD_GIT:      label = LabelType::GIT_BUILD; break;
+    case SYSSTACK:          label = LabelType::FREE_STACK; break;
+    case UNIT_sysvar:       label = LabelType::UNIT_NR; break;
+    case FLASH_FREQ:        label = LabelType::FLASH_CHIP_SPEED; break;
+    case FLASH_SIZE:        label = LabelType::FLASH_CHIP_REAL_SIZE; break;
+    case FLASH_CHIP_VENDOR: label = LabelType::FLASH_CHIP_VENDOR; break;
+    case FLASH_CHIP_MODEL:  label = LabelType::FLASH_CHIP_MODEL; break;
+    case FS_SIZE:           label = LabelType::FS_SIZE; break;
+    case FS_FREE:           label = LabelType::FS_FREE; break;
+
+    case ESP_CHIP_ID:       label = LabelType::ESP_CHIP_ID; break;
+    case ESP_CHIP_FREQ:     label = LabelType::ESP_CHIP_FREQ; break;
+    case ESP_CHIP_MODEL:    label = LabelType::ESP_CHIP_MODEL; break;
+    case ESP_CHIP_REVISION: label = LabelType::ESP_CHIP_REVISION; break;
+    case ESP_CHIP_CORES:    label = LabelType::ESP_CHIP_CORES; break;
+    case ESP_BOARD_NAME:    label = LabelType::ESP_BOARD_NAME; break;
+  }
+  if (LabelType::MAX_LABEL != label) {
+    return getValue(label);
+  }
+
+  String value;
+  switch (enumval)
+  {
+    case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
+    case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
+    case CR:                value = '\r'; break;
+    case IP4:               value = String(static_cast<int>(NetworkLocalIP()[3])); break; // 4th IP octet
+    #ifdef USES_MQTT
+    case ISMQTT:            value = String(MQTTclient_connected ? 1 : 0); break;
+    #else // ifdef USES_MQTT
+    case ISMQTT:            value = '0'; break;
+    #endif // ifdef USES_MQTT
+
+    #ifdef USES_P037
+    case ISMQTTIMP:         value = String(P037_MQTTImport_connected ? 1 : 0); break;
+    #else // ifdef USES_P037
+    case ISMQTTIMP:         value = '0'; break;
+    #endif // USES_P037
+
+
+    case ISNTP:             value = String(statusNTPInitialized ? 1 : 0); break;
+    case ISWIFI:            value = String(WiFiEventData.wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services
+                                                                              // initialized
+    case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
+    case LF:                value = '\n'; break;
+    case MAC_INT:           value = String(getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
+    case SPACE:             value = ' '; break;
+    case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
+    case SYSBUILD_DATE:     value = get_build_date(); break;
+    case SYSBUILD_TIME:     value = get_build_time(); break;
+    case SYSDAY:            value = String(node_time.day()); break;
+    case SYSDAY_0:          value = timeReplacement_leadZero(node_time.day()); break;
+    case SYSHEAP:           value = String(ESP.getFreeHeap()); break;
+    case SYSHOUR:           value = String(node_time.hour()); break;
+    case SYSHOUR_0:         value = timeReplacement_leadZero(node_time.hour()); break;
+    case SYSLOAD:           value = String(getCPUload(), 2); break;
+    case SYSMIN:            value = String(node_time.minute()); break;
+    case SYSMIN_0:          value = timeReplacement_leadZero(node_time.minute()); break;
+    case SYSMONTH:          value = String(node_time.month()); break;
+    case SYSNAME:           value = Settings.getHostname(); break;
+    case SYSSEC:            value = String(node_time.second()); break;
+    case SYSSEC_0:          value = timeReplacement_leadZero(node_time.second()); break;
+    case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;
+    case SYSTIME:           value = node_time.getTimeString(':'); break;
+    case SYSTIME_AM:        value = node_time.getTimeString_ampm(':'); break;
+    case SYSTM_HM:          value = node_time.getTimeString(':', false); break;
+    case SYSTM_HM_AM:       value = node_time.getTimeString_ampm(':', false); break;
+    case SYSWEEKDAY:        value = String(node_time.weekday()); break;
+    case SYSWEEKDAY_S:      value = node_time.weekday_str(); break;
+    case SYSYEAR_0:
+    case SYSYEAR:           value = String(node_time.year()); break;
+    case SYSYEARS:          value = timeReplacement_leadZero(node_time.year() % 100); break;
+    case SYS_MONTH_0:       value = timeReplacement_leadZero(node_time.month()); break;
+    case S_CR:              value = F("\\r"); break;
+    case S_LF:              value = F("\\n"); break;
+    case UNIXDAY:           value = String(node_time.getUnixTime() / 86400); break;
+    case UNIXDAY_SEC:       value = String(node_time.getUnixTime() % 86400); break;
+    case UNIXTIME:          value = String(node_time.getUnixTime()); break;
+    case UPTIME:            value = String(getUptimeMinutes()); break;
+    case UPTIME_MS:         value = ull2String(getMicros64() / 1000); break;
+    #if FEATURE_ADC_VCC
+    case VCC:               value = String(vcc); break;
+    #else // if FEATURE_ADC_VCC
+    case VCC:               value = String(-1); break;
+    #endif // if FEATURE_ADC_VCC
+    case WI_CH:             value = String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel()); break;
+
+    case UNKNOWN:
+      break;
+  }
+  return value;
+}
+
+#define SMART_REPL_T(T, S) \
+  if (s.indexOf(T) != -1) { (S((T), s, useURLencode)); }
 
 void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 {
@@ -87,135 +214,20 @@ void SystemVariables::parseSystemVariables(String& s, boolean useURLencode)
 
   do {
     enumval = SystemVariables::nextReplacementEnum(s, enumval);
-    String value;
-
     switch (enumval)
     {
-      case BOOT_CAUSE:        value = String(lastBootCause); break; // Integer value to be used in rules
-      case BSSID:             value = String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr()); break;
-      case CR:                value = '\r'; break;
-      case IP:                value = getValue(LabelType::IP_ADDRESS); break;
-      case IP4:               value = String(static_cast<int>(NetworkLocalIP()[3])); break; // 4th IP octet
-      case SUBNET:            value = getValue(LabelType::IP_SUBNET); break;
-      case DNS:               value = getValue(LabelType::DNS); break;
-      case DNS_1:             value = getValue(LabelType::DNS_1); break;
-      case DNS_2:             value = getValue(LabelType::DNS_2); break;
-      case GATEWAY:           value = getValue(LabelType::GATEWAY); break;
-      case CLIENTIP:          value = getValue(LabelType::CLIENT_IP); break;
-      #ifdef USES_MQTT
-      case ISMQTT:            value = String(MQTTclient_connected ? 1 : 0); break;
-      #else // ifdef USES_MQTT
-      case ISMQTT:            value = '0'; break;
-      #endif // ifdef USES_MQTT
-
-      #ifdef USES_P037
-      case ISMQTTIMP:         value = String(P037_MQTTImport_connected ? 1 : 0); break;
-      #else // ifdef USES_P037
-      case ISMQTTIMP:         value = '0'; break;
-      #endif // USES_P037
-
-
-      case ISNTP:             value = String(statusNTPInitialized ? 1 : 0); break;
-      case ISWIFI:            value = String(WiFiEventData.wifiStatus); break; // 0=disconnected, 1=connected, 2=got ip, 4=services
-                                                                               // initialized
-        // TODO: PKR: Add ETH Objects
-      #ifdef HAS_ETHERNET
-
-      case ETHWIFIMODE:       value = getValue(LabelType::ETH_WIFI_MODE); break; // 0=WIFI, 1=ETH
-      case ETHCONNECTED:      value = getValue(LabelType::ETH_CONNECTED); break; // 0=disconnected, 1=connected
-      case ETHDUPLEX:         value = getValue(LabelType::ETH_DUPLEX); break;
-      case ETHSPEED:          value = getValue(LabelType::ETH_SPEED); break;
-      case ETHSTATE:          value = getValue(LabelType::ETH_STATE); break;
-      case ETHSPEEDSTATE:     value = getValue(LabelType::ETH_SPEED_STATE); break;
-      #endif // ifdef HAS_ETHERNET
-      case LCLTIME:           value = getValue(LabelType::LOCAL_TIME); break;
-      case LCLTIME_AM:        value = node_time.getDateTimeString_ampm('-', ':', ' '); break;
-      case LF:                value = '\n'; break;
-      case MAC:               value = getValue(LabelType::STA_MAC); break;
-      case MAC_INT:           value = String(getChipId()); break; // Last 24 bit of MAC address as integer, to be used in rules.
-      case RSSI:              value = getValue(LabelType::WIFI_RSSI); break;
-      case SPACE:             value = ' '; break;
-      case SSID:              value = (WiFiEventData.WiFiDisconnected()) ? F("--") : WiFi.SSID(); break;
       case SUNRISE:           SMART_REPL_T(SystemVariables::toString(enumval), replSunRiseTimeString); break;
       case SUNSET:            SMART_REPL_T(SystemVariables::toString(enumval), replSunSetTimeString); break;
-      case SUNRISE_S:         value = getValue(LabelType::SUNRISE_S); break;
-      case SUNSET_S:          value = getValue(LabelType::SUNSET_S); break;
-      case SUNRISE_M:         value = getValue(LabelType::SUNRISE_M); break;
-      case SUNSET_M:          value = getValue(LabelType::SUNSET_M); break;
-      case SYSBUILD_DATE:     value = get_build_date(); break;
-      case SYSBUILD_DESCR:    value = getValue(LabelType::BUILD_DESC); break;
-      case SYSBUILD_FILENAME: value = getValue(LabelType::BINARY_FILENAME); break;
-      case SYSBUILD_GIT:      value = getValue(LabelType::GIT_BUILD); break;
-      case SYSBUILD_TIME:     value = get_build_time(); break;
-      case SYSDAY:            value = String(node_time.day()); break;
-      case SYSDAY_0:          value = timeReplacement_leadZero(node_time.day()); break;
-      case SYSHEAP:           value = String(ESP.getFreeHeap()); break;
-      case SYSHOUR:           value = String(node_time.hour()); break;
-      case SYSHOUR_0:         value = timeReplacement_leadZero(node_time.hour()); break;
-      case SYSLOAD:           value = String(getCPUload(), 2); break;
-      case SYSMIN:            value = String(node_time.minute()); break;
-      case SYSMIN_0:          value = timeReplacement_leadZero(node_time.minute()); break;
-      case SYSMONTH:          value = String(node_time.month()); break;
-      case SYSNAME:           value = Settings.getHostname(); break;
-      case SYSSEC:            value = String(node_time.second()); break;
-      case SYSSEC_0:          value = timeReplacement_leadZero(node_time.second()); break;
-      case SYSSEC_D:          value = String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second()); break;
-      case SYSSTACK:          value = getValue(LabelType::FREE_STACK); break;
-      case SYSTIME:           value = node_time.getTimeString(':'); break;
-      case SYSTIME_AM:        value = node_time.getTimeString_ampm(':'); break;
-      case SYSTM_HM:          value = node_time.getTimeString(':', false); break;
-      case SYSTM_HM_AM:       value = node_time.getTimeString_ampm(':', false); break;
-      case SYSWEEKDAY:        value = String(node_time.weekday()); break;
-      case SYSWEEKDAY_S:      value = node_time.weekday_str(); break;
-      case SYSYEAR_0:
-      case SYSYEAR:           value = String(node_time.year()); break;
-      case SYSYEARS:          value = timeReplacement_leadZero(node_time.year() % 100); break;
-      case SYS_MONTH_0:       value = timeReplacement_leadZero(node_time.month()); break;
-      case S_CR:              value = F("\\r"); break;
-      case S_LF:              value = F("\\n"); break;
-      case UNIT_sysvar:       value = getValue(LabelType::UNIT_NR); break;
-      case UNIXDAY:           value = String(node_time.getUnixTime() / 86400); break;
-      case UNIXDAY_SEC:       value = String(node_time.getUnixTime() % 86400); break;
-      case UNIXTIME:          value = String(node_time.getUnixTime()); break;
-      case UPTIME:            value = String(getUptimeMinutes()); break;
-      case UPTIME_MS:         value = ull2String(getMicros64() / 1000); break;
-      #if FEATURE_ADC_VCC
-      case VCC:               value = String(vcc); break;
-      #else // if FEATURE_ADC_VCC
-      case VCC:               value = String(-1); break;
-      #endif // if FEATURE_ADC_VCC
-      case WI_CH:             value = String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel()); break;
-      case FLASH_FREQ:        value = getValue(LabelType::FLASH_CHIP_SPEED); break;
-      case FLASH_SIZE:        value = getValue(LabelType::FLASH_CHIP_REAL_SIZE); break;
-      case FLASH_CHIP_VENDOR: value = getValue(LabelType::FLASH_CHIP_VENDOR); break;
-      case FLASH_CHIP_MODEL:  value = getValue(LabelType::FLASH_CHIP_MODEL); break;
-      case FS_SIZE:           value = getValue(LabelType::FS_SIZE); break;
-      case FS_FREE:           value = getValue(LabelType::FS_FREE); break;
-
-      case ESP_CHIP_ID:       value = getValue(LabelType::ESP_CHIP_ID); break;
-      case ESP_CHIP_FREQ:     value = getValue(LabelType::ESP_CHIP_FREQ); break;
-      case ESP_CHIP_MODEL:    value = getValue(LabelType::ESP_CHIP_MODEL); break;
-      case ESP_CHIP_REVISION: value = getValue(LabelType::ESP_CHIP_REVISION); break;
-      case ESP_CHIP_CORES:    value = getValue(LabelType::ESP_CHIP_CORES); break;
-      case ESP_BOARD_NAME:    value = getValue(LabelType::ESP_BOARD_NAME); break;
-
-
-      case UNKNOWN:
-        break;
-    }
-
-    switch (enumval)
-    {
-      case SUNRISE:
-      case SUNSET:
       case UNKNOWN:
 
         // Do not replace
         break;
       default:
-
+      {
+        const String value = getSystemVariable(enumval);
         repl(SystemVariables::toString(enumval), value, s, useURLencode);
         break;
+      }
     }
   }
   while (enumval != SystemVariables::Enum::UNKNOWN);
