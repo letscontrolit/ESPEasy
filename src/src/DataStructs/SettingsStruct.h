@@ -3,6 +3,7 @@
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/TimeSource.h"
