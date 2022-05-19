@@ -215,12 +215,15 @@ void handle_unprocessedNetworkEvents()
   if (EthEventData.EthServicesInitialized() && 
       active_network_medium == NetworkMedium_t::Ethernet &&
       EthEventData.ethInitSuccess) {
-    const IPAddress dns0     = NetworkDnsIP(0);
-    const IPAddress dns1     = NetworkDnsIP(1);
+    const bool has_cache = !EthEventData.dns0_cache && !EthEventData.dns1_cache;
+    if (has_cache) {
+      const IPAddress dns0     = NetworkDnsIP(0);
+      const IPAddress dns1     = NetworkDnsIP(1);
 
-    if (!dns0 && !dns1) {
-      addLog(LOG_LEVEL_ERROR, F("ETH  : DNS server was cleared, use cached DNS IP"));
-      ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
+      if (!dns0 && !dns1) {
+        addLog(LOG_LEVEL_ERROR, F("ETH  : DNS server was cleared, use cached DNS IP"));
+        ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
+      }
     }
   }
 #endif

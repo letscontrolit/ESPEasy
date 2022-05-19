@@ -142,6 +142,7 @@ bool Modbus::handle() {
         errcnt++;
         TXRXstate = MODBUS_IDLE;
       }
+      // FIXME TD-er: Missing break?
 
     case MODBUS_RECEIVE_PAYLOAD:
 

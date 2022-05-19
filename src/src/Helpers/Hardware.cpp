@@ -903,10 +903,10 @@ uint32_t HwRandom() {
   uint32_t result = 0;
   do {
     ccount = ESP.getCycleCount();
-    result ^= *(volatile uint32_t *)_RAND_ADDR;
+    result ^= *(volatile uint32_t *)_RAND_ADDR; // -V566
   } while (ccount - last_ccount < 64);
   last_ccount = ccount;
-  return result ^ *(volatile uint32_t *)_RAND_ADDR;
+  return result ^ *(volatile uint32_t *)_RAND_ADDR; // -V566
 #undef _RAND_ADDR
 }
 

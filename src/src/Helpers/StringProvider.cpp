@@ -25,6 +25,7 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/Convert.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
@@ -185,6 +186,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ESP_BOARD_NAME:         return F("ESP Board Name");
 
     case LabelType::FLASH_CHIP_ID:          return F("Flash Chip ID");
+    case LabelType::FLASH_CHIP_VENDOR:      return F("Flash Chip Vendor");
+    case LabelType::FLASH_CHIP_MODEL:       return F("Flash Chip Model");
     case LabelType::FLASH_CHIP_REAL_SIZE:   return F("Flash Chip Real Size");
     case LabelType::FLASH_CHIP_SPEED:       return F("Flash Chip Speed");
     case LabelType::FLASH_IDE_SIZE:         return F("Flash IDE Size");
@@ -397,24 +400,36 @@ String getValue(LabelType::Enum label) {
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
   #endif // ifdef FEATURE_SD
 
-    case LabelType::ESP_CHIP_ID:            return String(getChipId(), HEX);
+    case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId());
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
-    case LabelType::ESP_BOARD_NAME:         break;
+    case LabelType::ESP_BOARD_NAME:         
+      # ifdef ARDUINO_BOARD
+                                            return String(ARDUINO_BOARD);
+      #else
+                                            break;
+      #endif
 
-    case LabelType::FLASH_CHIP_ID:          break;
-    case LabelType::FLASH_CHIP_REAL_SIZE:   break;
-    case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed());
+    case LabelType::FLASH_CHIP_ID:          return String(getFlashChipId());
+    case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF);
+    case LabelType::FLASH_CHIP_MODEL:
+    {
+      const uint32_t flashChipId = getFlashChipId();
+      const uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
+      return formatToHex(flashDevice);
+    }
+    case LabelType::FLASH_CHIP_REAL_SIZE:   return String(getFlashRealSizeInBytes());
+    case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed() / 1000000);
     case LabelType::FLASH_IDE_SIZE:         break;
     case LabelType::FLASH_IDE_SPEED:        break;
     case LabelType::FLASH_IDE_MODE:         break;
     case LabelType::FLASH_WRITE_COUNT:      break;
     case LabelType::SKETCH_SIZE:            break;
     case LabelType::SKETCH_FREE:            break;
-    case LabelType::FS_SIZE:                break;
-    case LabelType::FS_FREE:                break;
+    case LabelType::FS_SIZE:                return String(SpiffsTotalBytes());
+    case LabelType::FS_FREE:                return String(SpiffsFreeSpace());
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
