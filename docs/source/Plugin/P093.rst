@@ -53,8 +53,6 @@ Parts required to make a CN105 female connector
 * `PAP-05V-S <https://www.digikey.com/product-detail/en/jst-sales-america-inc/PAP-05V-S/455-1489-ND/759977>`_,
 * `SPHD-002T-P0.5 <https://www.digikey.com/product-detail/en/jst-sales-america-inc/SPHD-002T-P0.5/455-1313-1-ND/608809>`_,
 
-One can also get `premade pigtails <http://www.usastore.revolectrix.com/Products_2/Cellpro-4s-Charge-Adapters_2/Cellpro-JST-PA-Battery-Pigtail-10-5-Position>`_.
-
 Example using D1 mini PRO
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
