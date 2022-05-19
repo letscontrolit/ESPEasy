@@ -89,7 +89,23 @@ Commands
 Example
 -------
 
-A full working example using openHAB can be found `here <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_.
+There are several ways how to control AC unit using ESP Easy.
+
+**Using HTTP:**
+
+Generally commands are send via http using syntax ``http://<espeasyip>/control?cmd=<command>`` where ``<espeasyip>`` is the IP of your ESP Easy device, for example ``192.168.0.100``:
+
+.. include:: P093_examples_http.repl
+
+**Using MQTT:**
+
+Commands are send via MQTT using syntax ``<MQTT subscribe template>/cmd`` with payload: ``<command>``. For example, if your `unit name <https://espeasy.readthedocs.io/en/latest/Config/Config.html#unit-name>`_ is ``MyESPEasy``, one would send the below payload to topic ``MyESPEasy/cmd``:
+
+.. include:: P093_examples_mqtt.repl
+
+Please check `here <https://espeasy.readthedocs.io/en/latest/Reference/Command.html>`_ for more details on how to send commands using ESP Easy.
+
+Please `check <https://community.openhab.org/t/mitsubishi-heat-pump/91765>`_ for an example integration with openHAB.
 
 Special thanks
 --------------
