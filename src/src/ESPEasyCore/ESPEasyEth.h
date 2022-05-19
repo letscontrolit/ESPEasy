@@ -9,7 +9,7 @@
 
 bool     ethUseStaticIP();
 void     ethSetupStaticIPconfig();
-void     ethSetDNS(const IPAddress dns0, const IPAddress dns1);
+void     ethSetDNS(const IPAddress& dns0, const IPAddress& dns1);
 bool     ethCheckSettings();
 bool     ethPrepare();
 void     ethPrintSettings();
