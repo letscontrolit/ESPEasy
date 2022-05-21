@@ -75,6 +75,40 @@ The user can set these to convert the raw values into the desired unit of measur
 When set, the configuration screen also displays the minimum, maximum and step size values based on the calibration settings.
 
 
+Use of Formula
+--------------
+
+A very typical use case for using the ADC is to measure some resistance.
+The best way to do this, is to have a constant current applied to this resistor.
+This way the measured voltage over the resistor has a linear correlation with the resistance.
+But that makes it somewhat complicated to connect such a sensor and it may also become rather difficult to find a good compromise between resolution and noise when the measured resistor can vary over a wide range.
+
+The simplest way to connect such a resistor is by adding a second resistor in series.
+However this makes the measured voltage no longer linear to the measured resistance.
+
+Then we only need a way to compute the measured resistance instead of the voltage.
+
+For this we first need to make sure the calibration is done so the ADC plugin outputs the correct voltage applied to the configured analog input pin.
+
+Then we must derive a formula to convert the voltage into a resistance value.
+
+For example the unknown resistor is r1 and the series resistor is r2.
+
+With 3V3 applied to both resistors in series, the measured voltage ``v`` is:
+
+``v = 3v3 / (r1 + r2) * r1``
+
+This can be derived into:
+
+``(-1 * r2 * v) / (v - 3v3)``
+
+When using 10k as a value for r2, we can use this in the formula field:
+
+``(-10000*%value%)/(%value%-3.3)``
+
+With proper calibration and this formula present, we now get the measured resistance on the output.
+
+
 Supported hardware
 ------------------
 

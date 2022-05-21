@@ -2,26 +2,17 @@
 #ifdef USES_P002
 
 
-#include "src/Helpers/Hardware.h"
-#include "src/PluginStructs/P002_data_struct.h"
+# include "src/Helpers/Hardware.h"
+# include "src/PluginStructs/P002_data_struct.h"
 
 // #######################################################################################################
 // #################################### Plugin 002: Analog ###############################################
 // #######################################################################################################
 
-#define PLUGIN_002
-#define PLUGIN_ID_002         2
-#define PLUGIN_NAME_002       "Analog input - internal"
-#define PLUGIN_VALUENAME1_002 "Analog"
-
-
-#define P002_OVERSAMPLING        PCONFIG(0)
-#define P002_CALIBRATION_ENABLED PCONFIG(3)  // FIXME TD-er: What happened to PCONFIG(1) & PCONFIG(2) ???
-#define P002_CALIBRATION_POINT1  PCONFIG_LONG(0)
-#define P002_CALIBRATION_POINT2  PCONFIG_LONG(1)
-#define P002_CALIBRATION_VALUE1  PCONFIG_FLOAT(0)
-#define P002_CALIBRATION_VALUE2  PCONFIG_FLOAT(1)
-
+# define PLUGIN_002
+# define PLUGIN_ID_002         2
+# define PLUGIN_NAME_002       "Analog input - internal"
+# define PLUGIN_VALUENAME1_002 "Analog"
 
 
 boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
@@ -60,13 +51,24 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      #if defined(ESP32)
+      # if defined(ESP32)
       addHtml(F("<TR><TD>Analog Pin:<TD>"));
       addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
-      #endif // if defined(ESP32)
+      # endif // if defined(ESP32)
 
-      addFormCheckBox(F("Oversampling"), F("p002_oversampling"), P002_OVERSAMPLING);
+      {
+        const __FlashStringHelper *outputOptions[] = {
+          F("Use Current Sample"),
+          F("Oversampling"),
+          F("Binning")
+        };
+        const int outputOptionValues[] = {
+          P002_USE_CURENT_SAMPLE,
+          P002_USE_OVERSAMPLING,
+          P002_USE_BINNING };
+        addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING, true);
+      }
 
       addFormSubHeader(F("Two Point Calibration"));
 
@@ -90,13 +92,17 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (P002_CALIBRATION_ENABLED) {
-          P002_formatStatistics(F("Minimum"),   0,                  P002_applyCalibration(event, 0));
-          P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_applyCalibration(event, P002_MAX_ADC_VALUE));
+          P002_formatStatistics(F("Minimum"),   0,                  P002_data_struct::applyCalibration(event, 0));
+          P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_data_struct::applyCalibration(event, P002_MAX_ADC_VALUE));
 
-          float stepsize = P002_applyCalibration(event, 1.0f) - P002_applyCalibration(event, 0.0f);
+          float stepsize = P002_data_struct::applyCalibration(event, 1.0f) - P002_data_struct::applyCalibration(event, 0.0f);
           P002_formatStatistics(F("Step size"), 1,                  stepsize);
         }
       }
+
+      addFormSubHeader(F("Multipoint Processing"));
+      addFormCheckBox(F("Multipoint Processing Enabled"), F("p002_multi_en"), P002_MULTIPOINT_ENABLED);
+
 
       success = true;
       break;
@@ -104,7 +110,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P002_OVERSAMPLING = isFormItemChecked(F("p002_oversampling"));
+      P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"));
 
       P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
 
@@ -114,13 +120,15 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
       P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
 
+      P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
+
       success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct());
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P002_data_struct(event));
       P002_data_struct *P002_data =
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -129,7 +137,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (P002_OVERSAMPLING) // Oversampling
+      if (P002_OVERSAMPLING != P002_USE_CURENT_SAMPLE) // Use multiple samples
       {
         P002_data_struct *P002_data =
           static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -138,7 +146,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
           int currentValue;
 
           P002_performRead(event, currentValue);
-          P002_data->addOversamplingValue(currentValue);
+          P002_data->addSample(currentValue);
         }
       }
       success = true;
@@ -163,7 +171,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
             log += F(" = ");
             log += formatUserVarNoCheck(event->TaskIndex, 0);
 
-            if (P002_OVERSAMPLING) {
+            if (P002_OVERSAMPLING == P002_USE_OVERSAMPLING) {
               log += F(" (");
               log += P002_data->OversamplingCount;
               log += F(" samples)");
@@ -193,44 +201,29 @@ bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_v
   }
   float float_value = 0.0f;
 
-  bool valueRead = P002_OVERSAMPLING && P002_data->getOversamplingValue(float_value, raw_value);
+  const bool valueRead = (P002_OVERSAMPLING != P002_USE_CURENT_SAMPLE) &&
+    P002_data->getValue(float_value, raw_value);
 
   if (!valueRead) {
     P002_performRead(event, raw_value);
     float_value = static_cast<float>(raw_value);
+    res_value = P002_data_struct::applyCalibration(event, float_value);
   }
 
-  res_value = P002_applyCalibration(event, float_value);
+  
   return true;
 }
 
-float P002_applyCalibration(struct EventStruct *event, float float_value) {
-  if (P002_CALIBRATION_ENABLED) // Calibration?
-  {
-    int   adc1 = P002_CALIBRATION_POINT1;
-    int   adc2 = P002_CALIBRATION_POINT2;
-    float out1 = P002_CALIBRATION_VALUE1;
-    float out2 = P002_CALIBRATION_VALUE2;
-
-    if (adc1 != adc2)
-    {
-      const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
-      float_value = normalized * (out2 - out1) + out1;
-    }
-  }
-  return float_value;
-}
-
 void P002_performRead(struct EventStruct *event, int& value) {
-  #ifdef ESP8266
+  # ifdef ESP8266
   value = espeasy_analogRead(A0);
-  #endif // if defined(ESP8266)
-  #if defined(ESP32)
+  # endif // if defined(ESP8266)
+  # if defined(ESP32)
   value = espeasy_analogRead(CONFIG_PIN1);
-  #endif // if defined(ESP32)
+  # endif // if defined(ESP32)
 }
 
-void P002_formatStatistics(const __FlashStringHelper * label, int raw, float float_value) {
+void P002_formatStatistics(const __FlashStringHelper *label, int raw, float float_value) {
   addRowLabel(label);
   addHtmlInt(raw);
   html_add_estimate_symbol();
