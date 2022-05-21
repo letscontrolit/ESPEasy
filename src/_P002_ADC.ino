@@ -67,7 +67,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
           P002_USE_CURENT_SAMPLE,
           P002_USE_OVERSAMPLING,
           P002_USE_BINNING };
-        addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING, true);
+        addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING);
       }
 
       addFormSubHeader(F("Two Point Calibration"));
@@ -84,12 +84,9 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
       {
         // Output the statistics for the current settings.
-        int   raw_value = 0;
-        float value;
-
-        if (P002_getOutputValue(event, raw_value, value)) {
-          P002_formatStatistics(F("Current"), raw_value, value);
-        }
+        int raw_value     = 0;
+        const float value = P002_data_struct::getCurrentValue(event, raw_value);
+        P002_formatStatistics(F("Current"), raw_value, value);
 
         if (P002_CALIBRATION_ENABLED) {
           P002_formatStatistics(F("Minimum"),   0,                  P002_data_struct::applyCalibration(event, 0));
@@ -143,10 +140,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
           static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P002_data) {
-          int currentValue;
-
-          P002_performRead(event, currentValue);
-          P002_data->addSample(currentValue);
+          P002_data->takeSample();
         }
       }
       success = true;
@@ -199,28 +193,8 @@ bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_v
   if (nullptr == P002_data) {
     return false;
   }
-  float float_value = 0.0f;
 
-  const bool valueRead = (P002_OVERSAMPLING != P002_USE_CURENT_SAMPLE) &&
-    P002_data->getValue(float_value, raw_value);
-
-  if (!valueRead) {
-    P002_performRead(event, raw_value);
-    float_value = static_cast<float>(raw_value);
-    res_value = P002_data_struct::applyCalibration(event, float_value);
-  }
-
-  
-  return true;
-}
-
-void P002_performRead(struct EventStruct *event, int& value) {
-  # ifdef ESP8266
-  value = espeasy_analogRead(A0);
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  value = espeasy_analogRead(CONFIG_PIN1);
-  # endif // if defined(ESP32)
+  return P002_data->getValue(res_value, raw_value);
 }
 
 void P002_formatStatistics(const __FlashStringHelper *label, int raw, float float_value) {

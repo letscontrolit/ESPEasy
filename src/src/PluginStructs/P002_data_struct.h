@@ -50,7 +50,7 @@ struct P002_ADC_Value_pair {
 struct P002_data_struct : public PluginTaskData_base {
   P002_data_struct(struct EventStruct *event);
 
-  void addSample(int sampleValue);
+  void takeSample();
 
   bool getValue(float& float_value,
                 int  & raw_value) const;
@@ -66,12 +66,11 @@ private:
   bool getOversamplingValue(float& float_value,
                             int  & raw_value) const;
 
-
 private:
-  
+
   // Get index of the bin to match.
   // Return -1 if no bin matched.
-  int getBinIndex(float currentValue) const;
+  int  getBinIndex(float currentValue) const;
 
   void addBinningValue(int currentValue);
 
@@ -84,11 +83,14 @@ public:
   static float applyCalibration(struct EventStruct *event,
                                 float               float_value);
 
-  float applyCalibration(float float_value) const;
+  static float getCurrentValue(struct EventStruct *event,
+                               int               & raw_value);
+
+  float        applyCalibration(float float_value) const;
 
 private:
 
-  float applyMultiPointInterpolation(float float_value) const;
+  float        applyMultiPointInterpolation(float float_value) const;
 
   static float mapADCtoFloat(float float_value,
                              int   adc1,
@@ -106,14 +108,15 @@ private:
   int16_t OversamplingMinVal = P002_MAX_ADC_VALUE;
   int16_t OversamplingMaxVal = -P002_MAX_ADC_VALUE;
 
-  int _calib_adc1 = 0;
-  int _calib_adc2 = 0;
+  int   _calib_adc1 = 0;
+  int   _calib_adc2 = 0;
   float _calib_out1 = 0.0f;
   float _calib_out2 = 0.0f;
 
   std::vector<P002_ADC_Value_pair>_multipoint;
-  std::vector<unsigned int> _binning;
-  
+  std::vector<unsigned int>       _binning;
+
+  int _pin_analogRead = -1;
 
   uint8_t _sampleMode = P002_USE_CURENT_SAMPLE;
 };

@@ -6,11 +6,20 @@
 P002_data_struct::P002_data_struct(struct EventStruct *event)
 {
   _sampleMode = P002_OVERSAMPLING;
-  _calib_adc1 = P002_CALIBRATION_POINT1;
-  _calib_adc2 = P002_CALIBRATION_POINT2;
-  _calib_out1 = P002_CALIBRATION_VALUE1;
-  _calib_out2 = P002_CALIBRATION_VALUE2;
 
+  # ifdef ESP8266
+  _pin_analogRead = A0;
+  # endif // if defined(ESP8266)
+  # if defined(ESP32)
+  _pin_analogRead = CONFIG_PIN1;
+  # endif // if defined(ESP32)
+
+  if (P002_CALIBRATION_ENABLED) {
+    _calib_adc1 = P002_CALIBRATION_POINT1;
+    _calib_adc2 = P002_CALIBRATION_POINT2;
+    _calib_out1 = P002_CALIBRATION_VALUE1;
+    _calib_out2 = P002_CALIBRATION_VALUE2;
+  }
 
   // hard-code some values of a wind-vane to test
   _multipoint.emplace_back(33000,  0);
@@ -35,14 +44,14 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   _binning.resize(_multipoint.size(), 0);
 }
 
-void P002_data_struct::addSample(int sampleValue)
+void P002_data_struct::takeSample()
 {
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
-      addOversamplingValue(sampleValue);
+      addOversamplingValue(espeasy_analogRead(_pin_analogRead));
       break;
     case P002_USE_BINNING:
-      addBinningValue(sampleValue);
+      addBinningValue(espeasy_analogRead(_pin_analogRead));
       break;
   }
 }
@@ -50,13 +59,32 @@ void P002_data_struct::addSample(int sampleValue)
 bool P002_data_struct::getValue(float& float_value,
                                 int  & raw_value) const
 {
+  bool mustTakeSample = false;
+
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
-      return getOversamplingValue(float_value, raw_value);
+
+      if (getOversamplingValue(float_value, raw_value)) { return true; }
+      mustTakeSample = true;
+      break;
     case P002_USE_BINNING:
-      return getBinnedValue(float_value, raw_value);
+
+      if (getBinnedValue(float_value, raw_value)) { return true; }
+      mustTakeSample = true;
+      break;
+    case P002_USE_CURENT_SAMPLE:
+      mustTakeSample = true;
+      break;
   }
-  return false;
+
+  if (!mustTakeSample) {
+    return false;
+  }
+
+  raw_value   = espeasy_analogRead(_pin_analogRead);
+  float_value = static_cast<float>(raw_value);
+  float_value = applyMultiPointInterpolation(applyCalibration(float_value));
+  return true;
 }
 
 void P002_data_struct::reset()
@@ -142,8 +170,8 @@ int P002_data_struct::getBinIndex(float currentValue) const
   if (currentValue >= _multipoint[last_mp_index]._adc) { return last_mp_index; }
 
   for (unsigned int i = 0; i < last_mp_index; ++i) {
-    const float dist_left  = _multipoint[i]._adc - currentValue;
-    const float dist_right = currentValue - _multipoint[i + 1]._adc;
+    const float dist_left  = currentValue - _multipoint[i]._adc;
+    const float dist_right = _multipoint[i + 1]._adc - currentValue;
 
     if ((dist_left >= 0) && (dist_right >= 0)) {
       // Inbetween 2 points of the multipoint array
@@ -170,22 +198,30 @@ void P002_data_struct::addBinningValue(int currentValue)
 
 bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 {
-  int best_index                 = -1;
   unsigned int highest_bin_count = 0;
 
   for (unsigned int i = 0; i < _binning.size(); ++i) {
     if (_binning[i] > highest_bin_count) {
       highest_bin_count = _binning[i];
-      best_index        = i;
+      float_value       = _multipoint[i]._value;
+      raw_value         = _multipoint[i]._adc;
     }
   }
+  # ifndef BUILD_NO_DEBUG
 
-  if ((best_index >= 0) && (_multipoint.size() > best_index)) {
-    float_value = _multipoint[best_index]._value;
-    raw_value   = _multipoint[best_index]._adc;
-    return true;
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("ADC getBinnedValue: bin cnt: ");
+
+    log += highest_bin_count;
+    log += F(" Value: ");
+    log += float_value;
+    log += F(" RAW: ");
+    log += raw_value;
+    addLog(LOG_LEVEL_DEBUG, log);
   }
-  return false;
+  # endif // ifndef BUILD_NO_DEBUG
+
+  return highest_bin_count != 0;
 }
 
 float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value) {
@@ -198,6 +234,19 @@ float P002_data_struct::applyCalibration(struct EventStruct *event, float float_
                                 P002_CALIBRATION_VALUE2);
   }
   return float_value;
+}
+
+float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_value)
+{
+  # ifdef ESP8266
+  const int pin = A0;
+  # endif // if defined(ESP8266)
+  # if defined(ESP32)
+  const int pin = CONFIG_PIN1;
+  # endif // if defined(ESP32)
+
+  raw_value = espeasy_analogRead(pin);
+  return applyCalibration(event, static_cast<float>(raw_value));
 }
 
 float P002_data_struct::applyCalibration(float float_value) const
@@ -239,8 +288,8 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
   }
 
   for (unsigned int i = 0; i < last_mp_index; ++i) {
-    const float dist_left  = _multipoint[i]._adc - float_value;
-    const float dist_right = float_value - _multipoint[i + 1]._adc;
+    const float dist_left  = float_value - _multipoint[i]._adc;
+    const float dist_right = _multipoint[i + 1]._adc - float_value;
 
     if ((dist_left >= 0) && (dist_right >= 0) &&
         (_multipoint[i]._adc != _multipoint[i + 1]._adc)) {
