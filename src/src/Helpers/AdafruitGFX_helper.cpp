@@ -65,8 +65,10 @@ const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth) {
     # if ADAGFX_SUPPORT_7COLOR
     case AdaGFXColorDepth::SevenColor: return F("eInk - 7 colors");
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor: return F("TFT - 8 colors");
     case AdaGFXColorDepth::SixteenColor: return F("TFT - 16 colors");
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor: return F("Full color - 65535 colors");
   }
   return F("None");
@@ -139,9 +141,17 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
                           uint16_t                   selectedIndex,
                           bool                       enabled) {
   # if ADAGFX_SUPPORT_7COLOR
+  #  if ADAGFX_SUPPORT_8and16COLOR
   const int colorDepthCount = 7 + 1;
+  #  else // if ADAGFX_SUPPORT_8and16COLOR
+  const int colorDepthCount = 5 + 1;
+  #  endif // if ADAGFX_SUPPORT_8and16COLOR
   # else // if ADAGFX_SUPPORT_7COLOR
+  #  if ADAGFX_SUPPORT_8and16COLOR
   const int colorDepthCount = 6 + 1;
+  #  else // if ADAGFX_SUPPORT_8and16COLOR
+  const int colorDepthCount = 4 + 1;
+  #  endif // if ADAGFX_SUPPORT_8and16COLOR
   # endif // if ADAGFX_SUPPORT_7COLOR
   const __FlashStringHelper *colorDepths[colorDepthCount] = { // Be sure to use all available modes from enum!
     toString(static_cast<AdaGFXColorDepth>(0)),               // include None
@@ -151,8 +161,10 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
     # if ADAGFX_SUPPORT_7COLOR
     toString(AdaGFXColorDepth::SevenColor),
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     toString(AdaGFXColorDepth::EightColor),
     toString(AdaGFXColorDepth::SixteenColor),
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     toString(AdaGFXColorDepth::FullColor)
   };
   const int colorDepthOptions[colorDepthCount] = {
@@ -163,8 +175,10 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
     # if ADAGFX_SUPPORT_7COLOR
     static_cast<int>(AdaGFXColorDepth::SevenColor),
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     static_cast<int>(AdaGFXColorDepth::EightColor),
     static_cast<int>(AdaGFXColorDepth::SixteenColor),
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     static_cast<int>(AdaGFXColorDepth::FullColor)
   };
 
@@ -540,7 +554,11 @@ String AdafruitGFX_helper::getFeatures() {
   # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
   # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
   log += F(" btn,");
-  # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
+  # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
+
+  if (log.endsWith(F(","))) {
+    log.remove(log.length() - 1);
+  }
   return log;
 }
 
@@ -1688,13 +1706,17 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
   }
 
   if ((result == -1) || (result == ADAGFX_WHITE)) { // Default & don't convert white
+    # if ADAGFX_SUPPORT_8and16COLOR
+
     if (
-      # if ADAGFX_SUPPORT_7COLOR
+      #  if ADAGFX_SUPPORT_7COLOR
       (colorDepth >= AdaGFXColorDepth::SevenColor) &&
-      # endif // if ADAGFX_SUPPORT_7COLOR
+      #  endif // if ADAGFX_SUPPORT_7COLOR
       (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
-    } else {
+    } else
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
+    {
       if (emptyIsBlack) {
         result = ADAGFX_BLACK;
       } else {
@@ -1714,12 +1736,14 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
         result = AdaGFXrgb565ToColor7(result); // Convert
         break;
       # endif  // if ADAGFX_SUPPORT_7COLOR
+      # if ADAGFX_SUPPORT_8and16COLOR
       case AdaGFXColorDepth::EightColor:
         result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
         break;
       case AdaGFXColorDepth::SixteenColor:
         result = color565((result >> 11 & 0x1F) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
         break;
+      # endif // if ADAGFX_SUPPORT_8and16COLOR
       case AdaGFXColorDepth::FullColor:
         // No color reduction
         break;
@@ -1779,8 +1803,10 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
       break;
     }
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor: // TODO: Sort out the actual 8/16 color options
     case AdaGFXColorDepth::SixteenColor:
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor:
     {
       AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_BLACK,       colorDepth);
@@ -1863,8 +1889,10 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
       break;
     }
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor:
     case AdaGFXColorDepth::SixteenColor:
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor:
     {
       switch (color) {

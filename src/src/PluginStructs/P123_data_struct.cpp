@@ -142,7 +142,7 @@ void P123_data_struct::displayButtonGroup(const EventStruct *event,
       }
       generateObjectEvent(event, objectNr, state, mode < 0, mode <= -2 ? -1 : 1);
     }
-    # ifdef XX_PLUGIN_123_DEBUG // Temporarily disabled
+    # ifdef XX_PLUGIN_123_DEBUG // TODO Temporarily disabled
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("P123: button init, state: ");
@@ -202,10 +202,12 @@ int P123_data_struct::parseStringToInt(const String& string, uint8_t indexFind, 
 bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
   addFormSubHeader(F("Touch configuration"));
 
-  addFormCheckBox(F("Flip rotation 180&deg;"), F("touch_rotation_flipped"), bitRead(P123_Settings.flags, P123_FLAGS_ROTATION_FLIPPED));
+  addFormCheckBox(F("Flip rotation 180&deg;"), F("tch_rotation_flipped"), bitRead(P123_Settings.flags, P123_FLAGS_ROTATION_FLIPPED));
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Some touchscreens are mounted 180&deg; rotated on the display."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 
-  addFormNumericBox(F("Touch minimum pressure"), F("touch_treshold"),
+  addFormNumericBox(F("Touch minimum pressure"), F("tch_treshold"),
                     P123_Settings.treshold, 0, 255);
 
   uint8_t choice3 = 0u;
@@ -224,17 +226,20 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
       F("Objectnames, X, Y and Z")
     };
     int optionValues3[P123_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-    addFormSelector(F("Events"), F("touch_events"), P123_EVENTS_OPTIONS, options3, optionValues3, choice3);
+    addFormSelector(F("Events"), F("tch_events"), P123_EVENTS_OPTIONS, options3, optionValues3, choice3);
 
-    addFormCheckBox(F("Initial Objectnames events"), F("touch_init_objectevent"), bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT));
+    addFormCheckBox(F("Initial Objectnames events"), F("tch_init_objectevent"), bitRead(P123_Settings.flags, P123_FLAGS_INIT_OBJECTEVENT));
     addFormNote(F("Will send state -1 but only for enabled On/Off button objects."));
   }
 
-  addFormCheckBox(F("Prevent duplicate events"), F("touch_deduplicate"), bitRead(P123_Settings.flags, P123_FLAGS_DEDUPLICATE));
+  addFormCheckBox(F("Prevent duplicate events"), F("tch_deduplicate"), bitRead(P123_Settings.flags, P123_FLAGS_DEDUPLICATE));
+
+  # ifndef LIMIT_BUILD_SIZE
 
   if (!Settings.UseRules) {
     addFormNote(F("Tools / Advanced / Rules must be enabled for events to be fired."));
   }
+  # endif // ifndef LIMIT_BUILD_SIZE
 
   addFormSubHeader(F("Calibration"));
 
@@ -242,7 +247,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
     int noYesOptionValues[2]                   = { 0, 1 };
     addFormSelector(F("Calibrate to screen resolution"),
-                    F("touch_use_calibration"),
+                    F("tch_use_calibration"),
                     2,
                     noYesOptions,
                     noYesOptionValues,
@@ -263,24 +268,24 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     html_TR_TD();
     addHtml(F("Top-left"));
     html_TD();
-    addNumericBox(F("touch_cal_tl_x"),
+    addNumericBox(F("tch_cal_tl_x"),
                   P123_Settings.top_left.x,
                   0,
                   65535);
     html_TD();
-    addNumericBox(F("touch_cal_tl_y"),
+    addNumericBox(F("tch_cal_tl_y"),
                   P123_Settings.top_left.y,
                   0,
                   65535);
     html_TD();
     addHtml(F("Bottom-right"));
     html_TD();
-    addNumericBox(F("touch_cal_br_x"),
+    addNumericBox(F("tch_cal_br_x"),
                   P123_Settings.bottom_right.x,
                   0,
                   65535);
     html_TD();
-    addNumericBox(F("touch_cal_br_y"),
+    addNumericBox(F("tch_cal_br_y"),
                   P123_Settings.bottom_right.y,
                   0,
                   65535);
@@ -288,7 +293,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     html_end_table();
   }
 
-  addFormCheckBox(F("Enable logging for calibration"), F("touch_log_calibration"),
+  addFormCheckBox(F("Enable logging for calibration"), F("tch_log_calibration"),
                   P123_Settings.logEnabled);
 
   addFormSubHeader(F("Touch objects"));
@@ -365,7 +370,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     html_end_table();
   }
   {
-    addFormNumericBox(F("Initial button group"), F("touch_initial_group"),
+    addFormNumericBox(F("Initial button group"), F("tch_initial_group"),
                       get8BitFromUL(P123_Settings.flags, P123_FLAGS_INITIAL_GROUP), 0, P123_MAX_BUTTON_GROUPS
                       #  ifdef P123_USE_TOOLTIPS
                       , F("Initial group")
@@ -608,9 +613,11 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
       html_TD(2);   // Start with some blank columns
       # ifdef P123_USE_EXTENDED_TOUCH
       {
+        #  ifdef P123_USE_TOOLTIPS
         String buttonGroupToolTip = F("Button-group [0..");
         buttonGroupToolTip += P123_MAX_BUTTON_GROUPS;
         buttonGroupToolTip += ']';
+        #  endif // ifdef P123_USE_TOOLTIPS
         addNumericBox(getPluginCustomArgName(objectNr + 1600),
                       get8BitFromUL(TouchObjects[objectNr].flags, P123_OBJECT_FLAG_GROUP), 0, P123_MAX_BUTTON_GROUPS
                       #  ifdef P123_USE_TOOLTIPS
@@ -698,7 +705,7 @@ bool P123_data_struct::plugin_webform_load(struct EventStruct *event) {
     }
     html_end_table();
 
-    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("touch_debounce"),
+    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("tch_debounce"),
                       P123_Settings.debounceMs, 0, 255);
     addUnit(F("0-255 msec."));
   }
@@ -718,31 +725,31 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
 
   uint32_t lSettings = 0u;
 
-  bitWrite(lSettings, P123_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("touch_events")), P123_FLAGS_SEND_XY));
-  bitWrite(lSettings, P123_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("touch_events")), P123_FLAGS_SEND_Z));
-  bitWrite(lSettings, P123_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("touch_events")), P123_FLAGS_SEND_OBJECTNAME));
-  bitWrite(lSettings, P123_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("touch_rotation_flipped")));
-  bitWrite(lSettings, P123_FLAGS_DEDUPLICATE,      isFormItemChecked(F("touch_deduplicate")));
-  bitWrite(lSettings, P123_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("touch_init_objectevent")));
+  bitWrite(lSettings, P123_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("tch_events")), P123_FLAGS_SEND_XY));
+  bitWrite(lSettings, P123_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("tch_events")), P123_FLAGS_SEND_Z));
+  bitWrite(lSettings, P123_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("tch_events")), P123_FLAGS_SEND_OBJECTNAME));
+  bitWrite(lSettings, P123_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("tch_rotation_flipped")));
+  bitWrite(lSettings, P123_FLAGS_DEDUPLICATE,      isFormItemChecked(F("tch_deduplicate")));
+  bitWrite(lSettings, P123_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("tch_init_objectevent")));
   # ifdef P123_USE_EXTENDED_TOUCH
-  set8BitToUL(lSettings, P123_FLAGS_INITIAL_GROUP, getFormItemInt(F("touch_initial_group"))); // Button group
+  set8BitToUL(lSettings, P123_FLAGS_INITIAL_GROUP, getFormItemInt(F("tch_initial_group"))); // Button group
   # endif // ifdef P123_USE_EXTENDED_TOUCH
 
-  config += getFormItemInt(F("touch_use_calibration"));
+  config += getFormItemInt(F("tch_use_calibration"));
   config += P123_SETTINGS_SEPARATOR;
-  config += isFormItemChecked(F("touch_log_calibration")) ? 1 : 0;
+  config += isFormItemChecked(F("tch_log_calibration")) ? 1 : 0;
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("touch_cal_tl_x"));
+  config += getFormItemInt(F("tch_cal_tl_x"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("touch_cal_tl_y"));
+  config += getFormItemInt(F("tch_cal_tl_y"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("touch_cal_br_x"));
+  config += getFormItemInt(F("tch_cal_br_x"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("touch_cal_br_y"));
+  config += getFormItemInt(F("tch_cal_br_y"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("touch_debounce"));
+  config += getFormItemInt(F("tch_debounce"));
   config += P123_SETTINGS_SEPARATOR;
-  config += getFormItemInt(F("touch_treshold"));
+  config += getFormItemInt(F("tch_treshold"));
   config += P123_SETTINGS_SEPARATOR;
   config += ull2String(lSettings);
   config += P123_SETTINGS_SEPARATOR;
@@ -998,7 +1005,10 @@ void P123_data_struct::generateObjectEvent(const EventStruct *event,
                                            const int8_t       onOffState,
                                            const bool         groupSwitch,
                                            const int8_t       factor) {
-  if ((objectIndex < 0) || (objectIndex >= TouchObjects.size())) { return; } // Range check
+  if ((objectIndex < 0) || // Range check
+      (objectIndex >= static_cast<int8_t>(TouchObjects.size()))) {
+    return;
+  }
   String eventCommand;
 
   eventCommand.reserve(48);
@@ -1171,8 +1181,8 @@ void P123_data_struct::loadTouchObjects(const EventStruct *event) {
     P123_Settings.colorOff             = ADAGFX_RED;
     P123_Settings.colorCaption         = ADAGFX_WHITE;
     P123_Settings.colorBorder          = ADAGFX_WHITE;
-    P123_Settings.colorDisabled        = 0x9410;
-    P123_Settings.colorDisabledCaption = 0x5A69;
+    P123_Settings.colorDisabled        = P123_DEFAULT_COLOR_DISABLED;
+    P123_Settings.colorDisabledCaption = P123_DEFAULT_COLOR_DISABLED_CAPTION;
   }
   # endif // ifdef P123_USE_EXTENDED_TOUCH
 

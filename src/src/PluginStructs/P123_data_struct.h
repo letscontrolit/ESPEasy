@@ -9,7 +9,9 @@
 
 # include <Adafruit_FT6206.h>
 
-# define PLUGIN_123_DEBUG        // Additional debugging information
+# ifndef LIMIT_BUILD_SIZE
+// #  define PLUGIN_123_DEBUG       // Additional debugging information
+# endif // ifndef LIMIT_BUILD_SIZE
 
 # define P123_USE_TOOLTIPS       // Enable tooltips in UI
 
@@ -110,14 +112,14 @@
 # endif // ifdef P123_USE_EXTENDED_TOUCH
 
 // Settings array field offsets: Touch objects
-# define P123_OBJECT_INDEX_START      (P123_CALIBRATION_START + 1)
-# define P123_OBJECT_INDEX_END        (P123_ARRAY_SIZE - (P123_CALIBRATION_START + 1))
-# define P123_OBJECT_NAME             1    // Name (String 14) (parseString index starts at 1)
-# define P123_OBJECT_FLAGS            2    // Flags (uint32_t)
-# define P123_OBJECT_COORD_TOP_X      3    // Top X (uint16_t)
-# define P123_OBJECT_COORD_TOP_Y      4    // Top Y
-# define P123_OBJECT_COORD_WIDTH      5    // Width
-# define P123_OBJECT_COORD_HEIGHT     6    // Height
+# define P123_OBJECT_INDEX_START        (P123_CALIBRATION_START + 1)
+# define P123_OBJECT_INDEX_END          (P123_ARRAY_SIZE - (P123_CALIBRATION_START + 1))
+# define P123_OBJECT_NAME               1  // Name (String 14) (parseString index starts at 1)
+# define P123_OBJECT_FLAGS              2  // Flags (uint32_t)
+# define P123_OBJECT_COORD_TOP_X        3  // Top X (uint16_t)
+# define P123_OBJECT_COORD_TOP_Y        4  // Top Y
+# define P123_OBJECT_COORD_WIDTH        5  // Width
+# define P123_OBJECT_COORD_HEIGHT       6  // Height
 # ifdef P123_USE_EXTENDED_TOUCH
 #  define P123_OBJECT_COLOR_ON          7  // Color ON (rgb565, uint16_t)
 #  define P123_OBJECT_COLOR_OFF         8  // Color OFF
@@ -129,13 +131,16 @@
 #  define P123_OBJECT_COLOR_DISABCAPT   14 // Disabled Caption Color
 # endif // ifdef P123_USE_EXTENDED_TOUCH
 
-# define P123_OBJECT_FLAG_ENABLED     0    // Enabled
-# define P123_OBJECT_FLAG_BUTTON      1    // Button behavior
-# define P123_OBJECT_FLAG_INVERTED    2    // Inverted button
-# define P123_OBJECT_FLAG_FONTSCALE   3    // 4 bits used as button alignment
-# define P123_OBJECT_FLAG_BUTTONTYPE  7    // 8 bits used as button type
-# define P123_OBJECT_FLAG_GROUP       15   // 8 bits used as button group
-# define P123_OBJECT_FLAG_ACTIONGROUP 23   // 8 bits, 6 bits used as action group 0..63, 2 bits used as action option
+# define P123_OBJECT_FLAG_ENABLED       0  // Enabled
+# define P123_OBJECT_FLAG_BUTTON        1  // Button behavior
+# define P123_OBJECT_FLAG_INVERTED      2  // Inverted button
+# define P123_OBJECT_FLAG_FONTSCALE     3  // 4 bits used as button alignment
+# define P123_OBJECT_FLAG_BUTTONTYPE    7  // 8 bits used as button type
+# define P123_OBJECT_FLAG_GROUP         15 // 8 bits used as button group
+# define P123_OBJECT_FLAG_ACTIONGROUP   23 // 8 bits, 6 bits used as action group 0..63, 2 bits used as action option
+
+# define P123_DEFAULT_COLOR_DISABLED          0x9410
+# define P123_DEFAULT_COLOR_DISABLED_CAPTION  0x5A69
 
 // Lets define our own coordinate point
 struct tP123_Point

@@ -30,8 +30,11 @@
 #  define ADAGFX_USE_ASCIITABLE       1  // Enable 'asciitable' command (useful for debugging/development)
 # endif // ifndef ADAGFX_USE_ASCIITABLE
 # ifndef ADAGFX_SUPPORT_7COLOR
-#  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
+// #  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_7COLOR
+# ifndef ADAGFX_SUPPORT_8and16COLOR
+// #  define ADAGFX_SUPPORT_8and16COLOR  1  // Do we support 8 and 16-Color displays?
+# endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # ifndef ADAGFX_FONTS_INCLUDED
 #  define ADAGFX_FONTS_INCLUDED       1  // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
@@ -89,6 +92,9 @@
 #  ifdef ADAGFX_USE_ASCIITABLE
 #   undef ADAGFX_USE_ASCIITABLE
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
+#  ifdef ADAGFX_SUPPORT_8and16COLOR
+#   undef ADAGFX_SUPPORT_8and16COLOR
+#  endif // ifdef ADAGFX_SUPPORT_8and16COLOR
 // #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
 // #   undef ADAGFX_ENABLE_BMP_DISPLAY
 // #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
@@ -113,6 +119,12 @@
 #  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+# ifndef ADAGFX_SUPPORT_7COLOR
+#  define ADAGFX_SUPPORT_7COLOR       1
+# endif // ifndef ADAGFX_SUPPORT_7COLOR
+# ifndef ADAGFX_SUPPORT_8and16COLOR
+#  define ADAGFX_SUPPORT_8and16COLOR  1
+# endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # endif  // ifdef PLUGIN_SET_MAX
 
 # define ADAGFX_PARSE_PREFIX      F("~")              // Subcommand-trigger prefix and postfix strings
@@ -174,11 +186,21 @@ enum class AdaGFXTextPrintMode : uint8_t {
 };
 
 # if ADAGFX_SUPPORT_7COLOR
-#  define ADAGFX_COLORDEPTH_COUNT 7
-#  define ADAGFX_MONOCOLORS_COUNT 4
+#  if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 7
+#   define ADAGFX_MONOCOLORS_COUNT 4
+#  else // if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 5
+#   define ADAGFX_MONOCOLORS_COUNT 4
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
 # else // if ADAGFX_SUPPORT_7COLOR
-#  define ADAGFX_COLORDEPTH_COUNT 6
-#  define ADAGFX_MONOCOLORS_COUNT 3
+#  if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 6
+#   define ADAGFX_MONOCOLORS_COUNT 3
+#  else // if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 4
+#   define ADAGFX_MONOCOLORS_COUNT 3
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
 # endif // if ADAGFX_SUPPORT_7COLOR
 enum class AdaGFXColorDepth : uint16_t {
   Monochrome            = 2u, // Black & white
@@ -187,9 +209,11 @@ enum class AdaGFXColorDepth : uint16_t {
   # if ADAGFX_SUPPORT_7COLOR
   SevenColor = 7u,            // Black, white, red, yellow, blue, green, orange
   # endif // if ADAGFX_SUPPORT_7COLOR
+  # if ADAGFX_SUPPORT_8and16COLOR
   EightColor   = 8u,          // 8 regular colors
   SixteenColor = 16u,         // 16 colors
-  FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
+  # endif // if ADAGFX_SUPPORT_8and16COLOR
+  FullColor = 65535u          // 65535 colors (max. supported by RGB565)
 };
 
 # if ADAGFX_ENABLE_BUTTON_DRAW
