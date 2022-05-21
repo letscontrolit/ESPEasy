@@ -1,8 +1,53 @@
 #include "../PluginStructs/P095_data_struct.h"
 
 #ifdef USES_P095
-
 # include "../Helpers/Hardware.h"
+
+/****************************************************************************
+ * ILI9xxx_type_toString: Display-value for the device selected
+ ***************************************************************************/
+const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device) {
+  switch (device) {
+    case ILI9xxx_type_e::ILI9341_240x320: return F("ILI9341 240 x 320px");
+    case ILI9xxx_type_e::ILI9342_240x320: return F("ILI9342 240 x 320px (M5Stack)");
+    case ILI9xxx_type_e::ILI9481_320x480: return F("ILI9481 320 x 480px");
+    case ILI9xxx_type_e::ILI9481_CPT29_320x480: return F("ILI9481 320 x 480px (CPT29)");
+    case ILI9xxx_type_e::ILI9481_PVI35_320x480: return F("ILI9481 320 x 480px (PVI35)");
+    case ILI9xxx_type_e::ILI9481_AUO317_320x480: return F("ILI9481 320 x 480px (AUO317)");
+    case ILI9xxx_type_e::ILI9481_CMO35_320x480: return F("ILI9481 320 x 480px (CMO35)");
+    case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
+    case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
+    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
+    case ILI9xxx_type_e::ILI9xxx_MAX: break;
+  }
+  return F("Unsupported type!");
+}
+
+/****************************************************************************
+ * ILI9xxx_type_toResolution: X and Y resolution for the selected type
+ ***************************************************************************/
+void ILI9xxx_type_toResolution(ILI9xxx_type_e device, uint16_t& x, uint16_t& y) {
+  switch (device) {
+    case ILI9xxx_type_e::ILI9341_240x320:
+    case ILI9xxx_type_e::ILI9342_240x320:
+      x = 240;
+      y = 320;
+      break;
+    case ILI9xxx_type_e::ILI9481_320x480:
+    case ILI9xxx_type_e::ILI9481_CPT29_320x480:
+    case ILI9xxx_type_e::ILI9481_PVI35_320x480:
+    case ILI9xxx_type_e::ILI9481_AUO317_320x480:
+    case ILI9xxx_type_e::ILI9481_CMO35_320x480:
+    case ILI9xxx_type_e::ILI9481_RGB_320x480:
+    case ILI9xxx_type_e::ILI9486_320x480:
+    case ILI9xxx_type_e::ILI9488_320x480:
+      x = 320;
+      y = 480;
+      break;
+    case ILI9xxx_type_e::ILI9xxx_MAX:
+      break;
+  }
+}
 
 /****************************************************************************
  * P095_CommandTrigger_toString: return the command string selected
@@ -11,6 +56,10 @@ const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd)
   switch (cmd) {
     case P095_CommandTrigger::tft: return F("tft");
     case P095_CommandTrigger::ili9341: return F("ili9341");
+    case P095_CommandTrigger::ili9342: return F("ili9342");
+    case P095_CommandTrigger::ili9481: return F("ili9481");
+    case P095_CommandTrigger::ili9486: return F("ili9486");
+    case P095_CommandTrigger::ili9488: return F("ili9488");
     case P095_CommandTrigger::MAX: return F("None");
   }
   return F("ili9341"); // Default command trigger
@@ -19,7 +68,8 @@ const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd)
 /****************************************************************************
  * Constructor
  ***************************************************************************/
-P095_data_struct::P095_data_struct(uint8_t             rotation,
+P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
+                                   uint8_t             rotation,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
                                    int8_t              backlightPin,
@@ -29,12 +79,14 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
                                    bool                textBackFill)
-  : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
-  _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
+  : _displayType(displayType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
+  _backlightPin(backlightPin), _backlightPercentage(backlightPercentage), _displayTimer(displayTimer),
+  _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
+  _textBackFill(textBackFill)
 {
   _xpix = 240;
   _ypix = 320;
+  ILI9xxx_type_toResolution(_displayType, _xpix, _ypix);
 
   updateFontMetrics();
   _commandTrigger.toLowerCase();
@@ -46,15 +98,8 @@ P095_data_struct::P095_data_struct(uint8_t             rotation,
  * Destructor
  ***************************************************************************/
 P095_data_struct::~P095_data_struct() {
-  if (nullptr != gfxHelper) {
-    delete gfxHelper;
-    gfxHelper = nullptr;
-  }
-
-  if (nullptr != tft) {
-    delete tft;
-    tft = nullptr;
-  }
+  delete gfxHelper;
+  delete tft;
 }
 
 /****************************************************************************
@@ -66,7 +111,11 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
   if (nullptr == tft) {
     addLog(LOG_LEVEL_INFO, F("ILI9341: Init start."));
 
-    tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2));
+    tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
+
+    if (nullptr != tft) {
+      tft->begin();
+    }
 
     # ifndef BUILD_NO_DEBUG
 
@@ -110,17 +159,20 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->setTxtfullCompensation(!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_COMPAT_P095) ? 0 : 1);
     }
     updateFontMetrics();
-    tft->fillScreen(_bgcolor);             // fill screen with black color
-    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+    tft->fillScreen(_bgcolor);             // fill screen with background color
+    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and configured background
     tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
     tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
     displayOnOff(true);
     # ifdef P095_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 3, ST77XX_WHITE, ST77XX_BLUE);
-    yPos += (3 * _fontheight);
-    gfxHelper->printText(String(F("ILI9341")).c_str(), 0, yPos, 2, ST77XX_BLUE,  ST77XX_WHITE);
-    delay(100); // Splash
+
+    if (P095_CONFIG_FLAG_GET_SHOW_SPLASH) {
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(),         0, yPos, 3, ADAGFX_WHITE, ADAGFX_BLUE);
+      yPos += (3 * _fontheight);
+      gfxHelper->printText(String(F("ILI934x/ILI948x")).c_str(), 0, yPos, 2, ADAGFX_BLUE,  ADAGFX_WHITE);
+      delay(100); // Splash
+    }
     # endif // ifdef P095_SHOW_SPLASH
     updateFontMetrics();
 
@@ -157,13 +209,10 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
     displayOnOff(false);
   }
 
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != tft) {
-    // delete tft; // Library is not properly inherited so no destructor called
-    free(tft); // Free up some memory without calling the destructor chain
-  }
+  delete tft;
   tft = nullptr;
   return true;
 }

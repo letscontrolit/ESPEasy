@@ -75,6 +75,7 @@ const __FlashStringHelper* toString(AdaGFXTextPrintMode mode) {
     case AdaGFXTextPrintMode::ContinueToNextLine: return F("Continue to next line");
     case AdaGFXTextPrintMode::TruncateExceedingMessage: return F("Truncate exceeding message");
     case AdaGFXTextPrintMode::ClearThenTruncate: return F("Clear then truncate exceeding message");
+    case AdaGFXTextPrintMode::TruncateExceedingCentered: return F("Truncate, centered if maxWidth set");
     case AdaGFXTextPrintMode::MAX: break;
   }
   return F("None");
@@ -107,12 +108,14 @@ void AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
   const __FlashStringHelper *textModes[textModeCount] = { // Be sure to use all available modes from enum!
     toString(AdaGFXTextPrintMode::ContinueToNextLine),
     toString(AdaGFXTextPrintMode::TruncateExceedingMessage),
-    toString(AdaGFXTextPrintMode::ClearThenTruncate)
+    toString(AdaGFXTextPrintMode::ClearThenTruncate),
+    toString(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
   const int textModeOptions[textModeCount] = {
     static_cast<int>(AdaGFXTextPrintMode::ContinueToNextLine),
     static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage),
-    static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate)
+    static_cast<int>(AdaGFXTextPrintMode::ClearThenTruncate),
+    static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingCentered),
   };
 
   addFormSelector(F("Text print Mode"), id, textModeCount, textModes, textModeOptions, selectedIndex);
@@ -472,8 +475,10 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT    *display,
 
 # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
 
-void AdafruitGFX_helper::initialize()
-{
+/****************************************************************************
+ * common initialization, called from constructors
+ ***************************************************************************/
+void AdafruitGFX_helper::initialize() {
   _trigger.toLowerCase(); // store trigger in lowercase
   # ifndef BUILD_NO_DEBUG
 
@@ -622,7 +627,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setTextColor(_fgcolor, _bgcolor);
     }
   }
-  else if (subcommand.equals(F("txs")) && (argCount == 1))
+  else if (subcommand.equals(F("txs")) && (argCount == 1)) // txs: Text size = font scaling, 1..10
   {
     if ((nParams[0] >= 0) || (nParams[0] <= 10)) {
       _fontscaling = nParams[0];
@@ -632,7 +637,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       success = false;
     }
   }
-  else if (subcommand.equals(F("txtfull")) && (argCount >= 3) && (argCount <= 6)) { // txtfull: Text at position, with size and color
+  else if (subcommand.equals(F("txtfull")) && (argCount >= 3) && (argCount <= 8)) { // txtfull: Text at position, with size and color
     switch (argCount) {
       case 3:                                                                       // single text
 
@@ -701,6 +706,36 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                     nParams[2],
                     AdaGFXparseColor(sParams[3], _colorDepth),
                     AdaGFXparseColor(sParams[4], _colorDepth));
+        }
+        break;
+      case 7: // 7: text + size + color + bkcolor + printmode
+      case 8: // as 7 but: + maxwidth
+
+        # if ADAGFX_ARGUMENT_VALIDATION
+
+        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+          success = false;
+        } else
+        # endif // if ADAGFX_ARGUMENT_VALIDATION
+        {
+          AdaGFXTextPrintMode tmpPrintMode = _textPrintMode;
+
+          if ((nParams[5] >= 0) && (nParams[5] < static_cast<int>(AdaGFXTextPrintMode::MAX))) {
+            _textPrintMode = static_cast<AdaGFXTextPrintMode>(nParams[5]);
+            _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+          }
+          printText(sParams[argCount - 1].c_str(),
+                    nParams[0] - _p095_compensation,
+                    nParams[1] - _p095_compensation,
+                    nParams[2],
+                    AdaGFXparseColor(sParams[3], _colorDepth),
+                    AdaGFXparseColor(sParams[4], _colorDepth),
+                    argCount == 8 ? nParams[argCount - 2] : 0);
+
+          if (_textPrintMode != tmpPrintMode) {
+            _textPrintMode = tmpPrintMode;
+            _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
+          }
         }
         break;
       default:
@@ -788,10 +823,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
     if (sParams[0].equals(F("sevenseg24"))) {
       _display->setFont(&Seven_Segment24pt7b);
-      calculateTextMetrics(21, 42, 35);
+      calculateTextMetrics(21, 42, 35, true);
     } else if (sParams[0].equals(F("sevenseg18"))) {
       _display->setFont(&Seven_Segment18pt7b);
-      calculateTextMetrics(16, 32, 25);
+      calculateTextMetrics(16, 33, 26, true);
     } else if (sParams[0].equals(F("freesans"))) {
       _display->setFont(&FreeSans9pt7b);
       calculateTextMetrics(10, 16, 12);
@@ -930,7 +965,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
     } else if (sParams[0].equals(F("default"))) { // font,default is always available!
       _display->setFont();
-      calculateTextMetrics(6, 10);
+      calculateTextMetrics(6, 9);
     } else {
       success = false;
     }
@@ -1240,48 +1275,36 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 /****************************************************************************
  * printText: Print text on display at a specific pixel or column/row location
  ***************************************************************************/
-void AdafruitGFX_helper::printText(const char    *string,
-                                   int            X,
-                                   int            Y,
-                                   unsigned int   textSize,
-                                   unsigned short color,
-                                   unsigned short bkcolor) {
+void AdafruitGFX_helper::printText(const char *string,
+                                   int16_t     X,
+                                   int16_t     Y,
+                                   uint8_t     textSize,
+                                   uint16_t    color,
+                                   uint16_t    bkcolor,
+                                   uint16_t    maxWidth) {
   int16_t  _x = X;
   int16_t  _y = Y + (_heightOffset * textSize);
   uint16_t _w = 0;
-  uint8_t  _h = 0;
-  int16_t  x1, y1;
-  uint16_t w0, w1, h1;
+  int16_t  x1 = 0, y1 = 0;
+  uint16_t w1 = 0, h1 = 0;
+  int16_t  ot = 0, ob = 0, ol = 0;
+  uint16_t res_x     = _res_x;
+  String   newString = string;
 
   if (_columnRowMode) {
     _x = X * (_fontwidth * textSize); // We need this multiple times
     _y = (Y * (_fontheight * textSize))  + (_heightOffset * textSize);
   }
 
-  if (_textBackFill && (color != bkcolor)) { // Draw extra lines above text
-    // Estimate used width
-    _w = _textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine ?
-         strlen(string) * _fontwidth * textSize :
-         ((_textcols + 1) * _fontwidth * textSize) - _x;
-
-    do {
-      _display->drawLine(_x, _y, _x + _w - 1, _y, bkcolor);
-      _h++;
-      _y++; // Shift down entire line
-    } while (_h < textSize);
-  }
-
   _display->setCursor(_x, _y);
   _display->setTextColor(color, bkcolor);
   _display->setTextSize(textSize);
-
-  String newString = string;
 
   if (_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) {
     if (_isProportional) {                                              // Proportional font. This is rather slow!
       _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1);   // Count length
 
-      while ((newString.length() > 0) && ((_x + w1) > _res_x)) {
+      while ((newString.length() > 0) && ((_x + w1) > res_x)) {
         newString.remove(newString.length() - 1);                       // Cut last character off
         _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1); // Re-count length
       }
@@ -1293,43 +1316,64 @@ void AdafruitGFX_helper::printText(const char    *string,
     }
   }
 
-  w1 = 0;
+  _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1); // Count length
 
-  _display->getTextBounds(F(" "), _x, _y, &x1, &y1, &w1, &h1);
+  if ((maxWidth > 0) && (_x + maxWidth <= _res_x)) {
+    res_x = _x + maxWidth;
+    _w    = maxWidth;
 
-  if (w1 == 0) { w1 = _fontwidth; } // Some fonts seem to have a 0-wide space, this is an endless loop protection
-
-  if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // Clear before print
-    _display->setCursor(_x, _y);
-    w0 = 0;
-    uint16_t w2 = 0;
-
-    _display->getTextBounds(newString, _x, _y, &x1, &y1, &w2, &h1); // Count length in pixels
-
-    for (; (w0 < w2); w0 += w1) {                                   // Clear previously used text with spaces
-      _display->print(' ');
+    if ((_textPrintMode == AdaGFXTextPrintMode::TruncateExceedingCentered) &&
+        (maxWidth > w1)) {
+      ol = (_w - (w1 + 2 * (x1 - _x))) / 2;
     }
+  } else {
+    _w = w1 + 2 * (x1 - _x);
+  }
+
+  if (_textBackFill && (color != bkcolor)) { // Fill extra space above and below text
+    ot -= textSize;
+    ob += textSize;
+    _y += textSize;
+  }
+
+  if ((_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) ||
+      (color != bkcolor)) { // Clear before print
+    # ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("printText: clear: _x:");
+      log += _x;
+      log += F(", _y:");
+      log += _y;
+      log += F(", x1:");
+      log += x1;
+      log += F(", y1:");
+      log += y1;
+      log += F(", w1:");
+      log += w1;
+      log += F(", h1:");
+      log += h1;
+      log += F(", _res_x/max:");
+      log += _res_x;
+      log += '/';
+      log += res_x;
+      log += F(", str:");
+      log += newString;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+    # endif // ifndef BUILD_NO_DEBUG
+
+    if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) {
+      _display->fillRect(_x + ot, y1, res_x - _x, h1 + ob, bkcolor); // Clear text area to right edge of screen
+    } else {
+      _display->fillRect(_x + ot, y1, _w, h1 + ob, bkcolor);         // Clear text area
+    }
+
     delay(0);
   }
 
-  _display->setCursor(_x, _y);
+  _display->setCursor(_x + ol, _y); // add left offset to center, _y may be updated
   _display->print(newString);
-
-  _display->getTextBounds(newString, _x, _y, &x1, &y1, &w0, &h1); // Count length in pixels
-
-  for (; ((_x + w0) < _res_x) && _textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine; w0 += w1) {
-    _display->print(' ');
-  }
-
-  if (_textBackFill && (color != bkcolor)) { // Draw extra lines below text
-    _y += ((_fontheight - 1) * textSize);
-    _h  = 0;
-
-    do {
-      _display->drawLine(_x, _y - _h, _x + _w - 1, _y - _h, bkcolor);
-      _h++;
-    } while (_h <= textSize);
-  }
 }
 
 /****************************************************************************
