@@ -87,7 +87,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::VCC);
 #endif // if FEATURE_ADC_VCC
 
-  addTableSeparator(F("System status"), 3, 3);
+  addTableSeparator(F("Services Status"), 3, 3);
 
   addSysVar_enum_html(SystemVariables::ISWIFI);
   addSysVar_enum_html(SystemVariables::ISNTP);
@@ -115,7 +115,12 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSBUILD_DESCR);
   addSysVar_enum_html(SystemVariables::SYSBUILD_GIT);
   
-  addTableSeparator(F("System"), 3, 3);
+  addTableSeparator(F("System Time"), 3, 3);
+  addSysVar_enum_html(SystemVariables::UPTIME);
+  addSysVar_enum_html(SystemVariables::UPTIME_MS);
+  addSysVar_enum_html(SystemVariables::UNIXTIME);
+  addSysVar_enum_html(SystemVariables::UNIXDAY);
+  addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
   addSysVar_html(F("%sysyear%  // %sysyear_0%"));
   addSysVar_html(F("%sysyears%"));
   addSysVar_html(F("%sysmonth% // %sysmonth_0%"));
@@ -126,12 +131,8 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::SYSSEC_D);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY);
   addSysVar_enum_html(SystemVariables::SYSWEEKDAY_S);
-  addTableSeparator(F("System"), 3, 3);
-  addSysVar_enum_html(SystemVariables::UPTIME);
-  addSysVar_enum_html(SystemVariables::UPTIME_MS);
-  addSysVar_enum_html(SystemVariables::UNIXTIME);
-  addSysVar_enum_html(SystemVariables::UNIXDAY);
-  addSysVar_enum_html(SystemVariables::UNIXDAY_SEC);
+
+  addTableSeparator(F("Sunrise/Sunset"), 3, 3);
   addSysVar_html(F("%sunset%"));
   addSysVar_html(F("%sunset-1h%"));
   addSysVar_html(F("%sunrise%"));
@@ -140,6 +141,22 @@ void handle_sysvars() {
   addSysVar_html(F("%s_sunrise%"));
   addSysVar_html(F("%m_sunset%"));
   addSysVar_html(F("%m_sunrise%"));
+
+  addTableSeparator(F("ESP Board"), 3, 3);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_ID);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_FREQ);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_MODEL);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_REVISION);
+  addSysVar_enum_html(SystemVariables::ESP_CHIP_CORES);
+  addSysVar_enum_html(SystemVariables::ESP_BOARD_NAME);
+
+  addTableSeparator(F("Storage"), 3, 3);
+  addSysVar_enum_html(SystemVariables::FLASH_FREQ);
+  addSysVar_enum_html(SystemVariables::FLASH_SIZE);
+  addSysVar_enum_html(SystemVariables::FLASH_CHIP_VENDOR);
+  addSysVar_enum_html(SystemVariables::FLASH_CHIP_MODEL);
+  addSysVar_enum_html(SystemVariables::FS_SIZE);
+  addSysVar_enum_html(SystemVariables::FS_FREE);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
 
