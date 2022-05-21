@@ -27,6 +27,16 @@ const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displ
   return F("");
 }
 
+P082_query Plugin_082_from_valuename(const String& valuename)
+{
+  for (uint8_t query = 0; query < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++query) {
+    if (valuename.equalsIgnoreCase(Plugin_082_valuename(static_cast<P082_query>(query), false))) {
+      return static_cast<P082_query>(query);
+    }
+  }
+  return P082_query::P082_NR_OUTPUT_OPTIONS;
+}
+
 const __FlashStringHelper* toString(P082_PowerMode mode) {
   switch (mode) {
     case P082_PowerMode::Max_Performance: return F("Max Performance");
