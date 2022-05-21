@@ -3,6 +3,7 @@
 
 
 #include "src/Helpers/Hardware.h"
+#include "src/PluginStructs/P002_data_struct.h"
 
 // #######################################################################################################
 // #################################### Plugin 002: Analog ###############################################
@@ -14,83 +15,14 @@
 #define PLUGIN_VALUENAME1_002 "Analog"
 
 
-#ifdef ESP32
-  # define P002_MAX_ADC_VALUE    4095
-#endif // ifdef ESP32
-#ifdef ESP8266
-  # define P002_MAX_ADC_VALUE    1023
-#endif // ifdef ESP8266
-
-
 #define P002_OVERSAMPLING        PCONFIG(0)
-#define P002_CALIBRATION_ENABLED PCONFIG(3)
+#define P002_CALIBRATION_ENABLED PCONFIG(3)  // FIXME TD-er: What happened to PCONFIG(1) & PCONFIG(2) ???
 #define P002_CALIBRATION_POINT1  PCONFIG_LONG(0)
 #define P002_CALIBRATION_POINT2  PCONFIG_LONG(1)
 #define P002_CALIBRATION_VALUE1  PCONFIG_FLOAT(0)
 #define P002_CALIBRATION_VALUE2  PCONFIG_FLOAT(1)
 
-struct P002_data_struct : public PluginTaskData_base {
-  P002_data_struct() {}
 
-  ~P002_data_struct() {
-    reset();
-  }
-
-  void reset() {
-    OversamplingValue  = 0;
-    OversamplingCount  = 0;
-    OversamplingMinVal = P002_MAX_ADC_VALUE;
-    OversamplingMaxVal = -P002_MAX_ADC_VALUE;
-  }
-
-  void addOversamplingValue(int currentValue) {
-    // Extra check to only add min or max readings once.
-    // They will be taken out of the averaging only one time.
-    if ((currentValue == 0) && (currentValue == OversamplingMinVal)) {
-      return;
-    }
-
-    if ((currentValue == P002_MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
-      return;
-    }
-
-    OversamplingValue += currentValue;
-    ++OversamplingCount;
-
-    if (currentValue > OversamplingMaxVal) {
-      OversamplingMaxVal = currentValue;
-    }
-
-    if (currentValue < OversamplingMinVal) {
-      OversamplingMinVal = currentValue;
-    }
-  }
-
-  bool getOversamplingValue(float& float_value, int& raw_value) {
-    if (OversamplingCount > 0) {
-      float sum   = static_cast<float>(OversamplingValue);
-      float count = static_cast<float>(OversamplingCount);
-
-      if (OversamplingCount >= 3) {
-        sum   -= OversamplingMaxVal;
-        sum   -= OversamplingMinVal;
-        count -= 2;
-      }
-      float_value = sum / count;
-      raw_value   = static_cast<int16_t>(float_value);
-      return true;
-    }
-    return false;
-  }
-
-  uint16_t OversamplingCount = 0;
-
-private:
-
-  int32_t OversamplingValue  = 0;
-  int16_t OversamplingMinVal = P002_MAX_ADC_VALUE;
-  int16_t OversamplingMaxVal = 0;
-};
 
 boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 {
