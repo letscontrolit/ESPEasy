@@ -2,6 +2,8 @@
 
 #ifdef USES_P002
 
+# include "../Helpers/Rules_calculate.h"
+
 
 P002_data_struct::P002_data_struct(struct EventStruct *event)
 {
@@ -20,6 +22,10 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
     _calib_out1 = P002_CALIBRATION_VALUE1;
     _calib_out2 = P002_CALIBRATION_VALUE2;
   }
+
+  LoadTaskSettings(event->TaskIndex);
+  _nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[0];
+
 
   // hard-code some values of a wind-vane to test
   _multipoint.emplace_back(33000,  0);
@@ -42,6 +48,9 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   std::sort(_multipoint.begin(), _multipoint.end());
 
   _binning.resize(_multipoint.size(), 0);
+
+  _formula = RulesCalculate_t::preProces(String(F("(-10000*%value%)/(%value%-3.3)")));
+
 }
 
 void P002_data_struct::takeSample()
@@ -188,7 +197,16 @@ void P002_data_struct::addBinningValue(int currentValue)
   float calibrated_value = applyCalibration(static_cast<float>(currentValue));
 
   // FIXME TD-er: hard-coded formula, must be computed before binning
-  calibrated_value = (-10000 * calibrated_value) / (calibrated_value - 3.3);
+  String formula = _formula;
+
+  formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
+
+  double result = 0;
+
+  if (!isError(RulesCalculate.doCalculate(parseTemplate(formula).c_str(), &result))) {
+    calibrated_value = result;
+  }
+
   const int index = getBinIndex(calibrated_value);
 
   if ((index >= 0) && (_binning.size() > index)) {
@@ -267,6 +285,17 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
   if (mp_size == 0) { return float_value; }
 
   if (float_value <= _multipoint[0]._adc) {
+    if (mp_size > 1) {
+      // Just extrapolate the first multipoint line segment.
+      return mapADCtoFloat(
+        float_value,
+        _multipoint[0]._adc,
+        _multipoint[1]._adc,
+        _multipoint[0]._value,
+        _multipoint[1]._value);
+    }
+
+    // just one point, so all we can do is consider it to be a slight deviation of the calibration.
     return mapADCtoFloat(
       float_value,
       0,
@@ -279,6 +308,17 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 
   if (float_value >= _multipoint[last_mp_index]._adc)
   {
+    if (mp_size > 1) {
+      // Just extrapolate the last multipoint line segment.
+      return mapADCtoFloat(
+        float_value,
+        _multipoint[last_mp_index - 1]._adc,
+        _multipoint[last_mp_index]._adc,
+        _multipoint[last_mp_index - 1]._value,
+        _multipoint[last_mp_index]._value);
+    }
+
+    // just one point, so all we can do is consider it to be a slight deviation of the calibration.
     return mapADCtoFloat(
       float_value,
       _multipoint[last_mp_index]._adc,

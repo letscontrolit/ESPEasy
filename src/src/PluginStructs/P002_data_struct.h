@@ -119,6 +119,9 @@ private:
   int _pin_analogRead = -1;
 
   uint8_t _sampleMode = P002_USE_CURENT_SAMPLE;
+
+  uint8_t _nrDecimals = 0;
+  String _formula;
 };
 
 

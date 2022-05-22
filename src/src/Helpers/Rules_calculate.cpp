@@ -36,9 +36,9 @@ bool RulesCalculate_t::is_number(char oc, char c)
 {
   // Check if it matches part of a number (identifier)
   return
-    isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
-    ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
     (c == '.')   ||                                // A decimal point of a floating point number.
+    ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
+    isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
     (is_operator(oc) && (c == '-'))                // Beginning of a negative number after an operator.
   ;
 }
@@ -51,7 +51,10 @@ bool RulesCalculate_t::is_operator(char c)
 bool RulesCalculate_t::is_unary_operator(char c)
 {
   const UnaryOperator op = static_cast<UnaryOperator>(c);
-
+  return (op == UnaryOperator::Not || (
+          c >= static_cast<char>(UnaryOperator::Log) &&
+          c <= static_cast<char>(UnaryOperator::ArcTan_d)));
+/*
   switch (op) {
     case UnaryOperator::Not:
     case UnaryOperator::Log:
@@ -76,6 +79,7 @@ bool RulesCalculate_t::is_unary_operator(char c)
       return true;
   }
   return false;
+  */
 }
 
 CalculateReturnCode RulesCalculate_t::push(double value)
@@ -283,9 +287,11 @@ bool RulesCalculate_t::op_left_assoc(const char c)
 {
   if (is_operator(c)) { return true;        // left to right
   }
-
+/*
+  // FIXME TD-er: Disabled the check as the return value is false anyway.
   if (is_unary_operator(c)) { return false; // right to left
   }
+  */
   return false;
 }
 
