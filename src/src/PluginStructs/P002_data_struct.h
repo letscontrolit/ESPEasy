@@ -47,6 +47,25 @@ struct P002_ADC_Value_pair {
   float _value;
 };
 
+struct P002_binningRange {
+  void set(int currentValue) {
+    if (currentValue > _maxADC) {
+      _maxADC = currentValue;
+    }
+
+    if (currentValue < _minADC) {
+      _minADC = currentValue;
+    }
+  }
+
+  bool inRange(int currentValue) const {
+    return _minADC <= currentValue && currentValue <= _maxADC;
+  }
+
+  int _minADC = INT_MAX;
+  int _maxADC = INT_MIN;
+};
+
 struct P002_data_struct : public PluginTaskData_base {
   P002_data_struct(struct EventStruct *event);
 
@@ -115,13 +134,14 @@ private:
 
   std::vector<P002_ADC_Value_pair>_multipoint;
   std::vector<unsigned int>       _binning;
+  std::vector<P002_binningRange>  _binningRange;
 
   int _pin_analogRead = -1;
 
   uint8_t _sampleMode = P002_USE_CURENT_SAMPLE;
 
   uint8_t _nrDecimals = 0;
-  String _formula;
+  String  _formula;
 };
 
 

@@ -48,9 +48,9 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   std::sort(_multipoint.begin(), _multipoint.end());
 
   _binning.resize(_multipoint.size(), 0);
+  _binningRange.resize(_multipoint.size());
 
   _formula = RulesCalculate_t::preProces(String(F("(-10000*%value%)/(%value%-3.3)")));
-
 }
 
 void P002_data_struct::takeSample()
@@ -193,6 +193,13 @@ int P002_data_struct::getBinIndex(float currentValue) const
 
 void P002_data_struct::addBinningValue(int currentValue)
 {
+  for (int index = 0; index < _binningRange.size(); ++index) {
+    if (_binningRange[index].inRange(currentValue)) {
+      ++_binning[index];
+      return;
+    }
+  }
+
   // First apply calibration, then find the bin index
   float calibrated_value = applyCalibration(static_cast<float>(currentValue));
 
@@ -210,6 +217,7 @@ void P002_data_struct::addBinningValue(int currentValue)
   const int index = getBinIndex(calibrated_value);
 
   if ((index >= 0) && (_binning.size() > index)) {
+    _binningRange[index].set(currentValue);
     ++_binning[index];
   }
 }
