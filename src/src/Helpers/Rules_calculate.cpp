@@ -98,7 +98,7 @@ double RulesCalculate_t::pop()
     return *(sp--);
   }
   else {
-    return 0.0f;
+    return 0.0;
   }
 }
 
@@ -119,7 +119,7 @@ double RulesCalculate_t::apply_operator(char op, double first, double second)
     case '^':
       return pow(first, second);
     default:
-      return 0;
+      return 0.0;
   }
 }
 
@@ -236,14 +236,16 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 
     ret = push(apply_operator(token[0], first, second));
 
-    if (isError(ret)) { return ret; }
+// FIXME TD-er: Regardless whether it is an error, all code paths return ret;
+//    if (isError(ret)) { return ret; }
   } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
     double first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
 
-    if (isError(ret)) { return ret; }
+// FIXME TD-er: Regardless whether it is an error, all code paths return ret;
+//    if (isError(ret)) { return ret; }
   } else {
     // Fetch next if there is any
     double value = 0.0;
@@ -251,7 +253,8 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 
     ret = push(value); // If it is a value, push to the stack
 
-    if (isError(ret)) { return ret; }
+// FIXME TD-er: Regardless whether it is an error, all code paths return ret;
+//    if (isError(ret)) { return ret; }
   }
 
   return ret;

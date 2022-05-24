@@ -5,6 +5,13 @@
 # include "../Helpers/Rules_calculate.h"
 
 
+void P002_formatStatistics(const __FlashStringHelper *label, int raw, float float_value) {
+  addRowLabel(label);
+  addHtmlInt(raw);
+  html_add_estimate_symbol();
+  addHtml(toString(float_value, 3));
+}
+
 P002_data_struct::P002_data_struct(struct EventStruct *event)
 {
   _sampleMode = P002_OVERSAMPLING;
@@ -24,33 +31,179 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   }
 
   LoadTaskSettings(event->TaskIndex);
-  _nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[0];
+  _nrDecimals        = ExtraTaskSettings.TaskDeviceValueDecimals[0];
+  _nrMultiPointItems = P002_NR_MULTIPOINT_ITEMS;
 
+  load(event);
 
-  // hard-code some values of a wind-vane to test
-  _multipoint.emplace_back(33000,  0);
-  _multipoint.emplace_back(6570,   22.5);
-  _multipoint.emplace_back(8200,   45);
-  _multipoint.emplace_back(891,    67.5);
-  _multipoint.emplace_back(1000,   90);
-  _multipoint.emplace_back(688,    112.5);
-  _multipoint.emplace_back(2200,   135);
-  _multipoint.emplace_back(1410,   157.5);
-  _multipoint.emplace_back(3900,   180);
-  _multipoint.emplace_back(3140,   202.5);
-  _multipoint.emplace_back(16000,  225);
-  _multipoint.emplace_back(14120,  247.5);
-  _multipoint.emplace_back(120000, 270);
-  _multipoint.emplace_back(42120,  292.5);
-  _multipoint.emplace_back(64900,  315);
-  _multipoint.emplace_back(21880,  337.5);
+  /*
 
+     // hard-code some values of a wind-vane to test
+     _multipoint.emplace_back(33000,  0);
+     _multipoint.emplace_back(6570,   22.5);
+     _multipoint.emplace_back(8200,   45);
+     _multipoint.emplace_back(891,    67.5);
+     _multipoint.emplace_back(1000,   90);
+     _multipoint.emplace_back(688,    112.5);
+     _multipoint.emplace_back(2200,   135);
+     _multipoint.emplace_back(1410,   157.5);
+     _multipoint.emplace_back(3900,   180);
+     _multipoint.emplace_back(3140,   202.5);
+     _multipoint.emplace_back(16000,  225);
+     _multipoint.emplace_back(14120,  247.5);
+     _multipoint.emplace_back(120000, 270);
+     _multipoint.emplace_back(42120,  292.5);
+     _multipoint.emplace_back(64900,  315);
+     _multipoint.emplace_back(21880,  337.5);
+
+     std::sort(_multipoint.begin(), _multipoint.end());
+
+     _binning.resize(_multipoint.size(), 0);
+     _binningRange.resize(_multipoint.size());
+
+     _formula = RulesCalculate_t::preProces(String(F("(-10000*%value%)/(%value%-3.3)")));
+   */
+}
+
+void P002_data_struct::load(struct EventStruct *event)
+{
+  const size_t nr_lines = P002_Nlines;
+
+  {
+    String lines[nr_lines];
+    LoadCustomTaskSettings(event->TaskIndex, lines, nr_lines, 0);
+    const int stored_nr_lines = lines[P002_SAVED_NR_LINES].toInt();
+    _formula              = lines[P002_LINE_INDEX_FORMULA];
+    _formula_preprocessed = RulesCalculate_t::preProces(_formula);
+
+    for (size_t i = P002_LINE_IDX_FIRST_MP; i < nr_lines && i < stored_nr_lines; i += P002_STRINGS_PER_MP) {
+      float adc, value = 0.0f;
+
+      if (validFloatFromString(lines[i], adc) && validFloatFromString(lines[i + 1], value)) {
+        _multipoint.emplace_back(adc, value);
+      }
+    }
+  }
   std::sort(_multipoint.begin(), _multipoint.end());
 
   _binning.resize(_multipoint.size(), 0);
   _binningRange.resize(_multipoint.size());
+}
 
-  _formula = RulesCalculate_t::preProces(String(F("(-10000*%value%)/(%value%-3.3)")));
+void P002_data_struct::webformLoad(struct EventStruct *event)
+{
+          # if defined(ESP32)
+  addHtml(F("<TR><TD>Analog Pin:<TD>"));
+  addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
+
+      # endif // if defined(ESP32)
+
+  {
+    const __FlashStringHelper *outputOptions[] = {
+      F("Use Current Sample"),
+      F("Oversampling"),
+      F("Binning")
+    };
+    const int outputOptionValues[] = {
+      P002_USE_CURENT_SAMPLE,
+      P002_USE_OVERSAMPLING,
+      P002_USE_BINNING };
+    addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING);
+  }
+
+  addFormSubHeader(F("Two Point Calibration"));
+
+  addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
+
+  addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, P002_MAX_ADC_VALUE);
+  html_add_estimate_symbol();
+  addTextBox(F("p002_out1"), toString(P002_CALIBRATION_VALUE1, 3), 10);
+
+  addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, P002_MAX_ADC_VALUE);
+  html_add_estimate_symbol();
+  addTextBox(F("p002_out2"), toString(P002_CALIBRATION_VALUE2, 3), 10);
+
+  {
+    // Output the statistics for the current settings.
+    int raw_value     = 0;
+    const float value = P002_data_struct::getCurrentValue(event, raw_value);
+    P002_formatStatistics(F("Current"), raw_value, value);
+
+    if (P002_CALIBRATION_ENABLED) {
+      P002_formatStatistics(F("Minimum"),   0,                  P002_data_struct::applyCalibration(event, 0));
+      P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_data_struct::applyCalibration(event, P002_MAX_ADC_VALUE));
+
+      float stepsize = P002_data_struct::applyCalibration(event, 1.0f) - P002_data_struct::applyCalibration(event, 0.0f);
+      P002_formatStatistics(F("Step size"), 1,                  stepsize);
+    }
+  }
+
+  addFormSubHeader(F("Multipoint Processing"));
+  addFormCheckBox(F("Multipoint Processing Enabled"), F("p002_multi_en"), P002_MULTIPOINT_ENABLED);
+
+  addFormTextBox(F("Binning Formula"), getPluginCustomArgName(P002_LINE_INDEX_FORMULA), _formula, P002_MAX_FORMULA_LENGTH);
+
+  addFormNumericBox(F("Nr Multipoint Fields"), F("p002_nr_mp"), P002_NR_MULTIPOINT_ITEMS, 0, P002_MAX_NR_MP_ITEMS);
+
+  size_t line_nr = 0;
+
+  for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < P002_Nlines; varNr += P002_STRINGS_PER_MP)
+  {
+    const String label = String(F("Point ")) + String(line_nr + 1);
+    const double adc = _multipoint[line_nr]._adc;
+    const double val = _multipoint[line_nr]._value;
+    addFormTextBox(F("widenumber"),
+                   label,
+                   getPluginCustomArgName(varNr),
+                   _multipoint.size() > line_nr ? doubleToString(adc, _nrDecimals, true) : EMPTY_STRING,
+                   20);
+    html_add_estimate_symbol();
+    addTextBox(getPluginCustomArgName(varNr + 1),
+               _multipoint.size() > line_nr ?  doubleToString(val, _nrDecimals, true) : EMPTY_STRING,
+               20);
+
+    ++line_nr;
+  }
+}
+
+String P002_data_struct::webformSave(struct EventStruct *event)
+{
+  P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"));
+
+  P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
+
+  P002_CALIBRATION_POINT1 = getFormItemInt(F("p002_adc1"));
+  P002_CALIBRATION_VALUE1 = getFormItemFloat(F("p002_out1"));
+
+  P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
+  P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
+
+  P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
+
+  P002_NR_MULTIPOINT_ITEMS = getFormItemInt(F("p002_nr_mp"));
+
+  const size_t nr_lines = P002_Nlines;
+  String lines[nr_lines];
+
+  // Store nr of lines that were saved, so no 'old' data will be read when nr of multi-point items has changed.
+  lines[P002_SAVED_NR_LINES]     = String(nr_lines);
+  lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
+
+  const int nrDecimals = webArg(F("TDVD1")).toInt();
+  for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < nr_lines; varNr += P002_STRINGS_PER_MP)
+  {
+    float adc, value = 0.0f;
+    const String adc_str = webArg(getPluginCustomArgName(varNr));
+    const String val_str = webArg(getPluginCustomArgName(varNr + 1));
+
+    if (validFloatFromString(adc_str, adc) && validFloatFromString(val_str, value)) {
+      // Only store valid floats
+      lines[varNr]     = adc_str;
+      lines[varNr + 1] = val_str;
+    }
+  }
+
+  return SaveCustomTaskSettings(event->TaskIndex, lines, nr_lines, 0);
 }
 
 void P002_data_struct::takeSample()
@@ -204,7 +357,7 @@ void P002_data_struct::addBinningValue(int currentValue)
   float calibrated_value = applyCalibration(static_cast<float>(currentValue));
 
   // FIXME TD-er: hard-coded formula, must be computed before binning
-  String formula = _formula;
+  String formula = _formula_preprocessed;
 
   formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
 

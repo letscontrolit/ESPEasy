@@ -765,10 +765,18 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     #endif
   }
 
-  const uint16_t bufferSize = 128;
+  #ifdef ESP8266
+  uint16_t bufferSize = 256;
+  #endif
+  #ifdef ESP32
+  uint16_t bufferSize = 1024;
+  #endif
+  if (bufferSize > max_size) {
+    bufferSize = max_size;
+  }
 
-  // FIXME TD-er: For now stack allocated, may need to be heap allocated?
-  uint8_t buffer[bufferSize];
+  std::vector<uint8_t> buffer;
+  buffer.resize(bufferSize);
 
   String   result;
   int      writePos        = posInBlock;
@@ -787,7 +795,9 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
   }
 
   while (stringCount < nrStrings && writePos < max_size) {
-    ZERO_FILL(buffer);
+    for (int i = 0; i < buffer.size(); ++i) {
+      buffer[i] = 0;
+    }
 
     for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
       if (stringReadPos == 0) {

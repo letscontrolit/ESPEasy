@@ -23,10 +23,25 @@
 # define P002_CALIBRATION_VALUE2  PCONFIG_FLOAT(1)
 
 # define P002_MULTIPOINT_ENABLED  PCONFIG(4)
+# define P002_NR_MULTIPOINT_ITEMS PCONFIG(5)
 
 # define P002_USE_CURENT_SAMPLE   0
 # define P002_USE_OVERSAMPLING    1
 # define P002_USE_BINNING         2
+
+// FIXME TD-er: Must test if HTML POST on ESP8266 will not take too much ram on save
+# define P002_MAX_NR_MP_ITEMS     64
+
+// We store the multipoint values and formula in a number of strings
+// These will be stored in CustomTaskSettings
+# define P002_SAVED_NR_LINES      0
+# define P002_LINE_INDEX_FORMULA  1
+
+# define P002_LINE_IDX_FIRST_MP   6 // Leave some room for extra lines in the settings later
+# define P002_STRINGS_PER_MP      2 // Nr of items per multi-point set
+# define P002_Nlines              (P002_LINE_IDX_FIRST_MP + (P002_STRINGS_PER_MP * (P002_NR_MULTIPOINT_ITEMS)))
+# define P002_MAX_FORMULA_LENGTH  64
+
 
 struct P002_ADC_Value_pair {
   P002_ADC_Value_pair(float adc, float value) : _adc(adc), _value(value) {}
@@ -68,6 +83,17 @@ struct P002_binningRange {
 
 struct P002_data_struct : public PluginTaskData_base {
   P002_data_struct(struct EventStruct *event);
+
+private:
+  
+  void load(struct EventStruct *event);
+
+public:
+
+  void webformLoad(struct EventStruct *event);
+
+
+  static String webformSave(struct EventStruct *event);
 
   void takeSample();
 
@@ -141,7 +167,10 @@ private:
   uint8_t _sampleMode = P002_USE_CURENT_SAMPLE;
 
   uint8_t _nrDecimals = 0;
+  uint8_t _nrMultiPointItems = 0;
   String  _formula;
+  String  _formula_preprocessed;
+  
 };
 
 

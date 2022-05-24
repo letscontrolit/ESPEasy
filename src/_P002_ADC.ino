@@ -51,73 +51,27 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      # if defined(ESP32)
-      addHtml(F("<TR><TD>Analog Pin:<TD>"));
-      addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      # endif // if defined(ESP32)
+      if (nullptr != P002_data) {
+        P002_data->webformLoad(event);
+        success = true;
+      } else {
+        P002_data = new (std::nothrow) P002_data_struct(event);
 
-      {
-        const __FlashStringHelper *outputOptions[] = {
-          F("Use Current Sample"),
-          F("Oversampling"),
-          F("Binning")
-        };
-        const int outputOptionValues[] = {
-          P002_USE_CURENT_SAMPLE,
-          P002_USE_OVERSAMPLING,
-          P002_USE_BINNING };
-        addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING);
-      }
-
-      addFormSubHeader(F("Two Point Calibration"));
-
-      addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
-
-      addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, P002_MAX_ADC_VALUE);
-      html_add_estimate_symbol();
-      addTextBox(F("p002_out1"), toString(P002_CALIBRATION_VALUE1, 3), 10);
-
-      addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, P002_MAX_ADC_VALUE);
-      html_add_estimate_symbol();
-      addTextBox(F("p002_out2"), toString(P002_CALIBRATION_VALUE2, 3), 10);
-
-      {
-        // Output the statistics for the current settings.
-        int raw_value     = 0;
-        const float value = P002_data_struct::getCurrentValue(event, raw_value);
-        P002_formatStatistics(F("Current"), raw_value, value);
-
-        if (P002_CALIBRATION_ENABLED) {
-          P002_formatStatistics(F("Minimum"),   0,                  P002_data_struct::applyCalibration(event, 0));
-          P002_formatStatistics(F("Maximum"),   P002_MAX_ADC_VALUE, P002_data_struct::applyCalibration(event, P002_MAX_ADC_VALUE));
-
-          float stepsize = P002_data_struct::applyCalibration(event, 1.0f) - P002_data_struct::applyCalibration(event, 0.0f);
-          P002_formatStatistics(F("Step size"), 1,                  stepsize);
+        if (nullptr != P002_data) {
+          P002_data->webformLoad(event);
+          success = true;
+          delete P002_data;
         }
       }
-
-      addFormSubHeader(F("Multipoint Processing"));
-      addFormCheckBox(F("Multipoint Processing Enabled"), F("p002_multi_en"), P002_MULTIPOINT_ENABLED);
-
-
-      success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"));
-
-      P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
-
-      P002_CALIBRATION_POINT1 = getFormItemInt(F("p002_adc1"));
-      P002_CALIBRATION_VALUE1 = getFormItemFloat(F("p002_out1"));
-
-      P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
-      P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
-
-      P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
+      addHtmlError(P002_data_struct::webformSave(event));
 
       success = true;
       break;
@@ -197,11 +151,5 @@ bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_v
   return P002_data->getValue(res_value, raw_value);
 }
 
-void P002_formatStatistics(const __FlashStringHelper *label, int raw, float float_value) {
-  addRowLabel(label);
-  addHtmlInt(raw);
-  html_add_estimate_symbol();
-  addHtml(toString(float_value, 3));
-}
 
 #endif // USES_P002
