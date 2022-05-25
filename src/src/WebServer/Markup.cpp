@@ -752,9 +752,11 @@ void addTextBox(const String  & id,
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"),     classname);
-  addHtmlAttribute(F("type"),      F("text"));
+  addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
-  addHtmlAttribute(F("maxlength"), maxlength);
+  if (maxlength > 0) {
+    addHtmlAttribute(F("maxlength"), maxlength);
+  }
   addHtmlAttribute(F("value"),     value);
 
   if (readonly) {
@@ -797,7 +799,9 @@ void addTextArea(const String  & id,
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
-  addHtmlAttribute(F("maxlength"), maxlength);
+  if (maxlength > 0) {
+    addHtmlAttribute(F("maxlength"), maxlength);
+  }
   addHtmlAttribute(F("rows"),      rows);
   addHtmlAttribute(F("cols"),      columns);
 

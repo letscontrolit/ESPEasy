@@ -269,6 +269,10 @@ void html_add_form() {
   addHtml(F("<form name='frmselect' method='post'>"));
 }
 
+void html_add_JQuery_script() {
+  addHtml(F("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js\"></script>"));
+}
+
 void html_add_autosubmit_form() {
   addHtml(F("<script><!--\n"
             "function dept_onchange(frmselect) {frmselect.submit();}"

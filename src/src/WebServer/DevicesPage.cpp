@@ -842,6 +842,7 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
 void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 {
   if (!validTaskIndex(taskIndex)) { return; }
+
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
   LoadTaskSettings(taskIndex);
@@ -1001,6 +1002,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
   html_end_table();
   html_end_form();
+  serve_JS(JSfiles_e::SplitPasteInput);
 }
 
 void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)

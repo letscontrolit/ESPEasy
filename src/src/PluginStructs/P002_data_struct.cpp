@@ -145,22 +145,30 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   addFormNumericBox(F("Nr Multipoint Fields"), F("p002_nr_mp"), P002_NR_MULTIPOINT_ITEMS, 0, P002_MAX_NR_MP_ITEMS);
 
+  // Checkbox needed to explicitly allow to split-paste over each field
+  addFormCheckBox(F("Split-Paste Multipoint Fields"), F("splitpaste"), false);
+  addFormNote(F("When checked, a set of tab, space or newline separated values can be pasted at once."));
+
   size_t line_nr = 0;
 
   for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < P002_Nlines; varNr += P002_STRINGS_PER_MP)
   {
     const String label = String(F("Point ")) + String(line_nr + 1);
-    const double adc = _multipoint[line_nr]._adc;
-    const double val = _multipoint[line_nr]._value;
-    addFormTextBox(F("widenumber"),
+    const double adc   = _multipoint[line_nr]._adc;
+    const double val   = _multipoint[line_nr]._value;
+    addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
                    _multipoint.size() > line_nr ? doubleToString(adc, _nrDecimals, true) : EMPTY_STRING,
-                   20);
+                   0);
     html_add_estimate_symbol();
     addTextBox(getPluginCustomArgName(varNr + 1),
                _multipoint.size() > line_nr ?  doubleToString(val, _nrDecimals, true) : EMPTY_STRING,
-               20);
+               0,
+               false,
+               false,
+               EMPTY_STRING,
+               F("query-input widenumber"));
 
     ++line_nr;
   }
@@ -190,6 +198,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
 
   const int nrDecimals = webArg(F("TDVD1")).toInt();
+
   for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < nr_lines; varNr += P002_STRINGS_PER_MP)
   {
     float adc, value = 0.0f;

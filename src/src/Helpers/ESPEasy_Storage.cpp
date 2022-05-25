@@ -799,7 +799,8 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
       buffer[i] = 0;
     }
 
-    for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
+    int bufpos = 0;
+    for ( ; bufpos < bufferSize && stringCount < nrStrings; ++bufpos) {
       if (stringReadPos == 0) {
         // We're at the start of a string
         curStringLength = strings[stringCount].length();
@@ -811,15 +812,15 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
         }
       }
 
-      uint16_t curPos = writePos + i;
+      const uint16_t curPos = writePos + bufpos;
 
       if (curPos >= nextStringPos) {
         if (stringReadPos < curStringLength) {
-          buffer[i] = strings[stringCount][stringReadPos];
+          buffer[bufpos] = strings[stringCount][stringReadPos];
           ++stringReadPos;
         } else {
-          buffer[i]     = 0;
-          stringReadPos = 0;
+          buffer[bufpos] = 0;
+          stringReadPos  = 0;
           ++stringCount;
 
           if (maxStringLength == 0) {
@@ -836,8 +837,8 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     if (RTC.flashDayCounter > 0) {
       RTC.flashDayCounter--;
     }
-    result   += SaveToFile(settingsType, index, &(buffer[0]), bufferSize, writePos);
-    writePos += bufferSize;
+    result   += SaveToFile(settingsType, index, &(buffer[0]), bufpos, writePos);
+    writePos += bufpos;
   }
 
   if ((writePos >= max_size) && (stringCount < nrStrings)) {

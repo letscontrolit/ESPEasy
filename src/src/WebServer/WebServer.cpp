@@ -130,9 +130,16 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
       const int nrArgs = web_server.args();
 
       if (nrArgs > 0) {
-        String log = F(" Webserver args:");
+        String log = F(" Webserver ");
+        log += nrArgs;
+        log += F(" Arguments");
 
-        for (int i = 0; i < nrArgs; ++i) {
+        if (nrArgs > 20) {
+          log += F(" (First 20)");
+        }
+        log += ':';
+
+        for (int i = 0; i < nrArgs && i < 20; ++i) {
           log += ' ';
           log += i;
           log += F(": '");

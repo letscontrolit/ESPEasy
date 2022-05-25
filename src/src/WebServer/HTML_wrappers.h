@@ -89,6 +89,7 @@ void html_add_wide_button_prefix(const String& classes, bool enabled);
 
 void html_add_form();
 
+void html_add_JQuery_script();
 void html_add_autosubmit_form();
 
 void html_add_script(const __FlashStringHelper * script, bool defer);

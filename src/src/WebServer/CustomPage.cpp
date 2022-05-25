@@ -65,6 +65,7 @@ bool handle_custom(const String& path) {
 
     TXBuffer.startStream();
     sendHeadandTail(F("TmplDsh"), _HEAD);
+    html_add_JQuery_script();
     html_add_autosubmit_form();
     html_add_form();
 
