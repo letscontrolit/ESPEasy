@@ -27,6 +27,10 @@
 # define P020_RESET_TARGET_PIN     PCONFIG(6)
 # define P020_RX_BUFFER            PCONFIG(7)
 
+# define P020_FLAGS                     PCONFIG_LONG(0)
+# define P020_FLAG_IGNORE_CLIENT        0
+# define P020_IGNORE_CLIENT_CONNECTED   bitRead(P020_FLAGS, P020_FLAG_IGNORE_CLIENT)
+
 
 # define P020_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 # define P020_NR_OUTPUT_OPTIONS  1
@@ -105,19 +109,24 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {
-        uint8_t   choice = P020_SERIAL_PROCESSING;
-        const __FlashStringHelper * options[3] = {
+        const __FlashStringHelper *options[3] = {
           F("None"),
           F("Generic"),
           F("RFLink")
         };
-        addFormSelector(F("Event processing"), F("p020_events"), 3, options, nullptr, choice);
+        addFormSelector(F("Event processing"), F("p020_events"), 3, options, nullptr, P020_SERIAL_PROCESSING);
+        addFormCheckBox(F("Process events without client"), F("p020_ignoreclient"), P020_IGNORE_CLIENT_CONNECTED);
+        # ifndef LIMIT_BUILD_SIZE
+        addFormNote(F("When enabled, will process serial data without a network client connected."));
+        # endif // ifndef LIMIT_BUILD_SIZE
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
       addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
 
       addFormNumericBox(F("RX buffer size (bytes)"), F("p020_rx_buffer"), P020_RX_BUFFER, 256, 1024);
+      # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("Standard RX buffer 256B; higher values could be unstable; energy meters could require 1024B"));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       success = true;
       break;
@@ -132,7 +141,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       P020_RX_WAIT           = getFormItemInt(F("p020_rxwait"));
       P020_RESET_TARGET_PIN  = getFormItemInt(F("p020_resetpin"));
       P020_RX_BUFFER         = getFormItemInt(F("p020_rx_buffer"));
-      success                = true;
+
+      uint32_t lSettings = 0;
+      bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("p020_ignoreclient")) ? 1 : 0);
+      P020_FLAGS = lSettings;
+
+      success = true;
       break;
     }
 
@@ -172,6 +186,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         CONFIG_PIN1 = rxPin;
         CONFIG_PIN2 = txPin;
       }
+
+      # ifndef LIMIT_BUILD_SIZE
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Ser2net: TaskIndex=");
         log += event->TaskIndex;
@@ -189,6 +206,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         log += P020_SERIAL_PROCESSING;
         addLogMove(LOG_LEVEL_INFO, log);
       }
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       // serial0 on esp32 is Ser2net: port=2 rxPin=3 txPin=1; serial1 on esp32 is Ser2net: port=4 rxPin=13 txPin=15; Serial2 on esp32 is
       // Ser2net: port=4 rxPin=16 txPin=17
@@ -202,7 +220,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (validGpio(P020_RESET_TARGET_PIN)) {
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log;
           log.reserve(38);
@@ -210,7 +229,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
           log += P020_RESET_TARGET_PIN;
           addLogMove(LOG_LEVEL_DEBUG, log);
         }
-        #endif
+        # endif // ifndef BUILD_NO_DEBUG
         pinMode(P020_RESET_TARGET_PIN, OUTPUT);
         digitalWrite(P020_RESET_TARGET_PIN, LOW);
         delay(500);
@@ -234,7 +253,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       P020_Task *task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr == task) {
-         break;
+        break;
       }
       task->checkServer();
       success = true;
@@ -249,8 +268,12 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (task->hasClientConnected()) {
-        task->handleClientIn(event);
+      bool hasClient = task->hasClientConnected();
+
+      if (P020_IGNORE_CLIENT_CONNECTED || hasClient) {
+        if (hasClient) {
+          task->handleClientIn(event);
+        }
         task->handleSerialIn(event); // in case of second serial connected, PLUGIN_SERIAL_IN is not called anymore
       }
       success = true;
@@ -265,11 +288,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      if (task->hasClientConnected()) {
+      if (P020_IGNORE_CLIENT_CONNECTED || task->hasClientConnected()) {
         task->handleSerialIn(event);
       } else {
         task->discardSerialIn();
-
       }
       success = true;
       break;
