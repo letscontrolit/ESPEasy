@@ -142,9 +142,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       P020_RESET_TARGET_PIN  = getFormItemInt(F("p020_resetpin"));
       P020_RX_BUFFER         = getFormItemInt(F("p020_rx_buffer"));
 
-      uint32_t lSettings = 0;
-      bitWrite(lSettings, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("p020_ignoreclient")) ? 1 : 0);
-      P020_FLAGS = lSettings;
+      bitWrite(P020_FLAGS, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("p020_ignoreclient")));
 
       success = true;
       break;
