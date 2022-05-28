@@ -120,12 +120,14 @@ void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t
     ser2netSerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != ser2netSerial) {
-        # if defined(ESP8266)
+      # if defined(ESP8266)
       ser2netSerial->begin(baud, (SerialConfig)config);
-        # elif defined(ESP32)
+      # elif defined(ESP32)
       ser2netSerial->begin(baud, config);
-        # endif // if defined(ESP8266)
+      # endif // if defined(ESP8266)
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial opened"));
+      # endif // ifndef BUILD_NO_DEBUG
     }
   }
 }
@@ -135,7 +137,9 @@ void P020_Task::serialEnd() {
     delete ser2netSerial;
     clearBuffer();
     ser2netSerial = nullptr;
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial closed"));
+    # endif // ifndef BUILD_NO_DEBUG
   }
 }
 
@@ -164,7 +168,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
   do {
     if (ser2netSerial->available()) {
       if (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER)) {
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
+        # endif // ifndef BUILD_NO_DEBUG
         ser2netSerial->read();
       }
       else { serial_buffer += (char)ser2netSerial->read(); }
@@ -181,7 +187,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
     rulesEngine(serial_buffer);
     ser2netClient.flush();
     clearBuffer();
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : data send!"));
+    # endif // ifndef BUILD_NO_DEBUG
   } // done
 }
 
