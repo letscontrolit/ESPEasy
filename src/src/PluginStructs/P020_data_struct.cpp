@@ -196,35 +196,58 @@ void P020_Task::discardSerialIn() {
 // We can also use the rules engine for local control!
 void P020_Task::rulesEngine(String message) {
   if (!(Settings.UseRules)) { return; }
-  int NewLinePos = message.indexOf(F("\r\n"));
+  int NewLinePos    = 0;
+  uint16_t StartPos = 0;
 
-  if (NewLinePos > 0) { message = message.substring(0, NewLinePos); }
-  String eventString;
+  NewLinePos = message.indexOf(F("\r\n"), StartPos);
 
-  switch (serial_processing) {
-    case 0: { break; }
-    case 1: { // Generic
-      eventString  = F("!Serial#");
-      eventString += message;
-      break;
+  if (NewLinePos < 0) {
+    NewLinePos = message.length();
+  }
+
+  do {
+    String eventString;
+    String eventMessage;
+    eventString.reserve((NewLinePos - StartPos) + 10); // Include the prefix
+    eventMessage.reserve(NewLinePos - StartPos);
+
+    eventMessage = message.substring(StartPos, NewLinePos);
+
+    // Skip CR/LF
+    while (StartPos < message.length() && (message[StartPos] == '\n' || message[StartPos] == '\r')) {
+      StartPos++;
     }
-    case 2: {                               // RFLink
-      message = message.substring(6);       // RFLink, strip 20;xx; from incoming message
 
-      if (message.startsWith("ESPEASY"))    // Special treatment for gpio values, strip unneeded parts...
-      {
-        message     = message.substring(8); // Strip "ESPEASY;"
-        eventString = F("RFLink#");
+    switch (serial_processing) {
+      case 0: { break; }
+      case 1: { // Generic
+        eventString  = F("!Serial#");
+        eventString += eventMessage;
+        break;
       }
-      else {
-        eventString = F("!RFLink#"); // default event as it comes in, literal match needed in rules, using '!'
+      case 2: {                                     // RFLink
+        eventMessage = eventMessage.substring(6);   // RFLink, strip 20;xx; from incoming message
+
+        if (eventMessage.startsWith("ESPEASY")) {   // Special treatment for gpio values, strip unneeded parts...
+          eventMessage = eventMessage.substring(8); // Strip "ESPEASY;"
+          eventString  = F("RFLink#");
+        } else {
+          eventString = F("!RFLink#");              // default event as it comes in, literal match needed in rules, using '!'
+        }
+        eventString += eventMessage;
+        break;
       }
-      eventString += message;
-      break;
+    } // switch
+
+    if (!eventString.isEmpty()) {
+      eventQueue.addMove(std::move(eventString));
     }
-  } // switch
+    NewLinePos = message.indexOf(F("\r\n"), StartPos);
 
-  if (eventString.length() > 0) { eventQueue.addMove(std::move(eventString)); }
+    if (NewLinePos < 0) {
+      NewLinePos = message.length();
+    }
+  } while (handleMultiLine && NewLinePos >= StartPos);
 }
 
 bool P020_Task::isInit() const {

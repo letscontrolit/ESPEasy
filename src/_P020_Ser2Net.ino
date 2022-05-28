@@ -5,6 +5,12 @@
 // #################################### Plugin 020: Ser2Net ##############################################
 // #######################################################################################################
 
+/************
+ * Changelog:
+ * 2022-05-28 tonhuisman: Add option to generate events for all lines of a multi-line message
+ * 2022-05-26 tonhuisman: Add option to allow processing without webclient connected.
+ * No older changelog available.
+ ***************************************************************/
 
 # include "src/Helpers/_Plugin_Helper_serial.h"
 # include "src/PluginStructs/P020_data_struct.h"
@@ -29,7 +35,9 @@
 
 # define P020_FLAGS                     PCONFIG_LONG(0)
 # define P020_FLAG_IGNORE_CLIENT        0
+# define P020_FLAG_MULTI_LINE           1
 # define P020_IGNORE_CLIENT_CONNECTED   bitRead(P020_FLAGS, P020_FLAG_IGNORE_CLIENT)
+# define P020_HANDLE_MULTI_LINE         bitRead(P020_FLAGS, P020_FLAG_MULTI_LINE)
 
 
 # define P020_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
@@ -119,6 +127,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("When enabled, will process serial data without a network client connected."));
         # endif // ifndef LIMIT_BUILD_SIZE
+        addFormCheckBox(F("Multiple lines processing"), F("p020_multiline"), P020_HANDLE_MULTI_LINE);
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
       addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
@@ -143,6 +152,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       P020_RX_BUFFER         = getFormItemInt(F("p020_rx_buffer"));
 
       bitWrite(P020_FLAGS, P020_FLAG_IGNORE_CLIENT, isFormItemChecked(F("p020_ignoreclient")));
+      bitWrite(P020_FLAGS, P020_FLAG_MULTI_LINE,    isFormItemChecked(F("p020_multiline")));
 
       success = true;
       break;
@@ -165,7 +175,8 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         // So don't recreate to keep the webserver running.
       } else {
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P020_Task(event->TaskIndex));
-        task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
+        task                  = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
+        task->handleMultiLine = P020_HANDLE_MULTI_LINE;
       }
 
       if (nullptr == task) {
