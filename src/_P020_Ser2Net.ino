@@ -175,13 +175,13 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         // So don't recreate to keep the webserver running.
       } else {
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P020_Task(event->TaskIndex));
-        task                  = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
-        task->handleMultiLine = P020_HANDLE_MULTI_LINE;
+        task = static_cast<P020_Task *>(getPluginTaskData(event->TaskIndex));
       }
 
       if (nullptr == task) {
         break;
       }
+      task->handleMultiLine = P020_HANDLE_MULTI_LINE;
 
       // int rxPin =-1;
       // int txPin =-1;

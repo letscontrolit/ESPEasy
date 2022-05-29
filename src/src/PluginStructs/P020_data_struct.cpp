@@ -183,7 +183,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
   } while (true);
 
   if (serial_buffer.length() > 0) {
-    ser2netClient.print(serial_buffer);
+    if (ser2netClient.connected()) { // Only send out if a client is connected
+      ser2netClient.print(serial_buffer);
+    }
     rulesEngine(serial_buffer);
     ser2netClient.flush();
     clearBuffer();
@@ -207,54 +209,55 @@ void P020_Task::rulesEngine(String message) {
   int NewLinePos    = 0;
   uint16_t StartPos = 0;
 
-  NewLinePos = message.indexOf(F("\r\n"), StartPos);
-
-  if (NewLinePos < 0) {
-    NewLinePos = message.length();
-  }
+  NewLinePos = message.indexOf('\n', StartPos);
 
   do {
+    if (NewLinePos < 0) {
+      NewLinePos = message.length();
+    }
+
     String eventString;
-    String eventMessage;
-    eventString.reserve((NewLinePos - StartPos) + 10); // Include the prefix
-    eventMessage.reserve(NewLinePos - StartPos);
 
-    eventMessage = message.substring(StartPos, NewLinePos);
+    if ((NewLinePos - StartPos) + 10 > 12) {
+      eventString.reserve((NewLinePos - StartPos) + 10); // Include the prefix
+    }
 
-    // Skip CR/LF
-    while (StartPos < message.length() && (message[StartPos] == '\n' || message[StartPos] == '\r')) {
-      StartPos++;
+    // Remove preceeding CR also
+    if ((message[NewLinePos] == '\n') && (message[NewLinePos - 1] == '\r')) {
+      NewLinePos--;
     }
 
     switch (serial_processing) {
       case 0: { break; }
       case 1: { // Generic
         eventString  = F("!Serial#");
-        eventString += eventMessage;
+        eventString += message.substring(StartPos, NewLinePos);
         break;
       }
-      case 2: {                                     // RFLink
-        eventMessage = eventMessage.substring(6);   // RFLink, strip 20;xx; from incoming message
+      case 2: {                          // RFLink
+        StartPos += 6;                   // RFLink, strip 20;xx; from incoming message
 
-        if (eventMessage.startsWith("ESPEASY")) {   // Special treatment for gpio values, strip unneeded parts...
-          eventMessage = eventMessage.substring(8); // Strip "ESPEASY;"
-          eventString  = F("RFLink#");
+        if (message.substring(StartPos, NewLinePos)
+            .startsWith(F("ESPEASY"))) { // Special treatment for gpio values, strip unneeded parts...
+          StartPos   += 8;               // Strip "ESPEASY;"
+          eventString = F("RFLink#");
         } else {
-          eventString = F("!RFLink#");              // default event as it comes in, literal match needed in rules, using '!'
+          eventString = F("!RFLink#");   // default event as it comes in, literal match needed in rules, using '!'
         }
-        eventString += eventMessage;
+        eventString += message.substring(StartPos, NewLinePos);
         break;
       }
     } // switch
 
-    if (!eventString.isEmpty()) {
-      eventQueue.addMove(std::move(eventString));
+    // Skip CR/LF
+    while (StartPos < message.length() && (message[StartPos] == '\n' || message[StartPos] == '\r')) {
+      StartPos++;
     }
-    NewLinePos = message.indexOf(F("\r\n"), StartPos);
 
-    if (NewLinePos < 0) {
-      NewLinePos = message.length();
+    if (!eventString.isEmpty()) {
+      eventQueue.add(eventString);
     }
+    NewLinePos = message.indexOf('\n', StartPos);
   } while (handleMultiLine && NewLinePos >= StartPos);
 }
 
