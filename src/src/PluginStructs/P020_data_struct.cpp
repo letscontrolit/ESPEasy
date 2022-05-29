@@ -230,8 +230,10 @@ void P020_Task::rulesEngine(String message) {
     switch (serial_processing) {
       case 0: { break; }
       case 1: { // Generic
-        eventString  = F("!Serial#");
-        eventString += message.substring(StartPos, NewLinePos);
+        if (NewLinePos > StartPos) {
+          eventString  = F("!Serial#");
+          eventString += message.substring(StartPos, NewLinePos);
+        }
         break;
       }
       case 2: {                          // RFLink
@@ -244,7 +246,10 @@ void P020_Task::rulesEngine(String message) {
         } else {
           eventString = F("!RFLink#");   // default event as it comes in, literal match needed in rules, using '!'
         }
-        eventString += message.substring(StartPos, NewLinePos);
+
+        if (NewLinePos > StartPos) {
+          eventString += message.substring(StartPos, NewLinePos);
+        }
         break;
       }
     } // switch
