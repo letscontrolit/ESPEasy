@@ -204,8 +204,8 @@ void P020_Task::discardSerialIn() {
 }
 
 // We can also use the rules engine for local control!
-void P020_Task::rulesEngine(String message) {
-  if (!(Settings.UseRules)) { return; }
+void P020_Task::rulesEngine(const String& message) {
+  if (!Settings.UseRules || message.isEmpty()) { return; }
   int NewLinePos    = 0;
   uint16_t StartPos = 0;
 
@@ -255,6 +255,8 @@ void P020_Task::rulesEngine(String message) {
     } // switch
 
     // Skip CR/LF
+    StartPos = NewLinePos; // Continue after what was already handled
+
     while (StartPos < message.length() && (message[StartPos] == '\n' || message[StartPos] == '\r')) {
       StartPos++;
     }
@@ -263,7 +265,11 @@ void P020_Task::rulesEngine(String message) {
       eventQueue.add(eventString);
     }
     NewLinePos = message.indexOf('\n', StartPos);
-  } while (handleMultiLine && NewLinePos >= StartPos);
+
+    if (handleMultiLine && (NewLinePos < 0)) {
+      NewLinePos = message.length();
+    }
+  } while (handleMultiLine && NewLinePos > StartPos);
 }
 
 bool P020_Task::isInit() const {

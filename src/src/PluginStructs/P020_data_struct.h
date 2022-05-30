@@ -42,7 +42,7 @@ struct P020_Task : public PluginTaskData_base {
 
   void handleSerialIn(struct EventStruct *event);
   void handleClientIn(struct EventStruct *event);
-  void rulesEngine(String message);
+  void rulesEngine(const String& message);
 
   void discardSerialIn();
 
