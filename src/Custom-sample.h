@@ -141,7 +141,7 @@
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
 #define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
-#define DEFAULT_SYNC_UDP_PORT                   0                 // Used for ESPEasy p2p. (IANA registered port: 8266)
+#define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
 #define BUILD_NO_DEBUG
