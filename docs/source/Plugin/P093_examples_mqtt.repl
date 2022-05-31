@@ -1,0 +1,19 @@
+.. csv-table::
+        :header: "Payload", "Description"
+        :widths: 20, 40
+
+        "
+        ``MitsubishiHP,power,ON``
+        ","
+        Turn on AC
+        "
+        "
+        ``MitsubishiHP,temperature,23``
+        ","
+        Set target temperature to 23
+        "
+        "
+        ``MitsubishiHP,fan,AUTO``
+        ","
+        Set fan mode to ``AUTO``
+        "
