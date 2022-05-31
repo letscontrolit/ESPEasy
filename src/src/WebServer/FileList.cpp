@@ -11,6 +11,8 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
 
+#include "../../ESPEasy_common.h"
+
 
 
 #ifdef USES_C016
@@ -62,8 +64,8 @@ void handle_filelist_json() {
   addHtml('[', '{');
   bool firstentry = true;
   # if defined(ESP32)
-  File root  = ESPEASY_FS.open("/");
-  File file  = root.openNextFile();
+  fs::File root  = ESPEASY_FS.open("/");
+  fs::File file  = root.openNextFile();
   int  count = -1;
 
   while (file and count < endIdx)
@@ -208,8 +210,8 @@ void handle_filelist() {
   moreFilesPresent = dir.next();
 # endif // if defined(ESP8266)
 # if defined(ESP32)
-  File root = ESPEASY_FS.open("/");
-  File file = root.openNextFile();
+  fs::File root = ESPEASY_FS.open("/");
+  fs::File file = root.openNextFile();
 
   while (file && count < endIdx)
   {
@@ -247,7 +249,7 @@ void handle_filelist() {
 void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
   html_TR_TD();
 
-  if ((filename != F(FILE_CONFIG)) && (filename != F(FILE_SECURITY)) && (filename != F(FILE_NOTIFICATION)))
+  if (!isProtectedFileType(filename))
   {
     html_add_button_prefix();
     addHtml(F("filelist?delete="));
@@ -363,9 +365,9 @@ void handle_SDfilelist() {
     current_dir = "/";
   }
 
-  File root = SD.open(current_dir.c_str());
+  fs::File root = SD.open(current_dir.c_str());
   root.rewindDirectory();
-  File entry = root.openNextFile();
+  fs::File entry = root.openNextFile();
   parent_dir = current_dir;
 
   if (!current_dir.equals("/"))
@@ -407,8 +409,8 @@ void handle_SDfilelist() {
       // take a look in the directory for entries
       String child_dir = current_dir + entry.name();
       child_dir.toCharArray(SDcardChildDir, child_dir.length() + 1);
-      File child         = SD.open(SDcardChildDir);
-      File dir_has_entry = child.openNextFile();
+      fs::File child         = SD.open(SDcardChildDir);
+      fs::File dir_has_entry = child.openNextFile();
 
       // when the directory is empty, display the button to delete them
       if (!dir_has_entry)
@@ -435,7 +437,7 @@ void handle_SDfilelist() {
     else
     {
 
-      if ((entry.name() != String(F(FILE_CONFIG)).c_str()) && (entry.name() != String(F(FILE_SECURITY)).c_str()))
+      if (isProtectedFileType(String(entry.name())))
       {
         addHtml(F("<a class='button link' onclick=\"return confirm('Delete this file?')\" href=\"SDfilelist?delete="));
         addHtml(current_dir);

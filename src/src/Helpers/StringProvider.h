@@ -23,11 +23,13 @@ struct LabelType {
     LOAD_PCT,            // 15.10
     LOOP_COUNT,          // 400
     CPU_ECO_MODE,        // true
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
     WIFI_TX_MAX_PWR,     // Unit: 0.25 dBm, 0 = use default (do not set)
     WIFI_CUR_TX_PWR,     // Unit dBm of current WiFi TX power.
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
-    WIFI_NR_EXTRA_SCANS,
+#endif
+    WIFI_NR_EXTRA_SCANS,    
     WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
@@ -49,17 +51,20 @@ struct LabelType {
 #ifdef ESP32
     HEAP_SIZE,
     HEAP_MIN_FREE,
-    #ifdef ESP32_ENABLE_PSRAM
+    #ifdef BOARD_HAS_PSRAM
     PSRAM_SIZE,
     PSRAM_FREE,
     PSRAM_MIN_FREE,
     PSRAM_MAX_FREE_BLOCK,
-    #endif // ESP32_ENABLE_PSRAM
+    #endif // BOARD_HAS_PSRAM
 #endif // ifdef ESP32
 
     JSON_BOOL_QUOTES,
     ENABLE_TIMING_STATISTICS,
+    ENABLE_RULES_CACHING,
+    ENABLE_RULES_EVENT_REORDER,
     TASKVALUESET_ALL_PLUGINS,
+    ALLOW_OTA_UNLIMITED,
     ENABLE_CLEAR_HUNG_I2C_BUS,
 #ifndef BUILD_NO_RAM_TRACKER
     ENABLE_RAM_TRACKING,
@@ -138,7 +143,10 @@ struct LabelType {
     ESP_BOARD_NAME,
 
     FLASH_CHIP_ID,
+    FLASH_CHIP_VENDOR,
+    FLASH_CHIP_MODEL,
     FLASH_CHIP_REAL_SIZE,
+    FLASH_CHIP_SPEED,
     FLASH_IDE_SIZE,
     FLASH_IDE_SPEED,
     FLASH_IDE_MODE,
@@ -193,33 +201,6 @@ String getInternalLabel(LabelType::Enum label,
 const __FlashStringHelper * getLabel(LabelType::Enum label);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
-
-
-struct FileType {
-  enum Enum : short {
-    CONFIG_DAT,
-    SECURITY_DAT,
-    RULES_TXT,
-    NOTIFICATION_DAT
-  };
-};
-
-
-const __FlashStringHelper * getFileName(FileType::Enum filetype);
-String getFileName(FileType::Enum filetype,
-                   unsigned int   filenr);
-
-// filenr = 0...3 for files rules1.txt ... rules4.txt
-String getRulesFileName(unsigned int filenr);
-void   addDownloadFiletypeCheckbox(FileType::Enum filetype,
-                                   unsigned int   filenr = 0);
-void   storeDownloadFiletypeCheckbox(FileType::Enum filetype,
-                                     unsigned int   filenr = 0);
-bool   tryDownloadFileType(const String & url,
-                           const String & user,
-                           const String & pass,
-                           FileType::Enum filetype,
-                           unsigned int   filenr = 0);
 
 
 #endif // STRING_PROVIDER_TYPES_H

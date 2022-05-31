@@ -178,8 +178,6 @@ void getStorageTableSVG(SettingsType::Enum settingsType);
 
 #ifdef ESP32
 
-int  getPartionCount(uint8_t pType);
-
 void getPartitionTableSVG(uint8_t         pType,
                           unsigned int partitionColor);
 

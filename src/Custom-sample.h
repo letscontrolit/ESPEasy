@@ -169,6 +169,12 @@
 
 #define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
 
+// Allow for remote provisioning of a node.
+// This is only allowed for custom builds.
+// To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
+// Default setting is to not allow to configure a node remotely, unless explicitly enabled.
+// #define USE_CUSTOM_PROVISIONING
+
 #define USES_SSDP
 
 #define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
@@ -177,6 +183,38 @@
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+// #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
+// #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
+// #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
+
+
+#ifdef USE_CUSTOM_PROVISIONING
+// For device models, see src/src/DataTypes/DeviceModel.h
+// #ifdef ESP32
+//  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+// #endif
+// #ifdef ESP8266
+//  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+// #endif
+//  #define DEFAULT_PROVISIONING_FETCH_RULES1      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES2      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES3      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES4      false
+//  #define DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS false
+//  #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
+//  #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
+//  #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+//  #define DEFAULT_PROVISIONING_SAVE_URL           false
+//  #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
+//  #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
+//  #define DEFAULT_PROVISIONING_URL                ""
+//  #define DEFAULT_PROVISIONING_USER               ""
+//  #define DEFAULT_PROVISIONING_PASS               ""
+#endif
+
+
+
+#define USES_SSDP
 
 /*
  #######################################################################################################
@@ -293,6 +331,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P034   // DHT12
 // #define USES_P036   // FrameOLED
 // #define USES_P037   // MQTTImport
+//   #define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
+//   #define P037_FILTER_SUPPORT  1 // Enable filtering support
+//   #define P037_JSON_SUPPORT    1 // Enable Json support
 // #define USES_P038   // NeoPixel
 // #define USES_P039   // Environment - Thermocouple
 
@@ -371,17 +412,21 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P106   // BME680
 // #define USES_P107   // Si1145
 // #define USES_P109   // ThermoOLED
+
 // #define USES_P110   // VL53L0X Time of Flight sensor
 // #define USES_P111   // RF522 RFID reader
 // #define USES_P112   // AS7265x
 // #define USES_P113   // VL53L1X ToF
 // #define USES_P114   // VEML6075
 // #define USES_P115   // MAX1704x
+// #define USES_P116   // ST77xx
 // #define USES_P117   // SCD30
 // #define USES_P119   // ITG3205 Gyro
 // #define USES_P120   // ADXL345 I2C Acceleration / Gravity
 // #define USES_P124   // I2C MultiRelay
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
+// #define USES_P126   // 74HC595 Shift register
+// #define USES_P127   // CDM7160
 
 
 // Special plugins needing IR library

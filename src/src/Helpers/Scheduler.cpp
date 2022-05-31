@@ -6,7 +6,6 @@
 
 #include "../../_Plugin_Helper.h"
 
-#include "../Commands/GPIO.h"
 #include "../ControllerQueue/DelayQueueElements.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
@@ -265,6 +264,9 @@ void ESPEasy_Scheduler::handle_schedule() {
     // Make sure normal scheduled jobs run at higher priority.
     // backgroundtasks();
     process_system_event_queue();
+
+    // System events may have added one or more rule events, try to process those
+    processNextEvent();
     last_system_event_run = millis();
     STOP_TIMER(HANDLE_SCHEDULER_IDLE);
     return;
@@ -1143,6 +1145,8 @@ void ESPEasy_Scheduler::process_system_event_queue() {
 
   if (ScheduledEventQueue.size() == 0) { return; }
 
+  START_TIMER
+
   const unsigned long id = ScheduledEventQueue.front().id;
 
   if (RTC.lastMixedSchedulerId != id) {
@@ -1176,6 +1180,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
       break;
   }
   ScheduledEventQueue.pop_front();
+  STOP_TIMER(PROCESS_SYSTEM_EVENT_QUEUE);
 }
 
 String ESPEasy_Scheduler::getQueueStats() {

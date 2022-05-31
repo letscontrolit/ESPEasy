@@ -456,9 +456,13 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
       #define PLUGIN_DESCR  "IR"
     #endif
-    #define USES_P016      // IR
+    #ifndef USES_P016    
+      #define USES_P016      // IR
+    #endif
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-    #define USES_P035      // IRTX
+    #ifndef USES_P035    
+      #define USES_P035      // IRTX
+    #endif
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
 #endif
 
@@ -466,9 +470,13 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended"
     #endif // PLUGIN_DESCR
-    #define USES_P016      // IR
+    #ifndef USES_P016    
+      #define USES_P016      // IR
+    #endif
     #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
-    #define USES_P035      // IRTX
+    #ifndef USES_P035    
+      #define USES_P035      // IRTX
+    #endif
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
@@ -485,7 +493,9 @@ To create/register a plugin, you have to :
     #if !defined(PLUGIN_DESCR) && !defined(PLUGIN_BUILD_MAX_ESP32)
         #define PLUGIN_DESCR  "IR Extended, no IR RX"
     #endif // PLUGIN_DESCR
-    #define USES_P035      // IRTX
+    #ifndef USES_P035    
+      #define USES_P035      // IRTX
+    #endif
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
@@ -612,7 +622,10 @@ To create/register a plugin, you have to :
 
 #ifdef PLUGIN_SET_MAGICHOME_IR
     #define PLUGIN_SET_ONLY_LEDSTRIP
-    #define USES_P016      // IR
+    #ifndef USES_P016    
+      #define USES_P016      // IR
+    #endif
+
 #endif
 
 
@@ -1082,7 +1095,7 @@ To create/register a plugin, you have to :
 
 // TESTING #####################################
 #ifdef PLUGIN_SET_TESTING
-  #ifndef PLUGIN_SET_MAX
+  #if !defined(PLUGIN_SET_MAX) && !defined(ESP32)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
     #endif
@@ -1179,10 +1192,13 @@ To create/register a plugin, you have to :
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
-    #ifndef USE_SECOND_HEAP  // Disable Itho when using second heap as it no longer fits.
-    #define USES_P118  // Itho ventilation control
+      // Disable Itho when using second heap as it no longer fits.
+      // Disable Itho for ESP32 as it does not (yet) work on ESP32 IDF4.4
+    #if !defined(USE_SECOND_HEAP) && !defined(ESP32)
+      #define USES_P118  // Itho ventilation control
     #endif
     #define USES_P124  // I2C MultiRelay
+    #define USES_P127  // CDM7160
 #endif
 
 #ifdef PLUGIN_SET_TESTING_E
@@ -1190,6 +1206,7 @@ To create/register a plugin, you have to :
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
+    #define USES_P126  // 74HC595 Shift register
 #endif
 
 
@@ -1233,6 +1250,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
+   #ifndef USES_ADAFRUITGFX_HELPER
+    #define USES_ADAFRUITGFX_HELPER
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1272,8 +1292,11 @@ To create/register a plugin, you have to :
    #ifndef USES_P104
     #define USES_P104   // MAX7219 dot matrix
    #endif
-   #ifndef USES_P109
-    #define USES_P109   // ThermoOLED
+  //  #ifndef USES_P109
+  //    #define USES_P109   // ThermoOLED
+  //  #endif
+   #ifndef USES_P116
+     #define USES_P116   // ST77xx
    #endif
 #endif
 
@@ -1469,13 +1492,14 @@ To create/register a plugin, you have to :
     #define USES_P115   // Fuel gauge MAX1704x
   #endif
   #ifndef USES_P116
-//    #define USES_P116   //
+    #define USES_P116   // ST77xx
   #endif
   #ifndef USES_P117
     #define USES_P117   // SCD30
   #endif
   #ifndef USES_P118
-    #define USES_P118   // Itho ventilation coontrol
+    // Does not (yet) work well on ESP32 with IDF 4.4
+    // #define USES_P118   // Itho ventilation coontrol
   #endif
   #ifndef USES_P119
     #define USES_P119   // ITG3205 Gyro
@@ -1499,10 +1523,10 @@ To create/register a plugin, you have to :
     #define USES_P125   // ADXL345 SPI Acceleration / Gravity
   #endif
   #ifndef USES_P126
-//    #define USES_P126   //
+    #define USES_P126   // 74HC595 Shift register
   #endif
   #ifndef USES_P127
-//    #define USES_P127   //
+    #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
 //    #define USES_P128   //
@@ -1586,6 +1610,11 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
+  #ifndef PLUGIN_USES_ADAFRUITGFX
+    #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
+  #endif
+#endif
 
 /*
 #if defined(USES_P00x) || defined(USES_P00y)
@@ -1694,7 +1723,7 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #ifndef PLUGIN_SET_TESTING
+  #if !defined(PLUGIN_SET_TESTING) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
       #undef USES_P076   // HWL8012   in POW r1
     #endif
@@ -1823,6 +1852,12 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_DNS_SERVER
       #define FEATURE_DNS_SERVER
     #endif
+  #endif
+#endif
+
+#if defined(USE_SETTINGS_ARCHIVE) || defined(USE_CUSTOM_PROVISIONING)
+  #ifndef USE_DOWNLOAD
+    #define USE_DOWNLOAD
   #endif
 #endif
 

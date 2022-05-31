@@ -43,7 +43,7 @@ void handle_tools() {
   addHtmlAttribute(F("style"), F("width: 98%"));
   addHtmlAttribute(F("type"),  F("text"));
   addHtmlAttribute(F("name"),  F("cmd"));
-  addHtmlAttribute(F("value"), webrequest);
+  addHtmlAttribute(F("value"), webArg(F("cmd")));
   addHtml('>');
 
   html_TR_TD();
@@ -150,7 +150,7 @@ void handle_tools() {
         }
       } else {
         html_B(F("WARNING"));
-        addHtml(F(" OTA not possible."));
+        addHtml(F(" Not enough space to safely update. Update might fail. "));
       }
       addHtml(F(" Max sketch size: "));
       addHtmlInt(maxSketchSize / 1024);

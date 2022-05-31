@@ -465,6 +465,33 @@ String wrapIfContains(const String& value, char contains, char wrap) {
   return value;
 }
 
+String wrapWithQuotes(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  // Try to find unused quote char and wrap
+  char quotechar = '_';
+  if (!findUnusedQuoteChar(text, quotechar)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("No unused quote to wrap: _");
+      log += text;
+      log += '_';
+      addLogMove(LOG_LEVEL_ERROR, log);
+    }
+  }
+  return wrap_String(text, quotechar);
+}
+
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  if (stringContainsSeparatorChar(text)) {
+    return wrapWithQuotes(text);
+  }
+  return text;
+}
+
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
@@ -526,7 +553,7 @@ String to_json_value(const String& value, bool wrapInQuotes) {
    Strip wrapping chars (e.g. quotes)
 \*********************************************************************************************/
 String stripWrappingChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
     return text.substring(1, length - 1);
@@ -535,20 +562,40 @@ String stripWrappingChar(const String& text, char wrappingChar) {
 }
 
 bool stringWrappedWithChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if (length < 2) { return false; }
-
-  if (text.charAt(0) != wrappingChar) { return false; }
-  return text.charAt(length - 1) == wrappingChar;
+  return (text.charAt(0) == wrappingChar) && 
+         (text.charAt(length - 1) == wrappingChar);
 }
 
 bool isQuoteChar(char c) {
   return c == '\'' || c == '"' || c == '`';
 }
 
+bool findUnusedQuoteChar(const String& text, char& quotechar) {
+  quotechar = '_';
+  if (text.indexOf('\'') == -1) quotechar = '\'';
+  else if (text.indexOf('"') == -1) quotechar = '"';
+  else if (text.indexOf('`') == -1) quotechar = '`';
+  
+  return isQuoteChar(quotechar);
+}
+
 bool isParameterSeparatorChar(char c) {
   return c == ',' || c == ' ';
+}
+
+bool stringContainsSeparatorChar(const String& text) {
+  return text.indexOf(',') != -1 || text.indexOf(' ') != -1;
+}
+
+bool isWrappedWithQuotes(const String& text) {
+  if (text.length() < 2) {
+    return false;
+  }
+  const char quoteChar = text[0];
+  return isQuoteChar(quoteChar) && stringWrappedWithChar(text, quoteChar);
 }
 
 String stripQuotes(const String& text) {
@@ -654,7 +701,7 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
     ++nextArgument;
   }
 
-  if (!hasArgument || (pos_begin < 0)) {
+  if (!hasArgument || (pos_begin < 0) || ((pos_begin >= 0) && (pos_begin == pos_end))) {
     return EMPTY_STRING;
   }
   String result = string.substring(pos_begin, pos_end);
@@ -1102,10 +1149,10 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
     for (int i = pos_begin; i < pos_end; ++i) {
       argvString += string[i];
     }
+    argvString.trim();
+    argvString = stripQuotes(argvString);
   }
-  argvString.trim();
-  argvString = stripQuotes(argvString);
-  return argvString.length() > 0;
+  return true;
 }
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
@@ -1118,21 +1165,37 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
 
   while (string_pos < string_len)
   {
-    char c, d; // c = current char, d = next char (if available)
+    char c, d, e; // c = current char, d,e = next char (if available)
     c = string[string_pos];
     d = 0;
+    e = 0;
 
     if ((string_pos + 1) < string_len) {
       d = string[string_pos + 1];
     }
+    if ((string_pos + 2) < string_len) {
+      e = string[string_pos + 2];
+    }
 
-    if       (!parenthesis && (c == ' ') && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d == separator)) {}
-    else if  (!parenthesis && (c == separator) && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
-    else if  (!parenthesis && (c == separator) && (d >= 33) && (d <= 126)) {}
+    if  (!parenthesis && (((c == ' ') && (d == ' ')) || 
+                          ((c == separator) && (d == ' ')))) {
+      // Consider multiple consequitive spaces as one.
+    }
+    else if  (!parenthesis && ((d == ' ') && (e == separator))) {
+      // Skip the space.      
+    }
     else
     {
+      // Found the start of the new argument.
+      if (pos_begin == -1 && !parenthesis && !((c == separator) || isParameterSeparatorChar(c))) {
+        pos_begin = string_pos;
+        pos_end   = string_pos;
+      }
+      if (pos_end != -1) {
+        ++pos_end;
+      }
+
+      // Check if we're in a set of parenthesis (any quote char or [])
       if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
         parenthesis          = true;
         matching_parenthesis = c;
@@ -1144,23 +1207,16 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
         parenthesis = false;
       }
 
-      if (pos_begin == -1) {
-        pos_begin = string_pos;
-        pos_end   = string_pos;
-      }
-      ++pos_end;
-
       if (!parenthesis && (isParameterSeparatorChar(d) || (d == separator) || (d == 0))) // end of word
       {
         argc_pos++;
-
         if (argc_pos == argc)
         {
           return true;
         }
+        // new Argument separator found
         pos_begin = -1;
         pos_end   = -1;
-        string_pos++;
       }
     }
     string_pos++;

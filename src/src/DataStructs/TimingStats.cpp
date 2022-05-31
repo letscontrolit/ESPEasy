@@ -92,7 +92,7 @@ const __FlashStringHelper * getPluginFunctionName(int function) {
     case PLUGIN_SET_CONFIG:            return F("SET_CONFIG");
     case PLUGIN_GET_DEVICEGPIONAMES:   return F("GET_DEVICEGPIONAMES");
     case PLUGIN_EXIT:                  return F("EXIT");
-    case PLUGIN_GET_CONFIG:            return F("GET_CONFIG");
+    case PLUGIN_GET_CONFIG_VALUE:      return F("GET_CONFIG");
     case PLUGIN_UNCONDITIONAL_POLL:    return F("UNCONDITIONAL_POLL");
     case PLUGIN_REQUEST:               return F("REQUEST");
   }
@@ -126,7 +126,7 @@ bool mustLogFunction(int function) {
     case PLUGIN_SET_CONFIG:            return false;
     case PLUGIN_GET_DEVICEGPIONAMES:   return false;
     case PLUGIN_EXIT:                  return false;
-    case PLUGIN_GET_CONFIG:            return false;
+    case PLUGIN_GET_CONFIG_VALUE:      return false;
     case PLUGIN_UNCONDITIONAL_POLL:    return false;
     case PLUGIN_REQUEST:               return true;
   }
@@ -225,9 +225,13 @@ const __FlashStringHelper * getMiscStatsName_F(int stat) {
     case FS_GC_SUCCESS:           return F("ESPEASY_FS GC success");
     case FS_GC_FAIL:              return F("ESPEASY_FS GC fail");
     case RULES_PROCESSING:        return F("rulesProcessing()");
+    case RULES_PARSE_LINE:        return F("parseCompleteNonCommentLine()");
+    case RULES_PROCESS_MATCHED:   return F("processMatchedRule()");
+    case RULES_MATCH:             return F("rulesMatch()");
     case GRAT_ARP_STATS:          return F("sendGratuitousARP()");
     case SAVE_TO_RTC:             return F("saveToRTC()");
     case BACKGROUND_TASKS:        return F("backgroundtasks()");
+    case PROCESS_SYSTEM_EVENT_QUEUE: return F("process_system_event_queue()");
     case HANDLE_SCHEDULER_IDLE:   return F("handle_schedule() idle");
     case HANDLE_SCHEDULER_TASK:   return F("handle_schedule() task");
     case PARSE_TEMPLATE_PADDED:   return F("parseTemplate_padded()");

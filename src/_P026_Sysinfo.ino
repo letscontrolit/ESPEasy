@@ -253,7 +253,7 @@ float P026_get_value(int type)
     }
     case 9:
     {
-      value = timePassedSince(lastWeb) / 1000; // respond in seconds
+      value = timePassedSince(lastWeb) / 1000.0f; // respond in seconds
       break;
     }
     case 10:

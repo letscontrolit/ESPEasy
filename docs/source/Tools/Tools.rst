@@ -226,6 +226,8 @@ Rules Settings
 
 * Rules - Check to enable rules functionality (on next page load, extra Rules tab will appear)
 * Old Engine - Default checked.
+* Enable Rules Cache - Rules cache will keep track of where in the rules files each ``on ... do`` block is located. This significantly improves the time it takes to handle events. (Enabled by default, Added 2022/04/17)
+* Allow Rules Event Reorder - It is best to have the rules blocks for the most frequently occuring events placed at the top of the first rules file. (also for frequently happening events, which you don't want to act on) The cached event positions can be reordered in memory based on how often an event was matched.  (Enabled by default, Added 2022/04/17)
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
 
@@ -373,8 +375,18 @@ If this is the fix, where ESPEasy is not able to resolve the lockec I2C bus on i
 
 Default: unchecked
 
+Allow OTA without size-check
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Added: 2022-04-22
 
+On ESP's with 1MB or 2MB Flash, updates via OTA *may* be disabled because of a lack of free flash memory to store the new image during OTA update.
+
+Enabling this setting will allow OTA updates even when there is not enough free Flash space to perform the update by allowing to overwrite the file-system, probably trashing the settings and other files like rules.
+
+This should best only be enabled if the configuration, and other files like rules, can be restored from an external source, or be re-entered manually.
+
+NB: If the OTA update is bigger than available flash + file-system size, the OTA update will fail, but as the file-system is already overwritten, any configuration and files are overwritten irreversibly!
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -821,12 +833,42 @@ Especially if the node is hard to reach for a proper clean setup.
 .. image:: images/SettingsArchive_download2.png
 
 After downloading the files, a summary is given.
+
 A returned error can be something like 404 (file not available) or 401 (not authorized).
 These are the standard HTTP error codes.
+The error will be ``-1`` if the host is unreachable.
+
+If a file already exists, the new file is downloaded with ``_tmp`` appended to the filename.
+If successful, the original file will be renamed to one with ``_bak`` appended to the filename and then the ``_tmp`` version is renamed to the original filename.
+However, if the ``_bak`` is present, it may fail to rename the original one, so the operation fails.
+The presence of the ``_bak`` file is also some protection to not being able to fetch a new version, unless the "Delete First" option is checked.
 
 If ''config.dat'' or ''security.dat'' was downloaded, it is very important to do a reboot and not try to change (and save) anything on the ESPeasy node.
 The old settings are still active in memory and if something will be saved, only the changed part may be saved.
 This would corrupt the settings file.
+
+
+With only ``USE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
+For this the build must be made with ``USE_CUSTOM_PROVISIONING`` defined.
+
+N.B. ``USE_CUSTOM_PROVISIONING`` is added on 2022/05/13.
+
+
+URL with Settings
+^^^^^^^^^^^^^^^^^
+
+This holds the full URL without file name where the files must be fetched from.
+
+Since builds made after 2022/05/13, the URL may also contain system variables.
+This allows for an URL like: ``http://192.168.10.127/%mac%``
+
+System variables will be converted into an URL encoded form, which may end up like this:
+
+* ``http://192.168.10.127/A0%3a20%3aA6%3a14%3a84%3a81/rules4.txt`` MAC address: ``A0:20:A6:14:84:81``
+
+The URL will not be stored, unless the build is made with ``USE_CUSTOM_PROVISIONING`` defined and the option is checked to save the URL. (option only present when ``USE_CUSTOM_PROVISIONING`` defined)
+
+Using system variables may allow for multi stage setup of a node, as you could for example fetch a rule which may set a variable to a new value and thus new files may be fetched from a different URL.
 
 
 Side Effects on cloning
@@ -842,3 +884,47 @@ If the original node is configured to use static IP, the clone will use the same
 This can render both inaccessible.
 
 
+Provisioning
+============
+
+Added: 2022/05/13
+
+When the build is made with ``USE_CUSTOM_PROVISIONING`` defined, this Settings Archive screen does allow for more settings helping deployment and remote administration of ESPEasy nodes.
+
+All Settings on the Settings Archive page can be stored in a file named ``provisioning.dat``.
+This file also can store the factory default settings like the device model to ease deployment of a large number of nodes.
+
+N.B. The ``USE_SETTINGS_ARCHIVE`` define is needed to allow to edit the ``provisioning.dat`` file, but it is not needed to use the provisioning feature.
+
+
+.. image:: images/SettingsArchive_provisioning.png
+
+As can be seen, the URL and credentials can be stored.
+This will be stored in a file named ``provisioning.dat`` 
+Such a file may also be fetched from a server.
+
+The ``provisioning.dat`` file can also be automatically generated when performing a factory reset.
+For this the (custom) build must be prepared via a number of defined defaults.
+See the ``Custom-sample.h`` file for some examples.
+
+
+Allow Fetch by Command
+^^^^^^^^^^^^^^^^^^^^^^
+
+This checkbox allows provisioning via commands.
+These commands are not restricted, so they can also be given via HTTP or MQTT.
+
+However, they can only be executed when:
+
+* Allow Fetch by Command is enabled
+* the file to download is checked
+* URL (+ optional credentials) is stored
+
+The commands are:
+
+
+* ``ProvisionConfig`` Fetch ``config.dat``
+* ``ProvisionSecurity`` Fetch ``security.dat``
+* ``ProvisionNotification`` Fetch ``notification.dat``
+* ``ProvisionProvision`` Fetch ``provisioning.dat``
+* ``ProvisionRules,1`` Fetch ``rules1.txt``

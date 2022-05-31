@@ -5,8 +5,6 @@
 // Central functions for GPIO handling
 // **************************************************************************/
 #include "../../_Plugin_Helper.h"
-#include "../Commands/GPIO.h"
-#include "../DataStructs/PinMode.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/Hardware.h"
