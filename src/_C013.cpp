@@ -37,7 +37,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesTemplate = false;
       Protocol[protocolCount].usesAccount  = false;
       Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 65501;
+      Protocol[protocolCount].defaultPort  = 8266;
       Protocol[protocolCount].usesID       = false;
       Protocol[protocolCount].Custom       = true;
       break;
