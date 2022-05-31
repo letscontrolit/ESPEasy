@@ -34,6 +34,8 @@ enum class P082_query : uint8_t {
 
 const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
 
+P082_query Plugin_082_from_valuename(const String& valuename);
+
 
 enum class P082_PowerMode : uint8_t {
   Max_Performance = 0,
