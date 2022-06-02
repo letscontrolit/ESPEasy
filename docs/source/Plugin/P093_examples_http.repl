@@ -1,0 +1,19 @@
+.. csv-table::
+        :header: "Command", "Description"
+        :widths: 20, 40
+
+        "
+        ``http://192.168.0.100/control?cmd=MitsubishiHP,power,ON``
+        ","
+        Turn on AC
+        "
+        "
+        ``http://192.168.0.100/control?cmd=MitsubishiHP,temperature,23``
+        ","
+        Set target temperature to 23
+        "
+        "
+        ``http://192.168.0.100/control?cmd=MitsubishiHP,fan,AUTO``
+        ","
+        Set fan mode to ``AUTO``
+        "
