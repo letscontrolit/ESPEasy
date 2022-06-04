@@ -1298,7 +1298,7 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
-   #ifndef USES_P123
+   #if !defined(USES_P123) && defined(ESP32)
      #define USES_P123   // FT6206
    #endif
 #endif
@@ -1616,6 +1616,12 @@ To create/register a plugin, you have to :
 #if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
+  #endif
+#endif
+
+#if defined(USES_P099) || defined(USES_P123)
+  #ifndef PLUGIN_USES_TOUCHHANDLER
+    #define PLUGIN_USES_TOUCHHANDLER
   #endif
 #endif
 
