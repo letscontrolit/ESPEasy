@@ -10,6 +10,17 @@
 /****************************************************************************
  * helper class and functions for displays that use Adafruit_GFX library
  ***************************************************************************/
+/************
+ * Changelog:
+ * 2022-06-02 tonhuisman: Leave out some Notes from UI to save a few bytes from size limited builds
+ * 2022-05-27 tonhuisman: Change btn subcommand to split state and mode arguments, state = 0/1, -2/-1, mode = -2, -1, 0
+ * 2022-05-27 tonhuisman: Fix a few character mappings in AdaGFXparseTemplate, add surrogates for chars not in font
+ *                        Add support for {0xNN...} to insert any ascii character in template, supports multiple 2-digit hex values > 00
+ *                        space, comma, dot, colon, semicolon or dash (' ,.:;-') as separators in hex value are allowed
+ * 2022-05-23 tonhuisman: Fix cast for returned value from AdaGFXparseColor
+ *                        Make 8 and 16 color support optional to squeeze a few bytes from size limited builds
+ * 2022-05-23 tonhuisman: Add changelog, older changes have not been logged.
+ ***************************************************************************/
 # include <Arduino.h>
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPITFT.h>
@@ -22,16 +33,21 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# define ADAGFX_PARSE_MAX_ARGS        7  // Maximum number of arguments needed and supported (corrected)
+# define ADAGFX_PARSE_MAX_ARGS        7 // Maximum number of arguments needed and supported (corrected)
 # ifndef ADAGFX_ARGUMENT_VALIDATION
-#  define ADAGFX_ARGUMENT_VALIDATION  1  // Validate command arguments
+#  define ADAGFX_ARGUMENT_VALIDATION  1 // Validate command arguments
 # endif // ifndef ADAGFX_ARGUMENT_VALIDATION
 # ifndef ADAGFX_USE_ASCIITABLE
-#  define ADAGFX_USE_ASCIITABLE       1  // Enable 'asciitable' command (useful for debugging/development)
+#  define ADAGFX_USE_ASCIITABLE       1 // Enable 'asciitable' command (useful for debugging/development)
 # endif // ifndef ADAGFX_USE_ASCIITABLE
 # ifndef ADAGFX_SUPPORT_7COLOR
-#  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
+
+// #  define ADAGFX_SUPPORT_7COLOR       1  // Do we support 7-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_7COLOR
+# ifndef ADAGFX_SUPPORT_8and16COLOR
+
+// #  define ADAGFX_SUPPORT_8and16COLOR  1  // Do we support 8 and 16-Color displays?
+# endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # ifndef ADAGFX_FONTS_INCLUDED
 #  define ADAGFX_FONTS_INCLUDED       1  // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
@@ -125,6 +141,12 @@
 #  ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #   define ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 #  endif // ifndef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
+#  ifndef ADAGFX_SUPPORT_7COLOR
+#   define ADAGFX_SUPPORT_7COLOR       1
+#  endif // ifndef ADAGFX_SUPPORT_7COLOR
+#  ifndef ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_SUPPORT_8and16COLOR  1
+#  endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # endif  // ifdef PLUGIN_SET_MAX
 
 # define ADAGFX_PARSE_PREFIX      F("~")            // Subcommand-trigger prefix and postfix strings
@@ -218,7 +240,7 @@ enum class Button_type_e : uint8_t {
   ArrowUp    = 0x05,
   ArrowRight = 0x06,
   ArrowDown  = 0x07,
-  Button_MAX // must be last value in enum, max possible values: 16
+  Button_MAX = 8u // must be last value in enum, max possible values: 16
 };
 
 // Only bits 4..7 can be used, masked with: 0xF0
@@ -235,7 +257,7 @@ enum class Button_layout_e : uint8_t {
   LeftBottomAligned  = 0x80,
   NoCaption          = 0x90,
   Bitmap             = 0xA0,
-  Alignment_MAX      = 11u // options-count
+  Alignment_MAX      = 11u // options-count, max possible values: 16
 };
 
 const __FlashStringHelper* toString(Button_type_e button);
@@ -385,6 +407,15 @@ private:
                           int  Y,
                           bool colRowMode = false);
   # endif // if ADAGFX_ARGUMENT_VALIDATION
+  # if ADAGFX_ENABLE_BUTTON_DRAW
+  void drawButtonShape(Button_type_e buttonType,
+                       int           x,
+                       int           y,
+                       int           w,
+                       int           h,
+                       uint16_t      fillColor,
+                       uint16_t      borderColor);
+  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
   Adafruit_GFX *_display = nullptr;
   Adafruit_SPITFT *_tft  = nullptr;

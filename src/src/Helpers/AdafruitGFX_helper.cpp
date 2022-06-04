@@ -219,7 +219,9 @@ void AdaGFXFormRotation(const __FlashStringHelper *id,
 void AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
                                   uint8_t                    selectedIndex) {
   addFormCheckBox(F("Background-fill for text"), id, selectedIndex);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Fill entire line-height with background color."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -228,7 +230,9 @@ void AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
 void AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
                               bool                       selectedState) {
   addFormCheckBox(F("Text Coordinates in col/row"), id, selectedState);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -237,7 +241,9 @@ void AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
 void AdaGFXFormOnePixelCompatibilityOption(const __FlashStringHelper *id,
                                            uint8_t                    selectedIndex) {
   addFormCheckBox(F("Use -1px offset for txp &amp; txtfull"), id, selectedIndex);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("This is for compatibility with the original plugin implementation."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -254,8 +260,12 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
   addFormTextBox(F("Foreground color"), foregroundId, color, 11);
   color = AdaGFXcolorToString(backgroundColor, colorDepth);
   addFormTextBox(F("Background color"), backgroundId, color, 11);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
   addFormNote(F("NB: Colors stored as RGB565 value!"));
+  # else // ifndef LIMIT_BUILD_SIZE
+  addFormNote(F("Use Color name, # + 1..4 hex RGB565 or # + 6 hex nibbles RGB color."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -308,9 +318,6 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
 String AdaGFXparseTemplate(const String      & tmpString,
                            uint8_t             lineSize,
                            AdafruitGFX_helper *gfxHelper) {
-  // Änderung WDS: Tabelle vorerst Abgeschaltet !!!!
-  // Perform some specific changes for LCD display
-  // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
   # if ADAGFX_PARSE_SUBCOMMAND
 
   String result = tmpString;
@@ -412,6 +419,23 @@ String AdaGFXparseTemplate(const String      & tmpString,
     const char quart[3]       = { 0xc2, 0xbc, 0 };   // Unicode quart 1/4 symbol
     const char quart_ascii[2] = { 0xac, 0 };         // quart 1/4 symbol
     result.replace(quart, quart_ascii);
+
+    const char sup2[3]       = { 0xc2, 0xb2, 0 };    // Unicode superscript 2 symbol
+    const char sup2_ascii[2] = { 0xfc, 0 };          // superscript 2 symbol
+    result.replace(sup2, sup2_ascii);
+
+    // Unsupported characters, replace by something useful
+    const char sup1[3]       = { 0xc2, 0xb9, 0 };   // Unicode superscript 1 symbol
+    const char sup1_ascii[2] = { 0x31, 0 };         // regular 1 (missing from font)
+    result.replace(sup1, sup1_ascii);
+
+    const char sup3[3]       = { 0xc2, 0xb3, 0 };   // Unicode superscript 3 symbol
+    const char sup3_ascii[2] = { 0x33, 0 };         // regular 3 (missing from font)
+    result.replace(sup3, sup3_ascii);
+
+    const char frac34[3]       = { 0xc2, 0xbe, 0 }; // Unicode fraction 3/4 symbol
+    const char frac34_ascii[2] = { 0x5c, 0 };       // regular \ (missing from font)
+    result.replace(frac34, frac34_ascii);
     delay(0);
   }
 
@@ -449,9 +473,40 @@ String AdaGFXparseTemplate(const String      & tmpString,
     result.replace(divide_uni, divide_ascii);
 
     const char umlaut_sz_uni[3]   = { 0xc3, 0x9f, 0 }; // Unicode Umlaute sz
-    const char umlaut_sz_ascii[2] = { 0xe0, 0 };       // Umlaute
+    const char umlaut_sz_ascii[2] = { 0xe0, 0 };       // Umlaute B
     result.replace(umlaut_sz_uni, umlaut_sz_ascii);
+
+    // Unsupported characters, replace by something useful
+    const char times[3]       = { 0xc3, 0x97, 0 }; // Unicode multiplication symbol
+    const char times_ascii[2] = { 0x78, 0 };       // regular x (missing from font)
+    result.replace(times, times_ascii);
     delay(0);
+  }
+
+  // Handle '{0xNN...}' hex values in template, where NN can be any hex value from 01..FF (practically 20..FF).
+  int16_t hexPrefix = 0;
+  int16_t hexPostfix;
+  const String hexSeparators = F(" ,.:;-");
+
+  while (((hexPrefix = result.indexOf(F("{0x"), hexPrefix)) > -1) &&
+         ((hexPostfix = result.indexOf('}', hexPrefix)) > -1)) {
+    String replace;
+
+    for (int16_t ci = hexPrefix + 3; ci < hexPostfix - 1; ci += 2) { // Multiple of 2 only
+      uint32_t hexValue = hexToUL(result.substring(ci, ci + 2));
+
+      if (hexValue > 0) {
+        replace += static_cast<char>(hexValue);
+      }
+
+      while (hexSeparators.indexOf(result.substring(ci + 2, ci + 3)) > -1 && ci < hexPostfix) {
+        ci++;
+      }
+    }
+
+    if (!replace.isEmpty()) {
+      result.replace(result.substring(hexPrefix, hexPostfix + 1), replace);
+    }
   }
 
   for (uint16_t l = result.length(); l > 0 && isSpace(result[l - 1]); l--) { // Right-trim
@@ -1343,57 +1398,64 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   # if ADAGFX_ENABLE_BUTTON_DRAW
-  else if (subcommand.equals(F("btn")) && (argCount >= 7) && (nParams[6] != 0))
-  { // btn,state,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
-    // ev: 1     2 3 4 5 6  7     8     9      10         11        12        13      14        15       16            17,18,19,20
-    // nP: 0     1 2 3 4 5  6     7     8      9          10        11        12      13        14       15            16,17,18,19
+  else if (subcommand.equals(F("btn")) && (argCount >= 8) && (nParams[7] != 0))
+  { // btn,state,m,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
+    // ev: 1     2 3 4 5 6 7  8     9     10     11         12        13        14      15        16       17,18,19,20,21
+    // nP: 0     1 2 3 4 5 6  7     8     9      10         11        12        13      14        15       16,17,18,19,20
     // : Draw a button
-    // state: -2 = disabled, -1 = initial (off), 0 = off, 1 = on
-    // type & 0x0F: 0 = none, < 0 = clear area, 1 = rectangle, 2 = rounded rect., 3 = circle,
+    // m=mode: -2 = disabled, -1 = initial, 0 = default
+    // state:  0 = off, 1 = on, -2 = off + disabled, -1 = on + disabled
+    // id: < 0 = clear area
+    // type & 0x0F: 0 = none, 1 = rectangle, 2 = rounded rect., 3 = circle,
     // type & 0xF0 = CenterAligned, LeftAligned, TopAligned, RightAligned, BottomAligned, LeftTopAligned, RightTopAligned,
     //               RightBottomAligned, LeftBottomAligned, NoCaption
     // (*clr = color, TaskIndex, Group and SelGrp are ignored)
     #  if ADAGFX_ARGUMENT_VALIDATION
 
-    if (invalidCoordinates(nParams[1], nParams[2]) ||
-        invalidCoordinates(nParams[1] + nParams[3], nParams[2] + nParams[4])) {
+    if (invalidCoordinates(nParams[2], nParams[3]) ||
+        invalidCoordinates(nParams[2] + nParams[4], nParams[3] + nParams[5])) {
       success = false;
     } else
     #  endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
       // All checked out OK
       // Default values
-      uint16_t onColor              = ADAGFX_GREEN;
+      uint16_t onColor              = ADAGFX_BLUE;
       uint16_t offColor             = ADAGFX_RED;
       uint16_t captionColor         = ADAGFX_WHITE;
-      uint8_t  fontScale            = 2;
+      uint8_t  fontScale            = 0;
       uint16_t borderColor          = ADAGFX_WHITE;
-      uint16_t disabledColor        = 0x9410;
-      uint16_t disabledCaptionColor = 0x5A69;
+      uint16_t disabledColor        = 0x9410; // Medium grey
+      uint16_t disabledCaptionColor = 0x5A69; // Dark grey
 
-      if (!sParams[7].isEmpty()) { onColor = AdaGFXparseColor(sParams[7], _colorDepth); }
+      if (!sParams[8].isEmpty()) { onColor = AdaGFXparseColor(sParams[8], _colorDepth); }
 
-      if (!sParams[8].isEmpty()) { offColor = AdaGFXparseColor(sParams[8], _colorDepth); }
+      if (!sParams[9].isEmpty()) { offColor = AdaGFXparseColor(sParams[9], _colorDepth); }
 
-      if (!sParams[9].isEmpty()) { captionColor = AdaGFXparseColor(sParams[9], _colorDepth); }
+      if (!sParams[10].isEmpty()) { captionColor = AdaGFXparseColor(sParams[10], _colorDepth); }
 
-      if (nParams[12] > 0) { fontScale = nParams[12]; }
+      if (nParams[11] > 0) { fontScale = nParams[11]; }
 
-      if (!sParams[13].isEmpty()) { borderColor = AdaGFXparseColor(sParams[13], _colorDepth); }
+      if (!sParams[14].isEmpty()) { borderColor = AdaGFXparseColor(sParams[14], _colorDepth); }
 
-      if (!sParams[14].isEmpty()) { disabledColor = AdaGFXparseColor(sParams[14], _colorDepth); }
+      if (!sParams[15].isEmpty()) { disabledColor = AdaGFXparseColor(sParams[15], _colorDepth); }
 
-      if (!sParams[15].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[15], _colorDepth); }
+      if (!sParams[16].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[16], _colorDepth); }
 
       uint16_t fillColor = onColor;
       uint16_t textColor = captionColor;
-      bool     clearArea = nParams[6] < 0;
-      nParams[6] = std::abs(nParams[6]);
+      bool     clearArea = nParams[7] < 0;
+      nParams[7] = std::abs(nParams[7]);
 
-      // Check state: -2, -1, 0, 1 to select used colors
-      if ((nParams[0] == 0) || (nParams[0] == -1)) {
+      Button_type_e   buttonType   = static_cast<Button_type_e>(nParams[7] & 0x0F);
+      Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
+
+      // Check mode & state: -2, -1, 0, 1 to select used colors
+      if (nParams[0] == 0) {
         fillColor = offColor;
-      } else if (nParams[0] == -2) {
+      }
+
+      if ((nParams[1] == -2) || (nParams[0] < 0)) {
         fillColor = disabledColor;
         textColor = disabledCaptionColor;
       } else if (clearArea) {
@@ -1401,131 +1463,79 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         borderColor = _bgcolor;
       }
 
-      if ((static_cast<Button_type_e>(nParams[6] & 0x0F) != Button_type_e::None) ||
+      // Clear the area?
+      if ((buttonType != Button_type_e::None) ||
           clearArea) {
-        _display->fillRect(nParams[1], nParams[2], nParams[3], nParams[4], _bgcolor);
+        drawButtonShape(buttonType,
+                        nParams[2], nParams[3], nParams[4], nParams[5],
+                        _bgcolor, _bgcolor);
       }
 
       // Check button-type bits (mask: 0x0F) to draw correct shape
       if (!clearArea) {
-        switch (static_cast<Button_type_e>(nParams[6] & 0x0F)) {
-          case Button_type_e::Square: // Rectangle
-          {
-            _display->fillRect(nParams[1], nParams[2], nParams[3], nParams[4], fillColor);
-            _display->drawRect(nParams[1], nParams[2], nParams[3], nParams[4], borderColor);
-            break;
-          }
-          case Button_type_e::Rounded:                       // Rounded Rectangle
-          {
-            int16_t radius = (nParams[3] + nParams[4]) / 20; // 10 % corner radius
-            _display->fillRoundRect(nParams[1], nParams[2], nParams[3], nParams[4], radius, fillColor);
-            _display->drawRoundRect(nParams[1], nParams[2], nParams[3], nParams[4], radius, borderColor);
-            break;
-          }
-          case Button_type_e::Circle:                       // Circle
-          {
-            int16_t radius = (nParams[3] + nParams[4]) / 4; // average radius
-            _display->fillCircle(nParams[1] + (nParams[3] / 2), nParams[2] + (nParams[4] / 2), radius, fillColor);
-            _display->drawCircle(nParams[1] + (nParams[3] / 2), nParams[2] + (nParams[4] / 2), radius, borderColor);
-            break;
-          }
-          case Button_type_e::ArrowLeft:
-          { // draw: left-center, right-top, right-bottom
-            _display->fillTriangle(nParams[1], nParams[2] + nParams[4] / 2, nParams[1] + nParams[3], nParams[2],
-                                   nParams[1] + nParams[3], nParams[2] + nParams[4], fillColor);
-            _display->drawTriangle(nParams[1], nParams[2] + nParams[4] / 2, nParams[1] + nParams[3], nParams[2],
-                                   nParams[1] + nParams[3], nParams[2] + nParams[4], borderColor);
-            break;
-          }
-          case Button_type_e::ArrowUp:
-          { // draw: top-center, right-bottom, left-bottom
-            _display->fillTriangle(nParams[1] + nParams[3] / 2, nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4],
-                                   nParams[1], nParams[2] + nParams[4], fillColor);
-            _display->drawTriangle(nParams[1] + nParams[3] / 2, nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4],
-                                   nParams[1], nParams[2] + nParams[4], borderColor);
-            break;
-          }
-          case Button_type_e::ArrowRight:
-          { // draw: left-top, right-center, left-bottom
-            _display->fillTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4] / 2,
-                                   nParams[1], nParams[2] + nParams[4], fillColor);
-            _display->drawTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2] + nParams[4] / 2,
-                                   nParams[1], nParams[2] + nParams[4], borderColor);
-            break;
-          }
-          case Button_type_e::ArrowDown:
-          { // draw: left-top, right-top, bottom-center
-            _display->fillTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2],
-                                   nParams[1] + nParams[3] / 2, nParams[2] + nParams[4], fillColor);
-            _display->drawTriangle(nParams[1], nParams[2], nParams[1] + nParams[3], nParams[2],
-                                   nParams[1] + nParams[3] / 2, nParams[2] + nParams[4], borderColor);
-            break;
-          }
-          case Button_type_e::None:
-          case Button_type_e::Button_MAX:
-            break;
-        }
+        drawButtonShape(buttonType,
+                        nParams[2], nParams[3], nParams[4], nParams[5],
+                        fillColor, borderColor);
       }
 
       // Display caption? (or bitmap)
       if (!clearArea &&
-          !(static_cast<Button_layout_e>(nParams[6] & 0xF0) == Button_layout_e::NoCaption)) {
+          (buttonLayout != Button_layout_e::NoCaption)) {
         int16_t  x1, y1;
         uint16_t w1, h1, w2, h2;
         String   newString;
 
         // Determine alignment parameters
-        if (nParams[0] == 1) {
-          newString = sParams[11].isEmpty() ? sParams[5] : sParams[11];
+        if ((nParams[0] == 1) || (nParams[0] == -1)) { // 1 = on+enabled, -1 = on+disabled
+          newString = sParams[12].isEmpty() ? sParams[6] : sParams[12];
         } else {
-          newString = sParams[12].isEmpty() ? sParams[5] : sParams[12];
+          newString = sParams[13].isEmpty() ? sParams[6] : sParams[13];
         }
         newString = AdaGFXparseTemplate(newString, 20);
 
-        if ((nParams[10] > 0) && (nParams[10] <= 10)) { _display->setTextSize(nParams[10]); } // set scaling
+        if ((nParams[11] > 0) && (nParams[11] <= 10)) { _display->setTextSize(nParams[11]); } // set scaling
         _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // get caption length and height in pixels
         _display->getTextBounds(F(" "),    0, 0, &x1, &y1, &w2, &h2); // measure space width for little margins
 
         // Check button-alignment bits (mask 0xF0) for caption placement, modifies the x/y arguments passed!
         // Little margin is: from left/right: half of the width of a space, from top/bottom: half of height of the font used
-        Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[6] & 0xF0);
 
         switch (buttonLayout) {
           case Button_layout_e::CenterAligned:
-            nParams[1] += (nParams[3] / 2 - w1 / 2);  // center horizontically
-            nParams[2] += (nParams[4] / 2 - h1 / 2);  // center vertically
+            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
             break;
           case Button_layout_e::LeftAligned:
-            nParams[1] += w2 / 2;                     // A little margin from left
-            nParams[2] += (nParams[4] / 2 - h1 / 2);  // center vertically
+            nParams[2] += w2 / 2;                     // A little margin from left
+            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
             break;
           case Button_layout_e::TopAligned:
-            nParams[1] += (nParams[3] / 2 - w1 / 2);  // center horizontically
-            nParams[2] += h1 / 2;                     // A little margin from top
+            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+            nParams[3] += h1 / 2;                     // A little margin from top
             break;
           case Button_layout_e::RightAligned:
-            nParams[1] += (nParams[3] - w1) - w2 / 2; // right-align + a little margin
-            nParams[2] += (nParams[4] / 2 - h1 / 2);  // center vertically
+            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
             break;
           case Button_layout_e::BottomAligned:
-            nParams[1] += (nParams[3] / 2 - w1 / 2);  // center horizontically
-            nParams[2] += (nParams[4] - h1 * 1.5);    // bottom align + a little margin
+            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
             break;
           case Button_layout_e::LeftTopAligned:
-            nParams[1] += w2 / 2;                     // A little margin from left
-            nParams[2] += h1 / 2;                     // A little margin from top
+            nParams[2] += w2 / 2;                     // A little margin from left
+            nParams[3] += h1 / 2;                     // A little margin from top
             break;
           case Button_layout_e::RightTopAligned:
-            nParams[1] += (nParams[3] - w1) - w2 / 2; // right-align + a little margin
-            nParams[2] += h1 / 2;                     // A little margin from top
+            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+            nParams[3] += h1 / 2;                     // A little margin from top
             break;
           case Button_layout_e::RightBottomAligned:
-            nParams[1] += (nParams[3] - w1) - w2 / 2; // right-align + a little margin
-            nParams[2] += (nParams[4] - h1 * 1.5);    // bottom align + a little margin
+            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
             break;
           case Button_layout_e::LeftBottomAligned:
-            nParams[1] += w2 / 2;                     // A little margin from left
-            nParams[2] += (nParams[4] - h1 * 1.5);    // bottom align + a little margin
+            nParams[2] += w2 / 2;                     // A little margin from left
+            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
             break;
           case Button_layout_e::Bitmap:
           {                                           // Use ON/OFF caption to specify (full) bitmap filename
@@ -1546,7 +1556,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                   newString = parseStringToEndKeepCase(newString, 2);
                 }
               }
-              success = showBmp(newString, nParams[1] + offX, nParams[2] + offY);
+              success = showBmp(newString, nParams[2] + offX, nParams[3] + offY);
             } else
             #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
             {
@@ -1562,7 +1572,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         if ((buttonLayout != Button_layout_e::NoCaption) &&
             (buttonLayout != Button_layout_e::Bitmap)) {
           // Set position and colors, then print
-          _display->setCursor(nParams[1], nParams[2]);
+          _display->setCursor(nParams[2], nParams[3]);
           _display->setTextColor(captionColor, captionColor); // transparent bg results in button color
           _display->print(newString);
 
@@ -1571,7 +1581,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
         }
 
         // restore font scaling
-        if ((nParams[10] > 0) && (nParams[10] <= 10)) { _display->setTextSize(_fontscaling); }
+        if ((nParams[11] > 0) && (nParams[11] <= 10)) { _display->setTextSize(_fontscaling); }
       }
     }
   }
@@ -1581,6 +1591,75 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
 
   return success;
+}
+
+/****************************************************************************
+ * draw a button shape with provided color, can also clear a previously drawn button
+ ***************************************************************************/
+void AdafruitGFX_helper::drawButtonShape(Button_type_e buttonType,
+                                         int           x,
+                                         int           y,
+                                         int           w,
+                                         int           h,
+                                         uint16_t      fillColor,
+                                         uint16_t      borderColor) {
+  switch (buttonType) {
+    case Button_type_e::Square: // Rectangle
+    {
+      _display->fillRect(x, y, w, h, fillColor);
+      _display->drawRect(x, y, w, h, borderColor);
+      break;
+    }
+    case Button_type_e::Rounded:     // Rounded Rectangle
+    {
+      int16_t radius = (w + h) / 20; // average 10 % corner radius w/h
+      _display->fillRoundRect(x, y, w, h, radius, fillColor);
+      _display->drawRoundRect(x, y, w, h, radius, borderColor);
+      break;
+    }
+    case Button_type_e::Circle:     // Circle
+    {
+      int16_t radius = (w + h) / 4; // average radius
+      _display->fillCircle(x + (w / 2), y + (h / 2), radius, fillColor);
+      _display->drawCircle(x + (w / 2), y + (h / 2), radius, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowLeft:
+    { // draw: left-center, right-top, right-bottom
+      _display->fillTriangle(x, y + h / 2, x + w, y,
+                             x + w, y + h, fillColor);
+      _display->drawTriangle(x, y + h / 2, x + w, y,
+                             x + w, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowUp:
+    { // draw: top-center, right-bottom, left-bottom
+      _display->fillTriangle(x + w / 2, y, x + w, y + h,
+                             x, y + h, fillColor);
+      _display->drawTriangle(x + w / 2, y, x + w, y + h,
+                             x, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowRight:
+    { // draw: left-top, right-center, left-bottom
+      _display->fillTriangle(x, y, x + w, y + h / 2,
+                             x, y + h, fillColor);
+      _display->drawTriangle(x, y, x + w, y + h / 2,
+                             x, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowDown:
+    { // draw: left-top, right-top, bottom-center
+      _display->fillTriangle(x, y, x + w, y,
+                             x + w / 2, y + h, fillColor);
+      _display->drawTriangle(x, y, x + w, y,
+                             x + w / 2, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::None:
+    case Button_type_e::Button_MAX:
+      break;
+  }
 }
 
 /****************************************************************************
@@ -1690,7 +1769,9 @@ void AdafruitGFX_helper::printText(const char *string,
 /****************************************************************************
  * color565: convert r, g, b colors to rgb565 (by bit-shifting)
  ***************************************************************************/
-uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
+uint16_t color565(uint8_t red,
+                  uint8_t green,
+                  uint8_t blue) {
   return ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | (blue >> 3);
 }
 
@@ -1704,7 +1785,9 @@ uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
 // Param [in] colorDepth: The requiresed color depth, default: FullColor
 // param [in] defaultWhite: Return White color if empty, default: true
 // return : color (default ADAGFX_WHITE)
-uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBlack) {
+uint16_t AdaGFXparseColor(String         & s,
+                          AdaGFXColorDepth colorDepth,
+                          bool             emptyIsBlack) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
@@ -1839,7 +1922,7 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
         break;
     }
   }
-  return result;
+  return static_cast<uint16_t>(result);
 }
 
 const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
@@ -2358,7 +2441,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log.clear();
-      log += F("showBmp: x: ");
+      log += F("showBmp: x:");
       log += x;
       log += F(", y:");
       log += y;

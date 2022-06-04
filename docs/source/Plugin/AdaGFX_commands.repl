@@ -239,3 +239,47 @@
 
     The file can be read from SD-card, when available, and the bmp file is not found on the internal file storage.
     "
+    "
+    ``<trigger>,btn,<state>,<mode>,<x>,<y>,<w>,<h>,<id>,<type>,<ONcolor=blue>,<OFFcolor=red>,<CaptionColor=white>,<fontsize>,<ONcaption>,<OFFcaption>,<BorderColor=white>,<DisabledColor=0x9410>,<DisabledCaptionColor=0x5A69>,<TaskIndex>,<Group>,<SelectGroup>,<objectname>``
+    ","
+    As a companion to the ESPEasy_TouchHelper, the AdafruitGFX_helper takes care of drawing button objects via this subcommand.
+
+    All arguments *must* be provided, though most can be empty, but all separator-commas must still be provided.
+
+    * ``state`` : 0 = off, 1 = on, -1 = off + disabled, -2 = on + disabled.
+
+    * ``mode`` : 0 = normal, -1 = initial, -2 = clear button area.
+
+    * ``x,y,w,h`` : button left-top coordinate, width and height.
+
+    * ``id`` : object id nr.  Not used for drawing the button, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``type`` : combination (addition/and operation) of ``button type`` (bits 0..3) and ``button layout`` (bits 4..7), when negative (multiplied by -1) will clear the button area.
+
+      * ``button types`` : 0 = none, 0x01 = rectangle, 0x02 = rounded rectangle, 0x03 = circle, 0x04 = left arrow, 0x05 = up arrow, 0x06 = right arrow, 0x07 = down arrow.
+
+      * ``button layouts`` : 0 = center aligned, 0x10 = left aligned, 0x20 = top aligned, 0x30 = right aligned, 0x40 = bottom aligned, 0x50 = left top aligned, 0x60 = right top aligned, 0x70 = right bottom aligned, 0x80 = left bottom aligned, 0x90 = no caption, 0xA0 = ``bitmap`` (see ``ONcaption`` / ``OFFcaption``).
+
+    * ``ONcolor`` / ``OFFcolor`` : fill color when button state is on or off and enabled.
+
+    * ``CaptionColor`` : color used for caption text.
+
+    * ``fontsize`` : size of the font for writing the caption, range 1..10.
+
+    * ``ONcaption`` / ``OFFcaption`` : The caption to show when state is on or off, when empty the objectname will be used. For ``button layout`` = ``bitmap`` a .bmp filename should be entered, that is available on the filesystem, optionally *prefixed* with an ``x`` and ``y`` offset, in pixels, to enable f.e. drawing a small bitmap centered on a button. The format with these optional arguments is: ``[<x>[,<y>],]bmpfile.bmp``
+    
+      * If a caption contains space(s), comma(s) or quote(s), it *must* be quoted with a different quote (double/single/backtick).
+      * Captions can use variables as available in rules, like plugin values via ``[taskname#valuename]``, ``%vNN%``, ``%<systemvariable>%`` and ``{<function>}`` formats.
+
+    * ``BorderColor``, ``DisabledColor``, ``DisabledCaptionColor`` : A separate border color can be specified, and a fill-color and caption color for disabled buttons.
+
+    * ``TaskIndex`` : The Task number for the display the button is to be drawn on. Not used, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``Group`` : The group this button is a member of. Not used for drawing the button, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``SelectGroup`` : The group that will be activated by this button. Not used for drawing the button, but passed to be used in rules from the ESPEasy_TouchHelper.
+
+    * ``objectname`` : **Required** The name of the button object, will be used as a caption if no ``ONcaption`` and/or ``OFFcaption`` are provided. *Not required* if both an ``ONcaption`` and ``OFFcaption`` are provided.
+
+    NB: This command wil only *draw* a button, it will not respond to any action. The action is usually provided by a touch screen like :ref:`P099_page` and :ref:`P123_page`.
+    "
