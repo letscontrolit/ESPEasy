@@ -6,6 +6,10 @@
 
 /**
  * Changelog:
+ * 2022-05-29 tonhuisman: Extend enable,disable subcommands to support a list of objects
+ * 2022-05-28 tonhuisman: Add incpage and decpage subcommands that + and - 10 to the current buttongroup
+ * 2022-05-26 tonhuisman: Add touch,updatebutton command
+ * 2022-05-23 tonhuisman: Refactor touch settings and button emulation into ESPEasy_TouchHandler class for reuse in P099
  * 2022-05-02 tonhuisman: Small updates and improvements
  * 2022-04-30 tonhuisman: Add support for AdaGFX btn subcommand use and (local) button groups
  *                        Start preparations for refactoring touch objects into separate helper class
@@ -21,15 +25,18 @@
 /**
  * Commands supported:
  * -------------------
- * touch,rot,<0..3>             : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
- * touch,flip,<0|1>             : Set rotation normal(0) or flipped by 180 degrees(1)
- * touch,enable,<objectName>    : Enables a disabled objectname (removes a leading underscore)
- * touch,disable,<objectName>   : Disables an enabled objectname (adds a leading underscore)
- * touch,on,<buttonObjectName>  : Switch a TouchButton on (must be enabled)
- * touch,off,<buttonObjectName> : Switch a TouchButton off (must be enabled)
- * touch,setgrp,<group>         : Switch to button group
- * touch,incgrp                 : Switch to next button group
- * touch,decgrp                 : Switch to previous button group
+ * touch,rot,<0..3>                     : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
+ * touch,flip,<0|1>                     : Set rotation normal(0) or flipped by 180 degrees(1)
+ * touch,enable,<objectName|Nr>[,...]   : Enable disabled objectname(s)
+ * touch,disable,<objectName|Nr>[,...]  : Disable enabled objectname(s)
+ * touch,on,<buttonObjectName|Nr>       : Switch a TouchButton on (must be enabled)
+ * touch,off,<buttonObjectName|Nr>      : Switch a TouchButton off (must be enabled)
+ * touch,setgrp,<group>                 : Switch to button group
+ * touch,incgrp                         : Switch to next button group
+ * touch,decgrp                         : Switch to previous button group
+ * touch,incpage                        : Switch to next button group page (+10)
+ * touch,decpage                        : Switch to previous button group page (-10)
+ * touch,updatebutton,<buttonName|Nr>[,<group>[,<mode>]] : Update a button by name or number
  */
 
 #define PLUGIN_123
@@ -61,6 +68,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 3;
       Device[deviceCount].SendDataOption     = false;
       Device[deviceCount].TimerOption        = false;
+      Device[deviceCount].ExitTaskBeforeSave = false;
       success                                = true;
       break;
     }
@@ -132,6 +140,8 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
       AdaGFXFormColorDepth(F("p123_colordepth"), P123_COLOR_DEPTH, (colorDepth_ == 0));
 
+      addFormNumericBox(F("Touch minimum pressure"), F("p123_treshold"), P123_CONFIG_TRESHOLD, 0, 255);
+
       {
         P123_data_struct *P123_data = new (std::nothrow) P123_data_struct();
 
@@ -151,6 +161,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P123_CONFIG_DISPLAY_PREV = P123_CONFIG_DISPLAY_TASK;
+      P123_CONFIG_TRESHOLD     = getFormItemInt(F("p123_treshold"));
       P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("p123_task"));
       P123_CONFIG_ROTATION     = getFormItemInt(F("p123_rotate"));
       P123_CONFIG_X_RES        = getFormItemInt(F("p123_width"));
@@ -161,8 +172,6 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       if (colorDepth != -1) {
         P123_COLOR_DEPTH = colorDepth;
       }
-
-      if (P123_CONFIG_OBJECTCOUNT > P123_MAX_OBJECT_COUNT) { P123_CONFIG_OBJECTCOUNT = P123_MAX_OBJECT_COUNT; }
 
       P123_data_struct *P123_data = new (std::nothrow) P123_data_struct();
 
@@ -188,15 +197,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
       success = true;
 
-      if (!(P123_data->init(event,
-                            P123_CONFIG_ROTATION,
-                            P123_CONFIG_X_RES,
-                            P123_CONFIG_Y_RES,
-                            P123_CONFIG_DISPLAY_TASK,
-                            static_cast<AdaGFXColorDepth>(P123_COLOR_DEPTH)))) {
+      if (!(P123_data->init(event))) {
         delete P123_data;
-        P123_data = nullptr;
-        success   = false;
+        success = false;
       }
       break;
     }
@@ -205,65 +208,13 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String command;
-      String subcommand;
-      String arguments;
-      arguments.reserve(24);
-
       {
-        command    = parseString(string, 1);
-        subcommand = parseString(string, 2);
-
         P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr == P123_data) {
           return success;
         }
-
-        if (command.equals(F("touch"))) {
-          #ifdef PLUGIN_123_DEBUG
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("P123 WRITE arguments Par1:");
-            log += event->Par1;
-            log += F(", 2: ");
-            log += event->Par2;
-            log += F(", 3: ");
-            log += event->Par3;
-            log += F(", 4: ");
-            log += event->Par4;
-            addLog(LOG_LEVEL_INFO, log);
-          }
-          #endif // ifdef PLUGIN_123_DEBUG
-
-          if (subcommand.equals(F("rot"))) { // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
-            uint8_t rot_ = static_cast<uint8_t>(event->Par2 % 4);
-
-            P123_data->setRotation(rot_);
-            success = true;
-          } else if (subcommand.equals(F("flip"))) {    // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
-            P123_data->setRotationFlipped(event->Par2 > 0);
-            success = true;
-          } else if (subcommand.equals(F("enable"))) {  // touch,enable,<objectName> : Enables a disabled objectname
-            arguments = parseString(string, 3);
-            success   = P123_data->setTouchObjectState(event, arguments, true);
-          } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName> : Disables an enabled objectname
-            arguments = parseString(string, 3);
-            success   = P123_data->setTouchObjectState(event, arguments, false);
-          } else if (subcommand.equals(F("on"))) {      // touch,on,<buttonObjectName> : Switch a TouchButton on
-            arguments = parseString(string, 3);
-            success   = P123_data->setTouchButtonOnOff(event, arguments, true);
-          } else if (subcommand.equals(F("off"))) {     // touch,off,<buttonObjectName> : Switch a TouchButton off
-            arguments = parseString(string, 3);
-            success   = P123_data->setTouchButtonOnOff(event, arguments, false);
-          } else if (subcommand.equals(F("setgrp"))) {  // touch,setgrp,<group> : Activate button group
-            success = P123_data->setButtonGroup(event, event->Par2);
-          } else if (subcommand.equals(F("incgrp"))) {  // touch,incgrp : increment group and Activate
-            success = P123_data->incrementButtonGroup(event);
-          } else if (subcommand.equals(F("decgrp"))) {  // touch,decgrp : Decrement group and Activate
-            success = P123_data->decrementButtonGroup(event);
-          }
-        }
+        success = P123_data->plugin_write(event, string);
       }
       break;
     }
@@ -278,6 +229,30 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
       success = P123_data->plugin_fifty_per_second(event);
 
+      break;
+    }
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr == P123_data) {
+        return success;
+      }
+      String command = parseString(string, 1);
+
+      if (command == F("buttongroup")) {
+        string  = P123_data->getButtonGroup();
+        success = true;
+      } else if (command == F("hasgroup")) {
+        int group; // We'll be ignoring group 0 if there are multiple button groups
+
+        if (validIntFromString(parseString(string, 2), group)) {
+          string  = P123_data->validButtonGroup(group, true) ? 1 : 0;
+          success = true;
+        } else {
+          string = '0'; // invalid number
+        }
+      }
       break;
     }
   } // switch(function)
