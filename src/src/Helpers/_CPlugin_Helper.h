@@ -2,12 +2,15 @@
 #define CPLUGIN_HELPER_H
 
 #include <Arduino.h>
+#include <WiFiClient.h>
+#include <WiFiUdp.h>
 
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
 
 #include "../ControllerQueue/DelayQueueElements.h" // Also forward declaring the do_process_cNNN_delay_queue
+#include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/CPlugins.h"
@@ -21,9 +24,6 @@
 #include "../Helpers/_CPlugin_Helper_webform.h"
 
 
-struct ControllerSettingsStruct;
-class WiFiUDP;
-class WiFiClient;
 
 /*********************************************************************************************\
 * Helper functions used in a number of controllers
