@@ -300,7 +300,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
   // ATTENTION: Any externally provided objectNumber is 1-based, result is 0-based
   if (validIntFromString(touchObject, index) &&
       (index > 0) &&
-      (index <= TouchObjects.size())) {
+      (index <= static_cast<int>(TouchObjects.size()))) {
     return static_cast<int8_t>(index - 1);
   }
 
@@ -438,10 +438,15 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
                                          int16_t             buttonGroup,
                                          int8_t              mode) {
   if ((buttonNr < 0) || (buttonNr >= static_cast<int8_t>(TouchObjects.size()))) { return false; } // sanity check
-  int8_t  state         = 99;
-  int16_t group         = get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP);
+  int8_t  state = 99;
+  int16_t group = get8BitFromUL(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_GROUP);
+
+  # ifdef TOUCH_USE_EXTENDED_TOUCH
   Touch_action_e action = static_cast<Touch_action_e>(get4BitFromUL(TouchObjects[buttonNr].groupFlags, TOUCH_OBJECT_GROUP_ACTION));
-  bool isArrow          = false;
+  # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
+  bool isArrow = false;
+
+  # ifdef TOUCH_USE_EXTENDED_TOUCH
 
   if ((mode > -2) &&                                 // Not on clear (-2 and -3)
       bitRead(Touch_Settings.flags, TOUCH_FLAGS_AUTO_PAGE_ARROWS) &&
@@ -451,6 +456,7 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
        (action == Touch_action_e::IncrementPage))) {
     isArrow = true;
   }
+  # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
 
   if (!TouchObjects[buttonNr].objectName.isEmpty() &&
       ((bitRead(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED) && (group == 0)) || (group > 0) || isArrow) &&
@@ -460,6 +466,8 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
        (mode == -3))) {
     // Act like a button, 1 = On, 0 = Off, inversion is handled in generateObjectEvent()
     state = TouchObjects[buttonNr].TouchStates ? 1 : 0;
+
+    # ifdef TOUCH_USE_EXTENDED_TOUCH
 
     if (isArrow) {                                    // Auto-Enable/Disable the arrow buttons
       bool pgupInvert = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
@@ -478,6 +486,7 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
         bitWrite(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED, validButtonGroup(buttonGroup + (pgupInvert ? -10 : 10), true));
       }
     }
+    # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
 
     if (bitRead(TouchObjects[buttonNr].flags, TOUCH_OBJECT_FLAG_ENABLED)) {
       if (mode == 0) {
