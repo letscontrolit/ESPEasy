@@ -67,13 +67,13 @@ static String getDateString(const struct tm& ts, char delimiter);
 
 // Formats the current Time
 // Default time format example: 235959 (HHMMSS)
-String getTimeString(char delimiter = '\0', bool show_seconds=true) const;
+String getTimeString(char delimiter = '\0', bool show_seconds = true, char hour_prefix = '\0') const;
 
-String getTimeString_ampm(char delimiter = '\0', bool show_seconds=true) const;
+String getTimeString_ampm(char delimiter = '\0', bool show_seconds = true, char hour_prefix = '\0') const;
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-static String getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds);
+static String getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix = '\0');
 
 
 

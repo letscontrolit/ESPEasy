@@ -43,7 +43,7 @@ inline int64_t usecPassedSince(const uint64_t& timestamp) {
   return timeDiff64(timestamp, getMicros64());
 }
 
-inline int64_t usecPassedSince(uint64_t& timestamp) {
+inline int64_t usecPassedSince(uint64_t& timestamp) { //-V669
   return timeDiff64(timestamp, getMicros64());
 }
 

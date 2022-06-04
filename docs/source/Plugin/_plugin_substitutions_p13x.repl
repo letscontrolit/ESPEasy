@@ -11,3 +11,15 @@
 .. |P131_compileinfo| replace:: `.`
 .. |P131_usedlibraries| replace:: `https://github.com/adafruit/Adafruit_NeoMatrix`
 
+.. |P132_name| replace:: :cyan:`INA3221`
+.. |P132_type| replace:: :cyan:`Energy (DC)`
+.. |P132_typename| replace:: :cyan:`Energy (DC) - INA3221`
+.. |P132_porttype| replace:: `.`
+.. |P132_status| replace:: :yellow:`ENERGY`
+.. |P132_github| replace:: P132_INA3221.ino
+.. _P132_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P132_INA3221.ino
+.. |P132_usedby| replace:: `.`
+.. |P132_shortinfo| replace:: `3-channel I2C DC Voltage/Current sensor`
+.. |P132_maintainer| replace:: `tonhuisman`
+.. |P132_compileinfo| replace:: `.`
+.. |P132_usedlibraries| replace:: `.`
