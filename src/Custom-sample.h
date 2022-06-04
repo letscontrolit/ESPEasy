@@ -141,7 +141,7 @@
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
 #define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
-#define DEFAULT_SYNC_UDP_PORT                   0                 // Used for ESPEasy p2p. (IANA registered port: 8266)
+#define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
 #define BUILD_NO_DEBUG
@@ -428,6 +428,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
 // #define USES_P129   // 74HC165 Input shiftregisters
+// #define USES_P132   // INA3221
 
 
 // Special plugins needing IR library
