@@ -6,6 +6,8 @@
 
 /**
  * Changelog:
+ * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling mostly to ESPEasy_TouchHandler (only rot and flip subcommands remain)
+ *                        Move PLUGIN_GET_CONFIG_VALUE handling to ESPEasy_TouchHandler
  * 2022-05-29 tonhuisman: Extend enable,disable subcommands to support a list of objects
  * 2022-05-28 tonhuisman: Add incpage and decpage subcommands that + and - 10 to the current buttongroup
  * 2022-05-26 tonhuisman: Add touch,updatebutton command
@@ -27,16 +29,8 @@
  * -------------------
  * touch,rot,<0..3>                     : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
  * touch,flip,<0|1>                     : Set rotation normal(0) or flipped by 180 degrees(1)
- * touch,enable,<objectName|Nr>[,...]   : Enable disabled objectname(s)
- * touch,disable,<objectName|Nr>[,...]  : Disable enabled objectname(s)
- * touch,on,<buttonObjectName|Nr>       : Switch a TouchButton on (must be enabled)
- * touch,off,<buttonObjectName|Nr>      : Switch a TouchButton off (must be enabled)
- * touch,setgrp,<group>                 : Switch to button group
- * touch,incgrp                         : Switch to next button group
- * touch,decgrp                         : Switch to previous button group
- * touch,incpage                        : Switch to next button group page (+10)
- * touch,decpage                        : Switch to previous button group page (-10)
- * touch,updatebutton,<buttonName|Nr>[,<group>[,<mode>]] : Update a button by name or number
+ * 
+ * Other commands: see ESPEasy_TouchHandler.h
  */
 
 #define PLUGIN_123
@@ -208,14 +202,12 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      {
-        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr == P123_data) {
-          return success;
-        }
-        success = P123_data->plugin_write(event, string);
+      if (nullptr == P123_data) {
+        return success;
       }
+      success = P123_data->plugin_write(event, string);
       break;
     }
 
@@ -235,23 +227,8 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     {
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P123_data) {
-        return success;
-      }
-      String command = parseString(string, 1);
-
-      if (command == F("buttongroup")) {
-        string  = P123_data->getButtonGroup();
-        success = true;
-      } else if (command == F("hasgroup")) {
-        int group; // We'll be ignoring group 0 if there are multiple button groups
-
-        if (validIntFromString(parseString(string, 2), group)) {
-          string  = P123_data->validButtonGroup(group, true) ? 1 : 0;
-          success = true;
-        } else {
-          string = '0'; // invalid number
-        }
+      if (nullptr != P123_data) {
+        return P123_data->plugin_get_config_value(event, string);
       }
       break;
     }

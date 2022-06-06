@@ -53,6 +53,8 @@ struct P123_data_struct : public PluginTaskData_base
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
   bool plugin_fifty_per_second(struct EventStruct *event);
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
 
   void loadTouchObjects(struct EventStruct *event);
   bool touched();

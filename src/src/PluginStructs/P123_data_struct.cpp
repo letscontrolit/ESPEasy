@@ -75,8 +75,8 @@ bool P123_data_struct::init(struct EventStruct *event) {
  * mode: -2 = clear buttons in group, -3 = clear all buttongroups, -1 = draw buttons in group, 0 = initialize buttons
  */
 void P123_data_struct::displayButtonGroup(struct EventStruct *event,
-                                          int16_t            buttonGroup,
-                                          int8_t             mode) {
+                                          int16_t             buttonGroup,
+                                          int8_t              mode) {
   touchHandler->displayButtonGroup(event, buttonGroup, mode);
 }
 
@@ -84,9 +84,9 @@ void P123_data_struct::displayButtonGroup(struct EventStruct *event,
  * (Re)Display a button
  */
 bool P123_data_struct::displayButton(struct EventStruct *event,
-                                     int8_t             buttonNr,
-                                     int16_t            buttonGroup,
-                                     int8_t             mode) {
+                                     int8_t              buttonNr,
+                                     int16_t             buttonGroup,
+                                     int8_t              mode) {
   return touchHandler->displayButton(event, buttonNr, buttonGroup, mode);
 }
 
@@ -112,16 +112,14 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
 }
 
 /**
- * Parse and execute the plugin commands
+ * Parse and execute the plugin commands, delegated to ESPEasy_TouchHandler
  */
 bool P123_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
   bool   success = false;
   String command;
   String subcommand;
-  String arguments;
 
-  arguments.reserve(24);
   command    = parseString(string, 1);
   subcommand = parseString(string, 2);
 
@@ -141,64 +139,14 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
     }
     # endif // ifdef PLUGIN_123_DEBUG
 
-    if (subcommand.equals(F("rot"))) {           // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
+    if (subcommand.equals(F("rot"))) {         // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
       setRotation(static_cast<uint8_t>(event->Par2 % 4));
       success = true;
-    } else if (subcommand.equals(F("flip"))) {   // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
+    } else if (subcommand.equals(F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
       setRotationFlipped(event->Par2 > 0);
       success = true;
-    } else if (subcommand.equals(F("enable"))) { // touch,enable,<objectName>[,...] : Enable disabled objectname(s)
-      uint8_t arg = 3;
-      arguments = parseString(string, arg);
-
-      while (!arguments.isEmpty()) {
-        success |= setTouchObjectState(event, arguments, true);
-        arg++;
-        arguments = parseString(string, arg);
-      }
-    } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
-      uint8_t arg = 3;
-      arguments = parseString(string, arg);
-
-      while (!arguments.isEmpty()) {
-        success |= setTouchObjectState(event, arguments, false);
-        arg++;
-        arguments = parseString(string, arg);
-      }
-    } else if (subcommand.equals(F("on"))) {           // touch,on,<buttonObjectName> : Switch a TouchButton on
-      arguments = parseString(string, 3);
-      success   = setTouchButtonOnOff(event, arguments, true);
-    } else if (subcommand.equals(F("off"))) {          // touch,off,<buttonObjectName> : Switch a TouchButton off
-      arguments = parseString(string, 3);
-      success   = setTouchButtonOnOff(event, arguments, false);
-    } else if (subcommand.equals(F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
-      success = setButtonGroup(event, event->Par2);
-    } else if (subcommand.equals(F("incgrp"))) {       // touch,incgrp : increment group and Activate
-      success = incrementButtonGroup(event);
-    } else if (subcommand.equals(F("decgrp"))) {       // touch,decgrp : Decrement group and Activate
-      success = decrementButtonGroup(event);
-    } else if (subcommand.equals(F("incpage"))) {      // touch,incpage : increment page and Activate
-      success = incrementButtonPage(event);
-    } else if (subcommand.equals(F("decpage"))) {      // touch,decpage : Decrement page and Activate
-      success = decrementButtonPage(event);
-    } else if (subcommand.equals(F("updatebutton"))) { // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
-      arguments = parseString(string, 3);
-
-      // Check for a valid button name or number, returns a 0-based index
-      int index = getTouchObjectIndex(event, arguments, true);
-
-      if (index > -1) {
-        bool hasPar3 = !parseString(string, 4).isEmpty();
-        bool hasPar4 = !parseString(string, 5).isEmpty();
-
-        if (hasPar4) {
-          success = displayButton(event, index, event->Par3, event->Par4);
-        } else if (hasPar3) {
-          success = displayButton(event, index, event->Par3);
-        } else {
-          success = displayButton(event, index); // Use default argument values
-        }
-      }
+    } else {                                   // Rest of the commands handled by
+      success = touchHandler->plugin_write(event, string);
     }
   }
   return success;
@@ -224,6 +172,14 @@ bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     }
   }
   return success;
+}
+
+/**
+ * Handle getting config values, mostly delegated to ESPEasy_TouchHandler
+ */
+bool P123_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  return touchHandler->plugin_get_config_value(event, string);
 }
 
 /**
@@ -424,7 +380,7 @@ bool P123_data_struct::validButtonGroup(int16_t buttonGroup,
  * Set the desired button group, must be between the minimum and maximum found values
  */
 bool P123_data_struct::setButtonGroup(struct EventStruct *event,
-                                      int16_t            buttonGroup) {
+                                      int16_t             buttonGroup) {
   return touchHandler->setButtonGroup(event, buttonGroup);
 }
 
