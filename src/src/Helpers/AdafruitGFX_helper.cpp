@@ -1800,7 +1800,6 @@ void AdafruitGFX_helper::printText(const char *string,
   int16_t  _x = X;
   int16_t  _y = Y + (_heightOffset * textSize);
   uint16_t _w = 0;
-  uint8_t  _h = 0;
   int16_t  x1 = 0, y1 = 0;
   uint16_t w1 = 0, h1 = 0;
   int16_t  ot = 0, ob = 0, ol = 0;
