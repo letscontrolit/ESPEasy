@@ -1748,7 +1748,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
              (command == F("textheight"))) {
     int16_t  x1, y1;
     uint16_t w1, h1;
-    String   newString = parseStringToEndKeepCase(string, 2);
+    String   newString = AdaGFXparseTemplate(parseStringToEndKeepCase(string, 2), 0);
     _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
 
     if (command == F("length")) {

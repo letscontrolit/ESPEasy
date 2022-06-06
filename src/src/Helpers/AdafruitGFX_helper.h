@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-06-06 tonhuisman: Process any special characters for lenght and textheight values for correct sizing
  * 2022-06-05 tonhuisman: Add support for getting config values: win (current window id), iswin (exists?), width and height (current window),
  *                        (text)length and textheight of a provided text, rot (current rotation), txs (fontscaling), tpm (textprintmode)
  * 2022-06-04 tonhuisman: Add Window support for drawing and printing within confined areas (windows)
