@@ -208,11 +208,12 @@ enum class AdaGFX7Colors: uint16_t {
 # endif // if ADAGFX_SUPPORT_7COLOR
 
 enum class AdaGFXTextPrintMode : uint8_t {
-  ContinueToNextLine       = 0u,
-  TruncateExceedingMessage = 1u,
-  ClearThenTruncate        = 2u, // Should have max. 16 options
+  ContinueToNextLine        = 0u,
+  TruncateExceedingMessage  = 1u,
+  ClearThenTruncate         = 2u,
+  TruncateExceedingCentered = 3u, // Should have max. 16 options
 
-  MAX                            // Keep as last
+  MAX                             // Keep as last
 };
 
 # if ADAGFX_SUPPORT_7COLOR
@@ -389,12 +390,13 @@ public:
   bool   pluginGetConfigValue(String& string); // Get a config value from the plugin
   # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
 
-  void   printText(const char    *string,
-                   int            X,
-                   int            Y,
-                   unsigned int   textSize = 0,
-                   unsigned short color    = ADAGFX_WHITE,
-                   unsigned short bkcolor  = ADAGFX_BLACK);
+  void printText(const char *string,
+                 int16_t     X,
+                 int16_t     Y,
+                 uint8_t     textSize = 0,
+                 uint16_t    color    = ADAGFX_WHITE,
+                 uint16_t    bkcolor  = ADAGFX_BLACK,
+                 uint16_t    maxWidth = 0);
   void calculateTextMetrics(uint8_t fontwidth,
                             uint8_t fontheight,
                             int8_t  heightOffset   = 0,
