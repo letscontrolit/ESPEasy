@@ -1590,7 +1590,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1693,7 +1693,7 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
              (command == F("textheight"))) {
     int16_t  x1, y1;
     uint16_t w1, h1;
-    String   newString = parseStringToEndKeepCase(string, 2);
+    String   newString = AdaGFXparseTemplate(parseStringToEndKeepCase(string, 2), 0);
     _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
 
     if (command == F("length")) {
