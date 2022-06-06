@@ -33,6 +33,7 @@
     * 0 : Continue to next line (wrap text onto the next line)
     * 1 : Truncate exceeding message (cut-off text that won't fit on the screen width)
     * 2 : Clear then truncate exceeding message (Clear to width of screen, then print the message)
+    * 3 : Truncate, centered if maxWidth set (like 1, but allows to center when used via ``txtfull`` subcommand)
     "
     "
     ``<trigger>,txt,<text>``
@@ -264,4 +265,65 @@
     * ``objectname`` : **Required** The name of the button object, will be used as a caption if no ``ONcaption`` and/or ``OFFcaption`` are provided. *Not required* if both an ``ONcaption`` and ``OFFcaption`` are provided.
 
     NB: This command wil only *draw* a button, it will not respond to any action. The action is usually provided by a touch screen like :ref:`P099_page` and :ref:`P123_page`.
+    "
+    "
+    ``<trigger>,defwin,<x>,<y>,<w>,<h>,<windowId>[,<rotation>]``
+
+    Example: (Display Task is named ``st7796``, using trigger ``st77xx``)
+
+    .. code:: none
+
+      on window1 do
+        if %eventvalue1|1%=1 // on = default
+          st77xx,defwin,20,50,390,219,1,1 // Window 1, using rotation 1
+          st77xx,win,1 // Select window
+          st77xx,rot,1 // Select rotation
+          st77xx,clear // Clear area
+          st77xx,r,0,0,[st7796#width],[st7796#height],white // Draw a white border
+          st77xx,win,0 // Return to Window 0
+        else
+          asyncevent,removewindow=1 // Remove Window 1
+        endif
+      endon
+      on removewindow do
+        if [st7796#iswin,%eventvalue1|-1%]=1 // Does the Window exist?
+          st77xx,win,%eventvalue1% // Select window
+          st77xx,clear // Clear area
+          st77xx,delwin,%eventvalue1% // Delete Window
+          st77xx,win,0 // Return to Window 0
+        endif
+      endon
+
+    ","
+    Define Window.
+
+    When enabled, the Window feature of the plugin can be used to define custom areas of the screen as a window. Any printing and drawing can then be limited to that area, having a coordinate system from ``0,0`` to ``<w>,<h>``.
+
+    Window 0 is the default window, having the native size of the display. The coordinates, width and height for the ``defwin`` subcommand must be specified in pixels.
+
+    * ``x,y``: The top-left coordinate of the window, according to the native resolution of the screen. This coordinate will become the ``0,0`` coordinate of the new window.
+
+    * ``w,h``: The width and height of the window.
+
+    * ``windowId``: The Id of the new window, can be any value from 1 to 255. When re-using an Id, the previous definition will be overwritten.
+
+    * ``rotation``: Optional. The rotation, identical to the ``rot`` subcommand, that the window dimensions are related to. When not specified, the current rotation setting will be used. Internally, the dimensions are transformed to the dimensions for rotation 0, and on each change of ``rot``, all windows will be re-calculated to have the dimensions corresponding with the new rotation setting.
+    "
+    "
+    ``<trigger>,delwin,<windowId>``
+    ","
+    Delete Window.
+
+    When no longer needed, a window definition can be deleted using this subcommand.
+
+    * ``windowId``: The window Id of a previously defined window.
+    "
+    "
+    ``<trigger>,win,<windowId>``
+    ","
+    Select Window.
+
+    To make a window active, is must be selected using this subcommand.
+
+    * ``windowId``: The window Id of a previously defined window.
     "
