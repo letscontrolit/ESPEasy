@@ -11,6 +11,11 @@
 
 /*****
  * Changelog:
+ * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling from P123
+ *                        Move PLUGIN_GET_CONFIG_VALUE handling from P123.
+ *                        Add getters for on/off (state) and (enabled), and matching GET_CONFIG_VALUE commands
+ *                        Add toggle subcommand for switching enabled on/off buttons to the other state
+ *                        Extend on, off, toggle subcommands to support a list of objects
  * 2022-06-03 tonhuisman: Change default ON color to blue (from green, too bright/bad contrast with white captions)
  *                        Add options for auto Enable/Disable arrow buttons and invert pgup/pgdn
  *                        Bugfix: Also apply debouncing to non-button objects
@@ -20,6 +25,22 @@
  * 2022-05 tonhuisman:    Testing, improving, bugfixing.
  * 2022-05-23 tonhuisman: Created from refactoring P123 Touch object handling into ESPEasy_TouchHandler
  *********************************************************************************************************************/
+
+/**
+ * Commands supported:
+ * -------------------
+ * touch,enable,<objectName|Nr>[,...]       : Enable disabled objectname(s)
+ * touch,disable,<objectName|Nr>[,...]      : Disable enabled objectname(s)
+ * touch,on,<buttonObjectName|Nr>[,...]     : Switch TouchButton(s) on (must be enabled)
+ * touch,off,<buttonObjectName|Nr>[,...]    : Switch TouchButton(s) off (must be enabled)
+ * touch,toggle,<buttonObjectName|Nr>[,...] : Switch TouchButton(s) to the other state (must be enabled)
+ * touch,setgrp,<group>                     : Switch to button group
+ * touch,incgrp                             : Switch to next button group
+ * touch,decgrp                             : Switch to previous button group
+ * touch,incpage                            : Switch to next button group page (+10)
+ * touch,decpage                            : Switch to previous button group page (-10)
+ * touch,updatebutton,<buttonName|Nr>[,<group>[,<mode>]] : Update a button by name or number
+ */
 
 # define TOUCH_DEBUG              // Additional debugging information
 
@@ -202,9 +223,13 @@ public:
   bool   setTouchObjectState(struct EventStruct *event,
                              const String      & touchObject,
                              bool                state);
+  int8_t getTouchObjectState(struct EventStruct *event,
+                             const String      & touchObject);
   bool   setTouchButtonOnOff(struct EventStruct *event,
                              const String      & touchObject,
                              bool                state);
+  int8_t getTouchButtonOnOff(struct EventStruct *event,
+                             const String      & touchObject);
   bool   plugin_webform_load(struct EventStruct *event);
   bool   plugin_webform_save(struct EventStruct *event);
   bool   plugin_fifty_per_second(struct EventStruct *event,
@@ -215,6 +240,10 @@ public:
                                  int16_t             rx,
                                  int16_t             ry,
                                  int16_t             z);
+  bool    plugin_write(struct EventStruct *event,
+                       const String      & string);
+  bool    plugin_get_config_value(struct EventStruct *event,
+                                  String            & string);
   int16_t getButtonGroup() {
     return _buttonGroup;
   }

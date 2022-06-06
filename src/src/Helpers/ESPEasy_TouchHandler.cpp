@@ -13,7 +13,7 @@ const __FlashStringHelper* toString(Touch_action_e action) {
     case Touch_action_e::IncrementGroup: return F("Next Group");
     case Touch_action_e::DecrementGroup: return F("Previous Group");
     case Touch_action_e::IncrementPage: return F("Next Page (+10)");
-    case Touch_action_e::DecrementPage: return F("Previous page (-10)");
+    case Touch_action_e::DecrementPage: return F("Previous Page (-10)");
     case Touch_action_e::TouchAction_MAX: break;
   }
   return F("Unsupported!");
@@ -361,6 +361,22 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
 }
 
 /**
+ * Get the enabled/disabled state of an object.
+ */
+int8_t ESPEasy_TouchHandler::getTouchObjectState(struct EventStruct *event,
+                                                 const String      & touchObject) {
+  if (touchObject.isEmpty()) { return false; }
+  int8_t result = -1;
+
+  int8_t objectNr = getTouchObjectIndex(event, touchObject);
+
+  if (objectNr > -1) {
+    result =  bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED) ? 1 : 0;
+  }
+  return result;
+}
+
+/**
  * Set the on/off state of an enabled touch-button object. Will generate an event if so configured.
  */
 bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
@@ -399,6 +415,24 @@ bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
     # endif // ifdef TOUCH_DEBUG
   }
   return success;
+}
+
+/**
+ * Get the on/off state of an enabled touch-button object.
+ */
+int8_t ESPEasy_TouchHandler::getTouchButtonOnOff(struct EventStruct *event,
+                                                 const String      & touchObject) {
+  if (touchObject.isEmpty()) { return false; }
+  int8_t result = -1; // invalid button
+
+  int8_t objectNr = getTouchObjectIndex(event, touchObject, true);
+
+  if ((objectNr > -1)
+      && bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED)
+      && bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTON)) {
+    result = TouchObjects[objectNr].TouchStates && !bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_INVERTED) ? 1 : 0;
+  }
+  return result;
 }
 
 /**
@@ -1441,6 +1475,156 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           }
         }
       }
+    }
+  }
+  return success;
+}
+
+/**
+ * Parse and execute the plugin commands
+ */
+bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
+                                        const String      & string) {
+  bool    success = false;
+  String  command;
+  String  subcommand;
+  String  arguments;
+  uint8_t arg = 3;
+
+  arguments.reserve(24);
+  command    = parseString(string, 1);
+  subcommand = parseString(string, 2);
+
+  if (command.equals(F("touch"))) {
+    # ifdef TOUCH_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("TOUCH PLUGIN_WRITE arguments Par1:");
+      log += event->Par1;
+      log += F(", 2: ");
+      log += event->Par2;
+      log += F(", 3: ");
+      log += event->Par3;
+      log += F(", 4: ");
+      log += event->Par4;
+      log += F(", string: ");
+      log += string;
+      addLog(LOG_LEVEL_INFO, log);
+    }
+    # endif // ifdef TOUCH_DEBUG
+
+    if (subcommand.equals(F("enable"))) { // touch,enable,<objectName>[,...] : Enable disabled objectname(s)
+      arguments = parseString(string, arg);
+
+      while (!arguments.isEmpty()) {
+        success |= setTouchObjectState(event, arguments, true);
+        arg++;
+        arguments = parseString(string, arg);
+      }
+    } else if (subcommand.equals(F("disable"))) { // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
+      arguments = parseString(string, arg);
+
+      while (!arguments.isEmpty()) {
+        success |= setTouchObjectState(event, arguments, false);
+        arg++;
+        arguments = parseString(string, arg);
+      }
+    } else if (subcommand.equals(F("on"))) { // touch,on,<buttonObjectName>[,...] : Switch TouchButton(s) on
+      arguments = parseString(string, arg);
+
+      while (!arguments.isEmpty()) {
+        success |= setTouchButtonOnOff(event, arguments, true);
+        arg++;
+        arguments = parseString(string, arg);
+      }
+    } else if (subcommand.equals(F("off"))) { // touch,off,<buttonObjectName>[,...] : Switch TouchButton(s) off
+      arguments = parseString(string, arg);
+
+      while (!arguments.isEmpty()) {
+        success |= setTouchButtonOnOff(event, arguments, false);
+        arg++;
+        arguments = parseString(string, arg);
+      }
+    } else if (subcommand.equals(F("toggle"))) { // touch,toggle,<buttonObjectName>[,...] : Switch TouchButton(s) to the other state
+      arguments = parseString(string, arg);
+
+      while (!arguments.isEmpty()) {
+        int8_t state = getTouchButtonOnOff(event, arguments);
+
+        if (state > -1) {
+          success |= setTouchButtonOnOff(event, arguments, state == 0);
+        }
+        arg++;
+        arguments = parseString(string, arg);
+      }
+    } else if (subcommand.equals(F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
+      success = setButtonGroup(event, event->Par2);
+    } else if (subcommand.equals(F("incgrp"))) {       // touch,incgrp : increment group and Activate
+      success = incrementButtonGroup(event);
+    } else if (subcommand.equals(F("decgrp"))) {       // touch,decgrp : Decrement group and Activate
+      success = decrementButtonGroup(event);
+    } else if (subcommand.equals(F("incpage"))) {      // touch,incpage : increment page and Activate
+      success = incrementButtonPage(event);
+    } else if (subcommand.equals(F("decpage"))) {      // touch,decpage : Decrement page and Activate
+      success = decrementButtonPage(event);
+    } else if (subcommand.equals(F("updatebutton"))) { // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
+      arguments = parseString(string, 3);
+
+      // Check for a valid button name or number, returns a 0-based index
+      int index = getTouchObjectIndex(event, arguments, true);
+
+      if (index > -1) {
+        bool hasPar3 = !parseString(string, 4).isEmpty();
+        bool hasPar4 = !parseString(string, 5).isEmpty();
+
+        if (hasPar4) {
+          success = displayButton(event, index, event->Par3, event->Par4);
+        } else if (hasPar3) {
+          success = displayButton(event, index, event->Par3);
+        } else {
+          success = displayButton(event, index); // Use default argument values
+        }
+      }
+    }
+  }
+  return success;
+}
+
+/**
+ * Handle getting config values from plugin/handler
+ */
+bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
+                                                   String            & string) {
+  bool   success = false;
+  String command = parseString(string, 1);
+
+  if (command == F("buttongroup")) {
+    string  = getButtonGroup();
+    success = true;
+  } else if (command == F("hasgroup")) {
+    int group; // We'll be ignoring group 0 if there are multiple button groups
+
+    if (validIntFromString(parseString(string, 2), group)) {
+      string  = validButtonGroup(group, true) ? 1 : 0;
+      success = true;
+    } else {
+      string = '0'; // invalid number = false
+    }
+  } else if (command == F("enabled")) {
+    String arguments = parseStringKeepCase(string, 2);
+    int8_t enabled   = getTouchObjectState(event, arguments);
+
+    if (enabled > -1) {
+      string  = enabled;
+      success = true;
+    }
+  } else if (command == F("state")) {
+    String arguments = parseStringKeepCase(string, 2);
+    int8_t state     = getTouchButtonOnOff(event, arguments);
+
+    if (state > -1) {
+      string  = state;
+      success = true;
     }
   }
   return success;
