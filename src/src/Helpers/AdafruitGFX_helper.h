@@ -12,6 +12,10 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-06-05 tonhuisman: Add support for getting config values: win (current window id), iswin (exists?), width and height (current window),
+ *                        (text)length and textheight of a provided text, rot (current rotation), txs (fontscaling), tpm (textprintmode)
+ * 2022-06-04 tonhuisman: Add Window support for drawing and printing within confined areas (windows)
+ *                        Always use exact font calculation for determining allowable text length
  * 2022-06-02 tonhuisman: Leave out some Notes from UI to save a few bytes from size limited builds
  * 2022-05-27 tonhuisman: Change btn subcommand to split state and mode arguments, state = 0/1, -2/-1, mode = -2, -1, 0
  * 2022-05-27 tonhuisman: Fix a few character mappings in AdaGFXparseTemplate, add surrogates for chars not in font
@@ -25,6 +29,7 @@
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPITFT.h>
 # include <FS.h>
+# include <vector>
 
 // Used for bmp support
 # define BUFPIXELS 200 ///< 200 * 5 = 1000 bytes
@@ -49,20 +54,26 @@
 // #  define ADAGFX_SUPPORT_8and16COLOR  1  // Do we support 8 and 16-Color displays?
 # endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # ifndef ADAGFX_FONTS_INCLUDED
-#  define ADAGFX_FONTS_INCLUDED       1  // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
+#  define ADAGFX_FONTS_INCLUDED       1     // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
 # ifndef ADAGFX_PARSE_SUBCOMMAND
-#  define ADAGFX_PARSE_SUBCOMMAND     1  // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
+#  define ADAGFX_PARSE_SUBCOMMAND     1     // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 # ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#  define ADAGFX_ENABLE_EXTRA_CMDS    1  // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
+#  define ADAGFX_ENABLE_EXTRA_CMDS    1     // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
 # endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
 # ifndef ADAGFX_ENABLE_BMP_DISPLAY
-#  define ADAGFX_ENABLE_BMP_DISPLAY   1  // Enable subcommands for displaying .bmp files on supported displays (color)
+#  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable subcommands for displaying .bmp files on supported displays (color)
 # endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
 # ifndef ADAGFX_ENABLE_BUTTON_DRAW
-#  define ADAGFX_ENABLE_BUTTON_DRAW    1 // Enable subcommands for displaying button-like shapes
+#  define ADAGFX_ENABLE_BUTTON_DRAW    1    // Enable subcommands for displaying button-like shapes
 # endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
+# ifndef ADAGFX_ENABLE_FRAMED_WINDOW
+#  define ADAGFX_ENABLE_FRAMED_WINDOW 1     // Enable framed window features
+# endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
+# ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
+#  define ADAGFX_ENABLE_GET_CONFIG_VALUE  1 // Enable getting values features
+# endif // ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
 
 // # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
 // # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
@@ -123,6 +134,12 @@
 // #  ifdef ADAGFX_ENABLE_BUTTON_DRAW
 // #   undef ADAGFX_ENABLE_BUTTON_DRAW
 // #  endif // ifdef ADAGFX_ENABLE_BUTTON_DRAW
+// #  ifdef ADAGFX_ENABLE_FRAMED_WINDOW
+// #   undef ADAGFX_ENABLE_FRAMED_WINDOW
+// #  endif // ifdef ADAGFX_ENABLE_FRAMED_WINDOW
+// #  ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
+// #   undef ADAGFX_ENABLE_GET_CONFIG_VALUE
+// #  endif // ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
@@ -265,6 +282,22 @@ const __FlashStringHelper* toString(Button_layout_e layout);
 
 # endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
+# if ADAGFX_ENABLE_FRAMED_WINDOW
+
+struct tWindowPoint {
+  uint16_t x = 0;
+  uint16_t y = 0;
+};
+struct tWindowObject {
+  tWindowPoint top_left;
+  tWindowPoint width_height;
+  tWindowPoint org_top_left;
+  tWindowPoint org_width_height;
+  uint8_t      id       = 0u;
+  int8_t       rotation = 0;
+};
+# endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+
 class AdafruitGFX_helper; // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
@@ -331,7 +364,7 @@ public:
                      uint16_t            bgcolor       = ADAGFX_BLACK,
                      bool                useValidation = true,
                      bool                textBackFill  = false);
-  # ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   AdafruitGFX_helper(Adafruit_SPITFT    *display,
                      const String      & trigger,
                      uint16_t            res_x,
@@ -343,12 +376,16 @@ public:
                      uint16_t            bgcolor       = ADAGFX_BLACK,
                      bool                useValidation = true,
                      bool                textBackFill  = false);
-  # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
   String getFeatures();
 
   bool   processCommand(const String& string); // Parse the string for recognized commands and apply them on the graphics display
+
+  # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+  bool   pluginGetConfigValue(String& string); // Get a config value from the plugin
+  # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
 
   void printText(const char *string,
                  int16_t     X,
@@ -392,11 +429,28 @@ public:
     return trigger.equalsIgnoreCase(ADAGFX_UNIVERSAL_TRIGGER);
   }
 
-  # ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   bool showBmp(const String& filename,
                int16_t       x,
                int16_t       y);
-  # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  uint8_t getWindow() {
+    return _window;
+  }
+
+  bool    validWindow(uint8_t windowId);
+  bool    selectWindow(uint8_t windowId,
+                       int8_t  rotation = -1);
+  uint8_t defineWindow(int16_t x,
+                       int16_t y,
+                       int16_t w,
+                       int16_t h,
+                       int16_t windowId = -1,
+                       int8_t  rotation = -1);
+  bool deleteWindow(uint8_t windowId);
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
 private:
 
@@ -439,14 +493,26 @@ private:
   bool _isProportional       = false;
   uint8_t _p095_compensation = 0;
   bool _columnRowMode        = false;
+  int8_t _rotation           = 0;
 
   uint16_t _display_x;
   uint16_t _display_y;
-  # ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BMP_DISPLAY
   uint16_t readLE16(void);
   uint32_t readLE32(void);
   fs::File file;
-  # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+  # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  int16_t getWindowIndex(int16_t windowId);
+  void    logWindows(const String& prefix = EMPTY_STRING);
+  void    getWindowOffsets(uint16_t& xOffset,
+                           uint16_t& yOffset);
+  void    getWindowLimits(uint16_t& xLimit,
+                          uint16_t& yLimit);
+  std::vector<tWindowObject>_windows;
+  uint8_t _window      = 0; // current window
+  uint8_t _windowIndex = 0; // current window Index
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 };
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX
 
