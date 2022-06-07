@@ -169,8 +169,14 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case SYSSEC_D:          return String(((node_time.hour() * 60) + node_time.minute()) * 60 + node_time.second());
     case SYSTIME:           return node_time.getTimeString(':');
     case SYSTIME_AM:        return node_time.getTimeString_ampm(':');
+    case SYSTIME_AM_0:      return node_time.getTimeString_ampm(':', true, '0');
+    case SYSTIME_AM_SP:     return node_time.getTimeString_ampm(':', true, ' ');
     case SYSTM_HM:          return node_time.getTimeString(':', false);
+    case SYSTM_HM_0:        return node_time.getTimeString(':', false, '0');
+    case SYSTM_HM_SP:       return node_time.getTimeString(':', false, ' ');
     case SYSTM_HM_AM:       return node_time.getTimeString_ampm(':', false);
+    case SYSTM_HM_AM_0:     return node_time.getTimeString_ampm(':', false, '0');
+    case SYSTM_HM_AM_SP:    return node_time.getTimeString_ampm(':', false, ' ');
     case SYSWEEKDAY:        return String(node_time.weekday());
     case SYSWEEKDAY_S:      return node_time.weekday_str();
     case SYSYEAR_0:
@@ -355,8 +361,14 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::SYSSTACK:           return F("%sysstack%");
     case Enum::SYSTIME:            return F("%systime%");
     case Enum::SYSTIME_AM:         return F("%systime_am%");
+    case Enum::SYSTIME_AM_0:       return F("%systime_am_0%");
+    case Enum::SYSTIME_AM_SP:      return F("%systime_am_sp%");
     case Enum::SYSTM_HM:           return F("%systm_hm%");
+    case Enum::SYSTM_HM_0:         return F("%systm_hm_0%");
+    case Enum::SYSTM_HM_SP:        return F("%systm_hm_sp%");
     case Enum::SYSTM_HM_AM:        return F("%systm_hm_am%");
+    case Enum::SYSTM_HM_AM_0:      return F("%systm_hm_am_0%");
+    case Enum::SYSTM_HM_AM_SP:     return F("%systm_hm_am_sp%");
     case Enum::SYSWEEKDAY:         return F("%sysweekday%");
     case Enum::SYSWEEKDAY_S:       return F("%sysweekday_s%");
     case Enum::SYSYEAR:            return F("%sysyear%");

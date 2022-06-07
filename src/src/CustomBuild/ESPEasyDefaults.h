@@ -318,7 +318,7 @@
 #endif
 
 #ifndef DEFAULT_SYNC_UDP_PORT
-#define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
+#define DEFAULT_SYNC_UDP_PORT                   8266                    // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
 
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
