@@ -12,8 +12,9 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-06-07 tonhuisman: Code improvements in initialization, move offset calculation to printText() function
  * 2022-06-06 tonhuisman: Process any special characters for lenght and textheight values for correct sizing
- * 2022-06-05 tonhuisman: Add support for getting config values: win (current window id), iswin (exists?), width and height (current window),
+ * 2022-06-05 tonhuisman: Add support for getting config values: win (current window id), iswin (exists?), width & height (current window),
  *                        (text)length and textheight of a provided text, rot (current rotation), txs (fontscaling), tpm (textprintmode)
  * 2022-06-04 tonhuisman: Add Window support for drawing and printing within confined areas (windows)
  *                        Always use exact font calculation for determining allowable text length
@@ -278,8 +279,8 @@ enum class Button_layout_e : uint8_t {
   Alignment_MAX      = 11u // options-count, max possible values: 16
 };
 
-const __FlashStringHelper* toString(Button_type_e button);
-const __FlashStringHelper* toString(Button_layout_e layout);
+const __FlashStringHelper* toString(const Button_type_e button);
+const __FlashStringHelper* toString(const Button_layout_e layout);
 
 # endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
@@ -302,8 +303,8 @@ struct tWindowObject {
 class AdafruitGFX_helper; // Forward declaration
 
 // Some generic AdafruitGFX_helper support functions
-const __FlashStringHelper* toString(AdaGFXTextPrintMode mode);
-const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth);
+const __FlashStringHelper* toString(const AdaGFXTextPrintMode mode);
+const __FlashStringHelper* toString(const AdaGFXColorDepth colorDepth);
 void                       AdaGFXFormTextPrintMode(const __FlashStringHelper *id,
                                                    uint8_t                    selectedIndex);
 void                       AdaGFXFormColorDepth(const __FlashStringHelper *id,
@@ -336,47 +337,48 @@ void     AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
                                uint8_t                    fontScaling,
                                uint8_t                    maxScale = 10);
 String   AdaGFXparseTemplate(const String      & tmpString,
-                             uint8_t             lineSize,
+                             const uint8_t       lineSize,
                              AdafruitGFX_helper *gfxHelper = nullptr);
-uint16_t AdaGFXparseColor(String         & s,
-                          AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
-                          bool             emptyIsBlack = false); // Parse either a color by name, 6 digit hex rrggbb color, or 1..4 digit
-                                                                  // #rgb565 color (hex with # prefix)
+uint16_t AdaGFXparseColor(String               & s,
+                          const AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
+                          const bool             emptyIsBlack = false); // Parse either a color by name, 6 digit hex rrggbb color,
+                                                                        // or 1..4 digit
+                                                                        // #rgb565 color (hex with # prefix)
 void   AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
-                                    AdaGFXColorDepth           colorDepth);
-String AdaGFXcolorToString(uint16_t         color,
-                           AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
-                           bool             blackIsEmpty = false);
+                                    const AdaGFXColorDepth     colorDepth);
+String AdaGFXcolorToString(const uint16_t         color,
+                           const AdaGFXColorDepth colorDepth   = AdaGFXColorDepth::FullColor,
+                           bool                   blackIsEmpty = false);
 # if ADAGFX_SUPPORT_7COLOR
-uint16_t AdaGFXrgb565ToColor7(uint16_t color); // Convert rgb565 color to 7-color
+uint16_t AdaGFXrgb565ToColor7(const uint16_t color); // Convert rgb565 color to 7-color
 # endif // if ADAGFX_SUPPORT_7COLOR
 
 class AdafruitGFX_helper {
 public:
 
-  AdafruitGFX_helper(Adafruit_GFX       *display,
-                     const String      & trigger,
-                     uint16_t            res_x,
-                     uint16_t            res_y,
-                     AdaGFXColorDepth    colorDepth    = AdaGFXColorDepth::FullColor,
-                     AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
-                     uint8_t             fontscaling   = 1,
-                     uint16_t            fgcolor       = ADAGFX_WHITE,
-                     uint16_t            bgcolor       = ADAGFX_BLACK,
-                     bool                useValidation = true,
-                     bool                textBackFill  = false);
+  AdafruitGFX_helper(Adafruit_GFX             *display,
+                     const String            & trigger,
+                     const uint16_t            res_x,
+                     const uint16_t            res_y,
+                     const AdaGFXColorDepth    colorDepth    = AdaGFXColorDepth::FullColor,
+                     const AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
+                     const uint8_t             fontscaling   = 1,
+                     const uint16_t            fgcolor       = ADAGFX_WHITE,
+                     const uint16_t            bgcolor       = ADAGFX_BLACK,
+                     const bool                useValidation = true,
+                     const bool                textBackFill  = false);
   # if ADAGFX_ENABLE_BMP_DISPLAY
-  AdafruitGFX_helper(Adafruit_SPITFT    *display,
-                     const String      & trigger,
-                     uint16_t            res_x,
-                     uint16_t            res_y,
-                     AdaGFXColorDepth    colorDepth    = AdaGFXColorDepth::FullColor,
-                     AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
-                     uint8_t             fontscaling   = 1,
-                     uint16_t            fgcolor       = ADAGFX_WHITE,
-                     uint16_t            bgcolor       = ADAGFX_BLACK,
-                     bool                useValidation = true,
-                     bool                textBackFill  = false);
+  AdafruitGFX_helper(Adafruit_SPITFT          *display,
+                     const String            & trigger,
+                     const uint16_t            res_x,
+                     const uint16_t            res_y,
+                     const AdaGFXColorDepth    colorDepth    = AdaGFXColorDepth::FullColor,
+                     const AdaGFXTextPrintMode textPrintMode = AdaGFXTextPrintMode::ContinueToNextLine,
+                     const uint8_t             fontscaling   = 1,
+                     const uint16_t            fgcolor       = ADAGFX_WHITE,
+                     const uint16_t            bgcolor       = ADAGFX_BLACK,
+                     const bool                useValidation = true,
+                     const bool                textBackFill  = false);
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   virtual ~AdafruitGFX_helper() {}
 
@@ -388,17 +390,17 @@ public:
   bool   pluginGetConfigValue(String& string); // Get a config value from the plugin
   # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
 
-  void printText(const char *string,
-                 int16_t     X,
-                 int16_t     Y,
-                 uint8_t     textSize = 0,
-                 uint16_t    color    = ADAGFX_WHITE,
-                 uint16_t    bkcolor  = ADAGFX_BLACK,
-                 uint16_t    maxWidth = 0);
-  void calculateTextMetrics(uint8_t fontwidth,
-                            uint8_t fontheight,
-                            int8_t  heightOffset   = 0,
-                            bool    isProportional = false);
+  void   printText(const char    *string,
+                   const int16_t  X,
+                   const int16_t  Y,
+                   const uint8_t  textSize = 0,
+                   const uint16_t color    = ADAGFX_WHITE,
+                   uint16_t       bkcolor  = ADAGFX_BLACK,
+                   const uint16_t maxWidth = 0);
+  void calculateTextMetrics(const uint8_t fontwidth,
+                            const uint8_t fontheight,
+                            const int8_t  heightOffset   = 0,
+                            const bool    isProportional = false);
   void getTextMetrics(uint16_t& textcols,
                       uint16_t& textrows,
                       uint8_t & fontwidth,
@@ -441,16 +443,16 @@ public:
     return _window;
   }
 
-  bool    validWindow(uint8_t windowId);
-  bool    selectWindow(uint8_t windowId,
-                       int8_t  rotation = -1);
-  uint8_t defineWindow(int16_t x,
-                       int16_t y,
-                       int16_t w,
-                       int16_t h,
-                       int16_t windowId = -1,
-                       int8_t  rotation = -1);
-  bool deleteWindow(uint8_t windowId);
+  bool    validWindow(const uint8_t windowId);
+  bool    selectWindow(const uint8_t windowId,
+                       const int8_t  rotation = -1);
+  uint8_t defineWindow(const int16_t x,
+                       const int16_t y,
+                       const int16_t w,
+                       const int16_t h,
+                       int16_t       windowId = -1,
+                       const int8_t  rotation = -1);
+  bool deleteWindow(const uint8_t windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
 private:
@@ -458,9 +460,9 @@ private:
   void initialize();
 
   # if ADAGFX_ARGUMENT_VALIDATION
-  bool invalidCoordinates(int  X,
-                          int  Y,
-                          bool colRowMode = false);
+  bool invalidCoordinates(const int  X,
+                          const int  Y,
+                          const bool colRowMode = false);
   # endif // if ADAGFX_ARGUMENT_VALIDATION
   # if ADAGFX_ENABLE_BUTTON_DRAW
   void drawButtonShape(Button_type_e buttonType,
@@ -504,7 +506,7 @@ private:
   fs::File file;
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
   # if ADAGFX_ENABLE_FRAMED_WINDOW
-  int16_t getWindowIndex(int16_t windowId);
+  int16_t getWindowIndex(const int16_t windowId);
   void    logWindows(const String& prefix = EMPTY_STRING);
   void    getWindowOffsets(uint16_t& xOffset,
                            uint16_t& yOffset);
