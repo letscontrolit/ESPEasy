@@ -39,7 +39,7 @@ When enabling "Step through pages with Display button", the button can also be u
 
 The Display Timeout setting sets the numbers of seconds after which the display is turned off. When set to 0 no timeout is active.
 
-The plugin allows for a header and footer line, which may show some user selectable information.
+The plugin allows for a header line, which may show some user selectable information. And an optional footer line that can show a page indicator, when using a 128x64 display.
 
 Checkbox 'Wake display on receiving text' (default: on) allows to not wake up the display when a text is sent from a remote source, and Display Timeout is set.
 
