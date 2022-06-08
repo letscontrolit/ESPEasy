@@ -44,7 +44,7 @@
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
  *****************************************************************************************/
-const __FlashStringHelper* toString(const AdaGFXTextPrintMode mode) {
+const __FlashStringHelper* toString(const AdaGFXTextPrintMode& mode) {
   switch (mode) {
     case AdaGFXTextPrintMode::ContinueToNextLine: return F("Continue to next line");
     case AdaGFXTextPrintMode::TruncateExceedingMessage: return F("Truncate exceeding message");
@@ -58,7 +58,7 @@ const __FlashStringHelper* toString(const AdaGFXTextPrintMode mode) {
 /******************************************************************************************
  * get the display text for a color depth enum value
  *****************************************************************************************/
-const __FlashStringHelper* toString(const AdaGFXColorDepth colorDepth) {
+const __FlashStringHelper* toString(const AdaGFXColorDepth& colorDepth) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome: return F("Monochrome");
     case AdaGFXColorDepth::BlackWhiteRed: return F("Monochrome + 1 color");
@@ -518,17 +518,17 @@ String AdaGFXparseTemplate(const String      & tmpString,
 /****************************************************************************
  * parameterized constructors
  ***************************************************************************/
-AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX             *display,
-                                       const String            & trigger,
-                                       const uint16_t            res_x,
-                                       const uint16_t            res_y,
-                                       const AdaGFXColorDepth    colorDepth,
-                                       const AdaGFXTextPrintMode textPrintMode,
-                                       const uint8_t             fontscaling,
-                                       const uint16_t            fgcolor,
-                                       const uint16_t            bgcolor,
-                                       const bool                useValidation,
-                                       const bool                textBackFill)
+AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX              *display,
+                                       const String             & trigger,
+                                       const uint16_t             res_x,
+                                       const uint16_t             res_y,
+                                       const AdaGFXColorDepth   & colorDepth,
+                                       const AdaGFXTextPrintMode& textPrintMode,
+                                       const uint8_t              fontscaling,
+                                       const uint16_t             fgcolor,
+                                       const uint16_t             bgcolor,
+                                       const bool                 useValidation,
+                                       const bool                 textBackFill)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _useValidation(useValidation), _textBackFill(textBackFill)
@@ -538,17 +538,17 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX             *display,
 }
 
 # if ADAGFX_ENABLE_BMP_DISPLAY
-AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT          *display,
-                                       const String            & trigger,
-                                       const uint16_t            res_x,
-                                       const uint16_t            res_y,
-                                       const AdaGFXColorDepth    colorDepth,
-                                       const AdaGFXTextPrintMode textPrintMode,
-                                       const uint8_t             fontscaling,
-                                       const uint16_t            fgcolor,
-                                       const uint16_t            bgcolor,
-                                       const bool                useValidation,
-                                       const bool                textBackFill)
+AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
+                                       const String             & trigger,
+                                       const uint16_t             res_x,
+                                       const uint16_t             res_y,
+                                       const AdaGFXColorDepth   & colorDepth,
+                                       const AdaGFXTextPrintMode& textPrintMode,
+                                       const uint8_t              fontscaling,
+                                       const uint16_t             fgcolor,
+                                       const uint16_t             bgcolor,
+                                       const bool                 useValidation,
+                                       const bool                 textBackFill)
   : _tft(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _useValidation(useValidation), _textBackFill(textBackFill)
@@ -1590,7 +1590,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
@@ -1721,13 +1721,13 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
 /****************************************************************************
  * draw a button shape with provided color, can also clear a previously drawn button
  ***************************************************************************/
-void AdafruitGFX_helper::drawButtonShape(Button_type_e buttonType,
-                                         int           x,
-                                         int           y,
-                                         int           w,
-                                         int           h,
-                                         uint16_t      fillColor,
-                                         uint16_t      borderColor) {
+void AdafruitGFX_helper::drawButtonShape(const Button_type_e& buttonType,
+                                         const int          & x,
+                                         const int          & y,
+                                         const int          & w,
+                                         const int          & h,
+                                         const uint16_t     & fillColor,
+                                         const uint16_t     & borderColor) {
   switch (buttonType) {
     case Button_type_e::Square: // Rectangle
     {
@@ -1790,13 +1790,13 @@ void AdafruitGFX_helper::drawButtonShape(Button_type_e buttonType,
 /****************************************************************************
  * printText: Print text on display at a specific pixel or column/row location
  ***************************************************************************/
-void AdafruitGFX_helper::printText(const char    *string,
-                                   const int16_t  X,
-                                   const int16_t  Y,
-                                   const uint8_t  textSize,
-                                   const uint16_t color,
-                                   uint16_t       bkcolor,
-                                   const uint16_t maxWidth) {
+void AdafruitGFX_helper::printText(const char     *string,
+                                   const int16_t & X,
+                                   const int16_t & Y,
+                                   const uint8_t & textSize,
+                                   const uint16_t& color,
+                                   uint16_t        bkcolor,
+                                   const uint16_t& maxWidth) {
   int16_t  _x        = X;
   int16_t  _y        = Y + (_heightOffset * textSize);
   uint16_t _w        = 0;
@@ -1907,9 +1907,9 @@ void AdafruitGFX_helper::printText(const char    *string,
 /****************************************************************************
  * color565: convert r, g, b colors to rgb565 (by bit-shifting)
  ***************************************************************************/
-uint16_t color565(const uint8_t red,
-                  const uint8_t green,
-                  const uint8_t blue) {
+uint16_t color565(const uint8_t& red,
+                  const uint8_t& green,
+                  const uint8_t& blue) {
   return ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | (blue >> 3);
 }
 
@@ -1923,9 +1923,9 @@ uint16_t color565(const uint8_t red,
 // Param [in] colorDepth: The requiresed color depth, default: FullColor
 // param [in] defaultWhite: Return White color if empty, default: true
 // return : color (default ADAGFX_WHITE)
-uint16_t AdaGFXparseColor(String               & s,
-                          const AdaGFXColorDepth colorDepth,
-                          const bool             emptyIsBlack) {
+uint16_t AdaGFXparseColor(String                & s,
+                          const AdaGFXColorDepth& colorDepth,
+                          const bool              emptyIsBlack) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
@@ -2069,9 +2069,9 @@ uint16_t AdaGFXparseColor(String               & s,
   return static_cast<uint16_t>(result);
 }
 
-const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
-                                                        AdaGFXColorDepth colorDepth,
-                                                        bool             blackIsEmpty);
+const __FlashStringHelper* AdaGFXcolorToString_internal(const uint16_t        & color,
+                                                        const AdaGFXColorDepth& colorDepth,
+                                                        bool                    blackIsEmpty);
 
 // Add a single optionvalue of a color to a datalist (internal/private)
 void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
@@ -2091,7 +2091,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
  * Generate a html 'datalist' of the colors available for selected colorDepth, with id provided
  ****************************************************************************************/
 void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
-                                  const AdaGFXColorDepth     colorDepth) {
+                                  const AdaGFXColorDepth   & colorDepth) {
   addHtml(F("<datalist id=\""));
   addHtml(id);
   addHtml(F("\">"));
@@ -2154,9 +2154,9 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
 /*****************************************************************************************
  * Convert an RGB565 color (number) to it's name or the #rgb565 hex string, based on depth
  ****************************************************************************************/
-String AdaGFXcolorToString(const uint16_t         color,
-                           const AdaGFXColorDepth colorDepth,
-                           bool                   blackIsEmpty) {
+String AdaGFXcolorToString(const uint16_t        & color,
+                           const AdaGFXColorDepth& colorDepth,
+                           bool                    blackIsEmpty) {
   String result = AdaGFXcolorToString_internal(color, colorDepth, blackIsEmpty);
 
   if (result.equals(F("*"))) {
@@ -2167,9 +2167,9 @@ String AdaGFXcolorToString(const uint16_t         color,
   return result;
 }
 
-const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
-                                                        AdaGFXColorDepth colorDepth,
-                                                        bool             blackIsEmpty) {
+const __FlashStringHelper* AdaGFXcolorToString_internal(const uint16_t        & color,
+                                                        const AdaGFXColorDepth& colorDepth,
+                                                        bool                    blackIsEmpty) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome:
     case AdaGFXColorDepth::BlackWhiteRed:
@@ -2247,7 +2247,7 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
  * AdaGFXrgb565ToColor7: Convert a rgb565 color to the 7 colors supported by 7-color eInk displays
  * Borrowed from https://github.com/ZinggJM/GxEPD2 color7() routine
  ***************************************************************************/
-uint16_t AdaGFXrgb565ToColor7(const uint16_t color) {
+uint16_t AdaGFXrgb565ToColor7(const uint16_t& color) {
   const uint16_t red   = (color & 0xF800);
   const uint16_t green = (color & 0x07E0) << 5;
   const uint16_t blue  = (color & 0x001F) << 11;
@@ -2860,15 +2860,15 @@ uint32_t AdafruitGFX_helper::readLE32(void) {
 /****************************************************************************
  * Check if the requested id is a valid window id
  ***************************************************************************/
-bool AdafruitGFX_helper::validWindow(uint8_t windowId) {
+bool AdafruitGFX_helper::validWindow(const uint8_t& windowId) {
   return getWindowIndex(windowId) != -1;
 }
 
 /****************************************************************************
  * Select this window id as the default
  ***************************************************************************/
-bool AdafruitGFX_helper::selectWindow(const uint8_t windowId,
-                                      const int8_t  rotation) {
+bool AdafruitGFX_helper::selectWindow(const uint8_t& windowId,
+                                      const int8_t & rotation) {
   const int16_t result = getWindowIndex(windowId);
 
   if (result != -1) {
@@ -2881,7 +2881,7 @@ bool AdafruitGFX_helper::selectWindow(const uint8_t windowId,
 /****************************************************************************
  * Return the index of the windowId in _windows, -1 if not found
  ***************************************************************************/
-int16_t AdafruitGFX_helper::getWindowIndex(const int16_t windowId) {
+int16_t AdafruitGFX_helper::getWindowIndex(const int16_t& windowId) {
   size_t result = 0;
 
   for (auto win = _windows.begin(); win != _windows.end(); win++, result++) {
@@ -2913,12 +2913,12 @@ void AdafruitGFX_helper::getWindowLimits(uint16_t& xLimit,
 /****************************************************************************
  * Define a window and return the ID
  ***************************************************************************/
-uint8_t AdafruitGFX_helper::defineWindow(const int16_t x,
-                                         const int16_t y,
-                                         const int16_t w,
-                                         const int16_t h,
-                                         int16_t       windowId,
-                                         const int8_t  rotation) {
+uint8_t AdafruitGFX_helper::defineWindow(const int16_t& x,
+                                         const int16_t& y,
+                                         const int16_t& w,
+                                         const int16_t& h,
+                                         int16_t        windowId,
+                                         const int8_t & rotation) {
   int16_t result = getWindowIndex(windowId);
 
   if (result < 0) {
@@ -2979,7 +2979,7 @@ uint8_t AdafruitGFX_helper::defineWindow(const int16_t x,
 /****************************************************************************
  * Remove a window definition
  ***************************************************************************/
-bool AdafruitGFX_helper::deleteWindow(const uint8_t windowId) {
+bool AdafruitGFX_helper::deleteWindow(const uint8_t& windowId) {
   const int16_t result = getWindowIndex(windowId);
 
   if (result > -1) {
