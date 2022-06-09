@@ -11,60 +11,60 @@
 # include <vector>
 
 # if ADAGFX_FONTS_INCLUDED
-#  include "src/Static/Fonts/Seven_Segment24pt7b.h"
-#  include "src/Static/Fonts/Seven_Segment18pt7b.h"
-#  include "src/Static/Fonts/FreeSans9pt7b.h"
+#  include "../Static/Fonts/Seven_Segment24pt7b.h"
+#  include "../Static/Fonts/Seven_Segment18pt7b.h"
+#  include "../Static/Fonts/FreeSans9pt7b.h"
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   include "src/Static/Fonts/angelina8pt7b.h"
-#   include "src/Static/Fonts/NovaMono8pt7b.h"
-#   include "src/Static/Fonts/unispace8pt7b.h"
-#   include "src/Static/Fonts/unispace_italic8pt7b.h"
-#   include "src/Static/Fonts/whitrabt8pt7b.h"
+#   include "../Static/Fonts/angelina8pt7b.h"
+#   include "../Static/Fonts/NovaMono8pt7b.h"
+#   include "../Static/Fonts/unispace8pt7b.h"
+#   include "../Static/Fonts/unispace_italic8pt7b.h"
+#   include "../Static/Fonts/whitrabt8pt7b.h"
 #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
-#    include "src/Static/Fonts/Roboto_Regular8pt7b.h"
+#    include "../Static/Fonts/Roboto_Regular8pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
 #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
-#    include "src/Static/Fonts/RobotoCondensed_Regular8pt7b.h"
+#    include "../Static/Fonts/RobotoCondensed_Regular8pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
 #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
-#    include "src/Static/Fonts/RobotoMono_Regular8pt7b.h"
+#    include "../Static/Fonts/RobotoMono_Regular8pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   include "src/Static/Fonts/angelina12pt7b.h"
-#   include "src/Static/Fonts/NovaMono12pt7b.h"
-#   include "src/Static/Fonts/RepetitionScrolling12pt7b.h"
-#   include "src/Static/Fonts/unispace12pt7b.h"
-#   include "src/Static/Fonts/unispace_italic12pt7b.h"
-#   include "src/Static/Fonts/whitrabt12pt7b.h"
+#   include "../Static/Fonts/angelina12pt7b.h"
+#   include "../Static/Fonts/NovaMono12pt7b.h"
+#   include "../Static/Fonts/RepetitionScrolling12pt7b.h"
+#   include "../Static/Fonts/unispace12pt7b.h"
+#   include "../Static/Fonts/unispace_italic12pt7b.h"
+#   include "../Static/Fonts/whitrabt12pt7b.h"
 #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
-#    include "src/Static/Fonts/Roboto_Regular12pt7b.h"
+#    include "../Static/Fonts/Roboto_Regular12pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
 #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
-#    include "src/Static/Fonts/RobotoCondensed_Regular12pt7b.h"
+#    include "../Static/Fonts/RobotoCondensed_Regular12pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
 #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
-#    include "src/Static/Fonts/RobotoMono_Regular12pt7b.h"
+#    include "../Static/Fonts/RobotoMono_Regular12pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   include "src/Static/Fonts/AmerikaSans16pt7b.h"
-#   include "src/Static/Fonts/whitrabt16pt7b.h"
+#   include "../Static/Fonts/AmerikaSans16pt7b.h"
+#   include "../Static/Fonts/whitrabt16pt7b.h"
 #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
-#    include "src/Static/Fonts/Roboto_Regular16pt7b.h"
+#    include "../Static/Fonts/Roboto_Regular16pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
 #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
-#    include "src/Static/Fonts/RobotoCondensed_Regular16pt7b.h"
+#    include "../Static/Fonts/RobotoCondensed_Regular16pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
 #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
-#    include "src/Static/Fonts/RobotoMono_Regular16pt7b.h"
+#    include "../Static/Fonts/RobotoMono_Regular16pt7b.h"
 #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   include "src/Static/Fonts/whitrabt18pt7b.h"
+#   include "../Static/Fonts/whitrabt18pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   include "src/Static/Fonts/whitrabt20pt7b.h"
+#   include "../Static/Fonts/whitrabt20pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
@@ -1688,6 +1688,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       } else {
         success = false;
       }
+
       // logWindows(F(" deFwin ")); // Use for debugging only?
     }
   }
@@ -1947,7 +1948,7 @@ void AdafruitGFX_helper::printText(const char     *string,
     if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) {
       _display->fillRect(_x + oTop, yText, res_x - (_x - xOffset), hText + oBottom, bkcolor); // Clear text area to right edge of screen
     } else {
-      _display->fillRect(_x + oTop, yText, _w, hText + oBottom, bkcolor); // Clear text area
+      _display->fillRect(_x + oTop, yText, _w, hText + oBottom, bkcolor);                     // Clear text area
     }
 
     delay(0);
