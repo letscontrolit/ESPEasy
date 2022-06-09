@@ -1891,10 +1891,11 @@ void AdafruitGFX_helper::printText(const char     *string,
 
     if (bkcolor == color) { bkcolor = _bgcolor; } // To get at least the text readable
 
-    if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) {
-      _display->fillRect(_x + oTop, yText, res_x - (_x - xOffset), hText + oBottom, bkcolor); // Clear text area to right edge of screen
+    if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // oTop is negative so subtract to add...
+      _display->fillRect(_x + oTop, yText, res_x - (_x - xOffset), hText + oBottom - oTop, bkcolor); // Clear text area to right edge of
+                                                                                                     // screen
     } else {
-      _display->fillRect(_x + oTop, yText, _w, hText + oBottom, bkcolor); // Clear text area
+      _display->fillRect(_x + oTop, yText, _w, hText + oBottom - oTop, bkcolor); // Clear text area
     }
 
     delay(0);
