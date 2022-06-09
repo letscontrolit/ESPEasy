@@ -11,33 +11,33 @@
 # include <vector>
 
 # if ADAGFX_FONTS_INCLUDED
-#  include "src/Static/Fonts/Seven_Segment24pt7b.h"
-#  include "src/Static/Fonts/Seven_Segment18pt7b.h"
-#  include "src/Static/Fonts/FreeSans9pt7b.h"
+#  include "../Static/Fonts/Seven_Segment24pt7b.h"
+#  include "../Static/Fonts/Seven_Segment18pt7b.h"
+#  include "../Static/Fonts/FreeSans9pt7b.h"
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   include "src/Static/Fonts/angelina8pt7b.h"
-#   include "src/Static/Fonts/NovaMono8pt7b.h"
-#   include "src/Static/Fonts/unispace8pt7b.h"
-#   include "src/Static/Fonts/unispace_italic8pt7b.h"
-#   include "src/Static/Fonts/whitrabt8pt7b.h"
+#   include "../Static/Fonts/angelina8pt7b.h"
+#   include "../Static/Fonts/NovaMono8pt7b.h"
+#   include "../Static/Fonts/unispace8pt7b.h"
+#   include "../Static/Fonts/unispace_italic8pt7b.h"
+#   include "../Static/Fonts/whitrabt8pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   include "src/Static/Fonts/angelina12pt7b.h"
-#   include "src/Static/Fonts/NovaMono12pt7b.h"
-#   include "src/Static/Fonts/RepetitionScrolling12pt7b.h"
-#   include "src/Static/Fonts/unispace12pt7b.h"
-#   include "src/Static/Fonts/unispace_italic12pt7b.h"
-#   include "src/Static/Fonts/whitrabt12pt7b.h"
+#   include "../Static/Fonts/angelina12pt7b.h"
+#   include "../Static/Fonts/NovaMono12pt7b.h"
+#   include "../Static/Fonts/RepetitionScrolling12pt7b.h"
+#   include "../Static/Fonts/unispace12pt7b.h"
+#   include "../Static/Fonts/unispace_italic12pt7b.h"
+#   include "../Static/Fonts/whitrabt12pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   include "src/Static/Fonts/AmerikaSans16pt7b.h"
-#   include "src/Static/Fonts/whitrabt16pt7b.h"
+#   include "../Static/Fonts/AmerikaSans16pt7b.h"
+#   include "../Static/Fonts/whitrabt16pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   include "src/Static/Fonts/whitrabt18pt7b.h"
+#   include "../Static/Fonts/whitrabt18pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   include "src/Static/Fonts/whitrabt20pt7b.h"
+#   include "../Static/Fonts/whitrabt20pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
