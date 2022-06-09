@@ -11,6 +11,7 @@
 
 /*****
  * Changelog:
+ * 2022-06-09 tonhuisman: Change method arguments to const-by-reference where possible for improved compile-time checks
  * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling from P123
  *                        Move PLUGIN_GET_CONFIG_VALUE handling from P123.
  *                        Add getters for on/off (state) and (enabled), and matching GET_CONFIG_VALUE commands
@@ -206,40 +207,40 @@ class ESPEasy_TouchHandler {
 public:
 
   ESPEasy_TouchHandler();
-  ESPEasy_TouchHandler(uint16_t         displayTask,
-                       AdaGFXColorDepth colorDepth);
+  ESPEasy_TouchHandler(const uint16_t        & displayTask,
+                       const AdaGFXColorDepth& colorDepth);
   virtual ~ESPEasy_TouchHandler() {}
 
   void loadTouchObjects(struct EventStruct *event);
   void init(struct EventStruct *event);
   bool isCalibrationActive();
-  bool isValidAndTouchedTouchObject(int16_t x,
-                                    int16_t y,
-                                    String& selectedObjectName,
-                                    int8_t& selectedObjectIndex);
+  bool isValidAndTouchedTouchObject(const int16_t& x,
+                                    const int16_t& y,
+                                    String       & selectedObjectName,
+                                    int8_t       & selectedObjectIndex);
   int8_t getTouchObjectIndex(struct EventStruct *event,
                              const String      & touchObject,
-                             bool                isButton = false);
+                             const bool        & isButton = false);
   bool   setTouchObjectState(struct EventStruct *event,
                              const String      & touchObject,
-                             bool                state);
+                             const bool        & state);
   int8_t getTouchObjectState(struct EventStruct *event,
                              const String      & touchObject);
   bool   setTouchButtonOnOff(struct EventStruct *event,
                              const String      & touchObject,
-                             bool                state);
+                             const bool        & state);
   int8_t getTouchButtonOnOff(struct EventStruct *event,
                              const String      & touchObject);
   bool   plugin_webform_load(struct EventStruct *event);
   bool   plugin_webform_save(struct EventStruct *event);
   bool   plugin_fifty_per_second(struct EventStruct *event,
-                                 int16_t             x,
-                                 int16_t             y,
-                                 int16_t             ox,
-                                 int16_t             oy,
-                                 int16_t             rx,
-                                 int16_t             ry,
-                                 int16_t             z);
+                                 const int16_t     & x,
+                                 const int16_t     & y,
+                                 const int16_t     & ox,
+                                 const int16_t     & oy,
+                                 const int16_t     & rx,
+                                 const int16_t     & ry,
+                                 const int16_t     & z);
   bool    plugin_write(struct EventStruct *event,
                        const String      & string);
   bool    plugin_get_config_value(struct EventStruct *event,
@@ -248,34 +249,34 @@ public:
     return _buttonGroup;
   }
 
-  bool validButtonGroup(int16_t group,
-                        bool    ignoreZero = false);
+  bool validButtonGroup(const int16_t& group,
+                        const bool   & ignoreZero = false);
   bool setButtonGroup(struct EventStruct *event,
-                      int16_t             buttonGroup);
+                      const int16_t     & buttonGroup);
   bool incrementButtonGroup(struct EventStruct *event);
   bool decrementButtonGroup(struct EventStruct *event);
   bool incrementButtonPage(struct EventStruct *event);
   bool decrementButtonPage(struct EventStruct *event);
   void displayButtonGroup(struct EventStruct *event,
-                          int16_t             buttonGroup,
-                          int8_t              mode = 0);
+                          const int16_t     & buttonGroup,
+                          const int8_t      & mode = 0);
   bool displayButton(struct EventStruct *event,
-                     int8_t              buttonNr,
-                     int16_t             buttonGroup = -1,
+                     const int8_t      & buttonNr,
+                     const int16_t     & buttonGroup = -1,
                      int8_t              mode        = 0);
 
 private:
 
-  int parseStringToInt(const String& string,
-                       uint8_t       indexFind,
-                       char          separator    = ',',
-                       int           defaultValue = 0);
+  int parseStringToInt(const String & string,
+                       const uint8_t& indexFind,
+                       const char   & separator    = ',',
+                       const int    & defaultValue = 0);
   void generateObjectEvent(struct EventStruct *event,
-                           const int8_t        objectIndex,
-                           const int8_t        onOffState,
-                           const int8_t        mode        = 0,
-                           const bool          groupSwitch = false,
-                           const int8_t        factor      = 1);
+                           const int8_t      & objectIndex,
+                           const int8_t      & onOffState,
+                           const int8_t      & mode        = 0,
+                           const bool        & groupSwitch = false,
+                           const int8_t      & factor      = 1);
 
   bool _deduplicate            = false;
   uint16_t _displayTask        = 0u;

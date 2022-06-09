@@ -26,8 +26,8 @@ const __FlashStringHelper* toString(Touch_action_e action) {
  */
 ESPEasy_TouchHandler::ESPEasy_TouchHandler() {}
 
-ESPEasy_TouchHandler::ESPEasy_TouchHandler(uint16_t         displayTask,
-                                           AdaGFXColorDepth colorDepth)
+ESPEasy_TouchHandler::ESPEasy_TouchHandler(const uint16_t        & displayTask,
+                                           const AdaGFXColorDepth& colorDepth)
   : _displayTask(displayTask), _colorDepth(colorDepth) {}
 
 /**
@@ -193,10 +193,10 @@ void ESPEasy_TouchHandler::init(struct EventStruct *event) {
 /**
  * helper function: use parseString() to read an argument, and convert that to an int value
  */
-int ESPEasy_TouchHandler::parseStringToInt(const String& string,
-                                           uint8_t       indexFind,
-                                           char          separator,
-                                           int           defaultValue) {
+int ESPEasy_TouchHandler::parseStringToInt(const String & string,
+                                           const uint8_t& indexFind,
+                                           const char   & separator,
+                                           const int    & defaultValue) {
   String parsed = parseStringKeepCase(string, indexFind, separator);
 
   int result = defaultValue;
@@ -224,10 +224,10 @@ bool ESPEasy_TouchHandler::isCalibrationActive() {
  * Returns state, sets selectedObjectName to the best matching object name
  * and selectedObjectIndex to the index into the TouchObjects vector.
  */
-bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(int16_t x,
-                                                        int16_t y,
-                                                        String& selectedObjectName,
-                                                        int8_t& selectedObjectIndex) {
+bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(const int16_t& x,
+                                                        const int16_t& y,
+                                                        String       & selectedObjectName,
+                                                        int8_t       & selectedObjectIndex) {
   uint32_t lastObjectArea = 0u;
   bool     selected       = false;
 
@@ -292,7 +292,7 @@ bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(int16_t x,
  */
 int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
                                                  const String      & touchObject,
-                                                 bool                isButton) {
+                                                 const bool        & isButton) {
   if (touchObject.isEmpty()) { return -1; }
 
   int index = -1;
@@ -319,7 +319,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
  */
 bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
                                                const String      & touchObject,
-                                               bool                state) {
+                                               const bool        & state) {
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
@@ -381,7 +381,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectState(struct EventStruct *event,
  */
 bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
                                                const String      & touchObject,
-                                               bool                state) {
+                                               const bool        & state) {
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
@@ -439,8 +439,8 @@ int8_t ESPEasy_TouchHandler::getTouchButtonOnOff(struct EventStruct *event,
  * mode: -2 = clear buttons in group, -3 = clear all buttongroups, -1 = draw buttons in group, 0 = initialize buttons
  */
 void ESPEasy_TouchHandler::displayButtonGroup(struct EventStruct *event,
-                                              int16_t             buttonGroup,
-                                              int8_t              mode) {
+                                              const int16_t     & buttonGroup,
+                                              const int8_t      & mode) {
   for (int objectNr = 0; objectNr < static_cast<int>(TouchObjects.size()); objectNr++) {
     displayButton(event, objectNr, buttonGroup, mode);
 
@@ -468,8 +468,8 @@ void ESPEasy_TouchHandler::displayButtonGroup(struct EventStruct *event,
  * Display a single button, using mode from displayButtonGroup
  */
 bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
-                                         int8_t              buttonNr,
-                                         int16_t             buttonGroup,
+                                         const int8_t      & buttonNr,
+                                         const int16_t     & buttonGroup,
                                          int8_t              mode) {
   if ((buttonNr < 0) || (buttonNr >= static_cast<int8_t>(TouchObjects.size()))) { return false; } // sanity check
   int8_t  state = 99;
@@ -557,8 +557,8 @@ bool ESPEasy_TouchHandler::displayButton(struct EventStruct *event,
  * When ignoreZero = true will return false for group 0 if the number of groups > 1.
  * NB: Group 0 is always available, even without button definitions!
  */
-bool ESPEasy_TouchHandler::validButtonGroup(int16_t group,
-                                            bool    ignoreZero) {
+bool ESPEasy_TouchHandler::validButtonGroup(const int16_t& group,
+                                            const bool   & ignoreZero) {
   return _buttonGroups.find(group) != _buttonGroups.end() &&
          (!ignoreZero || group > 0 || (group == 0 && _buttonGroups.size() == 1));
 }
@@ -567,7 +567,7 @@ bool ESPEasy_TouchHandler::validButtonGroup(int16_t group,
  * Set the desired button group, must be a known group, previous group will be erased and new group drawn
  */
 bool ESPEasy_TouchHandler::setButtonGroup(struct EventStruct *event,
-                                          int16_t             buttonGroup) {
+                                          const int16_t     & buttonGroup) {
   if (validButtonGroup(buttonGroup)) {
     if (buttonGroup != _buttonGroup) {
       displayButtonGroup(event, _buttonGroup, -2);
@@ -1381,13 +1381,13 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
  * Every 10th second we check if the screen is touched
  */
 bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
-                                                   int16_t             x,
-                                                   int16_t             y,
-                                                   int16_t             ox,
-                                                   int16_t             oy,
-                                                   int16_t             rx,
-                                                   int16_t             ry,
-                                                   int16_t             z) {
+                                                   const int16_t     & x,
+                                                   const int16_t     & y,
+                                                   const int16_t     & ox,
+                                                   const int16_t     & oy,
+                                                   const int16_t     & rx,
+                                                   const int16_t     & ry,
+                                                   const int16_t     & z) {
   bool success = false;
 
   // Avoid event-storms by deduplicating coordinates
@@ -1635,11 +1635,11 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
  * When a display is configured add x,y coordinate, width,height of the object, objectIndex, and TaskIndex of display
  **************************************************************************/
 void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
-                                               const int8_t        objectIndex,
-                                               const int8_t        onOffState,
-                                               const int8_t        mode,
-                                               const bool          groupSwitch,
-                                               const int8_t        factor) {
+                                               const int8_t      & objectIndex,
+                                               const int8_t      & onOffState,
+                                               const int8_t      & mode,
+                                               const bool        & groupSwitch,
+                                               const int8_t      & factor) {
   if ((objectIndex < 0) || // Range check
       (objectIndex >= static_cast<int8_t>(TouchObjects.size()))) {
     return;
