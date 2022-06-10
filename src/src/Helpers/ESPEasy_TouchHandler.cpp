@@ -629,7 +629,7 @@ bool ESPEasy_TouchHandler::decrementButtonPage(struct EventStruct *event) {
 bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
   addFormSubHeader(F("Touch configuration"));
 
-  addFormCheckBox(F("Flip rotation 180&deg;"), F("tch_rotation_flipped"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED));
+  addFormCheckBox(F("Flip rotation 180&deg;"), F("rotation_flipped"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED));
   # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Some touchscreens are mounted 180&deg; rotated on the display."));
   # endif // ifndef LIMIT_BUILD_SIZE
@@ -656,13 +656,13 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
     };
     int optionValues3[TOUCH_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
-    addFormSelector(F("Events"), F("tch_events"), TOUCH_EVENTS_OPTIONS, options3, optionValues3, choice3);
+    addFormSelector(F("Events"), F("events"), TOUCH_EVENTS_OPTIONS, options3, optionValues3, choice3);
 
-    addFormCheckBox(F("Draw buttons when started"), F("tch_init_objectevent"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
+    addFormCheckBox(F("Draw buttons when started"), F("init_objectevent"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
     addFormNote(F("Needs Objectnames 'Events' to be enabled."));
   }
 
-  addFormCheckBox(F("Prevent duplicate events"), F("tch_deduplicate"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_DEDUPLICATE));
+  addFormCheckBox(F("Prevent duplicate events"), F("deduplicate"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_DEDUPLICATE));
 
   # ifndef LIMIT_BUILD_SIZE
 
@@ -677,7 +677,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
     int noYesOptionValues[2]                   = { 0, 1 };
     addFormSelector(F("Calibrate to screen resolution"),
-                    F("tch_use_calibration"),
+                    F("use_calibration"),
                     2,
                     noYesOptions,
                     noYesOptionValues,
@@ -698,24 +698,24 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     html_TR_TD();
     addHtml(F("Top-left"));
     html_TD();
-    addNumericBox(F("tch_cal_tl_x"),
+    addNumericBox(F("cal_tl_x"),
                   Touch_Settings.top_left.x,
                   0,
                   65535);
     html_TD();
-    addNumericBox(F("tch_cal_tl_y"),
+    addNumericBox(F("cal_tl_y"),
                   Touch_Settings.top_left.y,
                   0,
                   65535);
     html_TD();
     addHtml(F("Bottom-right"));
     html_TD();
-    addNumericBox(F("tch_cal_br_x"),
+    addNumericBox(F("cal_br_x"),
                   Touch_Settings.bottom_right.x,
                   0,
                   65535);
     html_TD();
-    addNumericBox(F("tch_cal_br_y"),
+    addNumericBox(F("cal_br_y"),
                   Touch_Settings.bottom_right.y,
                   0,
                   65535);
@@ -723,7 +723,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     html_end_table();
   }
 
-  addFormCheckBox(F("Enable logging for calibration"), F("tch_log_calibration"),
+  addFormCheckBox(F("Enable logging for calibration"), F("log_calibration"),
                   Touch_Settings.logEnabled);
 
   addFormSubHeader(F("Touch objects"));
@@ -800,15 +800,15 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     html_end_table();
   }
   {
-    addFormNumericBox(F("Initial button group"), F("tch_initial_group"),
+    addFormNumericBox(F("Initial button group"), F("initial_group"),
                       get8BitFromUL(Touch_Settings.flags, TOUCH_FLAGS_INITIAL_GROUP), 0, TOUCH_MAX_BUTTON_GROUPS
                       #  ifdef TOUCH_USE_TOOLTIPS
                       , F("Initial group")
                       #  endif // ifdef TOUCH_USE_TOOLTIPS
                       );
-    addFormCheckBox(F("Draw buttons via Rules"),      F("tch_via_rules"),    bitRead(Touch_Settings.flags, TOUCH_FLAGS_DRAWBTN_VIA_RULES));
-    addFormCheckBox(F("Enable/Disable page buttons"), F("tch_page_buttons"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_AUTO_PAGE_ARROWS));
-    addFormCheckBox(F("PageUp/PageDown reversed"),    F("tch_page_below"),   bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU));
+    addFormCheckBox(F("Draw buttons via Rules"),      F("via_rules"),    bitRead(Touch_Settings.flags, TOUCH_FLAGS_DRAWBTN_VIA_RULES));
+    addFormCheckBox(F("Enable/Disable page buttons"), F("page_buttons"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_AUTO_PAGE_ARROWS));
+    addFormCheckBox(F("PageUp/PageDown reversed"),    F("page_below"),   bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU));
   }
   # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
   {
@@ -1146,7 +1146,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     }
     html_end_table();
 
-    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("tch_debounce"),
+    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("debounce"),
                       Touch_Settings.debounceMs, 0, 255);
     addUnit(F("0-255 msec."));
   }
@@ -1181,32 +1181,32 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
 
   uint32_t lSettings = 0u;
 
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("tch_events")), TOUCH_FLAGS_SEND_XY));
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("tch_events")), TOUCH_FLAGS_SEND_Z));
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("tch_events")), TOUCH_FLAGS_SEND_OBJECTNAME));
-  bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("tch_rotation_flipped")));
-  bitWrite(lSettings, TOUCH_FLAGS_DEDUPLICATE,      isFormItemChecked(F("tch_deduplicate")));
-  bitWrite(lSettings, TOUCH_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("tch_init_objectevent")));
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("events")), TOUCH_FLAGS_SEND_XY));
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("events")), TOUCH_FLAGS_SEND_Z));
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("events")), TOUCH_FLAGS_SEND_OBJECTNAME));
+  bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("rotation_flipped")));
+  bitWrite(lSettings, TOUCH_FLAGS_DEDUPLICATE,      isFormItemChecked(F("deduplicate")));
+  bitWrite(lSettings, TOUCH_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("init_objectevent")));
   # ifdef TOUCH_USE_EXTENDED_TOUCH
-  set8BitToUL(lSettings, TOUCH_FLAGS_INITIAL_GROUP, getFormItemInt(F("tch_initial_group"))); // Button group
-  bitWrite(lSettings, TOUCH_FLAGS_DRAWBTN_VIA_RULES, isFormItemChecked(F("tch_via_rules")));
-  bitWrite(lSettings, TOUCH_FLAGS_AUTO_PAGE_ARROWS,  isFormItemChecked(F("tch_page_buttons")));
-  bitWrite(lSettings, TOUCH_FLAGS_PGUP_BELOW_MENU,   isFormItemChecked(F("tch_page_below")));
+  set8BitToUL(lSettings, TOUCH_FLAGS_INITIAL_GROUP, getFormItemInt(F("initial_group"))); // Button group
+  bitWrite(lSettings, TOUCH_FLAGS_DRAWBTN_VIA_RULES, isFormItemChecked(F("via_rules")));
+  bitWrite(lSettings, TOUCH_FLAGS_AUTO_PAGE_ARROWS,  isFormItemChecked(F("page_buttons")));
+  bitWrite(lSettings, TOUCH_FLAGS_PGUP_BELOW_MENU,   isFormItemChecked(F("page_below")));
   # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
 
-  config += getFormItemInt(F("tch_use_calibration")); // First value should NEVER be empty, or parseString() wil get confused
+  config += getFormItemInt(F("use_calibration")); // First value should NEVER be empty, or parseString() wil get confused
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(isFormItemChecked(F("tch_log_calibration")) ? 1 : 0);
+  config += toStringNoZero(isFormItemChecked(F("log_calibration")) ? 1 : 0);
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(getFormItemInt(F("tch_cal_tl_x")));
+  config += toStringNoZero(getFormItemInt(F("cal_tl_x")));
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(getFormItemInt(F("tch_cal_tl_y")));
+  config += toStringNoZero(getFormItemInt(F("cal_tl_y")));
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(getFormItemInt(F("tch_cal_br_x")));
+  config += toStringNoZero(getFormItemInt(F("cal_br_x")));
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(getFormItemInt(F("tch_cal_br_y")));
+  config += toStringNoZero(getFormItemInt(F("cal_br_y")));
   config += TOUCH_SETTINGS_SEPARATOR;
-  config += toStringNoZero(getFormItemInt(F("tch_debounce")));
+  config += toStringNoZero(getFormItemInt(F("debounce")));
   config += TOUCH_SETTINGS_SEPARATOR;
   config += ull2String(lSettings);
   # ifdef TOUCH_USE_EXTENDED_TOUCH
