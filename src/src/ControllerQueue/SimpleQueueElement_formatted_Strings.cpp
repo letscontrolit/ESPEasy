@@ -1,6 +1,10 @@
 #include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
+#include "../Helpers/StringConverter.h"
+
+#include "../../_Plugin_Helper.h"
+
 
 SimpleQueueElement_formatted_Strings::SimpleQueueElement_formatted_Strings(struct EventStruct *event) :
   idx(event->idx),
