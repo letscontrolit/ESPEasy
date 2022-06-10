@@ -486,6 +486,29 @@ void addFormSelector(const String  & label,
               );
 }
 
+void addFormSelector_script(const __FlashStringHelper * label,
+                            const __FlashStringHelper * id,
+                            int           optionCount,
+                            const __FlashStringHelper * options[],
+                            const int     indices[],
+                            const String  attr[],
+                            int           selectedIndex,
+                            const __FlashStringHelper * onChangeCall
+                            #ifdef          ENABLE_TOOLTIPS
+                            , const String& tooltip
+                            #endif // ifdef ENABLE_TOOLTIPS
+                            )
+{
+  addRowLabel_tr_id(label, id);
+  do_addSelector_Head(id, F("wide"), onChangeCall, false
+                      #ifdef ENABLE_TOOLTIPS
+                      , tooltip
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
+}
+
 void addFormSelector_script(const String  & label,
                             const String  & id,
                             int             optionCount,
@@ -493,7 +516,7 @@ void addFormSelector_script(const String  & label,
                             const int       indices[],
                             const String    attr[],
                             int             selectedIndex,
-                            const String& onChangeCall
+                            const __FlashStringHelper * onChangeCall
                             #ifdef          ENABLE_TOOLTIPS
                             , const String& tooltip
                             #endif // ifdef ENABLE_TOOLTIPS
@@ -606,6 +629,12 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
   return validIntFromString(valueStr, value);
 }
 
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                int         & value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
 bool update_whenset_FormItemInt(const String& key, int& value) {
   int tmpVal;
 
@@ -615,6 +644,13 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   }
   return false;
 }
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                uint8_t& value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
 
 bool update_whenset_FormItemInt(const String& key, uint8_t& value) {
   int tmpVal;

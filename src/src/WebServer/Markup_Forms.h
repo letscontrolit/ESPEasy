@@ -17,7 +17,7 @@ void addFormSeparator(int clspan);
 // Add a note as row start
 // ********************************************************************************
 void addFormNote(const __FlashStringHelper * text);
-void addFormNote(const String& text, const String& id = "");
+void addFormNote(const String& text, const String& id = EMPTY_STRING);
 
 // ********************************************************************************
 // Create Forms
@@ -128,7 +128,7 @@ void addFormTextBox(const __FlashStringHelper * label,
                     int           maxlength,
                     bool          readonly = false,
                     bool          required = false,
-                    const String& pattern = "");
+                    const String& pattern = EMPTY_STRING);
 
 void addFormTextBox(const String& label,
                     const String& id,
@@ -136,7 +136,7 @@ void addFormTextBox(const String& label,
                     int           maxlength,
                     bool          readonly = false,
                     bool          required = false,
-                    const String& pattern  = ""
+                    const String& pattern  = EMPTY_STRING
                     #ifdef ENABLE_TOOLTIPS
                     ,
                     const String& tooltip = EMPTY_STRING
@@ -150,7 +150,7 @@ void addFormTextBox(const __FlashStringHelper * classname,
                     int           maxlength,
                     bool          readonly = false,
                     bool          required = false,
-                    const String& pattern  = ""
+                    const String& pattern  = EMPTY_STRING
                     #ifdef ENABLE_TOOLTIPS
                     ,
                     const String& tooltip = EMPTY_STRING
@@ -268,15 +268,6 @@ void addFormSelector(const String& label,
                      int           selectedIndex,
                      boolean       reloadonchange);
 
-void addFormSelector_script(const String& label,
-                            const String& id,
-                            int           optionCount,
-                            const __FlashStringHelper * options[],
-                            const int     indices[],
-                            const String  attr[],
-                            int           selectedIndex,
-                            const String& onChangeCall);
-
 
 void addFormSelector(const String& label,
                      const String& id,
@@ -284,7 +275,12 @@ void addFormSelector(const String& label,
                      const String  options[],
                      const int     indices[],
                      int           selectedIndex,
-                     bool          reloadonchange);
+                     bool          reloadonchange
+                     #ifdef ENABLE_TOOLTIPS
+                     ,
+                     const String& tooltip = EMPTY_STRING
+                     #endif
+                     );
 
 void addFormSelector(const String& label,
                      const String& id,
@@ -300,6 +296,21 @@ void addFormSelector(const String& label,
                      #endif
                      );
 
+void addFormSelector_script(const __FlashStringHelper * label,
+                            const __FlashStringHelper * id,
+                            int           optionCount,
+                            const __FlashStringHelper * options[],
+                            const int     indices[],
+                            const String  attr[],
+                            int           selectedIndex,
+                            const __FlashStringHelper * onChangeCall
+                            #ifdef ENABLE_TOOLTIPS
+                            ,
+                            const String& tooltip = EMPTY_STRING
+                            #endif
+                            );
+
+
 void addFormSelector_script(const String& label,
                             const String& id,
                             int           optionCount,
@@ -307,7 +318,7 @@ void addFormSelector_script(const String& label,
                             const int     indices[],
                             const String  attr[],
                             int           selectedIndex,
-                            const String& onChangeCall
+                            const __FlashStringHelper * onChangeCall
                             #ifdef ENABLE_TOOLTIPS
                             ,
                             const String& tooltip = EMPTY_STRING
@@ -331,8 +342,14 @@ int getFormItemInt(const String& key, int defaultValue);
 bool getCheckWebserverArg_int(const String& key,
                               int         & value);
 
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                int         & value);
+
 bool update_whenset_FormItemInt(const String& key,
                                 int         & value);
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                uint8_t     & value);
 
 bool update_whenset_FormItemInt(const String& key,
                                 uint8_t     & value);
