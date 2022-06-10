@@ -55,7 +55,7 @@ void addFormNote(const String& text, const String& id)
 // Add a checkbox Form
 // ********************************************************************************
 
-void addFormCheckBox_disabled(const String& label, const String& id, boolean checked
+void addFormCheckBox_disabled(const String& label, const String& id, bool checked
                               #ifdef ENABLE_TOOLTIPS
                               , const String& tooltip
                               #endif // ifdef ENABLE_TOOLTIPS
@@ -67,19 +67,19 @@ void addFormCheckBox_disabled(const String& label, const String& id, boolean che
                   );
 }
 
-void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, boolean checked, bool disabled)
+void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, bool checked, bool disabled)
 {
   addRowLabel_tr_id(label, id);
   addCheckBox(id, checked, disabled);
 }
 
-void addFormCheckBox(const __FlashStringHelper * label, const String& id, boolean checked, bool disabled)
+void addFormCheckBox(const __FlashStringHelper * label, const String& id, bool checked, bool disabled)
 {
   addRowLabel_tr_id(label, id);
   addCheckBox(id, checked, disabled);
 }
 
-void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled
+void addFormCheckBox(const String& label, const String& id, bool checked, bool disabled
                      #ifdef ENABLE_TOOLTIPS
                      , const String& tooltip
                      #endif // ifdef ENABLE_TOOLTIPS
@@ -93,7 +93,7 @@ void addFormCheckBox(const String& label, const String& id, boolean checked, boo
               );
 }
 
-void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled
+void addFormCheckBox(LabelType::Enum label, bool checked, bool disabled
                      #ifdef ENABLE_TOOLTIPS
                      , const String& tooltip
                      #endif // ifdef ENABLE_TOOLTIPS
@@ -105,7 +105,7 @@ void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled
                   );
 }
 
-void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
+void addFormCheckBox_disabled(LabelType::Enum label, bool checked) {
   addFormCheckBox(label, checked, true);
 }
 
@@ -448,7 +448,7 @@ void addFormSelector(const String& label,
                      const int     indices[],
                      const String  attr[],
                      int           selectedIndex,
-                     boolean       reloadonchange)
+                     bool       reloadonchange)
 {
   addRowLabel_tr_id(label, id);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
@@ -472,7 +472,7 @@ void addFormSelector(const String  & label,
                      const int       indices[],
                      const String    attr[],
                      int             selectedIndex,
-                     boolean       reloadonchange
+                     bool       reloadonchange
                      #ifdef          ENABLE_TOOLTIPS
                      , const String& tooltip
                      #endif // ifdef ENABLE_TOOLTIPS
@@ -531,6 +531,28 @@ void addFormSelector_script(const String  & label,
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
+
+void addFormSelector_YesNo(const __FlashStringHelper * label,
+                           const __FlashStringHelper * id,
+                           int           selectedIndex,
+                           bool       reloadonchange)
+{
+  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
+  int optionValuesNoYes[2]                   = { 0, 1 };
+  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+}
+
+void addFormSelector_YesNo(const __FlashStringHelper * label,
+                           const String& id,
+                           int           selectedIndex,
+                           bool       reloadonchange)
+{
+  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
+  int optionValuesNoYes[2]                   = { 0, 1 };
+  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+}
+
+
 
 // ********************************************************************************
 // Add a GPIO pin select dropdown list
