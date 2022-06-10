@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-06-10 tonhuisman: Remove p123_ prefixes on Settings variables
  * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling mostly to ESPEasy_TouchHandler (only rot and flip subcommands remain)
  *                        Move PLUGIN_GET_CONFIG_VALUE handling to ESPEasy_TouchHandler
  * 2022-05-29 tonhuisman: Extend enable,disable subcommands to support a list of objects
@@ -105,7 +106,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
       {
         addRowLabel(F("Display task"));
-        addTaskSelect(F("p123_task"), P123_CONFIG_DISPLAY_TASK);
+        addTaskSelect(F("task"), P123_CONFIG_DISPLAY_TASK);
         addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
       }
 
@@ -122,19 +123,19 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       if (width_ == 0) {
         width_ = P123_TS_X_RES; // default value
       }
-      addFormNumericBox(F("Screen Width (px) (x)"), F("p123_width"), width_, 1, 65535);
+      addFormNumericBox(F("Screen Width (px) (x)"), F("width"), width_, 1, 65535);
 
 
       if (height_ == 0) {
         height_ = P123_TS_Y_RES; // default value
       }
-      addFormNumericBox(F("Screen Height (px) (y)"), F("p123_height"), height_, 1, 65535);
+      addFormNumericBox(F("Screen Height (px) (y)"), F("height"), height_, 1, 65535);
 
-      AdaGFXFormRotation(F("p123_rotate"), rotation_);
+      AdaGFXFormRotation(F("rotate"), rotation_);
 
-      AdaGFXFormColorDepth(F("p123_colordepth"), P123_COLOR_DEPTH, (colorDepth_ == 0));
+      AdaGFXFormColorDepth(F("colordepth"), P123_COLOR_DEPTH, (colorDepth_ == 0));
 
-      addFormNumericBox(F("Touch minimum pressure"), F("p123_treshold"), P123_CONFIG_TRESHOLD, 0, 255);
+      addFormNumericBox(F("Touch minimum pressure"), F("treshold"), P123_CONFIG_TRESHOLD, 0, 255);
 
       {
         P123_data_struct *P123_data = new (std::nothrow) P123_data_struct();
@@ -155,13 +156,13 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P123_CONFIG_DISPLAY_PREV = P123_CONFIG_DISPLAY_TASK;
-      P123_CONFIG_TRESHOLD     = getFormItemInt(F("p123_treshold"));
-      P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("p123_task"));
-      P123_CONFIG_ROTATION     = getFormItemInt(F("p123_rotate"));
-      P123_CONFIG_X_RES        = getFormItemInt(F("p123_width"));
-      P123_CONFIG_Y_RES        = getFormItemInt(F("p123_height"));
+      P123_CONFIG_TRESHOLD     = getFormItemInt(F("treshold"));
+      P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("task"));
+      P123_CONFIG_ROTATION     = getFormItemInt(F("rotate"));
+      P123_CONFIG_X_RES        = getFormItemInt(F("width"));
+      P123_CONFIG_Y_RES        = getFormItemInt(F("height"));
 
-      int colorDepth = getFormItemInt(F("p123_colordepth"), -1);
+      int colorDepth = getFormItemInt(F("colordepth"), -1);
 
       if (colorDepth != -1) {
         P123_COLOR_DEPTH = colorDepth;
