@@ -93,8 +93,10 @@ const __FlashStringHelper* toString(const AdaGFXColorDepth& colorDepth) {
     # if ADAGFX_SUPPORT_7COLOR
     case AdaGFXColorDepth::SevenColor: return F("eInk - 7 colors");
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor: return F("TFT - 8 colors");
     case AdaGFXColorDepth::SixteenColor: return F("TFT - 16 colors");
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor: return F("Full color - 65535 colors");
   }
   return F("None");
@@ -169,9 +171,17 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
                           uint16_t                   selectedIndex,
                           bool                       enabled) {
   # if ADAGFX_SUPPORT_7COLOR
+  #  if ADAGFX_SUPPORT_8and16COLOR
   const int colorDepthCount = 7 + 1;
+  #  else // if ADAGFX_SUPPORT_8and16COLOR
+  const int colorDepthCount = 5 + 1;
+  #  endif // if ADAGFX_SUPPORT_8and16COLOR
   # else // if ADAGFX_SUPPORT_7COLOR
+  #  if ADAGFX_SUPPORT_8and16COLOR
   const int colorDepthCount = 6 + 1;
+  #  else // if ADAGFX_SUPPORT_8and16COLOR
+  const int colorDepthCount = 4 + 1;
+  #  endif // if ADAGFX_SUPPORT_8and16COLOR
   # endif // if ADAGFX_SUPPORT_7COLOR
   const __FlashStringHelper *colorDepths[colorDepthCount] = { // Be sure to use all available modes from enum!
     toString(static_cast<AdaGFXColorDepth>(0)),               // include None
@@ -181,8 +191,10 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
     # if ADAGFX_SUPPORT_7COLOR
     toString(AdaGFXColorDepth::SevenColor),
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     toString(AdaGFXColorDepth::EightColor),
     toString(AdaGFXColorDepth::SixteenColor),
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     toString(AdaGFXColorDepth::FullColor)
   };
   const int colorDepthOptions[colorDepthCount] = {
@@ -193,8 +205,10 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
     # if ADAGFX_SUPPORT_7COLOR
     static_cast<int>(AdaGFXColorDepth::SevenColor),
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     static_cast<int>(AdaGFXColorDepth::EightColor),
     static_cast<int>(AdaGFXColorDepth::SixteenColor),
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     static_cast<int>(AdaGFXColorDepth::FullColor)
   };
 
@@ -682,7 +696,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   getWindowOffsets(_xo, _yo);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
-  if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
+  if (!(cmd.equals(_trigger) ||
+        isAdaGFXTrigger(cmd)) ||
+      subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
   String log;
   std::vector<String> sParams;
@@ -749,7 +765,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
+        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
       } else {
         _display->setCursor(nParams[0] + _xo - _p095_compensation, nParams[1] + _yo - _p095_compensation);
       }
@@ -765,7 +781,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
+        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
       } else {
         _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
       }
@@ -2080,13 +2096,17 @@ uint16_t AdaGFXparseColor(String                & s,
   }
 
   if ((result == -1) || (result == ADAGFX_WHITE)) { // Default & don't convert white
+    # if ADAGFX_SUPPORT_8and16COLOR
+
     if (
       # if ADAGFX_SUPPORT_7COLOR
       (colorDepth >= AdaGFXColorDepth::SevenColor) &&
       # endif // if ADAGFX_SUPPORT_7COLOR
       (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
-    } else {
+    } else
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
+    {
       if (emptyIsBlack) {
         result = ADAGFX_BLACK;
       } else {
@@ -2106,12 +2126,14 @@ uint16_t AdaGFXparseColor(String                & s,
         result = AdaGFXrgb565ToColor7(result); // Convert
         break;
       # endif  // if ADAGFX_SUPPORT_7COLOR
+      # if ADAGFX_SUPPORT_8and16COLOR
       case AdaGFXColorDepth::EightColor:
         result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
         break;
       case AdaGFXColorDepth::SixteenColor:
         result = color565((result >> 11 & 0x1F) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
         break;
+      # endif // if ADAGFX_SUPPORT_8and16COLOR
       case AdaGFXColorDepth::FullColor:
         // No color reduction
         break;
@@ -2171,8 +2193,10 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
       break;
     }
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor: // TODO: Sort out the actual 8/16 color options
     case AdaGFXColorDepth::SixteenColor:
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor:
     {
       AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_BLACK,       colorDepth);
@@ -2255,8 +2279,10 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(const uint16_t        & 
       break;
     }
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor:
     case AdaGFXColorDepth::SixteenColor:
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor:
     {
       switch (color) {

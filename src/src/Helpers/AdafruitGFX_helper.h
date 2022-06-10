@@ -130,6 +130,9 @@
 #  ifdef ADAGFX_USE_ASCIITABLE
 #   undef ADAGFX_USE_ASCIITABLE
 #  endif // ifdef ADAGFX_USE_ASCIITABLE
+#  ifdef ADAGFX_SUPPORT_8and16COLOR
+#   undef ADAGFX_SUPPORT_8and16COLOR
+#  endif // ifdef ADAGFX_SUPPORT_8and16COLOR
 // #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
 // #   undef ADAGFX_ENABLE_BMP_DISPLAY
 // #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
@@ -173,7 +176,7 @@
 # define ADAGFX_PARSE_POSTFIX     F("~")            // Will be removed before the normal template parsing is done
 # define ADAGFX_PARSE_POSTFIX_LEN 1
 
-# define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_write") // Universal command trigger
+# define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_trigger") // Universal command trigger
 
 // Color definitions, borrowed from Adafruit_ILI9341.h
 
@@ -228,11 +231,21 @@ enum class AdaGFXTextPrintMode : uint8_t {
 };
 
 # if ADAGFX_SUPPORT_7COLOR
+#  if ADAGFX_SUPPORT_8and16COLOR
 #  define ADAGFX_COLORDEPTH_COUNT 7
 #  define ADAGFX_MONOCOLORS_COUNT 4
+#  else // if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 5
+#   define ADAGFX_MONOCOLORS_COUNT 4
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
 # else // if ADAGFX_SUPPORT_7COLOR
+#  if ADAGFX_SUPPORT_8and16COLOR
 #  define ADAGFX_COLORDEPTH_COUNT 6
 #  define ADAGFX_MONOCOLORS_COUNT 3
+#  else // if ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_COLORDEPTH_COUNT 4
+#   define ADAGFX_MONOCOLORS_COUNT 3
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
 # endif // if ADAGFX_SUPPORT_7COLOR
 enum class AdaGFXColorDepth : uint16_t {
   Monochrome            = 2u, // Black & white
@@ -241,8 +254,10 @@ enum class AdaGFXColorDepth : uint16_t {
   # if ADAGFX_SUPPORT_7COLOR
   SevenColor = 7u,            // Black, white, red, yellow, blue, green, orange
   # endif // if ADAGFX_SUPPORT_7COLOR
+  # if ADAGFX_SUPPORT_8and16COLOR
   EightColor   = 8u,          // 8 regular colors
   SixteenColor = 16u,         // 16 colors
+  # endif // if ADAGFX_SUPPORT_8and16COLOR
   FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
 };
 
