@@ -1878,4 +1878,8 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#if defined(LIMIT_BUILD_SIZE) && defined(USES_ESPEASY_NOW)
+  #undef USES_ESPEASY_NOW
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

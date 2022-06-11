@@ -35,7 +35,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
       // Only allow to set to ESPEasyNOW_only from WiFi
       return;
     }
-    #ifdef USES_EASPEASY_NOW
+    #ifdef USES_ESPEASY_NOW
     if (use_EspEasy_now) {
       ESPEasy_now_handler.end();
       active_network_medium = new_medium;
@@ -64,7 +64,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
         }
         break;
       case NetworkMedium_t::ESPEasyNOW_only:
-        #ifdef USES_EASPEASY_NOW
+        #ifdef USES_ESPEASY_NOW
         if (use_EspEasy_now) {
           ESPEasy_now_handler.end();
         }
@@ -83,7 +83,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 }
 
 bool isESPEasy_now_only() {
-  #ifdef USES_EASPEASY_NOW
+  #ifdef USES_ESPEASY_NOW
     if (active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
       return true;
     }

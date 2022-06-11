@@ -156,7 +156,7 @@ bool ESPEasy_now_handler_t::begin()
   _last_traceroute_sent = 0;
   _last_traceroute_received = 0;
   _last_used = millis();
-  _last_started = millis();
+  _last_started = _last_used;
   _controllerIndex = INVALID_CONTROLLER_INDEX;
 
   if (isESPEasy_now_only()) {
@@ -561,7 +561,7 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
     WiFi.softAPmacAddress(tmp.mac);
     if (tmp == receivedMAC) return handled;
     WiFi.macAddress(tmp.mac);
-    if (tmp == receivedMAC) return handled;
+    if (tmp == receivedMAC) return handled; //-V649
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
