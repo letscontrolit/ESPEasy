@@ -97,7 +97,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
-    addLog(LOG_LEVEL_INFO, F("NEOMATRIX: No init?"));
+    addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Init failed."));
   }
 
   if (isInitialized()) {
@@ -118,10 +118,13 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
     matrix->fillScreen(_bgcolor);                             // fill screen with black color
 
     # ifdef P131_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 1, ADAGFX_WHITE, ADAGFX_BLACK);
-    matrix->show();
-    delay(100);                               // Splash
+
+    if (P131_CONFIG_FLAG_GET_SHOW_SPLASH) {
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 1, ADAGFX_WHITE, ADAGFX_BLACK);
+      matrix->show();
+      delay(100); // Splash
+    }
     # endif // ifdef P131_SHOW_SPLASH
 
     matrix->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
@@ -139,7 +142,9 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P131_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Exit."));
+  # endif // ifndef BUILD_NO_DEBUG
 
   if ((nullptr != matrix) && bitRead(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     matrix->setTextColor(ADAGFX_WHITE, ADAGFX_BLACK);
@@ -153,10 +158,10 @@ bool P131_data_struct::plugin_exit(struct EventStruct *event) {
  * cleanup: De-initialize pointers
  ***************************************************************************/
 void P131_data_struct::cleanup() {
-  if (nullptr != gfxHelper) { delete gfxHelper; }
+  delete gfxHelper;
   gfxHelper = nullptr;
 
-  if (nullptr != matrix) { delete matrix; }
+  delete matrix;
   matrix = nullptr;
 }
 
@@ -176,9 +181,9 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
 
       for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
         content[x] = P131_content_struct();
-        String opts    = parseString(strings[x], 2);
-        int    optBits = 0;
-        validIntFromString(opts, optBits);
+        String   opts    = parseString(strings[x], 2);
+        uint32_t optBits = 0;
+        validUIntFromString(opts, optBits);
         content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
         content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
         content[x].pixelMode   = bitRead(optBits, P131_OPTBITS_PIXELSCROLL);
@@ -237,8 +242,8 @@ void P131_data_struct::display_content(struct EventStruct *event,
  * plugin_write: Handle commands
  ***************************************************************************/
 bool P131_data_struct::plugin_write(struct EventStruct *event, const String& string) {
-  bool   success = false;
-  String cmd     = parseString(string, 1);
+  bool success     = false;
+  const String cmd = parseString(string, 1);
 
   if ((nullptr != matrix) && cmd.equals(_commandTriggerCmd)) {
     String sub = parseString(string, 2);
@@ -333,7 +338,7 @@ void P131_data_struct::updateFontMetrics() {
       log += F(", yp: ");
       log += matrix->getCursorY();
     }
-    addLog(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // ifdef P131_DEBUG_LOG
 }
