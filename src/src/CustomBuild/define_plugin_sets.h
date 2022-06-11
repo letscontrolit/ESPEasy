@@ -1878,11 +1878,15 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#if defined(LIMIT_BUILD_SIZE) && defined(USES_ESPEASY_NOW)
-  #undef USES_ESPEASY_NOW
+#ifdef USES_ESPEASY_NOW
+  #if defined(LIMIT_BUILD_SIZE) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
+    // Will not fit on ESP8266 along with IR plugins included
+    #undef USES_ESPEASY_NOW
+  #endif
 #endif
 
 #if defined(USES_C019) && !defined(USES_ESPEASY_NOW)
+  // C019 depends on ESPEASY_NOW, so don't use it if ESPEasy_NOW is excluded
   #undef USES_C019
 #endif
 
