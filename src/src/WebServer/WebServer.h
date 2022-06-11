@@ -20,6 +20,8 @@
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 
+void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size);
+
 void sendHeadandTail(const __FlashStringHelper * tmplName,
                      boolean       Tail      = false,
                      boolean       rebooting = false);

@@ -428,7 +428,7 @@ uint8_t P073_data_struct::mapCharToFontPosition(char    character,
       } else if (isAlpha(character)) {
         position = character - (isLowerCase(character) ? 'a' : 'A') + 42;
       } else {
-        uint8_t idx = specialChars.indexOf(character);
+        int idx = specialChars.indexOf(character);
 
         if (idx > -1) {
           position = idx + 10;

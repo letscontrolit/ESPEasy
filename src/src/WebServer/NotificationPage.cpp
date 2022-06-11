@@ -56,7 +56,7 @@ void handle_notifications() {
     }
     else
     {
-      if (Settings.Notification != 0)
+      if (Settings.Notification[notificationindex] != 0)
       {
         nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
