@@ -134,19 +134,15 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Options"));
-      # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
-      const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
-      int optionValuesNoYes[2]                   = { 0, 1 };
-      # endif // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
 
       # if P037_JSON_SUPPORT
-      addFormSelector(F("Parse JSON messages"), F("p037_parse_json"),     2, optionsNoYes, optionValuesNoYes, P037_PARSE_JSON,     true);
+      addFormSelector_YesNo(F("Parse JSON messages"), F("p037_parse_json"), P037_PARSE_JSON,     true);
       # endif // if P037_JSON_SUPPORT
       # if P037_FILTER_SUPPORT
-      addFormSelector(F("Apply filters"),       F("p037_apply_filters"),  2, optionsNoYes, optionValuesNoYes, P037_APPLY_FILTERS,  true);
+      addFormSelector_YesNo(F("Apply filters"),       F("p037_apply_filters"), P037_APPLY_FILTERS,  true);
       # endif // if P037_FILTER_SUPPORT
       # if P037_MAPPING_SUPPORT
-      addFormSelector(F("Apply mappings"),      F("p037_apply_mappings"), 2, optionsNoYes, optionValuesNoYes, P037_APPLY_MAPPINGS, true);
+      addFormSelector_YesNo(F("Apply mappings"),      F("p037_apply_mappings"), P037_APPLY_MAPPINGS, true);
       # endif // if P037_MAPPING_SUPPORT
       # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       #  if !defined(LIMIT_BUILD_SIZE)

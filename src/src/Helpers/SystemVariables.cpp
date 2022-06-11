@@ -70,56 +70,63 @@ String timeReplacement_leadZero(int value)
 }
 
 // FIXME TD-er: Try to match these with  StringProvider::getValue
-
-
-String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
+LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
   LabelType::Enum label = LabelType::MAX_LABEL;
-
   switch (enumval)
   {
-    case IP:                label = LabelType::IP_ADDRESS; break;
-    case SUBNET:            label = LabelType::IP_SUBNET; break;
-    case DNS:               label = LabelType::DNS; break;
-    case DNS_1:             label = LabelType::DNS_1; break;
-    case DNS_2:             label = LabelType::DNS_2; break;
-    case GATEWAY:           label = LabelType::GATEWAY; break;
-    case CLIENTIP:          label = LabelType::CLIENT_IP; break;
+    case SystemVariables::IP:                label = LabelType::IP_ADDRESS; break;
+    case SystemVariables::SUBNET:            label = LabelType::IP_SUBNET; break;
+    case SystemVariables::DNS:               label = LabelType::DNS; break;
+    case SystemVariables::DNS_1:             label = LabelType::DNS_1; break;
+    case SystemVariables::DNS_2:             label = LabelType::DNS_2; break;
+    case SystemVariables::GATEWAY:           label = LabelType::GATEWAY; break;
+    case SystemVariables::CLIENTIP:          label = LabelType::CLIENT_IP; break;
 
     #ifdef HAS_ETHERNET
 
-    case ETHWIFIMODE:       label = LabelType::ETH_WIFI_MODE; break; // 0=WIFI, 1=ETH
-    case ETHCONNECTED:      label = LabelType::ETH_CONNECTED; break; // 0=disconnected, 1=connected
-    case ETHDUPLEX:         label = LabelType::ETH_DUPLEX; break;
-    case ETHSPEED:          label = LabelType::ETH_SPEED; break;
-    case ETHSTATE:          label = LabelType::ETH_STATE; break;
-    case ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
+    case SystemVariables::ETHWIFIMODE:       label = LabelType::ETH_WIFI_MODE; break; // 0=WIFI, 1=ETH
+    case SystemVariables::ETHCONNECTED:      label = LabelType::ETH_CONNECTED; break; // 0=disconnected, 1=connected
+    case SystemVariables::ETHDUPLEX:         label = LabelType::ETH_DUPLEX; break;
+    case SystemVariables::ETHSPEED:          label = LabelType::ETH_SPEED; break;
+    case SystemVariables::ETHSTATE:          label = LabelType::ETH_STATE; break;
+    case SystemVariables::ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
     #endif // ifdef HAS_ETHERNET
-    case LCLTIME:           label = LabelType::LOCAL_TIME; break;
-    case MAC:               label = LabelType::STA_MAC; break;
-    case RSSI:              label = LabelType::WIFI_RSSI; break;
-    case SUNRISE_S:         label = LabelType::SUNRISE_S; break;
-    case SUNSET_S:          label = LabelType::SUNSET_S; break;
-    case SUNRISE_M:         label = LabelType::SUNRISE_M; break;
-    case SUNSET_M:          label = LabelType::SUNSET_M; break;
-    case SYSBUILD_DESCR:    label = LabelType::BUILD_DESC; break;
-    case SYSBUILD_FILENAME: label = LabelType::BINARY_FILENAME; break;
-    case SYSBUILD_GIT:      label = LabelType::GIT_BUILD; break;
-    case SYSSTACK:          label = LabelType::FREE_STACK; break;
-    case UNIT_sysvar:       label = LabelType::UNIT_NR; break;
-    case FLASH_FREQ:        label = LabelType::FLASH_CHIP_SPEED; break;
-    case FLASH_SIZE:        label = LabelType::FLASH_CHIP_REAL_SIZE; break;
-    case FLASH_CHIP_VENDOR: label = LabelType::FLASH_CHIP_VENDOR; break;
-    case FLASH_CHIP_MODEL:  label = LabelType::FLASH_CHIP_MODEL; break;
-    case FS_SIZE:           label = LabelType::FS_SIZE; break;
-    case FS_FREE:           label = LabelType::FS_FREE; break;
+    case SystemVariables::LCLTIME:           label = LabelType::LOCAL_TIME; break;
+    case SystemVariables::MAC:               label = LabelType::STA_MAC; break;
+    case SystemVariables::RSSI:              label = LabelType::WIFI_RSSI; break;
+    case SystemVariables::SUNRISE_S:         label = LabelType::SUNRISE_S; break;
+    case SystemVariables::SUNSET_S:          label = LabelType::SUNSET_S; break;
+    case SystemVariables::SUNRISE_M:         label = LabelType::SUNRISE_M; break;
+    case SystemVariables::SUNSET_M:          label = LabelType::SUNSET_M; break;
+    case SystemVariables::SYSBUILD_DESCR:    label = LabelType::BUILD_DESC; break;
+    case SystemVariables::SYSBUILD_FILENAME: label = LabelType::BINARY_FILENAME; break;
+    case SystemVariables::SYSBUILD_GIT:      label = LabelType::GIT_BUILD; break;
+    case SystemVariables::SYSSTACK:          label = LabelType::FREE_STACK; break;
+    case SystemVariables::UNIT_sysvar:       label = LabelType::UNIT_NR; break;
+    case SystemVariables::FLASH_FREQ:        label = LabelType::FLASH_CHIP_SPEED; break;
+    case SystemVariables::FLASH_SIZE:        label = LabelType::FLASH_CHIP_REAL_SIZE; break;
+    case SystemVariables::FLASH_CHIP_VENDOR: label = LabelType::FLASH_CHIP_VENDOR; break;
+    case SystemVariables::FLASH_CHIP_MODEL:  label = LabelType::FLASH_CHIP_MODEL; break;
+    case SystemVariables::FS_SIZE:           label = LabelType::FS_SIZE; break;
+    case SystemVariables::FS_FREE:           label = LabelType::FS_FREE; break;
 
-    case ESP_CHIP_ID:       label = LabelType::ESP_CHIP_ID; break;
-    case ESP_CHIP_FREQ:     label = LabelType::ESP_CHIP_FREQ; break;
-    case ESP_CHIP_MODEL:    label = LabelType::ESP_CHIP_MODEL; break;
-    case ESP_CHIP_REVISION: label = LabelType::ESP_CHIP_REVISION; break;
-    case ESP_CHIP_CORES:    label = LabelType::ESP_CHIP_CORES; break;
-    case ESP_BOARD_NAME:    label = LabelType::ESP_BOARD_NAME; break;
+    case SystemVariables::ESP_CHIP_ID:       label = LabelType::ESP_CHIP_ID; break;
+    case SystemVariables::ESP_CHIP_FREQ:     label = LabelType::ESP_CHIP_FREQ; break;
+    case SystemVariables::ESP_CHIP_MODEL:    label = LabelType::ESP_CHIP_MODEL; break;
+    case SystemVariables::ESP_CHIP_REVISION: label = LabelType::ESP_CHIP_REVISION; break;
+    case SystemVariables::ESP_CHIP_CORES:    label = LabelType::ESP_CHIP_CORES; break;
+    case SystemVariables::ESP_BOARD_NAME:    label = LabelType::ESP_BOARD_NAME; break;
+
+    default: 
+      // No matching LabelType yet.
+      break;
   }
+  return label;
+}
+
+
+String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
+  const LabelType::Enum label = SystemVariables2LabelType(enumval);
 
   if (LabelType::MAX_LABEL != label) {
     return getValue(label);
@@ -196,6 +203,10 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case VCC:               return String(-1);
     #endif // if FEATURE_ADC_VCC
     case WI_CH:             return String((WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel());
+
+    default:
+      // Already handled above.
+      return EMPTY_STRING;
   }
   return EMPTY_STRING;
 }
