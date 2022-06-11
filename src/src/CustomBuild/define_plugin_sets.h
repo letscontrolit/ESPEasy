@@ -1625,7 +1625,7 @@ To create/register a plugin, you have to :
 */
 
 
-#if defined(USES_C018) || defined(USES_C019)
+#if defined(USES_C018)
   #define USES_PACKED_RAW_DATA
 #endif
 
@@ -1887,6 +1887,11 @@ To create/register a plugin, you have to :
   // C019 depends on ESPEASY_NOW, so don't use it if ESPEasy_NOW is excluded
   #undef USES_C019
 #endif
+
+#if defined(USES_C019) && !defined(USES_PACKED_RAW_DATA)
+  #define USES_PACKED_RAW_DATA
+#endif
+
 
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

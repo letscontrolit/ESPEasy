@@ -40,7 +40,9 @@ struct ControllerDelayHandlerStruct {
     must_check_reply         = settings.MustCheckReply;
     deduplicate              = settings.deduplicate();
     useLocalSystemTime       = settings.useLocalSystemTime();
+#ifdef USES_ESPEASY_NOW
     enableESPEasyNowFallback = settings.enableESPEasyNowFallback();
+#endif
     if (settings.allowExpire()) {
       expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
       if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
@@ -109,6 +111,7 @@ struct ControllerDelayHandlerStruct {
 
   // Return true if message is already present in the queue
   bool isDuplicate(const T& element) const {
+#ifdef USES_ESPEASY_NOW
     // Some controllers may receive duplicate messages, due to lost acknowledgement
     // This is actually the same message, so this should not be processed.
     if (!unitMessageRouteInfo_map.isNew(element.getMessageRouteInfo())) {
@@ -117,6 +120,7 @@ struct ControllerDelayHandlerStruct {
     // The unit message count is still stored to make sure a new one with the same count
     // is considered a duplicate, even when the queue is empty.
     unitMessageRouteInfo_map.add(element.getMessageRouteInfo());
+#endif
 
     // the setting 'deduplicate' does look at the content of the message and only compares it to messages in the queue.
     if (deduplicate && !sendQueue.empty()) {
@@ -249,7 +253,9 @@ struct ControllerDelayHandlerStruct {
   }
 
   std::list<T>  sendQueue;
+#ifdef USES_ESPEASY_NOW
   mutable UnitMessageRouteInfo_map unitMessageRouteInfo_map;
+#endif
   unsigned long lastSend = 0u;
   unsigned int  minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
   unsigned long expire_timeout = 0;

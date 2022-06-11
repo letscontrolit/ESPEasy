@@ -3,9 +3,9 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../Helpers/ESPEasy_now_handler.h"
-
 #ifdef USES_ESPEASY_NOW
+
+#include "../Helpers/ESPEasy_now_handler.h"
 
 extern ESPEasy_now_handler_t ESPEasy_now_handler;
 

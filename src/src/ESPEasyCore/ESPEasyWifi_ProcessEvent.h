@@ -8,7 +8,9 @@ void processDisconnect();
 void processConnect();
 void processGotIP();
 void processDisconnectAPmode();
+#ifdef USES_ESPEASY_NOW
 void processProbeRequestAPmode();
+#endif
 void processConnectAPmode();
 void processDisableAPmode();
 void processScanDone();

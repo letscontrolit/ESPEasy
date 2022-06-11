@@ -238,6 +238,7 @@ const __FlashStringHelper * getMiscStatsName_F(int stat) {
     case PARSE_SYSVAR:            return F("parseSystemVariables()");
     case PARSE_SYSVAR_NOCHANGE:   return F("parseSystemVariables() No change");
     case HANDLE_SERVING_WEBPAGE:  return F("handle webpage");
+#ifdef USES_ESPEASY_NOW
     case HANDLE_ESPEASY_NOW_LOOP: return F(ESPEASY_NOW_NAME " handle received message");
     case EXPIRED_ESPEASY_NOW_LOOP: return F(ESPEASY_NOW_NAME " incomplete expired");
     case INVALID_ESPEASY_NOW_LOOP: return F(ESPEASY_NOW_NAME " incomplete invalid");
@@ -246,6 +247,7 @@ const __FlashStringHelper * getMiscStatsName_F(int stat) {
     case ESPEASY_NOW_SEND_MSG_FAIL: return F(ESPEASY_NOW_NAME " send Message Fail");
     case ESPEASY_NOW_SEND_PCKT:    return F(ESPEASY_NOW_NAME " send Packet");
     case ESPEASY_NOW_DEDUP_LOOP:   return F(ESPEASY_NOW_NAME " DuplicateCheck loop");
+#endif
     case WIFI_SCAN_ASYNC:         return F("WiFi Scan Async");
     case WIFI_SCAN_SYNC:          return F("WiFi Scan Sync (blocking)");
     case C018_AIR_TIME:           return F("C018 LoRa TTN - Air Time");

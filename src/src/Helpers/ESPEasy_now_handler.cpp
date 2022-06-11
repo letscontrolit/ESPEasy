@@ -1,5 +1,9 @@
 #include "../Helpers/ESPEasy_now_handler.h"
 
+# include "../Helpers/_CPlugin_Helper.h"
+
+#ifdef USES_ESPEASY_NOW
+
 
 # include "../ControllerQueue/MQTT_queue_element.h"
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
@@ -34,12 +38,10 @@
 # include "../Helpers/ESPEasy_time_calc.h"
 # include "../Helpers/ESPEasyMutex.h"
 # include "../Helpers/PeriodicalActions.h"
-# include "../Helpers/_CPlugin_Helper.h"
 
 
 # include <list>
 
-#ifdef USES_ESPEASY_NOW
 
 # define ESPEASY_NOW_ACTIVITY_TIMEOUT      125000 // 2 minutes + 5 sec
 # define ESPEASY_NOW_SINCE_LAST_BROADCAST   65000 // 1 minute + 5 sec to start sending a node directly

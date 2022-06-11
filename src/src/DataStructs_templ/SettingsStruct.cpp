@@ -128,12 +128,18 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
+#ifdef USES_ESPEASY_NOW
   return bitRead(VariousBits1, 11);
+#else
+  return false;
+#endif
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow(bool value) {
+#ifdef USES_ESPEASY_NOW
   bitWrite(VariousBits1, 11, value);
+#endif
 }
 
 template<unsigned int N_TASKS>

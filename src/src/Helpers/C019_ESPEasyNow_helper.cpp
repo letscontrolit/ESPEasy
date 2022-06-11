@@ -1,5 +1,6 @@
 #include "../Helpers/C019_ESPEasyNow_helper.h"
 
+#ifdef USES_ESPEASY_NOW
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/CPlugins.h"
@@ -45,3 +46,4 @@ bool C019_ESPEasyNow_helper::process_receive(struct EventStruct *event) {
 void C019_ESPEasyNow_helper::process_received_PluginData(const ESPEasy_Now_p2p_data& data) {
     
 }
+#endif

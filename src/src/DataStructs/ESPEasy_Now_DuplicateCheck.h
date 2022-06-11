@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
+#ifdef USES_ESPEASY_NOW
 class ESPEasy_Now_DuplicateCheck {
 public:
 
@@ -19,6 +22,8 @@ public:
   const uint32_t _key;
   const message_t _type;
 };
+
+#endif
 
 
 #endif // DATASTRUCTS_ESPEASY_NOW_DUPLICATECHECK_H

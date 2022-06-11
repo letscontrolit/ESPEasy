@@ -40,8 +40,11 @@ void processMQTTdelayQueue();
 bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
-                        bool retained,
-                        const MessageRouteInfo_t* messageRouteInfo);
+                        bool retained
+#ifdef USES_ESPEASY_NOW
+                        , const MessageRouteInfo_t* messageRouteInfo
+#endif
+                        );
 
 void updateMQTTclient_connected();
 

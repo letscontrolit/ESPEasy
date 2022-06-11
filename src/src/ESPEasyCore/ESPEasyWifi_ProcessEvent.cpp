@@ -11,9 +11,10 @@
 #include "../ESPEasyCore/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_handler.h"
 #include "../Globals/ESPEasy_now_state.h"
-#include "../Globals/ESPEasy_now_state.h"
+#endif
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MQTT.h"
@@ -184,7 +185,9 @@ void handle_unprocessedNetworkEvents()
 
     if (!WiFiEventData.processedConnectAPmode) { processConnectAPmode(); }
 
+#ifdef USES_ESPEASY_NOW
     if (!WiFiEventData.processedProbeRequestAPmode) { processProbeRequestAPmode(); }
+#endif
 
     if (WiFiEventData.timerAPoff.isSet()) { processDisableAPmode(); }
 
@@ -485,6 +488,7 @@ void processDisconnectAPmode() {
   }
 }
 
+#ifdef USES_ESPEASY_NOW
 void processProbeRequestAPmode() {
   if (WiFiEventData.processedProbeRequestAPmode) { return; }
 
@@ -516,6 +520,7 @@ void processProbeRequestAPmode() {
   APModeProbeRequestReceived_list.pop_front();
   WiFiEventData.processedProbeRequestAPmode = APModeProbeRequestReceived_list.size() == 0;
 }
+#endif
 
 // Client connects to AP on this node
 void processConnectAPmode() {

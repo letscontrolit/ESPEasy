@@ -36,7 +36,9 @@ public:
 
   bool isDuplicate(const C018_queue_element& other) const;
 
+#ifdef USES_ESPEASY_NOW
   const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
+#endif
 
   String packed;
   unsigned long _timestamp         = millis();

@@ -33,7 +33,9 @@ public:
 
   bool isDuplicate(const C011_queue_element& other) const;
 
+#ifdef USES_ESPEASY_NOW
   const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
+#endif
 
   size_t getSize() const;
 

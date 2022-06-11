@@ -8,7 +8,9 @@
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
+#ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_handler.h"
+#endif
 
 #ifdef WEBSERVER_NEW_UI
 

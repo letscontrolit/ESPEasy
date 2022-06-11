@@ -33,12 +33,16 @@ extern WiFiEventHandler stationModeDHCPTimeoutHandler;
 extern WiFiEventHandler stationModeAuthModeChangeHandler;
 extern WiFiEventHandler APModeStationConnectedHandler;
 extern WiFiEventHandler APModeStationDisconnectedHandler;
+#ifdef USES_ESPEASY_NOW
 extern WiFiEventHandler APModeProbeRequestReceivedHandler;
 extern std::list<WiFiEventSoftAPModeProbeRequestReceived> APModeProbeRequestReceived_list;
+#endif
 #endif // ifdef ESP8266
 
 #ifdef ESP32
+#ifdef USES_ESPEASY_NOW
 extern std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
+#endif
 #endif
 
 extern WiFiEventData_t WiFiEventData;

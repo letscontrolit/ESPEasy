@@ -5,6 +5,9 @@
 #include <stdint.h>
 #include <Arduino.h>
 
+#include "../../ESPEasy_common.h"
+
+#ifdef USES_ESPEASY_NOW
 struct ESPEasy_Now_MQTT_QueueCheckState {
   enum Enum : uint8_t {
     Unset = 0,
@@ -12,5 +15,7 @@ struct ESPEasy_Now_MQTT_QueueCheckState {
     Full = 2
   };
 };
+
+#endif
 
 #endif

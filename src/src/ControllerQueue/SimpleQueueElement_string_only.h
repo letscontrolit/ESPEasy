@@ -30,7 +30,9 @@ public:
 
   bool isDuplicate(const simple_queue_element_string_only& other) const;
 
+#ifdef USES_ESPEASY_NOW
   const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
+#endif
 
   String txt;
   unsigned long _timestamp         = millis();

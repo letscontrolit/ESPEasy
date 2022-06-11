@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef USES_ESPEASY_NOW
 #include <map>
 #include <vector>
 
@@ -67,5 +68,6 @@ private:
 
   std::map<uint8_t, MessageRouteInfo_t> _map;
 };
+#endif
 
 #endif // ifndef DATASTRUCTS_MESSAGEROUTEINFO_H

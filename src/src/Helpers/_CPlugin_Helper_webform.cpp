@@ -49,7 +49,9 @@ const __FlashStringHelper * toString(ControllerSettingsStruct::VarType parameter
     case ControllerSettingsStruct::CONTROLLER_SEND_BINARY:              return  F("Send Binary");            
     case ControllerSettingsStruct::CONTROLLER_TIMEOUT:                  return  F("Client Timeout");         
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:     return  F("Sample Set Initiator");   
+#ifdef USES_ESPEASY_NOW
     case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK: return F("Enable " ESPEASY_NOW_NAME " Fallback");
+#endif
 
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
 
@@ -268,9 +270,11 @@ void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettin
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:
       addTaskSelectBox(displayName, internalName, ControllerSettings.SampleSetInitiator);
       break;
+#ifdef USES_ESPEASY_NOW
     case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK:
       addFormCheckBox(displayName, internalName, ControllerSettings.enableESPEasyNowFallback());
       break;
+#endif
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
       addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
       break;
@@ -395,9 +399,11 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_SAMPLE_SET_INITIATOR:
       ControllerSettings.SampleSetInitiator = getFormItemInt(internalName, ControllerSettings.SampleSetInitiator);
       break;
+#ifdef USES_ESPEASY_NOW
     case ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK:
       ControllerSettings.enableESPEasyNowFallback(isFormItemChecked(internalName));
       break;
+#endif
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
       Settings.ControllerEnabled[controllerindex] = isFormItemChecked(internalName);
       break;

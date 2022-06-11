@@ -110,7 +110,9 @@ struct WiFiEventData_t {
   bool processedConnectAPmode    = true;
   bool processedDisconnectAPmode = true;
   bool processedScanDone         = true;
+  #ifdef USES_ESPEASY_NOW
   bool processedProbeRequestAPmode = true;
+  #endif
   bool wifiConnectAttemptNeeded  = true;
   bool wifiConnectInProgress     = false;
   bool warnedNoValidWiFiSettings = false;

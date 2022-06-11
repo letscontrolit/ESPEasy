@@ -39,7 +39,9 @@ public:
 
   bool isDuplicate(const C015_queue_element& other) const;
 
+#ifdef USES_ESPEASY_NOW
   const MessageRouteInfo_t* getMessageRouteInfo() const { return nullptr; }
+#endif
 
   String txt[VARS_PER_TASK];
   int vPin[VARS_PER_TASK]          = { 0 };

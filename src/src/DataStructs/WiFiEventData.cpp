@@ -81,7 +81,9 @@ void WiFiEventData_t::markWiFiTurnOn() {
   processedConnectAPmode    = true;
   processedDisconnectAPmode = true;
   processedScanDone         = true;
+  #ifdef USES_ESPEASY_NOW
   processedProbeRequestAPmode = true;
+  #endif
   wifiConnectAttemptNeeded  = true;
   wifiConnectInProgress     = false;
   processingDisconnect.clear();

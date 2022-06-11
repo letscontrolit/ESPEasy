@@ -15,8 +15,10 @@ C019_queue_element::C019_queue_element(const C019_queue_element& other) :
   _timestamp(other._timestamp),
   TaskIndex(other.TaskIndex),
   controller_idx(other.controller_idx),
-  plugin_id(other.plugin_id),
-  MessageRouteInfo(other.MessageRouteInfo)
+  plugin_id(other.plugin_id)
+#ifdef USES_ESPEASY_NOW
+  , MessageRouteInfo(other.MessageRouteInfo)
+#endif
 {
    event.deep_copy(other.event);
 }

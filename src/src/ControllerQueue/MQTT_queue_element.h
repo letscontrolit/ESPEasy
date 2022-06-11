@@ -39,8 +39,10 @@ public:
 
   bool isDuplicate(const MQTT_queue_element& other) const;
 
+#ifdef USES_ESPEASY_NOW
   const MessageRouteInfo_t* getMessageRouteInfo() const { return &MessageRouteInfo; }
   MessageRouteInfo_t* getMessageRouteInfo() { return &MessageRouteInfo; }
+#endif
 
   void removeEmptyTopics();
 
@@ -50,7 +52,9 @@ public:
   taskIndex_t TaskIndex            = INVALID_TASK_INDEX;
   controllerIndex_t controller_idx = INVALID_CONTROLLER_INDEX;
   bool _retained                   = false;
+#ifdef USES_ESPEASY_NOW
   MessageRouteInfo_t MessageRouteInfo;
+#endif
 };
 
 #endif // USES_MQTT

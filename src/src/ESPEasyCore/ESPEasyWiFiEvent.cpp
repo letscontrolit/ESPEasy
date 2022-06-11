@@ -351,10 +351,12 @@ void onDisconnectedAPmode(const WiFiEventSoftAPModeStationDisconnected& event) {
   WiFiEventData.markDisconnectedAPmode(event.mac);
 }
 
+#ifdef USES_ESPEASY_NOW
 void onProbeRequestAPmode(const WiFiEventSoftAPModeProbeRequestReceived& event) {
   APModeProbeRequestReceived_list.push_back(event);
   WiFiEventData.processedProbeRequestAPmode = false;
 }
+#endif
 
 void onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event) {
   WiFiEventData.setAuthMode(event.newMode);

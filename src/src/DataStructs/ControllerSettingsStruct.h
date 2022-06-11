@@ -87,7 +87,9 @@ struct ControllerSettingsStruct
     CONTROLLER_TIMEOUT,
     CONTROLLER_SAMPLE_SET_INITIATOR,
     CONTROLLER_SEND_BINARY,
+#ifdef USES_ESPEASY_NOW
     CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK,
+#endif
 
     // Keep this as last, is used to loop over all parameters
     CONTROLLER_ENABLED

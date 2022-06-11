@@ -28,8 +28,10 @@
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
+#ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_handler.h"
 #include "../Globals/SendData_DuplicateChecker.h"
+#endif
 #include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
@@ -326,11 +328,13 @@ void processMQTTdelayQueue() {
 #endif
 
   bool processed = false;
+#ifdef USES_ESPEASY_NOW
   MessageRouteInfo_t messageRouteInfo;
   if (element->getMessageRouteInfo() != nullptr) {
     messageRouteInfo = *(element->getMessageRouteInfo());
   }
   messageRouteInfo.appendUnit(Settings.Unit);
+#endif
 
   #ifdef USES_ESPEASY_NOW
   if (element->_topic.startsWith(F("traceroute/")) || element->_topic.indexOf(F("/traceroute/")) != -1) {
@@ -344,11 +348,12 @@ void processMQTTdelayQueue() {
     message += element->_payload;
 
     processed = processMQTT_message(element->controller_idx, element->_topic, message, element->_retained, &messageRouteInfo);
-  } else 
-  #endif
-  {
+  } else {
     processed = processMQTT_message(element->controller_idx, element->_topic, element->_payload, element->_retained, &messageRouteInfo);
   }
+  #else
+  processed = processMQTT_message(element->controller_idx, element->_topic, element->_payload, element->_retained);
+  #endif
 
 
   MQTTDelayHandler->markProcessed(processed);
@@ -373,8 +378,11 @@ void processMQTTdelayQueue() {
 bool processMQTT_message(controllerIndex_t controllerIndex,
                         const String    & topic,
                         const String    & payload,
-                        bool retained,
-                        const MessageRouteInfo_t* messageRouteInfo) 
+                        bool retained
+#ifdef USES_ESPEASY_NOW
+                        , const MessageRouteInfo_t* messageRouteInfo
+#endif
+                        ) 
 {
   bool processed = false;
 
@@ -391,11 +399,13 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
         --WiFiEventData.connectionFailures;
       }
 //#ifndef BUILD_NO_DEBUG
+#ifdef USES_ESPEASY_NOW
       if (loglevelActiveFor(LOG_LEVEL_DEBUG) && messageRouteInfo != nullptr) {
         String log = F("MQTT : published from mesh: ");
         log += messageRouteInfo->toString();
         addLog(LOG_LEVEL_DEBUG, log);
       }
+#endif
 //#endif // ifndef BUILD_NO_DEBUG
       processed = true;
     }

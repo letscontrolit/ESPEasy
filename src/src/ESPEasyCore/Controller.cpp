@@ -20,8 +20,10 @@
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_handler.h"
 #include "../Globals/SendData_DuplicateChecker.h"
+#endif
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Protocol.h"
