@@ -70,8 +70,11 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
           element.txt[x] += event->idx + x;
           element.txt[x] += F("?value=");
           element.txt[x] += formattedValue;
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
+          #ifndef BUILD_NO_DEBUG
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
             addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+          }
+          #endif
         }
       }
 

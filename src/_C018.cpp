@@ -627,8 +627,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       {
-        String options[2] = { F("OTAA"),  F("ABP") };
-        int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
+        const __FlashStringHelper * options[2] = { F("OTAA"),  F("ABP") };
+        const int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
         addFormSelector_script(F("Activation Method"), F("joinmethod"), 2,
                                options, values, nullptr, joinmethod,
                                F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
