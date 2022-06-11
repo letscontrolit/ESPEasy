@@ -1,4 +1,4 @@
 esptool==4.0
-platformio>=6.0.1
+platformio>=6.0.2
 pygit2==1.9.1
 cryptography==37.0.2
