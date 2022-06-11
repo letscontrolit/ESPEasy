@@ -137,8 +137,6 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-
-
 #ifdef MEMORY_ANALYSIS
   #ifdef MQTT_ONLY
     #define USES_C002   // Domoticz MQTT
@@ -480,7 +478,7 @@ To create/register a plugin, you have to :
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-    #ifndef SIZE_1M          // Leaving out Heatpump IR for 1M builds because it won't fit after upgrading IRremoteESP8266 library to v2.8.1
+    #ifndef ESP8266_1M       // Leaving out Heatpump IR for 1M builds because it won't fit after upgrading IRremoteESP8266 library to v2.8.1
       #define USES_P088      // ToniA IR plugin
     #endif
     #define PLUGIN_SET_ONLY_SWITCH
@@ -1679,7 +1677,7 @@ To create/register a plugin, you have to :
 
 
 // Due to size restrictions, disable a few plugins/controllers for 1M builds
-#ifdef SIZE_1M
+#ifdef ESP8266_1M
   #ifdef USES_C003
     #undef USES_C003
   #endif
@@ -1879,7 +1877,7 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef USES_ESPEASY_NOW
-  #if defined(LIMIT_BUILD_SIZE) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
+  #if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M) || (defined(ESP8266) && defined(PLUGIN_BUILD_IR))
     // Will not fit on ESP8266 along with IR plugins included
     #undef USES_ESPEASY_NOW
   #endif
