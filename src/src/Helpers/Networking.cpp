@@ -1226,7 +1226,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     while (http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
       size_t bytes_to_read = downloadBuffSize;
-      if (len > 0 && len < bytes_to_read) {
+      if (len > 0 && len < static_cast<int>(bytes_to_read)) {
         bytes_to_read = len;
       }
       const size_t c = stream->readBytes(buff, bytes_to_read);
@@ -1302,7 +1302,7 @@ bool downloadFirmware(const String& url, String& error)
     while (http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
       size_t bytes_to_read = downloadBuffSize;
-      if (len > 0 && len < bytes_to_read) {
+      if (len > 0 && len < static_cast<int>(bytes_to_read)) {
         bytes_to_read = len;
       }
       const size_t c = stream->readBytes(buff, bytes_to_read);
