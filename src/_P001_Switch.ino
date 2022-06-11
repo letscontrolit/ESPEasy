@@ -408,7 +408,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // long timerstats = millis();
 
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
-      const String monitorEventString = F("GPIO");
+      const __FlashStringHelper * monitorEventString = F("GPIO");
 
       if (validGpio(CONFIG_PIN1))
       {
@@ -531,7 +531,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 // send task event
                 sendData(event);
                 // send monitor event
-                if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, output_value);
+                if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value);
 
                 // reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -625,7 +625,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                 // send task event
                 sendData(event);
                 // send monitor event
-                if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, output_value);
+                if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value);
 
                 // reset Userdata so it displays the correct state value in the web page
                 UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -654,7 +654,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               // send task event: DO NOT SEND TASK EVENT
               //sendData(event);
               // send monitor event
-              if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PIN1, SAFE_BUTTON_EVENT);
+              if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PIN1, SAFE_BUTTON_EVENT);
 
               // reset Userdata so it displays the correct state value in the web page
               UserVar[event->BaseVarIndex] = tempUserVar;
