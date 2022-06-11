@@ -552,6 +552,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
+  addHtml(F("<script>initCM();</script>"));
 
   html_TR_TD();
   {
