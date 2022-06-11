@@ -76,6 +76,10 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) 
   }
 }
 
+void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size) {
+  safe_strncpy_webserver_arg(dest, String(arg), max_size);
+}
+
 void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.

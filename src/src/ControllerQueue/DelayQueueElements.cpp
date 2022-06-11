@@ -46,7 +46,6 @@ void exit_mqtt_delay_queue() {
 * C001_queue_element for queueing requests for C001.
 \*********************************************************************************************/
 #ifdef USES_C001
-# define C001_queue_element simple_queue_element_string_only
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  1)  // -V522
 #endif // ifdef USES_C001
 
@@ -54,7 +53,6 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  1)  // -V522
 * C003_queue_element for queueing requests for C003 Nodo Telnet.
 \*********************************************************************************************/
 #ifdef USES_C003
-# define C003_queue_element simple_queue_element_string_only
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  3)  // -V522
 #endif // ifdef USES_C003
 
@@ -63,7 +61,6 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  4)  // -V522
 #endif // ifdef USES_C004
 
 #ifdef USES_C007
-# define C007_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  7)  // -V522
 #endif // ifdef USES_C007
 
@@ -71,25 +68,22 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  7)  // -V522
 
 /*********************************************************************************************\
 * C008_queue_element for queueing requests for 008: Generic HTTP
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 #ifdef USES_C008
-# define C008_queue_element queue_element_single_value_base
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  8)  // -V522
 #endif // ifdef USES_C008
 
 #ifdef USES_C009
-# define C009_queue_element queue_element_formatted_uservar
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(00,  9)  // -V522
 #endif // ifdef USES_C009
 
 
 /*********************************************************************************************\
 * C010_queue_element for queueing requests for 010: Generic UDP
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 #ifdef USES_C010
-# define C010_queue_element queue_element_single_value_base
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 10)  // -V522
 #endif // ifdef USES_C010
 
@@ -105,10 +99,9 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 11)  // -V522
 
 /*********************************************************************************************\
 * C012_queue_element for queueing requests for 012: Blynk
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 #ifdef USES_C012
-# define C012_queue_element queue_element_single_value_base
 DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP( 0, 12)  // -V522
 #endif // ifdef USES_C012
 

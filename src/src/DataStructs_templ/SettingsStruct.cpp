@@ -11,7 +11,7 @@
 #define DATASTRUCTS_SETTINGSSTRUCT_CPP
 
 template<unsigned int N_TASKS>
-SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) {
+SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) { //-V730
   clearAll();
   clearNetworkSettings();
 }

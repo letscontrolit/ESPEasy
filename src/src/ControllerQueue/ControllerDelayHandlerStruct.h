@@ -30,26 +30,17 @@
 \*********************************************************************************************/
 template<class T>
 struct ControllerDelayHandlerStruct {
-  ControllerDelayHandlerStruct() :
-    lastSend(0),
-    minTimeBetweenMessages(CONTROLLER_DELAY_QUEUE_DELAY_DFLT),
-    expire_timeout(0),
-    max_queue_depth(CONTROLLER_DELAY_QUEUE_DEPTH_DFLT),
-    attempt(0),
-    max_retries(CONTROLLER_DELAY_QUEUE_RETRY_DFLT),
-    delete_oldest(false),
-    must_check_reply(false),
-    deduplicate(false),
-    useLocalSystemTime(false) {}
+  ControllerDelayHandlerStruct() = default;
 
   void configureControllerSettings(const ControllerSettingsStruct& settings) {
-    minTimeBetweenMessages = settings.MinimalTimeBetweenMessages;
-    max_queue_depth        = settings.MaxQueueDepth;
-    max_retries            = settings.MaxRetry;
-    delete_oldest          = settings.DeleteOldest;
-    must_check_reply       = settings.MustCheckReply;
-    deduplicate            = settings.deduplicate();
-    useLocalSystemTime          = settings.useLocalSystemTime();
+    minTimeBetweenMessages   = settings.MinimalTimeBetweenMessages;
+    max_queue_depth          = settings.MaxQueueDepth;
+    max_retries              = settings.MaxRetry;
+    delete_oldest            = settings.DeleteOldest;
+    must_check_reply         = settings.MustCheckReply;
+    deduplicate              = settings.deduplicate();
+    useLocalSystemTime       = settings.useLocalSystemTime();
+    enableESPEasyNowFallback = settings.enableESPEasyNowFallback();
     if (settings.allowExpire()) {
       expire_timeout = max_queue_depth * max_retries * (minTimeBetweenMessages + settings.ClientTimeout);
       if (expire_timeout < CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME) {
@@ -259,16 +250,17 @@ struct ControllerDelayHandlerStruct {
 
   std::list<T>  sendQueue;
   mutable UnitMessageRouteInfo_map unitMessageRouteInfo_map;
-  unsigned long lastSend;
-  unsigned int  minTimeBetweenMessages;
+  unsigned long lastSend = 0u;
+  unsigned int  minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
   unsigned long expire_timeout = 0;
-  uint8_t          max_queue_depth;
-  uint8_t          attempt;
-  uint8_t          max_retries;
-  bool          delete_oldest;
-  bool          must_check_reply;
-  bool          deduplicate;
-  bool          useLocalSystemTime;
+  uint8_t       max_queue_depth = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+  uint8_t       attempt = 0u;
+  uint8_t       max_retries = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+  bool          delete_oldest = false;
+  bool          must_check_reply = false;
+  bool          deduplicate = false;
+  bool          useLocalSystemTime = false;
+  bool          enableESPEasyNowFallback = false;
 };
 
 
@@ -310,23 +302,20 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                           \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
-    if (element == nullptr) return;                                                                                       \
-    MakeControllerSettings(ControllerSettings);                                                                         \
-    bool ready = true;                                                                                                 \
-    if (!AllocatedControllerSettings()) {                                                                              \
-      ready = false;                                                                                                   \
-    } else {                                                                                                           \
-      LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
-      C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                     \
-      if (!C##NNN####M##_DelayHandler->readyToProcess(*element) &&                                                      \
-          !ControllerSettings.enableESPEasyNowFallback()) { ready = false; }                                           \
+    if (element == nullptr) return;                                                                                    \
+    if (C##NNN####M##_DelayHandler->enableESPEasyNowFallback ||                                                        \
+        C##NNN####M##_DelayHandler->readyToProcess(*element)) {                                                        \
+      MakeControllerSettings(ControllerSettings);                                                                      \
+      if (AllocatedControllerSettings()) {                                                                             \
+        LoadControllerSettings(element->controller_idx, ControllerSettings);                                           \
+        C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                   \
+        START_TIMER;                                                                                                   \
+        C##NNN####M##_DelayHandler->markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
+        STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                         \
+      }                                                                                                                \
     }                                                                                                                  \
-    if (ready) {                                                                                                       \
-      START_TIMER;                                                                                                     \
-      C##NNN####M##_DelayHandler->markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
-      STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
-    }                                                                                                                  \
-    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler->getNextScheduleTime());         \
+    Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE,              \
+                                     C##NNN####M##_DelayHandler->getNextScheduleTime());                               \
   }                                                                                                                    \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                             \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                       \

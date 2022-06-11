@@ -195,7 +195,7 @@ bool do_command_case_check(command_case_data         & data,
   if (mustCheckNrArguments) {
     if (!checkNrArguments(data.cmd, data.line, nrArguments)) {
       data.status = return_incorrect_nr_arguments();
-      data.retval = false;
+      //data.retval = false;
       return true; // Command is handled
     }
   }

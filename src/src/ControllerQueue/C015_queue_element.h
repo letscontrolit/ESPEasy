@@ -13,7 +13,7 @@ struct EventStruct;
 
 /*********************************************************************************************\
 * C015_queue_element for queueing requests for 015: Blynk
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 
 class C015_queue_element {
