@@ -6,7 +6,7 @@
 /****************************************************************************
  * ILI9xxx_type_toString: Display-value for the device selected
  ***************************************************************************/
-const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device) {
+const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
   switch (device) {
     case ILI9xxx_type_e::ILI9341_240x320: return F("ILI9341 240 x 320px");
     case ILI9xxx_type_e::ILI9342_240x320: return F("ILI9342 240 x 320px (M5Stack)");
@@ -26,7 +26,9 @@ const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device) {
 /****************************************************************************
  * ILI9xxx_type_toResolution: X and Y resolution for the selected type
  ***************************************************************************/
-void ILI9xxx_type_toResolution(ILI9xxx_type_e device, uint16_t& x, uint16_t& y) {
+void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
+                               uint16_t            & x,
+                               uint16_t            & y) {
   switch (device) {
     case ILI9xxx_type_e::ILI9341_240x320:
     case ILI9xxx_type_e::ILI9342_240x320:
@@ -52,7 +54,7 @@ void ILI9xxx_type_toResolution(ILI9xxx_type_e device, uint16_t& x, uint16_t& y) 
 /****************************************************************************
  * P095_CommandTrigger_toString: return the command string selected
  ***************************************************************************/
-const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd) {
+const __FlashStringHelper* P095_CommandTrigger_toString(const P095_CommandTrigger& cmd) {
   switch (cmd) {
     case P095_CommandTrigger::tft: return F("tft");
     case P095_CommandTrigger::ili9341: return F("ili9341");
@@ -383,6 +385,23 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
   return success;
 }
 
+# if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
+/****************************************************************************
+ * plugin_get_config_value: Retrieve values like [<taskname>#<valuename>]
+ ***************************************************************************/
+bool P095_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success = false;
+
+  if (gfxHelper != nullptr) {
+    success = gfxHelper->pluginGetConfigValue(string);
+  }
+  return success;
+}
+
+# endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
 /****************************************************************************
  * displayOnOff: Turn display on or off
  ***************************************************************************/
@@ -407,7 +426,8 @@ void P095_data_struct::displayOnOff(bool state) {
 /****************************************************************************
  * registerButtonState: the button has been pressed, apply some debouncing
  ***************************************************************************/
-void P095_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
+void P095_data_struct::registerButtonState(const uint8_t& newButtonState,
+                                           const bool   & bPin3Invers) {
   if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
     ButtonLastState = newButtonState;
     DebounceCounter++;

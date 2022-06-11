@@ -80,20 +80,20 @@ enum class ILI9xxx_type_e : uint8_t {
 };
 
 enum class P095_CommandTrigger : uint8_t {
-  tft = 0u,
-  ili9341,
-  ili9342,
-  ili9481,
-  ili9486,
-  ili9488,
-  MAX // Keep as last item!
+  tft     = 0u,
+  ili9341 = 1u,
+  ili9342 = 2u,
+  ili9481 = 3u,
+  ili9486 = 4u,
+  ili9488 = 5u,
+  MAX     = 6u // Keep as last item!
 };
 
-const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device);
-const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd);
-void                       ILI9xxx_type_toResolution(ILI9xxx_type_e device,
-                                                     uint16_t     & x,
-                                                     uint16_t     & y);
+const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device);
+const __FlashStringHelper* P095_CommandTrigger_toString(const P095_CommandTrigger& cmd);
+void                       ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
+                                                     uint16_t            & x,
+                                                     uint16_t            & y);
 
 struct P095_data_struct : public PluginTaskData_base {
 public:
@@ -116,11 +116,15 @@ public:
   bool plugin_read(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
+  # if ADAGFX_ENABLE_GET_CONFIG_VALUE
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string);
+  # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_once_a_second(struct EventStruct *event);
 
-  void registerButtonState(uint8_t newButtonState,
-                           bool    bPin3Invers);
+  void registerButtonState(const uint8_t& newButtonState,
+                           const bool   & bPin3Invers);
   void markButtonStateProcessed();
   bool getButtonState() {
     return ButtonState;
