@@ -1882,4 +1882,9 @@ To create/register a plugin, you have to :
   #undef USES_ESPEASY_NOW
 #endif
 
+#if defined(USES_C019) && !defined(USES_ESPEASY_NOW)
+  #undef USES_C019
+#endif
+
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
