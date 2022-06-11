@@ -47,16 +47,21 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool success = false;
 
   if (isInitialized()) {
-    String log;
-
-    if (loglevelActiveFor(LOG_LEVEL_INFO) &&
-        log.reserve(64)) {
-      log += F("P038 : write - ");
-      log += string;
-      addLogMove(LOG_LEVEL_INFO, log);
+    const String cmd = parseString(string, 1);
+    if (!cmd.startsWith(F("neo"))) {
+      return success;
     }
 
-    String cmd = parseString(string, 1);
+    {
+      String log;
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO) &&
+          log.reserve(64)) {
+        log += F("P038 : write - ");
+        log += string;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+    }
 
     if (cmd.equals(F("neopixel"))) { // NeoPixel
       Plugin_038_pixels->setPixelColor(event->Par1 - 1, Plugin_038_pixels->Color(event->Par2, event->Par3, event->Par4, event->Par5));

@@ -54,14 +54,14 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  3)
 #endif // ifdef USES_C003
 
 #ifdef USES_C004
-# include "../ControllerQueue/queue_element_formatted_uservar.h"
-# define C004_queue_element queue_element_formatted_uservar
+#include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C004_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  4)
 #endif // ifdef USES_C004
 
 #ifdef USES_C007
-# include "../ControllerQueue/queue_element_formatted_uservar.h"
-# define C007_queue_element queue_element_formatted_uservar
+#include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C007_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  7)
 #endif // ifdef USES_C007
 
@@ -69,28 +69,28 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  7)
 
 /*********************************************************************************************\
 * C008_queue_element for queueing requests for 008: Generic HTTP
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 #ifdef USES_C008
-#include "../ControllerQueue/queue_element_single_value_base.h"
-# define C008_queue_element queue_element_single_value_base
+#include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C008_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  8)
 #endif // ifdef USES_C008
 
 #ifdef USES_C009
-# include "../ControllerQueue/queue_element_formatted_uservar.h"
-# define C009_queue_element queue_element_formatted_uservar
+#include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C009_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(00,  9)
 #endif // ifdef USES_C009
 
 
 /*********************************************************************************************\
 * C010_queue_element for queueing requests for 010: Generic UDP
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 #ifdef USES_C010
-#include "../ControllerQueue/queue_element_single_value_base.h"
-# define C010_queue_element queue_element_single_value_base
+#include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C010_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 10)
 #endif // ifdef USES_C010
 
@@ -107,11 +107,11 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 11)
 
 /*********************************************************************************************\
 * C012_queue_element for queueing requests for 012: Blynk
-* Using queue_element_single_value_base
+* Using SimpleQueueElement_formatted_Strings
 \*********************************************************************************************/
 #ifdef USES_C012
-#include "../ControllerQueue/queue_element_single_value_base.h"
-# define C012_queue_element queue_element_single_value_base
+#include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C012_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO( 0, 12)
 #endif // ifdef USES_C012
 
@@ -142,8 +142,8 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 16)
 
 
 #ifdef USES_C017
-# include "../ControllerQueue/queue_element_formatted_uservar.h"
-# define C017_queue_element queue_element_formatted_uservar
+# include "../ControllerQueue/SimpleQueueElement_formatted_Strings.h"
+# define C017_queue_element SimpleQueueElement_formatted_Strings
 DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 17)
 #endif // ifdef USES_C017
 

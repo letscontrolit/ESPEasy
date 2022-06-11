@@ -81,7 +81,7 @@ void handle_hardware() {
         // do not add the pin state select for these pins.
       } else {
         if (validGpio(gpio)) {
-          String int_pinlabel = "p";
+          String int_pinlabel('p');
           int_pinlabel       += gpio;
           Settings.setPinBootState(gpio, static_cast<PinBootState>(getFormItemInt(int_pinlabel)));
         }
@@ -167,7 +167,7 @@ void handle_hardware() {
     // Script to show GPIO pins for User-defined SPI GPIOs
     html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
                     false);
-    const String spi_options[] = {
+    const __FlashStringHelper * spi_options[] = {
       getSPI_optionToString(SPI_Options_e::None), 
       getSPI_optionToString(SPI_Options_e::Vspi), 
       getSPI_optionToString(SPI_Options_e::Hspi), 
