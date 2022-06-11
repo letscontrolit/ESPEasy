@@ -361,7 +361,7 @@ void WiFi_AP_CandidatesList::addFromRTC() {
 
   // See if we may have a better candidate for the current network, with a significant better RSSI.
   auto bestMatch = candidates.end();
-  auto lastUsed  = candidates.end();
+  auto lastUsed  = bestMatch;
   for (auto it = candidates.begin(); lastUsed == candidates.end() && it != candidates.end(); ++it) {
     if (it->usable() && it->ssid.equals(fromRTC.ssid)) {
       const bool foundLastUsed = fromRTC.bssid_match(it->bssid);
