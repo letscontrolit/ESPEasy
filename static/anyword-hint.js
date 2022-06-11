@@ -12,7 +12,7 @@
   "use strict";
 
   var WORD = /[\w$]+/, RANGE = 500;
-  var EXTRAWORDS = ["AcessInfo", "Background", "Build", " ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
+  var EXTRAWORDS = ["AcessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
     "ControllerEnable", "DateTime", "Debug", "DeepSleep", "Delay", "DNS", "DST", "EraseSDKwifi", "ExecuteRules", "Gateway", "I2Cscanner",
     "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
     "Reboot", "Reset", "ResetFlashWriteCounter", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
@@ -36,10 +36,9 @@
     //
     "toBin", "toHex", "Constrain", "XOR", "AND:", "OR", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode", "Log", "Ln", "Exp",
     "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d",
-    "Delay"
   ]
-  var lC_EXTRAWORDS = EXTRAWORDS.map(name => name.toLowerCase());
-  EXTRAWORDS = EXTRAWORDS.concat(lC_EXTRAWORDS);
+  //var lC_EXTRAWORDS = EXTRAWORDS.map(name => name.toLowerCase());
+  //EXTRAWORDS = EXTRAWORDS.concat(lC_EXTRAWORDS);
 
   CodeMirror.registerHelper("hint", "anyword", function (editor, options) {
     var word = options && options.word || WORD;
@@ -65,7 +64,8 @@
         }
       }
     }
-    list.push(...(extraWords.filter(el => el.startsWith(curWord || ''))))
+    //list.push(...(extraWords.filter(el => el.startsWith(curWord || ''))))
+    list.push(...(extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''))))
     return { list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end) };
   });
 });
