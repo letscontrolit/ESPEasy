@@ -167,7 +167,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
 
       // const ESPEasySerialPort port= ESPEasySerialPort::serial0;
-      if ((rxPin < 0) && (rxPin < 0)) {
+      if ((rxPin < 0) && (txPin < 0)) {
         ESPeasySerialType::getSerialTypePins(port, rxPin, txPin);
         CONFIG_PIN1 = rxPin;
         CONFIG_PIN2 = txPin;
