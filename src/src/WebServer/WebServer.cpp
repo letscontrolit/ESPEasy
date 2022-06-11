@@ -408,10 +408,10 @@ void getWebPageTemplateDefaultHead(WebTemplateParser& parser, bool addMeta, bool
   if (parser.isTail()) return;
   parser.process(F("<!DOCTYPE html><html lang='en'>"
             "<head>"
-            "<link rel='stylesheet' href='codemirror.css'>"
+            "<link rel='stylesheet' href='codemirror.min.css'>"
             "<script src='codemirror.min.js'></script>"
-            "<script src='espeasy.js'></script>"
-            "<script src='anyword-hint.js' id='anyword'></script>"
+            "<script src='espeasy.min.js'></script>"
+            "<script src='anyword-hint.min.js' id='anyword'></script>"
             "<meta charset='utf-8'/>"
             "<meta name='viewport' content='width=device-width, initial-scale=1.0'>"
             "<title>{{name}}</title>"));
