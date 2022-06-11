@@ -1225,7 +1225,11 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     // read all data from server
     while (http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
-      const size_t c = stream->readBytes(buff, std::min(static_cast<size_t>(len), downloadBuffSize));
+      size_t bytes_to_read = downloadBuffSize;
+      if (len > 0 && len < bytes_to_read) {
+        bytes_to_read = len;
+      }
+      const size_t c = stream->readBytes(buff, bytes_to_read);
 
       if (c > 0) {
         timeout = millis() + 2000;
@@ -1285,7 +1289,7 @@ bool downloadFirmware(const String& url, String& error)
     return false;
   }
 
-  size_t len = http.getSize();
+  int len = http.getSize();
 
   if (Update.begin(len, U_FLASH, Settings.Pin_status_led, Settings.Pin_status_led_Inversed ? LOW : HIGH)) {
     const size_t downloadBuffSize = 256;
@@ -1297,7 +1301,11 @@ bool downloadFirmware(const String& url, String& error)
     WiFiClient *stream = &client;
     while (http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
-      const size_t c = stream->readBytes(buff, std::min(static_cast<size_t>(len), downloadBuffSize));
+      size_t bytes_to_read = downloadBuffSize;
+      if (len > 0 && len < bytes_to_read) {
+        bytes_to_read = len;
+      }
+      const size_t c = stream->readBytes(buff, bytes_to_read);
 
       if (c > 0) {
         timeout = millis() + 2000;
