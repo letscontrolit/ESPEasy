@@ -528,10 +528,11 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
     addUnit(F("1..100"));
 
     const __FlashStringHelper *frequencyOptions[] = {
-      F("10x per second"),
-      F("50x per second") };
+      F("10"),
+      F("50") };
     int frequencyValues[] = { P120_FREQUENCY_10, P120_FREQUENCY_50 };
     addFormSelector(F("Measuring frequency"), F("p120_frequency"), 2, frequencyOptions, frequencyValues, P120_FREQUENCY);
+    addUnit(F("Hz"));
     addFormNote(F("Values X/Y/Z are updated 1x per second, Controller updates &amp; Value-events are based on 'Interval' setting."));
   }
 

@@ -204,10 +204,8 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
         bool tbUseCalibration = bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION);
         {
-          const __FlashStringHelper * options4[2] = { F("No"), F("Yes") };
-          int optionValues4[2] = { 0, 1 };
           int choice4 = tbUseCalibration ? 1 : 0;
-          addFormSelector(F("Calibrate to screen resolution"), F("p099_use_calibration"), 2, options4, optionValues4, choice4, true);
+          addFormSelector_YesNo(F("Calibrate to screen resolution"), F("p099_use_calibration"), choice4, true);
         }
         if (tbUseCalibration) {
 
