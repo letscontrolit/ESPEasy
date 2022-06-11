@@ -655,11 +655,13 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       F("Objectnames, X, Y and Z")
       # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
     };
-    int optionValues3[TOUCH_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
+    const int optionValues3[TOUCH_EVENTS_OPTIONS] = { 0, 1, 3, 4, 5, 7 }; // Already used as a bitmap!
     addFormSelector(F("Events"), F("events"), TOUCH_EVENTS_OPTIONS, options3, optionValues3, choice3);
 
     addFormCheckBox(F("Draw buttons when started"), F("init_objectevent"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT));
+    # ifndef LIMIT_BUILD_SIZE
     addFormNote(F("Needs Objectnames 'Events' to be enabled."));
+    # endif // ifndef LIMIT_BUILD_SIZE
   }
 
   addFormCheckBox(F("Prevent duplicate events"), F("deduplicate"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_DEDUPLICATE));
@@ -675,7 +677,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 
   {
     const __FlashStringHelper *noYesOptions[2] = { F("No"), F("Yes") };
-    int noYesOptionValues[2]                   = { 0, 1 };
+    const int noYesOptionValues[2]             = { 0, 1 };
     addFormSelector(F("Calibrate to screen resolution"),
                     F("use_calibration"),
                     2,
@@ -1179,11 +1181,12 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
   config.reserve(80);
 
-  uint32_t lSettings = 0u;
+  uint32_t  lSettings   = 0u;
+  const int eventsValue = getFormItemInt(F("events"));
 
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,          bitRead(getFormItemInt(F("events")), TOUCH_FLAGS_SEND_XY));
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,           bitRead(getFormItemInt(F("events")), TOUCH_FLAGS_SEND_Z));
-  bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME,  bitRead(getFormItemInt(F("events")), TOUCH_FLAGS_SEND_OBJECTNAME));
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_XY,          bitRead(eventsValue, TOUCH_FLAGS_SEND_XY));
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_Z,           bitRead(eventsValue, TOUCH_FLAGS_SEND_Z));
+  bitWrite(lSettings, TOUCH_FLAGS_SEND_OBJECTNAME,  bitRead(eventsValue, TOUCH_FLAGS_SEND_OBJECTNAME));
   bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, isFormItemChecked(F("rotation_flipped")));
   bitWrite(lSettings, TOUCH_FLAGS_DEDUPLICATE,      isFormItemChecked(F("deduplicate")));
   bitWrite(lSettings, TOUCH_FLAGS_INIT_OBJECTEVENT, isFormItemChecked(F("init_objectevent")));
@@ -1265,32 +1268,28 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
       bitWrite(flags, TOUCH_OBJECT_FLAG_ENABLED,  isFormItemChecked(getPluginCustomArgName(objectNr + 0)));   // Enabled
       bitWrite(flags, TOUCH_OBJECT_FLAG_INVERTED, isFormItemChecked(getPluginCustomArgName(objectNr + 700))); // Inverted
       # ifdef TOUCH_USE_EXTENDED_TOUCH
-      uint32_t groupFlags = 0u;
-      uint8_t  buttonType = getFormItemInt(getPluginCustomArgName(objectNr + 800));
-      set4BitToUL(flags, TOUCH_OBJECT_FLAG_BUTTONTYPE,  buttonType);                                                    // Buttontype
-      set4BitToUL(flags, TOUCH_OBJECT_FLAG_BUTTONALIGN, getFormItemInt(getPluginCustomArgName(objectNr + 900)) >> 4);   // Button layout
-      bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON, (static_cast<Button_type_e>(buttonType) != Button_type_e::None));       // On/Off button
-      // uint8_t buttonAction      = getFormItemInt(getPluginCustomArgName(objectNr + 2000));
-      // uint8_t buttonSelectGroup = );
-      set4BitToUL(groupFlags, TOUCH_OBJECT_GROUP_ACTION, getFormItemInt(getPluginCustomArgName(objectNr + 2000)));      // ButtonAction
-      set8BitToUL(groupFlags, TOUCH_OBJECT_GROUP_ACTIONGROUP, getFormItemInt(getPluginCustomArgName(objectNr + 2100))); // ActionGroup
-      // uint8_t fontScale = getFormItemInt(getPluginCustomArgName(objectNr + 1200));
-      set4BitToUL(flags, TOUCH_OBJECT_FLAG_FONTSCALE, getFormItemInt(getPluginCustomArgName(objectNr + 1200)));         // Font scaling
-      uint8_t buttonGroup = getFormItemInt(getPluginCustomArgName(objectNr + 1600));
-      set8BitToUL(flags, TOUCH_OBJECT_FLAG_GROUP, buttonGroup);                                                         // Button group
+      uint32_t groupFlags      = 0u;
+      const uint8_t buttonType = getFormItemIntCustomArgName(objectNr + 800);
+      set4BitToUL(flags, TOUCH_OBJECT_FLAG_BUTTONTYPE,  buttonType);                                              // Buttontype
+      set4BitToUL(flags, TOUCH_OBJECT_FLAG_BUTTONALIGN, getFormItemIntCustomArgName(objectNr + 900) >> 4);        // Button layout
+      bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON, (static_cast<Button_type_e>(buttonType) != Button_type_e::None)); // On/Off button
+      set4BitToUL(groupFlags, TOUCH_OBJECT_GROUP_ACTION, getFormItemIntCustomArgName(objectNr + 2000));           // ButtonAction
+      set8BitToUL(groupFlags, TOUCH_OBJECT_GROUP_ACTIONGROUP, getFormItemIntCustomArgName(objectNr + 2100));      // ActionGroup
+      set4BitToUL(flags, TOUCH_OBJECT_FLAG_FONTSCALE, getFormItemIntCustomArgName(objectNr + 1200));              // Font scaling
+      set8BitToUL(flags, TOUCH_OBJECT_FLAG_GROUP, getFormItemIntCustomArgName(objectNr + 1600));                  // Button group
       # else // ifdef TOUCH_USE_EXTENDED_TOUCH
-      bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 600)));             // On/Off button
+      bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON, isFormItemChecked(getPluginCustomArgName(objectNr + 600)));       // On/Off button
       # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
 
-      config += ull2String(flags);                                                                                      // Flags
+      config += ull2String(flags);                                                                                // Flags
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemInt(getPluginCustomArgName(objectNr + 200)));                                 // Top x
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 200));                                      // Top x
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemInt(getPluginCustomArgName(objectNr + 300)));                                 // Top y
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 300));                                      // Top y
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemInt(getPluginCustomArgName(objectNr + 400)));                                 // Bottom x
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 400));                                      // Bottom x
       config += TOUCH_SETTINGS_SEPARATOR;
-      config += toStringNoZero(getFormItemInt(getPluginCustomArgName(objectNr + 500)));                                 // Bottom y
+      config += toStringNoZero(getFormItemIntCustomArgName(objectNr + 500));                                      // Bottom y
 
       # ifdef TOUCH_USE_EXTENDED_TOUCH
       config    += TOUCH_SETTINGS_SEPARATOR;
@@ -1324,7 +1323,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
     String endZero; // Trim off <sep> and <sep>0 from the end
     endZero += TOUCH_SETTINGS_SEPARATOR;
     endZero += '0';
-    uint8_t endZeroLen = endZero.length();
+    const uint8_t endZeroLen = endZero.length();
 
     while (!config.isEmpty() && (config.endsWith(endZero) || config[config.length() - 1] == TOUCH_SETTINGS_SEPARATOR)) {
       if (config[config.length() - 1] == TOUCH_SETTINGS_SEPARATOR) {
