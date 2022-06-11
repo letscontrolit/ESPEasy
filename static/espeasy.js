@@ -47,7 +47,7 @@ function initCM() {
       "HLWCalibrate", "HLWReset", "WemosMotorShieldCMD", "LolinMotorShieldCMD", "HeatPumpir", "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode",
       "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane", "Culreader_write", "TFTcmd", "TFT&", "Touch,Rot", "WakeOnLan", "Max1704xclearalert"];
     var commonTag = ["On", "Do", "Endon"];
-    var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
+    var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
     var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
     var commonWarning = ["delay", "Delay"]
 
