@@ -85,8 +85,9 @@ struct P002_data_struct : public PluginTaskData_base {
   P002_data_struct(struct EventStruct *event);
 
 private:
-  
+#ifndef LIMIT_BUILD_SIZE
   void load(struct EventStruct *event);
+#endif
 
 public:
 
@@ -112,6 +113,7 @@ private:
                             int  & raw_value) const;
 
 private:
+#ifndef LIMIT_BUILD_SIZE
 
   // Get index of the bin to match.
   // Return -1 if no bin matched.
@@ -121,6 +123,7 @@ private:
 
   bool getBinnedValue(float& float_value,
                       int  & raw_value) const;
+#endif
 
 public:
 
@@ -134,8 +137,9 @@ public:
   float        applyCalibration(float float_value) const;
 
 private:
-
+#ifndef LIMIT_BUILD_SIZE
   float        applyMultiPointInterpolation(float float_value) const;
+#endif
 
   static float mapADCtoFloat(float float_value,
                              int   adc1,
@@ -157,19 +161,22 @@ private:
   int   _calib_adc2 = 0;
   float _calib_out1 = 0.0f;
   float _calib_out2 = 0.0f;
-
+#ifndef LIMIT_BUILD_SIZE
   std::vector<P002_ADC_Value_pair>_multipoint;
   std::vector<unsigned int>       _binning;
   std::vector<P002_binningRange>  _binningRange;
+#endif
 
   int _pin_analogRead = -1;
 
   uint8_t _sampleMode = P002_USE_CURENT_SAMPLE;
 
   uint8_t _nrDecimals = 0;
+#ifndef LIMIT_BUILD_SIZE
   uint8_t _nrMultiPointItems = 0;
   String  _formula;
   String  _formula_preprocessed;
+#endif
   
 };
 

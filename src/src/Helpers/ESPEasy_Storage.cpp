@@ -787,7 +787,7 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
 
   if (maxStringLength != 0) {
     // Specified string length, check given strings
-    for (int i = 0; i < nrStrings; ++i) {
+    for (uint16_t i = 0; i < nrStrings; ++i) {
       if (strings[i].length() >= maxStringLength) {
         result += getCustomTaskSettingsError(i);
       }
@@ -795,7 +795,7 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
   }
 
   while (stringCount < nrStrings && writePos < max_size) {
-    for (int i = 0; i < buffer.size(); ++i) {
+    for (size_t i = 0; i < buffer.size(); ++i) {
       buffer[i] = 0;
     }
 

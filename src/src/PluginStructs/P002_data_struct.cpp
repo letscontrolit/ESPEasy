@@ -29,42 +29,16 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
     _calib_out1 = P002_CALIBRATION_VALUE1;
     _calib_out2 = P002_CALIBRATION_VALUE2;
   }
-
+#ifndef LIMIT_BUILD_SIZE
   LoadTaskSettings(event->TaskIndex);
   _nrDecimals        = ExtraTaskSettings.TaskDeviceValueDecimals[0];
   _nrMultiPointItems = P002_NR_MULTIPOINT_ITEMS;
 
   load(event);
-
-  /*
-
-     // hard-code some values of a wind-vane to test
-     _multipoint.emplace_back(33000,  0);
-     _multipoint.emplace_back(6570,   22.5);
-     _multipoint.emplace_back(8200,   45);
-     _multipoint.emplace_back(891,    67.5);
-     _multipoint.emplace_back(1000,   90);
-     _multipoint.emplace_back(688,    112.5);
-     _multipoint.emplace_back(2200,   135);
-     _multipoint.emplace_back(1410,   157.5);
-     _multipoint.emplace_back(3900,   180);
-     _multipoint.emplace_back(3140,   202.5);
-     _multipoint.emplace_back(16000,  225);
-     _multipoint.emplace_back(14120,  247.5);
-     _multipoint.emplace_back(120000, 270);
-     _multipoint.emplace_back(42120,  292.5);
-     _multipoint.emplace_back(64900,  315);
-     _multipoint.emplace_back(21880,  337.5);
-
-     std::sort(_multipoint.begin(), _multipoint.end());
-
-     _binning.resize(_multipoint.size(), 0);
-     _binningRange.resize(_multipoint.size());
-
-     _formula = RulesCalculate_t::preProces(String(F("(-10000*%value%)/(%value%-3.3)")));
-   */
+#endif
 }
 
+#ifndef LIMIT_BUILD_SIZE
 void P002_data_struct::load(struct EventStruct *event)
 {
   const size_t nr_lines = P002_Nlines;
@@ -76,7 +50,7 @@ void P002_data_struct::load(struct EventStruct *event)
     _formula              = lines[P002_LINE_INDEX_FORMULA];
     _formula_preprocessed = RulesCalculate_t::preProces(_formula);
 
-    for (size_t i = P002_LINE_IDX_FIRST_MP; i < nr_lines && i < stored_nr_lines; i += P002_STRINGS_PER_MP) {
+    for (size_t i = P002_LINE_IDX_FIRST_MP; i < nr_lines && static_cast<int>(i) < stored_nr_lines; i += P002_STRINGS_PER_MP) {
       float adc, value = 0.0f;
 
       if (validFloatFromString(lines[i], adc) && validFloatFromString(lines[i + 1], value)) {
@@ -89,6 +63,7 @@ void P002_data_struct::load(struct EventStruct *event)
   _binning.resize(_multipoint.size(), 0);
   _binningRange.resize(_multipoint.size());
 }
+#endif
 
 void P002_data_struct::webformLoad(struct EventStruct *event)
 {
@@ -98,6 +73,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
       # endif // if defined(ESP32)
 
+#ifndef LIMIT_BUILD_SIZE
   {
     const __FlashStringHelper *outputOptions[] = {
       F("Use Current Sample"),
@@ -110,6 +86,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       P002_USE_BINNING };
     addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING);
   }
+#endif
 
   addFormSubHeader(F("Two Point Calibration"));
 
@@ -137,7 +114,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       P002_formatStatistics(F("Step size"), 1,                  stepsize);
     }
   }
-
+#ifndef LIMIT_BUILD_SIZE
   addFormSubHeader(F("Multipoint Processing"));
   addFormCheckBox(F("Multipoint Processing Enabled"), F("p002_multi_en"), P002_MULTIPOINT_ENABLED);
 
@@ -151,7 +128,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   size_t line_nr = 0;
 
-  for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < P002_Nlines; varNr += P002_STRINGS_PER_MP)
+  for (int varNr = P002_LINE_IDX_FIRST_MP; varNr < P002_Nlines; varNr += P002_STRINGS_PER_MP)
   {
     const String label = String(F("Point ")) + String(line_nr + 1);
     const double adc   = _multipoint[line_nr]._adc;
@@ -172,11 +149,12 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     ++line_nr;
   }
+#endif
 }
 
 String P002_data_struct::webformSave(struct EventStruct *event)
 {
-  P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"));
+  P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"), 0); // Set a default for LIMIT_BUILD_SIZE
 
   P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
 
@@ -186,6 +164,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
   P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
 
+#ifndef LIMIT_BUILD_SIZE
   P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
 
   P002_NR_MULTIPOINT_ITEMS = getFormItemInt(F("p002_nr_mp"));
@@ -197,7 +176,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   lines[P002_SAVED_NR_LINES]     = String(nr_lines);
   lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
 
-  const int nrDecimals = webArg(F("TDVD1")).toInt();
+  //const int nrDecimals = webArg(F("TDVD1")).toInt();
 
   for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < nr_lines; varNr += P002_STRINGS_PER_MP)
   {
@@ -213,10 +192,14 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   }
 
   return SaveCustomTaskSettings(event->TaskIndex, lines, nr_lines, 0);
+#else
+  return EMPTY_STRING;
+#endif
 }
 
 void P002_data_struct::takeSample()
 {
+#ifndef LIMIT_BUILD_SIZE
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
       addOversamplingValue(espeasy_analogRead(_pin_analogRead));
@@ -225,11 +208,15 @@ void P002_data_struct::takeSample()
       addBinningValue(espeasy_analogRead(_pin_analogRead));
       break;
   }
+#else
+  addOversamplingValue(espeasy_analogRead(_pin_analogRead));
+#endif
 }
 
 bool P002_data_struct::getValue(float& float_value,
                                 int  & raw_value) const
 {
+#ifndef LIMIT_BUILD_SIZE
   bool mustTakeSample = false;
 
   switch (_sampleMode) {
@@ -251,15 +238,19 @@ bool P002_data_struct::getValue(float& float_value,
   if (!mustTakeSample) {
     return false;
   }
+#endif
 
   raw_value   = espeasy_analogRead(_pin_analogRead);
   float_value = static_cast<float>(raw_value);
+#ifndef LIMIT_BUILD_SIZE
   float_value = applyMultiPointInterpolation(applyCalibration(float_value));
+#endif
   return true;
 }
 
 void P002_data_struct::reset()
 {
+#ifndef LIMIT_BUILD_SIZE
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
       resetOversampling();
@@ -273,6 +264,9 @@ void P002_data_struct::reset()
       break;
     }
   }
+#else
+  resetOversampling();
+#endif
 }
 
 void P002_data_struct::resetOversampling() {
@@ -319,13 +313,17 @@ bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) 
     raw_value   = static_cast<int>(float_value);
 
     // We counted the raw oversampling values, so now we need to apply the calibration and multi-point processing
-    float_value = applyMultiPointInterpolation(applyCalibration(float_value));
+    float_value = applyCalibration(float_value);
+#ifndef LIMIT_BUILD_SIZE
+    float_value = applyMultiPointInterpolation(float_value);
+#endif
 
     return true;
   }
   return false;
 }
 
+#ifndef LIMIT_BUILD_SIZE
 int P002_data_struct::getBinIndex(float currentValue) const
 {
   const size_t mp_size = _multipoint.size();
@@ -355,7 +353,7 @@ int P002_data_struct::getBinIndex(float currentValue) const
 
 void P002_data_struct::addBinningValue(int currentValue)
 {
-  for (int index = 0; index < _binningRange.size(); ++index) {
+  for (size_t index = 0; index < _binningRange.size(); ++index) {
     if (_binningRange[index].inRange(currentValue)) {
       ++_binning[index];
       return;
@@ -378,7 +376,7 @@ void P002_data_struct::addBinningValue(int currentValue)
 
   const int index = getBinIndex(calibrated_value);
 
-  if ((index >= 0) && (_binning.size() > index)) {
+  if ((index >= 0) && (static_cast<int>(_binning.size()) > index)) {
     _binningRange[index].set(currentValue);
     ++_binning[index];
   }
@@ -388,7 +386,7 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 {
   unsigned int highest_bin_count = 0;
 
-  for (unsigned int i = 0; i < _binning.size(); ++i) {
+  for (size_t i = 0; i < _binning.size(); ++i) {
     if (_binning[i] > highest_bin_count) {
       highest_bin_count = _binning[i];
       float_value       = _multipoint[i]._value;
@@ -411,6 +409,7 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 
   return highest_bin_count != 0;
 }
+#endif
 
 float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value) {
   if (P002_CALIBRATION_ENABLED)
@@ -447,6 +446,7 @@ float P002_data_struct::applyCalibration(float float_value) const
     _calib_out2);
 }
 
+#ifndef LIMIT_BUILD_SIZE
 float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 {
   // First find the surrounding bins
@@ -515,6 +515,7 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 
   return float_value;
 }
+#endif
 
 float P002_data_struct::mapADCtoFloat(float float_value,
                                       int   adc1,
