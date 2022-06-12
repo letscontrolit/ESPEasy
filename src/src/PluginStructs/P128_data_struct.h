@@ -2280,16 +2280,15 @@ private:
 
   NEOPIXEL_LIB<FEATURE, METHOD> *Plugin_128_pixels = nullptr;
 
-  int8_t gpioPin;
-
-  uint16_t pos        = 0,
-           color      = 0,
-           r_pixel    = 0,
-           startpixel = 0,
-           endpixel   = 0,
-           difference = 0,
-           fps        = 50,
-           colorcount = 0;
+  uint16_t pos        = 0;
+  uint16_t color      = 0;
+  uint16_t r_pixel    = 0;
+  uint16_t startpixel = 0;
+  uint16_t endpixel   = 0;
+  uint16_t difference = 0;
+  uint16_t fps        = 50;
+  uint16_t colorcount = 0;
+  int8_t   gpioPin    = -1;
 
 # if defined(RGBW) || defined(GRBW)
   RgbwColor rgb_target[ARRAYSIZE],
@@ -2315,41 +2314,57 @@ private:
 
   uint16_t pixelCount = ARRAYSIZE;
 
-  int8_t defaultspeed  = 25,
-         rainbowspeed  = 1,
-         speed         = 25,
-         count         = 1,
-         rev_intensity = 3;
+  int8_t defaultspeed  = 25;
+  int8_t rainbowspeed  = 1;
+  int8_t speed         = 25;
+  int8_t count         = 1;
+  int8_t rev_intensity = 3;
 
-  uint32_t _counter_mode_step = 0,
-           fadetime           = 1000u,
-           ftv_holdTime       = 0,
-           pixelNum           = 0;
+  uint32_t _counter_mode_step = 0u;
+  uint32_t fadetime           = 1000u;
+  uint32_t ftv_holdTime       = 0u;
+  uint32_t pixelNum           = 0u;
 
-  uint16_t ftv_pr = 0, ftv_pg = 0, ftv_pb = 0; // Prev R, G, B;
-  uint32_t ftv_totalTime = 0, ftv_fadeTime = 0, ftv_startTime = 0, ftv_elapsed = 0;
-  uint16_t ftv_nr = 0, ftv_ng = 0, ftv_nb = 0, ftv_r = 0, ftv_g = 0, ftv_b = 0, ftv_i = 0, ftv_frac = 0;
-  uint8_t  ftv_hi = 0, ftv_lo = 0, ftv_r8 = 0, ftv_g8 = 0, ftv_b8 = 0;
+  uint16_t ftv_pr        = 0;
+  uint16_t ftv_pg        = 0;
+  uint16_t ftv_pb        = 0; // Prev R, G, B;
+  uint32_t ftv_totalTime = 0;
+  uint32_t ftv_fadeTime  = 0;
+  uint32_t ftv_startTime = 0;
+  uint32_t ftv_elapsed   = 0;
+  uint16_t ftv_nr        = 0;
+  uint16_t ftv_ng        = 0;
+  uint16_t ftv_nb        = 0;
+  uint16_t ftv_r         = 0;
+  uint16_t ftv_g         = 0;
+  uint16_t ftv_b         = 0;
+  uint16_t ftv_i         = 0;
+  uint16_t ftv_frac      = 0;
+  uint8_t  ftv_hi        = 0;
+  uint8_t  ftv_lo        = 0;
+  uint8_t  ftv_r8        = 0;
+  uint8_t  ftv_g8        = 0;
+  uint8_t  ftv_b8        = 0;
 
-  String colorStr,
-         backgroundcolorStr;
+  String colorStr;
+  String backgroundcolorStr;
 
   bool gReverseDirection = false;
   bool rgb_s_off         = false;
   bool fadeIn            = false;
 
-  byte cooling    = 50,
-       sparking   = 120,
-       brightness = 31;
+  uint8_t cooling    = 50;
+  uint8_t sparking   = 120;
+  uint8_t brightness = 31;
 
-  unsigned long counter20ms = 0,
-                starttime[ARRAYSIZE],
-                starttimerb = 0,
-                maxtime     = 0;
+  uint32_t counter20ms = 0;
+  uint32_t starttime[ARRAYSIZE];
+  uint32_t starttimerb = 0;
+  uint32_t maxtime     = 0;
 
-  P128_modetype mode     = P128_modetype::Off,
-                savemode = P128_modetype::Off,
-                lastmode = P128_modetype::Off;
+  P128_modetype mode     = P128_modetype::Off;
+  P128_modetype savemode = P128_modetype::Off;
+  P128_modetype lastmode = P128_modetype::Off;
 
   void     rgb2colorStr();
 
@@ -2370,8 +2385,8 @@ private:
   void     sparkle(void);
 
   // Fire
-  unsigned long fireTimer = 0;
-  RgbColor      leds[ARRAYSIZE];
+  uint32_t fireTimer = 0;
+  RgbColor leds[ARRAYSIZE];
   void                       fire(void);
 
   const __FlashStringHelper* P128_modeType_toString(P128_modetype modeType);

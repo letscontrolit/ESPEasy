@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-06-12, tonhuisman Optimizations, revert Makuna/NeopixelBus library to 2.6.9 for incompatibilties like [[maybe_unused]] arguments
 // 2022-01-30, tonhuisman Fix JSON message to use proper JSON functions, some bugfixes and small source improvements
 // 2022-01-09, tonhuisman Add conditional defines P128_USES_<colormode> (options: GRB/GRBW/RGB/RGBW/BRG/BRG) for selecting the
 //                        desired pixel type, optionally, from Custom.h
@@ -193,7 +194,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       addPinSelect(PinSelectPurpose::Generic_output, F("taskdevicepin1"), PIN(0));
       # endif // ifdef ESP32
 
-      addFormNumericBox(F("Led Count"), F("plugin_128_leds"), P128_CONFIG_LED_COUNT, 1, 999);
+      addFormNumericBox(F("Led Count"), F("ledcnt"), P128_CONFIG_LED_COUNT, 1, 999);
 
       success = true;
       break;
@@ -201,7 +202,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P128_CONFIG_LED_COUNT = getFormItemInt(F("plugin_128_leds"));
+      P128_CONFIG_LED_COUNT = getFormItemInt(F("ledcnt"));
 
       # ifdef ESP32
       PIN(0) = getFormItemInt(F("taskdevicepin1"));
@@ -223,10 +224,7 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT));
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P128_data) {
-        return success;
-      }
-      success = true;
+      success = nullptr != P128_data;
       break;
     }
 
@@ -234,10 +232,9 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     {
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P128_data) {
-        return success;
+      if (nullptr != P128_data) {
+        success = P128_data->plugin_read(event);
       }
-      success = P128_data->plugin_read(event);
 
       break;
     }
@@ -246,10 +243,9 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     {
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P128_data) {
-        return success;
+      if (nullptr != P128_data) {
+        success = P128_data->plugin_write(event, string);
       }
-      success = P128_data->plugin_write(event, string);
 
       break;
     }
@@ -258,10 +254,9 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
     {
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P128_data) {
-        return success;
+      if (nullptr != P128_data) {
+        success = P128_data->plugin_fifty_per_second(event);
       }
-      success = P128_data->plugin_fifty_per_second(event);
 
       break;
     }

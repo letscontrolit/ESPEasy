@@ -41,6 +41,8 @@ bool P128_data_struct::plugin_read(struct EventStruct *event) {
   UserVar[event->BaseVarIndex + 2] = fadetime;
   UserVar[event->BaseVarIndex + 3] = fadedelay;
 
+  # ifndef LIMIT_BUILD_SIZE
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     log.reserve(64);
@@ -54,6 +56,7 @@ bool P128_data_struct::plugin_read(struct EventStruct *event) {
     log += (int)UserVar[event->BaseVarIndex + 3];
     addLogMove(LOG_LEVEL_INFO, log);
   }
+  # endif // ifndef LIMIT_BUILD_SIZE
   return true;
 }
 
@@ -61,21 +64,21 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
   bool success = false;
 
-  String command = parseString(string, 1);
+  const String command = parseString(string, 1);
 
   if ((command == F("neopixelfx")) || (command == F("nfx"))) {
-    String subCommand = parseString(string, 2);
+    const String subCommand = parseString(string, 2);
 
-    String  str3  = parseString(string, 3);
-    int32_t str3i = event->Par2;
-    String  str4  = parseString(string, 4);
-    int32_t str4i = event->Par3;
-    String  str5  = parseString(string, 5);
-    int32_t str5i = event->Par4;
-    String  str6  = parseString(string, 6);
-    int32_t str6i = event->Par5;
-    String  str7  = parseString(string, 7);
-    int32_t str7i = str7.toInt();
+    const String  str3  = parseString(string, 3);
+    const int32_t str3i = event->Par2;
+    const String  str4  = parseString(string, 4);
+    const int32_t str4i = event->Par3;
+    const String  str5  = parseString(string, 5);
+    const int32_t str5i = event->Par4;
+    const String  str6  = parseString(string, 6);
+    const int32_t str6i = event->Par5;
+    const String  str7  = parseString(string, 7);
+    const int32_t str7i = str7.toInt();
 
     if (subCommand == F("fadetime")) {
       success  = true;
@@ -173,7 +176,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       success = true;
       mode    = P128_modetype::On;
 
-      uint16_t pixnum = str3i - 1;
+      const uint16_t pixnum = str3i - 1;
       hex2rgb(str4);
 
       Plugin_128_pixels->SetPixelColor(pixnum, rgb);
@@ -250,7 +253,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
       rgb2colorStr();
 
       hex2rgb(colorStr);
-      uint16_t pixnum = str3i - 1;
+      const uint16_t pixnum = str3i - 1;
       Plugin_128_pixels->SetPixelColor(pixnum, rgb);
     }
 
