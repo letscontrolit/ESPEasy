@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-06-12 tonhuisman: Fix reading settings before plugin_ten_per_second() is executed
+ *                        Implement PCONFIG_ULONG(n) macro
  * 2022-06-11 tonhuisman: Cleanup and optimize, make startup-splash configurable
  *                        Removed old setting for Brightness, check settings if older version has been used!
  * 2022-03-16 tonhuisman: Add textmode option, start scrolling implementation
@@ -58,15 +60,12 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       P131_CONFIG_TILE_WIDTH    = 1; // Default tile width
       P131_CONFIG_TILE_HEIGHT   = 1; // Default tile height
 
-      uint32_t lSettings = 0;
-      set8BitToUL(lSettings, P131_FLAGS_MATRIX_TYPE, NEO_MATRIX_TOP | NEO_MATRIX_LEFT | NEO_MATRIX_ROWS | NEO_MATRIX_PROGRESSIVE);
-      set8BitToUL(lSettings, P131_FLAGS_TILE_TYPE,   NEO_TILE_TOP | NEO_TILE_LEFT | NEO_TILE_ROWS | NEO_TILE_PROGRESSIVE);
-      P131_CONFIG_FLAGS = lSettings;
+      set8BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE,
+                  NEO_MATRIX_TOP | NEO_MATRIX_LEFT | NEO_MATRIX_ROWS | NEO_MATRIX_PROGRESSIVE |
+                  NEO_TILE_TOP | NEO_TILE_LEFT | NEO_TILE_ROWS | NEO_TILE_PROGRESSIVE);
 
-      lSettings = 0;
-      set8BitToUL(lSettings, P131_CONFIG_FLAG_B_BRIGHTNESS, 40);  // Default brightness
-      set8BitToUL(lSettings, P131_CONFIG_FLAG_B_MAXBRIGHT,  255); // Default max brightness
-      P131_CONFIG_FLAGS_B = lSettings;
+      set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_BRIGHTNESS, 40);  // Default brightness
+      set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_MAXBRIGHT,  255); // Default max brightness
 
       P131_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
 
@@ -275,37 +274,32 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       P131_CONFIG_TILE_WIDTH    = getFormItemInt(F("tilewidth"));
       P131_CONFIG_TILE_HEIGHT   = getFormItemInt(F("tileheight"));
 
-      uint32_t lSettings = 0;
-
       // Bits are already in the correct order/configuration to be passed on to the constructor
       // Matrix bits
-      set2BitToUL(lSettings, P131_FLAGS_MATRIX_TYPE_TOP, getFormItemInt(F("matrixstart")) & 0x03);
-      bitWrite(lSettings, P131_FLAGS_MATRIX_TYPE_RC, getFormItemInt(F("matrixrowcol")));
-      bitWrite(lSettings, P131_FLAGS_MATRIX_TYPE_PZ, getFormItemInt(F("matrixprozig")));
+      set2BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP, getFormItemInt(F("matrixstart")) & 0x03);
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC, getFormItemInt(F("matrixrowcol")));
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ, getFormItemInt(F("matrixprozig")));
 
       // Tile bits
-      set2BitToUL(lSettings, P131_FLAGS_TILE_TYPE_TOP, getFormItemInt(F("tilestart")) & 0x03);
-      bitWrite(lSettings, P131_FLAGS_TILE_TYPE_RC, getFormItemInt(F("tilerowcol")));
-      bitWrite(lSettings, P131_FLAGS_TILE_TYPE_PZ, getFormItemInt(F("tileprozig")));
+      set2BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP, getFormItemInt(F("tilestart")) & 0x03);
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC, getFormItemInt(F("tilerowcol")));
+      bitWrite(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ, getFormItemInt(F("tileprozig")));
 
       // Other settings
-      set4BitToUL(lSettings, P131_CONFIG_FLAG_MODE,        getFormItemInt(F("tpmode")));
-      set4BitToUL(lSettings, P131_CONFIG_FLAG_ROTATION,    getFormItemInt(F("rotate")));
-      set4BitToUL(lSettings, P131_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("fontscale")));
-      set4BitToUL(lSettings, P131_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));
+      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_MODE,        getFormItemInt(F("tpmode")));
+      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_ROTATION,    getFormItemInt(F("rotate")));
+      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("fontscale")));
+      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));
 
-      bitWrite(lSettings, P131_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));
-      bitWrite(lSettings, P131_CONFIG_FLAG_STRIP_TYPE,    getFormItemInt(F("striptype")) == 1);
+      bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));
+      bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_STRIP_TYPE,    getFormItemInt(F("striptype")) == 1);
       # ifdef P131_SHOW_SPLASH
-      bitWrite(lSettings, P131_CONFIG_FLAG_SHOW_SPLASH,   !isFormItemChecked(F("splash")));
+      bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_SHOW_SPLASH,   !isFormItemChecked(F("splash")));
       # endif // ifdef P131_SHOW_SPLASH
 
-      P131_CONFIG_FLAGS = lSettings;
 
-      lSettings = 0;
-      set8BitToUL(lSettings, P131_CONFIG_FLAG_B_BRIGHTNESS, getFormItemInt(F("brightness")));
-      set8BitToUL(lSettings, P131_CONFIG_FLAG_B_MAXBRIGHT,  getFormItemInt(F("maxbright")));
-      P131_CONFIG_FLAGS_B = lSettings;
+      set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_BRIGHTNESS, getFormItemInt(F("brightness")));
+      set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_MAXBRIGHT,  getFormItemInt(F("maxbright")));
 
       String   color   = web_server.arg(F("fgcolor"));
       uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty

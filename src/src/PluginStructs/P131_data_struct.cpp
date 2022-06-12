@@ -166,34 +166,41 @@ void P131_data_struct::cleanup() {
 }
 
 /****************************************************************************
+ * loadContent: load the default content if not yet loaded
+ ***************************************************************************/
+void P131_data_struct::loadContent(struct EventStruct *event) {
+  if (!stringsInitialized) {
+    LoadCustomTaskSettings(event->TaskIndex, strings, P131_Nlines, 0);
+    stringsInitialized = true;
+  }
+
+  if (!contentInitialized && stringsInitialized) {
+    content.clear();
+    content.reserve(P131_CONFIG_TILE_HEIGHT);
+
+    for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
+      content[x] = P131_content_struct();
+      String   opts    = parseString(strings[x], 2);
+      uint32_t optBits = 0;
+      validUIntFromString(opts, optBits);
+      content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
+      content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
+      content[x].pixelMode   = bitRead(optBits, P131_OPTBITS_PIXELSCROLL);
+      opts                   = parseString(strings[x], 3);
+      int speed = 0;
+      validIntFromString(opts, speed);
+      content[x].speed = speed;
+    }
+    contentInitialized = true;
+  }
+}
+
+/****************************************************************************
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P131_data_struct::plugin_read(struct EventStruct *event) {
   if (isInitialized()) {
-    if (!stringsInitialized) {
-      LoadCustomTaskSettings(event->TaskIndex, strings, P131_Nlines, 0);
-      stringsInitialized = true;
-    }
-
-    if (!contentInitialized && stringsInitialized) {
-      content.clear();
-      content.reserve(P131_CONFIG_TILE_HEIGHT);
-
-      for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
-        content[x] = P131_content_struct();
-        String   opts    = parseString(strings[x], 2);
-        uint32_t optBits = 0;
-        validUIntFromString(opts, optBits);
-        content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
-        content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
-        content[x].pixelMode   = bitRead(optBits, P131_OPTBITS_PIXELSCROLL);
-        opts                   = parseString(strings[x], 3);
-        int speed = 0;
-        validIntFromString(opts, speed);
-        content[x].speed = speed;
-      }
-      contentInitialized = true;
-    }
+    loadContent(event);
 
     bool hasContent = false;
 
@@ -289,6 +296,7 @@ bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   bool success = false;
 
   if (isInitialized()) {
+    loadContent(event);
     success = true;
 
     for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {

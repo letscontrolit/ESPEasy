@@ -22,8 +22,8 @@
 # define P131_CONFIG_TILE_WIDTH     PCONFIG(2)
 # define P131_CONFIG_TILE_HEIGHT    PCONFIG(3)
 
-# define P131_CONFIG_FLAGS          PCONFIG_LONG(0)
-# define P131_CONFIG_FLAGS_B        PCONFIG_LONG(1)
+# define P131_CONFIG_FLAGS          PCONFIG_ULONG(0)
+# define P131_CONFIG_FLAGS_B        PCONFIG_ULONG(1)
 # define P131_CONFIG_COLORS         PCONFIG_LONG(3) // 2 Colors fit in 1 long
 
 # define P131_FLAGS_MATRIX_TYPE             0       // MatrixType flags
@@ -123,6 +123,7 @@ private:
   void cleanup();
   void display_content(struct EventStruct *event,
                        bool                scrollOnly = false);
+  void loadContent(struct EventStruct *event);
 
   Adafruit_NeoMatrix *matrix    = nullptr;
   AdafruitGFX_helper *gfxHelper = nullptr;
