@@ -393,6 +393,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     #endif
     mqtt_tls_last_errorstr = buf;
   }
+  #ifdef ESP32
+  // FIXME TD-er: There seems to be no verify function in BearSSL used on ESP8266
   if (TLS_type == TLS_types::TLS_FINGERPRINT)
   {
     // Check fingerprint
@@ -423,6 +425,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
       }
     }
   }
+  #endif
 
   #endif
 
