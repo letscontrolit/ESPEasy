@@ -99,7 +99,7 @@ float getLoRaAirTime(uint8_t pl, uint8_t sf, uint16_t bw, uint8_t cr, uint8_t n_
   }
 
   // t_symbol and t_air in msec
-  float t_symbol = (1 << sf) / bw;
+  float t_symbol = static_cast<float>(1 << sf) / bw;
   float t_air    = ((n_preamble + 4.25f) + payload_length) * t_symbol;
   return t_air;
 }

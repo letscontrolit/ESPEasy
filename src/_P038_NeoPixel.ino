@@ -102,10 +102,9 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P038_data_struct(CONFIG_PIN1, P038_CONFIG_LEDCOUNT, P038_CONFIG_STRIPTYPE));
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P038_data) {
-        return success;
-      }
-      success = P038_data->plugin_init(event);
+      if (nullptr != P038_data) {
+        success = P038_data->plugin_init(event);
+      }     
 
       break;
     }
@@ -114,10 +113,9 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
     {
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P038_data) {
-        return success;
+      if (nullptr != P038_data) {
+        success = P038_data->plugin_exit(event);
       }
-      success = P038_data->plugin_exit(event);
 
       break;
     }
@@ -126,10 +124,9 @@ boolean Plugin_038(uint8_t function, struct EventStruct *event, String& string)
     {
       P038_data_struct *P038_data = static_cast<P038_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P038_data) {
-        return success;
+      if (nullptr != P038_data) {
+        success = P038_data->plugin_write(event, string);
       }
-      success = P038_data->plugin_write(event, string);
 
       break;
     }

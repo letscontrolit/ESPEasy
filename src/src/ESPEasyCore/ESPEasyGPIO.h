@@ -67,7 +67,7 @@ void GPIO_PCF_WriteAllPins(uint8_t Par1, uint8_t Par2);
 void GPIO_Monitor10xSec();
 
 // prefix should be either "GPIO", "PCF", "MCP"
-void sendMonitorEvent(const char* prefix, int port, int8_t state);
+void sendMonitorEvent(const __FlashStringHelper * prefix, int port, int8_t state);
 
 bool checkValidPortRange(pluginID_t pluginID, int port);
 bool checkValidPortAddress(pluginID_t pluginID, uint8_t address);
