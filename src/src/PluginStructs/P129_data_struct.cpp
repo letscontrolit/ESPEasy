@@ -36,7 +36,8 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
   return false;
 }
 
-const uint32_t P129_data_struct::getChannelState(uint8_t offset, uint8_t size) const {
+const uint32_t P129_data_struct::getChannelState(uint8_t offset,
+                                                 uint8_t size) const {
   uint32_t result    = 0u;
   uint16_t sft       = 0u;
   const uint8_t last = offset + size;
@@ -78,7 +79,7 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
   bool success = false;
 
-  String command = parseString(string, 1);
+  const String command = parseString(string, 1);
 
   if (command.equals(F("shiftin"))) {
     const String subcommand = parseString(string, 2);
@@ -216,10 +217,10 @@ void P129_data_struct::sendInputEvent(struct EventStruct *event,
                                       uint8_t             group,
                                       uint8_t             bit,
                                       uint8_t             state) {
-  String  send;
-  uint8_t pin  = (group * 8) + bit + 1; // 1..128
-  uint8_t chip = group + (bit / 8) + 1; // 1..16
-  uint8_t port = (bit % 8);             // 0..7
+  String send;
+  const uint8_t pin  = (group * 8) + bit + 1; // 1..128
+  const uint8_t chip = group + (bit / 8) + 1; // 1..16
+  const uint8_t port = (bit % 8);             // 0..7
 
   send.reserve(40);
   send += getTaskDeviceName(event->TaskIndex);

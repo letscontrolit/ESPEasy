@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-06-12 tonhuisman: Optimizations and small fixes
  * 2022-02-25 tonhuisman: Rename command to ShiftIn,<subcommand>,<arg>...
  * 2022-02-23 tonhuisman: Add command handling.
  * 2022-02-22 tonhuisman: Compare results and generate events.
@@ -125,9 +126,11 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormPinSelect(formatGpioName_output(F("Load pin (<SPAN STYLE=\"text-decoration:overline\">PL</SPAN>)")),
-                       F("p129_load_pin"),
+                       F("load_pin"),
                        P129_CONFIG_LOAD_PIN);
+      # ifndef LIMIT_BUILD_SIZE
       addFormNote(F("All GPIO pins <B>must</B> be configured to correctly initialize the plugin."));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       addFormSubHeader(F("Device configuration"));
 
@@ -140,7 +143,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           chipOption[i] = i + 1;
         }
         addFormSelector(F("Number of chips (Q7 &rarr; DS)"),
-                        F("p129_chips"),
+                        F("chipcnt"),
                         P129_MAX_CHIP_COUNT,
                         chipCount,
                         chipOption,
@@ -150,30 +153,31 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         String unit = F("Daisychained 1..");
         unit += P129_MAX_CHIP_COUNT;
         addUnit(unit);
-
+        # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
+        # endif // ifndef LIMIT_BUILD_SIZE
       }
 
       const __FlashStringHelper *frequencyOptions[] = {
         F("10/sec (100 msec)"),
         F("50/sec (20 msec)") };
-      int frequencyValues[] = { P129_FREQUENCY_10, P129_FREQUENCY_50 };
-      addFormSelector(F("Sample frequency"), F("p129_frequency"), 2, frequencyOptions, frequencyValues, P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
+      const int frequencyValues[] = { P129_FREQUENCY_10, P129_FREQUENCY_50 };
+      addFormSelector(F("Sample frequency"), F("frequency"), 2, frequencyOptions, frequencyValues, P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
 
       addFormSubHeader(F("Display and output"));
 
       # ifdef P129_SHOW_VALUES
-      addFormCheckBox(F("Values display (Off=Hex/On=Bin)"), F("p129_valuesdisplay"), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY == 1);
+      addFormCheckBox(F("Values display (Off=Hex/On=Bin)"), F("valuesdisplay"), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY == 1);
       # endif // ifdef P129_SHOW_VALUES
 
       const __FlashStringHelper *outputOptions[] = {
         F("Decimal &amp; hex/bin"),
         F("Decimal only"),
         F("Hex/bin only") };
-      int outputValues[] = { P129_OUTPUT_BOTH, P129_OUTPUT_DEC_ONLY, P129_OUTPUT_HEXBIN };
-      addFormSelector(F("Output selection"), F("p129_output"), 3, outputOptions, outputValues, P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
+      const int outputValues[] = { P129_OUTPUT_BOTH, P129_OUTPUT_DEC_ONLY, P129_OUTPUT_HEXBIN };
+      addFormSelector(F("Output selection"), F("outputsel"), 3, outputOptions, outputValues, P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
 
-      addFormCheckBox(F("Separate events per pin"), F("p129_separate_events"), P129_CONFIG_FLAGS_GET_SEPARATE_EVENTS == 1);
+      addFormCheckBox(F("Separate events per pin"), F("separate_events"), P129_CONFIG_FLAGS_GET_SEPARATE_EVENTS == 1);
 
       addFormSubHeader(F("Event configuration"));
 
@@ -242,20 +246,20 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P129_CONFIG_LOAD_PIN   = getFormItemInt(F("p129_load_pin"));
-      P129_CONFIG_CHIP_COUNT = getFormItemInt(F("p129_chips"));
+      P129_CONFIG_LOAD_PIN   = getFormItemInt(F("load_pin"));
+      P129_CONFIG_CHIP_COUNT = getFormItemInt(F("chipcnt"));
 
       uint32_t lSettings = 0u;
 
       # ifdef P129_SHOW_VALUES
 
-      if (isFormItemChecked(F("p129_valuesdisplay"))) { bitSet(lSettings, P129_FLAGS_VALUES_DISPLAY); }
+      if (isFormItemChecked(F("valuesdisplay"))) { bitSet(lSettings, P129_FLAGS_VALUES_DISPLAY); }
 
-      if (isFormItemChecked(F("p129_separate_events"))) { bitSet(lSettings, P129_FLAGS_SEPARATE_EVENTS); }
+      if (isFormItemChecked(F("separate_events"))) { bitSet(lSettings, P129_FLAGS_SEPARATE_EVENTS); }
       # endif // ifdef P129_SHOW_VALUES
 
-      if (getFormItemInt(F("p129_frequency"))) { bitSet(lSettings, P129_FLAGS_READ_FREQUENCY); }
-      set4BitToUL(lSettings, P129_FLAGS_OUTPUT_SELECTION, getFormItemInt(F("p129_output")));
+      if (getFormItemInt(F("frequency"))) { bitSet(lSettings, P129_FLAGS_READ_FREQUENCY); }
+      set4BitToUL(lSettings, P129_FLAGS_OUTPUT_SELECTION, getFormItemInt(F("outputsel")));
 
       P129_CONFIG_FLAGS = lSettings & 0xFFFF;
 
@@ -300,12 +304,10 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
                                                                                P129_CONFIG_CHIP_COUNT));
       P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P129_data) {
-        return success;
-      }
-
-      if (P129_data->isInitialized()) {
-        success = P129_data->plugin_init(event);
+      if (nullptr != P129_data) {
+        if (P129_data->isInitialized()) {
+          success = P129_data->plugin_init(event);
+        }
       }
 
       if (!success) {
@@ -329,11 +331,9 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     {
       P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P129_data) {
-        return success;
+      if (nullptr != P129_data) {
+        success = P129_data->plugin_read(event); // Get state
       }
-
-      success = P129_data->plugin_read(event); // Get state
 
       break;
     }
@@ -431,11 +431,9 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       {
         P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr == P129_data) {
-          return success;
+        if (nullptr != P129_data) {
+          success = P129_data->plugin_write(event, string);
         }
-
-        success = P129_data->plugin_write(event, string);
 
         break;
       }
