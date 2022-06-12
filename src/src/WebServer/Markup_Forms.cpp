@@ -55,7 +55,7 @@ void addFormNote(const String& text, const String& id)
 // Add a checkbox Form
 // ********************************************************************************
 
-void addFormCheckBox_disabled(const String& label, const String& id, boolean checked
+void addFormCheckBox_disabled(const String& label, const String& id, bool checked
                               #ifdef ENABLE_TOOLTIPS
                               , const String& tooltip
                               #endif // ifdef ENABLE_TOOLTIPS
@@ -67,19 +67,19 @@ void addFormCheckBox_disabled(const String& label, const String& id, boolean che
                   );
 }
 
-void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, boolean checked, bool disabled)
+void addFormCheckBox(const __FlashStringHelper * label, const __FlashStringHelper * id, bool checked, bool disabled)
 {
   addRowLabel_tr_id(label, id);
   addCheckBox(id, checked, disabled);
 }
 
-void addFormCheckBox(const __FlashStringHelper * label, const String& id, boolean checked, bool disabled)
+void addFormCheckBox(const __FlashStringHelper * label, const String& id, bool checked, bool disabled)
 {
   addRowLabel_tr_id(label, id);
   addCheckBox(id, checked, disabled);
 }
 
-void addFormCheckBox(const String& label, const String& id, boolean checked, bool disabled
+void addFormCheckBox(const String& label, const String& id, bool checked, bool disabled
                      #ifdef ENABLE_TOOLTIPS
                      , const String& tooltip
                      #endif // ifdef ENABLE_TOOLTIPS
@@ -93,7 +93,7 @@ void addFormCheckBox(const String& label, const String& id, boolean checked, boo
               );
 }
 
-void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled
+void addFormCheckBox(LabelType::Enum label, bool checked, bool disabled
                      #ifdef ENABLE_TOOLTIPS
                      , const String& tooltip
                      #endif // ifdef ENABLE_TOOLTIPS
@@ -105,7 +105,7 @@ void addFormCheckBox(LabelType::Enum label, boolean checked, bool disabled
                   );
 }
 
-void addFormCheckBox_disabled(LabelType::Enum label, boolean checked) {
+void addFormCheckBox_disabled(LabelType::Enum label, bool checked) {
   addFormCheckBox(label, checked, true);
 }
 
@@ -295,6 +295,23 @@ void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 }
 
 // ********************************************************************************
+// Add a MAC Box form
+// ********************************************************************************
+void addFormMACBox(const String& label, const String& id, const MAC_address mac)
+{
+  addRowLabel_tr_id(label, id);
+
+  addHtml(F("<input class='wide' type='text' name='"));
+  addHtml(id);
+  addHtml(F("' value='"));
+
+  if (!mac.all_zero()) {
+    addHtml(mac.toString());
+  }
+  addHtml(F("'>"));
+}
+
+// ********************************************************************************
 // Add a IP Access Control select dropdown list
 // ********************************************************************************
 void addFormIPaccessControlSelect(const String& label, const String& id, int choice)
@@ -407,7 +424,7 @@ void addFormSelector(const String& label,
                      const int     indices[],
                      const String  attr[],
                      int           selectedIndex,
-                     boolean       reloadonchange)
+                     bool       reloadonchange)
 {
   addRowLabel_tr_id(label, id);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
@@ -431,7 +448,7 @@ void addFormSelector(const String  & label,
                      const int       indices[],
                      const String    attr[],
                      int             selectedIndex,
-                     boolean       reloadonchange
+                     bool       reloadonchange
                      #ifdef          ENABLE_TOOLTIPS
                      , const String& tooltip
                      #endif // ifdef ENABLE_TOOLTIPS
@@ -445,14 +462,14 @@ void addFormSelector(const String  & label,
               );
 }
 
-void addFormSelector_script(const String  & label,
-                            const String  & id,
-                            int             optionCount,
-                            const String    options[],
-                            const int       indices[],
-                            const String    attr[],
-                            int             selectedIndex,
-                            const String& onChangeCall
+void addFormSelector_script(const __FlashStringHelper * label,
+                            const __FlashStringHelper * id,
+                            int           optionCount,
+                            const __FlashStringHelper * options[],
+                            const int     indices[],
+                            const String  attr[],
+                            int           selectedIndex,
+                            const __FlashStringHelper * onChangeCall
                             #ifdef          ENABLE_TOOLTIPS
                             , const String& tooltip
                             #endif // ifdef ENABLE_TOOLTIPS
@@ -467,6 +484,51 @@ void addFormSelector_script(const String  & label,
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
 }
+
+void addFormSelector_script(const String  & label,
+                            const String  & id,
+                            int             optionCount,
+                            const String    options[],
+                            const int       indices[],
+                            const String    attr[],
+                            int             selectedIndex,
+                            const __FlashStringHelper * onChangeCall
+                            #ifdef          ENABLE_TOOLTIPS
+                            , const String& tooltip
+                            #endif // ifdef ENABLE_TOOLTIPS
+                            )
+{
+  addRowLabel_tr_id(label, id);
+  do_addSelector_Head(id, F("wide"), onChangeCall, false
+                      #ifdef ENABLE_TOOLTIPS
+                      , tooltip
+                      #endif // ifdef ENABLE_TOOLTIPS
+                      );
+  addSelector_options(optionCount, options, indices, attr, selectedIndex);
+  addSelector_Foot();
+}
+
+void addFormSelector_YesNo(const __FlashStringHelper * label,
+                           const __FlashStringHelper * id,
+                           int           selectedIndex,
+                           bool       reloadonchange)
+{
+  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
+  int optionValuesNoYes[2]                   = { 0, 1 };
+  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+}
+
+void addFormSelector_YesNo(const __FlashStringHelper * label,
+                           const String& id,
+                           int           selectedIndex,
+                           bool       reloadonchange)
+{
+  const __FlashStringHelper *optionsNoYes[2] = { F("No"), F("Yes") };
+  int optionValuesNoYes[2]                   = { 0, 1 };
+  addFormSelector(label, id, 2, optionsNoYes, optionValuesNoYes, selectedIndex, reloadonchange);
+}
+
+
 
 // ********************************************************************************
 // Add a GPIO pin select dropdown list
@@ -565,6 +627,12 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
   return validIntFromString(valueStr, value);
 }
 
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                int         & value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
 bool update_whenset_FormItemInt(const String& key, int& value) {
   int tmpVal;
 
@@ -574,6 +642,13 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   }
   return false;
 }
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                uint8_t& value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
 
 bool update_whenset_FormItemInt(const String& key, uint8_t& value) {
   int tmpVal;

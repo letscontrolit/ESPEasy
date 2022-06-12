@@ -60,7 +60,7 @@ const __FlashStringHelper * return_see_serial(struct EventStruct *event)
 }
 
 String Command_GetORSetIP(struct EventStruct *event,
-                          const String      & targetDescription,
+                          const __FlashStringHelper * targetDescription,
                           const char         *Line,
                           uint8_t               *IP,
                           const IPAddress   & dhcpIP,
@@ -98,7 +98,7 @@ String Command_GetORSetIP(struct EventStruct *event,
 }
 
 String Command_GetORSetString(struct EventStruct *event,
-                              const String      & targetDescription,
+                              const __FlashStringHelper * targetDescription,
                               const char         *Line,
                               char               *target,
                               size_t              len,
@@ -134,7 +134,7 @@ String Command_GetORSetString(struct EventStruct *event,
 }
 
 String Command_GetORSetBool(struct EventStruct *event,
-                            const String      & targetDescription,
+                            const __FlashStringHelper * targetDescription,
                             const char         *Line,
                             bool               *value,
                             int                 arg)
@@ -167,8 +167,9 @@ String Command_GetORSetBool(struct EventStruct *event,
   return return_command_success();
 }
 
-String Command_GetORSetUint8_t(struct EventStruct *event,
-                            const String      & targetDescription,
+String Command_GetORSetETH(struct EventStruct *event,
+                            const __FlashStringHelper * targetDescription,
+                            const __FlashStringHelper * valueToString,
                             const char         *Line,
                             uint8_t            *value,
                             int                 arg)
@@ -186,21 +187,33 @@ String Command_GetORSetUint8_t(struct EventStruct *event,
       if (validIntFromString(TmpStr1, tmp_int)) {
         *value = static_cast<uint8_t>(tmp_int);
       }
-      else if (strcmp_P(PSTR("WIFI"), TmpStr1.c_str()) == 0) { *value = 0; }
-      else if (strcmp_P(PSTR("ETHERNET"), TmpStr1.c_str()) == 0) { *value = 1; }
+
+      // FIXME TD-er: This should not be in a generic function, but rather pre-processed in the command itself
+
+
+      // WiFi/Eth mode
+      else if (TmpStr1.equals(F("wifi"))) { *value = 0; }
+      else if (TmpStr1.equals(F("ethernet"))) { *value = 1; }
+
+      // ETH clockMode
+      else if (TmpStr1.startsWith(F("ext"))) { *value = 0; }
+      else if (TmpStr1.indexOf(F("gpio0"))  != -1) { *value = 1; }
+      else if (TmpStr1.indexOf(F("gpio16")) != -1) { *value = 2; }
+      else if (TmpStr1.indexOf(F("gpio17")) != -1) { *value = 3; }
     }
   }
 
+  String result = targetDescription;
   if (hasArgument) {
-    String result = targetDescription;
     result += *value;
-    return return_result(event, result);
+  } else {
+    result += valueToString;
   }
-  return return_command_success();
+  return return_result(event, result);
 }
 
 String Command_GetORSetInt8_t(struct EventStruct *event,
-                            const String      & targetDescription,
+                            const __FlashStringHelper * targetDescription,
                             const char         *Line,
                             int8_t             *value,
                             int                 arg)

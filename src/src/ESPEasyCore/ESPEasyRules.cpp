@@ -206,11 +206,13 @@ bool rulesProcessingFile(const String& fileName,
     {
       START_TIMER
       const bool matched_before_parse = match;
+      bool isOneLiner = false;
       parseCompleteNonCommentLine(line, event, action, match, codeBlock,
-                                  isCommand, condition, ifBranche, ifBlock,
+                                  isCommand, isOneLiner, condition, ifBranche, ifBlock,
                                   fakeIfBlock, startOnMatched);
-      if (matched_before_parse && !match) {
+      if ((matched_before_parse && !match) || isOneLiner) {
         // We were processing a matching event and now crossed the "endon"
+        // Or just dealing with a oneliner.
         // So we're done processing
         eventHandled = true;
         backgroundtasks();
@@ -221,8 +223,9 @@ bool rulesProcessingFile(const String& fileName,
     if (match) // rule matched for one action or a block of actions
     {
       START_TIMER
-      processMatchedRule(action, event, match, codeBlock,
-                          isCommand, condition, ifBranche, ifBlock, fakeIfBlock);
+      processMatchedRule(action, event,
+                         isCommand, condition,
+                         ifBranche, ifBlock, fakeIfBlock);
       STOP_TIMER(RULES_PROCESS_MATCHED);
     }
   }
@@ -583,12 +586,10 @@ void substitute_eventvalue(String& line, const String& event) {
           // With: X = event value nr, Y = default value when eventvalue does not exist.
           String defaultValue('0');
           int or_else_pos = line.indexOf('|', eventvalue_pos);
-          if (or_else_pos > percent_pos) {
+          if ((or_else_pos == -1) || (or_else_pos > percent_pos)) {
             or_else_pos = percent_pos;
           } else {
-            if (or_else_pos != -1) {
-              defaultValue = line.substring(or_else_pos + 1, percent_pos);
-            }
+            defaultValue = line.substring(or_else_pos + 1, percent_pos);
           }
           const String nr         = line.substring(eventvalue_pos + 11, or_else_pos);
           const String eventvalue = line.substring(eventvalue_pos, percent_pos + 1);
@@ -640,7 +641,7 @@ void substitute_eventvalue(String& line, const String& event) {
 
 void parseCompleteNonCommentLine(String& line, const String& event,
                                  String& action, bool& match,
-                                 bool& codeBlock, bool& isCommand,
+                                 bool& codeBlock, bool& isCommand, bool& isOneLiner,
                                  bool condition[], bool ifBranche[],
                                  uint8_t& ifBlock, uint8_t& fakeIfBlock,
                                  bool   startOnMatched) {
@@ -709,8 +710,9 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 
       if (action.length() > 0) // single on/do/action line, no block
       {
-        isCommand = true;
-        codeBlock = false;
+        isCommand  = true;
+        isOneLiner = true;
+        codeBlock  = false;
       } else {
         isCommand = false;
         codeBlock = true;
@@ -753,7 +755,6 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 }
 
 void processMatchedRule(String& action, const String& event,
-                        bool& match, bool& codeBlock,
                         bool& isCommand, bool condition[], bool ifBranche[],
                         uint8_t& ifBlock, uint8_t& fakeIfBlock) {
   String lcAction = action;

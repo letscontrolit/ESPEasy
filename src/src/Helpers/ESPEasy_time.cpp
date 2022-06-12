@@ -1,5 +1,7 @@
 #include "../Helpers/ESPEasy_time.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataTypes/TimeSource.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -29,11 +31,11 @@
 
 
 ESPEasy_time::ESPEasy_time() {
-  memset(&tm, 0, sizeof(tm));
-  memset(&tsRise, 0, sizeof(tm));
-  memset(&tsSet, 0, sizeof(tm));
+  memset(&tm,      0, sizeof(tm));
+  memset(&tsRise,  0, sizeof(tm));
+  memset(&tsSet,   0, sizeof(tm));
   memset(&sunRise, 0, sizeof(tm));
-  memset(&sunSet, 0, sizeof(tm));
+  memset(&sunSet,  0, sizeof(tm));
 }
 
 struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const {
@@ -48,7 +50,6 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
   breakTime(time, result);
   return result;
 }
-
 
 void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
   uint32_t time = (uint32_t)timeInput;
@@ -98,6 +99,8 @@ void ESPEasy_time::restoreFromRTC()
     firstCall = false;
     setExternalTimeSource(RTC.lastSysTime, timeSource_t::Restore_RTC_time_source);
     // Do not add the current uptime as offset. This will be done when calling now()
+    lastSyncTime = 0;
+    initTime();
   }
 }
 
@@ -162,9 +165,10 @@ unsigned long ESPEasy_time::now() {
         // Clock instability in msec/second
         timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
       }
-      lastTimeWanderCalculation = millis();
 
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
+      lastTimeWanderCalculation = prevMillis;
+      
       timeSynced = true;
 
       sysTime = unixTime_d;
@@ -226,6 +230,7 @@ unsigned long ESPEasy_time::now() {
 
   if (timeSynced) {
     calcSunRiseAndSet();
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Local time: ");
       log += getDateTimeString('-', ':', ' ');
@@ -248,7 +253,6 @@ unsigned long ESPEasy_time::now() {
   }
   return (unsigned long)localSystime;
 }
-
 
 bool ESPEasy_time::reportNewMinute()
 {
@@ -344,10 +348,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   while (udp.parsePacket() > 0) { // discard any previously received packets
   }
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
-  packetBuffer[0]  = 0b11100011;  // LI, Version, Mode
-  packetBuffer[1]  = 0;           // Stratum, or type of clock
-  packetBuffer[2]  = 6;           // Polling Interval
-  packetBuffer[3]  = 0xEC;        // Peer Clock Precision
+  packetBuffer[0]  = 0b11100011; // LI, Version, Mode
+  packetBuffer[1]  = 0;          // Stratum, or type of clock
+  packetBuffer[2]  = 6;          // Polling Interval
+  packetBuffer[3]  = 0xEC;       // Peer Clock Precision
   packetBuffer[12] = 49;
   packetBuffer[13] = 0x4E;
   packetBuffer[14] = 49;
@@ -381,6 +385,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           log += F(") unsynchronized");
           addLogMove(LOG_LEVEL_ERROR, log);
         }
+
         if (!useNTPpool) {
           // Does not make sense to try it very often if a single host is used which is not synchronized.
           nextSyncTime = sysTime + 120;
@@ -401,6 +406,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
+
       if (secsSince1900 == 0) {
         // No time stamp received
 
@@ -471,11 +477,9 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   return false;
 }
 
-
 /********************************************************************************************\
    Date/Time string formatters
  \*********************************************************************************************/
-
 String ESPEasy_time::getDateString(char delimiter) const
 {
   return getDateString(tm, delimiter);
@@ -490,43 +494,45 @@ String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
   return DateString;
 }
 
-String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/) const
+String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, false, show_seconds);
+  return getTimeString(tm, delimiter, false, show_seconds, hour_prefix);
 }
 
-String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/) const
+String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, true, show_seconds);
+  return getTimeString(tm, delimiter, true, show_seconds, hour_prefix);
 }
-
 
 // returns the current Time separated by the given delimiter
 // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String ESPEasy_time::getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds)
+String ESPEasy_time::getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix /*='\0'*/)
 {
   char TimeString[20]; // 19 digits plus the null char
+  char hour_prefix_s[2] = { 0 };
 
   if (am_pm) {
     uint8_t hour(ts.tm_hour % 12);
 
     if (hour == 0) { hour = 12; }
     const char a_or_p = ts.tm_hour < 12 ? 'A' : 'P';
+    if (hour < 10) { hour_prefix_s[0] = hour_prefix; }
 
     if (show_seconds) {
-      sprintf_P(TimeString, PSTR("%d%c%02d%c%02d %cM"),
-                hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
+      sprintf_P(TimeString, PSTR("%s%d%c%02d%c%02d %cM"),
+                hour_prefix_s, hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
     } else {
-      sprintf_P(TimeString, PSTR("%d%c%02d %cM"),
-                hour, delimiter, ts.tm_min, a_or_p);
+      sprintf_P(TimeString, PSTR("%s%d%c%02d %cM"),
+                hour_prefix_s, hour, delimiter, ts.tm_min, a_or_p);
     }
   } else {
     if (show_seconds) {
       sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
                 ts.tm_hour, delimiter, ts.tm_min, delimiter, ts.tm_sec);
     } else {
-      sprintf_P(TimeString, PSTR("%d%c%02d"),
-                ts.tm_hour, delimiter, ts.tm_min);
+      if (ts.tm_hour < 10) { hour_prefix_s[0] = hour_prefix; }
+      sprintf_P(TimeString, PSTR("%s%d%c%02d"),
+                hour_prefix_s, ts.tm_hour, delimiter, ts.tm_min);
     }
   }
   return TimeString;
@@ -553,13 +559,11 @@ String ESPEasy_time::getDateTimeString(const struct tm& ts, char dateDelimiter, 
   return ret;
 }
 
-
 /********************************************************************************************\
    Get current time/date
  \*********************************************************************************************/
-
 int ESPEasy_time::year(unsigned long t)
- {
+{
   struct tm tmp;
 
   breakTime(t, tmp);
@@ -574,25 +578,21 @@ int ESPEasy_time::weekday(unsigned long t)
   return tmp.tm_wday;
 }
 
-String ESPEasy_time::weekday_str(int wday) 
+String ESPEasy_time::weekday_str(int wday)
 {
-	const String weekDays = F("SunMonTueWedThuFriSat");
-	return weekDays.substring(wday * 3, wday * 3 + 3);
+  const String weekDays = F("SunMonTueWedThuFriSat");
+
+  return weekDays.substring(wday * 3, wday * 3 + 3);
 }
 
-String ESPEasy_time::weekday_str() const 
+String ESPEasy_time::weekday_str() const
 {
-	return weekday_str(weekday()-1);
+  return weekday_str(weekday() - 1);
 }
-
-
-
-
 
 /********************************************************************************************\
    Sunrise/Sunset calculations
  \*********************************************************************************************/
-
 int ESPEasy_time::getSecOffset(const String& format) {
   int position_minus = format.indexOf('-');
   int position_plus  = format.indexOf('+');
@@ -623,7 +623,6 @@ int ESPEasy_time::getSecOffset(const String& format) {
   return value;
 }
 
-
 String ESPEasy_time::getSunriseTimeString(char delimiter) const {
   return getTimeString(sunRise, delimiter, false, false);
 }
@@ -646,7 +645,6 @@ String ESPEasy_time::getSunsetTimeString(char delimiter, int secOffset) const {
   return getTimeString(getSunSet(secOffset), delimiter, false, false);
 }
 
-
 float ESPEasy_time::sunDeclination(int doy) {
   // Declination of the sun in radians
   // Formula 2008 by Arnold(at)Barmettler.com, fit to 20 years of average declinations (2008-2027)
@@ -659,7 +657,7 @@ float ESPEasy_time::diurnalArc(float dec, float lat) {
   float height = -50.0f / 60.0f * rad;
   float latRad = lat * rad;
 
-  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
+  return 12.0f * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
 }
 
 float ESPEasy_time::equationOfTime(int doy) {
@@ -705,7 +703,7 @@ void ESPEasy_time::calcSunRiseAndSet() {
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
 
   breakTime(time_zone.toLocal(makeTime(tsRise)), sunRise);
-  breakTime(time_zone.toLocal(makeTime(tsSet)),  sunSet);
+  breakTime(time_zone.toLocal(makeTime(tsSet)),   sunSet);
 }
 
 struct tm ESPEasy_time::getSunRise(int secOffset) const {

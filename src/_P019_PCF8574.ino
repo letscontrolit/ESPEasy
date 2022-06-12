@@ -2,7 +2,6 @@
 #ifdef USES_P019
 
 #include "src/DataStructs/PinMode.h"
-#include "src/Commands/GPIO.h"
 #include "src/ESPEasyCore/ESPEasyGPIO.h"
 
 // #######################################################################################################
@@ -341,7 +340,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
     {
       const int8_t state = Plugin_019_Read(CONFIG_PORT);
-      const String monitorEventString = F("PCF");
+      const __FlashStringHelper * monitorEventString = F("PCF");
 
       /**************************************************************************\
          20181022 - @giig1967g: new doubleclick logic is:
@@ -450,7 +449,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
             // send task event
             sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PORT, output_value);
 
             // Reset forceEvent
             currentStatus.forceEvent = 0;
@@ -515,7 +514,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
             // send task event
             sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, output_value);
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PORT, output_value);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
@@ -541,7 +540,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
             // send task event: DO NOT SEND TASK EVENT
             //sendData(event);
             // send monitor event
-            if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, SAFE_BUTTON_EVENT);
+            if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PORT, SAFE_BUTTON_EVENT);
 
             // reset Userdata so it displays the correct state value in the web page
             UserVar[event->BaseVarIndex] = tempUserVar;
@@ -564,7 +563,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
         // send task event
         sendData(event);
         // send monitor event
-        if (currentStatus.monitor) sendMonitorEvent(monitorEventString.c_str(), CONFIG_PORT, -1);
+        if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PORT, -1);
 
         savePortStatus(key, currentStatus);
       }

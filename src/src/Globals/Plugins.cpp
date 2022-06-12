@@ -458,6 +458,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
       }
 
+/*
       if (Function == PLUGIN_REQUEST) {
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
         for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
@@ -470,6 +471,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
         }
       }
+*/
       break;
     }
 
@@ -615,7 +617,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     }
 
     // Call to specific task not interacting with hardware
-    case PLUGIN_GET_CONFIG:
+    case PLUGIN_GET_CONFIG_VALUE:
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_GET_DEVICEVALUECOUNT:
     case PLUGIN_GET_DEVICEVTYPE:

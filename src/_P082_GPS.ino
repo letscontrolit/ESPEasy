@@ -150,6 +150,32 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P082_data_struct *P082_data =
+        static_cast<P082_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((nullptr != P082_data) && P082_data->isInitialized()) {
+        const P082_query query = Plugin_082_from_valuename(string);
+        if (query != P082_query::P082_NR_OUTPUT_OPTIONS) {
+          const float value = P082_data->_cache[static_cast<uint8_t>(query)];
+          int nrDecimals = 2;
+          if (query == P082_query::P082_QUERY_LONG || query == P082_query::P082_QUERY_LAT) {
+            nrDecimals = 6;
+          } else if (query == P082_query::P082_QUERY_SATVIS || 
+                     query == P082_query::P082_QUERY_SATUSE || 
+                     query == P082_query::P082_QUERY_FIXQ || 
+                     query == P082_query::P082_QUERY_CHKSUM_FAIL) {
+            nrDecimals = 0;
+          }
+
+          string = toString(value, nrDecimals);
+          success = true;
+        }
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
@@ -748,6 +774,7 @@ void P082_setSystemTime(struct EventStruct *event) {
     double time = makeTime(dateTime);
     time += static_cast<double>(age) / 1000.0;
     node_time.setExternalTimeSource(time, timeSource_t::GPS_time_source);
+    node_time.initTime();
   }
   P082_pps_time = 0;
 }

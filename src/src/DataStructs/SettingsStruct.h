@@ -3,6 +3,7 @@
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
 #include "../CustomBuild/ESPEasyLimits.h"
+#include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/TimeSource.h"
@@ -52,7 +53,7 @@ class SettingsStruct_tmpl
 {
   public:
 
-  SettingsStruct_tmpl();
+  SettingsStruct_tmpl(); //-V730
 
   // VariousBits1 defaults to 0, keep in mind when adding bit lookups.
   bool appendUnitToHostname() const;
@@ -219,52 +220,52 @@ class SettingsStruct_tmpl
   void setWiFi_TX_power(float dBm);
 
 
-  unsigned long PID;
-  int           Version;
-  int16_t       Build;
-  uint8_t       IP[4];
-  uint8_t       Gateway[4];
-  uint8_t       Subnet[4];
-  uint8_t       DNS[4];
-  uint8_t       IP_Octet;
-  uint8_t       Unit;
-  char          Name[26];
-  char          NTPHost[64];
+  unsigned long PID = 0;
+  int           Version = 0;
+  int16_t       Build = 0;
+  uint8_t       IP[4] = {0};
+  uint8_t       Gateway[4] = {0};
+  uint8_t       Subnet[4] = {0};
+  uint8_t       DNS[4] = {0};
+  uint8_t       IP_Octet = 0;
+  uint8_t       Unit = 0;
+  char          Name[26] = {0};
+  char          NTPHost[64] = {0};
   // FIXME TD-er: Issue #2690
-  unsigned long Delay;              // Sleep time in seconds
-  int8_t        Pin_i2c_sda;
-  int8_t        Pin_i2c_scl;
-  int8_t        Pin_status_led;
-  int8_t        Pin_sd_cs;
-  int8_t        PinBootStates[17];  // Only use getPinBootState and setPinBootState as multiple pins are packed for ESP32
-  uint8_t       Syslog_IP[4];
-  unsigned int  UDPPort;
-  uint8_t       SyslogLevel;
-  uint8_t       SerialLogLevel;
-  uint8_t       WebLogLevel;
-  uint8_t       SDLogLevel;
-  unsigned long BaudRate;
-  unsigned long MessageDelay_unused;  // MQTT settings now moved to the controller settings.
-  uint8_t       deepSleep_wakeTime;   // 0 = Sleep Disabled, else time awake from sleep in seconds
-  boolean       CustomCSS;
-  boolean       DST;
-  uint8_t       WDI2CAddress;
-  boolean       UseRules;
-  boolean       UseSerial;
-  boolean       UseSSDP;
-  uint8_t       ExternalTimeSource;
-  unsigned long WireClockStretchLimit;
-  boolean       GlobalSync;
-  unsigned long ConnectionFailuresThreshold;
-  int16_t       TimeZone;
-  boolean       MQTTRetainFlag_unused;
-  uint8_t       InitSPI; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
+  unsigned long Delay = 0;              // Sleep time in seconds
+  int8_t        Pin_i2c_sda = -1;
+  int8_t        Pin_i2c_scl = -1;
+  int8_t        Pin_status_led = -1;
+  int8_t        Pin_sd_cs = -1;
+  int8_t        PinBootStates[17] = {0};  // Only use getPinBootState and setPinBootState as multiple pins are packed for ESP32
+  uint8_t       Syslog_IP[4] = {0};
+  unsigned int  UDPPort = 8266;
+  uint8_t       SyslogLevel = 0;
+  uint8_t       SerialLogLevel = 0;
+  uint8_t       WebLogLevel = 0;
+  uint8_t       SDLogLevel = 0;
+  unsigned long BaudRate = 115200;
+  unsigned long MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
+  uint8_t       deepSleep_wakeTime = 0;   // 0 = Sleep Disabled, else time awake from sleep in seconds
+  boolean       CustomCSS = false;
+  boolean       DST = false;
+  uint8_t       WDI2CAddress = 0;
+  boolean       UseRules = false;
+  boolean       UseSerial = false;
+  boolean       UseSSDP = false;
+  uint8_t       ExternalTimeSource = 0;
+  unsigned long WireClockStretchLimit = 0;
+  boolean       GlobalSync = false;
+  unsigned long ConnectionFailuresThreshold = 0;
+  int16_t       TimeZone = 0;
+  boolean       MQTTRetainFlag_unused = false;
+  uint8_t       InitSPI = 0; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  uint8_t       Protocol[CONTROLLER_MAX];
-  uint8_t       Notification[NOTIFICATION_MAX]; //notifications, point to a NPLUGIN id
+  uint8_t       Protocol[CONTROLLER_MAX] = {0};
+  uint8_t       Notification[NOTIFICATION_MAX] = {0}; //notifications, point to a NPLUGIN id
   // FIXME TD-er: Must change to pluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
-  uint8_t       TaskDeviceNumber[N_TASKS]; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
-  unsigned int  OLD_TaskDeviceID[N_TASKS];  //UNUSED: this can be removed
+  uint8_t       TaskDeviceNumber[N_TASKS] = {0}; // The "plugin number" set at as task (e.g. 4 for P004_dallas)
+  unsigned int  OLD_TaskDeviceID[N_TASKS] = {0};  //UNUSED: this can be removed
   union {
     struct {
       int8_t        TaskDevicePin1[N_TASKS];
@@ -274,68 +275,68 @@ class SettingsStruct_tmpl
     };
     int8_t        TaskDevicePin[4][N_TASKS];
   };
-  boolean       TaskDevicePin1PullUp[N_TASKS];
+  boolean       TaskDevicePin1PullUp[N_TASKS] = {0};
   int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX];
-  boolean       TaskDevicePin1Inversed[N_TASKS];
+  boolean       TaskDevicePin1Inversed[N_TASKS] = {0};
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
-  uint8_t       TaskDeviceSendDataFlags[N_TASKS];
-  uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS];
-  uint8_t       TaskDeviceDataFeed[N_TASKS];    // When set to 0, only read local connected sensorsfeeds
-  unsigned long TaskDeviceTimer[N_TASKS];
-  boolean       TaskDeviceEnabled[N_TASKS];
-  boolean       ControllerEnabled[CONTROLLER_MAX];
-  boolean       NotificationEnabled[NOTIFICATION_MAX];
+  uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
+  uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS] = {0};
+  uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
+  unsigned long TaskDeviceTimer[N_TASKS] = {0};
+  boolean       TaskDeviceEnabled[N_TASKS] = {0};
+  boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
+  boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
   unsigned int  TaskDeviceID[CONTROLLER_MAX][N_TASKS];        // IDX number (mainly used by Domoticz)
   boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS];
-  boolean       Pin_status_led_Inversed;
-  boolean       deepSleepOnFail;
-  boolean       UseValueLogger;
-  boolean       ArduinoOTAEnable;
-  uint16_t      DST_Start;
-  uint16_t      DST_End;
-  boolean       UseRTOSMultitasking;
-  int8_t        Pin_Reset;
-  uint8_t       SyslogFacility;
-  uint32_t      StructSize;  // Forced to be 32 bit, to make sure alignment is clear.
-  boolean       MQTTUseUnitNameAsClientId_unused;
+  boolean       Pin_status_led_Inversed = false;
+  boolean       deepSleepOnFail = false;
+  boolean       UseValueLogger = false;
+  boolean       ArduinoOTAEnable = false;
+  uint16_t      DST_Start = 0;
+  uint16_t      DST_End = 0;
+  boolean       UseRTOSMultitasking = false;
+  int8_t        Pin_Reset = -1;
+  uint8_t       SyslogFacility = 0;
+  uint32_t      StructSize = 0;  // Forced to be 32 bit, to make sure alignment is clear.
+  boolean       MQTTUseUnitNameAsClientId_unused = false;
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.
   //TODO: document config.dat somewhere here
-  float         Latitude;
-  float         Longitude;
-  uint32_t      VariousBits1;
-  uint32_t      ResetFactoryDefaultPreference; // Do not clear this one in the clearAll()
-  uint32_t      I2C_clockSpeed;
-  uint16_t      WebserverPort;
-  uint16_t      SyslogPort;
+  float         Latitude = 0.0f;
+  float         Longitude = 0.0f;
+  uint32_t      VariousBits1 = 0;
+  uint32_t      ResetFactoryDefaultPreference = 0; // Do not clear this one in the clearAll()
+  uint32_t      I2C_clockSpeed = 400000;
+  uint16_t      WebserverPort = 80;
+  uint16_t      SyslogPort = 0;
 
   // FIXME @TD-er: As discussed in #1292, the CRC for the settings is now disabled.
   // make sure crc is the last value in the struct
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 //  uint8_t       ProgmemMd5[16]; // crc of the binary that last saved the struct to file.
 //  uint8_t       md5[16];
-  uint8_t         ETH_Phy_Addr;
-  int8_t          ETH_Pin_mdc;
-  int8_t          ETH_Pin_mdio;
-  int8_t          ETH_Pin_power;
-  EthPhyType_t    ETH_Phy_Type;
-  EthClockMode_t  ETH_Clock_Mode;
-  uint8_t         ETH_IP[4];
-  uint8_t         ETH_Gateway[4];
-  uint8_t         ETH_Subnet[4];
-  uint8_t         ETH_DNS[4];
-  NetworkMedium_t NetworkMedium;
-  int8_t          I2C_Multiplexer_Type;
-  int8_t          I2C_Multiplexer_Addr;
+  int8_t          ETH_Phy_Addr = -1;
+  int8_t          ETH_Pin_mdc = -1;
+  int8_t          ETH_Pin_mdio = -1;
+  int8_t          ETH_Pin_power = -1;
+  EthPhyType_t    ETH_Phy_Type = EthPhyType_t::LAN8710;
+  EthClockMode_t  ETH_Clock_Mode = EthClockMode_t::Ext_crystal_osc;
+  uint8_t         ETH_IP[4] = {0};
+  uint8_t         ETH_Gateway[4] = {0};
+  uint8_t         ETH_Subnet[4] = {0};
+  uint8_t         ETH_DNS[4] = {0};
+  NetworkMedium_t NetworkMedium = NetworkMedium_t::WIFI;
+  int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+  int8_t          I2C_Multiplexer_Addr = -1;
   int8_t          I2C_Multiplexer_Channel[N_TASKS];
-  uint8_t         I2C_Flags[N_TASKS];
-  uint32_t        I2C_clockSpeed_Slow;
-  uint8_t         I2C_Multiplexer_ResetPin;
+  uint8_t         I2C_Flags[N_TASKS] = {0};
+  uint32_t        I2C_clockSpeed_Slow = 100000;
+  int8_t          I2C_Multiplexer_ResetPin = -1;
 
   #ifdef ESP32
-  int8_t        PinBootStates_ESP32[24]; // pins 17 ... 39
+  int8_t        PinBootStates_ESP32[24] = {0}; // pins 17 ... 39
   #endif
   uint8_t       WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
   int8_t        WiFi_sensitivity_margin = 3;  // Margin in dBm on top of sensitivity.

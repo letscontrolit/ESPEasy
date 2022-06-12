@@ -141,7 +141,7 @@
 #define DEFAULT_SERIAL_BAUD                     115200            // Serial Port Baud Rate
 #define DEFAULT_SYSLOG_FACILITY                 0                 // kern
 
-#define DEFAULT_SYNC_UDP_PORT                   0                 // Used for ESPEasy p2p. (IANA registered port: 8266)
+#define DEFAULT_SYNC_UDP_PORT                   8266              // Used for ESPEasy p2p. (IANA registered port: 8266)
 
 
 #define BUILD_NO_DEBUG
@@ -169,6 +169,12 @@
 
 #define CUSTOM_EMERGENCY_FALLBACK_ALLOW_MINUTES_UPTIME 10
 
+// Allow for remote provisioning of a node.
+// This is only allowed for custom builds.
+// To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
+// Default setting is to not allow to configure a node remotely, unless explicitly enabled.
+// #define USE_CUSTOM_PROVISIONING
+
 #define USES_SSDP
 
 #define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
@@ -180,6 +186,35 @@
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
+
+
+#ifdef USE_CUSTOM_PROVISIONING
+// For device models, see src/src/DataTypes/DeviceModel.h
+// #ifdef ESP32
+//  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+// #endif
+// #ifdef ESP8266
+//  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+// #endif
+//  #define DEFAULT_PROVISIONING_FETCH_RULES1      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES2      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES3      false
+//  #define DEFAULT_PROVISIONING_FETCH_RULES4      false
+//  #define DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS false
+//  #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
+//  #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
+//  #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+//  #define DEFAULT_PROVISIONING_SAVE_URL           false
+//  #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
+//  #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
+//  #define DEFAULT_PROVISIONING_URL                ""
+//  #define DEFAULT_PROVISIONING_USER               ""
+//  #define DEFAULT_PROVISIONING_PASS               ""
+#endif
+
+
+
+#define USES_SSDP
 
 /*
  #######################################################################################################
@@ -392,6 +427,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P125   // ADXL345 SPI Acceleration / Gravity
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
+// #define USES_P132   // INA3221
 
 
 // Special plugins needing IR library
