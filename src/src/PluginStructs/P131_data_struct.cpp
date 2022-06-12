@@ -48,7 +48,7 @@ P131_data_struct::P131_data_struct(uint8_t             matrixWidth,
 // **************************************************************************/
 P131_data_struct::~P131_data_struct() {
   if (isInitialized()) {
-    delete matrix;
+    // delete matrix; // Doesn't have a virtual destructor
     matrix = nullptr;
   }
 }
@@ -113,27 +113,29 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
                                                       true,
                                                       _textBackFill);
 
-    gfxHelper->setRotation(_rotation);
-    matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
-    matrix->fillScreen(_bgcolor);                             // fill screen with black color
+    success = (nullptr != gfxHelper);
 
-    # ifdef P131_SHOW_SPLASH
+    if (success) {
+      gfxHelper->setRotation(_rotation);
+      matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
+      matrix->fillScreen(_bgcolor);                             // fill screen with black color
 
-    if (P131_CONFIG_FLAG_GET_SHOW_SPLASH) {
-      uint16_t yPos = 0;
-      gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 1, ADAGFX_WHITE, ADAGFX_BLACK);
-      matrix->show();
-      delay(100); // Splash
+      # ifdef P131_SHOW_SPLASH
+
+      if (P131_CONFIG_FLAG_GET_SHOW_SPLASH) {
+        uint16_t yPos = 0;
+        gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 1, ADAGFX_WHITE, ADAGFX_BLACK);
+        matrix->show();
+        delay(100); // Splash
+      }
+      # endif // ifdef P131_SHOW_SPLASH
+
+      matrix->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+      gfxHelper->setColumnRowMode(false);       // Pixel-mode
+      matrix->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
+      matrix->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
+      updateFontMetrics();
     }
-    # endif // ifdef P131_SHOW_SPLASH
-
-    matrix->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
-    gfxHelper->setColumnRowMode(false);       // Pixel-mode
-    matrix->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
-    matrix->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
-    updateFontMetrics();
-
-    success = true;
   }
   return success;
 }
@@ -161,7 +163,7 @@ void P131_data_struct::cleanup() {
   delete gfxHelper;
   gfxHelper = nullptr;
 
-  delete matrix;
+  // delete matrix; // Doesn't have a virtual destructor
   matrix = nullptr;
 }
 
@@ -176,7 +178,7 @@ void P131_data_struct::loadContent(struct EventStruct *event) {
 
   if (!contentInitialized && stringsInitialized) {
     content.clear();
-    content.reserve(P131_CONFIG_TILE_HEIGHT);
+    content.resize(P131_CONFIG_TILE_HEIGHT);
 
     for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
       content[x] = P131_content_struct();
@@ -221,28 +223,30 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
  ***************************************************************************/
 void P131_data_struct::display_content(struct EventStruct *event,
                                        bool                scrollOnly) {
-  int16_t yPos = 0;
+  if (isInitialized() && (nullptr != gfxHelper)) {
+    int16_t yPos = 0;
 
-  for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
-    String tmpString = parseStringKeepCase(strings[x], 1);
+    for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
+      String tmpString = parseStringKeepCase(strings[x], 1);
 
-    if (!scrollOnly ||
-        (scrollOnly && content[x].active)) {
-      String newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
+      if (!scrollOnly ||
+          (scrollOnly && content[x].active)) {
+        String newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
 
-      # if ADAGFX_PARSE_SUBCOMMAND
-      updateFontMetrics();
-      # endif // if ADAGFX_PARSE_SUBCOMMAND
+        # if ADAGFX_PARSE_SUBCOMMAND
+        updateFontMetrics();
+        # endif // if ADAGFX_PARSE_SUBCOMMAND
 
-      // TODO apply scrolling offset
-      if (yPos < _ypix) {
-        gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        // TODO apply scrolling offset
+        if (yPos < _ypix) {
+          gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+        }
       }
+      delay(0);
+      yPos += (_fontheight * _fontscaling);
     }
-    delay(0);
-    yPos += (_fontheight * _fontscaling);
+    matrix->show();
   }
-  matrix->show();
 }
 
 /****************************************************************************
@@ -283,7 +287,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
   }
 
-  if (success) {
+  if (isInitialized() && success) {
     matrix->show();
   }
   return success;
@@ -323,6 +327,12 @@ bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
  * updateFontMetrics: recalculate x and y columns, based on font size and font scale
  ***************************************************************************/
 void P131_data_struct::updateFontMetrics() {
+  if (_fontscaling == 0) { _fontscaling = 1; } // Sanity checks
+
+  if (_fontwidth == 0) { _fontwidth = 6; }
+
+  if (_fontheight == 0) { _fontheight = 10; }
+
   if (nullptr != gfxHelper) {
     gfxHelper->getTextMetrics(_textcols, _textrows, _fontwidth, _fontheight, _fontscaling, _heightOffset, _xpix, _ypix);
     gfxHelper->getColors(_fgcolor, _bgcolor);
