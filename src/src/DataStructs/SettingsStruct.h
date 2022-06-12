@@ -280,7 +280,7 @@ class SettingsStruct_tmpl
   boolean       TaskDevicePin1Inversed[N_TASKS] = {0};
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
   union {
-    long     TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+    int32_t  TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
     uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
   };
   uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
