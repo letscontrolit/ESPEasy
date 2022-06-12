@@ -9,11 +9,13 @@
 
 bool     ethUseStaticIP();
 void     ethSetupStaticIPconfig();
+void     ethSetDNS(const IPAddress& dns0, const IPAddress& dns1);
 bool     ethCheckSettings();
 bool     ethPrepare();
 void     ethPrintSettings();
 bool     ETHConnectRelaxed();
 bool     ETHConnected();
+void     ethPower(bool enable);
 MAC_address ETHMacAddress();
 
 #endif // ifdef HAS_ETHERNET

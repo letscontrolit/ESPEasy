@@ -116,7 +116,7 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
   #ifdef HAS_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {
-      return ETH.dnsIP();
+      return ETH.dnsIP(dns_no);
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkDnsIP(uint8_t dns_no) only on connected Ethernet!"));
       return IPAddress();
@@ -222,10 +222,12 @@ String WifiSTAmacAddress() {
 
 void CheckRunningServices() {
   set_mDNS();
+  #ifdef ESP8266
   if (active_network_medium == NetworkMedium_t::WIFI) 
   {
     SetWiFiTXpower();
   }
+  #endif
 }
 
 #ifdef HAS_ETHERNET
@@ -238,15 +240,22 @@ bool EthFullDuplex()
 
 bool EthLinkUp()
 {
-  if (EthEventData.ethInitSuccess)
+  if (EthEventData.ethInitSuccess) {
+    #ifdef ESP_IDF_VERSION_MAJOR
+    // FIXME TD-er: See: https://github.com/espressif/arduino-esp32/issues/6105
+    return EthEventData.EthConnected();
+    #else
     return ETH.linkUp();
+    #endif
+  }
   return false;
 }
 
 uint8_t EthLinkSpeed()
 {
-  if (EthEventData.ethInitSuccess)
+  if (EthEventData.ethInitSuccess) {
     return ETH.linkSpeed();
+  }
   return 0;
 }
 #endif

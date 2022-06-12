@@ -6,6 +6,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
@@ -81,7 +82,6 @@ void handle_unprocessedNetworkEvents()
     }
     EthEventData.setEthServicesInitialized();
   }
-
 #endif
   if (WiFiEventData.unprocessedWifiEvents()) {
     // Process disconnect events before connect events.
@@ -155,7 +155,7 @@ void handle_unprocessedNetworkEvents()
           lastDisconnectMoment_log.set(WiFiEventData.lastDisconnectMoment.get());
           lastWiFiStatus_log = cur_wifi_status;
           String wifilog = F("WIFI : Disconnected: WiFi.status() = ");
-          wifilog += ESPeasyWifiStatusToString();
+          wifilog += WiFiEventData.ESPeasyWifiStatusToString();
           wifilog += F(" RSSI: ");
           wifilog += String(WiFi.RSSI());
           wifilog += F(" status: ");
@@ -203,6 +203,24 @@ void handle_unprocessedNetworkEvents()
       }
     }
   }
+#ifdef HAS_ETHERNET
+  // Check if DNS is still valid, as this may have been reset by the WiFi module turned off.
+  if (EthEventData.EthServicesInitialized() && 
+      active_network_medium == NetworkMedium_t::Ethernet &&
+      EthEventData.ethInitSuccess) {
+    const bool has_cache = !EthEventData.dns0_cache && !EthEventData.dns1_cache;
+    if (has_cache) {
+      const IPAddress dns0     = NetworkDnsIP(0);
+      const IPAddress dns1     = NetworkDnsIP(1);
+
+      if (!dns0 && !dns1) {
+        addLog(LOG_LEVEL_ERROR, F("ETH  : DNS server was cleared, use cached DNS IP"));
+        ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
+      }
+    }
+  }
+#endif
+
   updateUDPport();
 }
 
@@ -252,6 +270,7 @@ void processDisconnect() {
 
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
+    WifiScan(false);
     delay(100);
     setWifiMode(WIFI_OFF);
     initWiFi();
@@ -259,8 +278,6 @@ void processDisconnect() {
     if (WiFiEventData.unprocessedWifiEvents()) {
       handle_unprocessedNetworkEvents();
     }
-
-    WifiScan(false);
   }
   logConnectionStatus();
   WiFiEventData.processedDisconnect = true;
@@ -557,6 +574,7 @@ void processEthernetConnected() {
 }
 
 void processEthernetDisconnected() {
+  if (EthEventData.processedDisconnect) return;
   EthEventData.setEthDisconnected();
   EthEventData.processedDisconnect = true;
   EthEventData.ethConnectAttemptNeeded = true;
@@ -567,13 +585,29 @@ void processEthernetDisconnected() {
 }
 
 void processEthernetGotIP() {
-  if (EthEventData.processedGotIP) {
+  if (EthEventData.processedGotIP || !EthEventData.ethInitSuccess) {
     return;
   }
-  IPAddress ip = NetworkLocalIP();
+  const IPAddress ip       = NetworkLocalIP();
+
+  if (!ip) { 
+    return;
+  }
+
   const IPAddress gw       = NetworkGatewayIP();
   const IPAddress subnet   = NetworkSubnetMask();
+
+  IPAddress dns0     = NetworkDnsIP(0);
+  IPAddress dns1     = NetworkDnsIP(1);
   const LongTermTimer::Duration dhcp_duration = EthEventData.lastConnectMoment.timeDiff(EthEventData.lastGetIPmoment);
+
+  if (!dns0 && !dns1) {
+    addLog(LOG_LEVEL_ERROR, F("ETH  : No DNS server received via DHCP, use cached DNS IP"));
+    ethSetDNS(EthEventData.dns0_cache, EthEventData.dns1_cache);
+  } else {
+    EthEventData.dns0_cache = dns0;
+    EthEventData.dns1_cache = dns1;
+  }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
@@ -588,13 +622,18 @@ void processEthernetGotIP() {
         log += F("DHCP");
       }
       log += F(" IP: ");
-      log += NetworkLocalIP().toString();
+      log += ip.toString();
       log += ' ';
       log += wrap_braces(NetworkGetHostname());
       log += F(" GW: ");
-      log += NetworkGatewayIP().toString();
+      log += gw.toString();
       log += F(" SN: ");
-      log += NetworkSubnetMask().toString();
+      log += subnet.toString();
+      log += F(" DNS: ");
+      log += dns0.toString();
+      log += '/';
+      log += dns1.toString();
+
       if (EthLinkUp()) {
         if (EthFullDuplex()) {
           log += F(" FULL_DUPLEX");

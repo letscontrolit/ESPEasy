@@ -37,7 +37,7 @@ bool CPlugin_013(CPlugin::Function function, struct EventStruct *event, String& 
       Protocol[protocolCount].usesTemplate = false;
       Protocol[protocolCount].usesAccount  = false;
       Protocol[protocolCount].usesPassword = false;
-      Protocol[protocolCount].defaultPort  = 65501;
+      Protocol[protocolCount].defaultPort  = 8266;
       Protocol[protocolCount].usesID       = false;
       Protocol[protocolCount].Custom       = true;
       break;
@@ -119,7 +119,7 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         infoReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&infoReply), sizeof(C013_SensorInfoStruct));
@@ -155,7 +155,7 @@ void C013_SendUDPTaskData(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
     C013_sendUDP(destUnit, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         dataReply.destUnit = it->first;
         C013_sendUDP(it->first, reinterpret_cast<const uint8_t *>(&dataReply), sizeof(C013_SensorDataStruct));
@@ -174,10 +174,13 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   if (!NetworkConnected(10)) {
     return;
   }
-  NodesMap::iterator it;
 
-  if (unit != 255) {
-    it = Nodes.find(unit);
+  IPAddress remoteNodeIP;
+  if (unit == 255) {
+    remoteNodeIP = { 255, 255, 255, 255 };
+  }
+  else {
+    auto it = Nodes.find(unit);
 
     if (it == Nodes.end()) {
       return;
@@ -186,6 +189,7 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
     if (it->second.ip[0] == 0) {
       return;
     }
+    remoteNodeIP = it->second.ip;
   }
 # ifndef BUILD_NO_DEBUG
 
@@ -197,15 +201,6 @@ void C013_sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
-
-  IPAddress remoteNodeIP;
-
-  if (unit == 255) {
-    remoteNodeIP = { 255, 255, 255, 255 };
-  }
-  else {
-    remoteNodeIP = it->second.ip;
-  }
 
   if (!beginWiFiUDP_randomPort(C013_portUDP)) { return; }
 

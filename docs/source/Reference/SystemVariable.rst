@@ -46,16 +46,40 @@ More uses of these system variables can be seen in the rules section and formula
      - Current time if NTP is enabled (hh:mm:ss, hh:mm prior to v2.0).
      - 
    * - ``%systm_hm%``
-     - 01:23
+     - 1:23
      - Current time if NTP is enabled (hh:mm "old behavior").
+     - 
+   * - ``%systm_hm_0%``
+     - 01:23
+     - Current time if NTP is enabled (0-prefixed if hour < 10).
+     - 
+   * - ``%systm_hm_sp%``
+     - ` 1:23`
+     - Current time if NTP is enabled (space-prefixed if hour < 10).
      - 
    * - ``%systime_am%``
      - 1:23:54 AM
      - Current AM/PM time if NTP is enabled (hh:mm:ss xM).
      - 
+   * - ``%systime_am_0%``
+     - 01:23:54 AM
+     - Current AM/PM time if NTP is enabled (0-prefixed if hour < 10).
+     - 
+   * - ``%systime_am_sp%``
+     - ` 1:23:54 AM`
+     - Current AM/PM time if NTP is enabled (space-prefixed if hour < 10).
+     - 
    * - ``%systm_hm_am%``
      - 1:23 AM
      - Current AM/PM time if NTP is enabled (hh:mm:ss xM).
+     - 
+   * - ``%systm_hm_am_0%``
+     - 01:23 AM
+     - Current AM/PM time if NTP is enabled (0-prefixed if hour < 10).
+     - 
+   * - ``%systm_hm_am_sp%``
+     - ` 1:23 AM`
+     - Current AM/PM time if NTP is enabled (space-prefixed if hour < 10).
      - 
    * - ``%lcltime%``
      - 2020-03-16 01:23:54
@@ -219,6 +243,54 @@ More uses of these system variables can be seen in the rules section and formula
    * - ``%dns2%``
      - (IP unset)
      - The configured secondary Domain Name Server IP-address
+     -
+   * - ``%flash_freq%``
+     - 40
+     - Actual frequency in MHz the flash is running at.
+     -
+   * - ``%flash_size%``
+     - 4194304
+     - Detected size of the flash chip in Bytes.
+     -
+   * - ``%flash_chip_vendor%``
+     - 0x20
+     - Vendor ID of the flash chip in Hex notation.
+     -
+   * - ``%flash_chip_model%``
+     - 0x4016
+     - Model nr of the flash chip, in Hex notation.
+     -
+   * - ``%fs_free%``
+     - 135722
+     - Free space of the file system in bytes.
+     -
+   * - ``%fs_size%``
+     - 290156
+     - Total size of the file system in bytes.
+     -
+   * - ``%cpu_id%``
+     - 0x45B368
+     - CPU ID of the processor in Hex notation. Often the last 3 bytes of the MAC address.
+     -
+   * - ``%cpu_freq%``
+     - 240
+     - Actual CPU frequency in MHz.
+     -
+   * - ``%cpu_model%``
+     - ESP32-D0WDQ5	
+     - Model nr of the CPU chip.
+     -
+   * - ``%cpu_rev%``
+     - 1
+     - Chip revision of the CPU chip (only on ESP32 variants)
+     -
+   * - ``%cpu_cores%``
+     - 2
+     - Number of CPU cores present.
+     -
+   * - ``%board_name%``
+     - Espressif Generic ESP32 4M Flash, ESPEasy 1810k Code/OTA, 316k FS
+     - Description of the used board definition to build the ESPEasy binary.
      -
 
 Standard Conversions

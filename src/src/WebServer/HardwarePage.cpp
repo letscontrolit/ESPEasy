@@ -81,7 +81,7 @@ void handle_hardware() {
         // do not add the pin state select for these pins.
       } else {
         if (validGpio(gpio)) {
-          String int_pinlabel = "p";
+          String int_pinlabel('p');
           int_pinlabel       += gpio;
           Settings.setPinBootState(gpio, static_cast<PinBootState>(getFormItemInt(int_pinlabel)));
         }
@@ -167,7 +167,7 @@ void handle_hardware() {
     // Script to show GPIO pins for User-defined SPI GPIOs
     html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' : 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
                     false);
-    const String spi_options[] = {
+    const __FlashStringHelper * spi_options[] = {
       getSPI_optionToString(SPI_Options_e::None), 
       getSPI_optionToString(SPI_Options_e::Vspi), 
       getSPI_optionToString(SPI_Options_e::Hspi), 
@@ -210,13 +210,36 @@ void handle_hardware() {
   addFormNote(F("Change Switch between WiFi and Ethernet requires reboot to activate"));
   addRowLabel_tr_id(F("Ethernet PHY type"), F("ethtype"));
   {
-    const __FlashStringHelper * ethPhyTypes[2] = { 
+  #if ESP_IDF_VERSION_MAJOR > 3
+    const uint32_t nrItems = 5;
+  #else
+    const uint32_t nrItems = 2;
+  #endif
+    const __FlashStringHelper * ethPhyTypes[nrItems] = { 
       toString(EthPhyType_t::LAN8710), 
-      toString(EthPhyType_t::TLK110) };
-    addSelector(F("ethtype"), 2, ethPhyTypes, nullptr, nullptr, static_cast<int>(Settings.ETH_Phy_Type), false, true);
+      toString(EthPhyType_t::TLK110)
+  #if ESP_IDF_VERSION_MAJOR > 3
+      ,
+      toString(EthPhyType_t::RTL8201),
+      toString(EthPhyType_t::DP83848),
+      toString(EthPhyType_t::DM9051) 
+  #endif
+      };
+    const int ethPhyTypes_index[] = {
+      static_cast<int>(EthPhyType_t::LAN8710),
+      static_cast<int>(EthPhyType_t::TLK110)
+  #if ESP_IDF_VERSION_MAJOR > 3
+      ,
+      static_cast<int>(EthPhyType_t::RTL8201),
+      static_cast<int>(EthPhyType_t::DP83848),
+      static_cast<int>(EthPhyType_t::DM9051)
+  #endif
+    };
+
+    addSelector(F("ethtype"), nrItems, ethPhyTypes, ethPhyTypes_index, nullptr, static_cast<int>(Settings.ETH_Phy_Type), false, true);
   }
-  addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, 0, 255);
-  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110)"));
+  addFormNumericBox(F("Ethernet PHY Address"), F("ethphy"), Settings.ETH_Phy_Addr, -1, 127);
+  addFormNote(F("I&sup2;C-address of Ethernet PHY (0 or 1 for LAN8720, 31 for TLK110, -1 autodetect)"));
   addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet MDC pin")), F("ethmdc"), Settings.ETH_Pin_mdc);
   addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_input(F("Ethernet MIO pin")), F("ethmdio"), Settings.ETH_Pin_mdio);
   addFormPinSelect(PinSelectPurpose::Ethernet, formatGpioName_output(F("Ethernet Power pin")), F("ethpower"), Settings.ETH_Pin_power);
