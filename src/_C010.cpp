@@ -89,8 +89,10 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
             element.txt[x] = pubname;
             parseSingleControllerVariable(element.txt[x], event, x, false);
             element.txt[x].replace(F("%value%"), formattedValue);
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))
               addLog(LOG_LEVEL_DEBUG_MORE, element.txt[x]);
+#endif
           }
         }
       }
