@@ -165,9 +165,10 @@ unsigned long ESPEasy_time::now() {
         // Clock instability in msec/second
         timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
       }
-      lastTimeWanderCalculation = millis();
 
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
+      lastTimeWanderCalculation = prevMillis;
+      
       timeSynced = true;
 
       sysTime = unixTime_d;
