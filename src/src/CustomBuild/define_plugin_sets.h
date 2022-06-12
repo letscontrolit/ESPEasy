@@ -1869,4 +1869,10 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#if defined(LIMIT_BUILD_SIZE) || defined(ESP8266_1M)
+  #ifdef USE_MQTT_TLS
+    #undef USE_MQTT_TLS
+  #endif
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
