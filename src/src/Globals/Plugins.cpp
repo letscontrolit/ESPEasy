@@ -480,6 +480,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
       }
 
+/*
       if (Function == PLUGIN_REQUEST) {
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
         for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
@@ -492,6 +493,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
         }
       }
+*/
       break;
     }
 
