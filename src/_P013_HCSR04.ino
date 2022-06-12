@@ -94,7 +94,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       }
 
 
-      String strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
+      const __FlashStringHelper * strUnit = (measuringUnit == UNIT_CM) ? F("cm") : F("inch");
 
       {
         const __FlashStringHelper *optionsOpMode[2];

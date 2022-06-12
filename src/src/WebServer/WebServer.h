@@ -20,6 +20,8 @@
 
 void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size);
 
+void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size);
+
 void sendHeadandTail(const __FlashStringHelper * tmplName,
                      boolean       Tail      = false,
                      boolean       rebooting = false);
@@ -177,8 +179,6 @@ void getStorageTableSVG(SettingsType::Enum settingsType);
 #endif // ifndef BUILD_MINIMAL_OTA
 
 #ifdef ESP32
-
-int  getPartionCount(uint8_t pType);
 
 void getPartitionTableSVG(uint8_t         pType,
                           unsigned int partitionColor);

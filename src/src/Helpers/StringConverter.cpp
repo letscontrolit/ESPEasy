@@ -465,6 +465,33 @@ String wrapIfContains(const String& value, char contains, char wrap) {
   return value;
 }
 
+String wrapWithQuotes(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  // Try to find unused quote char and wrap
+  char quotechar = '_';
+  if (!findUnusedQuoteChar(text, quotechar)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("No unused quote to wrap: _");
+      log += text;
+      log += '_';
+      addLogMove(LOG_LEVEL_ERROR, log);
+    }
+  }
+  return wrap_String(text, quotechar);
+}
+
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  if (stringContainsSeparatorChar(text)) {
+    return wrapWithQuotes(text);
+  }
+  return text;
+}
+
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
@@ -546,8 +573,29 @@ bool isQuoteChar(char c) {
   return c == '\'' || c == '"' || c == '`';
 }
 
+bool findUnusedQuoteChar(const String& text, char& quotechar) {
+  quotechar = '_';
+  if (text.indexOf('\'') == -1) quotechar = '\'';
+  else if (text.indexOf('"') == -1) quotechar = '"';
+  else if (text.indexOf('`') == -1) quotechar = '`';
+  
+  return isQuoteChar(quotechar);
+}
+
 bool isParameterSeparatorChar(char c) {
   return c == ',' || c == ' ';
+}
+
+bool stringContainsSeparatorChar(const String& text) {
+  return text.indexOf(',') != -1 || text.indexOf(' ') != -1;
+}
+
+bool isWrappedWithQuotes(const String& text) {
+  if (text.length() < 2) {
+    return false;
+  }
+  const char quoteChar = text[0];
+  return isQuoteChar(quoteChar) && stringWrappedWithChar(text, quoteChar);
 }
 
 String stripQuotes(const String& text) {

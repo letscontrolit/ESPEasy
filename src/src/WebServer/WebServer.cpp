@@ -76,6 +76,10 @@ void safe_strncpy_webserver_arg(char *dest, const String& arg, size_t max_size) 
   }
 }
 
+void safe_strncpy_webserver_arg(char *dest, const __FlashStringHelper * arg, size_t max_size) {
+  safe_strncpy_webserver_arg(dest, String(arg), max_size);
+}
+
 void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean rebooting) {
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
@@ -971,19 +975,6 @@ void getStorageTableSVG(SettingsType::Enum settingsType) {
 
 # include <esp_partition.h>
 
-int getPartionCount(uint8_t pType) {
-  esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, ESP_PARTITION_SUBTYPE_ANY, nullptr);
-  int nrPartitions                         = 0;
-
-  if (_mypartiterator) {
-    do {
-      ++nrPartitions;
-    } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
-  }
-  esp_partition_iterator_release(_mypartiterator);
-  return nrPartitions;
-}
 
 void getPartitionTableSVG(uint8_t pType, unsigned int partitionColor) {
   int nrPartitions = getPartionCount(pType);

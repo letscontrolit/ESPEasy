@@ -157,6 +157,7 @@ Each of the 4 task values can be set to a specific measurement value.
 * Distance (ODO) - Trip distance in meters
 * Distance from Reference Point - See the Reference Point setting.
 
+
 Most units of measure are clear, but some may need a bit more explanation.
 
 **HDOP**
@@ -188,6 +189,30 @@ For a 3D position fix, at least 4 satellites must be tracked.
 
 If just the bare minimum of satellites is being tracked, the GPS receiver may loose its fix quite often.
 
+Access To All Measurement Values
+""""""""""""""""""""""""""""""""
+
+Added: 2022/05/13
+
+All mentioned measurement values are processed from the GPS.
+So even though not all values will be made available as a task value (and thus sent to connected controllers), the other values can still be referred to via the ``[taskname#valuename]`` notation.
+
+To access via this notation, one must use these virtual task value names:
+
+* Longitude: ``long``
+* Latitude:  ``lat``
+* Altitude:  ``alt``
+* Speed (m/s): ``spd``
+* Satellites Visible: ``sat_vis``
+* Satellites Tracked: ``sat_tr``
+* HDOP: ``hdop``
+* Fix Quality: ``fix_qual``
+* Max SNR in dBHz: ``snr_max``
+* Checksum Fail:   ``chksum_fail``
+* Distance (ODO):  ``dist``
+* Distance from Reference Point: ``dist_ref``
+
+For example, to access the Longitude on a task named ``gps``, one can use ``[gps#long]`` regardless whether it is set as an output task value.
 
 
 Distance Update Interval
