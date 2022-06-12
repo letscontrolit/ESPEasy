@@ -247,10 +247,13 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P003_data) {
-        String command            = parseString(string, 1);
+        const String command      = parseString(string, 1);
         bool   mustCallPluginRead = false;
 
-        if ((command == F("resetpulsecounter")) || (command == F("setpulsecountertotal")))
+        const bool cmd_resetpulsecounter    = command == F("resetpulsecounter");
+        const bool cmd_setpulsecountertotal = command == F("setpulsecountertotal");
+
+        if (cmd_resetpulsecounter || cmd_setpulsecountertotal)
         {
           // Legacy commands       ({...} indicate optional parameters):
           // - {[<TaskName/Number>].}resetpulsecounter
@@ -263,7 +266,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           // Legacy: Allow for an optional taskIndex parameter.
           uint8_t tidx = 1;
 
-          if (command == F("setpulsecountertotal")) { tidx = 2; }
+          if (cmd_setpulsecountertotal) { tidx = 2; }
 
           if (!pluginOptionalTaskIndexArgumentMatch(event->TaskIndex, string, tidx)) {
             break;
@@ -271,12 +274,12 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
 
           int par1 = 0;
 
-          if (command == F("setpulsecountertotal")) {
+          if (cmd_setpulsecountertotal) {
             if (!validIntFromString(parseString(string, 2), par1)) { break; }
           }
           P003_data->pulseHelper.setPulseCountTotal(par1);
 
-          if (command == F("resetpulsecounter")) {
+          if (cmd_resetpulsecounter) {
             P003_data->pulseHelper.resetPulseCounter();
           }
           mustCallPluginRead = true;
@@ -301,15 +304,17 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           //       r = reset error and overdue counters after logging
           //       i = increase the log level for regular statstic logs to "info"
 
-          String subcommand = parseString(string, 2);
+          const String subcommand = parseString(string, 2);
+          const bool sub_i = subcommand == F("i");
+          const bool sub_r = subcommand == F("r");
 
-          if ((subcommand == F("i")) || (subcommand == F("r")) || (subcommand == "")) {
+          if ((sub_i) || (sub_r) || (subcommand.isEmpty())) {
             P003_data->pulseHelper.doStatisticLogging(P003_PULSE_STATS_ADHOC_LOG_LEVEL);
             P003_data->pulseHelper.doTimingLogging(P003_PULSE_STATS_ADHOC_LOG_LEVEL);
 
-            if (subcommand == F("i")) { P003_data->pulseHelper.setStatsLogLevel(LOG_LEVEL_INFO); }
+            if (sub_i) { P003_data->pulseHelper.setStatsLogLevel(LOG_LEVEL_INFO); }
 
-            if (subcommand == F("r")) { P003_data->pulseHelper.resetStatsErrorVars(); }
+            if (sub_r) { P003_data->pulseHelper.resetStatsErrorVars(); }
             success = true;
           }
           # else // ifdef PULSE_STATISTIC
