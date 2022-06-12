@@ -7,7 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2022-06-12 tonhuisman: Optimizations and small fixes
+ * 2022-06-12 tonhuisman: Optimizations and small fixes. Implement use of PCONFIG_ULONG()
  * 2022-02-25 tonhuisman: Rename command to ShiftIn,<subcommand>,<arg>...
  * 2022-02-23 tonhuisman: Add command handling.
  * 2022-02-22 tonhuisman: Compare results and generate events.
@@ -200,7 +200,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
         for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
           if (i % 4 == 0) {
-            bits = PCONFIG_LONG(i / 4) & 0x0ffffffff;
+            bits = PCONFIG_ULONG(i / 4) & 0x0ffffffff;
             off  = 0;
             # ifndef P129_DEBUG_LOG
 
@@ -275,7 +275,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         for (uint8_t j = 0; j < 8; j++) {
           bitWrite(bits, off * 8 + (7 - j), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1)));
         }
-        PCONFIG_LONG(i / 4) = bits;
+        PCONFIG_ULONG(i / 4) = bits;
 
         # ifndef P129_DEBUG_LOG
 
@@ -304,10 +304,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
                                                                                P129_CONFIG_CHIP_COUNT));
       P129_data_struct *P129_data = static_cast<P129_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P129_data) {
-        if (P129_data->isInitialized()) {
-          success = P129_data->plugin_init(event);
-        }
+      if ((nullptr != P129_data) && P129_data->isInitialized()) {
+        success = P129_data->plugin_init(event);
       }
 
       if (!success) {

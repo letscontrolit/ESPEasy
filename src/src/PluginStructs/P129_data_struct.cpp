@@ -91,11 +91,11 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
       if (validChannel(pin + 1) && ((value == 0) || (value == 1))) {
         const uint8_t ulong = pin / 32;
         const uint8_t bit   = pin % 32;
-        uint32_t lSettings  = PCONFIG_LONG(ulong);
+        uint32_t lSettings  = PCONFIG_ULONG(ulong);
 
         bitWrite(lSettings, bit, value);
-        PCONFIG_LONG(ulong) = lSettings;
-        success             = true;
+        PCONFIG_ULONG(ulong) = lSettings;
+        success              = true;
         # ifdef P129_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -119,11 +119,11 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
       if ((chip >= 0) && (chip < P129_CONFIG_CHIP_COUNT) && ((value == 0) || (value == 1))) {
         const uint8_t ulong = chip / 4;
         const uint8_t bit   = (chip % 4) * 8;
-        uint32_t lSettings  = PCONFIG_LONG(ulong);
+        uint32_t lSettings  = PCONFIG_ULONG(ulong);
 
         set8BitToUL(lSettings, bit, value == 1 ? 0xFF : 0x00);
-        PCONFIG_LONG(ulong) = lSettings;
-        success             = true;
+        PCONFIG_ULONG(ulong) = lSettings;
+        success              = true;
         # ifdef P129_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -197,15 +197,13 @@ bool P129_data_struct::plugin_readData(struct EventStruct *event) {
 
 void P129_data_struct::checkDiff(struct EventStruct *event) {
   for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i += 4) {
-    const uint32_t bits = PCONFIG_LONG(i / 4);
-
-    if (bits != 0) { // Any input event enabled?
+    if (PCONFIG_ULONG(i / 4) != 0) { // Any input event enabled?
       const uint32_t read = readBuffer[i + 3] << 24 | readBuffer[i + 2] << 16 | readBuffer[i + 1] << 8 | readBuffer[i + 0];
       const uint32_t prev = prevBuffer[i + 3] << 24 | prevBuffer[i + 2] << 16 | prevBuffer[i + 1] << 8 | prevBuffer[i + 0];
 
-      for (uint8_t j = 0; j < 32; j++) {                                  // Check all 32 bits
-        if (bitRead(bits, j) && (bitRead(read, j) != bitRead(prev, j))) { // Event enabled and bit changed?
-          sendInputEvent(event, i, j, bitRead(read, j));                  // Send out new state
+      for (uint8_t j = 0; j < 32; j++) {                                                  // Check all 32 bits
+        if (bitRead(PCONFIG_ULONG(i / 4), j) && (bitRead(read, j) != bitRead(prev, j))) { // Event enabled and bit changed?
+          sendInputEvent(event, i, j, bitRead(read, j));                                  // Send out new state
         }
       }
     }
