@@ -36,8 +36,8 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
   return false;
 }
 
-const uint32_t P129_data_struct::getChannelState(uint8_t offset,
-                                                 uint8_t size) const {
+uint32_t P129_data_struct::getChannelState(uint8_t offset,
+                                           uint8_t size) {
   uint32_t result    = 0u;
   uint16_t sft       = 0u;
   const uint8_t last = offset + size;
