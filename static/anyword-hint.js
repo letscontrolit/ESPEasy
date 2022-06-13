@@ -12,7 +12,7 @@
   "use strict";
 
   var WORD = /[\w$]+/, RANGE = 500;
-  var EXTRAWORDS = commonAtoms.concat(commonKeywords, commonCommands, commonString2, commonString3, commonTag, commonNumber, commonMath, commonWarning, AnythingElse);
+  var EXTRAWORDS = commonAtoms.concat(commonKeywords, commonCommands, commonString2, commonPlugins, commonTag, commonNumber, commonMath, commonWarning, AnythingElse);
 
   CodeMirror.registerHelper("hint", "anyword", function (editor, options) {
     var word = options && options.word || WORD;

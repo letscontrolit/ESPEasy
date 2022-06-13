@@ -11,18 +11,22 @@ var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WifiAPkey", "WifiAllowAP", "WifiAPMode", "WifiConnect", "WifiDisconnect", "WifiKey",
   "WifiKey", "WifiScan", "WifiSSID", "WifiSSID2", "WifiSTAMode",
   "Event", "AsyncEvent", "/control?cmd",
-  "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse",
-  "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "UnMonitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "MCPGPIORange", "MCPGPIOPattern",
-  "MCPMode", "MCPModeRange", "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF", "UnMonitor,PCF",
-  "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFMode", "Tone", "RTTTL", "UnMonitor",];
+  "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",];
 var commonString2 = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
   "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
   "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected"];
 var commonPlugins = [
-  //
+  //P003
   "ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic", 
-  //
+  //P007
+  "analogout",
+  //P009
+  "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse","MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "UnMonitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "MCPGPIORange", "MCPGPIOPattern", "MCPMode", "MCPModeRange",
+  //P012
   "LCDCmd", "LCD", 
+  //P019
+  "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF", "UnMonitor,PCF",
+  "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFMode",
   //P036
   "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
   //
