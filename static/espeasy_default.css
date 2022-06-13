@@ -261,7 +261,7 @@ select.wide {
 .logviewer,
 textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
-	width: 90vw;
+	width: 98%;
 	height: 60vh;
 }
 
@@ -386,10 +386,6 @@ table.normal th {
 	text-align: center
 }
 
-table.normal th:nth-child(1) {
-    max-width: 250px;
-}
-
 tr td {
 	border-width: 0.1px;
 }
@@ -400,6 +396,7 @@ table.normal {
 	border-spacing: 0px;
 	border-style: none;
 	min-width: 420px;
+	width: 100%;
 	padding-bottom: 5px;
 }
 
