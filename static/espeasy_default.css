@@ -1,10 +1,3 @@
-.closebtn,
-h1,
-h2,
-h3 {
-	font-weight: 700
-}
-
 h1,
 h6 {
 	color: #07D
@@ -57,10 +50,10 @@ h2 {
 }
 
 h3 {
-	background-color: #EEE;
+	background-color: #cacaca;
 	color: #444;
-	margin: 16px -4px 0;
-	padding: 4px
+	margin: -4px;
+	padding: 6px;
 }
 
 h6 {
@@ -80,7 +73,7 @@ xmp {
 .button {
 	background-color: #07D;
 	border: none;
-	border-radius: 4px;
+	border-radius: 5px;
 	color: #FFF;
 	margin: 4px;
 	padding: 4px 16px
@@ -115,16 +108,11 @@ textarea {
 input,
 select,
 textarea {
-	border-radius: 4px
+	border-radius: 5px
 }
 
 .button:hover {
 	background: #369
-}
-
-input:hover,
-select:hover {
-	background-color: #ccc
 }
 
 input,
@@ -137,8 +125,8 @@ textarea {
 
 input.wide,
 select.wide {
-	max-width: 500px;
-	width: 80%
+	max-width: 350px;
+	width: 95%
 }
 
 .widenumber {
@@ -161,7 +149,8 @@ select.wide {
 	margin-left: 4px;
 	margin-top: 0;
 	position: relative;
-	user-select: none
+	user-select: none;
+	height: 30px;
 }
 
 .container input {
@@ -181,10 +170,6 @@ select.wide {
 	position: absolute;
 	top: 0;
 	width: 25px
-}
-
-.container:hover input~.checkmark {
-	background-color: #ccc
 }
 
 .container input:checked~.checkmark {
@@ -251,10 +236,6 @@ select.wide {
 	width: 26px
 }
 
-.container2:hover input~.dotmark {
-	background-color: #ccc
-}
-
 .container2 input:checked~.dotmark {
 	background-color: #07D
 }
@@ -280,14 +261,13 @@ select.wide {
 .logviewer,
 textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
-	max-width: 1000px;
-	padding: 4px 8px;
-	width: 80%
+	width: 90vw;
+	height: 60vh;
 }
 
 #toastmessage {
 	background-color: #07D;
-	border-radius: 4px;
+	border-radius: 5px;
 	bottom: 30%;
 	color: #fff;
 	font-size: 17px;
@@ -312,6 +292,7 @@ textarea {
 		bottom: 20%;
 		opacity: 0
 	}
+
 	to {
 		bottom: 30%;
 		opacity: .9
@@ -323,6 +304,7 @@ textarea {
 		bottom: 20%;
 		opacity: 0
 	}
+
 	to {
 		bottom: 30%;
 		opacity: .9
@@ -334,6 +316,7 @@ textarea {
 		bottom: 30%;
 		opacity: .9
 	}
+
 	to {
 		bottom: 0;
 		opacity: 0
@@ -345,6 +328,7 @@ textarea {
 		bottom: 30%;
 		opacity: .9
 	}
+
 	to {
 		bottom: 0;
 		opacity: 0
@@ -378,61 +362,77 @@ textarea {
 .logviewer {
 	background-color: #272727;
 	color: #F1F1F1;
-	height: 530px;
 	overflow: auto
 }
 
-textarea:hover {
-	background-color: #ccc
+tbody {
+	background-color: #f8f8f8;
+	border-radius: 10px;
+	display: inline-block;
+	border: #444444 0.1px solid;
+	overflow: auto;
 }
 
 table.multirow th,
 table.normal th {
 	background-color: #444;
-	border-color: #888;
+	border-width: 0.1px;
+	border-color: #c0c0c0;
 	color: #FFF;
 	font-weight: 700;
 	padding: 6px;
 	align-content: center;
+	width: 100vw;
 	text-align: center
+}
+
+table.normal th:nth-child(1) {
+    max-width: 250px;
+}
+
+tr td {
+	border-width: 0.1px;
 }
 
 table.multirow,
 table.normal {
-	border-collapse: collapse;
-	color: #000;
+	border-collapse: separate;
+	border-spacing: 0px;
+	border-style: none;
 	min-width: 420px;
-	width: 100%
+	padding-bottom: 5px;
 }
 
 table.multirow tr,
 table.normal td,
 table.normal tr {
-	padding: 4px
+	padding: 4px;
 }
 
 table.normal td {
-	height: 30px
+	height: 30px;
 }
 
 table.multirow td {
 	height: 30px;
 	padding: 4px;
-	text-align: center
+	text-align: center;
+	border-color: #c0c0c0;
 }
 
-table.multirow tr:nth-child(even) {
-	background-color: #DEE6FF
+table.multirow tr:nth-child(odd) {
+	background-color: #e8e8e8;
 }
 
 .highlight td {
-	background-color: #dbff0075
+	background-color: #dd6600;
 }
 
 .apheader,
 .headermenu {
 	background-color: #F8F8F8;
-	padding: 8px 12px
+	padding: 8px 12px;
+	width: 100vw;
 }
 
 .note {
@@ -441,41 +441,49 @@ table.multirow tr:nth-child(even) {
 }
 
 .headermenu {
-	border-bottom: 1px solid #DDD;
-	height: 90px;
-	left: 0;
+	border-bottom: 0.1px solid #444444;
+	height: 100px;
 	position: fixed;
-	right: 0;
 	top: 0;
-	z-index: 1
+	z-index: 1;
 }
 
 .bodymenu {
-	margin-top: 96px
+	padding-top: 100px;
+	background-color: white;
+	height: 100vh;
 }
 
 .menubar {
 	position: inherit;
-	top: 55px
+	top: 54px;
+	width: 100%;
+}
+
+a.menu {
+	height: 46px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 .menu {
-	border: solid transparent;
-	border-radius: 4px 4px 0 0;
-	border-width: 4px 1px 1px;
+	border: solid transparent 1px;
+	border-radius: 5px 5px 0 0;
 	color: #444;
-	padding: 4px 16px 8px;
+	padding: 10px 10px 8px 10px;
 	white-space: nowrap
 }
 
 .menu.active {
 	background-color: #FFF;
-	border-color: #07D #DDD #FFF;
-	color: #000
+	border-color: #444444 #444444 #fff;
+	color: #000;
+	border-width: 0.1px;
 }
 
 .menu:hover {
-	background: #DEF;
+	background: #bdbdbd;
 	color: #000
 }
 
@@ -484,7 +492,7 @@ table.multirow tr:nth-child(even) {
 }
 
 .on {
-	color: green
+	color: #029B34
 }
 
 .off {
@@ -492,7 +500,7 @@ table.multirow tr:nth-child(even) {
 }
 
 .div_r {
-	background-color: #080;
+	background-color: #029B34;
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -531,15 +539,259 @@ table.multirow tr:nth-child(even) {
 
 section {
 	overflow-x: auto;
-	width: 100%
+	padding: 10px 5px 10px 5px;
 }
 
-@media screen and (max-width: 960px) {
+footer {
+	word-break: break-word;
+	padding: 0px 5px;
+}
+
+@media screen and (max-width: 750px) {
 	.showmenulabel {
-		display: none
+		display: none;
 	}
+
+	a.menu {
+		width: 12%
+	}
+}
+
+@media screen and (max-width: 450px) {
+	table.normal {
+		min-width: 300px;
+	}
+
+	input.wide:focus {
+		position: absolute;
+		left: 4px;
+		z-index: 1;
+	}
+
+	.container {
+		display: inline;
+		user-select: none
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+
+	h1,
+	h6 {
+		color: #dfdfdf
+	}
+
+	.closebtn,
+	.div_r {
+		color: #dfdfdf
+	}
+
+	* {
+		color: #b3b3b3
+	}
+
+	h2 {
+		background-color: #444;
+		color: #FFF
+	}
+
+	h3 {
+		background-color: #1e1e1e;
+		color: #dfdfdf
+	}
+
+	.button {
+		background-color: #44607a;
+		color: #FFF
+	}
+
+	.button.help,
+	.checkmark,
+	input,
+	select,
+	textarea {
+		border-color: gray
+	}
+
+	.button.link.red {
+		background-color: red
+	}
+
+	.button:hover {
+		background: #369
+	}
+
+	input,
+	select,
+	textarea {
+		background-color: #444
+	}
+
+	input.wide,
+	select.wide {
+		color: #dfdfdf
+	}
+
+	.checkmark.disabled {
+		background-color: grey
+	}
+
+	.checkmark {
+		background-color: #4444
+	}
+
+	.container input:checked~.checkmark {
+		background-color: #44607a
+	}
+
+	#toastmessage,
+	.dotmark,
+	.logviewer {
+		border-color: #00000018
+	}
+
+	.dotmark {
+		background-color: #eee
+	}
+
+	.container2 input:checked~.dotmark {
+		background-color: #07D
+	}
+
+	.container2 .dotmark:after {
+		background: #fff
+	}
+
+	.logviewer,
+	textarea {
+		color: #dfdfdf;
+		background-color: #222
+	}
+
+	#toastmessage {
+		background-color: #00000085;
+		color: #fff
+	}
+
+	.level_0 {
+		color: #F1F1F1
+	}
+
+	.level_1 {
+		color: #FCFF95
+	}
+
+	.level_2 {
+		color: #9DCEFE
+	}
+
+	.level_3 {
+		color: #A4FC79
+	}
+
+	.level_4 {
+		color: #F2AB39
+	}
+
+	.level_9 {
+		color: #F50
+	}
+
+	.logviewer {
+		background-color: #272727;
+		color: #F1F1F1
+	}
+
+	tbody {
+		background-color: #222222;
+	}
+
+	table.multirow th,
+	table.normal th {
+		background-color: #444;
+		border-color: #545454;
+		color: #dfdfdf
+	}
+
+	table.multirow td {
+		border-color: #545454;
+	}
+
+	table.multirow tr,
+	table.normal td,
+	table.normal tr {
+		background-color: #222
+	}
+
+	table.multirow tr:nth-child(odd) {
+		background-color: #2a2c2e
+	}
+
+	.highlight td {
+		background-color: #553044
+	}
+
+	.apheader,
+	.headermenu {
+		background-color: #222
+	}
+
+	.note {
+		color: #7b7b7b;
+	}
+
+	.headermenu {
+		border-bottom: 1px solid #222;
+		background-color: #44607a
+	}
+
+	.bodymenu {
+		background-color: #222
+	}
+
 	.menu {
-		max-width: 11vw;
-		max-width: 48px
+		color: #fff;
+		background-color: transparent
 	}
+
+	.menu.active {
+		background-color: #222;
+		border-color: transparent;
+		color: #fff
+	}
+
+	.menu:hover {
+		color: #fff;
+		background: #00000030;
+	}
+
+	.on {
+		color: green
+	}
+
+	.off {
+		color: red
+	}
+
+	.div_r {
+		background-color: #30553d
+	}
+
+	.alert,
+	.warning {
+		color: #fff
+	}
+
+	.alert {
+		background-color: #f44336
+	}
+
+	.warning {
+		background-color: #ffca17
+	}
+
+	.closebtn:hover {
+		color: #000
+	}
+
 }
