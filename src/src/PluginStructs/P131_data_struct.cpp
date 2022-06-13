@@ -48,7 +48,7 @@ P131_data_struct::P131_data_struct(uint8_t             matrixWidth,
 // **************************************************************************/
 P131_data_struct::~P131_data_struct() {
   if (isInitialized()) {
-    // delete matrix; // Doesn't have a virtual destructor
+    delete matrix; // Doesn't have a virtual destructor (yet)
     matrix = nullptr;
   }
 }
@@ -163,7 +163,7 @@ void P131_data_struct::cleanup() {
   delete gfxHelper;
   gfxHelper = nullptr;
 
-  // delete matrix; // Doesn't have a virtual destructor
+  delete matrix; // Doesn't have a virtual destructor (yet)
   matrix = nullptr;
 }
 
