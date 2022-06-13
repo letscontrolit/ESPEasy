@@ -18,10 +18,38 @@ var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "
 var commonString2 = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
   "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
   "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected"];
-var commonString3 = ["ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic", "LCDCmd", "LCD", "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
-  "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper", "Sensair_SetRelay", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset", "Play", "Vol", "Eq", "Mode", "Repeat",
-  "HLWCalibrate", "HLWReset", "WemosMotorShieldCMD", "LolinMotorShieldCMD", "HeatPumpir", "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode",
-  "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane", "Culreader_write", "TFTcmd", "TFT&", "Touch,Rot", "WakeOnLan", "Max1704xclearalert"];
+var commonPlugins = [
+  //
+  "ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic", 
+  //
+  "LCDCmd", "LCD", 
+  //P036
+  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
+  //
+  "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper",
+  // 
+  "Sensair_SetRelay", 
+  //P053
+  "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset", 
+  //P065
+  "Play", "Vol", "Eq", "Mode", "Repeat",
+  //
+  "HLWCalibrate", "HLWReset",
+  //P079
+  "WemosMotorShieldCMD", "LolinMotorShieldCMD", 
+  //
+  "HeatPumpir", 
+  //P093
+  "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode","MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane", 
+  //
+  "Culreader_write",
+  //
+  "TFTcmd", "TFT&", "Touch,Rot", 
+  //
+  "WakeOnLan", 
+  //
+  "Max1704xclearalert"
+];
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
 var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
@@ -60,8 +88,8 @@ function initCM() {
     var lCcommonString2 = commonString2.map(name => name.toLowerCase());
     commonString2 = commonString2.concat(lCcommonString2);
 
-    var lCcommonString3 = commonString3.map(name => name.toLowerCase());
-    commonString3 = commonString3.concat(lCcommonString3);
+    var lCcommonPlugins = commonPlugins.map(name => name.toLowerCase());
+    commonPlugins = commonPlugins.concat(lCcommonPlugins);
 
     var lCcommonAtoms = commonAtoms.map(name => name.toLowerCase());
     commonAtoms = commonAtoms.concat(lCcommonAtoms);
@@ -84,7 +112,7 @@ function initCM() {
     define('keyword', commonKeywords);
     define('builtin', commonCommands);
     define('hr', commonString2);
-    define('def', commonString3);
+    define('def', commonPlugin);
     define('tag', commonTag);
     define('number', commonNumber);
     define('bracket', commonMath);
