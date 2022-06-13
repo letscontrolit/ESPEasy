@@ -1,10 +1,40 @@
 // CodeMirror, copyright (c) by Marijn Haverbeke and others
 // Distributed under an MIT license: https://codemirror.net/LICENSE
+
+var commonAtoms = ["And", "Or"];
+var commonKeywords = ["If", "Else", "Elseif", "Endif"];
+var commonCommands = ["AcessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
+  "ControllerEnable", "DateTime", "Debug", "DeepSleep", "DNS", "DST", "EraseSDKwifi", "ExecuteRules", "Gateway", "I2Cscanner",
+  "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
+  "Reboot", "Reset", "ResetFlashWriteCounter", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
+  "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
+  "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WifiAPkey", "WifiAllowAP", "WifiAPMode", "WifiConnect", "WifiDisconnect", "WifiKey",
+  "WifiKey", "WifiScan", "WifiSSID", "WifiSSID2", "WifiSTAMode",
+  "Event", "AsyncEvent", "/control?cmd",
+  "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse",
+  "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "UnMonitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "MCPGPIORange", "MCPGPIOPattern",
+  "MCPMode", "MCPModeRange", "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF", "UnMonitor,PCF",
+  "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFMode", "Tone", "RTTTL", "UnMonitor",];
+var commonString2 = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
+  "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
+  "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected"];
+var commonString3 = ["ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic", "LCDCmd", "LCD", "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
+  "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper", "Sensair_SetRelay", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset", "Play", "Vol", "Eq", "Mode", "Repeat",
+  "HLWCalibrate", "HLWReset", "WemosMotorShieldCMD", "LolinMotorShieldCMD", "HeatPumpir", "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode",
+  "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane", "Culreader_write", "TFTcmd", "TFT&", "Touch,Rot", "WakeOnLan", "Max1704xclearalert"];
+var commonTag = ["On", "Do", "Endon"];
+var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
+var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
+var commonWarning = ["delay", "Delay", "Yehudit"];
+var AnythingElse = [];
+
+
 function initCM() {
-  CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword }); }
+  CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword}); }
   var rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), { lineNumbers: true, extraKeys: { 'Alt-Space': 'autocomplete' } });
   rEdit.on('change', function () { rEdit.save() });
 }
+
 
 (function (mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
@@ -24,33 +54,6 @@ function initCM() {
         words[dict[i]] = style;
       }
     };
-
-    var commonAtoms = ["And", "Or"];
-    var commonKeywords = ["If", "Else", "Elseif", "Endif"];
-    var commonCommands = ["AcessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-      "ControllerEnable", "DateTime", "Debug", "DeepSleep", "DNS", "DST", "EraseSDKwifi", "ExecuteRules", "Gateway", "I2Cscanner",
-      "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
-      "Reboot", "Reset", "ResetFlashWriteCounter", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
-      "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
-      "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WifiAPkey", "WifiAllowAP", "WifiAPMode", "WifiConnect", "WifiDisconnect", "WifiKey",
-      "WifiKey", "WifiScan", "WifiSSID", "WifiSSID2", "WifiSTAMode",
-      "Event", "AsyncEvent", "/control?cmd",
-      "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse",
-      "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "UnMonitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "MCPGPIORange", "MCPGPIOPattern",
-      "MCPMode", "MCPModeRange", "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF", "UnMonitor,PCF",
-      "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFMode", "Tone", "RTTTL", "UnMonitor",];
-    var commonString2 = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
-      "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
-      "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected"];
-    var commonString3 = ["ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic", "LCDCmd", "LCD", "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
-      "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper", "Sensair_SetRelay", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset", "Play", "Vol", "Eq", "Mode", "Repeat",
-      "HLWCalibrate", "HLWReset", "WemosMotorShieldCMD", "LolinMotorShieldCMD", "HeatPumpir", "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode",
-      "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane", "Culreader_write", "TFTcmd", "TFT&", "Touch,Rot", "WakeOnLan", "Max1704xclearalert"];
-    var commonTag = ["On", "Do", "Endon"];
-    var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
-    var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
-    var commonWarning = ["delay", "Delay"]
-
     var lCcommonCommands = commonCommands.map(name => name.toLowerCase());
     commonCommands = commonCommands.concat(lCcommonCommands);
 
@@ -86,8 +89,7 @@ function initCM() {
     define('number', commonNumber);
     define('bracket', commonMath);
     define('warning', commonWarning);
-
-
+    
     function tokenBase(stream, state) {
       if (stream.eatSpace()) return null;
 

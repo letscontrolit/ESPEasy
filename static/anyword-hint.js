@@ -12,33 +12,7 @@
   "use strict";
 
   var WORD = /[\w$]+/, RANGE = 500;
-  var EXTRAWORDS = ["AcessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
-    "ControllerEnable", "DateTime", "Debug", "DeepSleep", "Delay", "DNS", "DST", "EraseSDKwifi", "ExecuteRules", "Gateway", "I2Cscanner",
-    "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
-    "Reboot", "Reset", "ResetFlashWriteCounter", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
-    "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
-    "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WifiAPkey", "WifiAllowAP", "WifiAPMode", "WifiConnect", "WifiDisconnect", "WifiKey",
-    "WifiKey", "WifiScan", "WifiSSID", "WifiSSID2", "WifiSTAMode",
-    //
-    "Event", "AsyncEvent", "/control?cmd",
-    //
-    "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "UnMonitor", "Pulse", "PWM", "Servo", "Status", "MCPGPIO", "MCPGPIOToggle", "MCPLongPulse",
-    "MCPLongPulse_ms", "MCPPulse", "Status,MCP", "Monitor,MCP", "UnMonitor,MCP", "MonitorRange,MCP", "UnMonitorRange,MCP", "MCPGPIORange", "MCPGPIOPattern",
-    "MCPMode", "MCPModeRange", "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF", "UnMonitor,PCF",
-    "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFMode", "Tone", "RTTTL", "Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
-    "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
-    "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected", "ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStatistic", "LCDCmd", "LCD", "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
-    "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper", "Sensair_SetRelay", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset", "Play", "Vol", "Eq", "Mode", "Repeat",
-    "HLWCalibrate", "HLWReset", "WemosMotorShieldCMD", "LolinMotorShieldCMD", "HeatPumpir", "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode",
-    "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane", "Culreader_write", "TFTcmd", "TFT&", "Touch,Rot", "WakeOnLan", "Max1704xclearalert",
-    //
-    "On", "Do", "Endon", "If", "Else", "Elseif", "Endif", "And", "Or",
-    //
-    "toBin", "toHex", "Constrain", "XOR", "AND:", "OR", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode", "Log", "Ln", "Exp",
-    "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d",
-  ]
-  //var lC_EXTRAWORDS = EXTRAWORDS.map(name => name.toLowerCase());
-  //EXTRAWORDS = EXTRAWORDS.concat(lC_EXTRAWORDS);
+  var EXTRAWORDS = commonAtoms.concat(commonKeywords, commonCommands, commonString2, commonString3, commonTag, commonNumber, commonMath, commonWarning, AnythingElse);
 
   CodeMirror.registerHelper("hint", "anyword", function (editor, options) {
     var word = options && options.word || WORD;
@@ -64,7 +38,9 @@
         }
       }
     }
-    //list.push(...(extraWords.filter(el => el.startsWith(curWord || ''))))
+    if (curWord) {
+      curWord = curWord.toLowerCase();
+    }
     list.push(...(extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''))))
     return { list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end) };
   });
@@ -73,30 +49,30 @@
 
 
 // This is from the file show-hint.js-------------------------------------------------------------------------
-(function(showHint) {
+(function (showHint) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
-  showHint(require("codemirror"));
+    showHint(require("codemirror"));
   else if (typeof define == "function" && define.amd) // AMD
     define(["codemirror"], mod);
   else // Plain browser env
-  showHint(CodeMirror);
-})(function(CodeMirror) {
+    showHint(CodeMirror);
+})(function (CodeMirror) {
   "use strict";
 
-  var HINT_ELEMENT_CLASS        = "CodeMirror-hint";
+  var HINT_ELEMENT_CLASS = "CodeMirror-hint";
   var ACTIVE_HINT_ELEMENT_CLASS = "CodeMirror-hint-active";
 
   // This is the old interface, kept around for now to stay
   // backwards-compatible.
-  CodeMirror.showHint = function(cm, getHints, options) {
+  CodeMirror.showHint = function (cm, getHints, options) {
     if (!getHints) return cm.showHint(options);
     if (options && options.async) getHints.async = true;
-    var newOpts = {hint: getHints};
+    var newOpts = { hint: getHints };
     if (options) for (var prop in options) newOpts[prop] = options[prop];
     return cm.showHint(newOpts);
   };
 
-  CodeMirror.defineExtension("showHint", function(options) {
+  CodeMirror.defineExtension("showHint", function (options) {
     options = parseOptions(this, this.getCursor("start"), options);
     var selections = this.listSelections()
     if (selections.length > 1) return;
@@ -118,7 +94,7 @@
     completion.update(true);
   });
 
-  CodeMirror.defineExtension("closeHint", function() {
+  CodeMirror.defineExtension("closeHint", function () {
     if (this.state.completionActive) this.state.completionActive.close()
   })
 
@@ -130,20 +106,19 @@
     this.tick = 0;
     this.startPos = this.cm.getCursor("start");
     this.startLen = this.cm.getLine(this.startPos.line).length - this.cm.getSelection().length;
-
     if (this.options.updateOnCursorActivity) {
       var self = this;
-      cm.on("cursorActivity", this.activityFunc = function() { self.cursorActivity(); });
+      cm.on("cursorActivity", this.activityFunc = function () { self.cursorActivity(); });
     }
   }
 
-  var requestAnimationFrame = window.requestAnimationFrame || function(fn) {
-    return setTimeout(fn, 1000/60);
+  var requestAnimationFrame = window.requestAnimationFrame || function (fn) {
+    return setTimeout(fn, 1000 / 60);
   };
   var cancelAnimationFrame = window.cancelAnimationFrame || clearTimeout;
 
   Completion.prototype = {
-    close: function() {
+    close: function () {
       if (!this.active()) return;
       this.cm.state.completionActive = null;
       this.tick = null;
@@ -156,18 +131,18 @@
       CodeMirror.signal(this.cm, "endCompletion", this.cm);
     },
 
-    active: function() {
+    active: function () {
       return this.cm.state.completionActive == this;
     },
 
-    pick: function(data, i) {
+    pick: function (data, i) {
       var completion = data.list[i], self = this;
-      this.cm.operation(function() {
+      this.cm.operation(function () {
         if (completion.hint)
           completion.hint(self.cm, data, completion);
         else
           self.cm.replaceRange(getText(completion), completion.from || data.from,
-                               completion.to || data.to, "complete");
+            completion.to || data.to, "complete");
         CodeMirror.signal(data, "pick", completion);
         self.cm.scrollIntoView();
       });
@@ -176,38 +151,38 @@
       }
     },
 
-    cursorActivity: function() {
+    cursorActivity: function () {
       if (this.debounce) {
         cancelAnimationFrame(this.debounce);
         this.debounce = 0;
       }
 
       var identStart = this.startPos;
-      if(this.data) {
+      if (this.data) {
         identStart = this.data.from;
       }
 
       var pos = this.cm.getCursor(), line = this.cm.getLine(pos.line);
       if (pos.line != this.startPos.line || line.length - pos.ch != this.startLen - this.startPos.ch ||
-          pos.ch < identStart.ch || this.cm.somethingSelected() ||
-          (!pos.ch || this.options.closeCharacters.test(line.charAt(pos.ch - 1)))) {
+        pos.ch < identStart.ch || this.cm.somethingSelected() ||
+        (!pos.ch || this.options.closeCharacters.test(line.charAt(pos.ch - 1)))) {
         this.close();
       } else {
         var self = this;
-        this.debounce = requestAnimationFrame(function() {self.update();});
+        this.debounce = requestAnimationFrame(function () { self.update(); });
         if (this.widget) this.widget.disable();
       }
     },
 
-    update: function(first) {
+    update: function (first) {
       if (this.tick == null) return
       var self = this, myTick = ++this.tick
-      fetchHints(this.options.hint, this.cm, this.options, function(data) {
+      fetchHints(this.options.hint, this.cm, this.options, function (data) {
         if (self.tick == myTick) self.finishUpdate(data, first)
       })
     },
 
-    finishUpdate: function(data, first) {
+    finishUpdate: function (data, first) {
       if (this.data) CodeMirror.signal(this.data, "update");
 
       var picked = (this.widget && this.widget.picked) || (first && this.options.completeSingle);
@@ -245,12 +220,12 @@
 
   function buildKeyMap(completion, handle) {
     var baseMap = {
-      Up: function() {handle.moveFocus(-1);},
-      Down: function() {handle.moveFocus(1);},
-      PageUp: function() {handle.moveFocus(-handle.menuSize() + 1, true);},
-      PageDown: function() {handle.moveFocus(handle.menuSize() - 1, true);},
-      Home: function() {handle.setFocus(0);},
-      End: function() {handle.setFocus(handle.length - 1);},
+      Up: function () { handle.moveFocus(-1); },
+      Down: function () { handle.moveFocus(1); },
+      PageUp: function () { handle.moveFocus(-handle.menuSize() + 1, true); },
+      PageDown: function () { handle.moveFocus(handle.menuSize() - 1, true); },
+      Home: function () { handle.setFocus(0); },
+      End: function () { handle.setFocus(handle.length - 1); },
       Enter: handle.pick,
       Tab: handle.pick,
       Esc: handle.close
@@ -259,8 +234,8 @@
     var mac = /Mac/.test(navigator.platform);
 
     if (mac) {
-      baseMap["Ctrl-P"] = function() {handle.moveFocus(-1);};
-      baseMap["Ctrl-N"] = function() {handle.moveFocus(1);};
+      baseMap["Ctrl-P"] = function () { handle.moveFocus(-1); };
+      baseMap["Ctrl-N"] = function () { handle.moveFocus(1); };
     }
 
     var custom = completion.options.customKeys;
@@ -268,7 +243,7 @@
     function addBinding(key, val) {
       var bound;
       if (typeof val != "string")
-        bound = function(cm) { return val(cm, handle); };
+        bound = function (cm) { return val(cm, handle); };
       // This mechanism is deprecated
       else if (baseMap.hasOwnProperty(val))
         bound = baseMap[val];
@@ -353,7 +328,7 @@
 
     // Compute in the timeout to avoid reflow on init
     var startScroll;
-    setTimeout(function() { startScroll = cm.getScrollInfo(); });
+    setTimeout(function () { startScroll = cm.getScrollInfo(); });
 
     var overlapY = box.bottom - winH;
     if (overlapY > 0) {
@@ -385,22 +360,22 @@
       node.style.paddingRight = cm.display.nativeBarWidth + "px"
 
     cm.addKeyMap(this.keyMap = buildKeyMap(completion, {
-      moveFocus: function(n, avoidWrap) { widget.changeActive(widget.selectedHint + n, avoidWrap); },
-      setFocus: function(n) { widget.changeActive(n); },
-      menuSize: function() { return widget.screenAmount(); },
+      moveFocus: function (n, avoidWrap) { widget.changeActive(widget.selectedHint + n, avoidWrap); },
+      setFocus: function (n) { widget.changeActive(n); },
+      menuSize: function () { return widget.screenAmount(); },
       length: completions.length,
-      close: function() { completion.close(); },
-      pick: function() { widget.pick(); },
+      close: function () { completion.close(); },
+      pick: function () { widget.pick(); },
       data: data
     }));
 
     if (completion.options.closeOnUnfocus) {
       var closingOnBlur;
-      cm.on("blur", this.onBlur = function() { closingOnBlur = setTimeout(function() { completion.close(); }, 100); });
-      cm.on("focus", this.onFocus = function() { clearTimeout(closingOnBlur); });
+      cm.on("blur", this.onBlur = function () { closingOnBlur = setTimeout(function () { completion.close(); }, 100); });
+      cm.on("focus", this.onFocus = function () { clearTimeout(closingOnBlur); });
     }
 
-    cm.on("scroll", this.onScroll = function() {
+    cm.on("scroll", this.onScroll = function () {
       var curScroll = cm.getScrollInfo(), editor = cm.getWrapperElement().getBoundingClientRect();
       if (!startScroll) startScroll = cm.getScrollInfo();
       var newTop = top + startScroll.top - curScroll.top;
@@ -411,12 +386,12 @@
       hints.style.left = (left + startScroll.left - curScroll.left) + "px";
     });
 
-    CodeMirror.on(hints, "dblclick", function(e) {
+    CodeMirror.on(hints, "dblclick", function (e) {
       var t = getHintElement(hints, e.target || e.srcElement);
-      if (t && t.hintId != null) {widget.changeActive(t.hintId); widget.pick();}
+      if (t && t.hintId != null) { widget.changeActive(t.hintId); widget.pick(); }
     });
 
-    CodeMirror.on(hints, "click", function(e) {
+    CodeMirror.on(hints, "click", function (e) {
       var t = getHintElement(hints, e.target || e.srcElement);
       if (t && t.hintId != null) {
         widget.changeActive(t.hintId);
@@ -424,8 +399,8 @@
       }
     });
 
-    CodeMirror.on(hints, "mousedown", function() {
-      setTimeout(function(){cm.focus();}, 20);
+    CodeMirror.on(hints, "mousedown", function () {
+      setTimeout(function () { cm.focus(); }, 20);
     });
 
     // The first hint doesn't need to be scrolled to on init
@@ -439,7 +414,7 @@
   }
 
   Widget.prototype = {
-    close: function() {
+    close: function () {
       if (this.completion.widget != this) return;
       this.completion.widget = null;
       if (this.hints.parentNode) this.hints.parentNode.removeChild(this.hints);
@@ -456,22 +431,22 @@
       cm.off("scroll", this.onScroll);
     },
 
-    disable: function() {
+    disable: function () {
       this.completion.cm.removeKeyMap(this.keyMap);
       var widget = this;
-      this.keyMap = {Enter: function() { widget.picked = true; }};
+      this.keyMap = { Enter: function () { widget.picked = true; } };
       this.completion.cm.addKeyMap(this.keyMap);
     },
 
-    pick: function() {
+    pick: function () {
       this.completion.pick(this.data, this.selectedHint);
     },
 
-    changeActive: function(i, avoidWrap) {
+    changeActive: function (i, avoidWrap) {
       if (i >= this.data.list.length)
         i = avoidWrap ? this.data.list.length - 1 : 0;
       else if (i < 0)
-        i = avoidWrap ? 0  : this.data.list.length - 1;
+        i = avoidWrap ? 0 : this.data.list.length - 1;
       if (this.selectedHint == i) return;
       var node = this.hints.childNodes[this.selectedHint];
       if (node) {
@@ -486,7 +461,7 @@
       CodeMirror.signal(this.data, "select", this.data.list[this.selectedHint], node);
     },
 
-    scrollToActive: function() {
+    scrollToActive: function () {
       var selectedHintRange = this.getSelectedHintRange();
       var node1 = this.hints.childNodes[selectedHintRange.from];
       var node2 = this.hints.childNodes[selectedHintRange.to];
@@ -497,11 +472,11 @@
         this.hints.scrollTop = node2.offsetTop + node2.offsetHeight - this.hints.clientHeight + firstNode.offsetTop;
     },
 
-    screenAmount: function() {
+    screenAmount: function () {
       return Math.floor(this.hints.clientHeight / this.hints.firstChild.offsetHeight) || 1;
     },
 
-    getSelectedHintRange: function() {
+    getSelectedHintRange: function () {
       var margin = this.completion.options.scrollMargin || 0;
       return {
         from: Math.max(0, this.selectedHint - margin),
@@ -531,11 +506,11 @@
   function resolveAutoHints(cm, pos) {
     var helpers = cm.getHelpers(pos, "hint"), words
     if (helpers.length) {
-      var resolved = function(cm, callback, options) {
+      var resolved = function (cm, callback, options) {
         var app = applicableHelpers(cm, helpers);
         function run(i) {
           if (i == app.length) return callback(null)
-          fetchHints(app[i], cm, options, function(result) {
+          fetchHints(app[i], cm, options, function (result) {
             if (result && result.list.length > 0) callback(result)
             else run(i + 1)
           })
@@ -546,11 +521,11 @@
       resolved.supportsSelection = true
       return resolved
     } else if (words = cm.getHelper(cm.getCursor(), "hintWords")) {
-      return function(cm) { return CodeMirror.hint.fromList(cm, {words: words}) }
+      return function (cm) { return CodeMirror.hint.fromList(cm, { words: words }) }
     } else if (CodeMirror.hint.anyword) {
-      return function(cm, options) { return CodeMirror.hint.anyword(cm, options) }
+      return function (cm, options) { return CodeMirror.hint.anyword(cm, options) }
     } else {
-      return function() {}
+      return function () { }
     }
   }
 
@@ -558,7 +533,7 @@
     resolve: resolveAutoHints
   });
 
-  CodeMirror.registerHelper("hint", "fromList", function(cm, options) {
+  CodeMirror.registerHelper("hint", "fromList", function (cm, options) {
     var cur = cm.getCursor(), token = cm.getTokenAt(cur)
     var term, from = CodeMirror.Pos(cur.line, token.start), to = cur
     if (token.start < cur.ch && /\w/.test(token.string.charAt(cur.ch - token.start - 1))) {
@@ -574,7 +549,7 @@
         found.push(word);
     }
 
-    if (found.length) return {list: found, from: from, to: to};
+    if (found.length) return { list: found, from: from, to: to };
   });
 
   CodeMirror.commands.autocomplete = CodeMirror.showHint;
