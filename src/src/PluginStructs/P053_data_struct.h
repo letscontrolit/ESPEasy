@@ -15,9 +15,9 @@
 // Difference in build size is roughly 4k
 # define PLUGIN_053_ENABLE_EXTRA_SENSORS
 
-# if !defined(PLUGIN_BUILD_CUSTOM) && defined(SIZE_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
+# if !defined(PLUGIN_BUILD_CUSTOM) && defined(ESP8266_1M) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS) // Turn off for 1M OTA builds
 #  undef PLUGIN_053_ENABLE_EXTRA_SENSORS
-# endif // if defined(SIZE_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS)
+# endif // if defined(ESP8266_1M) && defined(PLUGIN_BUILD_MINIMAL_OTA) && defined(PLUGIN_053_ENABLE_EXTRA_SENSORS)
 
 
 // Do not change values, as they are being stored
