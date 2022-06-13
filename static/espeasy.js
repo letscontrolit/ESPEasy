@@ -26,12 +26,14 @@ var commonPlugins = [
   "LCDCmd", "LCD", 
   //P019
   "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF", "UnMonitor,PCF",
-  "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFMode",
+  "MonitorRange,PCF", "UnMonitorRange,PCF", "PCFGPIORange", "PCFGPIOpattern", "PCFMode", "PCFmodeRange",
   //P036
-  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame",
-  //
+  "OledFramedCmd", "OledFramedCmd,Display", "OledFramedCmd,Frame", "OledFramedCmd,linecount", "OledFramedCmd,leftalign",
+  //P038
+  "NeoPixel", "NeoPixelAll", "NeoPixelLine", "NeoPixelHSV", "NeoPixelAllHSV", "NeoPixelLineHSV",
+  //P048
   "MotorShieldCmd,DCMotor", "MotorShieldCmd,Stepper",
-  // 
+  //P052
   "Sensair_SetRelay", 
   //P053
   "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset", 
@@ -41,6 +43,8 @@ var commonPlugins = [
   "HLWCalibrate", "HLWReset",
   //P079
   "WemosMotorShieldCMD", "LolinMotorShieldCMD", 
+  //P073
+  "7dn", "7dt", "7dtt", "7dst", "7dsd", "7dtext",
   //
   "HeatPumpir", 
   //P093
@@ -116,7 +120,7 @@ function initCM() {
     define('keyword', commonKeywords);
     define('builtin', commonCommands);
     define('hr', commonString2);
-    define('def', commonPlugin);
+    define('def', commonPlugins);
     define('tag', commonTag);
     define('number', commonNumber);
     define('bracket', commonMath);
@@ -182,7 +186,7 @@ function initCM() {
           let klausi = element.substring(1);
           if (stream.match(klausi)) void (0)
         }
-        for (const element of commonString3) {
+        for (const element of commonPlugins) {
           let klausi = element.substring(1);
           if (stream.match(klausi)) void (0)
         }
