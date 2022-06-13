@@ -3,7 +3,7 @@
 
 var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
-var commonCommands = ["AcessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
+var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
   "ControllerEnable", "DateTime", "Debug", "DeepSleep", "DNS", "DST", "EraseSDKwifi", "ExecuteRules", "Gateway", "I2Cscanner",
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
   "Reboot", "Reset", "ResetFlashWriteCounter", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
@@ -25,7 +25,7 @@ var commonString3 = ["ResetPulseCounter", "SetPulseCounterTotal", "LogPulseStati
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
 var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
-var commonWarning = ["delay", "Delay", "Yehudit"];
+var commonWarning = ["delay", "Delay"];
 var AnythingElse = [];
 
 
