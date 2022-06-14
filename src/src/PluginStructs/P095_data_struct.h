@@ -17,6 +17,7 @@
 # ifndef LIMIT_BUILD_SIZE
 #  define P095_SHOW_SPLASH                              // Enable to show initial splash (text)
 # endif // ifndef LIMIT_BUILD_SIZE
+# define P095_SPLASH_DURATION           (3000 / 100)    // 3 seconds in 100 millisecond chunks
 
 # define P095_CONFIG_VERSION            PCONFIG(0)      // Settings version
 # define P095_CONFIG_ROTATION           PCONFIG(1)      // Rotation
@@ -169,6 +170,11 @@ private:
 
   int8_t _leftMarginCompensation = 0; // Not settable yet
   int8_t _topMarginCompensation  = 0;
+
+  bool _splashState = false;          // Have this always available to avoid 'many' #ifdefs in the code
+  # ifdef P095_SHOW_SPLASH
+  uint8_t _splashCounter = P095_SPLASH_DURATION;
+  # endif // ifdef P095_SHOW_SPLASH
 };
 
 
