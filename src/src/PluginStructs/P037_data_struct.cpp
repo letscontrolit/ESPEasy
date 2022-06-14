@@ -178,7 +178,7 @@ bool P037_data_struct::webform_load(
   addFormSubHeader(F("Topic subscriptions"));
 
   // Global topic prefix
-  addFormTextBox(F("Prefix for all topics"), F("p037_topicprefix"), globalTopicPrefix, 40);
+  addFormTextBox(F("Prefix for all topics"), F("topicprefix"), globalTopicPrefix, 40);
 
   # ifdef P037_JSON_SUPPORT
 
@@ -201,14 +201,14 @@ bool P037_data_struct::webform_load(
       addHtml(F("&nbsp;"));
       addHtmlInt(varNr + 1);
       html_TD(F("padding-right: 8px"));
-      id  = F("p037_template");
+      id  = F("template");
       id += (varNr + 1);
       addTextBox(id,
                  mqttTopics[varNr],
                  40,
                  false, false, EMPTY_STRING, F("xwide"));
       html_TD(F("padding-right: 8px"));
-      id  = F("p037_attribute");
+      id  = F("attribute");
       id += (varNr + 1);
       addTextBox(id,
                  jsonAttributes[varNr],
@@ -220,7 +220,7 @@ bool P037_data_struct::webform_load(
     {
       String label = F("MQTT Topic ");
       label += (varNr + 1);
-      id     = F("p037_template");
+      id     = F("template");
       id    += (varNr + 1);
       addFormTextBox(label, id, mqttTopics[varNr], 40);
     }
@@ -495,7 +495,7 @@ bool P037_data_struct::webform_save(
 
   for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
-    String argName = F("p037_template");
+    String argName = F("template");
     argName += (varNr + 1);
 
     mqttTopics[varNr] = web_server.arg(argName);
@@ -503,14 +503,14 @@ bool P037_data_struct::webform_save(
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
-      argName  = F("p037_attribute");
+      argName  = F("attribute");
       argName += (varNr + 1);
       jsonAttributes[varNr] = web_server.arg(argName);
     }
     # endif // P037_JSON_SUPPORT
   }
 
-  globalTopicPrefix = web_server.arg(F("p037_topicprefix"));
+  globalTopicPrefix = web_server.arg(F("topicprefix"));
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
@@ -545,8 +545,7 @@ bool P037_data_struct::webform_save(
       valueArray[mappingOffset] = EMPTY_STRING;
     }
 
-    if ((left.isEmpty() && !right.isEmpty()) ||
-        (!left.isEmpty() && right.isEmpty())) {
+    if (left.isEmpty() != right.isEmpty()) {
       if (firstError) {
         error     += F("Name and value should both be filled for mapping ");
         firstError = false;
@@ -592,8 +591,7 @@ bool P037_data_struct::webform_save(
       valueArray[filterOffset] = EMPTY_STRING;
     }
 
-    if ((left.isEmpty() && !right.isEmpty()) ||
-        (!left.isEmpty() && right.isEmpty())) {
+    if (left.isEmpty() != right.isEmpty()) {
       if (firstError) {
         error     += F("Name and value should both be filled for filter ");
         firstError = false;
@@ -656,14 +654,14 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
 
   if (!input.isEmpty()) {
     parseMappings();
-    String operands = P037_OPERAND_LIST;
+    const String operands = P037_OPERAND_LIST;
 
     int8_t idx = 0;
 
     for (uint8_t mappingOffset = P037_START_MAPPINGS; mappingOffset <= P037_END_MAPPINGS && idx <= _maxIdx; mappingOffset++) {
-      String name = parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR);
-      String oper = parseString(valueArray[mappingOffset], 2, P037_VALUE_SEPARATOR);
-      String valu = parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR);
+      const String name = parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR);
+      const String oper = parseString(valueArray[mappingOffset], 2, P037_VALUE_SEPARATOR);
+      const String valu = parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR);
 
       if ((name == input) || ((!attribute.isEmpty()) && (name == attribute))) {
         int8_t operandIndex = operands.indexOf(oper);
