@@ -14,6 +14,9 @@ void ExtraTaskSettingsStruct::clear() {
     TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
+    TaskDeviceMinValue[i]   = 0.0f;
+    TaskDeviceMaxValue[i]   = 0.0f;
+    TaskDeviceErrorValue[i] = 0.0f;
   }
 
   for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
@@ -49,6 +52,9 @@ void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
     TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
+    TaskDeviceMinValue[i]   = 0.0f;
+    TaskDeviceMaxValue[i]   = 0.0f;
+    TaskDeviceErrorValue[i] = 0.0f;
   }
 }
 
@@ -73,28 +79,31 @@ bool ExtraTaskSettingsStruct::checkInvalidCharInNames() const {
 
 bool ExtraTaskSettingsStruct::validCharForNames(char c) {
   // Smal optimization to check these chars as they are in sequence in the ASCII table
-  /*
-    case '(': // 40
-    case ')': // 41
-    case '*': // 42
-    case '+': // 43
-    case ',': // 44
-    case '-': // 45
-  */
 
-  if (c >= '(' && c <= '-') return false;
+  /*
+     case '(': // 40
+     case ')': // 41
+     case '*': // 42
+     case '+': // 43
+     case ',': // 44
+     case '-': // 45
+   */
+
+  if ((c >= '(') && (c <= '-')) { return false; }
+
   if (
-    (c == ' ') || 
-    (c == '!') || 
-    (c == '#') || 
-    (c == '%') || 
-    (c == '/') || 
-    (c == '=') || 
-    (c == '[') || 
-    (c == ']') || 
-    (c == '^') || 
-    (c == '{') || 
-    (c == '}'))
-      return false;
+    (c == ' ') ||
+    (c == '!') ||
+    (c == '#') ||
+    (c == '%') ||
+    (c == '/') ||
+    (c == '=') ||
+    (c == '[') ||
+    (c == ']') ||
+    (c == '^') ||
+    (c == '{') ||
+    (c == '}')) {
+    return false;
+  }
   return true;
 }
