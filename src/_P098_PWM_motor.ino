@@ -169,7 +169,7 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
 
       {
         # define P098_PWM_MODE_TYPES  static_cast<int>(P098_config_struct::PWM_mode_type::MAX_TYPE)
-        String options[P098_PWM_MODE_TYPES];
+        const __FlashStringHelper * options[P098_PWM_MODE_TYPES];
         int optionValues[P098_PWM_MODE_TYPES];
 
         for (int i = 0; i < P098_PWM_MODE_TYPES; ++i) {

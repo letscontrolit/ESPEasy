@@ -456,7 +456,7 @@ void GPIO_Monitor10xSec()
             it->second.state = currentState; //update state ONLY if task flag=false otherwise it will not be picked up by 10xSEC function
             // send event if not task, otherwise is sent in the task PLUGIN_TEN_PER_SECOND
             if (it->second.monitor) { 
-              sendMonitorEvent(String(eventString).c_str(), gpioPort, currentState);
+              sendMonitorEvent(eventString, gpioPort, currentState);
             }
           }
         }
@@ -467,7 +467,7 @@ void GPIO_Monitor10xSec()
 }
 
 // prefix should be either "GPIO", "PCF", "MCP"
-void sendMonitorEvent(const char* prefix, int port, int8_t state)
+void sendMonitorEvent(const __FlashStringHelper * prefix, int port, int8_t state)
 {
   String eventString = prefix;
   eventString += '#';
