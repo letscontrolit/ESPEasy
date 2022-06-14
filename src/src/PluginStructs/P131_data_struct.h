@@ -10,12 +10,13 @@
 
 # include <vector>
 
-# define P131_DEBUG_LOG   // Enable for some (extra) logging
+# define P131_DEBUG_LOG                          // Enable for some (extra) logging
 
-# define P131_Nlines  16  // The number of different lines which can be displayed
+# define P131_Nlines  16                         // The number of different lines which can be displayed
 # define P131_Nchars  50
 
-# define P131_SHOW_SPLASH // Enable to show splash (text)
+# define P131_SHOW_SPLASH                        // Enable to show splash (text)
+# define P131_SPLASH_DURATION       (3000 / 100) // 3 seconds in 100 millisecond chunks
 
 # define P131_CONFIG_MATRIX_WIDTH   PCONFIG(0)
 # define P131_CONFIG_MATRIX_HEIGHT  PCONFIG(1)
@@ -159,6 +160,11 @@ private:
 
   std::vector<P131_content_struct>content;
   bool                            contentInitialized = false;
+
+  bool _splashState = false; // Have this always available to avoid 'many' #ifdefs in the code
+  # ifdef P131_SHOW_SPLASH
+  uint8_t _splashCounter = P131_SPLASH_DURATION;
+  # endif // ifdef P131_SHOW_SPLASH
 };
 #endif // ifdef USES_P131
 #endif // ifndef PLUGINSTRUCTS_P131_DATA_STRUCT_H
