@@ -60,6 +60,9 @@
 #ifndef PCONFIG_LONG
   # define PCONFIG_LONG(n) (Settings.TaskDevicePluginConfigLong[event->TaskIndex][(n)])
 #endif // ifndef PCONFIG_LONG
+#ifndef PCONFIG_ULONG
+  # define PCONFIG_ULONG(n) (Settings.TaskDevicePluginConfigULong[event->TaskIndex][(n)])
+#endif // ifndef PCONFIG_ULONG
 #ifndef PIN
 
 // Please note the 'offset' of N compared to normal pin numbering.

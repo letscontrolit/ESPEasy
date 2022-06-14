@@ -94,6 +94,7 @@ struct DeviceStruct
   bool TimerOptional      : 1;       // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
   bool DecimalsOnly       : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
   bool ExitTaskBeforeSave : 1;       // Optimization in memory usage, Do not exit when task data is needed during save.
+  bool ErrorStateValues   : 1;       // Support Error State Values, can be called to retrieve surrogate values when PLUGIN_READ returns false
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 

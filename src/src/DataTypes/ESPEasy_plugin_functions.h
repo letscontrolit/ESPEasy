@@ -47,6 +47,9 @@
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
 #define PLUGIN_I2C_HAS_ADDRESS             40 // Check the I2C addresses from the plugin, output in 'success'
 #define PLUGIN_GET_DISPLAY_PARAMETERS      41 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 42 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+#define PLUGIN_INIT_VALUE_RANGES           43 // Initialize the ranges of values, called just before PLUGIN_INIT
+#define PLUGIN_GET_ERROR_VALUE_STATE       44 // Should we return the error values or not, called when PLUGIN_READ returns false, must also set error values into UserVar[]
 
 
 
