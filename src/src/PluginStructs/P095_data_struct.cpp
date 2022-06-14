@@ -171,7 +171,11 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->printText(String(F("ESPEasy")).c_str(),         0, yPos, 3, ADAGFX_WHITE, ADAGFX_BLUE);
       yPos += (3 * _fontheight);
       gfxHelper->printText(String(F("ILI934x/ILI948x")).c_str(), 0, yPos, 2, ADAGFX_BLUE,  ADAGFX_WHITE);
-      delay(100); // Splash
+      _splashState   = true; // Splash
+      _splashCounter = P095_SPLASH_DURATION;
+      #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P095 Splash start"));
+      #  endif // ifndef BUILD_NO_DEBUG
     }
     # endif // ifdef P095_SHOW_SPLASH
     updateFontMetrics();
@@ -221,7 +225,7 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P095_data_struct::plugin_read(struct EventStruct *event) {
-  if (nullptr != tft) {
+  if ((nullptr != tft) && !_splashState) {
     String strings[P095_Nlines];
     LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
@@ -264,6 +268,27 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+  # ifdef P095_SHOW_SPLASH
+
+  if (_splashState) { // Decrement splash counter
+    _splashCounter--;
+    _splashState = _splashCounter != 0;
+
+    if (!_splashState) {
+      #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P095 Splash finished."));
+      #  endif // ifndef BUILD_NO_DEBUG
+
+      if (nullptr != tft) {
+        tft->fillScreen(_bgcolor); // fill screen with background color
+      }
+
+      // Schedule the surrogate initial PLUGIN_READ that has been suppressed by the splash
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+    }
+  }
+  # endif // ifdef P095_SHOW_SPLASH
+
   if ((P095_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != tft)) {
     displayOnOff(true);
     markButtonStateProcessed();
@@ -275,7 +300,7 @@ bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
  * plugin_once_a_second: Count down display timer, if any, and turn display off if countdown reached
  ***************************************************************************/
 bool P095_data_struct::plugin_once_a_second(struct EventStruct *event) {
-  if (_displayTimer > 0) {
+  if ((_displayTimer > 0) && !_splashState) {
     _displayTimer--;
 
     if ((nullptr != tft) && (_displayTimer == 0)) {
@@ -292,7 +317,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if ((nullptr != tft) && cmd.equals(_commandTriggerCmd)) {
+  if ((nullptr != tft) && cmd.equals(_commandTriggerCmd) && !_splashState) {
     String arg1 = parseString(string, 2);
     success = true;
 
@@ -357,7 +382,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
   }
   else if (tft && (cmd.equals(_commandTrigger) ||
-                   (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
+                   (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd))) && !_splashState) {
     success = true;
 
     if (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE)) { // Wake display?

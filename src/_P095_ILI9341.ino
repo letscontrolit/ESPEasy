@@ -19,6 +19,8 @@
 
 /**
  * Changelog:
+ * 2022-06-14 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
+ * 2022-06-11 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details. Code optimization
  * 2022-05-17 tonhuisman: Add setting for Splash during plugin startup, default on, when compiled in
  * 2022-01-09 tonhuisman: Add support for ILI9342 (M5Stack, 240x320), ILI9481, ILI9486 and ILI9488 (320x480) displays
  * 2021-11-16 tonhuisman: Add support for PLUGIN_GET_DISPLAY_PARAMETERS, removed commented old source
