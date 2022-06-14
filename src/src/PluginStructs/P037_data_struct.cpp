@@ -200,20 +200,20 @@ bool P037_data_struct::webform_load(
       html_TR_TD();
       addHtml(F("&nbsp;"));
       addHtmlInt(varNr + 1);
-      html_TD();
+      html_TD(F("padding-right: 8px"));
       id  = F("template");
       id += (varNr + 1);
       addTextBox(id,
                  mqttTopics[varNr],
                  40,
-                 false, false, EMPTY_STRING, F("wide"));
-      html_TD();
+                 false, false, EMPTY_STRING, F("xwide"));
+      html_TD(F("padding-right: 8px"));
       id  = F("attribute");
       id += (varNr + 1);
       addTextBox(id,
                  jsonAttributes[varNr],
                  20,
-                 false, false, EMPTY_STRING, EMPTY_STRING);
+                 false, false, EMPTY_STRING, F("xwide"));
       html_TD();
     } else
     # endif // ifdef P037_JSON_SUPPORT
