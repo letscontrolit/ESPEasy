@@ -279,7 +279,10 @@ class SettingsStruct_tmpl
   int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX];
   boolean       TaskDevicePin1Inversed[N_TASKS] = {0};
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX];
-  long          TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+  union {
+    int32_t  TaskDevicePluginConfigLong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+    uint32_t TaskDevicePluginConfigULong[N_TASKS][PLUGIN_CONFIGLONGVAR_MAX];
+  };
   uint8_t       TaskDeviceSendDataFlags[N_TASKS] = {0};
   uint8_t       OLD_TaskDeviceGlobalSync[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
