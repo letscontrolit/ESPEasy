@@ -1098,13 +1098,27 @@ void setAPinternal(bool enable)
       addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
     }
 
-    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str())) {
+    int channel = 1;
+    if (WifiIsSTA(WiFi.getMode())) {
+      channel = WiFi.channel();
+    } else {
+      #ifdef USES_ESPEASY_NOW
+      if (Settings.UseESPEasyNow() && Settings.ForceESPEasyNOWchannel != 0) {
+        channel = Settings.ForceESPEasyNOWchannel;
+      }
+      #endif
+    }
+
+
+    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         eventQueue.add(F("WiFi#APmodeEnabled"));
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");
         log += WiFi.softAPIP().toString();
+        log += F(" on channel: ");
+        log += WiFi.channel();
         addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
@@ -1255,7 +1269,18 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (WifiIsAP(cur_mode) != new_mode_AP_enabled) {
     // Mode has changed
-    if (!Settings.DoNotStartAP()) {
+    if (new_mode_AP_enabled) {
+      // Check if we should start internal AP
+      if (!WifiIsSTA(wifimode)) {
+        bool mustStartInternalAP = !Settings.DoNotStartAP();
+        if (mustStartInternalAP && (WiFiEventData.wifiConnectInProgress || WiFiConnected())) {
+          mustStartInternalAP = false;
+        }
+        if (mustStartInternalAP) {
+          setAPinternal(new_mode_AP_enabled);
+        }
+      }
+    } else {
       setAPinternal(new_mode_AP_enabled);
     }
   }

@@ -29,29 +29,31 @@ bool WiFiEventData_t::WiFiConnectAllowed() const {
   return true;
 }
 
-bool WiFiEventData_t::unprocessedWifiEvents() const {
+bool WiFiEventData_t::unprocessedWifiEvents() {
   if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
   {
     return false;
   }
   if (!processedConnect) {
     if (lastConnectMoment.isSet() && lastConnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
-      return false;
+      processedConnect = true;
     }
   }
   if (!processedGotIP) {
     if (lastGetIPmoment.isSet() && lastGetIPmoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
-      return false;
+      processedGotIP = true;;
     }
   }
   if (!processedDisconnect) {
     if (lastDisconnectMoment.isSet() && lastDisconnectMoment.timeoutReached(WIFI_PROCESS_EVENTS_TIMEOUT)) {
-      return false;
+      processedDisconnect = true;
     }
   }
-  if (!processedDHCPTimeout) {
+  if (processedConnect && processedDisconnect && processedGotIP && processedDHCPTimeout)
+  {
     return false;
   }
+
   return true;
 }
 
@@ -98,6 +100,9 @@ void WiFiEventData_t::markWiFiBegin() {
   if (!timerAPstart.isSet()) {
     timerAPstart.setMillisFromNow(WIFI_RECONNECT_WAIT);
   }
+  #ifdef USES_ESPEASY_NOW
+  temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
+  #endif
 }
 
 bool WiFiEventData_t::WiFiDisconnected() const {
@@ -136,7 +141,7 @@ void WiFiEventData_t::setWiFiServicesInitialized() {
     wifiConnectInProgress = false;
 
     #ifdef USES_ESPEASY_NOW
-    temp_disable_EspEasy_now_timer = 0;
+    temp_disable_EspEasy_now_timer = millis() + WIFI_RECONNECT_WAIT;
     #endif
   }
 }

@@ -283,7 +283,6 @@ void processDisconnect() {
     mustRestartWiFi = true;
   }
   #endif
-
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
   if (mustRestartWiFi) {
     WifiScan(false);
@@ -609,7 +608,7 @@ void processScanDone() {
   #ifdef USES_ESPEASY_NOW
   if (Settings.UseESPEasyNow()) {
     ESPEasy_now_handler.addPeerFromWiFiScan();
-    if (!NetworkConnected()) {
+    if (!NetworkConnected() && (temp_disable_EspEasy_now_timer == 0 || timeOutReached(temp_disable_EspEasy_now_timer))) {
       if (WiFi_AP_Candidates.addedKnownCandidate()) {
         WiFi_AP_Candidates.force_reload();
   //        if (isESPEasy_now_only() || !ESPEasy_now_handler.active()) {
@@ -623,7 +622,7 @@ void processScanDone() {
           setSTA(false);
           setNetworkMedium(Settings.NetworkMedium);
           NetworkConnectRelaxed();
-  //        }
+//        }
       } else {
         setNetworkMedium(NetworkMedium_t::ESPEasyNOW_only);
       }

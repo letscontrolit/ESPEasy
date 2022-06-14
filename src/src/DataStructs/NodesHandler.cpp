@@ -534,14 +534,16 @@ bool NodesHandler::isEndpoint() const
 #ifdef USES_ESPEASY_NOW
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
-  if (isEndpoint()) {
-    if (active_network_medium == NetworkMedium_t::WIFI || 
-        Settings.ForceESPEasyNOWchannel == 0) {
-      return WiFi.channel();
-    }
+  if (active_network_medium == NetworkMedium_t::WIFI && NetworkConnected()) {
+    return WiFi.channel();
   }
   if (Settings.ForceESPEasyNOWchannel > 0) {
     return Settings.ForceESPEasyNOWchannel;
+  }
+  if (isEndpoint()) {
+    if (active_network_medium == NetworkMedium_t::WIFI) {
+      return WiFi.channel();
+    }
   }
   const NodeStruct *preferred = getPreferredNode();
   if (preferred != nullptr) {
