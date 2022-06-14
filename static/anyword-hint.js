@@ -12,8 +12,6 @@
   "use strict";
 
   var WORD = /[\w$]+/, RANGE = 500;
-  var EXTRAWORDS = commonAtoms.concat(commonKeywords, commonCommands, commonString2, commonPlugins, commonTag, commonNumber, commonMath, commonWarning, AnythingElse);
-
   CodeMirror.registerHelper("hint", "anyword", function (editor, options) {
     var word = options && options.word || WORD;
     var range = options && options.range || RANGE;
@@ -45,8 +43,6 @@
     return { list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end) };
   });
 });
-
-
 
 // This is from the file show-hint.js-------------------------------------------------------------------------
 (function (showHint) {
