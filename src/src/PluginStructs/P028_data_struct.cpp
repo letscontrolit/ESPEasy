@@ -89,6 +89,10 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
     last_measurement = 0;
   }
 
+  if (state == BMx_Error) {
+    return false;
+  }
+
   if (state != BMx_Wait_for_samples) {
     if ((last_measurement != 0) &&
         !timeOutReached(last_measurement + (Settings.TaskDeviceTimer[task_index] * 1000))) {
@@ -208,6 +212,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
 bool P028_data_struct::check() {
   bool wire_status      = false;
   const uint8_t chip_id = I2C_read8_reg(i2cAddress, BMx280_REGISTER_CHIPID, &wire_status);
+
   if (!wire_status) { setUninitialized(); }
 
   switch (chip_id) {
@@ -220,6 +225,7 @@ bool P028_data_struct::check() {
         if (sensorID != chip_id) {
           sensorID = static_cast<BMx_ChipId>(chip_id);
           setUninitialized();
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = F("BMx280 : Detected ");
             log += getFullDeviceName();
@@ -239,11 +245,15 @@ bool P028_data_struct::check() {
   if (sensorID == Unknown_DEVICE) {
     String log = F("BMx280 : Unable to detect chip ID (");
     log += chip_id;
+
     if (!wire_status) {
       log += F(", failed");
     }
     log += ')';
     addLogMove(LOG_LEVEL_INFO, log);
+
+    state = BMx_Error;
+
     return false;
   }
   return wire_status;
