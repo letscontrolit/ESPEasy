@@ -58,7 +58,7 @@ bool P123_data_struct::init(struct EventStruct *event) {
   }
 
   if (isInitialized()) {
-    touchscreen->begin(P123_CONFIG_TRESHOLD);
+    touchscreen->begin(P123_CONFIG_THRESHOLD);
 
     touchHandler->init(event);
 

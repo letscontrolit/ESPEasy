@@ -30,7 +30,7 @@
  * -------------------
  * touch,rot,<0..3>                     : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
  * touch,flip,<0|1>                     : Set rotation normal(0) or flipped by 180 degrees(1)
- * 
+ *
  * Other commands: see ESPEasy_TouchHandler.h
  */
 
@@ -93,6 +93,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       P123_CONFIG_DISPLAY_TASK = event->TaskIndex; // Preselect current task to avoid pointing to Task 1 by default
+      P123_CONFIG_THRESHOLD    = P123_TS_THRESHOLD;
       P123_CONFIG_ROTATION     = P123_TS_ROTATION;
       P123_CONFIG_X_RES        = P123_TS_X_RES;
       P123_CONFIG_Y_RES        = P123_TS_Y_RES;
@@ -106,7 +107,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
       {
         addRowLabel(F("Display task"));
-        addTaskSelect(F("task"), P123_CONFIG_DISPLAY_TASK);
+        addTaskSelect(F("dsptask"), P123_CONFIG_DISPLAY_TASK);
         addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
       }
 
@@ -123,31 +124,40 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       if (width_ == 0) {
         width_ = P123_TS_X_RES; // default value
       }
-      addFormNumericBox(F("Screen Width (px) (x)"), F("width"), width_, 1, 65535);
+      addFormNumericBox(F("Screen Width (px) (x)"), F("xres"), width_, 1, 65535);
 
 
       if (height_ == 0) {
         height_ = P123_TS_Y_RES; // default value
       }
-      addFormNumericBox(F("Screen Height (px) (y)"), F("height"), height_, 1, 65535);
+      addFormNumericBox(F("Screen Height (px) (y)"), F("yres"), height_, 1, 65535);
 
       AdaGFXFormRotation(F("rotate"), rotation_);
 
       AdaGFXFormColorDepth(F("colordepth"), P123_COLOR_DEPTH, (colorDepth_ == 0));
 
-      addFormNumericBox(F("Touch minimum pressure"), F("treshold"), P123_CONFIG_TRESHOLD, 0, 255);
+      addFormNumericBox(F("Touch minimum pressure"), F("threshold"), P123_CONFIG_THRESHOLD, 0, 255);
 
       {
-        P123_data_struct *P123_data = new (std::nothrow) P123_data_struct();
+        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
+        bool deleteP123_data        = false;
 
         if (nullptr == P123_data) {
-          return success;
+          P123_data       = new (std::nothrow) P123_data_struct();
+          deleteP123_data = true;
         }
-        P123_data->loadTouchObjects(event);
 
-        P123_data->plugin_webform_load(event);
+        if (nullptr != P123_data) {
+          if (deleteP123_data) {
+            P123_data->loadTouchObjects(event);
+          }
 
-        delete P123_data;
+          P123_data->plugin_webform_load(event);
+
+          if (deleteP123_data) {
+            delete P123_data;
+          }
+        }
       }
       success = true;
       break;
@@ -156,27 +166,35 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P123_CONFIG_DISPLAY_PREV = P123_CONFIG_DISPLAY_TASK;
-      P123_CONFIG_TRESHOLD     = getFormItemInt(F("treshold"));
-      P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("task"));
+      P123_CONFIG_THRESHOLD    = getFormItemInt(F("threshold"));
+      P123_CONFIG_DISPLAY_TASK = getFormItemInt(F("dsptask"));
       P123_CONFIG_ROTATION     = getFormItemInt(F("rotate"));
-      P123_CONFIG_X_RES        = getFormItemInt(F("width"));
-      P123_CONFIG_Y_RES        = getFormItemInt(F("height"));
+      P123_CONFIG_X_RES        = getFormItemInt(F("xres"));
+      P123_CONFIG_Y_RES        = getFormItemInt(F("yres"));
 
-      int colorDepth = getFormItemInt(F("colordepth"), -1);
+      const int colorDepth = getFormItemInt(F("colordepth"), -1);
 
       if (colorDepth != -1) {
         P123_COLOR_DEPTH = colorDepth;
       }
 
-      P123_data_struct *P123_data = new (std::nothrow) P123_data_struct();
+      {
+        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
+        bool deleteP123_data        = false;
 
-      if (nullptr == P123_data) {
-        return success; // Save other settings even though this didn't initialize properly
+        if (nullptr == P123_data) {
+          P123_data       = new (std::nothrow) P123_data_struct();
+          deleteP123_data = true;
+        }
+
+        if (nullptr != P123_data) {
+          success = P123_data->plugin_webform_save(event);
+
+          if (deleteP123_data) {
+            delete P123_data;
+          }
+        }
       }
-
-      success = P123_data->plugin_webform_save(event);
-
-      delete P123_data;
 
       break;
     }
@@ -205,10 +223,10 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     {
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P123_data) {
-        return success;
+      if (nullptr != P123_data) {
+        success = P123_data->plugin_write(event, string);
       }
-      success = P123_data->plugin_write(event, string);
+
       break;
     }
 
@@ -216,20 +234,19 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     {
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P123_data) {
-        return success;
+      if (nullptr != P123_data) {
+        success = P123_data->plugin_fifty_per_second(event);
       }
-
-      success = P123_data->plugin_fifty_per_second(event);
 
       break;
     }
+
     case PLUGIN_GET_CONFIG_VALUE:
     {
       P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P123_data) {
-        return P123_data->plugin_get_config_value(event, string);
+        success = P123_data->plugin_get_config_value(event, string);
       }
       break;
     }

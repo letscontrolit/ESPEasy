@@ -17,7 +17,7 @@
 # define P123_CONFIG_DISPLAY_TASK PCONFIG(0)
 
 # define P123_COLOR_DEPTH         PCONFIG_LONG(1)
-# define P123_CONFIG_TRESHOLD     PCONFIG(1)
+# define P123_CONFIG_THRESHOLD    PCONFIG(1)
 # define P123_CONFIG_ROTATION     PCONFIG(2)
 # define P123_CONFIG_X_RES        PCONFIG(3)
 # define P123_CONFIG_Y_RES        PCONFIG(4)
@@ -25,13 +25,13 @@
 # define P123_CONFIG_DISPLAY_PREV PCONFIG(7)
 
 // Default settings values
-# define P123_TS_TRESHOLD           40  // Treshold before the value is registered as a proper touch
-# define P123_TS_ROTATION           0   // Rotation 0-3 = 0/90/180/270 degrees
-# define P123_TS_X_RES              320 // Pixels, should match with the screen it is mounted on
+# define P123_TS_THRESHOLD          40            // Threshold before the value is registered as a proper touch
+# define P123_TS_ROTATION           0             // Rotation 0-3 = 0/90/180/270 degrees
+# define P123_TS_X_RES              320           // Pixels, should match with the screen it is mounted on
 # define P123_TS_Y_RES              480
 
-# define P123_TOUCH_X_NATIVE        320 // Native touchscreen resolution
-# define P123_TOUCH_Y_NATIVE        480
+# define P123_TOUCH_X_NATIVE        P123_TS_X_RES // Native touchscreen resolution, same as display resolution
+# define P123_TOUCH_Y_NATIVE        P123_TS_Y_RES
 
 # define P123_ROTATION_0   0
 # define P123_ROTATION_90  1
