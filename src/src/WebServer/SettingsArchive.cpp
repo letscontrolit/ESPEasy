@@ -69,7 +69,7 @@ void handle_settingsarchive() {
           ProvisioningSettings.setPass(web_server.arg(F("pass")));
         }
       }
-      error += saveProvisioningSettings(ProvisioningSettings);
+      error = saveProvisioningSettings(ProvisioningSettings);
     }
     #endif
 
@@ -82,9 +82,9 @@ void handle_settingsarchive() {
   if (web_server.hasArg(F("download"))) {
     // Try downloading files.
     // Don't use the ProvisioningSettings, as not all may be stored.
-    String url  = webArg(F("url"));
-    String user = webArg(F("user"));
-    String pass = webArg(F("pass"));
+    const String url  = webArg(F("url"));
+    const String user = webArg(F("user"));
+    const String pass = webArg(F("pass"));
 
     addTableSeparator(F("Download result"), 2, 3);
     bool somethingDownloaded = false;
@@ -205,7 +205,7 @@ void handle_settingsarchive() {
 // download filetype selectors
 // ********************************************************************************
 void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
-  String filetype_str = getFileName(filetype, filenr);
+  const String filetype_str = getFileName(filetype, filenr);
   String label        = F("Fetch ");
 
   label += filetype_str;
@@ -214,8 +214,7 @@ void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
 }
 
 void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
-  String filetype_str = getFileName(filetype, filenr);
-  bool   isChecked    = isFormItemChecked(filetype_str);
+  const bool isChecked = isFormItemChecked(getFileName(filetype, filenr));
 
   switch (filetype) {
     case FileType::CONFIG_DAT: ResetFactoryDefaultPreference.fetchConfigDat(isChecked); break;
