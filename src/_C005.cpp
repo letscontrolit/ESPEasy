@@ -237,18 +237,41 @@ bool C005_parse_command(struct EventStruct *event) {
         // Publish topic: espeasy_node/cmd_arg2/event/myevent/2
         // Message: 1
         // Actual event:  myevent=1,2
-        cmd = parseStringToEndKeepCase(cmd, 2);
-        String eventName = parseStringKeepCase(cmd, 1);
-        const int equal_pos = eventName.indexOf('=');
-        cmd = parseStringToEndKeepCase(cmd, 2);
-        if (equal_pos == -1 && cmd.length() != 0) {
-          // Only append an = if there are eventvalues.
-          eventName += '=';
-        }
-        // Need to reconstruct the event to get rid of calls like these:
-        // myevent=,1,2
-        cmd = eventName + cmd;
 
+        // Strip out the "event" or "asyncevent" part, leaving the actual event string
+        cmd = parseStringToEndKeepCase(cmd, 2);
+
+        {
+          // Get the first part upto a parameter separator
+          // Example: "myEvent,1,2,3", which needs to be converted to "myEvent=1,2,3"
+          // N.B. This may contain the first eventvalue too
+          // e.g. "myEvent=1,2,3" => "myEvent=1"
+          String eventName = parseStringKeepCase(cmd, 1);
+          String eventValues = parseStringToEndKeepCase(cmd, 2);
+          const int equal_pos = eventName.indexOf('=');
+          if (equal_pos != -1) {
+            // We found an '=' character, so the actual event name is everything before that char.
+            eventName = cmd.substring(0, equal_pos);
+            eventValues = cmd.substring(equal_pos + 1); // Rest of the event, after the '=' char
+          }
+          if (eventValues.startsWith(F(","))) {
+            // Need to reconstruct the event to get rid of calls like these:
+            // myevent=,1,2
+            eventValues = eventValues.substring(1);
+          }
+          // Now reconstruct the complete event
+          // Without event values: "myEvent" (no '=' char)
+          // With event values: "myEvent=1,2,3"
+
+          // Re-using the 'cmd' String as that has pre-allocated memory which is
+          // known to be large enough to hold the entire event.
+          cmd = eventName;
+          if (eventValues.length() > 0) {
+            // Only append an = if there are eventvalues.
+            cmd += '=';
+            cmd += eventValues;
+          }
+        }
         // Check for duplicates, as sometimes a node may have multiple subscriptions to the same topic.
         // Then it may add several of the same events in a burst.
         eventQueue.addMove(std::move(cmd), true);

@@ -1834,6 +1834,10 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
     }
   }
 
+  if (partitionSubType == 0x99) {
+    return F("EEPROM"); // Not defined in esp_partition_subtype_t
+  }
+
   if (partitionType == ESP_PARTITION_TYPE_DATA) {
     switch (partitionSubType) {
       case ESP_PARTITION_SUBTYPE_DATA_OTA:      return F("OTA selection");
@@ -1848,7 +1852,6 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
         #else
         return F("SPIFFS");
         #endif
-      case 0x99: return F("EEPROM"); // Not defined in esp_partition_subtype_t
       default: break;
     }
   }
