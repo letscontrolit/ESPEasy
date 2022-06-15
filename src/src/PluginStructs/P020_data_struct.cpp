@@ -120,12 +120,14 @@ void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t
     ser2netSerial = new (std::nothrow) ESPeasySerial(port, rxPin, txPin);
 
     if (nullptr != ser2netSerial) {
-        # if defined(ESP8266)
+      # if defined(ESP8266)
       ser2netSerial->begin(baud, (SerialConfig)config);
-        # elif defined(ESP32)
+      # elif defined(ESP32)
       ser2netSerial->begin(baud, config);
-        # endif // if defined(ESP8266)
+      # endif // if defined(ESP8266)
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial opened"));
+      # endif // ifndef BUILD_NO_DEBUG
     }
   }
 }
@@ -135,7 +137,9 @@ void P020_Task::serialEnd() {
     delete ser2netSerial;
     clearBuffer();
     ser2netSerial = nullptr;
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("Ser2net   : Serial closed"));
+    # endif // ifndef BUILD_NO_DEBUG
   }
 }
 
@@ -164,7 +168,9 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
   do {
     if (ser2netSerial->available()) {
       if (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER)) {
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : Error: Buffer overflow, discarded input."));
+        # endif // ifndef BUILD_NO_DEBUG
         ser2netSerial->read();
       }
       else { serial_buffer += (char)ser2netSerial->read(); }
@@ -177,11 +183,15 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
   } while (true);
 
   if (serial_buffer.length() > 0) {
-    ser2netClient.print(serial_buffer);
+    if (ser2netClient.connected()) { // Only send out if a client is connected
+      ser2netClient.print(serial_buffer);
+    }
     rulesEngine(serial_buffer);
     ser2netClient.flush();
     clearBuffer();
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("Ser2Net   : data send!"));
+    # endif // ifndef BUILD_NO_DEBUG
   } // done
 }
 
@@ -194,37 +204,72 @@ void P020_Task::discardSerialIn() {
 }
 
 // We can also use the rules engine for local control!
-void P020_Task::rulesEngine(String message) {
-  if (!(Settings.UseRules)) { return; }
-  int NewLinePos = message.indexOf(F("\r\n"));
+void P020_Task::rulesEngine(const String& message) {
+  if (!Settings.UseRules || message.isEmpty()) { return; }
+  int NewLinePos    = 0;
+  uint16_t StartPos = 0;
 
-  if (NewLinePos > 0) { message = message.substring(0, NewLinePos); }
-  String eventString;
+  NewLinePos = message.indexOf('\n', StartPos);
 
-  switch (serial_processing) {
-    case 0: { break; }
-    case 1: { // Generic
-      eventString  = F("!Serial#");
-      eventString += message;
-      break;
+  do {
+    if (NewLinePos < 0) {
+      NewLinePos = message.length();
     }
-    case 2: {                               // RFLink
-      message = message.substring(6);       // RFLink, strip 20;xx; from incoming message
 
-      if (message.startsWith("ESPEASY"))    // Special treatment for gpio values, strip unneeded parts...
-      {
-        message     = message.substring(8); // Strip "ESPEASY;"
-        eventString = F("RFLink#");
-      }
-      else {
-        eventString = F("!RFLink#"); // default event as it comes in, literal match needed in rules, using '!'
-      }
-      eventString += message;
-      break;
+    String eventString;
+
+    if ((NewLinePos - StartPos) + 10 > 12) {
+      eventString.reserve((NewLinePos - StartPos) + 10); // Include the prefix
     }
-  } // switch
 
-  if (eventString.length() > 0) { eventQueue.addMove(std::move(eventString)); }
+    // Remove preceeding CR also
+    if ((message[NewLinePos] == '\n') && (message[NewLinePos - 1] == '\r')) {
+      NewLinePos--;
+    }
+
+    switch (serial_processing) {
+      case 0: { break; }
+      case 1: { // Generic
+        if (NewLinePos > StartPos) {
+          eventString  = F("!Serial#");
+          eventString += message.substring(StartPos, NewLinePos);
+        }
+        break;
+      }
+      case 2: {                          // RFLink
+        StartPos += 6;                   // RFLink, strip 20;xx; from incoming message
+
+        if (message.substring(StartPos, NewLinePos)
+            .startsWith(F("ESPEASY"))) { // Special treatment for gpio values, strip unneeded parts...
+          StartPos   += 8;               // Strip "ESPEASY;"
+          eventString = F("RFLink#");
+        } else {
+          eventString = F("!RFLink#");   // default event as it comes in, literal match needed in rules, using '!'
+        }
+
+        if (NewLinePos > StartPos) {
+          eventString += message.substring(StartPos, NewLinePos);
+        }
+        break;
+      }
+    } // switch
+
+    // Skip CR/LF
+    StartPos = NewLinePos; // Continue after what was already handled
+
+    while (StartPos < message.length() && (message[StartPos] == '\n' || message[StartPos] == '\r')) {
+      StartPos++;
+    }
+
+    if (!eventString.isEmpty()) {
+      eventQueue.add(eventString);
+    }
+    NewLinePos = message.indexOf('\n', StartPos);
+
+    if (handleMultiLine && (NewLinePos < 0)) {
+      NewLinePos = message.length();
+    }
+  } while (handleMultiLine && NewLinePos > StartPos);
 }
 
 bool P020_Task::isInit() const {
