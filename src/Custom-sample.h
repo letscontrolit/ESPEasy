@@ -430,6 +430,14 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
 
+// #define USES_P128   // NeoPixelBusFX
+// #define P128_USES_GRB  // Default
+// #define P128_USES_GRBW // Select 1 option, only first one enabled from this list will be used
+// #define P128_USES_RGB
+// #define P128_USES_RGBW
+// #define P128_USES_BRG
+// #define P128_USES_RBG
+
 
 // Special plugins needing IR library
 // #define USES_P016   // IR

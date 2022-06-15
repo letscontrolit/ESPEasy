@@ -766,6 +766,9 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_DISPLAY_COLLECTION
         #define PLUGIN_DISPLAY_COLLECTION
     #endif
+    #ifndef PLUGIN_NEOPIXEL_COLLECTION
+        #define PLUGIN_NEOPIXEL_COLLECTION
+    #endif
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_TEST_ESP32 section at end,
     // where incompatible plugins will be disabled.
@@ -1302,6 +1305,24 @@ To create/register a plugin, you have to :
    #endif
 #endif
 
+// Collection of all NeoPixel plugins
+#ifdef PLUGIN_NEOPIXEL_COLLECTION
+  #ifndef USES_P038
+    #define USES_P038   // NeoPixel
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P070
+    #define USES_P070   // NeoPixel_Clock
+  #endif
+  #ifndef USES_P128
+    #define USES_P128   // NeoPixelBusFX
+  #endif
+#endif
 
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
@@ -1531,7 +1552,7 @@ To create/register a plugin, you have to :
     #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
-//    #define USES_P128   //
+    #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
 //    #define USES_P129   //
