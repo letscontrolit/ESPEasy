@@ -55,10 +55,8 @@ var commonPlugins = [
   "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode", "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane",
   //P094
   "Culreader_Write",
-  //P095
-  "TFTCMD", "TFT",
-  //P099
-  "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable",
+  //P099 & P123
+  "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Ingrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
   //P101
   "WakeOnLan",
   //P104
@@ -75,11 +73,37 @@ var commonPlugins = [
   //P127
   "cdmrst"
 ];
+var pluginDispKind = [
+  //P095
+  "tft", "ili9341", "ili9342", "ili9481", "ili9486", "ili9488",
+  //P096
+  "eink", "epaper", "il3897", "uc8151d", "ssd1680", "ws2in7", "ws1in54",
+  //P116
+  /*"tft",*/ "st77xx", "st7735", "st7789", "st7796",
+  //P131
+  "neomatrix", "neo"
+];
+var pluginDispCmd = [
+  "cmd,on", "cmd,off", "cmd,clear", "cmd,backlight", "cmd,bright", "cmd,deepsleep", "cmd,seq_start", "cmd,seq_end", "cmd,inv", "cmd,rot",
+  ",clear", ",rot", ",tpm", ",txt", ",txp", ",txz", ",txc", ",txs", ",txtfull", ",asciitable", ",font",
+  ",l", ",lh", ",lv", ",lm", ",lmr", ",r", ",rf", ",c", ",cf", ",rf", ",t", ",tf", ",rr", ",rrf", ",px", ",pxh", ",pxv", ",bmp", ",btn"
+];
 var commonTag = ["On", "Do", "Endon"];
 var commonNumber = ["toBin", "toHex", "Constrain", "XOR", "AND:", "OR:", "Ord", "bitRead", "bitSet", "bitClear", "bitWrite", "urlencode"];
 var commonMath = ["Log", "Ln", "Abs", "Exp", "Sqrt", "Sq", "Round", "Sin", "Cos", "Tan", "aSin", "aCos", "aTan", "Sind_d", "Cos_d", "Tan_d", "aSin_d", "aCos_d", "sTan_d"];
 var commonWarning = ["delay", "Delay"];
 var AnythingElse = [];
+
+//merging displayspecific commands of P095,P096,P116,P131 into commonPlugins
+for (const element2 of pluginDispKind) {
+  commonPlugins = commonPlugins.concat(element2);
+}
+for (const element2 of pluginDispKind) {
+  for (const element3 of pluginDispCmd) {
+    let mergedDisp = element2 + element3;
+    commonPlugins = commonPlugins.concat(mergedDisp);
+  }
+}
 
 var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommands, commonString2, commonTag, commonNumber, commonMath, commonWarning, AnythingElse);
 
@@ -160,7 +184,7 @@ function initCM() {
       if (/\w/.test(ch)) {
         for (const element of EXTRAWORDS) {
           let WinDB = element.substring(1);
-          if (stream.match(WinDB)) void (0)
+          if (element.includes(",") && stream.match(WinDB)) void (0)
         }
       }
 
