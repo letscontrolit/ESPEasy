@@ -36,6 +36,9 @@ bool pinsChanged(ESPEasySerialPort port,
     #ifndef ESP32S2
     case  ESPEasySerialPort::serial2: return receivePin != receivePin2 || transmitPin != transmitPin2;
     #endif
+    default:  
+      // No other hardware serial ports
+      break;
   }
   return false;
 }
@@ -61,6 +64,9 @@ void setPinsCache(ESPEasySerialPort port,
       break;
 
     #endif
+    default:  
+      // No other hardware serial ports
+      break;
   }
 }
 
