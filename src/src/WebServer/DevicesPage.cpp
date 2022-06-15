@@ -1208,6 +1208,13 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
   {
     addFormSubHeader(F("Data Acquisition"));
 
+    if (Device[DeviceIndex].ErrorStateValues) {
+      struct EventStruct TempEvent(taskIndex);
+      String dummy;
+
+      PluginCall(PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT, &TempEvent, dummy); // Show extra settings for Error State Value options
+    }
+
     addRowLabel(F("Single event with all values"));
     addCheckBox(F("TVSE"), Settings.CombineTaskValues_SingleEvent(taskIndex));
     addFormNote(F("Unchecked: Send event per value. Checked: Send single event (taskname#All) containing all values "));

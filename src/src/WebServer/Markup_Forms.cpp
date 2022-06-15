@@ -460,9 +460,17 @@ void addFormSelector(const String& label,
                      const String  options[],
                      const int     indices[],
                      int           selectedIndex,
-                     bool          reloadonchange)
+                     bool          reloadonchange
+                     #ifdef ENABLE_TOOLTIPS
+                     , const String& tooltip
+                     #endif // ifdef ENABLE_TOOLTIPS
+                    )
 {
-  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange
+                  #ifdef ENABLE_TOOLTIPS
+                  , tooltip
+                  #endif // ifdef ENABLE_TOOLTIPS
+                 );
 }
 
 void addFormSelector(const String  & label,
