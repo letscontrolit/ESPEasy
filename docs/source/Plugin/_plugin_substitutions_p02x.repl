@@ -109,8 +109,8 @@
 .. |P028_status| replace:: :green:`NORMAL`
 .. |P028_github| replace:: P028_BME280.ino
 .. _P028_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P028_BME280.ino
-.. |P028_usedby| replace:: :ref:`P028_BME280_page`
-.. |P028_shortinfo| replace:: Temperature and pressure for the BM**E**280 and BM**P**280 sensors.
+.. |P028_usedby| replace:: :ref:`P028_page`
+.. |P028_shortinfo| replace:: Temperature and pressure for the **BME280** and **BMP280** sensors.
 .. |P028_maintainer| replace:: `.`
 .. |P028_compileinfo| replace:: `.`
 .. |P028_usedlibraries| replace:: `.`
