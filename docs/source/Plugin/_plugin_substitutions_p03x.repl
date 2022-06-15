@@ -80,7 +80,7 @@
 .. |P036_type| replace:: :cyan:`Display`
 .. |P036_typename| replace:: :cyan:`Display - OLED SSD1306/SH1106 Framed`
 .. |P036_porttype| replace:: `.`
-.. |P036_status| replace:: :green:`DISPLAY, NORMAL`
+.. |P036_status| replace:: :green:`NORMAL` :yellow:`DISPLAY`
 .. |P036_github| replace:: P036_FrameOLED.ino
 .. _P036_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P036_FrameOLED.ino
 .. |P036_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P038_type| replace:: :cyan:`Output`
 .. |P038_typename| replace:: :cyan:`Output - NeoPixel (Basic)`
 .. |P038_porttype| replace:: `.`
-.. |P038_status| replace:: :green:`DISPLAY, NORMAL`
+.. |P038_status| replace:: :green:`NORMAL` :yellow:`DISPLAY, NEOPIXEL`
 .. |P038_github| replace:: P038_NeoPixel.ino
 .. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
 .. |P038_usedby| replace:: `NeoPixel RGB and RGBW LEDs and LED Strips`
