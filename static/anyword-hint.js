@@ -29,7 +29,6 @@
         var text = editor.getLine(line), m;
         while (m = re.exec(text)) {
           if (line == cur.line && m[0].toLowerCase() === curWord) continue;
-          console.log(line, "==", cur.line, "&&", m[0].toLowerCase(), "===", curWord);
           if ((!curWord || m[0].toLowerCase().lastIndexOf(curWord, 0) == 0) && !Object.prototype.hasOwnProperty.call(seen, m[0])) {
             seen[m[0]] = true;
             list.push(m[0]);
