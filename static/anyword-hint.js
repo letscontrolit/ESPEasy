@@ -20,7 +20,7 @@
     var end = cur.ch, start = end;
     while (start && word.test(curLine.charAt(start - 1))) --start;
     var curWord = start != end && curLine.slice(start, end);
-
+    if (curWord) { curWord = curWord.toLowerCase(); }
     var list = options && options.list || [], seen = {};
     var re = new RegExp(word.source, "g");
     for (var dir = -1; dir <= 1; dir += 2) {
@@ -28,21 +28,28 @@
       for (; line != endLine; line += dir) {
         var text = editor.getLine(line), m;
         while (m = re.exec(text)) {
-          if (line == cur.line && m[0] === curWord) continue;
-          if ((!curWord || m[0].lastIndexOf(curWord, 0) == 0) && !Object.prototype.hasOwnProperty.call(seen, m[0])) {
+          if (line == cur.line && m[0].toLowerCase() === curWord) continue;
+          console.log(line, "==", cur.line, "&&", m[0].toLowerCase(), "===", curWord);
+          if ((!curWord || m[0].toLowerCase().lastIndexOf(curWord, 0) == 0) && !Object.prototype.hasOwnProperty.call(seen, m[0])) {
             seen[m[0]] = true;
             list.push(m[0]);
           }
         }
       }
     }
-    if (curWord) {
-      curWord = curWord.toLowerCase();
-    }
-    list.push(...(extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''))))
+    list.sort();
+    list.reverse();
+    var arr = list;
+    let tempList = new Map(list.map(s => [s.toLowerCase(), s]));
+    list = [...tempList.values()];
+    list.sort();
+    list.push(...(extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''))));
+    let tempList2 = new Map(list.map(s => [s.toLowerCase(), s]));
+    list = [...tempList2.values()];
     return { list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end) };
   });
 });
+
 
 // This is from the file show-hint.js-------------------------------------------------------------------------
 (function (showHint) {
@@ -554,7 +561,7 @@
     hint: CodeMirror.hint.auto,
     completeSingle: true,
     alignWithWord: true,
-    closeCharacters: /[\s()\[\]{};:>,]/,
+    closeCharacters: /[\s()\[\]{};:>]/,
     closeOnPick: true,
     closeOnUnfocus: true,
     updateOnCursorActivity: true,
