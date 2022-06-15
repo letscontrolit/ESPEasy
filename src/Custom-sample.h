@@ -428,6 +428,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
 // #define USES_P132   // INA3221
+// #define USES_P133   // LTR390 UV
 
 
 // Special plugins needing IR library
