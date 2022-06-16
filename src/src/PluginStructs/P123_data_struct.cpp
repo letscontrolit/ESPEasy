@@ -84,7 +84,7 @@ void P123_data_struct::displayButtonGroup(struct EventStruct *event,
  * (Re)Display a button
  */
 bool P123_data_struct::displayButton(struct EventStruct *event,
-                                     int8_t              buttonNr,
+                                     const int8_t      & buttonNr,
                                      int16_t             buttonGroup,
                                      int8_t              mode) {
   return touchHandler->displayButton(event, buttonNr, buttonGroup, mode);
@@ -295,10 +295,10 @@ void P123_data_struct::setRotationFlipped(bool flipped) {
  * The smallest matching surface is selected if multiple objects overlap.
  * Returns state, and sets selectedObjectName to the best matching object
  */
-bool P123_data_struct::isValidAndTouchedTouchObject(int16_t x,
-                                                    int16_t y,
-                                                    String& selectedObjectName,
-                                                    int8_t& selectedObjectIndex) {
+bool P123_data_struct::isValidAndTouchedTouchObject(const int16_t& x,
+                                                    const int16_t& y,
+                                                    String       & selectedObjectName,
+                                                    int8_t       & selectedObjectIndex) {
   return touchHandler->isValidAndTouchedTouchObject(x, y, selectedObjectName, selectedObjectIndex);
 }
 

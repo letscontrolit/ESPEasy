@@ -28,8 +28,8 @@
 /**
  * Commands supported:
  * -------------------
- * touch,rot,<0..3>                     : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
- * touch,flip,<0|1>                     : Set rotation normal(0) or flipped by 180 degrees(1)
+ * touch,rot,<0..3>       : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
+ * touch,flip,<0|1>       : Set rotation normal(0) or flipped by 180 degrees(1)
  *
  * Other commands: see ESPEasy_TouchHandler.h
  */

@@ -66,10 +66,10 @@ struct P123_data_struct : public PluginTaskData_base
 
   void setRotation(uint8_t n);
   void setRotationFlipped(bool _flipped);
-  bool isValidAndTouchedTouchObject(int16_t x,
-                                    int16_t y,
-                                    String& selectedObjectName,
-                                    int8_t& selectedObjectIndex);
+  bool isValidAndTouchedTouchObject(const int16_t& x,
+                                    const int16_t& y,
+                                    String       & selectedObjectName,
+                                    int8_t       & selectedObjectIndex);
   int8_t  getTouchObjectIndex(struct EventStruct *event,
                               const String      & touchObject,
                               bool                isButton = false);
@@ -95,7 +95,7 @@ struct P123_data_struct : public PluginTaskData_base
                              int16_t             buttonGroup,
                              int8_t              mode = 0);
   bool    displayButton(struct EventStruct *event,
-                        int8_t              buttonNr,
+                        const int8_t      & buttonNr,
                         int16_t             buttonGroup = -1,
                         int8_t              mode        = 0);
 
