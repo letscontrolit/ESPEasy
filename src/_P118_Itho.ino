@@ -69,15 +69,15 @@
 
 #ifdef USES_P118
 
-#include "_Plugin_Helper.h"
-#include "./src/PluginStructs/P118_data_struct.h"
+# include "_Plugin_Helper.h"
+# include "./src/PluginStructs/P118_data_struct.h"
 
-#define PLUGIN_118
-#define PLUGIN_ID_118         118
-#define PLUGIN_NAME_118       "Communication - Itho ventilation"
-#define PLUGIN_VALUENAME1_118 "State"
-#define PLUGIN_VALUENAME2_118 "Timer"
-#define PLUGIN_VALUENAME3_118 "LastIDindex"
+# define PLUGIN_118
+# define PLUGIN_ID_118         118
+# define PLUGIN_NAME_118       "Communication - Itho ventilation"
+# define PLUGIN_VALUENAME1_118 "State"
+# define PLUGIN_VALUENAME2_118 "Timer"
+# define PLUGIN_VALUENAME3_118 "LastIDindex"
 
 boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -123,46 +123,44 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_SET_DEFAULTS:  // Set defaults address to the one used in old versions of the library for backwards compatability
+    case PLUGIN_SET_DEFAULTS:          // Set defaults address to the one used in old versions of the library for backwards compatability
     {
-      PIN(0)     = -1;         // Interrupt pin undefined by default
-      PIN(1)     = PIN_SPI_SS; // CS pin use the previous default of PIN_SPI_SS/gpio 15
-      PCONFIG(0) = 1;
-      PCONFIG(1) = 10;
-      PCONFIG(2) = 87;
-      PCONFIG(3) = 81;
-      success    = true;
+      PIN(0)             = -1;         // Interrupt pin undefined by default
+      PIN(1)             = PIN_SPI_SS; // CS pin use the previous default of PIN_SPI_SS/gpio 15
+      P118_CONFIG_LOG    = 1;
+      P118_CONFIG_DEVID1 = 10;
+      P118_CONFIG_DEVID2 = 87;
+      P118_CONFIG_DEVID3 = 81;
+      success            = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      #ifdef P118_DEBUG_LOG
+      # ifdef P118_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, F("INIT PLUGIN_118"));
-      #endif // ifdef P118_DEBUG_LOG
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P118_data_struct(PCONFIG(0)));
+      # endif // ifdef P118_DEBUG_LOG
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P118_data_struct(P118_CONFIG_LOG));
       P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P118_data) {
-        return success;
+      if (nullptr != P118_data) {
+        success = P118_data->plugin_init(event);
       }
-      success = P118_data->plugin_init(event);
 
       break;
     }
 
     case PLUGIN_EXIT:
     {
-      #ifdef P118_DEBUG_LOG
+      # ifdef P118_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, F("EXIT PLUGIN_118"));
-      #endif // ifdef P118_DEBUG_LOG
+      # endif // ifdef P118_DEBUG_LOG
       P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P118_data) {
-        return success;
+      if (nullptr != P118_data) {
+        success = P118_data->plugin_exit(event);
       }
 
-      success = P118_data->plugin_exit(event);
       break;
     }
 
@@ -170,10 +168,9 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     {
       P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P118_data) {
-        return success;
+      if (nullptr != P118_data) {
+        success = P118_data->plugin_once_a_second(event);
       }
-      success = P118_data->plugin_once_a_second(event);
 
       break;
     }
@@ -182,10 +179,9 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     {
       P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P118_data) {
-        return success;
+      if (nullptr != P118_data) {
+        success = P118_data->plugin_fifty_per_second(event);
       }
-      success = P118_data->plugin_fifty_per_second(event);
 
       break;
     }
@@ -194,10 +190,9 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ: {
       P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P118_data) {
-        return success;
+      if (nullptr != P118_data) {
+        success = P118_data->plugin_read(event);
       }
-      success = P118_data->plugin_read(event);
 
       break;
     }
@@ -205,10 +200,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE: {
       P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P118_data) {
-        return success;
+      if (nullptr != P118_data) {
+        success = P118_data->plugin_write(event, string);
       }
-      success = P118_data->plugin_write(event, string);
+
       break;
     }
 
@@ -217,14 +212,15 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
       LoadCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
       addFormSubHeader(F("Remote RF Controls"));
-      addFormTextBox(F("Unit ID remote 1"), F("PLUGIN_118_ID1"), PLUGIN_118_ExtraSettings.ID1, 8);
-      addFormTextBox(F("Unit ID remote 2"), F("PLUGIN_118_ID2"), PLUGIN_118_ExtraSettings.ID2, 8);
-      addFormTextBox(F("Unit ID remote 3"), F("PLUGIN_118_ID3"), PLUGIN_118_ExtraSettings.ID3, 8);
-      addFormCheckBox(F("Enable RF receive log"), F("p118_log"), PCONFIG(0)); // Makes RF logging optional to reduce clutter in the log file
-                                                                              // in RF noisy environments
-      addFormNumericBox(F("Device ID byte 1"), F("p118_deviceid1"), PCONFIG(1), 0, 255);
-      addFormNumericBox(F("Device ID byte 2"), F("p118_deviceid2"), PCONFIG(2), 0, 255);
-      addFormNumericBox(F("Device ID byte 3"), F("p118_deviceid3"), PCONFIG(3), 0, 255);
+      addFormTextBox(F("Unit ID remote 1"), F("pID1"), PLUGIN_118_ExtraSettings.ID1, 8);
+      addFormTextBox(F("Unit ID remote 2"), F("pID2"), PLUGIN_118_ExtraSettings.ID2, 8);
+      addFormTextBox(F("Unit ID remote 3"), F("pID3"), PLUGIN_118_ExtraSettings.ID3, 8);
+      addFormCheckBox(F("Enable RF receive log"), F("plog"), P118_CONFIG_LOG); // Makes RF logging optional to reduce clutter in the log
+                                                                               // file
+      // in RF noisy environments
+      addFormNumericBox(F("Device ID byte 1"), F("pdevid1"), P118_CONFIG_DEVID1, 0, 255);
+      addFormNumericBox(F("Device ID byte 2"), F("pdevid2"), P118_CONFIG_DEVID2, 0, 255);
+      addFormNumericBox(F("Device ID byte 3"), F("pdevid3"), P118_CONFIG_DEVID3, 0, 255);
       addFormNote(F(
                     "Device ID of your ESP, should not be the same as your neighbours ;-). Defaults to 10,87,81 which corresponds to the old Itho library"));
       success = true;
@@ -234,17 +230,17 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
-      strcpy(PLUGIN_118_ExtraSettings.ID1, web_server.arg(F("PLUGIN_118_ID1")).c_str());
-      strcpy(PLUGIN_118_ExtraSettings.ID2, web_server.arg(F("PLUGIN_118_ID2")).c_str());
-      strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("PLUGIN_118_ID3")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID1, web_server.arg(F("pID1")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID2, web_server.arg(F("pID2")).c_str());
+      strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("pID3")).c_str());
       SaveCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
 
-      PCONFIG(0) = isFormItemChecked(F("p118_log"));
+      P118_CONFIG_LOG = isFormItemChecked(F("plog"));
 
-      PCONFIG(1) = getFormItemInt(F("p118_deviceid1"), 10);
-      PCONFIG(2) = getFormItemInt(F("p118_deviceid2"), 87);
-      PCONFIG(3) = getFormItemInt(F("p118_deviceid3"), 81);
-      success    = true;
+      P118_CONFIG_DEVID1 = getFormItemInt(F("pdevid1"), 10);
+      P118_CONFIG_DEVID2 = getFormItemInt(F("pdevid2"), 87);
+      P118_CONFIG_DEVID3 = getFormItemInt(F("pdevid3"), 81);
+      success            = true;
       break;
     }
   }

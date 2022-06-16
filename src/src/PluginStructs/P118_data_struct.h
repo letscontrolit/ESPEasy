@@ -12,6 +12,11 @@
 
 # define P118_DEBUG_LOG // Enable for some (extra) logging
 
+# define P118_CONFIG_LOG      PCONFIG(0)
+# define P118_CONFIG_DEVID1   PCONFIG(1)
+# define P118_CONFIG_DEVID2   PCONFIG(2)
+# define P118_CONFIG_DEVID3   PCONFIG(3)
+
 // Timer values for hardware timer in Fan in seconds
 # define PLUGIN_118_Time1      10 * 60
 # define PLUGIN_118_Time2      20 * 60
