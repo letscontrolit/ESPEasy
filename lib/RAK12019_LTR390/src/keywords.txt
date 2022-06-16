@@ -1,0 +1,34 @@
+#######################################
+# Syntax Coloring Map For UVLIGHT
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+UVlight_LTR390	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+init	KEYWORD2    
+reset	KEYWORD2
+enable	KEYWORD2
+enabled	KEYWORD2
+setMode	KEYWORD2
+getMode	KEYWORD2
+setGain	KEYWORD2
+getGain	KEYWORD2
+setResolution	KEYWORD2
+getResolution	KEYWORD2
+setThresholds	KEYWORD2
+newDataAvailable	KEYWORD2
+configInterrupt	KEYWORD2
+readALS	KEYWORD2
+readUVS	KEYWORD2
+getLUX	KEYWORD2
+getUVI	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
