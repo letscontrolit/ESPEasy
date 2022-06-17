@@ -5,8 +5,8 @@
 Plugins
 #######
 
-Similar to a smartphones "apps" the ESP Easy plugins extends the functionality of
-the core operating system. You can use as many plugins as you available tasks.
+Similar to smartphone "apps" the ESPEasy plugins extends the functionality of
+the core operating system. You can use as many plugins as you have available tasks.
 
 List of official plugins
 ========================
@@ -15,13 +15,15 @@ There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
 
-:yellow:`TESTING` (split into A/B/C/D/E sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this is split into 5 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
+:yellow:`TESTING` (split into A/B/C/D/E sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this collection is split into 5 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
 
-.. comment :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
+:red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
 
 :yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` are specialized builds holding all Energy-, Display-, Infra Red- (extended) and NeoPixel related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
+
+:gray:`RETIRED` plugin has been retired from ESPEasy (though the source code is still available). Not included in any build.
 
 .. csv-table::
    :header: "Plugin name", "Build set", "Plugin number"
