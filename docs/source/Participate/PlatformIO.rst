@@ -367,6 +367,14 @@ Documentation for writing in reStructuredtext format can be found on the `Sphinx
 
 Building the documentation into html files, for reviewing locally, can be done by running this command from the ``docs`` folder:
 
+Start a new PIO Terminal:
+
+.. image:: VSCode_OpenPIOTerminal.png
+
+.. code-block::
+
+    cd docs
+
 On Windows:
 
 .. highlight::bat

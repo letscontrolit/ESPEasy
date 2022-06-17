@@ -27,6 +27,8 @@ As an alternative, VSCode can be used as a development environment. See also :re
 
 With the ESPEasy project open in VSCode, open the PIO terminal in VSCode.
 
+.. image:: VSCode_OpenPIOTerminal.png
+
 Install dependencies::
 
    cd docs
