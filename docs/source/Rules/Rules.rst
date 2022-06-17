@@ -16,10 +16,31 @@ Enable Rules
 
 To enable rules, :menuselection:`Tools --> Advanced` and check the Rules checkbox.
 
-After clicking Submit, you will find a new page added. Here you can start
-experimenting with Rules:
+After clicking Submit, you will find the Rules tab added. Here you can start experimenting with Rules:
 
-[ADD_GUI_PICTURE]
+.. image:: Advanced_RulesOptions.png
+  :alt: Rules options
+
+* **Rules**: Enable the use of rules. If disabled, also (most) events will no longer be generated, as they won't be processed, though data will still be sent to Controllers.
+* **Enable Rules Cache**: For faster processing of rules they can be (partially) cached in memory. If memory is really low this option can be disabled.
+* **Optimize Rules Cache Event Order**: During rules processing, some optimization is done to speed up the finding of the rule that is to be executed. This can cause issues if a variable argument is used for matching the event (f.e. use of ``%vN%`` like ``on sensor#value>%v1% do``). If such rules are used, or if rules are not executed as expected, first try to disable this option, to see if that resolves the issue. If needed, ask for support via the Forum.
+* **Tolerant last parameter**: A few commands can use, for backward compatibility, a more tolerant handling of the last parameter, as suggested in the note. This feature should be enabled if it is needed.
+
+.. code:: none
+
+  on System#Boot do
+    GPIO,12,0
+    LoopTimerSet,1,10
+  endon
+
+  on Rules#Timer=1 do
+    if [E1SW1#State]=1
+      GPIO,12,0
+    else
+      GPIO,12,1
+    endif
+  endon
+
 
 The example above shows an experiment with a LED, connected via a resistor of
 1k to GPIO12 and to ground.
@@ -154,6 +175,8 @@ for the limitation of not being able to nest. An "event" can be called from a
 consumption of stack space (IRAM). Depending on plug-ins in use this might
 lead to unpredictable, unreliable behavior, advice is not to exceed 3 levels
 of nesting.
+
+To avoid nesting of events, ``AsyncEvent`` can be used, using the same syntax as ``Event``, that will add the event to the end of the current event queue, for processing after other events are completed.
 
 .. code-block:: none
 
