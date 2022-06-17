@@ -909,7 +909,7 @@ See the ``Custom-sample.h`` file for some examples.
 
 
 Allow Fetch by Command
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 This checkbox allows provisioning via commands.
 These commands are not restricted, so they can also be given via HTTP or MQTT.
