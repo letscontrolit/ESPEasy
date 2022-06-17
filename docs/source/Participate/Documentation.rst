@@ -12,17 +12,25 @@ for more documentation which has not been moved here.
 
 Needed Python packages::
 
-   pip install sphinx recommonmark sphinx_bootstrap_theme
+   cd docs
 
-PlatformIO with Atom
-====================
+   pip install -r requirements.txt
 
-With the ESPEasy project open in Atom, open the PIO terminal in Atom.
+PlatformIO with VSCode
+======================
+
+.. note:: 
+
+  Here used to be a reference to the Atom editor, but both Atom, and the PlatformIO plugin for Atom, are no longer maintained by their owners, so it was removed from this documentation.
+
+As an alternative, VSCode can be used as a development environment. See also :ref:`PlatformIO_page`
+
+With the ESPEasy project open in VSCode, open the PIO terminal in VSCode.
 
 Install dependencies::
 
    cd docs
-   pip install ... (see needed Python packages above)
+   pip install -r requirements.txt
 
 Build on Windows::
 
