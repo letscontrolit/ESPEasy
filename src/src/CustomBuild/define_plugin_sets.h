@@ -1325,6 +1325,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
+  #ifndef USES_P131
+    #define USES_P131   // NeoMatrix
+  #endif
 #endif
 
 #ifdef CONTROLLER_SET_TESTING
