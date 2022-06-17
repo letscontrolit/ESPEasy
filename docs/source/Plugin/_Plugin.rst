@@ -19,7 +19,7 @@ There are different released versions of ESP Easy:
 
 .. comment :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
 
-:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` are specialized builds holding all Energy-, Display- and Infra Red- (extended) related plugins.
+:yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` are specialized builds holding all Energy-, Display-, Infra Red- (extended) and NeoPixel related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
@@ -150,7 +150,9 @@ There are different released versions of ESP Easy:
    ":ref:`P125_page`","|P125_status|","P125"
    ":ref:`P126_page`","|P126_status|","P126"
    ":ref:`P127_page`","|P127_status|","P127"
+   ":ref:`P128_page`","|P128_status|","P128"
    ":ref:`P132_page`","|P132_status|","P132"
+   ":ref:`P133_page`","|P133_status|","P133"
 
 
 Internal GPIO handling
