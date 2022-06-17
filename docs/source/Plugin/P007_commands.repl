@@ -1,0 +1,14 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``analogout,<value>``
+
+        Value: 0..255
+
+        ","
+        The value is linearly scaled from 0V to Vref. Vref is often the same as VCC for the chip, but can sometimes be configured using a potentiometer on the board.
+
+        Only available if **Enable Analog output (AOUT)** is enabled.
+        "

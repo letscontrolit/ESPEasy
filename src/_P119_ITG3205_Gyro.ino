@@ -111,10 +111,11 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
       addUnit(F("1..100"));
 
       const __FlashStringHelper *frequencyOptions[] = {
-        F("10x per second"),
-        F("50x per second") };
+        F("10"),
+        F("50") };
       int frequencyValues[] = { P119_FREQUENCY_10, P119_FREQUENCY_50 };
       addFormSelector(F("Measuring frequency"), F("p119_frequency"), 2, frequencyOptions, frequencyValues, P119_FREQUENCY);
+      addUnit(F("Hz"));
 
       success = true;
       break;

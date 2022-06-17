@@ -27,12 +27,12 @@
 #define PLUGIN_CLOCK_IN                    20 // Called every new minute
 #define PLUGIN_TIMER_IN                    21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
 #define PLUGIN_FIFTY_PER_SECOND            22 // Called 50 times per second
-#define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG to allow to set a config via a command.
+#define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
 #define PLUGIN_GET_DEVICEGPIONAMES         24 // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
 #define PLUGIN_EXIT                        25 // Called when a task no longer is enabled (or deleted)
-#define PLUGIN_GET_CONFIG                  26 // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.
+#define PLUGIN_GET_CONFIG_VALUE            26 // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it can handle the command.  Can also be used to access extra unused task values.
 #define PLUGIN_UNCONDITIONAL_POLL          27 // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different technique.
-#define PLUGIN_REQUEST                     28 // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG)
+#define PLUGIN_REQUEST                     28 // Specific command to fetch a state (FIXME TD-er: Seems very similar to PLUGIN_GET_CONFIG_VALUE)
 #define PLUGIN_TIME_CHANGE                 29 // Called when system time is set (e.g. via NTP)
 #define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
 #define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
@@ -47,6 +47,9 @@
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
 #define PLUGIN_I2C_HAS_ADDRESS             40 // Check the I2C addresses from the plugin, output in 'success'
 #define PLUGIN_GET_DISPLAY_PARAMETERS      41 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 42 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+#define PLUGIN_INIT_VALUE_RANGES           43 // Initialize the ranges of values, called just before PLUGIN_INIT
+#define PLUGIN_GET_ERROR_VALUE_STATE       44 // Should we return the error values or not, called when PLUGIN_READ returns false, must also set error values into UserVar[]
 
 
 

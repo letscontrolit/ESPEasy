@@ -458,6 +458,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
       }
 
+/*
       if (Function == PLUGIN_REQUEST) {
         // @FIXME TD-er: work-around as long as gpio command is still performed in P001_switch.
         for (deviceIndex_t deviceIndex = 0; deviceIndex < PLUGIN_MAX; deviceIndex++) {
@@ -470,6 +471,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           }
         }
       }
+*/
       break;
     }
 
@@ -588,10 +590,21 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           return false;
         }
         START_TIMER;
+
+        if (((Function == PLUGIN_INIT) ||
+             (Function == PLUGIN_WEBFORM_LOAD)) &&
+            Device[DeviceIndex].ErrorStateValues) { // Only when we support ErrorStateValues
+          Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
+        }
+
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
-        if (retval && (Function == PLUGIN_READ)) {
+        if (Function == PLUGIN_READ &&
+            (retval ||
+             (Device[DeviceIndex].ErrorStateValues && // Handle ErrorStateValues
+              Plugin_ptr[DeviceIndex](PLUGIN_GET_ERROR_VALUE_STATE, event, str)))) {
           saveUserVarToRTC();
+          retval = true; // Alternative success
         }
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
@@ -615,7 +628,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     }
 
     // Call to specific task not interacting with hardware
-    case PLUGIN_GET_CONFIG:
+    case PLUGIN_GET_CONFIG_VALUE:
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_GET_DEVICEVALUECOUNT:
     case PLUGIN_GET_DEVICEVTYPE:
@@ -630,6 +643,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:
     case PLUGIN_I2C_HAS_ADDRESS:
+    case PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT:
+    case PLUGIN_INIT_VALUE_RANGES:
 
     // PLUGIN_MQTT_xxx functions are directly called from the scheduler.
     //case PLUGIN_MQTT_CONNECTION_STATE:
@@ -665,6 +680,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
           event->sensorType = Device[DeviceIndex].VType;
+        }
+        if ((Function == PLUGIN_WEBFORM_SAVE) &&
+            Device[DeviceIndex].ErrorStateValues) { // Only if plugin supports ErrorStateValues
+          if (Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str)) { // Initialize value range(s)
+            SaveTaskSettings(event->TaskIndex); // Let's save that too
+          }
         }
 
         START_TIMER;

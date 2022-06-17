@@ -137,8 +137,6 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-
-
 #ifdef MEMORY_ANALYSIS
   #ifdef MQTT_ONLY
     #define USES_C002   // Domoticz MQTT
@@ -480,7 +478,7 @@ To create/register a plugin, you have to :
     // The following define is needed for extended decoding of A/C Messages and or using standardised common arguments for controlling all deeply supported A/C units
     #define P016_P035_Extended_AC
     #define P016_P035_USE_RAW_RAW2 //Use the RAW and RAW2 encodings, disabling it saves 3.7Kb
-    #ifndef SIZE_1M          // Leaving out Heatpump IR for 1M builds because it won't fit after upgrading IRremoteESP8266 library to v2.8.1
+    #ifndef ESP8266_1M       // Leaving out Heatpump IR for 1M builds because it won't fit after upgrading IRremoteESP8266 library to v2.8.1
       #define USES_P088      // ToniA IR plugin
     #endif
     #define PLUGIN_SET_ONLY_SWITCH
@@ -767,6 +765,9 @@ To create/register a plugin, you have to :
     #endif
     #ifndef PLUGIN_DISPLAY_COLLECTION
         #define PLUGIN_DISPLAY_COLLECTION
+    #endif
+    #ifndef PLUGIN_NEOPIXEL_COLLECTION
+        #define PLUGIN_NEOPIXEL_COLLECTION
     #endif
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_TEST_ESP32 section at end,
@@ -1207,6 +1208,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
+    #define USES_P133   // LTR390 UV
 #endif
 
 
@@ -1242,6 +1244,9 @@ To create/register a plugin, you have to :
    #endif
    #ifndef USES_P115
      #define USES_P115   // Fuel Gauge MAX1704x
+   #endif
+   #ifndef USES_P132
+     #define USES_P132   // INA3221
    #endif
 #endif
 
@@ -1300,6 +1305,24 @@ To create/register a plugin, you have to :
    #endif
 #endif
 
+// Collection of all NeoPixel plugins
+#ifdef PLUGIN_NEOPIXEL_COLLECTION
+  #ifndef USES_P038
+    #define USES_P038   // NeoPixel
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P070
+    #define USES_P070   // NeoPixel_Clock
+  #endif
+  #ifndef USES_P128
+    #define USES_P128   // NeoPixelBusFX
+  #endif
+#endif
 
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
@@ -1529,7 +1552,7 @@ To create/register a plugin, you have to :
     #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
-//    #define USES_P128   //
+    #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
 //    #define USES_P129   //
@@ -1541,7 +1564,7 @@ To create/register a plugin, you have to :
 //    #define USES_P131   //
   #endif
   #ifndef USES_P132
-//    #define USES_P132   //
+    #define USES_P132   // INA3221
   #endif
   #ifndef USES_P133
 //    #define USES_P133   //
@@ -1669,7 +1692,7 @@ To create/register a plugin, you have to :
 
 
 // Due to size restrictions, disable a few plugins/controllers for 1M builds
-#ifdef SIZE_1M
+#ifdef ESP8266_1M
   #ifdef USES_C003
     #undef USES_C003
   #endif

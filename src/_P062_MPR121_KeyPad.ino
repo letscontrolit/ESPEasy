@@ -177,10 +177,8 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
         html_end_table();
 
         if (canCalibrate) {
-          const __FlashStringHelper *options1[2] = { F("No"), F("Yes") };
-          int optionValues1[2]                   = { 0, 1 };
-          int choice1                            = tbUseCalibration ? 1 : 0;
-          addFormSelector(F("Enable Calibration"), F("p062_use_calibration"), 2, options1, optionValues1, choice1, true);
+          const int choice1 = tbUseCalibration ? 1 : 0;
+          addFormSelector_YesNo(F("Enable Calibration"), F("p062_use_calibration"), choice1, true);
 
           if (tbUseCalibration) {
             addFormCheckBox(F("Clear calibrationdata"), F("p062_clear_calibrate"), false);
