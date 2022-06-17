@@ -406,14 +406,27 @@ bool IthoCC1101::parseMessageCommand() {
 
 bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]) {
   uint8_t offset = 0;
-  // this is quite hacky as not even the opcode is checked. Now orcon 31E0 messages are wrongly recognised as itho standby messages.
+  // this is quite hacky as not even the opcode is checked for itho. Because of that orcon 31E0 messages are wrongly recognised as itho standby messages.
+  // TODO FIX THIS :D
 
+  // first byte is the header of the message, this determines the structure of the rest of the message
+  // The bits are used as follows <00TTAAPP>
+  // 00 - Unused
+  // TT - Message type
+  // AA - Present DeviceID fields
+  // PP - Present Params
   if ((itho->deviceType == 28) || (itho->deviceType == 24)) { offset = 2; }
 
-  for (int i = 4; i < 6; i++)
+
+  // for (int i = 4; i < 6; i++)
+  // the code above makes that only 3 bytes (byte 4, 5 and 6) are checked. That gives false positves
+  for (int i = 0; i < 6; i++)
+
   {
-    // if (i == 2 || i == 3) continue; //skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different number
-    // there
+    // this is required for differentiating between Orcon and Itho commands. However I don't know what the reason was to comment this out.
+    // thus this needs to be verified by Itho users
+    if (i == 2 || i == 3) continue; //skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different number there
+
     if ((itho->dataDecoded[i + 5 + offset] != commandBytes[i]) && (itho->dataDecodedChk[i + 5 + offset] != commandBytes[i])) {
       return false;
     }
