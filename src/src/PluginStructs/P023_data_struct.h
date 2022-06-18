@@ -3,6 +3,7 @@
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P023
+# include "../Helpers/OLed_helper.h"
 
 
 # define P23_Nlines 8 // The number of different lines which can be displayed

@@ -7,7 +7,7 @@
 // #######################################################################################################
 
 
-#include "src/PluginStructs/P023_data_struct.h"
+# include "src/PluginStructs/P023_data_struct.h"
 
 // Sample templates
 //  Temp: [DHT11#Temperature]   Hum:[DHT11#humidity]
@@ -15,10 +15,10 @@
 //  Lux:[Lux#Lux#R]
 //  Baro:[Baro#Pressure#R]
 
-#define PLUGIN_023
-#define PLUGIN_ID_023         23
-#define PLUGIN_NAME_023       "Display - OLED SSD1306"
-#define PLUGIN_VALUENAME1_023 "OLED"
+# define PLUGIN_023
+# define PLUGIN_ID_023         23
+# define PLUGIN_NAME_023       "Display - OLED SSD1306"
+# define PLUGIN_VALUENAME1_023 "OLED"
 
 boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -57,6 +57,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x3C, 0x3D };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
       } else {
@@ -75,32 +76,24 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(F("Use SH1106 controller"), F("p023_use_sh1106"), PCONFIG(5));
+      OLedFormController(F("p023_use_sh1106"), PCONFIG(5) == 1 ? 2 : 1); // Selector: 1 = SSD1306, 2 = SH1106
+
+      OLedFormRotation(F("p023_rotate"), PCONFIG(1));
 
       {
-        uint8_t choice2         = PCONFIG(1);
-        const __FlashStringHelper * options2[2]   = { F("Normal"), F("Rotated") };
-        int optionValues2[2] = { 1, 2 };
-        addFormSelector(F("Rotation"), F("p023_rotate"), 2, options2, optionValues2, choice2);
+        const int optionValues3[3] = { 1, 3, 2 };
+        OLedFormSizes(F("p023_size"), optionValues3, PCONFIG(3));
       }
       {
-        uint8_t   choice3          = PCONFIG(3);
-        const __FlashStringHelper * options3[3]      = { F("128x64"), F("128x32"), F("64x48") };
-        int    optionValues3[3] = { 1, 3, 2 };
-        addFormSelector(F("Display Size"), F("p023_size"), 3, options3, optionValues3, choice3);
-      }
-      {
-        uint8_t   choice4          = PCONFIG(4);
-        const __FlashStringHelper * options4[2]      = { F("Normal"), F("Optimized") };
-        int    optionValues4[2] = { 1, 2 };
-        addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, choice4);
+        const __FlashStringHelper *options4[2] = { F("Normal"), F("Optimized") };
+        const int optionValues4[2]             = { 1, 2 };
+        addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, PCONFIG(4));
       }
       {
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (uint8_t varNr = 0; varNr < 8; varNr++)
-        {
+        for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++) {
           addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }
       }
@@ -121,7 +114,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
       PCONFIG(3) = getFormItemInt(F("p023_size"));
       PCONFIG(4) = getFormItemInt(F("p023_font_spacing"));
-      PCONFIG(5) = isFormItemChecked(F("p023_use_sh1106"));
+      PCONFIG(5) = getFormItemInt(F("p023_use_sh1106")) == 2 ? 1 : 0;
 
 
       // FIXME TD-er: This is a huge stack allocated object.
@@ -145,11 +138,11 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t address                           = PCONFIG(0);
-      uint8_t type                              = 0;
+      uint8_t address                        = PCONFIG(0);
+      uint8_t type                           = 0;
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
-      uint8_t displayTimer                      = PCONFIG(2);
-      uint8_t use_sh1106                        = PCONFIG(5);
+      uint8_t displayTimer                   = PCONFIG(2);
+      uint8_t use_sh1106                     = PCONFIG(5);
 
 
       switch (PCONFIG(3)) {
