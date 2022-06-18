@@ -76,18 +76,18 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      OLedFormController(F("p023_use_sh1106"), PCONFIG(5) == 1 ? 2 : 1); // Selector: 1 = SSD1306, 2 = SH1106
+      OLedFormController(F("use_sh1106"), PCONFIG(5) == 1 ? 2 : 1); // Selector: 1 = SSD1306, 2 = SH1106
 
-      OLedFormRotation(F("p023_rotate"), PCONFIG(1));
+      OLedFormRotation(F("rotate"), PCONFIG(1));
 
       {
         const int optionValues3[3] = { 1, 3, 2 };
-        OLedFormSizes(F("p023_size"), optionValues3, PCONFIG(3));
+        OLedFormSizes(F("size"), optionValues3, PCONFIG(3));
       }
       {
         const __FlashStringHelper *options4[2] = { F("Normal"), F("Optimized") };
         const int optionValues4[2]             = { 1, 2 };
-        addFormSelector(F("Font Width"), F("p023_font_spacing"), 2, options4, optionValues4, PCONFIG(4));
+        addFormSelector(F("Font Width"), F("font_spacing"), 2, options4, optionValues4, PCONFIG(4));
       }
       {
         String strings[P23_Nlines];
@@ -101,7 +101,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_input_optional(F("Display button")), F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormNumericBox(F("Display Timeout"), F("plugin_23_timer"), PCONFIG(2));
+      addFormNumericBox(F("Display Timeout"), F("ptimer"), PCONFIG(2));
 
       success = true;
       break;
@@ -110,19 +110,18 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       PCONFIG(0) = getFormItemInt(F("i2c_addr"));
-      PCONFIG(1) = getFormItemInt(F("p023_rotate"));
-      PCONFIG(2) = getFormItemInt(F("plugin_23_timer"));
-      PCONFIG(3) = getFormItemInt(F("p023_size"));
-      PCONFIG(4) = getFormItemInt(F("p023_font_spacing"));
-      PCONFIG(5) = getFormItemInt(F("p023_use_sh1106")) == 2 ? 1 : 0;
+      PCONFIG(1) = getFormItemInt(F("rotate"));
+      PCONFIG(2) = getFormItemInt(F("ptimer"));
+      PCONFIG(3) = getFormItemInt(F("size"));
+      PCONFIG(4) = getFormItemInt(F("font_spacing"));
+      PCONFIG(5) = getFormItemInt(F("use_sh1106")) == 2 ? 1 : 0;
 
 
       // FIXME TD-er: This is a huge stack allocated object.
       char   deviceTemplate[P23_Nlines][P23_Nchars];
       String error;
 
-      for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++)
-      {
+      for (uint8_t varNr = 0; varNr < P23_Nlines; varNr++) {
         if (!safe_strncpy(deviceTemplate[varNr], webArg(getPluginCustomArgName(varNr)), P23_Nchars)) {
           error += getCustomTaskSettingsError(varNr);
         }
@@ -138,17 +137,14 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      uint8_t address                        = PCONFIG(0);
       uint8_t type                           = 0;
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
-      uint8_t displayTimer                   = PCONFIG(2);
-      uint8_t use_sh1106                     = PCONFIG(5);
 
 
       switch (PCONFIG(3)) {
         case 1:
           // 128x64
-          type = 0;
+          type = P023_data_struct::OLED_128x64;
           break;
         case 2:
           type = P023_data_struct::OLED_64x48;
@@ -158,8 +154,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
           break;
       }
 
-      if (PCONFIG(1) == 2)
-      {
+      if (PCONFIG(1) == 2) {
         type |= P023_data_struct::OLED_rotated;
       }
 
@@ -170,16 +165,14 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
           break;
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(address, type, font_spacing, displayTimer, use_sh1106));
-      P023_data_struct *P023_data =
-        static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P023_data_struct(PCONFIG(0), type, font_spacing, PCONFIG(2), PCONFIG(5)));
+      P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
         P023_data->StartUp_OLED();
         P023_data->clearDisplay();
 
-        if (PCONFIG(1) == 2)
-        {
+        if (PCONFIG(1) == 2) {
           P023_data->sendCommand(0xA0 | 0x1); // SEGREMAP   //Rotate screen 180 deg
           P023_data->sendCommand(0xC8);       // COMSCANDEC  Rotate screen 180 Deg
         }
@@ -196,12 +189,9 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TEN_PER_SECOND:
     {
-      if (validGpio(CONFIG_PIN3))
-      {
-        if (!digitalRead(CONFIG_PIN3))
-        {
-          P023_data_struct *P023_data =
-            static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
+      if (validGpio(CONFIG_PIN3)) {
+        if (!digitalRead(CONFIG_PIN3)) {
+          P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
           if (nullptr != P023_data) {
             P023_data->setDisplayTimer(PCONFIG(2));
@@ -213,8 +203,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      P023_data_struct *P023_data =
-        static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
         P023_data->checkDisplayTimer();
@@ -224,17 +213,14 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
-      P023_data_struct *P023_data =
-        static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
         String strings[P23_Nlines];
         LoadCustomTaskSettings(event->TaskIndex, strings, P23_Nlines, P23_Nchars);
 
-        for (uint8_t x = 0; x < 8; x++)
-        {
-          if (strings[x].length())
-          {
+        for (uint8_t x = 0; x < 8; x++) {
+          if (strings[x].length()) {
             String newString = P023_data->parseTemplate(strings[x], 16);
             P023_data->sendStrXY(newString.c_str(), x, 0);
           }
@@ -246,14 +232,12 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      P023_data_struct *P023_data =
-        static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P023_data_struct *P023_data = static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P023_data) {
         String cmd = parseString(string, 1); // Changes to lowercase
 
-        if (cmd.equals(F("oledcmd")))
-        {
+        if (cmd.equals(F("oledcmd"))) {
           success = true;
           String param = parseString(string, 2);
 
@@ -267,8 +251,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
             P023_data->clearDisplay();
           }
         }
-        else if (cmd.equals(F("oled")))
-        {
+        else if (cmd.equals(F("oled"))) {
           success = true;
           String text = parseStringToEndKeepCase(string, 4);
           text = P023_data->parseTemplate(text, 16);
