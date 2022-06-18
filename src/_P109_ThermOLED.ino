@@ -41,6 +41,7 @@
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
    2022-06-17 tonhuisman: Optimizations
+   2022-06-18 tonhuisman: More optimizations, use #defines where appropriate
  */
 
 # define PLUGIN_109
@@ -96,8 +97,22 @@ const char flameimg[] PROGMEM = {
 
 # define P109_WIFI_STATE_UNSET          -2
 # define P109_WIFI_STATE_NOT_CONNECTED  -1
+# define P109_TEMP_STATE_UNSET          99.0f
+# define P109_SETPOINT_STATE_UNSET      0.0f
+# define P109_SETPOINT_STATE_INITIAL    19.0f
+# define P109_TIMEOUT_STATE_UNSET       32768.0f
+# define P109_HEATING_STATE_UNSET       255
+# define P109_MODE_STATE_UNSET          255
+# define P109_MODE_STATE_INITIAL        1
+# define P109_BUTTON_DEBOUNCE_TIME_MS   300
 
-float   Plugin_109_prev_temp = 99.0f;
+# define P109_CONFIG_I2CADDRESS         PCONFIG(0)
+# define P109_CONFIG_ROTATION           PCONFIG(1)
+# define P109_CONFIG_DISPLAYTYPE        PCONFIG(2)
+# define P109_CONFIG_CONTRAST           PCONFIG(3)
+# define P109_CONFIG_RELAYPIN           PCONFIG(4)
+
+float   Plugin_109_prev_temp = P109_TEMP_STATE_UNSET;
 float   Plugin_109_prev_setpoint;
 float   Plugin_109_prev_timeout;
 uint8_t Plugin_109_prev_heating;
@@ -164,7 +179,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("pi2caddr"), 2, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("pi2caddr"), 2, i2cAddressValues, P109_CONFIG_I2CADDRESS);
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -183,7 +198,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       string += formatGpioLabel(CONFIG_PIN3, false);
       string += event->String1; // newline
       string += F("Relay: ");
-      string += formatGpioLabel(PCONFIG(4), false);
+      string += formatGpioLabel(P109_CONFIG_RELAYPIN, false);
       success = true;
       break;
     }
@@ -192,16 +207,15 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
     {
       const __FlashStringHelper *options5[] = { F("SSD1306"), F("SH1106") };
       const int optionValues5[]             = { 1, 2 };
-      addFormSelector(F("Controller"), F("controler"), 2, options5, optionValues5, PCONFIG(2));
+      addFormSelector(F("Controller"), F("controler"), 2, options5, optionValues5, P109_CONFIG_DISPLAYTYPE);
 
       const __FlashStringHelper *options1[] = { F("Normal"), F("Rotated") };
       const int optionValues1[]             = { 1, 2 };
-      addFormSelector(F("Rotation"), F("rotate"), 2, options1, optionValues1, PCONFIG(1));
+      addFormSelector(F("Rotation"), F("rotate"), 2, options1, optionValues1, P109_CONFIG_ROTATION);
 
       LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&P109_deviceTemplate), sizeof(P109_deviceTemplate));
 
-      for (uint8_t varNr = 0; varNr < P109_Nlines; varNr++)
-      {
+      for (uint8_t varNr = 0; varNr < P109_Nlines; varNr++) {
         String label = F("Line ");
 
         if (varNr == 0) {
@@ -218,19 +232,18 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       addFormPinSelect(F("Button right"), F("taskdevicepin2"), CONFIG_PIN2);
       addFormPinSelect(F("Button mode"),  F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormPinSelect(F("Relay"),        F("heatrelay"),      PCONFIG(4));
+      addFormPinSelect(F("Relay"),        F("heatrelay"),      P109_CONFIG_RELAYPIN);
 
-      uint8_t choice6 = PCONFIG(3);
+      uint8_t choice6 = P109_CONFIG_CONTRAST;
 
       if (choice6 == 0) { choice6 = P109_CONTRAST_HIGH; }
       const __FlashStringHelper *options6[] = { F("Low"), F("Medium"), F("High") };
       const int optionValues6[]             = { P109_CONTRAST_LOW, P109_CONTRAST_MED, P109_CONTRAST_HIGH };
       addFormSelector(F("Contrast"), F("contrast"), 3, options6, optionValues6, choice6);
 
-      uint8_t choice4                       = (PCONFIG_FLOAT(0) * 10.0f);
       const __FlashStringHelper *options4[] = { F("0.2"), F("0.5"), F("1") };
       const int optionValues4[]             = { 2, 5, 10 };
-      addFormSelector(F("Hysteresis"), F("hyst"), 3, options4, optionValues4, choice4);
+      addFormSelector(F("Hysteresis"), F("hyst"), 3, options4, optionValues4, static_cast<int>(PCONFIG_FLOAT(0) * 10.0f));
 
       success = true;
       break;
@@ -238,18 +251,17 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)       = getFormItemInt(F("pi2caddr"));
-      PCONFIG(1)       = getFormItemInt(F("rotate"));
-      PCONFIG(2)       = getFormItemInt(F("controler"));
-      PCONFIG(3)       = getFormItemInt(F("contrast"));
-      PCONFIG(4)       = getFormItemInt(F("heatrelay"));
-      PCONFIG_FLOAT(0) = (getFormItemInt(F("hyst")) / 10.0f);
-
-      String argName;
+      P109_CONFIG_I2CADDRESS  = getFormItemInt(F("pi2caddr"));
+      P109_CONFIG_ROTATION    = getFormItemInt(F("rotate"));
+      P109_CONFIG_DISPLAYTYPE = getFormItemInt(F("controler"));
+      P109_CONFIG_CONTRAST    = getFormItemInt(F("contrast"));
+      P109_CONFIG_RELAYPIN    = getFormItemInt(F("heatrelay"));
+      PCONFIG_FLOAT(0)        = (getFormItemInt(F("hyst")) / 10.0f);
 
       for (uint8_t varNr = 0; varNr < P109_Nlines; varNr++) {
-        argName = getPluginCustomArgName(varNr + 1);
-        strncpy(P109_deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(P109_deviceTemplate[varNr]) - 1);
+        strncpy(P109_deviceTemplate[varNr],
+                web_server.arg(getPluginCustomArgName(varNr + 1)).c_str(),
+                sizeof(P109_deviceTemplate[varNr]) - 1);
         P109_deviceTemplate[varNr][sizeof(P109_deviceTemplate[varNr]) - 1] = 0;
       }
 
@@ -275,12 +287,10 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       Plugin_109_taskindex = event->TaskIndex;
       Plugin_109_varindex  = event->BaseVarIndex;
 
-      uint8_t OLED_address = PCONFIG(0);
-
-      if (PCONFIG(2) == 1) {
-        P109_display = new (std::nothrow) SSD1306Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+      if (P109_CONFIG_DISPLAYTYPE == 1) {
+        P109_display = new (std::nothrow) SSD1306Wire(P109_CONFIG_I2CADDRESS, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
       } else {
-        P109_display = new (std::nothrow) SH1106Wire(OLED_address, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
+        P109_display = new (std::nothrow) SH1106Wire(P109_CONFIG_I2CADDRESS, Settings.Pin_i2c_sda, Settings.Pin_i2c_scl);
       }
 
       if (P109_display == nullptr) {
@@ -308,7 +318,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      Plugin_109_prev_temp = 99;
+      Plugin_109_prev_temp = P109_TEMP_STATE_UNSET;
 
       fs::File f = tryOpenFile(F("thermo.dat"), F("r"));
 
@@ -319,13 +329,13 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       Plugin_109_lastsavetime = millis();
 
       if (UserVar[event->BaseVarIndex] < 1) {
-        UserVar[event->BaseVarIndex]     = 19; // setpoint
-        UserVar[event->BaseVarIndex + 2] = 1;  // mode (X=0,A=1,M=2)
+        UserVar[event->BaseVarIndex]     = P109_SETPOINT_STATE_INITIAL; // setpoint
+        UserVar[event->BaseVarIndex + 2] = P109_MODE_STATE_INITIAL;     // mode (X=0,A=1,M=2)
       }
 
       // UserVar[event->BaseVarIndex + 1] = 0; // heating (0=off,1=heating in progress)
       // UserVar[event->BaseVarIndex + 3] = 0; // timeout (manual on for minutes)
-      if (PCONFIG(4) != -1) {
+      if (P109_CONFIG_RELAYPIN != -1) {
         // pinMode(Settings.TaskDevicePluginConfig[event->TaskIndex][4], OUTPUT);
         P109_setHeatRelay(static_cast<uint8_t>(UserVar[event->BaseVarIndex + 1]));
       }
@@ -339,10 +349,12 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       }
 
       Plugin_109_changed    = 1;
-      Plugin_109_buttons[0] = 0; Plugin_109_buttons[1] = 0; Plugin_109_buttons[2] = 0;
+      Plugin_109_buttons[0] = 0;
+      Plugin_109_buttons[1] = 0;
+      Plugin_109_buttons[2] = 0;
 
       //      flip screen if required
-      if (PCONFIG(1) == 2) { P109_display->flipScreenVertically(); }
+      if (P109_CONFIG_ROTATION == 2) { P109_display->flipScreenVertically(); }
 
       //      Display the device name, logo, time and wifi
       P109_display_header();
@@ -359,7 +371,8 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       if (P109_display) {
         P109_display->end();
         delete P109_display;
-        P109_display = nullptr;
+        P109_display    = nullptr;
+        Plugin_109_init = false;
       }
       break;
     }
@@ -369,86 +382,80 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       uint32_t current_time;
 
       if (Plugin_109_init) {
-        if (validGpio(CONFIG_PIN1)) {
-          if (!digitalRead(CONFIG_PIN1)) {
-            current_time = millis();
+        if (validGpio(CONFIG_PIN1) && !digitalRead(CONFIG_PIN1)) {
+          current_time = millis();
 
-            if (Plugin_109_buttons[0] + 300 < current_time) {
-              Plugin_109_buttons[0] = current_time;
+          if (Plugin_109_buttons[0] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
+            Plugin_109_buttons[0] = current_time;
 
-              switch (int(UserVar[event->BaseVarIndex + 2])) {
-                case 0: { // off mode, no func
-                  break;
-                }
-                case 1: { // auto mode, setpoint dec
-                  P109_setSetpoint(F("-0.5"));
-                  break;
-                }
-                case 2: { // manual on mode, timer dec
-                  UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] - 300;
+            switch (int(UserVar[event->BaseVarIndex + 2])) {
+              case 0: { // off mode, no func
+                break;
+              }
+              case 1: { // auto mode, setpoint dec
+                P109_setSetpoint(F("-0.5"));
+                break;
+              }
+              case 2: { // manual on mode, timer dec
+                UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] - P109_BUTTON_DEBOUNCE_TIME_MS;
 
-                  if (UserVar[event->BaseVarIndex + 3] < 0) {
-                    UserVar[event->BaseVarIndex + 3] = 5400;
-                  }
-                  Plugin_109_prev_timeout = 32768;
-                  Plugin_109_changed      = 1;
-                  break;
+                if (UserVar[event->BaseVarIndex + 3] < 0) {
+                  UserVar[event->BaseVarIndex + 3] = 5400;
                 }
+                Plugin_109_prev_timeout = P109_TIMEOUT_STATE_UNSET;
+                Plugin_109_changed      = 1;
+                break;
               }
             }
           }
         }
 
-        if (validGpio(CONFIG_PIN2)) {
-          if (!digitalRead(CONFIG_PIN2)) {
-            current_time = millis();
+        if (validGpio(CONFIG_PIN2) && !digitalRead(CONFIG_PIN2)) {
+          current_time = millis();
 
-            if (Plugin_109_buttons[1] + 300 < current_time) {
-              Plugin_109_buttons[1] = current_time;
+          if (Plugin_109_buttons[1] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
+            Plugin_109_buttons[1] = current_time;
 
-              switch (int(UserVar[event->BaseVarIndex + 2])) {
-                case 0: { // off mode, no func
-                  break;
-                }
-                case 1: { // auto mode, setpoint inc
-                  P109_setSetpoint(F("+0.5"));
-                  break;
-                }
-                case 2: { // manual on mode, timer dec
-                  UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] + 300;
+            switch (int(UserVar[event->BaseVarIndex + 2])) {
+              case 0: { // off mode, no func
+                break;
+              }
+              case 1: { // auto mode, setpoint inc
+                P109_setSetpoint(F("+0.5"));
+                break;
+              }
+              case 2: { // manual on mode, timer dec
+                UserVar[event->BaseVarIndex + 3] = UserVar[event->BaseVarIndex + 3] + P109_BUTTON_DEBOUNCE_TIME_MS;
 
-                  if (UserVar[event->BaseVarIndex + 3] > 5400) {
-                    UserVar[event->BaseVarIndex + 3] = 60;
-                  }
-                  Plugin_109_prev_timeout = 32768;
-                  Plugin_109_changed      = 1;
-                  break;
+                if (UserVar[event->BaseVarIndex + 3] > 5400) {
+                  UserVar[event->BaseVarIndex + 3] = 60;
                 }
+                Plugin_109_prev_timeout = P109_TIMEOUT_STATE_UNSET;
+                Plugin_109_changed      = 1;
+                break;
               }
             }
           }
         }
 
-        if (validGpio(CONFIG_PIN3)) {
-          if (!digitalRead(CONFIG_PIN3)) {
-            current_time = millis();
+        if (validGpio(CONFIG_PIN3) && !digitalRead(CONFIG_PIN3)) {
+          current_time = millis();
 
-            if (Plugin_109_buttons[2] + 300 < current_time) {
-              Plugin_109_buttons[2] = current_time;
+          if (Plugin_109_buttons[2] + P109_BUTTON_DEBOUNCE_TIME_MS < current_time) {
+            Plugin_109_buttons[2] = current_time;
 
-              switch (int(UserVar[event->BaseVarIndex + 2])) {
-                case 0: { // off mode, next
-                  P109_setMode(F("a"), F("0"));
-                  break;
-                }
-                case 1: { // auto mode, next
-                  P109_setMode(F("m"), F("5"));
-                  break;
-                }
-                case 2: { // manual on mode, next
-                  P109_setMode(F("x"), F("0"));
-                  break;
-                }
+            switch (int(UserVar[event->BaseVarIndex + 2])) {
+              case 0: { // off mode, next
+                P109_setMode(F("a"), F("0"));
+                break;
+              }
+              case 1: { // auto mode, next
+                P109_setMode(F("m"), F("5"));
+                break;
+              }
+              case 2: { // manual on mode, next
+                P109_setMode(F("x"), F("0"));
+                break;
               }
             }
           }
@@ -483,23 +490,22 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
           Plugin_109_changed    = 0;
         }
 
-        if (Plugin_109_saveneeded == 1) {
-          if ((Plugin_109_lastsavetime + 30000) < millis()) {
-            Plugin_109_saveneeded   = 0;
-            Plugin_109_lastsavetime = millis();
-            fs::File f = tryOpenFile(F("thermo.dat"), F("w"));
+        if ((Plugin_109_saveneeded == 1) && ((Plugin_109_lastsavetime + 30000) < millis())) {
+          Plugin_109_saveneeded   = 0;
+          Plugin_109_lastsavetime = millis();
+          fs::File f = tryOpenFile(F("thermo.dat"), F("w"));
 
-            if (f) {
-              f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
-              f.close();
-              flashCount();
-            }
-            addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
+          if (f) {
+            f.write(reinterpret_cast<const uint8_t *>(&UserVar[event->BaseVarIndex]), 16);
+            f.close();
+            flashCount();
           }
+          addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
         }
         success = true;
+
+        break;
       }
-      break;
     }
 
     case PLUGIN_READ:
@@ -513,15 +519,17 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
           String atempstr  = parseTemplate(atempstr2, 20);
           atempstr.trim();
 
-          if ((atempstr.length() > 0) && (Plugin_109_prev_temp != 99)) { // do not switch until the first temperature data arrives
+          if ((atempstr.length() > 0) &&
+              (Plugin_109_prev_temp != P109_TEMP_STATE_UNSET)) { // do not switch until the first temperature data arrives
             float atemp = atempstr.toFloat();
 
-            if (atemp != 0.0f) {
-              if ((UserVar[event->BaseVarIndex] > atemp) && (UserVar[event->BaseVarIndex + 1] < 1)) {
+            if (!essentiallyEqual(atemp, 0.0f)) {
+              if (definitelyGreaterThan(UserVar[event->BaseVarIndex], atemp) &&
+                  (UserVar[event->BaseVarIndex + 1] < 1)) {
                 P109_setHeater(F("1"));
                 Plugin_109_changed = 1;
-              } else if ((((static_cast<float>(atemp) - (PCONFIG_FLOAT(0))) >=
-                           UserVar[event->BaseVarIndex])) && (UserVar[event->BaseVarIndex + 1] > 0)) {
+              } else if (!definitelyLessThan(UserVar[event->BaseVarIndex], atemp - PCONFIG_FLOAT(0)) &&
+                         (UserVar[event->BaseVarIndex + 1] > 0)) {
                 P109_setHeater(F("0"));
                 Plugin_109_changed = 1;
               } else {
@@ -592,6 +600,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
   }
+
   return success;
 }
 
@@ -678,12 +687,12 @@ bool P109_display_wifibars() {
   if (newState == P109_lastWiFiState) {
     return false; // nothing to do.
   }
-  int x         = 105;
-  int y         = 0;
-  int size_x    = 15;
-  int size_y    = 10;
-  int nbars     = 5;
-  int16_t width = (size_x / nbars);
+  const int x         = 105;
+  const int y         = 0;
+  int size_x          = 15;
+  const int size_y    = 10;
+  const int nbars     = 5;
+  const int16_t width = (size_x / nbars);
 
   size_x = width * nbars - 1; // Correct for round errors.
 
@@ -725,7 +734,7 @@ void P109_display_current_temp() {
 
   if (atempstr.length() > 0) {
     float atemp = atempstr.toFloat();
-    atemp = (round(atemp * 10)) / 10.0f;
+    atemp = (round(atemp * 10.0f)) / 10.0f;
 
     if (Plugin_109_prev_temp != atemp) {
       P109_display->setColor(BLACK);
@@ -741,7 +750,7 @@ void P109_display_current_temp() {
 
 void P109_display_setpoint_temp(const uint8_t& force) {
   if (UserVar[Plugin_109_varindex + 2] == 1) {
-    float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
+    float stemp = (round(UserVar[Plugin_109_varindex] * 10.0f)) / 10.0f;
 
     if ((Plugin_109_prev_setpoint != stemp) || (force == 1)) {
       P109_display->setColor(BLACK);
@@ -759,8 +768,8 @@ void P109_display_setpoint_temp(const uint8_t& force) {
 void P109_display_timeout() {
   if (UserVar[Plugin_109_varindex + 2] == 2) {
     if (Plugin_109_prev_timeout >= (UserVar[Plugin_109_varindex + 3] + 60)) {
-      float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60;
-      String thour     = toString((static_cast<int>(timeinmin / 60)), 0);
+      float  timeinmin = UserVar[Plugin_109_varindex + 3] / 60.0f;
+      String thour     = toString((static_cast<int>(timeinmin / 60.0f)), 0);
       thour += ':';
       String thour2 = toString((static_cast<int>(timeinmin) % 60), 0);
 
@@ -782,7 +791,7 @@ void P109_display_mode() {
   if (Plugin_109_prev_mode != UserVar[Plugin_109_varindex + 2]) {
     String tmpString;
 
-    switch (int(UserVar[Plugin_109_varindex + 2])) {
+    switch (static_cast<int>(UserVar[Plugin_109_varindex + 2])) {
       case 0:
         tmpString = 'X';
         break;
@@ -821,11 +830,11 @@ void P109_display_page() {
   P109_display->fillRect(0, 15, 128, 49);
   P109_display->setColor(WHITE);
 
-  Plugin_109_prev_temp     = 99;
-  Plugin_109_prev_setpoint = 0;
-  Plugin_109_prev_heating  = 255;
-  Plugin_109_prev_mode     = 255;
-  Plugin_109_prev_timeout  = 32768;
+  Plugin_109_prev_temp     = P109_TEMP_STATE_UNSET;
+  Plugin_109_prev_setpoint = P109_SETPOINT_STATE_UNSET;
+  Plugin_109_prev_heating  = P109_HEATING_STATE_UNSET;
+  Plugin_109_prev_mode     = P109_MODE_STATE_UNSET;
+  Plugin_109_prev_timeout  = P109_TIMEOUT_STATE_UNSET;
 
   P109_display->setFont(getDialog_plain_12());
   P109_display->setTextAlignment(TEXT_ALIGN_LEFT);
@@ -849,7 +858,7 @@ void P109_display_page() {
 }
 
 void P109_setSetpoint(const String& sptemp) {
-  float stemp = (round(UserVar[Plugin_109_varindex] * 10)) / 10.0f;
+  float stemp = (round(UserVar[Plugin_109_varindex] * 10.0f)) / 10.0f;
 
   if ((sptemp.charAt(0) == '+') || (sptemp.charAt(0) == 'p'))  {
     stemp = stemp + sptemp.substring(1).toFloat();
@@ -869,7 +878,7 @@ void P109_setHeatRelay(const uint8_t& state) {
     String logstr = F("Thermo : Set Relay");
 
     logstr += relaypin;
-    logstr += F("=");
+    logstr += '=';
     logstr += state;
     addLogMove(LOG_LEVEL_INFO, logstr);
   }
@@ -881,13 +890,8 @@ void P109_setHeatRelay(const uint8_t& state) {
 }
 
 void P109_setHeater(const String& heater) {
-  if ((heater == F("1")) || (heater == F("on"))) {
-    UserVar[Plugin_109_varindex + 1] = 1;
-    P109_setHeatRelay(HIGH);
-  } else if ((heater == F("0")) || (heater == F("off"))) {
-    UserVar[Plugin_109_varindex + 1] = 0;
-    P109_setHeatRelay(LOW);
-  } else if (UserVar[Plugin_109_varindex + 1] == 0) {
+  if ((heater[0] == '1') || (heater == F("on")) ||
+      ((heater.length() == 0) && (UserVar[Plugin_109_varindex + 1] == 0))) {
     UserVar[Plugin_109_varindex + 1] = 1;
     P109_setHeatRelay(HIGH);
   } else {
@@ -898,19 +902,19 @@ void P109_setHeater(const String& heater) {
 }
 
 void P109_setMode(const String& amode, const String& atimeout) {
-  if ((amode == F("0")) || (amode == F("x"))) {
+  if ((amode[0] == '0') || (amode[0] == 'x')) {
     UserVar[Plugin_109_varindex + 2] = 0;
     P109_setHeater(F("0"));
     P109_display->setColor(BLACK);
     P109_display->fillRect(86, 35, 41, 21);
-    Plugin_109_prev_setpoint = 0;
-  } else if ((amode == F("1")) || (amode == F("a"))) {
+    Plugin_109_prev_setpoint = P109_SETPOINT_STATE_UNSET;
+  } else if ((amode[0] == '1') || (amode[0] == 'a')) {
     UserVar[Plugin_109_varindex + 2] = 1;
     P109_display_setpoint_temp(1);
-  } else if ((amode == F("2")) || (amode == F("m"))) {
+  } else if ((amode[0] == '2') || (amode[0] == 'm')) {
     UserVar[Plugin_109_varindex + 2] = 2;
     UserVar[Plugin_109_varindex + 3] = (atimeout.toFloat() * 60);
-    Plugin_109_prev_timeout          = 32768;
+    Plugin_109_prev_timeout          = P109_TIMEOUT_STATE_UNSET;
     P109_display_timeout();
     P109_setHeater(F("1"));
   } else {
