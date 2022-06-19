@@ -11,7 +11,13 @@ P109_data_struct::P109_data_struct():
 /**************************************************************************
  * Destructor
  *************************************************************************/
-P109_data_struct::~P109_data_struct() {}
+P109_data_struct::~P109_data_struct() {
+  if (nullptr != _display) {
+    _display->end();
+  }
+  delete _display;
+  _display = nullptr;
+}
 
 /**************************************************************************
  * Load ExtraTaskSettings data
@@ -174,11 +180,7 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
 bool P109_data_struct::plugin_exit(struct EventStruct *event) {
   bool success = true;
 
-  if (nullptr != _display) {
-    _display->end();
-  }
-  delete _display;
-  _display     = nullptr;
+  // TODO: Add 'clear on exit' option?
   _initialized = false;
 
   return success;
