@@ -76,7 +76,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      OLedFormController(F("use_sh1106"), PCONFIG(5) == 1 ? 2 : 1); // Selector: 1 = SSD1306, 2 = SH1106
+      OLedFormController(F("use_sh1106"), PCONFIG(5) == 1 ? 2 : 1); // backward compatible setting 0/1 to selector: 1 = SSD1306, 2 = SH1106
 
       OLedFormRotation(F("rotate"), PCONFIG(1));
 
@@ -114,7 +114,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(2) = getFormItemInt(F("ptimer"));
       PCONFIG(3) = getFormItemInt(F("size"));
       PCONFIG(4) = getFormItemInt(F("font_spacing"));
-      PCONFIG(5) = getFormItemInt(F("use_sh1106")) == 2 ? 1 : 0;
+      PCONFIG(5) = getFormItemInt(F("use_sh1106")) == 2 ? 1 : 0; // Selector: 1 = SSD1306, 2 = SH1106, to backward compatible setting
 
 
       // FIXME TD-er: This is a huge stack allocated object.
