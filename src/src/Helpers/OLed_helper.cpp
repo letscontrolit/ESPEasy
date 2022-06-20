@@ -4,6 +4,7 @@
  * Select controller type, SSD1306 or SH1106
  *************************************************************************/
 void OLedFormController(const __FlashStringHelper *id,
+                        const int                 *values,
                         uint8_t                    selectedIndex) {
   const __FlashStringHelper *controllerOptions[2] = {
     F("SSD1306 (128x64 dot controller)"),
@@ -13,7 +14,7 @@ void OLedFormController(const __FlashStringHelper *id,
     1,
     2 };
 
-  addFormSelector(F("Controller"), id, 2, controllerOptions, controllerValues, selectedIndex);
+  addFormSelector(F("Controller"), id, 2, controllerOptions, values == nullptr ? controllerValues : values, selectedIndex);
 }
 
 /**************************************************************************
