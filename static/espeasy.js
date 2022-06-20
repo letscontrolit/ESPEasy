@@ -109,7 +109,7 @@ var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommand
 
 function initCM() {
   CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword }); }
-  var rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), { lineNumbers: true, extraKeys: { 'Alt-Space': 'autocomplete' } });
+  var rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), { lineNumbers: true, extraKeys: { 'Ctrl-Space': 'autocomplete' } });
   rEdit.on('change', function () { rEdit.save() });
 }
 
@@ -172,14 +172,14 @@ function initCM() {
       var ch = stream.next();
 
       if (/\d/.test(ch)) {
-        //if (!/d|o/.test(stream.peek())) {
+        if (!/d|o/.test(stream.peek())) {
         stream.eatWhile(/\d|\./);
         if (!stream.match("dt") && !stream.match("output")) {
           if (stream.eol() || /\D/.test(stream.peek())) {
             return 'number';
           }
         }
-      }
+      }}
 
       if (/\w/.test(ch)) {
         for (const element of EXTRAWORDS) {
