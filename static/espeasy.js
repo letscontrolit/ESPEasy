@@ -172,14 +172,13 @@ function initCM() {
       var ch = stream.next();
 
       if (/\d/.test(ch)) {
-        if (!/d|o/.test(stream.peek())) {
         stream.eatWhile(/\d|\./);
-        if (!stream.match("dt") && !stream.match("output")) {
+        if (!stream.match("d") && !stream.match("output")) {
           if (stream.eol() || /\D/.test(stream.peek())) {
             return 'number';
           }
         }
-      }}
+      }
 
       if (/\w/.test(ch)) {
         for (const element of EXTRAWORDS) {
