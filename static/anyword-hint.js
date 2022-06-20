@@ -42,7 +42,10 @@
     let tempList = new Map(list.map(s => [s.toLowerCase(), s]));
     list = [...tempList.values()];
     list.sort();
-    list.push(...(extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''))));
+    //list.push(...(extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''))));
+    var list2 = extraWords.filter(el => el.toLowerCase().startsWith(curWord || ''));
+    list2.sort();
+    list = list.concat(list2);
     let tempList2 = new Map(list.map(s => [s.toLowerCase(), s]));
     list = [...tempList2.values()];
     return { list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end) };
