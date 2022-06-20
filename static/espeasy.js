@@ -8,7 +8,7 @@ var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "
   "IP", "Let", "Load", "LogEntry", "LogPortStatus", "LoopTimerSet", "LoopTimerSet_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "Publish",
   "Reboot", "Reset", "ResetFlashWriteCounter", "Save", "SendTo", "SendToHTTP", "SendToUDP", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
-  "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFiAPkey", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
+  "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAPkey", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
   "WiFiKey2", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode", "WiFi#Disconnected",
   "Event", "AsyncEvent",
   "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",];
@@ -36,7 +36,7 @@ var commonPlugins = [
   //P052
   "Sensair_SetRelay",
   //P053
-  "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset",
+  "PMSX003", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset",
   //P065
   "Play", "Vol", "Eq", "Mode", "Repeat",
   //P073
@@ -46,30 +46,30 @@ var commonPlugins = [
   //P079
   "WemosMotorShieldCMD", "LolinMotorShieldCMD",
   //P082
-  "GPS,Sleep", "GPS,Wake", "GPS#GotFix", "GPS#LostFix", "GPS#Travelled",
+  "GPS", "GPS,Sleep", "GPS,Wake", "GPS#GotFix", "GPS#LostFix", "GPS#Travelled",
   //P086
   "homieValueSet",
   //P088
   "HeatPumpir",
   //P093
-  "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode", "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane",
+  "MitsubishiHP", "MitsubishiHP,temperature", "MitsubishiHP,power", "MitsubishiHP,mode", "MitsubishiHP,fan", "MitsubishiHP,vane", "MitsubishiHP,widevane",
   //P094
   "Culreader_Write",
   //P099 & P123
-  "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Ingrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
+  "Touch", "Touch,Rot", "Touch,Flip", "Touch,Enable", "Touch,Disable", "Touch,On", "Touch,Off", "Touch,Toggle", "Touch,Setgrp", "Touch,Ingrp", "Touch,Decgrp", "Touch,Incpage", "Touch,Decpage", "Touch,Updatebutton",
   //P101
   "WakeOnLan",
   //P104
-  "DotMatrix,clear", "DotMatrix,update", "DotMatrix,size", "DotMatrix,txt", "DotMatrix,settxt", "DotMatrix,content", "DotMatrix,alignment", "DotMatrix,anim.in", "DotMatrix,anim.out", "DotMatrix,speed", "DotMatrix,pause", "DotMatrix,font", "DotMatrix,layout", "DotMatrix,inverted", "DotMatrix,specialeffect", "DotMatrix,offset", "DotMatrix,brightness", "DotMatrix,repeat", "DotMatrix,bar", "DotMatrix,bar",
+  "DotMatrix", "DotMatrix,clear", "DotMatrix,update", "DotMatrix,size", "DotMatrix,txt", "DotMatrix,settxt", "DotMatrix,content", "DotMatrix,alignment", "DotMatrix,anim.in", "DotMatrix,anim.out", "DotMatrix,speed", "DotMatrix,pause", "DotMatrix,font", "DotMatrix,layout", "DotMatrix,inverted", "DotMatrix,specialeffect", "DotMatrix,offset", "DotMatrix,brightness", "DotMatrix,repeat", "DotMatrix,bar", "DotMatrix,bar",
   //P115
   "Max1704xclearalert",
   //P116
   //P117
   "scdgetabc", "scdgetalt", "scdgettmp", "scdsetcalibration", "scdsetfrc", "scdgetinterval",
   //P124
-  "multirelay,on", "multirelay,off", "multirelay,set", "multirelay,get", "multirelay,loop",
+  "multirelay", "multirelay,on", "multirelay,off", "multirelay,set", "multirelay,get", "multirelay,loop",
   //P126
-  "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
+  "ShiftOut", "ShiftOut,Set", "ShiftOut,SetNoUpdate", "ShiftOut,Update", "ShiftOut,SetAll", "ShiftOut,SetAllNoUpdate", "ShiftOut,SetAllLow", "ShiftOut,SetChipCount", "ShiftOut,SetHexBin",
   //P127
   "cdmrst"
 ];
