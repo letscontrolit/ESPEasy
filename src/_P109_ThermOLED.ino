@@ -125,7 +125,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      OLedFormController(F("controller"), P109_CONFIG_DISPLAYTYPE);
+      OLedFormController(F("controller"), nullptr, P109_CONFIG_DISPLAYTYPE);
 
       OLedFormRotation(F("rotate"), P109_CONFIG_ROTATION);
 
