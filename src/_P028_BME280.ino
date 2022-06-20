@@ -232,7 +232,10 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
+        // PLUGIN_READ is called from `TaskRun` or on the set interval or it has re-scheduled itself to output read samples.
+        // So if there aren't any new values, it must have been called to get a new sample.
         if (P028_data->state != BMx_New_values) {
+          P028_data->startMeasurement();
           break;
         }
 

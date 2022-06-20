@@ -127,11 +127,15 @@ struct P028_data_struct : public PluginTaskData_base {
 
   const __FlashStringHelper* getDeviceName() const;
 
-  boolean                    hasHumidity() const;
+  bool                       hasHumidity() const;
 
   bool                       initialized() const;
 
   void                       setUninitialized();
+
+  bool                       measurementInProgress() const;
+
+  void                       startMeasurement();
 
   // Only perform the measurements with big interval to prevent the sensor from warming up.
   bool                       updateMeasurements(float         tempOffset,
