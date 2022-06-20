@@ -25,7 +25,7 @@ const uint8_t orconMessageTimer0CommandBytes[] =    { 34, 243, 7, 0, 82, 12, 0, 
 const uint8_t orconMessageTimer1CommandBytes[] =    { 34, 243, 7, 0, 18, 60, 1, 4, 4, 4 };      //  Timer 60 minuten @ speed 1
 const uint8_t orconMessageTimer2CommandBytes[] =    { 34, 243, 7, 0, 82, 13, 2, 4, 4, 4 };      //  Timer 13*60 minuten @ speed 2
 const uint8_t orconMessageTimer3CommandBytes[] =    { 34, 243, 7, 0, 18, 60, 3, 4, 4, 4 };      //  Timer 60 minuten @ speed 3
-const uint8_t orconMessageAutoCO2CommandBytes[] =   { 34, 243, 7, 0, 18, 60, 4, 4, 4, 4 };      //  Timer 60 minuten @ speed 3
+const uint8_t orconMessageAutoCO2CommandBytes[] =   { 34, 243, 7, 0, 18, 60, 4, 4, 4, 4 };      //  Timer 60 minuten @ speed auto
 
 const uint8_t ithoMessageRVHighCommandBytes[]   = { 49, 224, 4, 0, 0, 200 };
 const uint8_t ithoMessageHighCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
