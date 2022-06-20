@@ -186,7 +186,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       // Use number 5 to remain compatible with existing configurations,
       // but the item should be one of the first choices.
-      OLedFormController(F("p036_controller"), P036_CONTROLLER);
+      OLedFormController(F("p036_controller"), nullptr, P036_CONTROLLER);
 
       {
         const int optionValues[P36_MaxSizesCount] =
