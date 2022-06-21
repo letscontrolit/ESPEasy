@@ -62,68 +62,70 @@
 # define P028_TEMPERATURE_OFFSET  PCONFIG(2)
 # define P028_ERROR_STATE_OUTPUT  PCONFIG(3)
 
-typedef struct
-{
-  uint16_t dig_T1 = 0;
-  int16_t  dig_T2 = 0;
-  int16_t  dig_T3 = 0;
-
-  uint16_t dig_P1 = 0;
-  int16_t  dig_P2 = 0;
-  int16_t  dig_P3 = 0;
-  int16_t  dig_P4 = 0;
-  int16_t  dig_P5 = 0;
-  int16_t  dig_P6 = 0;
-  int16_t  dig_P7 = 0;
-  int16_t  dig_P8 = 0;
-  int16_t  dig_P9 = 0;
-
-  uint8_t dig_H1 = 0;
-  int16_t dig_H2 = 0;
-  uint8_t dig_H3 = 0;
-  int16_t dig_H4 = 0;
-  int16_t dig_H5 = 0;
-  int8_t  dig_H6 = 0;
-  int32_t t_fine = 0;
-} bme280_calib_data;
-
-struct bme280_uncomp_data {
-  /*! un-compensated pressure */
-  uint32_t pressure = 0;
-
-  /*! un-compensated temperature */
-  uint32_t temperature = 0;
-
-  /*! un-compensated humidity */
-  uint32_t humidity = 0;
-};
-
-enum BMx_ChipId {
-  Unknown_DEVICE        = 0,
-  BMP280_DEVICE_SAMPLE1 = 0x56,
-  BMP280_DEVICE_SAMPLE2 = 0x57,
-  BMP280_DEVICE         = 0x58,
-  BME280_DEVICE         = 0x60
-};
-
-enum BMx_state {
-  BMx_Uninitialized = 0,
-  BMx_Initialized,
-  BMx_Wait_for_samples,
-  BMx_New_values,
-  BMx_Values_read,
-  BMx_Error
-};
-
-
 struct P028_data_struct : public PluginTaskData_base {
+  struct bme280_calib_data
+  {
+    uint16_t dig_T1 = 0;
+    int16_t  dig_T2 = 0;
+    int16_t  dig_T3 = 0;
+
+    uint16_t dig_P1 = 0;
+    int16_t  dig_P2 = 0;
+    int16_t  dig_P3 = 0;
+    int16_t  dig_P4 = 0;
+    int16_t  dig_P5 = 0;
+    int16_t  dig_P6 = 0;
+    int16_t  dig_P7 = 0;
+    int16_t  dig_P8 = 0;
+    int16_t  dig_P9 = 0;
+
+    uint8_t dig_H1 = 0;
+    int16_t dig_H2 = 0;
+    uint8_t dig_H3 = 0;
+    int16_t dig_H4 = 0;
+    int16_t dig_H5 = 0;
+    int8_t  dig_H6 = 0;
+    int32_t t_fine = 0;
+  };
+
+  struct bme280_uncomp_data {
+    /*! un-compensated pressure */
+    uint32_t pressure = 0;
+
+    /*! un-compensated temperature */
+    uint32_t temperature = 0;
+
+    /*! un-compensated humidity */
+    uint32_t humidity = 0;
+  };
+
+  enum BMx_ChipId {
+    Unknown_DEVICE        = 0,
+    BMP280_DEVICE_SAMPLE1 = 0x56,
+    BMP280_DEVICE_SAMPLE2 = 0x57,
+    BMP280_DEVICE         = 0x58,
+    BME280_DEVICE         = 0x60
+  };
+
+  enum BMx_state {
+    BMx_Uninitialized = 0,
+    BMx_Initialized,
+    BMx_Wait_for_samples,
+    BMx_New_values,
+    BMx_Values_read,
+    BMx_Error
+  };
+
+
   P028_data_struct(uint8_t addr);
 
-  uint8_t                    get_config_settings() const;
+private:
 
-  uint8_t                    get_control_settings() const;
+  uint8_t get_config_settings() const;
 
-  String                     getFullDeviceName() const;
+  uint8_t get_control_settings() const;
+
+public:
 
   const __FlashStringHelper* getDeviceName() const;
 
@@ -131,15 +133,20 @@ struct P028_data_struct : public PluginTaskData_base {
 
   bool                       initialized() const;
 
-  void                       setUninitialized();
+private:
 
-  bool                       measurementInProgress() const;
+  void setUninitialized();
 
-  void                       startMeasurement();
+  bool measurementInProgress() const;
 
-  // Only perform the measurements with big interval to prevent the sensor from warming up.
-  bool                       updateMeasurements(float         tempOffset,
-                                                unsigned long task_index);
+public:
+
+  void startMeasurement();
+
+  bool updateMeasurements(float         tempOffset,
+                          unsigned long task_index);
+
+private:
 
   // **************************************************************************/
   // Check BME280 presence
@@ -151,6 +158,8 @@ struct P028_data_struct : public PluginTaskData_base {
   // **************************************************************************/
   bool begin();
 
+private:
+
   // **************************************************************************/
   // Reads the factory-set coefficients
   // **************************************************************************/
@@ -160,30 +169,40 @@ struct P028_data_struct : public PluginTaskData_base {
 
   // **************************************************************************/
   // Read temperature
+  // Needs to be processed first as it updates calib data
   // **************************************************************************/
   float readTemperature();
 
   // **************************************************************************/
   // Read pressure
   // **************************************************************************/
-  float readPressure();
+  float readPressure() const;
 
   // **************************************************************************/
   // Read humidity
   // **************************************************************************/
-  float readHumidity();
+  float readHumidity() const;
 
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
-  float              last_hum_val      = 0.0f;
-  float              last_press_val    = 0.0f;
-  float              last_temp_val     = 0.0f;
-  float              last_dew_temp_val = 0.0f;
-  unsigned long      last_measurement  = 0;
-  BMx_ChipId         sensorID          = Unknown_DEVICE;
-  uint8_t            i2cAddress        = 0;
-  unsigned long      moment_next_step  = 0;
-  BMx_state          state             = BMx_Uninitialized;
+
+public:
+
+  float last_hum_val      = 0.0f;
+  float last_press_val    = 0.0f;
+  float last_temp_val     = 0.0f;
+  float last_dew_temp_val = 0.0f;
+
+private:
+
+  unsigned long last_measurement = 0;
+  unsigned long moment_next_step = 0;
+  uint8_t       i2cAddress       = 0;
+
+public:
+
+  BMx_state  state    = BMx_Uninitialized;
+  BMx_ChipId sensorID = Unknown_DEVICE;
 };
 
 #endif // ifdef USES_P028

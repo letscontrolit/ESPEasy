@@ -126,9 +126,9 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        if (P028_data->sensorID != Unknown_DEVICE) {
+        if (P028_data->sensorID != P028_data_struct::Unknown_DEVICE) {
           String detectedString = F("Detected: ");
-          detectedString += P028_data->getFullDeviceName();
+          detectedString += P028_data->getDeviceName();
           addUnit(detectedString);
         }
       }
@@ -234,12 +234,12 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P028_data) {
         // PLUGIN_READ is called from `TaskRun` or on the set interval or it has re-scheduled itself to output read samples.
         // So if there aren't any new values, it must have been called to get a new sample.
-        if (P028_data->state != BMx_New_values) {
+        if (P028_data->state != P028_data_struct::BMx_New_values) {
           P028_data->startMeasurement();
           break;
         }
 
-        P028_data->state = BMx_Values_read;
+        P028_data->state = P028_data_struct::BMx_Values_read;
 
         if (!P028_data->hasHumidity()) {
           // Patch the sensor type to output only the measured values.
