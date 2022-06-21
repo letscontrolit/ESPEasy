@@ -117,7 +117,8 @@ struct P028_data_struct : public PluginTaskData_base {
   };
 
 
-  P028_data_struct(uint8_t addr);
+  P028_data_struct(uint8_t addr,
+                   float   tempOffset);
 
 private:
 
@@ -143,8 +144,7 @@ public:
 
   void startMeasurement();
 
-  bool updateMeasurements(float         tempOffset,
-                          unsigned long task_index);
+  bool updateMeasurements(unsigned long task_index);
 
 private:
 
@@ -183,8 +183,13 @@ private:
   // **************************************************************************/
   float readHumidity() const;
 
+  const uint8_t i2cAddress  = 0;
+  const float   temp_offset = 0.0f;
+
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
+
+  unsigned long last_measurement = 0;
 
 public:
 
@@ -193,16 +198,9 @@ public:
   float last_temp_val     = 0.0f;
   float last_dew_temp_val = 0.0f;
 
-private:
-
-  unsigned long last_measurement = 0;
-  unsigned long moment_next_step = 0;
-  uint8_t       i2cAddress       = 0;
-
-public:
-
-  BMx_state  state    = BMx_Uninitialized;
-  BMx_ChipId sensorID = Unknown_DEVICE;
+  BMx_state  state                = BMx_Uninitialized;
+  BMx_ChipId sensorID             = Unknown_DEVICE;
+  bool       lastMeasurementError = false; // Keep track of measurement errors
 };
 
 #endif // ifdef USES_P028

@@ -9,8 +9,8 @@
 // 1 second = 63% of the time needed to perform a measurement.
 # define P028_MEASUREMENT_TIMEOUT 1.587f
 
-P028_data_struct::P028_data_struct(uint8_t addr) :
-  i2cAddress(addr) {}
+P028_data_struct::P028_data_struct(uint8_t addr, float tempOffset) :
+  i2cAddress(addr), temp_offset(tempOffset) {}
 
 
 uint8_t P028_data_struct::get_config_settings() const {
@@ -71,11 +71,13 @@ void P028_data_struct::startMeasurement() {
     I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROL, get_control_settings());
     state            = BMx_Wait_for_samples;
     last_measurement = millis();
+  } else {
+    lastMeasurementError = true;
   }
 }
 
 // Only perform the measurements with big interval to prevent the sensor from warming up.
-bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_index) {
+bool P028_data_struct::updateMeasurements(unsigned long task_index) {
   if ((state != BMx_Wait_for_samples) || measurementInProgress()) {
     // Nothing to do in processing the measurement
     return false;
@@ -88,6 +90,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   // Set to sleep mode again to prevent the sensor from heating up.
   I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROL, 0x00);
 
+  lastMeasurementError = false;
   state          = BMx_New_values;
   last_temp_val  = readTemperature();
   last_press_val = readPressure();
@@ -108,19 +111,19 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
   if (hasHumidity()) {
     // Apply half of the temp offset, to correct the dew point offset.
     // The sensor is warmer than the surrounding air, which has effect on the perceived humidity.
-    last_dew_temp_val = compute_dew_point_temp(last_temp_val + (tempOffset / 2.0f), last_hum_val);
+    last_dew_temp_val = compute_dew_point_temp(last_temp_val + (temp_offset / 2.0f), last_hum_val);
   } else {
     // No humidity measurement, thus set dew point equal to air temperature.
     last_dew_temp_val = last_temp_val;
   }
 
-  if (!approximatelyEqual(tempOffset, 0.0f)) {
+  if (!approximatelyEqual(temp_offset, 0.0f)) {
     # ifndef LIMIT_BUILD_SIZE
 
     // There is some offset to apply.
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log += F(" Apply temp offset ");
-      log += tempOffset;
+      log += temp_offset;
       log += 'C';
     }
     # endif // ifndef LIMIT_BUILD_SIZE
@@ -133,7 +136,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
         log += last_hum_val;
       }
       # endif // ifndef LIMIT_BUILD_SIZE
-      last_hum_val = compute_humidity_from_dewpoint(last_temp_val + tempOffset, last_dew_temp_val);
+      last_hum_val = compute_humidity_from_dewpoint(last_temp_val + temp_offset, last_dew_temp_val);
 
       # ifndef LIMIT_BUILD_SIZE
 
@@ -154,7 +157,7 @@ bool P028_data_struct::updateMeasurements(float tempOffset, unsigned long task_i
       log += last_temp_val;
     }
 # endif // ifndef LIMIT_BUILD_SIZE
-    last_temp_val = last_temp_val + tempOffset;
+    last_temp_val = last_temp_val + temp_offset;
 
 # ifndef LIMIT_BUILD_SIZE
 

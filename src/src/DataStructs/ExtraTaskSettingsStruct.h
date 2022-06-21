@@ -32,6 +32,15 @@ struct ExtraTaskSettingsStruct
 
   static bool validCharForNames(char character);
 
+  void        setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue);
+  void        setIgnoreRangeCheck(taskVarIndex_t taskVarIndex);
+
+  bool        ignoreRangeCheck(taskVarIndex_t taskVarIndex) const;
+
+  float       checkAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const;
+
+  bool        valueInAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const;
+
   taskIndex_t TaskIndex; // Always < TASKS_MAX or INVALID_TASK_INDEX
   char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];

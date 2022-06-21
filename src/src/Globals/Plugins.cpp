@@ -260,6 +260,9 @@ void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) 
   }
 }
 
+void queueTaskEvent(const __FlashStringHelper * eventName, taskIndex_t taskIndex, int value1) {
+  queueTaskEvent(String(eventName), taskIndex, value1);
+}
 
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
@@ -599,12 +602,26 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
-        if (Function == PLUGIN_READ &&
-            (retval ||
-             (Device[DeviceIndex].ErrorStateValues && // Handle ErrorStateValues
-              Plugin_ptr[DeviceIndex](PLUGIN_GET_ERROR_VALUE_STATE, event, str)))) {
-          saveUserVarToRTC();
-          retval = true; // Alternative success
+        if (Function == PLUGIN_READ) {
+          if (!retval) {
+            if (Device[DeviceIndex].ErrorStateValues) {
+              // Handle ErrorStateValues
+              String errorStr;
+              if (Plugin_ptr[DeviceIndex](PLUGIN_READ_ERROR_OCCURED, event, errorStr))
+              {
+                // Apparently the last read call resulted in an error
+                // Send event
+                if (errorStr.length() > 0) {
+                  queueTaskEvent(errorStr, event->TaskIndex, retval);
+                } else {
+                  queueTaskEvent(F("TaskError"), event->TaskIndex, retval);
+                }
+                // Still need to send data telling there was an error
+                retval = true;
+              }
+            }
+          }
+          if (retval) saveUserVarToRTC();
         }
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
@@ -680,12 +697,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
           event->sensorType = Device[DeviceIndex].VType;
-        }
-        if ((Function == PLUGIN_WEBFORM_SAVE) &&
-            Device[DeviceIndex].ErrorStateValues) { // Only if plugin supports ErrorStateValues
-          if (Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str)) { // Initialize value range(s)
-            SaveTaskSettings(event->TaskIndex); // Let's save that too
-          }
         }
 
         START_TIMER;

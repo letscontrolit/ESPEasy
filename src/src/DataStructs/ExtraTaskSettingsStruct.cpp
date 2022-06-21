@@ -14,8 +14,7 @@ void ExtraTaskSettingsStruct::clear() {
     TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
-    TaskDeviceMinValue[i]   = 0.0f;
-    TaskDeviceMaxValue[i]   = 0.0f;
+    setIgnoreRangeCheck(i);
     TaskDeviceErrorValue[i] = 0.0f;
   }
 
@@ -52,8 +51,7 @@ void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
     TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
-    TaskDeviceMinValue[i]   = 0.0f;
-    TaskDeviceMaxValue[i]   = 0.0f;
+    setIgnoreRangeCheck(i);
     TaskDeviceErrorValue[i] = 0.0f;
   }
 }
@@ -106,4 +104,58 @@ bool ExtraTaskSettingsStruct::validCharForNames(char c) {
     return false;
   }
   return true;
+}
+
+void ExtraTaskSettingsStruct::setAllowedRange(taskVarIndex_t taskVarIndex, const float& minValue, const float& maxValue)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    if (minValue > maxValue) {
+      TaskDeviceMinValue[taskVarIndex] = maxValue;
+      TaskDeviceMaxValue[taskVarIndex] = minValue;
+    } else {
+      TaskDeviceMinValue[taskVarIndex] = minValue;
+      TaskDeviceMaxValue[taskVarIndex] = maxValue;
+    }
+  }
+}
+
+void ExtraTaskSettingsStruct::setIgnoreRangeCheck(taskVarIndex_t taskVarIndex)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    // Clear range to indicate no range check should be done.
+    TaskDeviceMinValue[taskVarIndex] = 0.0f;
+    TaskDeviceMaxValue[taskVarIndex] = 0.0f;
+  }
+}
+
+bool  ExtraTaskSettingsStruct::ignoreRangeCheck(taskVarIndex_t taskVarIndex) const
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    return essentiallyEqual(TaskDeviceMinValue[taskVarIndex], TaskDeviceMaxValue[taskVarIndex]);
+  }
+  return true;
+}
+
+bool ExtraTaskSettingsStruct::valueInAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const 
+{
+  if (ignoreRangeCheck(taskVarIndex)) return true;
+  if (validTaskVarIndex(taskVarIndex)) {
+    return (definitelyLessThan(value, TaskDeviceMaxValue[taskVarIndex]) ||
+            definitelyGreaterThan(value, TaskDeviceMinValue[taskVarIndex]));
+  }
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_ERROR, F("Programming error: invalid taskVarIndex"));
+  #endif
+  return false;
+}
+
+
+float ExtraTaskSettingsStruct::checkAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const
+{
+  if (!valueInAllowedRange(taskVarIndex, value)) {
+    if (validTaskVarIndex(taskVarIndex)) {
+      return TaskDeviceErrorValue[taskVarIndex];
+    }
+  }
+  return value;
 }
