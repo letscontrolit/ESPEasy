@@ -57,11 +57,11 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT_VALUE_RANGES:
     {
       // Min/Max values obtained from the BMP280/BME280 datasheets (both have equal ranges)
-      ExtraTaskSettings.setAllowedRange(0, -40.0f,   85.0f); // Temperature min/max
-      ExtraTaskSettings.setAllowedRange(1,   0.0f,  100.0f); // Humidity min/max
+      ExtraTaskSettings.setAllowedRange(0, -40.0f, 85.0f);   // Temperature min/max
+      ExtraTaskSettings.setAllowedRange(1, 0.0f,   100.0f);  // Humidity min/max
       ExtraTaskSettings.setAllowedRange(2, 300.0f, 1100.0f); // Barometric Pressure min/max
 
-      switch (P028_ERROR_STATE_OUTPUT) {                // Only temperature error is configurable
+      switch (P028_ERROR_STATE_OUTPUT) {                     // Only temperature error is configurable
         case P028_ERROR_IGNORE:
           ExtraTaskSettings.setIgnoreRangeCheck(0);
           break;
@@ -96,7 +96,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
-      initPluginTaskData(event->TaskIndex, 
+      initPluginTaskData(event->TaskIndex,
                          new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS, tempOffset));
       P028_data_struct *P028_data =
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -196,17 +196,13 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     {
       // Called if PLUGIN_READ returns false
       // Function returns "true" when last measurement was an error.
-      if (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE) {
-        P028_data_struct *P028_data =
-          static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P028_data_struct *P028_data =
+        static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if (nullptr != P028_data) {
-          if (P028_data->lastMeasurementError) {
-            success = true; // "success" may be a confusing name here
-            for (uint8_t i = 0; i < 3; i++) {
-              UserVar[event->BaseVarIndex + i] = ExtraTaskSettings.TaskDeviceErrorValue[i];
-            }
-          }
+      if (nullptr != P028_data) {
+        if (P028_data->lastMeasurementError) {
+          success = true; // "success" may be a confusing name here
+          string = F("Sensor Not Found");
         }
       }
       break;
@@ -245,56 +241,65 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         // So if there aren't any new values, it must have been called to get a new sample.
         if (P028_data->state != P028_data_struct::BMx_New_values) {
           P028_data->startMeasurement();
-          break;
-        }
 
-        P028_data->state = P028_data_struct::BMx_Values_read;
+          if (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE) {
+            if (P028_data->lastMeasurementError) {
+              success = true; // "success" may be a confusing name here
 
-        if (!P028_data->hasHumidity()) {
-          // Patch the sensor type to output only the measured values.
-          event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
-        }
-        UserVar[event->BaseVarIndex]     = ExtraTaskSettings.checkAllowedRange(0, P028_data->last_temp_val);
-        UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
-        const int elev = P028_ALTITUDE;
-
-        if (elev != 0) {
-          UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
+              for (uint8_t i = 0; i < 3; i++) {
+                UserVar[event->BaseVarIndex + i] = ExtraTaskSettings.TaskDeviceErrorValue[i];
+              }
+            }
+          }
         } else {
-          UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
-        }
+          P028_data->state = P028_data_struct::BMx_Values_read;
+
+          if (!P028_data->hasHumidity()) {
+            // Patch the sensor type to output only the measured values.
+            event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
+          }
+          UserVar[event->BaseVarIndex]     = ExtraTaskSettings.checkAllowedRange(0, P028_data->last_temp_val);
+          UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
+          const int elev = P028_ALTITUDE;
+
+          if (elev != 0) {
+            UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
+          } else {
+            UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
+          }
 
         # ifndef LIMIT_BUILD_SIZE
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
 
-          if (log.reserve(40)) { // Prevent re-allocation
-            log  = P028_data->getDeviceName();
-            log += F(" : Address: 0x");
-            log += String(P028_I2C_ADDRESS, HEX);
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            // addLogMove does also clear the string.
-            log  = P028_data->getDeviceName();
-            log += F(" : Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            if (P028_data->hasHumidity()) {
+            if (log.reserve(40)) { // Prevent re-allocation
               log  = P028_data->getDeviceName();
-              log += F(" : Humidity: ");
-              log += formatUserVarNoCheck(event->TaskIndex, 1);
+              log += F(" : Address: 0x");
+              log += String(P028_I2C_ADDRESS, HEX);
+              addLogMove(LOG_LEVEL_INFO, log);
+
+              // addLogMove does also clear the string.
+              log  = P028_data->getDeviceName();
+              log += F(" : Temperature: ");
+              log += formatUserVarNoCheck(event->TaskIndex, 0);
+              addLogMove(LOG_LEVEL_INFO, log);
+
+              if (P028_data->hasHumidity()) {
+                log  = P028_data->getDeviceName();
+                log += F(" : Humidity: ");
+                log += formatUserVarNoCheck(event->TaskIndex, 1);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              log  = P028_data->getDeviceName();
+              log += F(" : Barometric Pressure: ");
+              log += formatUserVarNoCheck(event->TaskIndex, 2);
               addLogMove(LOG_LEVEL_INFO, log);
             }
-            log  = P028_data->getDeviceName();
-            log += F(" : Barometric Pressure: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 2);
-            addLogMove(LOG_LEVEL_INFO, log);
           }
-        }
         # endif // ifndef LIMIT_BUILD_SIZE
-        success = true;
+          success = true;
+        }
       }
       break;
     }

@@ -56,7 +56,8 @@
           LogEntry,'TaskError task: %eventvalue1% result: %eventvalue2%'
         endon
 
-   The first event value is the task index, the second event value is the return value of the ``PLUGIN_READ`` call.
+   The first event value is the task index, the second event value is a plugin specific indicator of the error that occured.
+   N.B. The second event value can be a string.
    "
    "
    ``System#Wake``
