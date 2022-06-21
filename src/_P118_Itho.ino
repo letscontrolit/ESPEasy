@@ -22,6 +22,7 @@
 //								   - Remove unused code, reformat source using Uncrustify
 //			tonhuisman, 28-12-2021 - Move interrupt handling to Plugin_data_struct, lifting the limit on nr. of plugins
 //      tonhuisman, 03-01-2022 - Review source after structural-crash report, fix interrupt handler
+//      tonhuisman, 21-06-2022 - Minor improvements
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 

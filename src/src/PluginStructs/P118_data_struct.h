@@ -44,6 +44,9 @@ public:
   bool plugin_read(struct EventStruct *event);
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
+
+private:
+
   void ITHOcheck();
   void PublishData(struct EventStruct *event);
   void PluginWriteLog(const String& command);
@@ -51,8 +54,6 @@ public:
   bool isInitialized() {
     return PLUGIN_118_rf != nullptr;
   }
-
-private:
 
   IthoCC1101 *PLUGIN_118_rf = nullptr;
 

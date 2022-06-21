@@ -12,10 +12,8 @@ P118_data_struct::P118_data_struct(uint8_t logData)
 // Destructor
 // **************************************************************************/
 P118_data_struct::~P118_data_struct() {
-  if (isInitialized()) {
-    delete PLUGIN_118_rf;
-    PLUGIN_118_rf = nullptr;
-  }
+  delete PLUGIN_118_rf;
+  PLUGIN_118_rf = nullptr;
 }
 
 bool P118_data_struct::plugin_init(struct EventStruct *event) {
@@ -29,9 +27,8 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
   PLUGIN_118_rf = new (std::nothrow) IthoCC1101(PIN(1));
 
   if (nullptr != PLUGIN_118_rf) {
-    PLUGIN_118_rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3); // DeviceID used to send commands, can also be
-                                                                                            // changed on the fly for
-    // multi itho control, 10,87,81 corresponds with old library
+    // DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
+    PLUGIN_118_rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
     PLUGIN_118_rf->init();
 
     attachInterruptArg(digitalPinToInterrupt(Plugin_118_IRQ_pin),
@@ -50,9 +47,6 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
 bool P118_data_struct::plugin_exit(struct EventStruct *event) {
   // remove interupt when plugin is removed
   detachInterrupt(digitalPinToInterrupt(Plugin_118_IRQ_pin));
-
-  delete PLUGIN_118_rf;
-  PLUGIN_118_rf = nullptr;
 
   return true;
 }
@@ -355,6 +349,8 @@ void P118_data_struct::PublishData(struct EventStruct *event) {
   UserVar[event->BaseVarIndex + 1] = PLUGIN_118_Timer;
   UserVar[event->BaseVarIndex + 2] = PLUGIN_118_LastIDindex;
 
+  # ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("State: ");
 
@@ -369,6 +365,7 @@ void P118_data_struct::PublishData(struct EventStruct *event) {
     log += UserVar[event->BaseVarIndex + 2];
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 void P118_data_struct::PluginWriteLog(const String& command) {
