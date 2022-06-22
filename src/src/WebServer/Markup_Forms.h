@@ -377,7 +377,7 @@ float getFormItemFloat(const LabelType::Enum& id);
 
 bool  isFormItem(const String& id);
 
-void  copyFormPassword(const String& id,
+void  copyFormPassword(const __FlashStringHelper * id,
                        char         *pPassword,
                        int           maxlength);
 

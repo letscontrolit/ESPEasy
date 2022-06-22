@@ -748,7 +748,7 @@ bool isFormItem(const String& id)
   return !webArg(id).isEmpty();
 }
 
-void copyFormPassword(const String& id, char *pPassword, int maxlength)
+void copyFormPassword(const __FlashStringHelper * id, char *pPassword, int maxlength)
 {
   String password;
 
