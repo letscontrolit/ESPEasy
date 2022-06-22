@@ -11,6 +11,9 @@ on:
   pull_request:
     branches: [mega]
 
+permissions:
+  contents: read
+
 jobs:
   documentation:
     runs-on: ubuntu-20.04
