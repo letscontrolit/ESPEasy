@@ -179,6 +179,10 @@ bool getFormPassword(const String& id,
 // Add a IP Box form
 // ********************************************************************************
 
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const uint8_t ip[4]);
+
 void addFormIPBox(const String& label,
                   const String& id,
                   const uint8_t ip[4]);
@@ -191,21 +195,28 @@ void addFormMACBox(const String& label, const String& id, const MAC_address mac)
 // ********************************************************************************
 // Add a IP Access Control select dropdown list
 // ********************************************************************************
-void addFormIPaccessControlSelect(const String& label,
-                                  const String& id,
+void addFormIPaccessControlSelect(const __FlashStringHelper * label,
+                                  const __FlashStringHelper * id,
                                   int           choice);
 
 // ********************************************************************************
 // Add a selector form
 // ********************************************************************************
 
+/*
 void addFormPinSelect(const String& label,
                       const String& id,
                       int           choice);
 void addFormPinSelect(const String& label,
                       const __FlashStringHelper * id,
                       int           choice);
+void addFormPinSelect(const __FlashStringHelper * label,
+                      const __FlashStringHelper * id,
+                      int           choice);
+*/
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
+
+void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label,
                          const String& id,

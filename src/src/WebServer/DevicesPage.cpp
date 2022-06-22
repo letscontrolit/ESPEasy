@@ -1076,7 +1076,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(3)) {
-      addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
+      addFormPinSelect(PinSelectPurpose::Generic, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
     }
   }
 }
