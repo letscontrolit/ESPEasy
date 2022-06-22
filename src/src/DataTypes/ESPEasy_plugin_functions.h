@@ -49,7 +49,7 @@
 #define PLUGIN_GET_DISPLAY_PARAMETERS      41 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
 #define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 42 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
 #define PLUGIN_INIT_VALUE_RANGES           43 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_READ_ERROR_OCCURED          44 // Function returns "true" when last measurement was an error., called when PLUGIN_READ returns false, must also set error values into UserVar[]
+#define PLUGIN_READ_ERROR_OCCURED          44 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
 
 
 
