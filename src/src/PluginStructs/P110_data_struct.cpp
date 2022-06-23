@@ -46,9 +46,9 @@ bool P110_data_struct::plugin_fifty_per_second() {
   if (initPhase == P110_initPhases::InitDelay) {
     timeToWait -= 20; // milliseconds
 
-    String log = F("VL53L0X: remaining wait: ");
-    log += timeToWait;
-    addLogMove(LOG_LEVEL_INFO, log);
+    // String log = F("VL53L0X: remaining wait: ");
+    // log += timeToWait;
+    // addLogMove(LOG_LEVEL_INFO, log);
 
     if (timeToWait <= 0) {
       timeToWait = 0;
