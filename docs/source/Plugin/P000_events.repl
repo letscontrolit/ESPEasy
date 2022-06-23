@@ -43,6 +43,23 @@
 
    "
    "
+   ``TaskError#<taskname>``
+   Added: 2022-06-21
+   Triggered when a tasks ``PLUGIN_READ`` caused an error.
+   The reason to trigger this error is plugin specific and this is not implemented for all plugins.
+   For example, the BMx280 plugin will trigger this event when it was unable to start a measurement, for example when the sensor does not reply or its reply is unexpected.
+   ","
+
+   .. code-block:: none
+
+        on TaskError#bme do
+          LogEntry,'TaskError task: %eventvalue1% result: %eventvalue2%'
+        endon
+
+   The first event value is the task index, the second event value is a plugin specific indicator of the error that occured.
+   N.B. The second event value can be a string.
+   "
+   "
    ``System#Wake``
    Triggered after power on.
    ","

@@ -74,6 +74,17 @@ void addFormNumericBox(LabelType::Enum label,
                        #endif // ifdef ENABLE_TOOLTIPS
                        );
 
+void addFormNumericBox(const __FlashStringHelper * label, 
+                       const __FlashStringHelper * id, 
+                       int value, 
+                       int min = INT_MIN, 
+                       int max = INT_MAX
+                       #ifdef        ENABLE_TOOLTIPS
+                       ,
+                       const String& tooltip = EMPTY_STRING
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       );
+
 void addFormNumericBox(const String& label,
                        const String& id,
                        int           value,
@@ -84,6 +95,7 @@ void addFormNumericBox(const String& label,
                        const String& tooltip = EMPTY_STRING
                        #endif // ifdef ENABLE_TOOLTIPS
                        );
+
 
 void addFormFloatNumberBox(LabelType::Enum label,
                            float           value,
@@ -109,7 +121,19 @@ void addFormFloatNumberBox(const String& label,
                            const String& tooltip = EMPTY_STRING
                            #endif // ifdef ENABLE_TOOLTIPS
                            );
-void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min = INT_MIN, int max = INT_MAX);
+
+void addFormFloatNumberBox(const __FlashStringHelper * label,
+                           const __FlashStringHelper * id,
+                           float         value,
+                           float         min,
+                           float         max,
+                           uint8_t       nrDecimals = 6,
+                           float         stepsize   = 0.0f
+                           #ifdef ENABLE_TOOLTIPS
+                           ,
+                           const String& tooltip = EMPTY_STRING
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           );
 
 
 // ********************************************************************************
@@ -193,6 +217,10 @@ bool getFormPassword(const String& id,
 // Add a IP Box form
 // ********************************************************************************
 
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const uint8_t ip[4]);
+
 void addFormIPBox(const String& label,
                   const String& id,
                   const uint8_t ip[4]);
@@ -205,21 +233,28 @@ void addFormMACBox(const String& label, const String& id, const MAC_address mac)
 // ********************************************************************************
 // Add a IP Access Control select dropdown list
 // ********************************************************************************
-void addFormIPaccessControlSelect(const String& label,
-                                  const String& id,
+void addFormIPaccessControlSelect(const __FlashStringHelper * label,
+                                  const __FlashStringHelper * id,
                                   int           choice);
 
 // ********************************************************************************
 // Add a selector form
 // ********************************************************************************
 
+/*
 void addFormPinSelect(const String& label,
                       const String& id,
                       int           choice);
 void addFormPinSelect(const String& label,
                       const __FlashStringHelper * id,
                       int           choice);
+void addFormPinSelect(const __FlashStringHelper * label,
+                      const __FlashStringHelper * id,
+                      int           choice);
+*/
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
+
+void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice);
 
 void addFormPinSelectI2C(const String& label,
                          const String& id,
@@ -248,6 +283,7 @@ void addFormSelector(const String& label,
                      );
 
 void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
+void addFormSelector(const __FlashStringHelper * label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange = false);
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex);
 void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const String options[], const int indices[], int selectedIndex);
 
@@ -380,7 +416,7 @@ float getFormItemFloat(const LabelType::Enum& id);
 
 bool  isFormItem(const String& id);
 
-void  copyFormPassword(const String& id,
+void  copyFormPassword(const __FlashStringHelper * id,
                        char         *pPassword,
                        int           maxlength);
 

@@ -130,7 +130,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         addFormCheckBox(F("Multiple lines processing"), F("p020_multiline"), P020_HANDLE_MULTI_LINE);
       }
       addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p020_rxwait"), P020_RX_WAIT, 0, 20);
-      addFormPinSelect(F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
+      addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after init"), F("p020_resetpin"), P020_RESET_TARGET_PIN);
 
       addFormNumericBox(F("RX buffer size (bytes)"), F("p020_rx_buffer"), P020_RX_BUFFER, 256, 1024);
       # ifndef LIMIT_BUILD_SIZE

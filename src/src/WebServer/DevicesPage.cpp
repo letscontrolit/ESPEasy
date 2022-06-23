@@ -379,6 +379,10 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     }
 
     PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
+    if (Device[DeviceIndex].ErrorStateValues) { 
+      // FIXME TD-er: Must collect these from the web page.
+      Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
+    }
 
     // Make sure the task needs to reload using the new settings.
     if (!Device[DeviceIndex].ExitTaskBeforeSave) {
@@ -1074,7 +1078,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(3)) {
-      addFormPinSelect(TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
+      addFormPinSelect(PinSelectPurpose::Generic, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
     }
   }
 }
