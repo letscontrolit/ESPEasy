@@ -60,7 +60,7 @@ boolean Plugin_044(uint8_t function, struct EventStruct *event, String& string)
         serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 
         // FIXME TD-er: Why isn't this using the normal pin selection functions?
-      	addFormPinSelect(F("Reset target after boot"), F("taskdevicepin1"), P044_RESET_TARGET_PIN);
+      	addFormPinSelect(PinSelectPurpose::Generic, F("Reset target after boot"), F("taskdevicepin1"), P044_RESET_TARGET_PIN);
 
       	addFormNumericBox(F("RX Receive Timeout (mSec)"), F("p044_rxwait"), P044_RX_WAIT, 0);
 
