@@ -63,7 +63,7 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Binaries
           path: ESPEasy_${{ matrix.env }}.zip
@@ -94,7 +94,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Distribution
           path: |
