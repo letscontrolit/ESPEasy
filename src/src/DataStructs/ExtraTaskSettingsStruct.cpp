@@ -128,7 +128,7 @@ void ExtraTaskSettingsStruct::setIgnoreRangeCheck(taskVarIndex_t taskVarIndex)
   }
 }
 
-bool  ExtraTaskSettingsStruct::ignoreRangeCheck(taskVarIndex_t taskVarIndex) const
+bool ExtraTaskSettingsStruct::ignoreRangeCheck(taskVarIndex_t taskVarIndex) const
 {
   if (validTaskVarIndex(taskVarIndex)) {
     return essentiallyEqual(TaskDeviceMinValue[taskVarIndex], TaskDeviceMaxValue[taskVarIndex]);
@@ -136,19 +136,19 @@ bool  ExtraTaskSettingsStruct::ignoreRangeCheck(taskVarIndex_t taskVarIndex) con
   return true;
 }
 
-bool ExtraTaskSettingsStruct::valueInAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const 
+bool ExtraTaskSettingsStruct::valueInAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const
 {
-  if (ignoreRangeCheck(taskVarIndex)) return true;
+  if (ignoreRangeCheck(taskVarIndex)) { return true; }
+
   if (validTaskVarIndex(taskVarIndex)) {
-    return (definitelyLessThan(value, TaskDeviceMaxValue[taskVarIndex]) ||
-            definitelyGreaterThan(value, TaskDeviceMinValue[taskVarIndex]));
+    return definitelyLessThan(value, TaskDeviceMaxValue[taskVarIndex]) ||
+           definitelyGreaterThan(value, TaskDeviceMinValue[taskVarIndex]);
   }
   #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_ERROR, F("Programming error: invalid taskVarIndex"));
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
   return false;
 }
-
 
 float ExtraTaskSettingsStruct::checkAllowedRange(taskVarIndex_t taskVarIndex, const float& value) const
 {

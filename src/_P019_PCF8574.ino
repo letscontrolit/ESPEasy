@@ -345,23 +345,19 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
             }
 
             // just to simplify the reading of the code
-#define COUNTER PCONFIG(7)
-#define DC P019_DOUBLECLICK
+# define COUNTER PCONFIG(7)
+# define DC P019_DOUBLECLICK
 
             // check settings for doubleclick according to the settings
             if ((COUNTER != 0) || ((COUNTER == 0) && ((DC == 3) || ((DC == 1) && (state == 0)) || ((DC == 2) && (state == 1))))) {
               PCONFIG(7)++;
             }
-#undef DC
-#undef COUNTER
+# undef DC
+# undef COUNTER
 
             // switchstate[event->TaskIndex] = state;
-            if ((currentStatus.mode == PIN_MODE_OFFLINE) || (currentStatus.mode == PIN_MODE_UNDEFINED)) { currentStatus.mode = PIN_MODE_INPUT; //
-                                                                                                                                               // changed
-                                                                                                                                               // from
-                                                                                                                                               // offline
-                                                                                                                                               // to
-                                                                                                                                               // online
+            if ((currentStatus.mode == PIN_MODE_OFFLINE) || (currentStatus.mode == PIN_MODE_UNDEFINED)) {
+              currentStatus.mode = PIN_MODE_INPUT; // changed from offline to online
             }
             currentStatus.state = state;
 

@@ -144,7 +144,7 @@ public:
 
   void startMeasurement();
 
-  bool updateMeasurements(unsigned long task_index);
+  bool updateMeasurements(taskIndex_t task_index);
 
 private:
 

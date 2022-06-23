@@ -77,7 +77,7 @@ void P028_data_struct::startMeasurement() {
 }
 
 // Only perform the measurements with big interval to prevent the sensor from warming up.
-bool P028_data_struct::updateMeasurements(unsigned long task_index) {
+bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
   if ((state != BMx_Wait_for_samples) || measurementInProgress()) {
     // Nothing to do in processing the measurement
     return false;
@@ -91,10 +91,10 @@ bool P028_data_struct::updateMeasurements(unsigned long task_index) {
   I2C_write8_reg(i2cAddress, BMx280_REGISTER_CONTROL, 0x00);
 
   lastMeasurementError = false;
-  state          = BMx_New_values;
-  last_temp_val  = readTemperature();
-  last_press_val = readPressure();
-  last_hum_val   = readHumidity();
+  state                = BMx_New_values;
+  last_temp_val        = readTemperature();
+  last_press_val       = readPressure();
+  last_hum_val         = readHumidity();
 
 
 # ifndef LIMIT_BUILD_SIZE

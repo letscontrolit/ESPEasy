@@ -39,26 +39,26 @@
    3: safebutton counter (=0,1)
 \**************************************************/
 
-#define PLUGIN_001
-#define PLUGIN_ID_001         1
-#define PLUGIN_NAME_001       "Switch input - Switch"
-#define PLUGIN_VALUENAME1_001 "State"
+# define PLUGIN_001
+# define PLUGIN_ID_001         1
+# define PLUGIN_NAME_001       "Switch input - Switch"
+# define PLUGIN_VALUENAME1_001 "State"
 
 // Make sure the initial default is a switch (value 0)
-#define PLUGIN_001_TYPE_SWITCH                   0
-#define PLUGIN_001_TYPE_DIMMER                   3 // Due to some changes in previous versions, do not use 2.
-#define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH     0
-#define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW   1
-#define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
+# define PLUGIN_001_TYPE_SWITCH                   0
+# define PLUGIN_001_TYPE_DIMMER                   3 // Due to some changes in previous versions, do not use 2.
+# define PLUGIN_001_BUTTON_TYPE_NORMAL_SWITCH     0
+# define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_LOW   1
+# define PLUGIN_001_BUTTON_TYPE_PUSH_ACTIVE_HIGH  2
 
 
-#define P001_BOOTSTATE     PCONFIG(3)       
-#define P001_DEBOUNCE      PCONFIG_FLOAT(0) 
-#define P001_DOUBLECLICK   PCONFIG(4)       
-#define P001_DC_MAX_INT    PCONFIG_FLOAT(1) 
-#define P001_LONGPRESS     PCONFIG(5)       
-#define P001_LP_MIN_INT    PCONFIG_FLOAT(2) 
-#define P001_SAFE_BTN      PCONFIG_FLOAT(3) 
+# define P001_BOOTSTATE     PCONFIG(3)
+# define P001_DEBOUNCE      PCONFIG_FLOAT(0)
+# define P001_DOUBLECLICK   PCONFIG(4)
+# define P001_DC_MAX_INT    PCONFIG_FLOAT(1)
+# define P001_LONGPRESS     PCONFIG(5)
+# define P001_LP_MIN_INT    PCONFIG_FLOAT(2)
+# define P001_SAFE_BTN      PCONFIG_FLOAT(3)
 
 
 boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
@@ -247,25 +247,26 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-/*
-    case PLUGIN_REQUEST:
-    {
-          // String device = parseString(string, 1);
-          // String command = parseString(string, 2);
-          // String strPar1 = parseString(string, 3);
 
-          // returns pin value using syntax: [plugin#gpio#pinstate#xx]
-          if ((string.length() >= 13) && string.substring(0, 13).equalsIgnoreCase(F("gpio,pinstate")))
-          {
-            int par1;
+    /*
+        case PLUGIN_REQUEST:
+        {
+              // String device = parseString(string, 1);
+              // String command = parseString(string, 2);
+              // String strPar1 = parseString(string, 3);
 
-            if (validIntFromString(parseString(string, 3), par1)) {
-              string = digitalRead(par1);
+              // returns pin value using syntax: [plugin#gpio#pinstate#xx]
+              if ((string.length() >= 13) && string.substring(0, 13).equalsIgnoreCase(F("gpio,pinstate")))
+              {
+                int par1;
+
+                if (validIntFromString(parseString(string, 3), par1)) {
+                  string = digitalRead(par1);
+                }
+                success = true;
+              }
+              break;
             }
-            success = true;
-          }
-          break;
-        }
      */
     /*
           case PLUGIN_UNCONDITIONAL_POLL:
@@ -342,27 +343,28 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // long timerstats = millis();
 
       // Bug fixed: avoid 10xSEC in case of a non-fully configured device (no GPIO defined yet)
-      const __FlashStringHelper * monitorEventString = F("GPIO");
+      const __FlashStringHelper *monitorEventString = F("GPIO");
 
       if (validGpio(CONFIG_PIN1))
       {
-        const uint32_t   key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+        const uint32_t key = createKey(PLUGIN_ID_001, CONFIG_PIN1);
+
         // WARNING operator [],creates an entry in map if key doesn't exist:
         portStatusStruct currentStatus = globalMapPortStatus[key];
 
-        const int8_t state = GPIO_Read_Switch_State(CONFIG_PIN1,currentStatus.mode);
+        const int8_t state = GPIO_Read_Switch_State(CONFIG_PIN1, currentStatus.mode);
 
-//        if (currentStatus.mode != PIN_MODE_OUTPUT )
-//        {
+        //        if (currentStatus.mode != PIN_MODE_OUTPUT )
+        //        {
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
-          // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
-          if (round(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
-          {
-  #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
-  #endif // ifndef BUILD_NO_DEBUG
-            PCONFIG_LONG(3) = 1;
-          }
+        // QUESTION: MAYBE IT'S BETTER TO WAIT 2 CYCLES??
+        if (round(P001_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
+        {
+  # ifndef BUILD_NO_DEBUG
+          addLog(LOG_LEVEL_DEBUG, F("SW  : 1st click"));
+  # endif // ifndef BUILD_NO_DEBUG
+          PCONFIG_LONG(3) = 1;
+        }
 
         // CASE 2: not using SafeButton, or already waited 1 more 100ms cycle, so proceed.
         else if ((state != currentStatus.state) || currentStatus.forceEvent)
@@ -386,21 +388,21 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
               // reset timer for doubleclick
               PCONFIG(7) = 0;
               PCONFIG_LONG(1) = millis();
-              }
+            }
 
-              // just to simplify the reading of the code
-    #define COUNTER PCONFIG(7)
-    #define DC P001_DOUBLECLICK
+            // just to simplify the reading of the code
+    # define COUNTER PCONFIG(7)
+    # define DC P001_DOUBLECLICK
 
-              // check settings for doubleclick according to the settings
-              if ((COUNTER != 0) || ((COUNTER == 0) && ((DC == 3) || ((DC == 1) && (state == 0)) || ((DC == 2) && (state == 1))))) {
-                PCONFIG(7)++;
-              }
-    #undef DC
-    #undef COUNTER
+            // check settings for doubleclick according to the settings
+            if ((COUNTER != 0) || ((COUNTER == 0) && ((DC == 3) || ((DC == 1) && (state == 0)) || ((DC == 2) && (state == 1))))) {
+              PCONFIG(7)++;
+            }
+    # undef DC
+    # undef COUNTER
 
-              currentStatus.state = state;
-              const boolean currentOutputState = currentStatus.output;
+            currentStatus.state = state;
+            const boolean currentOutputState = currentStatus.output;
             boolean new_outputState          = currentOutputState;
 
             switch (PCONFIG(2))
@@ -420,13 +422,13 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                   new_outputState = !currentOutputState;
                 }
                 break;
-              }
+            }
 
-              // send if output needs to be changed
-              if (currentOutputState != new_outputState || currentStatus.forceEvent)
-              {
-                uint8_t output_value;
-                currentStatus.output = new_outputState;
+            // send if output needs to be changed
+            if ((currentOutputState != new_outputState) || currentStatus.forceEvent)
+            {
+              uint8_t output_value;
+              currentStatus.output = new_outputState;
               boolean sendState = new_outputState;
 
               if (Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
@@ -448,48 +450,52 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
                   // Only set type to being dimmer when setting a value else it is "switched off".
                   event->sensorType = Sensor_VType::SENSOR_TYPE_DIMMER;
                 }
-                }
-                UserVar[event->BaseVarIndex] = output_value;
-                
-                #ifndef BUILD_NO_DEBUG
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("SW  : GPIO=");
-                  log += CONFIG_PIN1;
+              }
+              UserVar[event->BaseVarIndex] = output_value;
+
+                # ifndef BUILD_NO_DEBUG
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : GPIO=");
+                log += CONFIG_PIN1;
                 log += F(" State=");
                 log += state ? '1' : '0';
                 log += output_value == 3 ? F(" Doubleclick=") : F(" Output value=");
-                  log += output_value;
-                  addLogMove(LOG_LEVEL_INFO, log);
-                }
-                #endif
-                // send task event
-                sendData(event);
-                // send monitor event
-                if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value);
-
-                // reset Userdata so it displays the correct state value in the web page
-                UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+                log += output_value;
+                addLogMove(LOG_LEVEL_INFO, log);
               }
-              PCONFIG_LONG(0) = millis();
-            }
-            // Reset forceEvent
-            currentStatus.forceEvent = 0;
+                # endif // ifndef BUILD_NO_DEBUG
 
-          savePortStatus(key, currentStatus);
+              // send task event
+              sendData(event);
+
+              // send monitor event
+              if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value); }
+
+              // reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+            }
+            PCONFIG_LONG(0) = millis();
           }
 
-          // just to simplify the reading of the code
-    #define LP P001_LONGPRESS
-    #define FIRED PCONFIG(6)
+          // Reset forceEvent
+          currentStatus.forceEvent = 0;
 
-          // CASE 3: status unchanged. Checking longpress:
-          // Check if LP is enabled and if LP has not fired yet
-          else if (!FIRED && ((LP == 3) || ((LP == 1) && (state == 0)) || ((LP == 2) && (state == 1)))) {
-    #undef LP
-    #undef FIRED
+          savePortStatus(key, currentStatus);
+        }
 
-            /**************************************************************************\
-               20181009 - @giig1967g: new longpress logic is:
+        // just to simplify the reading of the code
+    # define LP P001_LONGPRESS
+    # define FIRED PCONFIG(6)
+
+        // CASE 3: status unchanged. Checking longpress:
+        // Check if LP is enabled and if LP has not fired yet
+        else if (!FIRED && ((LP == 3) || ((LP == 1) && (state == 0)) || ((LP == 2) && (state == 1)))) {
+    # undef LP
+    # undef FIRED
+
+          /**************************************************************************\
+             20181009 - @giig1967g: new longpress logic is:
              if there is no 'state' change, check if longpress interval reached
              When reached send longpress event.
              Returned Event value = state + 10
@@ -543,79 +549,86 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
               // output_value = output_value + 10;
 
-                UserVar[event->BaseVarIndex] = output_value;
+              UserVar[event->BaseVarIndex] = output_value;
 
-                #ifndef BUILD_NO_DEBUG
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  String log = F("SW  : LongPress: GPIO= ");
-                  log += CONFIG_PIN1;
+                # ifndef BUILD_NO_DEBUG
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                String log = F("SW  : LongPress: GPIO= ");
+                log += CONFIG_PIN1;
                 log += F(" State=");
                 log += state ? '1' : '0';
                 log += F(" Output value=");
-                  log += output_value;
-                  addLogMove(LOG_LEVEL_INFO, log);
-                }
-                #endif
-                // send task event
-                sendData(event);
-                // send monitor event
-                if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value);
+                log += output_value;
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+                # endif // ifndef BUILD_NO_DEBUG
 
-                // reset Userdata so it displays the correct state value in the web page
-                UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
+              // send task event
+              sendData(event);
+
+              // send monitor event
+              if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PIN1, output_value); }
+
+              // reset Userdata so it displays the correct state value in the web page
+              UserVar[event->BaseVarIndex] = sendState ? 1 : 0;
             }
             savePortStatus(key, currentStatus);
           }
-          } else {
-            if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
-              const uint8_t SAFE_BUTTON_EVENT = 4;
-              // Reset SafeButton counter
-              PCONFIG_LONG(3) = 0;
+        } else {
+          if (PCONFIG_LONG(3) == 1) { // Safe Button detected. Send EVENT value = 4
+            const uint8_t SAFE_BUTTON_EVENT = 4;
+
+            // Reset SafeButton counter
+            PCONFIG_LONG(3) = 0;
 
             // Create EVENT with value = 4 for SafeButton false positive detection
-              const int tempUserVar = round(UserVar[event->BaseVarIndex]);
-              UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
+            const int tempUserVar = round(UserVar[event->BaseVarIndex]);
+            UserVar[event->BaseVarIndex] = SAFE_BUTTON_EVENT;
 
-              #ifndef BUILD_NO_DEBUG
-              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                String log = F("SW  : SafeButton: false positive detected. GPIO= ");
-                log += CONFIG_PIN1;
+              # ifndef BUILD_NO_DEBUG
+
+            if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+              String log = F("SW  : SafeButton: false positive detected. GPIO= ");
+              log += CONFIG_PIN1;
               log += F(" State=");
-                log += tempUserVar;
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
-              #endif
-              // send task event: DO NOT SEND TASK EVENT
-              //sendData(event);
-              // send monitor event
-              if (currentStatus.monitor) sendMonitorEvent(monitorEventString, CONFIG_PIN1, SAFE_BUTTON_EVENT);
-
-              // reset Userdata so it displays the correct state value in the web page
-              UserVar[event->BaseVarIndex] = tempUserVar;
+              log += tempUserVar;
+              addLogMove(LOG_LEVEL_INFO, log);
             }
-          }
+              # endif // ifndef BUILD_NO_DEBUG
 
-          //OUTPUT PIN
-/*
+            // send task event: DO NOT SEND TASK EVENT
+            // sendData(event);
+            // send monitor event
+            if (currentStatus.monitor) { sendMonitorEvent(monitorEventString, CONFIG_PIN1, SAFE_BUTTON_EVENT); }
+
+            // reset Userdata so it displays the correct state value in the web page
+            UserVar[event->BaseVarIndex] = tempUserVar;
+          }
         }
 
-                else if ((state != currentStatus.state) || currentStatus.forceEvent) {
-                  // Reset forceEvent
-                  currentStatus.forceEvent = 0;
-                  currentStatus.state = state;
-                  UserVar[event->BaseVarIndex] = state;
+        // OUTPUT PIN
 
-                  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    String log = F("SW  : GPIO=");
-                    log += CONFIG_PIN1;
-                    log += F(" State=");
-                    log += state ? '1' : '0';
-                    addLog(LOG_LEVEL_INFO, log);
-                  }
-                  sendData(event);
-                  savePortStatus(key, currentStatus);
-
+        /*
                 }
+
+                        else if ((state != currentStatus.state) || currentStatus.forceEvent) {
+                          // Reset forceEvent
+                          currentStatus.forceEvent = 0;
+                          currentStatus.state = state;
+                          UserVar[event->BaseVarIndex] = state;
+
+                          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                            String log = F("SW  : GPIO=");
+                            log += CONFIG_PIN1;
+                            log += F(" State=");
+                            log += state ? '1' : '0';
+                            addLog(LOG_LEVEL_INFO, log);
+                          }
+                          sendData(event);
+                          savePortStatus(key, currentStatus);
+
+                        }
          */
       }
       success = true;
@@ -632,13 +645,14 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     {
       // We do not actually read the pin state as this is already done 10x/second
       // Instead we just send the last known state stored in Uservar
-      #ifndef BUILD_NO_DEBUG
+      # ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("SW   : State ");
         log += UserVar[event->BaseVarIndex];
         addLogMove(LOG_LEVEL_INFO, log);
       }
-      #endif
+      # endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }
@@ -652,7 +666,8 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       if (command == F("inputswitchstate")) {
         success = true;
-        //@giig1967g deprecated since 2019-11-26
+
+        // @giig1967g deprecated since 2019-11-26
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log = F("inputswitchstate is deprecated");
           log += string;
@@ -687,8 +702,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
       tempStatus.state = event->Par2;
       tempStatus.mode  = PIN_MODE_OUTPUT;
-//sp    (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
-      tempStatus.forceMonitor = 1; //added to send event for longpulse command
+
+      // sp    (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0;
+      tempStatus.forceMonitor = 1; // added to send event for longpulse command
       savePortStatus(key, tempStatus);
       break;
     }
