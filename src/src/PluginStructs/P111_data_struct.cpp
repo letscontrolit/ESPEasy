@@ -9,41 +9,44 @@
 
 # include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(uint8_t csPin, uint8_t rstPin) : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
+P111_data_struct::P111_data_struct(int8_t csPin,
+                                   int8_t rstPin)
+  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
 {}
 
 P111_data_struct::~P111_data_struct() {
-  if (mfrc522 != nullptr) {
-    delete mfrc522;
-    mfrc522 = nullptr;
-  }
+  delete mfrc522;
+  mfrc522 = nullptr;
 }
 
 void P111_data_struct::init() {
-  if (mfrc522 != nullptr) {
-    delete mfrc522;
-    mfrc522 = nullptr;
-  }
+  delete mfrc522;
+
   mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin); // Instantiate a MFRC522
 
   if (mfrc522 != nullptr) {
     mfrc522->PCD_Init();                                 // Initialize MFRC522 reader
+    initPhase = P111_initPhases::Ready;
   }
 }
 
 /**
  * read status and tag
  */
-uint8_t P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
-  uint8_t error = 0;
+uint8_t P111_data_struct::readCardStatus(uint32_t *key,
+                                         bool     *removedTag) {
+  if (initPhase != P111_initPhases::Ready) { // No read during reset
+    return P111_ERROR_RESET_BUSY;
+  }
 
+  uint8_t error = P111_NO_ERROR;
   uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
   uint8_t uidLength;
 
   error = readPassiveTargetID(uid, &uidLength);
 
   switch (error) {
-    case 1: // Read error
+    case P111_ERROR_READ: // Read error
     {
       errorCount++;
       removedState = false;
@@ -55,7 +58,7 @@ uint8_t P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
       }
       break;
     }
-    case 2: // No tag found
+    case P111_ERROR_NO_TAG: // No tag found
 
       if (!removedState) {
         removedState = true;
@@ -71,9 +74,11 @@ uint8_t P111_data_struct::readCardStatus(unsigned long *key, bool *removedTag) {
   }
 
   if (errorCount > 2) { // if three consecutive read errors, reset MFRC522
-    reset(_csPin, _rstPin);
+    if (!reset(_csPin, _rstPin)) {
+      return P111_ERROR_RESET_BUSY;
+    }
   }
-  unsigned long tmpKey = uid[0];
+  uint32_t tmpKey = uid[0];
 
   for (uint8_t i = 1; i < 4; i++) {
     tmpKey <<= 8;
@@ -93,9 +98,23 @@ String P111_data_struct::getCardName() {
 
 /*********************************************************************************************\
 * MFRC522 init
+* Procedure when resetPin != -1:
+* - pull reset pin low
+* - set timer for 100 msec, phase = ResetTimer1
+* - exit false
+* - plugin_fifty_per_second counts down the timer, when done calls reset() again
+* - pull reset pin high
+* - set timer for 10 msec, phase = ResetTimer2
+* - exit false
+* - plugin_fifty_per_second counts down the timer, when done calls reset() again
+* - reset initializes the cardreader and checks status
+* - phase = Ready
+* - exit true, assuming initialization succeeds
 \*********************************************************************************************/
-bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
-  if (resetPin != -1) {
+bool P111_data_struct::reset(int8_t csPin,
+                             int8_t resetPin) {
+  if ((resetPin != -1) &&
+      (initPhase == P111_initPhases::Ready)) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("MFRC522: Reset on pin: ");
       log += resetPin;
@@ -103,10 +122,18 @@ bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
     }
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
-    delay(100);
+    timeToWait = 100;
+    initPhase  = P111_initPhases::ResetDelay1; // Start 1st timer
+    return false;
+  }
+
+  if ((resetPin != -1) &&
+      (initPhase == P111_initPhases::ResetDelay1)) {
     digitalWrite(resetPin, HIGH);
     pinMode(resetPin, INPUT_PULLUP);
-    delay(10);
+    timeToWait = 10;                           // Effectively 20 msec
+    initPhase  = P111_initPhases::ResetDelay2; // Start 2nd timer
+    return false;
   }
 
   pinMode(csPin, OUTPUT);
@@ -127,7 +154,7 @@ bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
     // When 0x00 or 0xFF is returned, communication probably failed
     if ((v == 0x00) || (v == 0xFF)) {
       addLog(LOG_LEVEL_ERROR, F("MFRC522: Communication failure, is the MFRC522 properly connected?"));
-      return false;
+      result = false;
     } else {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("MFRC522: Software Version: ");
@@ -145,23 +172,29 @@ bool P111_data_struct::reset(int8_t csPin, int8_t resetPin) {
         addLogMove(LOG_LEVEL_INFO, log);
       }
     }
-    return true;
   }
-  return false;
+
+  if ((resetPin != -1) &&
+      (initPhase == P111_initPhases::ResetDelay1)) { // Last phase, done
+    initPhase = P111_initPhases::Ready;              // Reading can commence again
+  }
+
+  return result;
 }
 
 /*********************************************************************************************\
 * RC522 read tag ID
 \*********************************************************************************************/
-uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid, uint8_t *uidLength) { // needed ? see above (not PN532)
+uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid,
+                                              uint8_t *uidLength) { // needed ? see above (not PN532)
   // Getting ready for Reading PICCs
-  if (!mfrc522->PICC_IsNewCardPresent()) {                                        // If a new PICC placed to RFID reader continue
-    return 2;
+  if (!mfrc522->PICC_IsNewCardPresent()) {                          // If a new PICC placed to RFID reader continue
+    return P111_ERROR_NO_TAG;
   }
   addLog(LOG_LEVEL_INFO, F("MFRC522: New Card Detected"));
 
   if (!mfrc522->PICC_ReadCardSerial()) { // Since a PICC placed get Serial and continue
-    return 1;
+    return P111_ERROR_READ;
   }
 
   // There are Mifare PICCs which have 4 uint8_t or 7 uint8_t UID care if you use 7 uint8_t PICC
@@ -174,7 +207,28 @@ uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid, uint8_t *uidLength) 
   }
   *uidLength = 4;
   mfrc522->PICC_HaltA(); // Stop reading
-  return 0;
+  return P111_NO_ERROR;
+}
+
+/*********************************************************************************************
+ * Handle timers instead of using delay()
+ ********************************************************************************************/
+bool P111_data_struct::plugin_fifty_per_second() {
+  if ((initPhase == P111_initPhases::ResetDelay1) ||
+      (initPhase == P111_initPhases::ResetDelay2)) {
+    timeToWait -= 20; // milliseconds
+
+    // String log = F("MFRC522: remaining wait: ");
+    // log += timeToWait;
+    // addLogMove(LOG_LEVEL_INFO, log);
+
+    if (timeToWait <= 0) {
+      timeToWait = 0;
+
+      reset(_csPin, _rstPin); // Start next phase
+    }
+  }
+  return true;
 }
 
 #endif // ifdef USES_P111
