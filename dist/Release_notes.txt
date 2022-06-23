@@ -1,4 +1,290 @@
 -------------------------------------------------
+Changes in release mega-20220616 (since mega-20220427)
+-------------------------------------------------
+
+Release date: do 16 jun 2022 21:56:25 CEST
+
+Bartłomiej Zimoń (8):
+      [P2P] set default port to 8266, plus warn about port, partly fix for #3982
+      [p2p] more defaults
+      [p2p] warn about int number equals 0
+      [p2p] update text plus check for port on rootpage
+      [p2p] update text info
+      [p2p] typo
+      Update AdvancedConfigPage.cpp
+      [p2p] typo of typo of typo
+
+Boris Krivonog (2):
+      Should resolve #3531 and #3158.
+      Removed invalid (no longer working) url ...
+
+Gijs Noorlander (2):
+      [MQTT commands] Support commands with arbitrary argument position
+      [MQTT commands] Fix parsing full command
+
+Mateusz Skowroński (1):
+      P031 - fix timing for SHT1X
+
+TD-er (198):
+      [Provisioning] Allow to fetch config via commands from HTTP server
+      [Provisioning] Add factory default defines to ease deployment of nodes
+      [Provisioning] Add documentation
+      [Cleanup] Missing include in C013
+      [Cleanup] Fix return value of gpio_mode_range_helper (real bug)
+      [Cleanup] Uncrustify Commands/GPIO.cpp
+      [ESP32] Update to IDF 4.4 Arduino-ESP32 2.0.1
+      [ESP32] Allow building LittleFS builds on ESP32
+      [Build] Fix case sensitive include
+      [Windows Build] Convert IRremoteESP8266 to single cpp file
+      [IR build] Fix build issue on IR plugins
+      [WiFi ESP32] Disable WiFi TX power settings for ESP32 (IDF4.4)
+      [ESP32 IDF4.4] Update to the latest Arduino ESP32 2.0.1.1
+      [Webserver] Change chunked buffer size to 1360 bytes
+      [Web UI] Small tweaks improving speed serving pages
+      [Cleanup] Use .clear() on strings instead of assigning empty string
+      [Webserver] Fix serving CSS
+      [Web] Allow to stream from file system (e.g. CSS inline)
+      [ESP32-S2] Add PlatformIO envs for ESP32-s2
+      [IR] Cleanup check for redefine IR plugin USES
+      Revert "[Windows Build] Convert IRremoteESP8266 to single cpp file"
+      [Build] Fix build of ESP32 max LittleFS build on Windows
+      [PIO] Simplify ESP32 env definitions.
+      [PIO] Simplify WROVER kit envs and remove WROVER kit ETH builds
+      [PIO] Add missing ESP32-S2 build envs
+      [IDF4.4] Use Tasmota's IDF 4.4 platform-tasmota-espressif32
+      [IDF4.4-v2.0.2] Now actually using the latest espressif/Arduino-esp32
+      [LittleFS] Make sure to always define USE_LITTLEFS on LittleFS envs
+      [PIO build ESP32] Attempt to fix boot loop on ESP32 with IDF4.4
+      [Cleanup] Misc optimisations to reduce build size
+      [LittleFS] Some cleanup to fix boot loops ESP32 IDF4.4 for 16M flash
+      [IDF4.4 + 16M] Make normal builds with IDF4.4 work on 16M flash
+      [IDF4.4 + 16M] Restore missing ESP32 builds
+      [Cleanup] Make ESP32 PIO envs a bit more readable
+      [Cleanup] Split ESP32S2 envs to separate ini file.
+      [PIO build] Do not use commas in build_flags (Linux build fail)
+      [PIO] fix incorrect esp32 IRExt envs
+      [PIO] add labels to envs which wil later adjusted in extends
+      [PIO] Use shorter extends chain for ESP32 max builds
+      [PIO] Apparently when referring an env, the 'env:' prefix is needed
+      [P096 eink] Fix  failing build
+      [ESP32 LittleFS] Add old LittleFS library to lib_ignore
+      [P118] Disable P118 ITHO for now as it crashes on IDF4.4
+      [ESP32 Factory] Fix boot loop on 16M flash nodes using factory image
+      [ESP32 factory] Use esptool.py to generate and patch combined binary
+      [Build] Add missing esptool==3.2 in requirements.txt
+      [ESP32 factory] Revert factory image script to not use esptool.py
+      [ESP32 factory] Final fix using esptool.py by Jason2866
+      [ESP32 factory] Change -factory.bin to .factory.bin
+      [ESP32 factory] using the pio env to find esptool
+      [ESP32 build] Restore ESP32 build for 16M1M (using SPIFFS) with Ethernet
+      [Libs] Update adafruit/Adafruit BusIO @ ^1.10.0
+      [ESP32 IDF4.4] Set CPU frequency to 240 MHz
+      [ESP32 Max] Do not use "LIMIT_BUILD_SIZE" on Max builds
+      [ESP32 PSRAM] Rename define ESP32_ENABLE_PSRAM to BOARD_HAS_PSRAM
+      [Ethernet] Add selector for newer supported Ethernet chips
+      [PSRAM] Fix 40 MHz signal on GPIO-17 using Tasmota PSRAM functions
+      [Build] Fix build on ESP8266
+      [Ethernet] Work-around for bug in IDF4.4 in ETH.linkUp()
+      [Cleanup] Fix parameter mismatch floating point formatting String
+      [ESP32 IDF4.4] Update to include latest merges
+      [PSRAM] Fix incorrect log of found PSRAM
+      [Eth] Show state of actual active network device in logs
+      [Eth] Power cycle Ethernet device if power pin is defined
+      [PWM] Fix PWM and status LED on ESP32 IDF4.4
+      [Eth] Add option to autodetect Eth PHY address + documentation
+      [ESP32-S2] Disable -flto on ESP32-S2
+      Disable -flto on ESP32 due to linker errors.
+      [Cleanup] Move defines from Commands/GPIO to DataStructs/PinMode.h
+      [ESP32 IDF4.4] Move  to platform-espressif32 v2.0.2.1
+      [Bugfix] Fix possible crash when printing floating point values
+      [Cleanup] Fix define paths on .h files
+      [Cleanup] Fix missing paths on #include statements + update I2Cdev lib
+      [I2Cdev lib] Change `byte` to `uint8_t`
+      [ESP32] Update to IDF 4.4 Arduino-ESP32 2.0.1
+      [ESP32] Allow building LittleFS builds on ESP32
+      [Build] Fix case sensitive include
+      [Windows Build] Convert IRremoteESP8266 to single cpp file
+      [IR build] Fix build issue on IR plugins
+      [WiFi ESP32] Disable WiFi TX power settings for ESP32 (IDF4.4)
+      [ESP32 IDF4.4] Update to the latest Arduino ESP32 2.0.1.1
+      [Cleanup] Use .clear() on strings instead of assigning empty string
+      [Web] Allow to stream from file system (e.g. CSS inline)
+      [ESP32-S2] Add PlatformIO envs for ESP32-s2
+      [IR] Cleanup check for redefine IR plugin USES
+      Revert "[Windows Build] Convert IRremoteESP8266 to single cpp file"
+      [Build] Fix build of ESP32 max LittleFS build on Windows
+      [PIO] Simplify ESP32 env definitions.
+      [PIO] Simplify WROVER kit envs and remove WROVER kit ETH builds
+      [PIO] Add missing ESP32-S2 build envs
+      [IDF4.4] Use Tasmota's IDF 4.4 platform-tasmota-espressif32
+      [IDF4.4-v2.0.2] Now actually using the latest espressif/Arduino-esp32
+      [LittleFS] Make sure to always define USE_LITTLEFS on LittleFS envs
+      [PIO build ESP32] Attempt to fix boot loop on ESP32 with IDF4.4
+      [Cleanup] Misc optimisations to reduce build size
+      [LittleFS] Some cleanup to fix boot loops ESP32 IDF4.4 for 16M flash
+      [IDF4.4 + 16M] Make normal builds with IDF4.4 work on 16M flash
+      [IDF4.4 + 16M] Restore missing ESP32 builds
+      [Cleanup] Make ESP32 PIO envs a bit more readable
+      [Cleanup] Split ESP32S2 envs to separate ini file.
+      [PIO build] Do not use commas in build_flags (Linux build fail)
+      [PIO] fix incorrect esp32 IRExt envs
+      [PIO] add labels to envs which wil later adjusted in extends
+      [PIO] Use shorter extends chain for ESP32 max builds
+      [PIO] Apparently when referring an env, the 'env:' prefix is needed
+      [P096 eink] Fix  failing build
+      [ESP32 LittleFS] Add old LittleFS library to lib_ignore
+      [P118] Disable P118 ITHO for now as it crashes on IDF4.4
+      [ESP32 Factory] Fix boot loop on 16M flash nodes using factory image
+      [ESP32 factory] Use esptool.py to generate and patch combined binary
+      [Build] Add missing esptool==3.2 in requirements.txt
+      [ESP32 factory] Revert factory image script to not use esptool.py
+      [ESP32 factory] Final fix using esptool.py by Jason2866
+      [ESP32 factory] Change -factory.bin to .factory.bin
+      [ESP32 factory] using the pio env to find esptool
+      [ESP32 build] Restore ESP32 build for 16M1M (using SPIFFS) with Ethernet
+      [Libs] Update adafruit/Adafruit BusIO @ ^1.10.0
+      [ESP32 IDF4.4] Set CPU frequency to 240 MHz
+      [ESP32 Max] Do not use "LIMIT_BUILD_SIZE" on Max builds
+      [ESP32 PSRAM] Rename define ESP32_ENABLE_PSRAM to BOARD_HAS_PSRAM
+      [Ethernet] Add selector for newer supported Ethernet chips
+      [PSRAM] Fix 40 MHz signal on GPIO-17 using Tasmota PSRAM functions
+      [Build] Fix build on ESP8266
+      [Ethernet] Work-around for bug in IDF4.4 in ETH.linkUp()
+      [Cleanup] Fix parameter mismatch floating point formatting String
+      [ESP32 IDF4.4] Update to include latest merges
+      [PSRAM] Fix incorrect log of found PSRAM
+      [Eth] Show state of actual active network device in logs
+      [Eth] Power cycle Ethernet device if power pin is defined
+      [PWM] Fix PWM and status LED on ESP32 IDF4.4
+      [Eth] Add option to autodetect Eth PHY address + documentation
+      [ESP32-S2] Disable -flto on ESP32-S2
+      Disable -flto on ESP32 due to linker errors.
+      [Cleanup] Move defines from Commands/GPIO to DataStructs/PinMode.h
+      [ESP32 IDF4.4] Move  to platform-espressif32 v2.0.2.1
+      [Cleanup] Fix missing paths on #include statements + update I2Cdev lib
+      [I2Cdev lib] Change `byte` to `uint8_t`
+      [EDP32 IDF4.4] Fix merge issues
+      [IDF 4.4] Update to platform-espressif32 v2.0.2.2
+      Temporary revert move operator on RamTracker
+      [MQTT commands] Add command via MQTT with variable parameters
+      [IDF 4.4] Update to espressif/arduino-esp32 tag 2.0.3
+      [WiFi] Prevent stack overflow when WiFi connection isn't successful
+      [WiFi] Properly clear duplicates from WiFi scans
+      [WiFi] Fix connecting to the strongest WiFi AP
+      [Build] Add missing include in Servo.cpp
+      [IDF 4.4] Update to platform-espressif32-2.0.3rc1
+      Revert "[IDF 4.4] Update to platform-espressif32-2.0.3rc1"
+      [Build] Fix build on display plugins using NodeMCU pin labels
+      [MQTT] Reduce rate of MQTT reconnects when failing to reconnect
+      [IDF 4.4] Update to latest platform espressif32 zip file
+      [Web flash] Let user choose to erase flash or not upon flashing
+      [Eth] Fix loosing DNS info when disabling WiFi after ETH got IP
+      [ETH] Cleanup unused variable
+      [Rules] Fix issues with rules one-liners (#4025)
+      [ESP32] Fix PWM on IDF4.4
+      [Docs] Fix formatting of C005 OpenHab MQTT documentation
+      [MQTT Events] Allow receiving events + eventvalues via MQTT (C005)
+      [Provisioning] Cleanup code to manage internal file names
+      [Provisioning] Cleanup of no longer needed strings + use RULESETS_MAX
+      [Misc] pre-merge small fixes from pending ESPEasy-NOW PR
+      [Web] Cleanup code to show MAC address input field
+      [MQTT events] Do not add '=' when no eventvalues present + dedup
+      [WiFi] Revert accidentally reject SSID < 8 chars
+      Access extra GPS values + document setLevel command
+      [Tools page] Fix to keep original command instead of showing parsed one
+      [ESP32] Update to platform-espressif32-v.2.0.3
+      [PlatformIO] Revert to PlatformIO 5.2.5
+      [PIO lib_deps] Set Adafruit ILI9341 library version
+      [PIO] Make lib_deps multi-line definitions
+      [PlatformIO] Change to multi-line lib_ignore
+      [PlatformIO] Remove normal_ESP32_16M8M_LittleFS env.
+      [PlatformIO] Clean up ini files.
+      [PlatformIO] Update to PIO 6.0.1
+      [PlatformIO] Clean requirements.txt files to only the essentials
+      [PVS Studio] Fix a number of issues reported by PVS Studio (#4066)
+      [Sysvars] Add various system variables to hardware info
+      [System Variables] Clean-up parsing system variables
+      [System Variables] Clean-up to reduce build size for sysvars parsing
+      [Build] Fix warnings on unused enums in switch statements
+      [Cleanup] Small optimizations to reduce bin size
+      [Cleanup] Reduce loading controller settings when not ready to process
+      [Cleanup] Add function addFormSelector_YesNo to remove code duplication
+      [Cleanup] Reduce build size by combining controller queue types
+      [Controller Queue] Add missing includes
+      [PVS Studio] Fix some hints provided by PVS Studio
+      [P073, PVS Studio] Fix bug in font handling for Siekoo display
+      [Cleanup] Various PVS-Studio hints
+      [Build] switch case does not (yet) exist in the 'mega' branch
+      [PIO] Add build_flags to every intermediate PIO env.
+      [PIO] Add lib_ignore to all 1M non-Custom builds
+      [Build] Set lib_ignore for all ESP8266 Testing builds
+      [Build] Remove test_X_alt_wifi_ESP8266_4M1M_VCC envs
+      [MQTT command[ Fix unintended change of MQTT command syntax (#4093)
+      [Build] Warnings when building with -Wswitch enabled on ESP32 (#4085)
+      [Build] Fix warning of 0x99 not in 'esp_partition_subtype_t'
+      [LoRaWAN TTN] Fix serial port selector on LoRaWAN TTN controller
+      [ESPEasySerial] Update to 2.0.10
+
+Ton Huisman (56):
+      [P128] Migrate NeoPixelBuxFX from playground / djcysmic/NeopixelBusFX
+      [P128] Fix ESP32 issues, add config for GPIO pin (only ESP32)
+      [P128] Move all code & variables to Plugin_data_struct
+      [P128] Initialization improvements, code optimizations
+      [P128] Forgot some code-debug
+      [P128] Code optimizations, review feedback
+      [P128] Small UI fixes while writing documentation
+      [P128] Add plugin documentation
+      [P128] Add compile-time pixel-type selection #defines
+      [Build] Add NeoPixel builds for ESP8266 4M and 1M, ESP32 and ESP32s2 with all NeoPixel plugins
+      [Docs] Update documentation to reflect NeoPixel builds, and improved Display and Energy build labels
+      [P128] Fix JSON assembly, some bugfixes and code improvements
+      [P128] Log optimization
+      [P133] Add plugin for LTR390 UV Sensor
+      [P133] Add to TEST_E build configuration
+      [P128] Doc: Bring command syntax in line with other commands by using commas
+      [P128] Fix define clash with library method
+      [P133] Add documentation
+      [P132] New plugin INA3221 3 channel DC Voltage/Current
+      [P132] Add separate Conversion rate setting for Voltage and Current
+      [P132] Add documentation
+      [P073] Correct endless loop in max7219_ShowTime
+      [Build] Move ESP32s2 neopixel build to ESP32s2 pio config file
+      [P022] Fix [taskname].gpio,all,n command
+      [C002] Handle P029 and P088 as if enabled for this controller
+      [Sysvars] Add %systm_hm_0%, %systm_hm_sp%, %systm_hm_am_0%, %systm_hm_am_sp%, %systime_am_0% and %systime_am_sp%
+      [Sysvars] Update documentation
+      [Build] Include Display plugin-set in ESP32 Display build
+      [P007] Add Input mode selection, Enable Analog output, analogout command, updated documentation
+      [P007] Fix typo
+      [P128] Fix NEOPIXEL_ESP32[s2] build configurations
+      [GPIO] Remove unwanted colon from GPIO log
+      [P028] Add Error State Value option (BMx280)
+      [P028] Minor UI correction
+      [P028] Update/overhaul of documentation
+      [P028] Set error value -1 for Humidity and Pressure
+      [Core] Add support for Error State Values
+      [Core UI] Add support for Error State Values
+      [P028] Use core Error State Value support
+      [P028] Update documentation for Error State Values
+      [P028] Minor documentation corrections
+      [P028] Reduce codesize
+      [P020] Add option to process events without network client connected
+      [P020] Fix and simplify saving settings on ESP8266 (was working on ESP32)
+      [P020] Add option for processing multi-line messages
+      [P020] Scrape off a few bytes from buildsize by disabling some debug messages
+      [P020] Improvements for processing multi-line messages, optimize String handling
+      [P020] Add some extra checks to avoid crashes because of optimized String handling
+      [P020] Improved string parsing for multi-line support
+      [Settings] Add PCONFIG_ULONG(n), union with PCONFIG_LONG(n)
+      [Build] Restore TEST_E builds for ESP and ESP32s2
+      [Fix] Complete implementation for changed addFormSelector() definition
+      [P128] [Build] Fix pio config issue, revert NeoPixelBus library to previous version (C++17 compatibility errors)
+      [P128] Optimizations
+      [Settings] Replace long by int32_t for PCONFIG_LONG(n)
+      [P128] [Build] Fix pio config issue missed earlier
+
+
+-------------------------------------------------
 Changes in release mega-20220427 (since mega-20220328)
 -------------------------------------------------
 

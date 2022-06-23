@@ -1092,10 +1092,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-
-
-// TESTING #####################################
-#ifdef PLUGIN_SET_TESTING
+#if defined(PLUGIN_SET_TESTING) || defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D) || defined(PLUGIN_SET_TESTING_E)
   #if !defined(PLUGIN_SET_MAX) && !defined(ESP32)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
@@ -1103,8 +1100,11 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
-  #endif // PLUGIN_SET_MAX
+  #endif
+#endif
 
+// TESTING #####################################
+#ifdef PLUGIN_SET_TESTING
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
