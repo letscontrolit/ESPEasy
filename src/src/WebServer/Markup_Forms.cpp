@@ -126,9 +126,23 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max
                     );
 }
 
-void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min, int max)
+void addFormNumericBox(const __FlashStringHelper * label, 
+                       const __FlashStringHelper * id, 
+                       int value, 
+                       int min, 
+                       int max
+                       #ifdef        ENABLE_TOOLTIPS
+                       ,
+                       const String& tooltip
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       )
 {
-  addFormNumericBox(String(label), String(id), value, min, max);
+  addFormNumericBox(String(label), String(id), value, min, max
+                    #ifdef ENABLE_TOOLTIPS
+                    , tooltip
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
+
 }
 
 void addFormNumericBox(const String& label, const String& id, int value, int min, int max
@@ -177,6 +191,29 @@ void addFormFloatNumberBox(const String& label,
                     #endif // ifdef ENABLE_TOOLTIPS
                     );
 }
+
+void addFormFloatNumberBox(const __FlashStringHelper * label,
+                           const __FlashStringHelper * id,
+                           float         value,
+                           float         min,
+                           float         max,
+                           uint8_t       nrDecimals,
+                           float         stepsize
+                           #ifdef ENABLE_TOOLTIPS
+                           ,
+                           const String& tooltip
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           )
+{
+  addRowLabel_tr_id(label, id);
+  addFloatNumberBox(id, value, min, max, nrDecimals, stepsize
+                    #ifdef ENABLE_TOOLTIPS
+                    , tooltip
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
+}
+
+
 
 // ********************************************************************************
 // Add a task selector form
@@ -399,6 +436,11 @@ void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addres
 void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange)
 {
   addFormSelector(String(label), String(id), optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
+}
+
+void addFormSelector(const __FlashStringHelper * label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange)
+{
+  addFormSelector(String(label), id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
