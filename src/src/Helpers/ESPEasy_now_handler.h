@@ -5,9 +5,9 @@
 
 #ifdef USES_ESPEASY_NOW
 
-#include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
-#include "../DataTypes/ControllerIndex.h"
-#include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
+# include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
+# include "../DataTypes/ControllerIndex.h"
+# include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 
 
 struct ESPEasy_Now_p2p_data;
@@ -116,7 +116,7 @@ private:
 
   void load_ControllerSettingsCache(controllerIndex_t controllerIndex);
 
-  ESPEasy_Now_NTP_query * _best_NTP_candidate = nullptr;
+  ESPEasy_Now_NTP_query *_best_NTP_candidate = nullptr;
 
   unsigned long _last_used    = 0;
   unsigned long _last_started = 0;
