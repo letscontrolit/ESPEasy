@@ -298,8 +298,7 @@ void handle_advanced() {
 #endif
   {
     addFormNumericBox(LabelType::WIFI_NR_EXTRA_SCANS, Settings.NumberExtraWiFiScans, 0, 5);
-    String note = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
-    addFormNote(note);
+    addFormNote(F("Number of extra times to scan all channels to have higher chance of finding the desired AP"));
   }
   addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
@@ -326,37 +325,41 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   {
-    String weeklabel = isStart ? F("Start")  : F("End");
-    weeklabel += F(" (week, dow, month)");
-    String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
     const __FlashStringHelper *  week[5] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
     int    weekValues[5] = { 0, 1, 2, 3, 4 };
 
-    addRowLabel(weeklabel);
-    addSelector(weekid, 5, week, weekValues, nullptr, rule.week);
+    {
+      String weeklabel = isStart ? F("Start")  : F("End");
+      weeklabel += F(" (week, dow, month)");
+      addRowLabel(weeklabel);
+    }
+    addSelector(
+      isStart ? F("dststartweek")  : F("dstendweek"), 
+      5, week, weekValues, nullptr, rule.week);
   }
   html_BR();
   {
-    String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
     const __FlashStringHelper *  dow[7] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
     int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
 
-    addSelector(dowid, 7, dow, dowValues, nullptr, rule.dow);
+    addSelector(
+      isStart ? F("dststartdow")   : F("dstenddow"),
+      7, dow, dowValues, nullptr, rule.dow);
   }
   html_BR();
   {
-    String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
     const __FlashStringHelper * month[12] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
                              "Dec") };
     int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
-    addSelector(monthid, 12, month, monthValues, nullptr, rule.month);
+    addSelector(isStart ? F("dststartmonth") : F("dstendmonth"),
+                12, month, monthValues, nullptr, rule.month);
   }
   {
-    String hourid  = isStart ? F("dststarthour")  : F("dstendhour");
-    String hourlabel = isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)");
-
-    addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
+    addFormNumericBox(
+      isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)"),
+      isStart ? F("dststarthour")  : F("dstendhour"),
+      rule.hour, 0, 23);
     addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
   }
 }
