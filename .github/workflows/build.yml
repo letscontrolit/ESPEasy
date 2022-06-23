@@ -11,15 +11,18 @@ on:
   pull_request:
     branches: [mega]
 
+permissions:
+  contents: read
+
 jobs:
   documentation:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
@@ -31,7 +34,7 @@ jobs:
           make html
           cd ..
           zip -r -qq ESPEasy_docs.zip docs/build/*
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Documentation
           path: ESPEasy_docs.zip
@@ -41,7 +44,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
       - id: set-matrix
@@ -56,19 +59,19 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         if: ${{ contains(matrix.env, 'esp32') }}
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         if: ${{ contains(matrix.env, 'esp8266') }}
         with:
           path: ~/.platformio
@@ -85,7 +88,7 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Binaries
           path: ESPEasy_${{ matrix.env }}.zip

@@ -568,11 +568,23 @@ void json_close(bool arr) {
   lastLevel = level;
 }
 
+void json_number(const __FlashStringHelper * name, const String& value)
+{
+  json_prop(name, value);
+}
+
+
 void json_number(const String& name, const String& value) {
+  json_prop(name, value);
+}
+
+void json_prop(const __FlashStringHelper * name, const String& value) 
+{
   json_quote_name(name);
   json_quote_val(value);
   lastLevel = level;
 }
+
 
 void json_prop(const String& name, const String& value) {
   json_quote_name(name);
