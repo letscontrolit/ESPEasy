@@ -188,11 +188,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P108_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P108_data) && P108_data->isInitialized()) {
-        String detectedString = P108_data->modbus.detected_device_description;
-
-        if (detectedString.length() > 0) {
-          addFormNote(detectedString);
-        }
+        addFormNote(P108_data->modbus.detected_device_description);
         addRowLabel(F("Checksum (pass/fail/nodata)"));
         uint32_t reads_pass, reads_crc_failed, reads_nodata;
         P108_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
