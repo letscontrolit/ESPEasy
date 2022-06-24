@@ -3,11 +3,12 @@
 
 #include "../Globals/ESPEasy_now_state.h"
 
+#include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
+
 #ifdef USES_ESPEASY_NOW
 
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
 # include "../DataTypes/ControllerIndex.h"
-# include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 
 
 struct ESPEasy_Now_p2p_data;
