@@ -211,6 +211,73 @@ uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid,
 }
 
 /*********************************************************************************************
+ * Handle regular read and reset processing
+ ********************************************************************************************/
+bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+  bool success = false;
+
+  if (((initPhase == P111_initPhases::ResetDelay1) || // Whichever handler comes first
+       (initPhase == P111_initPhases::ResetDelay2)) &&
+      (timeToWait <= 0)) {
+    timeToWait = 0;
+
+    reset(_csPin, _rstPin); // Start next phase
+    return success;
+  }
+
+  counter++;          // This variable replaces a static variable in the original implementation
+
+  if (counter == 3) { // Only every 3rd 0.1 second we do a read
+    counter = 0;
+
+    uint32_t key        = P111_NO_KEY;
+    bool     removedTag = false;
+    const uint8_t error = readCardStatus(&key, &removedTag);
+
+    if (error == P111_NO_ERROR) {
+      const uint32_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
+      bool new_key           = false;
+
+          # ifdef P111_USE_REMOVAL
+
+      if (removedTag && (P111_TAG_AUTOREMOVAL == 2)) { // removal detected and enabled
+        key = P111_REMOVALVALUE;
+      }
+          # endif // P111_USE_REMOVAL
+
+      if ((old_key != key) && (key != P111_NO_KEY)) {
+        UserVar.setSensorTypeLong(event->TaskIndex, key);
+        new_key = true;
+      }
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO) && (key != P111_NO_KEY)) {
+        String log = F("MFRC522: ");
+
+        if (new_key) {
+          log += F("New Tag: ");
+        } else {
+          log += F("Old Tag: ");
+        }
+        log += key;
+
+        if (!removedTag) {
+          log += F(" card: ");
+          log += getCardName();
+        }
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+
+      if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any
+        sendData(event);
+      }
+      Scheduler.setPluginTaskTimer(P111_REMOVALTIMEOUT, event->TaskIndex, event->Par1);
+      success = true;
+    }
+  }
+  return success;
+}
+
+/*********************************************************************************************
  * Handle timers instead of using delay()
  ********************************************************************************************/
 bool P111_data_struct::plugin_fifty_per_second() {
@@ -222,10 +289,12 @@ bool P111_data_struct::plugin_fifty_per_second() {
     // log += timeToWait;
     // addLogMove(LOG_LEVEL_INFO, log);
 
-    if (timeToWait <= 0) {
-      timeToWait = 0;
+    if (initPhase == P111_initPhases::ResetDelay1) { // Only handle ResetDelay1 here, as ResetDelay2 phase might be too much for 50/s
+      if (timeToWait <= 0) {
+        timeToWait = 0;
 
-      reset(_csPin, _rstPin); // Start next phase
+        reset(_csPin, _rstPin); // Start next phase
+      }
     }
   }
   return true;

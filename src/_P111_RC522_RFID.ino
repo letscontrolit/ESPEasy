@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-06-24, tonhuidmsn: Move plugin_ten_per_second handler to pluginstruct so it can properly handle the reset procedure
 // 2022-06-23, tonhuisman: Reformat source (uncrustify), optimize somewhat for size
 //                         Replace delay() call in reset by handling via plugin_fifty_per_second
 // 2021-03-13, tonhuisman: Disabled tag removal detection, as it seems impossible to achieve with the MFRC522.
@@ -24,10 +25,6 @@
 # define PLUGIN_VALUENAME1_111 "Tag"
 
 # include "src/PluginStructs/P111_data_struct.h"
-
-# define P111_NO_KEY           0xFFFFFFFF
-
-// #define P111_USE_REMOVAL      // Enable (real) Tag Removal detection options (but that won't work with MFRC522 reader)
 
 boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -140,6 +137,7 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TIMER_IN:
     {
+      // Timer is triggered from plugin_ten_per_second handler after a successful read
       // Reset card id on timeout
       if (P111_TAG_AUTOREMOVAL == 0
           # ifdef P111_USE_REMOVAL
@@ -161,59 +159,10 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
     {
       P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P111_data) {
-        return success;
+      if (nullptr != P111_data) {
+        success = P111_data->plugin_ten_per_second(event);
       }
 
-      P111_data->counter++;          // This variable replaces a static variable in the original implementation
-
-      if (P111_data->counter == 3) { // Only every 3rd 0.1 second we do a read
-        P111_data->counter = 0;
-
-        uint32_t key        = P111_NO_KEY;
-        bool     removedTag = false;
-        const uint8_t error = P111_data->readCardStatus(&key, &removedTag);
-
-        if (error == P111_NO_ERROR) {
-          const uint32_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-          bool new_key           = false;
-
-          # ifdef P111_USE_REMOVAL
-
-          if (removedTag && (P111_TAG_AUTOREMOVAL == 2)) { // removal detected and enabled
-            key = P111_REMOVALVALUE;
-          }
-          # endif // P111_USE_REMOVAL
-
-          if ((old_key != key) && (key != P111_NO_KEY)) {
-            UserVar.setSensorTypeLong(event->TaskIndex, key);
-            new_key = true;
-          }
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO) && (key != P111_NO_KEY)) {
-            String log = F("MFRC522: ");
-
-            if (new_key) {
-              log += F("New Tag: ");
-            } else {
-              log += F("Old Tag: ");
-            }
-            log += key;
-
-            if (!removedTag) {
-              log += F(" card: ");
-              log += P111_data->getCardName();
-            }
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
-
-          if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any
-            sendData(event);
-          }
-          Scheduler.setPluginTaskTimer(P111_REMOVALTIMEOUT, event->TaskIndex, event->Par1);
-          success = true;
-        }
-      }
       break;
     }
 

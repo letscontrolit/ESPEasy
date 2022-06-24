@@ -18,6 +18,10 @@
 # define P111_ERROR_NO_TAG      2
 # define P111_ERROR_RESET_BUSY  3
 
+# define P111_NO_KEY           0xFFFFFFFF
+
+// #define P111_USE_REMOVAL      // Enable (real) Tag Removal detection options (but that won't work with MFRC522 reader)
+
 enum class P111_initPhases : uint8_t {
   Ready       = 0x00,
   ResetDelay1 = 0x01,
@@ -33,6 +37,7 @@ struct P111_data_struct : public PluginTaskData_base {
   uint8_t readCardStatus(uint32_t *key,
                          bool     *removedTag);
   String  getCardName();
+  bool    plugin_ten_per_second(struct EventStruct *event);
   bool    plugin_fifty_per_second();
 
   MFRC522 *mfrc522 = nullptr;
