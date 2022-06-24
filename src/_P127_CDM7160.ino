@@ -6,6 +6,7 @@
 // Resolves: https://github.com/letscontrolit/ESPEasy/issues/986
 //
 // Changelog:
+// 2022-06-24, tonhuisman Remove delay from init call, optimize some code
 // 2022-01-13, tonhuisman Ignore measured values > 15000: unit is still initializing
 //                        Change status from Development to Testing
 // 2021-12-31, tonhuisman Migrate plugin from ESPEasyPluginPlayground to ESPEasy repository
@@ -67,7 +68,9 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P127_CONFIG_I2C_ADDRESS);
+        # ifndef BUILD_NO_DEBUG
         addFormNote(F("CAD0 High/open=0x69, Low=0x68"));
+        # endif // ifndef BUILD_NO_DEBUG
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -82,8 +85,9 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Altitude"), F("plugin_127_altitude"), P127_CONFIG_ALTITUDE, 0, 2550); // Max. 2550 meter supported
+      addFormNumericBox(F("Altitude"), F("altitude"), P127_CONFIG_ALTITUDE, 0, 2550); // Max. 2550 meter supported
       addUnit('m');
+
       success = true;
       break;
     }
@@ -91,19 +95,19 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P127_CONFIG_I2C_ADDRESS = getFormItemInt(F("i2c_addr"));
-      P127_CONFIG_ALTITUDE    = getFormItemInt(F("plugin_127_altitude"));
-      success                 = true;
+      P127_CONFIG_ALTITUDE    = getFormItemInt(F("altitude"));
+
+      success = true;
       break;
     }
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P127_data_struct(P127_CONFIG_I2C_ADDRESS));
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P127_data_struct(P127_CONFIG_I2C_ADDRESS, P127_CONFIG_ALTITUDE));
       P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P127_data) {
-        return success;
+      if (nullptr != P127_data) {
+        success = P127_data->init();
       }
-      success = P127_data->init(P127_CONFIG_ALTITUDE);
 
       break;
     }
@@ -111,10 +115,9 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
     {
       P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P127_data) {
-        return success;
+      if (nullptr != P127_data) {
+        success = P127_data->checkData();
       }
-      success = P127_data->checkData();
 
       break;
     }
@@ -154,15 +157,25 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
     {
       P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr == P127_data) {
-        return success;
-      }
-      String command = parseString(string, 1);
+      if (nullptr != P127_data) {
+        String command = parseString(string, 1);
 
-      if (command.equals(F("cdmrst"))) {
-        addLog(LOG_LEVEL_INFO, F("CDM7160: reset"));
-        P127_data->setReset();
-        success = true;
+        if (command.equals(F("cdmrst"))) {
+          addLog(LOG_LEVEL_INFO, F("CDM7160: reset"));
+          P127_data->setReset();
+          success = true;
+        }
+      }
+
+      break;
+    }
+
+    case PLUGIN_FIFTY_PER_SECOND: // Handle delays
+    {
+      P127_data_struct *P127_data = static_cast<P127_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P127_data) {
+        success = P127_data->plugin_fifty_per_second();
       }
 
       break;
