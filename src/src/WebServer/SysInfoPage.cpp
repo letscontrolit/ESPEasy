@@ -160,10 +160,7 @@ void handle_sysinfo_json() {
   json_open(false, F("esp"));
   json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
   json_number(F("cpu"), getValue(LabelType::ESP_CHIP_FREQ));
-
-  # ifdef ARDUINO_BOARD
-  json_prop(F("board"), ARDUINO_BOARD);
-  # endif // ifdef ARDUINO_BOARD
+  json_prop(F("board"), get_board_name());
   json_close();
   json_open(false, F("storage"));
 
@@ -189,7 +186,7 @@ void handle_sysinfo_json() {
   json_number(F("ide_size"),  String(ESP.getFlashChipSize() / 1024));
 
   // Please check what is supported for the ESP32
-  json_number(F("flash_speed"), String(ESP.getFlashChipSpeed() / 1000000));
+  json_number(F("flash_speed"), getValue(LabelType::FLASH_CHIP_SPEED));
 
   FlashMode_t ideMode = ESP.getFlashChipMode();
 
@@ -561,11 +558,7 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
   # endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
-
-  # ifdef ARDUINO_BOARD
-  addRowLabel(LabelType::ESP_BOARD_NAME);
-  addHtml(ARDUINO_BOARD);
-  # endif // ifdef ARDUINO_BOARD
+  addRowLabelValue(LabelType::ESP_BOARD_NAME);
 }
 
 void handle_sysinfo_Storage() {
@@ -580,7 +573,7 @@ void handle_sysinfo_Storage() {
     // Set to HEX may be something like 0x1640E0.
     // Where manufacturer is 0xE0 and device is 0x4016.
     addHtml(F("Vendor: "));
-    addHtml(formatToHex(flashChipId & 0xFF));
+    addHtml(getValue(LabelType::FLASH_CHIP_VENDOR));
 
     if (flashChipVendorPuya())
     {
@@ -594,8 +587,7 @@ void handle_sysinfo_Storage() {
       addHtml(')');
     }
     addHtml(F(" Device: "));
-    uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-    addHtml(formatToHex(flashDevice));
+    addHtml(getValue(LabelType::FLASH_CHIP_MODEL));
   }
   const uint32_t realSize = getFlashRealSizeInBytes();
   const uint32_t ideSize  = ESP.getFlashChipSize();

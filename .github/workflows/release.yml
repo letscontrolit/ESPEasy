@@ -19,7 +19,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
       - id: set-matrix
@@ -34,19 +34,19 @@ jobs:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-${{ hashFiles('requirements.txt') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         if: ${{ contains(matrix.env, 'esp32') }}
         with:
           path: ~/.platformio
           key: ${{ runner.os }}-esp32-${{ hashFiles('platformio*.ini') }}
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         if: ${{ contains(matrix.env, 'esp8266') }}
         with:
           path: ~/.platformio
@@ -63,7 +63,7 @@ jobs:
           ENV: ${{ matrix.env }}
         run: |
           python tools/ci/build-and-archive.py
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Binaries
           path: ESPEasy_${{ matrix.env }}.zip
@@ -74,10 +74,10 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-docs-${{ hashFiles('docs/requirements.txt') }}
@@ -94,7 +94,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: Distribution
           path: |
@@ -108,7 +108,7 @@ jobs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
       - id: release-notes
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           result-encoding: string
           script: |
@@ -128,10 +128,10 @@ jobs:
     needs: [build, prepare-dist, prepare-notes]
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           path: artifacts/
       - run: |
