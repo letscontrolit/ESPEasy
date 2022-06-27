@@ -29,7 +29,13 @@ bool RulesEventCache::addLine(const String& line, const String& filename, size_t
 RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const String& event, bool optimize)
 {
   RulesEventCache_vector::iterator it   = _eventCache.begin();
-  RulesEventCache_vector::iterator prev = _eventCache.end();
+//  RulesEventCache_vector::iterator prev = _eventCache.end();
+
+  // FIXME TD-er: Disable optimize as it has some side effects.
+  // For example, matching a specific event first and then a more generic one is perfectly normal to do.
+  // But this optimization will then put the generic one in front as it will be matched more often.
+  // Thus it will never match the more specific one anymore.
+
 
   for (; it != _eventCache.end(); ++it)
   {
@@ -38,6 +44,7 @@ RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const S
     STOP_TIMER(RULES_MATCH);
 
     if (match) {
+      /*
       if (optimize) {
         it->_nrTimesMatched++;
 
@@ -50,9 +57,10 @@ RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const S
           }
         }
       }
+      */
       return it;
     }
-
+/*
     if (optimize) {
       if (prev == _eventCache.end()) {
         prev = it;
@@ -62,6 +70,7 @@ RulesEventCache_vector::const_iterator RulesEventCache::findMatchingRule(const S
         prev = it;
       }
     }
+    */
   }
   return it;
 }
