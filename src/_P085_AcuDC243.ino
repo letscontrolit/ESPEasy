@@ -178,11 +178,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P085_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P085_data) && P085_data->isInitialized()) {
-        String detectedString = P085_data->modbus.detected_device_description;
-
-        if (detectedString.length() > 0) {
-          addFormNote(detectedString);
-        }
+        addFormNote(P085_data->modbus.detected_device_description);
         addRowLabel(F("Checksum (pass/fail/nodata)"));
         uint32_t reads_pass, reads_crc_failed, reads_nodata;
         P085_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);

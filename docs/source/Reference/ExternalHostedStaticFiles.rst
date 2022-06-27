@@ -28,7 +28,7 @@ They are sorted with the most important files on top.
 
 * ``espeasy_default.css``  Without this file the web UI does look rather unusable and horrible. Make sure to rename the file to ``esp.css`` when saving to the ESP's file system.
 * ``rules_save.js`` JavaScript to actually perform saving the rules. Rules cannot be saved without this file.
-* ``update_sensor_values_device_page.js`` JavaScript to perform value updates of tasks on the "Devices" tab.
+* ``update_sensor_values_device_page.js`` JavaScript to perform value updates of tasks on the "Devices" tab. (see note below)
 * ``fetch_and_parse_log.js`` JavaScript to fetch new logs on the web based log viewer.
 * ``reboot.js`` JavaScript to check whether it is best to perform a reboot of the ESP node.
 * ``toasting.js`` Showing an acknowledgement toasting message when submitting settings.
@@ -37,6 +37,10 @@ They are sorted with the most important files on top.
 
 
 When storing a local copy of one of these files, make sure you're using the same name as presented here.
+
+Changed: 2022-06-23:
+Only exception is for the ``update_sensor_values_device_page.js`` file.
+Due to maximum file name length, the file should be renamed to ``upd_values_device_page.js`` when storing on the local file system.
 
 .. note::
 

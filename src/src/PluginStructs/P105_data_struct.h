@@ -70,7 +70,7 @@ struct P105_data_struct : public PluginTaskData_base {
   void setUninitialized();
 
   // Perform the measurements with interval
-  bool updateMeasurements(unsigned long task_index);
+  bool updateMeasurements(taskIndex_t task_index);
 
   AHTx_Device   device;
   AHTx_state    state;

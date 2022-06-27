@@ -49,7 +49,7 @@
 #define PLUGIN_GET_DISPLAY_PARAMETERS      41 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
 #define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 42 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
 #define PLUGIN_INIT_VALUE_RANGES           43 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_GET_ERROR_VALUE_STATE       44 // Should we return the error values or not, called when PLUGIN_READ returns false, must also set error values into UserVar[]
+#define PLUGIN_READ_ERROR_OCCURED          44 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
 
 
 
@@ -63,7 +63,7 @@ public:
   // As these function values are also used in the timing stats, make sure there is no overlap with the PLUGIN_xxx numbering.
 
   enum class Function {
-    CPLUGIN_PROTOCOL_ADD = 40, // Called at boot for letting a controller adding itself to list of available controllers
+    CPLUGIN_PROTOCOL_ADD = 127, // Called at boot for letting a controller adding itself to list of available controllers
     CPLUGIN_PROTOCOL_TEMPLATE,
     CPLUGIN_PROTOCOL_SEND,
     CPLUGIN_PROTOCOL_RECV,
