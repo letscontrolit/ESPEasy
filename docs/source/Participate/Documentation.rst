@@ -42,14 +42,10 @@ Build on Windows::
 Build on Linux/Mac::
 
    cd docs
-   ./make html
+   make html
+
+Any build errors are shown in the output in ``red`` (and should be acted upon, except for magick not being found). On Windows, an error may be shown about the magick tool not being found, but this Linux image processing tool is usually not installed on Windows (not a Python tool), but the images will show unaltered when previewing. In the actual processing for Read The Docs, this tool *is* available, so the images will be re-scaled when needed.
+
+After the build is completed, the result can be reviewed by opening the ``index.html`` file, that can be found in ``docs\build\html`` (for Linux/MacOS adjust ``\`` to ``/``).
 
 
-LaTeX (PDF) build on Linux
-==========================
-
-To build a PDF document of this documentation, you need to have LaTeX installed and some texlive packages.
-
-Via apt-get installed packages::
-
-  sudo apt-get install xzdec texlive-fonts-recommended texlive-latex-recommended texlive-latex-extra
