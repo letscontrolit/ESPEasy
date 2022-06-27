@@ -8,19 +8,14 @@
 // ********************************************************************************
 // Add Selector
 // ********************************************************************************
-void addSelector(const String             & id,
+void addSelector(const __FlashStringHelper *id,
                  int                        optionCount,
                  const __FlashStringHelper *options[],
                  const int                  indices[],
                  const String               attr[],
-                 int                        selectedIndex);
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex);
+                 int                        selectedIndex,
+                 bool                       reloadonchange = false,
+                 bool                       enabled = true);
 
 void addSelector(const String             & id,
                  int                        optionCount,
@@ -28,8 +23,8 @@ void addSelector(const String             & id,
                  const int                  indices[],
                  const String               attr[],
                  int                        selectedIndex,
-                 boolean                    reloadonchange,
-                 bool                       enabled);
+                 bool                       reloadonchange = false,
+                 bool                       enabled = true);
 
 void addSelector(const String& id,
                  int           optionCount,
@@ -37,8 +32,8 @@ void addSelector(const String& id,
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
-                 boolean       reloadonchange,
-                 bool          enabled);
+                 bool          reloadonchange = false,
+                 bool          enabled = true);
 
 
 void addSelector(const String             & id,
@@ -47,7 +42,7 @@ void addSelector(const String             & id,
                  const int                  indices[],
                  const String               attr[],
                  int                        selectedIndex,
-                 boolean                    reloadonchange,
+                 bool                       reloadonchange,
                  bool                       enabled,
                  const String& classname
                  #ifdef                     ENABLE_TOOLTIPS
@@ -62,7 +57,7 @@ void addSelector(const String& id,
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
-                 boolean       reloadonchange,
+                 bool          reloadonchange,
                  bool          enabled,
                  const String& classname
                  #ifdef        ENABLE_TOOLTIPS
@@ -135,19 +130,19 @@ void do_addSelector_Head(const String& id,
 void addPinSelector_Item(PinSelectPurpose purpose,
                          const String   & gpio_label,
                          int              gpio,
-                         boolean          selected,
-                         boolean          disabled = false,
+                         bool          selected,
+                         bool          disabled = false,
                          const String   & attr     = EMPTY_STRING);
 
 void addSelector_Item(const __FlashStringHelper *option,
                       int                        index,
-                      boolean                    selected,
-                      boolean                    disabled = false,
+                      bool                    selected,
+                      bool                    disabled = false,
                       const String             & attr     = EMPTY_STRING);
 void addSelector_Item(const String& option,
                       int           index,
-                      boolean       selected,
-                      boolean       disabled = false,
+                      bool       selected,
+                      bool       disabled = false,
                       const String& attr     = EMPTY_STRING);
 
 void addSelector_Foot();
@@ -215,7 +210,7 @@ void addFormSubHeader(const String& header);
 // Add a checkbox
 // ********************************************************************************
 void addCheckBox(const String& id,
-                 boolean       checked,
+                 bool       checked,
                  bool          disabled = false
                  #ifdef        ENABLE_TOOLTIPS
                  ,
@@ -223,7 +218,7 @@ void addCheckBox(const String& id,
                  #endif // ifdef ENABLE_TOOLTIPS
                  );
 void addCheckBox(const __FlashStringHelper *id,
-                 boolean                    checked,
+                 bool                    checked,
                  bool                       disabled = false);
 
 // ********************************************************************************
