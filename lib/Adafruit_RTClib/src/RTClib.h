@@ -89,6 +89,7 @@ public:
   DateTime(const char *date, const char *time);
   DateTime(const __FlashStringHelper *date, const __FlashStringHelper *time);
   DateTime(const char *iso8601date);
+  DateTime& operator=(const DateTime &copy) = delete;
   bool isValid() const;
   char *toString(char *buffer);
 
@@ -217,6 +218,7 @@ public:
   TimeSpan(int32_t seconds = 0);
   TimeSpan(int16_t days, int8_t hours, int8_t minutes, int8_t seconds);
   TimeSpan(const TimeSpan &copy);
+  TimeSpan& operator=(const TimeSpan &copy) = delete;
 
   /*!
       @brief  Number of days in the TimeSpan
