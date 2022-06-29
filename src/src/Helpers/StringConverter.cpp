@@ -686,7 +686,7 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
     ++nextArgument;
   }
 
-  if (!hasArgument || (pos_begin < 0) || ((pos_begin >= 0) && (pos_begin == pos_end))) {
+  if (!hasArgument || (pos_begin < 0) || (pos_begin == pos_end)) {
     return EMPTY_STRING;
   }
   String result = string.substring(pos_begin, pos_end);
@@ -1044,15 +1044,16 @@ bool getConvertArgumentString(const String& marker,
 // FIXME TD-er: These macros really increase build size
 struct ConvertArgumentData {
   ConvertArgumentData(String& s, bool useURLencode) 
-    : str(s), URLencode(useURLencode) {}
+    : str(s), arg1(0.0f), arg2(0.0f), startIndex(0), endIndex(0),
+      URLencode(useURLencode) {}
 
   ConvertArgumentData() = delete;
 
   String& str;
-  float arg1, arg2 = 0.0f;
-  int   startIndex = 0;
-  int   endIndex   = 0;
-  bool  URLencode  = false;
+  float arg1, arg2;
+  int   startIndex;
+  int   endIndex;
+  bool  URLencode;
 };
 
 void repl(ConvertArgumentData& data, const String& repl_str) {
