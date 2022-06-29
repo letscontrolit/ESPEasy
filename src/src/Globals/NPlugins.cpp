@@ -19,7 +19,7 @@ NotificationStruct Notification[NPLUGIN_MAX];
 int notificationCount = -1;
 
 
-uint8_t NPluginCall(NPlugin::Function Function, struct EventStruct *event)
+bool NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
