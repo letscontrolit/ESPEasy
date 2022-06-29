@@ -173,10 +173,11 @@ boolean Plugin_074(uint8_t function, struct EventStruct *event, String& string) 
       // integration time (dim light)
       //        }
       {
-        const __FlashStringHelper * optionsMode[6] = { F("100ms"), F("200ms"), F("300ms"),
-                                  F("400ms"), F("500ms"), F("600ms") };
+        const __FlashStringHelper * optionsMode[6] = { F("100"), F("200"), F("300"),
+                                  F("400"), F("500"), F("600") };
         addFormSelector(F("Integration Time"), F("p074_itime"), 6, optionsMode,
                         nullptr, PCONFIG(1));
+        addUnit(F("ms"));
       }
 
       //        TSL2591_GAIN_LOW                  = 0x00,    // low gain (1x)

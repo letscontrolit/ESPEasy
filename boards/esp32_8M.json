@@ -25,7 +25,7 @@
     "arduino",
     "espidf"
   ],
-  "name": "Espressif Generic ESP32 8M Flash, ESPEasy 2944k Code/OTA, 2112k FS",
+  "name": "Espressif Generic ESP32 8M Flash ESPEasy 2944k Code/OTA 2112k FS",
   "upload": {
     "flash_size": "8MB",
     "maximum_ram_size": 327680,
