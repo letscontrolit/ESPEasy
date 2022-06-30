@@ -7,13 +7,6 @@
 
 # include <vector>
 
-# ifdef ESP32
-  #  define P002_MAX_ADC_VALUE    4095
-# endif // ifdef ESP32
-# ifdef ESP8266
-  #  define P002_MAX_ADC_VALUE    1023
-# endif // ifdef ESP8266
-
 
 # define P002_OVERSAMPLING        PCONFIG(0)
 # ifdef ESP32
@@ -164,8 +157,8 @@ public:
 private:
 
   int32_t OversamplingValue  = 0;
-  int16_t OversamplingMinVal = P002_MAX_ADC_VALUE;
-  int16_t OversamplingMaxVal = -P002_MAX_ADC_VALUE;
+  int16_t OversamplingMinVal = getMax_adc_value();
+  int16_t OversamplingMaxVal = -getMax_adc_value();
 
   int   _calib_adc1 = 0;
   int   _calib_adc2 = 0;

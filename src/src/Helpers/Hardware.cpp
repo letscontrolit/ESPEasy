@@ -27,6 +27,7 @@
 
   // Needed to get ADC Vref
   #include <esp_adc_cal.h>
+  #include <driver/adc.h>
 
   #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
     #if CONFIG_IDF_TARGET_ESP32       // ESP32/PICO-D4
@@ -480,8 +481,10 @@ esp_adc_cal_characteristics_t adc2_chars;
 #endif
 
 void initADC() {
-  adc1_calibration_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc1_chars);
-  adc2_calibration_type = esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc2_chars);
+  const adc_bits_width_t adc_bit_width = static_cast<adc_bits_width_t>(ADC_WIDTH_MAX - 1);
+
+  adc1_calibration_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, adc_bit_width, DEFAULT_VREF, &adc1_chars);
+  adc2_calibration_type = esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_DB_11, adc_bit_width, DEFAULT_VREF, &adc2_chars);
 }
 
 bool hasADC_factory_calibration() {
@@ -1582,6 +1585,8 @@ bool validGpio(int gpio) {
 // @param t          index of touch pad ID
 bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 {
+  adc = -1;
+  ch = -1;
   t = -1;
 
 #ifdef ESP32S2
