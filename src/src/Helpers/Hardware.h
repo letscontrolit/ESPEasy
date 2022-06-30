@@ -17,6 +17,18 @@
 #include <driver/adc.h>
 #endif
 
+# ifdef ESP32
+#  if CONFIG_IDF_TARGET_ESP32
+  #define MAX_ADC_VALUE 4095
+#  else // if CONFIG_IDF_TARGET_ESP32
+  #define MAX_ADC_VALUE ((1 << SOC_ADC_MAX_BITWIDTH) - 1)
+#  endif // if CONFIG_IDF_TARGET_ESP32
+# endif // ifdef ESP32
+# ifdef ESP8266
+  #define MAX_ADC_VALUE 1023
+# endif // ifdef ESP8266
+
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -59,19 +71,6 @@ int                espeasy_analogRead(int pin);
 
 #ifdef ESP32
 void               initADC();
-
-constexpr int32_t getMax_adc_value()  {
-# ifdef ESP32
-#  if CONFIG_IDF_TARGET_ESP32
-  return 4095;
-#  else // if CONFIG_IDF_TARGET_ESP32
-  return (1 << SOC_ADC_MAX_BITWIDTH) - 1;
-#  endif // if CONFIG_IDF_TARGET_ESP32
-# endif // ifdef ESP32
-# ifdef ESP8266
-  return 1023;
-# endif // ifdef ESP8266
-}
 
 bool                       hasADC_factory_calibration();
 const __FlashStringHelper* getADC_factory_calibration_type();

@@ -99,7 +99,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     /*
         // Test code to quickly check the factory calibration
-        for (int i = 0; i < getMax_adc_value(); i += (getMax_adc_value() / 100)) {
+        for (int i = 0; i < MAX_ADC_VALUE; i += (MAX_ADC_VALUE / 100)) {
           P002_formatStatistics(F("test"), i, applyFactoryADCcalibration(1, i));
         }
      */
@@ -110,11 +110,11 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
 
-  addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, getMax_adc_value());
+  addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, MAX_ADC_VALUE);
   html_add_estimate_symbol();
   addTextBox(F("p002_out1"), toString(P002_CALIBRATION_VALUE1, 3), 10);
 
-  addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, getMax_adc_value());
+  addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, MAX_ADC_VALUE);
   html_add_estimate_symbol();
   addTextBox(F("p002_out2"), toString(P002_CALIBRATION_VALUE2, 3), 10);
 
@@ -126,7 +126,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     if (P002_CALIBRATION_ENABLED) {
       P002_formatStatistics(F("Minimum"),   0,                  P002_data_struct::applyCalibration(event, 0));
-      P002_formatStatistics(F("Maximum"),   getMax_adc_value(), P002_data_struct::applyCalibration(event, getMax_adc_value()));
+      P002_formatStatistics(F("Maximum"),   MAX_ADC_VALUE, P002_data_struct::applyCalibration(event, MAX_ADC_VALUE));
 
       float stepsize = P002_data_struct::applyCalibration(event, 1.0f) - P002_data_struct::applyCalibration(event, 0.0f);
       P002_formatStatistics(F("Step size"), 1,                  stepsize);
@@ -318,8 +318,8 @@ void P002_data_struct::reset()
 void P002_data_struct::resetOversampling() {
   OversamplingValue  = 0;
   OversamplingCount  = 0;
-  OversamplingMinVal = getMax_adc_value();
-  OversamplingMaxVal = -getMax_adc_value();
+  OversamplingMinVal = MAX_ADC_VALUE;
+  OversamplingMaxVal = -MAX_ADC_VALUE;
 }
 
 void P002_data_struct::addOversamplingValue(int currentValue) {
@@ -329,7 +329,7 @@ void P002_data_struct::addOversamplingValue(int currentValue) {
     return;
   }
 
-  if ((currentValue == getMax_adc_value()) && (currentValue == OversamplingMaxVal)) {
+  if ((currentValue == MAX_ADC_VALUE) && (currentValue == OversamplingMaxVal)) {
     return;
   }
 
@@ -558,9 +558,9 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
     return mapADCtoFloat(
       float_value,
       _multipoint[last_mp_index]._adc,
-      getMax_adc_value(),
+      MAX_ADC_VALUE,
       _multipoint[last_mp_index]._value,
-      applyCalibration(getMax_adc_value()));
+      applyCalibration(MAX_ADC_VALUE));
   }
 
   for (unsigned int i = 0; i < last_mp_index; ++i) {

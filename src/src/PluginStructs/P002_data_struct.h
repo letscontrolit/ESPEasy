@@ -5,6 +5,7 @@
 
 #ifdef USES_P002
 
+# include "src/Helpers/Hardware.h"
 # include <vector>
 
 
@@ -134,9 +135,9 @@ public:
 
   float        applyCalibration(float float_value) const;
 
-#ifdef ESP32
+# ifdef ESP32
   static bool  applyFactoryCalibration(struct EventStruct *event);
-#endif
+# endif // ifdef ESP32
 
 private:
 
@@ -157,8 +158,8 @@ public:
 private:
 
   int32_t OversamplingValue  = 0;
-  int16_t OversamplingMinVal = getMax_adc_value();
-  int16_t OversamplingMaxVal = -getMax_adc_value();
+  int16_t OversamplingMinVal = MAX_ADC_VALUE;
+  int16_t OversamplingMaxVal = -MAX_ADC_VALUE;
 
   int   _calib_adc1 = 0;
   int   _calib_adc2 = 0;
