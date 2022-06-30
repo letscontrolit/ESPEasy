@@ -14,6 +14,7 @@
 #include "../../ESPEasy_common.h"
 
 
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
@@ -53,7 +54,17 @@ extern int lastADCvalue; // Keep track of last ADC value as it cannot be read wh
 int espeasy_analogRead(int pin);
 
 #ifdef ESP32
+void initADC();
+
+bool hasADC_factory_calibration();
+const __FlashStringHelper * getADC_factory_calibration_type();
+
+int getADC_num_for_gpio(int pin);
+
+int applyFactoryADCcalibration(int adc_num, int reading);
+
 int espeasy_analogRead(int pin, bool readAsTouch);
+int espeasy_analogRead_calibrated(int pin, int& raw_value);
 #endif
 
 

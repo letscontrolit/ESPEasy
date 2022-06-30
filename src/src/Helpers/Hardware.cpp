@@ -25,6 +25,9 @@
   #include <soc/soc.h>
   #include <soc/efuse_reg.h>
 
+  // Needed to get ADC Vref
+  #include <esp_adc_cal.h>
+
   #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
     #if CONFIG_IDF_TARGET_ESP32       // ESP32/PICO-D4
       #include <esp32/rom/spi_flash.h>
@@ -466,6 +469,59 @@ int espeasy_analogRead(int pin) {
 #endif // ifdef ESP8266
 
 #ifdef ESP32
+// ESP32 ADC calibration datatypes.
+esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
+esp_adc_cal_value_t adc2_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
+esp_adc_cal_characteristics_t adc1_chars;
+esp_adc_cal_characteristics_t adc2_chars;
+
+#ifndef DEFAULT_VREF
+  #define DEFAULT_VREF 1100
+#endif
+
+void initADC() {
+  adc1_calibration_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc1_chars);
+  adc2_calibration_type = esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, DEFAULT_VREF, &adc2_chars);
+}
+
+bool hasADC_factory_calibration() {
+  return esp_adc_cal_check_efuse(adc1_calibration_type) == ESP_OK ||
+         esp_adc_cal_check_efuse(adc2_calibration_type) == ESP_OK;
+}
+
+const __FlashStringHelper * getADC_factory_calibration_type() {
+  switch (adc1_calibration_type) {
+    case ESP_ADC_CAL_VAL_EFUSE_VREF:   return F("V_ref in eFuse");
+    case ESP_ADC_CAL_VAL_EFUSE_TP:     return F("Two Point values in eFuse");
+    case ESP_ADC_CAL_VAL_DEFAULT_VREF: return F("Default reference voltage");
+    case ESP_ADC_CAL_VAL_EFUSE_TP_FIT: return F("Two Point values and fitting curve in eFuse");
+    case ESP_ADC_CAL_VAL_NOT_SUPPORTED:
+      break;
+  }
+  return F("Unknown");
+}
+
+int getADC_num_for_gpio(int pin) {
+  int adc, ch, t;
+
+  if (getADC_gpio_info(pin, adc, ch, t)) {
+    return adc;
+  }
+  return -1;
+}
+
+int applyFactoryADCcalibration(int adc_num, int reading) {
+  if (adc_num == 1 || adc_num == 2) {
+    if (esp_adc_cal_check_efuse((adc_num == 1) ? adc1_calibration_type : adc2_calibration_type) == ESP_OK) {
+      return esp_adc_cal_raw_to_voltage(
+        reading,
+        (adc_num == 1) ? &adc1_chars : &adc2_chars);
+    }
+  }
+  return reading;
+}
+
+
 int espeasy_analogRead(int pin) {
   return espeasy_analogRead(pin, false);
 }
@@ -506,6 +562,26 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
     }
   }
   return value;
+}
+
+int espeasy_analogRead_calibrated(int pin, int& raw_value) {
+  int adc, ch, t;
+
+  raw_value = 0;
+
+  if (getADC_gpio_info(pin, adc, ch, t)) {
+    if (adc == 2) {
+      if (WiFi.getMode() == WIFI_OFF) {
+        // See:
+        // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#configuration-and-reading-adc
+        // ADC2 is shared with WiFi, so don't read ADC2 when WiFi is on.
+        return 0;
+      }
+    }
+    raw_value = analogRead(pin);
+    return applyFactoryADCcalibration(adc, raw_value);
+  }
+  return 0;
 }
 
 #endif // ifdef ESP32

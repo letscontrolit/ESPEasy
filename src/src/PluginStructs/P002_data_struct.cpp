@@ -21,6 +21,7 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   # endif // if defined(ESP8266)
   # if defined(ESP32)
   _pin_analogRead = CONFIG_PIN1;
+  _useFactoryCalibration = applyFactoryCalibration(event);
   # endif // if defined(ESP32)
 
   if (P002_CALIBRATION_ENABLED) {
@@ -29,16 +30,16 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
     _calib_out1 = P002_CALIBRATION_VALUE1;
     _calib_out2 = P002_CALIBRATION_VALUE2;
   }
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
   LoadTaskSettings(event->TaskIndex);
   _nrDecimals        = ExtraTaskSettings.TaskDeviceValueDecimals[0];
   _nrMultiPointItems = P002_NR_MULTIPOINT_ITEMS;
 
   load(event);
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
 void P002_data_struct::load(struct EventStruct *event)
 {
   const size_t nr_lines = P002_Nlines;
@@ -63,7 +64,8 @@ void P002_data_struct::load(struct EventStruct *event)
   _binning.resize(_multipoint.size(), 0);
   _binningRange.resize(_multipoint.size());
 }
-#endif
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 void P002_data_struct::webformLoad(struct EventStruct *event)
 {
@@ -73,7 +75,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
       # endif // if defined(ESP32)
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
   {
     const __FlashStringHelper *outputOptions[] = {
       F("Use Current Sample"),
@@ -86,7 +88,23 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       P002_USE_BINNING };
     addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING);
   }
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
+  # ifdef ESP32
+  addFormSubHeader(F("Factory Calibration"));
+  addFormCheckBox(F("Apply Factory Calibration"), F("p002_fac_cal"), P002_APPLY_FACTORY_CALIB, !hasADC_factory_calibration());
+
+  if (hasADC_factory_calibration()) {
+    addRowLabel(F("Factory Calibration Type"));
+    addHtml(getADC_factory_calibration_type());
+
+    /*
+        // Test code to quickly check the factory calibration
+        for (int i = 0; i < P002_MAX_ADC_VALUE; i += (P002_MAX_ADC_VALUE / 100)) {
+          P002_formatStatistics(F("test"), i, applyFactoryADCcalibration(1, i));
+        }
+     */
+  }
+  # endif // ifdef ESP32
 
   addFormSubHeader(F("Two Point Calibration"));
 
@@ -114,7 +132,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       P002_formatStatistics(F("Step size"), 1,                  stepsize);
     }
   }
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
   addFormSubHeader(F("Multipoint Processing"));
   addFormCheckBox(F("Multipoint Processing Enabled"), F("p002_multi_en"), P002_MULTIPOINT_ENABLED);
 
@@ -149,7 +167,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     ++line_nr;
   }
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
 String P002_data_struct::webformSave(struct EventStruct *event)
@@ -157,6 +175,9 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   P002_OVERSAMPLING = getFormItemInt(F("p002_oversampling"), 0); // Set a default for LIMIT_BUILD_SIZE
 
   P002_CALIBRATION_ENABLED = isFormItemChecked(F("p002_cal"));
+  # ifdef ESP32
+  P002_APPLY_FACTORY_CALIB = isFormItemChecked(F("p002_fac_cal"));
+  # endif // ifdef ESP32
 
   P002_CALIBRATION_POINT1 = getFormItemInt(F("p002_adc1"));
   P002_CALIBRATION_VALUE1 = getFormItemFloat(F("p002_out1"));
@@ -164,7 +185,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
   P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
   P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
 
   P002_NR_MULTIPOINT_ITEMS = getFormItemInt(F("p002_nr_mp"));
@@ -176,7 +197,7 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   lines[P002_SAVED_NR_LINES]     = String(nr_lines);
   lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
 
-  //const int nrDecimals = webArg(F("TDVD1")).toInt();
+  // const int nrDecimals = webArg(F("TDVD1")).toInt();
 
   for (size_t varNr = P002_LINE_IDX_FIRST_MP; varNr < nr_lines; varNr += P002_STRINGS_PER_MP)
   {
@@ -192,31 +213,44 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   }
 
   return SaveCustomTaskSettings(event->TaskIndex, lines, nr_lines, 0);
-#else
+# else // ifndef LIMIT_BUILD_SIZE
   return EMPTY_STRING;
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
 void P002_data_struct::takeSample()
 {
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
+
+  if (_sampleMode == P002_USE_CURENT_SAMPLE) { return; }
+# endif // ifndef LIMIT_BUILD_SIZE
+# ifdef ESP32
+  int adc_raw;
+  const int raw = _useFactoryCalibration ?
+                  espeasy_analogRead_calibrated(_pin_analogRead, adc_raw) :
+                  espeasy_analogRead(_pin_analogRead);
+# else // ifdef ESP32
+  const int raw = espeasy_analogRead(_pin_analogRead);
+# endif // ifdef ESP32
+# ifndef LIMIT_BUILD_SIZE
+
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
-      addOversamplingValue(espeasy_analogRead(_pin_analogRead));
+      addOversamplingValue(raw);
       break;
     case P002_USE_BINNING:
-      addBinningValue(espeasy_analogRead(_pin_analogRead));
+      addBinningValue(raw);
       break;
   }
-#else
-  addOversamplingValue(espeasy_analogRead(_pin_analogRead));
-#endif
+# else // ifndef LIMIT_BUILD_SIZE
+  addOversamplingValue(raw);
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
 bool P002_data_struct::getValue(float& float_value,
                                 int  & raw_value) const
 {
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
   bool mustTakeSample = false;
 
   switch (_sampleMode) {
@@ -238,19 +272,31 @@ bool P002_data_struct::getValue(float& float_value,
   if (!mustTakeSample) {
     return false;
   }
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
 
+  # ifdef ESP32
+
+  if (_useFactoryCalibration) {
+    float_value = espeasy_analogRead_calibrated(_pin_analogRead, raw_value);
+  } else {
+    raw_value   = espeasy_analogRead(_pin_analogRead);
+    float_value = static_cast<float>(raw_value);
+  }
+  # else // ifdef ESP32
   raw_value   = espeasy_analogRead(_pin_analogRead);
   float_value = static_cast<float>(raw_value);
-#ifndef LIMIT_BUILD_SIZE
+  # endif // ifdef ESP32
+
+# ifndef LIMIT_BUILD_SIZE
   float_value = applyMultiPointInterpolation(applyCalibration(float_value));
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
   return true;
 }
 
 void P002_data_struct::reset()
 {
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
+
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
       resetOversampling();
@@ -264,9 +310,9 @@ void P002_data_struct::reset()
       break;
     }
   }
-#else
+# else // ifndef LIMIT_BUILD_SIZE
   resetOversampling();
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
 void P002_data_struct::resetOversampling() {
@@ -314,16 +360,16 @@ bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) 
 
     // We counted the raw oversampling values, so now we need to apply the calibration and multi-point processing
     float_value = applyCalibration(float_value);
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
     float_value = applyMultiPointInterpolation(float_value);
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
 
     return true;
   }
   return false;
 }
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
 int P002_data_struct::getBinIndex(float currentValue) const
 {
   const size_t mp_size = _multipoint.size();
@@ -393,7 +439,7 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
       raw_value         = _multipoint[i]._adc;
     }
   }
-  # ifndef BUILD_NO_DEBUG
+  #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("ADC getBinnedValue: bin cnt: ");
@@ -405,11 +451,12 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
     log += raw_value;
     addLog(LOG_LEVEL_DEBUG, log);
   }
-  # endif // ifndef BUILD_NO_DEBUG
+  #  endif // ifndef BUILD_NO_DEBUG
 
   return highest_bin_count != 0;
 }
-#endif
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value) {
   if (P002_CALIBRATION_ENABLED)
@@ -430,9 +477,16 @@ float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_valu
   # endif // if defined(ESP8266)
   # if defined(ESP32)
   const int pin = CONFIG_PIN1;
+
+  if (applyFactoryCalibration(event)) {
+    return applyCalibration(event, static_cast<float>(espeasy_analogRead_calibrated(pin, raw_value)));
+  } else  {
+    raw_value = espeasy_analogRead(pin);
+  }
+  # else // if defined(ESP32)
+  raw_value = espeasy_analogRead(pin);
   # endif // if defined(ESP32)
 
-  raw_value = espeasy_analogRead(pin);
   return applyCalibration(event, static_cast<float>(raw_value));
 }
 
@@ -446,7 +500,19 @@ float P002_data_struct::applyCalibration(float float_value) const
     _calib_out2);
 }
 
-#ifndef LIMIT_BUILD_SIZE
+#ifdef ESP32
+bool  P002_data_struct::applyFactoryCalibration(struct EventStruct *event) {
+  if (P002_APPLY_FACTORY_CALIB) {
+    const int adc_num = getADC_num_for_gpio(CONFIG_PIN1);
+    if ((adc_num == 1) || (adc_num == 2)) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif
+
+# ifndef LIMIT_BUILD_SIZE
 float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 {
   // First find the surrounding bins
@@ -515,7 +581,8 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 
   return float_value;
 }
-#endif
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 float P002_data_struct::mapADCtoFloat(float float_value,
                                       int   adc1,
