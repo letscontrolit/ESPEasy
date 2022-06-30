@@ -1255,6 +1255,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
+   #if !defined(FEATURE_SD)
+     #define FEATURE_SD
+   #endif
    #ifndef USES_ADAFRUITGFX_HELPER
     #define USES_ADAFRUITGFX_HELPER
    #endif
@@ -1307,6 +1310,9 @@ To create/register a plugin, you have to :
 
 // Collection of all NeoPixel plugins
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
+  #if !defined(FEATURE_SD) && !defined(ESP8266_1M)
+    #define FEATURE_SD
+  #endif
   #ifndef USES_P038
     #define USES_P038   // NeoPixel
   #endif
