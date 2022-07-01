@@ -261,7 +261,7 @@ void AdaGFXFormBacklight(const __FlashStringHelper *backlightPinId,
                          int8_t                     backlightPin,
                          const __FlashStringHelper *backlightPercentageId,
                          uint16_t                   backlightPercentage) {
-  addFormPinSelect(formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
+  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
 
   addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 1, 100);
   addUnit(F("1-100%"));
@@ -276,7 +276,7 @@ void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
                              bool                       buttonInverse,
                              const __FlashStringHelper *displayTimeoutId,
                              int                        displayTimeout) {
-  addFormPinSelect(F("Display button"), buttonPinId, buttonPin);
+  addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), buttonPinId, buttonPin);
 
   addFormCheckBox(F("Inversed Logic"), buttonInverseId, buttonInverse);
 

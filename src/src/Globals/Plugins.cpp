@@ -267,21 +267,34 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 // event value 1 = taskIndex (first task = 1)
 // event value 2 = return value of the plugin function
 // Example:  TaskInit#bme=1,0    (taskindex = 0, return value = 0)
-void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, int value1) {
+void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, const String& value_str) {
   if (Settings.UseRules) {
     String event;
-    event.reserve(eventName.length() + 32);
+    event.reserve(eventName.length() + 32 + value_str.length());
     event  = eventName;
     event += '#';
     event += getTaskDeviceName(taskIndex);
     event += '=';
     event += taskIndex + 1;
-    event += ',';
-    event += value1;
+    if (value_str.length() > 0) {
+      event += ',';
+      event += wrapWithQuotesIfContainsParameterSeparatorChar(value_str);
+    }
     eventQueue.addMove(std::move(event));
   }
 }
 
+void queueTaskEvent(const String& eventName, taskIndex_t taskIndex, const int& value1) {
+  queueTaskEvent(eventName, taskIndex, String(value1));
+}
+
+void queueTaskEvent(const __FlashStringHelper * eventName, taskIndex_t taskIndex, const String& value1) {
+  queueTaskEvent(String(eventName), taskIndex, value1);
+}
+
+void queueTaskEvent(const __FlashStringHelper * eventName, taskIndex_t taskIndex, const int& value1) {
+  queueTaskEvent(String(eventName), taskIndex, String(value1));
+}
 
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
@@ -616,17 +629,26 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (((Function == PLUGIN_INIT) ||
              (Function == PLUGIN_WEBFORM_LOAD)) &&
             Device[DeviceIndex].ErrorStateValues) { // Only when we support ErrorStateValues
+          // FIXME TD-er: Not sure if this should be called here.
+          // It may be better if ranges are set in the call for default values and error values set via PLUGIN_INIT.
+          // Also these may be plugin specific so perhaps create a helper function to load/save these values and call these helpers from the plugin code.
           Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
         }
 
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
-        if (Function == PLUGIN_READ &&
-            (retval ||
-             (Device[DeviceIndex].ErrorStateValues && // Handle ErrorStateValues
-              Plugin_ptr[DeviceIndex](PLUGIN_GET_ERROR_VALUE_STATE, event, str)))) {
-          saveUserVarToRTC();
-          retval = true; // Alternative success
+        if (Function == PLUGIN_READ) {
+          if (!retval) {
+            String errorStr;
+            if (Plugin_ptr[DeviceIndex](PLUGIN_READ_ERROR_OCCURED, event, errorStr))
+            {
+              // Apparently the last read call resulted in an error
+              // Send event indicating the error.
+              queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
+            }
+          } else {
+            saveUserVarToRTC();
+          }
         }
         if (Function == PLUGIN_INIT) {
           // Schedule the plugin to be read.
@@ -702,12 +724,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
         if (Function == PLUGIN_GET_DEVICEVTYPE) {
           event->sensorType = Device[DeviceIndex].VType;
-        }
-        if ((Function == PLUGIN_WEBFORM_SAVE) &&
-            Device[DeviceIndex].ErrorStateValues) { // Only if plugin supports ErrorStateValues
-          if (Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str)) { // Initialize value range(s)
-            SaveTaskSettings(event->TaskIndex); // Let's save that too
-          }
         }
 
         START_TIMER;

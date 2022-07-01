@@ -87,8 +87,14 @@ void json_close();
 
 void json_close(bool arr);
 
+void json_number(const __FlashStringHelper * name,
+                 const String& value);
+
 void json_number(const String& name,
                  const String& value);
+
+void json_prop(const __FlashStringHelper * name,
+               const String& value);
 
 void json_prop(const String& name,
                const String& value);
