@@ -96,12 +96,12 @@ void sw_watchdog_callback(void *arg)
 \*********************************************************************************************/
 void ESPEasy_setup()
 {
-#ifdef ESP8266_DISABLE_EXTRA4K
+#if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)
   disable_extra4k_at_link_time();
-#endif // ifdef ESP8266_DISABLE_EXTRA4K
+#endif
 #ifdef PHASE_LOCKED_WAVEFORM
   enablePhaseLockedWaveform();
-#endif // ifdef PHASE_LOCKED_WAVEFORM
+#endif
 #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
 #endif
@@ -126,11 +126,12 @@ void ESPEasy_setup()
     }
   }
 #endif  // CONFIG_IDF_TARGET_ESP32
+#endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
-#endif  // ESP32
+
   initWiFi();
 
   run_compiletime_checks();

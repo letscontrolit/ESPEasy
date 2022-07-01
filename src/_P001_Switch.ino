@@ -227,7 +227,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         PCONFIG_LONG(3) = 0; // safebutton counter
 
         // used to track if LP has fired
-        PCONFIG(6) = false;
+        PCONFIG(6) = 0;
 
         // store millis for debounce, doubleclick and long press
         PCONFIG_LONG(0) = millis(); // debounce timer
@@ -374,7 +374,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
           // reset timer for long press
           PCONFIG_LONG(2) = millis();
-          PCONFIG(6)      = false;
+          PCONFIG(6)      = 0;
 
           const unsigned long debounceTime = timePassedSince(PCONFIG_LONG(0));
 
@@ -516,9 +516,9 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
           if (deltaLP >= (unsigned long)lround(P001_LP_MIN_INT))
           {
             uint8_t output_value;
-            uint8_t needToSendEvent = false;
+            bool needToSendEvent = false;
 
-            PCONFIG(6) = true;
+            PCONFIG(6) = 1;
 
             switch (PCONFIG(2))
             {

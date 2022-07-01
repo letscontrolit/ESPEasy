@@ -954,9 +954,7 @@ void readBootCause() {
     #endif
     case TG0WDT_SYS_RESET: 
     case TG1WDT_SYS_RESET:
-    #ifndef ESP32S2
     case RTCWDT_SYS_RESET:  lastBootCause = BOOT_CAUSE_EXT_WD; break;
-    #endif
     #ifndef ESP32S2
     case SW_CPU_RESET:
     case TGWDT_CPU_RESET:
@@ -968,6 +966,14 @@ void readBootCause() {
     #endif
     case RTCWDT_BROWN_OUT_RESET: lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break;
     case RTCWDT_RTC_RESET:  lastBootCause = BOOT_CAUSE_COLD_BOOT; break;
+    #ifdef ESP32S2
+    case RTC_SW_SYS_RESET: lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
+    case TG0WDT_CPU_RESET: lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    case RTC_SW_CPU_RESET: lastBootCause = BOOT_CAUSE_SOFT_RESTART; break;
+    case TG1WDT_CPU_RESET: lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    case SUPER_WDT_RESET:   lastBootCause = BOOT_CAUSE_EXT_WD; break;
+    case GLITCH_RTC_RESET:  lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break; // FIXME TD-er: Does this need a different reason?
+    #endif
   }
 }
 #endif

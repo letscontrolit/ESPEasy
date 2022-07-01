@@ -204,7 +204,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
     }
   }
 
-  if (!search || (search && found))
+  if (!search || found)
   {
     String reply;
     reply.reserve(128);
