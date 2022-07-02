@@ -252,6 +252,19 @@ This allows ESPEasy to know the correct date and time after been powered off for
 
 N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
 
+Procedure to configure a real time clock (RTC) chip:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Connect the RTC chip to the configured I2C pins, and boot up the ESPEasy unit.
+* From Tools/Advanced, enable the use of NTP, and set DST option in the DST settings and the Timezone offset, Latitude and Longitude in the Location settings **correctly**.
+* Select the used RTC chip from the list.
+* Submit the page to save the settings.
+* Reboot the unit.
+* The time will be retrieved using NTP once more, and set into the RTC chip.
+* Check on the Main tab if the time is displayed correctly.
+* On the Tools/Advanced page, the NTP setting can now be disabled, if so desired, as it won't be used anymore (unless the External Time Source is set to None).
+
+
 DST Settings
 ------------
 
