@@ -795,8 +795,8 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
 void P128_data_struct::fade(void) {
   for (int pixel = 0; pixel < pixelCount; pixel++) {
-    long  zaehler  = 20 * (counter20ms - starttime[pixel]);
-    float progress = (float)zaehler / (float)fadetime;
+    long  counter  = 20 * (counter20ms - starttime[pixel]);
+    float progress = (float)counter / (float)fadetime;
     progress = (progress < 0) ? 0 : progress;
     progress = (progress > 1) ? 1 : progress;
 
@@ -961,8 +961,8 @@ void P128_data_struct::faketv(void) {
  * Cycles a rainbow over the entire string of LEDs.
  */
 void P128_data_struct::rainbow(void) {
-  long  zaehler  = 20 * (counter20ms - starttimerb);
-  float progress = (float)zaehler / (float)fadetime;
+  long  counter  = 20 * (counter20ms - starttimerb);
+  float progress = (float)counter / (float)fadetime;
 
   if (fadeIn == true) {
     Plugin_128_pixels->SetBrightness(progress * maxBright); // Safety check
