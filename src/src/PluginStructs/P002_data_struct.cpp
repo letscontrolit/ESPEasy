@@ -149,16 +149,14 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   for (int varNr = P002_LINE_IDX_FIRST_MP; varNr < P002_Nlines; varNr += P002_STRINGS_PER_MP)
   {
     const String label = String(F("Point ")) + String(line_nr + 1);
-    const double adc   = _multipoint[line_nr]._adc;
-    const double val   = _multipoint[line_nr]._value;
     addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
-                   _multipoint.size() > line_nr ? doubleToString(adc, _nrDecimals, true) : EMPTY_STRING,
+                   _multipoint.size() > line_nr ? doubleToString(static_cast<double>(_multipoint[line_nr]._adc), _nrDecimals, true) : EMPTY_STRING,
                    0);
     html_add_estimate_symbol();
     addTextBox(getPluginCustomArgName(varNr + 1),
-               _multipoint.size() > line_nr ?  doubleToString(val, _nrDecimals, true) : EMPTY_STRING,
+               _multipoint.size() > line_nr ?  doubleToString(static_cast<double>(_multipoint[line_nr]._value), _nrDecimals, true) : EMPTY_STRING,
                0,
                false,
                false,
@@ -432,7 +430,9 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 {
   unsigned int highest_bin_count = 0;
 
-  for (size_t i = 0; i < _binning.size(); ++i) {
+  const size_t nr_bin_elements = std::min(_binning.size(), _multipoint.size());
+
+  for (size_t i = 0; i < nr_bin_elements; ++i) {
     if (_binning[i] > highest_bin_count) {
       highest_bin_count = _binning[i];
       float_value       = _multipoint[i]._value;
