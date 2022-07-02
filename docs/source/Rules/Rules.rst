@@ -23,7 +23,6 @@ After clicking Submit, you will find the Rules tab added. Here you can start exp
 
 * **Rules**: Enable the use of rules. If disabled, also (most) events will no longer be generated, as they won't be processed, though data will still be sent to Controllers.
 * **Enable Rules Cache**: For faster processing of rules they can be (partially) cached in memory. If memory is really low this option can be disabled.
-* **Optimize Rules Cache Event Order**: During rules processing, some optimization is done to speed up the finding of the rule that is to be executed. This can cause issues if a variable argument is used for matching the event (f.e. use of ``%vN%`` like ``on sensor#value>%v1% do``). If such rules are used, or if rules are not executed as expected, first try to disable this option, to see if that resolves the issue. If needed, ask for support via the Forum.
 * **Tolerant last parameter**: A few commands can use, for backward compatibility, a more tolerant handling of the last parameter, as suggested in the note. This feature should be enabled if it is needed.
 
 .. code:: none

@@ -264,6 +264,11 @@ Procedure to configure a real time clock (RTC) chip:
 * Check on the Main tab if the time is displayed correctly.
 * On the Tools/Advanced page, the NTP setting can now be disabled, if so desired, as it won't be used anymore (unless the External Time Source is set to None).
 
+Besides using NTP to set the date/time to the RTC chip, other supported options are:
+
+* Using the ``DateTime`` command to set the date and time.
+* Having a GPS receiver connected, using the GPS plugin (:ref:`P082_page`), the ESPEasy date/time will be set when GPS date/time is valid, as that is more accurate than the RTC date/time. The RTC date/time will be used from boot, and be updated once the GPS has a fix, which may take some time, depending on conditions.
+
 
 DST Settings
 ------------
