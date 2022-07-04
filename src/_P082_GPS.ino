@@ -711,7 +711,7 @@ void P082_html_show_stats(struct EventStruct *event) {
   P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
-  addHtml(toString(P082_data->gps->hdop.value() / 100.0f));
+  addHtmlFloat(P082_data->gps->hdop.value() / 100.0f);
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;

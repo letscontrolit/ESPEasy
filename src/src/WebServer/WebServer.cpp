@@ -750,27 +750,6 @@ String getControllerSymbol(uint8_t index)
    }
  */
 
-void addSVG_param(const __FlashStringHelper * key, int value) {
-  addHtml(' ');
-  addHtml(key);
-  addHtml('=');
-  addHtml('\"');
-  addHtmlInt(value);
-  addHtml('\"');
-}
-
-void addSVG_param(const __FlashStringHelper * key, float value) {
-  addSVG_param(key, toString(value, 2));
-}
-
-void addSVG_param(const __FlashStringHelper * key, const String& value) {
-  addHtml(' ');
-  addHtml(key);
-  addHtml('=');
-  addHtml('\"');
-  addHtml(value);
-  addHtml('\"');
-}
 
 void createSvgRect_noStroke(const __FlashStringHelper * classname, unsigned int fillColor, float xoffset, float yoffset, float width, float height, float rx, float ry) {
   createSvgRect(classname, fillColor, fillColor, xoffset, yoffset, width, height, 0, rx, ry);
@@ -788,21 +767,21 @@ void createSvgRect(const String& classname,
                    float        ry) {
   addHtml(F("<rect"));
   if (!classname.isEmpty()) {
-    addSVG_param(F("class"), classname);
+    addHtmlAttribute(F("class"), classname);
   }
-  addSVG_param(F("fill"), formatToHex(fillColor, F("#")));
+  addHtmlAttribute(F("fill"), formatToHex(fillColor, F("#")));
 
   if (!approximatelyEqual(strokeWidth, 0)) {
-    addSVG_param(F("stroke"),       formatToHex(strokeColor, F("#")));
-    addSVG_param(F("stroke-width"), strokeWidth);
+    addHtmlAttribute(F("stroke"),       formatToHex(strokeColor, F("#")));
+    addHtmlAttribute(F("stroke-width"), strokeWidth);
   }
-  addSVG_param(F("x"),      xoffset);
-  addSVG_param(F("y"),      yoffset);
-  addSVG_param(F("width"),  width);
-  addSVG_param(F("height"), height);
-  addSVG_param(F("rx"),     rx);
-  addSVG_param(F("ry"),     ry);
-  addHtml(F("/>"));
+  addHtmlAttribute('x',      xoffset);
+  addHtmlAttribute('y',      yoffset);
+  addHtmlAttribute(F("width"),  width);
+  addHtmlAttribute(F("height"), height);
+  addHtmlAttribute(F("rx"),     rx);
+  addHtmlAttribute(F("ry"),     ry);
+  addHtml('/', '>');
 }
 
 void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size, int height, int range, float SVG_BAR_WIDTH) {
@@ -811,29 +790,24 @@ void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size
   if (width < 2) { width = 2; }
   addHtml(formatToHex(color, F("<path fill=\"#")));
   addHtml(F("\" d=\"M"));
-  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtmlFloat(SVG_BAR_WIDTH * xoffset / range, 2);
   addHtml(' ');
   addHtmlInt(yoffset);
-  addHtml('h');
-  addHtml(toString(width, 2));
-  addHtml('v');
-  addHtmlInt(height);
-  addHtml('H');
-  addHtml(toString(SVG_BAR_WIDTH * xoffset / range, 2));
+  addHtmlAttribute('h', width);
+  addHtmlAttribute('v', height);
+  addHtmlAttribute('H', SVG_BAR_WIDTH * xoffset / range);
   addHtml(F("z\"/>\n"));
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
-  addHtml(F("<text style=\"line-height:1.25\" x=\""));
-  addHtml(toString(textXoffset, 2));
-  addHtml(F("\" y=\""));
-  addHtml(toString(textYoffset, 2));
+  addHtml(F("<text style=\"line-height:1.25\""));
+  addHtmlAttribute('x', textXoffset);
+  addHtmlAttribute('y', textYoffset);
   addHtml(F("\" stroke-width=\".3\" font-family=\"sans-serif\" font-size=\"8\" letter-spacing=\"0\" word-spacing=\"0\">\n"));
-  addHtml(F("<tspan x=\""));
-  addHtml(toString(textXoffset, 2));
-  addHtml(F("\" y=\""));
-  addHtml(toString(textYoffset, 2));
-  addHtml('"', '>');
+  addHtml(F("<tspan"));
+  addHtmlAttribute('x', textXoffset);
+  addHtmlAttribute('y', textYoffset);
+  addHtml('>');
   addHtml(text);
   addHtml(F("</tspan>\n</text>"));
 }
@@ -841,17 +815,115 @@ void createSvgTextElement(const String& text, float textXoffset, float textYoffs
 #define SVG_BAR_HEIGHT 16
 #define SVG_BAR_WIDTH 400
 
-void write_SVG_image_header(int width, int height, bool useViewbox) {
-  addHtml(F("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\""));
-  addHtmlInt(width);
-  addHtml(F("\" height=\""));
-  addHtmlInt(height);
+void write_SVG_image_header(int  width,
+                            int  height,
+                            bool useViewbox) 
+{
+  write_SVG_image_header(width, height, F("svg"), useViewbox);
+}
+
+
+void write_SVG_image_header(int width, int height, const __FlashStringHelper * classname, bool useViewbox) {
+  write_SVG_image_header(width, height, 0, 0, 100, 100, classname, useViewbox);
+}
+
+void write_SVG_image_header(int  width,
+                            int  height,
+                            float  viewbox_minX,
+                            float  viewbox_minY,
+                            float  viewbox_width,
+                            float  viewbox_height,
+                            const __FlashStringHelper * classname,
+                            bool useViewbox) {
+  addHtml(F("<svg xmlns=\"http://www.w3.org/2000/svg\" "));
+  addHtmlAttribute(F("width"), width);
+  addHtmlAttribute(F("height"), height);
   addHtml(F("\" version=\"1.1\""));
 
   if (useViewbox) {
-    addHtml(F(" viewBox=\"0 0 100 100\""));
+    addHtml(F(" viewBox=\""));
+    addHtmlFloat(viewbox_minX, 2);
+    addHtml(' ');
+    addHtmlFloat(viewbox_minY, 2);
+    addHtml(' ');
+    addHtmlFloat(viewbox_width, 2);
+    addHtml(' ');
+    addHtmlFloat(viewbox_height, 2);
+    addHtml('\"');
   }
+  addHtmlAttribute(F("class"), classname);
   addHtml('>');
+}
+
+void add_ChartJS_chart_header(
+                       const __FlashStringHelper * chartType,
+                       const __FlashStringHelper * id,
+                       const __FlashStringHelper * chartTitle,
+                       int width,
+                       int height,
+                       int       valueCount,
+                       const int labels[])
+{
+  addHtml(F("<canvas"));
+  addHtmlAttribute(F("id"), id);
+  addHtmlAttribute(F("width"), width);
+  addHtmlAttribute(F("height"), height);
+  addHtml(F("></canvas>"));
+  addHtml(F("<script>const "));
+  addHtml(id);
+  addHtml(F("_ctx = document.getElementById('"));
+  addHtml(id);
+  addHtml(F("');const my_"));
+  addHtml(id);
+  addHtml(F("_Chart = new Chart("));
+  addHtml(id);
+  addHtml(F("_ctx, {type: '"));
+  addHtml(chartType);
+  addHtml('\'', ',');
+  addHtml(F("options: {responsive: false,plugins: {legend: {position: 'top',},title: {display: true,text: '"));
+  addHtml(chartTitle);
+  addHtml(F("'}}},"));
+  addHtml(F("data: {labels: ["));
+  for (int i = 0; i < valueCount; ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(labels[i]);
+  }
+  addHtml(F("],datasets: ["));
+
+}
+
+
+void add_ChartJS_dataset(
+  const __FlashStringHelper * label,
+  const __FlashStringHelper * color,
+  const float values[],
+  int       valueCount)
+{
+  addHtml('{');
+  addHtml(F("label: '"));
+  addHtml(label);
+  addHtml('\'', ',');
+  addHtml(F("backgroundColor: '"));
+  addHtml(color);
+  addHtml('\'', ',');
+  addHtml(F("borderColor: '"));
+  addHtml(color);
+  addHtml('\'', ',');
+  addHtml(F("data: ["));
+  for (int i = 0; i < valueCount; ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+    addHtmlFloat(values[i], 3);
+  }
+  addHtml(']', ',');
+  addHtml('}', ',');
+}
+
+void add_ChartJS_chart_footer() {
+  addHtml(F("]}});</script>"));
 }
 
 /*

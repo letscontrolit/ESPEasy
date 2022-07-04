@@ -128,7 +128,8 @@ public:
 
   // This needs to be a static function, as the object may not exist if the task is not enabled.
   static float applyCalibration(struct EventStruct *event,
-                                float               float_value);
+                                float               float_value,
+                                bool                useFactoryCalibration = false);
 
   static float getCurrentValue(struct EventStruct *event,
                                int               & raw_value);
@@ -146,8 +147,8 @@ private:
 # endif // ifndef LIMIT_BUILD_SIZE
 
   static float mapADCtoFloat(float float_value,
-                             int   adc1,
-                             int   adc2,
+                             float adc1,
+                             float adc2,
                              float out1,
                              float out2);
 

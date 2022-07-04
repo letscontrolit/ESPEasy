@@ -9,7 +9,7 @@ void P002_formatStatistics(const __FlashStringHelper *label, int raw, float floa
   addRowLabel(label);
   addHtmlInt(raw);
   html_add_estimate_symbol();
-  addHtml(toString(float_value, 3));
+  addHtmlFloat(float_value, 3);
 }
 
 P002_data_struct::P002_data_struct(struct EventStruct *event)
@@ -69,11 +69,10 @@ void P002_data_struct::load(struct EventStruct *event)
 
 void P002_data_struct::webformLoad(struct EventStruct *event)
 {
-          # if defined(ESP32)
+# if defined(ESP32)
   addHtml(F("<TR><TD>Analog Pin:<TD>"));
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
-
-      # endif // if defined(ESP32)
+# endif // if defined(ESP32)
 
 # ifndef LIMIT_BUILD_SIZE
   {
@@ -96,13 +95,6 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   if (hasADC_factory_calibration()) {
     addRowLabel(F("Factory Calibration Type"));
     addHtml(getADC_factory_calibration_type());
-
-    /*
-        // Test code to quickly check the factory calibration
-        for (int i = 0; i < MAX_ADC_VALUE; i += (MAX_ADC_VALUE / 100)) {
-          P002_formatStatistics(F("test"), i, applyFactoryADCcalibration(1, i));
-        }
-     */
   }
   # endif // ifdef ESP32
 
@@ -125,10 +117,80 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     P002_formatStatistics(F("Current"), raw_value, value);
 
     if (P002_CALIBRATION_ENABLED) {
-      P002_formatStatistics(F("Minimum"),   0,                  P002_data_struct::applyCalibration(event, 0));
-      P002_formatStatistics(F("Maximum"),   MAX_ADC_VALUE, P002_data_struct::applyCalibration(event, MAX_ADC_VALUE));
+      const float minY_value = P002_data_struct::applyCalibration(event, 0, true);
+      const float maxY_value = P002_data_struct::applyCalibration(event, MAX_ADC_VALUE, true);
 
-      float stepsize = P002_data_struct::applyCalibration(event, 1.0f) - P002_data_struct::applyCalibration(event, 0.0f);
+      #ifndef LIMIT_BUILD_SIZE
+      addRowLabel(F("Calibration Curve"));
+
+      constexpr int valueCount = 32;
+      constexpr int stepSize = (MAX_ADC_VALUE + 1) / valueCount;
+
+      int labels[valueCount + 1];
+      for (int i = 0; i <= valueCount; ++i) {
+        const int adcval = (i == valueCount) ? MAX_ADC_VALUE : i * stepSize;
+        labels[i] = adcval;
+      }
+
+      add_ChartJS_chart_header(
+        F("line"),
+        F("twoPointCurve"),
+        F("Two Point Calibration Curve"),
+        500,
+        500,
+        valueCount,
+        labels);
+
+      {
+        float values[valueCount + 1];
+        for (int i = 0; i <= valueCount; ++i) {
+          values[i] = P002_data_struct::applyCalibration(event, labels[i], false);
+        }
+
+        add_ChartJS_dataset(
+          F("2 Point Calibration"),
+          F("rgb(255, 99, 132)"),
+          values, 
+          valueCount);
+      }
+
+#ifdef ESP32
+      if (hasADC_factory_calibration())
+      {
+        float values[valueCount + 1];
+        for (int i = 0; i <= valueCount; ++i) {
+          values[i] = P002_data_struct::applyCalibration(event, labels[i], true);
+        }
+
+        add_ChartJS_dataset(
+          F("Factory & 2 Point Calibration"),
+          F("rgb(153, 102, 255)"),
+          values, 
+          valueCount);
+      }
+      if (hasADC_factory_calibration()) 
+      {
+        float values[valueCount + 1];
+        for (int i = 0; i <= valueCount; ++i) {
+          values[i] = applyFactoryADCcalibration(1, labels[i]);
+        }
+
+        add_ChartJS_dataset(
+          F("Factory Calibration"),
+          F("rgb(54, 162, 235)"),
+          values, 
+          valueCount);
+      }
+#endif
+      add_ChartJS_chart_footer();
+      #endif
+
+
+
+      P002_formatStatistics(F("Minimum ADC"), 0,             minY_value);
+      P002_formatStatistics(F("Maximum ADC"), MAX_ADC_VALUE, maxY_value);
+
+      const float stepsize = (maxY_value - minY_value) / MAX_ADC_VALUE;
       P002_formatStatistics(F("Step size"), 1,                  stepsize);
     }
   }
@@ -165,6 +227,35 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     ++line_nr;
   }
+
+  {
+    int labels[_multipoint.size()] = {0};
+    float values[_multipoint.size()];
+    for (int i = 0; i < _multipoint.size(); ++i) {
+      labels[i] = _multipoint[i]._adc;
+      values[i] = _multipoint[i]._value;
+    }
+
+    const bool useBinning = P002_OVERSAMPLING == P002_USE_BINNING;
+
+    add_ChartJS_chart_header(
+      useBinning ? F("bar") : F("line"),
+      F("mpcurve"),
+      F("Multipoint Curve"),
+      500,
+      500,
+      _multipoint.size(),
+      labels);
+
+    add_ChartJS_dataset(
+      F("Multipoint Values"),
+      F("rgb(255, 99, 132)"),
+      values, 
+      _multipoint.size());
+
+    add_ChartJS_chart_footer();
+  }
+
 # endif // ifndef LIMIT_BUILD_SIZE
 }
 
@@ -458,7 +549,12 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 
 # endif // ifndef LIMIT_BUILD_SIZE
 
-float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value) {
+float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value, bool useFactoryCalibration) {
+  #ifdef ESP32
+  if (useFactoryCalibration && applyFactoryCalibration(event)) {
+    float_value = applyFactoryADCcalibration(1, float_value);
+  }
+  #endif
   if (P002_CALIBRATION_ENABLED)
   {
     float_value = mapADCtoFloat(float_value,
@@ -585,8 +681,8 @@ float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 # endif // ifndef LIMIT_BUILD_SIZE
 
 float P002_data_struct::mapADCtoFloat(float float_value,
-                                      int   adc1,
-                                      int   adc2,
+                                      float adc1,
+                                      float adc2,
                                       float out1,
                                       float out2)
 {

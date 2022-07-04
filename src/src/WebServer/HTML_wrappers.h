@@ -90,6 +90,7 @@ void html_add_wide_button_prefix(const String& classes, bool enabled);
 void html_add_form();
 
 void html_add_JQuery_script();
+void html_add_ChartJS_script();
 void html_add_autosubmit_form();
 
 void html_add_script(const __FlashStringHelper * script, bool defer);
@@ -113,11 +114,16 @@ void addHtmlInt(int32_t int_val);
 void addHtmlInt(uint32_t int_val);
 void addHtmlInt(int64_t int_val);
 void addHtmlInt(uint64_t int_val);
+void addHtmlFloat(const float& value, unsigned int nrDecimals = 2u);
+void addHtmlFloat(const double& value, unsigned int nrDecimals = 2u);
 
 void addEncodedHtml(const __FlashStringHelper * html);
 void addEncodedHtml(const String& html);
 
+void addHtmlAttribute(char label, int value);
+void addHtmlAttribute(char label, float value);
 void addHtmlAttribute(const __FlashStringHelper * label, int value);
+void addHtmlAttribute(const __FlashStringHelper * label, float value);
 void addHtmlAttribute(const String& label, int value);
 void addHtmlAttribute(const __FlashStringHelper * label, const __FlashStringHelper * value);
 void addHtmlAttribute(const __FlashStringHelper * label, const String& value);
