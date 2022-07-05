@@ -584,6 +584,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       uint8_t stackVersion;
       uint8_t adr;
 
+      ESPEasySerialPort port = ESPEasySerialPort::not_set;
+
       {
         // Keep this object in a small scope so we can destruct it as soon as possible again.
         std::shared_ptr<C018_ConfigStruct> customConfig;
@@ -610,6 +612,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         joinmethod    = customConfig->joinmethod;
         stackVersion  = customConfig->stackVersion;
         adr           = customConfig->adr;
+        port = static_cast<ESPEasySerialPort>(customConfig->serialPort);
 
         {
           addFormTextBox(F("Device EUI"), F("deveui"), customConfig->DeviceEUI, C018_DEVICE_EUI_LEN - 1);
@@ -627,8 +630,8 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       {
-        String options[2] = { F("OTAA"),  F("ABP") };
-        int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
+        const __FlashStringHelper * options[2] = { F("OTAA"),  F("ABP") };
+        const int    values[2]  = { C018_USE_OTAA, C018_USE_ABP };
         addFormSelector_script(F("Activation Method"), F("joinmethod"), 2,
                                options, values, nullptr, joinmethod,
                                F("joinChanged(this)")); // Script to toggle OTAA/ABP fields visibility when changing selection.
@@ -664,8 +667,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
 
       addTableSeparator(F("Serial Port Configuration"), 2, 3);
 
-      // FIXME TD-er: Add port selector
-      serialHelper_webformLoad(ESPEasySerialPort::not_set, rxpin, txpin, true);
+      serialHelper_webformLoad(port, rxpin, txpin, true);
 
       // Show serial port selection
       addFormPinSelect(PinSelectPurpose::Generic_input, formatGpioName_RX(false),                   F("taskdevicepin1"), rxpin);
@@ -718,13 +720,13 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
           RN2xx3_status status = C018_data->getStatus();
 
           addRowLabel(F("Status RAW value"));
-          addHtml(String(status.getRawStatus()));
+          addHtmlInt(status.getRawStatus());
 
           addRowLabel(F("Activation Status"));
-          addHtml(String(status.Joined));
+          addEnabled(status.Joined);
 
           addRowLabel(F("Silent Immediately"));
-          addHtml(String(status.SilentImmediately));
+          addHtmlInt(status.SilentImmediately ? 1 : 0);
         }
       }
 
@@ -861,12 +863,10 @@ bool C018_init(struct EventStruct *event) {
   }
 
 
-  if (C018_data == nullptr) {
-    C018_data = new (std::nothrow) C018_data_struct;
+  C018_data = new (std::nothrow) C018_data_struct;
 
-    if (C018_data == nullptr) {
-      return false;
-    }
+  if (C018_data == nullptr) {
+    return false;
   }
   {
     // Allocate ControllerSettings object in a scope, so we can destruct it as soon as possible.

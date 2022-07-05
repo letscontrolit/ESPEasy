@@ -232,6 +232,8 @@ bool deserializeDomoticzJson(const String& json,
   // const char* svalue3 = root["svalue3"]; // Not used
   const char *switchtype_c = root[F("switchType")]; // Expect "On/Off" or "dimmer"
 
+  // FIXME TD-er: Is this compare even useful?
+  // nvalue is already assigned the same value as nvaluealt and not changed since.
   if (nvalue == 0) {
     nvalue = nvaluealt;
   }

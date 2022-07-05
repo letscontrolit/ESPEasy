@@ -12,14 +12,14 @@ nprotocolIndex_t INVALID_NPROTOCOL_INDEX = NPLUGIN_MAX;
 bool (*NPlugin_ptr[NPLUGIN_MAX])(NPlugin::Function,
                                     struct EventStruct *,
                                     String&);
-npluginID_t NPlugin_id[NPLUGIN_MAX] = { INVALID_N_PLUGIN_ID };
+npluginID_t NPlugin_id[NPLUGIN_MAX];
 
 NotificationStruct Notification[NPLUGIN_MAX];
 
 int notificationCount = -1;
 
 
-uint8_t NPluginCall(NPlugin::Function Function, struct EventStruct *event)
+bool NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;

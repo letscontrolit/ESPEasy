@@ -64,7 +64,8 @@ namespace std
 #include "src/CustomBuild/ESPEasyDefaults.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/Globals/RamTracker.h"
-
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/Helpers/ESPEasy_math.h"
 
 #ifndef FS_NO_GLOBALS
   #define FS_NO_GLOBALS

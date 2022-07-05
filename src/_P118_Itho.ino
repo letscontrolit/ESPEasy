@@ -106,7 +106,7 @@ volatile bool PLUGIN_118_Int = false;
 // Forward declarations
 void PLUGIN_118_ITHOcheck();
 void PLUGIN_118_Publishdata(struct EventStruct *event);
-void PLUGIN_118_PluginWriteLog(const String& command);
+void PLUGIN_118_PluginWriteLog(const __FlashStringHelper * command);
 
 ICACHE_RAM_ATTR void PLUGIN_118_ITHOinterrupt()
 {
@@ -584,7 +584,7 @@ void PLUGIN_118_Publishdata(struct EventStruct *event)
 #endif // ifndef BUILD_NO_DEBUG
 }
 
-void PLUGIN_118_PluginWriteLog(const String& command)
+void PLUGIN_118_PluginWriteLog(const __FlashStringHelper * command)
 {
   String log = F("Send Itho command for: ");
 

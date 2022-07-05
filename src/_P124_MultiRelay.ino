@@ -99,19 +99,14 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper *optionsMode2[] = {
-        F("2 relays"),
-        F("4 relays"),
-        F("8 relays") };
+        F("2"),
+        F("4"),
+        F("8") };
       int optionValuesMode2[] { 2, 4, 8 };
       addFormSelector(F("Number of relays"), F("plugin_124_relays"), 3, optionsMode2, optionValuesMode2, P124_CONFIG_RELAY_COUNT, true);
 
-      const __FlashStringHelper *noYesOptions[] = {
-        F("No"),
-        F("Yes")
-      };
-      int noYesValues[] = { 0, 1 };
-      addFormSelector(F("Initialize relays on startup"),
-                      getPluginCustomArgName(P124_FLAGS_INIT_RELAYS), 2, noYesOptions, noYesValues,
+      addFormSelector_YesNo(F("Initialize relays on startup"),
+                      getPluginCustomArgName(P124_FLAGS_INIT_RELAYS), 
                       bitRead(P124_CONFIG_FLAGS, P124_FLAGS_INIT_RELAYS) ? 1 : 0, true);
       String label;
 
@@ -129,8 +124,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormSelector(F("Reset relays on exit"),
-                      getPluginCustomArgName(P124_FLAGS_EXIT_RELAYS), 2, noYesOptions, noYesValues,
+      addFormSelector_YesNo(F("Reset relays on exit"),
+                      getPluginCustomArgName(P124_FLAGS_EXIT_RELAYS), 
                       bitRead(P124_CONFIG_FLAGS, P124_FLAGS_EXIT_RELAYS) ? 1 : 0, true);
 
       if (bitRead(P124_CONFIG_FLAGS, P124_FLAGS_EXIT_RELAYS)) {
