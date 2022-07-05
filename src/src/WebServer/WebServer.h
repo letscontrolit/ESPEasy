@@ -178,22 +178,8 @@ void write_SVG_image_header(int  width,
                             bool useViewbox = false);
 
 
-void add_ChartJS_chart_header(
-                       const __FlashStringHelper * chartType,
-                       const __FlashStringHelper * id,
-                       const __FlashStringHelper * chartTitle,
-                       int width,
-                       int height,
-                       int       valueCount,
-                       const int labels[]);
 
-void add_ChartJS_dataset(
-  const __FlashStringHelper * label,
-  const __FlashStringHelper * color,
-  const float values[],
-  int       valueCount);
 
-void add_ChartJS_chart_footer();
 
 /*
    void getESPeasyLogo(int width_pixels);

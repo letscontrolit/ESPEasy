@@ -20,7 +20,7 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   _pin_analogRead = A0;
   # endif // if defined(ESP8266)
   # if defined(ESP32)
-  _pin_analogRead = CONFIG_PIN1;
+  _pin_analogRead        = CONFIG_PIN1;
   _useFactoryCalibration = applyFactoryCalibration(event);
   # endif // if defined(ESP32)
 
@@ -120,78 +120,85 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       const float minY_value = P002_data_struct::applyCalibration(event, 0, true);
       const float maxY_value = P002_data_struct::applyCalibration(event, MAX_ADC_VALUE, true);
 
-      #ifndef LIMIT_BUILD_SIZE
+      # ifndef LIMIT_BUILD_SIZE
       addRowLabel(F("Calibration Curve"));
 
-      constexpr int valueCount = 32;
-      constexpr int stepSize = (MAX_ADC_VALUE + 1) / valueCount;
+      constexpr int valueCount = 33;
+      constexpr int stepSize   = (MAX_ADC_VALUE + 1) / (valueCount - 1);
 
-      int labels[valueCount + 1];
-      for (int i = 0; i <= valueCount; ++i) {
-        const int adcval = (i == valueCount) ? MAX_ADC_VALUE : i * stepSize;
-        labels[i] = adcval;
+      int labels[valueCount];
+
+      for (int i = 0; i < valueCount; ++i) {
+        labels[i] = i * stepSize;
       }
+      labels[valueCount - 1] = MAX_ADC_VALUE;
 
       add_ChartJS_chart_header(
         F("line"),
         F("twoPointCurve"),
         F("Two Point Calibration Curve"),
         500,
-        500,
+        500);
+      add_ChartJS_chart_labels(
         valueCount,
         labels);
 
       {
-        float values[valueCount + 1];
-        for (int i = 0; i <= valueCount; ++i) {
+        float values[valueCount];
+
+        for (int i = 0; i < valueCount; ++i) {
           values[i] = P002_data_struct::applyCalibration(event, labels[i], false);
         }
 
         add_ChartJS_dataset(
           F("2 Point Calibration"),
           F("rgb(255, 99, 132)"),
-          values, 
+          values,
           valueCount);
       }
 
-#ifdef ESP32
+#  ifdef ESP32
+
       if (hasADC_factory_calibration())
       {
-        float values[valueCount + 1];
-        for (int i = 0; i <= valueCount; ++i) {
+        float values[valueCount];
+
+        for (int i = 0; i < valueCount; ++i) {
           values[i] = P002_data_struct::applyCalibration(event, labels[i], true);
         }
 
         add_ChartJS_dataset(
           F("Factory & 2 Point Calibration"),
           F("rgb(153, 102, 255)"),
-          values, 
+          values,
           valueCount);
       }
-      if (hasADC_factory_calibration()) 
+
+      if (hasADC_factory_calibration())
       {
-        float values[valueCount + 1];
-        for (int i = 0; i <= valueCount; ++i) {
+        float values[valueCount];
+
+        for (int i = 0; i < valueCount; ++i) {
           values[i] = applyFactoryADCcalibration(1, labels[i]);
         }
 
         add_ChartJS_dataset(
           F("Factory Calibration"),
           F("rgb(54, 162, 235)"),
-          values, 
-          valueCount);
+          values,
+          valueCount,
+          true);
       }
-#endif
+#  endif // ifdef ESP32
       add_ChartJS_chart_footer();
-      #endif
-
+      # endif // ifndef LIMIT_BUILD_SIZE
 
 
       P002_formatStatistics(F("Minimum ADC"), 0,             minY_value);
       P002_formatStatistics(F("Maximum ADC"), MAX_ADC_VALUE, maxY_value);
 
       const float stepsize = (maxY_value - minY_value) / MAX_ADC_VALUE;
-      P002_formatStatistics(F("Step size"), 1,                  stepsize);
+      P002_formatStatistics(F("Step size"),   1,             stepsize);
     }
   }
 # ifndef LIMIT_BUILD_SIZE
@@ -214,11 +221,13 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
-                   _multipoint.size() > line_nr ? doubleToString(static_cast<double>(_multipoint[line_nr]._adc), _nrDecimals, true) : EMPTY_STRING,
+                   _multipoint.size() > line_nr ? doubleToString(static_cast<double>(_multipoint[line_nr]._adc), _nrDecimals,
+                                                                 true) : EMPTY_STRING,
                    0);
     html_add_estimate_symbol();
     addTextBox(getPluginCustomArgName(varNr + 1),
-               _multipoint.size() > line_nr ?  doubleToString(static_cast<double>(_multipoint[line_nr]._value), _nrDecimals, true) : EMPTY_STRING,
+               _multipoint.size() > line_nr ?  doubleToString(static_cast<double>(_multipoint[line_nr]._value), _nrDecimals,
+                                                              true) : EMPTY_STRING,
                0,
                false,
                false,
@@ -228,12 +237,13 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     ++line_nr;
   }
 
+  if (P002_MULTIPOINT_ENABLED)
   {
-    int labels[_multipoint.size()] = {0};
-    float values[_multipoint.size()];
+    addRowLabel(F("Multipoint Curve"));
+    int labels[_multipoint.size()];
+
     for (int i = 0; i < _multipoint.size(); ++i) {
       labels[i] = _multipoint[i]._adc;
-      values[i] = _multipoint[i]._value;
     }
 
     const bool useBinning = P002_OVERSAMPLING == P002_USE_BINNING;
@@ -243,16 +253,32 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       F("mpcurve"),
       F("Multipoint Curve"),
       500,
-      500,
+      500);
+
+    // Add labels
+    for (size_t i = 0; i < _multipoint.size(); ++i) {
+      if (i != 0) {
+        addHtml(',');
+      }
+      addHtmlFloat(_multipoint[i]._adc, 3);
+    }
+    addHtml(F("],datasets: ["));
+
+    add_ChartJS_chart_labels(
       _multipoint.size(),
       labels);
 
-    add_ChartJS_dataset(
+    add_ChartJS_dataset_header(
       F("Multipoint Values"),
-      F("rgb(255, 99, 132)"),
-      values, 
-      _multipoint.size());
+      F("rgb(255, 99, 132)"));
 
+    for (int i = 0; i < _multipoint.size(); ++i) {
+      if (i != 0) {
+        addHtml(',');
+      }
+      addHtmlFloat(_multipoint[i]._value, 3);
+    }
+    add_ChartJS_dataset_footer();
     add_ChartJS_chart_footer();
   }
 
@@ -550,11 +576,13 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 # endif // ifndef LIMIT_BUILD_SIZE
 
 float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value, bool useFactoryCalibration) {
-  #ifdef ESP32
+  # ifdef ESP32
+
   if (useFactoryCalibration && applyFactoryCalibration(event)) {
     float_value = applyFactoryADCcalibration(1, float_value);
   }
-  #endif
+  # endif // ifdef ESP32
+
   if (P002_CALIBRATION_ENABLED)
   {
     float_value = mapADCtoFloat(float_value,
@@ -596,17 +624,19 @@ float P002_data_struct::applyCalibration(float float_value) const
     _calib_out2);
 }
 
-#ifdef ESP32
-bool  P002_data_struct::applyFactoryCalibration(struct EventStruct *event) {
+# ifdef ESP32
+bool P002_data_struct::applyFactoryCalibration(struct EventStruct *event) {
   if (P002_APPLY_FACTORY_CALIB) {
     const int adc_num = getADC_num_for_gpio(CONFIG_PIN1);
+
     if ((adc_num == 1) || (adc_num == 2)) {
       return true;
     }
   }
   return false;
 }
-#endif
+
+# endif // ifdef ESP32
 
 # ifndef LIMIT_BUILD_SIZE
 float P002_data_struct::applyMultiPointInterpolation(float float_value) const

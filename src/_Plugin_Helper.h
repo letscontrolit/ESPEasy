@@ -43,6 +43,7 @@
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
+#include "src/WebServer/Chart_JS.h"
 #include "src/WebServer/HTML_wrappers.h"
 #include "src/WebServer/Markup.h"
 #include "src/WebServer/Markup_Forms.h"
