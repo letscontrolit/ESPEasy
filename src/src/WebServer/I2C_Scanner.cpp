@@ -214,6 +214,9 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x30:
       result +=  F("VL53L0X,VL53L1X");
       break;
+    case 0x34:
+      result +=  F("AXP192");
+      break;
     case 0x36:
       result +=  F("MAX1704x");
       break;

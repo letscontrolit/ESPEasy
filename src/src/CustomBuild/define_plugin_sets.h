@@ -1303,6 +1303,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
 #endif
 
 // Collection of all NeoPixel plugins
@@ -1321,6 +1324,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
+  #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
   #endif
 #endif
 
@@ -1574,6 +1580,12 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P135
 //    #define USES_P135   //
+  #endif
+  #ifndef USES_P136
+//    #define USES_P136   //
+  #endif
+  #ifndef USES_P137
+    #define USES_P137   // AXP192
   #endif
 
   // Controllers
