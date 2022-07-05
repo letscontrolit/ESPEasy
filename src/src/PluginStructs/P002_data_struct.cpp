@@ -301,6 +301,104 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
     }
     add_ChartJS_dataset_footer();
     add_ChartJS_chart_footer();
+
+    if (!useBinning) {
+      // Try to compute the expected mapping from ADC to multipoint values
+      addRowLabel(F("ADC to Output Curve"));
+      constexpr int valueCount = 33;
+      constexpr int stepSize   = (MAX_ADC_VALUE + 1) / (valueCount - 1);
+
+      int labels[valueCount];
+
+      for (int i = 0; i < valueCount; ++i) {
+        labels[i] = i * stepSize;
+      }
+      labels[valueCount - 1] = MAX_ADC_VALUE;
+
+      String axisOptions;
+
+      {
+        const ChartJS_title xAxisTitle(F("ADC Value"));
+        const ChartJS_title yAxisTitle(F("Output"));
+        axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+      }
+      add_ChartJS_chart_header(
+        F("line"),
+        F("mpCurveSimulated"),
+        F("Simulated ADC to Output Curve"),
+        500,
+        500,
+        axisOptions);
+
+      add_ChartJS_chart_labels(
+        valueCount,
+        labels);
+
+      float values[valueCount];
+      const __FlashStringHelper *label = F("2 Point Calibration");
+      const __FlashStringHelper *color = F("rgb(255, 99, 132)");
+
+      bool useFactoryCalib = false;
+      bool hidden          = true;
+
+      # ifdef ESP32
+      const bool hasFactoryCalibration = hasADC_factory_calibration();
+      # else // ifdef ESP32
+      const bool hasFactoryCalibration = false;
+      # endif // ifdef ESP32
+
+
+      for (int step = 0; step < 4; ++step)
+      {
+        switch (step) {
+          case 0:
+            useFactoryCalib = false;
+            hidden          = true;
+            break;
+          case 1:
+            label           = F("Multipoint & 2 Point Calibration");
+            color           = F("rgb(54, 162, 235)");
+            useFactoryCalib = false;
+            hidden          = false;
+            break;
+          case 2:
+            label           = F("Factory & 2 Point Calibration");
+            color           = F("rgb(153, 102, 255)");
+            useFactoryCalib = true;
+            hidden          = true;
+            break;
+          case 3:
+            label           = F("Multipoint & Factory & 2 Point Calibration");
+            color           = F("rgb(54, 235, 235)");
+            useFactoryCalib = true;
+            hidden          = false;
+            break;
+        }
+
+        if (hasFactoryCalibration || !useFactoryCalib) {
+          for (int i = 0; i < valueCount; ++i) {
+            switch (step) {
+              case 0:
+              case 2:
+                values[i] = P002_data_struct::applyCalibration(event, labels[i], useFactoryCalib);
+                break;
+              case 1:
+              case 3:
+                values[i] = applyMultiPointInterpolation(values[i]);
+                break;
+            }
+          }
+
+          add_ChartJS_dataset(
+            label,
+            color,
+            values,
+            valueCount,
+            hidden);
+        }
+      }
+      add_ChartJS_chart_footer();
+    }
   }
 }
 

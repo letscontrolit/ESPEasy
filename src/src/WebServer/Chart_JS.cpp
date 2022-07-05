@@ -4,6 +4,14 @@
 #include "../Helpers/StringConverter.h"
 #include "../WebServer/HTML_wrappers.h"
 
+  ChartJS_title::ChartJS_title() {
+    align = F("center");
+  }
+
+  ChartJS_title::ChartJS_title(const String& titleText) : text(titleText) {
+    align = F("center");
+  }
+
 
 String ChartJS_title::toString() const {
   String res;

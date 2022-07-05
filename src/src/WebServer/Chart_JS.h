@@ -18,10 +18,10 @@
 // *********************************************
 
 struct ChartJS_title {
-  ChartJS_title() = default;
-  ChartJS_title(const String& titleText) : text(titleText) {}
+  ChartJS_title();
+  ChartJS_title(const String& titleText);
 
-  String align = F("center");
+  String align;
   String text;
 
   String toString() const;
