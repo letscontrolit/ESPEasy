@@ -5,6 +5,55 @@
 #include "../WebServer/HTML_wrappers.h"
 
 
+String ChartJS_title::toString() const {
+  String res;
+
+  if (text.isEmpty()) {
+    res = F("title: {display: false}");
+  } else {
+    res  = F("title: {display: true,align: '");
+    res += align;
+    res += F("',text:'");
+    res += text;
+    res += '\'';
+    res += '}';
+  }
+  return res;
+}
+
+String make_ChartJS_scale_options_singleAxis(
+  const String       & AxisType,
+  const ChartJS_title& AxisTitle)
+{
+  String res;
+
+  if (!AxisType.isEmpty()) {
+    res += F("type: '");
+    res += AxisType;
+    res += '\'';
+    res += ',';
+  }
+  res += AxisTitle.toString();
+  return res;
+}
+
+String make_ChartJS_scale_options(
+  const ChartJS_title& xAxisTitle,
+  const ChartJS_title& yAxisTitle,
+  const String       & xAxisType,
+  const String       & yAxisType)
+{
+  String res;
+
+  res  = F("scales: {x: {");
+  res += make_ChartJS_scale_options_singleAxis(xAxisType, xAxisTitle);
+  res += F("}, y: {");
+  res += make_ChartJS_scale_options_singleAxis(yAxisType, yAxisTitle);
+  res += '}';
+  res += '}';
+  return res;
+}
+
 void add_ChartJS_array(int          valueCount,
                        const String array[])
 {
@@ -43,9 +92,10 @@ void add_ChartJS_chart_header(
   const __FlashStringHelper *id,
   const __FlashStringHelper *chartTitle,
   int                        width,
-  int                        height)
+  int                        height,
+  const String             & options)
 {
-  add_ChartJS_chart_header(chartType, String(id), String(chartTitle), width, height);
+  add_ChartJS_chart_header(chartType, String(id), String(chartTitle), width, height, options);
 }
 
 void add_ChartJS_chart_header(
@@ -53,7 +103,8 @@ void add_ChartJS_chart_header(
   const String             & id,
   const String             & chartTitle,
   int                        width,
-  int                        height)
+  int                        height,
+  const String             & options)
 {
   addHtml(F("<canvas"));
   addHtmlAttribute(F("id"),     id);
@@ -73,7 +124,14 @@ void add_ChartJS_chart_header(
   addHtml('\'', ',');
   addHtml(F("options: {responsive: false,plugins: {legend: {position: 'top',},title: {display: true,text: '"));
   addHtml(chartTitle);
-  addHtml(F("'}}},"));
+  addHtml('\'', '}'); // end title
+  addHtml('}',  ','); // end plugins
+
+  if (!options.isEmpty()) {
+    addHtml(options);
+  }
+
+  addHtml(F("},")); // end options
   addHtml(F("data: {labels: ["));
 }
 
@@ -98,7 +156,7 @@ void add_ChartJS_dataset(
   const float                values[],
   int                        valueCount,
   bool                       hidden,
-  const String& options)
+  const String             & options)
 {
   add_ChartJS_dataset_header(label, color);
   add_ChartJS_array(valueCount, values);
@@ -127,9 +185,11 @@ void add_ChartJS_dataset_footer(bool hidden, const String& options) {
   if (hidden) {
     addHtml(F("hidden: true,"));
   }
+
   if (!options.isEmpty()) {
     addHtml(options);
-//    if (!options.endsWith(F(","))) { addHtml(','); }
+
+    //    if (!options.endsWith(F(","))) { addHtml(','); }
   }
 
   addHtml('}', ',');

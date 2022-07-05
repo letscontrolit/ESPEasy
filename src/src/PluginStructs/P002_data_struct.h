@@ -89,8 +89,15 @@ private:
 
 public:
 
-  void          webformLoad(struct EventStruct *event);
+  void webformLoad(struct EventStruct *event);
 
+private:
+
+  static void webformLoad_calibrationCurve(struct EventStruct *event);
+
+  void        webformLoad_multipointCurve(struct EventStruct *event) const;
+
+public:
 
   static String webformSave(struct EventStruct *event);
 

@@ -11,11 +11,27 @@
 // - add_ChartJS_chart_labels
 // - add_ChartJS_dataset (1x or more)
 // - add_ChartJS_chart_footer
-// 
-// Split into several parts so a long array of 
-// values can also be served directly 
+//
+// Split into several parts so a long array of
+// values can also be served directly
 // to reduce memory usage.
 // *********************************************
+
+struct ChartJS_title {
+  ChartJS_title() = default;
+  ChartJS_title(const String& titleText) : text(titleText) {}
+
+  String align = F("center");
+  String text;
+
+  String toString() const;
+};
+
+String   make_ChartJS_scale_options(
+  const ChartJS_title& xAxisTitle,
+  const ChartJS_title& yAxisTitle,
+  const String       & xAxisType = EMPTY_STRING,
+  const String       & yAxisType = EMPTY_STRING);
 
 
 void add_ChartJS_chart_header(
@@ -23,14 +39,17 @@ void add_ChartJS_chart_header(
   const __FlashStringHelper *id,
   const __FlashStringHelper *chartTitle,
   int                        width,
-  int                        height);
+  int                        height,
+  const String             & options = EMPTY_STRING);
 
 void add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const String             & id,
   const String             & chartTitle,
   int                        width,
-  int                        height);
+  int                        height,
+  const String             & options = EMPTY_STRING);
+
 
 void add_ChartJS_chart_labels(
   int       valueCount,
@@ -46,14 +65,15 @@ void add_ChartJS_dataset(
   const __FlashStringHelper *color,
   const float                values[],
   int                        valueCount,
-  bool                       hidden = false,
-  const String& options = EMPTY_STRING);
+  bool                       hidden  = false,
+  const String             & options = EMPTY_STRING);
 
 void add_ChartJS_dataset_header(
   const __FlashStringHelper *label,
   const __FlashStringHelper *color);
 
-void add_ChartJS_dataset_footer(bool hidden = false, const String& options = EMPTY_STRING);
+void add_ChartJS_dataset_footer(bool          hidden  = false,
+                                const String& options = EMPTY_STRING);
 
 
 void add_ChartJS_chart_footer();
