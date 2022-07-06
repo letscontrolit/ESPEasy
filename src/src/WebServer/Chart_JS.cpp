@@ -171,9 +171,31 @@ void add_ChartJS_dataset(
   add_ChartJS_dataset_footer(hidden, options);
 }
 
+void add_ChartJS_dataset(
+  const String&              label,
+  const String&              color,
+  const float                values[],
+  int                        valueCount,
+  bool                       hidden,
+  const String             & options)
+{
+  add_ChartJS_dataset_header(label, color);
+  add_ChartJS_array(valueCount, values);
+  add_ChartJS_dataset_footer(hidden, options);
+}
+
+
 void add_ChartJS_dataset_header(
   const __FlashStringHelper *label,
-  const __FlashStringHelper *color) {
+  const __FlashStringHelper *color) 
+{
+  add_ChartJS_dataset_header(String(label), String(color));
+}
+
+void add_ChartJS_dataset_header(
+  const String& label,
+  const String& color) 
+{
   addHtml('{');
   addHtml(F("label: '"));
   addHtml(label);
@@ -186,6 +208,8 @@ void add_ChartJS_dataset_header(
   addHtml('\'', ',');
   addHtml(F("data: ["));
 }
+
+
 
 void add_ChartJS_dataset_footer(bool hidden, const String& options) {
   addHtml(']', ',');

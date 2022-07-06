@@ -68,9 +68,21 @@ void add_ChartJS_dataset(
   bool                       hidden  = false,
   const String             & options = EMPTY_STRING);
 
+void add_ChartJS_dataset(
+  const String&              label,
+  const String&              color,
+  const float                values[],
+  int                        valueCount,
+  bool                       hidden  = false,
+  const String             & options = EMPTY_STRING);
+
 void add_ChartJS_dataset_header(
   const __FlashStringHelper *label,
   const __FlashStringHelper *color);
+
+void add_ChartJS_dataset_header(
+  const String& label,
+  const String& color);
 
 void add_ChartJS_dataset_footer(bool          hidden  = false,
                                 const String& options = EMPTY_STRING);

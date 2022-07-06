@@ -25,10 +25,6 @@
   # include <soc/soc.h>
   # include <soc/efuse_reg.h>
 
-// Needed to get ADC Vref
-  # include <esp_adc_cal.h>
-  # include <driver/adc.h>
-
   # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
     #  if CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
       #   include <esp32/rom/spi_flash.h>
@@ -488,24 +484,20 @@ int espeasy_analogRead(int pin) {
 
 // ESP32 ADC calibration datatypes.
 esp_adc_cal_value_t adc1_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
-esp_adc_cal_value_t adc2_calibration_type = ESP_ADC_CAL_VAL_NOT_SUPPORTED;
-esp_adc_cal_characteristics_t adc1_chars;
-esp_adc_cal_characteristics_t adc2_chars;
-
-# ifndef DEFAULT_VREF
-  #  define DEFAULT_VREF 1100
-# endif // ifndef DEFAULT_VREF
+esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 
 void initADC() {
+  # ifndef DEFAULT_VREF
+  #  define DEFAULT_VREF 1100
+  # endif // ifndef DEFAULT_VREF
   const adc_bits_width_t adc_bit_width = static_cast<adc_bits_width_t>(ADC_WIDTH_MAX - 1);
-
-  adc1_calibration_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, adc_bit_width, DEFAULT_VREF, &adc1_chars);
-  adc2_calibration_type = esp_adc_cal_characterize(ADC_UNIT_2, ADC_ATTEN_DB_11, adc_bit_width, DEFAULT_VREF, &adc2_chars);
+  for (size_t atten = 0; atten < ADC_ATTEN_MAX; ++atten) {
+    adc1_calibration_type = esp_adc_cal_characterize(ADC_UNIT_1, static_cast<adc_atten_t>(atten), adc_bit_width, DEFAULT_VREF, &adc_chars[atten]);
+  }
 }
 
 bool hasADC_factory_calibration() {
-  return esp_adc_cal_check_efuse(adc1_calibration_type) == ESP_OK ||
-         esp_adc_cal_check_efuse(adc2_calibration_type) == ESP_OK;
+  return esp_adc_cal_check_efuse(adc1_calibration_type) == ESP_OK;
 }
 
 const __FlashStringHelper* getADC_factory_calibration_type() {
@@ -527,21 +519,6 @@ int getADC_num_for_gpio(int pin) {
     return adc;
   }
   return -1;
-}
-
-int applyFactoryADCcalibration(int adc_num, int reading) {
-  if ((adc_num == 1) || (adc_num == 2)) {
-    if (esp_adc_cal_check_efuse((adc_num == 1) ? adc1_calibration_type : adc2_calibration_type) == ESP_OK) {
-      return esp_adc_cal_raw_to_voltage(
-        reading,
-        (adc_num == 1) ? &adc1_chars : &adc2_chars);
-    }
-  }
-  return reading;
-}
-
-int espeasy_analogRead(int pin) {
-  return espeasy_analogRead(pin, false);
 }
 
 int espeasy_analogRead(int pin, bool readAsTouch) {
@@ -580,26 +557,6 @@ int espeasy_analogRead(int pin, bool readAsTouch) {
     }
   }
   return value;
-}
-
-int espeasy_analogRead_calibrated(int pin, int& raw_value) {
-  int adc, ch, t;
-
-  raw_value = 0;
-
-  if (getADC_gpio_info(pin, adc, ch, t)) {
-    if (adc == 2) {
-      if (WiFi.getMode() == WIFI_OFF) {
-        // See:
-        // https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html#configuration-and-reading-adc
-        // ADC2 is shared with WiFi, so don't read ADC2 when WiFi is on.
-        return 0;
-      }
-    }
-    raw_value = analogRead(pin);
-    return applyFactoryADCcalibration(adc, raw_value);
-  }
-  return 0;
 }
 
 #endif // ifdef ESP32

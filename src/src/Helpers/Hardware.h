@@ -14,7 +14,11 @@
 #include "../../ESPEasy_common.h"
 
 #ifdef ESP32
-#include <driver/adc.h>
+# include <driver/adc.h>
+
+// Needed to get ADC Vref
+# include <esp_adc_cal.h>
+# include <driver/adc.h>
 #endif
 
 # ifdef ESP32
@@ -66,24 +70,23 @@ void    checkResetFactoryPin();
 
 #ifdef ESP8266
 extern int lastADCvalue; // Keep track of last ADC value as it cannot be read while WiFi is connecting
+
+int espeasy_analogRead(int pin);
 #endif // ifdef ESP8266
-int                espeasy_analogRead(int pin);
 
 #ifdef ESP32
-void               initADC();
+void initADC();
 
 bool                       hasADC_factory_calibration();
 const __FlashStringHelper* getADC_factory_calibration_type();
 
 int                        getADC_num_for_gpio(int pin);
 
-int                        applyFactoryADCcalibration(int adc_num,
-                                                      int reading);
-
 int                        espeasy_analogRead(int  pin,
-                                              bool readAsTouch);
-int                        espeasy_analogRead_calibrated(int  pin,
-                                                         int& raw_value);
+                                              bool readAsTouch = false);
+
+// ADC Factory calibration definition
+extern esp_adc_cal_characteristics_t adc_chars[ADC_ATTEN_MAX];
 #endif // ifdef ESP32
 
 

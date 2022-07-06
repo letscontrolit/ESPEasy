@@ -8,12 +8,20 @@
 # include "src/Helpers/Hardware.h"
 # include <vector>
 
+# ifdef ESP32
+
+// Needed to get ADC Vref
+  #  include <esp_adc_cal.h>
+  #  include <driver/adc.h>
+# endif // ifdef ESP32
+
 
 # define P002_OVERSAMPLING        PCONFIG(0)
 # ifdef ESP32
 #  define P002_APPLY_FACTORY_CALIB  PCONFIG(1)
+#  define P002_ATTENUATION          PCONFIG(2)
 # endif // ifdef ESP32
-# define P002_CALIBRATION_ENABLED PCONFIG(3) // FIXME TD-er: What happened to PCONFIG(2) ???
+# define P002_CALIBRATION_ENABLED PCONFIG(3)
 # define P002_CALIBRATION_POINT1  PCONFIG_LONG(0)
 # define P002_CALIBRATION_POINT2  PCONFIG_LONG(1)
 # define P002_CALIBRATION_VALUE1  PCONFIG_FLOAT(0)
@@ -38,6 +46,12 @@
 # define P002_STRINGS_PER_MP      2 // Nr of items per multi-point set
 # define P002_Nlines              (P002_LINE_IDX_FIRST_MP + (P002_STRINGS_PER_MP * (P002_NR_MULTIPOINT_ITEMS)))
 # define P002_MAX_FORMULA_LENGTH  64
+
+// Need to define the attenuation values to make sure no old or uninitialized value may be setting this to the wrong value.
+# define P002_ADC_0db              (ADC_ATTEN_DB_0  + 10)
+# define P002_ADC_2_5db            (ADC_ATTEN_DB_2_5 + 10)
+# define P002_ADC_6db              (ADC_ATTEN_DB_6 + 10)
+# define P002_ADC_11db             (ADC_ATTEN_DB_11 + 10)
 
 
 struct P002_ADC_Value_pair {
@@ -93,7 +107,24 @@ public:
 
 private:
 
-  static void webformLoad_calibrationCurve(struct EventStruct *event);
+# ifdef ESP32
+  static adc_atten_t                getAttenuation(struct EventStruct *event);
+  static const __FlashStringHelper* AttenuationToString(adc_atten_t attenuation);
+  static void                       webformLoad_calibrationCurve(struct EventStruct *event);
+# endif // ifdef ESP32
+
+  static const __FlashStringHelper* getChartXaxisLabel(struct EventStruct *event);
+
+  static void                       getChartRange(struct EventStruct *event,
+                                                  int               & min_value,
+                                                  int               & max_value,
+                                                  bool                ignoreCalibration = false);
+  static void getChartRange(struct EventStruct *event,
+                            int                 values[],
+                            int                 count,
+                            bool                ignoreCalibration = false);
+
+  static void webformLoad_2pt_calibrationCurve(struct EventStruct *event);
 
   void        webformLoad_multipointCurve(struct EventStruct *event) const;
 
@@ -135,8 +166,7 @@ public:
 
   // This needs to be a static function, as the object may not exist if the task is not enabled.
   static float applyCalibration(struct EventStruct *event,
-                                float               float_value,
-                                bool                useFactoryCalibration = false);
+                                float               float_value);
 
   static float getCurrentValue(struct EventStruct *event,
                                int               & raw_value);
@@ -190,7 +220,8 @@ private:
   String  _formula_preprocessed;
 # endif // ifndef LIMIT_BUILD_SIZE
 # ifdef ESP32
-  bool _useFactoryCalibration = false;
+  bool        _useFactoryCalibration = false;
+  adc_atten_t _attenuation           = ADC_ATTEN_DB_11;
 # endif // ifdef ESP32
 };
 
