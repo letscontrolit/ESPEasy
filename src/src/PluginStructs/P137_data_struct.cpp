@@ -1,6 +1,7 @@
 #include "../PluginStructs/P137_data_struct.h"
 
 #ifdef USES_P137
+# ifdef ESP32
 
 const __FlashStringHelper* toString(const P137_valueOptions_e value, bool displayString) {
   switch (value) {
@@ -214,12 +215,5 @@ bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
   return success;
 }
 
-// **************************************************************************/
-//
-// **************************************************************************/
-
-// **************************************************************************/
-//
-// **************************************************************************/
-
+# endif // ifdef ESP32
 #endif // ifdef USES_P137
