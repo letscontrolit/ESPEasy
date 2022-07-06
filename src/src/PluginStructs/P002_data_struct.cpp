@@ -52,6 +52,51 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
 }
 
 # ifndef LIMIT_BUILD_SIZE
+bool P002_data_struct::plugin_get_config_value(struct EventStruct *event, String& string) const
+{
+  bool   success = false;
+  String command = parseString(string, 1);
+  float  value;
+
+  if (command == F("adcmin")) {            // [taskname#adcmin] Lowest ADC value seen since value reset
+    value   = _lowestSampleValue;
+    success = true;
+  } else if (command == F("adcmax")) {     // [taskname#adcmax] Highest ADC value seen since value reset
+    value   = _highestSampleValue;
+    success = true;
+  } else if (command == F("adcsamples")) { // [taskname#adcsamples] Number of samples taken since counter reset
+    value   = _nrSamples;
+    success = true;
+  }
+
+  if (success) {
+    string = toString(value, 3);
+  }
+  return success;
+}
+
+bool P002_data_struct::plugin_write(struct EventStruct *event, const String& string)
+{
+  bool success = false;
+
+  if (parseString(string, 1).equals(F("adc"))) {
+    const String cmd = parseString(string, 2); // sub command
+
+    if (cmd.equals(F("clearstats"))) {
+      // Command: "adc,clearstats"
+      success             = true;
+      _lowestSampleValue  = MAX_ADC_VALUE;
+      _highestSampleValue = 0;
+      _nrSamples          = 0;
+    }
+  }
+  return success;
+}
+
+# endif // ifndef LIMIT_BUILD_SIZE
+
+
+# ifndef LIMIT_BUILD_SIZE
 void P002_data_struct::load(struct EventStruct *event)
 {
   const size_t nr_lines = P002_Nlines;
@@ -225,6 +270,16 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   }
   webformLoad_multipointCurve(event);
 # endif // ifndef LIMIT_BUILD_SIZE
+
+  if (_nrSamples > 0) {
+    addFormSubHeader(F("Statistics"));
+    addRowLabel(F("Min. ADC value"));
+    addHtmlInt(_lowestSampleValue);
+    addRowLabel(F("Max. ADC value"));
+    addHtmlInt(_highestSampleValue);
+    addRowLabel(F("Nr. ADC Samples"));
+    addHtmlInt(_nrSamples);
+  }
 }
 
 # ifndef LIMIT_BUILD_SIZE
@@ -601,6 +656,12 @@ void P002_data_struct::takeSample()
 # else // ifdef ESP32
   const int raw = espeasy_analogRead(_pin_analogRead);
 # endif // ifdef ESP32
+
+  if (raw < _lowestSampleValue) { _lowestSampleValue = raw; }
+
+  if (raw > _highestSampleValue) { _highestSampleValue = raw; }
+  ++_nrSamples;
+
 # ifndef LIMIT_BUILD_SIZE
 
   switch (_sampleMode) {
@@ -645,9 +706,11 @@ bool P002_data_struct::getValue(float& float_value,
 
   # ifdef ESP32
 
-  raw_value = _useFactoryCalibration ?
-              analogReadMilliVolts(_pin_analogRead) :
-              espeasy_analogRead(_pin_analogRead);
+  raw_value = espeasy_analogRead(_pin_analogRead);
+
+  if (_useFactoryCalibration) {
+    raw_value = esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[_attenuation]);
+  }
   # else // ifdef ESP32
   raw_value = espeasy_analogRead(_pin_analogRead);
   # endif // ifdef ESP32

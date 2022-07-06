@@ -106,50 +106,56 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       int   raw_value = 0;
       float res_value = 0.0f;
 
-      if (P002_getOutputValue(event, raw_value, res_value)) {
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if ((P002_data != nullptr) && P002_data->getValue(res_value, raw_value)) {
         UserVar[event->BaseVarIndex] = res_value;
 
-        P002_data_struct *P002_data =
-          static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("ADC  : Analog value: ");
+          log += raw_value;
+          log += F(" = ");
+          log += formatUserVarNoCheck(event->TaskIndex, 0);
 
-        if (nullptr != P002_data) {
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("ADC  : Analog value: ");
-            log += String(raw_value);
-            log += F(" = ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-
-            if (P002_OVERSAMPLING == P002_USE_OVERSAMPLING) {
-              log += F(" (");
-              log += P002_data->OversamplingCount;
-              log += F(" samples)");
-            }
-            addLogMove(LOG_LEVEL_INFO, log);
+          if (P002_OVERSAMPLING == P002_USE_OVERSAMPLING) {
+            log += F(" (");
+            log += P002_data->OversamplingCount;
+            log += F(" samples)");
           }
-          P002_data->reset();
-          success = true;
-        } else {
-          addLog(LOG_LEVEL_ERROR, F("ADC  : No value received "));
-          success = false;
+          addLogMove(LOG_LEVEL_INFO, log);
         }
+        P002_data->reset();
+        success = true;
+      } else {
+        addLog(LOG_LEVEL_ERROR, F("ADC  : No value received "));
+        success = false;
       }
 
+      break;
+    }
+
+    case PLUGIN_WRITE:
+    {
+      P002_data_struct *P002_data = static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P002_data) {
+        success = P002_data->plugin_write(event, string);
+      }
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P002_data_struct *P002_data = static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P002_data) {
+        success = P002_data->plugin_get_config_value(event, string); // GetConfig operation, handle variables
+      }
       break;
     }
   }
   return success;
 }
-
-bool P002_getOutputValue(struct EventStruct *event, int& raw_value, float& res_value) {
-  P002_data_struct *P002_data =
-    static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-  if (nullptr == P002_data) {
-    return false;
-  }
-
-  return P002_data->getValue(res_value, raw_value);
-}
-
 
 #endif // USES_P002

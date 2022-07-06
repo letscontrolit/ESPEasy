@@ -95,6 +95,15 @@ struct P002_binningRange {
 struct P002_data_struct : public PluginTaskData_base {
   P002_data_struct(struct EventStruct *event);
 
+# ifndef LIMIT_BUILD_SIZE
+  bool plugin_get_config_value(struct EventStruct *event,
+                               String            & string) const;
+
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
+
+# endif // ifndef LIMIT_BUILD_SIZE
+
 private:
 
 # ifndef LIMIT_BUILD_SIZE
@@ -211,6 +220,11 @@ private:
   std::vector<unsigned int>       _binning;
   std::vector<P002_binningRange>  _binningRange;
 # endif // ifndef LIMIT_BUILD_SIZE
+
+  int      _lowestSampleValue  = MAX_ADC_VALUE;
+  int      _highestSampleValue = 0;
+  uint64_t _nrSamples          = 0;
+
 
   int _pin_analogRead = -1;
 
