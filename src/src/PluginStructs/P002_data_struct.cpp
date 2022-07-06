@@ -86,7 +86,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   const float currentValue = P002_data_struct::getCurrentValue(event, raw_value);
 
 # if defined(ESP32)
-  addHtml(F("<TR><TD>Analog Pin:<TD>"));
+  addRowLabel(F("Analog Pin"));
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
   {
@@ -166,7 +166,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       # endif // ifndef LIMIT_BUILD_SIZE
 
       int minInputValue, maxInputValue;
-      getChartRange(event, minInputValue, maxInputValue);
+      getInputRange(event, minInputValue, maxInputValue);
 
       const float minY_value         = P002_data_struct::applyCalibration(event, minInputValue);
       const float maxY_value         = P002_data_struct::applyCalibration(event, maxInputValue);
@@ -227,7 +227,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 # endif // ifndef LIMIT_BUILD_SIZE
 }
 
-# ifdef ESP32
+# ifndef LIMIT_BUILD_SIZE
+#  ifdef ESP32
 void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 {
   if (!hasADC_factory_calibration()) { return; }
@@ -282,21 +283,23 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
   add_ChartJS_chart_footer();
 }
 
-# endif // ifdef ESP32
+#  endif // ifdef ESP32
 
 const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStruct *event)
 {
-  # ifdef ESP32
+  #  ifdef ESP32
 
   if (applyFactoryCalibration(event)) {
     // reading in mVolt, not ADC
     return F("Input Voltage (mV)");
   }
-  # endif // ifdef ESP32
+  #  endif // ifdef ESP32
   return F("ADC Value");
 }
 
-void P002_data_struct::getChartRange(struct EventStruct *event, int& minInputValue, int& maxInputValue, bool ignoreCalibration)
+# endif // ifndef LIMIT_BUILD_SIZE
+
+void P002_data_struct::getInputRange(struct EventStruct *event, int& minInputValue, int& maxInputValue, bool ignoreCalibration)
 {
   minInputValue = 0;
   maxInputValue = MAX_ADC_VALUE;
@@ -311,11 +314,13 @@ void P002_data_struct::getChartRange(struct EventStruct *event, int& minInputVal
   # endif // ifdef ESP32
 }
 
+# ifndef LIMIT_BUILD_SIZE
+
 void P002_data_struct::getChartRange(struct EventStruct *event, int values[], int count, bool ignoreCalibration)
 {
   int minInputValue, maxInputValue;
 
-  getChartRange(event, minInputValue, maxInputValue, ignoreCalibration);
+  getInputRange(event, minInputValue, maxInputValue, ignoreCalibration);
 
   const float stepSize = static_cast<float>(maxInputValue + 1 - minInputValue) / (count - 1);
 
@@ -370,6 +375,8 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
   add_ChartJS_chart_footer();
 }
 
+# endif // ifndef LIMIT_BUILD_SIZE
+
 # ifdef ESP32
 const __FlashStringHelper * P002_data_struct::AttenuationToString(adc_atten_t attenuation) {
   const __FlashStringHelper *datalabels[] = { F("0 dB"), F("2.5 dB"), F("6 dB"), F("11 dB") };
@@ -389,6 +396,7 @@ adc_atten_t P002_data_struct::getAttenuation(struct EventStruct *event) {
 
 # endif // ifdef ESP32
 
+# ifndef LIMIT_BUILD_SIZE
 void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) const
 {
   if (P002_MULTIPOINT_ENABLED)
@@ -457,12 +465,12 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       bool useFactoryCalib = false;
       bool hidden          = true;
 
-      # ifdef ESP32
+      #  ifdef ESP32
       const bool   hasFactoryCalibration = hasADC_factory_calibration();
       const size_t attenuation           = getAttenuation(event);
-      # else // ifdef ESP32
+      #  else // ifdef ESP32
       const bool hasFactoryCalibration = false;
-      # endif // ifdef ESP32
+      #  endif // ifdef ESP32
 
 
       for (int step = 0; step < 4; ++step)
@@ -499,11 +507,11 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
                 values[i] = P002_data_struct::applyCalibration(event, xAxisValues[i]);
                 break;
               case 2:
-                # ifdef ESP32
+                #  ifdef ESP32
                 values[i] = P002_data_struct::applyCalibration(
                   event,
                   esp_adc_cal_raw_to_voltage(xAxisValues[i], &adc_chars[attenuation]));
-                # endif // ifdef ESP32
+                #  endif // ifdef ESP32
                 break;
               case 1:
               case 3:
@@ -524,6 +532,8 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
     }
   }
 }
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 String P002_data_struct::webformSave(struct EventStruct *event)
 {

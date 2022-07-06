@@ -113,12 +113,14 @@ private:
   static void                       webformLoad_calibrationCurve(struct EventStruct *event);
 # endif // ifdef ESP32
 
+# ifndef LIMIT_BUILD_SIZE
   static const __FlashStringHelper* getChartXaxisLabel(struct EventStruct *event);
-
-  static void                       getChartRange(struct EventStruct *event,
+# endif // ifndef LIMIT_BUILD_SIZE
+  static void                       getInputRange(struct EventStruct *event,
                                                   int               & min_value,
                                                   int               & max_value,
                                                   bool                ignoreCalibration = false);
+# ifndef LIMIT_BUILD_SIZE
   static void getChartRange(struct EventStruct *event,
                             int                 values[],
                             int                 count,
@@ -127,6 +129,7 @@ private:
   static void webformLoad_2pt_calibrationCurve(struct EventStruct *event);
 
   void        webformLoad_multipointCurve(struct EventStruct *event) const;
+# endif // ifndef LIMIT_BUILD_SIZE
 
 public:
 
