@@ -230,11 +230,6 @@ private:
   bool                            _useMultipoint = false;
 # endif // ifndef LIMIT_BUILD_SIZE
 
-  int      _lowestSampleValue  = MAX_ADC_VALUE;
-  int      _highestSampleValue = 0;
-  uint64_t _nrSamples          = 0;
-
-
   int _pin_analogRead = -1;
 
   uint8_t _sampleMode = P002_USE_CURENT_SAMPLE;

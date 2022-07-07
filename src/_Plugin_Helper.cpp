@@ -3,6 +3,7 @@
 #include "ESPEasy_common.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"
+#include "src/DataStructs/PluginTaskData_base.h"
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
@@ -13,6 +14,7 @@
 
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = { nullptr, };
+
 
 String PCONFIG_LABEL(int n) {
   if (n < PLUGIN_CONFIGVAR_MAX) {

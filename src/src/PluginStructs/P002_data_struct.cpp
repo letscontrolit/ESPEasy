@@ -12,6 +12,7 @@
 
 P002_data_struct::P002_data_struct(struct EventStruct *event)
 {
+  initPluginStats(0);
   _sampleMode = P002_OVERSAMPLING;
 
   # ifdef ESP8266
@@ -49,42 +50,47 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
 # ifndef LIMIT_BUILD_SIZE
 bool P002_data_struct::plugin_get_config_value(struct EventStruct *event, String& string) const
 {
-  bool   success = false;
-  String command = parseString(string, 1);
-  float  value;
+  bool success = false;
 
-  if (command == F("adcmin")) {            // [taskname#adcmin] Lowest ADC value seen since value reset
-    value   = _lowestSampleValue;
-    success = true;
-  } else if (command == F("adcmax")) {     // [taskname#adcmax] Highest ADC value seen since value reset
-    value   = _highestSampleValue;
-    success = true;
-  } else if (command == F("adcsamples")) { // [taskname#adcsamples] Number of samples taken since counter reset
-    value   = _nrSamples;
-    success = true;
-  }
+  if (_plugin_stats[0] != nullptr) {
+    String command = parseString(string, 1);
+    float  value;
 
-  if (success) {
-    string = toString(value, 3);
+    if (command == F("adcmin")) {        // [taskname#adcmin] Lowest ADC value seen since value reset
+      value   = _plugin_stats[0]->getPeakLow();
+      success = true;
+    } else if (command == F("adcmax")) { // [taskname#adcmax] Highest ADC value seen since value reset
+      value   = _plugin_stats[0]->getPeakHigh();
+      success = true;
+    } else if (command == F("avg")) {    // [taskname#adcavg] Average ADC value of the last N kept samples
+      value   = _plugin_stats[0]->getSampleAvg();
+      success = true;
+    }
+
+    if (success) {
+      string = toString(value, 3);
+    }
   }
   return success;
 }
 
 bool P002_data_struct::plugin_write(struct EventStruct *event, const String& string)
 {
+  if (plugin_write_base(event, string)) { return true; }
+
   bool success = false;
 
-  if (parseString(string, 1).equals(F("adc"))) {
-    const String cmd = parseString(string, 2); // sub command
+  /*
+     if (parseString(string, 1).equals(F("adc"))) {
+      const String cmd = parseString(string, 2); // sub command
 
-    if (cmd.equals(F("clearstats"))) {
-      // Command: "adc,clearstats"
-      success             = true;
-      _lowestSampleValue  = MAX_ADC_VALUE;
-      _highestSampleValue = 0;
-      _nrSamples          = 0;
-    }
-  }
+      if (cmd.equals(F("resetpeaks"))) {
+        // Command: "adc,resetpeaks"
+        success             = true;
+        _plugin_stats[0]->resetPeaks();
+      }
+     }
+   */
   return success;
 }
 
@@ -284,12 +290,24 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   webformLoad_multipointCurve(event);
 # endif // ifndef LIMIT_BUILD_SIZE
 
-  if (_nrSamples > 0) {
-    addFormSubHeader(F("Statistics"));
-    formatADC_statistics(F("Min. ADC value"), _lowestSampleValue);
-    formatADC_statistics(F("Max. ADC value"), _highestSampleValue);
-    addRowLabel(F("Nr. ADC Samples"));
-    addHtmlInt(_nrSamples);
+  if (_plugin_stats[0] != nullptr) {
+    if (_plugin_stats[0]->getNrSamples() > 0) {
+      addFormSubHeader(F("Statistics"));
+
+      if (_plugin_stats[0]->hasPeaks()) {
+        formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow());
+        formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
+        addFormNote(F("Peak values recorded since last \"resetpeaks\"."));
+      }
+      addRowLabel(F("Avg. ouput value"));
+      {
+        String note = F("Average over last ");
+        note += _plugin_stats[0]->getNrSamples();
+        note += F(" samples");
+        addFormNote(note);
+      }
+      addHtmlFloat(_plugin_stats[0]->getSampleAvg());
+    }
   }
 }
 
@@ -684,11 +702,9 @@ void P002_data_struct::takeSample()
   if (_sampleMode == P002_USE_CURENT_SAMPLE) { return; }
   int raw = espeasy_analogRead(_pin_analogRead);
 
-  if (raw < _lowestSampleValue) { _lowestSampleValue = raw; }
-
-  if (raw > _highestSampleValue) { _highestSampleValue = raw; }
-  ++_nrSamples;
-
+  if (_plugin_stats[0] != nullptr) {
+    _plugin_stats[0]->trackPeak(raw);
+  }
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
@@ -717,13 +733,23 @@ bool P002_data_struct::getValue(float& float_value,
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
 
-      if (getOversamplingValue(float_value, raw_value)) { return true; }
+      if (getOversamplingValue(float_value, raw_value)) {
+        if (_plugin_stats[0] != nullptr) {
+          _plugin_stats[0]->push(float_value);
+        }
+        return true;
+      }
       mustTakeSample = true;
       break;
 # ifndef LIMIT_BUILD_SIZE
     case P002_USE_BINNING:
 
-      if (getBinnedValue(float_value, raw_value)) { return true; }
+      if (getBinnedValue(float_value, raw_value)) {
+        if (_plugin_stats[0] != nullptr) {
+          _plugin_stats[0]->push(float_value);
+        }
+        return true;
+      }
       mustTakeSample = true;
       break;
 # endif // ifndef LIMIT_BUILD_SIZE
@@ -737,6 +763,7 @@ bool P002_data_struct::getValue(float& float_value,
   }
 
   raw_value = espeasy_analogRead(_pin_analogRead);
+  _plugin_stats[0]->trackPeak(raw_value);
   # ifdef ESP32
 
   if (_useFactoryCalibration) {
@@ -749,6 +776,10 @@ bool P002_data_struct::getValue(float& float_value,
 # ifndef LIMIT_BUILD_SIZE
   float_value = applyMultiPointInterpolation(float_value);
 # endif // ifndef LIMIT_BUILD_SIZE
+
+  if (_plugin_stats[0] != nullptr) {
+    _plugin_stats[0]->push(float_value);
+  }
   return true;
 }
 

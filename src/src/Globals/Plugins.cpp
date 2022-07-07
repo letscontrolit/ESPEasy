@@ -625,6 +625,10 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
             }
           } else {
+            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+            if (taskData != nullptr) {
+              taskData->pushPluginStatsValues(event);
+            }
             saveUserVarToRTC();
           }
         }

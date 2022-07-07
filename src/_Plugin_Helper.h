@@ -10,6 +10,7 @@
 #include "src/DataStructs/DeviceStruct.h"
 #include "src/DataStructs/ESPEasy_EventStruct.h"
 #include "src/DataStructs/PinMode.h"
+#include "src/DataStructs/PluginTaskData_base.h"
 
 #include "src/DataTypes/ESPEasy_plugin_functions.h"
 
@@ -87,20 +88,6 @@ String PCONFIG_LABEL(int n);
 // ==============================================
 // Data used by instances of plugins.
 // =============================================
-
-// base class to be able to delete a data object from the array.
-// N.B. in order to use this, a data object must inherit from this base class.
-//      This is a compile time check.
-struct PluginTaskData_base {
-  virtual ~PluginTaskData_base() {}
-
-  // We cannot use dynamic_cast, so we must keep track of the plugin ID to
-  // perform checks on the casting.
-  // This is also a check to only use these functions and not to insert pointers
-  // at random in the Plugin_task_data array.
-  pluginID_t _taskdata_pluginID = INVALID_PLUGIN_ID;
-};
-
 
 void                 resetPluginTaskData();
 
