@@ -21,6 +21,7 @@
 
 #define P087_BAUDRATE           PCONFIG_LONG(0)
 #define P087_BAUDRATE_LABEL     PCONFIG_LABEL(0)
+#define P087_SERIAL_CONFIG      PCONFIG_LONG(1)
 
 #define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
 #define P087_NR_OUTPUT_OPTIONS  1
@@ -133,6 +134,8 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     {
       addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
       addUnit(F("baud"));
+      uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P087_SERIAL_CONFIG);
+      serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       break;
     }
 
@@ -148,7 +151,8 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-      P087_BAUDRATE = getFormItemInt(P087_BAUDRATE_LABEL);
+      P087_BAUDRATE      = getFormItemInt(P087_BAUDRATE_LABEL);
+      P087_SERIAL_CONFIG = serialHelper_serialconfig_webformSave();
 
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -178,7 +182,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         return success;
       }
 
-      if (P087_data->init(port, serial_rx, serial_tx, P087_BAUDRATE)) {
+      if (P087_data->init(port, serial_rx, serial_tx, P087_BAUDRATE, static_cast<uint8_t>(P087_SERIAL_CONFIG))) {
         LoadCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0);
         P087_data->post_init();
         success = true;
