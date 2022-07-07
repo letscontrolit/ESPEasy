@@ -146,6 +146,8 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+# ifndef LIMIT_BUILD_SIZE
+
     case PLUGIN_GET_CONFIG_VALUE:
     {
       P002_data_struct *P002_data = static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -155,6 +157,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+#endif
   }
   return success;
 }

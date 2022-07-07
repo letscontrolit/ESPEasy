@@ -73,6 +73,7 @@ bool P002_data_struct::plugin_get_config_value(struct EventStruct *event, String
   }
   return success;
 }
+# endif // ifndef LIMIT_BUILD_SIZE
 
 bool P002_data_struct::plugin_write(struct EventStruct *event, const String& string)
 {
@@ -93,8 +94,6 @@ bool P002_data_struct::plugin_write(struct EventStruct *event, const String& str
    */
   return success;
 }
-
-# endif // ifndef LIMIT_BUILD_SIZE
 
 
 # ifndef LIMIT_BUILD_SIZE

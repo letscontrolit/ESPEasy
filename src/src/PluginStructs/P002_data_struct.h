@@ -98,11 +98,10 @@ struct P002_data_struct : public PluginTaskData_base {
 # ifndef LIMIT_BUILD_SIZE
   bool plugin_get_config_value(struct EventStruct *event,
                                String            & string) const;
+# endif // ifndef LIMIT_BUILD_SIZE
 
   bool plugin_write(struct EventStruct *event,
                     const String      & string);
-
-# endif // ifndef LIMIT_BUILD_SIZE
 
 private:
 
