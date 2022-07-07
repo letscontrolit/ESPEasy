@@ -10,21 +10,14 @@
 # endif // ifndef DEFAULT_VREF
 
 
-void P002_formatStatistics(const __FlashStringHelper *label, int raw, float float_value) {
-  addRowLabel(label);
-  addHtmlInt(raw);
-  html_add_estimate_symbol();
-  addHtmlFloat(float_value, 3);
-}
-
 P002_data_struct::P002_data_struct(struct EventStruct *event)
 {
   _sampleMode = P002_OVERSAMPLING;
 
   # ifdef ESP8266
   _pin_analogRead = A0;
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
+  # endif // ifdef ESP8266
+  # ifdef ESP32
   _pin_analogRead        = CONFIG_PIN1;
   _useFactoryCalibration = applyFactoryCalibration(event);
   _attenuation           = getAttenuation(event);
@@ -34,18 +27,20 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
     analogSetPinAttenuation(_pin_analogRead, static_cast<adc_attenuation_t>(_attenuation));
   }
 
-  # endif // if defined(ESP32)
+  # endif // ifdef ESP32
 
   if (P002_CALIBRATION_ENABLED) {
-    _calib_adc1 = P002_CALIBRATION_POINT1;
-    _calib_adc2 = P002_CALIBRATION_POINT2;
-    _calib_out1 = P002_CALIBRATION_VALUE1;
-    _calib_out2 = P002_CALIBRATION_VALUE2;
+    _use2pointCalibration = true;
+    _calib_adc1           = P002_CALIBRATION_POINT1;
+    _calib_adc2           = P002_CALIBRATION_POINT2;
+    _calib_out1           = P002_CALIBRATION_VALUE1;
+    _calib_out2           = P002_CALIBRATION_VALUE2;
   }
 # ifndef LIMIT_BUILD_SIZE
   LoadTaskSettings(event->TaskIndex);
   _nrDecimals        = ExtraTaskSettings.TaskDeviceValueDecimals[0];
   _nrMultiPointItems = P002_NR_MULTIPOINT_ITEMS;
+  _useMultipoint     = P002_MULTIPOINT_ENABLED;
 
   load(event);
 # endif // ifndef LIMIT_BUILD_SIZE
@@ -130,7 +125,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   int raw_value            = 0;
   const float currentValue = P002_data_struct::getCurrentValue(event, raw_value);
 
-# if defined(ESP32)
+# ifdef ESP32
   addRowLabel(F("Analog Pin"));
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
 
@@ -150,23 +145,32 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     addFormSelector(F("Attenuation"), F("p002_attn"), 4, outputOptions, outputOptionValues, P002_ATTENUATION);
   }
 
-# endif // if defined(ESP32)
+# endif // ifdef ESP32
 
-# ifndef LIMIT_BUILD_SIZE
   {
     const __FlashStringHelper *outputOptions[] = {
       F("Use Current Sample"),
-      F("Oversampling"),
-      F("Binning")
+      F("Oversampling")
+# ifndef LIMIT_BUILD_SIZE
+      , F("Binning")
+# endif // ifndef LIMIT_BUILD_SIZE
     };
     const int outputOptionValues[] = {
       P002_USE_CURENT_SAMPLE,
-      P002_USE_OVERSAMPLING,
-      P002_USE_BINNING };
-    addFormSelector(F("Oversampling"), F("p002_oversampling"), 3, outputOptions, outputOptionValues, P002_OVERSAMPLING);
-  }
+      P002_USE_OVERSAMPLING
+# ifndef LIMIT_BUILD_SIZE
+      , P002_USE_BINNING
 # endif // ifndef LIMIT_BUILD_SIZE
-  # ifdef ESP32
+    };
+# ifndef LIMIT_BUILD_SIZE
+    const int nrOptions = 3;
+# else // ifndef LIMIT_BUILD_SIZE
+    const int nrOptions = 2;
+# endif // ifndef LIMIT_BUILD_SIZE
+    addFormSelector(F("Oversampling"), F("p002_oversampling"), nrOptions, outputOptions, outputOptionValues, P002_OVERSAMPLING);
+  }
+
+# ifdef ESP32
   addFormSubHeader(F("Factory Calibration"));
   addFormCheckBox(F("Apply Factory Calibration"), F("p002_fac_cal"), P002_APPLY_FACTORY_CALIB, !hasADC_factory_calibration());
   addFormNote(F("When checked, reading is in mV"));
@@ -177,19 +181,27 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     #  ifndef LIMIT_BUILD_SIZE
     webformLoad_calibrationCurve(event);
     #  endif // ifndef LIMIT_BUILD_SIZE
-    P002_formatStatistics(F("Current ADC to mV"), raw_value, currentValue);
+    formatADC_statistics(F("Current ADC to mV"), raw_value);
 
     for (size_t att = 0; att < ADC_ATTEN_MAX; ++att) {
-      String rowlabel = F("Input Range @");
+      const int   low  = esp_adc_cal_raw_to_voltage(0, &adc_chars[att]);
+      const int   high = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[att]);
+      const float step = static_cast<float>(high - low) / MAX_ADC_VALUE;
+
+      String rowlabel = F("Attenuation @");
       rowlabel += AttenuationToString(static_cast<adc_atten_t>(att));
       addRowLabel(rowlabel);
-      addHtmlInt(esp_adc_cal_raw_to_voltage(0, &adc_chars[att]));
+      addHtml(F("Range / Step: "));
+      addHtmlInt(low);
       addHtml(F(" ... "));
-      addHtmlInt(esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[att]));
+      addHtmlInt(high);
+      addUnit(F("mV"));
+      addHtml(F(" / "));
+      addHtmlFloat(step, 3);
       addUnit(F("mV"));
     }
   }
-  # endif // ifdef ESP32
+# endif // ifdef ESP32
 
   addFormSubHeader(F("Two Point Calibration"));
 
@@ -217,12 +229,13 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       const float maxY_value         = P002_data_struct::applyCalibration(event, maxInputValue);
       const float current_calibrated = P002_data_struct::applyCalibration(event, currentValue);
 
-      P002_formatStatistics(F("Current"),   currentValue,  current_calibrated);
-      P002_formatStatistics(F("Minimum"),   minInputValue, minY_value);
-      P002_formatStatistics(F("Maximum"),   maxInputValue, maxY_value);
+      format_2point_calib_statistics(F("Current"), currentValue,  current_calibrated);
+      format_2point_calib_statistics(F("Minimum"), minInputValue, minY_value);
+      format_2point_calib_statistics(F("Maximum"), maxInputValue, maxY_value);
 
-      const float stepsize = (maxY_value - minY_value) / (maxInputValue - minInputValue);
-      P002_formatStatistics(F("Step size"), 1,             stepsize);
+      const float stepsize = (maxY_value - minY_value) / (MAX_ADC_VALUE + 1);
+      addRowLabel(F("Step Size"));
+      addHtmlFloat(stepsize, 3);
     } else {
       addRowLabel(F("Current"));
       addHtmlFloat(currentValue, 3);
@@ -273,10 +286,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   if (_nrSamples > 0) {
     addFormSubHeader(F("Statistics"));
-    addRowLabel(F("Min. ADC value"));
-    addHtmlInt(_lowestSampleValue);
-    addRowLabel(F("Max. ADC value"));
-    addHtmlInt(_highestSampleValue);
+    formatADC_statistics(F("Min. ADC value"), _lowestSampleValue);
+    formatADC_statistics(F("Max. ADC value"), _highestSampleValue);
     addRowLabel(F("Nr. ADC Samples"));
     addHtmlInt(_nrSamples);
   }
@@ -339,7 +350,9 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 }
 
 #  endif // ifdef ESP32
+# endif  // ifndef LIMIT_BUILD_SIZE
 
+# ifndef LIMIT_BUILD_SIZE
 const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStruct *event)
 {
   #  ifdef ESP32
@@ -386,7 +399,7 @@ void P002_data_struct::getChartRange(struct EventStruct *event, int values[], in
 
 void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *event)
 {
-  addRowLabel(F("Calibration Curve"));
+  addRowLabel(F("Two Point Calibration"));
 
   const int valueCount = 33;
   int xAxisValues[valueCount];
@@ -431,6 +444,33 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
 }
 
 # endif // ifndef LIMIT_BUILD_SIZE
+
+void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, int raw) const
+{
+  addRowLabel(label);
+  addHtmlInt(raw);
+# ifdef ESP32
+
+  if (_useFactoryCalibration) {
+    html_add_estimate_symbol();
+    addHtmlInt(esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]));
+    addUnit(F("mV"));
+  }
+# endif // ifdef ESP32
+}
+
+void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper *label, int raw, float float_value) const
+{
+  addRowLabel(label);
+  addHtmlInt(raw);
+  # ifdef ESP32
+  addUnit(_useFactoryCalibration ? F("mV") : F("raw"));
+  # else // ifdef ESP32
+  addUnit(F("raw"));
+  # endif // ifdef ESP32
+  html_add_estimate_symbol();
+  addHtmlFloat(float_value, 3);
+}
 
 # ifdef ESP32
 const __FlashStringHelper * P002_data_struct::AttenuationToString(adc_atten_t attenuation) {
@@ -641,46 +681,37 @@ String P002_data_struct::webformSave(struct EventStruct *event)
 
 void P002_data_struct::takeSample()
 {
-# ifndef LIMIT_BUILD_SIZE
-
   if (_sampleMode == P002_USE_CURENT_SAMPLE) { return; }
-# endif // ifndef LIMIT_BUILD_SIZE
-# ifdef ESP32
-
   int raw = espeasy_analogRead(_pin_analogRead);
-
-  if (_useFactoryCalibration) {
-    raw = esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]);
-  }
-
-# else // ifdef ESP32
-  const int raw = espeasy_analogRead(_pin_analogRead);
-# endif // ifdef ESP32
 
   if (raw < _lowestSampleValue) { _lowestSampleValue = raw; }
 
   if (raw > _highestSampleValue) { _highestSampleValue = raw; }
   ++_nrSamples;
 
-# ifndef LIMIT_BUILD_SIZE
+# ifdef ESP32
+
+  if (_useFactoryCalibration) {
+    raw = esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]);
+  }
+# endif // ifdef ESP32
+
 
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
       addOversamplingValue(raw);
       break;
+# ifndef LIMIT_BUILD_SIZE
     case P002_USE_BINNING:
       addBinningValue(raw);
       break;
-  }
-# else // ifndef LIMIT_BUILD_SIZE
-  addOversamplingValue(raw);
 # endif // ifndef LIMIT_BUILD_SIZE
+  }
 }
 
 bool P002_data_struct::getValue(float& float_value,
                                 int  & raw_value) const
 {
-# ifndef LIMIT_BUILD_SIZE
   bool mustTakeSample = false;
 
   switch (_sampleMode) {
@@ -689,11 +720,13 @@ bool P002_data_struct::getValue(float& float_value,
       if (getOversamplingValue(float_value, raw_value)) { return true; }
       mustTakeSample = true;
       break;
+# ifndef LIMIT_BUILD_SIZE
     case P002_USE_BINNING:
 
       if (getBinnedValue(float_value, raw_value)) { return true; }
       mustTakeSample = true;
       break;
+# endif // ifndef LIMIT_BUILD_SIZE
     case P002_USE_CURENT_SAMPLE:
       mustTakeSample = true;
       break;
@@ -702,21 +735,19 @@ bool P002_data_struct::getValue(float& float_value,
   if (!mustTakeSample) {
     return false;
   }
-# endif // ifndef LIMIT_BUILD_SIZE
-
-  # ifdef ESP32
 
   raw_value = espeasy_analogRead(_pin_analogRead);
+  # ifdef ESP32
 
   if (_useFactoryCalibration) {
     raw_value = esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[_attenuation]);
   }
-  # else // ifdef ESP32
-  raw_value = espeasy_analogRead(_pin_analogRead);
   # endif // ifdef ESP32
 
+  float_value = applyCalibration(raw_value);
+
 # ifndef LIMIT_BUILD_SIZE
-  float_value = applyMultiPointInterpolation(applyCalibration(raw_value));
+  float_value = applyMultiPointInterpolation(float_value);
 # endif // ifndef LIMIT_BUILD_SIZE
   return true;
 }
@@ -835,7 +866,9 @@ void P002_data_struct::addBinningValue(int currentValue)
   }
 
   // First apply calibration, then find the bin index
-  float calibrated_value = applyCalibration(static_cast<float>(currentValue));
+  float calibrated_value = static_cast<float>(currentValue);
+
+  calibrated_value = applyCalibration(static_cast<float>(currentValue));
 
   // FIXME TD-er: hard-coded formula, must be computed before binning
   String formula = _formula_preprocessed;
@@ -904,25 +937,27 @@ float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_valu
 {
   # ifdef ESP8266
   const int pin = A0;
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
+  # endif // ifdef ESP8266
+  # ifdef ESP32
   const int pin = CONFIG_PIN1;
+  # endif // ifdef ESP32
 
   raw_value = espeasy_analogRead(pin);
+
+  # ifdef ESP32
 
   if (applyFactoryCalibration(event)) {
     const size_t attenuation = getAttenuation(event);
     return esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[attenuation]);
   }
-  # else // if defined(ESP32)
-  raw_value = espeasy_analogRead(pin);
-  # endif // if defined(ESP32)
+  # endif // ifdef ESP32
 
   return raw_value;
 }
 
 float P002_data_struct::applyCalibration(float float_value) const
 {
+  if (!_use2pointCalibration) { return float_value; }
   return mapADCtoFloat(
     float_value,
     _calib_adc1,
@@ -948,6 +983,8 @@ bool P002_data_struct::applyFactoryCalibration(struct EventStruct *event) {
 # ifndef LIMIT_BUILD_SIZE
 float P002_data_struct::applyMultiPointInterpolation(float float_value) const
 {
+  if (!_useMultipoint) { return float_value; }
+
   // First find the surrounding bins
   const size_t mp_size = _multipoint.size();
 
@@ -1023,7 +1060,7 @@ float P002_data_struct::mapADCtoFloat(float float_value,
                                       float out1,
                                       float out2)
 {
-  if (adc1 != adc2)
+  if (!approximatelyEqual(adc1, adc2))
   {
     const float normalized = static_cast<float>(float_value - adc1) / static_cast<float>(adc2 - adc1);
     float_value = normalized * (out2 - out1) + out1;

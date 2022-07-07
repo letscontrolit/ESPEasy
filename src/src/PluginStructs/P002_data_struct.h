@@ -116,6 +116,12 @@ public:
 
 private:
 
+  void formatADC_statistics(const __FlashStringHelper *label,
+                            int                        raw) const;
+  void format_2point_calib_statistics(const __FlashStringHelper *label,
+                                      int                        raw,
+                                      float                      float_value) const;
+
 # ifdef ESP32
   static adc_atten_t                getAttenuation(struct EventStruct *event);
   static const __FlashStringHelper* AttenuationToString(adc_atten_t attenuation);
@@ -215,10 +221,13 @@ private:
   int   _calib_adc2 = 0;
   float _calib_out1 = 0.0f;
   float _calib_out2 = 0.0f;
+
+  bool _use2pointCalibration = false;
 # ifndef LIMIT_BUILD_SIZE
   std::vector<P002_ADC_Value_pair>_multipoint;
   std::vector<unsigned int>       _binning;
   std::vector<P002_binningRange>  _binningRange;
+  bool                            _useMultipoint = false;
 # endif // ifndef LIMIT_BUILD_SIZE
 
   int      _lowestSampleValue  = MAX_ADC_VALUE;
