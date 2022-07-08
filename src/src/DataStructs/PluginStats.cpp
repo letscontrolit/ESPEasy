@@ -2,7 +2,7 @@
 
 #include "../../_Plugin_Helper.h"
 
-PluginStats::PluginStats()
+PluginStats::PluginStats(uint8_t nrDecimals) : _nrDecimals(nrDecimals)
 {
   resetPeaks();
 }
@@ -44,5 +44,27 @@ float PluginStats::getSampleAvg(uint8_t lastNrSamples) const
 
 bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String& string) const
 {
-  return false;
+  bool success = false;
+
+  // Full value name is something like "taskvaluename.avg"
+  const String fullValueName = parseString(string, 1);
+  const String command       = parseString(fullValueName, 2, '.');
+
+  float value;
+
+  if (command == F("min")) {        // [taskname#valuename.min] Lowest value seen since value reset
+    value   = getPeakLow();
+    success = true;
+  } else if (command == F("max")) { // [taskname#valuename.max] Highest value seen since value reset
+    value   = getPeakHigh();
+    success = true;
+  } else if (command == F("avg")) { // [taskname#valuename.avg] Average value of the last N kept samples
+    value   = getSampleAvg();
+    success = true;
+  }
+
+  if (success) {
+    string = toString(value, _nrDecimals);
+  }
+  return success;
 }

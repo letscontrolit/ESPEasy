@@ -26,6 +26,11 @@ struct PluginTaskData_base {
   // Called right after successful PLUGIN_READ to store task values
   void pushPluginStatsValues(struct EventStruct *event);
 
+  // Support task value notation to 'get' statistics
+  // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
+  bool plugin_get_config_value_base(struct EventStruct *event,
+                                    String            & string) const;
+
   bool plugin_write_base(struct EventStruct *event,
                          const String      & string);
 

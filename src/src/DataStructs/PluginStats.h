@@ -17,7 +17,9 @@
 class PluginStats {
 public:
 
-  PluginStats();
+  PluginStats() = delete;
+  PluginStats(uint8_t nrDecimals);
+
 
   // Add a sample to the _sample buffer
   // This does not also track peaks as the peaks could be raw sensor data and the samples processed data.
@@ -73,6 +75,7 @@ private:
   float _maxValue;
 
   CircularBuffer<float, PLUGIN_STATS_NR_ELEMENTS>_samples;
+  uint8_t _nrDecimals = 3u;
 };
 
 #endif // ifndef HELPERS_PLUGINSTATS_H

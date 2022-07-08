@@ -135,29 +135,6 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-
-    case PLUGIN_WRITE:
-    {
-      P002_data_struct *P002_data = static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P002_data) {
-        success = P002_data->plugin_write(event, string);
-      }
-      break;
-    }
-
-# ifndef LIMIT_BUILD_SIZE
-
-    case PLUGIN_GET_CONFIG_VALUE:
-    {
-      P002_data_struct *P002_data = static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P002_data) {
-        success = P002_data->plugin_get_config_value(event, string); // GetConfig operation, handle variables
-      }
-      break;
-    }
-#endif
   }
   return success;
 }

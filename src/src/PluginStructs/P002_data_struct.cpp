@@ -48,55 +48,6 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
 }
 
 # ifndef LIMIT_BUILD_SIZE
-bool P002_data_struct::plugin_get_config_value(struct EventStruct *event, String& string) const
-{
-  bool success = false;
-
-  if (_plugin_stats[0] != nullptr) {
-    String command = parseString(string, 1);
-    float  value;
-
-    if (command == F("adcmin")) {        // [taskname#adcmin] Lowest ADC value seen since value reset
-      value   = _plugin_stats[0]->getPeakLow();
-      success = true;
-    } else if (command == F("adcmax")) { // [taskname#adcmax] Highest ADC value seen since value reset
-      value   = _plugin_stats[0]->getPeakHigh();
-      success = true;
-    } else if (command == F("avg")) {    // [taskname#adcavg] Average ADC value of the last N kept samples
-      value   = _plugin_stats[0]->getSampleAvg();
-      success = true;
-    }
-
-    if (success) {
-      string = toString(value, 3);
-    }
-  }
-  return success;
-}
-# endif // ifndef LIMIT_BUILD_SIZE
-
-bool P002_data_struct::plugin_write(struct EventStruct *event, const String& string)
-{
-  if (plugin_write_base(event, string)) { return true; }
-
-  bool success = false;
-
-  /*
-     if (parseString(string, 1).equals(F("adc"))) {
-      const String cmd = parseString(string, 2); // sub command
-
-      if (cmd.equals(F("resetpeaks"))) {
-        // Command: "adc,resetpeaks"
-        success             = true;
-        _plugin_stats[0]->resetPeaks();
-      }
-     }
-   */
-  return success;
-}
-
-
-# ifndef LIMIT_BUILD_SIZE
 void P002_data_struct::load(struct EventStruct *event)
 {
   const size_t nr_lines = P002_Nlines;
@@ -299,13 +250,13 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
         addFormNote(F("Peak values recorded since last \"resetpeaks\"."));
       }
       addRowLabel(F("Avg. ouput value"));
+      addHtmlFloat(_plugin_stats[0]->getSampleAvg());
       {
         String note = F("Average over last ");
         note += _plugin_stats[0]->getNrSamples();
         note += F(" samples");
         addFormNote(note);
       }
-      addHtmlFloat(_plugin_stats[0]->getSampleAvg());
     }
   }
 }
@@ -733,9 +684,6 @@ bool P002_data_struct::getValue(float& float_value,
     case P002_USE_OVERSAMPLING:
 
       if (getOversamplingValue(float_value, raw_value)) {
-        if (_plugin_stats[0] != nullptr) {
-          _plugin_stats[0]->push(float_value);
-        }
         return true;
       }
       mustTakeSample = true;
@@ -744,9 +692,6 @@ bool P002_data_struct::getValue(float& float_value,
     case P002_USE_BINNING:
 
       if (getBinnedValue(float_value, raw_value)) {
-        if (_plugin_stats[0] != nullptr) {
-          _plugin_stats[0]->push(float_value);
-        }
         return true;
       }
       mustTakeSample = true;
@@ -762,7 +707,10 @@ bool P002_data_struct::getValue(float& float_value,
   }
 
   raw_value = espeasy_analogRead(_pin_analogRead);
-  _plugin_stats[0]->trackPeak(raw_value);
+
+  if (_plugin_stats[0] != nullptr) {
+    _plugin_stats[0]->trackPeak(raw_value);
+  }
   # ifdef ESP32
 
   if (_useFactoryCalibration) {
@@ -776,9 +724,6 @@ bool P002_data_struct::getValue(float& float_value,
   float_value = applyMultiPointInterpolation(float_value);
 # endif // ifndef LIMIT_BUILD_SIZE
 
-  if (_plugin_stats[0] != nullptr) {
-    _plugin_stats[0]->push(float_value);
-  }
   return true;
 }
 

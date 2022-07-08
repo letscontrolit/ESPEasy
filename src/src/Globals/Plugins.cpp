@@ -420,8 +420,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         String arg0 = parseString(command, 1);                // Get first argument
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
-          String thisTaskName = command.substring(0, dotPos); // Extract taskname prefix
-          thisTaskName.replace(F("["), EMPTY_STRING);                      // Remove the optional square brackets
+          String thisTaskName = parseString(arg0, 1, '.');    // Extract taskname prefix
+          thisTaskName.replace(F("["), EMPTY_STRING);         // Remove the optional square brackets
           thisTaskName.replace(F("]"), EMPTY_STRING);
           if (thisTaskName.length() > 0) {                    // Second precondition
             taskIndex_t thisTask = findTaskIndexByName(thisTaskName);
@@ -464,6 +464,19 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       for (taskIndex_t task = firstTask; task < lastTask; task++)
       {
         bool retval = PluginCallForTask(task, Function, &TempEvent, command);
+
+        if (!retval) {
+          if (1 == (lastTask - firstTask)) {
+            // These plugin task data commands are generic, so only apply them on a specific task.
+            // Don't try to match them on the first task that may have such data.
+            PluginTaskData_base *taskData = getPluginTaskData(task);
+            if (nullptr != taskData) {
+              if (taskData->plugin_write_base(event, command)) {
+                retval = true;
+              }
+            }
+          }
+        }
 
         if (retval) {
           CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
@@ -713,6 +726,17 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         if (Function == PLUGIN_SET_DEFAULTS) {
           saveUserVarToRTC();
         }
+        if (Function == PLUGIN_GET_CONFIG_VALUE && !retval) {
+          // Try to match a statistical property of a task value.
+          // e.g.: [taskname#valuename.avg]
+          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+          if (nullptr != taskData) {
+            if (taskData->plugin_get_config_value_base(event, str)) {
+              retval = true;
+            }
+          }
+        }
+
         if (Function == PLUGIN_GET_DEVICEVALUECOUNT) {
           // Check if we have a valid value count.
           if (Output_Data_type_t::Simple == Device[DeviceIndex].OutputDataType) {
