@@ -8,6 +8,12 @@
 // Interact with a device connected to serial
 // Allows to redirect data to a controller
 //
+/**
+ * Changelog:
+ * 2022-07-08 tonhuisman: Allow baudrate lowest value to 300 (from 2400)
+ * 2022-07-07 tonhuisman: Add selection for serial protocol configuration (databits, parity, nr. of stopbits)
+ * 2022-07 First recorded changelog
+ **/
 
 
 #include "src/PluginStructs/P087_data_struct.h"
@@ -132,7 +138,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 2400, 115200);
+      addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 300, 115200);
       addUnit(F("baud"));
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P087_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
