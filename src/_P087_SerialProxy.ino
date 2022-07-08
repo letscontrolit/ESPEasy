@@ -11,6 +11,7 @@
 /**
  * Changelog:
  * 2022-07-08 tonhuisman: Allow baudrate lowest value to 300 (from 2400)
+ *                        Don't trim off pre/post white-space from string to send
  * 2022-07-07 tonhuisman: Add selection for serial protocol configuration (databits, parity, nr. of stopbits)
  * 2022-07 First recorded changelog
  **/
@@ -240,7 +241,7 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
           static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if ((nullptr != P087_data)) {
-          String param1 = parseStringKeepCase(string, 2);
+          String param1 = parseStringKeepCase(string, 2, ',', false); // Don't trim off white-space
           parseSystemVariables(param1, false);
           P087_data->sendString(param1);
           addLogMove(LOG_LEVEL_INFO, param1);
