@@ -160,10 +160,7 @@ void handle_sysinfo_json() {
   json_open(false, F("esp"));
   json_prop(F("chip_id"), getValue(LabelType::ESP_CHIP_ID));
   json_number(F("cpu"), getValue(LabelType::ESP_CHIP_FREQ));
-
-  # ifdef ARDUINO_BOARD
-  json_prop(F("board"), ARDUINO_BOARD);
-  # endif // ifdef ARDUINO_BOARD
+  json_prop(F("board"), get_board_name());
   json_close();
   json_open(false, F("storage"));
 
@@ -561,10 +558,7 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_REVISION);
   # endif // if defined(ESP32)
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
-
-  # ifdef ARDUINO_BOARD
   addRowLabelValue(LabelType::ESP_BOARD_NAME);
-  # endif // ifdef ARDUINO_BOARD
 }
 
 void handle_sysinfo_Storage() {
