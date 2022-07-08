@@ -369,6 +369,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceFormula[varNr], String(F("TDF")) + (varNr + 1));
     update_whenset_FormItemInt(String(F("TDVD")) + (varNr + 1), ExtraTaskSettings.TaskDeviceValueDecimals[varNr]);
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], String(F("TDVN")) + (varNr + 1));
+    ExtraTaskSettings.enablePluginStats(varNr, isFormItemChecked(String(F("TDS")) + (varNr + 1)));
   }
 
   // allow the plugin to save plugin-specific form settings.
@@ -863,6 +864,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
   {
     // takes lots of memory/time so call this only when needed.
     addDeviceSelect(F("TDNUM"), Settings.TaskDeviceNumber[taskIndex]); // ="taskdevicenumber"
+    addFormSeparator(4);
   }
 
   // device selected
@@ -986,8 +988,6 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
     devicePage_show_task_values(taskIndex, DeviceIndex);
   }
-
-  addFormSeparator(4);
 
   html_TR_TD();
   addHtml(F("<TD colspan='3'>"));
@@ -1275,6 +1275,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
   if (!Device[DeviceIndex].Custom && (valueCount > 0))
   {
+    int colCount = 1;
     addFormSubHeader(F("Values"));
     html_end_table();
     html_table_class_normal();
@@ -1286,11 +1287,19 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
     if (Device[DeviceIndex].FormulaOption)
     {
       html_table_header(F("Formula"), F("EasyFormula"), 0);
+      ++colCount;
+    }
+
+    if (Device[DeviceIndex].PluginStats)
+    {
+      html_table_header(F("Stats"), 30);
+      ++colCount;
     }
 
     if (Device[DeviceIndex].configurableDecimals())
     {
       html_table_header(F("Decimals"), 30);
+      ++colCount;
     }
 
     // table body
@@ -1312,6 +1321,14 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addTextBox(id, ExtraTaskSettings.TaskDeviceFormula[varNr], NAME_FORMULA_LENGTH_MAX);
       }
 
+      if (Device[DeviceIndex].PluginStats)
+      {
+        html_TD();
+        String id = F("TDS"); // ="taskdevicestats"
+        id += (varNr + 1);
+        addCheckBox(id, ExtraTaskSettings.enablePluginStats(varNr));
+      }
+
       if (Device[DeviceIndex].configurableDecimals())
       {
         html_TD();
@@ -1320,6 +1337,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         addNumericBox(id, ExtraTaskSettings.TaskDeviceValueDecimals[varNr], 0, 6);
       }
     }
+    addFormSeparator(colCount);
   }
 }
 

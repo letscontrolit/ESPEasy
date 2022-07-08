@@ -16,6 +16,7 @@ void ExtraTaskSettingsStruct::clear() {
     ZERO_FILL(TaskDeviceValueNames[i]);
     setIgnoreRangeCheck(i);
     TaskDeviceErrorValue[i] = 0.0f;
+    VariousBits[i] = 0u;
   }
 
   for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
@@ -158,4 +159,17 @@ float ExtraTaskSettingsStruct::checkAllowedRange(taskVarIndex_t taskVarIndex, co
     }
   }
   return value;
+}
+
+bool ExtraTaskSettingsStruct::enablePluginStats(taskVarIndex_t taskVarIndex) const
+{
+  if (!validTaskVarIndex(taskVarIndex)) { return false; }
+  return bitRead(VariousBits[taskVarIndex], 0);
+}
+
+void ExtraTaskSettingsStruct::enablePluginStats(taskVarIndex_t taskVarIndex, bool enabled)
+{
+  if (validTaskVarIndex(taskVarIndex)) {
+    bitWrite(VariousBits[taskVarIndex], 0, enabled);
+  }
 }

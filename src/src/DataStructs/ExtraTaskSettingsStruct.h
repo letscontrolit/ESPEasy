@@ -45,6 +45,9 @@ struct ExtraTaskSettingsStruct
   bool        valueInAllowedRange(taskVarIndex_t taskVarIndex,
                                   const float  & value) const;
 
+  bool        enablePluginStats(taskVarIndex_t taskVarIndex) const;
+  void        enablePluginStats(taskVarIndex_t taskVarIndex, bool enabled);
+
   taskIndex_t TaskIndex; // Always < TASKS_MAX or INVALID_TASK_INDEX
   char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
@@ -55,6 +58,7 @@ struct ExtraTaskSettingsStruct
   float       TaskDeviceMinValue[VARS_PER_TASK];
   float       TaskDeviceMaxValue[VARS_PER_TASK];
   float       TaskDeviceErrorValue[VARS_PER_TASK];
+  uint32_t    VariousBits[VARS_PER_TASK] = {0};
 };
 
 
