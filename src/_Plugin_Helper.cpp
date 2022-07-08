@@ -57,6 +57,11 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (Settings.TaskDeviceEnabled[taskIndex]) {
     Plugin_task_data[taskIndex]                     = data;
     Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
+
+    const uint8_t valueCount = getValueCountForTask(taskIndex);
+    for (size_t i = 0; i < VARS_PER_TASK && i < valueCount; ++i) {
+      Plugin_task_data[taskIndex]->initPluginStats(i);
+    }
   } else if (data != nullptr) {
     delete data;
   }

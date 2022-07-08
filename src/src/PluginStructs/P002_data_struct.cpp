@@ -12,7 +12,6 @@
 
 P002_data_struct::P002_data_struct(struct EventStruct *event)
 {
-  initPluginStats(0);
   _sampleMode = P002_OVERSAMPLING;
 
   # ifdef ESP8266
