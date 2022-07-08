@@ -2,6 +2,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#define EXTRA_TASK_SETTINGS_VERSION 1
+
 ExtraTaskSettingsStruct::ExtraTaskSettingsStruct() : TaskIndex(INVALID_TASK_INDEX) {
   clear();
 }
@@ -16,7 +18,7 @@ void ExtraTaskSettingsStruct::clear() {
     ZERO_FILL(TaskDeviceValueNames[i]);
     setIgnoreRangeCheck(i);
     TaskDeviceErrorValue[i] = 0.0f;
-    VariousBits[i] = 0u;
+    VariousBits[i]          = 0u;
   }
 
   for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
@@ -31,6 +33,25 @@ void ExtraTaskSettingsStruct::validate() {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
     ZERO_TERMINATE(TaskDeviceFormula[i]);
     ZERO_TERMINATE(TaskDeviceValueNames[i]);
+  }
+
+  if (dummy1 != 0) {
+    // FIXME TD-er: This check was added to add the version for allowing to make transitions on the data.
+    // If we've been using this for a while, we no longer need to check for the value of this dummy and we can re-use it for something else.
+    dummy1  = 0;
+    version = 0;
+  }
+
+  if (version != EXTRA_TASK_SETTINGS_VERSION) {
+    if (version < 1) {
+      // Need to initialize the newly added fields
+      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+        setIgnoreRangeCheck(i);
+        TaskDeviceErrorValue[i] = 0.0f;
+        VariousBits[i]          = 0u;
+      }
+    }
+    version = EXTRA_TASK_SETTINGS_VERSION;
   }
 }
 

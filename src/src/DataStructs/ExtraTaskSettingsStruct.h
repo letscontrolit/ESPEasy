@@ -52,6 +52,8 @@ struct ExtraTaskSettingsStruct
   char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
   char        TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
   char        TaskDeviceValueNames[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1];
+  uint8_t     dummy1 = 0;
+  uint8_t     version = 1;
   long        TaskDevicePluginConfigLong[PLUGIN_EXTRACONFIGVAR_MAX] = {0};
   uint8_t     TaskDeviceValueDecimals[VARS_PER_TASK] = {0};
   int16_t     TaskDevicePluginConfig[PLUGIN_EXTRACONFIGVAR_MAX] = {0};

@@ -81,6 +81,10 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   int raw_value            = 0;
   const float currentValue = P002_data_struct::getCurrentValue(event, raw_value);
 
+  if (_plugin_stats[0] != nullptr) {
+    _plugin_stats[0]->trackPeak(raw_value);
+  }
+
 # ifdef ESP32
   addRowLabel(F("Analog Pin"));
   addADC_PinSelect(AdcPinSelectPurpose::ADC_Touch_HallEffect, F("taskdevicepin1"), CONFIG_PIN1);
@@ -241,7 +245,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 # endif // ifndef LIMIT_BUILD_SIZE
 
   if (_plugin_stats[0] != nullptr) {
-    if (_plugin_stats[0]->getNrSamples() > 0) {
+    if (_plugin_stats[0]->hasPeaks()) {
       addFormSubHeader(F("Statistics"));
 
       if (_plugin_stats[0]->hasPeaks()) {
@@ -249,13 +253,16 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
         formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
         addFormNote(F("Peak values recorded since last \"resetpeaks\"."));
       }
-      addRowLabel(F("Avg. ouput value"));
-      addHtmlFloat(_plugin_stats[0]->getSampleAvg());
-      {
-        String note = F("Average over last ");
-        note += _plugin_stats[0]->getNrSamples();
-        note += F(" samples");
-        addFormNote(note);
+
+      if (_plugin_stats[0]->getNrSamples() > 0) {
+        addRowLabel(F("Avg. ouput value"));
+        addHtmlFloat(_plugin_stats[0]->getSampleAvg());
+        {
+          String note = F("Average over last ");
+          note += _plugin_stats[0]->getNrSamples();
+          note += F(" samples");
+          addFormNote(note);
+        }
       }
     }
   }
