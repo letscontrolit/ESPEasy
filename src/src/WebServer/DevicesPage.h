@@ -61,6 +61,8 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex);
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
+void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 void devicePage_show_interval_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);

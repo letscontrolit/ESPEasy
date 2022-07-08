@@ -105,6 +105,8 @@ public:
 
   void webformLoad(struct EventStruct *event);
 
+  void webformLoad_show_stats(struct EventStruct *event);
+
 private:
 
   void formatADC_statistics(const __FlashStringHelper *label,

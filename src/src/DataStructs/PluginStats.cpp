@@ -4,6 +4,8 @@
 
 #include "../Helpers/ESPEasy_math.h"
 
+#include "../WebServer/Chart_JS.h"
+
 PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _errorValue(errorValue),
   _nrDecimals(nrDecimals)
@@ -101,4 +103,53 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
     string = toString(value, _nrDecimals);
   }
   return success;
+}
+
+bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
+{
+  bool somethingAdded = false;
+
+  if (hasPeaks()) {
+    addRowLabel(_ChartJS_dataset_config.label +  F(" Peak Low/High"));
+    addHtmlFloat(getPeakLow(), _nrDecimals);
+    addHtml('/');
+    addHtmlFloat(getPeakHigh(), _nrDecimals);
+    somethingAdded = true;
+  }
+
+  if (getNrSamples() > 0) {
+    addRowLabel(F("Avg. ouput value"));
+    addHtmlFloat(getSampleAvg());
+    addHtml(' ', '(');
+    addHtmlInt(getNrSamples());
+    addHtml(F(" samples)"));
+    somethingAdded = true;
+  }
+
+  if (somethingAdded) {
+    addFormSeparator(4);
+  }
+
+  return somethingAdded;
+}
+
+void PluginStats::plot_ChartJS_dataset() const
+{
+  add_ChartJS_dataset_header(_ChartJS_dataset_config.label, _ChartJS_dataset_config.color);
+
+  PluginStatsBuffer_t::index_t i = 0;
+
+  for (; i < _samples.size(); ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+
+    if (!isnan(_samples[i])) {
+      addHtmlFloat(_samples[i], _nrDecimals);
+    }
+    else {
+      addHtml(F("null"));
+    }
+  }
+  add_ChartJS_dataset_footer(_ChartJS_dataset_config.hidden);
 }

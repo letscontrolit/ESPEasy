@@ -70,6 +70,18 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
+    {
+      P002_data_struct *P002_data =
+        static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P002_data) {
+        P002_data->webformLoad_show_stats(event);
+        success = true;
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_SAVE:
     {
       addHtmlError(P002_data_struct::webformSave(event));

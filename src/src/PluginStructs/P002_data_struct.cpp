@@ -242,26 +242,23 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   }
   webformLoad_multipointCurve(event);
 # endif // ifndef LIMIT_BUILD_SIZE
+}
 
+void P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
+{
   if (_plugin_stats[0] != nullptr) {
     if (_plugin_stats[0]->hasPeaks()) {
-      addFormSubHeader(F("Statistics"));
-
       if (_plugin_stats[0]->hasPeaks()) {
         formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow());
         formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
-        addFormNote(F("Peak values recorded since last \"resetpeaks\"."));
       }
 
       if (_plugin_stats[0]->getNrSamples() > 0) {
         addRowLabel(F("Avg. ouput value"));
         addHtmlFloat(_plugin_stats[0]->getSampleAvg());
-        {
-          String note = F("Average over last ");
-          note += _plugin_stats[0]->getNrSamples();
-          note += F(" samples");
-          addFormNote(note);
-        }
+        addHtml(' ', '(');
+        addHtmlInt(_plugin_stats[0]->getNrSamples());
+        addHtml(F(" samples)"));
       }
     }
   }

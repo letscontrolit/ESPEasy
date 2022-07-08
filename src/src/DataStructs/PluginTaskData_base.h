@@ -20,11 +20,15 @@ struct PluginTaskData_base {
   PluginTaskData_base();
   virtual ~PluginTaskData_base();
 
-  void initPluginStats(taskVarIndex_t taskVarIndex);
-  void clearPluginStats(taskVarIndex_t taskVarIndex);
+
+  bool    hasPluginStats() const;
+  bool    hasPeaks() const;
+  uint8_t nrSamplesPresent() const;
+  void    initPluginStats(taskVarIndex_t taskVarIndex);
+  void    clearPluginStats(taskVarIndex_t taskVarIndex);
 
   // Called right after successful PLUGIN_READ to store task values
-  void pushPluginStatsValues(struct EventStruct *event);
+  void    pushPluginStatsValues(struct EventStruct *event);
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
@@ -33,6 +37,10 @@ struct PluginTaskData_base {
 
   bool plugin_write_base(struct EventStruct *event,
                          const String      & string);
+
+  bool webformLoad_show_stats(struct EventStruct *event) const;
+
+  void plot_ChartJS() const;
 
   // We cannot use dynamic_cast, so we must keep track of the plugin ID to
   // perform checks on the casting.

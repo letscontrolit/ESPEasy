@@ -194,7 +194,7 @@ void handle_devices() {
 // TODO TD-er: Add JavaScript filter:
 //             https://www.w3schools.com/howto/howto_js_filter_dropdown.asp
 // ********************************************************************************
-void addDeviceSelect(const __FlashStringHelper * name,  int choice)
+void addDeviceSelect(const __FlashStringHelper *name,  int choice)
 {
   String deviceName;
 
@@ -302,8 +302,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
         ExtraTaskSettings.clearUnusedValueNames(getValueCountFromSensorType(VType));
 
         // nr output values has changed, generate new variable names
-        String oldNames[VARS_PER_TASK];
-        uint8_t   oldNrDec[VARS_PER_TASK];
+        String  oldNames[VARS_PER_TASK];
+        uint8_t oldNrDec[VARS_PER_TASK];
 
         for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
           oldNames[i] = ExtraTaskSettings.TaskDeviceValueNames[i];
@@ -375,12 +375,14 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   // allow the plugin to save plugin-specific form settings.
   {
     String dummy;
+
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
 
     PluginCall(PLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
-    if (Device[DeviceIndex].ErrorStateValues) { 
+
+    if (Device[DeviceIndex].ErrorStateValues) {
       // FIXME TD-er: Must collect these from the web page.
       Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, &TempEvent, dummy);
     }
@@ -407,18 +409,19 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 }
 
 void GpioToHtml(int8_t pin) {
-  if (pin == -1) return;
+  if (pin == -1) { return; }
   addHtml(formatGpioLabel(pin, false));
+
   if (Settings.isSPI_pin(pin) ||
       Settings.isI2C_pin(pin) ||
-      Settings.isEthernetPin(pin) || 
+      Settings.isEthernetPin(pin) ||
       Settings.isEthernetPinOptional(pin)) {
     addHtml(' ');
     addHtml(F(HTML_SYMBOL_WARNING));
   }
 }
 
-void Label_Gpio_toHtml(const __FlashStringHelper * label, const String& gpio_pin_descr) {
+void Label_Gpio_toHtml(const __FlashStringHelper *label, const String& gpio_pin_descr) {
   addHtml(label);
   addHtml(':');
   addHtml(F("&nbsp;"));
@@ -691,7 +694,8 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             {
               showpin1 = true;
               String description;
-              if (pluginWebformShowGPIOdescription(x, F("<BR>"), description) || Device[DeviceIndex].Type == DEVICE_TYPE_CUSTOM0) {
+
+              if (pluginWebformShowGPIOdescription(x, F("<BR>"), description) || (Device[DeviceIndex].Type == DEVICE_TYPE_CUSTOM0)) {
                 addHtml(description);
                 showpin1 = false;
                 showpin2 = false;
@@ -699,7 +703,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
               }
               break;
             }
-            
+
             default:
               showpin1 = true;
               showpin2 = true;
@@ -711,19 +715,23 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           {
             GpioToHtml(Settings.getTaskDevicePin(x, 1));
           }
+
           if (showpin2)
           {
             html_BR();
             GpioToHtml(Settings.getTaskDevicePin(x, 2));
           }
+
           if (showpin3)
           {
             html_BR();
             GpioToHtml(Settings.getTaskDevicePin(x, 3));
           }
+
           // Allow for tasks to show their own specific GPIO pins.
           if (!Device[DeviceIndex].isCustom()) {
             String description;
+
             if (pluginWebformShowGPIOdescription(x, F("<BR>"), description)) {
               html_BR();
               addHtml(description);
@@ -830,6 +838,7 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
   if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
     for (int i = 0; i < 3; ++i) {
       const String pin_descr = formatGpioLabel(spi_gpios[i], false);
+
       switch (i) {
         case 0:  Label_Gpio_toHtml(F("CLK"), pin_descr); break;
         case 1:  Label_Gpio_toHtml(F("MISO"), pin_descr); break;
@@ -978,6 +987,8 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
     }
 
+    // Task statistics and historic data in a chart
+    devicePage_show_task_statistics(taskIndex, DeviceIndex);
 
     // section: Data Acquisition
     devicePage_show_controller_config(taskIndex, DeviceIndex);
@@ -1053,7 +1064,8 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
     if (Device[DeviceIndex].usesTaskDevicePin(1)) {
       PinSelectPurpose purpose = PinSelectPurpose::Generic;
-      if (Device[DeviceIndex].isSerial()) 
+
+      if (Device[DeviceIndex].isSerial())
       {
         // Pin1 = GPIO <--- TX
         purpose = PinSelectPurpose::Generic_input;
@@ -1068,13 +1080,14 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
     if (Device[DeviceIndex].usesTaskDevicePin(2)) {
       PinSelectPurpose purpose = PinSelectPurpose::Generic;
-      if (Device[DeviceIndex].isSerial() || Device[DeviceIndex].isSPI()) 
+
+      if (Device[DeviceIndex].isSerial() || Device[DeviceIndex].isSPI())
       {
         // Serial Pin2 = GPIO ---> RX
         // SPI only needs output pins
         purpose = PinSelectPurpose::Generic_output;
       }
-      addFormPinSelect(purpose, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);    
+      addFormPinSelect(purpose, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
     }
 
     if (Device[DeviceIndex].usesTaskDevicePin(3)) {
@@ -1109,9 +1122,9 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
   if (isI2CMultiplexerEnabled()) {
     bool multipleMuxPorts = bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
     {
-      const __FlashStringHelper * i2c_mux_channels[2];
-      int    i2c_mux_channelOptions[2];
-      int    i2c_mux_channelCount = 1;
+      const __FlashStringHelper *i2c_mux_channels[2];
+      int i2c_mux_channelOptions[2];
+      int i2c_mux_channelCount = 1;
       i2c_mux_channels[0]       = F("Single channel");
       i2c_mux_channelOptions[0] = 0;
 
@@ -1206,6 +1219,39 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
   }
 }
 
+void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
+{
+  if (Device[DeviceIndex].PluginStats)
+  {
+    PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
+
+    if (taskData != nullptr) {
+      if (taskData->hasPluginStats()) {
+        addFormSubHeader(F("Statistics"));
+      }
+
+      if (taskData->nrSamplesPresent() > 0) {
+        addRowLabel(F("Historic data"));
+        taskData->plot_ChartJS();
+      }
+
+      struct EventStruct TempEvent(taskIndex);
+      String dummy;
+      bool   somethingAdded = false;
+
+      if (!PluginCall(PLUGIN_WEBFORM_LOAD_SHOW_STATS, &TempEvent, dummy)) {
+        somethingAdded = taskData->webformLoad_show_stats(&TempEvent);
+      } else { somethingAdded = true; }
+
+      if (somethingAdded) {
+        if (taskData->hasPeaks()) {
+          addFormNote(F("Peak values recorded since last \"resetpeaks\"."));
+        }
+      }
+    }
+  }
+}
+
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].SendDataOption)
@@ -1222,12 +1268,16 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
     addRowLabel(F("Single event with all values"));
     addCheckBox(F("TVSE"), Settings.CombineTaskValues_SingleEvent(taskIndex));
     addFormNote(F("Unchecked: Send event per value. Checked: Send single event (taskname#All) containing all values "));
-    addFormSeparator(2);
 
+    bool separatorAdded = false;
     for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
     {
       if (Settings.Protocol[controllerNr] != 0)
       {
+        if (!separatorAdded) {
+          addFormSeparator(2);
+        }
+        separatorAdded = true;
         String id = F("TDSD"); // ="taskdevicesenddata"
         id += controllerNr + 1;
 
@@ -1313,6 +1363,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         id += (varNr + 1);
         addTextBox(id, ExtraTaskSettings.TaskDeviceValueNames[varNr], NAME_FORMULA_LENGTH_MAX);
       }
+
       if (Device[DeviceIndex].FormulaOption)
       {
         html_TD();

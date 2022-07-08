@@ -45,11 +45,13 @@
 #define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 #define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
-#define PLUGIN_I2C_HAS_ADDRESS             40 // Check the I2C addresses from the plugin, output in 'success'
-#define PLUGIN_GET_DISPLAY_PARAMETERS      41 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
-#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 42 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
-#define PLUGIN_INIT_VALUE_RANGES           43 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_READ_ERROR_OCCURED          44 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+#define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
+#define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
+#define PLUGIN_GET_DISPLAY_PARAMETERS      42 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+#define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
+#define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+
 
 
 

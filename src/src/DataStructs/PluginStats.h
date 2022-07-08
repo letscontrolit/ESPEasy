@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/ChartJS_dataset_config.h"
+
 #include <CircularBuffer.h>
 
 #ifndef PLUGIN_STATS_NR_ELEMENTS
@@ -20,7 +22,8 @@ public:
   typedef CircularBuffer<float, PLUGIN_STATS_NR_ELEMENTS> PluginStatsBuffer_t;
 
   PluginStats() = delete;
-  PluginStats(uint8_t nrDecimals, float errorValue);
+  PluginStats(uint8_t nrDecimals,
+              float   errorValue);
 
 
   // Add a sample to the _sample buffer
@@ -73,7 +76,12 @@ public:
   bool plugin_get_config_value_base(struct EventStruct *event,
                                     String            & string) const;
 
-  
+  bool webformLoad_show_stats(struct EventStruct *event) const;
+
+  void plot_ChartJS_dataset() const;
+
+
+  ChartJS_dataset_config _ChartJS_dataset_config;
 
 private:
 
@@ -82,6 +90,7 @@ private:
 
   PluginStatsBuffer_t _samples;
   float _errorValue;
+
   uint8_t _nrDecimals = 3u;
 };
 
