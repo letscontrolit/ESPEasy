@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-06-13 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
  * 2022-06-12 tonhuisman: Fix reading settings before plugin_ten_per_second() is executed
  *                        Implement PCONFIG_ULONG(n) macro
  * 2022-06-11 tonhuisman: Cleanup and optimize, make startup-splash configurable
@@ -415,7 +416,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       P131_data_struct *P131_data = static_cast<P131_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P131_data) {
-        success = P131_data->plugin_ten_per_second(event); // 10 per second operation, update scrolling
+        success = P131_data->plugin_ten_per_second(event); // 10 per second operation, update scrolling, handle splash counter
       }
 
       break;

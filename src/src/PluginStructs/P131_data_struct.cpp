@@ -126,7 +126,11 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
         uint16_t yPos = 0;
         gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 1, ADAGFX_WHITE, ADAGFX_BLACK);
         matrix->show();
-        delay(100); // Splash
+        _splashState   = true; // Splash
+        _splashCounter = P131_SPLASH_DURATION;
+        #  ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_INFO, F("P131 Splash start."));
+        #  endif // ifndef BUILD_NO_DEBUG
       }
       # endif // ifdef P131_SHOW_SPLASH
 
@@ -201,7 +205,7 @@ void P131_data_struct::loadContent(struct EventStruct *event) {
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P131_data_struct::plugin_read(struct EventStruct *event) {
-  if (isInitialized()) {
+  if (isInitialized() && !_splashState) {
     loadContent(event);
 
     bool hasContent = false;
@@ -253,42 +257,45 @@ void P131_data_struct::display_content(struct EventStruct *event,
  * plugin_write: Handle commands
  ***************************************************************************/
 bool P131_data_struct::plugin_write(struct EventStruct *event, const String& string) {
-  bool success     = false;
-  const String cmd = parseString(string, 1);
+  bool success = false;
 
-  if ((nullptr != matrix) && cmd.equals(_commandTriggerCmd)) {
-    String sub = parseString(string, 2);
-    success = true;
+  if (isInitialized()  && !_splashState) {
+    const String cmd = parseString(string, 1);
 
-    if (sub.equals(F("clear"))) {
-      matrix->fillScreen(_bgcolor);
-    }
-    else if (sub.startsWith(F("bright")) && (event->Par2 >= 0) && (event->Par2 <= 255)) {
-      if (parseString(string, 3).isEmpty()) {                     // No argument, then
-        matrix->setBrightness(std::min(_maxbright, _brightness)); // use initial brightness
-      } else {
-        matrix->setBrightness(std::min(_maxbright, static_cast<uint8_t>(event->Par2)));
+    if ((nullptr != matrix) && cmd.equals(_commandTriggerCmd)) {
+      String sub = parseString(string, 2);
+      success = true;
+
+      if (sub.equals(F("clear"))) {
+        matrix->fillScreen(_bgcolor);
       }
-    } else {
-      success = false;
+      else if (sub.startsWith(F("bright")) && (event->Par2 >= 0) && (event->Par2 <= 255)) {
+        if (parseString(string, 3).isEmpty()) {                     // No argument, then
+          matrix->setBrightness(std::min(_maxbright, _brightness)); // use initial brightness
+        } else {
+          matrix->setBrightness(std::min(_maxbright, static_cast<uint8_t>(event->Par2)));
+        }
+      } else {
+        success = false;
+      }
     }
-  }
-  else if (matrix && (cmd.equals(_commandTrigger) ||
-                      (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
-    success = true;
+    else if (matrix && (cmd.equals(_commandTrigger) ||
+                        (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
+      success = true;
 
-    if (nullptr != gfxHelper) {
-      String tmp(string);
+      if (nullptr != gfxHelper) {
+        String tmp(string);
 
-      // Hand it over after replacing variables
-      success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
+        // Hand it over after replacing variables
+        success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
 
-      updateFontMetrics(); // Font or color may have changed
+        updateFontMetrics(); // Font or color may have changed
+      }
     }
-  }
 
-  if (isInitialized() && success) {
-    matrix->show();
+    if (success) {
+      matrix->show();
+    }
   }
   return success;
 }
@@ -299,7 +306,28 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
 bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   bool success = false;
 
-  if (isInitialized()) {
+  # ifdef P131_SHOW_SPLASH
+
+  if (_splashState) { // Decrement splash counter
+    _splashCounter--;
+    _splashState = _splashCounter != 0;
+
+    if (!_splashState) {
+      #  ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, F("P131 Splash finished."));
+      #  endif // ifndef BUILD_NO_DEBUG
+
+      if (nullptr != matrix) {
+        matrix->fillScreen(_bgcolor); // fill screen with black color
+      }
+
+      // Schedule the surrogate initial PLUGIN_READ that has been suppressed by the splash
+      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+    }
+  }
+  # endif // ifdef P131_SHOW_SPLASH
+
+  if (isInitialized() && !_splashState) {
     loadContent(event);
     success = true;
 

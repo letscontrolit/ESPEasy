@@ -10,12 +10,13 @@
 
 # include <vector>
 
-# define P131_DEBUG_LOG   // Enable for some (extra) logging
+# define P131_DEBUG_LOG                          // Enable for some (extra) logging
 
-# define P131_Nlines  16  // The number of different lines which can be displayed
+# define P131_Nlines  16                         // The number of different lines which can be displayed
 # define P131_Nchars  50
 
-# define P131_SHOW_SPLASH // Enable to show splash (text)
+# define P131_SHOW_SPLASH                        // Enable to show splash (text)
+# define P131_SPLASH_DURATION       (3000 / 100) // 3 seconds in 100 millisecond chunks
 
 # define P131_CONFIG_MATRIX_WIDTH   PCONFIG(0)
 # define P131_CONFIG_MATRIX_HEIGHT  PCONFIG(1)
@@ -24,26 +25,26 @@
 
 # define P131_CONFIG_FLAGS          PCONFIG_ULONG(0)
 # define P131_CONFIG_FLAGS_B        PCONFIG_ULONG(1)
-# define P131_CONFIG_COLORS         PCONFIG_LONG(3) // 2 Colors fit in 1 long
+# define P131_CONFIG_COLORS         PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
-# define P131_FLAGS_MATRIX_TYPE             0       // MatrixType flags
-# define P131_FLAGS_MATRIX_TYPE_TOP         0       // MatrixType flags Top/Bottom/Left/Right
-# define P131_FLAGS_MATRIX_TYPE_RC          2       // MatrixType Row/Col
-# define P131_FLAGS_MATRIX_TYPE_PZ          3       // MatrixType Progressive/Zigzag
-# define P131_FLAGS_TILE_TYPE               4       // TileType flags
-# define P131_FLAGS_TILE_TYPE_TOP           4       // TileType Top/Bottom/Left/Right
-# define P131_FLAGS_TILE_TYPE_RC            6       // TileType RowCol
-# define P131_FLAGS_TILE_TYPE_PZ            7       // TileType Progressive/Zigzag
-# define P131_CONFIG_FLAG_ROTATION          8       // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10, 11
-# define P131_CONFIG_FLAG_MODE              12      // Flag-offset to store 4 bits for Mode, uses bits 12, 13, 14 and 15
-# define P131_CONFIG_FLAG_FONTSCALE         20      // Flag-offset to store 4 bits for Font scaling, uses bits 20, 21, 22, 23
-# define P131_CONFIG_FLAG_CMD_TRIGGER       24      // Flag-offset to store 4 bits for Command trigger, uses bits 24, 25, 26, 27
-# define P131_CONFIG_FLAG_CLEAR_ON_EXIT     28      // Flag: Clear display on exit
-# define P131_CONFIG_FLAG_STRIP_TYPE        29      // Flag: Strip type
-# define P131_CONFIG_FLAG_SHOW_SPLASH       30      // Flag: Show splash
+# define P131_FLAGS_MATRIX_TYPE             0        // MatrixType flags
+# define P131_FLAGS_MATRIX_TYPE_TOP         0        // MatrixType flags Top/Bottom/Left/Right
+# define P131_FLAGS_MATRIX_TYPE_RC          2        // MatrixType Row/Col
+# define P131_FLAGS_MATRIX_TYPE_PZ          3        // MatrixType Progressive/Zigzag
+# define P131_FLAGS_TILE_TYPE               4        // TileType flags
+# define P131_FLAGS_TILE_TYPE_TOP           4        // TileType Top/Bottom/Left/Right
+# define P131_FLAGS_TILE_TYPE_RC            6        // TileType RowCol
+# define P131_FLAGS_TILE_TYPE_PZ            7        // TileType Progressive/Zigzag
+# define P131_CONFIG_FLAG_ROTATION          8        // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10, 11
+# define P131_CONFIG_FLAG_MODE              12       // Flag-offset to store 4 bits for Mode, uses bits 12, 13, 14 and 15
+# define P131_CONFIG_FLAG_FONTSCALE         20       // Flag-offset to store 4 bits for Font scaling, uses bits 20, 21, 22, 23
+# define P131_CONFIG_FLAG_CMD_TRIGGER       24       // Flag-offset to store 4 bits for Command trigger, uses bits 24, 25, 26, 27
+# define P131_CONFIG_FLAG_CLEAR_ON_EXIT     28       // Flag: Clear display on exit
+# define P131_CONFIG_FLAG_STRIP_TYPE        29       // Flag: Strip type
+# define P131_CONFIG_FLAG_SHOW_SPLASH       30       // Flag: Show splash
 
-# define P131_CONFIG_FLAG_B_BRIGHTNESS      0       // Brightness, 8 bits
-# define P131_CONFIG_FLAG_B_MAXBRIGHT       8       // Maximum Brightness, 8 bits
+# define P131_CONFIG_FLAG_B_BRIGHTNESS      0        // Brightness, 8 bits
+# define P131_CONFIG_FLAG_B_MAXBRIGHT       8        // Maximum Brightness, 8 bits
 
 # define P131_CONFIG_FLAGS_GET_MATRIX_TYPE  (get8BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE))
 # define P131_CONFIG_FLAG_GET_ROTATION      (get4BitFromUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_ROTATION))
@@ -159,6 +160,11 @@ private:
 
   std::vector<P131_content_struct>content;
   bool                            contentInitialized = false;
+
+  bool _splashState = false; // Have this always available to avoid 'many' #ifdefs in the code
+  # ifdef P131_SHOW_SPLASH
+  uint8_t _splashCounter = P131_SPLASH_DURATION;
+  # endif // ifdef P131_SHOW_SPLASH
 };
 #endif // ifdef USES_P131
 #endif // ifndef PLUGINSTRUCTS_P131_DATA_STRUCT_H
