@@ -35,11 +35,17 @@ float PluginStats::getSampleAvg(uint8_t lastNrSamples) const
   if (lastNrSamples < _samples.size()) {
     i = _samples.size() - lastNrSamples;
   }
+  decltype(_samples)::index_t samplesUsed = 0;
 
   for (; i < _samples.size(); ++i) {
-    sum += _samples[i];
+    if (!isnan(_samples[i])) {
+      ++samplesUsed;
+      sum += _samples[i];
+    }
   }
-  return sum / _samples.size();
+
+  if (samplesUsed == 0) { return 0.0f; }
+  return sum / samplesUsed;
 }
 
 bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String& string) const
@@ -58,9 +64,22 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
   } else if (command == F("max")) { // [taskname#valuename.max] Highest value seen since value reset
     value   = getPeakHigh();
     success = true;
-  } else if (command == F("avg")) { // [taskname#valuename.avg] Average value of the last N kept samples
-    value   = getSampleAvg();
-    success = true;
+  } else if (command.startsWith(F("avg"))) {
+    if (command == F("avg")) { // [taskname#valuename.avg] Average value of the last N kept samples
+      value   = getSampleAvg();
+      success = true;
+    } else {
+      // Check for "avgN", where N is the number of most recent samples to use.
+      int nrSamples = 0;
+
+      if (validIntFromString(command.substring(3), nrSamples)) {
+        if (nrSamples > 0) {
+          // [taskname#valuename.avgN] Average over N most recent samples
+          value   = getSampleAvg(nrSamples);
+          success = true;
+        }
+      }
+    }
   }
 
   if (success) {
