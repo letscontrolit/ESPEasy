@@ -26,7 +26,9 @@ void PluginTaskData_base::initPluginStats(taskVarIndex_t taskVarIndex)
 {
   if (taskVarIndex < VARS_PER_TASK) {
     clearPluginStats(taskVarIndex);
-    _plugin_stats[taskVarIndex] = new PluginStats(ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex]);
+    _plugin_stats[taskVarIndex] = new PluginStats(
+        ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
+        ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
   }
 }
 

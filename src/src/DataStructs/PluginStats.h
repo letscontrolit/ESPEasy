@@ -17,8 +17,10 @@
 class PluginStats {
 public:
 
+  typedef CircularBuffer<float, PLUGIN_STATS_NR_ELEMENTS> PluginStatsBuffer_t;
+
   PluginStats() = delete;
-  PluginStats(uint8_t nrDecimals);
+  PluginStats(uint8_t nrDecimals, float errorValue);
 
 
   // Add a sample to the _sample buffer
@@ -32,12 +34,12 @@ public:
 
   // Get lowest recorded value since reset
   float getPeakLow() const {
-    return hasPeaks() ? _minValue : 0.0f;
+    return hasPeaks() ? _minValue : _errorValue;
   }
 
   // Get highest recorded value since reset
   float getPeakHigh() const {
-    return hasPeaks() ? _maxValue : 0.0f;
+    return hasPeaks() ? _maxValue : _errorValue;
   }
 
   bool hasPeaks() const {
@@ -61,7 +63,9 @@ public:
   }
 
   // Compute average over last N stored values
-  float getSampleAvg(uint8_t lastNrSamples) const;
+  float getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const;
+
+  float operator[](PluginStatsBuffer_t::index_t index) const;
 
 
   // Support task value notation to 'get' statistics
@@ -69,12 +73,15 @@ public:
   bool plugin_get_config_value_base(struct EventStruct *event,
                                     String            & string) const;
 
+  
+
 private:
 
   float _minValue;
   float _maxValue;
 
-  CircularBuffer<float, PLUGIN_STATS_NR_ELEMENTS>_samples;
+  PluginStatsBuffer_t _samples;
+  float _errorValue;
   uint8_t _nrDecimals = 3u;
 };
 

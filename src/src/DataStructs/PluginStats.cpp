@@ -2,7 +2,12 @@
 
 #include "../../_Plugin_Helper.h"
 
-PluginStats::PluginStats(uint8_t nrDecimals) : _nrDecimals(nrDecimals)
+#include "../Helpers/ESPEasy_math.h"
+
+PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
+  _errorValue(errorValue),
+  _nrDecimals(nrDecimals)
+
 {
   resetPeaks();
 }
@@ -25,27 +30,37 @@ void PluginStats::resetPeaks()
   _maxValue = std::numeric_limits<float>::min();
 }
 
-float PluginStats::getSampleAvg(uint8_t lastNrSamples) const
+float PluginStats::getSampleAvg(PluginStatsBuffer_t::index_t lastNrSamples) const
 {
-  if (_samples.size() == 0) { return 0.0f; }
+  if (_samples.size() == 0) { return _errorValue; }
   float sum = 0.0f;
 
-  decltype(_samples)::index_t i = 0;
+  PluginStatsBuffer_t::index_t i = 0;
 
   if (lastNrSamples < _samples.size()) {
     i = _samples.size() - lastNrSamples;
   }
-  decltype(_samples)::index_t samplesUsed = 0;
+  PluginStatsBuffer_t::index_t samplesUsed = 0;
+
+  const bool errorValueIsNaN = isnan(_errorValue);
 
   for (; i < _samples.size(); ++i) {
     if (!isnan(_samples[i])) {
-      ++samplesUsed;
-      sum += _samples[i];
+      if (errorValueIsNaN || !essentiallyEqual(_errorValue, _samples[i])) {
+        ++samplesUsed;
+        sum += _samples[i];
+      }
     }
   }
 
-  if (samplesUsed == 0) { return 0.0f; }
+  if (samplesUsed == 0) { return _errorValue; }
   return sum / samplesUsed;
+}
+
+float PluginStats::operator[](PluginStatsBuffer_t::index_t index) const
+{
+  if (index < _samples.size()) { return _samples[index]; }
+  return _errorValue;
 }
 
 bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String& string) const
