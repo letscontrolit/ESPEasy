@@ -213,11 +213,11 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
         }
       }
 
-      addFormPinSelect(F("Button left"),  F("taskdevicepin1"), CONFIG_PIN1);
-      addFormPinSelect(F("Button right"), F("taskdevicepin2"), CONFIG_PIN2);
-      addFormPinSelect(F("Button mode"),  F("taskdevicepin3"), CONFIG_PIN3);
+      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button left"),  F("taskdevicepin1"), CONFIG_PIN1);
+      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button right"), F("taskdevicepin2"), CONFIG_PIN2);
+      addFormPinSelect(PinSelectPurpose::Generic_input,  F("Button mode"),  F("taskdevicepin3"), CONFIG_PIN3);
 
-      addFormPinSelect(F("Relay"),        F("heatrelay"),      PCONFIG(4));
+      addFormPinSelect(PinSelectPurpose::Generic_output, F("Relay"),        F("heatrelay"),      PCONFIG(4));
 
       byte choice6 = PCONFIG(3);
 
