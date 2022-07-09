@@ -42,6 +42,7 @@ void addFormNote(const __FlashStringHelper * text)
 
 void addFormNote(const String& text, const String& id)
 {
+  if (text.isEmpty())  return;
   addRowLabel_tr_id(EMPTY_STRING, id);
   addHtmlDiv(F("note"), String(F("Note: ")) + text);
 }
@@ -125,9 +126,23 @@ void addFormNumericBox(LabelType::Enum label, int value, int min, int max
                     );
 }
 
-void addFormNumericBox(const __FlashStringHelper * label, const __FlashStringHelper * id, int value, int min, int max)
+void addFormNumericBox(const __FlashStringHelper * label, 
+                       const __FlashStringHelper * id, 
+                       int value, 
+                       int min, 
+                       int max
+                       #ifdef        ENABLE_TOOLTIPS
+                       ,
+                       const String& tooltip
+                       #endif // ifdef ENABLE_TOOLTIPS
+                       )
 {
-  addFormNumericBox(String(label), String(id), value, min, max);
+  addFormNumericBox(String(label), String(id), value, min, max
+                    #ifdef ENABLE_TOOLTIPS
+                    , tooltip
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
+
 }
 
 void addFormNumericBox(const String& label, const String& id, int value, int min, int max
@@ -176,6 +191,29 @@ void addFormFloatNumberBox(const String& label,
                     #endif // ifdef ENABLE_TOOLTIPS
                     );
 }
+
+void addFormFloatNumberBox(const __FlashStringHelper * label,
+                           const __FlashStringHelper * id,
+                           float         value,
+                           float         min,
+                           float         max,
+                           uint8_t       nrDecimals,
+                           float         stepsize
+                           #ifdef ENABLE_TOOLTIPS
+                           ,
+                           const String& tooltip
+                           #endif // ifdef ENABLE_TOOLTIPS
+                           )
+{
+  addRowLabel_tr_id(label, id);
+  addFloatNumberBox(id, value, min, max, nrDecimals, stepsize
+                    #ifdef ENABLE_TOOLTIPS
+                    , tooltip
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
+}
+
+
 
 // ********************************************************************************
 // Add a task selector form
@@ -279,6 +317,13 @@ bool getFormPassword(const String& id, String& password)
 // ********************************************************************************
 // Add a IP Box form
 // ********************************************************************************
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const uint8_t ip[4])
+{
+  addFormIPBox(String(label), String(id), ip);
+}
+
 
 void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
 {
@@ -314,7 +359,7 @@ void addFormMACBox(const String& label, const String& id, const MAC_address mac)
 // ********************************************************************************
 // Add a IP Access Control select dropdown list
 // ********************************************************************************
-void addFormIPaccessControlSelect(const String& label, const String& id, int choice)
+void addFormIPaccessControlSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);
   addIPaccessControlSelect(id, choice);
@@ -329,8 +374,22 @@ void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __Fla
   addPinSelect(purpose, id, choice);
 }
 
+void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
+{
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
 
+/*
 void addFormPinSelect(const String& label, const __FlashStringHelper * id, int choice)
+{
+  addRowLabel_tr_id(label, id);
+  addPinSelect(PinSelectPurpose::Generic, id, choice);
+}
+
+void addFormPinSelect(const __FlashStringHelper * label,
+                      const __FlashStringHelper * id,
+                      int           choice)
 {
   addRowLabel_tr_id(label, id);
   addPinSelect(PinSelectPurpose::Generic, id, choice);
@@ -341,6 +400,7 @@ void addFormPinSelect(const String& label, const String & id, int choice)
   addRowLabel_tr_id(label, id);
   addPinSelect(PinSelectPurpose::Generic, id, choice);
 }
+*/
 
 void addFormPinSelectI2C(const String& label, const String& id, int choice)
 {
@@ -376,6 +436,11 @@ void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addres
 void addFormSelector(const __FlashStringHelper * label, const __FlashStringHelper * id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange)
 {
   addFormSelector(String(label), String(id), optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
+}
+
+void addFormSelector(const __FlashStringHelper * label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex, bool reloadonchange)
+{
+  addFormSelector(String(label), id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
 }
 
 void addFormSelector(const String& label, const String& id, int optionCount, const __FlashStringHelper * options[], const int indices[], int selectedIndex)
@@ -424,7 +489,7 @@ void addFormSelector(const String& label,
                      const int     indices[],
                      const String  attr[],
                      int           selectedIndex,
-                     bool       reloadonchange)
+                     bool          reloadonchange)
 {
   addRowLabel_tr_id(label, id);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true);
@@ -436,9 +501,17 @@ void addFormSelector(const String& label,
                      const String  options[],
                      const int     indices[],
                      int           selectedIndex,
-                     bool          reloadonchange)
+                     bool          reloadonchange
+                     #ifdef ENABLE_TOOLTIPS
+                     , const String& tooltip
+                     #endif // ifdef ENABLE_TOOLTIPS
+                    )
 {
-  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange);
+  addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange
+                  #ifdef ENABLE_TOOLTIPS
+                  , tooltip
+                  #endif // ifdef ENABLE_TOOLTIPS
+                 );
 }
 
 void addFormSelector(const String  & label,
@@ -717,7 +790,7 @@ bool isFormItem(const String& id)
   return !webArg(id).isEmpty();
 }
 
-void copyFormPassword(const String& id, char *pPassword, int maxlength)
+void copyFormPassword(const __FlashStringHelper * id, char *pPassword, int maxlength)
 {
   String password;
 

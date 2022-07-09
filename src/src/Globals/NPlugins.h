@@ -29,7 +29,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 extern int notificationCount;
 
 
-uint8_t          NPluginCall(NPlugin::Function   Function,
+bool             NPluginCall(NPlugin::Function   Function,
                              struct EventStruct *event);
 
 bool             validNProtocolIndex(nprotocolIndex_t index);

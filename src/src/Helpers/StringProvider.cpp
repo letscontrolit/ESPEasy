@@ -94,7 +94,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return F("JSON bool output without quotes");
     case LabelType::ENABLE_TIMING_STATISTICS:   return F("Collect Timing Statistics");
     case LabelType::ENABLE_RULES_CACHING:       return F("Enable Rules Cache");
-    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order");
+//    case LabelType::ENABLE_RULES_EVENT_REORDER: return F("Optimize Rules Cache Event Order"); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return F("Allow TaskValueSet on all plugins");
     case LabelType::ALLOW_OTA_UNLIMITED:        return F("Allow OTA without size-check");
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:  return F("Try clear I2C bus when stuck");
@@ -291,7 +291,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::JSON_BOOL_QUOTES:           return jsonBool(Settings.JSONBoolWithoutQuotes());
     case LabelType::ENABLE_TIMING_STATISTICS:   return jsonBool(Settings.EnableTimingStats());
     case LabelType::ENABLE_RULES_CACHING:       return jsonBool(Settings.EnableRulesCaching());
-    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder());
+//    case LabelType::ENABLE_RULES_EVENT_REORDER: return jsonBool(Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:   return jsonBool(Settings.AllowTaskValueSetAllPlugins());
     case LabelType::ALLOW_OTA_UNLIMITED:        return jsonBool(Settings.AllowOTAUnlimited());
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:  return jsonBool(Settings.EnableClearHangingI2Cbus());
@@ -390,13 +390,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
-    case LabelType::ESP_BOARD_NAME:         
-      # ifdef ARDUINO_BOARD
-                                            return String(ARDUINO_BOARD);
-      #else
-                                            break;
-      #endif
-
+    case LabelType::ESP_BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return String(getFlashChipId());
     case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF);
     case LabelType::FLASH_CHIP_MODEL:

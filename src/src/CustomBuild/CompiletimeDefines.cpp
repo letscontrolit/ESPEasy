@@ -57,3 +57,13 @@ const __FlashStringHelper* get_git_head() {
   return F(STRINGIFY(SET_BUILD_GIT_HEAD));
  #endif // ifndef SET_BUILD_GIT_HEAD
 }
+
+const __FlashStringHelper * get_board_name() {
+  #ifdef SET_BOARD_NAME
+  return F(STRINGIFY(SET_BOARD_NAME));
+  #elif defined(ARDUINO_BOARD)
+  return F(ARDUINO_BOARD);
+  #else
+  return F("");
+  #endif
+}

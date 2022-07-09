@@ -13,6 +13,10 @@ def create_binary_filename():
     return 'ESP_Easy_mega_{}_{}'.format(d1, env["PIOENV"])
 
 
+def get_board_name():
+    return env.BoardConfig().get("name").replace('"', "")
+
+
 def get_git_description():
     try:
         from pygit2 import Repository
@@ -53,6 +57,7 @@ def gen_compiletime_defines(node):
         node,
         CPPDEFINES=env["CPPDEFINES"]
         + [("SET_BUILD_BINARY_FILENAME", create_binary_filename())]
+        + [("SET_BOARD_NAME", get_board_name())]
         + [("SET_BUILD_PLATFORM", platform.platform())]
         + [("SET_BUILD_GIT_HEAD", get_git_description())],
         CCFLAGS=env["CCFLAGS"]
@@ -64,6 +69,7 @@ deduct_flags_from_pioenv()
 # Set the binary filename in the environment to be used in other build steps
 env.Replace(PROGNAME=create_binary_filename())
 print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
+print("\u001b[33m BOARD_NAME:     \u001b[0m  {}".format(get_board_name()))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
 print("\u001b[32m ------------------------------- \u001b[0m")

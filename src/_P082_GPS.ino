@@ -593,7 +593,7 @@ void P082_logStats(struct EventStruct *event) {
   if (log.reserve(128)) {
     log  = F("GPS:");
     log += F(" Fix: ");
-    log += String(P082_data->hasFix(P082_TIMEOUT));
+    log += P082_data->hasFix(P082_TIMEOUT) ? 1 : 0;
     log += F(" #sat: ");
     log += P082_data->gps->satellites.value();
     log += F(" #SNR: ");
