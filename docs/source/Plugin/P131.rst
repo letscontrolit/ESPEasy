@@ -89,7 +89,7 @@ NB: It is advised to use a single 220 to 470 ohm resistor in the wiring from ESP
 Power consumption
 ~~~~~~~~~~~~~~~~~
 
-By the physical design of these modules, using NeoPixel leds for display, the power consumption is dependent on the number of neopixels that are activated and the brightness that is set. On a display consisting of 4 matrices, the power used was ca. 3A @ 5V with all leds on at brightness 255, so it requires an adequate power supply, preferably separate from the power supply used to power the ESP.
+.. include:: NeoPixel_Power.rst
 
 Also, when using several matrices sequentially, separate wiring should be added for VCC and GND to each group of matrices, to avoid burning out the pcb traces of the matrix where the power is connected. For groups of 4 to 8 matrices, it is advised to use separate wiring for power to each group, and only connect the GND and signal connections Dout/GND to Din/GND of the next group, but **never** the VCC pins.
 
