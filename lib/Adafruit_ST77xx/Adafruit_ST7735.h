@@ -13,6 +13,7 @@
 #define INITR_144GREENTAB 0x01
 #define INITR_MINI160x80 0x04
 #define INITR_HALLOWING 0x05
+#define INITR_GREENTAB160x80 0x06
 
 // Some register settings
 #define ST7735_MADCTL_BGR 0x08
