@@ -75,20 +75,45 @@ public:
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
-  bool plugin_get_config_value_base(struct EventStruct *event,
-                                    String            & string) const;
+  bool          plugin_get_config_value_base(struct EventStruct *event,
+                                             String            & string) const;
 
-  bool webformLoad_show_stats(struct EventStruct *event) const;
+  bool          webformLoad_show_stats(struct EventStruct *event) const;
+
+  const String& getLabel() const {
+# ifdef USES_CHART_JS
+    return _ChartJS_dataset_config.label;
+# else // ifdef USES_CHART_JS
+    return _label;
+# endif // ifdef USES_CHART_JS
+  }
+
+  void setLabel(const String& label) {
+# ifdef USES_CHART_JS
+    _ChartJS_dataset_config.label = label;
+# else // ifdef USES_CHART_JS
+    _label = label;
+# endif // ifdef USES_CHART_JS
+  }
 
 # ifdef USES_CHART_JS
   void plot_ChartJS_dataset() const;
 # endif // ifdef USES_CHART_JS
 
-#ifdef USES_CHART_JS
+# ifdef USES_CHART_JS
+
+public:
+
   ChartJS_dataset_config _ChartJS_dataset_config;
-#else
+# else // ifdef USES_CHART_JS
+
+private:
+
   String _label;
-#endif
+
+public:
+
+# endif // ifdef USES_CHART_JS
 
 private:
 

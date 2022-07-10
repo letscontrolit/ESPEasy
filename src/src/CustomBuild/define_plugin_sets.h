@@ -1335,6 +1335,14 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
+  #if defined(USES_PLUGIN_STATS) && defined(ESP8266)
+    // Does not fit in build
+    #undef USES_PLUGIN_STATS
+  #endif
+  #if defined(USES_CHART_JS) && defined(ESP8266)
+    // Does not fit in build
+    #undef USES_CHART_JS
+  #endif
 #endif
 
 #ifdef CONTROLLER_SET_TESTING

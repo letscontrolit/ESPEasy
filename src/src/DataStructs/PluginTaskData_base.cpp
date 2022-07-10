@@ -83,13 +83,11 @@ void PluginTaskData_base::initPluginStats(taskVarIndex_t taskVarIndex)
         ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
 
       if (_plugin_stats[taskVarIndex] != nullptr) {
-        #ifdef USES_CHART_JS
-        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.label = ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex];
+        _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
+        # ifdef USES_CHART_JS
         const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#EFF2C0"), F("#A4BAB7") };
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
-        #else
-        _plugin_stats[taskVarIndex]->_label = ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex];
-        #endif
+        # endif // ifdef USES_CHART_JS
       }
     }
   }
@@ -217,4 +215,4 @@ void PluginTaskData_base::plot_ChartJS() const
 
 # endif // ifdef USES_CHART_JS
 
-#endif // ifdef USES_PLUGIN_STATS
+#endif  // ifdef USES_PLUGIN_STATS

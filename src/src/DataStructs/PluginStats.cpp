@@ -111,11 +111,7 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
   bool somethingAdded = false;
 
   if (hasPeaks()) {
-    #ifdef USES_CHART_JS
-    addRowLabel(_ChartJS_dataset_config.label +  F(" Peak Low/High"));
-    #else
-    addRowLabel(_label +  F(" Peak Low/High"));
-    #endif
+    addRowLabel(getLabel() +  F(" Peak Low/High"));
     addHtmlFloat(getPeakLow(), _nrDecimals);
     addHtml('/');
     addHtmlFloat(getPeakHigh(), _nrDecimals);
@@ -141,7 +137,7 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 # ifdef USES_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const
 {
-  add_ChartJS_dataset_header(_ChartJS_dataset_config.label, _ChartJS_dataset_config.color);
+  add_ChartJS_dataset_header(getLabel(), _ChartJS_dataset_config.color);
 
   PluginStatsBuffer_t::index_t i = 0;
 
@@ -161,4 +157,4 @@ void PluginStats::plot_ChartJS_dataset() const
 }
 
 # endif // ifdef USES_CHART_JS
-#endif // ifdef USES_PLUGIN_STATS
+#endif  // ifdef USES_PLUGIN_STATS

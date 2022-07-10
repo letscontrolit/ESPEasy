@@ -43,8 +43,9 @@ struct PluginTaskData_base {
 
 #ifdef USES_PLUGIN_STATS
   bool webformLoad_show_stats(struct EventStruct *event) const;
-
+# ifdef USES_CHART_JS
   void plot_ChartJS() const;
+# endif // ifdef USES_CHART_JS
 #endif // ifdef USES_PLUGIN_STATS
 
   // We cannot use dynamic_cast, so we must keep track of the plugin ID to

@@ -273,9 +273,11 @@ void html_add_JQuery_script() {
   addHtml(F("<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js\"></script>"));
 }
 
+#ifdef USES_CHART_JS
 void html_add_ChartJS_script() {
   addHtml(F("<script src=\"https://cdn.jsdelivr.net/npm/chart.js\"></script>"));
 }
+#endif
 
 
 void html_add_autosubmit_form() {
