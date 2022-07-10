@@ -126,6 +126,14 @@ String  getControllerSymbol(uint8_t index);
 /*
    String getValueSymbol(uint8_t index);
  */
+void    addSVG_param(const __FlashStringHelper * key,
+                     int         value);
+
+void    addSVG_param(const __FlashStringHelper * key,
+                     float         value);
+
+void    addSVG_param(const __FlashStringHelper * key,
+                     const String& value);
 
 void    createSvgRect_noStroke(const __FlashStringHelper * classname,
                                unsigned int fillColor,
@@ -162,24 +170,6 @@ void createSvgTextElement(const String& text,
 void write_SVG_image_header(int  width,
                             int  height,
                             bool useViewbox = false);
-
-void write_SVG_image_header(int  width,
-                            int  height,
-                            const __FlashStringHelper * classname,
-                            bool useViewbox = false);
-
-void write_SVG_image_header(int  width,
-                            int  height,
-                            float  viewbox_minX,
-                            float  viewbox_minY,
-                            float  viewbox_width,
-                            float  viewbox_height,
-                            const __FlashStringHelper * classname,
-                            bool useViewbox = false);
-
-
-
-
 
 /*
    void getESPeasyLogo(int width_pixels);
