@@ -75,10 +75,14 @@ public:
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
-  bool          plugin_get_config_value_base(struct EventStruct *event,
-                                             String            & string) const;
+  bool plugin_get_config_value_base(struct EventStruct *event,
+                                    String            & string) const;
 
-  bool          webformLoad_show_stats(struct EventStruct *event) const;
+  bool webformLoad_show_stats(struct EventStruct *event) const;
+
+  bool webformLoad_show_avg(struct EventStruct *event) const;
+  bool webformLoad_show_peaks(struct EventStruct *event) const;
+
 
   const String& getLabel() const {
 # ifdef USES_CHART_JS

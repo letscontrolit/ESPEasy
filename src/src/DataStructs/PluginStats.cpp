@@ -109,23 +109,8 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
 bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 {
   bool somethingAdded = false;
-
-  if (hasPeaks()) {
-    addRowLabel(getLabel() +  F(" Peak Low/High"));
-    addHtmlFloat(getPeakLow(), _nrDecimals);
-    addHtml('/');
-    addHtmlFloat(getPeakHigh(), _nrDecimals);
-    somethingAdded = true;
-  }
-
-  if (getNrSamples() > 0) {
-    addRowLabel(F("Avg. ouput value"));
-    addHtmlFloat(getSampleAvg());
-    addHtml(' ', '(');
-    addHtmlInt(getNrSamples());
-    addHtml(F(" samples)"));
-    somethingAdded = true;
-  }
+  if (webformLoad_show_avg(event)) somethingAdded = true;
+  if (webformLoad_show_peaks(event)) somethingAdded = true;
 
   if (somethingAdded) {
     addFormSeparator(4);
@@ -133,6 +118,32 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 
   return somethingAdded;
 }
+
+bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
+{
+  if (getNrSamples() > 0) {
+    addRowLabel(F("Avg. ouput value"));
+    addHtmlFloat(getSampleAvg(), _nrDecimals);
+    addHtml(' ', '(');
+    addHtmlInt(getNrSamples());
+    addHtml(F(" samples)"));
+    return true;
+  }
+  return false;
+} 
+
+bool PluginStats::webformLoad_show_peaks(struct EventStruct *event) const
+{
+  if (hasPeaks()) {
+    addRowLabel(getLabel() +  F(" Peak Low/High"));
+    addHtmlFloat(getPeakLow(), _nrDecimals);
+    addHtml('/');
+    addHtmlFloat(getPeakHigh(), _nrDecimals);
+    return true;
+  }
+  return false;
+} 
+
 
 # ifdef USES_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const

@@ -106,7 +106,7 @@ public:
   void webformLoad(struct EventStruct *event);
 
 # ifdef USES_PLUGIN_STATS
-  void webformLoad_show_stats(struct EventStruct *event);
+  bool webformLoad_show_stats(struct EventStruct *event);
 # endif // ifdef USES_PLUGIN_STATS
 
 private:

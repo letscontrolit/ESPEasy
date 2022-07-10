@@ -250,22 +250,18 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 }
 
 # ifdef USES_PLUGIN_STATS
-void P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
+bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
+  bool somethingAdded = false;
   if (_plugin_stats[0] != nullptr) {
-    if (_plugin_stats[0]->getNrSamples() > 0) {
-      addRowLabel(F("Avg. ouput value"));
-      addHtmlFloat(_plugin_stats[0]->getSampleAvg());
-      addHtml(' ', '(');
-      addHtmlInt(_plugin_stats[0]->getNrSamples());
-      addHtml(F(" samples)"));
-    }
-
+    if (_plugin_stats[0]->webformLoad_show_avg(event)) somethingAdded = true;
     if (_plugin_stats[0]->hasPeaks()) {
       formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow());
       formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
+      somethingAdded = true;
     }
   }
+  return somethingAdded;
 }
 
 # endif // ifdef USES_PLUGIN_STATS

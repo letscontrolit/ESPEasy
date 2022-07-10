@@ -77,8 +77,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P002_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P002_data) {
-        P002_data->webformLoad_show_stats(event);
-        success = true;
+        success = P002_data->webformLoad_show_stats(event);
       }
       break;
     }
