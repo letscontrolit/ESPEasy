@@ -70,6 +70,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+# ifdef USES_PLUGIN_STATS
     case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
     {
       P002_data_struct *P002_data =
@@ -81,6 +82,7 @@ boolean Plugin_002(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
+# endif // ifdef USES_PLUGIN_STATS
 
     case PLUGIN_WEBFORM_SAVE:
     {

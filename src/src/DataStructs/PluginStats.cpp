@@ -1,10 +1,11 @@
 #include "../DataStructs/PluginStats.h"
 
-#include "../../_Plugin_Helper.h"
+#ifdef USES_PLUGIN_STATS
+# include "../../_Plugin_Helper.h"
 
-#include "../Helpers/ESPEasy_math.h"
+# include "../Helpers/ESPEasy_math.h"
 
-#include "../WebServer/Chart_JS.h"
+# include "../WebServer/Chart_JS.h"
 
 PluginStats::PluginStats(uint8_t nrDecimals, float errorValue) :
   _errorValue(errorValue),
@@ -110,7 +111,11 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
   bool somethingAdded = false;
 
   if (hasPeaks()) {
+    #ifdef USES_CHART_JS
     addRowLabel(_ChartJS_dataset_config.label +  F(" Peak Low/High"));
+    #else
+    addRowLabel(_label +  F(" Peak Low/High"));
+    #endif
     addHtmlFloat(getPeakLow(), _nrDecimals);
     addHtml('/');
     addHtmlFloat(getPeakHigh(), _nrDecimals);
@@ -133,6 +138,7 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
   return somethingAdded;
 }
 
+# ifdef USES_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const
 {
   add_ChartJS_dataset_header(_ChartJS_dataset_config.label, _ChartJS_dataset_config.color);
@@ -153,3 +159,6 @@ void PluginStats::plot_ChartJS_dataset() const
   }
   add_ChartJS_dataset_footer(_ChartJS_dataset_config.hidden);
 }
+
+# endif // ifdef USES_CHART_JS
+#endif // ifdef USES_PLUGIN_STATS

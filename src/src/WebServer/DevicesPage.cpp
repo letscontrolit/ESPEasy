@@ -987,8 +987,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
     }
 
+#ifdef USES_PLUGIN_STATS
     // Task statistics and historic data in a chart
     devicePage_show_task_statistics(taskIndex, DeviceIndex);
+#endif
 
     // section: Data Acquisition
     devicePage_show_controller_config(taskIndex, DeviceIndex);
@@ -1219,6 +1221,7 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
   }
 }
 
+#ifdef USES_PLUGIN_STATS
 void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].PluginStats)
@@ -1229,11 +1232,12 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       if (taskData->hasPluginStats()) {
         addFormSubHeader(F("Statistics"));
       }
-
+#ifdef USES_CHART_JS
       if (taskData->nrSamplesPresent() > 0) {
         addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
       }
+#endif
 
       struct EventStruct TempEvent(taskIndex);
       String dummy;
@@ -1251,6 +1255,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
     }
   }
 }
+#endif
 
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {

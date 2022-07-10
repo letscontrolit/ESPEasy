@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef USES_CHART_JS
 struct ChartJS_dataset_config {
 
     String label;
@@ -10,5 +11,6 @@ struct ChartJS_dataset_config {
     bool hidden = false;
 
 };
+#endif
 
 #endif

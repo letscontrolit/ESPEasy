@@ -297,6 +297,12 @@ To create/register a plugin, you have to :
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
     #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+    #ifndef USES_PLUGIN_STATS
+        #define USES_PLUGIN_STATS
+    #endif
+    #ifndef USES_CHART_JS
+        #define USES_CHART_JS
+    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -769,6 +775,13 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_NEOPIXEL_COLLECTION
         #define PLUGIN_NEOPIXEL_COLLECTION
     #endif
+    #ifndef USES_PLUGIN_STATS
+        #define USES_PLUGIN_STATS
+    #endif
+    #ifndef USES_CHART_JS
+        #define USES_CHART_JS
+    #endif
+
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_TEST_ESP32 section at end,
     // where incompatible plugins will be disabled.
@@ -1778,7 +1791,12 @@ To create/register a plugin, you have to :
   #ifdef USES_SSDP
     #undef USES_SSDP
   #endif
-
+  #ifdef USES_PLUGIN_STATS
+    #undef USES_PLUGIN_STATS
+  #endif
+  #ifdef USES_CHART_JS
+    #undef USES_CHART_JS
+  #endif
 #endif
 
 // Timing stats page needs timing stats

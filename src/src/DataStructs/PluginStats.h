@@ -3,18 +3,20 @@
 
 #include "../../ESPEasy_common.h"
 
-#include "../DataStructs/ChartJS_dataset_config.h"
+#ifdef USES_PLUGIN_STATS
 
-#include <CircularBuffer.h>
+# include "../DataStructs/ChartJS_dataset_config.h"
 
-#ifndef PLUGIN_STATS_NR_ELEMENTS
-# ifdef ESP8266
-#  define PLUGIN_STATS_NR_ELEMENTS 16
-# endif // ifdef ESP8266
-# ifdef ESP32
-#  define PLUGIN_STATS_NR_ELEMENTS 64
-# endif // ifdef ESP32
-#endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
+# include <CircularBuffer.h>
+
+# ifndef PLUGIN_STATS_NR_ELEMENTS
+#  ifdef ESP8266
+#   define PLUGIN_STATS_NR_ELEMENTS 16
+#  endif // ifdef ESP8266
+#  ifdef ESP32
+#   define PLUGIN_STATS_NR_ELEMENTS 64
+#  endif // ifdef ESP32
+# endif  // ifndef PLUGIN_STATS_NR_ELEMENTS
 
 class PluginStats {
 public:
@@ -78,10 +80,15 @@ public:
 
   bool webformLoad_show_stats(struct EventStruct *event) const;
 
+# ifdef USES_CHART_JS
   void plot_ChartJS_dataset() const;
+# endif // ifdef USES_CHART_JS
 
-
+#ifdef USES_CHART_JS
   ChartJS_dataset_config _ChartJS_dataset_config;
+#else
+  String _label;
+#endif
 
 private:
 
@@ -93,5 +100,5 @@ private:
 
   uint8_t _nrDecimals = 3u;
 };
-
+#endif // ifdef USES_PLUGIN_STATS
 #endif // ifndef HELPERS_PLUGINSTATS_H
