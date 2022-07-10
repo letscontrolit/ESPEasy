@@ -123,7 +123,7 @@ private:
   #  ifdef USES_CHART_JS
   static void                       webformLoad_calibrationCurve(struct EventStruct *event);
   #  endif // ifdef USES_CHART_JS
-# endif // ifdef ESP32
+# endif    // ifdef ESP32
 
 # ifdef USES_CHART_JS
   static const __FlashStringHelper* getChartXaxisLabel(struct EventStruct *event);

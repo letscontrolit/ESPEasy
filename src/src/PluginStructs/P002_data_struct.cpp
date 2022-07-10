@@ -140,9 +140,9 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   if (hasADC_factory_calibration()) {
     addRowLabel(F("Factory Calibration Type"));
     addHtml(getADC_factory_calibration_type());
-    #ifdef USES_CHART_JS
+    #  ifdef USES_CHART_JS
     webformLoad_calibrationCurve(event);
-    #endif
+    #  endif // ifdef USES_CHART_JS
     formatADC_statistics(F("Current ADC to mV"), raw_value);
 
     for (size_t att = 0; att < ADC_ATTEN_MAX; ++att) {
@@ -182,7 +182,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     if (P002_CALIBRATION_ENABLED) {
       # ifdef USES_CHART_JS
       webformLoad_2pt_calibrationCurve(event);
-      # endif
+      # endif // ifdef USES_CHART_JS
 
       int minInputValue, maxInputValue;
       getInputRange(event, minInputValue, maxInputValue);
@@ -243,29 +243,27 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     ++line_nr;
   }
-  #ifdef USES_CHART_JS
+  #  ifdef USES_CHART_JS
   webformLoad_multipointCurve(event);
-  #endif
-# endif
+  #  endif // ifdef USES_CHART_JS
+# endif // ifndef LIMIT_BUILD_SIZE
 }
 
 # ifdef USES_PLUGIN_STATS
 void P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   if (_plugin_stats[0] != nullptr) {
-    if (_plugin_stats[0]->hasPeaks()) {
-      if (_plugin_stats[0]->hasPeaks()) {
-        formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow());
-        formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
-      }
+    if (_plugin_stats[0]->getNrSamples() > 0) {
+      addRowLabel(F("Avg. ouput value"));
+      addHtmlFloat(_plugin_stats[0]->getSampleAvg());
+      addHtml(' ', '(');
+      addHtmlInt(_plugin_stats[0]->getNrSamples());
+      addHtml(F(" samples)"));
+    }
 
-      if (_plugin_stats[0]->getNrSamples() > 0) {
-        addRowLabel(F("Avg. ouput value"));
-        addHtmlFloat(_plugin_stats[0]->getSampleAvg());
-        addHtml(' ', '(');
-        addHtmlInt(_plugin_stats[0]->getNrSamples());
-        addHtml(F(" samples)"));
-      }
+    if (_plugin_stats[0]->hasPeaks()) {
+      formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow());
+      formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
     }
   }
 }
@@ -273,8 +271,8 @@ void P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 # endif // ifdef USES_PLUGIN_STATS
 
 
-#ifdef ESP32
-#ifdef USES_CHART_JS
+# ifdef ESP32
+#  ifdef USES_CHART_JS
 void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 {
   if (!hasADC_factory_calibration()) { return; }
@@ -329,8 +327,8 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
   add_ChartJS_chart_footer();
 }
 
-# endif
-# endif
+#  endif // ifdef USES_CHART_JS
+# endif // ifdef ESP32
 
 # ifdef USES_CHART_JS
 const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStruct *event)
