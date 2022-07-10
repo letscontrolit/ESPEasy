@@ -49,7 +49,8 @@ public:
   bool init(ESPEasySerialPort port, 
             const int16_t serial_rx,
             const int16_t serial_tx,
-            unsigned long baudrate);
+            unsigned long baudrate,
+            uint8_t       config);
 
   // Called after loading the config from the settings.
   // Will interpret some data and load caches.

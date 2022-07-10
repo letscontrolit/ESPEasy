@@ -139,6 +139,7 @@ Available options:
 * *ST7735 128 x 128px* Allows about 12 lines of text in the smallest font scaling setting (the 13th line will be distorted, as the bottom 2 pixellines aren't available)
 * *ST7735 128 x 160px* Allows 16 lines of text in the smallest font scaling setting.
 * *ST7735 80 x 160px* Allows 16 lines of text in the smallest font scaling setting.
+* *ST7735 80 x 160px (Color inverted)* Special color inverted configuration as used in f.e. M5Stack StickC.
 * *ST7789 240 x 320px* Allows 32 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.
 * *ST7789 240 x 240px* Allows 24 lines of text in the smallest font scaling setting.
 * *ST7789 240 x 280px* Allows 28 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.
