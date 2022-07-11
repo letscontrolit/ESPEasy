@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-07-02, tonhuisman Introduce Max Brightness setting for protecting the hardware and power supply (and the eyes :-))
 // 2022-06-12, tonhuisman Optimizations, revert Makuna/NeopixelBus library to 2.6.9 for incompatibilties like [[maybe_unused]] arguments
 // 2022-01-30, tonhuisman Fix JSON message to use proper JSON functions, some bugfixes and small source improvements
 // 2022-01-09, tonhuisman Add conditional defines P128_USES_<colormode> (options: GRB/GRBW/RGB/RGBW/BRG/BRG) for selecting the
@@ -174,13 +175,14 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # ifdef ESP32
     case PLUGIN_SET_DEFAULTS:
     {
-      PIN(0) = -1; // None
+      # ifdef ESP32
+      PIN(0) = -1;                  // None
+      # endif // ifdef ESP32
+      P128_CONFIG_MAX_BRIGHT = 255; // Allow full brightness by default, range 1..255
       break;
     }
-    # endif // ifdef ESP32
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -194,7 +196,10 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
       addPinSelect(PinSelectPurpose::Generic_output, F("taskdevicepin1"), PIN(0));
       # endif // ifdef ESP32
 
-      addFormNumericBox(F("Led Count"), F("ledcnt"), P128_CONFIG_LED_COUNT, 1, 999);
+      addFormNumericBox(F("Led Count"),      F("ledcnt"),    P128_CONFIG_LED_COUNT,  1, 999);
+
+      if (P128_CONFIG_MAX_BRIGHT == 0) { P128_CONFIG_MAX_BRIGHT = 255; } // Set to default for existing installations
+      addFormNumericBox(F("Max brightness"), F("maxbright"), P128_CONFIG_MAX_BRIGHT, 1, 255);
 
       success = true;
       break;
@@ -202,7 +207,8 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P128_CONFIG_LED_COUNT = getFormItemInt(F("ledcnt"));
+      P128_CONFIG_LED_COUNT  = getFormItemInt(F("ledcnt"));
+      P128_CONFIG_MAX_BRIGHT = getFormItemInt(F("maxbright"));
 
       # ifdef ESP32
       PIN(0) = getFormItemInt(F("taskdevicepin1"));
@@ -221,7 +227,8 @@ boolean Plugin_128(uint8_t function, struct EventStruct *event, String& string)
         clearPluginTaskData(event->TaskIndex);
       }
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT));
+      if (P128_CONFIG_MAX_BRIGHT == 0) { P128_CONFIG_MAX_BRIGHT = 255; } // Set to default for existing installations
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P128_data_struct(PIN(0), P128_CONFIG_LED_COUNT, P128_CONFIG_MAX_BRIGHT));
       P128_data_struct *P128_data = static_cast<P128_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = nullptr != P128_data;
