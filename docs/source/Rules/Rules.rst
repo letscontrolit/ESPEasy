@@ -66,6 +66,31 @@ Special Notations
  If a previous value is needed, one has to use variables for it.
 
 
+Dot Notation
+~~~~~~~~~~~~
+
+The dot (``.``) can be used to refer to something "belonging" to something else.
+For example calling a command on a specific task (``pulsecounter.resetpulsecounter``) to reset the pulse counter on a specific Pulse Counter task.
+
+(Added: 2022/07/11)
+For task values with "Stats" enabled, one can also access statistical properties of the data or call commands on this statistical data.
+
+For example using just like normal task value data:
+
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+* ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
+* ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
+* ``[bme#temp.min]`` See ``[bme#temp.max]`` 
+
+
+Commands on "Stats" data:
+
+* ``bme.resetpeaks`` Reset the recorded "max" and "min" value of all task values of that task.
+* ``bme.clearsamples`` Clear the recorded historic samples of all task values of that task.
+
+
+
+
 Syntax
 ------
 
