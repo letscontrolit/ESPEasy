@@ -246,18 +246,20 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   #  ifdef USES_CHART_JS
   webformLoad_multipointCurve(event);
   #  endif // ifdef USES_CHART_JS
-# endif // ifndef LIMIT_BUILD_SIZE
+# endif    // ifndef LIMIT_BUILD_SIZE
 }
 
 # ifdef USES_PLUGIN_STATS
 bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
+
   if (_plugin_stats[0] != nullptr) {
-    if (_plugin_stats[0]->webformLoad_show_avg(event)) somethingAdded = true;
+    if (_plugin_stats[0]->webformLoad_show_avg(event)) { somethingAdded = true; }
+
     if (_plugin_stats[0]->hasPeaks()) {
-      formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow());
-      formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh());
+      formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow(),  true);
+      formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh(), true);
       somethingAdded = true;
     }
   }
@@ -324,7 +326,7 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 }
 
 #  endif // ifdef USES_CHART_JS
-# endif // ifdef ESP32
+# endif  // ifdef ESP32
 
 # ifdef USES_CHART_JS
 const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStruct *event)
@@ -419,18 +421,45 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
 
 # endif // ifdef USES_CHART_JS
 
-void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, int raw) const
+void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, int raw, bool includeOutputValue) const
 {
   addRowLabel(label);
   addHtmlInt(raw);
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
+    raw = esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]);
     html_add_estimate_symbol();
-    addHtmlInt(esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]));
+    addHtmlInt(raw);
     addUnit(F("mV"));
   }
 # endif // ifdef ESP32
+
+  if (includeOutputValue) {
+    addHtml(' ');
+    addHtml(F("&rarr; "));
+    float float_value =  applyCalibration(raw);
+
+# ifndef LIMIT_BUILD_SIZE
+
+    switch (_sampleMode) {
+      case P002_USE_OVERSAMPLING:
+        float_value = applyMultiPointInterpolation(float_value);
+        break;
+      case P002_USE_BINNING:
+      {
+        const int index = computeADC_to_bin(raw);
+
+        if ((index >= 0) && (static_cast<int>(_binning.size()) > index)) {
+          float_value = _multipoint[index]._value;
+        }
+
+        break;
+      }
+    }
+# endif // ifndef LIMIT_BUILD_SIZE
+    addHtmlFloat(float_value, _nrDecimals);
+  }
 }
 
 void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper *label, int raw, float float_value) const
@@ -732,7 +761,22 @@ bool P002_data_struct::getValue(float& float_value,
   float_value = applyCalibration(raw_value);
 
 # ifndef LIMIT_BUILD_SIZE
-  float_value = applyMultiPointInterpolation(float_value);
+
+  switch (_sampleMode) {
+    case P002_USE_OVERSAMPLING:
+      float_value = applyMultiPointInterpolation(float_value);
+      break;
+    case P002_USE_BINNING:
+    {
+      const int index = computeADC_to_bin(raw_value);
+
+      if ((index >= 0) && (static_cast<int>(_binning.size()) > index)) {
+        float_value = _multipoint[index]._value;
+      }
+
+      break;
+    }
+  }
 # endif // ifndef LIMIT_BUILD_SIZE
 
   return true;
@@ -842,15 +886,8 @@ int P002_data_struct::getBinIndex(float currentValue) const
   return -1;
 }
 
-void P002_data_struct::addBinningValue(int currentValue)
+int P002_data_struct::computeADC_to_bin(int currentValue) const
 {
-  for (size_t index = 0; index < _binningRange.size(); ++index) {
-    if (_binningRange[index].inRange(currentValue)) {
-      ++_binning[index];
-      return;
-    }
-  }
-
   // First apply calibration, then find the bin index
   float calibrated_value = static_cast<float>(currentValue);
 
@@ -867,7 +904,19 @@ void P002_data_struct::addBinningValue(int currentValue)
     calibrated_value = result;
   }
 
-  const int index = getBinIndex(calibrated_value);
+  return getBinIndex(calibrated_value);
+}
+
+void P002_data_struct::addBinningValue(int currentValue)
+{
+  for (size_t index = 0; index < _binningRange.size(); ++index) {
+    if (_binningRange[index].inRange(currentValue)) {
+      ++_binning[index];
+      return;
+    }
+  }
+
+  const int index = computeADC_to_bin(currentValue);
 
   if ((index >= 0) && (static_cast<int>(_binning.size()) > index)) {
     _binningRange[index].set(currentValue);

@@ -112,7 +112,8 @@ public:
 private:
 
   void formatADC_statistics(const __FlashStringHelper *label,
-                            int                        raw) const;
+                            int                        raw,
+                            bool                       includeOutputValue = false) const;
   void format_2point_calib_statistics(const __FlashStringHelper *label,
                                       int                        raw,
                                       float                      float_value) const;
@@ -170,6 +171,8 @@ private:
   // Get index of the bin to match.
   // Return -1 if no bin matched.
   int  getBinIndex(float currentValue) const;
+
+  int  computeADC_to_bin(int currentValue) const;
 
   void addBinningValue(int currentValue);
 
