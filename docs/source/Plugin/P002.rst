@@ -24,13 +24,170 @@ Used libraries: |P002_usedlibraries|
 Description
 -----------
 
-The ESP82xx has 1 ADC included.
-This one can be set either to measure the Vdd pin (supplied voltage to the ESP) or to ``TOUT``, so it can measure the voltage on the ``A0`` pin.
+All ESP chips have one or more ADCs available to measure an analog signal.
 
-The ESP32 has 18 pins that can be used as ADC. It also has a Hall Effect sensor included.
+* ESP8266: 1x 12-bit ADC on the A0 pin or the supplied voltage (on ``VCC`` Builds)
+* ESP32: 1 Hall Effect sensor + 18 pins which can be configured to read supplied voltage.
+* ESP32-S2: 20 pins which can be configured to read supplied voltage.
+
+The ESP32 chips have 2 ADCs.
+Each pin that can be set to read an analog voltage will then be hard-wired to one of both ADCs.
+See below for the limitations on sampling analog values with WiFi active.
 
 See the `ESP32 API reference <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/adc.html>`_ for more detailed information on the features and limitations of these pins.
 
+Range and Calibration
+---------------------
+
+2022/07/11: Added support for Attenuation selection + Factory calibration 
+
+
+The ESP8266 ADC has a fixed range of 0...1V.
+However, almost all boards do have some resistors to act as a voltage divider to extend this range to 3.6V
+
+All ESP32 versions allow for changing the range per pin (channel) by setting some attentuation resistor active.
+The default active attentuation is 11 dB, which allows for a maximum input voltage of 3.1V
+Upto roughly 2.5V the ADC does show a nearly linear response.
+
+Suggested ranges ESP32:
+
+.. code-block:: none
+
+  +----------+-------------+-----------------+
+  |          | attenuation | suggested range |
+  |    SoC   |     (dB)    |      (mV)       |
+  +==========+=============+=================+
+  |          |       0     |    100 ~  950   |
+  |          +-------------+-----------------+
+  |          |       2.5   |    100 ~ 1250   |
+  |   ESP32  +-------------+-----------------+
+  |          |       6     |    150 ~ 1750   |
+  |          +-------------+-----------------+
+  |          |      11     |    150 ~ 2450   |
+  +----------+-------------+-----------------+
+  |          |       0     |      0 ~  750   |
+  |          +-------------+-----------------+
+  |          |       2.5   |      0 ~ 1050   |
+  | ESP32-S2 +-------------+-----------------+
+  |          |       6     |      0 ~ 1300   |
+  |          +-------------+-----------------+
+  |          |      11     |      0 ~ 2500   |
+  +----------+-------------+-----------------+
+
+N.B. The ESP32 cannot measure down to 0V. The minimum Voltage depends on the set attenuation.
+
+Each (recent) ESP32 chip does have a factory calibration burnt in to compensate for the non-linear behavior of the ADC and to correct for the used internal voltage reference.
+
+Only the really early production runs of the ESP32 do not have such factory calibration.
+
+.. image:: P002_FactoryCalibration.png
+
+N.B. The initial chart on the setup page of an Analog Input task will only show the active attenuation. Others can be shown by clicking on the labels in the chart legend.
+
+With ``Apply Factory Calibration`` checked, the Analog Input plugin in ESPEasy will perform the reading in mV.
+
+
+Oversampling
+------------
+
+With ``Oversampling`` selected, the task will take a sample 10x per second.
+These are averaged over the period set by the ``Interval`` timer. (or shorter interval when the task is executed via the ``TaskRun`` command)
+This mode also takes out the highest and lowest sample values to make sure a single fluke measurement is not affecting the output value too much.
+
+Binning
+-------
+
+Added: 2022/07/11
+
+For some use cases, a strict classification of data is needed.
+
+A typical use case is the wind vane of a very popular set, the DS-15901.
+
+.. image:: P002_DS-15901_wind_vane_schematics.png
+
+This wind vane uses a magnet to trigger a number of reed switches which will then activate a resistor.
+What makes this setup rather complex is that for some angles 2 resistors will be active and thus effectively lower the seen resistance between 2 other wind directions.
+
+Plot of voltage measured over the wind vane when using a 10k resistor in series with the wind vane:
+
+.. image:: P002_voltage_vs_wind_dir.png
+
+
+For this use case, it is not possible to use oversampling as this may result in very unstable readings.
+We need to map a range of values to a single output value.
+
+Plotting the resistance range from the wind vane datasheet:
+
+.. image:: P002_range_resistance_per_bin.png
+
+As can be seen, the ranges are quite small for some and quite large for others.
+But also the wind direction is not increasing when the resistance increases.
+
+Therefore we need a look-up table. (see Multipoint Processing below)
+
+What binning does is it tries to match each sample to a specific bin (an entry in the Multipoint Processing table) and simply counts each occurence per bin.
+After a measurement period (the time between 2 calls to "run" the task, typically the "interval") the bin with the highest count is picked and the output value of this bin will be returned as output.
+
+
+Two Point Calibration
+---------------------
+
+The measured sample taken by the ADC (either a raw value, or mV when ESP32 Factory Calibration is enabled) often has to be mapped on a specific range.
+For example when measuring the voltage of a car battery, one needs to have some voltage divider to transform the battery voltage to a range suitable for the ADC.
+
+On the output, one may want to see the actual battery voltage again.
+This mapping can be done using the "Two Point Calibration".
+
+For this, one must measure 2 known voltages and input the raw ADC value.
+
+Example of some Two Point Calibration:
+
+.. image:: P002_two_point_calibration.png
+
+(Chart option added: 2022/07/11)
+
+The values below the chart  only taking the Two Point Calibration into account.
+
+* The current ADC value with the corresponding output when the set Two Point Calibration is applied.
+* The minimum and maximum values are based on the maximum range which can be measured with the set attenuation.
+* The step size is the minimal step size of the output value.
+
+
+Multipoint Processing
+---------------------
+
+Added: 2022/07/11
+
+The values entered in the "Multipoint Processing" section can be considered a look-up table.
+
+* For "Binning", these represent the bins and their output values.
+* For just taking samples, these can be seen as an extention to the "Two Point Calibration" to model a more elaborate response curve of a sensor. (e.g. measuring water level in a round tank)
+
+Often such curves will be modeled first in a spreadsheet program.
+To simply copy/paste 2 columns of data from a spreadsheet into the task settings, one has to check "Split-Paste Multipoint Fields" first and then paste these columns into the first field.
+By checking this checkbox, some JavaScript will be set active to decode the values and place them in separate fields.
+
+
+When using "Binning", it can be useful to also have some formula to process the data first before mapping the data to the correct bin.
+
+For example the wind vane with a 10k in series, connected to 3.3V.
+To convert the measured voltage into a resistance, one can use this formula: ``(-10000*%value%)/(%value%-3.3)``
+
+With the values converted into a resistance, one can simply use the stated values in the sensor datasheet.
+
+.. image:: P002_multipoint_binning.png
+
+
+Processing Order
+----------------
+
+All steps between ADC and output of the task are processed in the order they appear on the settings page:
+
+* Attenuation (ESP32 only)
+* Factory Calibration  (ESP32 only)
+* Two Point Calibration
+* Multipoint Processing ("Binning formula" first when set to Binning)
+* Formula at the bottom, when set.
 
 
 Hall Effect Sensor (ESP32)
@@ -54,25 +211,6 @@ ESP32 has 2 ADCs present.
 ``ADC1`` and ``ADC2``
 
 Since the ``ADC2`` is shared with the WIFI module, which has higher priority, reading operation of ``adc2_get_raw()`` may fail between ``esp_wifi_start()`` and ``esp_wifi_stop()``.
-
-
-Oversampling
-------------
-
-When ``Oversampling`` is enabled, the plugin will take a reading 10 times a second.
-This reading is averaged over the entire interval time as set in the task configuration.
-
-The highest and lowest values are subtracted from the recorded values, to filter out single flukes.
-Measured values which are clipped either on the lower range or higher range are only added once per interval as they may occur for more than a single sample per interval.
-This is done to prevent a relative large offset in the averaging due to clipping or maybe unforceen interaction of the WiFi chip on the ADC measurements.
-
-
-Calibration
------------
-
-The plugin supports a 2-point calibration.
-The user can set these to convert the raw values into the desired unit of measure.
-When set, the configuration screen also displays the minimum, maximum and step size values based on the calibration settings.
 
 
 Use of Formula
