@@ -82,8 +82,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
 # ifdef USES_PLUGIN_STATS
 
-  if (_plugin_stats[0] != nullptr) {
-    _plugin_stats[0]->trackPeak(raw_value);
+  if (getPluginStats(0) != nullptr) {
+    getPluginStats(0)->trackPeak(raw_value);
   }
 # endif // ifdef USES_PLUGIN_STATS
 
@@ -254,12 +254,12 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
 
-  if (_plugin_stats[0] != nullptr) {
-    if (_plugin_stats[0]->webformLoad_show_avg(event)) { somethingAdded = true; }
+  if (getPluginStats(0) != nullptr) {
+    if (getPluginStats(0)->webformLoad_show_avg(event)) { somethingAdded = true; }
 
-    if (_plugin_stats[0]->hasPeaks()) {
-      formatADC_statistics(F("ADC Peak Low"),  _plugin_stats[0]->getPeakLow(),  true);
-      formatADC_statistics(F("ADC Peak High"), _plugin_stats[0]->getPeakHigh(), true);
+    if (getPluginStats(0)->hasPeaks()) {
+      formatADC_statistics(F("ADC Peak Low"),  getPluginStats(0)->getPeakLow(),  true);
+      formatADC_statistics(F("ADC Peak High"), getPluginStats(0)->getPeakHigh(), true);
       somethingAdded = true;
     }
   }
@@ -689,8 +689,8 @@ void P002_data_struct::takeSample()
 
 # ifdef USES_PLUGIN_STATS
 
-  if (_plugin_stats[0] != nullptr) {
-    _plugin_stats[0]->trackPeak(raw);
+  if (getPluginStats(0) != nullptr) {
+    getPluginStats(0)->trackPeak(raw);
   }
 # endif // ifdef USES_PLUGIN_STATS
 # ifdef ESP32
@@ -747,8 +747,8 @@ bool P002_data_struct::getValue(float& float_value,
   raw_value = espeasy_analogRead(_pin_analogRead);
 # ifdef USES_PLUGIN_STATS
 
-  if (_plugin_stats[0] != nullptr) {
-    _plugin_stats[0]->trackPeak(raw_value);
+  if (getPluginStats(0) != nullptr) {
+    getPluginStats(0)->trackPeak(raw_value);
   }
 # endif // ifdef USES_PLUGIN_STATS
   # ifdef ESP32

@@ -55,8 +55,14 @@ struct PluginTaskData_base {
   pluginID_t _taskdata_pluginID = INVALID_PLUGIN_ID;
 #ifdef USES_PLUGIN_STATS
 
+  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;
+
+  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
+
+private:
+
   // Array of pointers to PluginStats. One per task value.
-  PluginStats *_plugin_stats[VARS_PER_TASK] = { nullptr, };
+  PluginStats_array *_plugin_stats_array = nullptr;
 #endif // ifdef USES_PLUGIN_STATS
 };
 

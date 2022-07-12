@@ -75,13 +75,13 @@ public:
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
-  bool plugin_get_config_value_base(struct EventStruct *event,
-                                    String            & string) const;
+  bool          plugin_get_config_value_base(struct EventStruct *event,
+                                             String            & string) const;
 
-  bool webformLoad_show_stats(struct EventStruct *event) const;
+  bool          webformLoad_show_stats(struct EventStruct *event) const;
 
-  bool webformLoad_show_avg(struct EventStruct *event) const;
-  bool webformLoad_show_peaks(struct EventStruct *event) const;
+  bool          webformLoad_show_avg(struct EventStruct *event) const;
+  bool          webformLoad_show_peaks(struct EventStruct *event) const;
 
 
   const String& getLabel() const {
@@ -129,5 +129,45 @@ private:
 
   uint8_t _nrDecimals = 3u;
 };
+
+class PluginStats_array {
+public:
+
+  PluginStats_array();
+  ~PluginStats_array();
+
+  void    initPluginStats(taskVarIndex_t taskVarIndex);
+  void    clearPluginStats(taskVarIndex_t taskVarIndex);
+
+  bool    hasStats() const;
+  bool    hasPeaks() const;
+
+  uint8_t nrSamplesPresent() const;
+
+  void    pushPluginStatsValues(struct EventStruct *event,
+                                bool                trackPeaks);
+
+  bool    plugin_get_config_value_base(struct EventStruct *event,
+                                       String            & string) const;
+
+  bool    plugin_write_base(struct EventStruct *event,
+                            const String      & string);
+
+  bool    webformLoad_show_stats(struct EventStruct *event) const;
+
+# ifdef USES_CHART_JS
+  void    plot_ChartJS() const;
+# endif // ifdef USES_CHART_JS
+
+
+  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;
+
+  PluginStats* getPluginStats(taskVarIndex_t taskVarIndex);
+
+private:
+
+  PluginStats *_plugin_stats[VARS_PER_TASK] = { nullptr, };
+};
+
 #endif // ifdef USES_PLUGIN_STATS
 #endif // ifndef HELPERS_PLUGINSTATS_H

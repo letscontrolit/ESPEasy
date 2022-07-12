@@ -60,8 +60,11 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 #ifdef USES_PLUGIN_STATS
     const uint8_t valueCount = getValueCountForTask(taskIndex);
-    for (size_t i = 0; i < VARS_PER_TASK && i < valueCount; ++i) {
-      Plugin_task_data[taskIndex]->initPluginStats(i);
+    LoadTaskSettings(taskIndex);
+    for (size_t i = 0; i < valueCount; ++i) {
+      if (ExtraTaskSettings.enabledPluginStats(i)) {
+        Plugin_task_data[taskIndex]->initPluginStats(i);
+      }
     }
 #endif
   } else if (data != nullptr) {

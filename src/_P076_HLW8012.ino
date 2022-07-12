@@ -125,6 +125,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     Device[deviceCount].SendDataOption = true;
     Device[deviceCount].TimerOption = true;
     Device[deviceCount].GlobalSyncOption = false;
+    Device[deviceCount].PluginStats        = true;
     break;
   }
 
@@ -433,6 +434,13 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
         // Library expects an interrupt on both edges
         attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, cf1_trigger);
         attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, cf_trigger);
+
+        #ifdef USES_PLUGIN_STATS
+        if (ExtraTaskSettings.anyEnabledPluginStats()) {
+          initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+        }
+        #endif
+
         success = true;
       }
     }

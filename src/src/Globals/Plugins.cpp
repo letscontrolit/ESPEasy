@@ -626,20 +626,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
         }
 
-        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
-
-        #ifdef USES_PLUGIN_STATS
-        if (Function == PLUGIN_INIT && Device[DeviceIndex].PluginStats) {
-          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
-          if (taskData == nullptr) {
-            // Plugin apparently does not have PluginTaskData.
-            // Create Plugin Task data if it has "Stats" checked.
-            if (ExtraTaskSettings.anyEnablePluginStats()) {
-              initPluginTaskData(event->TaskIndex, new (std::nothrow) PluginTaskData_base());
-            }
-          }
+        if (Function == PLUGIN_INIT) {
+          // Make sure any task data is actually cleared.
+          clearPluginTaskData(event->TaskIndex);
         }
-        #endif
+
+        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
         if (Function == PLUGIN_READ) {
           if (!retval) {

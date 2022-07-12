@@ -12,14 +12,7 @@ void ExtraTaskSettingsStruct::clear() {
   TaskIndex = INVALID_TASK_INDEX;
   ZERO_FILL(TaskDeviceName);
 
-  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    TaskDeviceValueDecimals[i] = 2;
-    ZERO_FILL(TaskDeviceFormula[i]);
-    ZERO_FILL(TaskDeviceValueNames[i]);
-    setIgnoreRangeCheck(i);
-    TaskDeviceErrorValue[i] = 0.0f;
-    VariousBits[i]          = 0u;
-  }
+  clearUnusedValueNames(0);
 
   for (uint8_t i = 0; i < PLUGIN_EXTRACONFIGVAR_MAX; ++i) {
     TaskDevicePluginConfigLong[i] = 0;
@@ -70,11 +63,12 @@ bool ExtraTaskSettingsStruct::checkUniqueValueNames() const {
 
 void ExtraTaskSettingsStruct::clearUnusedValueNames(uint8_t usedVars) {
   for (uint8_t i = usedVars; i < VARS_PER_TASK; ++i) {
-    TaskDeviceValueDecimals[i] = 2;
     ZERO_FILL(TaskDeviceFormula[i]);
     ZERO_FILL(TaskDeviceValueNames[i]);
+    TaskDeviceValueDecimals[i] = 2;
     setIgnoreRangeCheck(i);
     TaskDeviceErrorValue[i] = 0.0f;
+    VariousBits[i] = 0;
   }
 }
 
@@ -182,7 +176,7 @@ float ExtraTaskSettingsStruct::checkAllowedRange(taskVarIndex_t taskVarIndex, co
   return value;
 }
 
-bool ExtraTaskSettingsStruct::enablePluginStats(taskVarIndex_t taskVarIndex) const
+bool ExtraTaskSettingsStruct::enabledPluginStats(taskVarIndex_t taskVarIndex) const
 {
   if (!validTaskVarIndex(taskVarIndex)) { return false; }
   return bitRead(VariousBits[taskVarIndex], 0);
@@ -195,10 +189,10 @@ void ExtraTaskSettingsStruct::enablePluginStats(taskVarIndex_t taskVarIndex, boo
   }
 }
 
-bool ExtraTaskSettingsStruct::anyEnablePluginStats() const
+bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
 {
   for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-    if (enablePluginStats(i)) return true;
+    if (enabledPluginStats(i)) return true;
   }
   return false;
 }

@@ -44,6 +44,7 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].TimerOptional      = false;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -110,6 +111,12 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       VEML6040_Init(PCONFIG(1));
+
+      #ifdef USES_PLUGIN_STATS
+      if (ExtraTaskSettings.anyEnabledPluginStats()) {
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+      }
+      #endif
 
       success = true;
       break;

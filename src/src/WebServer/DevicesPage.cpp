@@ -371,6 +371,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     strncpy_webserver_arg(ExtraTaskSettings.TaskDeviceValueNames[varNr], String(F("TDVN")) + (varNr + 1));
     ExtraTaskSettings.enablePluginStats(varNr, isFormItemChecked(String(F("TDS")) + (varNr + 1)));
   }
+  ExtraTaskSettings.clearUnusedValueNames(valueCount);
 
   // allow the plugin to save plugin-specific form settings.
   {
@@ -1382,7 +1383,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         html_TD();
         String id = F("TDS"); // ="taskdevicestats"
         id += (varNr + 1);
-        addCheckBox(id, ExtraTaskSettings.enablePluginStats(varNr));
+        addCheckBox(id, ExtraTaskSettings.enabledPluginStats(varNr));
       }
 
       if (Device[DeviceIndex].configurableDecimals())

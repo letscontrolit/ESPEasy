@@ -109,8 +109,10 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
 bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 {
   bool somethingAdded = false;
-  if (webformLoad_show_avg(event)) somethingAdded = true;
-  if (webformLoad_show_peaks(event)) somethingAdded = true;
+
+  if (webformLoad_show_avg(event)) { somethingAdded = true; }
+
+  if (webformLoad_show_peaks(event)) { somethingAdded = true; }
 
   if (somethingAdded) {
     addFormSeparator(4);
@@ -130,7 +132,7 @@ bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
     return true;
   }
   return false;
-} 
+}
 
 bool PluginStats::webformLoad_show_peaks(struct EventStruct *event) const
 {
@@ -142,8 +144,7 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event) const
     return true;
   }
   return false;
-} 
-
+}
 
 # ifdef USES_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const
@@ -168,4 +169,201 @@ void PluginStats::plot_ChartJS_dataset() const
 }
 
 # endif // ifdef USES_CHART_JS
-#endif  // ifdef USES_PLUGIN_STATS
+
+PluginStats_array::PluginStats_array()
+{
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    _plugin_stats[i] = nullptr;
+  }
+}
+
+PluginStats_array::~PluginStats_array()
+{
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      delete _plugin_stats[i];
+      _plugin_stats[i] = nullptr;
+    }
+  }
+}
+
+void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
+{
+  if (taskVarIndex < VARS_PER_TASK) {
+    delete _plugin_stats[taskVarIndex];
+    _plugin_stats[taskVarIndex] = nullptr;
+
+    if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
+      _plugin_stats[taskVarIndex] = new (std::nothrow) PluginStats(
+        ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
+        ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
+
+      if (_plugin_stats[taskVarIndex] != nullptr) {
+        _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
+        # ifdef USES_CHART_JS
+        const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#EFF2C0"), F("#A4BAB7") };
+        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
+        # endif // ifdef USES_CHART_JS
+      }
+    }
+  }
+}
+
+void PluginStats_array::clearPluginStats(taskVarIndex_t taskVarIndex)
+{
+  if (taskVarIndex < VARS_PER_TASK) {
+    if (_plugin_stats[taskVarIndex] != nullptr) {
+      delete _plugin_stats[taskVarIndex];
+      _plugin_stats[taskVarIndex] = nullptr;
+    }
+  }
+}
+
+bool PluginStats_array::hasStats() const
+{
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) { return true; }
+  }
+  return false;
+}
+
+bool PluginStats_array::hasPeaks() const
+{
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if ((_plugin_stats[i] != nullptr) && _plugin_stats[i]->hasPeaks()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+uint8_t PluginStats_array::nrSamplesPresent() const
+{
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      return _plugin_stats[i]->getNrSamples();
+    }
+  }
+  return 0;
+}
+
+void PluginStats_array::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
+{
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
+
+      if (trackPeaks) {
+        _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+      }
+    }
+  }
+}
+
+bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
+                                                     String            & string) const
+{
+  // Full value name is something like "taskvaluename.avg"
+  const String fullValueName = parseString(string, 1);
+  const String valueName     = parseString(fullValueName, 1, '.');
+
+  for (uint8_t i = 0; i < VARS_PER_TASK; i++)
+  {
+    if (_plugin_stats[i] != nullptr) {
+      // Check case insensitive, since the user entered value name can have any case.
+      if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[i]))
+      {
+        return _plugin_stats[i]->plugin_get_config_value_base(event, string);
+      }
+    }
+  }
+  return false;
+}
+
+bool PluginStats_array::plugin_write_base(struct EventStruct *event, const String& string)
+{
+  bool success     = false;
+  const String cmd = parseString(string, 1);               // command
+
+  const bool resetPeaks   = cmd.equals(F("resetpeaks"));   // Command: "taskname.resetPeaks"
+  const bool clearSamples = cmd.equals(F("clearsamples")); // Command: "taskname.clearSamples"
+
+  if (resetPeaks || clearSamples) {
+    success = true;
+
+    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+      if (_plugin_stats[i] != nullptr) {
+        if (resetPeaks) {
+          _plugin_stats[i]->resetPeaks();
+        }
+
+        if (clearSamples) {
+          _plugin_stats[i]->clearSamples();
+        }
+      }
+    }
+  }
+  return success;
+}
+
+bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
+{
+  bool somethingAdded = false;
+
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      if (_plugin_stats[i]->webformLoad_show_stats(event)) { somethingAdded = true; }
+    }
+  }
+  return somethingAdded;
+}
+
+# ifdef USES_CHART_JS
+void PluginStats_array::plot_ChartJS() const
+{
+  const uint8_t nrSamples = nrSamplesPresent();
+
+  if (nrSamples == 0) { return; }
+
+  // Chart Header
+  add_ChartJS_chart_header(F("line"), F("TaskStatsChart"), F(""), 500, 500);
+
+  // Add labels
+  for (size_t i = 0; i < nrSamples; ++i) {
+    if (i != 0) {
+      addHtml(',');
+    }
+    addHtmlInt(i);
+  }
+  addHtml(F("],datasets: ["));
+
+
+  // Data sets
+  for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      _plugin_stats[i]->plot_ChartJS_dataset();
+    }
+  }
+  add_ChartJS_chart_footer();
+}
+
+# endif // ifdef USES_CHART_JS
+
+
+PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex) const
+{
+  if ((taskVarIndex < VARS_PER_TASK)) {
+    return _plugin_stats[taskVarIndex];
+  }
+  return nullptr;
+}
+
+PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex)
+{
+  if ((taskVarIndex < VARS_PER_TASK)) {
+    return _plugin_stats[taskVarIndex];
+  }
+  return nullptr;
+}
+
+#endif // ifdef USES_PLUGIN_STATS

@@ -34,6 +34,7 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -58,6 +59,12 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      #ifdef USES_PLUGIN_STATS
+      if (ExtraTaskSettings.anyEnabledPluginStats()) {
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
+      }
+      #endif
+
       success = true;
       break;
     }
