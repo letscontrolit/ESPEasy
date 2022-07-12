@@ -194,3 +194,11 @@ void ExtraTaskSettingsStruct::enablePluginStats(taskVarIndex_t taskVarIndex, boo
     bitWrite(VariousBits[taskVarIndex], 0, enabled);
   }
 }
+
+bool ExtraTaskSettingsStruct::anyEnablePluginStats() const
+{
+  for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
+    if (enablePluginStats(i)) return true;
+  }
+  return false;
+}

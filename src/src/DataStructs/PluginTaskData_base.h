@@ -30,8 +30,8 @@ struct PluginTaskData_base {
   #endif // ifdef USES_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values
-  void pushPluginStatsValues(struct EventStruct *event);
-
+  void pushPluginStatsValues(struct EventStruct *event,
+                             bool                trackPeaks);
 
   // Support task value notation to 'get' statistics
   // Notations like [taskname#taskvalue.avg] can then be used to compute the average over a number of samples.
@@ -46,7 +46,7 @@ struct PluginTaskData_base {
 # ifdef USES_CHART_JS
   void plot_ChartJS() const;
 # endif // ifdef USES_CHART_JS
-#endif // ifdef USES_PLUGIN_STATS
+#endif  // ifdef USES_PLUGIN_STATS
 
   // We cannot use dynamic_cast, so we must keep track of the plugin ID to
   // perform checks on the casting.

@@ -104,13 +104,17 @@ void PluginTaskData_base::clearPluginStats(taskVarIndex_t taskVarIndex)
 }
 
 #endif // ifdef USES_PLUGIN_STATS
-void PluginTaskData_base::pushPluginStatsValues(struct EventStruct *event)
+void PluginTaskData_base::pushPluginStatsValues(struct EventStruct *event, bool trackPeaks)
 {
 #ifdef USES_PLUGIN_STATS
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
       _plugin_stats[i]->push(UserVar[event->BaseVarIndex + i]);
+
+      if (trackPeaks) {
+        _plugin_stats[i]->trackPeak(UserVar[event->BaseVarIndex + i]);
+      }
     }
   }
 #endif // ifdef USES_PLUGIN_STATS

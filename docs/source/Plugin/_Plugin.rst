@@ -83,7 +83,11 @@ the "Stats" option is checked in the "Values" section at the bottom of the page.
 
 .. image:: Task_config_page_Statistics.png
 
-This also extends how task values can be addressed within ESPEasy.
+As can be seen in the screenshot taken from a "sysinfo" task, a dataset can be disabled in the chart by clicking on the item in the legend.
+This will scale the chart to fit the other data sets.
+For example the amount of free memory on an ESP32 is several orders of magnitude larger than the typical system load.
+
+Enabling "Stats" on a task value also extends how task values can be addressed within ESPEasy.
 
 For example using just like normal task value data:
 
@@ -125,8 +129,7 @@ This only shows controllers which are configured.
 Some controllers, like Domoticz MQTT and Domoticz HTTP, also require some IDX value to identify the sample origin.
 
 
-The last option to set is the "Interval".
-This Interval is the number of seconds to call ``TaskRun``, which will perform a read of the sensor.
+This Interval is the number of seconds between repeated calls to ``TaskRun``, which will perform a read of the sensor.
 
 Some plugins allow this to be set to ``0``, which then effectively disables repetitive calls to run this task.
 However, most plugins consider ``0`` to be the default of 60 seconds.

@@ -628,6 +628,19 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
         bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
 
+        #ifdef USES_PLUGIN_STATS
+        if (Function == PLUGIN_INIT && Device[DeviceIndex].PluginStats) {
+          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+          if (taskData == nullptr) {
+            // Plugin apparently does not have PluginTaskData.
+            // Create Plugin Task data if it has "Stats" checked.
+            if (ExtraTaskSettings.anyEnablePluginStats()) {
+              initPluginTaskData(event->TaskIndex, new (std::nothrow) PluginTaskData_base());
+            }
+          }
+        }
+        #endif
+
         if (Function == PLUGIN_READ) {
           if (!retval) {
             String errorStr;
@@ -638,10 +651,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
             }
           } else {
+            #ifdef USES_PLUGIN_STATS
             PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
             if (taskData != nullptr) {
-              taskData->pushPluginStatsValues(event);
+              taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
             }
+            #endif
             saveUserVarToRTC();
           }
         }
