@@ -1,5 +1,6 @@
+#####
 Rules
-*****
+#####
 
 Introduction
 ============
@@ -67,7 +68,7 @@ Special Notations
 
 
 Dot Notation
-~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 The dot (``.``) can be used to refer to something "belonging" to something else.
 For example calling a command on a specific task (``pulsecounter.resetpulsecounter``) to reset the pulse counter on a specific Pulse Counter task.
@@ -78,16 +79,8 @@ For task values with "Stats" enabled, one can also access statistical properties
 For example using just like normal task value data:
 
 * ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
-* ``[bme#temp.avgX]`` Compute the average over the last X samples (or less if there are less samples available)
-* ``[bme#temp.max]`` Refer to the maximum recorded sample since the last ``resetpeaks``. N.B. Not all tasks log the min and max peaks.
-* ``[bme#temp.min]`` See ``[bme#temp.max]`` 
 
-
-Commands on "Stats" data:
-
-* ``bme.resetpeaks`` Reset the recorded "max" and "min" value of all task values of that task.
-* ``bme.clearsamples`` Clear the recorded historic samples of all task values of that task.
-
+See :ref:`Task Value Statistics:  <Task Value Statistics>` for more examples.
 
 
 
@@ -768,6 +761,8 @@ The reason this behavior was changed from before 2019/11 was that the old implem
 
 Formatting refered values
 -------------------------
+
+.. _Formatting values:
 
 When referring another value, some basic formatting can be used.
 
