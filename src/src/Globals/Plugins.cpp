@@ -293,7 +293,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
     }
   }
 
-  if (Function != PLUGIN_WEBFORM_LOAD && Function != PLUGIN_EXIT && Function != PLUGIN_WEBFORM_LOAD_SHOW_STATS && Function != PLUGIN_WEBFORM_SAVE)
+  if (Function != PLUGIN_WEBFORM_LOAD && 
+      Function != PLUGIN_EXIT && 
+      Function != PLUGIN_WEBFORM_SAVE)
   {
     // FIXME TD-er: Must check if these checks are complete
     if (Settings.TaskDeviceDataFeed[taskIndex] != 0) {// All other calls only to tasks with local feed
@@ -658,12 +660,12 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
     // Call to specific task which may interact with the hardware
     case PLUGIN_EXIT:
+    case PLUGIN_WEBFORM_LOAD:
     {
       return PluginCallForTask(event->TaskIndex, Function, &TempEvent, str, event);
     }
 
     case PLUGIN_INIT:
-    case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
