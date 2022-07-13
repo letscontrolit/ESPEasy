@@ -1250,7 +1250,10 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
 
       if (somethingAdded) {
         if (taskData->hasPeaks()) {
-          addFormNote(F("Peak values recorded since last \"resetpeaks\"."));
+          String note = F("Peak values recorded since last \"");
+          note += getTaskDeviceName(taskIndex);
+          note += F(".resetpeaks\".");
+          addFormNote(note);
         }
       }
     }

@@ -124,7 +124,7 @@ bool PluginStats::webformLoad_show_stats(struct EventStruct *event) const
 bool PluginStats::webformLoad_show_avg(struct EventStruct *event) const
 {
   if (getNrSamples() > 0) {
-    addRowLabel(F("Avg. Output Value"));
+    addRowLabel(getLabel() +  F(" Average"));
     addHtmlFloat(getSampleAvg(), _nrDecimals);
     addHtml(' ', '(');
     addHtmlInt(getNrSamples());
