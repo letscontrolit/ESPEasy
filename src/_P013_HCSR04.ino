@@ -163,12 +163,6 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
     case PLUGIN_INIT:
     {
-      #ifdef USES_PLUGIN_STATS
-      if (ExtraTaskSettings.anyEnabledPluginStats()) {
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
-      }
-      #endif
-
       int16_t max_distance  = PCONFIG(2);
       int16_t measuringUnit = PCONFIG(3);
       int16_t filterType    = PCONFIG(4);

@@ -156,6 +156,7 @@ void handle_devices() {
 
       if (Settings.TaskDeviceEnabled[taskIndex]) {
         PluginCall(PLUGIN_INIT, &TempEvent, dummy);
+        PluginCall(PLUGIN_READ, &TempEvent, dummy);
       } else {
         PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
       }

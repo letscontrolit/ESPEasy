@@ -99,12 +99,6 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
 
       if (!status) {
         addLog(LOG_LEVEL_INFO, F("VEML6070: Not available!"));
-      } else {
-        #ifdef USES_PLUGIN_STATS
-        if (ExtraTaskSettings.anyEnabledPluginStats()) {
-          initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
-        }
-        #endif
       }
 
       success = status;

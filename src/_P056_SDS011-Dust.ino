@@ -109,11 +109,6 @@ boolean Plugin_056(uint8_t function, struct EventStruct *event, String& string)
         if (Plugin_056_SDS) {
           delete Plugin_056_SDS;
         }
-        #ifdef USES_PLUGIN_STATS
-        if (ExtraTaskSettings.anyEnabledPluginStats()) {
-          initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
-        }
-        #endif
 
         const int16_t serial_rx = CONFIG_PIN1;
         const int16_t serial_tx = CONFIG_PIN2;

@@ -277,57 +277,131 @@ void queueTaskEvent(const __FlashStringHelper * eventName, taskIndex_t taskIndex
 /**
  * Call the plugin of 1 task for 1 function, with standard EventStruct and optional command string
  */
+
+// FIXME TD-er: Why do we have this function, that's being called via PLUGIN_INIT_ALL while PLUGIN_INIT is calling other code.
 bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *TempEvent, String& command, EventStruct *event = nullptr) {
+  if (!validTaskIndex(taskIndex)) {
+    return false;
+  }
+  if (Function == PLUGIN_READ || 
+      Function == PLUGIN_INIT || 
+      Function == PLUGIN_WRITE||
+      Function == PLUGIN_GET_PACKED_RAW_DATA) {
+    // FIXME TD-er: Must check which other calls need the task to be enabled
+    if (!Settings.TaskDeviceEnabled[taskIndex]) {
+      return false;
+    }
+  }
+
+  if (Function != PLUGIN_WEBFORM_LOAD && Function != PLUGIN_EXIT && Function != PLUGIN_WEBFORM_LOAD_SHOW_STATS && Function != PLUGIN_WEBFORM_SAVE)
+  {
+    // FIXME TD-er: Must check if these checks are complete
+    if (Settings.TaskDeviceDataFeed[taskIndex] != 0) {// All other calls only to tasks with local feed
+      return false;
+    }
+  }
+
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
 
   bool retval = false;
-  if (Settings.TaskDeviceEnabled[taskIndex] && validPluginID_fullcheck(Settings.TaskDeviceNumber[taskIndex]))
   {
-    if (Settings.TaskDeviceDataFeed[taskIndex] == 0) // these calls only to tasks with local feed
-    {
-      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-      if (validDeviceIndex(DeviceIndex)) {
-        TempEvent->setTaskIndex(taskIndex);
-        TempEvent->sensorType   = Device[DeviceIndex].VType;
-        if (event != nullptr) {
-          TempEvent->OriginTaskIndex = event->TaskIndex;
-        }
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+    if (validDeviceIndex(DeviceIndex)) {
+      // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
+      LoadTaskSettings(taskIndex);
+      TempEvent->setTaskIndex(taskIndex);
+      TempEvent->sensorType   = Device[DeviceIndex].VType;
+      if (event != nullptr) {
+        TempEvent->OriginTaskIndex = event->TaskIndex;
+      }
 
-        if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
-          return false;
+      if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
+        return false;
+      }
+      #ifndef BUILD_NO_RAM_TRACKER
+      switch (Function) {
+        case PLUGIN_WRITE:          // First set
+        case PLUGIN_REQUEST:
+        case PLUGIN_ONCE_A_SECOND:  // Second set
+        case PLUGIN_TEN_PER_SECOND:
+        case PLUGIN_FIFTY_PER_SECOND:
+        case PLUGIN_INIT:           // Second set, instead of PLUGIN_INIT_ALL
+        case PLUGIN_CLOCK_IN:
+        case PLUGIN_EVENT_OUT:
+        case PLUGIN_TIME_CHANGE:
+          {
+            checkRAM(F("PluginCall_s"), taskIndex);
+            break;
+          }
+      }
+      #endif
+
+      if (((Function == PLUGIN_INIT) ||
+            (Function == PLUGIN_WEBFORM_LOAD)) &&
+          Device[DeviceIndex].ErrorStateValues) { // Only when we support ErrorStateValues
+        // FIXME TD-er: Not sure if this should be called here.
+        // It may be better if ranges are set in the call for default values and error values set via PLUGIN_INIT.
+        // Also these may be plugin specific so perhaps create a helper function to load/save these values and call these helpers from the plugin code.
+        Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, TempEvent, command); // Initialize value range(s)
+      }
+
+      if (Function == PLUGIN_INIT) {
+        // Make sure any task data is actually cleared.
+        clearPluginTaskData(taskIndex);
+      }
+
+      START_TIMER;
+      retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
+      STOP_TIMER_TASK(DeviceIndex, Function);
+
+      if (Function == PLUGIN_READ) {
+        if (!retval) {
+          String errorStr;
+          if (Plugin_ptr[DeviceIndex](PLUGIN_READ_ERROR_OCCURED, event, errorStr))
+          {
+            // Apparently the last read call resulted in an error
+            // Send event indicating the error.
+            queueTaskEvent(F("TaskError"), taskIndex, errorStr);
+          }
+        } else {
+          #ifdef USES_PLUGIN_STATS
+          PluginTaskData_base *taskData = getPluginTaskData(taskIndex);
+          if (taskData != nullptr) {
+            taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
+          }
+          #endif
+          saveUserVarToRTC();
         }
-        #ifndef BUILD_NO_RAM_TRACKER
-        switch (Function) {
-          case PLUGIN_WRITE:          // First set
-          case PLUGIN_REQUEST:
-          case PLUGIN_ONCE_A_SECOND:  // Second set
-          case PLUGIN_TEN_PER_SECOND:
-          case PLUGIN_FIFTY_PER_SECOND:
-          case PLUGIN_INIT:           // Second set, instead of PLUGIN_INIT_ALL
-          case PLUGIN_CLOCK_IN:
-          case PLUGIN_EVENT_OUT:
-          case PLUGIN_TIME_CHANGE:
-            {
-              checkRAM(F("PluginCall_s"), taskIndex);
-              break;
+      }
+
+      if (Function == PLUGIN_INIT) {
+        #ifdef USES_PLUGIN_STATS
+        if (Device[DeviceIndex].PluginStats) {
+          PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
+          if (taskData == nullptr) {
+            // Plugin apparently does not have PluginTaskData.
+            // Create Plugin Task data if it has "Stats" checked.
+            if (ExtraTaskSettings.anyEnabledPluginStats()) {
+              initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
             }
+          }
         }
         #endif
-        START_TIMER;
-        retval = (Plugin_ptr[DeviceIndex](Function, TempEvent, command));
-        STOP_TIMER_TASK(DeviceIndex, Function);
-
-        if (Function == PLUGIN_INIT) {
-          // Schedule the plugin to be read.
-          Scheduler.schedule_task_device_timer_at_init(TempEvent->TaskIndex);
-          queueTaskEvent(F("TaskInit"), taskIndex, retval);
-        }
-
-        post_I2C_by_taskIndex(taskIndex, DeviceIndex);
-        delay(0); // SMY: call delay(0) unconditionally
+        // Schedule the plugin to be read.
+        Scheduler.schedule_task_device_timer_at_init(taskIndex);
+        queueTaskEvent(F("TaskInit"), taskIndex, retval);
       }
+      if (Function == PLUGIN_EXIT) {
+        clearPluginTaskData(taskIndex);
+        updateTaskCaches();
+        initSerial();
+        queueTaskEvent(F("TaskExit"), taskIndex, retval);
+      }
+
+      post_I2C_by_taskIndex(taskIndex, DeviceIndex);
+      delay(0); // SMY: call delay(0) unconditionally
     }
   }
   return retval;
@@ -463,24 +537,26 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
       for (taskIndex_t task = firstTask; task < lastTask; task++)
       {
-        bool retval = PluginCallForTask(task, Function, &TempEvent, command);
+        if (Settings.TaskDeviceEnabled[task] && Settings.TaskDeviceDataFeed[task] == 0) {
+          bool retval = PluginCallForTask(task, Function, &TempEvent, command);
 
-        if (!retval) {
-          if (1 == (lastTask - firstTask)) {
-            // These plugin task data commands are generic, so only apply them on a specific task.
-            // Don't try to match them on the first task that may have such data.
-            PluginTaskData_base *taskData = getPluginTaskData(task);
-            if (nullptr != taskData) {
-              if (taskData->plugin_write_base(event, command)) {
-                retval = true;
+          if (!retval) {
+            if (1 == (lastTask - firstTask)) {
+              // These plugin task data commands are generic, so only apply them on a specific task.
+              // Don't try to match them on the first task that may have such data.
+              PluginTaskData_base *taskData = getPluginTaskData(task);
+              if (nullptr != taskData) {
+                if (taskData->plugin_write_base(event, command)) {
+                  retval = true;
+                }
               }
             }
           }
-        }
 
-        if (retval) {
-          CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
-          return true;
+          if (retval) {
+            CPluginCall(CPlugin::Function::CPLUGIN_ACKNOWLEDGE, &TempEvent, command);
+            return true;
+          }
         }
       }
 
@@ -507,13 +583,15 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str);
+        if (Settings.TaskDeviceEnabled[taskIndex] && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
+          bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str);
 
-        if (retval) {
-          #ifndef BUILD_NO_RAM_TRACKER
-          checkRAM(F("PluginCallUDP"), taskIndex);
-          #endif
-          return true;
+          if (retval) {
+            #ifndef BUILD_NO_RAM_TRACKER
+            checkRAM(F("PluginCallUDP"), taskIndex);
+            #endif
+            return true;
+          }
         }
       }
       return false;
@@ -534,40 +612,42 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        #ifndef BUILD_NO_DEBUG
-        const int freemem_begin = ESP.getFreeHeap();
-        #endif
+        if (Settings.TaskDeviceEnabled[taskIndex] && Settings.TaskDeviceDataFeed[taskIndex] == 0) {
+          #ifndef BUILD_NO_DEBUG
+          const int freemem_begin = ESP.getFreeHeap();
+          #endif
 
-        PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
+          PluginCallForTask(taskIndex, Function, &TempEvent, str, event);
 
-        #ifndef BUILD_NO_DEBUG
-        if (Function == PLUGIN_INIT) {
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            // See also logMemUsageAfter()
-            const int freemem_end = ESP.getFreeHeap();
-            String log;
-            if (log.reserve(128)) {
-              log  = F("After PLUGIN_INIT ");
-              log += F(" task: ");
-              if (taskIndex < 9) log += ' ';
-              log += taskIndex + 1;
-              while (log.length() < 30) log += ' ';
-              log += F("Free mem after: ");
-              log += freemem_end;
-              while (log.length() < 53) log += ' ';
-              log += F("plugin: ");
-              log += freemem_begin - freemem_end;
-              while (log.length() < 67) log += ' ';
+          #ifndef BUILD_NO_DEBUG
+          if (Function == PLUGIN_INIT) {
+            if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+              // See also logMemUsageAfter()
+              const int freemem_end = ESP.getFreeHeap();
+              String log;
+              if (log.reserve(128)) {
+                log  = F("After PLUGIN_INIT ");
+                log += F(" task: ");
+                if (taskIndex < 9) log += ' ';
+                log += taskIndex + 1;
+                while (log.length() < 30) log += ' ';
+                log += F("Free mem after: ");
+                log += freemem_end;
+                while (log.length() < 53) log += ' ';
+                log += F("plugin: ");
+                log += freemem_begin - freemem_end;
+                while (log.length() < 67) log += ' ';
 
-              log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
-              while (log.length() < 73) log += ' ';
-              log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
+                log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+                while (log.length() < 73) log += ' ';
+                log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
 
-              addLogMove(LOG_LEVEL_DEBUG, log);
+                addLogMove(LOG_LEVEL_DEBUG, log);
+              }
             }
           }
+          #endif
         }
-        #endif
       }
       if (Function == PLUGIN_INIT) {
         updateTaskCaches();
@@ -577,98 +657,22 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     }
 
     // Call to specific task which may interact with the hardware
-    case PLUGIN_INIT:
     case PLUGIN_EXIT:
+    {
+      return PluginCallForTask(event->TaskIndex, Function, &TempEvent, str, event);
+    }
+
+    case PLUGIN_INIT:
     case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
-      if (!validTaskIndex(event->TaskIndex)) {
-        return false;
-      }
-      if (Function == PLUGIN_READ || Function == PLUGIN_INIT) {
-        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
-          return false;
-        }
-      }
-      const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-
-      if (validDeviceIndex(DeviceIndex)) {
-        if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
-          LoadTaskSettings(event->TaskIndex);
-        }
-        event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
-        {
-          #ifndef BUILD_NO_RAM_TRACKER
-          String descr;
-          descr.reserve(20);
-          descr  = F("PluginCall_task_");
-          descr += (event->TaskIndex + 1);
-          #ifdef USES_TIMING_STATS
-          checkRAM(descr, getPluginFunctionName(Function));
-          #else
-          checkRAM(descr, String(Function));
-          #endif
-          #endif
-        }
-        if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
-          return false;
-        }
-        START_TIMER;
-
-        if (((Function == PLUGIN_INIT) ||
-             (Function == PLUGIN_WEBFORM_LOAD)) &&
-            Device[DeviceIndex].ErrorStateValues) { // Only when we support ErrorStateValues
-          // FIXME TD-er: Not sure if this should be called here.
-          // It may be better if ranges are set in the call for default values and error values set via PLUGIN_INIT.
-          // Also these may be plugin specific so perhaps create a helper function to load/save these values and call these helpers from the plugin code.
-          Plugin_ptr[DeviceIndex](PLUGIN_INIT_VALUE_RANGES, event, str); // Initialize value range(s)
-        }
-
+      if (Settings.TaskDeviceEnabled[event->TaskIndex] && Settings.TaskDeviceDataFeed[event->TaskIndex] == 0) {
+        const bool res = PluginCallForTask(event->TaskIndex, Function, &TempEvent, str, event);
         if (Function == PLUGIN_INIT) {
-          // Make sure any task data is actually cleared.
-          clearPluginTaskData(event->TaskIndex);
-        }
-
-        bool retval =  Plugin_ptr[DeviceIndex](Function, event, str);
-
-        if (Function == PLUGIN_READ) {
-          if (!retval) {
-            String errorStr;
-            if (Plugin_ptr[DeviceIndex](PLUGIN_READ_ERROR_OCCURED, event, errorStr))
-            {
-              // Apparently the last read call resulted in an error
-              // Send event indicating the error.
-              queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
-            }
-          } else {
-            #ifdef USES_PLUGIN_STATS
-            PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
-            if (taskData != nullptr) {
-              taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
-            }
-            #endif
-            saveUserVarToRTC();
-          }
-        }
-        if (Function == PLUGIN_INIT) {
-          // Schedule the plugin to be read.
-          Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
           updateTaskCaches();
-          queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
         }
-        if (Function == PLUGIN_EXIT) {
-          clearPluginTaskData(event->TaskIndex);
-          updateTaskCaches();
-          initSerial();
-          queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
-        }
-        STOP_TIMER_TASK(DeviceIndex, Function);
-        post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
-        delay(0); // SMY: call delay(0) unconditionally
-
-        return retval;
+        return res;
       }
       return false;
     }
