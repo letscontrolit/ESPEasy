@@ -7,11 +7,11 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
@@ -367,8 +367,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   uint8_t nrDecimals = 0;
   if (Device[DeviceIndex].configurableDecimals()) {
-    LoadTaskSettings(event->TaskIndex);
-    nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+    nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
   String result = toString(f, nrDecimals);
@@ -640,31 +639,33 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
-String parseString(const String& string, uint8_t indexFind, char separator) {
-  String result = parseStringKeepCase(string, indexFind, separator);
+String parseString(const String& string, uint8_t indexFind, char separator, bool trimResult) {
+  String result = parseStringKeepCase(string, indexFind, separator, trimResult);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringKeepCase(const String& string, uint8_t indexFind, char separator) {
+String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
     return EMPTY_STRING;
   }
-  result.trim();
+  if (trimResult) {
+    result.trim();
+  }
   return stripQuotes(result);
 }
 
-String parseStringToEnd(const String& string, uint8_t indexFind, char separator) {
-  String result = parseStringToEndKeepCase(string, indexFind, separator);
+String parseStringToEnd(const String& string, uint8_t indexFind, char separator, bool trimResult) {
+  String result = parseStringToEndKeepCase(string, indexFind, separator, trimResult);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator) {
+String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   // Loop over the arguments to find the first and last pos of the arguments.
   int  pos_begin = string.length();
   int  pos_end = pos_begin;
@@ -691,24 +692,27 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
   }
   String result = string.substring(pos_begin, pos_end);
 
-  result.trim();
+  if (trimResult) {
+    result.trim();
+  }
   return stripQuotes(result);
 }
 
 String tolerantParseStringKeepCase(const char * string,
-                                   uint8_t          indexFind,
-                                   char          separator)
+                                   uint8_t      indexFind,
+                                   char         separator,
+                                   bool         trimResult)
 {
-  return tolerantParseStringKeepCase(String(string), indexFind, separator);
+  return tolerantParseStringKeepCase(String(string), indexFind, separator, trimResult);
 }
 
 
-String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator)
+String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult)
 {
   if (Settings.TolerantLastArgParse()) {
-    return parseStringToEndKeepCase(string, indexFind, separator);
+    return parseStringToEndKeepCase(string, indexFind, separator, trimResult);
   }
-  return parseStringKeepCase(string, indexFind, separator);
+  return parseStringKeepCase(string, indexFind, separator, trimResult);
 }
 
 // escapes special characters in strings for use in html-forms
@@ -920,8 +924,7 @@ void parseSingleControllerVariable(String            & s,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
   } else {
     repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -958,9 +961,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
 
   if (validTaskIndex(event->TaskIndex)) {
-    // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
   } else {
     repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -974,7 +975,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       vname += '%';
 
       if (validTaskIndex(event->TaskIndex)) {
-        repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
+        repl(vname, getTaskValueName(event->TaskIndex, i), s, useURLencode);
       } else {
         repl(vname, EMPTY_STRING, s, useURLencode);
       }

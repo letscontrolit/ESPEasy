@@ -84,7 +84,7 @@ bool CPlugin_008(CPlugin::Function function, struct EventStruct *event, String& 
         C008_queue_element& element = C008_DelayHandler->sendQueue.back();
 
         // Collect the values at the same run, to make sure all are from the same sample
-        LoadTaskSettings(event->TaskIndex);
+        //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
         parseControllerVariables(pubname, event, true);
 
         for (uint8_t x = 0; x < valueCount; x++)

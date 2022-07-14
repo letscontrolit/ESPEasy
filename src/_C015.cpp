@@ -190,7 +190,6 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
         C015_queue_element& element = C015_DelayHandler->sendQueue.back();
-        LoadTaskSettings(event->TaskIndex);
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -202,8 +201,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
             formattedValue = String();
           }
 
-          String valueName     = ExtraTaskSettings.TaskDeviceValueNames[x];
-          String valueFullName = ExtraTaskSettings.TaskDeviceName;
+          const String valueName = getTaskValueName(event->TaskIndex, x);
+          String valueFullName   = getTaskDeviceName(event->TaskIndex);
           valueFullName += F(".");
           valueFullName += valueName;
           String vPinNumberStr = valueName.substring(1, 4);

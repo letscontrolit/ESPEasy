@@ -192,7 +192,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addUnit('V');
 
       addRowLabel(F("Sensor Data"));
-      addHtml(toString(UserVar[event->BaseVarIndex]));
+      addHtmlFloat(UserVar[event->BaseVarIndex]);
       switch (board_type)
       {
       case PH:

@@ -97,7 +97,7 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
 
         if (Settings.ControllerEnabled[controllerNr])
         {
-          addHtml(F("<TR><TD>IDX:<TD>"));
+          addRowLabel(F("IDX"));
           String id = F("TDID");   //="taskdeviceid"
           id += controllerNr + 1;
           addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);
