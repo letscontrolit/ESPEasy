@@ -773,10 +773,18 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     #endif
   }
 
-  const uint16_t bufferSize = 128;
+  #ifdef ESP8266
+  uint16_t bufferSize = 256;
+  #endif
+  #ifdef ESP32
+  uint16_t bufferSize = 1024;
+  #endif
+  if (bufferSize > max_size) {
+    bufferSize = max_size;
+  }
 
-  // FIXME TD-er: For now stack allocated, may need to be heap allocated?
-  uint8_t buffer[bufferSize];
+  std::vector<uint8_t> buffer;
+  buffer.resize(bufferSize);
 
   String   result;
   int      writePos        = posInBlock;
@@ -787,7 +795,7 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
 
   if (maxStringLength != 0) {
     // Specified string length, check given strings
-    for (int i = 0; i < nrStrings; ++i) {
+    for (uint16_t i = 0; i < nrStrings; ++i) {
       if (strings[i].length() >= maxStringLength) {
         result += getCustomTaskSettingsError(i);
       }
@@ -795,9 +803,12 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
   }
 
   while (stringCount < nrStrings && writePos < max_size) {
-    ZERO_FILL(buffer);
+    for (size_t i = 0; i < buffer.size(); ++i) {
+      buffer[i] = 0;
+    }
 
-    for (int i = 0; i < bufferSize && stringCount < nrStrings; ++i) {
+    int bufpos = 0;
+    for ( ; bufpos < bufferSize && stringCount < nrStrings; ++bufpos) {
       if (stringReadPos == 0) {
         // We're at the start of a string
         curStringLength = strings[stringCount].length();
@@ -809,15 +820,15 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
         }
       }
 
-      uint16_t curPos = writePos + i;
+      const uint16_t curPos = writePos + bufpos;
 
       if (curPos >= nextStringPos) {
         if (stringReadPos < curStringLength) {
-          buffer[i] = strings[stringCount][stringReadPos];
+          buffer[bufpos] = strings[stringCount][stringReadPos];
           ++stringReadPos;
         } else {
-          buffer[i]     = 0;
-          stringReadPos = 0;
+          buffer[bufpos] = 0;
+          stringReadPos  = 0;
           ++stringCount;
 
           if (maxStringLength == 0) {
@@ -834,8 +845,8 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     if (RTC.flashDayCounter > 0) {
       RTC.flashDayCounter--;
     }
-    result   += SaveToFile(settingsType, index, &(buffer[0]), bufferSize, writePos);
-    writePos += bufferSize;
+    result   += SaveToFile(settingsType, index, &(buffer[0]), bufpos, writePos);
+    writePos += bufpos;
   }
 
   if ((writePos >= max_size) && (stringCount < nrStrings)) {
@@ -881,10 +892,10 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
-  ExtraTaskSettings.clear();
   if (!validTaskIndex(TaskIndex)) {
     return String(); // Un-initialized task index.
   }
+  ExtraTaskSettings.clear();
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadTaskSettings"));
   #endif
@@ -914,6 +925,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
+  Cache.updateExtraTaskSettingsCache();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

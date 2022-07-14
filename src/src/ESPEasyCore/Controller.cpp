@@ -44,7 +44,7 @@ void sendData(struct EventStruct *event)
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("sendData"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-  LoadTaskSettings(event->TaskIndex);
+//  LoadTaskSettings(event->TaskIndex);
 
   if (Settings.UseRules) {
     createRuleEvents(event);
@@ -54,7 +54,7 @@ void sendData(struct EventStruct *event)
     SendValueLogger(event->TaskIndex);
   }
 
-  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
+//  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
@@ -864,8 +864,6 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
     if (!validDeviceIndex(DeviceIndex)) { return; }
 
-    LoadTaskSettings(TaskIndex);
-
     struct EventStruct TempEvent(TaskIndex);
     checkDeviceVTypeForTask(&TempEvent);
 
@@ -876,9 +874,9 @@ void SensorSendTask(taskIndex_t TaskIndex)
     if (Device[DeviceIndex].FormulaOption) {
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
       {
-        if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+        const String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+        if (!formula.isEmpty())
         {
-          const String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
           if (formula.indexOf(F("%pvalue%")) != -1) {
             preValue[varNr] = formatUserVarNoCheck(&TempEvent, varNr);
           }
@@ -902,11 +900,11 @@ void SensorSendTask(taskIndex_t TaskIndex)
 
         for (uint8_t varNr = 0; varNr < valueCount; varNr++)
         {
-          if (ExtraTaskSettings.TaskDeviceFormula[varNr][0] != 0)
+          String formula = Cache.getTaskDeviceFormula(TaskIndex, varNr);
+          if (!formula.isEmpty())
           {
             // TD-er: Should we use the set nr of decimals here, or not round at all?
             // See: https://github.com/letscontrolit/ESPEasy/issues/3721#issuecomment-889649437
-            String formula = ExtraTaskSettings.TaskDeviceFormula[varNr];
             formula.replace(F("%pvalue%"), preValue[varNr]);
             formula.replace(F("%value%"),  formatUserVarNoCheck(&TempEvent, varNr));
             double result = 0;

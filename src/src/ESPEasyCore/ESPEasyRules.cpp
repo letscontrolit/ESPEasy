@@ -8,7 +8,6 @@
 #include "../Globals/Cache.h"
 #include "../Globals/Device.h"
 #include "../Globals/EventQueue.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Plugins_other.h"
 #include "../Globals/Settings.h"
@@ -1198,16 +1197,13 @@ void createRuleEvents(struct EventStruct *event) {
 // TD-er: Disabled for now, suspect for causing crashes
   #endif
 
-
-  LoadTaskSettings(event->TaskIndex);
-
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
   // Small optimization as sensor type string may result in large strings
   // These also only yield a single value, so no need to check for combining task values.
   if (event->sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
-    expectedSize += strlen(ExtraTaskSettings.TaskDeviceValueNames[0]);
+    expectedSize += getTaskValueName(event->TaskIndex, 0).length();
    
     bool appendCompleteStringvalue = false;
     String eventString;
@@ -1221,7 +1217,7 @@ void createRuleEvents(struct EventStruct *event) {
     }
     eventString += getTaskDeviceName(event->TaskIndex);
     eventString += '#';
-    eventString += ExtraTaskSettings.TaskDeviceValueNames[0];
+    eventString += getTaskValueName(event->TaskIndex, 0);
     eventString += '=';
     eventString += '`';
     if (appendCompleteStringvalue) {
@@ -1252,7 +1248,7 @@ void createRuleEvents(struct EventStruct *event) {
       eventString.reserve(64); // Enough for most use cases, prevent lots of memory allocations.
       eventString += getTaskDeviceName(event->TaskIndex);
       eventString += '#';
-      eventString += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+      eventString += getTaskValueName(event->TaskIndex, varNr);
       eventString += '=';
       eventString += formatUserVarNoCheck(event, varNr);
       eventQueue.addMove(std::move(eventString));
