@@ -252,6 +252,24 @@ This allows ESPEasy to know the correct date and time after been powered off for
 
 N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
 
+Procedure to configure a real time clock (RTC) chip:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Connect the RTC chip to the configured I2C pins, and boot up the ESPEasy unit.
+* From Tools/Advanced, enable the use of NTP, and set DST option in the DST settings and the Timezone offset, Latitude and Longitude in the Location settings **correctly**.
+* Select the used RTC chip from the list.
+* Submit the page to save the settings.
+* Reboot the unit.
+* The time will be retrieved using NTP once more, and set into the RTC chip.
+* Check on the Main tab if the time is displayed correctly.
+* On the Tools/Advanced page, the NTP setting can now be disabled, if so desired, as it won't be used anymore (unless the External Time Source is set to None).
+
+Besides using NTP to set the date/time to the RTC chip, other supported options are:
+
+* Using the ``DateTime`` command to set the date and time.
+* Having a GPS receiver connected, using the GPS plugin (:ref:`P082_page`), the ESPEasy date/time will be set when GPS date/time is valid, as that is more accurate than the RTC date/time. The RTC date/time will be used from boot, and be updated once the GPS has a fix, which may take some time, depending on conditions.
+
+
 DST Settings
 ------------
 
@@ -909,7 +927,7 @@ See the ``Custom-sample.h`` file for some examples.
 
 
 Allow Fetch by Command
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 This checkbox allows provisioning via commands.
 These commands are not restricted, so they can also be given via HTTP or MQTT.
