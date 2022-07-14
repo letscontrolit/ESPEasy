@@ -1,14 +1,12 @@
 #include "../DataTypes/SettingsType.h"
 
 #include "../CustomBuild/StorageLayout.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/ExtraTaskSettingsStruct.h"
 #include "../DataStructs/NotificationSettingsStruct.h"
 #include "../DataStructs/SecurityStruct.h"
-#include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
-
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
-
 
 const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {

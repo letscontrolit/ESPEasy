@@ -1166,7 +1166,9 @@ void ESPEasy_Scheduler::process_system_event_queue() {
     case PluginPtrType::TaskPlugin:
 
       if (validDeviceIndex(Index)) {
-        LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
+        if (Function != PLUGIN_READ || Device[Index].ErrorStateValues) {
+          LoadTaskSettings(ScheduledEventQueue.front().event.TaskIndex);
+        }
         Plugin_ptr[Index](Function, &ScheduledEventQueue.front().event, tmpString);
       }
       break;

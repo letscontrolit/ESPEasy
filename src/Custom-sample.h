@@ -179,6 +179,16 @@
 
 #define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
+#define USES_PLUGIN_STATS          // Support collecting historic data + computing stats on historic data
+#ifdef ESP8266
+#  define PLUGIN_STATS_NR_ELEMENTS 16
+#endif // ifdef ESP8266
+# ifdef ESP32
+#  define PLUGIN_STATS_NR_ELEMENTS 64
+#endif // ifdef ESP32
+#define USES_CHART_JS               // Support for drawing charts, like PluginStats historic data
+
+
 
 // #define USE_SETTINGS_ARCHIVE
 // #define FEATURE_I2CMULTIPLEXER

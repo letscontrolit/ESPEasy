@@ -4,6 +4,7 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
@@ -59,7 +60,6 @@ void handle_csvval()
 
     if (validDeviceIndex(DeviceIndex))
     {
-      LoadTaskSettings(taskNr);
       const uint8_t taskValCount = getValueCountForTask(taskNr);
 
       if (printHeader)
@@ -68,7 +68,7 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            addHtml(getTaskValueName(taskNr, x));
             if (x != taskValCount - 1)
             {
               addHtml(';');
@@ -353,7 +353,7 @@ void handle_json()
     if (validDeviceIndex(DeviceIndex))
     {
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
-      LoadTaskSettings(TaskIndex);
+      //LoadTaskSettings(TaskIndex);
       addHtml('{', '\n');
 
       unsigned long ttl_json = 60; // Default value
@@ -379,14 +379,14 @@ void handle_json()
         {
           addHtml('{');
           const String value = formatUserVarNoCheck(TaskIndex, x);
-          uint8_t nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
 
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
             nrDecimals = 255;
           }
           stream_next_json_object_value(F("ValueNumber"), x + 1);
-          stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+          stream_next_json_object_value(F("Name"),        getTaskValueName(TaskIndex, x));
           stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
           stream_last_json_object_value(F("Value"), value);
 
@@ -421,7 +421,7 @@ void handle_json()
       if (showTaskDetails) {
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
-        stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
+        stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
 #ifdef FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {

@@ -22,7 +22,7 @@
     "
     | ``nfx,dim[,dimvalue]``
     ","
-    | Set the brightness of the stripe, range ``0`` to ``255`` (max. brightness), set to 0 when not specified.
+    | Set the brightness of the stripe, range ``0`` to ``255`` (max. brightness), set to 0 when not specified. If the provided dimvalue exceeds the configured Max brightness configuration setting, or is negative, it is ignored (invalid command).
     "
     "
     | ``nfx,line,<startpixel>,<endpixel>,<color>``

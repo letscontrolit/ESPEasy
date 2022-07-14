@@ -257,7 +257,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
     addLog(LOG_LEVEL_ERROR, F("No C011_DelayHandler"));
     return false;
   }
-  LoadTaskSettings(event->TaskIndex);
+  //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
   // Add a new element to the queue with the minimal payload
   bool success = C011_DelayHandler->addToQueue(C011_queue_element(event));

@@ -124,6 +124,7 @@ void ESPEasy_setup()
     }
   }
 #endif  // CONFIG_IDF_TARGET_ESP32
+  initADC();
 #endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
