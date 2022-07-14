@@ -55,7 +55,6 @@
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/SecuritySettings.h"
@@ -618,8 +617,6 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
-    LoadTaskSettings(x);
-
     {
       addHtml(F("<option value='"));
       addHtmlInt(x);
@@ -639,7 +636,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
       addHtml(F(" - "));
       addHtml(deviceName);
       addHtml(F(" - "));
-      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml(getTaskDeviceName(x));
       addHtml(F("</option>"));
     }
   }
@@ -661,7 +658,6 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   addHtmlAttribute(F("name"), name);
   addHtml('>');
 
-  LoadTaskSettings(TaskIndex);
   const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
   for (uint8_t x = 0; x < valueCount; x++)
@@ -674,7 +670,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
       addHtml(F(" selected"));
     }
     addHtml('>');
-    addHtml(ExtraTaskSettings.TaskDeviceValueNames[x]);
+    addHtml(getTaskValueName(TaskIndex, x));
     addHtml(F("</option>"));
   }
 }

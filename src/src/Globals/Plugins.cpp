@@ -326,6 +326,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
             if (taskData == nullptr) {
               // Plugin apparently does not have PluginTaskData.
               // Create Plugin Task data if it has "Stats" checked.
+              LoadTaskSettings(event->TaskIndex);
               if (ExtraTaskSettings.anyEnabledPluginStats()) {
                 initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
               }
@@ -608,8 +609,14 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
       if (validDeviceIndex(DeviceIndex)) {
         if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
-          // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
-          LoadTaskSettings(event->TaskIndex);
+          if (Function == PLUGIN_READ && !Device[DeviceIndex].ErrorStateValues) {
+            // PLUGIN_READ should not need to access ExtraTaskSettings except for what's already being cached.
+            // Only exception is when ErrorStateValues is needed.
+            // Therefore no need to call LoadTaskSettings
+          } else {
+            // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
+            LoadTaskSettings(event->TaskIndex);
+          }
         }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
         {
@@ -672,6 +679,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             if (taskData == nullptr) {
               // Plugin apparently does not have PluginTaskData.
               // Create Plugin Task data if it has "Stats" checked.
+              LoadTaskSettings(event->TaskIndex);
               if (ExtraTaskSettings.anyEnabledPluginStats()) {
                 initPluginTaskData(event->TaskIndex, new (std::nothrow) _StatsOnly_data_struct());
               }
@@ -727,8 +735,15 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
       if (validDeviceIndex(DeviceIndex)) {
-        // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
-        LoadTaskSettings(event->TaskIndex);
+        if (Function == PLUGIN_GET_DEVICEVALUENAMES ||
+            Function == PLUGIN_WEBFORM_SAVE ||
+            Function == PLUGIN_WEBFORM_LOAD ||
+            Function == PLUGIN_SET_DEFAULTS ||
+            Function == PLUGIN_INIT_VALUE_RANGES ||
+            Function == PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS
+        ) {
+          LoadTaskSettings(event->TaskIndex);
+        }
         event->BaseVarIndex = event->TaskIndex * VARS_PER_TASK;
         {
           #ifndef BUILD_NO_RAM_TRACKER

@@ -17,6 +17,7 @@
 #include "src/ESPEasyCore/Controller.h"
 #include "src/ESPEasyCore/ESPEasy_Log.h"
 
+#include "src/Globals/Cache.h"
 #include "src/Globals/Device.h"
 #include "src/Globals/ESPEasy_Scheduler.h"
 #include "src/Globals/ESPEasy_time.h"

@@ -2,7 +2,6 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/RuntimeData.h"
 
 #include "../Helpers/StringConverter.h"

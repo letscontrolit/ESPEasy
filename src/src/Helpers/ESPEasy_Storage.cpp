@@ -884,10 +884,10 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
-  ExtraTaskSettings.clear();
   if (!validTaskIndex(TaskIndex)) {
     return String(); // Un-initialized task index.
   }
+  ExtraTaskSettings.clear();
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadTaskSettings"));
   #endif
@@ -917,6 +917,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, tmp);
   }
   ExtraTaskSettings.validate();
+  Cache.updateExtraTaskSettingsCache();
   STOP_TIMER(LOAD_TASK_SETTINGS);
 
   return result;

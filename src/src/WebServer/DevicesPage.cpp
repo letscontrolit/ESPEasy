@@ -129,7 +129,7 @@ void handle_devices() {
 
   if (!taskIndexNotSet) {
     --taskIndex;
-    LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
+//    LoadTaskSettings(taskIndex); // Make sure ExtraTaskSettings are up-to-date
   }
 
   // FIXME TD-er: Might have to clear any caches here.
@@ -527,7 +527,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
     // Editing a task which has a non supported plugin will present the same as when assigning a new plugin to a task.
     if (pluginID_set)
     {
-      LoadTaskSettings(x);
+      //LoadTaskSettings(x);
       int8_t spi_gpios[3] { -1, -1, -1 };
       struct EventStruct TempEvent(x);
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
@@ -535,7 +535,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       html_TD();
       addHtml(getPluginNameFromPluginID(Settings.TaskDeviceNumber[x]));
       html_TD();
-      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml(getTaskDeviceName(x));
       html_TD();
 
       if (validDeviceIndex(DeviceIndex)) {
@@ -756,7 +756,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           {
             if (validPluginID_fullcheck(Settings.TaskDeviceNumber[x]))
             {
-              pluginWebformShowValue(x, varNr, ExtraTaskSettings.TaskDeviceValueNames[varNr], formatUserVarNoCheck(x, varNr));
+              pluginWebformShowValue(x, varNr, getTaskValueName(x, varNr), formatUserVarNoCheck(x, varNr));
             }
           }
         }
@@ -861,7 +861,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
 
-  LoadTaskSettings(taskIndex);
+  //LoadTaskSettings(taskIndex);
 
   html_add_form();
   html_table_class_normal();
@@ -894,7 +894,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHelpButton(String(F("Plugin")) + Settings.TaskDeviceNumber[taskIndex]);
     addRTDPluginButton(Settings.TaskDeviceNumber[taskIndex]);
 
-    addFormTextBox(F("Name"), F("TDN"), ExtraTaskSettings.TaskDeviceName, NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
+    addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
     addFormCheckBox(F("Enabled"), F("TDE"), Settings.TaskDeviceEnabled[taskIndex]);                 // ="taskdeviceenabled"
 
@@ -1362,6 +1362,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
+    LoadTaskSettings(taskIndex);
     // table body
     for (uint8_t varNr = 0; varNr < valueCount; varNr++)
     {

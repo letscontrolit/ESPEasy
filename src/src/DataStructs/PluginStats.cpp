@@ -271,7 +271,7 @@ bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
   {
     if (_plugin_stats[i] != nullptr) {
       // Check case insensitive, since the user entered value name can have any case.
-      if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[i]))
+      if (valueName.equalsIgnoreCase(getTaskValueName(event->TaskIndex, i)))
       {
         return _plugin_stats[i]->plugin_get_config_value_base(event, string);
       }
