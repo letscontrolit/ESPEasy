@@ -167,6 +167,20 @@ void addFormTextBox(const String& label,
                     #endif // ifdef ENABLE_TOOLTIPS
                     );
 
+void addFormTextBox(const __FlashStringHelper * classname,
+                    const String& label,
+                    const String& id,
+                    const String& value,
+                    int           maxlength,
+                    bool          readonly = false,
+                    bool          required = false,
+                    const String& pattern  = EMPTY_STRING
+                    #ifdef ENABLE_TOOLTIPS
+                    ,
+                    const String& tooltip = EMPTY_STRING
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    );
+
 
 void addFormTextArea(const String& label,
                      const String& id,

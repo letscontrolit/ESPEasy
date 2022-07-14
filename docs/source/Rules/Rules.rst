@@ -1,5 +1,6 @@
+#####
 Rules
-*****
+#####
 
 Introduction
 ============
@@ -64,6 +65,23 @@ Special Notations
  Formulas used in tasks (thus not using the rules) may refer to ``%value%`` for the new current value and ``%pvalue%`` for the previous value before ``PLUGIN_READ`` was called.
  These notations cannot be used in the rules.
  If a previous value is needed, one has to use variables for it.
+
+
+Dot Notation
+^^^^^^^^^^^^
+
+The dot (``.``) can be used to refer to something "belonging" to something else.
+For example calling a command on a specific task (``pulsecounter.resetpulsecounter``) to reset the pulse counter on a specific Pulse Counter task.
+
+(Added: 2022/07/11)
+For task values with "Stats" enabled, one can also access statistical properties of the data or call commands on this statistical data.
+
+For example using just like normal task value data:
+
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+
+See :ref:`Task Value Statistics:  <Task Value Statistics>` for more examples.
+
 
 
 Syntax
@@ -743,6 +761,8 @@ The reason this behavior was changed from before 2019/11 was that the old implem
 
 Formatting refered values
 -------------------------
+
+.. _Formatting values:
 
 When referring another value, some basic formatting can be used.
 
