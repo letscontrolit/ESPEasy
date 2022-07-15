@@ -2,7 +2,7 @@
 .. |P131_type| replace:: :cyan:`Display`
 .. |P131_typename| replace:: :cyan:`Display - NeoPixel Matrix`
 .. |P131_porttype| replace:: `.`
-.. |P131_status| replace:: :yellow:`DISPLAY`
+.. |P131_status| replace:: :yellow:`DISPLAY, NEOPIXEL`
 .. |P131_github| replace:: P131_NeoPixelMatrix.ino
 .. _P131_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P131_NeoPixelMatrix.ino
 .. |P131_usedby| replace:: `.`

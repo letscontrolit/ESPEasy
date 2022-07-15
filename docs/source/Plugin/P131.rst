@@ -228,13 +228,19 @@ If the Foreground and Background colors are the same, the background color will 
 Lines
 ^^^^^
 
-.. warning:: **TODO** Need to complete the implementation and documentation. Only basic display of text is currently available.
-
 * **Line 1..n** Predefined content can be specified. The number of lines shown depends on the Tile height of the display, the font used and the font scaling that is set. On a 240x240 pixel display, with the default font, and font scling set ot 1, all 24 lines will be displayed, but when using font scaling 2, then only the first 12 lines are displayed. If more lines are needed, then they should be set from the rules or an external source, like commands via http.
 
 The usual variables, like ``[Taskname#Valuename]``, or ``%v1%``, system variables, formulas and functions can be used.
 
 Input length is limited to 50 characters per line. If a longer calculated text is needed for a line, then it should be set from the rules or from an external source via http commands.
+
+Per **Line** you can define if Scrolling should be used for displaying the content. When enabled, the other available options will be used to scroll the text.
+
+* **Scroll**: Enables (horizontal) scrolling of the content. NB: Scrolling will *only* be enabled if the content length won't fit on the display!
+* **Empty start**: When checked, the display will start empty, and the text will be scrolled in. It will also scroll out until the display is empty again. (Default enabled). When unchecked, the display will start with the content that fits on the display, and scroll until the 'other' end of the text is visible. The display won't be empty when having this setting off.
+* **Scroll right**: By default, scrolling will be from right to left, when checked, scrolling will be from left to right direction.
+* **Stepsize**: The number of pixels that each step will scroll. Range 1..16, default 1.
+* **Speed**: The number of 0.1 seconds before the next scroll step will be applied. Range 1..600 (0.1 second to 60 seconds), default 10 (1 step per second).
 
 If more then 1 line is shown, next to the last Line the remaining capacity in characters is displayed.
 
