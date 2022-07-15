@@ -1,5 +1,7 @@
 #include "src/Helpers/_CPlugin_Helper.h"
-#ifdef USES_C013
+#ifdef USES_C013 
+
+#ifdef FEATURE_ESP_P2P
 
 # include "src/Globals/Nodes.h"
 # include "src/DataStructs/C013_p2p_dataStructs.h"
@@ -311,4 +313,5 @@ void C013_Receive(struct EventStruct *event) {
   }
 }
 
+#endif // FEATURE_ESP_P2P
 #endif // ifdef USES_C013

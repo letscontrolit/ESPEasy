@@ -129,6 +129,8 @@ void sendSyslog(uint8_t logLevel, const String& message)
   }
 }
 
+#ifdef FEATURE_ESP_P2P
+
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
@@ -547,6 +549,8 @@ void sendSysInfoUDP(uint8_t repeats)
     it->second.nodeType = NODE_TYPE_ID;
   }
 }
+
+#endif // FEATURE_ESP_P2P
 
 #if defined(ESP8266)
 

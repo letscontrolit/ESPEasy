@@ -416,11 +416,15 @@ bool executeInternalCommand(command_case_data & data)
     #endif // ifdef FEATURE_SD
 
       if (data.cmd_lc[1] == 'e') {
+        #ifdef FEATURE_ESP_P2P
         COMMAND_CASE_A(    "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr
                                                                   // of
                                                                   // arguments?
+        #endif // FEATURE_ESP_P2P
         COMMAND_CASE_A("sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
+        #ifdef FEATURE_ESP_P2P
         COMMAND_CASE_A( "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
+        #endif
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
         COMMAND_CASE_R("serialfloat", Command_SerialFloat,    0); // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -458,8 +462,10 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'u': {
+      #ifdef FEATURE_ESP_P2P
       COMMAND_CASE_R("udpport", Command_UDP_Port,      1);    // UDP.h
       COMMAND_CASE_R("udptest", Command_UDP_Test,      2);    // UDP.h
+      #endif
       COMMAND_CASE_R(   "unit", Command_Settings_Unit, 1);    // Settings.h
       COMMAND_CASE_A("unmonitor", Command_GPIO_UnMonitor, 2); // GPIO.h
       COMMAND_CASE_A("unmonitorrange", Command_GPIO_UnMonitorRange, 3); // GPIO.h

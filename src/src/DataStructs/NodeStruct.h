@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_NODESTRUCT_H
 #define DATASTRUCTS_NODESTRUCT_H
 
+#ifdef FEATURE_ESP_P2P
+
 #include "../../ESPEasy_common.h"
 #include <map>
 #include <IPAddress.h>
@@ -33,5 +35,6 @@ struct NodeStruct
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
 
+#endif //FEATURE_ESP_P2P
 
 #endif // DATASTRUCTS_NODESTRUCT_H

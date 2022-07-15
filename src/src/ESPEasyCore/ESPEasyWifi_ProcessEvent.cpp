@@ -220,8 +220,9 @@ void handle_unprocessedNetworkEvents()
     }
   }
 #endif
-
+#ifdef FEATURE_ESP_P2P
   updateUDPport();
+#endif
 }
 
 // ********************************************************************************
@@ -453,7 +454,9 @@ void processGotIP() {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();
   }
+  #ifdef FEATURE_ESP_P2P
   refreshNodeList();
+  #endif
   logConnectionStatus();
 }
 

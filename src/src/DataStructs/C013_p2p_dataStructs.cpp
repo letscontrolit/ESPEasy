@@ -2,6 +2,7 @@
 
 #include "../Globals/Plugins.h"
 
+#ifdef FEATURE_ESP_P2P
 C013_SensorInfoStruct::C013_SensorInfoStruct()
 {
   ZERO_FILL(taskName);
@@ -42,3 +43,5 @@ bool C013_SensorDataStruct::isValid() const
   }
   return true;
 }
+
+#endif

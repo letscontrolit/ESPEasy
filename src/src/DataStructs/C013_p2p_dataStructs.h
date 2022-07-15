@@ -1,6 +1,9 @@
 #ifndef DATASTRUCTS_C013_P2P_DATASTRUCTS_H
 #define DATASTRUCTS_C013_P2P_DATASTRUCTS_H
 
+#ifdef USES_C013 
+#ifdef FEATURE_ESP_P2P
+
 #include <Arduino.h>
 
 #include "../CustomBuild/ESPEasyLimits.h"
@@ -41,5 +44,6 @@ struct C013_SensorDataStruct
   float       Values[VARS_PER_TASK];
 };
 
-
+#endif //FEATURE_ESP_P2P
+#endif
 #endif // DATASTRUCTS_C013_P2P_DATASTRUCTS_H

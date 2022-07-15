@@ -13,6 +13,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#ifdef FEATURE_ESP_P2P
 const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const char *Line)
 {
   for (uint8_t x = 0; x < event->Par2; x++)
@@ -72,3 +73,4 @@ const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, con
   }
   return return_not_connected();
 }
+#endif

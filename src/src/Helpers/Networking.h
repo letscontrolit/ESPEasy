@@ -12,6 +12,7 @@
 \*********************************************************************************************/
 void sendSyslog(uint8_t logLevel, const String& message);
 
+#ifdef FEATURE_ESP_P2P
 
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
@@ -56,6 +57,7 @@ void refreshNodeList();
 \*********************************************************************************************/
 void sendSysInfoUDP(uint8_t repeats);
 
+#endif
 
 #if defined(ESP8266)
 

@@ -1,5 +1,6 @@
 #include "../DataStructs/NodeStruct.h"
 
+#ifdef FEATURE_ESP_P2P
 const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType) {
   switch (nodeType)
   {
@@ -20,3 +21,4 @@ const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType) {
   {
     for (uint8_t i = 0; i < 4; ++i) { ip[i] = 0; }
   }
+#endif
