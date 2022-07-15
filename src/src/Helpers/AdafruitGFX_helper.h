@@ -316,6 +316,14 @@ public:
                int16_t       y);
   # endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
 
+  uint16_t getTextSize(const String& text,
+                       uint16_t    & h); // return length and height in pixels using current font
+
+  void     setValidation(const bool& state);
+  bool     getValidation() const {
+    return _useValidation;
+  }
+
 private:
 
   void initialize();
