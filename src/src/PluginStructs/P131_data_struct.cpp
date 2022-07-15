@@ -145,14 +145,15 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
 
       // Setup initial scroll position
       for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
+        content[x].pixelPos = 0;
+
         if (content[x].active) {
           String   tmpString = parseStringKeepCase(strings[x], 1);
           String   newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
           uint16_t h;
-          content[x].length   = gfxHelper->getTextSize(newString, h);
-          content[x].pixelPos = 0;
+          content[x].length = gfxHelper->getTextSize(newString, h);
 
-          if (content[x].startBlank) {
+          if (content[x].startBlank && (content[x].length > _xpix)) {
             if (content[x].rightScroll) {
               content[x].pixelPos = -1 * content[x].length;
             } else {
@@ -275,7 +276,7 @@ void P131_data_struct::display_content(struct EventStruct *event,
                                _fgcolor,
                                _bgcolor);
 
-          if (scrollOnly && content[x].active)  {
+          if (scrollOnly && content[x].active && (content[x].length > _xpix))  {
             if (content[x].rightScroll && (content[x].pixelPos > 0)) {
               // Clear left from text
               matrix->fillRect(content[x].pixelPos - content[x].stepWidth,
@@ -418,7 +419,7 @@ bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     success = true;
 
     for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
-      if (content[x].active) {
+      if (content[x].active && content[x].length > _xpix) {
         if (content[x].loop == -1) { content[x].loop = content[x].speed; } // Initialize
 
         if (!content[x].loop--) {
