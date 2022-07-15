@@ -136,9 +136,31 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
 
       matrix->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
       gfxHelper->setColumnRowMode(false);       // Pixel-mode
-      matrix->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
+      matrix->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1
       matrix->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
       updateFontMetrics();
+
+      // Load
+      loadContent(event);
+
+      // Setup initial scroll position
+      for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
+        if (content[x].active) {
+          String   tmpString = parseStringKeepCase(strings[x], 1);
+          String   newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
+          uint16_t h;
+          content[x].length   = gfxHelper->getTextSize(newString, h);
+          content[x].pixelPos = 0;
+
+          if (content[x].startBlank) {
+            if (content[x].rightScroll) {
+              content[x].pixelPos = -1 * content[x].length;
+            } else {
+              content[x].pixelPos = _xpix;
+            }
+          }
+        }
+      }
     }
   }
   return success;
@@ -153,8 +175,8 @@ bool P131_data_struct::plugin_exit(struct EventStruct *event) {
   # endif // ifndef BUILD_NO_DEBUG
 
   if ((nullptr != matrix) && bitRead(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CLEAR_ON_EXIT)) {
-    matrix->setTextColor(ADAGFX_WHITE, ADAGFX_BLACK);
     matrix->fillScreen(ADAGFX_BLACK); // fill screen with black color
+    matrix->show();
   }
   cleanup();
   return true;
@@ -191,7 +213,8 @@ void P131_data_struct::loadContent(struct EventStruct *event) {
       validUIntFromString(opts, optBits);
       content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
       content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
-      content[x].pixelMode   = bitRead(optBits, P131_OPTBITS_PIXELSCROLL);
+      content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0; // Inverted
+      content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP);
       opts                   = parseString(strings[x], 3);
       int speed = 0;
       validIntFromString(opts, speed);
@@ -228,27 +251,90 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
 void P131_data_struct::display_content(struct EventStruct *event,
                                        bool                scrollOnly) {
   if (isInitialized() && (nullptr != gfxHelper)) {
-    int16_t yPos = 0;
+    int16_t yPos   = 0;
+    bool    useVal = gfxHelper->getValidation();
+    gfxHelper->setValidation(false); // Ignore validation to enable scrolling
 
     for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
-      String tmpString = parseStringKeepCase(strings[x], 1);
-
       if (!scrollOnly ||
           (scrollOnly && content[x].active)) {
-        String newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
+        String   tmpString = parseStringKeepCase(strings[x], 1);
+        String   newString = AdaGFXparseTemplate(tmpString, _textcols, gfxHelper);
+        uint16_t h;
+        content[x].length = gfxHelper->getTextSize(newString, h);
 
         # if ADAGFX_PARSE_SUBCOMMAND
         updateFontMetrics();
         # endif // if ADAGFX_PARSE_SUBCOMMAND
 
-        // TODO apply scrolling offset
         if (yPos < _ypix) {
-          gfxHelper->printText(newString.c_str(), 0, yPos, _fontscaling, _fgcolor, _bgcolor);
+          gfxHelper->printText(newString.c_str(),
+                               content[x].pixelPos,
+                               yPos,
+                               _fontscaling,
+                               _fgcolor,
+                               _bgcolor);
+
+          if (scrollOnly && content[x].active)  {
+            if (content[x].rightScroll && (content[x].pixelPos > 0)) {
+              // Clear left from text
+              matrix->fillRect(content[x].pixelPos - (content[x].stepWidth + 1),
+                               yPos,
+                               (content[x].stepWidth + 1),
+                               h,
+                               _bgcolor);
+            }
+
+            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth > 0)) {
+              // Clear right from text
+              matrix->fillRect(content[x].pixelPos + content[x].length + 1,
+                               yPos,
+                               content[x].stepWidth,
+                               h,
+                               _bgcolor);
+            }
+          }
+        }
+
+        if (scrollOnly && content[x].active) {
+          if (content[x].rightScroll) {
+            // Fully scrolled? then reset, starting left of the screen or with right side aligned right if not startBlank
+            if (content[x].pixelPos > (content[x].startBlank ? _xpix : 0 - (content[x].stepWidth + 1))) {
+              if (content[x].startBlank) {
+                content[x].pixelPos = -1 * content[x].length;
+              } else {
+                content[x].pixelPos = (-1 * content[x].length) + _xpix - (content[x].stepWidth + 1);
+              }
+            }
+          } else {
+            // Fully scrolled? then reset, starting at right of the screen or left if not startBlank
+            if (content[x].pixelPos + content[x].length < (content[x].startBlank ? 0 : _xpix + (content[x].stepWidth + 1))) {
+              if (content[x].startBlank) {
+                content[x].pixelPos = _xpix;
+              } else {
+                content[x].pixelPos = content[x].stepWidth + 1;
+              }
+            }
+          }
+
+          // Logging used only during development
+          // String log = F("display_content: x=");
+          // log += x;
+          // log += F(", pxPos=");
+          // log += content[x].pixelPos;
+          // log += F(", len=");
+          // log += content[x].length;
+          // log += F(", stp=");
+          // log += content[x].stepWidth + 1;
+          // log += F(", xpix=");
+          // log += _xpix;
+          // addLogMove(LOG_LEVEL_INFO, log);
         }
       }
       delay(0);
       yPos += (_fontheight * _fontscaling);
     }
+    gfxHelper->setValidation(useVal);
     matrix->show();
   }
 }
@@ -336,14 +422,9 @@ bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         if (content[x].loop == -1) { content[x].loop = content[x].speed; } // Initialize
 
         if (!content[x].loop--) {
-          if (content[x].pixelMode) {
-            if (content[x].pixelPos > 0) {
-              // TODO
-            }
-          }
+          content[x].pixelPos += (content[x].rightScroll ? 1 : -1) * (content[x].stepWidth + 1);
 
-          // TODO
-          // display_content(event, true);
+          display_content(event, true);
         }
       }
     }
@@ -370,7 +451,7 @@ void P131_data_struct::updateFontMetrics() {
   }
   # ifdef P131_DEBUG_LOG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("updateFontMetrics: size: ");
     log += _fontscaling;
     log += F(", fg: ");
@@ -384,7 +465,7 @@ void P131_data_struct::updateFontMetrics() {
       log += F(", yp: ");
       log += matrix->getCursorY();
     }
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifdef P131_DEBUG_LOG
 }

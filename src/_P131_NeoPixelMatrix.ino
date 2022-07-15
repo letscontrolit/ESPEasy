@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-07-15 tonhuisman: Implement horizontal scrolling (left/right, opt. empty start) for predefined content
+ * 2022-07-11 tonhuisman: Fix Clear on Exit issue
  * 2022-06-13 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
  * 2022-06-12 tonhuisman: Fix reading settings before plugin_ten_per_second() is executed
  *                        Implement PCONFIG_ULONG(n) macro
@@ -196,8 +198,9 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         html_table_header(F("Line #&nbsp;"));
         html_table_header(F("Text"));
         html_table_header(F("Scroll"));
-        html_table_header(F("Right"));
-        html_table_header(F("/Pixel"));
+        html_table_header(F("Empty start"));
+        html_table_header(F("Scroll right"));
+        html_table_header(F("Stepsize"));
         html_table_header(F("Speed"));
 
         for (uint8_t varNr = 0; varNr < P131_CONFIG_TILE_HEIGHT; varNr++) {
@@ -221,31 +224,37 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           html_TD(); // Scroll
           addCheckBox(getPluginCustomArgName(varNr + 100), bitRead(optBits, P131_OPTBITS_SCROLL) == 1, false
                       # ifdef ENABLE_TOOLTIPS
-                      , F("Scroll text if length > display-width")
+                      , F("Scroll text")
+                      # endif // ifdef ENABLE_TOOLTIPS
+                      );
+          html_TD(); // Start with empty display, inverted setting
+          addCheckBox(getPluginCustomArgName(varNr + 200), bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0, false
+                      # ifdef ENABLE_TOOLTIPS
+                      , F("Start and end scroll with empty display")
                       # endif // ifdef ENABLE_TOOLTIPS
                       );
           html_TD(); // Scroll from right
-          addCheckBox(getPluginCustomArgName(varNr + 200), bitRead(optBits, P131_OPTBITS_RIGHTSCROLL) == 1, false
+          addCheckBox(getPluginCustomArgName(varNr + 300), bitRead(optBits, P131_OPTBITS_RIGHTSCROLL) == 1, false
                       # ifdef ENABLE_TOOLTIPS
-                      , F("Scroll in from right")
+                      , F("Scroll from left to right")
                       # endif // ifdef ENABLE_TOOLTIPS
                       );
-          html_TD(); // Scroll per character or per pixel
-          addCheckBox(getPluginCustomArgName(varNr + 300), bitRead(optBits, P131_OPTBITS_PIXELSCROLL) == 1, false
-                      # ifdef ENABLE_TOOLTIPS
-                      , F("Scroll per pixel")
-                      # endif // ifdef ENABLE_TOOLTIPS
-                      );
+          html_TD(); // Pixels per step, offset with -1
+          addNumericBox(getPluginCustomArgName(varNr + 400), get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1, 1, 16
+                        # ifdef ENABLE_TOOLTIPS
+                        , EMPTY_STRING, F("Scroll 1..16 pixels / step")
+                        # endif // ifdef ENABLE_TOOLTIPS
+                        );
 
           opts = parseString(strings[varNr], 3);
           int scrollSpeed = 0;
           validIntFromString(opts, scrollSpeed);
 
           if (scrollSpeed == 0) { scrollSpeed = 10; }
-          html_TD(); // Speed 0.1 steps per second
-          addNumericBox(getPluginCustomArgName(varNr + 400), scrollSpeed, 1, 600
+          html_TD(); // Speed 0.1 seconds per step
+          addNumericBox(getPluginCustomArgName(varNr + 500), scrollSpeed, 1, 600
                         # ifdef ENABLE_TOOLTIPS
-                        , F(""), F("Scroll-speed in 0.1 steps / second.")
+                        , EMPTY_STRING, F("Scroll-speed in 0.1 seconds / step")
                         # endif // ifdef ENABLE_TOOLTIPS
                         );
 
@@ -323,11 +332,12 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         error += ',';
         uint32_t optBits = 0;
         bitWrite(optBits, P131_OPTBITS_SCROLL,      isFormItemChecked(getPluginCustomArgName(varNr + 100)));
-        bitWrite(optBits, P131_OPTBITS_RIGHTSCROLL, isFormItemChecked(getPluginCustomArgName(varNr + 200)));
-        bitWrite(optBits, P131_OPTBITS_PIXELSCROLL, isFormItemChecked(getPluginCustomArgName(varNr + 300)));
+        bitWrite(optBits, P131_OPTBITS_STARTBLANK,  !isFormItemChecked(getPluginCustomArgName(varNr + 200))); // Inverted
+        bitWrite(optBits, P131_OPTBITS_RIGHTSCROLL, isFormItemChecked(getPluginCustomArgName(varNr + 300)));
+        set4BitToUL(optBits, P131_OPTBITS_SCROLLSTEP, getFormItemIntCustomArgName(varNr + 400) - 1);          // Offset -1
         error         += optBits;
         error         += ',';
-        error         += getFormItemIntCustomArgName(varNr + 400);
+        error         += getFormItemIntCustomArgName(varNr + 500);
         strings[varNr] = error;
       }
       error.clear();

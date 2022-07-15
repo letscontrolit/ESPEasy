@@ -10,12 +10,12 @@
 
 # include <vector>
 
-# define P131_DEBUG_LOG                          // Enable for some (extra) logging
+# define P131_DEBUG_LOG  // Enable for some (extra) logging
 
-# define P131_Nlines  16                         // The number of different lines which can be displayed
+# define P131_Nlines  16 // The number of different lines which can be displayed
 # define P131_Nchars  50
 
-# define P131_SHOW_SPLASH                        // Enable to show splash (text)
+// # define P131_SHOW_SPLASH                        // Enable to show splash (text)
 # define P131_SPLASH_DURATION       (3000 / 100) // 3 seconds in 100 millisecond chunks
 
 # define P131_CONFIG_MATRIX_WIDTH   PCONFIG(0)
@@ -63,7 +63,8 @@
 // Line options
 # define P131_OPTBITS_SCROLL            0 // Scrolling enabled
 # define P131_OPTBITS_RIGHTSCROLL       1 // Scroll in from right
-# define P131_OPTBITS_PIXELSCROLL       2 // Scroll per character (0) or per pixel (1)
+# define P131_OPTBITS_STARTBLANK        3 // Start with blank display (1) or not (0)
+# define P131_OPTBITS_SCROLLSTEP        4 // Number of pixels to scroll
 
 enum class P131_CommandTrigger : uint8_t {
   neomatrix = 0u,
@@ -74,15 +75,15 @@ enum class P131_CommandTrigger : uint8_t {
 const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd);
 
 struct P131_content_struct {
-  int16_t start       = 0;  //
-  int16_t length      = 0;  //
+  int16_t length      = 0;  // Intermediate storage for current length
   int16_t position    = 0;  // position within the string to display (characters)
   int16_t pixelPos    = 0;  // current left-offset on display
   int16_t speed       = 0;  // 0.1 sec. steps
   int16_t loop        = -1; // steps before we go, -1 = restart from speed
+  int8_t  stepWidth   = 0;  // Nr. of pixels to scroll - 1
   bool    active      = false;
   bool    rightScroll = false;
-  bool    pixelMode   = false;
+  bool    startBlank  = false;
 };
 
 struct P131_data_struct : public PluginTaskData_base {
