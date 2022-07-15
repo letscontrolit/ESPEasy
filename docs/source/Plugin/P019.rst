@@ -140,7 +140,7 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |added|
+  |changed|
   2021-08-03 Replaced single Port inputfield with separate I2CAddress and Port selections.
 
   |added|

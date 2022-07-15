@@ -87,6 +87,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true; //   and I use Domoticz ... so there.
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].FormulaOption  = false;
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 

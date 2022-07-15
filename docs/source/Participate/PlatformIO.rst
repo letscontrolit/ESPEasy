@@ -1,3 +1,5 @@
+.. _PlatformIO_page:
+
 PlatformIO
 **********
 
@@ -10,14 +12,13 @@ PlatformIO is just the build, test and upload environment for many micro control
 
 On top of that you need to use an editor, or so called IDE in which PlatformIO will be used.
 
-The two main choices are:
+The current choice is:
 
-* Atom
-* Microsoft Visual Studio Code. (MS VS-Code)
+* Microsoft Visual Studio Code. (MS VSCode)
 
-Both are free to use and are available for Windows, MacOS and Linux.
+VSCode is free to use and available for Windows, MacOS and Linux.
 
-Apart from these two, there are more available, like Eclipse and probably more.
+Apart from VSCode, there are more available, like Eclipse, MS Visual Studio (IDE) and probably more.
 
 
 PlatformIO Prerequisites
@@ -36,53 +37,47 @@ install Pyton in Windows for PlatformIO.
 
 **Do not forget to check "Add Python xxx to PATH".**
 
-Windows ExecutionPolicy
------------------------
+.. Windows ExecutionPolicy
+.. -----------------------
 
-For PlatformIO 4.1.x and newer in Windows, you may need to change the Windows ExecutionPolicy 
-to be able to start a powershell script.
-PlatformIO does use a PowerShell script to activate the Python virtual environment.
+.. For PlatformIO 4.1.x and newer in Windows, you may need to change the Windows ExecutionPolicy 
+.. to be able to start a powershell script.
+.. PlatformIO does use a PowerShell script to activate the Python virtual environment.
 
-Default Windows security settings prevent execution of a PowerShell script.
+.. Default Windows security settings prevent execution of a PowerShell script.
 
-Enter in the PowerShell terminal window in VScode:
+.. Enter in the PowerShell terminal window in VScode:
 
-.. code-block:: none
+.. .. code-block:: none
 
-    Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
+..     Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser
 
-Please note this does lower your security, so make sure you know its implications.
-See `Microsoft - About Execution Policies <https:/go.microsoft.com/fwlink/?LinkID=135170>`_ for more details.
-
-
-PlatformIO with Atom
-====================
+.. Please note this does lower your security, so make sure you know its implications.
+.. See `Microsoft - About Execution Policies <https:/go.microsoft.com/fwlink/?LinkID=135170>`_ for more details.
 
 
-
-PlatformIO with VS-Code
-=======================
+PlatformIO with VSCode
+======================
 
 Install
 -------
 
-For development of ESPeasy, a number of extensions has to be installed in VS-Code:
+For development of ESPEasy, a number of extensions has to be installed in VS-Code:
 
 * PlatformIO IDE (by PlatformIO)
 * C/C++ IntelliSense (by Microsoft)
-* Arduino for Visual Studio Code (by Microsoft)
 * Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
 Optional, but highly recommended:
 
 * Bookmarks (by Alessandro Fragnani)
-* GitLens - Git supercharged (by Eric Amodio)
+* GitLens - Git supercharged (by Gitkraken)
 * Todo Tree (by Gruntfuggly)
 * All Autocomplete (by Atishay Jain)
 * Excel Viewer (by GrapeCity)
-* esbonio - An extension for editing sphinx projects (by Swyddfa)
-* reStructuredText - for .rst language support (by LeXtudio Inc.)
+* Esbonio - An extension for editing sphinx projects (by Swyddfa)
 * reStructuredText Syntax highlighting (by Trond Snekvik)
+* Extension pack for reStructuredText (by LeXtudio Inc.)
 * Markdown All in One (by Yu Zhang)
 
 
@@ -93,6 +88,8 @@ The extension Uncrustify is mainly to format the code using a standard code form
 This code format standard is defined in the file uncrustify.cfg in the main directory of this repository.
 For new code contributions, it is highly appreciated if the code is formatted using this tool.
 
+NB: Uncrustify has to be installed separately, as it is not included in the plugin! Download `Uncrustify from Sourceforge.net <https://sourceforge.net/projects/uncrustify/>`_
+
 To do so:
 
 * Right click mouse in editor
@@ -102,12 +99,15 @@ The first time (after installing uncrustify) it must be confirmed to use Uncrust
 
 After setting it as the default formatter, the hotkey Alt-Shift-F (Cmd-Shift-F on MacOS) can be used to format the entire document.
 
+.. note:: 
+
+  There used to be a reference to the Atom editor, but both Atom, and the PlatformIO plugin for Atom, are no longer maintained by their owners, so it was removed from this documentation.
 
 Load a project using PlatformIO
 -------------------------------
 
 If you have PIO installed and the source tree cloned to your hard drive, then you can open the main dir of the repository.
-The main directory of the repository is the level with platformio.ini in it.
+The main directory of the repository is the level with the file platformio.ini in it.
 
 Then in a few moments after opening the directory, on the left there will appear an alien logo, the logo of PlatformIO.
 If you click that one, you will get a tree with lots and lots of project tasks and environments.
@@ -132,8 +132,9 @@ The environment definitions all have at least the used micro controller in the n
 For example:
 
 * ..._ESP8266_4Mnn -> ESP8266 has external flash, which can vary in size from 512 kB to 16 MB, with nn configured as filesystem.
-* ..._ESP8285_1M -> ESP8285 has the flash internal, so is always 1 MB.
+* ..._ESP8285_1M -> ESP8285 has the flash internal, it is always 1 MB.
 * ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
+* ..._ESP32s2_4M316k -> ESP32s2 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
 * ..._ESP32_16M2M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (2MB LittleFS)
 * ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
 
@@ -365,6 +366,14 @@ When adding screenshots it is advised to use the ``.png`` file format, as that u
 Documentation for writing in reStructuredtext format can be found on the `Sphinx website <https://www.sphinx-doc.org/en/master/>`_
 
 Building the documentation into html files, for reviewing locally, can be done by running this command from the ``docs`` folder:
+
+Start a new PIO Terminal:
+
+.. image:: VSCode_OpenPIOTerminal.png
+
+.. code-block::
+
+    cd docs
 
 On Windows:
 
