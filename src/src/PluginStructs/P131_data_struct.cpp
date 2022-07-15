@@ -213,8 +213,8 @@ void P131_data_struct::loadContent(struct EventStruct *event) {
       validUIntFromString(opts, optBits);
       content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
       content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
-      content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0; // Inverted
-      content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP);
+      content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0;      // Inverted
+      content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1; // Add offset once
       opts                   = parseString(strings[x], 3);
       int speed = 0;
       validIntFromString(opts, speed);
@@ -278,18 +278,18 @@ void P131_data_struct::display_content(struct EventStruct *event,
           if (scrollOnly && content[x].active)  {
             if (content[x].rightScroll && (content[x].pixelPos > 0)) {
               // Clear left from text
-              matrix->fillRect(content[x].pixelPos - (content[x].stepWidth + 1),
+              matrix->fillRect(content[x].pixelPos - content[x].stepWidth,
                                yPos,
-                               (content[x].stepWidth + 1),
+                               content[x].stepWidth,
                                h,
                                _bgcolor);
             }
 
-            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth > 0)) {
+            if (!content[x].rightScroll && (content[x].pixelPos + content[x].length < _xpix) && (content[x].stepWidth > 1)) {
               // Clear right from text
               matrix->fillRect(content[x].pixelPos + content[x].length + 1,
                                yPos,
-                               content[x].stepWidth,
+                               content[x].stepWidth - 1,
                                h,
                                _bgcolor);
             }
@@ -299,20 +299,20 @@ void P131_data_struct::display_content(struct EventStruct *event,
         if (scrollOnly && content[x].active) {
           if (content[x].rightScroll) {
             // Fully scrolled? then reset, starting left of the screen or with right side aligned right if not startBlank
-            if (content[x].pixelPos > (content[x].startBlank ? _xpix : 0 - (content[x].stepWidth + 1))) {
+            if (content[x].pixelPos > (content[x].startBlank ? _xpix : 0 - content[x].stepWidth)) {
               if (content[x].startBlank) {
                 content[x].pixelPos = -1 * content[x].length;
               } else {
-                content[x].pixelPos = (-1 * content[x].length) + _xpix - (content[x].stepWidth + 1);
+                content[x].pixelPos = (-1 * content[x].length) + _xpix - content[x].stepWidth;
               }
             }
           } else {
             // Fully scrolled? then reset, starting at right of the screen or left if not startBlank
-            if (content[x].pixelPos + content[x].length < (content[x].startBlank ? 0 : _xpix + (content[x].stepWidth + 1))) {
+            if (content[x].pixelPos + content[x].length < (content[x].startBlank ? 0 : _xpix + content[x].stepWidth)) {
               if (content[x].startBlank) {
                 content[x].pixelPos = _xpix;
               } else {
-                content[x].pixelPos = content[x].stepWidth + 1;
+                content[x].pixelPos = content[x].stepWidth;
               }
             }
           }
@@ -325,7 +325,7 @@ void P131_data_struct::display_content(struct EventStruct *event,
           // log += F(", len=");
           // log += content[x].length;
           // log += F(", stp=");
-          // log += content[x].stepWidth + 1;
+          // log += content[x].stepWidth;
           // log += F(", xpix=");
           // log += _xpix;
           // addLogMove(LOG_LEVEL_INFO, log);
@@ -422,7 +422,7 @@ bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
         if (content[x].loop == -1) { content[x].loop = content[x].speed; } // Initialize
 
         if (!content[x].loop--) {
-          content[x].pixelPos += (content[x].rightScroll ? 1 : -1) * (content[x].stepWidth + 1);
+          content[x].pixelPos += (content[x].rightScroll ? 1 : -1) * content[x].stepWidth;
 
           display_content(event, true);
         }
