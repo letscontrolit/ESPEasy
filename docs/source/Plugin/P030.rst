@@ -26,6 +26,8 @@ Supported hardware
 
 |P030_usedby|
 
+:red:`RETIRED` This plugin has been retired, all functionality is available in :ref:`P028_page`
+
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
 

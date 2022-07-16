@@ -51,68 +51,68 @@ Change log
 Description
 ===========
 
-This Plugin reads the data from Thermocouples and Resistor Temperature Detector sensors. You have to use an Adapter Board with a respective 
-adapter/converter in order to read the values. Take a look at the usual sources to find such boards.
+This Plugin reads the data from Thermocouples and Resistor Temperature Detector sensors. You have to use an Adapter Board with a respective 
+adapter/converter in order to read the values. Take a look at the usual sources to find such boards.
 
-You can only use ESP8266 boards which expose the SPI Interface. This Plugin uses only the Hardware SPI Interface - no software SPI at the moment.
-Nevertheless you need at least 3 Pins to use SPI. So using an very simple ESP-01 is unfortunately no option.
+You can only use ESP8266 boards which expose the SPI Interface. This Plugin uses only the Hardware SPI Interface - no software SPI at the moment.
+Nevertheless you need at least 3 Pins to use SPI. So using an very simple ESP-01 is unfortunately no option.
 
-**Basic Information on Thermocouples**
+**Basic Information on Thermocouples**
 `Wikipedia: Thrmocouples <https://en.wikipedia.org/wiki/Thermocouple>`_
 
-**Basic Information on Resistor Temperature Detector Sensors**
+**Basic Information on Resistor Temperature Detector Sensors**
 `Wikipedia: Resistance Thermometers <https://en.wikipedia.org/wiki/Resistance_thermometer>`_
 
 Wiring
 ------
 
-Basic Information on SPI Bus you can find in `Wikipedia: SPI Bus <https://en.wikipedia.org/wiki/Serial_Peripheral_Interface>`_
+Basic Information on SPI Bus you can find in `Wikipedia: SPI Bus <https://en.wikipedia.org/wiki/Serial_Peripheral_Interface>`_
 
-You need an ESP8266 device with accessible SPI Pins. These Pins are:
+You need an ESP8266 device with accessible SPI Pins. These Pins are:
 
 ====  =============  ======  ========  =========================================================================
 Name  Description    PIO     NodeMCU   Notes
 ====  =============  ======  ========  =========================================================================
-MOSI  Master Output  GPIO13  D7        Hardware SPI (only required in case of write access to device registers)
-MISO  Master Input   GPIO12  D6        Hardware SPI
-SCK   Clock Output   GPIO14  D5        Hardware SPI
-CS    Chip Select    GPIO15  D8        Hardware SPI (CS is configurable through the web interface)
+MOSI  Master Output  GPIO13  D7        Hardware SPI (only required in case of write access to device registers)
+MISO  Master Input   GPIO12  D6        Hardware SPI
+SCK   Clock Output   GPIO14  D5        Hardware SPI
+CS    Chip Select    GPIO15  D8        Hardware SPI (CS is configurable through the web interface)
 ====  =============  ======  ========  =========================================================================
 
 .. note:: Write Access to device registers is required for MAX 31856 and MAX 31865 devices so far.
 
-Supported Hardware
+Supported Hardware
 ------------------
 
-**[2021-05-03]: Added support for RTD sensor adapters based on Maxim Device MAX21865.**
+**[2021-05-03]: Added support for RTD sensor adapters based on Maxim Device MAX21865.**
 
-  This adapter device requires write access to internal configuration registers. For this device you will need to wire MOSI signal to your adapter.
-  For MAX31865 multiple shields are available in the usual sources. Those are mostly based on `Adafruit MAX 31865 shield <https://www.adafruit.com/product/3328>`_ 
-  and follow the original schematics and element values.
+  This adapter device requires write access to internal configuration registers. For this device you will need to wire MOSI signal to your adapter.
+  For MAX31865 multiple shields are available in the usual sources. Those are mostly based on `Adafruit MAX 31865 shield <https://www.adafruit.com/product/3328>`_ 
+  and follow the original schematics and element values.
 
   .. image:: https://cdn-shop.adafruit.com/970x728/3328-01.jpg
     :width: 400
     :alt: image showing the Adafruit MAX 31865 adapter shield for SPI bus
 
-  The adapter can be purchased prepared for the required senor type (PT 100 or PT 1000). Basically this will influence the choice of the reference 
-  resistor. Those resistors are usualy chosen with the following values, but can be adjusted to the needs of the user and the application.
+  The adapter can be purchased prepared for the required senor type (PT 100 or PT 1000). Basically this will influence the choice of the reference 
+  resistor. Those resistors are usualy chosen with the following values, but can be adjusted to the needs of the user and the application.
 
   ============  ===============================
-  Sensor Type   Reference Resistor Value
+  Sensor Type   Reference Resistor Value
   ============  ===============================
-  PT 100        Rref = 430 Ohm
-  PT 1000       Rref = 4300 Ohm
+  PT 100        Rref = 430 Ohm
+  PT 1000       Rref = 4300 Ohm
   ============  ===============================
 
-  The populated value can be directly stated in the device configuration and therefore adjusted to any desired resistor value.
+  The populated value can be directly stated in the device configuration and therefore adjusted to any desired resistor value.
 
-  The modules often allow usage of 2-wire, 3-wire and 4-wire connection of an appropriate sensor. For activation of the connection type, it requires 
-  closing/opening of hardware bridges on the adapter **and** adjustment of the configuration in the ESPEasy device configuration.
+  The modules often allow usage of 2-wire, 3-wire and 4-wire connection of an appropriate sensor. For activation of the connection type, it requires 
+  closing/opening of hardware bridges on the adapter **and** adjustment of the configuration in the ESPEasy device configuration.
 
-  MAX31865 devices support filtering of noise frequencies resulting from the frequency of your power net. Basic filtering of 50/60 Hz noise 
-  contributions can be adjusted in the device configuration. See configuration examples below.
+  MAX31865 devices support filtering of noise frequencies resulting from the frequency of your power net. Basic filtering of 50/60 Hz noise 
+  contributions can be adjusted in the device configuration. See configuration examples below.
 
-**[2021-02-xx]:  Initial support of thermocouple sensors via Maxim devices MAX6675, MAX31855 and MAX31856**
+**[2021-02-xx]:  Initial support of thermocouple sensors via Maxim devices MAX6675, MAX31855 and MAX31856**
 
   From the start this device allows usage of thermocouple sensors and adapters. Most of them are rather simple to use and access, as they only require read access to their SPI interface.
   Nevertheless they provide powerful options to sense high temperature ranges and difficult sensing scenarios. See system advantages and limitations on above mentioned Wikipedia page on Thermocouples.
@@ -129,7 +129,7 @@ Supported Hardware
     :alt: image of Adafruit MAX 31855 shield
 
 
-Configuration in ESPEasy
+Configuration in ESPEasy
 ------------------------
 
 .. image:: P039_select_plugin.png
@@ -144,25 +144,25 @@ Within ESPEasy tab "Devices" chose the plugin "Environment - Thermosensors" to u
 
 In the plugin configuration page you will be initially asked to define the unique name of the task and the CS pin used for activating the SPI communication.
 
-At first you need to select the name of the task and the GPIO pin you want to use as CS for your SPI interface. You can select every GPIO that
-is not blocked by another device or which is limited by its function capabilities, e.g. not possible to configure as OUTPUT.
+At first you need to select the name of the task and the GPIO pin you want to use as CS for your SPI interface. You can select every GPIO that
+is not blocked by another device or which is limited by its function capabilities, e.g. not possible to configure as OUTPUT.
 
-Keep in mind some of the GPIOs require dedicated states during boot or have limited configuration options. E.g. D8 need to be pulled to GND during 
-boot to allow proper boot. Some of the shields provide 10k pull-up resistors overriding any weak pull-down on an ESP 8266 and such avoid correct 
-start up of ESP. In such cases solder an additional 4,7k resistor between GND and D8.
+Keep in mind some of the GPIOs require dedicated states during boot or have limited configuration options. E.g. D8 need to be pulled to GND during 
+boot to allow proper boot. Some of the shields provide 10k pull-up resistors overriding any weak pull-down on an ESP 8266 and such avoid correct 
+start up of ESP. In such cases solder an additional 4,7k resistor between GND and D8.
 
 .. image:: P039_overview_after_initial_open.png
   :width: 800
   :alt: image showing the overview of configuration after initial call of the plugin
 
-After that, the configuration page of the device provides a three step configuration:
+After that, the configuration page of the device provides a three step configuration:
 
-#.  **Choose the type of sensor you want to use**
+#.  **Choose the type of sensor you want to use**
       
-    Inital configuration step is to decide on which sensor family you want to use. This device support two:
+    Inital configuration step is to decide on which sensor family you want to use. This device support two:
 
-    * Thermocouple  -->   Thermocoupling Sensors
-    * RTD           -->   Resistor Temperature Device Sensors
+    * Thermocouple  -->   Thermocoupling Sensors
+    * RTD           -->   Resistor Temperature Device Sensors
 
 
 
@@ -172,34 +172,34 @@ After that, the configuration page of the device provides a three step�
 
     With the drop down field you can chose the sensor type you want to use.
   
-#.  **Choose the type of the adapter device you use**
+#.  **Choose the type of the adapter device you use**
 
     In case you want to use RTD adatpers the further configuration looks like the following:
 
-    When page has been updated after the submit you can decide on which adapter device you plan to use. 
+    When page has been updated after the submit you can decide on which adapter device you plan to use. 
 
     .. image:: P039_select_device_type.png
       :width: 800
       :alt: image showing the configuration section to select used adapter devices
 
-    Depending on the chosen sensor type the drop box will adjust the possible choices to the supported devices
+    Depending on the chosen sensor type the drop box will adjust the possible choices to the supported devices
   
 
-#.  **Configure the device details to match your needs**
+#.  **Configure the device details to match your needs**
 
-    When page has been updated after the submit you can configure the device according to your needs.
+    When page has been updated after the submit you can configure the device according to your needs.
 
     .. image:: P039_MAX31865_device_settings.png
       :width: 800
-      :alt: image showing the configuration section for setting all options for your device
+      :alt: image showing the configuration section for setting all options for your device
 
     In this section you can detail the configuration to adjust the behavior to your technical needs.
   
     .. image:: P039_press_submit.png
       :width: 200
-      :alt: image showing the configuration section to submit the configuration so far
+      :alt: image showing the configuration section to submit the configuration so far
 
-    After this selection select the enable check box in the upper section of this configuration page and submit the configuration to finalize the set up.
+    After this selection select the enable check box in the upper section of this configuration page and submit the configuration to finalize the set up.
 
 Details on Device Settings
 ==========================
