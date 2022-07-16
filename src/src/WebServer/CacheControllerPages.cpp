@@ -10,9 +10,10 @@
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/TaskIndex.h"
 #include "../Globals/C016_ControllerCache.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Misc.h"
+
 
 
 // ********************************************************************************
@@ -37,13 +38,11 @@ void handle_dumpcache() {
   addHtml(F("UNIX timestamp;contr. idx;sensortype;taskindex;value count"));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    LoadTaskSettings(i);
-
     for (int j = 0; j < VARS_PER_TASK; ++j) {
       addHtml(';');
-      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml(getTaskDeviceName(i));
       addHtml('#');
-      addHtml(ExtraTaskSettings.TaskDeviceValueNames[j]);
+      addHtml(getTaskValueName(i, j));
     }
   }
   html_BR();
@@ -107,12 +106,10 @@ void handle_cache_json() {
   addHtml(to_json_value(F("task index")));
 
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    LoadTaskSettings(i);
-
     for (int j = 0; j < VARS_PER_TASK; ++j) {
-      String label = ExtraTaskSettings.TaskDeviceName;
+      String label = getTaskDeviceName(i);
       label += '#';
-      label += ExtraTaskSettings.TaskDeviceValueNames[j];
+      label += getTaskValueName(i, j);
       addHtml(',');
       addHtml(to_json_value(label));
     }

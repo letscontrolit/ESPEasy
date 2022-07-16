@@ -7,7 +7,6 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../Commands/InternalCommands.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
@@ -65,6 +64,10 @@ bool handle_custom(const String& path) {
 
     TXBuffer.startStream();
     sendHeadandTail(F("TmplDsh"), _HEAD);
+    html_add_JQuery_script();
+    #ifdef USES_CHART_JS
+    html_add_ChartJS_script();
+    #endif
     html_add_autosubmit_form();
     html_add_form();
 
@@ -183,22 +186,22 @@ bool handle_custom(const String& path) {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
           if (validDeviceIndex(DeviceIndex)) {
-            LoadTaskSettings(x);
             html_TR_TD();
-            addHtml(ExtraTaskSettings.TaskDeviceName);
+            addHtml(getTaskDeviceName(x));
 
             const uint8_t valueCount = getValueCountForTask(x);
 
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
+              const String taskValueName = getTaskValueName(x, varNr);
               if ((varNr < valueCount) &&
-                  (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
+                  (!taskValueName.isEmpty()))
               {
                 if (varNr > 0) {
                   html_TR_TD();
                 }
                 html_TD();
-                addHtml(ExtraTaskSettings.TaskDeviceValueNames[varNr]);
+                addHtml(taskValueName);
                 html_TD();
                 addHtml(formatUserVarNoCheck(x, varNr));
               }
