@@ -25,9 +25,9 @@
 # define P095_CONFIG_DISPLAY_TIMEOUT    PCONFIG(3)      // Time-out when display-button is enable
 # define P095_CONFIG_BACKLIGHT_PIN      PCONFIG(4)      // Backlight pin
 # define P095_CONFIG_BACKLIGHT_PERCENT  PCONFIG(5)      // Backlight percentage
-# define P095_CONFIG_COLORS             PCONFIG_LONG(3) // 2 Colors fit in 1 long
+# define P095_CONFIG_COLORS            PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
-# define P095_CONFIG_FLAGS              PCONFIG_LONG(0) // All flags
+# define P095_CONFIG_FLAGS             PCONFIG_ULONG(0) // All flags
 # define P095_CONFIG_FLAG_NO_WAKE       0               // Flag: Don't wake display
 # define P095_CONFIG_FLAG_INVERT_BUTTON 1               // Flag: Inverted button state
 # define P095_CONFIG_FLAG_CLEAR_ON_EXIT 2               // Flag: Clear display on exit
@@ -75,9 +75,11 @@ enum class ILI9xxx_type_e : uint8_t {
   ILI9481_AUO317_320x480 = 5u,
   ILI9481_CMO35_320x480  = 6u,
   ILI9481_RGB_320x480    = 7u,
+  ILI9481_CMI7_320x480   = 10u,
+  ILI9481_CMI8_320x480   = 11u,
   ILI9486_320x480        = 8u,
   ILI9488_320x480        = 9u,
-  ILI9xxx_MAX            = 10u // last value = count
+  ILI9xxx_MAX            = 12u // last value = count
 };
 
 enum class P095_CommandTrigger : uint8_t {

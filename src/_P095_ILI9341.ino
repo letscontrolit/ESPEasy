@@ -13,12 +13,11 @@
 # define PLUGIN_095_MAX_DISPLAY 1
 
 
-# if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
-  #  define PLUGIN_095_FONT_INCLUDED // enable to use fonts in this plugin
-# endif // if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
-
 /**
  * Changelog:
+ * 2022-07-16 tonhuisman: Add support for some more ILI9481 sub-types (Again cloned from TFT_eSPI library)
+ *                        WARNING: ILI9481 does *NOT* support changing rotation and keep writing on the display!
+ *                                 Display memory is restructured by the rotation change, but the content is not adjusted.
  * 2022-06-14 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
  * 2022-06-11 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details. Code optimization
  * 2022-05-17 tonhuisman: Add setting for Splash during plugin startup, default on, when compiled in
@@ -232,6 +231,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_AUO317_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMO35_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI7_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI8_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9488_320x480),
         };
@@ -244,6 +245,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ILI9xxx_type_e::ILI9481_AUO317_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_CMO35_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMI7_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMI8_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
         };

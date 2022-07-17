@@ -16,6 +16,8 @@ const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device) {
     case ILI9xxx_type_e::ILI9481_AUO317_320x480: return F("ILI9481 320 x 480px (AUO317)");
     case ILI9xxx_type_e::ILI9481_CMO35_320x480: return F("ILI9481 320 x 480px (CMO35)");
     case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
+    case ILI9xxx_type_e::ILI9481_CMI7_320x480: return F("ILI9481 320 x 480px (CMI7)");
+    case ILI9xxx_type_e::ILI9481_CMI8_320x480: return F("ILI9481 320 x 480px (CMI8)");
     case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
     case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
     case ILI9xxx_type_e::ILI9xxx_MAX: break;
@@ -39,6 +41,8 @@ void ILI9xxx_type_toResolution(ILI9xxx_type_e device, uint16_t& x, uint16_t& y) 
     case ILI9xxx_type_e::ILI9481_AUO317_320x480:
     case ILI9xxx_type_e::ILI9481_CMO35_320x480:
     case ILI9xxx_type_e::ILI9481_RGB_320x480:
+    case ILI9xxx_type_e::ILI9481_CMI7_320x480:
+    case ILI9xxx_type_e::ILI9481_CMI8_320x480:
     case ILI9xxx_type_e::ILI9486_320x480:
     case ILI9xxx_type_e::ILI9488_320x480:
       x = 320;
@@ -373,7 +377,11 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
 
       if (validIntFromString(arg2, nArg2) &&
           (nArg2 >= 0)) {
-        tft->setRotation(nArg2 % 4);
+        if (nullptr != gfxHelper) {
+          gfxHelper->setRotation(nArg2 % 4);
+        } else {
+          tft->setRotation(nArg2 % 4);
+        }
       } else {
         success = false;
       }
