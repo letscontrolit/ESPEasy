@@ -25,7 +25,7 @@ void ControllerSettingsStruct::reset() {
   MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
   MaxQueueDepth              = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
   MaxRetry                   = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
-  DeleteOldest               = DEFAULT_MQTT_DELETE_OLDEST;
+  DeleteOldest               = DEFAULT_CONTROLLER_DELETE_OLDEST;
   ClientTimeout              = CONTROLLER_CLIENTTIMEOUT_DFLT;
   MustCheckReply             = DEFAULT_CONTROLLER_MUST_CHECK_REPLY ;
   SampleSetInitiator         = INVALID_TASK_INDEX;
