@@ -676,7 +676,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     return;
   }
   addRowLabel(F("Fix"));
-  addHtmlInt(P082_data->hasFix(P082_TIMEOUT));
+  addEnabled(P082_data->hasFix(P082_TIMEOUT));
 
   addRowLabel(F("Fix Quality"));
 
