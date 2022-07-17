@@ -7,11 +7,11 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
@@ -367,8 +367,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   uint8_t nrDecimals = 0;
   if (Device[DeviceIndex].configurableDecimals()) {
-    LoadTaskSettings(event->TaskIndex);
-    nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+    nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
   String result = toString(f, nrDecimals);
@@ -925,8 +924,7 @@ void parseSingleControllerVariable(String            & s,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
   } else {
     repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -963,9 +961,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
 
   if (validTaskIndex(event->TaskIndex)) {
-    // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
   } else {
     repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -979,7 +975,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       vname += '%';
 
       if (validTaskIndex(event->TaskIndex)) {
-        repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
+        repl(vname, getTaskValueName(event->TaskIndex, i), s, useURLencode);
       } else {
         repl(vname, EMPTY_STRING, s, useURLencode);
       }

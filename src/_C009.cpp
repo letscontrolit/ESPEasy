@@ -108,7 +108,6 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   if (!try_connect_host(controller_number, client, ControllerSettings)) {
     return false;
   }
-  LoadTaskSettings(element.TaskIndex);
   String request;
   {
     // Place in separate scope, so we can destruct it jsonString before calling send_to_http.
@@ -184,7 +183,7 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
               {
                 jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
                 jsonString += ',';
-                jsonString += to_json_object_value(F("valueName"), ExtraTaskSettings.TaskDeviceValueNames[x]);
+                jsonString += to_json_object_value(F("valueName"), getTaskValueName(element.TaskIndex, x));
                 jsonString += ',';
                 jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
                 jsonString += ',';
