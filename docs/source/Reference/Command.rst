@@ -47,11 +47,11 @@ ESP Easy offers a set of commands to control hardware devices and provide some b
 
 Commands are divided into several classes:
 
-:red:`Internal` can be run from serial and rules engine
+:red:`Internal` Commands not related to plugins, controllers or notifications. Can be run from serial and rules engine
 
-:green:`Rules` can be run from serial and rules engine
+:green:`Rules` Related to rules processing. Can be run from serial and rules engine
 
-:cyan:`Plugin` can be run from serial, rules engine, HTTP, MQTT
+:cyan:`Plugin` Commands specific for a plugin. Can be run from serial, rules engine, HTTP, MQTT
 
 :blue:`Special` can be used from any source
 
@@ -113,6 +113,19 @@ Ringtone Internal GPIO
 ~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P001_commands_RTTTL.repl
+
+Task Value Stats Commands
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(Added: 2022/07/11)
+For task values with "Stats" enabled, one can call commands on this statistical data.
+
+Commands on "Stats" data:
+
+* ``bme.resetpeaks`` Reset the recorded "max" and "min" value of all task values of the task called "bme".
+* ``bme.clearsamples`` Clear the recorded historic samples of all task values of the task called "bme".
+
+
 
 
 Plugin based commands

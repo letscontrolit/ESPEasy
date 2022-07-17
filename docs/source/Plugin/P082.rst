@@ -260,7 +260,7 @@ Commands available
 .. include:: P082_commands.repl
 
 Events
-~~~~~~
+^^^^^^
 
 .. include:: P082_events.repl
 

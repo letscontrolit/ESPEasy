@@ -259,6 +259,30 @@ void addFormTextBox(const String  & label,
              );
 }
 
+void addFormTextBox(const __FlashStringHelper * classname,
+                    const String& label,
+                    const String& id,
+                    const String& value,                    
+                    int           maxlength,
+                    bool          readonly ,
+                    bool          required ,
+                    const String& pattern  
+                    #ifdef ENABLE_TOOLTIPS
+                    ,
+                    const String& tooltip 
+                    #endif // ifdef ENABLE_TOOLTIPS
+                    )
+{
+  addRowLabel_tr_id(label, id);
+  addTextBox(id, value, maxlength, readonly, required, pattern, classname
+             #ifdef ENABLE_TOOLTIPS
+             , tooltip
+             #endif // ifdef ENABLE_TOOLTIPS
+             );
+}
+
+
+
 void addFormTextArea(const String  & label,
                      const String  & id,
                      const String  & value,

@@ -692,7 +692,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addHtml(C018_data->sysver());
 
         addRowLabel(F("Voltage"));
-        addHtml(toString(static_cast<float>(C018_data->getVbat()) / 1000.0f, 3));
+        addHtmlFloat(static_cast<float>(C018_data->getVbat()) / 1000.0f, 3);
 
         addRowLabel(F("Dev Addr"));
         addHtml(C018_data->getDevaddr());
