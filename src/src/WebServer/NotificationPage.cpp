@@ -144,16 +144,13 @@ void handle_notifications() {
       }
       else
       {
-          //MFD: we display the GPIO
-          if (NotificationSettings.Pin1>=0){
-            addHtml(F("GPIO-"));
-            addHtmlInt(NotificationSettings.Pin1);
-          }
+          //MFD: we display the GPIO 
+          addGpioHtml(NotificationSettings.Pin1);
+
           if (NotificationSettings.Pin2>=0)
           {
             html_BR();
-            addHtml(F("GPIO-"));
-            addHtmlInt(NotificationSettings.Pin2);
+            addGpioHtml(NotificationSettings.Pin2);
           }
         html_TD(3);
       }
