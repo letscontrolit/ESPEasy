@@ -879,9 +879,9 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 /********************************************************************************************\
    Load Task settings from file system
  \*********************************************************************************************/
-String LoadTaskSettings(taskIndex_t TaskIndex, bool forceLoad)
+String LoadTaskSettings(taskIndex_t TaskIndex)
 {
-  if ((ExtraTaskSettings.TaskIndex == TaskIndex) && !forceLoad) {
+  if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return String(); // already loaded
   }
   if (!validTaskIndex(TaskIndex)) {

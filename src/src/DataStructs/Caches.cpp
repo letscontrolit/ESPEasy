@@ -167,7 +167,8 @@ ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t Ta
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it == extraTaskSettings_cache.end()) {
-      LoadTaskSettings(TaskIndex, true);
+      ExtraTaskSettings.clear(); // Force reload so the cache is filled
+      LoadTaskSettings(TaskIndex);
       it = extraTaskSettings_cache.find(TaskIndex);
     }
     return it;
