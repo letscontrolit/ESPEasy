@@ -90,6 +90,9 @@ Available options:
 .. image:: P095_TFTDisplayModelOptions.png
    :alt: TFT Display model options
 
+.. warning:: 
+   The **ILI9481** display controller does have issues when rotating, by using the ``<trigger>,rot,<n>`` command, to change the display orientation after some content is already displayed on the screen (content may move, rotate and/or mirror unexpectedly). It is advised to clear the screen after changing the rotation setting.
+
 Layout
 ^^^^^^^^
 
