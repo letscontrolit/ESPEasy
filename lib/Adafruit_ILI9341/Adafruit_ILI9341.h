@@ -134,6 +134,8 @@
 #define ILI_TYPE_9481_AUO317    5
 #define ILI_TYPE_9481_CMO35     6
 #define ILI_TYPE_9481_RGB       7
+#define ILI_TYPE_9481_CMI7      10
+#define ILI_TYPE_9481_CMI8      11
 #define ILI_TYPE_9486           8
 #define ILI_TYPE_9488           9
 

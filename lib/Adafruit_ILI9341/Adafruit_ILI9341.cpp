@@ -74,15 +74,15 @@
 # define SPI_DEFAULT_FREQ 24000000 ///< Default SPI data clock frequency
 #endif // if defined(ARDUINO_ARCH_ARC32) || defined(ARDUINO_MAXIM)
 
-#define MADCTL_MY 0x80  ///< Bottom to top
-#define MADCTL_MX 0x40  ///< Right to left
-#define MADCTL_MV 0x20  ///< Reverse Mode
-#define MADCTL_ML 0x10  ///< LCD refresh Bottom to top
-#define MADCTL_RGB 0x00 ///< Red-Green-Blue pixel order
-#define MADCTL_BGR 0x08 ///< Blue-Green-Red pixel order
-#define MADCTL_MH 0x04  ///< LCD refresh right to left
-#define MADCTL_SS 0x02  ///< ?? ILI9481 mode
-#define MADCTL_GS 0x01  ///< ?? ILI9481 mode
+#define MADCTL_MY 0x80             ///< Bottom to top
+#define MADCTL_MX 0x40             ///< Right to left
+#define MADCTL_MV 0x20             ///< Reverse Mode
+#define MADCTL_ML 0x10             ///< LCD refresh Bottom to top
+#define MADCTL_RGB 0x00            ///< Red-Green-Blue pixel order
+#define MADCTL_BGR 0x08            ///< Blue-Green-Red pixel order
+#define MADCTL_MH 0x04             ///< LCD refresh right to left
+#define MADCTL_SS 0x02             ///< ?? ILI9481 mode
+#define MADCTL_GS 0x01             ///< ?? ILI9481 mode
 
 /**************************************************************************/
 
@@ -284,6 +284,8 @@ static const uint8_t PROGMEM initcmd_9481_CPT29[] = { // ILI9481 CPT29 variation
   0x00                  // End of list
 };
 
+// clang-format on
+
 // clang-format off
 static const uint8_t PROGMEM initcmd_9481_PVI35[] = { // ILI9481 PVI35 variation
   ILI9341_SLPOUT, 0x80,                               // Exit Sleep
@@ -307,6 +309,8 @@ static const uint8_t PROGMEM initcmd_9481_PVI35[] = { // ILI9481 PVI35 variation
   ILI9341_DISPON, 0x80, // Display on
   0x00                  // End of list
 };
+
+// clang-format on
 
 // clang-format off
 static const uint8_t PROGMEM initcmd_9481_AUO317[] = { // ILI9481 AUO317 variation
@@ -393,13 +397,65 @@ static const uint8_t PROGMEM initcmd_9481_RGB[] = { // ILI9481 RGB variation
 // clang-format on
 
 // clang-format off
-static const uint8_t PROGMEM initcmd_9486[] = {                 // ILI9486
-  ILI9341_SLPOUT,  0x80,                                        // Exit Sleep
-  ILI9341_PIXFMT,  1,  0x55,                                    // Pixel format 0x55=16bit, 0x66=18bit
-  ILI9341_PWCTR3,  1,  0x44,                                    // Power control3
-  ILI9341_VMCTR1,  4,  0x00,   0x00,                0x00, 0x00, // VCM control
-  ILI9341_GMCTRP1, 15, 0x0F,   0x1F,                0x1c, 0x0C, 0x0F, 0x08, 0x48, 0x98, 0x37, 0x0A, 0x13, 0x04, 0x11, 0x0D, 0x00,
-  ILI9341_GMCTRN1, 15, 0x0F,   0x32,                0x2E, 0x0B, 0x0D, 0x05, 0x47, 0x75, 0x37, 0x06, 0x10, 0x03, 0x24, 0x20, 0x00,
+static const uint8_t PROGMEM initcmd_9481_CMI7[] = { // ILI9481 CMI7 (TFT_eSPI INIT_7) variation
+  ILI9341_SLPOUT, 0x80,                              // Exit Sleep
+  0xD0,           3,              0x07,              0x42,              0x1B,
+  0xD1,           3,              0x00,              0x14,              0x1B,
+  0xD2,           2,              0x01,              0x12,
+  ILI9341_PWCTR1, 5,              0x10,              0x3B,              0x00,             0x02,              0x01, // Power control VRH[5:0]
+  ILI9341_VMCTR1, 1,              0x03,                                                                            // VCM control
+  0xC8,           12,             0x00,              0x46,              0x44,             0x50,              0x04,   0x16,   0x33,
+  0x13,           0x77,           0x05,              0x0F,              0x00,
+  ILI9341_MADCTL, 1,              0x0A,                                                                            // Memory Access Control
+  ILI9341_PIXFMT, 1,              0x55,                                                                            // Pixel format
+                                                                                                                   // 0x55=16bit,
+                                                                                                                   // 0x66=18bit
+  ILI9341_INVON,  0,
+  0x22,           4,              0x00,              0x00,              0x01,             0x3F,
+  ILI9341_PASET,  0x84,           0x00,              0x00,              0x01,             0xE0,
+  ILI9341_DISPON, 0x80, // Display on
+  0x00                  // End of list
+};
+
+// clang-format on
+
+// clang-format off
+static const uint8_t PROGMEM initcmd_9481_CMI8[] = { // ILI9481 CMI8 (TFT_eSPI INIT_8) variation
+  ILI9341_SLPOUT, 0x80,                              // Exit Sleep
+  0xD0,           0x83,           0x07,              0x44,              0x1E,
+  0xD1,           3,              0x00,              0x0C,              0x1A,
+  ILI9341_VMCTR1, 1,              0x03,              // VCM control
+  0xD2,           2,              0x01,              0x11,
+  0xE4,           1,              0xA0,
+  0xF3,           2,              0x00,              0x2A,
+  0xC8,           12,             0x00,              0x26,              0x21,             0x00,              0x00,              0x1F,
+  0x65,
+  0x23,           0x77,           0x00,              0x0F,              0x00,
+  ILI9341_PWCTR1, 5,              0x00,              0x3B,              0x00,             0x02,              0x11, // Power control VRH[5:0]
+  0xC6,           1,              0x83,
+  0xF0,           1,              0x01,
+  0xE4,           1,              0xA0,
+  ILI9341_MADCTL, 1,              0x0A, // Memory Access Control
+  ILI9341_PIXFMT, 1,              0x55, // Pixel format 0x55=16bit,
+                                        // 0x66=18bit
+  ILI9341_INVCTR, 0x84,           0x02,              0x00,              0x00,             0x01,
+  ILI9341_CASET,  4,              0x00,              0x00,              0x01,             0x3F,
+  ILI9341_PASET,  4,              0x00,              0x00,              0x01,             0xDF,
+  ILI9341_DISPON, 0x80, // Display on
+  ILI9341_RAMWR,  0,
+  0x00                  // End of list
+};
+
+// clang-format on
+
+// clang-format off
+static const uint8_t PROGMEM initcmd_9486[] = { // ILI9486
+  ILI9341_SLPOUT,  0x80,                        // Exit Sleep
+  ILI9341_PIXFMT,  1,  0x55,                    // Pixel format 0x55=16bit, 0x66=18bit
+  ILI9341_PWCTR3,  1,  0x44,                    // Power control3
+  ILI9341_VMCTR1,  4,  0x00, 0x00, 0x00, 0x00,  // VCM control
+  ILI9341_GMCTRP1, 15, 0x0F, 0x1F, 0x1c, 0x0C, 0x0F, 0x08, 0x48, 0x98, 0x37, 0x0A, 0x13, 0x04, 0x11, 0x0D, 0x00,
+  ILI9341_GMCTRN1, 15, 0x0F, 0x32, 0x2E, 0x0B, 0x0D, 0x05, 0x47, 0x75, 0x37, 0x06, 0x10, 0x03, 0x24, 0x20, 0x00,
   ILI9341_INVOFF,  0,
   ILI9341_MADCTL,  1,  0x48, // Memory Access Control
   ILI9341_DISPON,  0x80,     // Display on
@@ -409,7 +465,7 @@ static const uint8_t PROGMEM initcmd_9486[] = {                 // ILI9486
 // clang-format on
 
 // clang-format off
-static const uint8_t PROGMEM initcmd_9488[] = {
+static const uint8_t PROGMEM initcmd_9488[] = { // ILI9488
   // Set gamma
   ILI9341_GMCTRP1, 15,              0x00,               0x03,               0x09,               0x08,               0x16,               0x0A,
   0x3F,            0x78,            0x4C,               0x09,               0x0A,               0x08,               0x16,               0x1A,
@@ -513,6 +569,12 @@ void Adafruit_ILI9341::begin(uint32_t freq) {
     case ILI_TYPE_9481_RGB:    // ILI9481 RGB
       addr = initcmd_9481_RGB;
       break;
+    case ILI_TYPE_9481_CMI7:   // ILI9481 CMI7
+      addr = initcmd_9481_CMI7;
+      break;
+    case ILI_TYPE_9481_CMI8:   // ILI9481 CMI8
+      addr = initcmd_9481_CMI8;
+      break;
     case ILI_TYPE_9486:        // ILI9486
       addr = initcmd_9486;
       break;
@@ -563,6 +625,8 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9481_AUO317: // ILI9481 AUO317
         case ILI_TYPE_9481_CMO35:  // ILI9481 CMO35
         case ILI_TYPE_9481_RGB:    // ILI9481 RGB
+        case ILI_TYPE_9481_CMI7:   // ILI9481 CMI7
+        case ILI_TYPE_9481_CMI8:   // ILI9481 CMI8
           m = (MADCTL_SS | MADCTL_BGR);
           break;
         case ILI_TYPE_9341:        // ILI9341
@@ -593,8 +657,10 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9481_AUO317: // ILI9481 AUO317
         case ILI_TYPE_9481_CMO35:  // ILI9481 CMO35
         case ILI_TYPE_9481_RGB:    // ILI9481 RGB
-          m = (MADCTL_MV | MADCTL_BGR);
-          break;
+        case ILI_TYPE_9481_CMI7:   // ILI9481 CMI7
+        case ILI_TYPE_9481_CMI8:   // ILI9481 CMI8
+        //  m = (MADCTL_MV | MADCTL_BGR);
+        //  break;
         case ILI_TYPE_9341:        // ILI9341
         // m = (MADCTL_MV | MADCTL_BGR);
         // break;
@@ -623,6 +689,8 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9481_AUO317: // ILI9481 AUO317
         case ILI_TYPE_9481_CMO35:  // ILI9481 CMO35
         case ILI_TYPE_9481_RGB:    // ILI9481 RGB
+        case ILI_TYPE_9481_CMI7:   // ILI9481 CMI7
+        case ILI_TYPE_9481_CMI8:   // ILI9481 CMI8
           m = (MADCTL_GS | MADCTL_BGR);
           break;
         case ILI_TYPE_9341:        // ILI9341
@@ -653,6 +721,8 @@ void Adafruit_ILI9341::setRotation(uint8_t m) {
         case ILI_TYPE_9481_AUO317: // ILI9481 AUO317
         case ILI_TYPE_9481_CMO35:  // ILI9481 CMO35
         case ILI_TYPE_9481_RGB:    // ILI9481 RGB
+        case ILI_TYPE_9481_CMI7:   // ILI9481 CMI7
+        case ILI_TYPE_9481_CMI8:   // ILI9481 CMI8
           m = (MADCTL_SS | MADCTL_GS | MADCTL_MV | MADCTL_BGR);
           break;
         case ILI_TYPE_9341:        // ILI9341
