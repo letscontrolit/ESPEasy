@@ -14,12 +14,12 @@
 void Caches::clearAllCaches()
 {
   fileExistsMap.clear();
-  updateTaskCaches();
+  clearTaskCaches();
   WiFi_AP_Candidates.clearCache();
   rulesHelper.closeAllFiles();
 }
 
-void Caches::updateTaskCaches() {
+void Caches::clearTaskCaches() {
   taskIndexName.clear();
   taskIndexValueName.clear();
   extraTaskSettings_cache.clear();
@@ -167,7 +167,7 @@ ExtraTaskSettingsMap::const_iterator Caches::getExtraTaskSettings(taskIndex_t Ta
     auto it = extraTaskSettings_cache.find(TaskIndex);
 
     if (it == extraTaskSettings_cache.end()) {
-      LoadTaskSettings(TaskIndex);
+      LoadTaskSettings(TaskIndex, true);
       it = extraTaskSettings_cache.find(TaskIndex);
     }
     return it;

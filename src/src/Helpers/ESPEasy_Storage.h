@@ -112,7 +112,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex);
 /********************************************************************************************\
    Load Task settings from file system
  \*********************************************************************************************/
-String LoadTaskSettings(taskIndex_t TaskIndex);
+String LoadTaskSettings(taskIndex_t TaskIndex, bool forceLoad = false);
 
 /********************************************************************************************\
    Save Custom Task settings to file system
