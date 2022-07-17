@@ -31,6 +31,7 @@ public:
 
   rn2xx3_handler(Stream& serial);
 
+  String sendRawCommand(const __FlashStringHelper* command);
   String sendRawCommand(const String& command);
 
   bool   prepare_raw_command(const String& command);
@@ -113,6 +114,12 @@ public:
                 uint8_t *DevEui);
 
 
+  RN2xx3_datatypes::TX_return_type txCommand(const __FlashStringHelper* command, 
+                                             const String& data, 
+                                             bool shouldEncode, 
+                                             uint8_t port);
+
+
   RN2xx3_datatypes::TX_return_type txCommand(const String&,
                                              const String&,
                                              bool,
@@ -180,6 +187,7 @@ public:
   String        getLastError();
 
   // Set specific error string.
+  void          setLastError(const __FlashStringHelper* error);
   void          setLastError(const String& error);
 
   RN_state      get_state() const;
@@ -282,20 +290,29 @@ public:
 
   // Convenience functions
 
+  int  readIntValue(const __FlashStringHelper* command);
   int  readIntValue(const String& command);
 
+
+  bool readUIntMacGet(const __FlashStringHelper* param,
+                      uint32_t    & value);
   bool readUIntMacGet(const String& param,
                       uint32_t    & value);
 
   // All "mac set ..." commands return either "ok" or "invalid_param"
+  bool sendMacSet(const __FlashStringHelper* param,
+                  const String& value);
   bool sendMacSet(const String& param,
                   const String& value);
-  bool sendMacSetEnabled(const String& param,
+  bool sendMacSetEnabled(const __FlashStringHelper* param,
                          bool          enabled);
   bool sendMacSetCh(const String& param,
                     unsigned int  channel,
                     const String& value);
   bool sendMacSetCh(const String& param,
+                    unsigned int  channel,
+                    uint32_t      value);
+  bool sendMacSetCh(const __FlashStringHelper* param,
                     unsigned int  channel,
                     uint32_t      value);
   bool setChannelDutyCycle(unsigned int channel,

@@ -100,14 +100,7 @@ struct C018_data_struct {
     return isInitialized();
   }
 
-  bool isInitialized() const {
-    if ((C018_easySerial != nullptr) && (myLora != nullptr)) {
-      if (autobaud_success) {
-        return true;
-      }
-    }
-    return false;
-  }
+  bool isInitialized() const;
 
   bool hasJoined() const {
     if (!isInitialized()) { return false; }
@@ -183,6 +176,7 @@ struct C018_data_struct {
   bool initOTAA(const String& AppEUI, const String& AppKey, const String& DevEUI) {
     if (myLora == nullptr) { return false; }
     bool success = myLora->initOTAA(AppEUI, AppKey, DevEUI);
+    cacheDevAddr = String();
 
     C018_logError(F("initOTAA()"));
     updateCacheOnInit();
@@ -192,6 +186,7 @@ struct C018_data_struct {
   bool initABP(const String& addr, const String& AppSKey, const String& NwkSKey) {
     if (myLora == nullptr) { return false; }
     bool success = myLora->initABP(addr, AppSKey, NwkSKey);
+    cacheDevAddr = addr;
 
     C018_logError(F("initABP()"));
     updateCacheOnInit();
@@ -199,7 +194,7 @@ struct C018_data_struct {
   }
 
   String sendRawCommand(const String& command) {
-    if (!isInitialized()) { return ""; }
+    if (!isInitialized()) { return EMPTY_STRING; }
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("sendRawCommand: ");
@@ -218,17 +213,17 @@ struct C018_data_struct {
   }
 
   String peekLastError() {
-    if (!isInitialized()) { return ""; }
+    if (!isInitialized()) { return EMPTY_STRING; }
     return myLora->peekLastError();
   }
 
   String getLastError() {
-    if (!isInitialized()) { return ""; }
+    if (!isInitialized()) { return EMPTY_STRING; }
     return myLora->getLastError();
   }
 
   String getDataRate() {
-    if (!isInitialized()) { return ""; }
+    if (!isInitialized()) { return EMPTY_STRING; }
     String res = myLora->getDataRate();
 
     C018_logError(F("getDataRate()"));
@@ -336,36 +331,9 @@ struct C018_data_struct {
 
 private:
 
-  void C018_logError(const String& command) const {
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String error = myLora->peekLastError();
+  void C018_logError(const __FlashStringHelper* command) const;
 
-      //    String error = myLora->getLastError();
-
-      if (error.length() > 0) {
-        String log = F("RN2483: ");
-        log += command;
-        log += F(": ");
-        log += error;
-        addLogMove(LOG_LEVEL_INFO, log);
-      }
-    }
-  }
-
-  void updateCacheOnInit() {
-    cacheDevAddr = String();
-
-    if (isInitialized()) {
-      if (myLora->getStatus().Joined)
-      {
-        cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
-
-        if (cacheDevAddr == F("00000000")) {
-          cacheDevAddr = String();
-        }
-      }
-    }
-  }
+  void updateCacheOnInit();
 
   void triggerAutobaud() {
     if ((C018_easySerial == nullptr) || (myLora == nullptr)) {
@@ -429,6 +397,46 @@ private:
   bool           autobaud_success   = false;
 };
 
+
+  bool C018_data_struct::isInitialized() const {
+    if ((C018_easySerial != nullptr) && (myLora != nullptr)) {
+      if (autobaud_success) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void C018_data_struct::C018_logError(const __FlashStringHelper* command) const {
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String error = myLora->peekLastError();
+
+      //    String error = myLora->getLastError();
+
+      if (error.length() > 0) {
+        String log = F("RN2483: ");
+        log += command;
+        log += F(": ");
+        log += error;
+        addLogMove(LOG_LEVEL_INFO, log);
+      }
+    }
+  }
+
+  void C018_data_struct::updateCacheOnInit() {
+    if (isInitialized()) {
+      if (cacheDevAddr.isEmpty() && myLora->getStatus().Joined)
+      {
+        cacheDevAddr = myLora->sendRawCommand(F("mac get devaddr"));
+
+        if (cacheDevAddr == F("00000000")) {
+          cacheDevAddr = String();
+        }
+      }
+    }
+  }
+
+
 C018_data_struct *C018_data = nullptr;
 
 # define C018_DEVICE_EUI_LEN          17
@@ -453,7 +461,7 @@ struct C018_ConfigStruct
       reset();
     }
     if (stackVersion >= RN2xx3_datatypes::TTN_stack_version::TTN_NOT_SET) {
-      stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v2;  
+      stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v3;  
     }
   }
 
@@ -462,13 +470,13 @@ struct C018_ConfigStruct
     ZERO_FILL(DeviceAddr);
     ZERO_FILL(NetworkSessionKey);
     ZERO_FILL(AppSessionKey);
-    baudrate      = 9600;
-    rxpin         = 12;
-    txpin         = 14;
+    baudrate      = 57600;
+    rxpin         = -1;
+    txpin         = -1;
     resetpin      = -1;
     sf            = 7;
     frequencyplan = RN2xx3_datatypes::Freq_plan::TTN_EU;
-    stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v2;
+    stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v3;
     joinmethod    = C018_USE_OTAA;
   }
 
@@ -694,7 +702,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         addRowLabel(F("Voltage"));
         addHtmlFloat(static_cast<float>(C018_data->getVbat()) / 1000.0f, 3);
 
-        addRowLabel(F("Dev Addr"));
+        addRowLabel(F("Device Addr"));
         addHtml(C018_data->getDevaddr());
 
         uint32_t dnctr, upctr;

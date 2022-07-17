@@ -34,7 +34,7 @@ bool rn2xx3::getAsyncMode() const {
 bool rn2xx3::autobaud()
 {
   // FIXME TD-er: Must fix this, as it is not working well.
-  String response = "";
+  String response;
 
   // Try a maximum of 10 times with a 1 second delay
   for (uint8_t i = 0; i < 10 && response.length() == 0; i++)
