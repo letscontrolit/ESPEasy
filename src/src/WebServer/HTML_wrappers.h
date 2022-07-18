@@ -145,4 +145,9 @@ void addHtmlDiv(const String& htmlclass, const String& content, const String& id
 
 void addEnabled(boolean enabled);
 
+void addGpioHtml(int8_t pin);
+
+void Label_Gpio_toHtml(const __FlashStringHelper *label, const String& gpio_pin_descr);
+
+
 #endif

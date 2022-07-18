@@ -582,9 +582,6 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
         #endif
       }
-      if (Function == PLUGIN_INIT) {
-        updateTaskCaches();
-      }
 
       return true;
     }
@@ -688,14 +685,13 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           #endif
           // Schedule the plugin to be read.
           Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
-          updateTaskCaches();
           queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
         }
         if (Function == PLUGIN_EXIT) {
           clearPluginTaskData(event->TaskIndex);
-          updateTaskCaches();
           initSerial();
           queueTaskEvent(F("TaskExit"), event->TaskIndex, retval);
+          clearTaskCaches(); // FIXME: To improve: Only remove current TaskIndex from cache
         }
         STOP_TIMER_TASK(DeviceIndex, Function);
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);

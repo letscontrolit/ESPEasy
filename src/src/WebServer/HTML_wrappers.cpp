@@ -497,3 +497,23 @@ void addEnabled(boolean enabled)
   }
   addHtml(F("</span>"));
 }
+
+void addGpioHtml(int8_t pin) {
+  if (pin == -1) { return; }
+  addHtml(formatGpioLabel(pin, false));
+
+  if (Settings.isSPI_pin(pin) ||
+      Settings.isI2C_pin(pin) ||
+      Settings.isEthernetPin(pin) ||
+      Settings.isEthernetPinOptional(pin)) {
+    addHtml(' ');
+    addHtml(F(HTML_SYMBOL_WARNING));
+  }
+}
+
+void Label_Gpio_toHtml(const __FlashStringHelper *label, const String& gpio_pin_descr) {
+  addHtml(label);
+  addHtml(':');
+  addHtml(F("&nbsp;"));
+  addHtml(gpio_pin_descr);
+}
