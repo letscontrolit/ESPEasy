@@ -103,8 +103,6 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
     return false;
   }
 
-  LoadTaskSettings(element.TaskIndex);
-
   const size_t capacity = JSON_ARRAY_SIZE(VARS_PER_TASK) + JSON_OBJECT_SIZE(2) + VARS_PER_TASK * JSON_OBJECT_SIZE(3) + VARS_PER_TASK * 50; //Size for esp8266 with 4 variables per task: 288+200
   String JSON_packet_content;
   {
@@ -118,15 +116,16 @@ bool do_process_c017_delay_queue(int controller_number, const C017_queue_element
     // Populate JSON with the data
     for (uint8_t i = 0; i < element.valueCount; i++)
     {
-      if (ExtraTaskSettings.TaskDeviceValueNames[i][0] == 0) {
-        continue;                                                   // Zabbix will ignore an empty key anyway
+      const String taskValueName = getTaskValueName(element.TaskIndex, i);
+      if (taskValueName.isEmpty()) {
+        continue;                                    // Zabbix will ignore an empty key anyway
       }
       JsonObject block = data.createNestedObject();
-      block[F("host")] = Settings.Name;                             // Zabbix hostname, Unit Name for the ESP easy
-      block[F("key")]  = ExtraTaskSettings.TaskDeviceValueNames[i]; // Zabbix item key // Value Name for the ESP easy
+      block[F("host")] = Settings.Name;              // Zabbix hostname, Unit Name for the ESP easy
+      block[F("key")]  = taskValueName;              // Zabbix item key // Value Name for the ESP easy
       float value = 0.0f;
       validFloatFromString(element.txt[i], value);
-      block[F("value")] = value;                                    // ESPeasy supports only floats
+      block[F("value")] = value;                     // ESPeasy supports only floats
     }
     serializeJson(root, JSON_packet_content);
   }

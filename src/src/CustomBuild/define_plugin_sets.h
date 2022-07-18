@@ -297,6 +297,12 @@ To create/register a plugin, you have to :
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
     #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+    #ifndef USES_PLUGIN_STATS
+        #define USES_PLUGIN_STATS
+    #endif
+    #ifndef USES_CHART_JS
+        #define USES_CHART_JS
+    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -766,6 +772,16 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_DISPLAY_COLLECTION
         #define PLUGIN_DISPLAY_COLLECTION
     #endif
+    #ifndef PLUGIN_NEOPIXEL_COLLECTION
+        #define PLUGIN_NEOPIXEL_COLLECTION
+    #endif
+    #ifndef USES_PLUGIN_STATS
+        #define USES_PLUGIN_STATS
+    #endif
+    #ifndef USES_CHART_JS
+        #define USES_CHART_JS
+    #endif
+
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_TEST_ESP32 section at end,
     // where incompatible plugins will be disabled.
@@ -1089,10 +1105,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-
-
-// TESTING #####################################
-#ifdef PLUGIN_SET_TESTING
+#if defined(PLUGIN_SET_TESTING) || defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D) || defined(PLUGIN_SET_TESTING_E)
   #if !defined(PLUGIN_SET_MAX) && !defined(ESP32)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
@@ -1100,8 +1113,11 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
     #endif
-  #endif // PLUGIN_SET_MAX
+  #endif
+#endif
 
+// TESTING #####################################
+#ifdef PLUGIN_SET_TESTING
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
@@ -1205,6 +1221,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
+    #define USES_P133   // LTR390 UV
 #endif
 
 
@@ -1301,6 +1318,32 @@ To create/register a plugin, you have to :
    #endif
 #endif
 
+// Collection of all NeoPixel plugins
+#ifdef PLUGIN_NEOPIXEL_COLLECTION
+  #ifndef USES_P038
+    #define USES_P038   // NeoPixel
+  #endif
+  #ifndef USES_P041
+    #define USES_P041   // NeoClock
+  #endif
+  #ifndef USES_P042
+    #define USES_P042   // Candle
+  #endif
+  #ifndef USES_P070
+    #define USES_P070   // NeoPixel_Clock
+  #endif
+  #ifndef USES_P128
+    #define USES_P128   // NeoPixelBusFX
+  #endif
+  #if defined(USES_PLUGIN_STATS) && defined(ESP8266)
+    // Does not fit in build
+    #undef USES_PLUGIN_STATS
+  #endif
+  #if defined(USES_CHART_JS) && defined(ESP8266)
+    // Does not fit in build
+    #undef USES_CHART_JS
+  #endif
+#endif
 
 #ifdef CONTROLLER_SET_TESTING
     #define USES_C011   // Generic HTTP Advanced
@@ -1530,7 +1573,7 @@ To create/register a plugin, you have to :
     #define USES_P127   // CDM7160
   #endif
   #ifndef USES_P128
-//    #define USES_P128   //
+    #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
 //    #define USES_P129   //
@@ -1658,14 +1701,16 @@ To create/register a plugin, you have to :
 #endif
 
 // VCC builds need a bit more, disable timing stats to make it fit.
-#if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
-  #ifndef LIMIT_BUILD_SIZE
-    #define LIMIT_BUILD_SIZE
-  #endif
-  #ifndef NOTIFIER_SET_NONE
-    #define NOTIFIER_SET_NONE
-  #endif
+#ifndef PLUGIN_BUILD_CUSTOM
+  #if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
 
+  #endif
 #endif
 
 
@@ -1756,7 +1801,12 @@ To create/register a plugin, you have to :
   #ifdef USES_SSDP
     #undef USES_SSDP
   #endif
-
+  #ifdef USES_PLUGIN_STATS
+    #undef USES_PLUGIN_STATS
+  #endif
+  #ifdef USES_CHART_JS
+    #undef USES_CHART_JS
+  #endif
 #endif
 
 // Timing stats page needs timing stats
@@ -1867,6 +1917,11 @@ To create/register a plugin, you have to :
   #ifndef USE_RTTTL
     #define USE_RTTTL
   #endif
+#endif
+
+// By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
+#ifdef WEBSERVER_NEW_UI
+ #define SHOW_SYSINFO_JSON
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

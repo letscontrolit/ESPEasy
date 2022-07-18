@@ -115,7 +115,7 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
           label += F(" [");
           label += getTaskDeviceName(task);
           label += '#';
-          label += ExtraTaskSettings.TaskDeviceValueNames[var_index];
+          label += getTaskValueName(task, var_index);
           label += F("])");
 
           addr_task_map[tmpAddr_64] = label;

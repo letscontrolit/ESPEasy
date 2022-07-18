@@ -215,7 +215,7 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
       // Use any of the following (defined at web_server.ino):
       // addFormNote(F("not editable text added here"));
       // To add some html, which cannot be done in the existing functions, add it in the following way:
-      addHtml(F("<TR><TD>Analog Pin:<TD>"));
+      addRowLabel(F("Analog Pin"));
 
 
       // For strings, always use the F() macro, which stores the string in flash, not in memory.
