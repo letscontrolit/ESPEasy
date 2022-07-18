@@ -78,8 +78,9 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-
+    #if FEATURE_ESPEASY_P2P
     checkUDP();
+    #endif
   }
 
   #ifdef FEATURE_DNS_SERVER
