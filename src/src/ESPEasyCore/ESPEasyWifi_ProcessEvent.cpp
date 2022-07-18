@@ -231,7 +231,9 @@ void handle_unprocessedNetworkEvents()
   }
 #endif
 
+#if FEATURE_ESPEASY_P2P
   updateUDPport();
+#endif
 }
 
 // ********************************************************************************
@@ -468,7 +470,9 @@ void processGotIP() {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();
   }
+  #if FEATURE_ESPEASY_P2P
   refreshNodeList();
+  #endif
   logConnectionStatus();
 }
 

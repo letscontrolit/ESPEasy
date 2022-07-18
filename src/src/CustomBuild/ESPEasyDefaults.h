@@ -394,6 +394,11 @@
 #endif
 
 
+// --- We define the default features to be enabled here
+#ifndef FEATURE_ESPEASY_P2P
+  #define FEATURE_ESPEASY_P2P   1
+#endif
+
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 

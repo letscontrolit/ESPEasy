@@ -19,6 +19,7 @@
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
 
+#if FEATURE_ESPEASY_P2P
 /*********************************************************************************************\
 * NodeStruct
 \*********************************************************************************************/
@@ -108,5 +109,6 @@ struct __attribute__((__packed__)) NodeStruct
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
 
+#endif //FEATURE_ESPEASY_P2P
 
 #endif // DATASTRUCTS_NODESTRUCT_H

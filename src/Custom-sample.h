@@ -21,6 +21,11 @@
     Here are some examples:
  */
 
+// --- Feature Flagging ---------------------------------------------------------
+
+#define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA         //enables the Arduino OTA capabilities
+
 #ifdef BUILD_GIT
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT

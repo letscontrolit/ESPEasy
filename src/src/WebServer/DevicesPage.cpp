@@ -521,9 +521,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] != 0) {
+          #if FEATURE_ESPEASY_P2P
           // Show originating node number
           const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[x];
           format_originating_node(remoteUnit);
+          #endif
         } else {
           String portDescr;
 
@@ -751,6 +753,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   html_end_form();
 }
 
+#if FEATURE_ESPEASY_P2P
 void format_originating_node(uint8_t remoteUnit) {
   addHtml(F("Unit "));
   addHtmlInt(remoteUnit);
@@ -766,6 +769,7 @@ void format_originating_node(uint8_t remoteUnit) {
     }
   }
 }
+#endif
 
 void format_I2C_port_description(taskIndex_t x)
 {
@@ -953,6 +957,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       }
     }
     else {
+      #if FEATURE_ESPEASY_P2P
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
       uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
@@ -968,6 +973,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         }
       }
       addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
+      #endif
     }
 
 #ifdef USES_PLUGIN_STATS

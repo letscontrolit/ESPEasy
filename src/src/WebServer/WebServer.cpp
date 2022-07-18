@@ -300,7 +300,9 @@ void WebServerInit()
   web_server.on(F("/factoryreset_json"), handle_factoryreset_json);
   web_server.on(F("/filelist_json"),     handle_filelist_json);
   web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
+  #if FEATURE_ESPEASY_P2P
   web_server.on(F("/node_list_json"),    handle_nodes_list_json);
+  #endif
   web_server.on(F("/pinstates_json"),    handle_pinstates_json);
   web_server.on(F("/timingstats_json"),  handle_timingstats_json);
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);

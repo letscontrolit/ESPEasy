@@ -5,6 +5,8 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
+#if FEATURE_ESPEASY_P2P
+
 #define NODE_STRUCT_AGE_TIMEOUT 300000  // 5 minutes
 
 NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0)
@@ -102,6 +104,7 @@ const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString(uint8_t nodeTyp
   }
   return F("");
 }
+
 
 const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString() const {
   return NodeStruct::getNodeTypeDisplayString(nodeType);
@@ -261,3 +264,5 @@ void NodeStruct::setAP_MAC(const MAC_address& mac)
 {
   mac.get(ap_mac);
 }
+
+#endif

@@ -110,9 +110,11 @@ void run_compiletime_checks() {
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
+#if FEATURE_ESPEASY_P2P
 
   check_size<NodeStruct,                            56u>();
 
+#endif
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();

@@ -50,7 +50,9 @@ void RTOS_TaskServers(void *parameter)
   while (true) {
     delay(100);
     web_server.handleClient();
+    #if FEATURE_ESPEASY_P2P
     checkUDP();
+    #endif
   }
 }
 
