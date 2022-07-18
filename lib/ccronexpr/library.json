@@ -1,0 +1,14 @@
+{
+    "name": "ccronexpr",
+    "version": "1.0.0",
+    "description": "Cron expression parsing in ANSI C",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/staticlibs/ccronexpr"
+    },
+    "frameworks": "arduino",
+    "platforms": [
+      "espressif8266","espressif32","espressif32s2"
+    ]
+}

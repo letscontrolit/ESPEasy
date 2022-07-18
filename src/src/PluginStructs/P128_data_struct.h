@@ -2202,6 +2202,7 @@ const uint8_t PROGMEM ftv_gamma8[] = {
 # include "../../ESPEasy-Globals.h"
 
 # define P128_CONFIG_LED_COUNT  PCONFIG(0)
+# define P128_CONFIG_MAX_BRIGHT PCONFIG(1)
 
 # define SPEED_MAX 50
 # define ARRAYSIZE 300 // Max LED Count
@@ -2266,7 +2267,8 @@ struct P128_data_struct : public PluginTaskData_base {
 public:
 
   P128_data_struct(int8_t   _gpioPin,
-                   uint16_t _pixelCount);
+                   uint16_t _pixelCount,
+                   uint8_t  _maxBright);
 
   P128_data_struct() = delete;
   ~P128_data_struct();
@@ -2309,6 +2311,8 @@ private:
            rgb_h      = HtmlColor(0x0000FF),
            rgb_s      = HtmlColor(0xFF0000);
 # endif // if defined(RGBW) || defined(GRBW)
+
+  uint8_t maxBright = 255;
 
   int16_t fadedelay = 20;
 

@@ -5,7 +5,7 @@
 
 void clearAllCaches();
 
-void updateTaskCaches();
+void clearTaskCaches();
 
 void updateActiveTaskUseSerial0();
 

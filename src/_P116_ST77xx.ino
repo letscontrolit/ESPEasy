@@ -8,6 +8,7 @@
 
 
 // History:
+// 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
 // 2021-11-16 tonhuisman: P116: Change state from Development to Testing
 // 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
 //                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
@@ -121,6 +122,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x128),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x160),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160),
+          ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160_M5),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
@@ -131,6 +133,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7735s_128x128),
           static_cast<int>(ST77xx_type_e::ST7735s_128x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160),
+          static_cast<int>(ST77xx_type_e::ST7735s_80x160_M5),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),

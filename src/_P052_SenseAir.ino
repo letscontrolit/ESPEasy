@@ -1,6 +1,8 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P052
 
+# include "src/PluginStructs/P052_data_struct.h"
+
 // #######################################################################################################
 // ############################# Plugin 052: Senseair CO2 Sensors ########################################
 // #######################################################################################################
@@ -22,124 +24,10 @@
     Use 1kOhm in serie on datapins!
  */
 
-#define PLUGIN_052
-#define PLUGIN_ID_052 52
-#define PLUGIN_NAME_052 "Gases - CO2 Senseair"
-#define PLUGIN_VALUENAME1_052 ""
+# define PLUGIN_052
+# define PLUGIN_ID_052 52
+# define PLUGIN_NAME_052 "Gases - CO2 Senseair"
 
-#define P052_MEASUREMENT_INTERVAL 60000L
-
-
-#define P052_QUERY1_CONFIG_POS  0
-#define P052_SENSOR_TYPE_INDEX  (P052_QUERY1_CONFIG_POS + (VARS_PER_TASK + 1))
-#define P052_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX))) 
-#define P052_NR_OUTPUT_OPTIONS  8
-
-
-// For layout and status flags in RAM/EEPROM, see document
-// "CO2-Engine-BLG_ELG configuration guide Rev 1_02.docx"
-
-// RAM layout
-#define P052_RAM_ADDR_ERROR_STATUS      0x1E // U8 (error flags)
-#define P052_RAM_ADDR_METER_STATUS      0x1D // U8 (status flags)
-#define P052_RAM_ADDR_ALARM_STATUS      0x1C // U8 (alarm flags)
-#define P052_RAM_ADDR_CO2               0x08 // S16 BLG: x.xxx%  ELG: x ppm
-#define P052_RAM_ADDR_DET_TEMPERATURE   0x0A // S16 x.xx °C    (S8 sensor)
-#define P052_RAM_ADDR_SPACE_TEMPERATURE 0x12 // S16 x.xx °C
-#define P052_RAM_ADDR_RELATIVE_HUMIDITY 0x14 // S16 x.xx %
-#define P052_RAM_ADDR_MIXING_RATIO      0x16 // S16 x.xx g/kg
-#define P052_RAM_ADDR_HR1               0x40 // U16
-#define P052_RAM_ADDR_HR2               0x42 // U16
-#define P052_RAM_ADDR_ANIN4             0x69 // U16 x.xxx volt
-#define P052_RAM_ADDR_RTC               0x65 // U32 x seconds   (virtual real time clock)
-#define P052_RAM_ADDR_SCR               0x60 // U8 (special control register)
-
-#define P052_CMD_READ_RAM  0x44
-
-// EEPROM layout
-#define P052_EEPROM_ADDR_METERCONTROL 0x03               // U8
-#define P052_EEPROM_ADDR_METERCONFIG 0x06                // U16
-#define P052_EEPROM_ADDR_ABC_PERIOD 0x40                 // U16 ABC period in hours
-#define P052_EEPROM_ADDR_HEARTBEATPERIOD 0xA2            // U8 Period in seconds
-#define P052_EEPROM_ADDR_PUMPPERIOD 0xA3                 // U8 Period in seconds
-#define P052_EEPROM_ADDR_MEASUREMENT_SLEEP_PERIOD  0xB0  // U24 Measurement period (unit = seconds)
-#define P052_EEPROM_ADDR_LOGGER_STRUCTURE_ADDRESS  0x200 // 16b Described in "BLG_ELG Logger Structure"
-
-// SCR (Special Control Register) commands
-#define P052_SCR_FORCE_START_MEASUREMENT 0x30
-#define P052_SCR_FORCE_STOP_MEASUREMENT 0x31
-#define P052_SCR_RESTART_LOGGER 0x32      // (logger data erased)
-#define P052_SCR_REINITIALIZE_LOGGER 0x33 // (logger data unaffected)
-#define P052_SCR_WRITE_TIMESTAMP_TO_LOGGER 0x34
-#define P052_SCR_SINGLE_MEASUREMENT 0x35
-
-// IR (Input Register)
-#define P052_IR_ERRORSTATUS  0
-#define P052_IR_ALARMSTATUS  1
-#define P052_IR_OUTPUTSTATUS 2
-#define P052_IR_SPACE_CO2    3            // also called CO2 value filtered
-#define P052_IR_TEMPERATURE  4            // Chip temperature in 1/100th degree C
-#define P052_IR_SPACE_HUMIDITY    5
-#define P052_IR_MEASUREMENT_COUNT  6      // Range 0 .. 255, to see if a measurement has been done.
-#define P052_IR_MEASUREMENT_CYCLE_TIME  7 // Time in current cycle (in 2 seconds steps)
-#define P052_IR_CO2_UNFILTERED 8
-
-
-#define P052_HR_ACK_REG 0
-#define P052_HR_SPACE_CO2 3
-#define P052_HR_ABC_PERIOD 31
-
-// #define P052_MODBUS_SLAVE_ADDRESS 0x68
-#define P052_MODBUS_SLAVE_ADDRESS 0xFE // Modbus "any address"
-
-#define P052_MODBUS_TIMEOUT  180       // 100 msec communication timeout.
-
-#include <ESPeasySerial.h>
-
-#include "src/Helpers/Modbus_RTU.h"
-#include "src/Helpers/_Plugin_Helper_serial.h"
-
-
-struct P052_data_struct : public PluginTaskData_base {
-  P052_data_struct() {}
-
-  ~P052_data_struct() {
-    reset();
-  }
-
-  void reset() {
-    modbus.reset();
-  }
-
-  bool init(const ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx) {
-    return modbus.init(port, serial_rx, serial_tx, 9600, P052_MODBUS_SLAVE_ADDRESS);
-  }
-
-  bool isInitialized() const {
-    return modbus.isInitialized();
-  }
-
-  ModbusRTU_struct modbus;
-};
-
-unsigned int _plugin_052_last_measurement = 0;
-
-
-const __FlashStringHelper * Plugin_052_valuename(uint8_t value_nr, bool displayString) {
-  switch (value_nr) {
-    case 0:  return displayString ? F("Empty") : F("");
-    case 1:  return displayString ? F("Carbon Dioxide") : F("co2");
-    case 2:  return displayString ? F("Temperature") : F("T");
-    case 3:  return displayString ? F("Humidity") : F("H");
-    case 4:  return displayString ? F("Relay Status") : F("rel");
-    case 5:  return displayString ? F("Temperature Adjustment") : F("Tadj");
-    case 6:  return displayString ? F("ABC period") : F("abc_per");
-    case 7:  return displayString ? F("Error Status") : F("err");
-    default:
-      break;
-  }
-  return F("");
-}
 
 boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
@@ -158,8 +46,8 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      // FIXME TD-er: Seems to use task data, but not sure if really needed.
       Device[deviceCount].ExitTaskBeforeSave = false;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -175,7 +63,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           uint8_t choice             = PCONFIG(pconfigIndex);
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_052_valuename(choice, false),
+            P052_data_struct::Plugin_052_valuename(choice, false),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
         } else {
           ZERO_FILL(ExtraTaskSettings.TaskDeviceValueNames[i]);
@@ -187,15 +75,15 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
       event->Par1 = P052_NR_OUTPUT_VALUES;
-      success = true;
+      success     = true;
       break;
     }
 
     case PLUGIN_GET_DEVICEVTYPE:
     {
       event->sensorType = static_cast<Sensor_VType>(PCONFIG(P052_SENSOR_TYPE_INDEX));
-      event->idx = P052_SENSOR_TYPE_INDEX;
-      success = true;
+      event->idx        = P052_SENSOR_TYPE_INDEX;
+      success           = true;
       break;
     }
 
@@ -214,10 +102,10 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(P052_SENSOR_TYPE_INDEX) = static_cast<int16_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
-      PCONFIG(0) = 1;   // "CO2"
+      PCONFIG(0)                      = 1; // "CO2"
 
       for (uint8_t i = 1; i < VARS_PER_TASK; ++i) {
-        PCONFIG(i) = 0; // "Empty"
+        PCONFIG(i) = 0;                    // "Empty"
       }
 
       success = true;
@@ -278,12 +166,11 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_LOAD: {
-
       {
-        const __FlashStringHelper * options[P052_NR_OUTPUT_OPTIONS];
+        const __FlashStringHelper *options[P052_NR_OUTPUT_OPTIONS];
 
         for (uint8_t i = 0; i < P052_NR_OUTPUT_OPTIONS; ++i) {
-          options[i] = Plugin_052_valuename(i, true);
+          options[i] = P052_data_struct::Plugin_052_valuename(i, true);
         }
 
         for (uint8_t i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
@@ -317,7 +204,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
           }
 
           uint8_t errorcode = 0;
-          int  value     = P052_data->modbus.readInputRegister(0x06, errorcode);
+          int     value     = P052_data->modbus.readInputRegister(0x06, errorcode);
 
           if (errorcode == 0) {
             addRowLabel(F("Measurement Count"));
@@ -340,9 +227,10 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
         }
 
         {
-          uint8_t errorcode     = 0;
-          //int  meas_mode     = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
-          //bool has_meas_mode = errorcode == 0;
+          uint8_t errorcode = 0;
+
+          // int  meas_mode     = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
+          // bool has_meas_mode = errorcode == 0;
           int  period        = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
           bool has_period    = errorcode == 0;
           int  samp_meas     = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
@@ -387,12 +275,11 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_WEBFORM_SAVE: {
-
       // Save output selector parameters.
       for (uint8_t i = 0; i < P052_NR_OUTPUT_VALUES; ++i) {
         const uint8_t pconfigIndex = i + P052_QUERY1_CONFIG_POS;
         const uint8_t choice       = PCONFIG(pconfigIndex);
-        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_052_valuename(choice, false));
+        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, P052_data_struct::Plugin_052_valuename(choice, false));
       }
 
       P052_data_struct *P052_data =
@@ -404,7 +291,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
         if (((mode == 0) || (mode == 1))) {
           uint8_t errorcode;
-          int  readVal = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
+          int     readVal = P052_data->modbus.readHoldingRegister(0x0A, errorcode);
 
           if ((errorcode == 0) && (readVal != mode)) {
             P052_data->modbus.writeMultipleRegisters(0x0A, mode);
@@ -416,7 +303,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
         if (period > 1) {
           uint8_t errorcode;
-          int  readVal = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
+          int     readVal = P052_data->modbus.readHoldingRegister(0x0B, errorcode);
 
           if ((errorcode == 0) && (readVal != period)) {
             P052_data->modbus.writeMultipleRegisters(0x0B, period);
@@ -428,7 +315,7 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
 
         if ((samp_meas > 0) && (samp_meas <= 1024)) {
           uint8_t errorcode;
-          int  readVal = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
+          int     readVal = P052_data->modbus.readHoldingRegister(0x0C, errorcode);
 
           if ((errorcode == 0) && (readVal != samp_meas)) {
             P052_data->modbus.writeMultipleRegisters(0x0C, samp_meas);
@@ -458,8 +345,8 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_INIT: {
-      const int16_t serial_rx = CONFIG_PIN1;
-      const int16_t serial_tx = CONFIG_PIN2;
+      const int16_t serial_rx      = CONFIG_PIN1;
+      const int16_t serial_tx      = CONFIG_PIN2;
       const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P052_data_struct());
       P052_data_struct *P052_data =
@@ -508,8 +395,8 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
         String logPrefix;
 
         for (int varnr = 0; varnr < P052_NR_OUTPUT_VALUES; ++varnr) {
-          uint8_t  errorcode = 0;
-          float value     = 0;
+          uint8_t errorcode = 0;
+          float   value     = 0;
 
           switch (PCONFIG(varnr)) {
             case 1: {
@@ -595,143 +482,5 @@ boolean Plugin_052(uint8_t function, struct EventStruct *event, String& string) 
   }
   return success;
 }
-
-/*
-   bool getBitOfInt(int reg, int pos) {
-   // Create a mask
-   int mask = 0x01 << pos;
-
-   // Mask the status register
-   int masked_register = mask & reg;
-
-   // Shift the result of masked register back to position 0
-   int result = masked_register >> pos;
-   return (result == 1);
-   }
-
-   bool Plugin_052_check_error_status() {
-   uint8_t error_status = P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM,
-                                                 P052_RAM_ADDR_ERROR_STATUS, 1);
-   if (error_status == 0)
-    return true;
-   String log = F("P052 Error status:");
-   for (int i = 0; i < 8; ++i) {
-    if (getBitOfInt(error_status, i)) {
-      log += F(" (");
-      switch (i) {
-      case 0:
-        log += F("fatal");
-        break;
-      case 1:
-        log += F("CO2");
-        break;
-      case 2:
-        log += F("T/H comm");
-        break;
-      case 4:
-        log += F("detector temp range");
-        break;
-      case 5:
-        log += F("CO2 range");
-        break;
-      case 6:
-        log += F("mem err.");
-        break;
-      case 7:
-        log += F("room temp range");
-        break;
-      default:
-        log += F("unknown");
-        break;
-      }
-      log += F(")");
-    }
-   }
-   addLog(LOG_LEVEL_INFO, log);
-   return false;
-   }
-
-   int Plugin_052_readCo2_from_RAM(void) {
-   bool valid_measurement = Plugin_052_prepare_single_measurement_from_RAM();
-   short co2 =
-      P052_data->modbus.read_RAM_EEPROM(P052_CMD_READ_RAM, P052_RAM_ADDR_CO2, 2);
-   short temperature = P052_data->modbus.read_RAM_EEPROM(
-      P052_CMD_READ_RAM, P052_RAM_ADDR_SPACE_TEMPERATURE, 2);
-   short humidity = P052_data->modbus.read_RAM_EEPROM(
-      P052_CMD_READ_RAM, P052_RAM_ADDR_RELATIVE_HUMIDITY, 2);
-   String log = F("P052: ");
-   log += F("CO2: ");
-   log += co2;
-   log += F(" ppm Temp: ");
-   log += static_cast<float>(temperature) / 100.0f;
-   log += F(" C Hum: ");
-   log += static_cast<float>(humidity) / 100.0f;
-   log += F("%");
-   if (!valid_measurement)
-    log += F(" (old)");
-   addLog(LOG_LEVEL_INFO, log);
-   return co2;
-   }
-
-   bool Plugin_052_measurement_active() {
-   unsigned int meter_status = P052_data->modbus.read_RAM_EEPROM(
-      P052_CMD_READ_RAM, P052_RAM_ADDR_METER_STATUS, 1);
-   // Meter Status bit 5 indicates single cycle measurement active
-   return getBitOfInt(meter_status, 5);
-   }
-
-   // Perform a single measurement.
-   // return value indicates a successful measurement update.
-   bool Plugin_052_prepare_single_measurement_from_RAM() {
-   Plugin_052_check_error_status();
-   if (timeOutReached(_plugin_052_last_measurement +
-                     P052_MEASUREMENT_INTERVAL)) {
-    // Last measurement taken is still valid.
-    return true;
-   }
-   int retry_count = 2;
-   addLog(LOG_LEVEL_INFO, F("P052: Start perform measurement"));
-   while (!Plugin_052_measurement_active() && retry_count > 0) {
-    // Trigger new measurement and make sure it is set active.
-    --retry_count;
-    addLog(LOG_LEVEL_INFO, F("P052: Write to SCR: perform measurement"));
-    Plugin_052_writeSpecialCommandRegister(P052_SCR_SINGLE_MEASUREMENT);
-    delay(50);
-   }
-   if (!Plugin_052_measurement_active()) {
-    // Could not start measurement.
-    addLog(LOG_LEVEL_INFO, F("P052: Could not start single measurement"));
-    return false;
-   }
-   retry_count = 30;
-   while (retry_count > 0) {
-    --retry_count;
-    if (retry_count < 14) {
-      // Just wait for 16 seconds.
-      if (!Plugin_052_measurement_active()) {
-        _plugin_052_last_measurement = millis();
-        String log = F("P052: Measurement complete after ");
-        log += (30 - retry_count);
-        addLog(LOG_LEVEL_INFO, log);
-        return true;
-      }
-    }
-    delay(1000);
-   }
-   return false;
-   }
-
-
-
-
-   int Plugin_052_readABCperiod(void) {
-   return P052_data->modbus.readHoldingRegister(0x1F);
-   }
-
-   int Plugin_052_readModbusAddress(void) {
-   return P052_data->modbus.readHoldingRegister(63); // HR64 MAC address Modbus address, valid range 1 - 253
-   }
- */
-
 
 #endif // USES_P052

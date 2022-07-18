@@ -54,7 +54,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
       if (C012_DelayHandler == nullptr) {
         break;
       }
-      LoadTaskSettings(event->TaskIndex);
+      //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
