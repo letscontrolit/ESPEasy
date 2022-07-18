@@ -52,7 +52,9 @@ void RTOS_TaskServers(void *parameter)
   while (true) {
     delay(100);
     web_server.handleClient();
+    #if FEATURE_ESPEASY_P2P
     checkUDP();
+    #endif
   }
 }
 
@@ -126,6 +128,7 @@ void ESPEasy_setup()
     }
   }
 #endif  // CONFIG_IDF_TARGET_ESP32
+  initADC();
 #endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();

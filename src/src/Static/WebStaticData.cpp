@@ -72,6 +72,9 @@ void serve_JS(JSfiles_e JSfile) {
         case JSfiles_e::Toasting:
           url = F("toasting.js");
           break;
+        case JSfiles_e::SplitPasteInput:
+          url = F("split_paste.js");
+          break;
     }
 
     // Work-around for shortening the filename when stored on SPIFFS file system
@@ -120,6 +123,11 @@ void serve_JS(JSfiles_e JSfile) {
             // we can push custom messages here in future releases...
             addHtml(F("Submitted"));
             TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageEnd));
+            break;
+          case JSfiles_e::SplitPasteInput:
+            TXBuffer.addFlashString((PGM_P)FPSTR(jsSplitMultipleFields));
+            // After this, make sure to call it, like this:
+            // split('$', ".query-input")
             break;
 
         }

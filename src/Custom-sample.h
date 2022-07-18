@@ -21,6 +21,11 @@
     Here are some examples:
  */
 
+// --- Feature Flagging ---------------------------------------------------------
+
+#define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA         //enables the Arduino OTA capabilities
+
 #ifdef BUILD_GIT
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
@@ -116,6 +121,8 @@
 #define DEFAULT_RULES_OLDENGINE                 true
 
 #define DEFAULT_MQTT_RETAIN                     false             // (true|false) Retain MQTT messages?
+#define DEFAULT_CONTROLLER_DELETE_OLDEST              false             // (true|false) to delete oldest message when queue is full
+#define DEFAULT_CONTROLLER_MUST_CHECK_REPLY     false             // (true|false) Check Acknowledgment
 #define DEFAULT_MQTT_DELAY                      100               // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
@@ -178,6 +185,16 @@
 #define USES_SSDP
 
 #define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+
+#define USES_PLUGIN_STATS          // Support collecting historic data + computing stats on historic data
+#ifdef ESP8266
+#  define PLUGIN_STATS_NR_ELEMENTS 16
+#endif // ifdef ESP8266
+# ifdef ESP32
+#  define PLUGIN_STATS_NR_ELEMENTS 64
+#endif // ifdef ESP32
+#define USES_CHART_JS               // Support for drawing charts, like PluginStats historic data
+
 
 
 // #define USE_SETTINGS_ARCHIVE
@@ -245,6 +262,7 @@
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
+#define SHOW_SYSINFO_JSON   //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
 
 /*
  #######################################################################################################
