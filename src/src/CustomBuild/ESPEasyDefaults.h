@@ -385,6 +385,15 @@
 #endif
 
 
+// --- We define the default features to be enabled here if custom.h is not used
+#ifndef USE_CUSTOM_H
+
+    #ifndef FEATURE_ESPEASY_P2P
+      #define FEATURE_ESPEASY_P2P   1
+    #endif
+
+#endif
+
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------
 

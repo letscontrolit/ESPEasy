@@ -13,6 +13,8 @@
 void sendSyslog(uint8_t logLevel, const String& message);
 
 
+#if FEATURE_ESPEASY_P2P
+
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
@@ -26,7 +28,7 @@ extern boolean runningUPDCheck;
 void checkUDP();
 
 /*********************************************************************************************\
-   Send event using UDP message
+   Send event using UDP message to specific unit
 \*********************************************************************************************/
 void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength);
 
@@ -37,12 +39,12 @@ void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength);
 String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode);
 
 /*********************************************************************************************\
-   Get IP address for unit
+   Get IP address for specific unit
 \*********************************************************************************************/
 IPAddress getIPAddressForUnit(uint8_t unit);
 
 /*********************************************************************************************\
-   Send UDP message (unit 255=broadcast)
+   Send UDP message to specific unit (unit 255=broadcast)
 \*********************************************************************************************/
 void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size);
 
@@ -55,6 +57,7 @@ void refreshNodeList();
    Broadcast system info to other nodes. (to update node lists)
 \*********************************************************************************************/
 void sendSysInfoUDP(uint8_t repeats);
+#endif //FEATURE_ESPEASY_P2P
 
 
 #if defined(ESP8266)

@@ -1,4 +1,4 @@
-Import("env")
+#Import("env")
 import os
 
 
@@ -15,7 +15,7 @@ def clear_concat_cpp_files(path_to_concat):
         os.rmdir(cpp_path_out)
 
 
-def clear_all_concat_cpp_files(source, target, env):
+def clear_all_concat_cpp_files():
     print("\u001b[32m Remove temp concatenated files \u001b[0m")
     clear_concat_cpp_files('./src/src/Commands')
     clear_concat_cpp_files('./src/src/ControllerQueue')
@@ -29,3 +29,5 @@ def clear_all_concat_cpp_files(source, target, env):
 
 
 #env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [clear_all_concat_cpp_files])
+
+clear_all_concat_cpp_files()
