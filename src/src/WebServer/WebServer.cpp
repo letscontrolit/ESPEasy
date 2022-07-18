@@ -299,11 +299,13 @@ void WebServerInit()
   web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
   web_server.on(F("/node_list_json"),    handle_nodes_list_json);
   web_server.on(F("/pinstates_json"),    handle_pinstates_json);
-  web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
   web_server.on(F("/timingstats_json"),  handle_timingstats_json);
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
   web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
+#ifdef SHOW_SYSINFO_JSON
+    web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
+#endif//SHOW_SYSINFO_JSON
 
   web_server.onNotFound(handleNotFound);
 

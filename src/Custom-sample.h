@@ -116,6 +116,8 @@
 #define DEFAULT_RULES_OLDENGINE                 true
 
 #define DEFAULT_MQTT_RETAIN                     false             // (true|false) Retain MQTT messages?
+#define DEFAULT_CONTROLLER_DELETE_OLDEST              false             // (true|false) to delete oldest message when queue is full
+#define DEFAULT_CONTROLLER_MUST_CHECK_REPLY     false             // (true|false) Check Acknowledgment
 #define DEFAULT_MQTT_DELAY                      100               // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
@@ -255,6 +257,8 @@
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
+#define SHOW_SYSINFO_JSON   //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
+
 /*
  #######################################################################################################
    External CSS and JS
@@ -263,6 +267,7 @@
 
 #define WEBSERVER_USE_CDN_JS_CSS  //When set, the followig URL will be used as a prefix for CSS, JS and favicon files, else they will be directly included into the HTML
 #define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20220427/static/"
+
 
 /*
  #######################################################################################################
