@@ -130,7 +130,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
 }
 
 
-#if FEATURE_ESP_P2P
+#if FEATURE_ESPEASY_P2P
 
 /*********************************************************************************************\
    Send event using UDP message
@@ -140,7 +140,6 @@ void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
   if (!NetworkConnected(10)) {
     return;
   }
-FEATURE_ESPEASY_P2P
   if (destUnit != 0)
   {
     sendUDP(destUnit, (const uint8_t *)data, dataLength);
@@ -551,7 +550,7 @@ void sendSysInfoUDP(uint8_t repeats)
   }
 }
 
-#endif // FEATURE_ESP_P2P
+#endif // FEATURE_ESPEASY_P2P
 
 #if defined(ESP8266)
 
@@ -561,7 +560,7 @@ void sendSysInfoUDP(uint8_t repeats)
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
 void SSDP_schema(WiFiClient& client) {
-  if (!NetFEATURE_ESPEASY_P2P0)) {
+  if (!NetworkConnected(10)) {
     return;
   }
 

@@ -254,8 +254,8 @@ void handle_root() {
       }
       html_end_table();
       
-    #if FEATURE_ESP_P2P
-      htFEATURE_ESPEASY_P2P
+    #if FEATURE_ESPEASY_P2P
+      html_BR();
       if (Settings.Unit == 0 && Settings.UDPPort != 0) addFormNote(F("Warning: Unit number is 0, please change it if you want to send data to other units."));
       html_BR();
       html_table_class_multirow_noborder();
