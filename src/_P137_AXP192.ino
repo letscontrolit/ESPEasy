@@ -7,6 +7,7 @@
 
 /**
  * Changelog:
+ * 2022-07-18, tonhuisman: Add missing Get Config values
  * 2022-07-05, tonhuisman: Add commands for setting LDO2, LDO3 and GPIO0 pins to voltage, or percentage, mapped to range
  *                         Supported commands see list below.
  *                         Include LDO2, LDO3 and GPIO0 in available values (not available from library)
@@ -25,7 +26,7 @@
  * axp,gpio0map,<low>,<high>  : Set mapping range for percentage 0..100
  * axp,ldo2perc,<percentage>  : Set voltage to percentage of mapped values, 0..100, 0 = off, 1..100 maps to map range
  * axp,ldo3perc,<percentage>  : Set voltage to percentage of mapped values
- * axp,gpio0perc,<percentage>  : Set voltage to percentage of mapped values
+ * axp,gpio0perc,<percentage> : Set voltage to percentage of mapped values
  **/
 /**
  * Get Config options:
@@ -39,6 +40,9 @@
  * [<taskname>#vbuscurr]      : VBus current
  * [<taskname>#inttemp]       : Internal temperature
  * [<taskname>#apsvolt]       : APS voltage
+ * [<taskname>#ldo2volt]      : LDO2 voltage
+ * [<taskname>#ldo3volt]      : LDO3 voltage
+ * [<taskname>#gpio0volt]     : GPIO0 voltage
  **/
 
 # include "_Plugin_Helper.h"
@@ -184,7 +188,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
       addUnit(F("mV"));
 
       addFormNote(F("Value range: 1800..3300mV in 100 mV steps. Values &lt; 1800mV will switch off the output."));
-      addFormNote(F("Check documentation what is connected to each output."));
+      addFormNote(F("Check your board documentation for what is connected to each output."));
 
       success = true;
       break;

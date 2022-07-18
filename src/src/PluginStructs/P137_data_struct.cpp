@@ -204,8 +204,17 @@ bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
   } else if (command == F("inttemp")) {      // inttemp
     value   = read_value(P137_valueOptions_e::InternalTemperature);
     success = true;
-  } else if (command == F("apsvolt")) {      // inttemp
+  } else if (command == F("apsvolt")) {      // apsvolt
     value   = read_value(P137_valueOptions_e::ApsVoltage);
+    success = true;
+  } else if (command == F("ldo2volt")) {     // ldo2volt
+    value   = read_value(P137_valueOptions_e::LDO2);
+    success = true;
+  } else if (command == F("ldo3volt")) {     // ldo3volt
+    value   = read_value(P137_valueOptions_e::LDO3);
+    success = true;
+  } else if (command == F("gpio0volt")) {    // gpio0volt
+    value   = read_value(P137_valueOptions_e::GPIO0);
     success = true;
   }
 
