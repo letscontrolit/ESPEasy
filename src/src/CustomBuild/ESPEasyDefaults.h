@@ -259,6 +259,15 @@
 #ifndef DEFAULT_MQTT_RETAIN
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #endif
+
+#ifndef DEFAULT_CONTROLLER_DELETE_OLDEST
+#define DEFAULT_CONTROLLER_DELETE_OLDEST              false  // (true|false) to delete oldest message when queue is full
+#endif
+
+#ifndef DEFAULT_CONTROLLER_MUST_CHECK_REPLY 
+#define DEFAULT_CONTROLLER_MUST_CHECK_REPLY            false  // (true|false) Check Acknowledgment
+#endif
+
 #ifndef DEFAULT_MQTT_DELAY
 #define DEFAULT_MQTT_DELAY                      100    // Time in milliseconds to retain MQTT messages
 #endif

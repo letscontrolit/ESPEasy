@@ -20,14 +20,14 @@ ControllerSettingsStruct::ControllerSettingsStruct()
 }
 
 void ControllerSettingsStruct::reset() {
-  UseDNS                     = false;
-  Port                       = 0;
+  UseDNS                     = DEFAULT_SERVER_USEDNS;
+  Port                       = DEFAULT_PORT;
   MinimalTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
   MaxQueueDepth              = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
   MaxRetry                   = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
-  DeleteOldest               = false;
+  DeleteOldest               = DEFAULT_CONTROLLER_DELETE_OLDEST;
   ClientTimeout              = CONTROLLER_CLIENTTIMEOUT_DFLT;
-  MustCheckReply             = false;
+  MustCheckReply             = DEFAULT_CONTROLLER_MUST_CHECK_REPLY ;
   SampleSetInitiator         = INVALID_TASK_INDEX;
   VariousFlags               = 0;
 
