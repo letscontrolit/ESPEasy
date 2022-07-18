@@ -386,7 +386,7 @@
 
 
 // --- We define the default features to be enabled here if custom.h is not used
-#ifndef USE_CUSTOM_H
+#ifndef PLUGIN_BUILD_CUSTOM
 
     #ifndef FEATURE_ESPEASY_P2P
       #define FEATURE_ESPEASY_P2P   1
