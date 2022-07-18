@@ -106,11 +106,10 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   infoReply.sourceTaskIndex = sourceTaskIndex;
   infoReply.destTaskIndex   = destTaskIndex;
   infoReply.deviceNumber    = pluginID;
-  LoadTaskSettings(infoReply.sourceTaskIndex);
   safe_strncpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex), sizeof(infoReply.taskName));
 
   for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
-    safe_strncpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x], sizeof(infoReply.ValueNames[x]));
+    safe_strncpy(infoReply.ValueNames[x], getTaskValueName(infoReply.sourceTaskIndex, x), sizeof(infoReply.ValueNames[x]));
   }
 
   if (destUnit != 0)

@@ -289,7 +289,7 @@ set -o pipefail; pip install -r ${SRC}/requirements.txt | { grep -v "already sat
 
 # Update (and clean) all targets
 # N.B. clean does also install missing packages which must be installed before applying patches.
-platformio update
+platformio pkg update
 platformio run --target clean
 # patch platformio core libs for PUYA bug (https://github.com/letscontrolit/ESPEasy/issues/650)
 cd ${SRC}/patches; ./check_puya_patch;

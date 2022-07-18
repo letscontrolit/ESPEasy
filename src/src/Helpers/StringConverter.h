@@ -209,28 +209,34 @@ String to_internal_string(const String& input,
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
 String parseString(const String& string,
-                   uint8_t          indexFind,
-                   char          separator = ',');
+                   uint8_t       indexFind,
+                   char          separator = ',',
+                   bool          trimResult = true);
 
 String parseStringKeepCase(const String& string,
-                           uint8_t          indexFind,
-                           char          separator = ',');
+                           uint8_t       indexFind,
+                           char          separator = ',',
+                           bool          trimResult = true);
 
 String parseStringToEnd(const String& string,
-                        uint8_t          indexFind,
-                        char          separator = ',');
+                        uint8_t       indexFind,
+                        char          separator = ',',
+                        bool          trimResult = true);
 
 String parseStringToEndKeepCase(const String& string,
-                                uint8_t          indexFind,
-                                char          separator = ',');
+                                uint8_t       indexFind,
+                                char          separator = ',',
+                                bool          trimResult = true);
 
 String tolerantParseStringKeepCase(const char * string,
-                                   uint8_t          indexFind,
-                                   char          separator = ',');
+                                   uint8_t      indexFind,
+                                   char         separator = ',',
+                                   bool         trimResult = true);
 
 String tolerantParseStringKeepCase(const String& string,
-                                   uint8_t          indexFind,
-                                   char          separator = ',');
+                                   uint8_t       indexFind,
+                                   char          separator = ',',
+                                   bool          trimResult = true);
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,
@@ -251,6 +257,12 @@ void   repl(const __FlashStringHelper * key,
             bool       useURLencode);
 
 void   repl(const __FlashStringHelper * key,
+            const char* val,
+            String      & s,
+            bool       useURLencode);
+
+void   repl(const __FlashStringHelper * key1,
+             const __FlashStringHelper * key2,
             const char* val,
             String      & s,
             bool       useURLencode);

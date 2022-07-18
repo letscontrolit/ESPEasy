@@ -55,7 +55,6 @@
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/SecuritySettings.h"
@@ -134,9 +133,16 @@ void sendHeadandTail_stdtemplate(boolean Tail, boolean rebooting) {
       const int nrArgs = web_server.args();
 
       if (nrArgs > 0) {
-        String log = F(" Webserver args:");
+        String log = F(" Webserver ");
+        log += nrArgs;
+        log += F(" Arguments");
 
-        for (int i = 0; i < nrArgs; ++i) {
+        if (nrArgs > 20) {
+          log += F(" (First 20)");
+        }
+        log += ':';
+
+        for (int i = 0; i < nrArgs && i < 20; ++i) {
           log += ' ';
           log += i;
           log += F(": '");
@@ -293,11 +299,13 @@ void WebServerInit()
   web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
   web_server.on(F("/node_list_json"),    handle_nodes_list_json);
   web_server.on(F("/pinstates_json"),    handle_pinstates_json);
-  web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
   web_server.on(F("/timingstats_json"),  handle_timingstats_json);
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
   web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
+#ifdef SHOW_SYSINFO_JSON
+    web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
+#endif//SHOW_SYSINFO_JSON
 
   web_server.onNotFound(handleNotFound);
 
@@ -565,11 +573,23 @@ void json_close(bool arr) {
   lastLevel = level;
 }
 
+void json_number(const __FlashStringHelper * name, const String& value)
+{
+  json_prop(name, value);
+}
+
+
 void json_number(const String& name, const String& value) {
+  json_prop(name, value);
+}
+
+void json_prop(const __FlashStringHelper * name, const String& value) 
+{
   json_quote_name(name);
   json_quote_val(value);
   lastLevel = level;
 }
+
 
 void json_prop(const String& name, const String& value) {
   json_quote_name(name);
@@ -599,8 +619,6 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
     deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
-    LoadTaskSettings(x);
-
     {
       addHtml(F("<option value='"));
       addHtmlInt(x);
@@ -620,7 +638,7 @@ void addTaskSelect(const String& name,  taskIndex_t choice)
       addHtml(F(" - "));
       addHtml(deviceName);
       addHtml(F(" - "));
-      addHtml(ExtraTaskSettings.TaskDeviceName);
+      addHtml(getTaskDeviceName(x));
       addHtml(F("</option>"));
     }
   }
@@ -642,7 +660,6 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
   addHtmlAttribute(F("name"), name);
   addHtml('>');
 
-  LoadTaskSettings(TaskIndex);
   const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
   for (uint8_t x = 0; x < valueCount; x++)
@@ -655,7 +672,7 @@ void addTaskValueSelect(const String& name, int choice, taskIndex_t TaskIndex)
       addHtml(F(" selected"));
     }
     addHtml('>');
-    addHtml(ExtraTaskSettings.TaskDeviceValueNames[x]);
+    addHtml(getTaskValueName(TaskIndex, x));
     addHtml(F("</option>"));
   }
 }

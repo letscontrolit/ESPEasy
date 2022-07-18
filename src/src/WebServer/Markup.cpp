@@ -16,24 +16,16 @@
 // ********************************************************************************
 // Add Selector
 // ********************************************************************************
-void addSelector(const String             & id,
+void addSelector(const __FlashStringHelper *id,
                  int                        optionCount,
                  const __FlashStringHelper *options[],
                  const int                  indices[],
                  const String               attr[],
-                 int                        selectedIndex)
+                 int                        selectedIndex,
+                 bool                       reloadonchange,
+                 bool                       enabled)
 {
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
-}
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex)
-{
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
+  addSelector(String(id), optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
 }
 
 void addSelector(const String             & id,
@@ -42,7 +34,7 @@ void addSelector(const String             & id,
                  const int                  indices[],
                  const String               attr[],
                  int                        selectedIndex,
-                 boolean                    reloadonchange,
+                 bool                       reloadonchange,
                  bool                       enabled)
 {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
@@ -54,7 +46,7 @@ void addSelector(const String& id,
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
-                 boolean       reloadonchange,
+                 bool          reloadonchange,
                  bool          enabled)
 {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
@@ -66,7 +58,7 @@ void addSelector(const String             & id,
                  const int                  indices[],
                  const String               attr[],
                  int                        selectedIndex,
-                 boolean                    reloadonchange,
+                 bool                       reloadonchange,
                  bool                       enabled,
                  const String& classname
                  #ifdef                     ENABLE_TOOLTIPS
@@ -74,7 +66,7 @@ void addSelector(const String             & id,
                  #endif // ifdef ENABLE_TOOLTIPS
                  )
 {
-  // FIXME TD-er Change boolean to disabled
+  // FIXME TD-er Change bool    to disabled
   if (reloadonchange)
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled
@@ -109,7 +101,7 @@ void addSelector_reloadOnChange(
                  #endif // ifdef ENABLE_TOOLTIPS
                  )
 {
-  // FIXME TD-er Change boolean to disabled
+  // FIXME TD-er Change bool    to disabled
   do_addSelector_Head(id, classname, onChangeCall, !enabled
                       #ifdef ENABLE_TOOLTIPS
                       , tooltip
@@ -126,7 +118,7 @@ void addSelector(const String  & id,
                  const int       indices[],
                  const String    attr[],
                  int             selectedIndex,
-                 boolean         reloadonchange,
+                 bool            reloadonchange,
                  bool            enabled,
                  const String& classname
                  #ifdef          ENABLE_TOOLTIPS
@@ -134,7 +126,7 @@ void addSelector(const String  & id,
                  #endif // ifdef ENABLE_TOOLTIPS
                  )
 {
-  // FIXME TD-er Change boolean to disabled
+  // FIXME TD-er Change bool    to disabled
   if (reloadonchange)
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled
@@ -263,7 +255,7 @@ void do_addSelector_Head(const String& id, const String& classname, const String
   addHtml('>');
 }
 
-void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int gpio, boolean selected, boolean disabled, const String& attr)
+void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int gpio, bool    selected, bool    disabled, const String& attr)
 {
   if (gpio != -1) // empty selection can never be disabled...
   {
@@ -347,7 +339,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
                    disabled);
 }
 
-void addSelector_Item(const __FlashStringHelper *option, int index, boolean selected, boolean disabled, const String& attr)
+void addSelector_Item(const __FlashStringHelper *option, int index, bool    selected, bool    disabled, const String& attr)
 {
   addHtml(F("<option "));
   addHtmlAttribute(F("value"), index);
@@ -370,7 +362,7 @@ void addSelector_Item(const __FlashStringHelper *option, int index, boolean sele
   addHtml(F("</option>"));
 }
 
-void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
+void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
 {
   addHtml(F("<option "));
   addHtmlAttribute(F("value"), index);
@@ -421,20 +413,28 @@ void addUnit(char unit)
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const __FlashStringHelper *id)
 {
-  addRowLabel_tr_id(String(label), String(id));
+  addRowLabel_tr_id(label, String(id));
 }
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const String& id)
 {
-  addRowLabel_tr_id(String(label), id);
+  if (id.isEmpty()) {
+    addRowLabel(label);
+  } else {
+    addRowLabel_tr_id(String(label), id);
+  }
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
 {
-  String tr_id = F("tr_");
+  if (id.isEmpty()) {
+    addRowLabel(label);
+  } else {
+    String tr_id = F("tr_");
 
-  tr_id += id;
-  addRowLabel(label, tr_id);
+    tr_id += id;
+    addRowLabel(label, tr_id);
+  }
 }
 
 void addRowLabel(const __FlashStringHelper *label)
@@ -591,12 +591,12 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 // Add a checkbox
 // ********************************************************************************
-void addCheckBox(const __FlashStringHelper *id, boolean checked, bool disabled)
+void addCheckBox(const __FlashStringHelper *id, bool    checked, bool disabled)
 {
   addCheckBox(String(id), checked, disabled);
 }
 
-void addCheckBox(const String& id, boolean checked, bool disabled
+void addCheckBox(const String& id, bool    checked, bool disabled
                  #ifdef ENABLE_TOOLTIPS
                  , const String& tooltip
                  #endif // ifdef ENABLE_TOOLTIPS
@@ -752,9 +752,11 @@ void addTextBox(const String  & id,
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"),     classname);
-  addHtmlAttribute(F("type"),      F("text"));
+  addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
-  addHtmlAttribute(F("maxlength"), maxlength);
+  if (maxlength > 0) {
+    addHtmlAttribute(F("maxlength"), maxlength);
+  }
   addHtmlAttribute(F("value"),     value);
 
   if (readonly) {
@@ -797,7 +799,9 @@ void addTextArea(const String  & id,
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
-  addHtmlAttribute(F("maxlength"), maxlength);
+  if (maxlength > 0) {
+    addHtmlAttribute(F("maxlength"), maxlength);
+  }
   addHtmlAttribute(F("rows"),      rows);
   addHtmlAttribute(F("cols"),      columns);
 

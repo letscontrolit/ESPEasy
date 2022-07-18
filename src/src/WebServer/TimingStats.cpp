@@ -46,7 +46,7 @@ void handle_timingstats() {
   addHtml(ESPEasy_time::getDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
-  addHtml(toString(timespan));
+  addHtmlFloat(timespan);
   addHtml(F(" sec"));
   addRowLabel(F("*"));
   addHtml(F("Duty cycle based on average < 1 msec is highly unreliable"));
@@ -65,7 +65,7 @@ void format_using_threshhold(unsigned long value) {
   if (value > TIMING_STATS_THRESHOLD) {
     html_B(toString(value_msec, 3));
   } else {
-    addHtml(toString(value_msec, 3));
+    addHtmlFloat(value_msec, 3);
   }
 }
 
@@ -78,7 +78,7 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   html_TD();
   const float call_per_sec = static_cast<float>(c) / static_cast<float>(timeSinceLastReset) * 1000.0f;
   const float avg = stats.getAvg();
-  addHtml(toString(call_per_sec, 2));
+  addHtmlFloat(call_per_sec, 2);
   html_TD();
   {
     const float duty = (call_per_sec * avg / 10000.0f);
