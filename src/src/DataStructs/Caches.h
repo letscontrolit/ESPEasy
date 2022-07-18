@@ -25,7 +25,7 @@ typedef std::map<taskIndex_t, ExtraTaskSettings_cache_t>ExtraTaskSettingsMap;
 struct Caches {
   void    clearAllCaches();
 
-  void    updateTaskCaches();
+  void    clearTaskCaches();
 
   void    updateActiveTaskUseSerial0();
 

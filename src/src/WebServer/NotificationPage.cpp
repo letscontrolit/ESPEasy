@@ -142,7 +142,16 @@ void handle_notifications() {
         html_TD();
         addHtmlInt(NotificationSettings.Port);
       }
-      else {
+      else
+      {
+          //MFD: we display the GPIO 
+          addGpioHtml(NotificationSettings.Pin1);
+
+          if (NotificationSettings.Pin2>=0)
+          {
+            html_BR();
+            addGpioHtml(NotificationSettings.Pin2);
+          }
         html_TD(3);
       }
     }
