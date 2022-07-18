@@ -1931,4 +1931,9 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+// By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
+#ifdef WEBSERVER_NEW_UI
+ #define SHOW_SYSINFO_JSON
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
