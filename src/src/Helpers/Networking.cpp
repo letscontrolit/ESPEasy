@@ -152,7 +152,7 @@ void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
     sendUDP(destUnit, (const uint8_t *)data, dataLength);
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         sendUDP(it->first, (const uint8_t *)data, dataLength);
         delay(10);
@@ -356,30 +356,6 @@ void checkUDP()
     portUDP.read();
   }
   runningUPDCheck = false;
-}
-
-/*********************************************************************************************\
-   Send event using UDP message
-\*********************************************************************************************/
-void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
-{
-  if (!NetworkConnected(10)) {
-    return;
-  }
-
-  if (destUnit != 0)
-  {
-    sendUDP(destUnit, (const uint8_t *)data, dataLength);
-    delay(10);
-  } else {
-    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-      if (it->first != Settings.Unit) {
-        sendUDP(it->first, (const uint8_t *)data, dataLength);
-        delay(10);
-      }
-    }
-  }
-  delay(50);
 }
 
 /*********************************************************************************************\
