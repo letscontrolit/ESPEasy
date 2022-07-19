@@ -3,7 +3,7 @@
 #include "../../ESPEasy_common.h"
 
 
-NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(0), Pin2(0) {
+NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(-1), Pin2(-1) {
     ZERO_FILL(Server);
     ZERO_FILL(Domain);
     ZERO_FILL(Sender);
