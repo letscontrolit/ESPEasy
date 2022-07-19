@@ -13,6 +13,16 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+String Command_UDP_Port(struct EventStruct *event, const char *Line)
+{
+  return Command_GetORSetBool(event, F("UDPPort:"),
+                              Line,
+                              (bool *)&Settings.UDPPort,
+                              1);
+}
+
+#if FEATURE_ESPEASY_P2P
+
 const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const char *Line)
 {
   for (uint8_t x = 0; x < event->Par2; x++)
@@ -24,13 +34,6 @@ const __FlashStringHelper * Command_UDP_Test(struct EventStruct *event, const ch
   return return_command_success();
 }
 
-String Command_UDP_Port(struct EventStruct *event, const char *Line)
-{
-  return Command_GetORSetBool(event, F("UDPPort:"),
-                              Line,
-                              (bool *)&Settings.UDPPort,
-                              1);
-}
 
 const __FlashStringHelper * Command_UPD_SendTo(struct EventStruct *event, const char *Line)
 {
@@ -42,6 +45,7 @@ const __FlashStringHelper * Command_UPD_SendTo(struct EventStruct *event, const 
   }
   return return_command_success();
 }
+#endif //FEATURE_ESPEASY_P2P
 
 const __FlashStringHelper * Command_UDP_SendToUPD(struct EventStruct *event, const char *Line)
 {
