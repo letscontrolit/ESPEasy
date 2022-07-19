@@ -8,6 +8,8 @@
 
 #include "../DataStructs/MAC_address.h"
 
+#include "../Globals/ESPEasy_now_state.h"
+
 void setNetworkMedium(NetworkMedium_t medium);
 
 bool isESPEasy_now_only();
