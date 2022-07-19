@@ -2309,7 +2309,6 @@ private:
   uint16_t difference = 0;
   uint16_t fps        = 50;
   uint16_t colorcount = 0;
-  int8_t   gpioPin    = -1;
 
 # if defined(RGBW) || defined(GRBW)
   RgbwColor rgb_target[ARRAYSIZE],
@@ -2331,11 +2330,12 @@ private:
            rgb_s      = HtmlColor(0xFF0000);
 # endif // if defined(RGBW) || defined(GRBW)
 
-  uint8_t maxBright = 255;
+  int8_t   gpioPin;
+  uint16_t pixelCount;
+  uint8_t  maxBright;
 
   int16_t fadedelay = 20;
 
-  uint16_t pixelCount = ARRAYSIZE;
 
   int8_t defaultspeed  = 25;
   int8_t rainbowspeed  = 1;
