@@ -384,6 +384,10 @@
 # define GITHUB_RELEASES_LINK_SUFFIX "</a>"
 #endif
 
+// --- We define the default features to be enabled here
+#ifndef FEATURE_ESPEASY_P2P
+  #define FEATURE_ESPEASY_P2P   1
+#endif
 
 
 /*
@@ -394,7 +398,6 @@ The current "ESPEasy@mega-20211224" tag, should be replaced at build/release tim
 #ifndef CDN_JS_CSS_URL
 #define CDN_JS_CSS_URL           "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20220427/static/"
 #endif
-
 
 
 

@@ -111,13 +111,14 @@ void run_compiletime_checks() {
   #ifdef USES_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif
+  #if FEATURE_ESPEASY_P2P
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
   check_size<NodeStruct,                            32u>();
   #else
   check_size<NodeStruct,                            28u>();
   #endif
-
+  #endif
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
