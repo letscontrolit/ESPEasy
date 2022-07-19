@@ -36,8 +36,9 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 // ********************************************************************************
 void handle_devicess_ShowAllTasksTable(uint8_t page);
 
+#if FEATURE_ESPEASY_P2P
 void format_originating_node(uint8_t remoteUnit);
-
+#endif
 void format_I2C_port_description(taskIndex_t x);
 
 void format_SPI_port_description(int8_t spi_gpios[3]);

@@ -8,6 +8,7 @@
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/NPlugins.h"
 
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -278,6 +279,7 @@ void handle_json()
     }
     #endif // ifdef HAS_ETHERNET
 
+  #if FEATURE_ESPEASY_P2P
     if (showNodes) {
       bool comma_between = false;
 
@@ -317,6 +319,7 @@ void handle_json()
         addHtml(F("],\n")); // close array if >0 nodes
       }
     }
+  #endif
   }
 
   taskIndex_t firstTaskIndex = 0;
@@ -484,6 +487,8 @@ void handle_timingstats_json() {
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_NEW_UI
+
+#if FEATURE_ESPEASY_P2P
 void handle_nodes_list_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -514,6 +519,7 @@ void handle_nodes_list_json() {
   json_close(true);
   TXBuffer.endStream();
 }
+#endif
 
 void handle_buildinfo() {
   if (!isLoggedIn()) { return; }

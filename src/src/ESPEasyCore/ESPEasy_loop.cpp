@@ -88,7 +88,9 @@ void ESPEasy_loop()
 
     RTC.bootFailedCount = 0;
     saveToRTC();
+    #if FEATURE_ESPEASY_P2P
     sendSysInfoUDP(1);
+    #endif
   }
 
   if (Settings.EnableClearHangingI2Cbus())
