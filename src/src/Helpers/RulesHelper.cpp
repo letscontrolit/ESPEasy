@@ -112,15 +112,18 @@ void RulesHelperClass::init()
             rulesLine,
             filename,
             pos_start_line)) {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+#ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           String log = F("Cache rules event: ");
           log += filename;
           log += F(" pos: ");
           log += pos_start_line;
           log += ' ';
           log += rulesLine;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_DEBUG, log);
         }
+#endif // ifndef BUILD_NO_DEBUG
       }
     }
   }
@@ -276,14 +279,16 @@ String RulesHelperClass::readLn(const String& filename,
         lines.push_back(tmpStr);
         tmpStr.clear();
       }
+# ifndef BUILD_NO_DEBUG
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("Rules : Read ");
         log += lines.size();
         log += F(" lines from ");
         log += filename;
-        addLogMove(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_DEBUG, log);
       }
+# endif // ifndef BUILD_NO_DEBUG
       _fileHandleMap.emplace(std::make_pair(filename, std::move(lines)));
       it = _fileHandleMap.find(filename);
     }
