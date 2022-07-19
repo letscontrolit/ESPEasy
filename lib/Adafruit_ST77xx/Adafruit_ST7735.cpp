@@ -234,6 +234,15 @@ void Adafruit_ST7735::initR(uint8_t options) {
     displayInit(Rcmd2green160x80);
     _colstart = 24;
     _rowstart = 0;
+  } else if (options == INITR_GREENTAB160x80) {
+    _height = ST7735_TFTWIDTH_80;
+    _width = ST7735_TFTHEIGHT_160;
+    displayInit(Rcmd2green160x80);
+    const uint8_t data = 0x00;
+    sendCommand(ST77XX_INVON, &data, 0);
+    sendCommand(ST77XX_INVON, &data, 0); // Write twice...
+    _colstart = 26;
+    _rowstart = 1;
   } else {
     // colstart, rowstart left at default '0' values
     displayInit(Rcmd2red);

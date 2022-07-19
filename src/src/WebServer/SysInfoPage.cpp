@@ -47,8 +47,10 @@
 #endif // ifdef ESP32
 
 
-#ifdef WEBSERVER_NEW_UI
 
+
+
+#ifdef SHOW_SYSINFO_JSON
 // ********************************************************************************
 // Web Interface sysinfo page
 // ********************************************************************************
@@ -212,7 +214,7 @@ void handle_sysinfo_json() {
   TXBuffer.endStream();
 }
 
-#endif // WEBSERVER_NEW_UI
+#endif // SHOW_SYSINFO_JSON
 
 #ifdef WEBSERVER_SYSINFO
 

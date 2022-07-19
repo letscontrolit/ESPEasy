@@ -328,7 +328,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      LoadTaskSettings(event->TaskIndex);
+      LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
       String unparsedPayload; // To keep an unprocessed copy
 
       bool checkJson = false;
@@ -610,7 +610,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   if (checkJson) {
                     log += key;
                   } else {
-                    log += ExtraTaskSettings.TaskDeviceValueNames[x];
+                    log += getTaskValueName(event->TaskIndex, x);
                   }
                   log += F("] : ");
                   log += doublePayload;
@@ -651,7 +651,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   RuleEvent.reserve(64);
                   RuleEvent += getTaskDeviceName(event->TaskIndex);
                   RuleEvent += '#';
-                  RuleEvent += ExtraTaskSettings.TaskDeviceValueNames[x];
+                  RuleEvent += getTaskValueName(event->TaskIndex, x);
                   RuleEvent += '=';
 
                   if (numericPayload) {
@@ -725,7 +725,7 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
                 log += F(" used by: [");
                 log += getTaskDeviceName(event->TaskIndex);
                 log += '#';
-                log += ExtraTaskSettings.TaskDeviceValueNames[x];
+                log += getTaskValueName(event->TaskIndex, x);
                 log += ']';
                 log += topic;
                 addLogMove(LOG_LEVEL_INFO, log);
@@ -740,7 +740,7 @@ bool MQTT_unsubscribe_037(struct EventStruct *event)
         String log = F("IMPT : [");
         log += getTaskDeviceName(event->TaskIndex);
         log += '#';
-        log += ExtraTaskSettings.TaskDeviceValueNames[x];
+        log += getTaskValueName(event->TaskIndex, x);
         log += F("] : Unsubscribe topic: ");
         log += topic;
         addLogMove(LOG_LEVEL_INFO, log);
@@ -774,10 +774,9 @@ bool MQTTSubscribe_037(struct EventStruct *event)
       if (MQTTclient.subscribe(subscribeTo.c_str())) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("IMPT : [");
-          LoadTaskSettings(event->TaskIndex);
           log += getTaskDeviceName(event->TaskIndex);
           log += F("#");
-          log += ExtraTaskSettings.TaskDeviceValueNames[x];
+          log += getTaskValueName(event->TaskIndex, x);
           log += F("] subscribed to ");
           log += subscribeTo;
           addLogMove(LOG_LEVEL_INFO, log);

@@ -115,134 +115,176 @@ Best pins to use on ESP32
 There is also a NodeMCU version using the ESP32.
 Fortunately the designers used the GPIO numbers as labels on the board.
 
+N.B. This table does NOT describe the pins of other ESP32 variants like the ESP32-S2.
+
 .. list-table:: Sorted in reverse GPIO pinnr order
-   :widths: 10 25 25 40
+   :widths: 10 15 15 10 50
    :header-rows: 1
 
    * - GPIO
      - Input
      - Output
+     - ADC
      - Remarks
-   * - 36
-     - :green:`OK`
-     -
-     - :yellow:`input only`
    * - 39
      - :green:`OK`
      -
+     - ADC1_CH3
+     - :yellow:`input only` :yellow:`See Notes`
+   * - 38
+     - :green:`OK`
+     -
+     - ADC1_CH2
      - :yellow:`input only`
+   * - 37
+     - :green:`OK`
+     -
+     - ADC1_CH1
+     - :yellow:`input only`
+   * - 36
+     - :green:`OK`
+     -
+     - ADC1_CH0
+     - :yellow:`input only` :yellow:`See Notes`
    * - 35
      - :green:`OK`
      -
+     - ADC1_CH7
      - :yellow:`input only`
    * - 34
      - :green:`OK`
      -
+     - ADC1_CH6
      - :yellow:`input only`
    * - 33
      - :green:`OK`
      - :green:`OK`
+     - ADC1_CH5
      -
    * - 32
      - :green:`OK`
      - :green:`OK`
+     - ADC1_CH4
      -
    * - 27
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH7
      -
    * - 26
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH9
      -
    * - 25
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH8
      -
    * - 23
      - :green:`OK`
      - :green:`OK`
      -
+     -
    * - 22
      - :green:`OK`
      - :green:`OK`
+     -
      -
    * - 21
      - :green:`OK`
      - :green:`OK`
      -
+     -
    * - 19
      - :green:`OK`
      - :green:`OK`
+     -
      -
    * - 18
      - :green:`OK`
      - :green:`OK`
      -
+     -
    * - 17
      - :green:`OK`
      - :green:`OK`
      -
+     - :yellow:`See notes`
    * - 16
      - :green:`OK`
      - :green:`OK`
      -
+     - :yellow:`See notes`
    * - 15
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH3
      - :yellow:`output PWM signal at boot, internal pull-up` Silences boot messages when pulled low at boot.
    * - 14
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH6
      - :yellow:`output PWM signal at boot`
    * - 13
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH4
      -
    * - 12
      -
      - :green:`OK`
+     - ADC2_CH5
      - :yellow:`Boot fail if pulled high` :red:`May damage flash if low at boot on 1.8V flash chips`
    * - 9, 10, 11
      - :red:`High at boot`
      -
+     -
      - :red:`See notes`
    * - 6, 7, 8
+     -
      -
      -
      - :red:`See notes`
    * - 5
      - :green:`OK`
      - :green:`OK`
+     -
      - :yellow:`output PWM signal at boot, internal pull-up`
    * - 4
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH0
      - :yellow:`Internal pull-down`
    * - 3 (RX)
      - :yellow:`High at boot`
      - :red:`is RX`
+     -
      - RX channel of serial0
    * - 2
      - :green:`OK`
      - :green:`OK`
+     - ADC2_CH2
      - Often connected to LED, :yellow:`Internal pull-down`
    * - 1 (TX)
      - :red:`is TX`
      - :yellow:`debug output at boot`
+     -
      - TX channel of serial0
    * - 0
      - :yellow:`pulled up`
      - :yellow:`OK`
+     - ADC2_CH1
      - :yellow:`Boot fail if pulled low & output PWM signal at boot`
 
 Source used: 
 
 * `The Hook Up - How To: Pick the right pins on the NodeMCU ESP8266 and ESP32 <https://www.youtube.com/watch?v=7h2bE2vNoaY>`_
 * `Random Nerd Tutorials - ESP32 Pinout Reference: Which GPIO pins should you use? <https://randomnerdtutorials.com/esp32-pinout-reference-gpios/>`_
+* `Espressif Docs - GPIO & RTC GPIO <https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/gpio.html>`_
 
-Special notes on GPIO 6 - 11
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Special notes on GPIO 6 - 11 & 16, 17
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Almost any ESP32 board has a flash chip connected to some or all of GPIO6-GPIO11.
 
@@ -250,6 +292,45 @@ It is best not to use any of the GPIO pins 6 - 11.
 
 GPIO 6, 7 & 8 may output some PWM signals at boot.
 GPIO 9, 10 & 11 output high at boot and may fail to boot of pulled either high or low.
+
+GPIO 16 & 17 are usually connected to the SPI flash and PSRAM. These do show some activity during boot to detect the presence of PSRAM.
+For example GPIO 17 may still show some high frequency signal until it is specifically set to a high or low output state.
+When PSRAM is present, these pins should not be used.
+
+Special notes on GPIO 34-39
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+GPIO 34-39 can only be set as input mode and do not have software-enabled pullup or pulldown functions.
+
+GPIO 36 & 39 should not be used for interrupts when also using ADC or WiFi and Bluetooth.
+These pins are on some boards labelled as:
+
+* ``VP``: GPIO 36 (ADC1_CH0)
+* ``VN``: GPIO 39 (ADC1_CH3)
+
+The internal Hall sensor in the ESP32 is connected to these two pins.
+
+The Hall Sensor uses channels 0 and 3 of ADC1. 
+Do not configure these channels for use as ADC channels when also reading from the Hall sensor.
+
+
+Typical uses in ESPEasy where an interrupt of a GPIO pin is used are:
+
+* Switch input
+* Monitoring of a pin in rules
+* Pulse Count plugin
+* RX pin of a serial port
+
+Special notes on ADC pins
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ADC2: ADC2 pins cannot be used when Wi-Fi is used. 
+So, if you are having trouble getting the value from an ADC2 GPIO while using Wi-Fi, you may consider using an ADC1 GPIO instead, which should solve your problem.
+
+Some ADC pins are strapped to a pull-up or pull-down resistor to set the ESP in a specific state during boot.
+This requires special attention when applying some voltage to these pins which may be present at boot.
+
+
 
 Boot Strapping Pins
 ~~~~~~~~~~~~~~~~~~~

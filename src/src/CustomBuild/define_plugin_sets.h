@@ -297,6 +297,12 @@ To create/register a plugin, you have to :
         #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
     #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
+    #ifndef USES_PLUGIN_STATS
+        #define USES_PLUGIN_STATS
+    #endif
+    #ifndef USES_CHART_JS
+        #define USES_CHART_JS
+    #endif
 #endif
 
 #ifdef USES_FHEM
@@ -308,6 +314,12 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
+    // Disable ESPEasy p2p for minimal OTA builds.
+    #ifdef FEATURE_ESPEASY_P2P
+      #undef FEATURE_ESPEASY_P2P
+      #define FEATURE_ESPEASY_P2P 0
+    #endif
+
     #ifndef PLUGIN_DESCR
       #define PLUGIN_DESCR  "Minimal 1M OTA"
     #endif
@@ -326,7 +338,7 @@ To create/register a plugin, you have to :
     #define USES_C008   // Generic HTTP
 //    #define USES_C009   // FHEM HTTP
 //    #define USES_C010   // Generic UDP
-    #define USES_C013   // ESPEasy P2P network
+//    #define USES_C013   // ESPEasy P2P network
 
 //    #define NOTIFIER_SET_STABLE
     #define NOTIFIER_SET_NONE
@@ -769,6 +781,13 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_NEOPIXEL_COLLECTION
         #define PLUGIN_NEOPIXEL_COLLECTION
     #endif
+    #ifndef USES_PLUGIN_STATS
+        #define USES_PLUGIN_STATS
+    #endif
+    #ifndef USES_CHART_JS
+        #define USES_CHART_JS
+    #endif
+
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_TEST_ESP32 section at end,
     // where incompatible plugins will be disabled.
@@ -1322,6 +1341,14 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
+  #if defined(USES_PLUGIN_STATS) && defined(ESP8266)
+    // Does not fit in build
+    #undef USES_PLUGIN_STATS
+  #endif
+  #if defined(USES_CHART_JS) && defined(ESP8266)
+    // Does not fit in build
+    #undef USES_CHART_JS
+  #endif
 #endif
 
 #ifdef CONTROLLER_SET_TESTING
@@ -1680,14 +1707,16 @@ To create/register a plugin, you have to :
 #endif
 
 // VCC builds need a bit more, disable timing stats to make it fit.
-#if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
-  #ifndef LIMIT_BUILD_SIZE
-    #define LIMIT_BUILD_SIZE
-  #endif
-  #ifndef NOTIFIER_SET_NONE
-    #define NOTIFIER_SET_NONE
-  #endif
+#ifndef PLUGIN_BUILD_CUSTOM
+  #if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
+    #ifndef LIMIT_BUILD_SIZE
+      #define LIMIT_BUILD_SIZE
+    #endif
+    #ifndef NOTIFIER_SET_NONE
+      #define NOTIFIER_SET_NONE
+    #endif
 
+  #endif
 #endif
 
 
@@ -1778,7 +1807,12 @@ To create/register a plugin, you have to :
   #ifdef USES_SSDP
     #undef USES_SSDP
   #endif
-
+  #ifdef USES_PLUGIN_STATS
+    #undef USES_PLUGIN_STATS
+  #endif
+  #ifdef USES_CHART_JS
+    #undef USES_CHART_JS
+  #endif
 #endif
 
 // Timing stats page needs timing stats
@@ -1889,6 +1923,11 @@ To create/register a plugin, you have to :
   #ifndef USE_RTTTL
     #define USE_RTTTL
   #endif
+#endif
+
+// By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
+#ifdef WEBSERVER_NEW_UI
+ #define SHOW_SYSINFO_JSON
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

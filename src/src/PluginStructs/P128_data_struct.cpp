@@ -7,8 +7,9 @@
 // Constructor
 // ***************************************************************/
 P128_data_struct::P128_data_struct(int8_t   _gpioPin,
-                                   uint16_t _pixelCount)
-  : gpioPin(_gpioPin), pixelCount(_pixelCount) {
+                                   uint16_t _pixelCount,
+                                   uint8_t  _maxBright)
+  : gpioPin(_gpioPin), pixelCount(_pixelCount), maxBright(_maxBright) {
   if (!Plugin_128_pixels) {
     # ifdef ESP8266
     Plugin_128_pixels = new (std::nothrow) NEOPIXEL_LIB<FEATURE, METHOD>(min(pixelCount, static_cast<uint16_t>(ARRAYSIZE)));
@@ -20,6 +21,7 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
 
     if (nullptr != Plugin_128_pixels) {
       Plugin_128_pixels->Begin(); // This initializes the NeoPixelBus library.
+      Plugin_128_pixels->SetBrightness(maxBright);
     }
   }
 }
@@ -28,10 +30,8 @@ P128_data_struct::P128_data_struct(int8_t   _gpioPin,
 // Destructor
 // ***************************************************************/
 P128_data_struct::~P128_data_struct() {
-  if (Plugin_128_pixels) {
-    delete Plugin_128_pixels;
-    Plugin_128_pixels = nullptr;
-  }
+  delete Plugin_128_pixels;
+  Plugin_128_pixels = nullptr;
 }
 
 bool P128_data_struct::plugin_read(struct EventStruct *event) {
@@ -145,8 +145,10 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
     }
 
     else if (subCommand == F("dim")) {
-      success = true;
-      Plugin_128_pixels->SetBrightness(str3i);
+      if ((str3i >= 0) && (str3i <= maxBright)) { // Safety check
+        success = true;
+        Plugin_128_pixels->SetBrightness(str3i);
+      }
     }
 
     else if (subCommand == F("line")) {
@@ -793,8 +795,8 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
 void P128_data_struct::fade(void) {
   for (int pixel = 0; pixel < pixelCount; pixel++) {
-    long  zaehler  = 20 * (counter20ms - starttime[pixel]);
-    float progress = (float)zaehler / (float)fadetime;
+    long  counter  = 20 * (counter20ms - starttime[pixel]);
+    float progress = (float)counter / (float)fadetime;
     progress = (progress < 0) ? 0 : progress;
     progress = (progress > 1) ? 1 : progress;
 
@@ -959,11 +961,11 @@ void P128_data_struct::faketv(void) {
  * Cycles a rainbow over the entire string of LEDs.
  */
 void P128_data_struct::rainbow(void) {
-  long  zaehler  = 20 * (counter20ms - starttimerb);
-  float progress = (float)zaehler / (float)fadetime;
+  long  counter  = 20 * (counter20ms - starttimerb);
+  float progress = (float)counter / (float)fadetime;
 
   if (fadeIn == true) {
-    Plugin_128_pixels->SetBrightness(progress * 255);
+    Plugin_128_pixels->SetBrightness(progress * maxBright); // Safety check
     fadeIn = (progress == 1) ? false : true;
   }
 
