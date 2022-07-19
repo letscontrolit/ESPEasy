@@ -125,7 +125,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(formatGpioName_output(F("Load pin (<SPAN STYLE=\"text-decoration:overline\">PL</SPAN>)")),
+      addFormPinSelect(PinSelectPurpose::Generic_output,
+                       formatGpioName_output(F("Load pin (<SPAN STYLE=\"text-decoration:overline\">PL</SPAN>)")),
                        F("load_pin"),
                        P129_CONFIG_LOAD_PIN);
       # ifndef LIMIT_BUILD_SIZE

@@ -79,9 +79,9 @@ public:
 private:
 
   uint32_t getChannelState(uint8_t offset,
-                           uint8_t size);
+                           uint8_t size) const;
 
-  bool     validChannel(uint channel) {
+  bool     validChannel(uint channel) const {
     return channel > 0 && channel <= (_chipCount * 8);
   }
 
