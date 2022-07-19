@@ -225,8 +225,10 @@ void runEach30Seconds()
     addLogMove(LOG_LEVEL_INFO, log);
   }
   WiFi_AP_Candidates.purge_expired();
+  #if FEATURE_ESPEASY_P2P
   sendSysInfoUDP(1);
   refreshNodeList();
+  #endif
 
   // sending $stats to homie controller
   CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
