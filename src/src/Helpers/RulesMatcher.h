@@ -6,8 +6,9 @@
 /********************************************************************************************\
    Check if an event matches to a given rule
  \*********************************************************************************************/
-bool ruleMatch(const String& event,
-               const String& rule);
+// Both strings are copied, since they may need to be trimmed and call parseTemplate
+bool ruleMatch(String event,
+               String rule);
 
 
 bool compareIntValues(char       compare,
