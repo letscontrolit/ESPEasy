@@ -112,7 +112,9 @@ void handle_json()
   #endif // ifdef HAS_ETHERNET
   bool showDataAcquisition = true;
   bool showTaskDetails     = true;
+  #if FEATURE_ESPEASY_P2P
   bool showNodes           = true;
+  #endif
   {
     const String view = webArg(F("view"));
 
@@ -124,7 +126,9 @@ void handle_json()
       #endif // ifdef HAS_ETHERNET
       showDataAcquisition = false;
       showTaskDetails     = false;
+      #if FEATURE_ESPEASY_P2P
       showNodes           = false;
+      #endif
     }
   }
 
