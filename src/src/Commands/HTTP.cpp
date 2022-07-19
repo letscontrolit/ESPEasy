@@ -18,71 +18,86 @@
 #include "../Helpers/StringParser.h"
 
 
-const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
+const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, const char *Line)
 {
-	if (NetworkConnected()) {
-		String authHeader;
-		String host = parseStringKeepCase(Line, 2);
-		const int pos_at = host.indexOf('@');
-		if (pos_at != -1) {
-			String user = host.substring(0, pos_at);
-			String pass;
-			host = host.substring(pos_at + 1);
-			const int pos_colon = user.indexOf(':');
-			if (pos_colon != -1) {
-				pass = user.substring(pos_colon + 1);
-				user = user.substring(0, pos_colon);
-            }
-			authHeader = get_auth_header(user, pass);
-		}
+  bool success = false;
 
-		const int port = parseCommandArgumentInt(Line, 2);
-		#ifndef BUILD_NO_DEBUG
-		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-			String log = F("SendToHTTP: Host: ");
-			log += host;
-			log += F(" port: ");
-			log += port;
-			addLogMove(LOG_LEVEL_DEBUG, log);
-		}
-		#endif
-		if (port < 0 || port > 65535) return return_command_failed();
-		// FIXME TD-er: This is not using the tolerant settings option.
+  if (NetworkConnected()) {
+    String user, pass;
+    String host      = parseStringKeepCase(Line, 2);
+    const int pos_at = host.indexOf('@');
+
+    if (pos_at != -1) {
+      user = host.substring(0, pos_at);
+      host = host.substring(pos_at + 1);
+      const int pos_colon = user.indexOf(':');
+
+      if (pos_colon != -1) {
+        pass = user.substring(pos_colon + 1);
+        user = user.substring(0, pos_colon);
+      }
+    }
+
+    const int port = parseCommandArgumentInt(Line, 2);
+#ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("SendToHTTP: Host: ");
+      log += host;
+      log += F(" port: ");
+      log += port;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+#endif // ifndef BUILD_NO_DEBUG
+
+    if ((port < 0) || (port > 65535)) { return return_command_failed(); }
+
+    // FIXME TD-er: This is not using the tolerant settings option.
     // String path = tolerantParseStringKeepCase(Line, 4);
-		const String path = parseStringToEndKeepCase(Line, 4);
+    const String path = parseStringToEndKeepCase(Line, 4);
 #ifndef BUILD_NO_DEBUG
-		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-			String log = F("SendToHTTP: Path: ");
-			log += path;
-			addLogMove(LOG_LEVEL_DEBUG, log);
-		}
-#endif
-		WiFiClient client;
-		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
-		const bool connected = connectClient(client, host.c_str(), port, CONTROLLER_CLIENTTIMEOUT_MAX);
-		if (connected) {
-			String hostportString = host;
-			if (port != 0 && port != 80) {
-				hostportString += ':';
-				hostportString += port;
-			}
-			const String request = do_create_http_request(
-				hostportString, 
-				F("GET"), 
-				path,
-				authHeader,
-				EMPTY_STRING, // additional_options
-				-1  // content_length
-				);
-#ifndef BUILD_NO_DEBUG
-			addLog(LOG_LEVEL_DEBUG, request);
-#endif
-			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, Settings.SendToHttp_ack());
-			return return_command_success();
-		}
-		addLog(LOG_LEVEL_ERROR, F("SendToHTTP connection failed"));
-	} else {
-		addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
-	}
-	return return_command_failed();
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("SendToHTTP: Path: ");
+      log += path;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+#endif // ifndef BUILD_NO_DEBUG
+
+
+    int httpCode = -1;
+    WiFiClient   client;
+    const String res = send_via_http(
+      F("Command_HTTP_SendToHTTP"),
+      client,
+      CONTROLLER_CLIENTTIMEOUT_MAX,
+      user,
+      pass,
+      host,
+      port,
+      path,
+      F("GET"),
+      EMPTY_STRING, // header
+      EMPTY_STRING, // poststr
+      httpCode);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String logstr;
+      logstr += F("SendToHTTP: ");
+      logstr += httpCode;
+	  if (!res.isEmpty()) {
+		logstr += F(" Received reply: ");
+		logstr += res;
+	  }
+      addLog(LOG_LEVEL_INFO, logstr);
+    }
+
+    if ((httpCode >= 100) && (httpCode < 300)) {
+      return return_command_success();
+    }
+    addLog(LOG_LEVEL_ERROR, String(F("SendToHTTP: HTTP code: ")) + httpCode);
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
+  }
+  return return_command_failed();
 }
