@@ -61,6 +61,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

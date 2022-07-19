@@ -43,16 +43,17 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].PullUpOption       = false;
       Device[deviceCount].InverseLogicOption = false;
       # ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].FormulaOption = true;
-      Device[deviceCount].ValueCount    = 4;
+      Device[deviceCount].FormulaOption      = true;
+      Device[deviceCount].ValueCount         = 4;
       # else // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].FormulaOption = false;
-      Device[deviceCount].ValueCount    = 3;
+      Device[deviceCount].FormulaOption      = false;
+      Device[deviceCount].ValueCount         = 3;
       # endif // ifdef PLUGIN_053_ENABLE_EXTRA_SENSORS
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      success                              = true;
+      Device[deviceCount].SendDataOption     = true;
+      Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
+      success                                = true;
       break;
     }
 

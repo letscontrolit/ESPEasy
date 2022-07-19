@@ -63,7 +63,7 @@ bool CPlugin_010(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      LoadTaskSettings(event->TaskIndex);
+      //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
       C010_queue_element element(event, valueCount);
 
       {

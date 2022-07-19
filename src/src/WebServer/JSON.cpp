@@ -4,9 +4,11 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/NPlugins.h"
 
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -59,7 +61,6 @@ void handle_csvval()
 
     if (validDeviceIndex(DeviceIndex))
     {
-      LoadTaskSettings(taskNr);
       const uint8_t taskValCount = getValueCountForTask(taskNr);
 
       if (printHeader)
@@ -68,7 +69,7 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            addHtml(getTaskValueName(taskNr, x));
             if (x != taskValCount - 1)
             {
               addHtml(';');
@@ -111,7 +112,9 @@ void handle_json()
   #endif // ifdef HAS_ETHERNET
   bool showDataAcquisition = true;
   bool showTaskDetails     = true;
+  #if FEATURE_ESPEASY_P2P
   bool showNodes           = true;
+  #endif
   {
     const String view = webArg(F("view"));
 
@@ -123,7 +126,9 @@ void handle_json()
       #endif // ifdef HAS_ETHERNET
       showDataAcquisition = false;
       showTaskDetails     = false;
+      #if FEATURE_ESPEASY_P2P
       showNodes           = false;
+      #endif
     }
   }
 
@@ -278,6 +283,7 @@ void handle_json()
     }
     #endif // ifdef HAS_ETHERNET
 
+  #if FEATURE_ESPEASY_P2P
     if (showNodes) {
       bool comma_between = false;
 
@@ -317,6 +323,7 @@ void handle_json()
         addHtml(F("],\n")); // close array if >0 nodes
       }
     }
+  #endif
   }
 
   taskIndex_t firstTaskIndex = 0;
@@ -349,7 +356,7 @@ void handle_json()
     if (validDeviceIndex(DeviceIndex))
     {
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
-      LoadTaskSettings(TaskIndex);
+      //LoadTaskSettings(TaskIndex);
       addHtml('{', '\n');
 
       unsigned long ttl_json = 60; // Default value
@@ -375,14 +382,14 @@ void handle_json()
         {
           addHtml('{');
           const String value = formatUserVarNoCheck(TaskIndex, x);
-          uint8_t nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
 
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
             nrDecimals = 255;
           }
           stream_next_json_object_value(F("ValueNumber"), x + 1);
-          stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+          stream_next_json_object_value(F("Name"),        getTaskValueName(TaskIndex, x));
           stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
           stream_last_json_object_value(F("Value"), value);
 
@@ -417,7 +424,7 @@ void handle_json()
       if (showTaskDetails) {
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
-        stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
+        stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
 #ifdef FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
@@ -484,6 +491,8 @@ void handle_timingstats_json() {
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_NEW_UI
+
+#if FEATURE_ESPEASY_P2P
 void handle_nodes_list_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -514,6 +523,7 @@ void handle_nodes_list_json() {
   json_close(true);
   TXBuffer.endStream();
 }
+#endif
 
 void handle_buildinfo() {
   if (!isLoggedIn()) { return; }

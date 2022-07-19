@@ -2,6 +2,8 @@
 
 #include "../Globals/Plugins.h"
 
+#ifdef USES_C013
+
 C013_SensorInfoStruct::C013_SensorInfoStruct()
 {
   ZERO_FILL(taskName);
@@ -42,3 +44,5 @@ bool C013_SensorDataStruct::isValid() const
   }
   return true;
 }
+
+#endif

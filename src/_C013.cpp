@@ -1,6 +1,11 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C013
 
+#if FEATURE_ESPEASY_P2P == 0
+  #error "Controller C013 ESPEasy P2P requires the FEATURE_ESPEASY_P2P enabled"
+#endif
+
+
 # include "src/Globals/Nodes.h"
 # include "src/DataStructs/C013_p2p_dataStructs.h"
 # include "src/ESPEasyCore/ESPEasyRules.h"
@@ -106,11 +111,10 @@ void C013_SendUDPTaskInfo(uint8_t destUnit, uint8_t sourceTaskIndex, uint8_t des
   infoReply.sourceTaskIndex = sourceTaskIndex;
   infoReply.destTaskIndex   = destTaskIndex;
   infoReply.deviceNumber    = pluginID;
-  LoadTaskSettings(infoReply.sourceTaskIndex);
   safe_strncpy(infoReply.taskName, getTaskDeviceName(infoReply.sourceTaskIndex), sizeof(infoReply.taskName));
 
   for (uint8_t x = 0; x < VARS_PER_TASK; x++) {
-    safe_strncpy(infoReply.ValueNames[x], ExtraTaskSettings.TaskDeviceValueNames[x], sizeof(infoReply.ValueNames[x]));
+    safe_strncpy(infoReply.ValueNames[x], getTaskValueName(infoReply.sourceTaskIndex, x), sizeof(infoReply.ValueNames[x]));
   }
 
   if (destUnit != 0)
