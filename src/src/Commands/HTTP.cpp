@@ -21,7 +21,21 @@
 const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
 {
 	if (NetworkConnected()) {
-		const String host = parseString(Line, 2);
+		String authHeader;
+		String host = parseStringKeepCase(Line, 2);
+		const int pos_at = host.indexOf('@');
+		if (pos_at != -1) {
+			String user = host.substring(0, pos_at);
+			String pass;
+			host = host.substring(pos_at + 1);
+			const int pos_colon = user.indexOf(':');
+			if (pos_colon != -1) {
+				pass = user.substring(pos_colon + 1);
+				user = user.substring(0, pos_colon);
+            }
+			authHeader = get_auth_header(user, pass);
+		}
+
 		const int port = parseCommandArgumentInt(Line, 2);
 		#ifndef BUILD_NO_DEBUG
 		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -52,7 +66,14 @@ const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, c
 				hostportString += ':';
 				hostportString += port;
 			}
-			const String request = do_create_http_request(hostportString, F("GET"), path);
+			const String request = do_create_http_request(
+				hostportString, 
+				F("GET"), 
+				path,
+				authHeader,
+				EMPTY_STRING, // additional_options
+				-1  // content_length
+				);
 #ifndef BUILD_NO_DEBUG
 			addLog(LOG_LEVEL_DEBUG, request);
 #endif
