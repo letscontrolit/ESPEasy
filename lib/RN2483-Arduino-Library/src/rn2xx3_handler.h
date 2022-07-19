@@ -161,7 +161,7 @@ public:
     return _moduleType;
   }
 
-  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp);
+  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp, uint32_t rx2_freq = 0);
 
   bool setTTNstack(RN2xx3_datatypes::TTN_stack_version version);
 
@@ -276,6 +276,7 @@ private:
   RN2xx3_datatypes::Firmware _firmware = RN2xx3_datatypes::Firmware::unknown;
   RN2xx3_datatypes::Model _moduleType = RN2xx3_datatypes::Model::RN_NA;
   RN2xx3_datatypes::Freq_plan _fp     = RN2xx3_datatypes::Freq_plan::TTN_EU;
+  uint32_t _rx2_frequency             = 0;
   uint8_t _sf                         = 7;
   uint8_t _dr                         = 5;
 

@@ -20,7 +20,7 @@ String rn2xx3_handler::sendRawCommand(const String& command)
 
   if (!prepare_raw_command(command)) {
     setLastError(F("sendRawCommand: Prepare fail"));
-    return "";
+    return emptyString;
   }
 
   if (wait_command_finished() == RN_state::timeout) {
@@ -259,16 +259,14 @@ bool rn2xx3_handler::init()
   // may not be successful after a factory reset if not all fields are set.
 
   // Set OTAA keys
-  if (_otaa) {
-    sendMacSet(F("deveui"),  _deveui);
-    sendMacSet(F("appeui"),  _appeui);
-    sendMacSet(F("appkey"),  _appkey);
-  } else {
-    // Set ABP keys
-    sendMacSet(F("nwkskey"), _nwkskey);
-    sendMacSet(F("appskey"), _appskey);
-    sendMacSet(F("devaddr"), _devaddr);
-  }
+  sendMacSet(F("deveui"),  _deveui);
+  sendMacSet(F("appeui"),  _appeui);
+  sendMacSet(F("appkey"),  _appkey);
+
+  // Set ABP keys
+  sendMacSet(F("nwkskey"), _nwkskey);
+  sendMacSet(F("appskey"), _appskey);
+  sendMacSet(F("devaddr"), _devaddr);
 
   // Set max. allowed power.
   // 868 MHz EU   : 1 -> 14 dBm
@@ -285,7 +283,7 @@ bool rn2xx3_handler::init()
   // Maybe we should not specify this for other networks.
   if (_moduleType == RN2xx3_datatypes::Model::RN2483)
   {
-    set2ndRecvWindow(3, 869525000);
+    setFrequencyPlan(_fp, _rx2_frequency);
   }
   // Disabled for now because an OTAA join seems to work fine without.
 
@@ -523,7 +521,7 @@ void rn2xx3_handler::setLastUsedJoinMode(bool isOTAA) {
   }
 }
 
-bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
+bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp, uint32_t rx2_freq)
 {
   bool returnValue = false;
 
@@ -533,9 +531,11 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
     {
       if (_moduleType == RN2xx3_datatypes::Model::RN2483)
       {
+        if (rx2_freq == 0)
+          rx2_freq = 869525000;
         // mac set rx2 <dataRate> <frequency>
         // set2ndRecvWindow(5, 868100000); //use this for "strict" one channel gateways
-        set2ndRecvWindow(3, 869525000); // use for "non-strict" one channel gateways
+        set2ndRecvWindow(3, rx2_freq); // use for "non-strict" one channel gateways
         setChannelDutyCycle(0, 99);     // 1% duty cycle for this channel
         setChannelDutyCycle(1, 65535);  // almost never use this channel
         setChannelDutyCycle(2, 65535);  // almost never use this channel
@@ -588,7 +588,10 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
         }
 
         // RX window 2
-        set2ndRecvWindow(3, 869525000);
+        if (rx2_freq == 0)
+          rx2_freq = 869525000;
+
+        set2ndRecvWindow(3, rx2_freq);
 
         returnValue = true;
       }
@@ -641,6 +644,7 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
     }
   }
   _fp = fp;
+  _rx2_frequency = rx2_freq;
 
   return returnValue;
 }

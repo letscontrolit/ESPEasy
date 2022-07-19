@@ -148,9 +148,9 @@ struct C018_data_struct {
     return res;
   }
 
-  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan plan) {
+  bool setFrequencyPlan(RN2xx3_datatypes::Freq_plan plan, uint32_t rx2_freq) {
     if (!isInitialized()) { return false; }
-    bool res = myLora->setFrequencyPlan(plan);
+    bool res = myLora->setFrequencyPlan(plan, rx2_freq);
 
     C018_logError(F("setFrequencyPlan()"));
     return res;
@@ -463,6 +463,21 @@ struct C018_ConfigStruct
     if (stackVersion >= RN2xx3_datatypes::TTN_stack_version::TTN_NOT_SET) {
       stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v3;  
     }
+    switch (frequencyplan) {
+      case RN2xx3_datatypes::Freq_plan::SINGLE_CHANNEL_EU:
+      case RN2xx3_datatypes::Freq_plan::TTN_EU:
+      case RN2xx3_datatypes::Freq_plan::DEFAULT_EU:
+        if (rx2_freq < 867000000 || rx2_freq > 870000000) {
+          rx2_freq = 0;
+        }
+        break;
+      case RN2xx3_datatypes::Freq_plan::TTN_US:
+        // FIXME TD-er: Need to find the ranges for US (and other regions)
+        break;
+      default: 
+        rx2_freq = 0;
+        break;
+    }
   }
 
   void reset() {
@@ -476,6 +491,7 @@ struct C018_ConfigStruct
     resetpin      = -1;
     sf            = 7;
     frequencyplan = RN2xx3_datatypes::Freq_plan::TTN_EU;
+    rx2_freq      = 0;
     stackVersion  = RN2xx3_datatypes::TTN_stack_version::TTN_v3;
     joinmethod    = C018_USE_OTAA;
   }
@@ -494,6 +510,7 @@ struct C018_ConfigStruct
   uint8_t       serialPort                                      = 0;
   uint8_t       stackVersion                                    = RN2xx3_datatypes::TTN_stack_version::TTN_v2;
   uint8_t       adr                                             = 0;
+  uint32_t      rx2_freq                                        = 0;
 };
 
 
@@ -583,6 +600,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       }
 
       unsigned long baudrate;
+      uint32_t rx2_frequency;
       int8_t  rxpin;
       int8_t  txpin;
       int8_t  resetpin;
@@ -617,6 +635,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         resetpin      = customConfig->resetpin;
         sf            = customConfig->sf;
         frequencyplan = customConfig->frequencyplan;
+        rx2_frequency = customConfig->rx2_freq;
         joinmethod    = customConfig->joinmethod;
         stackVersion  = customConfig->stackVersion;
         adr           = customConfig->adr;
@@ -658,6 +677,9 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         };
 
         addFormSelector(F("Frequency Plan"), F("frequencyplan"), 4, options, values, nullptr, frequencyplan, false);
+        addFormNumericBox(F("RX2 Frequency"), F("rx2freq"), rx2_frequency, 0);
+        addUnit(F("Hz"));
+        addFormNote(F("0 = default, or else override default"));
       }
       {
         const __FlashStringHelper * options[2] = { F("TTN v2"), F("TTN v3") };
@@ -770,6 +792,7 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
         customConfig->resetpin      = getFormItemInt(F("taskdevicepin3"), customConfig->resetpin);
         customConfig->sf            = getFormItemInt(F("sf"), customConfig->sf);
         customConfig->frequencyplan = getFormItemInt(F("frequencyplan"), customConfig->frequencyplan);
+        customConfig->rx2_freq      = getFormItemInt(F("rx2freq"), customConfig->rx2_freq);
         customConfig->joinmethod    = getFormItemInt(F("joinmethod"), customConfig->joinmethod);
         customConfig->stackVersion  = getFormItemInt(F("ttnstack"), customConfig->stackVersion);
         customConfig->adr           = isFormItemChecked(F("adr"));
@@ -830,6 +853,31 @@ bool CPlugin_018(CPlugin::Function function, struct EventStruct *event, String& 
       // FIXME TD-er: WHen should this be scheduled?
       // protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(event->ControllerIndex);
       // schedule_controller_event_timer(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_RECV, event);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_WRITE:
+    {
+      if (C018_data != nullptr) {
+        if (C018_data->isInitialized())
+        {
+          const String command    = parseString(string, 1);
+          if (command.equals(F("lorawan"))) {
+            const String subcommand = parseString(string, 2);
+            if (subcommand.equals(F("write"))) {
+              const String loraWriteCommand = parseStringToEnd(string, 3);
+              const String res = C018_data->sendRawCommand(loraWriteCommand);
+              String logstr = F("LoRaWAN cmd: ");
+              logstr += loraWriteCommand;
+              logstr += F(" -> ");
+              logstr += res;
+              addLog(LOG_LEVEL_INFO, logstr);
+              SendStatus(event, logstr);
+              success = true;
+            }
+          }
+        }
+      }
       break;
     }
 
@@ -915,7 +963,7 @@ bool C018_init(struct EventStruct *event) {
     return false;
   }
 
-  C018_data->setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig->frequencyplan));
+  C018_data->setFrequencyPlan(static_cast<RN2xx3_datatypes::Freq_plan>(customConfig->frequencyplan), customConfig->rx2_freq);
   if (!C018_data->setSF(customConfig->sf)) {
     return false;
   }

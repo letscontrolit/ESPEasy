@@ -243,9 +243,9 @@ RN2xx3_datatypes::Model rn2xx3::moduleType()
   return _rn2xx3_handler.moduleType();
 }
 
-bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
+bool rn2xx3::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp, uint32_t rx2_freq)
 {
-  return _rn2xx3_handler.setFrequencyPlan(fp);
+  return _rn2xx3_handler.setFrequencyPlan(fp, rx2_freq);
 }
 
 bool rn2xx3::setTTNstack(RN2xx3_datatypes::TTN_stack_version version)

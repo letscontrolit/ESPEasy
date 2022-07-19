@@ -151,6 +151,7 @@ const __FlashStringHelper * getCPluginCFunctionName(CPlugin::Function function) 
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return F("CPLUGIN_FIFTY_PER_SECOND");
     case CPlugin::Function::CPLUGIN_INIT_ALL:                  return F("CPLUGIN_INIT_ALL");
     case CPlugin::Function::CPLUGIN_EXIT:                      return F("CPLUGIN_EXIT");
+    case CPlugin::Function::CPLUGIN_WRITE:                     return F("CPLUGIN_WRITE");
 
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED:
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
@@ -182,6 +183,7 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return true;
     case CPlugin::Function::CPLUGIN_INIT_ALL:                  return false;
     case CPlugin::Function::CPLUGIN_EXIT:                      return false;
+    case CPlugin::Function::CPLUGIN_WRITE:                     return true;
 
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED:
     case CPlugin::Function::CPLUGIN_GOT_INVALID:
