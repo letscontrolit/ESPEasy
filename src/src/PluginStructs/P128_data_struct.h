@@ -2269,7 +2269,7 @@ const uint8_t PROGMEM ftv_colors[] = {
 # if P128_ENABLE_FAKETV
 #  define NUMPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
 # else // if P128_ENABLE_FAKETV
-#  define NUMPixels (26000 / 8)
+#  define NUMPixels (26000)
 # endif // if P128_ENABLE_FAKETV
 
 enum class P128_modetype {
