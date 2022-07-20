@@ -15,6 +15,9 @@
 
 /**
  * Changelog:
+ * 2022-07-20 tonhuisman: Made support for ILI9486/ILI9488 optional and excluded by default as these are not available as 
+ *                        regular SPI devices (3/4 wire SPI)
+ *                        NOTE: Renumbered enum with display types.
  * 2022-07-16 tonhuisman: Add support for some more ILI9481 sub-types (Again cloned from TFT_eSPI library)
  *                        WARNING: ILI9481 does *NOT* support changing rotation and keep writing on the display!
  *                                 Display memory is restructured by the rotation change, but the content is not adjusted.
@@ -233,8 +236,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_RGB_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI7_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI8_320x480),
+          # ifdef P095_ENABLE_ILI948X
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9488_320x480),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         const int hardwareOptions[] = {
           static_cast<int>(ILI9xxx_type_e::ILI9341_240x320),
@@ -247,8 +252,10 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ILI9xxx_type_e::ILI9481_RGB_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_CMI7_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_CMI8_320x480),
+          # ifdef P095_ENABLE_ILI948X
           static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         addFormSelector(F("TFT display model"),
                         F("p095_type"),
@@ -278,16 +285,20 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9341),
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9342),
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9481),
+          # ifdef P095_ENABLE_ILI948X
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9486),
-          P095_CommandTrigger_toString(P095_CommandTrigger::ili9488)
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9488),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         const int commandTriggerOptions[] = {
           static_cast<int>(P095_CommandTrigger::tft),
           static_cast<int>(P095_CommandTrigger::ili9341),
           static_cast<int>(P095_CommandTrigger::ili9342),
           static_cast<int>(P095_CommandTrigger::ili9481),
+          # ifdef P095_ENABLE_ILI948X
           static_cast<int>(P095_CommandTrigger::ili9486),
-          static_cast<int>(P095_CommandTrigger::ili9488)
+          static_cast<int>(P095_CommandTrigger::ili9488),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         addFormSelector(F("Write Command trigger"),
                         F("p095_commandtrigger"),
