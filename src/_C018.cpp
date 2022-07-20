@@ -60,6 +60,11 @@ struct C018_data_struct {
       // Both pins are needed, or else no serial possible
       return false;
     }
+
+    // FIXME TD-er: Prevent unneeded OTAA joins.
+    // See: https://www.thethingsnetwork.org/forum/t/how-often-should-a-node-do-an-otaa-join-and-is-otaa-better-than-abp/11192/47?u=td-er
+
+
     sampleSetInitiator = sampleSet_Initiator;
 
     if (isInitialized()) {
@@ -971,6 +976,10 @@ bool C018_init(struct EventStruct *event) {
     return false;
   }
 
+  if (!C018_data->setTTNstack(static_cast<RN2xx3_datatypes::TTN_stack_version>(customConfig->stackVersion))) {
+    return false;
+  }
+
   if (customConfig->joinmethod == C018_USE_OTAA) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("OTAA: AppEUI: ");
@@ -993,9 +1002,6 @@ bool C018_init(struct EventStruct *event) {
     }
   }
 
-  if (!C018_data->setTTNstack(static_cast<RN2xx3_datatypes::TTN_stack_version>(customConfig->stackVersion))) {
-    return false;
-  }
 
   if (!C018_data->txUncnf(F("ESPeasy (TTN)"), Port)) {
     return false;
