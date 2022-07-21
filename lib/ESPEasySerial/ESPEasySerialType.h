@@ -2,7 +2,7 @@
 #define ESPEASY_SERIAL_ESPEASYSERIALTYPE_H
 
 
-#include "ESPeasySerialPort.h"
+#include "ESPEasySerialPort.h"
 
 
 
