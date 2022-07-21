@@ -30,6 +30,7 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 #include <base64.h>
+#include <MD5Builder.h>
 
 
 #ifdef ESP8266
@@ -122,13 +123,14 @@ String get_auth_header(int controller_index, const ControllerSettingsStruct& Con
 String get_user_agent_string() {
   static unsigned int agent_size = 20;
   String userAgent;
+
   userAgent.reserve(agent_size);
-  userAgent   += F("ESP Easy/");
-  userAgent   += BUILD;
-  userAgent   += '/';
-  userAgent   += get_build_date();
-  userAgent   += ' ';
-  userAgent   += get_build_time();
+  userAgent += F("ESP Easy/");
+  userAgent += BUILD;
+  userAgent += '/';
+  userAgent += get_build_date();
+  userAgent += ' ';
+  userAgent += get_build_time();
   agent_size = userAgent.length();
   return userAgent;
 }
@@ -151,10 +153,10 @@ String do_create_http_request(
   const String& auth_header, const String& additional_options,
   int content_length) {
   static int est_size_error = 0; // prevent re-alloc by compensating for estimation error
-  int estimated_size = hostportString.length() + method.length()
-                       + uri.length() + auth_header.length()
-                       + additional_options.length()
-                       + 42;
+  int estimated_size        = hostportString.length() + method.length()
+                              + uri.length() + auth_header.length()
+                              + additional_options.length()
+                              + 42;
 
   if (content_length >= 0) { estimated_size += 45; }
   String request;
@@ -187,6 +189,7 @@ String do_create_http_request(
   request += get_user_agent_request_header_field();
   request += F("Connection: close\r\n");
   request += F("\r\n");
+
   if (request.length() > static_cast<size_t>(estimated_size + est_size_error)) {
     est_size_error = request.length() - estimated_size;
   }
@@ -202,7 +205,7 @@ String do_create_http_request(
   return do_create_http_request(hostportString, method, uri,
                                 EMPTY_STRING, // auth_header
                                 EMPTY_STRING, // additional_options
-                                -1  // content_length
+                                -1            // content_length
                                 );
 }
 
@@ -247,7 +250,7 @@ String create_http_request_auth(int controller_number, int controller_index, Con
 }
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const __FlashStringHelper * prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
+void log_connecting_to(const __FlashStringHelper *prefix, int controller_number, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -259,7 +262,7 @@ void log_connecting_to(const __FlashStringHelper * prefix, int controller_number
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number) {
+void log_connecting_fail(const __FlashStringHelper *prefix, int controller_number) {
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log = prefix;
     log += get_formatted_Controller_number(controller_number);
@@ -272,7 +275,7 @@ void log_connecting_fail(const __FlashStringHelper * prefix, int controller_numb
   }
 }
 
-bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number) {
+bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number) {
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
@@ -308,7 +311,10 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
   return try_connect_host(controller_number, client, ControllerSettings, F("HTTP : "));
 }
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const __FlashStringHelper * loglabel) {
+bool try_connect_host(int                        controller_number,
+                      WiFiClient               & client,
+                      ControllerSettingsStruct & ControllerSettings,
+                      const __FlashStringHelper *loglabel) {
   START_TIMER;
 
   if (!NetworkConnected()) { return false; }
@@ -370,6 +376,7 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 #endif // ifndef BUILD_NO_DEBUG
 
   const unsigned long timeout = 1000;
+
   if (must_check_reply) {
     unsigned long timer = millis() + timeout;
 
@@ -439,10 +446,10 @@ bool send_via_http(const String& logIdentifier, WiFiClient& client, const String
 #ifdef ESP8266
   client.flush(timeout);
   client.stop(timeout);
-#else
+#else // ifdef ESP8266
   client.flush();
   client.stop();
-#endif
+#endif // ifdef ESP8266
   return success;
 }
 
@@ -493,18 +500,87 @@ bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String&
   if (colonPos < 0) {
     return false;
   }
-  name   = multiHeaders.substring(strpos, colonPos);
+  name = multiHeaders.substring(strpos, colonPos);
   int valueEndPos = multiHeaders.indexOf('\n', colonPos + 1);
+
   if (valueEndPos < 0) {
-    value = multiHeaders.substring(colonPos + 1);
+    value  = multiHeaders.substring(colonPos + 1);
     strpos = -1;
   } else {
-    value = multiHeaders.substring(colonPos + 1, valueEndPos);
+    value  = multiHeaders.substring(colonPos + 1, valueEndPos);
     strpos = valueEndPos + 1;
   }
   value.replace('\r', ' ');
   value.trim();
   return true;
+}
+
+String exractParam(String& authReq, const String& param, const char delimit) {
+  int _begin = authReq.indexOf(param);
+
+  if (_begin == -1) { return EMPTY_STRING; }
+  return authReq.substring(_begin + param.length(), authReq.indexOf(delimit, _begin + param.length()));
+}
+
+String getCNonce(const int len) {
+  static const char alphanum[] = "0123456789"
+                                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                 "abcdefghijklmnopqrstuvwxyz";
+  String s;
+
+  for (int i = 0; i < len; ++i) {
+    s += alphanum[rand() % (sizeof(alphanum) - 1)];
+  }
+
+  return s;
+}
+
+String getDigestAuth(String      & authReq,
+                     const String& username,
+                     const String& password,
+                     const String& method,
+                     const String& uri,
+                     unsigned int  counter) {
+  // extracting required parameters for RFC 2069 simpler Digest
+  const String realm  = exractParam(authReq, F("realm=\""), '"');
+  const String nonce  = exractParam(authReq, F("nonce=\""), '"');
+  const String cNonce = getCNonce(8);
+
+  char nc[9];
+
+  snprintf(nc, sizeof(nc), "%08x", counter);
+
+  // parameters for the RFC 2617 newer Digest
+  MD5Builder md5;
+
+  md5.begin();
+  md5.add(username + ':' + realm + ':' + password); // md5 of the user:realm:user
+  md5.calculate();
+  const String h1 = md5.toString();
+
+  md5.begin();
+  md5.add(method + ':' + uri);
+  md5.calculate();
+  const String h2 = md5.toString();
+
+  md5.begin();
+  md5.add(h1 + ':' + nonce + ':' + String(nc) + ':' + cNonce + F(":auth:") + h2);
+  md5.calculate();
+  const String response = md5.toString();
+
+  const String authorization =
+    String(F("Digest username=\"")) + username +
+    F("\", realm=\"") + realm +
+    F("\", nonce=\"") + nonce +
+    F("\", uri=\"") + uri +
+    F("\", algorithm=\"MD5\", qop=auth, nc=") + String(nc) +
+    F(", cnonce=\"") + cNonce +
+    F("\", response=\"") + response +
+    '"';
+
+  //  Serial.println(authorization);
+
+  return authorization;
 }
 
 String send_via_http(const String& logIdentifier,
@@ -533,13 +609,17 @@ String send_via_http(const String& logIdentifier,
   delay(0);
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
-#else
+#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri);
-#endif
-  
+#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+
+  const char *keys[] = { "WWW-Authenticate" };
+  http.collectHeaders(keys, 1);
+
   {
     int headerpos = 0;
     String name, value;
+
     while (splitHeaders(headerpos, header, name, value)) {
       http.addHeader(name, value);
     }
@@ -556,13 +636,48 @@ String send_via_http(const String& logIdentifier,
 
   // httpCode will be negative on error
   if (httpCode > 0) {
+    String authReq = http.header(String(F("WWW-Authenticate")).c_str());
+
+    if ((httpCode == 401) && (authReq.indexOf(F("Digest")) != -1)) {
+      // Use Digest authorization
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        String log = F("HTTP : Start Digest Authorization for ");
+        log += host;
+        addLog(LOG_LEVEL_INFO, log);
+      }
+      String authorization = getDigestAuth(authReq, String(user), String(pass), "GET", String(uri), 1);
+
+      http.end();
+#if defined(CORE_POST_2_6_0) || defined(ESP32)
+      http.begin(client, host, port, uri, false); // HTTP
+#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+      http.begin(client, host, port, uri);
+#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+
+      http.addHeader(F("Authorization"), authorization);
+
+      // start connection and send HTTP header (and body)
+      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+        httpCode = http.sendRequest(HttpMethod.c_str());
+      } else {
+        httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+      }
+
+      if (httpCode <= 0) {
+        http.end();
+        return EMPTY_STRING;
+      }
+    }
+
+
     response = http.getString();
 
     uint8_t loglevel = LOG_LEVEL_ERROR;
+
     // HTTP codes:
     // 1xx Informational response
     // 2xx Success
-    if (httpCode >= 100 && httpCode < 300) {
+    if ((httpCode >= 100) && (httpCode < 300)) {
       loglevel = LOG_LEVEL_INFO;
     }
 
