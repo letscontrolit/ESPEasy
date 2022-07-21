@@ -77,7 +77,7 @@
 #endif // ESP32
 
 
-#include "ESPeasySerialPort.h"
+#include "ESPEasySerialPort.h"
 #include "ESPEasySerialType.h"
 
 

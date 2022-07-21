@@ -80,7 +80,7 @@ ESPEasySerialPort ESPeasySerialType::getSerialType(ESPEasySerialPort typeHint, i
 
 
 #ifdef ESP8266
-static ESPEasySerialPort ESPeasySerialType::getSerialType(ESPEasySerialPort typeHint, int receivePin, int transmitPin) {
+ESPEasySerialPort ESPeasySerialType::getSerialType(ESPEasySerialPort typeHint, int receivePin, int transmitPin) {
   if (typeHint != ESPEasySerialPort::not_set) {
     return typeHint;
   }
