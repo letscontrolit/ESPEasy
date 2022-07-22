@@ -1178,11 +1178,7 @@ bool start_downloadFile(WiFiClient& client, HTTPClient& http, const String& url,
     }
 
     /*
-       String authHeader = get_auth_header(user, pass);
-
-       if (authHeader.length() > 0) {
-       http.setAuthorization(authHeader.c_str());
-       }
+       http.setAuthorization(user, pass);
      */
   }
   int httpCode = http.GET();
