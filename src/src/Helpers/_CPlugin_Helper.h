@@ -106,7 +106,8 @@ String send_via_http(const String& logIdentifier,
                      const String& HttpMethod,
                      const String& header,
                      const String& postStr,
-                     int         & httpCode);
+                     int         & httpCode,
+                     bool          must_check_reply);
 
 String send_via_http(int                             controller_number,
                      const ControllerSettingsStruct& ControllerSettings,

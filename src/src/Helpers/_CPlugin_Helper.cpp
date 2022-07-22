@@ -479,7 +479,8 @@ String send_via_http(int                             controller_number,
     HttpMethod,
     header,
     postStr,
-    httpCode);
+    httpCode,
+    ControllerSettings.MustCheckReply);
 
   const bool success = httpCode > 0;
 
@@ -515,7 +516,7 @@ bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String&
   return true;
 }
 
-String exractParam(String& authReq, const String& param, const char delimit) {
+String exractParam(const String& authReq, const String& param, const char delimit) {
   int _begin = authReq.indexOf(param);
 
   if (_begin == -1) { return EMPTY_STRING; }
@@ -535,7 +536,7 @@ String getCNonce(const int len) {
   return s;
 }
 
-String getDigestAuth(String      & authReq,
+String getDigestAuth(const String& authReq,
                      const String& username,
                      const String& password,
                      const String& method,
@@ -583,6 +584,49 @@ String getDigestAuth(String      & authReq,
   return authorization;
 }
 
+void log_http_result(const HTTPClient& http,
+                     const String    & logIdentifier,
+                     const String    & HttpMethod,
+                     int               httpCode,
+                     const String    & response)
+{
+  uint8_t loglevel = LOG_LEVEL_ERROR;
+  bool    success  = false;
+
+  // HTTP codes:
+  // 1xx Informational response
+  // 2xx Success
+  if ((httpCode >= 100) && (httpCode < 300)) {
+    loglevel = LOG_LEVEL_INFO;
+    success  = true;
+  }
+
+  if (loglevelActiveFor(loglevel)) {
+    String log = F("HTTP : ");
+    log += logIdentifier;
+    log += ' ';
+    log += HttpMethod;
+    log += F("... ");
+
+    if (!success) {
+      log += F("failed ");
+    }
+    log += F("HTTP code: ");
+    log += String(httpCode);
+
+    if (!success) {
+      log += ' ';
+      log += http.errorToString(httpCode);
+    }
+
+    if (response.length() > 0) {
+      log += ' ';
+      log += response.substring(0, 100); // Returned string may be huge, so only log the first part.
+    }
+    addLogMove(loglevel, log);
+  }
+}
+
 String send_via_http(const String& logIdentifier,
                      WiFiClient  & client,
                      uint16_t      timeout,
@@ -594,7 +638,8 @@ String send_via_http(const String& logIdentifier,
                      const String& HttpMethod,
                      const String& header,
                      const String& postStr,
-                     int         & httpCode) {
+                     int         & httpCode,
+                     bool          must_check_reply) {
   HTTPClient http;
 
   http.setAuthorization(user.c_str(), pass.c_str());
@@ -636,16 +681,16 @@ String send_via_http(const String& logIdentifier,
 
   // httpCode will be negative on error
   if (httpCode > 0) {
-    String authReq = http.header(String(F("WWW-Authenticate")).c_str());
+    const String authReq = http.header(String(F("WWW-Authenticate")).c_str());
 
     if ((httpCode == 401) && (authReq.indexOf(F("Digest")) != -1)) {
       // Use Digest authorization
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("HTTP : Start Digest Authorization for ");
-        log += host;
-        addLog(LOG_LEVEL_INFO, log);
+        addLogMove(LOG_LEVEL_INFO, String(F("HTTP : Start Digest Authorization for ")) + host);
       }
-      String authorization = getDigestAuth(authReq, String(user), String(pass), "GET", String(uri), 1);
+
+      http.setAuthorization(""); // Clear Basic authorization
+      const String authorization = getDigestAuth(authReq, String(user), String(pass), "GET", String(uri), 1);
 
       http.end();
 #if defined(CORE_POST_2_6_0) || defined(ESP32)
@@ -662,51 +707,13 @@ String send_via_http(const String& logIdentifier,
       } else {
         httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
       }
-
-      if (httpCode <= 0) {
-        http.end();
-        return EMPTY_STRING;
-      }
     }
 
-
-    response = http.getString();
-
-    uint8_t loglevel = LOG_LEVEL_ERROR;
-
-    // HTTP codes:
-    // 1xx Informational response
-    // 2xx Success
-    if ((httpCode >= 100) && (httpCode < 300)) {
-      loglevel = LOG_LEVEL_INFO;
-    }
-
-
-    if (loglevelActiveFor(loglevel)) {
-      String log = F("HTTP : ");
-      log += logIdentifier;
-      log += ' ';
-      log += HttpMethod;
-      log += F("... HTTP code: ");
-      log += String(httpCode);
-
-      if (response.length() > 0) {
-        log += ' ';
-        log += response;
-      }
-      addLogMove(loglevel, log);
-    }
-  } else {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("HTTP : ");
-      log += logIdentifier;
-      log += ' ';
-      log += HttpMethod;
-      log += F("... failed, error: ");
-      log += http.errorToString(httpCode);
-      addLogMove(LOG_LEVEL_ERROR, log);
+    if (httpCode > 0 && must_check_reply) {
+      response = http.getString();
     }
   }
+  log_http_result(http, logIdentifier, HttpMethod, httpCode, response);
   http.end();
   return response;
 }

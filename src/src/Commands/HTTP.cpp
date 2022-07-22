@@ -79,7 +79,8 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
       F("GET"),
       EMPTY_STRING, // header
       EMPTY_STRING, // poststr
-      httpCode);
+      httpCode,
+	  Settings.SendToHttp_ack());
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String logstr;
