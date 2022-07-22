@@ -1,6 +1,11 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C013
 
+#if FEATURE_ESPEASY_P2P == 0
+  #error "Controller C013 ESPEasy P2P requires the FEATURE_ESPEASY_P2P enabled"
+#endif
+
+
 # include "src/Globals/Nodes.h"
 # include "src/DataStructs/C013_p2p_dataStructs.h"
 # include "src/ESPEasyCore/ESPEasyRules.h"

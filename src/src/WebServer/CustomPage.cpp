@@ -37,6 +37,7 @@ bool handle_custom(const String& path) {
     return false;    // unknown file that does not exist...
   }
 
+  #if FEATURE_ESPEASY_P2P
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
@@ -124,6 +125,7 @@ bool handle_custom(const String& path) {
     addHtmlInt(next);
     addHtml(F("'>&gt;</a>"));
   }
+  #endif
 
   // handle commands from a custom page
   String webrequest = webArg(F("cmd"));

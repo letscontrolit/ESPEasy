@@ -134,6 +134,65 @@ void sendSyslog(uint8_t logLevel, const String& message)
   }
 }
 
+
+#if FEATURE_ESPEASY_P2P
+
+/*********************************************************************************************\
+   Send event using UDP message
+\*********************************************************************************************/
+void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
+{
+  if (!NetworkConnected(10)) {
+    return;
+  }
+  if (destUnit != 0)
+  {
+    sendUDP(destUnit, (const uint8_t *)data, dataLength);
+    delay(10);
+  } else {
+    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        sendUDP(it->first, (const uint8_t *)data, dataLength);
+        delay(10);
+      }
+    }
+  }
+  delay(50);
+}
+
+/*********************************************************************************************\
+   Send UDP message to specific unit (unit 255=broadcast)
+\*********************************************************************************************/
+void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
+{
+  if (!NetworkConnected(10)) {
+    return;
+  }
+
+  IPAddress remoteNodeIP = getIPAddressForUnit(unit);
+
+  if (remoteNodeIP[0] == 0) {
+    return;
+  }
+
+#ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+    String log = F("UDP  : Send UDP message to ");
+    log += unit;
+    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
+  }
+#endif // ifndef BUILD_NO_DEBUG
+
+  statusLED(true);
+  FeedSW_watchdog();
+  portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
+  portUDP.write(data, size);
+  portUDP.endPacket();
+  FeedSW_watchdog();
+  delay(0);
+}
+
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
@@ -330,30 +389,6 @@ void checkUDP()
 }
 
 /*********************************************************************************************\
-   Send event using UDP message
-\*********************************************************************************************/
-void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
-{
-  if (!NetworkConnected(10)) {
-    return;
-  }
-
-  if (destUnit != 0)
-  {
-    sendUDP(destUnit, (const uint8_t *)data, dataLength);
-    delay(10);
-  } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
-      if (it->first != Settings.Unit) {
-        sendUDP(it->first, (const uint8_t *)data, dataLength);
-        delay(10);
-      }
-    }
-  }
-  delay(50);
-}
-
-/*********************************************************************************************\
    Get formatted IP address for unit
    formatcodes: 0 = default toString(), 1 = empty string when invalid, 2 = 0 when invalid
 \*********************************************************************************************/
@@ -397,39 +432,6 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     remoteNodeIP = it->second.ip;
   }
   return remoteNodeIP;
-}
-
-/*********************************************************************************************\
-   Send UDP message (unit 255=broadcast)
-\*********************************************************************************************/
-void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
-{
-  if (!NetworkConnected(10)) {
-    return;
-  }
-
-  IPAddress remoteNodeIP = getIPAddressForUnit(unit);
-
-  if (remoteNodeIP[0] == 0) {
-    return;
-  }
-
-#ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    String log = F("UDP  : Send UDP message to ");
-    log += unit;
-    addLogMove(LOG_LEVEL_DEBUG_MORE, log);
-  }
-#endif // ifndef BUILD_NO_DEBUG
-
-  statusLED(true);
-  FeedSW_watchdog();
-  portUDP.beginPacket(remoteNodeIP, Settings.UDPPort);
-  portUDP.write(data, size);
-  portUDP.endPacket();
-  FeedSW_watchdog();
-  delay(0);
 }
 
 /*********************************************************************************************\
@@ -552,6 +554,8 @@ void sendSysInfoUDP(uint8_t repeats)
     it->second.nodeType = NODE_TYPE_ID;
   }
 }
+
+#endif // FEATURE_ESPEASY_P2P
 
 #if defined(ESP8266)
 
@@ -1231,11 +1235,7 @@ bool start_downloadFile(WiFiClient& client, HTTPClient& http, const String& url,
     }
 
     /*
-       String authHeader = get_auth_header(user, pass);
-
-       if (authHeader.length() > 0) {
-       http.setAuthorization(authHeader.c_str());
-       }
+       http.setAuthorization(user, pass);
      */
   }
   int httpCode = http.GET();

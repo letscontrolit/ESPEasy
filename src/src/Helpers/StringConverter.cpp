@@ -1099,7 +1099,9 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #define SMART_CONV(T, FUN) \
   while (getConvertArgument2((T), data)) { repl(data, (FUN)); }
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(data.arg1, data.arg2), 2))
+  #if FEATURE_ESPEASY_P2P
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(data.arg1, data.arg2))
+  #endif
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
   #undef SMART_CONV
