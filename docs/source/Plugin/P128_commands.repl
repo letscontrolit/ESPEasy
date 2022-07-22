@@ -136,6 +136,8 @@
     | ``nfx,faketv[,startpixel[,endpixel]]``
     ","
     | Run a fake TV effect on the pixels, optionally specifying a start- end end-pixel. Used for simulating an active TV-set, f.e. when not at home during the evening, to scare off potential burglars.
+    |
+    | NB: This effect may be excluded from the build for size reasons, by default it is **not** included in ESP8266 builds. It *can* be included in self-built Custom builds.
     "
     "
     | ``nfx,simpleclock[,bigtickcolor[,smalltickcolor[,hourcolor[,minutecolor[,secondcolor (set 'off' to disable)[,backgroundcolor]]]]]]``

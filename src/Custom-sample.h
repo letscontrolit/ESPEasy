@@ -21,6 +21,11 @@
     Here are some examples:
  */
 
+// --- Feature Flagging ---------------------------------------------------------
+
+#define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA         //enables the Arduino OTA capabilities
+
 #ifdef BUILD_GIT
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
@@ -450,6 +455,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define P128_USES_RGBW
 // #define P128_USES_BRG
 // #define P128_USES_RBG
+// #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 
 
 // Special plugins needing IR library

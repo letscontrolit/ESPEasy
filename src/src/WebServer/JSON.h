@@ -25,8 +25,9 @@ void handle_timingstats_json();
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_NEW_UI
+#if FEATURE_ESPEASY_P2P
 void handle_nodes_list_json();
-
+#endif
 void handle_buildinfo();
 
 #endif // WEBSERVER_NEW_UI
