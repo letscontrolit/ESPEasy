@@ -19,7 +19,7 @@ To create/register a plugin, you have to :
  either by adding "-DPLUGIN_BUILD_DEV" when compiling, or by momentarly
  adding "#define PLUGIN_BUILD_DEV" at the top of the ESPEasy.ino file
  - You will then have to push a PR including your plugin + the corret line (#define USES_P777) added to this file
- When found stable enough, the maintainer (and only him) will choose to move it to TESTING or STABLE
+ When found stable enough, the maintainer (and only him) will choose to move it to COLLECTION or NORMAL
 */
 
 //#define FEATURE_SD
@@ -176,8 +176,8 @@ To create/register a plugin, you have to :
     #define PLUGIN_BUILD_IR
 #endif
 
-#ifdef PLUGIN_BUILD_TESTING_IR
-    #define PLUGIN_BUILD_TESTING   // add testing
+#ifdef PLUGIN_BUILD_COLLECTION_IR
+    #define PLUGIN_BUILD_COLLECTION   // add collection
     #define PLUGIN_BUILD_IR
 #endif
 
@@ -220,69 +220,81 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_NORMAL_IRext
-    #define PLUGIN_BUILD_NORMAL     // add stable
+  #define PLUGIN_BUILD_NORMAL     // add stable
+  #if defined(PLUGIN_SET_COLLECTION_ESP32)
+    #define PLUGIN_DESCR  "Collection_A, IR with AC"
+  #elif defined(PLUGIN_SET_COLLECTION_B_ESP32)
+    #define PLUGIN_DESCR  "Collection_B, IR with AC"
+  #elif defined(PLUGIN_SET_COLLECTION_C_ESP32)
+    #define PLUGIN_DESCR  "Collection_C, IR with AC"
+  #elif defined(PLUGIN_SET_COLLECTION_D_ESP32)
+    #define PLUGIN_DESCR  "Collection_D, IR with AC"
+  #elif defined(PLUGIN_SET_COLLECTION_E_ESP32)
+    #define PLUGIN_DESCR  "Collection_E, IR with AC"
+  #else
     #define PLUGIN_DESCR  "Normal, IR with AC"
-    #define PLUGIN_BUILD_IR_EXTENDED
+  #endif
+  #define PLUGIN_BUILD_IR_EXTENDED
 #endif
 
 #ifdef PLUGIN_BUILD_DEV
-    #define  PLUGIN_SET_EXPERIMENTAL
-    #define  CONTROLLER_SET_EXPERIMENTAL
-    #define  NOTIFIER_SET_EXPERIMENTAL
-    #define  PLUGIN_BUILD_TESTING   // add testing
+  #define  PLUGIN_SET_EXPERIMENTAL
+  #define  CONTROLLER_SET_EXPERIMENTAL
+  #define  NOTIFIER_SET_EXPERIMENTAL
+  #define  PLUGIN_BUILD_COLLECTION   // add collection
 #endif
 
-#ifdef PLUGIN_BUILD_TESTING
-    #if !defined(PLUGIN_BUILD_TESTING_B) && !defined(PLUGIN_BUILD_TESTING_C) && !defined(PLUGIN_BUILD_TESTING_D) && !defined(PLUGIN_BUILD_TESTING_E)
-      #define PLUGIN_DESCR  "TEST_A"
-      #define PLUGIN_SET_TESTING_A
-    #endif
-    #define PLUGIN_SET_TESTING
-    #define CONTROLLER_SET_TESTING
-    #define NOTIFIER_SET_TESTING
-    #define PLUGIN_BUILD_NORMAL     // add stable
+#ifdef PLUGIN_BUILD_COLLECTION
+  #if !defined(PLUGIN_BUILD_COLLECTION_B) && !defined(PLUGIN_BUILD_COLLECTION_C) && !defined(PLUGIN_BUILD_COLLECTION_D) && !defined(PLUGIN_BUILD_COLLECTION_E)
+    #define PLUGIN_DESCR  "Collection_A"
+    #define PLUGIN_SET_COLLECTION_A
+  #endif
+  #define PLUGIN_SET_COLLECTION
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
 #endif
 
-#ifdef PLUGIN_BUILD_TESTING_B
-    #define PLUGIN_DESCR  "TEST_B"
-    #define PLUGIN_SET_TESTING
-    #define PLUGIN_SET_TESTING_B
-    #define CONTROLLER_SET_TESTING
-    #define NOTIFIER_SET_TESTING
-    #define PLUGIN_BUILD_NORMAL     // add stable
+#ifdef PLUGIN_BUILD_COLLECTION_B
+  #define PLUGIN_DESCR  "Collection_B"
+  #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_B
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
 #endif
 
-#ifdef PLUGIN_BUILD_TESTING_C
-    #define PLUGIN_DESCR  "TEST_C"
-    #define PLUGIN_SET_TESTING
-    #define PLUGIN_SET_TESTING_C
-    #define CONTROLLER_SET_TESTING
-    #define NOTIFIER_SET_TESTING
-    #define PLUGIN_BUILD_NORMAL     // add stable
+#ifdef PLUGIN_BUILD_COLLECTION_C
+  #define PLUGIN_DESCR  "Collection_C"
+  #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_C
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
 #endif
 
-#ifdef PLUGIN_BUILD_TESTING_D
-    #define PLUGIN_DESCR  "TEST_D"
-    #define PLUGIN_SET_TESTING
-    #define PLUGIN_SET_TESTING_D
-    #define CONTROLLER_SET_TESTING
-    #define NOTIFIER_SET_TESTING
-    #define PLUGIN_BUILD_NORMAL     // add stable
+#ifdef PLUGIN_BUILD_COLLECTION_D
+  #define PLUGIN_DESCR  "Collection_D"
+  #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_D
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
 #endif
 
-#ifdef PLUGIN_BUILD_TESTING_E
-    #define PLUGIN_DESCR  "TEST_E"
-    #define PLUGIN_SET_TESTING
-    #define PLUGIN_SET_TESTING_E
-    #define CONTROLLER_SET_TESTING
-    #define NOTIFIER_SET_TESTING
-    #define PLUGIN_BUILD_NORMAL     // add stable
+#ifdef PLUGIN_BUILD_COLLECTION_E
+  #define PLUGIN_DESCR  "Collection_E"
+  #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_E
+  #define CONTROLLER_SET_COLLECTION
+  #define NOTIFIER_SET_COLLECTION
+  #define PLUGIN_BUILD_NORMAL     // add stable
 #endif
 
 #ifndef PLUGIN_BUILD_CUSTOM
-    #ifndef PLUGIN_BUILD_NORMAL
-        #define PLUGIN_BUILD_NORMAL // defaults to stable, if not custom
-    #endif
+  #ifndef PLUGIN_BUILD_NORMAL
+    #define PLUGIN_BUILD_NORMAL // defaults to stable, if not custom
+  #endif
 #endif
 
 #ifdef PLUGIN_BUILD_NORMAL
@@ -656,106 +668,156 @@ To create/register a plugin, you have to :
     #define USES_P028   // BME280
 #endif
 
-#ifdef PLUGIN_SET_TEST_ESP32
-    #if !defined(PLUGIN_SET_TEST_B_ESP32) && !defined(PLUGIN_SET_TEST_C_ESP32) && !defined(PLUGIN_SET_TEST_D_ESP32) && !defined(PLUGIN_SET_TEST_E_ESP32)
-      #define PLUGIN_DESCR  "TEST_A ESP32"
-      #define  PLUGIN_SET_TESTING_A
+#ifdef PLUGIN_SET_COLLECTION_ESP32
+  #if !defined(PLUGIN_SET_COLLECTION_B_ESP32) && !defined(PLUGIN_SET_COLLECTION_C_ESP32) && !defined(PLUGIN_SET_COLLECTION_D_ESP32) && !defined(PLUGIN_SET_COLLECTION_E_ESP32)
+    #ifndef PLUGIN_DESCR // COLLECTION_A_ESP32_IRExt also passes here
+      #define PLUGIN_DESCR  "Collection_A ESP32"
     #endif
-    #ifndef ESP32
-        #define ESP32
-    #endif
-    #ifdef ESP8266
-        #undef ESP8266
-    #endif
-//    #define PLUGIN_SET_ONLY_SWITCH
-
-    #define  PLUGIN_SET_TESTING
-    #define  CONTROLLER_SET_STABLE
-    #define  NOTIFIER_SET_STABLE
-    #define  PLUGIN_SET_STABLE     // add stable
-    // See also PLUGIN_SET_TEST_ESP32 section at end,
-    // where incompatible plugins will be disabled.
-    // TODO : Check compatibility of plugins for ESP32 board.
+    #define  PLUGIN_SET_COLLECTION_A
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  CONTROLLER_SET_STABLE
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
+  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
+  // where incompatible plugins will be disabled.
+  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
-#ifdef PLUGIN_SET_TEST_B_ESP32
-    #define PLUGIN_DESCR  "TEST_B ESP32"
-    #ifndef ESP32
-        #define ESP32
-    #endif
-    #ifdef ESP8266
-        #undef ESP8266
-    #endif
-//    #define PLUGIN_SET_ONLY_SWITCH
-
-    #define  PLUGIN_SET_TESTING
-    #define  PLUGIN_SET_TESTING_B
-    #define  CONTROLLER_SET_STABLE
-    #define  NOTIFIER_SET_STABLE
-    #define  PLUGIN_SET_STABLE     // add stable
-    // See also PLUGIN_SET_TEST_ESP32 section at end,
-    // where incompatible plugins will be disabled.
-    // TODO : Check compatibility of plugins for ESP32 board.
+#ifdef PLUGIN_SET_COLLECTION_B_ESP32
+  #ifndef PLUGIN_DESCR // COLLECTION_B_ESP32_IRExt also passes here
+    #define PLUGIN_DESCR  "Collection_B ESP32"
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  PLUGIN_SET_COLLECTION_B
+  #define  CONTROLLER_SET_STABLE
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
+  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
+  // where incompatible plugins will be disabled.
+  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
-#ifdef PLUGIN_SET_TEST_C_ESP32
-    #define PLUGIN_DESCR  "TEST_C ESP32"
-    #ifndef ESP32
-        #define ESP32
-    #endif
-    #ifdef ESP8266
-        #undef ESP8266
-    #endif
-//    #define PLUGIN_SET_ONLY_SWITCH
-
-    #define  PLUGIN_SET_TESTING
-    #define  PLUGIN_SET_TESTING_C
-    #define  CONTROLLER_SET_STABLE
-    #define  NOTIFIER_SET_STABLE
-    #define  PLUGIN_SET_STABLE     // add stable
-    // See also PLUGIN_SET_TEST_ESP32 section at end,
-    // where incompatible plugins will be disabled.
-    // TODO : Check compatibility of plugins for ESP32 board.
+#ifdef PLUGIN_SET_COLLECTION_C_ESP32
+  #ifndef PLUGIN_DESCR // COLLECTION_C_ESP32_IRExt also passes here
+    #define PLUGIN_DESCR  "Collection_C ESP32"
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  PLUGIN_SET_COLLECTION_C
+  #define  CONTROLLER_SET_STABLE
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
+  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
+  // where incompatible plugins will be disabled.
+  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
-#ifdef PLUGIN_SET_TEST_D_ESP32
-    #define PLUGIN_DESCR  "TEST_D ESP32"
-    #ifndef ESP32
-        #define ESP32
-    #endif
-    #ifdef ESP8266
-        #undef ESP8266
-    #endif
-//    #define PLUGIN_SET_ONLY_SWITCH
-
-    #define  PLUGIN_SET_TESTING
-    #define  PLUGIN_SET_TESTING_D
-    #define  CONTROLLER_SET_STABLE
-    #define  NOTIFIER_SET_STABLE
-    #define  PLUGIN_SET_STABLE     // add stable
-    // See also PLUGIN_SET_TEST_ESP32 section at end,
-    // where incompatible plugins will be disabled.
-    // TODO : Check compatibility of plugins for ESP32 board.
+#ifdef PLUGIN_SET_COLLECTION_D_ESP32
+  #ifndef PLUGIN_DESCR // COLLECTION_D_ESP32_IRExt also passes here
+    #define PLUGIN_DESCR  "Collection_D ESP32"
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  PLUGIN_SET_COLLECTION_D
+  #define  CONTROLLER_SET_STABLE
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
+  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
+  // where incompatible plugins will be disabled.
+  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
-#ifdef PLUGIN_SET_TEST_E_ESP32
-    #define PLUGIN_DESCR  "TEST_E ESP32"
-    #ifndef ESP32
-        #define ESP32
-    #endif
-    #ifdef ESP8266
-        #undef ESP8266
-    #endif
-//    #define PLUGIN_SET_ONLY_SWITCH
-
-    #define  PLUGIN_SET_TESTING
-    #define  PLUGIN_SET_TESTING_E
-    #define  CONTROLLER_SET_STABLE
-    #define  NOTIFIER_SET_STABLE
-    #define  PLUGIN_SET_STABLE     // add stable
-    // See also PLUGIN_SET_TEST_ESP32 section at end,
-    // where incompatible plugins will be disabled.
-    // TODO : Check compatibility of plugins for ESP32 board.
+#ifdef PLUGIN_SET_COLLECTION_E_ESP32
+  #ifndef PLUGIN_DESCR // COLLECTION_E_ESP32_IRExt also passes here
+    #define PLUGIN_DESCR  "Collection_E ESP32"
+  #endif
+  #ifndef ESP32
+    #define ESP32
+  #endif
+  #ifdef ESP8266
+    #undef ESP8266
+  #endif
+  // Undefine contradictionary defines
+  #ifdef PLUGIN_SET_NONE
+    #undef PLUGIN_SET_NONE
+  #endif
+  #ifdef PLUGIN_SET_ONLY_SWITCH
+    #undef PLUGIN_SET_ONLY_SWITCH
+  #endif
+  #ifdef PLUGIN_SET_ONLY_TEMP_HUM
+    #undef PLUGIN_SET_ONLY_TEMP_HUM
+  #endif
+  #define  PLUGIN_SET_COLLECTION
+  #define  PLUGIN_SET_COLLECTION_E
+  #define  CONTROLLER_SET_STABLE
+  #define  NOTIFIER_SET_STABLE
+  #define  PLUGIN_SET_STABLE     // add stable
+  // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
+  // where incompatible plugins will be disabled.
+  // TODO : Check compatibility of plugins for ESP32 board.
 #endif
 
 #ifdef PLUGIN_BUILD_MAX_ESP32
@@ -789,7 +851,7 @@ To create/register a plugin, you have to :
     #endif
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
-    // See also PLUGIN_SET_TEST_ESP32 section at end,
+    // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
     // where incompatible plugins will be disabled.
     // TODO : Check compatibility of plugins for ESP32 board.
 #endif
@@ -805,7 +867,7 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_SET_VENTUS_W266
     #define PLUGIN_SET_ONLY_SWITCH
     #define PLUGIN_BUILD_DISABLED
-    #define USES_P046      // TESTING	Hardware	P046_VentusW266.ino
+    #define USES_P046      // Hardware	P046_VentusW266.ino
 #endif
 
 
@@ -881,136 +943,126 @@ To create/register a plugin, you have to :
 #endif
 
 
-
-
-
-
 /******************************************************************************\
  * Main Families **************************************************************
 \******************************************************************************/
 
 // NONE #####################################
 #ifdef PLUGIN_SET_NONE
-    #ifdef PLUGIN_SET_STABLE
-        #undef PLUGIN_SET_STABLE
-    #endif
-    #ifdef PLUGIN_SET_TESTING
-        #undef PLUGIN_SET_TESTING
-    #endif
-    #ifdef PLUGIN_SET_TESTING_A
-        #undef PLUGIN_SET_TESTING_A
-    #endif
-    #ifdef PLUGIN_SET_TESTING_B
-        #undef PLUGIN_SET_TESTING_B
-    #endif
-    #ifdef PLUGIN_SET_TESTING_C
-        #undef PLUGIN_SET_TESTING_C
-    #endif
-    #ifdef PLUGIN_SET_TESTING_D
-        #undef PLUGIN_SET_TESTING_D
-    #endif
-    #ifdef PLUGIN_SET_TESTING_E
-        #undef PLUGIN_SET_TESTING_E
-    #endif
-    #ifdef PLUGIN_SET_EXPERIMENTAL
-        #undef PLUGIN_SET_EXPERIMENTAL
-    #endif
+  #ifdef PLUGIN_SET_STABLE
+    #undef PLUGIN_SET_STABLE
+  #endif
+  #ifdef PLUGIN_SET_COLLECTION
+    #undef PLUGIN_SET_COLLECTION
+  #endif
+  #ifdef PLUGIN_SET_COLLECTION_A
+    #undef PLUGIN_SET_COLLECTION_A
+  #endif
+  #ifdef PLUGIN_SET_COLLECTION_B
+    #undef PLUGIN_SET_COLLECTION_B
+  #endif
+  #ifdef PLUGIN_SET_COLLECTION_C
+    #undef PLUGIN_SET_COLLECTION_C
+  #endif
+  #ifdef PLUGIN_SET_COLLECTION_D
+    #undef PLUGIN_SET_COLLECTION_D
+  #endif
+  #ifdef PLUGIN_SET_COLLECTION_E
+    #undef PLUGIN_SET_COLLECTION_E
+  #endif
+  #ifdef PLUGIN_SET_EXPERIMENTAL
+    #undef PLUGIN_SET_EXPERIMENTAL
+  #endif
 #endif
 
 
 #ifdef CONTROLLER_SET_NONE
-    #ifdef CONTROLLER_SET_STABLE
-        #undef CONTROLLER_SET_STABLE
-    #endif
-    #ifdef CONTROLLER_SET_TESTING
-        #undef CONTROLLER_SET_TESTING
-    #endif
-    #ifdef CONTROLLER_SET_EXPERIMENTAL
-        #undef CONTROLLER_SET_EXPERIMENTAL
-    #endif
+  #ifdef CONTROLLER_SET_STABLE
+    #undef CONTROLLER_SET_STABLE
+  #endif
+  #ifdef CONTROLLER_SET_COLLECTION
+    #undef CONTROLLER_SET_COLLECTION
+  #endif
+  #ifdef CONTROLLER_SET_EXPERIMENTAL
+    #undef CONTROLLER_SET_EXPERIMENTAL
+  #endif
 #endif
 
 
 #ifdef NOTIFIER_SET_NONE
-    #ifdef NOTIFIER_SET_STABLE
-        #undef NOTIFIER_SET_STABLE
-    #endif
-    #ifdef NOTIFIER_SET_TESTING
-        #undef NOTIFIER_SET_TESTING
-    #endif
-    #ifdef NOTIFIER_SET_EXPERIMENTAL
-        #undef NOTIFIER_SET_EXPERIMENTAL
-    #endif
+  #ifdef NOTIFIER_SET_STABLE
+    #undef NOTIFIER_SET_STABLE
+  #endif
+  #ifdef NOTIFIER_SET_COLLECTION
+    #undef NOTIFIER_SET_COLLECTION
+  #endif
+  #ifdef NOTIFIER_SET_EXPERIMENTAL
+    #undef NOTIFIER_SET_EXPERIMENTAL
+  #endif
 #endif
 
 // ALL ###########################################
 #ifdef PLUGIN_SET_ALL
-    #ifndef PLUGIN_SET_STABLE
-        #define PLUGIN_SET_STABLE
-    #endif
-    #ifndef PLUGIN_SET_TESTING
-        #define PLUGIN_SET_TESTING
-    #endif
-    // #ifndef PLUGIN_SET_TESTING_A
-    //     #define PLUGIN_SET_TESTING_A
-    // #endif
-    #ifndef PLUGIN_SET_EXPERIMENTAL
-        #define PLUGIN_SET_EXPERIMENTAL
-    #endif
+  #ifndef PLUGIN_SET_STABLE
+    #define PLUGIN_SET_STABLE
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION
+    #define PLUGIN_SET_COLLECTION
+  #endif
+  #ifndef PLUGIN_SET_EXPERIMENTAL
+    #define PLUGIN_SET_EXPERIMENTAL
+  #endif
 #endif
 
 
 #ifdef CONTROLLER_SET_ALL
-    #ifndef CONTROLLER_SET_STABLE
-        #define CONTROLLER_SET_STABLE
-    #endif
-    #ifndef CONTROLLER_SET_TESTING
-        #define CONTROLLER_SET_TESTING
-    #endif
-    #ifndef CONTROLLER_SET_EXPERIMENTAL
-        #define CONTROLLER_SET_EXPERIMENTAL
-    #endif
+  #ifndef CONTROLLER_SET_STABLE
+    #define CONTROLLER_SET_STABLE
+  #endif
+  #ifndef CONTROLLER_SET_COLLECTION
+    #define CONTROLLER_SET_COLLECTION
+  #endif
+  #ifndef CONTROLLER_SET_EXPERIMENTAL
+    #define CONTROLLER_SET_EXPERIMENTAL
+  #endif
 #endif
 
 
 #ifdef NOTIFIER_SET_ALL
-    #ifndef NOTIFIER_SET_STABLE
-        #define NOTIFIER_SET_STABLE
-    #endif
-    #ifndef NOTIFIER_SET_TESTING
-        #define NOTIFIER_SET_TESTING
-    #endif
-    #ifndef NOTIFIER_SET_EXPERIMENTAL
-        #define NOTIFIER_SET_EXPERIMENTAL
-    #endif
+  #ifndef NOTIFIER_SET_STABLE
+    #define NOTIFIER_SET_STABLE
+  #endif
+  #ifndef NOTIFIER_SET_COLLECTION
+    #define NOTIFIER_SET_COLLECTION
+  #endif
+  #ifndef NOTIFIER_SET_EXPERIMENTAL
+    #define NOTIFIER_SET_EXPERIMENTAL
+  #endif
 #endif
 
 // MAX ###########################################
 #ifdef PLUGIN_SET_MAX
-    #ifndef PLUGIN_SET_STABLE
-        #define PLUGIN_SET_STABLE
-    #endif
-    #ifndef PLUGIN_SET_TESTING
-        #define PLUGIN_SET_TESTING
-    #endif
-    #ifndef PLUGIN_SET_TESTING_A
-        #define PLUGIN_SET_TESTING_A
-    #endif
-    #ifndef PLUGIN_SET_TESTING_B
-        #define PLUGIN_SET_TESTING_B
-    #endif
-    #ifndef PLUGIN_SET_TESTING_C
-        #define PLUGIN_SET_TESTING_C
-    #endif
-    #ifndef PLUGIN_SET_TESTING_D
-        #define PLUGIN_SET_TESTING_D
-    #endif
-    #ifndef PLUGIN_SET_TESTING_E
-        #define PLUGIN_SET_TESTING_E
-    #endif
-    // #ifndef PLUGIN_SET_EXPERIMENTAL
-    //     #define PLUGIN_SET_EXPERIMENTAL
-    // #endif
+  #ifndef PLUGIN_SET_STABLE
+    #define PLUGIN_SET_STABLE
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION
+    #define PLUGIN_SET_COLLECTION
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_A
+    #define PLUGIN_SET_COLLECTION_A
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_B
+    #define PLUGIN_SET_COLLECTION_B
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_C
+    #define PLUGIN_SET_COLLECTION_C
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_D
+    #define PLUGIN_SET_COLLECTION_D
+  #endif
+  #ifndef PLUGIN_SET_COLLECTION_E
+    #define PLUGIN_SET_COLLECTION_E
+  #endif
 #endif
 
 
@@ -1082,7 +1134,7 @@ To create/register a plugin, you have to :
     #define USES_P059   // Encoder
 
     #define USES_P063   // TTP229_KeyPad
-    #define USES_P073   // 7DG
+    #define USES_P073   // 7DGT
     #define USES_P079   // Wemos Motoshield
 #endif
 
@@ -1111,7 +1163,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#if defined(PLUGIN_SET_TESTING) || defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D) || defined(PLUGIN_SET_TESTING_E)
+#if defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E)
   #if !defined(PLUGIN_SET_MAX) && !defined(ESP32)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
@@ -1122,8 +1174,8 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-// TESTING #####################################
-#ifdef PLUGIN_SET_TESTING
+// COLLECTIONS #####################################
+#ifdef PLUGIN_SET_COLLECTION
     #define USES_P045   // MPU6050
     #define USES_P047   // I2C_soil_misture
     #define USES_P048   // Motoshield_v2
@@ -1153,7 +1205,7 @@ To create/register a plugin, you have to :
     #define USES_P089   // Ping
 #endif
 
-#ifdef PLUGIN_SET_TESTING_A
+#ifdef PLUGIN_SET_COLLECTION_A
 
     #define USES_P067   // HX711_Load_Cell
     #define USES_P068   // SHT3x
@@ -1178,7 +1230,7 @@ To create/register a plugin, you have to :
     #define USES_P105   // AHT10/20/21
 #endif
 
-#ifdef PLUGIN_SET_TESTING_B
+#ifdef PLUGIN_SET_COLLECTION_B
     #define USES_P069   // LM75A
 
     #define USES_P100   // Pulse Counter - DS2423
@@ -1193,7 +1245,7 @@ To create/register a plugin, you have to :
     #define USES_P113   // VL53L1X ToF
 #endif
 
-#ifdef PLUGIN_SET_TESTING_C
+#ifdef PLUGIN_SET_COLLECTION_C
     #define USES_P085   // AcuDC24x
     #define USES_P087   // Serial Proxy
 
@@ -1203,7 +1255,7 @@ To create/register a plugin, you have to :
     #define USES_P111   // RC522 RFID reader
 #endif
 
-#ifdef PLUGIN_SET_TESTING_D
+#ifdef PLUGIN_SET_COLLECTION_D
     #define USES_P093   // Mitsubishi Heat Pump
     #define USES_P094  // CUL Reader
     #ifndef USES_P098
@@ -1221,7 +1273,7 @@ To create/register a plugin, you have to :
     #define USES_P127  // CDM7160
 #endif
 
-#ifdef PLUGIN_SET_TESTING_E
+#ifdef PLUGIN_SET_COLLECTION_E
     #define USES_P119   // ITG3205 Gyro
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
@@ -1233,6 +1285,9 @@ To create/register a plugin, you have to :
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "Energy"
+  #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
    #endif
@@ -1271,6 +1326,9 @@ To create/register a plugin, you have to :
 
 // Collection of all display plugins. (also NeoPixel)
 #ifdef PLUGIN_DISPLAY_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "Display"
+  #endif
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
@@ -1326,6 +1384,9 @@ To create/register a plugin, you have to :
 
 // Collection of all NeoPixel plugins
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
+  #ifndef PLUGIN_DESCR
+    #define PLUGIN_DESCR  "NeoPixel"
+  #endif
   #ifndef USES_P038
     #define USES_P038   // NeoPixel
   #endif
@@ -1351,7 +1412,7 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifdef CONTROLLER_SET_TESTING
+#ifdef CONTROLLER_SET_COLLECTION
     #define USES_C011   // Generic HTTP Advanced
     #define USES_C012   // Blynk HTTP
     #define USES_C014   // homie 3 & 4dev MQTT
@@ -1362,7 +1423,8 @@ To create/register a plugin, you have to :
 #endif
 
 
-#ifdef NOTIFIER_SET_TESTING
+#ifdef NOTIFIER_SET_COLLECTION
+  // To be defined
 #endif
 
 
@@ -1453,7 +1515,7 @@ To create/register a plugin, you have to :
 
 
 // Maximized build definition for an ESP(32) with 16MB Flash and 4MB sketch partition
-// Add all plugins, controllers and features that don't fit in the TESTING set
+// Add all plugins, controllers and features that don't fit in the COLLECTION set
 #ifdef PLUGIN_SET_MAX
   // Features
   #ifndef USE_SERVO
@@ -1782,7 +1844,7 @@ To create/register a plugin, you have to :
   #ifdef USES_BLYNK
     #undef USES_BLYNK
   #endif
-  #if !defined(PLUGIN_SET_TESTING) && !defined(PLUGIN_SET_SONOFF_POW)
+  #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
       #undef USES_P076   // HWL8012   in POW r1
     #endif
@@ -1925,8 +1987,8 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-// Here we can re-enable specific features in the TESTING sets as we have created some space there by splitting them up
-#if defined(TESTING_USE_RTTTL) && (defined(PLUGIN_SET_TESTING_A) || defined(PLUGIN_SET_TESTING_B) || defined(PLUGIN_SET_TESTING_C) || defined(PLUGIN_SET_TESTING_D) || defined(PLUGIN_SET_TESTING_E))
+// Here we can re-enable specific features in the COLLECTION sets as we have created some space there by splitting them up
+#if defined(COLLECTION_USE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E))
   #ifndef USE_RTTTL
     #define USE_RTTTL
   #endif
@@ -1952,7 +2014,7 @@ To create/register a plugin, you have to :
 
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
 #ifdef WEBSERVER_NEW_UI
- #define SHOW_SYSINFO_JSON
+  #define SHOW_SYSINFO_JSON
 #endif
 
 

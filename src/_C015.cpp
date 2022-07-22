@@ -18,8 +18,6 @@
 //
 // https://www.youtube.com/watch?v=5_V_DibOypE
 
-// #ifdef PLUGIN_BUILD_TESTING
-
 // Uncomment this to use ssl connection. This requires more device resources than unencrypted one.
 // Also it requires valid server thumbprint string to be entered in plugin settings.
 // #define CPLUGIN_015_SSL
