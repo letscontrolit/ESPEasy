@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 // Changelog:
+// 2022-07-20, tonhuisman Make FakeTV compile-time optional, disabled by default on ESP8266, enabled by default on ESP32
+//                        P128_ENABLE_FAKETV can be set to 0/1 in Custom.h
 // 2022-07-02, tonhuisman Introduce Max Brightness setting for protecting the hardware and power supply (and the eyes :-))
 // 2022-06-12, tonhuisman Optimizations, revert Makuna/NeopixelBus library to 2.6.9 for incompatibilties like [[maybe_unused]] arguments
 // 2022-01-30, tonhuisman Fix JSON message to use proper JSON functions, some bugfixes and small source improvements
