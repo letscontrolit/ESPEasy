@@ -138,15 +138,18 @@ bool do_process_c008_delay_queue(int controller_number, const C008_queue_element
   }
 
   WiFiClient client;
-
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
-
-  String request =
-    create_http_request_auth(controller_number, element.controller_idx, ControllerSettings, F("GET"), element.txt[element.valuesSent]);
-
-  return element.checkDone(send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply));
+  int httpCode = -1;
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    client,
+    element.txt[element.valuesSent],
+    F("GET"),
+    EMPTY_STRING,
+    EMPTY_STRING,
+    httpCode);
+  return element.checkDone((httpCode >= 100) && (httpCode < 300));
 }
 
 #endif // ifdef USES_C008
