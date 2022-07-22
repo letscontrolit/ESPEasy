@@ -174,9 +174,9 @@ String getPluginDescriptionString() {
   #ifdef PLUGIN_BUILD_NORMAL
   result += F(" [Normal]");
   #endif // ifdef PLUGIN_BUILD_NORMAL
-  #ifdef PLUGIN_BUILD_TESTING
-  result += F(" [Testing]");
-  #endif // ifdef PLUGIN_BUILD_TESTING
+  #ifdef PLUGIN_BUILD_COLLECTION
+  result += F(" [Collection]");
+  #endif // ifdef PLUGIN_BUILD_COLLECTION
   #ifdef PLUGIN_BUILD_DEV
   result += F(" [Development]");
   #endif // ifdef PLUGIN_BUILD_DEV
