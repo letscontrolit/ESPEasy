@@ -9,7 +9,7 @@
 
 # define CPLUGIN_012
 # define CPLUGIN_ID_012         12
-# define CPLUGIN_NAME_012       "Blynk HTTP [TESTING]"
+# define CPLUGIN_NAME_012       "Blynk HTTP"
 
 bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& string)
 {

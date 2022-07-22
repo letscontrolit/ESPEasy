@@ -7,7 +7,7 @@
 
 #define PLUGIN_086
 #define PLUGIN_ID_086         86
-#define PLUGIN_NAME_086       "Generic - Homie receiver [TESTING]"
+#define PLUGIN_NAME_086       "Generic - Homie receiver"
 
 // empty default names because settings will be ignored / not used if value name is empty
 #define PLUGIN_VALUENAME1_086 ""
