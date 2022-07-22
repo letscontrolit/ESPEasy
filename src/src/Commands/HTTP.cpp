@@ -20,8 +20,6 @@
 
 const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, const char *Line)
 {
-  bool success = false;
-
   if (NetworkConnected()) {
     String user, pass;
     String host      = parseStringKeepCase(Line, 2);
@@ -80,16 +78,17 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
       EMPTY_STRING, // header
       EMPTY_STRING, // poststr
       httpCode,
-	  Settings.SendToHttp_ack());
+      Settings.SendToHttp_ack());
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String logstr;
       logstr += F("SendToHTTP: ");
       logstr += httpCode;
-	  if (!res.isEmpty()) {
-		logstr += F(" Received reply: ");
-		logstr += res;
-	  }
+
+      if (!res.isEmpty()) {
+        logstr += F(" Received reply: ");
+        logstr += res;
+      }
       addLog(LOG_LEVEL_INFO, logstr);
     }
 

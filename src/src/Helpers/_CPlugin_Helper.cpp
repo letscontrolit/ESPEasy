@@ -475,6 +475,15 @@ String send_via_http(const String& logIdentifier,
   }
   log_http_result(http, logIdentifier, HttpMethod, httpCode, response);
   http.end();
+  if (Settings.UseRules) {
+    // Generate event with the HTTP return code
+    // e.g. http#hostname=401
+    String event = F("http#");
+    event += host;
+    event += '=';
+    event += httpCode;
+    eventQueue.addMove(std::move(event));
+  }
   return response;
 }
 
