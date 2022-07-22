@@ -31,7 +31,7 @@
 
 #define PLUGIN_099
 #define PLUGIN_ID_099         99
-#define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display [TESTING]"
+#define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display"
 #define PLUGIN_VALUENAME1_099 "X"
 #define PLUGIN_VALUENAME2_099 "Y"
 #define PLUGIN_VALUENAME3_099 "Z"

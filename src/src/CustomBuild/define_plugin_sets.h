@@ -1439,8 +1439,8 @@ To create/register a plugin, you have to :
     // [copied from Playground as of 6 March 2018]
     // It needs some cleanup as some are ALSO in the main repo,
     // thus they should have been removed from the Playground repo
-    // #define USES_P100	// Was SRF01, now Pulse Counter - DS2423 [Testing]
-	// #define USES_P101	// Was NeoClock, now Wake On Lan [Testing]
+    // #define USES_P100	// Was SRF01, now Pulse Counter - DS2423
+	// #define USES_P101	// Was NeoClock, now Wake On Lan
 	#define USES_P102	// Nodo
 	#define USES_P103	// Event
 	#define USES_P104	// SRF02

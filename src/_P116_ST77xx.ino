@@ -28,7 +28,7 @@
 
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
-# define PLUGIN_NAME_116       "Display - ST77xx TFT [TESTING]"
+# define PLUGIN_NAME_116       "Display - ST77xx TFT"
 # define PLUGIN_VALUENAME1_116 "CursorX"
 # define PLUGIN_VALUENAME2_116 "CursorY"
 

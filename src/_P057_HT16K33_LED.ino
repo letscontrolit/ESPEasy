@@ -67,7 +67,7 @@
 
 #define PLUGIN_057
 #define PLUGIN_ID_057         57
-#define PLUGIN_NAME_057       "Display - HT16K33 [TESTING]"
+#define PLUGIN_NAME_057       "Display - HT16K33"
 
 
 #include "src/PluginStructs/P057_data_struct.h"
