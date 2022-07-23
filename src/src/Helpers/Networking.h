@@ -3,9 +3,17 @@
 
 #include "../../ESPEasy_common.h"
 
-
+#include <Arduino.h>
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
+
+#ifdef ESP8266
+# include <ESP8266HTTPClient.h>
+#endif // ifdef ESP8266
+#ifdef ESP32
+# include <HTTPClient.h>
+#endif // ifdef ESP32
+
 
 /*********************************************************************************************\
    Syslog client
@@ -155,6 +163,38 @@ bool splitHostPortString(const String& hostPortString, String& host, uint16_t& p
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
 String splitURL(const String& fullURL, String& host, uint16_t& port, String& file);
+
+
+// Initiate the HTTP connection.
+// Also try to authenticate using either Basic auth or Digest.
+// @retval HTTP return code.
+int http_authenticate(const String& logIdentifier,
+                      WiFiClient  & client,
+                      HTTPClient  & http,
+                      uint16_t      timeout,
+                      const String& user,
+                      const String& pass,
+                      const String& host,
+                      uint16_t      port,
+                      const String& uri,
+                      const String& HttpMethod,
+                      const String& header,
+                      const String& postStr);
+
+
+String send_via_http(const String& logIdentifier,
+                     WiFiClient  & client,
+                     uint16_t      timeout,
+                     const String& user,
+                     const String& pass,
+                     const String& host,
+                     uint16_t      port,
+                     const String& uri,
+                     const String& HttpMethod,
+                     const String& header,
+                     const String& postStr,
+                     int         & httpCode,
+                     bool          must_check_reply);
 
 #ifdef USE_DOWNLOAD
 

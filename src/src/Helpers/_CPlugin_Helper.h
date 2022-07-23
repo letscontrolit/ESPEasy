@@ -1,10 +1,6 @@
 #ifndef CPLUGIN_HELPER_H
 #define CPLUGIN_HELPER_H
 
-#include <Arduino.h>
-#include <WiFiClient.h>
-#include <WiFiUdp.h>
-
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
@@ -19,6 +15,7 @@
 #include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Network.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/_CPlugin_Helper_webform.h"
@@ -55,19 +52,6 @@ bool try_connect_host(int controller_number, WiFiClient& client, ControllerSetti
 bool client_available(WiFiClient& client);
 
 
-String send_via_http(const String& logIdentifier,
-                     WiFiClient  & client,
-                     uint16_t      timeout,
-                     const String& user,
-                     const String& pass,
-                     const String& host,
-                     uint16_t      port,
-                     const String& uri,
-                     const String& HttpMethod,
-                     const String& header,
-                     const String& postStr,
-                     int         & httpCode,
-                     bool          must_check_reply);
 
 String send_via_http(int                             controller_number,
                      const ControllerSettingsStruct& ControllerSettings,
