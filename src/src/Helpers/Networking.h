@@ -158,11 +158,22 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp);
 
 void sendGratuitousARP();
 
+
 bool splitHostPortString(const String& hostPortString, String& host, uint16_t& port);
+
+// Split the username and password from a string like this:
+// username:password@hostname:portnr
+// @param  hostPortString  The string to parse
+// @param  user The found username (if any)
+// @param  pass The found password (if any)
+// @param  hostname The hostname stripped from any of the other possible parameters
+// @param  port The found portname (defaults to 80 when not specified)
+// @retval Whether supplied hostPortString was valid.
+bool splitUserPass_HostPortString(const String& hostPortString, String& user, String& pass, String& host, uint16_t& port);
 
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& host, uint16_t& port, String& file);
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file);
 
 
 // Initiate the HTTP connection.

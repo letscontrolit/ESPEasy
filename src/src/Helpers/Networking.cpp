@@ -1180,9 +1180,26 @@ bool splitHostPortString(const String& hostPortString, String& host, uint16_t& p
   return true;
 }
 
+bool splitUserPass_HostPortString(const String& hostPortString, String& user, String& pass, String& host, uint16_t& port)
+{
+  const int pos_at = hostPortString.indexOf('@');
+
+  if (pos_at != -1) {
+    user = hostPortString.substring(0, pos_at);
+    const int pos_colon = user.indexOf(':');
+
+    if (pos_colon != -1) {
+      pass = user.substring(pos_colon + 1);
+      user = user.substring(0, pos_colon);
+    }
+    return splitHostPortString(hostPortString.substring(pos_at + 1), host, port);
+  }
+  return splitHostPortString(hostPortString, host, port);
+}
+
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& host, uint16_t& port, String& file) {
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file) {
   int starthost = fullURL.indexOf(F("//"));
 
   if (starthost == -1) {
@@ -1192,7 +1209,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   }
   int endhost = fullURL.indexOf('/', starthost);
 
-  splitHostPortString(fullURL.substring(starthost, endhost), host, port);
+  splitUserPass_HostPortString(fullURL.substring(starthost, endhost), user, pass, host, port);
   int startfile = fullURL.lastIndexOf('/');
 
   if (startfile >= 0) {
@@ -1310,6 +1327,7 @@ String getDigestAuth(const String& authReq,
 
 void log_http_result(const HTTPClient& http,
                      const String    & logIdentifier,
+                     const String    & host,
                      const String    & HttpMethod,
                      int               httpCode,
                      const String    & response)
@@ -1329,6 +1347,8 @@ void log_http_result(const HTTPClient& http,
     String log = F("HTTP : ");
     log += logIdentifier;
     log += ' ';
+    log += host;
+    log += ' ';
     log += HttpMethod;
     log += F("... ");
 
@@ -1344,7 +1364,7 @@ void log_http_result(const HTTPClient& http,
     }
 
     if (response.length() > 0) {
-      log += ' ';
+      log += F(" Received reply: ");
       log += response.substring(0, 100); // Returned string may be huge, so only log the first part.
     }
     addLogMove(loglevel, log);
@@ -1369,6 +1389,10 @@ int http_authenticate(const String& logIdentifier,
   http.setAuthorization(user.c_str(), pass.c_str());
   http.setTimeout(timeout);
   http.setUserAgent(get_user_agent_string());
+
+  // FIXME TD-er: Must make this configurable
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  http.setRedirectLimit(2);
 
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -1449,7 +1473,7 @@ int http_authenticate(const String& logIdentifier,
     event += httpCode;
     eventQueue.addMove(std::move(event));
   }
-  log_http_result(http, logIdentifier, HttpMethod, httpCode, EMPTY_STRING);
+  log_http_result(http, logIdentifier, host, HttpMethod, httpCode, EMPTY_STRING);
   return httpCode;
 }
 
@@ -1488,7 +1512,7 @@ String send_via_http(const String& logIdentifier,
     response = http.getString();
 
     if (!response.isEmpty()) {
-      log_http_result(http, logIdentifier, HttpMethod, httpCode, response);
+      log_http_result(http, logIdentifier, host, HttpMethod, httpCode, response);
     }
   }
   http.end();
@@ -1512,16 +1536,18 @@ bool downloadFile(const String& url, String file_save) {
   return downloadFile(url, file_save, EMPTY_STRING, EMPTY_STRING, error);
 }
 
+// User and Pass may be updated if they occur in the hostname part.
+// Thus have to be copied instead of const reference.
 bool start_downloadFile(WiFiClient  & client,
                         HTTPClient  & http,
                         const String& url,
                         String      & file_save,
-                        const String& user,
-                        const String& pass,
+                        String        user,
+                        String        pass,
                         String      & error) {
   String   host, file;
   uint16_t port;
-  String   uri = splitURL(url, host, port, file);
+  String   uri = splitURL(url, user, pass, host, port, file);
 
   if (file_save.isEmpty()) {
     file_save = file;
@@ -1549,7 +1575,7 @@ bool start_downloadFile(WiFiClient  & client,
     return false;
   }
 
-  int httpCode = http_authenticate(
+  const int httpCode = http_authenticate(
     F("DownloadFile"),
     client,
     http,
