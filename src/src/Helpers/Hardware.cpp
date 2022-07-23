@@ -1085,6 +1085,7 @@ void readBootCause() {
     case TG1WDT_CPU_RESET: lastBootCause  = BOOT_CAUSE_EXT_WD; break;
     case SUPER_WDT_RESET:   lastBootCause = BOOT_CAUSE_EXT_WD; break;
     case GLITCH_RTC_RESET:  lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break; // FIXME TD-er: Does this need a different reason?
+    case EFUSE_RESET:       break; // FIXME TD-er: No idea what may cause this reset reason.
     # endif // ifdef ESP32S2
   }
 }
