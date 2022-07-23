@@ -214,7 +214,7 @@ There are different released versions of ESP Easy:
 
 :green:`NORMAL` is the regular set of plugins, you can consider these plugins stable with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
 
-:yellow:`COLLECTION` (split into sets A..) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like the I2C multiplexer feature, RTTTL, tooltips, and some DEBUG logging.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like the I2C multiplexer feature, RTTTL, tooltips, and some DEBUG logging.
 
 :red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
