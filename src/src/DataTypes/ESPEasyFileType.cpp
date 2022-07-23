@@ -72,6 +72,7 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
     case FileType::FIRMWARE: 
       break;
 
+    case FileType::FIRMWARE: // FIXME TD-er: Must decide what to do with firmware description/protection on provisioning settings
     case FileType::MAX_FILETYPE:
       break;
   }

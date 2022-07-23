@@ -12,7 +12,6 @@
 # include "../Helpers/Networking.h"
 # include "../Helpers/StringConverter.h"
 
-
 String Command_Provisioning_Config(struct EventStruct *event, const char *Line)
 {
   return downloadFileType(FileType::CONFIG_DAT);
