@@ -97,7 +97,8 @@ extern float vcc;
 extern bool shouldReboot;
 extern bool firstLoop;
 
-
+// This is read from the settings at boot.
+// Even if this setting is changed, you need to reboot to activate the changes.
 extern boolean UseRTOSMultitasking;
 
 #endif /* ESPEASY_GLOBALS_H_ */

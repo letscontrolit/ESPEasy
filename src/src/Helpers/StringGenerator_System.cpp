@@ -82,6 +82,7 @@ const __FlashStringHelper * getResetReasonString_f(uint8_t icore, bool& isDEEPSL
     case TG1WDT_CPU_RESET:       return F("Time Group1 reset CPU");                            // 17
     case SUPER_WDT_RESET:        return F("Super watchdog reset digital core and rtc module"); // 18
     case GLITCH_RTC_RESET:       return F("Glitch reset digital core and rtc module");         // 19
+    case EFUSE_RESET:            return F("EFUSE_RESET"); // FIXME TD-er: No idea what may cause this
     case NO_MEAN:                break; // Undefined, "No Meaning"
   }
 
