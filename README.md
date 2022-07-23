@@ -69,7 +69,7 @@ core_274_sdk3   | Arduino Core 2.7.4 SDK v.3 release |
 _[hardware-type]_ cn be any of:
 Hardware type    | Description                                 |
 -----------------|---------------------------------------------|
-ESP8266          | Espressif ESP8266 generic boards            |
+ESP8266          | Espressif ESP8266/ESP8285 generic boards    |
 WROOM02          | Espressif ESP8266 WRoom02 boards            |
 ESP32            | Espressif ESP32 generic boards              |
 ESP32-wrover-kit | Espressif ESP32 wrover-kit boards           |
@@ -79,6 +79,8 @@ Shelly_1         | Shelly 1 switch                             |
 Shelly_PLUG_S    | Shelly plug S switch with power measurement |
 Ventus           | Ventus W266 weather station                 |
 LCtech           | LC-tech serial switch                       |
+
+N.B. Starting 2022/07/23, 1M ESP8266 builds can also be used on ESP8285 units and thus there is no longer a specific ESP8285 build anymore.
 
 
 _[flash-size]_ can be any of:
