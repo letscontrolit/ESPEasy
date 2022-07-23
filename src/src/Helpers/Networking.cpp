@@ -1390,9 +1390,10 @@ int http_authenticate(const String& logIdentifier,
   http.setTimeout(timeout);
   http.setUserAgent(get_user_agent_string());
 
-  // FIXME TD-er: Must make this configurable
-  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
-  http.setRedirectLimit(2);
+  if (Settings.SendToHTTP_follow_redirects()) {
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.setRedirectLimit(2);
+  }
 
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
