@@ -29,8 +29,6 @@
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
-#include <base64.h>
-#include <MD5Builder.h>
 
 
 bool safeReadStringUntil(Stream     & input,

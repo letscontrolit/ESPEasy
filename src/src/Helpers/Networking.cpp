@@ -26,6 +26,9 @@
 #include "../../ESPEasy-Globals.h"
 
 #include <IPAddress.h>
+#include <base64.h>
+#include <MD5Builder.h>
+
 
 // Generic Networking routines
 
