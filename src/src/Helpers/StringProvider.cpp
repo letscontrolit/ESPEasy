@@ -164,9 +164,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
     case LabelType::WEB_LOG_LEVEL:          return F("Web Log Level");
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
     case LabelType::SD_LOG_LEVEL:           return F("SD Log Level");
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
@@ -381,9 +381,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
     case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId());
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());

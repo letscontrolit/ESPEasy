@@ -411,10 +411,10 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 's': {
       COMMAND_CASE_R(    "save", Command_Settings_Save, 0); // Settings.h
-    #ifdef FEATURE_SD
+    #if FEATURE_SD
       COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
-    #endif // ifdef FEATURE_SD
+    #endif // if FEATURE_SD
 
       if (data.cmd_lc[1] == 'e') {
       #if FEATURE_ESPEASY_P2P

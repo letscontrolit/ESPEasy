@@ -131,9 +131,9 @@ struct LabelType {
     SYSLOG_LOG_LEVEL,
     SERIAL_LOG_LEVEL,
     WEB_LOG_LEVEL,
-#ifdef FEATURE_SD
+#if FEATURE_SD
     SD_LOG_LEVEL,
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
     ESP_CHIP_ID,
     ESP_CHIP_FREQ,

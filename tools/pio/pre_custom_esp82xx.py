@@ -57,7 +57,7 @@ else:
 #   "-DUSES_C015",  # Blynk
 
 #    "-DFEATURE_MDNS",
-#    "-DFEATURE_SD",
+#    "-DFEATURE_SD=1",
     "-DUSE_EXT_RTC",
     "-DFEATURE_I2CMULTIPLEXER",
     "-DUSE_TRIGONOMETRIC_FUNCTIONS_RULES",

@@ -22,7 +22,7 @@ To create/register a plugin, you have to :
  When found stable enough, the maintainer (and only him) will choose to move it to COLLECTION or NORMAL
 */
 
-//#define FEATURE_SD
+//#define FEATURE_SD 1
 
 /******************************************************************************\
  * WebServer pages   **********************************************************
@@ -1527,7 +1527,7 @@ To create/register a plugin, you have to :
     #define USE_SETTINGS_ARCHIVE
   #endif
   #ifndef FEATURE_SD
-    #define FEATURE_SD
+    #define FEATURE_SD 1
   #endif
 
   // Plugins
@@ -1790,8 +1790,9 @@ To create/register a plugin, you have to :
   #ifdef USES_C016
     #undef USES_C016  // Cache controller
   #endif
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
     #undef FEATURE_SD  // Unlikely on 1M units
+    #define FEATURE_SD 0
   #endif
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE

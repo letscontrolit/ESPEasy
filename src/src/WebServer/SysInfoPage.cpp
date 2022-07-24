@@ -509,9 +509,9 @@ void handle_sysinfo_SystemStatus() {
   addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
   addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
   addRowLabelValue(LabelType::WEB_LOG_LEVEL);
-    # ifdef FEATURE_SD
+  # if FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
-    # endif // ifdef FEATURE_SD
+  # endif // if FEATURE_SD
 
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);

@@ -169,9 +169,9 @@ void handle_tools() {
   # ifdef USE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
   # endif // ifdef USE_SETTINGS_ARCHIVE
-# ifdef FEATURE_SD
+# if FEATURE_SD
   addWideButtonPlusDescription(F("SDfilelist"),       F("SD Card"),          F("Show files on SD-Card"));
-# endif   // ifdef FEATURE_SD
+# endif   // if FEATURE_SD
 
   html_end_table();
   html_end_form();
