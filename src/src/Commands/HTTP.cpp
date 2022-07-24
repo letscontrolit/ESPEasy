@@ -21,22 +21,44 @@
 const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, const char *Line)
 {
   if (NetworkConnected()) {
-    String user, pass;
-    String host      = parseStringKeepCase(Line, 2);
-    const int pos_at = host.indexOf('@');
+    String   user, pass, host, file, path;
+    uint16_t port;
 
-    if (pos_at != -1) {
-      user = host.substring(0, pos_at);
-      host = host.substring(pos_at + 1);
-      const int pos_colon = user.indexOf(':');
+    const String arg1 = parseStringKeepCase(Line, 2);
 
-      if (pos_colon != -1) {
-        pass = user.substring(pos_colon + 1);
-        user = user.substring(0, pos_colon);
+    if (arg1.indexOf('/') != -1) {
+      // Full url given
+      path = splitURL(arg1, user, pass, host, port, file);
+    } else {
+      // Command arguments are split into: host, port, url
+      if (!splitUserPass_HostPortString(
+            arg1,
+            user,
+            pass,
+            host,
+            port))
+      {
+        return return_command_failed();
       }
-    }
 
-    const int port = parseCommandArgumentInt(Line, 2);
+      const int port_arg = event->Par2;
+
+      if ((port_arg > 0) && (port_arg < 65536)) {
+        port = port_arg;
+      } else {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("SendToHTTP: Invalid port argument: ");
+          log += port_arg;
+          log += F(" will use: ");
+          log += port;
+          addLogMove(LOG_LEVEL_ERROR, log);
+        }
+      }
+
+      // FIXME TD-er: This is not using the tolerant settings option.
+      // String path = tolerantParseStringKeepCase(Line, 4);
+      path = parseStringToEndKeepCase(Line, 4);
+    }
 #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -44,29 +66,16 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
       log += host;
       log += F(" port: ");
       log += port;
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-
-    if ((port < 0) || (port > 65535)) { return return_command_failed(); }
-
-    // FIXME TD-er: This is not using the tolerant settings option.
-    // String path = tolerantParseStringKeepCase(Line, 4);
-    const String path = parseStringToEndKeepCase(Line, 4);
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("SendToHTTP: Path: ");
+      log += F(" path: ");
       log += path;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
 #endif // ifndef BUILD_NO_DEBUG
 
-
     int httpCode = -1;
-    WiFiClient   client;
-    const String res = send_via_http(
-      F("Command_HTTP_SendToHTTP"),
+    WiFiClient client;
+    send_via_http(
+      F("SendToHTTP"),
       client,
       CONTROLLER_CLIENTTIMEOUT_MAX,
       user,
@@ -80,22 +89,9 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
       httpCode,
       Settings.SendToHttp_ack());
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String logstr;
-      logstr += F("SendToHTTP: ");
-      logstr += httpCode;
-
-      if (!res.isEmpty()) {
-        logstr += F(" Received reply: ");
-        logstr += res;
-      }
-      addLog(LOG_LEVEL_INFO, logstr);
-    }
-
     if ((httpCode >= 100) && (httpCode < 300)) {
       return return_command_success();
     }
-    addLog(LOG_LEVEL_ERROR, String(F("SendToHTTP: HTTP code: ")) + httpCode);
   } else {
     addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
   }
