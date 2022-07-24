@@ -181,7 +181,7 @@
 
 // Allow for remote provisioning of a node.
 // This is only allowed for custom builds.
-// To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
+// To setup the configuration of the provisioning file, one must also define FEATURE_SETTINGS_ARCHIVE
 // Default setting is to not allow to configure a node remotely, unless explicitly enabled.
 // #define FEATURE_CUSTOM_PROVISIONING  1
 
@@ -200,7 +200,7 @@
 
 
 
-// #define USE_SETTINGS_ARCHIVE
+// #define FEATURE_SETTINGS_ARCHIVE 1
 // #define FEATURE_I2CMULTIPLEXER
 // #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library

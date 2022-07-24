@@ -155,14 +155,15 @@ To create/register a plugin, you have to :
  * Available options **********************************************************
 \******************************************************************************/
 #if defined(CORE_POST_2_5_0) && !defined(MEMORY_ANALYSIS) && !defined(USE_CUSTOM_H)
-    #ifndef USE_SETTINGS_ARCHIVE
+    #ifndef FEATURE_SETTINGS_ARCHIVE
     // FIXME TD-er: Disabled for now, to reduce binary size
-//        #define USE_SETTINGS_ARCHIVE
-    #endif // USE_SETTINGS_ARCHIVE
+//        #define FEATURE_SETTINGS_ARCHIVE 1
+    #endif // ifndef FEATURE_SETTINGS_ARCHIVE
 #endif
 
-#if defined(USE_SETTINGS_ARCHIVE) && defined(FORCE_PRE_2_5_0)
-  #undef USE_SETTINGS_ARCHIVE
+#if FEATURE_SETTINGS_ARCHIVE && defined(FORCE_PRE_2_5_0)
+  #undef FEATURE_SETTINGS_ARCHIVE
+  #define FEATURE_SETTINGS_ARCHIVE  0
 #endif
 
 
@@ -357,9 +358,10 @@ To create/register a plugin, you have to :
 
     #define PLUGIN_SET_NONE
 
-    #ifdef USE_SETTINGS_ARCHIVE
-        #undef USE_SETTINGS_ARCHIVE
-    #endif // USE_SETTINGS_ARCHIVE
+    #if FEATURE_SETTINGS_ARCHIVE
+        #undef FEATURE_SETTINGS_ARCHIVE
+        #define FEATURE_SETTINGS_ARCHIVE  0
+    #endif // if FEATURE_SETTINGS_ARCHIVE
 
     #ifdef USES_TIMING_STATS
         #undef USES_TIMING_STATS
@@ -1524,8 +1526,8 @@ To create/register a plugin, you have to :
   #ifndef USE_RTTTL
     #define USE_RTTTL
   #endif
-  #ifndef USE_SETTINGS_ARCHIVE
-    #define USE_SETTINGS_ARCHIVE
+  #ifndef FEATURE_SETTINGS_ARCHIVE
+    #define FEATURE_SETTINGS_ARCHIVE  1
   #endif
   #ifndef FEATURE_SD
     #define FEATURE_SD 1
@@ -1829,8 +1831,9 @@ To create/register a plugin, you have to :
   #ifdef FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
   #endif
-  #ifdef USE_SETTINGS_ARCHIVE
-    #undef USE_SETTINGS_ARCHIVE
+  #if FEATURE_SETTINGS_ARCHIVE
+    #undef FEATURE_SETTINGS_ARCHIVE
+    #define FEATURE_SETTINGS_ARCHIVE  0
   #endif
 
   #ifdef USE_SERVO
@@ -1982,7 +1985,7 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#if defined(USE_SETTINGS_ARCHIVE) || FEATURE_CUSTOM_PROVISIONING
+#if FEATURE_SETTINGS_ARCHIVE || FEATURE_CUSTOM_PROVISIONING
   #ifndef FEATURE_DOWNLOAD
     #define FEATURE_DOWNLOAD  1
   #endif

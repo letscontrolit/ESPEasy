@@ -67,7 +67,7 @@ else:
 
     "-DFEATURE_ESPEASY_P2P=1",
 
-    "-DUSE_SETTINGS_ARCHIVE"
+    "-DFEATURE_SETTINGS_ARCHIVE=1"
   ]
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
