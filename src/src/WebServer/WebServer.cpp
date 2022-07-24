@@ -228,9 +228,9 @@ void WebServerInit()
   #ifdef WEBSERVER_FACTORY_RESET
   web_server.on(F("/factoryreset"),    handle_factoryreset);
   #endif // ifdef WEBSERVER_FACTORY_RESET
-  #ifdef USE_SETTINGS_ARCHIVE
+  #if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/settingsarchive"), handle_settingsarchive);
-  #endif // ifdef USE_SETTINGS_ARCHIVE
+  #endif // if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
   web_server.on(F("/filelist"),        handle_filelist);

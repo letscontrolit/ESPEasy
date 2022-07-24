@@ -1,6 +1,6 @@
 #include "../WebServer/SettingsArchive.h"
 
-#ifdef USE_SETTINGS_ARCHIVE
+#if FEATURE_SETTINGS_ARCHIVE
 
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -241,4 +241,4 @@ bool tryDownloadFileType(const String& url, const String& user, const String& pa
   return false;
 }
 
-#endif // ifdef USE_SETTINGS_ARCHIVE
+#endif // if FEATURE_SETTINGS_ARCHIVE

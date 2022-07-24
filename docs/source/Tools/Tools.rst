@@ -867,7 +867,8 @@ The old settings are still active in memory and if something will be saved, only
 This would corrupt the settings file.
 
 
-With only ``USE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
+With only ``FEATURE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
+(2022/07/24: Renamed USE_SETTINGS_ARCHIVE to FEATURE_SETTINGS_ARCHIVE)
 For this the build must be made with ``FEATURE_CUSTOM_PROVISIONING`` defined.
 
 N.B. ``FEATURE_CUSTOM_PROVISIONING`` is added on 2022/05/13. (2022/07/24: Renamed from USE_CUSTOM_PROVISIONING to FEATURE_CUSTOM_PROVISIONING)
@@ -913,7 +914,7 @@ When the build is made with ``FEATURE_CUSTOM_PROVISIONING`` defined, this Settin
 All Settings on the Settings Archive page can be stored in a file named ``provisioning.dat``.
 This file also can store the factory default settings like the device model to ease deployment of a large number of nodes.
 
-N.B. The ``USE_SETTINGS_ARCHIVE`` define is needed to allow to edit the ``provisioning.dat`` file, but it is not needed to use the provisioning feature.
+N.B. The ``FEATURE_SETTINGS_ARCHIVE`` define is needed to allow to edit the ``provisioning.dat`` file, but it is not needed to use the provisioning feature.
 
 
 .. image:: images/SettingsArchive_provisioning.png
