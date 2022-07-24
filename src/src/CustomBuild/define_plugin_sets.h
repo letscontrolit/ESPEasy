@@ -1975,7 +1975,7 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#if defined(USE_SETTINGS_ARCHIVE) || defined(USE_CUSTOM_PROVISIONING)
+#if defined(USE_SETTINGS_ARCHIVE) || FEATURE_CUSTOM_PROVISIONING
   #ifndef FEATURE_DOWNLOAD
     #define FEATURE_DOWNLOAD  1
   #endif

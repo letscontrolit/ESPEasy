@@ -508,7 +508,7 @@ void afterloadSettings() {
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
-  #ifdef USE_CUSTOM_PROVISIONING
+  #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
     if (AllocatedProvisioningSettings()) {
@@ -1059,7 +1059,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
 }
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 /********************************************************************************************\
    Save Provisioning Settings
  \*********************************************************************************************/
@@ -1827,7 +1827,7 @@ String downloadFileType(const String& url, const String& user, const String& pas
 
 #endif // if FEATURE_DOWNLOAD
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 
 String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 {
@@ -1849,4 +1849,4 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
   return downloadFileType(url, user, pass, filetype, filenr);
 }
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+#endif // if FEATURE_CUSTOM_PROVISIONING
