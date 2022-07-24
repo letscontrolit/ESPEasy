@@ -1955,7 +1955,7 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
   #ifndef FEATURE_MDNS
     #define FEATURE_MDNS
   #endif
