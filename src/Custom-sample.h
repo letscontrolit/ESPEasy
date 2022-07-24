@@ -26,7 +26,8 @@
 
 #define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
 #define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
-// #define FEATURE_SD                1   // Enable SD card support
+// #define FEATURE_SD                1     // Enable SD card support
+// #define FEATURE_DOWNLOAD          1     // Enable downloading a file from an url
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT

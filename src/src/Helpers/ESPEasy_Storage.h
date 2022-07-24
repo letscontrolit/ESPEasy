@@ -292,10 +292,10 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 /********************************************************************************************\
    Download ESPEasy file types from HTTP server
  \*********************************************************************************************/
-#ifdef USE_DOWNLOAD
+#if FEATURE_DOWNLOAD
 String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
 
-#endif
+#endif // if FEATURE_DOWNLOAD
 #ifdef USE_CUSTOM_PROVISIONING
 // Download file type based on settings stored in provisioning.dat file.
 String downloadFileType(FileType::Enum filetype, unsigned int filenr = 0);

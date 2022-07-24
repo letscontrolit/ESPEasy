@@ -207,7 +207,7 @@ String send_via_http(const String& logIdentifier,
                      int         & httpCode,
                      bool          must_check_reply);
 
-#ifdef USE_DOWNLOAD
+#if FEATURE_DOWNLOAD
 
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
@@ -219,7 +219,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
 
 bool downloadFirmware(const String& url, String& error);
 
-#endif
+#endif // if FEATURE_DOWNLOAD
 
 
 
