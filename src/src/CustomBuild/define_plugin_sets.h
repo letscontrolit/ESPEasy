@@ -1983,8 +1983,8 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USE_SETTINGS_ARCHIVE) || defined(USE_CUSTOM_PROVISIONING)
-  #ifndef USE_DOWNLOAD
-    #define USE_DOWNLOAD
+  #ifndef FEATURE_DOWNLOAD
+    #define FEATURE_DOWNLOAD  1
   #endif
 #endif
 

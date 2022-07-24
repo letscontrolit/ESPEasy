@@ -69,7 +69,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 
 #endif  // ifdef SUPPORT_ARP
 
-#ifdef USE_DOWNLOAD
+#if FEATURE_DOWNLOAD
 # ifdef ESP8266
 #  include <ESP8266HTTPClient.h>
 # endif // ifdef ESP8266
@@ -77,7 +77,7 @@ void etharp_gratuitous_r(struct netif *netif) {
 #  include <HTTPClient.h>
 #  include <Update.h>
 # endif // ifdef ESP32
-#endif  // ifdef USE_DOWNLOAD
+#endif  // if FEATURE_DOWNLOAD
 
 #include <vector>
 
@@ -1462,7 +1462,7 @@ String send_via_http(const String& logIdentifier,
   return response;
 }
 
-#ifdef USE_DOWNLOAD
+#if FEATURE_DOWNLOAD
 
 // FIXME TD-er: Must set the timeout somewhere
 # ifndef DOWNLOAD_FILE_TIMEOUT
@@ -1728,4 +1728,4 @@ bool downloadFirmware(const String& url, String& error)
   return false;
 }
 
-#endif // ifdef USE_DOWNLOAD
+#endif // if FEATURE_DOWNLOAD
