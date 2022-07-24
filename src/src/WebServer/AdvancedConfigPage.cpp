@@ -229,9 +229,9 @@ void handle_advanced() {
   #ifdef ESP32
   addUnit(F("1/80 usec"));
   #endif
-  #if defined(FEATURE_ARDUINO_OTA)
+  #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
-  #endif // if defined(FEATURE_ARDUINO_OTA)
+  #endif // if FEATURE_ARDUINO_OTA
   #if defined(ESP32)
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
