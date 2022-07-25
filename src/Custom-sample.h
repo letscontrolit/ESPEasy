@@ -187,7 +187,7 @@
 
 #define FEATURE_SSDP  1
 
-#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+#define FEATURE_EXT_RTC  1         // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
 #define USES_PLUGIN_STATS          // Support collecting historic data + computing stats on historic data
 #ifdef ESP8266

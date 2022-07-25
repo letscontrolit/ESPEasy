@@ -132,8 +132,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
     #endif
-    #ifndef USE_EXT_RTC
-        #define USE_EXT_RTC
+    #ifndef FEATURE_EXT_RTC
+        #define FEATURE_EXT_RTC 1
     #endif
 #endif
 
@@ -456,8 +456,9 @@ To create/register a plugin, you have to :
     #ifndef NOTIFIER_SET_NONE
         #define NOTIFIER_SET_NONE
     #endif
-    #ifdef USE_EXT_RTC
-        #undef USE_EXT_RTC
+    #if FEATURE_EXT_RTC
+        #undef FEATURE_EXT_RTC
+        #define FEATURE_EXT_RTC 0
     #endif
 #endif
 
@@ -1807,8 +1808,9 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
   #endif
-  #ifdef USE_EXT_RTC
-    #undef USE_EXT_RTC
+  #if FEATURE_EXT_RTC
+    #undef FEATURE_EXT_RTC
+    #define FEATURE_EXT_RTC 0
   #endif
 #endif
 
