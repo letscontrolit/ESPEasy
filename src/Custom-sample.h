@@ -201,7 +201,7 @@
 
 
 // #define FEATURE_SETTINGS_ARCHIVE 1
-// #define FEATURE_I2CMULTIPLEXER
+// #define FEATURE_I2CMULTIPLEXER 1
 // #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper

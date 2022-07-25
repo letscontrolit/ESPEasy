@@ -248,13 +248,13 @@ void initI2C() {
       #endif // ifdef ESP32S2
   }
 
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
 
   if (validGpio(Settings.I2C_Multiplexer_ResetPin)) { // Initialize Reset pin to High if configured
     pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
     digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
   }
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   // I2C Watchdog boot status check
   if (Settings.WDI2CAddress != 0)
@@ -336,7 +336,7 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
   #endif // ifdef ESP32
 }
 
-#ifdef FEATURE_I2CMULTIPLEXER
+#if FEATURE_I2CMULTIPLEXER
 
 // Check if the I2C Multiplexer is enabled
 bool isI2CMultiplexerEnabled() {
@@ -441,7 +441,7 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
          || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
 
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+#endif // if FEATURE_I2CMULTIPLEXER
 
 void checkResetFactoryPin() {
   static uint8_t factoryResetCounter = 0;
