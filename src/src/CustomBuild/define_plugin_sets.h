@@ -314,6 +314,12 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
+    // Disable ESPEasy p2p for minimal OTA builds.
+    #ifdef FEATURE_ESPEASY_P2P
+      #undef FEATURE_ESPEASY_P2P
+      #define FEATURE_ESPEASY_P2P 0
+    #endif
+
     #ifndef PLUGIN_DESCR
       #define PLUGIN_DESCR  "Minimal 1M OTA"
     #endif
@@ -332,7 +338,7 @@ To create/register a plugin, you have to :
     #define USES_C008   // Generic HTTP
 //    #define USES_C009   // FHEM HTTP
 //    #define USES_C010   // Generic UDP
-    #define USES_C013   // ESPEasy P2P network
+//    #define USES_C013   // ESPEasy P2P network
 
 //    #define NOTIFIER_SET_STABLE
     #define NOTIFIER_SET_NONE

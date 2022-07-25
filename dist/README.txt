@@ -27,9 +27,11 @@ There is also a number of special builds:
 - normal_beta => "Normal" using the staged (beta) branch of the esp8266/Arduino repository.
 
 Chip can be:
-- ESP8266      => Most likely option
-- ESP8285      => Used in some Sonoff modules
+- ESP8266      => Most likely option  (use also for ESP8285 chips)
 - ESP32        => Showing up in commercial products, but mainly seen on NodeMCU like boards.
+- ESP32-S2     => Newer version of ESP32, with more GPIO pins, but lacking some features of ESP32.
+- ESP32-S3     => Not yet supported in ESPEasy. (hardly available to buy)
+- ESP32-C3     => Support in ESPEasy will be added soon.
 
 MemorySize can be:
 - 1M  => 1 MB flash modules (e.g. almost all Sonoff modules)
