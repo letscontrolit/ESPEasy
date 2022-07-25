@@ -622,11 +622,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           descr.reserve(20);
           descr  = F("PluginCall_task_");
           descr += (event->TaskIndex + 1);
-          #ifdef USES_TIMING_STATS
+          #if FEATURE_TIMING_STATS
           checkRAM(descr, getPluginFunctionName(Function));
-          #else
+          #else // if FEATURE_TIMING_STATS
           checkRAM(descr, String(Function));
-          #endif
+          #endif // if FEATURE_TIMING_STATS
           #endif
         }
         if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
@@ -747,11 +747,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           descr.reserve(20);
           descr  = F("PluginCall_task_");
           descr += (event->TaskIndex + 1);
-          #ifdef USES_TIMING_STATS
+          #if FEATURE_TIMING_STATS
           checkRAM(descr, getPluginFunctionName(Function));
-          #else
+          #else // if FEATURE_TIMING_STATS
           checkRAM(descr, String(Function));
-          #endif
+          #endif // if FEATURE_TIMING_STATS
           #endif
 
         }
