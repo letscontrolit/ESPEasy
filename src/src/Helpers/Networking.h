@@ -70,7 +70,7 @@ void sendSysInfoUDP(uint8_t repeats);
 
 #if defined(ESP8266)
 
-# ifdef USES_SSDP
+# if FEATURE_SSDP
 
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
@@ -119,7 +119,7 @@ void SSDP_send(uint8_t method);
  \*********************************************************************************************/
 void SSDP_update();
 
-# endif // ifdef USES_SSDP
+# endif // if FEATURE_SSDP
 #endif // if defined(ESP8266)
 
 

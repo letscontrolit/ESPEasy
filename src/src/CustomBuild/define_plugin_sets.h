@@ -120,8 +120,8 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef PLUGIN_BUILD_CUSTOM
-    #ifndef USES_SSDP
-        #define USES_SSDP
+    #ifndef FEATURE_SSDP
+        #define FEATURE_SSDP  1
     #endif
     #ifndef USES_TIMING_STATS
         #define USES_TIMING_STATS
@@ -1871,8 +1871,9 @@ To create/register a plugin, you have to :
   #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
-  #ifdef USES_SSDP
-    #undef USES_SSDP
+  #if FEATURE_SSDP
+    #undef FEATURE_SSDP
+    #define FEATURE_SSDP  0
   #endif
   #ifdef USES_PLUGIN_STATS
     #undef USES_PLUGIN_STATS

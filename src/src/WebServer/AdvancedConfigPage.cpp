@@ -68,9 +68,9 @@ void handle_advanced() {
     );
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
-    #ifdef USES_SSDP
+    #if FEATURE_SSDP
     Settings.UseSSDP                     = isFormItemChecked(F("usessdp"));
-    #endif // USES_SSDP
+    #endif // if FEATURE_SSDP
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
@@ -253,9 +253,9 @@ void handle_advanced() {
   #endif
 
 
-  #ifdef USES_SSDP
+  #if FEATURE_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
-  #endif // ifdef USES_SSDP
+  #endif // if FEATURE_SSDP
 
   addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
