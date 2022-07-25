@@ -579,75 +579,53 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
         valueCount,
         xAxisValues);
 
-      float values[valueCount];
-      const __FlashStringHelper *label = F("2 Point Calibration");
+      const __FlashStringHelper *label = F("Multipoint Calibration");
       const __FlashStringHelper *color = F("rgb(255, 99, 132)");
 
-      bool useFactoryCalib = false;
-      bool hidden          = true;
-
-      #  ifdef ESP32
-      const bool   hasFactoryCalibration = hasADC_factory_calibration();
-      const size_t attenuation           = getAttenuation(event);
-      #  else // ifdef ESP32
-      const bool hasFactoryCalibration = false;
-      #  endif // ifdef ESP32
-
-
-      for (int step = 0; step < 4; ++step)
+      for (int step = 0; step < 3; ++step)
       {
+        float values[valueCount];
+        bool  use2PointCalib = false;
+        bool  useMultiPoint  = false;
+
         switch (step) {
           case 0:
-            useFactoryCalib = false;
-            hidden          = true;
+            useMultiPoint = true;
             break;
           case 1:
-            label           = F("Multipoint & 2 Point Calibration");
-            color           = F("rgb(54, 162, 235)");
-            useFactoryCalib = false;
-            hidden          = false;
+            label          = F("2 Point Calibration & Multipoint");
+            color          = F("rgb(54, 162, 235)");
+            use2PointCalib = true;
+            useMultiPoint  = true;
             break;
           case 2:
-            label           = F("Factory & 2 Point Calibration");
-            color           = F("rgb(153, 102, 255)");
-            useFactoryCalib = true;
-            hidden          = true;
-            break;
-          case 3:
-            label           = F("Multipoint & Factory & 2 Point Calibration");
-            color           = F("rgb(54, 235, 235)");
-            useFactoryCalib = true;
-            hidden          = false;
+            label          = F("2 Point Calibration");
+            color          = F("rgb(153, 102, 255)");
+            use2PointCalib = true;
             break;
         }
 
-        if (hasFactoryCalibration || !useFactoryCalib) {
-          for (int i = 0; i < valueCount; ++i) {
-            switch (step) {
-              case 0:
-                values[i] = P002_data_struct::applyCalibration(event, xAxisValues[i]);
-                break;
-              case 2:
-                #  ifdef ESP32
-                values[i] = P002_data_struct::applyCalibration(
-                  event,
-                  applyFactoryCalibration(xAxisValues[i], static_cast<adc_atten_t>(attenuation)));
-                #  endif // ifdef ESP32
-                break;
-              case 1:
-              case 3:
-                values[i] = applyMultiPointInterpolation(values[i]);
-                break;
-            }
+        bool hidden = !((use2PointCalib == _use2pointCalibration) &&
+                        useMultiPoint);
+
+        for (int i = 0; i < valueCount; ++i) {
+          values[i] = xAxisValues[i];
+
+          if (use2PointCalib) {
+            values[i] = P002_data_struct::applyCalibration(event, values[i], true);
           }
 
-          add_ChartJS_dataset(
-            label,
-            color,
-            values,
-            valueCount,
-            hidden);
+          if (useMultiPoint) {
+            values[i] = applyMultiPointInterpolation(values[i], true);
+          }
         }
+
+        add_ChartJS_dataset(
+          label,
+          color,
+          values,
+          valueCount,
+          hidden);
       }
       add_ChartJS_chart_footer();
     }
@@ -990,8 +968,8 @@ bool P002_data_struct::getBinnedValue(float& float_value, int& raw_value) const
 
 # endif // ifndef LIMIT_BUILD_SIZE
 
-float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value) {
-  if (P002_CALIBRATION_ENABLED)
+float P002_data_struct::applyCalibration(struct EventStruct *event, float float_value, bool force) {
+  if (force || P002_CALIBRATION_ENABLED)
   {
     float_value = mapADCtoFloat(float_value,
                                 P002_CALIBRATION_POINT1,
@@ -1078,9 +1056,9 @@ float P002_data_struct::applyFactoryCalibration(float raw_value, adc_atten_t att
 # endif // ifdef ESP32
 
 # ifndef LIMIT_BUILD_SIZE
-float P002_data_struct::applyMultiPointInterpolation(float float_value) const
+float P002_data_struct::applyMultiPointInterpolation(float float_value, bool force) const
 {
-  if (!_useMultipoint) { return float_value; }
+  if (!_useMultipoint && !force) { return float_value; }
 
   // First find the surrounding bins
   const size_t mp_size = _multipoint.size();

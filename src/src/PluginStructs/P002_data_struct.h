@@ -191,7 +191,8 @@ public:
 
   // This needs to be a static function, as the object may not exist if the task is not enabled.
   static float applyCalibration(struct EventStruct *event,
-                                float               float_value);
+                                float               float_value,
+                                bool                force = false);
 
   static float getCurrentValue(struct EventStruct *event,
                                int               & raw_value);
@@ -210,7 +211,7 @@ public:
 private:
 
 # ifndef LIMIT_BUILD_SIZE
-  float        applyMultiPointInterpolation(float float_value) const;
+  float        applyMultiPointInterpolation(float float_value, bool force = false) const;
 # endif // ifndef LIMIT_BUILD_SIZE
 
   static float mapADCtoFloat(float float_value,
