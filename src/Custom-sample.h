@@ -183,7 +183,7 @@
 // This is only allowed for custom builds.
 // To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
 // Default setting is to not allow to configure a node remotely, unless explicitly enabled.
-// #define USE_CUSTOM_PROVISIONING
+// #define FEATURE_CUSTOM_PROVISIONING  1
 
 #define USES_SSDP
 
@@ -208,7 +208,7 @@
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
 // #ifdef ESP32
 //  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default

@@ -331,7 +331,7 @@
 #endif
 
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
   #ifndef DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL
     #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
   #endif
@@ -377,7 +377,7 @@
   #ifndef DEFAULT_PROVISIONING_PASS
     #define DEFAULT_PROVISIONING_PASS               ""
   #endif
-#endif
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #ifndef BUILD_IN_WEBHEADER
 #define BUILD_IN_WEBHEADER                      false
