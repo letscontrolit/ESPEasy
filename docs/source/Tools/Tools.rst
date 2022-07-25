@@ -230,6 +230,7 @@ Rules Settings
 * Allow Rules Event Reorder - It is best to have the rules blocks for the most frequently occuring events placed at the top of the first rules file. (also for frequently happening events, which you don't want to act on) The cached event positions can be reordered in memory based on how often an event was matched.  (Enabled by default, Added 2022/04/17, disabled 2022/06/24)
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
+* SendToHTTP Follow Redirects - When checked, HTTP calls may follow redirects. Strict RFC2616, only requests using GET or HEAD methods will be redirected (using the same method), since the RFC requires end-user confirmation in other cases.
 
 Time Source
 -----------

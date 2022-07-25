@@ -18,6 +18,8 @@ String Command_Provisioning_Provision(struct EventStruct *event,
 String Command_Provisioning_Rules(struct EventStruct *event,
                                   const char         *Line);
 
+String Command_Provisioning_Firmware(struct EventStruct *event,
+                                     const char         *Line);
 
 #endif // ifdef USE_CUSTOM_PROVISIONING
 

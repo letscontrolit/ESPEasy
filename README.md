@@ -69,8 +69,7 @@ core_274_sdk3   | Arduino Core 2.7.4 SDK v.3 release |
 _[hardware-type]_ cn be any of:
 Hardware type    | Description                                 |
 -----------------|---------------------------------------------|
-ESP8266          | Espressif ESP8266 generic boards            |
-ESP8285          | Espressif ESP8285 generic boards 1MB Flash  |
+ESP8266          | Espressif ESP8266/ESP8285 generic boards    |
 WROOM02          | Espressif ESP8266 WRoom02 boards            |
 ESP32            | Espressif ESP32 generic boards              |
 ESP32-wrover-kit | Espressif ESP32 wrover-kit boards           |
@@ -80,6 +79,8 @@ Shelly_1         | Shelly 1 switch                             |
 Shelly_PLUG_S    | Shelly plug S switch with power measurement |
 Ventus           | Ventus W266 weather station                 |
 LCtech           | LC-tech serial switch                       |
+
+N.B. Starting 2022/07/23, 1M ESP8266 builds can also be used on ESP8285 units and thus there is no longer a specific ESP8285 build anymore.
 
 
 _[flash-size]_ can be any of:
@@ -112,7 +113,6 @@ Some example firmware names:
 Firmware name                                      | Hardware                | Included plugins              |
 ---------------------------------------------------|-------------------------|-------------------------------|
 ESPEasy_mega-20210501_normal_ESP8266_1M.bin        | ESP8266 with 1MB flash  | Stable                        |
-ESPEasy_mega-20210501_normal_ESP8285_1M.bin        | ESP8285 with 1MB flash  | Stable                        |
 ESPEasy_mega-20210501_normal_ESP8266_4M1M.bin      | ESP8266 with 4MB flash  | Stable                        |
 ESPEasy_mega-20210501_test_A_ESP8266_4M1M.bin      | ESP8266 with 4MB flash  | Stable + Testing base + set A |
 ESPEasy_mega-20210501_normal_ESP32_4M316k.bin      | ESP32 with 4MB flash    | Stable                        |
@@ -125,7 +125,7 @@ To see what plugins are included in which testing set, you can find that on the 
 
 ## Documentation & more info
 
-Our new, in-depth documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/). Automatically built, so always up-to-date according to the contributed contents. The old Wiki documention can be found at [letscontrolit.com/wiki](https://www.letscontrolit.com/wiki/index.php?title=ESPEasy).
+Our new, in-depth documentation can be found at [ESPEasy.readthedocs.io](https://espeasy.readthedocs.io/en/latest/). Automatically built, so always up-to-date according to the contributed contents. The old Wiki documentation can be found at [letscontrolit.com/wiki](https://www.letscontrolit.com/wiki/index.php?title=ESPEasy).
 
 Additional details and discussion are on the "Experimental" section of the forum: https://www.letscontrolit.com/forum/viewforum.php?f=18
 

@@ -88,6 +88,7 @@ void handle_advanced() {
     #endif // WEBSERVER_NEW_RULES
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
+    Settings.SendToHTTP_follow_redirects(isFormItemChecked(F("sendtohttp_redir")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(LabelType::FORCE_WIFI_BG));
     Settings.WiFiRestart_connection_lost(isFormItemChecked(LabelType::RESTART_WIFI_LOST_CONN));
     Settings.EcoPowerMode(isFormItemChecked(LabelType::CPU_ECO_MODE));
@@ -144,6 +145,7 @@ void handle_advanced() {
   addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
+  addFormCheckBox(F("SendToHTTP Follow Redirects"), F("sendtohttp_redir"), Settings.SendToHTTP_follow_redirects());
 
   /*
   // MQTT settings now moved to the controller settings.
