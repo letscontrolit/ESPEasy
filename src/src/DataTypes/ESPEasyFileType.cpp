@@ -69,8 +69,6 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
     case FileType::NOTIFICATION_DAT: isChecked = ResetFactoryDefaultPreference.fetchNotificationDat(); break;
     case FileType::RULES_TXT: isChecked        = ResetFactoryDefaultPreference.fetchRulesTXT(filenr); break;
     case FileType::PROVISIONING_DAT: isChecked = ResetFactoryDefaultPreference.fetchProvisioningDat(); break;
-    case FileType::FIRMWARE: 
-      break;
 
     case FileType::FIRMWARE: // FIXME TD-er: Must decide what to do with firmware description/protection on provisioning settings
     case FileType::MAX_FILETYPE:
