@@ -232,9 +232,9 @@ void handle_advanced() {
   #endif // if defined(ESP32)
 
   addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
-  #endif
+  #endif // if FEATURE_TIMING_STATS
 #ifndef BUILD_NO_RAM_TRACKER
   addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
 #endif

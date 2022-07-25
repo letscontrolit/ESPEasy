@@ -481,9 +481,9 @@ void handle_timingstats_json() {
   TXBuffer.startJsonStream();
   json_init();
   json_open();
-  # ifdef USES_TIMING_STATS
+  # if FEATURE_TIMING_STATS
   jsonStatistics(false);
-  # endif // ifdef USES_TIMING_STATS
+  # endif // if FEATURE_TIMING_STATS
   json_close();
   TXBuffer.endStream();
 }

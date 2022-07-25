@@ -123,8 +123,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_SSDP
         #define FEATURE_SSDP  1
     #endif
-    #ifndef USES_TIMING_STATS
-        #define USES_TIMING_STATS
+    #ifndef FEATURE_TIMING_STATS
+        #define FEATURE_TIMING_STATS  1
     #endif
     #ifndef FEATURE_I2CMULTIPLEXER
         #define FEATURE_I2CMULTIPLEXER  1
@@ -363,8 +363,9 @@ To create/register a plugin, you have to :
         #define FEATURE_SETTINGS_ARCHIVE  0
     #endif // if FEATURE_SETTINGS_ARCHIVE
 
-    #ifdef USES_TIMING_STATS
-        #undef USES_TIMING_STATS
+    #if FEATURE_TIMING_STATS
+        #undef FEATURE_TIMING_STATS
+        #define FEATURE_TIMING_STATS  0
     #endif
 
     #ifndef USES_P001
@@ -1884,13 +1885,14 @@ To create/register a plugin, you have to :
 #endif
 
 // Timing stats page needs timing stats
-#if defined(WEBSERVER_TIMINGSTATS) && !defined(USES_TIMING_STATS)
-  #define USES_TIMING_STATS
+#if defined(WEBSERVER_TIMINGSTATS) && !FEATURE_TIMING_STATS
+  #define FEATURE_TIMING_STATS  1
 #endif
 
 // If timing stats page is not included, there is no need in collecting the stats
-#if !defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
-  #undef USES_TIMING_STATS
+#if !defined(WEBSERVER_TIMINGSTATS) && FEATURE_TIMING_STATS
+  #undef FEATURE_TIMING_STATS
+  #define FEATURE_TIMING_STATS  0
 #endif
 
 

@@ -83,13 +83,13 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   static uint64_t statisticsTimerStart = 0;
 
   if (!Tail) {
     statisticsTimerStart = getMicros64();
   }
-  #endif // ifdef USES_TIMING_STATS
+  #endif // if FEATURE_TIMING_STATS
   {
     const String fileName = String(tmplName) + F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
