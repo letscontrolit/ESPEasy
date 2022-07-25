@@ -129,8 +129,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_I2CMULTIPLEXER
         #define FEATURE_I2CMULTIPLEXER
     #endif
-    #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
-        #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+        #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
     #endif
     #ifndef USE_EXT_RTC
         #define USE_EXT_RTC
@@ -306,8 +306,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_I2CMULTIPLEXER
         #define FEATURE_I2CMULTIPLEXER
     #endif
-    #ifndef USE_TRIGONOMETRIC_FUNCTIONS_RULES
-        #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+        #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
     #endif
     #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
     #ifndef USES_PLUGIN_STATS
@@ -1867,8 +1867,8 @@ To create/register a plugin, you have to :
   #ifdef USES_C018
     #undef USES_C018 // LoRa TTN - RN2483/RN2903
   #endif
-  #if defined(USE_TRIGONOMETRIC_FUNCTIONS_RULES) && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
-    #undef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+  #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
+    #undef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   #endif
   #ifdef USES_SSDP
     #undef USES_SSDP
