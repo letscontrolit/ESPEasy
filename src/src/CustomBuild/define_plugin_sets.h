@@ -147,9 +147,9 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifndef ENABLE_TOOLTIPS
-  #define ENABLE_TOOLTIPS
-#endif // ENABLE_TOOLTIPS
+#ifndef FEATURE_TOOLTIPS
+  #define FEATURE_TOOLTIPS  1
+#endif // ifndef FEATURE_TOOLTIPS
 
 /******************************************************************************\
  * Available options **********************************************************
@@ -1846,8 +1846,9 @@ To create/register a plugin, you have to :
   #ifdef USE_RTTTL
     #undef USE_RTTTL
   #endif
-  #ifdef ENABLE_TOOLTIPS
-    #undef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
+    #undef FEATURE_TOOLTIPS
+    #define FEATURE_TOOLTIPS  0
   #endif
   #ifdef USES_BLYNK
     #undef USES_BLYNK
