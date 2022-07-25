@@ -212,11 +212,11 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
   if (I2C_state != I2C_bus_state::OK) {
     return false; // Bus state is not OK, so do not consider task runnable
   }
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   I2CMultiplexerSelectByTaskIndex(taskIndex);
   // Output is selected after this write, so now we must make sure the
   // frequency is set before anything else is sent.
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectLowClockSpeed(); // Set to slow

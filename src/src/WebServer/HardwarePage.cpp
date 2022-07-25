@@ -42,7 +42,7 @@ void handle_hardware() {
     Settings.Pin_i2c_scl              = getFormItemInt(F("pscl"));
     Settings.I2C_clockSpeed           = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C_clockSpeed_Slow      = getFormItemInt(F("pi2cspslow"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     Settings.I2C_Multiplexer_Type     = getFormItemInt(F("pi2cmuxtype"));
     if (Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
       Settings.I2C_Multiplexer_Addr   = getFormItemInt(F("pi2cmuxaddr"));
@@ -50,7 +50,7 @@ void handle_hardware() {
       Settings.I2C_Multiplexer_Addr   = -1;
     }
     Settings.I2C_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset"));
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
     #ifdef ESP32
       Settings.InitSPI                = getFormItemInt(F("initspi"), static_cast<int>(SPI_Options_e::None));
       if (Settings.InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) { // User-define SPI GPIO pins
@@ -117,7 +117,7 @@ void handle_hardware() {
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));
   addFormNumericBox(F("Slow device Clock Speed"), F("pi2cspslow"), Settings.I2C_clockSpeed_Slow, 100, 3400000);
   addUnit(F("Hz"));
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
@@ -158,7 +158,7 @@ void handle_hardware() {
   }
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
   addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));

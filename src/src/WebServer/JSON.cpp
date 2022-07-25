@@ -430,7 +430,7 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
-#ifdef FEATURE_I2CMULTIPLEXER
+        #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
           if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
@@ -456,7 +456,7 @@ void handle_json()
             }
           }
         }
-#endif
+        #endif // if FEATURE_I2CMULTIPLEXER
       }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
       stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);

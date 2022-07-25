@@ -127,7 +127,7 @@ To create/register a plugin, you have to :
         #define USES_TIMING_STATS
     #endif
     #ifndef FEATURE_I2CMULTIPLEXER
-        #define FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER  1
     #endif
     #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
@@ -304,7 +304,7 @@ To create/register a plugin, you have to :
     #define  NOTIFIER_SET_STABLE
 
     #ifndef FEATURE_I2CMULTIPLEXER
-        #define FEATURE_I2CMULTIPLEXER
+        #define FEATURE_I2CMULTIPLEXER  1
     #endif
     #ifndef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
         #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
@@ -1828,8 +1828,9 @@ To create/register a plugin, you have to :
   #ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
     #define BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
   #endif
-  #ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
     #undef FEATURE_I2CMULTIPLEXER
+    #define FEATURE_I2CMULTIPLEXER  0
   #endif
   #if FEATURE_SETTINGS_ARCHIVE
     #undef FEATURE_SETTINGS_ARCHIVE
