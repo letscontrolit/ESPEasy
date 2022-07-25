@@ -452,8 +452,6 @@ void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, in
   if (_useFactoryCalibration) {
     float_value = applyFactoryCalibration(raw, _attenuation);
 
-    // Must update raw value too to be used on binning.
-    raw = float_value;
     html_add_estimate_symbol();
     addHtmlFloat(float_value, _nrDecimals);
     addUnit(F("mV"));
@@ -774,9 +772,6 @@ bool P002_data_struct::getValue(float& float_value,
 
   if (_useFactoryCalibration) {
     float_value = applyFactoryCalibration(raw_value, _attenuation);
-
-    // Also need to update the raw_value for when using binning.
-    raw_value = float_value;
   }
   # endif // ifdef ESP32
 
@@ -915,7 +910,7 @@ int P002_data_struct::getBinIndex(float currentValue) const
   return -1;
 }
 
-int P002_data_struct::computeADC_to_bin(int currentValue) const
+int P002_data_struct::computeADC_to_bin(const int& currentValue) const
 {
   // First apply calibration, then find the bin index
   float calibrated_value = static_cast<float>(currentValue);
@@ -928,7 +923,7 @@ int P002_data_struct::computeADC_to_bin(int currentValue) const
 #  endif // ifdef ESP32
 
 
-  calibrated_value = applyCalibration(static_cast<float>(currentValue));
+  calibrated_value = applyCalibration(calibrated_value);
 
   if (!_formula_preprocessed.isEmpty()) {
     // Formula, must be applied before binning

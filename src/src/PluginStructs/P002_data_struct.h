@@ -179,7 +179,7 @@ private:
   // Return -1 if no bin matched.
   int  getBinIndex(float currentValue) const;
 
-  int  computeADC_to_bin(int currentValue) const;
+  int  computeADC_to_bin(const int& currentValue) const;
 
   void addBinningValue(int currentValue);
 
