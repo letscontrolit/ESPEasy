@@ -203,7 +203,6 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
-
   uint16_t mqttPort = ControllerSettings.Port;
 
 #ifdef USE_MQTT_TLS
@@ -228,7 +227,12 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   switch(TLS_type) {
     case TLS_types::NoTLS:
     {
-      mqtt.setTimeout(ControllerSettings.ClientTimeout);
+#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+     // See: https://github.com/espressif/arduino-esp32/pull/6676
+     mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+#else
+     mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
+#endif
       MQTTclient.setClient(mqtt);
       break;
     }
@@ -313,8 +317,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (TLS_type != TLS_types::NoTLS && mqtt_tls != nullptr) {
     // Certificate expiry not enabled in Mbed TLS.
 //    mqtt_tls->setX509Time(node_time.getUnixTime());
-    mqtt_tls->setTimeout(ControllerSettings.ClientTimeout);
-    #ifdef ESP8266
+#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+     // See: https://github.com/espressif/arduino-esp32/pull/6676
+    mqtt_tls->setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+#else
+    mqtt_tls->setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
+#endif
+
+#ifdef ESP8266
     mqtt_tls->setBufferSizes(1024,1024);
     #endif
     MQTTclient.setClient(*mqtt_tls);
@@ -328,8 +338,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
 
 #else
-  mqtt.setTimeout(ControllerSettings.ClientTimeout);
-  MQTTclient.setClient(mqtt);
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  #else
+  mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
+  #endif
+
+MQTTclient.setClient(mqtt);
 #endif
 
   if (ControllerSettings.UseDNS) {
