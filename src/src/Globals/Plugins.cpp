@@ -232,9 +232,9 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
     return;
   }
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   I2CMultiplexerOff();
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectHighClockSpeed();  // Reset
