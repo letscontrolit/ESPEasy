@@ -329,7 +329,7 @@ void WebServerInit()
 
   #if defined(ESP8266)
 
-  # ifdef USES_SSDP
+  # if FEATURE_SSDP
 
   if (Settings.UseSSDP)
   {
@@ -340,7 +340,7 @@ void WebServerInit()
     });
     SSDP_begin();
   }
-  # endif // USES_SSDP
+  # endif // if FEATURE_SSDP
   #endif  // if defined(ESP8266)
 }
 

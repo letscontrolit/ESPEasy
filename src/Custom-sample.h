@@ -185,7 +185,7 @@
 // Default setting is to not allow to configure a node remotely, unless explicitly enabled.
 // #define FEATURE_CUSTOM_PROVISIONING  1
 
-#define USES_SSDP
+#define FEATURE_SSDP  1
 
 #define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
@@ -234,7 +234,7 @@
 
 
 
-#define USES_SSDP
+#define FEATURE_SSDP  1
 
 /*
  #######################################################################################################
