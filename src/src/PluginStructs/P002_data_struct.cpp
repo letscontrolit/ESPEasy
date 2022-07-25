@@ -19,7 +19,7 @@ P002_data_struct::P002_data_struct(struct EventStruct *event)
   # endif // ifdef ESP8266
   # ifdef ESP32
   _pin_analogRead        = CONFIG_PIN1;
-  _useFactoryCalibration = applyFactoryCalibration(event);
+  _useFactoryCalibration = useFactoryCalibration(event);
   _attenuation           = getAttenuation(event);
   const int adc = getADC_num_for_gpio(_pin_analogRead);
 
@@ -73,6 +73,20 @@ void P002_data_struct::load(struct EventStruct *event)
 }
 
 # endif // ifndef LIMIT_BUILD_SIZE
+
+void P002_data_struct::webformLoad_2p_calibPoint(
+  const __FlashStringHelper *label,
+  const __FlashStringHelper *id_point,
+  const __FlashStringHelper *id_value,
+  int                        point,
+  float                      value) const
+{
+  addFormNumericBox(label, id_point, point, 0, MAX_ADC_VALUE);
+  html_add_estimate_symbol();
+  const unsigned int display_nrDecimals = _nrDecimals > 3 ? _nrDecimals : 3;
+
+  addTextBox(id_value, toString(value, display_nrDecimals), 10);
+}
 
 void P002_data_struct::webformLoad(struct EventStruct *event)
 {
@@ -159,7 +173,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
       addHtmlInt(high);
       addUnit(F("mV"));
       addHtml(F(" / "));
-      addHtmlFloat(step, 3);
+      addHtmlFloat(step, 3); // calibration output is int value in mV, so doesn't really matter how many decimals
       addUnit(F("mV"));
     }
   }
@@ -169,13 +183,18 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
   addFormCheckBox(F("Calibration Enabled"), F("p002_cal"), P002_CALIBRATION_ENABLED);
 
-  addFormNumericBox(F("Point 1"), F("p002_adc1"), P002_CALIBRATION_POINT1, 0, MAX_ADC_VALUE);
-  html_add_estimate_symbol();
-  addTextBox(F("p002_out1"), toString(P002_CALIBRATION_VALUE1, 3), 10);
-
-  addFormNumericBox(F("Point 2"), F("p002_adc2"), P002_CALIBRATION_POINT2, 0, MAX_ADC_VALUE);
-  html_add_estimate_symbol();
-  addTextBox(F("p002_out2"), toString(P002_CALIBRATION_VALUE2, 3), 10);
+  webformLoad_2p_calibPoint(
+    F("Point 1"),
+    F("p002_adc1"),
+    F("p002_out1"),
+    P002_CALIBRATION_POINT1,
+    P002_CALIBRATION_VALUE1);
+  webformLoad_2p_calibPoint(
+    F("Point 2"),
+    F("p002_adc2"),
+    F("p002_out2"),
+    P002_CALIBRATION_POINT2,
+    P002_CALIBRATION_VALUE2);
 
   {
     // Output the statistics for the current settings.
@@ -197,10 +216,10 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
       const float stepsize = (maxY_value - minY_value) / (MAX_ADC_VALUE + 1);
       addRowLabel(F("Step Size"));
-      addHtmlFloat(stepsize, 3);
+      addHtmlFloat(stepsize, _nrDecimals);
     } else {
       addRowLabel(F("Current"));
-      addHtmlFloat(currentValue, 3);
+      addHtmlFloat(currentValue, _nrDecimals);
     }
   }
 # ifndef LIMIT_BUILD_SIZE
@@ -312,7 +331,7 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
     float values[valueCount];
 
     for (int i = 0; i < valueCount; ++i) {
-      values[i] = esp_adc_cal_raw_to_voltage(xAxisValues[i], &adc_chars[att]);
+      values[i] = applyFactoryCalibration(xAxisValues[i], static_cast<adc_atten_t>(att));
     }
 
     add_ChartJS_dataset(
@@ -333,7 +352,7 @@ const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStr
 {
   #  ifdef ESP32
 
-  if (applyFactoryCalibration(event)) {
+  if (useFactoryCalibration(event)) {
     // reading in mVolt, not ADC
     return F("Input Voltage (mV)");
   }
@@ -349,7 +368,7 @@ void P002_data_struct::getInputRange(struct EventStruct *event, int& minInputVal
   maxInputValue = MAX_ADC_VALUE;
   # ifdef ESP32
 
-  if (applyFactoryCalibration(event) && !ignoreCalibration) {
+  if (useFactoryCalibration(event) && !ignoreCalibration) {
     // reading in mVolt, not ADC
     const size_t attenuation = getAttenuation(event);
     minInputValue = esp_adc_cal_raw_to_voltage(0, &adc_chars[attenuation]);
@@ -425,12 +444,18 @@ void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, in
 {
   addRowLabel(label);
   addHtmlInt(raw);
+
+  float float_value = raw;
+
 # ifdef ESP32
 
   if (_useFactoryCalibration) {
-    raw = esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]);
+    float_value = applyFactoryCalibration(raw, _attenuation);
+
+    // Must update raw value too to be used on binning.
+    raw = float_value;
     html_add_estimate_symbol();
-    addHtmlInt(raw);
+    addHtmlFloat(float_value, _nrDecimals);
     addUnit(F("mV"));
   }
 # endif // ifdef ESP32
@@ -438,7 +463,7 @@ void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, in
   if (includeOutputValue) {
     addHtml(' ');
     addHtml(F("&rarr; "));
-    float float_value =  applyCalibration(raw);
+    float_value =  applyCalibration(float_value);
 
 # ifndef LIMIT_BUILD_SIZE
 
@@ -472,7 +497,7 @@ void P002_data_struct::format_2point_calib_statistics(const __FlashStringHelper 
   addUnit(F("raw"));
   # endif // ifdef ESP32
   html_add_estimate_symbol();
-  addHtmlFloat(float_value, 3);
+  addHtmlFloat(float_value, _nrDecimals);
 }
 
 # ifdef ESP32
@@ -513,7 +538,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       if (i != 0) {
         addHtml(',');
       }
-      addHtmlFloat(_multipoint[i]._adc, 3);
+      addHtmlFloat(_multipoint[i]._adc, _nrDecimals);
     }
     addHtml(F("],datasets: ["));
 
@@ -525,7 +550,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       if (i != 0) {
         addHtml(',');
       }
-      addHtmlFloat(_multipoint[i]._value, 3);
+      addHtmlFloat(_multipoint[i]._value, _nrDecimals);
     }
     add_ChartJS_dataset_footer();
     add_ChartJS_chart_footer();
@@ -608,7 +633,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
                 #  ifdef ESP32
                 values[i] = P002_data_struct::applyCalibration(
                   event,
-                  esp_adc_cal_raw_to_voltage(xAxisValues[i], &adc_chars[attenuation]));
+                  applyFactoryCalibration(xAxisValues[i], static_cast<adc_atten_t>(attenuation)));
                 #  endif // ifdef ESP32
                 break;
               case 1:
@@ -693,13 +718,6 @@ void P002_data_struct::takeSample()
     getPluginStats(0)->trackPeak(raw);
   }
 # endif // ifdef USES_PLUGIN_STATS
-# ifdef ESP32
-
-  if (_useFactoryCalibration) {
-    raw = esp_adc_cal_raw_to_voltage(raw, &adc_chars[_attenuation]);
-  }
-# endif // ifdef ESP32
-
 
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
@@ -751,14 +769,18 @@ bool P002_data_struct::getValue(float& float_value,
     getPluginStats(0)->trackPeak(raw_value);
   }
 # endif // ifdef USES_PLUGIN_STATS
+  float_value = raw_value;
   # ifdef ESP32
 
   if (_useFactoryCalibration) {
-    raw_value = esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[_attenuation]);
+    float_value = applyFactoryCalibration(raw_value, _attenuation);
+
+    // Also need to update the raw_value for when using binning.
+    raw_value = float_value;
   }
   # endif // ifdef ESP32
 
-  float_value = applyCalibration(raw_value);
+  float_value = applyCalibration(float_value);
 
 # ifndef LIMIT_BUILD_SIZE
 
@@ -847,6 +869,13 @@ bool P002_data_struct::getOversamplingValue(float& float_value, int& raw_value) 
     float_value = sum / count;
     raw_value   = static_cast<int>(float_value);
 
+# ifdef ESP32
+
+    if (_useFactoryCalibration) {
+      float_value = applyFactoryCalibration(float_value, _attenuation);
+    }
+# endif // ifdef ESP32
+
     // We counted the raw oversampling values, so now we need to apply the calibration and multi-point processing
     float_value = applyCalibration(float_value);
 # ifndef LIMIT_BUILD_SIZE
@@ -891,17 +920,27 @@ int P002_data_struct::computeADC_to_bin(int currentValue) const
   // First apply calibration, then find the bin index
   float calibrated_value = static_cast<float>(currentValue);
 
+#  ifdef ESP32
+
+  if (_useFactoryCalibration) {
+    calibrated_value = applyFactoryCalibration(calibrated_value, _attenuation);
+  }
+#  endif // ifdef ESP32
+
+
   calibrated_value = applyCalibration(static_cast<float>(currentValue));
 
-  // FIXME TD-er: hard-coded formula, must be computed before binning
-  String formula = _formula_preprocessed;
+  if (!_formula_preprocessed.isEmpty()) {
+    // Formula, must be applied before binning
+    String formula = _formula_preprocessed;
 
-  formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
+    formula.replace(F("%value%"), toString(calibrated_value, _nrDecimals));
 
-  double result = 0;
+    double result = 0;
 
-  if (!isError(RulesCalculate.doCalculate(parseTemplate(formula).c_str(), &result))) {
-    calibrated_value = result;
+    if (!isError(RulesCalculate.doCalculate(parseTemplate(formula).c_str(), &result))) {
+      calibrated_value = result;
+    }
   }
 
   return getBinIndex(calibrated_value);
@@ -981,9 +1020,8 @@ float P002_data_struct::getCurrentValue(struct EventStruct *event, int& raw_valu
 
   # ifdef ESP32
 
-  if (applyFactoryCalibration(event)) {
-    const size_t attenuation = getAttenuation(event);
-    return esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[attenuation]);
+  if (useFactoryCalibration(event)) {
+    return applyFactoryCalibration(raw_value, getAttenuation(event));
   }
   # endif // ifdef ESP32
 
@@ -1002,7 +1040,7 @@ float P002_data_struct::applyCalibration(float float_value) const
 }
 
 # ifdef ESP32
-bool P002_data_struct::applyFactoryCalibration(struct EventStruct *event) {
+bool P002_data_struct::useFactoryCalibration(struct EventStruct *event) {
   if (P002_APPLY_FACTORY_CALIB) {
     const int adc_num = getADC_num_for_gpio(CONFIG_PIN1);
 
@@ -1011,6 +1049,35 @@ bool P002_data_struct::applyFactoryCalibration(struct EventStruct *event) {
     }
   }
   return false;
+}
+
+float P002_data_struct::applyFactoryCalibration(float raw_value, adc_atten_t attenuation)
+{
+  if (attenuation == adc_atten_t::ADC_ATTEN_DB_11) {
+    return esp_adc_cal_raw_to_voltage(raw_value, &adc_chars[attenuation]);
+  }
+
+  // All other attenuations do appear to have a straight calibration curve.
+  // But applying the factory calibration then reduces resolution.
+  // So we interpolate using the calibrated extremes
+
+  // Cache the computing of the values.
+  static adc_atten_t last_Attn = ADC_ATTEN_MAX;
+  static float last_out1       = 0.0;
+  static float last_out2       = MAX_ADC_VALUE;
+
+  if (last_Attn != attenuation) {
+    last_Attn = attenuation;
+    last_out1 = esp_adc_cal_raw_to_voltage(0, &adc_chars[attenuation]);
+    last_out2 = esp_adc_cal_raw_to_voltage(MAX_ADC_VALUE, &adc_chars[attenuation]);
+  }
+
+  return mapADCtoFloat(
+    raw_value,
+    0,
+    MAX_ADC_VALUE,
+    last_out1,
+    last_out2);
 }
 
 # endif // ifdef ESP32
@@ -1101,6 +1168,62 @@ float P002_data_struct::mapADCtoFloat(float float_value,
     float_value = normalized * (out2 - out1) + out1;
   }
   return float_value;
+}
+
+bool P002_data_struct::plugin_write(struct EventStruct *event, const String& string)
+{
+  bool success         = false;
+  const String command = parseString(string, 1);
+
+  if (command == F("setadc")) {
+    const String subcommand = parseString(string, 2);
+
+    if (subcommand == F("calibratepoints")) {
+      float   in1, out1, in2, out2 = 0.0f;
+      uint8_t index = 3;
+
+      if (validFloatFromString(parseString(string, index++), in1) &&
+          validFloatFromString(parseString(string, index++), out1) &&
+          validFloatFromString(parseString(string, index++), in2) &&
+          validFloatFromString(parseString(string, index++), out2))
+      {
+        if (!essentiallyEqual(in1, in2)) {
+          // Store the calibration in points as int and use those to compute the matching float output values
+          if (in1 > in2) {
+            // Sort the values with lowest input first
+            std::swap(in1,  in2);
+            std::swap(out1, out2);
+          }
+
+          P002_CALIBRATION_POINT1 = floorf(in1);
+          P002_CALIBRATION_POINT2 = ceilf(in2); // Increase "distance" by rounding up.
+          P002_CALIBRATION_VALUE1 = mapADCtoFloat(
+            P002_CALIBRATION_POINT1,
+            in1, in2,
+            out1, out2);
+          P002_CALIBRATION_VALUE2 = mapADCtoFloat(
+            P002_CALIBRATION_POINT2,
+            in1, in2,
+            out1, out2);
+          success = true;
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
+            log += F("ADC:  CalibratePoints point1: ");
+            log += P002_CALIBRATION_POINT1;
+            log += F(" => ");
+            log += toString(P002_CALIBRATION_VALUE1, _nrDecimals);
+            log += F(" point2: ");
+            log += P002_CALIBRATION_POINT2;
+            log += F(" => ");
+            log += toString(P002_CALIBRATION_VALUE2, _nrDecimals);
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
+        }
+      }
+    }
+  }
+  return success;
 }
 
 #endif // ifdef USES_P002

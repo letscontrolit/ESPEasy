@@ -101,6 +101,13 @@ private:
   void load(struct EventStruct *event);
 # endif // ifndef LIMIT_BUILD_SIZE
 
+  void webformLoad_2p_calibPoint(
+    const __FlashStringHelper *label,
+    const __FlashStringHelper *id_point,
+    const __FlashStringHelper *id_value,
+    int                        point,
+    float                      value) const;
+
 public:
 
   void webformLoad(struct EventStruct *event);
@@ -192,7 +199,12 @@ public:
   float        applyCalibration(float float_value) const;
 
 # ifdef ESP32
-  static bool  applyFactoryCalibration(struct EventStruct *event);
+  static bool  useFactoryCalibration(struct EventStruct *event);
+
+  static float applyFactoryCalibration(float       raw_value,
+                                       adc_atten_t attenuation);
+
+
 # endif // ifdef ESP32
 
 private:
@@ -208,6 +220,9 @@ private:
                              float out2);
 
 public:
+
+  bool plugin_write(struct EventStruct *event,
+                    const String      & string);
 
   uint16_t OversamplingCount = 0;
 
