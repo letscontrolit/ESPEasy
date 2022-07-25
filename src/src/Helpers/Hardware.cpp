@@ -45,9 +45,9 @@
 #endif // ifdef ESP32
 
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 # include <SD.h>
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -207,7 +207,7 @@ void hardwareInit()
     addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
   }
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 
   if (Settings.Pin_sd_cs >= 0)
   {
@@ -221,7 +221,7 @@ void hardwareInit()
       addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
     }
   }
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 #ifdef HAS_ETHERNET
   ethPower(false);
 #endif

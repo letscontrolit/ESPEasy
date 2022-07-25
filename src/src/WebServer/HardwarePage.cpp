@@ -192,10 +192,10 @@ void handle_hardware() {
   #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
   
-#ifdef FEATURE_SD
+#if FEATURE_SD
   addFormSubHeader(F("SD Card"));
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
   
 #ifdef HAS_ETHERNET
   addFormSubHeader(F("Ethernet"));

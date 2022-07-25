@@ -162,7 +162,7 @@ namespace std
 #include <Wire.h>
 #include <SPI.h>
 #include <FS.h>
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
 #else
 using namespace fs;

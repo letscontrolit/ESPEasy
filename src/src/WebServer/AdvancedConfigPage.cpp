@@ -57,9 +57,9 @@ void handle_advanced() {
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
-#ifdef FEATURE_SD
+#if FEATURE_SD
     setLogLevelFor(LOG_TO_SDCARD, LabelType::SD_LOG_LEVEL);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
     Settings.UseNTP(isFormItemChecked(F("usentp")));
@@ -194,11 +194,11 @@ void handle_advanced() {
   addFormLogLevelSelect(LabelType::SERIAL_LOG_LEVEL, Settings.SerialLogLevel);
   addFormLogLevelSelect(LabelType::WEB_LOG_LEVEL,    Settings.WebLogLevel);
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
   addFormLogLevelSelect(LabelType::SD_LOG_LEVEL,     Settings.SDLogLevel);
 
   addFormCheckBox(F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 
   addFormSubHeader(F("Serial Settings"));

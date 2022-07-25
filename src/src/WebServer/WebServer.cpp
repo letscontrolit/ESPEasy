@@ -266,9 +266,9 @@ void WebServerInit()
   web_server.on(F("/rules/delete"), handle_rules_delete);
   # endif // WEBSERVER_NEW_RULES
   #endif  // WEBSERVER_RULES
-#ifdef FEATURE_SD
+#if FEATURE_SD
   web_server.on(F("/SDfilelist"),  handle_SDfilelist);
-#endif   // ifdef FEATURE_SD
+#endif   // if FEATURE_SD
 #ifdef WEBSERVER_SETUP
   web_server.on(F("/setup"),       handle_setup);
 #endif // ifdef WEBSERVER_SETUP
