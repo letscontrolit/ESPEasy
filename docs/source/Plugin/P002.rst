@@ -152,6 +152,27 @@ The values below the chart  only taking the Two Point Calibration into account.
 * The minimum and maximum values are based on the maximum range which can be measured with the set attenuation.
 * The step size is the minimal step size of the output value.
 
+.. note:: It is possible to enter a floating point value as "ADC" input for the 2-point calibration.
+          Since this value is stored as an integer value, the calibrated values will be adjusted accordingly to still represent the same calibration curve.
+
+It is best to turn off the 2-point calibration and let the ESP run for a while with a stable voltage applied.
+The measured value (either in raw ADC or in mV on ESP32 with Factory Calibration enabled) can then be averaged over a longer period to get the most accurate value.
+
+For example the system is measuring the voltage over a 10k resistor (with another 330k resistor in series) and a diode.
+This means there is some voltage drop over de diode and thus we need 2 calibration sets.
+The attenuation is set to 0dB on an ESP32.
+
+Measured with 9.00V applied and 20.00V applied:
+
+* 240.88 mV => 9
+* 565.4957 mV => 20
+
+When entered in the 2-point calibration fields, the page will reload with these converted values:
+
+* 241 mV => 9.0041
+* 565 mV => 19.9832
+
+
 
 Multipoint Processing
 ---------------------
