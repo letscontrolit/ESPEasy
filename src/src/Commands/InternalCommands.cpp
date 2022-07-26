@@ -289,7 +289,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'e': {
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
       COMMAND_CASE_R(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
       COMMAND_CASE_R(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
       COMMAND_CASE_R(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
@@ -302,7 +302,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
       COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
       COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
-    #endif // HAS_ETHERNET
+    #endif // FEATURE_ETHERNET
       COMMAND_CASE_R("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE_A(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE_A("executerules", Command_Rules_Execute, -1); // Rule.h

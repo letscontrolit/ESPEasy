@@ -68,7 +68,7 @@ void hardwareInit()
 
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
         PinBootState bootState = Settings.getPinBootState(gpio);
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
 
         if (Settings.ETH_Pin_power == gpio)
         {
@@ -80,7 +80,7 @@ void hardwareInit()
           bootState = PinBootState::Output_low;
         }
 
-      #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
 
         if (bootState != PinBootState::Default_state) {
           int8_t  state = -1;
@@ -1190,9 +1190,9 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-#if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+#if defined(ESP8266) || (defined(ESP32) && FEATURE_ETHERNET)
   const uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
-#endif // if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+#endif // if defined(ESP8266) || (defined(ESP32) && FEATURE_ETHERNET)
 
   // TD-er: This also checks for ESP8266/ESP8285/ESP32
   switch (model) {
@@ -1231,11 +1231,11 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
     case DeviceModel::DeviceModel_wESP32:
     case DeviceModel::DeviceModel_WT32_ETH01:
-#if  defined(ESP32) && defined(HAS_ETHERNET)
+#if  defined(ESP32) && FEATURE_ETHERNET
       return size_MB == 4;
-#else // if  defined(ESP32) && defined(HAS_ETHERNET)
+#else // if  defined(ESP32) && FEATURE_ETHERNET
       return false;
-#endif // if  defined(ESP32) && defined(HAS_ETHERNET)
+#endif // if  defined(ESP32) && FEATURE_ETHERNET
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:
@@ -1373,7 +1373,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   /*
-   # ifdef HAS_ETHERNET
+   # if FEATURE_ETHERNET
 
      // Check pins used for RMII Ethernet PHY
      if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
@@ -1394,7 +1394,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
      }
 
 
-   # endif // ifdef HAS_ETHERNET
+   # endif // if FEATURE_ETHERNET
 
    */
 # else // ifdef ESP32S2
@@ -1446,7 +1446,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  #  ifdef HAS_ETHERNET
+  #  if FEATURE_ETHERNET
 
   // Check pins used for RMII Ethernet PHY
   if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
@@ -1467,7 +1467,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
 
-  #  endif // ifdef HAS_ETHERNET
+  #  endif // if FEATURE_ETHERNET
 
 # endif // ifdef ESP32S2
 

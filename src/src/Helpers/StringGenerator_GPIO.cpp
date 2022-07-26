@@ -150,9 +150,9 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   bool includeI2C = true;
   bool includeSPI = true;
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   bool includeEthernet = true;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
 
   switch (purpose) {
     case PinSelectPurpose::I2C:
@@ -162,9 +162,9 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
       includeSPI = false;
       break;
     case PinSelectPurpose::Ethernet:
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       includeEthernet = false;
-      #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
       break;
     case PinSelectPurpose::Generic:
     case PinSelectPurpose::Generic_input:
@@ -180,7 +180,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
   if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
   if (Settings.isEthernetPin(gpio)) {
     return F("Eth");
@@ -195,7 +195,7 @@ const __FlashStringHelper* getConflictingUse(int gpio, PinSelectPurpose purpose)
 
     return F("Eth");
   }
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
 
 #ifdef ESP32
   if (UsePSRAM()) {

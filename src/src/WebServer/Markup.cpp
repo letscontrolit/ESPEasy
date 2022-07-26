@@ -265,18 +265,18 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
       bool includeI2C = true;
       bool includeSPI = true;
-        #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       bool includeEthernet = true;
-        #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
           includeSPI = false;
           break;
         case PinSelectPurpose::Ethernet:
-            #ifdef HAS_ETHERNET
+          #if FEATURE_ETHERNET
           includeEthernet = false;
-            #endif // ifdef HAS_ETHERNET
+          #endif // if FEATURE_ETHERNET
           break;
         case PinSelectPurpose::Generic:
 
@@ -324,12 +324,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
       if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
         disabled = true;
       }
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
     }
   }
 

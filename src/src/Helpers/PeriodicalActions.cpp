@@ -204,7 +204,7 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     bool logWiFiStatus = true;
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
     if(active_network_medium == NetworkMedium_t::Ethernet) {
       logWiFiStatus = false;
       log += F( " EthSpeedState ");
@@ -212,7 +212,7 @@ void runEach30Seconds()
       log += F(" ETH status: ");
       log += EthEventData.ESPEasyEthStatusToString();
     }
-    #endif
+    #endif // if FEATURE_ETHERNET
     if (logWiFiStatus) {
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
