@@ -81,11 +81,12 @@ void P002_data_struct::webformLoad_2p_calibPoint(
   int                        point,
   float                      value) const
 {
-  addFormNumericBox(label, id_point, point, 0, MAX_ADC_VALUE);
+  addRowLabel_tr_id(label, id_point);
+  addTextBox(id_point, String(point), 10, false, false, EMPTY_STRING, F("number"));
   html_add_estimate_symbol();
   const unsigned int display_nrDecimals = _nrDecimals > 3 ? _nrDecimals : 3;
 
-  addTextBox(id_value, toString(value, display_nrDecimals), 10);
+  addTextBox(id_value, toString(value, display_nrDecimals), 10, F("number"));
 }
 
 void P002_data_struct::webformLoad(struct EventStruct *event)
@@ -196,6 +197,8 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     P002_CALIBRATION_POINT2,
     P002_CALIBRATION_VALUE2);
 
+  addFormNote(F("Input float values will be stored as int, calibration values will be adjusted accordingly"));
+
   {
     // Output the statistics for the current settings.
     if (P002_CALIBRATION_ENABLED) {
@@ -223,27 +226,31 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
     }
   }
 # ifndef LIMIT_BUILD_SIZE
-  addFormSubHeader(F("Multipoint Processing"));
-  addFormCheckBox(F("Multipoint Processing Enabled"), F("p002_multi_en"), P002_MULTIPOINT_ENABLED);
+  const bool useBinning = P002_OVERSAMPLING == P002_USE_BINNING;
+  addFormSubHeader(useBinning ? F("Binning Processing") : F("Multipoint Processing"));
+  addFormCheckBox(useBinning ? F("Binning Processing Enabled") : F("Multipoint Processing Enabled"),
+                  F("p002_multi_en"),
+                  P002_MULTIPOINT_ENABLED);
 
-
-  addFormTextBox(F("Binning Formula"), getPluginCustomArgName(P002_LINE_INDEX_FORMULA), _formula, P002_MAX_FORMULA_LENGTH);
-
-  if (P002_OVERSAMPLING != P002_USE_BINNING) {
-    addFormNote(F("Formula only used when binning"));
+  if (useBinning) {
+    addFormTextBox(F("Binning Formula"), getPluginCustomArgName(P002_LINE_INDEX_FORMULA), _formula, P002_MAX_FORMULA_LENGTH);
   }
 
-  addFormNumericBox(F("Nr Multipoint Fields"), F("p002_nr_mp"), P002_NR_MULTIPOINT_ITEMS, 0, P002_MAX_NR_MP_ITEMS);
+  addFormNumericBox(useBinning ? F("Nr of Bins") : F("Nr Multipoint Fields"),
+                    F("p002_nr_mp"),
+                    P002_NR_MULTIPOINT_ITEMS,
+                    0,
+                    P002_MAX_NR_MP_ITEMS);
 
   // Checkbox needed to explicitly allow to split-paste over each field
-  addFormCheckBox(F("Split-Paste Multipoint Fields"), F("splitpaste"), false);
+  addFormCheckBox(useBinning ? F("Split-Paste Binning Fields") : F("Split-Paste Multipoint Fields"), F("splitpaste"), false);
   addFormNote(F("When checked, a set of tab, space or newline separated values can be pasted at once."));
 
   size_t line_nr = 0;
 
   for (int varNr = P002_LINE_IDX_FIRST_MP; varNr < P002_Nlines; varNr += P002_STRINGS_PER_MP)
   {
-    const String label = String(F("Point ")) + String(line_nr + 1);
+    const String label = String(useBinning ? F("Bin ") : F("Point ")) + String(line_nr + 1);
     addFormTextBox(F("query-input widenumber"),
                    label,
                    getPluginCustomArgName(varNr),
@@ -522,14 +529,24 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
 {
   if (P002_MULTIPOINT_ENABLED)
   {
-    addRowLabel(F("Multipoint Curve"));
     const bool useBinning = P002_OVERSAMPLING == P002_USE_BINNING;
+    addRowLabel(useBinning ? F("Binning Curve") : F("Multipoint Curve"));
+
+    String axisOptions;
+
+    {
+      const ChartJS_title xAxisTitle(useBinning ? F("Bin Center Value") : F("Input"));
+      const ChartJS_title yAxisTitle(useBinning ? F("Bin Output Value") : F("Output"));
+      axisOptions = make_ChartJS_scale_options(xAxisTitle, yAxisTitle);
+    }
+
     add_ChartJS_chart_header(
       useBinning ? F("bar") : F("line"),
       F("mpcurve"),
-      F("Multipoint Curve"),
+      useBinning ? F("Bin Values") : F("Multipoint Curve"),
       500,
-      500);
+      500,
+      axisOptions);
 
     // Add labels
     for (size_t i = 0; i < _multipoint.size(); ++i) {
@@ -541,7 +558,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
     addHtml(F("],datasets: ["));
 
     add_ChartJS_dataset_header(
-      F("Multipoint Values"),
+      useBinning ? F("Bins") : F("Multipoint Values"),
       F("rgb(255, 99, 132)"));
 
     for (int i = 0; i < _multipoint.size(); ++i) {
@@ -579,7 +596,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
         valueCount,
         xAxisValues);
 
-      const __FlashStringHelper *label = F("Multipoint Calibration");
+      const __FlashStringHelper *label = F("Multipoint");
       const __FlashStringHelper *color = F("rgb(255, 99, 132)");
 
       for (int step = 0; step < 3; ++step)
@@ -644,11 +661,26 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   P002_ATTENUATION         = getFormItemInt(F("p002_attn"));
   # endif // ifdef ESP32
 
-  P002_CALIBRATION_POINT1 = getFormItemInt(F("p002_adc1"));
-  P002_CALIBRATION_VALUE1 = getFormItemFloat(F("p002_out1"));
+  {
+    // Map the input "point" values to the nearest int.
+    const float adc1 = getFormItemFloat(F("p002_adc1"));
+    const float adc2 = getFormItemFloat(F("p002_adc2"));
 
-  P002_CALIBRATION_POINT2 = getFormItemInt(F("p002_adc2"));
-  P002_CALIBRATION_VALUE2 = getFormItemFloat(F("p002_out2"));
+    const float out1 = getFormItemFloat(F("p002_out1"));
+    const float out2 = getFormItemFloat(F("p002_out2"));
+
+
+    P002_CALIBRATION_POINT1 = roundf(adc1);
+    P002_CALIBRATION_POINT2 = roundf(adc2);
+    P002_CALIBRATION_VALUE1 = mapADCtoFloat(
+      P002_CALIBRATION_POINT1,
+      adc1, adc2,
+      out1, out2);
+    P002_CALIBRATION_VALUE2 = mapADCtoFloat(
+      P002_CALIBRATION_POINT2,
+      adc1, adc2,
+      out1, out2);
+  }
 
 # ifndef LIMIT_BUILD_SIZE
   P002_MULTIPOINT_ENABLED = isFormItemChecked(F("p002_multi_en"));
@@ -659,8 +691,11 @@ String P002_data_struct::webformSave(struct EventStruct *event)
   String lines[nr_lines];
 
   // Store nr of lines that were saved, so no 'old' data will be read when nr of multi-point items has changed.
-  lines[P002_SAVED_NR_LINES]     = String(nr_lines);
-  lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
+  lines[P002_SAVED_NR_LINES] = String(nr_lines);
+
+  if (web_server.hasArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA))) {
+    lines[P002_LINE_INDEX_FORMULA] = webArg(getPluginCustomArgName(P002_LINE_INDEX_FORMULA));
+  }
 
   // const int nrDecimals = webArg(F("TDVD1")).toInt();
 
@@ -1143,60 +1178,5 @@ float P002_data_struct::mapADCtoFloat(float float_value,
   return float_value;
 }
 
-bool P002_data_struct::plugin_write(struct EventStruct *event, const String& string)
-{
-  bool success         = false;
-  const String command = parseString(string, 1);
-
-  if (command == F("setadc")) {
-    const String subcommand = parseString(string, 2);
-
-    if (subcommand == F("calibratepoints")) {
-      float   in1, out1, in2, out2 = 0.0f;
-      uint8_t index = 3;
-
-      if (validFloatFromString(parseString(string, index++), in1) &&
-          validFloatFromString(parseString(string, index++), out1) &&
-          validFloatFromString(parseString(string, index++), in2) &&
-          validFloatFromString(parseString(string, index++), out2))
-      {
-        if (!essentiallyEqual(in1, in2)) {
-          // Store the calibration in points as int and use those to compute the matching float output values
-          if (in1 > in2) {
-            // Sort the values with lowest input first
-            std::swap(in1,  in2);
-            std::swap(out1, out2);
-          }
-
-          P002_CALIBRATION_POINT1 = floorf(in1);
-          P002_CALIBRATION_POINT2 = ceilf(in2); // Increase "distance" by rounding up.
-          P002_CALIBRATION_VALUE1 = mapADCtoFloat(
-            P002_CALIBRATION_POINT1,
-            in1, in2,
-            out1, out2);
-          P002_CALIBRATION_VALUE2 = mapADCtoFloat(
-            P002_CALIBRATION_POINT2,
-            in1, in2,
-            out1, out2);
-          success = true;
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log;
-            log += F("ADC:  CalibratePoints point1: ");
-            log += P002_CALIBRATION_POINT1;
-            log += F(" => ");
-            log += toString(P002_CALIBRATION_VALUE1, _nrDecimals);
-            log += F(" point2: ");
-            log += P002_CALIBRATION_POINT2;
-            log += F(" => ");
-            log += toString(P002_CALIBRATION_VALUE2, _nrDecimals);
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
-        }
-      }
-    }
-  }
-  return success;
-}
 
 #endif // ifdef USES_P002

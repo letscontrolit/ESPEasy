@@ -222,9 +222,6 @@ private:
 
 public:
 
-  bool plugin_write(struct EventStruct *event,
-                    const String      & string);
-
   uint16_t OversamplingCount = 0;
 
 private:
