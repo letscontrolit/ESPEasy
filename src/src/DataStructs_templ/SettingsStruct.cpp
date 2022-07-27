@@ -681,7 +681,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled() const {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
     if (19 == pin) return true; // ETH TXD0
@@ -691,21 +691,21 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
     if (26 == pin) return true; // ETH RXD1
     if (27 == pin) return true; // ETH CRS_DV
   }
-  #endif
+  #endif // if FEATURE_ETHERNET
   return false;
 }
 
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if (pin < 0) return false;
   if (NetworkMedium == NetworkMedium_t::Ethernet) {
     if (ETH_Pin_mdc == pin) return true;
     if (ETH_Pin_mdio == pin) return true;
     if (ETH_Pin_power == pin) return true;
   }
-  #endif
+  #endif // if FEATURE_ETHERNET
   return false;
 }
 

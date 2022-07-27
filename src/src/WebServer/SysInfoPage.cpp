@@ -134,7 +134,7 @@ void handle_sysinfo_json() {
   json_prop(F("ssid2"),         getValue(LabelType::WIFI_STORED_SSID2));
   json_close();
 
-# ifdef HAS_ETHERNET
+# if FEATURE_ETHERNET
   json_open(false, F("ethernet"));
   json_prop(F("ethwifimode"),   getValue(LabelType::ETH_WIFI_MODE));
   json_prop(F("ethconnected"),  getValue(LabelType::ETH_CONNECTED));
@@ -143,7 +143,7 @@ void handle_sysinfo_json() {
   json_prop(F("ethstate"),      getValue(LabelType::ETH_STATE));
   json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE));
   json_close();
-# endif // ifdef HAS_ETHERNET
+# endif // if FEATURE_ETHERNET
 
   json_open(false, F("firmware"));
   json_prop(F("build"),       String(BUILD));
@@ -258,9 +258,9 @@ void handle_sysinfo() {
 
   handle_sysinfo_Network();
 
-# ifdef HAS_ETHERNET
+# if FEATURE_ETHERNET
   handle_sysinfo_Ethernet();
-# endif // ifdef HAS_ETHERNET
+# endif // if FEATURE_ETHERNET
 
   handle_sysinfo_WiFiSettings();
 
@@ -382,7 +382,7 @@ void handle_sysinfo_memory() {
 # endif // if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 }
 
-# ifdef HAS_ETHERNET
+# if FEATURE_ETHERNET
 void handle_sysinfo_Ethernet() {
   if (active_network_medium == NetworkMedium_t::Ethernet) {
     addTableSeparator(F("Ethernet"), 2, 3);
@@ -396,12 +396,12 @@ void handle_sysinfo_Ethernet() {
   }
 }
 
-# endif // ifdef HAS_ETHERNET
+# endif // if FEATURE_ETHERNET
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
-  # if defined(HAS_ETHERNET) || defined(USES_ESPEASY_NOW)
+  # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
   # endif 
 

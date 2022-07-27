@@ -290,7 +290,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'e': {
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
       COMMAND_CASE_R(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
       COMMAND_CASE_R(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
       COMMAND_CASE_R(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
@@ -303,7 +303,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
       COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
       COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
-    #endif // HAS_ETHERNET
+    #endif // FEATURE_ETHERNET
 #ifdef USES_ESPEASY_NOW
       COMMAND_CASE_R("espeasynowdisable", Command_ESPEasy_Now_Disable, 0); // ESPEasy_Now_cmd.h
       COMMAND_CASE_R( "espeasynowenable", Command_ESPEasy_Now_Enable,  0); // ESPEasy_Now_cmd.h

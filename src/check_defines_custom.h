@@ -65,6 +65,12 @@
 # undef ENABLE_TOOLTIPS
 #endif // ifdef ENABLE_TOOLTIPS
 
+#ifdef HAS_ETHERNET
+# warning "Custom.h has '#define HAS_ETHERNET' to be replaced with '#define FEATURE_ETHERNET 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_ETHERNET  1
+# undef HAS_ETHERNET
+#endif // ifdef HAS_ETHERNET
+
 /* *INDENT-ON* */
 
 #endif // ifndef CHECK_DEFINES_CUSTOM_H

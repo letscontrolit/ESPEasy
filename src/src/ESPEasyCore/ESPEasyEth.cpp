@@ -1,6 +1,6 @@
 #include "../ESPEasyCore/ESPEasyEth.h"
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
@@ -250,4 +250,4 @@ bool ETHConnected() {
   return false;
 }
 
-#endif
+#endif // if FEATURE_ETHERNET

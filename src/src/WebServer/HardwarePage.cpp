@@ -65,7 +65,7 @@ void handle_hardware() {
       Settings.InitSPI                = isFormItemChecked(F("initspi")); // SPI Init
     #endif
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     Settings.ETH_Phy_Addr             = getFormItemInt(F("ethphy"));
     Settings.ETH_Pin_mdc              = getFormItemInt(F("ethmdc"));
     Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
@@ -73,7 +73,7 @@ void handle_hardware() {
     Settings.ETH_Phy_Type             = static_cast<EthPhyType_t>(getFormItemInt(F("ethtype")));
     Settings.ETH_Clock_Mode           = static_cast<EthClockMode_t>(getFormItemInt(F("ethclock")));
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
-#endif
+#endif // if FEATURE_ETHERNET
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
@@ -197,7 +197,7 @@ void handle_hardware() {
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
 #endif // if FEATURE_SD
   
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   addFormSubHeader(F("Ethernet"));
   addRowLabel_tr_id(F("Preferred network medium"), F("ethwifi"));
   {
@@ -253,7 +253,7 @@ void handle_hardware() {
       };
     addSelector(F("ethclock"), 4, ethClockOptions, nullptr, nullptr, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
   }
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
 

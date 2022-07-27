@@ -283,13 +283,13 @@ void ESPEasy_setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
   // Do not call setNetworkMedium here as that may try to clean up settings.
   active_network_medium = Settings.NetworkMedium;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();

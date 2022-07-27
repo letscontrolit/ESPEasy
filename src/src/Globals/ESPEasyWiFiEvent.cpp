@@ -28,7 +28,7 @@ std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list;
 
 WiFiEventData_t WiFiEventData;
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 EthernetEventData_t EthEventData;
 #endif
 

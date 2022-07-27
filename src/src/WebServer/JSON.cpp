@@ -107,9 +107,9 @@ void handle_json()
   bool showSystem             = true;
   bool showWifi               = true;
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   bool showEthernet = true;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
   bool showDataAcquisition = true;
   bool showTaskDetails     = true;
   #if FEATURE_ESPEASY_P2P
@@ -121,9 +121,9 @@ void handle_json()
     if (view == F("sensorupdate")) {
       showSystem = false;
       showWifi   = false;
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       showEthernet = false;
-      #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
       showDataAcquisition = false;
       showTaskDetails     = false;
       #if FEATURE_ESPEASY_P2P
@@ -265,7 +265,7 @@ void handle_json()
       stream_comma_newline();
     }
 
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
 
     if (showEthernet) {
       addHtml(F("\"Ethernet\":{\n"));
@@ -285,7 +285,7 @@ void handle_json()
       stream_json_object_values(labels);
       stream_comma_newline();
     }
-    #endif // ifdef HAS_ETHERNET
+    #endif // if FEATURE_ETHERNET
 
   #if FEATURE_ESPEASY_P2P
     if (showNodes) {

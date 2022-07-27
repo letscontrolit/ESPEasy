@@ -226,7 +226,7 @@
 #define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
 #ifndef DEFAULT_NETWORK_MEDIUM
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
   #else
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
