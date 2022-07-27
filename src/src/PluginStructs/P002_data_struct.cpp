@@ -83,10 +83,17 @@ void P002_data_struct::webformLoad_2p_calibPoint(
 {
   addRowLabel_tr_id(label, id_point);
   addTextBox(id_point, String(point), 10, false, false, EMPTY_STRING, F("number"));
+
+#ifdef ESP32
+  if (_useFactoryCalibration) {
+    addUnit(F("mV"));
+  }
+#endif
+
   html_add_estimate_symbol();
   const unsigned int display_nrDecimals = _nrDecimals > 3 ? _nrDecimals : 3;
 
-  addTextBox(id_value, toString(value, display_nrDecimals), 10, F("number"));
+  addTextBox(id_value, toString(value, display_nrDecimals), 10, false, false, EMPTY_STRING, F("number"));
 }
 
 void P002_data_struct::webformLoad(struct EventStruct *event)
