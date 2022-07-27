@@ -136,6 +136,11 @@ class SettingsStruct_tmpl
   bool AllowOTAUnlimited() const;
   void AllowOTAUnlimited(bool value);
 
+  // Default behavior is to not allow following redirects  
+  bool SendToHTTP_follow_redirects() const;
+  void SendToHTTP_follow_redirects(bool value);
+
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);

@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 
 class String;
 
@@ -18,7 +18,9 @@ String Command_Provisioning_Provision(struct EventStruct *event,
 String Command_Provisioning_Rules(struct EventStruct *event,
                                   const char         *Line);
 
+String Command_Provisioning_Firmware(struct EventStruct *event,
+                                     const char         *Line);
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #endif // ifndef COMMANDS_PROVISIONING_H

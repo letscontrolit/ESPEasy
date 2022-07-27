@@ -13,7 +13,7 @@
 
 # define PLUGIN_081
 # define PLUGIN_ID_081      81                        // plugin id
-# define PLUGIN_NAME_081   "Generic - CRON [TESTING]" // "Plugin Name" is what will be displayed in the selection list
+# define PLUGIN_NAME_081   "Generic - CRON" // "Plugin Name" is what will be displayed in the selection list
 # define PLUGIN_VALUENAME1_081 "LastExecution"
 # define PLUGIN_VALUENAME2_081 "NextExecution"
 

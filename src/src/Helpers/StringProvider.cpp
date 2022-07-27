@@ -1,8 +1,8 @@
 #include "../Helpers/StringProvider.h"
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 # include <ETH.h>
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 
 #include "../../ESPEasy-Globals.h"
 
@@ -10,7 +10,7 @@
 
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 #include "../ESPEasyCore/ESPEasyEth.h"
 #endif
 
@@ -166,9 +166,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::SYSLOG_LOG_LEVEL:       return F("Syslog Log Level");
     case LabelType::SERIAL_LOG_LEVEL:       return F("Serial Log Level");
     case LabelType::WEB_LOG_LEVEL:          return F("Web Log Level");
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
     case LabelType::SD_LOG_LEVEL:           return F("SD Log Level");
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
@@ -199,7 +199,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    return F("Max. OTA Sketch Size");
     case LabelType::OTA_2STEP:              return F("OTA 2-step Needed");
     case LabelType::OTA_POSSIBLE:           return F("OTA possible");
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return F("Eth IP Address");
     case LabelType::ETH_IP_SUBNET:          return F("Eth IP Subnet");
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return F("Eth IP / Subnet");
@@ -211,7 +211,7 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ETH_STATE:              return F("Eth State");
     case LabelType::ETH_SPEED_STATE:        return F("Eth Speed State");
     case LabelType::ETH_CONNECTED:          return F("Eth connected");
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
     case LabelType::ETH_WIFI_MODE:          return F("Network Type");
     case LabelType::SUNRISE:                return F("Sunrise");
     case LabelType::SUNSET:                 return F("Sunset");
@@ -336,20 +336,20 @@ String getValue(LabelType::Enum label) {
     case LabelType::ENCRYPTION_TYPE_STA:    return // WiFi_AP_Candidates.getCurrent().encryption_type();
                                                    WiFi_encryptionType(WiFiEventData.auth_mode);
     case LabelType::CONNECTED:
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       if(active_network_medium == NetworkMedium_t::Ethernet) {
         return format_msec_duration(EthEventData.lastConnectMoment.millisPassedSince());
       }
-      #endif
+      #endif // if FEATURE_ETHERNET
       return format_msec_duration(WiFiEventData.lastConnectMoment.millisPassedSince());
 
     // Use only the nr of seconds to fit it in an int32, plus append '000' to have msec format again.
     case LabelType::CONNECTED_MSEC:         
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       if(active_network_medium == NetworkMedium_t::Ethernet) {
         return String(static_cast<int32_t>(EthEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
       }
-      #endif
+      #endif // if FEATURE_ETHERNET
       return String(static_cast<int32_t>(WiFiEventData.lastConnectMoment.millisPassedSince() / 1000ll)) + F("000"); 
     case LabelType::LAST_DISCONNECT_REASON: return String(WiFiEventData.lastDisconnectReason);
     case LabelType::LAST_DISC_REASON_STR:   return getLastDisconnectReason();
@@ -384,9 +384,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::SYSLOG_LOG_LEVEL:       return getLogLevelDisplayString(Settings.SyslogLevel);
     case LabelType::SERIAL_LOG_LEVEL:       return getLogLevelDisplayString(getSerialLogLevel());
     case LabelType::WEB_LOG_LEVEL:          return getLogLevelDisplayString(getWebLogLevel());
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
     case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId());
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
@@ -415,7 +415,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::MAX_OTA_SKETCH_SIZE:    break;
     case LabelType::OTA_2STEP:              break;
     case LabelType::OTA_POSSIBLE:           break;
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     case LabelType::ETH_IP_ADDRESS:         return NetworkLocalIP().toString();
     case LabelType::ETH_IP_SUBNET:          return NetworkSubnetMask().toString();
     case LabelType::ETH_IP_ADDRESS_SUBNET:  return String(getValue(LabelType::ETH_IP_ADDRESS) + F(" / ") +
@@ -428,7 +428,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ETH_STATE:              return EthLinkUp() ? F("Link Up") : F("Link Down");
     case LabelType::ETH_SPEED_STATE:        return EthLinkUp() ? getEthLinkSpeedState() : F("Link Down");
     case LabelType::ETH_CONNECTED:          return ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"); // 0=disconnected, 1=connected
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
     case LabelType::ETH_WIFI_MODE:          return toString(active_network_medium);
     case LabelType::SUNRISE:                return node_time.getSunriseTimeString(':');
     case LabelType::SUNSET:                 return node_time.getSunsetTimeString(':');
@@ -448,7 +448,7 @@ String getValue(LabelType::Enum label) {
   return F("MissingString");
 }
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 String getEthSpeed() {
   String result;
 
@@ -475,7 +475,7 @@ String getEthLinkSpeedState() {
   return result;
 }
 
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 
 String getExtendedValue(LabelType::Enum label) {
   switch (label)

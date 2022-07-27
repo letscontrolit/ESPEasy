@@ -31,9 +31,9 @@ void updateLoopStats() {
   }
   const int64_t usecSince = usecPassedSince(lastLoopStart);
 
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   miscStats[LOOP_STATS].add(usecSince);
-  #endif // ifdef USES_TIMING_STATS
+  #endif // if FEATURE_TIMING_STATS
 
   loop_usec_duration_total += usecSince;
   lastLoopStart             = getMicros64();

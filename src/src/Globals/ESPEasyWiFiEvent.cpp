@@ -17,7 +17,7 @@ WiFiEventHandler APModeStationDisconnectedHandler;
 
 WiFiEventData_t WiFiEventData;
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 EthernetEventData_t EthEventData;
 #endif
 

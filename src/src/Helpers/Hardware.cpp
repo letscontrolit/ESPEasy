@@ -45,9 +45,9 @@
 #endif // ifdef ESP32
 
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 # include <SD.h>
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -68,7 +68,7 @@ void hardwareInit()
 
       if (getGpioPullResistor(gpio, hasPullUp, hasPullDown)) {
         PinBootState bootState = Settings.getPinBootState(gpio);
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
 
         if (Settings.ETH_Pin_power == gpio)
         {
@@ -80,7 +80,7 @@ void hardwareInit()
           bootState = PinBootState::Output_low;
         }
 
-      #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
 
         if (bootState != PinBootState::Default_state) {
           int8_t  state = -1;
@@ -207,7 +207,7 @@ void hardwareInit()
     addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
   }
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 
   if (Settings.Pin_sd_cs >= 0)
   {
@@ -221,7 +221,7 @@ void hardwareInit()
       addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
     }
   }
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 }
 
 void initI2C() {
@@ -248,13 +248,13 @@ void initI2C() {
       #endif // ifdef ESP32S2
   }
 
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
 
   if (validGpio(Settings.I2C_Multiplexer_ResetPin)) { // Initialize Reset pin to High if configured
     pinMode(Settings.I2C_Multiplexer_ResetPin, OUTPUT);
     digitalWrite(Settings.I2C_Multiplexer_ResetPin, HIGH);
   }
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   // I2C Watchdog boot status check
   if (Settings.WDI2CAddress != 0)
@@ -336,7 +336,7 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
   #endif // ifdef ESP32
 }
 
-#ifdef FEATURE_I2CMULTIPLEXER
+#if FEATURE_I2CMULTIPLEXER
 
 // Check if the I2C Multiplexer is enabled
 bool isI2CMultiplexerEnabled() {
@@ -441,7 +441,7 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
          || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
 
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+#endif // if FEATURE_I2CMULTIPLEXER
 
 void checkResetFactoryPin() {
   static uint8_t factoryResetCounter = 0;
@@ -874,13 +874,28 @@ const __FlashStringHelper* getChipModel() {
     return F("ESP32-H2");
   }
   return F("ESP32");
-
-#elif defined(ESP8285)
-  return F("ESP8285");
 #elif defined(ESP8266)
-  return F("ESP8266");
-#endif // ifdef ESP32
+  return isESP8285() ? F("ESP8285") : F("ESP8266");
+#endif
   return F("Unknown");
+}
+
+bool isESP8285() {
+  #ifdef ESP8266
+  const uint32_t efuse_blocks[4] {
+    READ_PERI_REG(0x3ff00050),
+    READ_PERI_REG(0x3ff00054),
+    READ_PERI_REG(0x3ff00058),
+    READ_PERI_REG(0x3ff0005c)
+  };
+
+  return (
+      (efuse_blocks[0] & (1 << 4))
+      || (efuse_blocks[2] & (1 << 16))
+  );
+  #else
+  return false;
+  #endif
 }
 
 uint8_t getChipRevision() {
@@ -1070,6 +1085,7 @@ void readBootCause() {
     case TG1WDT_CPU_RESET: lastBootCause  = BOOT_CAUSE_EXT_WD; break;
     case SUPER_WDT_RESET:   lastBootCause = BOOT_CAUSE_EXT_WD; break;
     case GLITCH_RTC_RESET:  lastBootCause = BOOT_CAUSE_POWER_UNSTABLE; break; // FIXME TD-er: Does this need a different reason?
+    case EFUSE_RESET:       break; // FIXME TD-er: No idea what may cause this reset reason.
     # endif // ifdef ESP32S2
   }
 }
@@ -1174,9 +1190,9 @@ String getDeviceModelString(DeviceModel model) {
 }
 
 bool modelMatchingFlashSize(DeviceModel model) {
-#if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+#if defined(ESP8266) || (defined(ESP32) && FEATURE_ETHERNET)
   const uint32_t size_MB = getFlashRealSizeInBytes() >> 20;
-#endif // if defined(ESP8266) || (defined(ESP32) && defined(HAS_ETHERNET))
+#endif // if defined(ESP8266) || (defined(ESP32) && FEATURE_ETHERNET)
 
   // TD-er: This also checks for ESP8266/ESP8285/ESP32
   switch (model) {
@@ -1215,11 +1231,11 @@ bool modelMatchingFlashSize(DeviceModel model) {
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
     case DeviceModel::DeviceModel_wESP32:
     case DeviceModel::DeviceModel_WT32_ETH01:
-#if  defined(ESP32) && defined(HAS_ETHERNET)
+#if  defined(ESP32) && FEATURE_ETHERNET
       return size_MB == 4;
-#else // if  defined(ESP32) && defined(HAS_ETHERNET)
+#else // if  defined(ESP32) && FEATURE_ETHERNET
       return false;
-#endif // if  defined(ESP32) && defined(HAS_ETHERNET)
+#endif // if  defined(ESP32) && FEATURE_ETHERNET
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:
@@ -1357,7 +1373,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   /*
-   # ifdef HAS_ETHERNET
+   # if FEATURE_ETHERNET
 
      // Check pins used for RMII Ethernet PHY
      if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
@@ -1378,7 +1394,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
      }
 
 
-   # endif // ifdef HAS_ETHERNET
+   # endif // if FEATURE_ETHERNET
 
    */
 # else // ifdef ESP32S2
@@ -1430,7 +1446,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
     warning = true;
   }
 
-  #  ifdef HAS_ETHERNET
+  #  if FEATURE_ETHERNET
 
   // Check pins used for RMII Ethernet PHY
   if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
@@ -1451,7 +1467,7 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
 
-  #  endif // ifdef HAS_ETHERNET
+  #  endif // if FEATURE_ETHERNET
 
 # endif // ifdef ESP32S2
 
@@ -1543,29 +1559,24 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   }
 
   if (isFlashInterfacePin(gpio)) {
-    # ifdef ESP8285
-
-    if ((gpio == 9) || (gpio == 10)) {
-      // Usable on ESP8285
+    if (isESP8285()) {
+      if ((gpio == 9) || (gpio == 10)) {
+        // Usable on ESP8285
+      } else {
+        warning = true;
+      }
     } else {
       warning = true;
+      // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash 
+      if (gpio == 9) {
+        // GPIO9 is internally used to control the flash memory.
+        input  = false;
+        output = false;
+      } else if (gpio == 10) {
+        // GPIO10 can be used as input only.
+        output = false;
+      }
     }
-
-    # else // ifdef ESP8285
-
-    warning = true;
-
-    // On ESP8266 GPIO 9 & 10 are only usable if not connected to flash
-    if (gpio == 9) {
-      // GPIO9 is internally used to control the flash memory.
-      input  = false;
-      output = false;
-    } else if (gpio == 10) {
-      // GPIO10 can be used as input only.
-      output = false;
-    }
-
-    # endif // ifdef ESP8285
   }
 
   if ((pinnr < 0) || (pinnr > 16)) {

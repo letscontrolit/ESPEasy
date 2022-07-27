@@ -23,7 +23,7 @@
 
 #define PLUGIN_087
 #define PLUGIN_ID_087           87
-#define PLUGIN_NAME_087         "Communication - Serial Proxy [TESTING]"
+#define PLUGIN_NAME_087         "Communication - Serial Proxy"
 
 
 #define P087_BAUDRATE           PCONFIG_LONG(0)

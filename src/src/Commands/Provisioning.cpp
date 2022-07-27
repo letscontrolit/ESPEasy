@@ -1,7 +1,7 @@
 #include "../Commands/Provisioning.h"
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 
 # include "../Commands/Common.h"
 
@@ -9,7 +9,8 @@
 # include "../DataTypes/ESPEasyFileType.h"
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../Helpers/ESPEasy_Storage.h"
-
+# include "../Helpers/Networking.h"
+# include "../Helpers/StringConverter.h"
 
 String Command_Provisioning_Config(struct EventStruct *event, const char *Line)
 {
@@ -39,4 +40,15 @@ String Command_Provisioning_Rules(struct EventStruct *event, const char *Line)
   return downloadFileType(FileType::RULES_TXT, event->Par1 - 1);
 }
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+String Command_Provisioning_Firmware(struct EventStruct *event, const char *Line)
+{
+  const String url = parseStringToEndKeepCase(Line, 2);
+  String error;
+  if (downloadFirmware(url, error)) {
+    // TODO TD-er: send events
+  }
+  return error;
+}
+
+
+#endif // if FEATURE_CUSTOM_PROVISIONING

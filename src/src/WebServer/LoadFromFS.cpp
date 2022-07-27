@@ -9,9 +9,9 @@
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/WebServer.h"
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 # include <SD.h>
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 bool match_ext(const String& path, const __FlashStringHelper *ext) {
   return path.endsWith(ext) || path.endsWith(String(ext) + F(".gz"));
@@ -102,11 +102,11 @@ bool loadFromFS(String path) {
 
   // Search flash file system first, then SD if present
   f = tryOpenFile(path.c_str(), "r");
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
   if (!f) {
     f = SD.open(path.c_str(), "r");
   }
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
   if (!f) {
     return false;
@@ -139,11 +139,11 @@ size_t streamFromFS(String path, bool htmlEscape) {
 
   // Search flash file system first, then SD if present
   f = tryOpenFile(path.c_str(), "r");
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
   if (!f) {
     f = SD.open(path.c_str(), "r");
   }
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
   if (!f) {
     return bytesStreamed;

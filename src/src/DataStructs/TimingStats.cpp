@@ -7,7 +7,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-#ifdef USES_TIMING_STATS
+#if FEATURE_TIMING_STATS
 
 
 std::map<int, TimingStats> pluginStats;
@@ -256,4 +256,4 @@ String getMiscStatsName(int stat) {
   return getMiscStatsName_F(stat);
 }
 
-#endif
+#endif // if FEATURE_TIMING_STATS

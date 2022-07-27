@@ -289,7 +289,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'e': {
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
       COMMAND_CASE_R(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
       COMMAND_CASE_R(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
       COMMAND_CASE_R(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
@@ -302,7 +302,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
       COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
       COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
-    #endif // HAS_ETHERNET
+    #endif // FEATURE_ETHERNET
       COMMAND_CASE_R("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE_A(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE_A("executerules", Command_Rules_Execute, -1); // Rule.h
@@ -385,12 +385,13 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
       COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
       COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
       COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
+      COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #ifdef USES_MQTT
@@ -410,10 +411,10 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 's': {
       COMMAND_CASE_R(    "save", Command_Settings_Save, 0); // Settings.h
-    #ifdef FEATURE_SD
+    #if FEATURE_SD
       COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
-    #endif // ifdef FEATURE_SD
+    #endif // if FEATURE_SD
 
       if (data.cmd_lc[1] == 'e') {
       #if FEATURE_ESPEASY_P2P
