@@ -23,7 +23,7 @@
 
 # define PLUGIN_062
 # define PLUGIN_ID_062         62
-# define PLUGIN_NAME_062       "Keypad - MPR121 Touch [TESTING]"
+# define PLUGIN_NAME_062       "Keypad - MPR121 Touch"
 # define PLUGIN_VALUENAME1_062 "ScanCode"
 
 

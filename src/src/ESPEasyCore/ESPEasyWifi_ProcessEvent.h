@@ -12,10 +12,10 @@ void processConnectAPmode();
 void processDisableAPmode();
 void processScanDone();
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 void processEthernetConnected();
 void processEthernetDisconnected();
 void processEthernetGotIP();
-#endif
+#endif // if FEATURE_ETHERNET
 
 #endif //ESPEASYWIFI_PROCESSEVENT_H

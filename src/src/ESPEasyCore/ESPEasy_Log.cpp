@@ -10,7 +10,7 @@
 
 #include <FS.h>
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
 #endif
 
@@ -100,7 +100,7 @@ void updateLogLevelCache() {
   if (Logging.logActiveRead()) {
     max_lvl = _max(max_lvl, Settings.WebLogLevel);
   }
-#ifdef FEATURE_SD
+#if FEATURE_SD
   max_lvl = _max(max_lvl, Settings.SDLogLevel);
 #endif
   highest_active_log_level = max_lvl;
@@ -148,7 +148,7 @@ bool loglevelActiveFor(uint8_t destination, uint8_t logLevel) {
       break;
     }
     case LOG_TO_SDCARD: {
-      #ifdef FEATURE_SD
+      #if FEATURE_SD
       logLevelSettings = Settings.SDLogLevel;
       #endif
       break;
@@ -263,7 +263,7 @@ void addToSysLog(uint8_t logLevel, const String& string)
 
 void addToSDLog(uint8_t logLevel, const String& string)
 {
-#ifdef FEATURE_SD
+#if FEATURE_SD
   if (loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     fs::File logFile = SD.open("log.dat", FILE_WRITE);
     if (logFile) {

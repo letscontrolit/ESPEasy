@@ -4,7 +4,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../WebServer/HTML_wrappers.h"
 
-#ifdef USES_CHART_JS
+#if FEATURE_CHART_JS
   ChartJS_title::ChartJS_title() {
     align = F("center");
   }
@@ -231,4 +231,4 @@ void add_ChartJS_dataset_footer(bool hidden, const String& options) {
 void add_ChartJS_chart_footer() {
   addHtml(F("]}});</script>"));
 }
-#endif
+#endif // if FEATURE_CHART_JS

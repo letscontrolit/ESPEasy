@@ -27,7 +27,7 @@
      - implement plugin and perform testing
      - set plugin status to DEVELOPMENT and distribute to other users for testing
      - after sufficient usage and possible code correction, set plugin status to TESTING and perform testing with more users
-     - finally, plugin will be accepted in project
+     - finally, plugin will be accepted in project, then the TESTING tag can be removed.
    - along with the plugin source code, prepare a wiki page containing:
      - instructions on how to make the necessary configuration
      - instructions on commands (if any)

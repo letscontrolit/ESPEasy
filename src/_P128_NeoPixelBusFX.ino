@@ -126,7 +126,7 @@
 
 # define PLUGIN_128
 # define PLUGIN_ID_128         128
-# define PLUGIN_NAME_128       "Output - NeoPixel (BusFX) [TESTING]"
+# define PLUGIN_NAME_128       "Output - NeoPixel (BusFX)"
 # define PLUGIN_VALUENAME1_128 "Mode"
 # define PLUGIN_VALUENAME2_128 "Lastmode"
 # define PLUGIN_VALUENAME3_128 "Fadetime"

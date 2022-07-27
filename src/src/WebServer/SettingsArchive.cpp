@@ -1,6 +1,6 @@
 #include "../WebServer/SettingsArchive.h"
 
-#ifdef USE_SETTINGS_ARCHIVE
+#if FEATURE_SETTINGS_ARCHIVE
 
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -48,7 +48,7 @@ void handle_settingsarchive() {
     }
 
     ResetFactoryDefaultPreference.deleteFirst(isFormItemChecked(F("del")));
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
     ResetFactoryDefaultPreference.saveURL(isFormItemChecked(F("saveurl")));
     ResetFactoryDefaultPreference.allowFetchByCommand(isFormItemChecked(F("allowcommand")));
     ResetFactoryDefaultPreference.storeCredentials(isFormItemChecked(F("savecred")));
@@ -56,7 +56,7 @@ void handle_settingsarchive() {
     applyFactoryDefaultPref();
 
     String error;
-    #ifdef USE_CUSTOM_PROVISIONING
+    #if FEATURE_CUSTOM_PROVISIONING
     {
       MakeProvisioningSettings(ProvisioningSettings);
       if (AllocatedProvisioningSettings()) {
@@ -128,7 +128,7 @@ void handle_settingsarchive() {
       String url, user, pass;
 
       {
-        #ifdef USE_CUSTOM_PROVISIONING
+        #if FEATURE_CUSTOM_PROVISIONING
         {
           MakeProvisioningSettings(ProvisioningSettings);
           if (AllocatedProvisioningSettings()) {
@@ -153,12 +153,12 @@ void handle_settingsarchive() {
 
       addFormTextBox(F("URL with settings"), F("url"), url, 256);
       addFormNote(F("Only HTTP supported. Do not include filename. URL is allowed to contain system variables."));
-      #ifdef USE_CUSTOM_PROVISIONING
+      #if FEATURE_CUSTOM_PROVISIONING
       addFormCheckBox(F("Store URL"), F("saveurl"), ResetFactoryDefaultPreference.saveURL());
       #endif
       addFormTextBox(F("User"), F("user"), user, 64);
       addFormPasswordBox(F("Pass"), F("pass"), pass, 64);
-      #ifdef USE_CUSTOM_PROVISIONING
+      #if FEATURE_CUSTOM_PROVISIONING
       addFormCheckBox(F("Store Credentials"), F("savecred"), ResetFactoryDefaultPreference.storeCredentials());
       #endif
     }
@@ -168,7 +168,7 @@ void handle_settingsarchive() {
     addRowLabel(F("Delete First"));
     addCheckBox(F("del"), ResetFactoryDefaultPreference.deleteFirst());
     addFormNote(F("Needed on filesystem with not enough free space. Use with care!"));
-    #ifdef USE_CUSTOM_PROVISIONING
+    #if FEATURE_CUSTOM_PROVISIONING
     addFormCheckBox(F("Allow Fetch by Command"), F("allowcommand"), ResetFactoryDefaultPreference.allowFetchByCommand());
     addFormNote(F("Fetch files via a command does need stored URL (+ credentials)"));
     #endif
@@ -241,4 +241,4 @@ bool tryDownloadFileType(const String& url, const String& user, const String& pa
   return false;
 }
 
-#endif // ifdef USE_SETTINGS_ARCHIVE
+#endif // if FEATURE_SETTINGS_ARCHIVE

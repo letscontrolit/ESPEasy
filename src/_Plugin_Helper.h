@@ -45,7 +45,7 @@
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 #include "src/PluginStructs/_StatsOnly_data_struct.h"
 #endif
 

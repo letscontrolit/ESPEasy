@@ -9,7 +9,7 @@
 #include "../WebServer/AccessControl.h"
 
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 #include <ETH.h>
 #endif
 
@@ -46,7 +46,7 @@ String Command_Subnet (struct EventStruct *event, const char* Line)
   return Command_GetORSetIP(event, F("Subnet:"), Line, Settings.Subnet, NetworkSubnetMask(), 1);
 }
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 String Command_ETH_Phy_Addr (struct EventStruct *event, const char* Line)
 {
   return Command_GetORSetInt8_t(event, F("ETH_Phy_Addr:"), Line, reinterpret_cast<int8_t*>(&Settings.ETH_Phy_Addr),1);
@@ -134,4 +134,4 @@ String Command_ETH_Disconnect (struct EventStruct *event, const char* Line)
   return return_command_success();
 }
 
-#endif
+#endif // if FEATURE_ETHERNET

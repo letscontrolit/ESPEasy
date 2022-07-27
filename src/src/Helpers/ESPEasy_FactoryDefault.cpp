@@ -27,7 +27,7 @@
  \*********************************************************************************************/
 void ResetFactory()
 {
-  #ifdef USE_CUSTOM_PROVISIONING
+  #if FEATURE_CUSTOM_PROVISIONING
   if (ResetFactoryDefaultPreference.getPreference() == 0)
   {
     ResetFactoryDefaultPreference.setDeviceModel(static_cast<DeviceModel>(DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL));
@@ -93,7 +93,7 @@ void ResetFactory()
     return;
   }
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
   {
     MakeProvisioningSettings(ProvisioningSettings);
     if (AllocatedProvisioningSettings()) {

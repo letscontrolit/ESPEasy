@@ -22,14 +22,11 @@
 //(512k is NOT finsihed or tested yet as of v2.0.0-dev6)
 
 
-//build all plugins that are in test stadium
-//#define PLUGIN_BUILD_TESTING
-
 //build all plugins that still are being developed and are broken or incomplete
 //#define PLUGIN_BUILD_DEV
 
 //add this if you want SD support (add 10k flash)
-//#define FEATURE_SD
+//#define FEATURE_SD 1
 
 
 
