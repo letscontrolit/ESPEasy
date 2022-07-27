@@ -108,6 +108,12 @@
 # undef USE_SERVO
 #endif // ifdef USE_SERVO
 
+#ifdef USE_RTTTL
+# warning "Custom.h has '#define USE_RTTTL' to be replaced with '#define FEATURE_RTTTL 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_RTTTL  1
+# undef USE_RTTTL
+#endif // ifdef USE_RTTTL
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
