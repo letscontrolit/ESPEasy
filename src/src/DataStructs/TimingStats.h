@@ -5,7 +5,7 @@
 #include "../../ESPEasy_common.h"
 
 
-#ifdef USES_TIMING_STATS
+#if FEATURE_TIMING_STATS
 
 #include "../Helpers/ESPEasy_time_calc.h"
 
@@ -148,7 +148,7 @@ extern unsigned long timingstats_last_reset;
 // Add a timer statistic value in usec.
 # define ADD_TIMER_STAT(L, T) if (Settings.EnableTimingStats()) { miscStats[L].add(T); }
 
-#else // ifdef USES_TIMING_STATS
+#else // if FEATURE_TIMING_STATS
 
 # define START_TIMER ;
 # define STOP_TIMER_TASK(T, F) ;
@@ -162,6 +162,6 @@ extern unsigned long timingstats_last_reset;
 // Meaning we must make sure the forward declaration of the TimingStats class is made, since it is used as an argument in some function.
 class TimingStats;
 
-#endif // ifdef USES_TIMING_STATS
+#endif // if FEATURE_TIMING_STATS
 
 #endif // DATASTRUCTS_TIMINGSTATS_H

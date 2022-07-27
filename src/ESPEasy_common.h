@@ -56,6 +56,7 @@ namespace std
 // make the compiler show a warning to confirm that this file is inlcuded
 //#warning "**** Using Settings from Custom.h File ***"
   #include "Custom.h"
+  #include "check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
 #else 
   // Set as default
 //  #define PLUGIN_BUILD_NORMAL
@@ -162,7 +163,7 @@ namespace std
 #include <Wire.h>
 #include <SPI.h>
 #include <FS.h>
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
 #else
 using namespace fs;

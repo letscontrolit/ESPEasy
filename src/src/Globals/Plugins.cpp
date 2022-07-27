@@ -212,11 +212,11 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
   if (I2C_state != I2C_bus_state::OK) {
     return false; // Bus state is not OK, so do not consider task runnable
   }
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   I2CMultiplexerSelectByTaskIndex(taskIndex);
   // Output is selected after this write, so now we must make sure the
   // frequency is set before anything else is sent.
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectLowClockSpeed(); // Set to slow
@@ -232,9 +232,9 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
     return;
   }
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   I2CMultiplexerOff();
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectHighClockSpeed();  // Reset
@@ -622,11 +622,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           descr.reserve(20);
           descr  = F("PluginCall_task_");
           descr += (event->TaskIndex + 1);
-          #ifdef USES_TIMING_STATS
+          #if FEATURE_TIMING_STATS
           checkRAM(descr, getPluginFunctionName(Function));
-          #else
+          #else // if FEATURE_TIMING_STATS
           checkRAM(descr, String(Function));
-          #endif
+          #endif // if FEATURE_TIMING_STATS
           #endif
         }
         if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
@@ -747,11 +747,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           descr.reserve(20);
           descr  = F("PluginCall_task_");
           descr += (event->TaskIndex + 1);
-          #ifdef USES_TIMING_STATS
+          #if FEATURE_TIMING_STATS
           checkRAM(descr, getPluginFunctionName(Function));
-          #else
+          #else // if FEATURE_TIMING_STATS
           checkRAM(descr, String(Function));
-          #endif
+          #endif // if FEATURE_TIMING_STATS
           #endif
 
         }

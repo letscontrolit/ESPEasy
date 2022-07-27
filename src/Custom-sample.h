@@ -22,9 +22,12 @@
  */
 
 // --- Feature Flagging ---------------------------------------------------------
+// Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
 
 #define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
-#define FEATURE_ARDUINO_OTA         //enables the Arduino OTA capabilities
+#define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
+// #define FEATURE_SD                1     // Enable SD card support
+// #define FEATURE_DOWNLOAD          1     // Enable downloading a file from an url
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT
@@ -178,13 +181,13 @@
 
 // Allow for remote provisioning of a node.
 // This is only allowed for custom builds.
-// To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
+// To setup the configuration of the provisioning file, one must also define FEATURE_SETTINGS_ARCHIVE
 // Default setting is to not allow to configure a node remotely, unless explicitly enabled.
-// #define USE_CUSTOM_PROVISIONING
+// #define FEATURE_CUSTOM_PROVISIONING  1
 
-#define USES_SSDP
+#define FEATURE_SSDP  1
 
-#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+#define FEATURE_EXT_RTC  1         // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
 #define USES_PLUGIN_STATS          // Support collecting historic data + computing stats on historic data
 #ifdef ESP8266
@@ -197,15 +200,15 @@
 
 
 
-// #define USE_SETTINGS_ARCHIVE
-// #define FEATURE_I2CMULTIPLEXER
-// #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+// #define FEATURE_SETTINGS_ARCHIVE 1
+// #define FEATURE_I2CMULTIPLEXER 1
+// #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
 // #ifdef ESP32
 //  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
@@ -231,7 +234,7 @@
 
 
 
-#define USES_SSDP
+#define FEATURE_SSDP  1
 
 /*
  #######################################################################################################

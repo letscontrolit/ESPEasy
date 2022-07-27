@@ -137,9 +137,9 @@ struct LabelType {
     SYSLOG_LOG_LEVEL,
     SERIAL_LOG_LEVEL,
     WEB_LOG_LEVEL,
-#ifdef FEATURE_SD
+#if FEATURE_SD
     SD_LOG_LEVEL,
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
     ESP_CHIP_ID,
     ESP_CHIP_FREQ,
@@ -164,7 +164,7 @@ struct LabelType {
     MAX_OTA_SKETCH_SIZE,
     OTA_2STEP,
     OTA_POSSIBLE,
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     ETH_IP_ADDRESS,
     ETH_IP_SUBNET,
     ETH_IP_ADDRESS_SUBNET,
@@ -176,7 +176,7 @@ struct LabelType {
     ETH_STATE,
     ETH_SPEED_STATE,
     ETH_CONNECTED,
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
     ETH_WIFI_MODE,
     SUNRISE,
     SUNSET,
@@ -196,11 +196,11 @@ struct LabelType {
 };
 
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 String getEthSpeed();
 
 String getEthLinkSpeedState();
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 
 String getInternalLabel(LabelType::Enum label,
                         char            replaceSpace = '_');

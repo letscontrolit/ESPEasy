@@ -226,7 +226,7 @@
 #define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
 #ifndef DEFAULT_NETWORK_MEDIUM
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
   #else
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
@@ -331,7 +331,7 @@
 #endif
 
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
   #ifndef DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL
     #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
   #endif
@@ -377,7 +377,7 @@
   #ifndef DEFAULT_PROVISIONING_PASS
     #define DEFAULT_PROVISIONING_PASS               ""
   #endif
-#endif
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #ifndef BUILD_IN_WEBHEADER
 #define BUILD_IN_WEBHEADER                      false

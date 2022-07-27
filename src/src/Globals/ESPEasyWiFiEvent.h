@@ -10,7 +10,7 @@
 
 #include "../DataStructs/WiFiEventData.h"
 #include "../DataStructs/MAC_address.h"
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 #include "../DataStructs/EthernetEventData.h"
 #endif
 
@@ -47,7 +47,7 @@ extern std::list<system_event_ap_probe_req_rx_t> APModeProbeRequestReceived_list
 
 extern WiFiEventData_t WiFiEventData;
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 extern EthernetEventData_t EthEventData;
 #endif
 

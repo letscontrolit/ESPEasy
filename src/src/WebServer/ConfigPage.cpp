@@ -140,12 +140,12 @@ void handle_config() {
     webArg2ip(F("espgateway"), Settings.Gateway);
     webArg2ip(F("espsubnet"),  Settings.Subnet);
     webArg2ip(F("espdns"),     Settings.DNS);
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     webArg2ip(F("espethip"),      Settings.ETH_IP);
     webArg2ip(F("espethgateway"), Settings.ETH_Gateway);
     webArg2ip(F("espethsubnet"),  Settings.ETH_Subnet);
     webArg2ip(F("espethdns"),     Settings.ETH_DNS);
-#endif
+#endif // if FEATURE_ETHERNET
     addHtmlError(SaveSettings());
   }
 
@@ -181,11 +181,11 @@ void handle_config() {
   addFormNote(F("When set you can use the Sensor in AP-Mode without being forced to /setup. /setup can still be called."));
 
   addFormCheckBox(F("Do Not Start AP"), F("DoNotStartAP"), Settings.DoNotStartAP());
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   addFormNote(F("Do not allow to start an AP when unable to connect to configured LAN/WiFi"));
-  #else
+  #else // if FEATURE_ETHERNET
   addFormNote(F("Do not allow to start an AP when configured WiFi cannot be found"));
-  #endif
+  #endif // if FEATURE_ETHERNET
 
 
   // TD-er add IP access box F("ipblocklevel")
@@ -213,7 +213,7 @@ void handle_config() {
   addFormIPBox(F("ESP WiFi DNS"),        F("espdns"),     Settings.DNS);
   addFormNote(F("Leave empty for DHCP"));
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   addFormSubHeader(F("Ethernet IP Settings"));
 
   addFormIPBox(F("ESP Ethernet IP"),         F("espethip"),      Settings.ETH_IP);
@@ -221,7 +221,7 @@ void handle_config() {
   addFormIPBox(F("ESP Ethernet Subnetmask"), F("espethsubnet"),  Settings.ETH_Subnet);
   addFormIPBox(F("ESP Ethernet DNS"),        F("espethdns"),     Settings.ETH_DNS);
   addFormNote(F("Leave empty for DHCP"));
-#endif
+#endif // if FEATURE_ETHERNET
 
 #ifdef USES_ESPEASY_NOW
   addFormSubHeader(F("ESPEasy-NOW"));

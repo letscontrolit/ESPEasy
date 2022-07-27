@@ -57,9 +57,9 @@ void handle_advanced() {
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
-#ifdef FEATURE_SD
+#if FEATURE_SD
     setLogLevelFor(LOG_TO_SDCARD, LabelType::SD_LOG_LEVEL);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
     Settings.UseNTP(isFormItemChecked(F("usentp")));
@@ -68,9 +68,9 @@ void handle_advanced() {
     );
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
-    #ifdef USES_SSDP
+    #if FEATURE_SSDP
     Settings.UseSSDP                     = isFormItemChecked(F("usessdp"));
-    #endif // USES_SSDP
+    #endif // if FEATURE_SSDP
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
@@ -194,11 +194,11 @@ void handle_advanced() {
   addFormLogLevelSelect(LabelType::SERIAL_LOG_LEVEL, Settings.SerialLogLevel);
   addFormLogLevelSelect(LabelType::WEB_LOG_LEVEL,    Settings.WebLogLevel);
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
   addFormLogLevelSelect(LabelType::SD_LOG_LEVEL,     Settings.SDLogLevel);
 
   addFormCheckBox(F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 
   addFormSubHeader(F("Serial Settings"));
@@ -229,17 +229,17 @@ void handle_advanced() {
   #ifdef ESP32
   addUnit(F("1/80 usec"));
   #endif
-  #if defined(FEATURE_ARDUINO_OTA)
+  #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
-  #endif // if defined(FEATURE_ARDUINO_OTA)
+  #endif // if FEATURE_ARDUINO_OTA
   #if defined(ESP32)
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
   addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
-  #endif
+  #endif // if FEATURE_TIMING_STATS
 #ifndef BUILD_NO_RAM_TRACKER
   addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
 #endif
@@ -258,9 +258,9 @@ void handle_advanced() {
   #endif
 
 
-  #ifdef USES_SSDP
+  #if FEATURE_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
-  #endif // ifdef USES_SSDP
+  #endif // if FEATURE_SSDP
 
   addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266

@@ -1,7 +1,7 @@
 #include "../Globals/Services.h"
 
-#ifdef FEATURE_ARDUINO_OTA
-  bool ArduinoOTAtriggered=false;
+#if FEATURE_ARDUINO_OTA
+  bool ArduinoOTAtriggered = false;
 #endif
 
 

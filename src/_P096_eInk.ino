@@ -7,7 +7,7 @@
 
 # define PLUGIN_096
 # define PLUGIN_ID_096         96
-# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen [TESTING]"
+# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen"
 # define PLUGIN_VALUENAME1_096 "CursorX"
 # define PLUGIN_VALUENAME2_096 "CursorY"
 

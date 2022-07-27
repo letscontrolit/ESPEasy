@@ -194,7 +194,7 @@ void handle_root() {
       addHtml(html);
     }
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     addRowLabelValue(LabelType::ETH_WIFI_MODE);
 #endif
 
@@ -211,7 +211,7 @@ void handle_root() {
       addHtml(html);
     }
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     if(active_network_medium == NetworkMedium_t::Ethernet) {
       addRowLabelValue(LabelType::ETH_SPEED_STATE);
       addRowLabelValue(LabelType::ETH_IP_ADDRESS);

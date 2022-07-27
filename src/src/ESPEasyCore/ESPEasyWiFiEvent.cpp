@@ -1,6 +1,6 @@
 #include "../ESPEasyCore/ESPEasyWiFiEvent.h"
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 #include <ETH.h>
 #endif
 
@@ -73,12 +73,12 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       break;
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       if (active_network_medium == NetworkMedium_t::Ethernet) {
         EthEventData.markLostIP();
       }
       else
-      #endif
+      #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
@@ -146,7 +146,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
       WiFiEventData.processedScanDone = false;
       break;
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     case ARDUINO_EVENT_ETH_START:
       if (ethPrepare()) {
         addLog(LOG_LEVEL_INFO, F("ETH event: Started"));
@@ -176,7 +176,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
     #endif
       addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
       break;
-#endif //HAS_ETHERNET
+#endif //FEATURE_ETHERNET
     default:
       {
         String log = F("UNKNOWN WIFI/ETH EVENT: ");
@@ -206,12 +206,12 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
       break;
     case SYSTEM_EVENT_STA_LOST_IP:
       // ESP32 station lost IP and the IP is reset to 0
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       if (active_network_medium == NetworkMedium_t::Ethernet) {
         EthEventData.markLostIP();
       }
       else
-      #endif
+      #endif // if FEATURE_ETHERNET
       WiFiEventData.markLostIP();
       addLog(LOG_LEVEL_INFO, 
         active_network_medium == NetworkMedium_t::Ethernet ?
@@ -279,7 +279,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_SCAN_DONE:
       WiFiEventData.processedScanDone = false;
       break;
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     case SYSTEM_EVENT_ETH_START:
       if (ethPrepare()) {
         addLog(LOG_LEVEL_INFO, F("ETH event: Started"));
@@ -305,7 +305,7 @@ void WiFiEvent(system_event_id_t event, system_event_info_t info) {
     case SYSTEM_EVENT_GOT_IP6:
       addLog(LOG_LEVEL_INFO, F("ETH event: Got IP6"));
       break;
-#endif //HAS_ETHERNET
+#endif //FEATURE_ETHERNET
     default:
       {
         String log = F("UNKNOWN WIFI/ETH EVENT: ");

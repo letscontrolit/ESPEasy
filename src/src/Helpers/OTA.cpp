@@ -8,7 +8,7 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
   //enable Arduino OTA updating.
   //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
   #include <ArduinoOTA.h>
@@ -47,7 +47,7 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #endif // if defined(ESP8266)
 }
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 
 /********************************************************************************************\
    Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
@@ -118,4 +118,4 @@ void ArduinoOTA_handle()
   ArduinoOTA.handle();
 }
 
-#endif // ifdef FEATURE_ARDUINO_OTA
+#endif // if FEATURE_ARDUINO_OTA

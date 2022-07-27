@@ -37,7 +37,7 @@
 
 # define PLUGIN_105
 # define PLUGIN_ID_105         105
-# define PLUGIN_NAME_105       "Environment - AHT10/20/21 [TESTING]"
+# define PLUGIN_NAME_105       "Environment - AHT10/20/21"
 # define PLUGIN_VALUENAME1_105 "Temperature"
 # define PLUGIN_VALUENAME2_105 "Humidity"
 

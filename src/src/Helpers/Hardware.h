@@ -49,7 +49,7 @@ void I2CBegin(int8_t   sda,
               int8_t   scl,
               uint32_t clockFreq);
 
-#ifdef FEATURE_I2CMULTIPLEXER
+#if FEATURE_I2CMULTIPLEXER
 bool    isI2CMultiplexerEnabled();
 
 void    I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex);
@@ -64,7 +64,7 @@ uint8_t I2CMultiplexerMaxChannels();
 void    I2CMultiplexerReset();
 
 bool    I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex);
-#endif // ifdef FEATURE_I2CMULTIPLEXER
+#endif // if FEATURE_I2CMULTIPLEXER
 
 void    checkResetFactoryPin();
 
