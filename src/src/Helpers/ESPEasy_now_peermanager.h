@@ -2,9 +2,10 @@
 #define HELPERS_ESPEASY_NOW_PEERMANAGER_H
 
 #include "../../ESPEasy_common.h"
-#include "../Globals/ESPEasy_now_state.h"
 #ifdef USES_ESPEASY_NOW
+
 # include "../DataStructs/MAC_address.h"
+# include "../Globals/ESPEasy_now_state.h"
 
 # include <list>
 

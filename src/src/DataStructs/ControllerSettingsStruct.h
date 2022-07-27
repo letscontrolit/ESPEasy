@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H
 #define DATASTRUCTS_CONTROLLERSETTINGSSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 /*********************************************************************************************\
 * ControllerSettingsStruct definition
 \*********************************************************************************************/
@@ -12,7 +14,6 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-#include "../../ESPEasy_common.h"
 #include "../Globals/Plugins.h"
 
 // Minimum delay between messages for a controller to send in msec.

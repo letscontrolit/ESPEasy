@@ -3,12 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifndef NETWORK_H
-#define NETWORK_H
-
 #include "../DataStructs/MAC_address.h"
-
-#include "../Globals/ESPEasy_now_state.h"
 
 void setNetworkMedium(NetworkMedium_t medium);
 
@@ -37,6 +32,4 @@ uint8_t EthLinkSpeed();
 void stop_eth_dhcps();
 #endif
 
-
-#endif 
 #endif

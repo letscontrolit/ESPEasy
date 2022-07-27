@@ -2,13 +2,15 @@
 #define DATASTRUCTS_ESPEASY_NOW_MERGER_H
 
 #include "../../ESPEasy_common.h"
+
+#ifdef USES_ESPEASY_NOW
+
 #include "../DataStructs/ESPEasy_now_hdr.h"
 #include "../DataStructs/ESPEasy_Now_packet.h"
 #include "../DataStructs/MAC_address.h"
 
 #include <map>
 
-#ifdef USES_ESPEASY_NOW
 
 // Class to process all incoming messages from a single sender.
 // One or more packets form a complete message.

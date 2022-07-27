@@ -1,9 +1,10 @@
 #include "../DataStructs/ESPEasy_now_Node_statistics.h"
 
+#ifdef USES_ESPEASY_NOW
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
-#ifdef USES_ESPEASY_NOW
 
 unsigned long ESPEasy_now_Node_statistics_t::getAge() const
 {

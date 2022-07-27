@@ -1,6 +1,8 @@
 #ifndef DATASTRUCTS_WIFIEVENTDATA_H
 #define DATASTRUCTS_WIFIEVENTDATA_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../../ESPEasy-Globals.h"
 
 #include "../DataStructs/MAC_address.h"

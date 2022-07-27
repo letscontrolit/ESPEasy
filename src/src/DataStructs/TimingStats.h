@@ -1,11 +1,12 @@
 #ifndef DATASTRUCTS_TIMINGSTATS_H
 #define DATASTRUCTS_TIMINGSTATS_H
 
-#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../../ESPEasy_common.h"
 
 
 #if FEATURE_TIMING_STATS
+
+#include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 

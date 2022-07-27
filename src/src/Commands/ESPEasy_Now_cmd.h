@@ -1,9 +1,11 @@
 #ifndef COMMANDS_ESPEASY_NOW_CMD_H
 #define COMMANDS_ESPEASY_NOW_CMD_H
 
-#include "../Globals/ESPEasy_now_state.h"
 #include "../../ESPEasy_common.h"
+
 #ifdef USES_ESPEASY_NOW
+
+#include "../Globals/ESPEasy_now_state.h"
 
 class String;
 

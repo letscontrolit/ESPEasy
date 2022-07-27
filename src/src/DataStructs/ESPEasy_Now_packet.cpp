@@ -1,12 +1,13 @@
 # include "../DataStructs/ESPEasy_Now_packet.h"
 
+#ifdef USES_ESPEASY_NOW
+
 # include "../DataStructs/ESPEasy_now_hdr.h"
 # include "../Helpers/CRC_functions.h"
 # include "../Helpers/Memory.h"
 
 # define ESPEASY_NOW_MAX_PACKET_SIZE   200
 
-#ifdef USES_ESPEASY_NOW
 
 ESPEasy_Now_packet::ESPEasy_Now_packet(const ESPEasy_now_hdr& header, size_t payloadSize)
 {

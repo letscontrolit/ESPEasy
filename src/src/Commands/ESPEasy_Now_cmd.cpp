@@ -1,8 +1,6 @@
 #include "../Commands/ESPEasy_Now_cmd.h"
 
 
-#include "../Globals/ESPEasy_now_state.h"
-
 #include "../../ESPEasy_common.h"
 
 #ifdef USES_ESPEASY_NOW

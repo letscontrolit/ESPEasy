@@ -5,13 +5,13 @@
 
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_peermanager.h"
+#include "../Globals/ESPEasy_now_state.h"
 #endif
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ESPEasy_now_state.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/NetworkState.h"

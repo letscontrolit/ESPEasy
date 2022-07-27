@@ -1,24 +1,21 @@
 #ifndef DATASTRUCTS_ESPEASY_NOW_PACKET_H
 #define DATASTRUCTS_ESPEASY_NOW_PACKET_H
 
-#include <Arduino.h>
-
-#include "../Globals/ESPEasy_now_state.h"
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/MAC_address.h"
-
-
-#include <list>
-#include <map>
-#include <vector>
-
 #ifdef USES_ESPEASY_NOW
 
-class  ESPEasy_now_hdr;
+# include "../DataStructs/MAC_address.h"
+# include "../Globals/ESPEasy_now_state.h"
+
+# include <Arduino.h>
+# include <list>
+# include <map>
+# include <vector>
+
+class ESPEasy_now_hdr;
 
 class ESPEasy_Now_packet {
 public:
-
 
   // Constructor for sending a packet
   // Actual allocated size may be lower than requested.
@@ -31,35 +28,35 @@ public:
 
   ESPEasy_Now_packet(ESPEasy_Now_packet&& other);
 
-  ESPEasy_Now_packet& operator=(const ESPEasy_Now_packet& other) = delete;
-  ESPEasy_Now_packet& operator=(ESPEasy_Now_packet&& other);
+  ESPEasy_Now_packet   & operator=(const ESPEasy_Now_packet& other) = delete;
+  ESPEasy_Now_packet   & operator=(ESPEasy_Now_packet&& other);
 
   bool ICACHE_FLASH_ATTR setReceivedPacket(const MAC_address& mac,
-                         const uint8_t     *buf,
-                         size_t             packetSize);
+                                           const uint8_t     *buf,
+                                           size_t             packetSize);
 
   // A packet may become invalid if it was not possible to allocate enough memory for the buffer
   bool ICACHE_FLASH_ATTR valid() const;
 
-  bool            checksumValid() const;
+  bool                   checksumValid() const;
 
-  size_t          getSize() const;
+  size_t                 getSize() const;
 
-  size_t          getPayloadSize() const;
+  size_t                 getPayloadSize() const;
 
-  static size_t   getMaxPayloadSize();
+  static size_t          getMaxPayloadSize();
 
-  ESPEasy_now_hdr getHeader() const;
+  ESPEasy_now_hdr        getHeader() const;
 
-  void            setHeader(ESPEasy_now_hdr header);
+  void                   setHeader(ESPEasy_now_hdr header);
 
-  void            setMac(const MAC_address& mac);
+  void                   setMac(const MAC_address& mac);
 
-  void            setBroadcast();
+  void                   setBroadcast();
 
-  size_t          addBinaryData(const uint8_t *data,
-                                size_t         length,
-                                size_t       & payload_pos);
+  size_t                 addBinaryData(const uint8_t *data,
+                                       size_t         length,
+                                       size_t       & payload_pos);
 
   size_t getBinaryData(uint8_t *data,
                        size_t   length,

@@ -1,11 +1,12 @@
 #ifndef DATASTRUCTS_ESPEASY_NOW_DUPLICATECHECK_H
 #define DATASTRUCTS_ESPEASY_NOW_DUPLICATECHECK_H
 
-#include <Arduino.h>
-
 #include "../../ESPEasy_common.h"
 
 #ifdef USES_ESPEASY_NOW
+
+#include <Arduino.h>
+
 class ESPEasy_Now_DuplicateCheck {
 public:
 

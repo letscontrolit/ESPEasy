@@ -1,5 +1,8 @@
 #include "../ControllerQueue/C019_queue_element.h"
 
+
+#ifdef USES_C019
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -57,3 +60,6 @@ bool C019_queue_element::isDuplicate(const C019_queue_element& other) const {
   // FIXME TD-er: Must check event too?
   return false;
 }
+
+
+#endif

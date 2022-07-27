@@ -2,6 +2,11 @@
 #define CONTROLLERQUEUE_C016_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+
+
+#ifdef USES_C016
+
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/ControllerIndex.h"
@@ -9,9 +14,6 @@
 #include "../Globals/Plugins.h"
 
 struct EventStruct;
-
-
-#ifdef USES_C016
 
 /*********************************************************************************************\
 * C016_queue_element for queueing requests for C016: Cached HTTP.

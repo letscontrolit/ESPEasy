@@ -2,13 +2,14 @@
 #define CONTROLLERQUEUE_C019_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+
+#ifdef USES_C019
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
 
-
-// #ifdef USES_C019
 
 /*********************************************************************************************\
 * C019_queue_element for queueing requests for C019: ESPEasy-NOW
@@ -49,7 +50,7 @@ public:
 #endif
 };
 
-// #endif //USES_C019
+#endif //USES_C019
 
 
 #endif // CONTROLLERQUEUE_C019_QUEUE_ELEMENT_H

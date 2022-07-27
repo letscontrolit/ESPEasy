@@ -1,8 +1,9 @@
 #include "../Helpers/ESPEasy_now_handler.h"
 
+#ifdef USES_ESPEASY_NOW
+
 # include "../Helpers/_CPlugin_Helper.h"
 
-#ifdef USES_ESPEASY_NOW
 
 
 # include "../ControllerQueue/MQTT_queue_element.h"

@@ -1,12 +1,14 @@
 #ifndef DATASTRUCT_ESPEASY_NOW_MQTT_QUEUE_CHECK_PACKET_H
 #define DATASTRUCT_ESPEASY_NOW_MQTT_QUEUE_CHECK_PACKET_H
 
+#include "../../ESPEasy_common.h"
+
+#ifdef USES_ESPEASY_NOW
+
 #include <Arduino.h>
 
 #include "../Globals/ESPEasy_now_state.h"
 #include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
-
-#ifdef USES_ESPEASY_NOW
 
 class ESPEasy_Now_MQTT_queue_check_packet {
 public:

@@ -1,5 +1,6 @@
 #include "../DataStructs/ESPEasy_Now_NTP_query.h"
 
+#ifdef USES_ESPEASY_NOW
 
 
 // Typical time wander for ESP nodes is 0.04 ms/sec
@@ -268,3 +269,5 @@ bool ESPEasy_Now_NTP_query::processReply(const ESPEasy_Now_NTP_query& received, 
   reset(true);
   return true;
 }
+
+#endif

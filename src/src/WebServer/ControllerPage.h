@@ -3,12 +3,9 @@
 
 #include "../WebServer/common.h"
 
-#include "../DataStructs/ControllerSettingsStruct.h"
-
-
-
 #ifdef WEBSERVER_CONTROLLERS
 
+#include "../DataStructs/ControllerSettingsStruct.h"
 #include "../Globals/CPlugins.h"
 
 // ********************************************************************************

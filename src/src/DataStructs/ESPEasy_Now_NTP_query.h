@@ -1,8 +1,13 @@
 #ifndef DATASTRUCT_ESPEASY_NOW_NTP_QUERY_H
 #define DATASTRUCT_ESPEASY_NOW_NTP_QUERY_H
 
+#include "../../ESPEasy_common.h"
+
+#ifdef USES_ESPEASY_NOW
+
 #include <Arduino.h>
 #include <stdint.h>
+
 
 #include "../Globals/ESPEasy_now_state.h"
 
@@ -54,4 +59,5 @@ public:
   uint8_t _mac_prev_fail[6] = { 0 };
 };
 
+#endif
 #endif // DATASTRUCT_ESPEASY_NOW_NTP_QUERY_H

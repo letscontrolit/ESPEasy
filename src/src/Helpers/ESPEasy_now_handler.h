@@ -1,14 +1,14 @@
 #ifndef HELPERS_ESPEASY_NOW_HANDLER_H
 #define HELPERS_ESPEASY_NOW_HANDLER_H
 
-#include "../Globals/ESPEasy_now_state.h"
-
-#include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
+#include "../../ESPEasy_common.h"
 
 #ifdef USES_ESPEASY_NOW
 
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
+# include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 # include "../DataTypes/ControllerIndex.h"
+# include "../Globals/ESPEasy_now_state.h"
 
 
 struct ESPEasy_Now_p2p_data;

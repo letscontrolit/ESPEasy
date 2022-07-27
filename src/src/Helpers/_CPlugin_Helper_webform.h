@@ -1,6 +1,8 @@
 #ifndef HELPERS__CPLUGIN_HELPER_WEBFORM_H
 #define HELPERS__CPLUGIN_HELPER_WEBFORM_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../DataStructs/ControllerSettingsStruct.h"
