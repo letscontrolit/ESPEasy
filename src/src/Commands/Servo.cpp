@@ -89,7 +89,7 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
     return return_command_success();
   }
   #else // if FEATURE_SERVO
-  addLog(LOG_LEVEL_ERROR, F("FEATURE_SERVO not included in build"));
+  addLog(LOG_LEVEL_ERROR, F("SERVO : command not included in build"));
   #endif // FEATURE_SERVO
   return return_command_failed();
 }
