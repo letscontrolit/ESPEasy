@@ -9,7 +9,8 @@
 
 
 /*
- If using the SI7013 toi measure ADC make sure you implement one of the two thermistor circuit diagrams:
+ datasheet: https://www.silabs.com/sensors/humidity/si7006-13-20-21-34/device.si7013-a20-gm1
+ If using the SI7013 to measure ADC make sure you implement one of the two thermistor (thermistor can we replaced with LRD for light level measurements) circuit diagrams:
   Figure 5. Typical Application Circuit for Thermistor Interface with AD0 = 1
   Figure 6. Typical Application Circuit for Thermistor Interface with AD0 = 0
 Do not use the single ended circuit as the Vout is connected directly to ground:

@@ -87,7 +87,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
 
         //we have to stop trying after a while
         if (errCount>P014_MAX_RETRY){
-            state = P014_state::ERROR;
+            state = P014_state::Error;
             return true;
         }
 
