@@ -84,6 +84,12 @@
 # undef USES_FHEM
 #endif // ifdef USES_FHEM
 
+#ifdef USES_HOMEASSISTANT_OPENHAB
+# warning "Custom.h has '#define USES_HOMEASSISTANT_OPENHAB' to be replaced with '#define FEATURE_HOMEASSISTANT_OPENHAB 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_HOMEASSISTANT_OPENHAB  1
+# undef USES_HOMEASSISTANT_OPENHAB
+#endif // ifdef USES_HOMEASSISTANT_OPENHAB
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H

@@ -189,8 +189,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_FHEM
         #define FEATURE_FHEM  1
     #endif
-    #ifndef USES_HOMEASSISTANT_OPENHAB
-        #define USES_HOMEASSISTANT_OPENHAB
+    #ifndef FEATURE_HOMEASSISTANT_OPENHAB
+        #define FEATURE_HOMEASSISTANT_OPENHAB 1
     #endif
 
     #define PLUGIN_BUILD_MINIMAL_OTA
@@ -205,8 +205,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_FHEM
         #define FEATURE_FHEM  1
     #endif
-    #ifndef USES_HOMEASSISTANT_OPENHAB
-        #define USES_HOMEASSISTANT_OPENHAB
+    #ifndef FEATURE_HOMEASSISTANT_OPENHAB
+        #define FEATURE_HOMEASSISTANT_OPENHAB 1
     #endif
 
     #define PLUGIN_BUILD_MINIMAL_OTA
@@ -322,7 +322,7 @@ To create/register a plugin, you have to :
     #define USES_C009   // FHEM HTTP
 #endif
 
-#ifdef USES_HOMEASSISTANT_OPENHAB
+#ifdef FEATURE_HOMEASSISTANT_OPENHAB
     #define USES_C005   // Home Assistant (openHAB) MQTT
 #endif
 
