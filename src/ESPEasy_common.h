@@ -61,6 +61,9 @@ namespace std
 //  #define PLUGIN_BUILD_NORMAL
 #endif
 
+// Check if any deprecated '#define <variable>' (Custom.h) or '-D<variable>' (pre_custom_esp82xx.py/pre_custom_esp32.py) are used
+#include "./src/CustomBuild/check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
+
 #include "src/CustomBuild/ESPEasyDefaults.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/Globals/RamTracker.h"

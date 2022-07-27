@@ -6,7 +6,7 @@
  *
  * Changelog:
  * ----------
- * 2022-07-27 tonhuisman: Move file to CustomBuild folder, move include to ESPEasy.ino so any warning is output once only
+ * 2022-07-27 tonhuisman: Move file to CustomBuild folder, and also check for any regular build (like when using pre_custom*.py scripts)
  * 2022-07-26 tonhuisman: Initial checks, disable formatting by Uncrustify as it messes up the url's
  */
 
