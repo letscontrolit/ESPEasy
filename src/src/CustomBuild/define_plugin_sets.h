@@ -183,8 +183,8 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_IR
-    #ifndef USES_DOMOTICZ
-        #define USES_DOMOTICZ
+    #ifndef FEATURE_DOMOTICZ
+        #define FEATURE_DOMOTICZ  1
     #endif
     #ifndef USES_FHEM
         #define USES_FHEM
@@ -199,8 +199,8 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_IRext
-    #ifndef USES_DOMOTICZ
-        #define USES_DOMOTICZ
+    #ifndef FEATURE_DOMOTICZ
+        #define FEATURE_DOMOTICZ  1
     #endif
     #ifndef USES_FHEM
         #define USES_FHEM
@@ -1749,12 +1749,12 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
-  #ifndef USES_DOMOTICZ
-    #define USES_DOMOTICZ
+  #ifndef FEATURE_DOMOTICZ
+    #define FEATURE_DOMOTICZ  1
   #endif
 #endif
 
-#ifdef USES_DOMOTICZ  // Move Domoticz enabling logic together
+#if FEATURE_DOMOTICZ  // Move Domoticz enabling logic together
     #ifndef USES_C001
       #define USES_C001   // Domoticz HTTP
     #endif

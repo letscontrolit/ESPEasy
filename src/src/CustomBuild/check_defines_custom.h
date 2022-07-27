@@ -72,6 +72,12 @@
 # undef HAS_ETHERNET
 #endif // ifdef HAS_ETHERNET
 
+#ifdef USES_DOMOTICZ
+# warning "Custom.h has '#define USES_DOMOTICZ' to be replaced with '#define FEATURE_DOMOTICZ 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_DOMOTICZ  1
+# undef USES_DOMOTICZ
+#endif // ifdef HAS_ETHERNET
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
