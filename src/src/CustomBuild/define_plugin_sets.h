@@ -186,8 +186,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_DOMOTICZ
         #define FEATURE_DOMOTICZ  1
     #endif
-    #ifndef USES_FHEM
-        #define USES_FHEM
+    #ifndef FEATURE_FHEM
+        #define FEATURE_FHEM  1
     #endif
     #ifndef USES_HOMEASSISTANT_OPENHAB
         #define USES_HOMEASSISTANT_OPENHAB
@@ -202,8 +202,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_DOMOTICZ
         #define FEATURE_DOMOTICZ  1
     #endif
-    #ifndef USES_FHEM
-        #define USES_FHEM
+    #ifndef FEATURE_FHEM
+        #define FEATURE_FHEM  1
     #endif
     #ifndef USES_HOMEASSISTANT_OPENHAB
         #define USES_HOMEASSISTANT_OPENHAB
@@ -318,7 +318,7 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifdef USES_FHEM
+#ifdef FEATURE_FHEM
     #define USES_C009   // FHEM HTTP
 #endif
 
