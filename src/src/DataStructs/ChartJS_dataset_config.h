@@ -3,14 +3,12 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_CHART_JS
+#if FEATURE_CHART_JS
 struct ChartJS_dataset_config {
-
-    String label;
-    String color;
-    bool hidden = false;
-
+  String label;
+  String color;
+  bool   hidden = false;
 };
-#endif
+#endif // if FEATURE_CHART_JS
 
-#endif
+#endif // ifndef DATASTRUCTS_CHARTJS_DATASET_CONFIG_H

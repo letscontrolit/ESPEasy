@@ -131,7 +131,7 @@
    "
    ``http#hostname=404``
    Added: 2022/07/23
-   Triggered as a "return value" when performing a HTTP call to some host.
+   Triggered as a 'return value' when performing a HTTP call to some host.
    The event value is the HTTP return code.
    The ``hostname`` is replaced by the hostname used in the HTTP call.
    ","
@@ -139,9 +139,11 @@
    .. code-block:: none
 
 	   on http#192.168.1.2 do
-	    if %eventvalue1%!=200
-           LogEntry,"HTTP error: %eventvalue1% to: %eventpar%:
-         endif
+       if %eventvalue1%!=200
+         // %eventvalue1% is HTTP Code
+         // %eventpar% is the part of the event after the #, thus here it is the hostname
+         LogEntry,'HTTP error: %eventvalue1% to: %eventpar%:'
+       endif
 	   endon
 
    "

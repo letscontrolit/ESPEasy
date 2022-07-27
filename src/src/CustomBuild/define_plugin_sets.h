@@ -183,14 +183,14 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_IR
-    #ifndef USES_DOMOTICZ
-        #define USES_DOMOTICZ
+    #ifndef FEATURE_DOMOTICZ
+        #define FEATURE_DOMOTICZ  1
     #endif
-    #ifndef USES_FHEM
-        #define USES_FHEM
+    #ifndef FEATURE_FHEM
+        #define FEATURE_FHEM  1
     #endif
-    #ifndef USES_HOMEASSISTANT_OPENHAB
-        #define USES_HOMEASSISTANT_OPENHAB
+    #ifndef FEATURE_HOMEASSISTANT_OPENHAB
+        #define FEATURE_HOMEASSISTANT_OPENHAB 1
     #endif
 
     #define PLUGIN_BUILD_MINIMAL_OTA
@@ -199,14 +199,14 @@ To create/register a plugin, you have to :
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_IRext
-    #ifndef USES_DOMOTICZ
-        #define USES_DOMOTICZ
+    #ifndef FEATURE_DOMOTICZ
+        #define FEATURE_DOMOTICZ  1
     #endif
-    #ifndef USES_FHEM
-        #define USES_FHEM
+    #ifndef FEATURE_FHEM
+        #define FEATURE_FHEM  1
     #endif
-    #ifndef USES_HOMEASSISTANT_OPENHAB
-        #define USES_HOMEASSISTANT_OPENHAB
+    #ifndef FEATURE_HOMEASSISTANT_OPENHAB
+        #define FEATURE_HOMEASSISTANT_OPENHAB 1
     #endif
 
     #define PLUGIN_BUILD_MINIMAL_OTA
@@ -310,19 +310,19 @@ To create/register a plugin, you have to :
         #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
     #endif
     #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
-    #ifndef USES_PLUGIN_STATS
-        #define USES_PLUGIN_STATS
+    #ifndef FEATURE_PLUGIN_STATS
+        #define FEATURE_PLUGIN_STATS  1
     #endif
-    #ifndef USES_CHART_JS
-        #define USES_CHART_JS
+    #ifndef FEATURE_CHART_JS
+        #define FEATURE_CHART_JS  1
     #endif
 #endif
 
-#ifdef USES_FHEM
+#ifdef FEATURE_FHEM
     #define USES_C009   // FHEM HTTP
 #endif
 
-#ifdef USES_HOMEASSISTANT_OPENHAB
+#ifdef FEATURE_HOMEASSISTANT_OPENHAB
     #define USES_C005   // Home Assistant (openHAB) MQTT
 #endif
 
@@ -388,11 +388,11 @@ To create/register a plugin, you have to :
 //        #define USES_P005   // DHT
     #endif
 
-    #ifdef USE_SERVO
-      #undef USE_SERVO
+    #if FEATURE_SERVO
+      #undef FEATURE_SERVO
     #endif
-    #ifdef USE_RTTTL
-      #undef USE_RTTTL
+    #if FEATURE_RTTTL
+      #undef FEATURE_RTTTL
     #endif
 #endif
 
@@ -446,10 +446,10 @@ To create/register a plugin, you have to :
     #ifndef LIMIT_BUILD_SIZE
         #define LIMIT_BUILD_SIZE
     #endif
-    #if USE_I2C_DEVICE_SCAN
-        #undef USE_I2C_DEVICE_SCAN
-        #define USE_I2C_DEVICE_SCAN     false   // turn feature off in OTA builds
-    #endif // if USE_I2C_DEVICE_SCAN
+    #if FEATURE_I2C_DEVICE_SCAN
+        #undef FEATURE_I2C_DEVICE_SCAN
+        #define FEATURE_I2C_DEVICE_SCAN     0   // turn feature off in OTA builds
+    #endif // if FEATURE_I2C_DEVICE_SCAN
     #ifdef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
         #undef KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
     #endif
@@ -847,11 +847,11 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_NEOPIXEL_COLLECTION
         #define PLUGIN_NEOPIXEL_COLLECTION
     #endif
-    #ifndef USES_PLUGIN_STATS
-        #define USES_PLUGIN_STATS
+    #ifndef FEATURE_PLUGIN_STATS
+        #define FEATURE_PLUGIN_STATS  1
     #endif
-    #ifndef USES_CHART_JS
-        #define USES_CHART_JS
+    #ifndef FEATURE_CHART_JS
+        #define FEATURE_CHART_JS  1
     #endif
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
@@ -1074,10 +1074,10 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
-    #ifndef DONT_USE_SERVO
-        #define USE_SERVO
+    #ifndef FEATURE_SERVO
+      #define FEATURE_SERVO 1
     #endif
-    #define USE_RTTTL
+    #define FEATURE_RTTTL 1
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
@@ -1403,13 +1403,13 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
-  #if defined(USES_PLUGIN_STATS) && defined(ESP8266)
+  #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
-    #undef USES_PLUGIN_STATS
+    #undef FEATURE_PLUGIN_STATS
   #endif
-  #if defined(USES_CHART_JS) && defined(ESP8266)
+  #if FEATURE_CHART_JS && defined(ESP8266)
     // Does not fit in build
-    #undef USES_CHART_JS
+    #undef FEATURE_CHART_JS
   #endif
 #endif
 
@@ -1519,11 +1519,11 @@ To create/register a plugin, you have to :
 // Add all plugins, controllers and features that don't fit in the COLLECTION set
 #ifdef PLUGIN_SET_MAX
   // Features
-  #ifndef USE_SERVO
-    #define USE_SERVO
+  #ifndef FEATURE_SERVO
+    #define FEATURE_SERVO 1
   #endif
-  #ifndef USE_RTTTL
-    #define USE_RTTTL
+  #ifndef FEATURE_RTTTL
+    #define FEATURE_RTTTL 1
   #endif
   #ifndef FEATURE_SETTINGS_ARCHIVE
     #define FEATURE_SETTINGS_ARCHIVE  1
@@ -1753,12 +1753,12 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
-  #ifndef USES_DOMOTICZ
-    #define USES_DOMOTICZ
+  #ifndef FEATURE_DOMOTICZ
+    #define FEATURE_DOMOTICZ  1
   #endif
 #endif
 
-#ifdef USES_DOMOTICZ  // Move Domoticz enabling logic together
+#if FEATURE_DOMOTICZ  // Move Domoticz enabling logic together
     #ifndef USES_C001
       #define USES_C001   // Domoticz HTTP
     #endif
@@ -1837,11 +1837,11 @@ To create/register a plugin, you have to :
     #define FEATURE_SETTINGS_ARCHIVE  0
   #endif
 
-  #ifdef USE_SERVO
-    #undef USE_SERVO
+  #if FEATURE_SERVO
+    #undef FEATURE_SERVO
   #endif
-  #ifdef USE_RTTTL
-    #undef USE_RTTTL
+  #if FEATURE_RTTTL
+    #undef FEATURE_RTTTL
   #endif
   #if FEATURE_TOOLTIPS
     #undef FEATURE_TOOLTIPS
@@ -1883,11 +1883,11 @@ To create/register a plugin, you have to :
     #undef FEATURE_SSDP
     #define FEATURE_SSDP  0
   #endif
-  #ifdef USES_PLUGIN_STATS
-    #undef USES_PLUGIN_STATS
+  #if FEATURE_PLUGIN_STATS
+    #undef FEATURE_PLUGIN_STATS
   #endif
-  #ifdef USES_CHART_JS
-    #undef USES_CHART_JS
+  #if FEATURE_CHART_JS
+    #undef FEATURE_CHART_JS
   #endif
 #endif
 
@@ -1996,9 +1996,9 @@ To create/register a plugin, you have to :
 #endif
 
 // Here we can re-enable specific features in the COLLECTION sets as we have created some space there by splitting them up
-#if defined(COLLECTION_USE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E))
-  #ifndef USE_RTTTL
-    #define USE_RTTTL
+#if defined(COLLECTION_FEATURE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E))
+  #ifndef FEATURE_RTTTL
+    #define FEATURE_RTTTL 1
   #endif
 #endif
 

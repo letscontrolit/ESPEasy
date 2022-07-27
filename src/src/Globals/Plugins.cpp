@@ -145,7 +145,7 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
 
-#if USE_I2C_DEVICE_SCAN
+#if FEATURE_I2C_DEVICE_SCAN
 bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress) {
   bool hasI2CAddress = false;
 
@@ -157,7 +157,7 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
   }
   return hasI2CAddress;
 }
-#endif // if USE_I2C_DEVICE_SCAN
+#endif // if FEATURE_I2C_DEVICE_SCAN
 
 // ********************************************************************************
 // Device Sort routine, actual sorting alfabetically by plugin name.
@@ -320,7 +320,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
         STOP_TIMER_TASK(DeviceIndex, Function);
 
         if (Function == PLUGIN_INIT) {
-          #ifdef USES_PLUGIN_STATS
+          #if FEATURE_PLUGIN_STATS
           if (Device[DeviceIndex].PluginStats) {
             PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
             if (taskData == nullptr) {
@@ -332,7 +332,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
               }
             }
           }
-          #endif
+          #endif // if FEATURE_PLUGIN_STATS
           // Schedule the plugin to be read.
           Scheduler.schedule_task_device_timer_at_init(TempEvent->TaskIndex);
           queueTaskEvent(F("TaskInit"), taskIndex, retval);
@@ -660,17 +660,17 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               queueTaskEvent(F("TaskError"), event->TaskIndex, errorStr);
             }
           } else {
-            #ifdef USES_PLUGIN_STATS
+            #if FEATURE_PLUGIN_STATS
             PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
             if (taskData != nullptr) {
               taskData->pushPluginStatsValues(event, !Device[DeviceIndex].PluginLogsPeaks);
             }
-            #endif
+            #endif // if FEATURE_PLUGIN_STATS
             saveUserVarToRTC();
           }
         }
         if (Function == PLUGIN_INIT) {
-          #ifdef USES_PLUGIN_STATS
+          #if FEATURE_PLUGIN_STATS
           if (Device[DeviceIndex].PluginStats) {
             PluginTaskData_base *taskData = getPluginTaskData(event->TaskIndex);
             if (taskData == nullptr) {
@@ -682,7 +682,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               }
             }
           }
-          #endif
+          #endif // if FEATURE_PLUGIN_STATS
           // Schedule the plugin to be read.
           Scheduler.schedule_task_device_timer_at_init(TempEvent.TaskIndex);
           queueTaskEvent(F("TaskInit"), event->TaskIndex, retval);
@@ -714,9 +714,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
-#ifdef USES_PLUGIN_STATS
+    #if FEATURE_PLUGIN_STATS
     case PLUGIN_WEBFORM_LOAD_SHOW_STATS:
-#endif
+    #endif // if FEATURE_PLUGIN_STATS
     case PLUGIN_FORMAT_USERVAR:
     case PLUGIN_SET_CONFIG:
     case PLUGIN_SET_DEFAULTS:

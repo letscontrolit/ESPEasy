@@ -110,7 +110,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
-#define USE_I2C_DEVICE_SCAN                     true
+#define FEATURE_I2C_DEVICE_SCAN                 1
 
 #define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
 
@@ -189,14 +189,14 @@
 
 #define FEATURE_EXT_RTC  1         // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
 
-#define USES_PLUGIN_STATS          // Support collecting historic data + computing stats on historic data
+#define FEATURE_PLUGIN_STATS  1    // Support collecting historic data + computing stats on historic data
 #ifdef ESP8266
 #  define PLUGIN_STATS_NR_ELEMENTS 16
 #endif // ifdef ESP8266
 # ifdef ESP32
 #  define PLUGIN_STATS_NR_ELEMENTS 64
 #endif // ifdef ESP32
-#define USES_CHART_JS               // Support for drawing charts, like PluginStats historic data
+#define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
 
 
@@ -312,7 +312,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #######################################################################################################
  */
 
-// #define USE_SERVO
+// #define FEATURE_SERVO  1   // Uncomment and set to 0 to explicitly disable SERVO support
 
 
 // #define USES_P001   // Switch

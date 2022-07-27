@@ -146,7 +146,7 @@ void handle_i2cscanner_json() {
 String getKnownI2Cdevice(uint8_t address) {
   String result;
 
-  #if USE_I2C_DEVICE_SCAN
+  #if FEATURE_I2C_DEVICE_SCAN
   for (uint8_t x = 0; x <= deviceCount; x++) {
     const deviceIndex_t deviceIndex = DeviceIndex_sorted[x];
 
@@ -171,7 +171,7 @@ String getKnownI2Cdevice(uint8_t address) {
       }
     }
   }
-  #endif // if USE_I2C_DEVICE_SCAN
+  #endif // if FEATURE_I2C_DEVICE_SCAN
   #ifndef LIMIT_BUILD_SIZE
 
   switch (address)
