@@ -2,6 +2,7 @@
 #ifdef USES_C014
 
 # include "src/Commands/InternalCommands.h"
+# include "src/DataTypes/NodeTypeID.h"
 # include "src/Globals/Device.h"
 # include "src/Globals/MQTT.h"
 # include "src/Globals/Plugins.h"
@@ -307,7 +308,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                    errorCounter);
 
         // $fw/name	Device → Controller	Name of the firmware running on the device. Allowed characters are the same as the device ID	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/name"), getNodeTypeDisplayString(NODE_TYPE_ID),
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/name"), toNodeTypeDisplayString(NODE_TYPE_ID),
                                    errorCounter);
 
         // $stats/interval	Device → Controller	Interval in seconds at which the device refreshes its $stats/+: See next section for

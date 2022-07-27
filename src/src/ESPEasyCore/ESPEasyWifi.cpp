@@ -1377,7 +1377,7 @@ void setConnectionSpeed() {
     WiFi.setPhyMode(WIFI_PHY_MODE_11N);
   } else {
     WiFiPhyMode_t phyMode = WIFI_PHY_MODE_11G;
-    #ifdef USE_ESPEASY_NOW
+    #ifdef USES_ESPEASY_NOW
     if (active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
       phyMode = WIFI_PHY_MODE_11B;
     }

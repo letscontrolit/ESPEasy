@@ -8,6 +8,8 @@
 # include "../WebServer/Markup_Buttons.h"
 # include "../WebServer/Markup_Forms.h"
 
+# include "../DataStructs/NodeStruct.h"
+
 # include "../Globals/CPlugins.h"
 # include "../Globals/Device.h"
 # include "../Globals/ExtraTaskSettings.h"

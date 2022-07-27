@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Commands/InternalCommands.h"
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"

@@ -65,11 +65,7 @@ namespace std
 // Check if any deprecated '#define <variable>' (Custom.h) or '-D<variable>' (pre_custom_esp82xx.py/pre_custom_esp32.py) are used
 #include "./src/CustomBuild/check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
 
-#include "src/CustomBuild/ESPEasyDefaults.h"
-#include "src/DataStructs/NodeStruct.h"
-#include "src/Globals/RamTracker.h"
-#include "src/ESPEasyCore/ESPEasy_Log.h"
-#include "src/Helpers/ESPEasy_math.h"
+#include "src/DataTypes/NodeTypeID.h"
 
 #ifndef FS_NO_GLOBALS
   #define FS_NO_GLOBALS
@@ -178,6 +174,12 @@ using namespace fs;
 #include "src/CustomBuild/ESPEasy_buildinfo.h"
 #include "src/CustomBuild/ESPEasyLimits.h"
 #include "src/CustomBuild/define_plugin_sets.h"
+
+#include "src/CustomBuild/ESPEasyDefaults.h"
+#include "src/Globals/RamTracker.h"
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/Helpers/ESPEasy_math.h"
+
 
 #ifdef ESP32
 #include <esp8266-compat.h>

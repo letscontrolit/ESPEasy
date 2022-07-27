@@ -9,6 +9,9 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/WebServer.h"
 
+#include "../DataStructs/MAC_address.h"
+#include "../DataStructs/NodeStruct.h"
+
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 
@@ -22,9 +25,6 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
-
-
-#include "../DataStructs/MAC_address.h"
 
 // ********************************************************************************
 // Web Interface config page

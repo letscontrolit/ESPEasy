@@ -2,6 +2,7 @@
 
 #ifdef USES_ESPEASY_NOW
 
+# include "../DataStructs/NodeStruct.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../Globals/Nodes.h"
