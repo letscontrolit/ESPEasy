@@ -18,6 +18,9 @@
   # warning "**** Using Settings from Custom.h File ***"
 #endif // ifdef USE_CUSTOM_H
 
+// Check if any deprecated '#define <variable>' (Custom.h) or '-D<variable>' (pre_custom_esp82xx.py/pre_custom_esp32.py) are used
+#include "./src/CustomBuild/check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
+
 
 // Needed due to preprocessor issues.
 #ifdef PLUGIN_SET_GENERIC_ESP32

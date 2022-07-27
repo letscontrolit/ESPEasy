@@ -1,11 +1,12 @@
-#ifndef CHECK_DEFINES_CUSTOM_H
-#define CHECK_DEFINES_CUSTOM_H
+#ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
+#define CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
 
 /**
  * Check if any of the now renamed #define variables is still used and output a warning during compilation
  *
  * Changelog:
  * ----------
+ * 2022-07-27 tonhuisman: Move file to CustomBuild folder, move include to ESPEasy.ino so any warning is output once only
  * 2022-07-26 tonhuisman: Initial checks, disable formatting by Uncrustify as it messes up the url's
  */
 
@@ -73,4 +74,4 @@
 
 /* *INDENT-ON* */
 
-#endif // ifndef CHECK_DEFINES_CUSTOM_H
+#endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
