@@ -90,6 +90,12 @@
 # undef USES_HOMEASSISTANT_OPENHAB
 #endif // ifdef USES_HOMEASSISTANT_OPENHAB
 
+#ifdef USES_PLUGIN_STATS
+# warning "Custom.h has '#define USES_PLUGIN_STATS' to be replaced with '#define FEATURE_PLUGIN_STATS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_PLUGIN_STATS  1
+# undef USES_PLUGIN_STATS
+#endif // ifdef USES_PLUGIN_STATS
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H

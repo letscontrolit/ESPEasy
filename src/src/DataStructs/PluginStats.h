@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 
 # include "../DataStructs/ChartJS_dataset_config.h"
 
@@ -169,5 +169,5 @@ private:
   PluginStats *_plugin_stats[VARS_PER_TASK] = { nullptr, };
 };
 
-#endif // ifdef USES_PLUGIN_STATS
+#endif // if FEATURE_PLUGIN_STATS
 #endif // ifndef HELPERS_PLUGINSTATS_H

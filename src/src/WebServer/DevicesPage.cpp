@@ -976,10 +976,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       #endif
     }
 
-#ifdef USES_PLUGIN_STATS
+    #if FEATURE_PLUGIN_STATS
     // Task statistics and historic data in a chart
     devicePage_show_task_statistics(taskIndex, DeviceIndex);
-#endif
+    #endif // if FEATURE_PLUGIN_STATS
 
     // section: Data Acquisition
     devicePage_show_controller_config(taskIndex, DeviceIndex);
@@ -1210,7 +1210,7 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
   }
 }
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].PluginStats)
@@ -1247,7 +1247,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
     }
   }
 }
-#endif
+#endif // if FEATURE_PLUGIN_STATS
 
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {

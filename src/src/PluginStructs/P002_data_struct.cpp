@@ -102,12 +102,12 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   int raw_value            = 0;
   const float currentValue = P002_data_struct::getCurrentValue(event, raw_value);
 
-# ifdef USES_PLUGIN_STATS
+# if FEATURE_PLUGIN_STATS
 
   if (getPluginStats(0) != nullptr) {
     getPluginStats(0)->trackPeak(raw_value);
   }
-# endif // ifdef USES_PLUGIN_STATS
+# endif // if FEATURE_PLUGIN_STATS
 
 # ifdef ESP32
   addRowLabel(F("Analog Pin"));
@@ -282,7 +282,7 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 # endif    // ifndef LIMIT_BUILD_SIZE
 }
 
-# ifdef USES_PLUGIN_STATS
+# if FEATURE_PLUGIN_STATS
 bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 {
   bool somethingAdded = false;
@@ -299,7 +299,7 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
   return somethingAdded;
 }
 
-# endif // ifdef USES_PLUGIN_STATS
+# endif // if FEATURE_PLUGIN_STATS
 
 
 # ifdef ESP32
@@ -730,12 +730,12 @@ void P002_data_struct::takeSample()
   if (_sampleMode == P002_USE_CURENT_SAMPLE) { return; }
   int raw = espeasy_analogRead(_pin_analogRead);
 
-# ifdef USES_PLUGIN_STATS
+# if FEATURE_PLUGIN_STATS
 
   if (getPluginStats(0) != nullptr) {
     getPluginStats(0)->trackPeak(raw);
   }
-# endif // ifdef USES_PLUGIN_STATS
+# endif // if FEATURE_PLUGIN_STATS
 
   switch (_sampleMode) {
     case P002_USE_OVERSAMPLING:
@@ -781,12 +781,12 @@ bool P002_data_struct::getValue(float& float_value,
   }
 
   raw_value = espeasy_analogRead(_pin_analogRead);
-# ifdef USES_PLUGIN_STATS
+# if FEATURE_PLUGIN_STATS
 
   if (getPluginStats(0) != nullptr) {
     getPluginStats(0)->trackPeak(raw_value);
   }
-# endif // ifdef USES_PLUGIN_STATS
+# endif // if FEATURE_PLUGIN_STATS
   float_value = raw_value;
   # ifdef ESP32
 

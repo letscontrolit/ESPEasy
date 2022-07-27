@@ -1,6 +1,6 @@
 #include "../DataStructs/PluginStats.h"
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 # include "../../_Plugin_Helper.h"
 
 # include "../Helpers/ESPEasy_math.h"
@@ -366,4 +366,4 @@ PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex)
   return nullptr;
 }
 
-#endif // ifdef USES_PLUGIN_STATS
+#endif // if FEATURE_PLUGIN_STATS

@@ -310,8 +310,8 @@ To create/register a plugin, you have to :
         #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
     #endif
     #define KEEP_TRIGONOMETRIC_FUNCTIONS_RULES
-    #ifndef USES_PLUGIN_STATS
-        #define USES_PLUGIN_STATS
+    #ifndef FEATURE_PLUGIN_STATS
+        #define FEATURE_PLUGIN_STATS  1
     #endif
     #ifndef USES_CHART_JS
         #define USES_CHART_JS
@@ -847,8 +847,8 @@ To create/register a plugin, you have to :
     #ifndef PLUGIN_NEOPIXEL_COLLECTION
         #define PLUGIN_NEOPIXEL_COLLECTION
     #endif
-    #ifndef USES_PLUGIN_STATS
-        #define USES_PLUGIN_STATS
+    #ifndef FEATURE_PLUGIN_STATS
+        #define FEATURE_PLUGIN_STATS  1
     #endif
     #ifndef USES_CHART_JS
         #define USES_CHART_JS
@@ -1406,9 +1406,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
-  #if defined(USES_PLUGIN_STATS) && defined(ESP8266)
+  #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
-    #undef USES_PLUGIN_STATS
+    #undef FEATURE_PLUGIN_STATS
   #endif
   #if defined(USES_CHART_JS) && defined(ESP8266)
     // Does not fit in build
@@ -1879,8 +1879,8 @@ To create/register a plugin, you have to :
     #undef FEATURE_SSDP
     #define FEATURE_SSDP  0
   #endif
-  #ifdef USES_PLUGIN_STATS
-    #undef USES_PLUGIN_STATS
+  #if FEATURE_PLUGIN_STATS
+    #undef FEATURE_PLUGIN_STATS
   #endif
   #ifdef USES_CHART_JS
     #undef USES_CHART_JS

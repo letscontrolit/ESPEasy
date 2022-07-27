@@ -24,10 +24,10 @@ struct PluginTaskData_base {
   bool    hasPluginStats() const;
   bool    hasPeaks() const;
   uint8_t nrSamplesPresent() const;
-  #ifdef USES_PLUGIN_STATS
+  #if FEATURE_PLUGIN_STATS
   void    initPluginStats(taskVarIndex_t taskVarIndex);
   void    clearPluginStats(taskVarIndex_t taskVarIndex);
-  #endif // ifdef USES_PLUGIN_STATS
+  #endif // if FEATURE_PLUGIN_STATS
 
   // Called right after successful PLUGIN_READ to store task values
   void pushPluginStatsValues(struct EventStruct *event,
@@ -41,19 +41,19 @@ struct PluginTaskData_base {
   bool plugin_write_base(struct EventStruct *event,
                          const String      & string);
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
   bool webformLoad_show_stats(struct EventStruct *event) const;
 # ifdef USES_CHART_JS
   void plot_ChartJS() const;
 # endif // ifdef USES_CHART_JS
-#endif  // ifdef USES_PLUGIN_STATS
+#endif  // if FEATURE_PLUGIN_STATS
 
   // We cannot use dynamic_cast, so we must keep track of the plugin ID to
   // perform checks on the casting.
   // This is also a check to only use these functions and not to insert pointers
   // at random in the Plugin_task_data array.
   pluginID_t _taskdata_pluginID = INVALID_PLUGIN_ID;
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 
   PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;
 
@@ -63,7 +63,7 @@ private:
 
   // Array of pointers to PluginStats. One per task value.
   PluginStats_array *_plugin_stats_array = nullptr;
-#endif // ifdef USES_PLUGIN_STATS
+#endif // if FEATURE_PLUGIN_STATS
 };
 
 #endif // ifndef DATASTRUCTS_PLUGINTASKDATA_BASE_H
