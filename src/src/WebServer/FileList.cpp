@@ -19,9 +19,9 @@
 #include "../Globals/C016_ControllerCache.h"
 #endif
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
-#endif
+#endif // if FEATURE_SD
 
 
 #ifdef WEBSERVER_NEW_UI
@@ -311,7 +311,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 // ********************************************************************************
 // Web Interface SD card file and directory list
 // ********************************************************************************
-#ifdef FEATURE_SD
+#if FEATURE_SD
 void handle_SDfilelist() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_SDfilelist"));
@@ -470,4 +470,4 @@ void handle_SDfilelist() {
   TXBuffer.endStream();
 }
 
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD

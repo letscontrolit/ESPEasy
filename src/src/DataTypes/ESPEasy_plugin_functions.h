@@ -45,9 +45,9 @@
 #define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 #define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 #define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
-#endif
+#endif // if FEATURE_PLUGIN_STATS
 #define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
 #define PLUGIN_GET_DISPLAY_PARAMETERS      42 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
 #define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE

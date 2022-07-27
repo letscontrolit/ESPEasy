@@ -13,7 +13,7 @@
 
 #define PLUGIN_084
 #define PLUGIN_ID_084         84
-#define PLUGIN_NAME_084       "UV - VEML6070 [TESTING]"
+#define PLUGIN_NAME_084       "UV - VEML6070"
 #define PLUGIN_VALUENAME1_084 "Raw"
 #define PLUGIN_VALUENAME2_084 "Risk"
 #define PLUGIN_VALUENAME3_084 "Power"

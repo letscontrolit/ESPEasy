@@ -62,9 +62,9 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex);
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
-#endif
+#endif // if FEATURE_PLUGIN_STATS
 
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 

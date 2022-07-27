@@ -18,7 +18,7 @@
 
 #define PLUGIN_071
 #define PLUGIN_ID_071 71
-#define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401 [TESTING]"
+#define PLUGIN_NAME_071 "Communication - Kamstrup Multical 401"
 #define PLUGIN_VALUENAME1_071 "Heat"
 #define PLUGIN_VALUENAME2_071 "Volume"
 

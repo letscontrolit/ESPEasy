@@ -8,7 +8,7 @@
 
 # define CPLUGIN_018
 # define CPLUGIN_ID_018         18
-# define CPLUGIN_NAME_018       "LoRa TTN - RN2483/RN2903 [TESTING]"
+# define CPLUGIN_NAME_018       "LoRa TTN - RN2483/RN2903"
 # define C018_BAUDRATE_LABEL     "baudrate"
 
 
