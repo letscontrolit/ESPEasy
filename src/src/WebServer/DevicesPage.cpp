@@ -1221,12 +1221,12 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       if (taskData->hasPluginStats()) {
         addFormSubHeader(F("Statistics"));
       }
-#ifdef USES_CHART_JS
+      #if FEATURE_CHART_JS
       if (taskData->nrSamplesPresent() > 0) {
         addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
       }
-#endif
+      #endif // if FEATURE_CHART_JS
 
       struct EventStruct TempEvent(taskIndex);
       String dummy;

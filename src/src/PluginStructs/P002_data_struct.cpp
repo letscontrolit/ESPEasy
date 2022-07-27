@@ -162,9 +162,9 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   if (hasADC_factory_calibration()) {
     addRowLabel(F("Factory Calibration Type"));
     addHtml(getADC_factory_calibration_type());
-    #  ifdef USES_CHART_JS
+    #  if FEATURE_CHART_JS
     webformLoad_calibrationCurve(event);
-    #  endif // ifdef USES_CHART_JS
+    #  endif // if FEATURE_CHART_JS
     formatADC_statistics(F("Current ADC to mV"), raw_value);
 
     for (size_t att = 0; att < ADC_ATTEN_MAX; ++att) {
@@ -209,9 +209,9 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
   {
     // Output the statistics for the current settings.
     if (P002_CALIBRATION_ENABLED) {
-      # ifdef USES_CHART_JS
+      # if FEATURE_CHART_JS
       webformLoad_2pt_calibrationCurve(event);
-      # endif // ifdef USES_CHART_JS
+      # endif // if FEATURE_CHART_JS
 
       int minInputValue, maxInputValue;
       getInputRange(event, minInputValue, maxInputValue);
@@ -276,9 +276,9 @@ void P002_data_struct::webformLoad(struct EventStruct *event)
 
     ++line_nr;
   }
-  #  ifdef USES_CHART_JS
+  #  if FEATURE_CHART_JS
   webformLoad_multipointCurve(event);
-  #  endif // ifdef USES_CHART_JS
+  #  endif // if FEATURE_CHART_JS
 # endif    // ifndef LIMIT_BUILD_SIZE
 }
 
@@ -303,7 +303,7 @@ bool P002_data_struct::webformLoad_show_stats(struct EventStruct *event)
 
 
 # ifdef ESP32
-#  ifdef USES_CHART_JS
+#  if FEATURE_CHART_JS
 void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
 {
   if (!hasADC_factory_calibration()) { return; }
@@ -358,10 +358,10 @@ void P002_data_struct::webformLoad_calibrationCurve(struct EventStruct *event)
   add_ChartJS_chart_footer();
 }
 
-#  endif // ifdef USES_CHART_JS
+#  endif // if FEATURE_CHART_JS
 # endif  // ifdef ESP32
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStruct *event)
 {
   #  ifdef ESP32
@@ -374,7 +374,7 @@ const __FlashStringHelper * P002_data_struct::getChartXaxisLabel(struct EventStr
   return F("ADC Value");
 }
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 void P002_data_struct::getInputRange(struct EventStruct *event, int& minInputValue, int& maxInputValue, bool ignoreCalibration)
 {
@@ -391,7 +391,7 @@ void P002_data_struct::getInputRange(struct EventStruct *event, int& minInputVal
   # endif // ifdef ESP32
 }
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 
 void P002_data_struct::getChartRange(struct EventStruct *event, int values[], int count, bool ignoreCalibration)
 {
@@ -452,7 +452,7 @@ void P002_data_struct::webformLoad_2pt_calibrationCurve(struct EventStruct *even
   add_ChartJS_chart_footer();
 }
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 void P002_data_struct::formatADC_statistics(const __FlashStringHelper *label, int raw, bool includeOutputValue) const
 {
@@ -531,7 +531,7 @@ adc_atten_t P002_data_struct::getAttenuation(struct EventStruct *event) {
 
 # endif // ifdef ESP32
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) const
 {
   if (P002_MULTIPOINT_ENABLED)
@@ -656,7 +656,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
   }
 }
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 String P002_data_struct::webformSave(struct EventStruct *event)
 {

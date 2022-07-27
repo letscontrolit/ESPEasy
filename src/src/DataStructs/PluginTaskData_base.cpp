@@ -125,7 +125,7 @@ bool PluginTaskData_base::webformLoad_show_stats(struct EventStruct *event) cons
   return false;
 }
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 void PluginTaskData_base::plot_ChartJS() const
 {
   if (_plugin_stats_array != nullptr) {
@@ -133,7 +133,7 @@ void PluginTaskData_base::plot_ChartJS() const
   }
 }
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 PluginStats * PluginTaskData_base::getPluginStats(taskVarIndex_t taskVarIndex) const
 {

@@ -313,8 +313,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_PLUGIN_STATS
         #define FEATURE_PLUGIN_STATS  1
     #endif
-    #ifndef USES_CHART_JS
-        #define USES_CHART_JS
+    #ifndef FEATURE_CHART_JS
+        #define FEATURE_CHART_JS  1
     #endif
 #endif
 
@@ -850,8 +850,8 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_PLUGIN_STATS
         #define FEATURE_PLUGIN_STATS  1
     #endif
-    #ifndef USES_CHART_JS
-        #define USES_CHART_JS
+    #ifndef FEATURE_CHART_JS
+        #define FEATURE_CHART_JS  1
     #endif
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
@@ -1410,9 +1410,9 @@ To create/register a plugin, you have to :
     // Does not fit in build
     #undef FEATURE_PLUGIN_STATS
   #endif
-  #if defined(USES_CHART_JS) && defined(ESP8266)
+  #if FEATURE_CHART_JS && defined(ESP8266)
     // Does not fit in build
-    #undef USES_CHART_JS
+    #undef FEATURE_CHART_JS
   #endif
 #endif
 
@@ -1882,8 +1882,8 @@ To create/register a plugin, you have to :
   #if FEATURE_PLUGIN_STATS
     #undef FEATURE_PLUGIN_STATS
   #endif
-  #ifdef USES_CHART_JS
-    #undef USES_CHART_JS
+  #if FEATURE_CHART_JS
+    #undef FEATURE_CHART_JS
   #endif
 #endif
 

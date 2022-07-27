@@ -196,7 +196,7 @@
 # ifdef ESP32
 #  define PLUGIN_STATS_NR_ELEMENTS 64
 #endif // ifdef ESP32
-#define USES_CHART_JS               // Support for drawing charts, like PluginStats historic data
+#define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
 
 

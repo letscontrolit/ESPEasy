@@ -96,6 +96,12 @@
 # undef USES_PLUGIN_STATS
 #endif // ifdef USES_PLUGIN_STATS
 
+#ifdef USES_CHART_JS
+# warning "Custom.h has '#define USES_CHART_JS' to be replaced with '#define FEATURE_CHART_JS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_CHART_JS  1
+# undef USES_CHART_JS
+#endif // ifdef USES_CHART_JS
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H

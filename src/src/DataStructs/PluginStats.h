@@ -85,31 +85,31 @@ public:
 
 
   const String& getLabel() const {
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
     return _ChartJS_dataset_config.label;
-# else // ifdef USES_CHART_JS
+# else // if FEATURE_CHART_JS
     return _label;
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
   }
 
   void setLabel(const String& label) {
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
     _ChartJS_dataset_config.label = label;
-# else // ifdef USES_CHART_JS
+# else // if FEATURE_CHART_JS
     _label = label;
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
   }
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
   void plot_ChartJS_dataset() const;
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 
 public:
 
   ChartJS_dataset_config _ChartJS_dataset_config;
-# else // ifdef USES_CHART_JS
+# else // if FEATURE_CHART_JS
 
 private:
 
@@ -117,7 +117,7 @@ private:
 
 public:
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 private:
 
@@ -155,9 +155,9 @@ public:
 
   bool    webformLoad_show_stats(struct EventStruct *event) const;
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
   void    plot_ChartJS() const;
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 
   PluginStats* getPluginStats(taskVarIndex_t taskVarIndex) const;

@@ -128,19 +128,19 @@ private:
 # ifdef ESP32
   static adc_atten_t                getAttenuation(struct EventStruct *event);
   static const __FlashStringHelper* AttenuationToString(adc_atten_t attenuation);
-  #  ifdef USES_CHART_JS
+  #  if FEATURE_CHART_JS
   static void                       webformLoad_calibrationCurve(struct EventStruct *event);
-  #  endif // ifdef USES_CHART_JS
+  #  endif // if FEATURE_CHART_JS
 # endif    // ifdef ESP32
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
   static const __FlashStringHelper* getChartXaxisLabel(struct EventStruct *event);
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
   static void                       getInputRange(struct EventStruct *event,
                                                   int               & min_value,
                                                   int               & max_value,
                                                   bool                ignoreCalibration = false);
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
   static void getChartRange(struct EventStruct *event,
                             int                 values[],
                             int                 count,
@@ -149,7 +149,7 @@ private:
   static void webformLoad_2pt_calibrationCurve(struct EventStruct *event);
 
   void        webformLoad_multipointCurve(struct EventStruct *event) const;
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 public:
 
