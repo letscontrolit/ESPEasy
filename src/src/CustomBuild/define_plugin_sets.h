@@ -391,8 +391,8 @@ To create/register a plugin, you have to :
     #if FEATURE_SERVO
       #undef FEATURE_SERVO
     #endif
-    #ifdef USE_RTTTL
-      #undef USE_RTTTL
+    #if FEATURE_RTTTL
+      #undef FEATURE_RTTTL
     #endif
 #endif
 
@@ -1077,7 +1077,7 @@ To create/register a plugin, you have to :
     #ifndef FEATURE_SERVO
       #define FEATURE_SERVO 1
     #endif
-    #define USE_RTTTL
+    #define FEATURE_RTTTL 1
 
     #define USES_P001   // Switch
     #define USES_P002   // ADC
@@ -1524,8 +1524,8 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
   #endif
-  #ifndef USE_RTTTL
-    #define USE_RTTTL
+  #ifndef FEATURE_RTTTL
+    #define FEATURE_RTTTL 1
   #endif
   #ifndef FEATURE_SETTINGS_ARCHIVE
     #define FEATURE_SETTINGS_ARCHIVE  1
@@ -1836,8 +1836,8 @@ To create/register a plugin, you have to :
   #if FEATURE_SERVO
     #undef FEATURE_SERVO
   #endif
-  #ifdef USE_RTTTL
-    #undef USE_RTTTL
+  #if FEATURE_RTTTL
+    #undef FEATURE_RTTTL
   #endif
   #if FEATURE_TOOLTIPS
     #undef FEATURE_TOOLTIPS
@@ -1992,9 +1992,9 @@ To create/register a plugin, you have to :
 #endif
 
 // Here we can re-enable specific features in the COLLECTION sets as we have created some space there by splitting them up
-#if defined(COLLECTION_USE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E))
-  #ifndef USE_RTTTL
-    #define USE_RTTTL
+#if defined(COLLECTION_FEATURE_RTTTL) && (defined(PLUGIN_SET_COLLECTION_A) || defined(PLUGIN_SET_COLLECTION_B) || defined(PLUGIN_SET_COLLECTION_C) || defined(PLUGIN_SET_COLLECTION_D) || defined(PLUGIN_SET_COLLECTION_E))
+  #ifndef FEATURE_RTTTL
+    #define FEATURE_RTTTL 1
   #endif
 #endif
 
