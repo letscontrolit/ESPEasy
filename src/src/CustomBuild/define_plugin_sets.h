@@ -1336,9 +1336,6 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
-   #ifndef USES_ADAFRUITGFX_HELPER
-    #define USES_ADAFRUITGFX_HELPER
-   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
