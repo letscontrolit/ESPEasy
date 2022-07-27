@@ -13,7 +13,7 @@
 
 #define PLUGIN_083
 #define PLUGIN_ID_083        83
-#define PLUGIN_NAME_083       "Gasses - SGP30 [TESTING]"
+#define PLUGIN_NAME_083       "Gasses - SGP30"
 #define PLUGIN_VALUENAME1_083 "TVOC"
 #define PLUGIN_VALUENAME2_083 "eCO2"
 

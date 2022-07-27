@@ -38,7 +38,7 @@
 // ********************************************************************************
 void handle_unprocessedNetworkEvents()
 {
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   if (EthEventData.unprocessedEthEvents()) {
     // Process disconnect events before connect events.
     if (!EthEventData.processedDisconnect) {
@@ -82,7 +82,7 @@ void handle_unprocessedNetworkEvents()
     }
     EthEventData.setEthServicesInitialized();
   }
-#endif
+#endif // if FEATURE_ETHERNET
   if (WiFiEventData.unprocessedWifiEvents()) {
     // Process disconnect events before connect events.
     if (!WiFiEventData.processedDisconnect) {
@@ -203,7 +203,7 @@ void handle_unprocessedNetworkEvents()
       }
     }
   }
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   // Check if DNS is still valid, as this may have been reset by the WiFi module turned off.
   if (EthEventData.EthServicesInitialized() && 
       active_network_medium == NetworkMedium_t::Ethernet &&
@@ -219,7 +219,7 @@ void handle_unprocessedNetworkEvents()
       }
     }
   }
-#endif
+#endif // if FEATURE_ETHERNET
 
 #if FEATURE_ESPEASY_P2P
   updateUDPport();
@@ -562,7 +562,7 @@ void processScanDone() {
 
 
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 
 void processEthernetConnected() {
   if (EthEventData.processedConnect) return;
@@ -685,4 +685,4 @@ void processEthernetGotIP() {
   CheckRunningServices();
 }
 
-#endif
+#endif // if FEATURE_ETHERNET

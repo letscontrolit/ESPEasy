@@ -516,7 +516,7 @@ void afterloadSettings() {
 
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
-  #ifdef USE_CUSTOM_PROVISIONING
+  #if FEATURE_CUSTOM_PROVISIONING
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
     if (AllocatedProvisioningSettings()) {
@@ -1067,7 +1067,7 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
 }
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 /********************************************************************************************\
    Save Provisioning Settings
  \*********************************************************************************************/
@@ -1915,7 +1915,7 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 
 #endif // ifdef ESP32
 
-#ifdef USE_DOWNLOAD
+#if FEATURE_DOWNLOAD
 String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr)
 {
   if (!getDownloadFiletypeChecked(filetype, filenr)) {
@@ -1993,9 +1993,9 @@ String downloadFileType(const String& url, const String& user, const String& pas
   return error;
 }
 
-#endif // ifdef USE_DOWNLOAD
+#endif // if FEATURE_DOWNLOAD
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 
 String downloadFileType(FileType::Enum filetype, unsigned int filenr)
 {
@@ -2017,4 +2017,4 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
   return downloadFileType(url, user, pass, filetype, filenr);
 }
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+#endif // if FEATURE_CUSTOM_PROVISIONING

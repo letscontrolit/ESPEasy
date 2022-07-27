@@ -5,7 +5,7 @@
 #include "../../ESPEasy_common.h"
 
 
-#ifdef USES_TIMING_STATS
+#if FEATURE_TIMING_STATS
 
 #include "../DataStructs/TimingStats.h"
 
@@ -15,7 +15,7 @@ void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset)
 
 void jsonStatistics(bool clearStats);
 
-#endif
+#endif // if FEATURE_TIMING_STATS
 
 
 #endif

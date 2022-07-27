@@ -26,14 +26,14 @@ public:
     ISMQTTIMP,
     ISNTP,
     ISWIFI,
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
     ETHWIFIMODE,
     ETHCONNECTED,
     ETHDUPLEX,
     ETHSPEED,
     ETHSTATE,
     ETHSPEEDSTATE,
-    #endif
+    #endif // if FEATURE_ETHERNET
     LCLTIME,
     LCLTIME_AM,
     LF,

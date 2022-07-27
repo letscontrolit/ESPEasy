@@ -1,7 +1,7 @@
 #include "../Commands/Provisioning.h"
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 
 # include "../Commands/Common.h"
 
@@ -51,4 +51,4 @@ String Command_Provisioning_Firmware(struct EventStruct *event, const char *Line
 }
 
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+#endif // if FEATURE_CUSTOM_PROVISIONING

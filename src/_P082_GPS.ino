@@ -23,7 +23,7 @@
 
 # define PLUGIN_082
 # define PLUGIN_ID_082          82
-# define PLUGIN_NAME_082       "Position - GPS [TESTING]"
+# define PLUGIN_NAME_082       "Position - GPS"
 # define PLUGIN_VALUENAME1_082 "Longitude"
 # define PLUGIN_VALUENAME2_082 "Latitude"
 # define PLUGIN_VALUENAME3_082 "Altitude"
