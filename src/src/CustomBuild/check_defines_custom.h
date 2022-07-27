@@ -102,6 +102,12 @@
 # undef USES_CHART_JS
 #endif // ifdef USES_CHART_JS
 
+#ifdef USE_SERVO
+# warning "Custom.h has '#define USE_SERVO' to be replaced with '#define FEATURE_SERVO 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_SERVO  1
+# undef USE_SERVO
+#endif // ifdef USE_SERVO
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H

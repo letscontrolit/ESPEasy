@@ -312,7 +312,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #######################################################################################################
  */
 
-// #define USE_SERVO
+// #define FEATURE_SERVO  1   // Uncomment and set to 0 to explicitly disable SERVO support
 
 
 // #define USES_P001   // Switch

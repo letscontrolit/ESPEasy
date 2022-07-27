@@ -13,14 +13,14 @@
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
-#ifdef USE_SERVO
+#if FEATURE_SERVO
 # include <Servo.h>
 ServoPinMap_t ServoPinMap;
-#endif // ifdef USE_SERVO
+#endif // if FEATURE_SERVO
 
 const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char *Line)
 {
-#ifdef USE_SERVO
+  #if FEATURE_SERVO
 
   // GPIO number is stored inside event->Par2 instead of event->Par1 as in all the other commands
   // So needs to reload the tempPortStruct.
@@ -88,8 +88,8 @@ const __FlashStringHelper * Command_Servo(struct EventStruct *event, const char 
     // SendStatus(event, getPinStateJSON(SEARCH_PIN_STATE, PLUGIN_ID_001, event->Par2, log, 0));
     return return_command_success();
   }
-    #else // ifdef USE_SERVO
-  addLog(LOG_LEVEL_ERROR, F("USE_SERVO not included in build"));
-    #endif // USE_SERVO
+  #else // if FEATURE_SERVO
+  addLog(LOG_LEVEL_ERROR, F("FEATURE_SERVO not included in build"));
+  #endif // FEATURE_SERVO
   return return_command_failed();
 }

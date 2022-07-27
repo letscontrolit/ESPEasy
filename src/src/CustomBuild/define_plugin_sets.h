@@ -388,8 +388,8 @@ To create/register a plugin, you have to :
 //        #define USES_P005   // DHT
     #endif
 
-    #ifdef USE_SERVO
-      #undef USE_SERVO
+    #if FEATURE_SERVO
+      #undef FEATURE_SERVO
     #endif
     #ifdef USE_RTTTL
       #undef USE_RTTTL
@@ -1074,8 +1074,8 @@ To create/register a plugin, you have to :
 
 // STABLE #####################################
 #ifdef PLUGIN_SET_STABLE
-    #ifndef DONT_USE_SERVO
-        #define USE_SERVO
+    #ifndef FEATURE_SERVO
+      #define FEATURE_SERVO 1
     #endif
     #define USE_RTTTL
 
@@ -1521,8 +1521,8 @@ To create/register a plugin, you have to :
 // Add all plugins, controllers and features that don't fit in the COLLECTION set
 #ifdef PLUGIN_SET_MAX
   // Features
-  #ifndef USE_SERVO
-    #define USE_SERVO
+  #ifndef FEATURE_SERVO
+    #define FEATURE_SERVO 1
   #endif
   #ifndef USE_RTTTL
     #define USE_RTTTL
@@ -1833,8 +1833,8 @@ To create/register a plugin, you have to :
     #define FEATURE_SETTINGS_ARCHIVE  0
   #endif
 
-  #ifdef USE_SERVO
-    #undef USE_SERVO
+  #if FEATURE_SERVO
+    #undef FEATURE_SERVO
   #endif
   #ifdef USE_RTTTL
     #undef USE_RTTTL
