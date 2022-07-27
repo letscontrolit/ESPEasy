@@ -114,6 +114,12 @@
 # undef USE_RTTTL
 #endif // ifdef USE_RTTTL
 
+#if USE_I2C_DEVICE_SCAN
+# warning "Custom.h has '#define USE_I2C_DEVICE_SCAN true' to be replaced with '#define FEATURE_I2C_DEVICE_SCAN 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_I2C_DEVICE_SCAN  1
+# undef USE_I2C_DEVICE_SCAN
+#endif // if USE_I2C_DEVICE_SCAN
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H

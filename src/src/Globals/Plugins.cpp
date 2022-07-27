@@ -145,7 +145,7 @@ String getPluginNameFromPluginID(pluginID_t pluginID) {
   return getPluginNameFromDeviceIndex(deviceIndex);
 }
 
-#if USE_I2C_DEVICE_SCAN
+#if FEATURE_I2C_DEVICE_SCAN
 bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2cAddress) {
   bool hasI2CAddress = false;
 
@@ -157,7 +157,7 @@ bool checkPluginI2CAddressFromDeviceIndex(deviceIndex_t deviceIndex, uint8_t i2c
   }
   return hasI2CAddress;
 }
-#endif // if USE_I2C_DEVICE_SCAN
+#endif // if FEATURE_I2C_DEVICE_SCAN
 
 // ********************************************************************************
 // Device Sort routine, actual sorting alfabetically by plugin name.
