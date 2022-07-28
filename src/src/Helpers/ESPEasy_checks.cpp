@@ -133,7 +133,7 @@ void run_compiletime_checks() {
   #endif
 
 
-  #if defined(USE_NON_STANDARD_24_TASKS) && defined(ESP8266)
+  #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
     static_assert(TASKS_MAX == 24, "TASKS_MAX invalid size");
   #endif
 
