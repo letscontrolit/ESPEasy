@@ -120,6 +120,18 @@
 # undef USE_I2C_DEVICE_SCAN
 #endif // if USE_I2C_DEVICE_SCAN
 
+#if defined(FEATURE_MDNS) && (2 - FEATURE_MDNS - 2 == 4) // 'Defined but empty' check
+# warning "Custom.h has '#define FEATURE_MDNS' to be replaced with '#define FEATURE_MDNS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# undef FEATURE_MDNS
+# define FEATURE_MDNS  1
+#endif // if defined(FEATURE_MDNS) && (2-FEATURE_MDNS-2 == 4)
+
+#ifdef USES_NOTIFIER
+# warning "Custom.h has '#define USES_NOTIFIER' to be replaced with '#define FEATURE_NOTIFIER 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_NOTIFIER  1
+# undef USES_NOTIFIER
+#endif // ifdef USES_NOTIFIER
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
