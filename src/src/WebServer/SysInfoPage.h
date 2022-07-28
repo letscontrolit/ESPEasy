@@ -21,7 +21,7 @@ void handle_sysinfo_basicInfo();
 
 void handle_sysinfo_memory();
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 void handle_sysinfo_Ethernet();
 #endif
 

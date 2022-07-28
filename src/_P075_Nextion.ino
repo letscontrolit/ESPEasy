@@ -27,7 +27,7 @@
 // Plug-In defines
 # define PLUGIN_075
 # define PLUGIN_ID_075 75
-# define PLUGIN_NAME_075 "Display - Nextion [TESTING]"
+# define PLUGIN_NAME_075 "Display - Nextion"
 # define PLUGIN_DEFAULT_NAME "NEXTION"
 # define PLUGIN_VALUENAME1_075 "idx"
 # define PLUGIN_VALUENAME2_075 "value"

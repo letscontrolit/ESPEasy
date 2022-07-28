@@ -26,11 +26,11 @@ String WifiSTAmacAddress();
 
 void CheckRunningServices();
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 bool EthFullDuplex();
 bool EthLinkUp();
 uint8_t EthLinkSpeed();
-#endif
+#endif // if FEATURE_ETHERNET
 
 
 #endif 

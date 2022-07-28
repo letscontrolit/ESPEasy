@@ -42,7 +42,7 @@ void handle_hardware() {
     Settings.Pin_i2c_scl              = getFormItemInt(F("pscl"));
     Settings.I2C_clockSpeed           = getFormItemInt(F("pi2csp"), DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C_clockSpeed_Slow      = getFormItemInt(F("pi2cspslow"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
-#ifdef FEATURE_I2CMULTIPLEXER
+    #if FEATURE_I2CMULTIPLEXER
     Settings.I2C_Multiplexer_Type     = getFormItemInt(F("pi2cmuxtype"));
     if (Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
       Settings.I2C_Multiplexer_Addr   = getFormItemInt(F("pi2cmuxaddr"));
@@ -50,7 +50,7 @@ void handle_hardware() {
       Settings.I2C_Multiplexer_Addr   = -1;
     }
     Settings.I2C_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset"));
-#endif
+    #endif // if FEATURE_I2CMULTIPLEXER
     #ifdef ESP32
       Settings.InitSPI                = getFormItemInt(F("initspi"), static_cast<int>(SPI_Options_e::None));
       if (Settings.InitSPI == static_cast<int>(SPI_Options_e::UserDefined)) { // User-define SPI GPIO pins
@@ -65,7 +65,7 @@ void handle_hardware() {
       Settings.InitSPI                = isFormItemChecked(F("initspi")); // SPI Init
     #endif
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
     Settings.ETH_Phy_Addr             = getFormItemInt(F("ethphy"));
     Settings.ETH_Pin_mdc              = getFormItemInt(F("ethmdc"));
     Settings.ETH_Pin_mdio             = getFormItemInt(F("ethmdio"));
@@ -73,7 +73,7 @@ void handle_hardware() {
     Settings.ETH_Phy_Type             = static_cast<EthPhyType_t>(getFormItemInt(F("ethtype")));
     Settings.ETH_Clock_Mode           = static_cast<EthClockMode_t>(getFormItemInt(F("ethclock")));
     Settings.NetworkMedium            = static_cast<NetworkMedium_t>(getFormItemInt(F("ethwifi")));
-#endif
+#endif // if FEATURE_ETHERNET
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
@@ -117,7 +117,7 @@ void handle_hardware() {
   addFormNote(F("Use 100 kHz for old I2C devices, 400 kHz is max for most."));
   addFormNumericBox(F("Slow device Clock Speed"), F("pi2cspslow"), Settings.I2C_clockSpeed_Slow, 100, 3400000);
   addUnit(F("Hz"));
-#ifdef FEATURE_I2CMULTIPLEXER
+  #if FEATURE_I2CMULTIPLEXER
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
@@ -158,7 +158,7 @@ void handle_hardware() {
   }
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Reset")), F("pi2cmuxreset"), Settings.I2C_Multiplexer_ResetPin);
   addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
-#endif
+  #endif // if FEATURE_I2CMULTIPLEXER
 
   // SPI Init
   addFormSubHeader(F("SPI Interface"));
@@ -192,12 +192,12 @@ void handle_hardware() {
   #endif
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
   
-#ifdef FEATURE_SD
+#if FEATURE_SD
   addFormSubHeader(F("SD Card"));
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("SD Card CS")), F("sd"), Settings.Pin_sd_cs);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
   
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   addFormSubHeader(F("Ethernet"));
   addRowLabel_tr_id(F("Preferred network medium"), F("ethwifi"));
   {
@@ -253,7 +253,7 @@ void handle_hardware() {
       };
     addSelector(F("ethclock"), 4, ethClockOptions, nullptr, nullptr, static_cast<int>(Settings.ETH_Clock_Mode), false, true);
   }
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 
   addFormSubHeader(F("GPIO boot states"));
 

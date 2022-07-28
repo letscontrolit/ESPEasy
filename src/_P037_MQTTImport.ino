@@ -166,14 +166,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        # if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        # if !defined(LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         String toolTip = F("0..");
         toolTip += P037_MAX_QUEUEDEPTH;
         toolTip += F(" entries");
         addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
-        # else // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        # else // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
-        # endif // if !defined(LIMIT_BUILD_SIZE) && defined(ENABLE_TOOLTIPS)
+        # endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         addUnit(F("0 = no check"));
         # if !defined(LIMIT_BUILD_SIZE)
         addFormNote(F("New events will be discarded if the event queue has more entries queued."));

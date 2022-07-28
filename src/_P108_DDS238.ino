@@ -31,7 +31,7 @@
 
 # define PLUGIN_108
 # define PLUGIN_ID_108 108
-# define PLUGIN_NAME_108 "Energy (AC) - DDS238-x ZN [TESTING]"
+# define PLUGIN_NAME_108 "Energy (AC) - DDS238-x ZN"
 # define PLUGIN_VALUENAME1_108 ""
 
 
