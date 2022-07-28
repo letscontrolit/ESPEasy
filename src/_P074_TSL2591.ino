@@ -20,7 +20,7 @@
 
 # define PLUGIN_074
 # define PLUGIN_ID_074 74
-# define PLUGIN_NAME_074 "Light/Lux - TSL2591 [TESTING]"
+# define PLUGIN_NAME_074 "Light/Lux - TSL2591"
 # define PLUGIN_VALUENAME1_074 "Lux"
 # define PLUGIN_VALUENAME2_074 "Full"
 # define PLUGIN_VALUENAME3_074 "Visible"

@@ -11,7 +11,7 @@
 //   Oct-12-2020: Creation
 //   Oct-16-2020: Beta Test Release to ESPEasy Forum.
 //   Oct-18-2020: Re-assigned as plugin number P101 (was P248).
-//   Oct-20-2020: Github PR #3328, Submitted as [Testing] plugin.
+//   Oct-20-2020: Github PR #3328, Submitted as plugin.
 //
 // This ESPEasy plugin requires the WakeOnLan library found here:
 //   https://github.com/a7md0/WakeOnLan
@@ -55,7 +55,7 @@
 // Plugin defines
 #define PLUGIN_101
 #define PLUGIN_ID_101      101
-#define PLUGIN_NAME_101    "Communication - Wake On LAN [Testing]"
+#define PLUGIN_NAME_101    "Communication - Wake On LAN"
 
 // Config Setting defines
 #define CUSTOMTASK_STR_SIZE_P101 20

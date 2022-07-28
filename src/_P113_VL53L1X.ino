@@ -15,7 +15,7 @@
 
 # define PLUGIN_113
 # define PLUGIN_ID_113         113
-# define PLUGIN_NAME_113       "Distance - VL53L1X (400cm) [TESTING]"
+# define PLUGIN_NAME_113       "Distance - VL53L1X (400cm)"
 # define PLUGIN_VALUENAME1_113 "Distance"
 # define PLUGIN_VALUENAME2_113 "Ambient"
 

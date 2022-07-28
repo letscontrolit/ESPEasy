@@ -45,10 +45,10 @@ void addSelector(const String             & id,
                  bool                       reloadonchange,
                  bool                       enabled,
                  const String& classname
-                 #ifdef                     ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  ,
                  const String             & tooltip = EMPTY_STRING
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  );
 
 void addSelector(const String& id,
@@ -60,10 +60,10 @@ void addSelector(const String& id,
                  bool          reloadonchange,
                  bool          enabled,
                  const String& classname
-                 #ifdef        ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  ,
                  const String& tooltip = EMPTY_STRING
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  );
 
 void addSelector_reloadOnChange(
@@ -76,10 +76,10 @@ void addSelector_reloadOnChange(
                  const String& onChangeCall,
                  bool          enabled,
                  const String& classname
-                 #ifdef        ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  ,
                  const String& tooltip = EMPTY_STRING
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  );
 
 
@@ -101,30 +101,30 @@ void addSelector_Head_reloadOnChange(const String& id);
 void addSelector_Head_reloadOnChange(const String& id,
                                      const String& classname,
                                      bool          disabled
-                                     #ifdef        ENABLE_TOOLTIPS
+                                     #if FEATURE_TOOLTIPS
                                      ,
                                      const String& tooltip = EMPTY_STRING
-                                     #endif // ifdef        ENABLE_TOOLTIPS
+                                     #endif // if FEATURE_TOOLTIPS
                                      );
 
 void addSelector_Head_reloadOnChange(const String& id,
                                      const String& classname,
                                      const String& onChangeCall,
                                      bool          disabled
-                                     #ifdef        ENABLE_TOOLTIPS
+                                     #if FEATURE_TOOLTIPS
                                      ,
                                      const String& tooltip = EMPTY_STRING
-                                     #endif // ifdef        ENABLE_TOOLTIPS
+                                     #endif // if FEATURE_TOOLTIPS
                                      );
 
 void do_addSelector_Head(const String& id,
                          const String& classname,
                          const String& onChangeCall,
                          const bool& disabled
-                         #ifdef        ENABLE_TOOLTIPS
+                         #if FEATURE_TOOLTIPS
                          ,
                          const String& tooltip = EMPTY_STRING
-                         #endif // ifdef        ENABLE_TOOLTIPS
+                         #endif // if FEATURE_TOOLTIPS
                          );
 
 void addPinSelector_Item(PinSelectPurpose purpose,
@@ -212,10 +212,10 @@ void addFormSubHeader(const String& header);
 void addCheckBox(const String& id,
                  bool       checked,
                  bool          disabled = false
-                 #ifdef        ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  ,
                  const String& tooltip = EMPTY_STRING
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  );
 void addCheckBox(const __FlashStringHelper *id,
                  bool                    checked,
@@ -224,14 +224,14 @@ void addCheckBox(const __FlashStringHelper *id,
 // ********************************************************************************
 // Add a numeric box
 // ********************************************************************************
-#ifdef        ENABLE_TOOLTIPS
+#if FEATURE_TOOLTIPS
 void addNumericBox(const String& id,
                    int           value,
                    int           min,
                    int           max,
                    const String& classname,
                    const String& tooltip = EMPTY_STRING);
-#endif // ifdef ENABLE_TOOLTIPS
+#endif // if FEATURE_TOOLTIPS
 
 void addFloatNumberBox(const String& id,
                        float         value,
@@ -239,10 +239,10 @@ void addFloatNumberBox(const String& id,
                        float         max,
                        unsigned int  nrDecimals = 6,
                        float         stepsize   = 0.0f
-                       #ifdef ENABLE_TOOLTIPS
+                       #if FEATURE_TOOLTIPS
                        ,
                        const String& tooltip = EMPTY_STRING
-                       #endif // ifdef ENABLE_TOOLTIPS
+                       #endif // if FEATURE_TOOLTIPS
                        );
 void addNumericBox(const __FlashStringHelper *id,
                    int                        value,
@@ -269,10 +269,10 @@ void addTextBox(const String& id,
                 bool          required,
                 const String& pattern,
                 const String& classname
-                #ifdef        ENABLE_TOOLTIPS
+                #if FEATURE_TOOLTIPS
                 ,
                 const String& tooltip = EMPTY_STRING
-                #endif // ifdef ENABLE_TOOLTIPS
+                #endif // if FEATURE_TOOLTIPS
                 );
 
 // ********************************************************************************
@@ -285,10 +285,10 @@ void addTextArea(const String& id,
                  int           columns,
                  bool          readonly,
                  bool          required
-                 #ifdef        ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  ,
                  const String& tooltip = EMPTY_STRING
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  );
 
 // ********************************************************************************

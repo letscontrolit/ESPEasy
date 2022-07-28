@@ -11,7 +11,7 @@
 
 # define PLUGIN_080
 # define PLUGIN_ID_080         80
-# define PLUGIN_NAME_080       "Input - iButton [TESTING]"
+# define PLUGIN_NAME_080       "Input - iButton"
 # define PLUGIN_VALUENAME1_080 "iButton"
 
 

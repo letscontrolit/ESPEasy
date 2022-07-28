@@ -1,7 +1,6 @@
 #ifndef HELPERS_PERIODICALACTIONS_H
 #define HELPERS_PERIODICALACTIONS_H
 
-#include <Arduino.h>
 #include "../../ESPEasy_common.h"
 
 #include "../Globals/CPlugins.h"

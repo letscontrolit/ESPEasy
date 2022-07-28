@@ -2,14 +2,15 @@
 #define CONTROLLERQUEUE_C018_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
+
+#ifdef USES_C018
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
 
 
 struct EventStruct;
-
-#ifdef USES_C018
 
 /*********************************************************************************************\
 * C018_queue_element for queueing requests for C018: TTN/RN2483
