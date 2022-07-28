@@ -78,16 +78,27 @@ String LoadSettings();
    Disable Plugin, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disablePlugin(uint8_t bootFailedCount);
+uint8_t disableAllPlugins(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disableController(uint8_t bootFailedCount);
+uint8_t disableAllControllers(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
+#ifdef USES_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount);
+uint8_t disableAllNotifications(uint8_t bootFailedCount);
+#endif
+
+/********************************************************************************************\
+   Disable Rules, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableRules(uint8_t bootFailedCount);
+
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);
 

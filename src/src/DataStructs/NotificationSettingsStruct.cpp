@@ -1,7 +1,6 @@
 #include "../DataStructs/NotificationSettingsStruct.h"
 
-#include "../../ESPEasy_common.h"
-
+#ifdef USES_NOTIFIER
 
 NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(-1), Pin2(-1) {
     ZERO_FILL(Server);
@@ -24,3 +23,5 @@ NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(-1), Pi
     ZERO_TERMINATE(User);
     ZERO_TERMINATE(Pass);
   }
+
+#endif
