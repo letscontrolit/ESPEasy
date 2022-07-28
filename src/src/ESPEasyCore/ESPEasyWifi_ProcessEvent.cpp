@@ -428,13 +428,13 @@ void processGotIP() {
   if (node_time.systemTimePresent()) {
     node_time.initTime();
   }
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)
@@ -664,13 +664,13 @@ void processEthernetGotIP() {
   if (node_time.systemTimePresent()) {
     node_time.initTime();
   }
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)

@@ -441,6 +441,12 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_NEW_RULES
             #undef WEBSERVER_NEW_RULES
         #endif
+        #ifdef SHOW_SYSINFO_JSON
+            #undef SHOW_SYSINFO_JSON
+        #endif
+        #ifndef WEBSERVER_SYSINFO_MINIMAL
+            #define WEBSERVER_SYSINFO_MINIMAL
+        #endif
 
 
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED
@@ -1930,7 +1936,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
-  #define USES_MQTT
+  #define FEATURE_MQTT  1
 #endif
 
 #if defined(USES_C012) || defined (USES_C015)
@@ -1953,12 +1959,12 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
   #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
 #endif
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
 
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined

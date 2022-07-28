@@ -280,10 +280,28 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
-
+    #if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
+    #endif
+
+    if (toDisable != 0) {
+      toDisable = disableRules(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllPlugins(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllControllers(toDisable);
+    }
+#if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableAllNotifications(toDisable);
+    }
+#endif
   }
   #if FEATURE_ETHERNET
 

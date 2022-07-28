@@ -17,12 +17,14 @@
 #include "../Commands/HTTP.h"
 #include "../Commands/i2c.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Commands/MQTT.h"
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 #include "../Commands/Networks.h"
+#if FEATURE_NOTIFIER
 #include "../Commands/Notifications.h"
+#endif
 #include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
@@ -388,15 +390,17 @@ bool executeInternalCommand(command_case_data & data)
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
+      #if FEATURE_NOTIFIER
       COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
+      #endif
       COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
       COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
       COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h
 #endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
-#ifdef USES_MQTT
+#if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
@@ -432,9 +436,9 @@ bool executeInternalCommand(command_case_data & data)
       }
       COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
-    #ifdef USES_MQTT
+    #if FEATURE_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
-    #endif // USES_MQTT
+    #endif // if FEATURE_MQTT
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "sysload", Command_SysLoad,        0);     // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

@@ -1,5 +1,7 @@
 #include "../WebServer/NotificationPage.h"
 
+#if FEATURE_NOTIFIER
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -20,7 +22,6 @@
 // Web Interface notifcations page
 // ********************************************************************************
 
-#if FEATURE_NOTIFIER
 
 #include "../Globals/NPlugins.h"
 

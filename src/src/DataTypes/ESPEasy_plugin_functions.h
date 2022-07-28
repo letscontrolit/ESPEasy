@@ -1,6 +1,8 @@
 #ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
 #define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
+#include "../../ESPEasy_common.h"
+
 
 // ********************************************************************************
 //   Plugin (Task) function calls

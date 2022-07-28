@@ -1,15 +1,12 @@
 #include "../Helpers/StringGenerator_System.h"
 
 
-#include <Arduino.h>
-
-
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
 
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
@@ -31,7 +28,7 @@ const __FlashStringHelper * getMQTT_state() {
   return F("");
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information

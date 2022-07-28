@@ -1,12 +1,12 @@
 #include "../ControllerQueue/C018_queue_element.h"
 
+#ifdef USES_C018
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Helpers/_CPlugin_LoRa_TTN_helper.h"
-
-#ifdef USES_C018
 
 C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sampleSetCount) :
   TaskIndex(event->TaskIndex),

@@ -1,6 +1,8 @@
 #ifndef COMMAND_UDP_H
 #define COMMAND_UDP_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 String Command_UDP_Port(struct EventStruct *event, const char* Line);
 
