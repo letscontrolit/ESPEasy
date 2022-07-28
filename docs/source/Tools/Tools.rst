@@ -867,10 +867,11 @@ The old settings are still active in memory and if something will be saved, only
 This would corrupt the settings file.
 
 
-With only ``USE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
-For this the build must be made with ``USE_CUSTOM_PROVISIONING`` defined.
+With only ``FEATURE_SETTINGS_ARCHIVE`` defined during build, the URL and credentials cannot be stored.
+(2022/07/24: Renamed USE_SETTINGS_ARCHIVE to FEATURE_SETTINGS_ARCHIVE)
+For this the build must be made with ``FEATURE_CUSTOM_PROVISIONING`` defined.
 
-N.B. ``USE_CUSTOM_PROVISIONING`` is added on 2022/05/13.
+N.B. ``FEATURE_CUSTOM_PROVISIONING`` is added on 2022/05/13. (2022/07/24: Renamed from USE_CUSTOM_PROVISIONING to FEATURE_CUSTOM_PROVISIONING)
 
 
 URL with Settings
@@ -885,7 +886,7 @@ System variables will be converted into an URL encoded form, which may end up li
 
 * ``http://192.168.10.127/A0%3a20%3aA6%3a14%3a84%3a81/rules4.txt`` MAC address: ``A0:20:A6:14:84:81``
 
-The URL will not be stored, unless the build is made with ``USE_CUSTOM_PROVISIONING`` defined and the option is checked to save the URL. (option only present when ``USE_CUSTOM_PROVISIONING`` defined)
+The URL will not be stored, unless the build is made with ``FEATURE_CUSTOM_PROVISIONING`` defined and the option is checked to save the URL. (option only present when ``FEATURE_CUSTOM_PROVISIONING`` defined)
 
 Using system variables may allow for multi stage setup of a node, as you could for example fetch a rule which may set a variable to a new value and thus new files may be fetched from a different URL.
 
@@ -908,12 +909,12 @@ Provisioning
 
 Added: 2022/05/13
 
-When the build is made with ``USE_CUSTOM_PROVISIONING`` defined, this Settings Archive screen does allow for more settings helping deployment and remote administration of ESPEasy nodes.
+When the build is made with ``FEATURE_CUSTOM_PROVISIONING`` defined, this Settings Archive screen does allow for more settings helping deployment and remote administration of ESPEasy nodes.
 
 All Settings on the Settings Archive page can be stored in a file named ``provisioning.dat``.
 This file also can store the factory default settings like the device model to ease deployment of a large number of nodes.
 
-N.B. The ``USE_SETTINGS_ARCHIVE`` define is needed to allow to edit the ``provisioning.dat`` file, but it is not needed to use the provisioning feature.
+N.B. The ``FEATURE_SETTINGS_ARCHIVE`` define is needed to allow to edit the ``provisioning.dat`` file, but it is not needed to use the provisioning feature.
 
 
 .. image:: images/SettingsArchive_provisioning.png

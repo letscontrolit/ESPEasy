@@ -15,7 +15,7 @@
 .. |P133_type| replace:: :cyan:`UV`
 .. |P133_typename| replace:: :cyan:`UV - LTR390`
 .. |P133_porttype| replace:: `.`
-.. |P133_status| replace:: :yellow:`TESTING E`
+.. |P133_status| replace:: :yellow:`COLLECTION E`
 .. |P133_github| replace:: P133_LTR390.ino
 .. _P133_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P133_LTR390.ino
 .. |P133_usedby| replace:: `.`

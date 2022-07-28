@@ -25,10 +25,10 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
 // ********************************************************************************
 // Web Interface SD card file and directory list
 // ********************************************************************************
-#ifdef FEATURE_SD
+#if FEATURE_SD
 void handle_SDfilelist();
 
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 
 

@@ -23,7 +23,7 @@ bool tone_espEasy(int8_t _pin, unsigned int frequency, unsigned long duration) {
 /********************************************************************************************\
    Play RTTTL string on specified pin
  \*********************************************************************************************/
-#ifdef USE_RTTTL
+#if FEATURE_RTTTL
 bool play_rtttl(int8_t _pin, const char *p)
 {
   if (_pin<0) return false;
@@ -196,4 +196,4 @@ bool play_rtttl(int8_t _pin, const char *p)
   #endif
   return true;
 }
-#endif
+#endif // if FEATURE_RTTTL

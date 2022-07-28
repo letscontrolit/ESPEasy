@@ -149,7 +149,7 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
       break;
   }
 
-#ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+#if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   const bool useDegree = angleDegree(un_op);
 
   // First the trigonometric functions with angle as output
@@ -188,7 +188,7 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
     default:
       break;
   }
-#else // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+#else // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
   switch (un_op) {
     case UnaryOperator::Sin:
@@ -203,12 +203,12 @@ double RulesCalculate_t::apply_unary_operator(char op, double first)
     case UnaryOperator::ArcCos_d:
     case UnaryOperator::ArcTan:
     case UnaryOperator::ArcTan_d:
-      addLog(LOG_LEVEL_ERROR, F("USE_TRIGONOMETRIC_FUNCTIONS_RULES not defined in build"));
+      addLog(LOG_LEVEL_ERROR, F("FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES not defined in build"));
       break;
     default:
       break;
   }
-#endif // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+#endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   return ret;
 }
 
@@ -577,7 +577,7 @@ String RulesCalculate_t::preProces(const String& input)
   preProcessReplace(preprocessed, UnaryOperator::Sqrt);
   preProcessReplace(preprocessed, UnaryOperator::Sq);
   preProcessReplace(preprocessed, UnaryOperator::Round);
-#ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+#if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
   // Try the "arc" functions first, or else "sin" is already replaced when "asin" is tried.
   if (preprocessed.indexOf(F("sin")) != -1) {
@@ -600,7 +600,7 @@ String RulesCalculate_t::preProces(const String& input)
     preProcessReplace(preprocessed, UnaryOperator::Tan);
     preProcessReplace(preprocessed, UnaryOperator::Tan_d);
   }
-#endif // ifdef USE_TRIGONOMETRIC_FUNCTIONS_RULES
+#endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   return preprocessed;
 }
 

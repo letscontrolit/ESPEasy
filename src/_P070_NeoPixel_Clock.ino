@@ -17,7 +17,7 @@
 
 # define PLUGIN_070
 # define PLUGIN_ID_070         70
-# define PLUGIN_NAME_070       "Output - NeoPixel Ring Clock [TESTING]"
+# define PLUGIN_NAME_070       "Output - NeoPixel Ring Clock"
 # define PLUGIN_VALUENAME1_070 "Enabled"
 # define PLUGIN_VALUENAME2_070 "Brightness"
 # define PLUGIN_VALUENAME3_070 "Marks"
