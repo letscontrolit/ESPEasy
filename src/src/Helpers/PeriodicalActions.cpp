@@ -1,6 +1,5 @@
 #include "../Helpers/PeriodicalActions.h"
 
-#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
 

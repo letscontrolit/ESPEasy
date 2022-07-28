@@ -1,5 +1,7 @@
 #include "../WebServer/HardwarePage.h"
 
+#ifdef WEBSERVER_HARDWARE
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -16,8 +18,6 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
-
-#ifdef WEBSERVER_HARDWARE
 
 // ********************************************************************************
 // Web Interface hardware page

@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#ifdef USES_NOTIFIER
+
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
 #include <Arduino.h>
@@ -1043,5 +1045,6 @@ void NPluginInit();
 
 #undef ADDNPLUGIN_H
 
+#endif
 
 #endif
