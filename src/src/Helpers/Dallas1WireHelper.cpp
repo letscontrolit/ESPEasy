@@ -7,12 +7,13 @@
 
 #include "../WebServer/JSON.h"
 
-#include "../../ESPEasy_common.h"
 
-#if defined(ESP32)
-  # define ESP32noInterrupts() { portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED; portENTER_CRITICAL(&mux)
-  # define ESP32interrupts() portEXIT_CRITICAL(&mux); }
-#endif // if defined(ESP32)
+// Macros to perform direct access on GPIOs
+// Macros written by Paul Stoffregen
+// See: https://github.com/PaulStoffregen/OneWire/blob/master/util/
+#include "../DataTypes/GPIO_Direct_gpio.h"
+
+
 
 #include <vector>
 
@@ -612,13 +613,17 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   uint8_t retries = 125;
 
-    #if defined(ESP32)
-  ESP32noInterrupts();
-    #endif // if defined(ESP32)
+  IO_REG_TYPE mask_rx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_rx);
+  volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
+
+  IO_REG_TYPE mask_tx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_tx);
+  volatile IO_REG_TYPE *reg_tx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_tx);
+
+  noInterrupts();
   if(gpio_pin_rx == gpio_pin_tx) {
-    pinMode(gpio_pin_rx, INPUT);
+    DIRECT_MODE_INPUT(reg_rx, mask_rx);
   } else {
-    digitalWrite(gpio_pin_tx, HIGH);
+    DIRECT_WRITE_HIGH(reg_tx, mask_tx);
   }
   bool success = true;
 
@@ -629,7 +634,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     }
     delayMicroseconds(2);
   }
-  while (!digitalRead(gpio_pin_rx) && success);
+  while (!DIRECT_READ(reg_rx, mask_rx) && success);
 
   usec_release   = 0;
   presence_start = 0;
@@ -639,15 +644,15 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     // The master starts a transmission with a reset pulse,
     // which pulls the wire to 0 volts for at least 480 µs.
     // This resets every slave device on the bus.
-    digitalWrite(gpio_pin_tx, LOW);
+    DIRECT_WRITE_LOW(reg_tx, mask_tx);
     if(gpio_pin_rx == gpio_pin_tx) {
-      pinMode(gpio_pin_rx, OUTPUT);
+      DIRECT_MODE_OUTPUT(reg_rx, mask_rx);
     }
     delayMicroseconds(480);
     if(gpio_pin_rx == gpio_pin_tx) {
-      pinMode(gpio_pin_rx, INPUT);
+      DIRECT_MODE_INPUT(reg_rx, mask_rx);
     } else {
-      digitalWrite(gpio_pin_tx, HIGH);
+      DIRECT_WRITE_HIGH(reg_tx, mask_tx);
     }
 
     // After that, any slave device, if present, shows that it exists with a "presence" pulse:
@@ -655,7 +660,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     // This may take about 30 usec after release for present sensors to pull the line low.
     // Sequence:
     // - Release => pin high
-    // - Presemce condition start (typ: 30 usec after release)
+    // - Presence condition start (typ: 30 usec after release)
     // - Presence condition end   (minimal duration 60 usec, typ: 100 usec)
     // - Wait till 480 usec after release.
     const uint64_t start = getMicros64();
@@ -664,7 +669,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     while (usec_passed < 480) {
       usec_passed = usecPassedSince(start);
 
-      const bool pin_state = !!digitalRead(gpio_pin_rx);
+      const bool pin_state = !!DIRECT_READ(reg_rx, mask_rx);
 
       if (usec_release == 0) {
         if (pin_state) {
@@ -685,9 +690,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
       delayMicroseconds(2);
     }
   }
-    #if defined(ESP32)
-  ESP32interrupts();
-    #endif // if defined(ESP32)
+  interrupts();
 
   if (presence_end != 0) {
     const long presence_duration = presence_end - presence_start;
@@ -904,12 +907,16 @@ uint8_t IRAM_ATTR Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, un
 {
   uint8_t r;
   {
-      #if defined(ESP32)
-    ESP32noInterrupts();
-      #endif // if defined(ESP32)
-    digitalWrite(gpio_pin_tx, LOW);
+    IO_REG_TYPE mask_rx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_rx);
+    volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
+
+    IO_REG_TYPE mask_tx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_tx);
+    volatile IO_REG_TYPE *reg_tx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_tx);
+
+    noInterrupts();
+    DIRECT_WRITE_LOW(reg_tx, mask_tx);
     if(gpio_pin_rx == gpio_pin_tx) {
-      pinMode(gpio_pin_rx, OUTPUT);
+      DIRECT_MODE_OUTPUT(reg_rx, mask_rx);
     }
 
     while (usecPassedSince(start) < 6) {
@@ -917,19 +924,17 @@ uint8_t IRAM_ATTR Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, un
     }
     const uint64_t startwait = getMicros64();
     if(gpio_pin_rx == gpio_pin_tx) {
-      pinMode(gpio_pin_rx, INPUT); // let pin float, pull up will raise
+      DIRECT_MODE_INPUT(reg_rx, mask_rx); // let pin float, pull up will raise
     } else {
-      digitalWrite(gpio_pin_tx, HIGH);
+      DIRECT_WRITE_HIGH(reg_tx, mask_tx);
     }
 
     while (usecPassedSince(startwait) < 9ll) {
       // Wait for another 9 usec
     }
-    r = digitalRead(gpio_pin_rx);
+    r = DIRECT_READ(reg_rx, mask_rx);
 
-      #if defined(ESP32)
-    ESP32interrupts();
-      #endif // if defined(ESP32)
+    interrupts();
   }
   return r;
 }
@@ -963,22 +968,25 @@ void IRAM_ATTR Dallas_write_bit_ISR(uint8_t v,
                       long high_time,
                       uint64_t &start)
 {
-  #if defined(ESP32)
-  ESP32noInterrupts();
-  #endif // if defined(ESP32)
-  digitalWrite(gpio_pin_tx, LOW);
+  IO_REG_TYPE mask_rx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_rx);
+  volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
+
+  IO_REG_TYPE mask_tx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_tx);
+  volatile IO_REG_TYPE *reg_tx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_tx);
+
+
+  noInterrupts();
+  DIRECT_WRITE_LOW(reg_tx, mask_tx);
   if(gpio_pin_rx == gpio_pin_tx) {
-    pinMode(gpio_pin_rx, OUTPUT);
+    DIRECT_MODE_OUTPUT(reg_rx, mask_rx);
   }
 
   while (usecPassedSince(start) < low_time) {
     // output remains low
   }
   start = getMicros64();
-  digitalWrite(gpio_pin_tx, HIGH);
-  #if defined(ESP32)
-  ESP32interrupts();
-  #endif // if defined(ESP32)
+  DIRECT_WRITE_HIGH(reg_tx, mask_tx);
+  interrupts();
 }
 
 /*********************************************************************************************\
@@ -1046,11 +1054,6 @@ uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
 
   return crc;
 }
-
-#if defined(ESP32)
-  # undef ESP32noInterrupts
-  # undef ESP32interrupts
-#endif // if defined(ESP32)
 
 
 void Dallas_SensorData::set_measurement_inactive() {
