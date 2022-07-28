@@ -1,10 +1,11 @@
 #include "../PluginStructs/P094_data_struct.h"
 
+#ifdef USES_P094
+
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
 
-#ifdef USES_P094
 #include <Regexp.h>
 
 #include "../Globals/ESPEasy_time.h"

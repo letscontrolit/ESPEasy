@@ -1,6 +1,8 @@
 #ifndef HELPERS_STRINGPARSER_H
 #define HELPERS_STRINGPARSER_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../Globals/Plugins.h"

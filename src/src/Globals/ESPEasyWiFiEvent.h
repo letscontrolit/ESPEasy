@@ -1,11 +1,6 @@
 #ifndef GLOBALS_ESPEASYWIFIEVENT_H
 #define GLOBALS_ESPEASYWIFIEVENT_H
 
-#include <Arduino.h>
-#include <IPAddress.h>
-#include <stdint.h>
-#include <list>
-
 #include "../../ESPEasy_common.h"
 
 #include "../DataStructs/WiFiEventData.h"
@@ -13,6 +8,12 @@
 #if FEATURE_ETHERNET
 #include "../DataStructs/EthernetEventData.h"
 #endif
+
+
+#include <Arduino.h>
+#include <IPAddress.h>
+#include <stdint.h>
+#include <list>
 
 #ifdef ESP32
 # include <esp_event.h>

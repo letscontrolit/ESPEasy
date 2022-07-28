@@ -3,14 +3,12 @@
 
 #include "../../ESPEasy_common.h"
 
-
 #if FEATURE_TIMING_STATS
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
-
 #include "../Helpers/ESPEasy_time_calc.h"
-
 #include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 # include <Arduino.h>
 # include <map>

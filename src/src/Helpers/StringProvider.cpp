@@ -36,7 +36,6 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
-#include "../../ESPEasy_common.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);

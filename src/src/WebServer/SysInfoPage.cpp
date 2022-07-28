@@ -1,5 +1,7 @@
 #include "../WebServer/SysInfoPage.h"
 
+#if defined(WEBSERVER_SYSINFO) || defined(SHOW_SYSINFO_JSON)
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -254,7 +256,9 @@ void handle_sysinfo() {
 
   handle_sysinfo_basicInfo();
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
   handle_sysinfo_memory();
+#endif
 
   handle_sysinfo_Network();
 
@@ -262,10 +266,13 @@ void handle_sysinfo() {
   handle_sysinfo_Ethernet();
 # endif // if FEATURE_ETHERNET
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
   handle_sysinfo_WiFiSettings();
+#endif
 
   handle_sysinfo_Firmware();
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
   handle_sysinfo_SystemStatus();
 
   handle_sysinfo_NetworkServices();
@@ -273,6 +280,7 @@ void handle_sysinfo() {
   handle_sysinfo_ESP_Board();
 
   handle_sysinfo_Storage();
+#endif
 
 
   html_end_table();
@@ -321,6 +329,7 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::SW_WD_COUNT);
 }
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_memory() {
   addTableSeparator(F("Memory"), 2, 3);
 
@@ -381,6 +390,7 @@ void handle_sysinfo_memory() {
   } 
 # endif // if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 }
+#endif
 
 # if FEATURE_ETHERNET
 void handle_sysinfo_Ethernet() {
@@ -460,6 +470,7 @@ void handle_sysinfo_Network() {
   html_TR();
 }
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_WiFiSettings() {
   addTableSeparator(F("WiFi Settings"), 2, 3);
   addRowLabelValue(LabelType::FORCE_WIFI_BG);
@@ -484,6 +495,7 @@ void handle_sysinfo_WiFiSettings() {
 #endif
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
+#endif
 
 void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
@@ -506,6 +518,7 @@ void handle_sysinfo_Firmware() {
   addRowLabelValue_copy(LabelType::GIT_HEAD);
 }
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_SystemStatus() {
   addTableSeparator(F("System Status"), 2, 3);
 
@@ -522,7 +535,9 @@ void handle_sysinfo_SystemStatus() {
     addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
   }
 }
+#endif
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_NetworkServices() {
   addTableSeparator(F("Network Services"), 2, 3);
 
@@ -539,7 +554,9 @@ void handle_sysinfo_NetworkServices() {
   }
   #endif
 }
+#endif
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
@@ -566,7 +583,9 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
   addRowLabelValue(LabelType::ESP_BOARD_NAME);
 }
+#endif
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
@@ -743,5 +762,9 @@ void handle_sysinfo_Storage() {
   getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
   # endif // ifdef ESP32
 }
+#endif
 
 #endif    // ifdef WEBSERVER_SYSINFO
+
+
+#endif

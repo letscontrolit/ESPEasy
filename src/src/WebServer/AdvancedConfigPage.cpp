@@ -17,8 +17,6 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
 
-
-
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }

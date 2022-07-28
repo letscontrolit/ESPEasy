@@ -23,7 +23,9 @@
 #endif // USES_MQTT
 
 #include "../Commands/Networks.h"
+#ifdef USES_NOTIFIER
 #include "../Commands/Notifications.h"
+#endif
 #include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
@@ -393,7 +395,9 @@ bool executeInternalCommand(command_case_data & data)
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
       COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
+      #ifdef USES_NOTIFIER
       COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
+      #endif
       COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
       COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
       COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h

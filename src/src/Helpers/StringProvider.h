@@ -3,13 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-
-
-
-struct LabelType;
-
-// enum LabelType::Enum : short;
-
 struct LabelType {
   enum Enum : short {
     UNIT_NR,

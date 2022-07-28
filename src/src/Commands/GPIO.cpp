@@ -1,8 +1,9 @@
 #include "../Commands/GPIO.h"
 
+#include "../../ESPEasy_common.h"
+
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_common.h"
 
 #include "../Commands/Common.h"
 #include "../DataStructs/PinMode.h"

@@ -5,10 +5,8 @@
 
 #ifdef USES_MQTT
 
-
 #include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
-
 
 /*********************************************************************************************\
 * MQTT_queue_element for all MQTT base controllers

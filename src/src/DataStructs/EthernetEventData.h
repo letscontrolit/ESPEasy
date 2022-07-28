@@ -1,7 +1,13 @@
 #ifndef DATASTRUCTS_ETHERNETEVENTDATA_H
 #define DATASTRUCTS_ETHERNETEVENTDATA_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_ETHERNET
+
 #include "../Helpers/LongTermTimer.h"
+
+
 
 
 #ifdef ESP32
@@ -72,5 +78,7 @@ struct EthernetEventData_t {
   bool ethInitSuccess            = false;
   unsigned long connectionFailures = 0;
 };
+
+#endif
 
 #endif   // ifndef DATASTRUCTS_ETHERNETEVENTDATA_H

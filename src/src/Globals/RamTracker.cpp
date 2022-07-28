@@ -1,5 +1,7 @@
 #include "../Globals/RamTracker.h"
 
+#ifndef BUILD_NO_RAM_TRACKER
+
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
@@ -9,7 +11,6 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 
-#ifndef BUILD_NO_RAM_TRACKER
 RamTracker myRamTracker;
 
 /********************************************************************************************\

@@ -7,8 +7,6 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
 
-#include "../../ESPEasy_common.h"
-
 
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4

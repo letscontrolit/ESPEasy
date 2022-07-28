@@ -619,6 +619,17 @@ uint8_t disablePlugin(uint8_t bootFailedCount) {
   return bootFailedCount;
 }
 
+uint8_t disableAllPlugins(uint8_t bootFailedCount) {
+  if (bootFailedCount > 0) {
+    --bootFailedCount;
+    for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
+        Settings.TaskDeviceEnabled[i] = false;
+    }
+  }
+  return bootFailedCount;
+}
+
+
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
@@ -635,9 +646,21 @@ uint8_t disableController(uint8_t bootFailedCount) {
   return bootFailedCount;
 }
 
+uint8_t disableAllControllers(uint8_t bootFailedCount) {
+  if (bootFailedCount > 0) {
+    --bootFailedCount;
+    for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
+      Settings.ControllerEnabled[i] = false;
+    }
+  }
+  return bootFailedCount;
+}
+
+
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
+#ifdef USES_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount) {
   for (uint8_t i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
     if (Settings.NotificationEnabled[i]) {
@@ -647,6 +670,28 @@ uint8_t disableNotification(uint8_t bootFailedCount) {
         Settings.NotificationEnabled[i] = false;
       }
     }
+  }
+  return bootFailedCount;
+}
+
+uint8_t disableAllNotifications(uint8_t bootFailedCount) {
+  if (bootFailedCount > 0) {
+    --bootFailedCount;
+    for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
+        Settings.NotificationEnabled[i] = false;
+    }
+  }
+  return bootFailedCount;
+}
+#endif
+
+/********************************************************************************************\
+   Disable Rules, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableRules(uint8_t bootFailedCount) {
+  if (bootFailedCount > 0) {
+    --bootFailedCount;
+    Settings.UseRules = false;
   }
   return bootFailedCount;
 }
@@ -1114,6 +1159,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 
 #endif
 
+#ifdef USES_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
@@ -1135,7 +1181,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
   #endif
   return LoadFromFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
-
+#endif
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
