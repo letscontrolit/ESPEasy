@@ -5,10 +5,10 @@
 #include "../../_Plugin_Helper.h"
 #include "../Globals/Settings.h"
 
-#ifdef USES_BLYNK
+#if FEATURE_BLYNK
 # include "../Commands/Blynk.h"
 # include "../Commands/Blynk_c015.h"
-#endif // ifdef USES_BLYNK
+#endif // if FEATURE_BLYNK
 
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"

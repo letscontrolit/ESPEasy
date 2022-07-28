@@ -150,6 +150,12 @@
 # undef USES_PACKED_RAW_DATA
 #endif // ifdef USES_PACKED_RAW_DATA
 
+#ifdef USES_BLYNK
+# warning "Custom.h has '#define USES_BLYNK' to be replaced with '#define FEATURE_BLYNK 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_BLYNK  1
+# undef USES_BLYNK
+#endif // ifdef USES_BLYNK
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
