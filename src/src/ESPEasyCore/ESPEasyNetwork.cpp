@@ -3,6 +3,12 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasyEth.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
+
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_state.h"
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
+
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Settings.h"
