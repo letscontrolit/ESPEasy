@@ -5,8 +5,6 @@
 
 #ifdef USES_ESPEASY_NOW
 
-#include "../Globals/ESPEasy_now_handler.h"
-
 # include <WifiEspNow.h>
 
 extern bool use_EspEasy_now;

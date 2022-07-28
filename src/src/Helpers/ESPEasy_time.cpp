@@ -13,6 +13,11 @@
 #include "../Globals/Settings.h"
 #include "../Globals/TimeZone.h"
 
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
+
+
 #include "../Helpers/Convert.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"

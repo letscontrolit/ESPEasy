@@ -6,18 +6,17 @@
 #ifdef USES_ESPEASY_NOW
 
 # include "../DataStructs/ESPEasy_Now_DuplicateCheck.h"
-# include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
+# include "../DataStructs/ESPEasy_Now_NTP_query.h"
+# include "../DataStructs/ESPEasy_Now_p2p_data.h"
+# include "../DataStructs/ESPEasy_now_merger.h"
+# include "../DataStructs/ESPEasy_now_traceroute.h"
+# include "../DataStructs/MAC_address.h"
+# include "../DataStructs/MessageRouteInfo.h"
+# include "../DataStructs/WiFi_AP_Candidate.h"
 # include "../DataTypes/ControllerIndex.h"
+# include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 # include "../Globals/ESPEasy_now_state.h"
 
-
-struct ESPEasy_Now_p2p_data;
-class ESPEasy_now_merger;
-struct ESPEasy_now_traceroute_struct;
-struct MessageRouteInfo_t;
-class MAC_address;
-struct WiFi_AP_Candidate;
-class ESPEasy_Now_NTP_query;
 class ESPEasy_now_handler_t {
 public:
 
