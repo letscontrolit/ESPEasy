@@ -3,9 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifndef NETWORK_H
-#define NETWORK_H
-
 #include "../DataStructs/MAC_address.h"
 
 void setNetworkMedium(NetworkMedium_t medium);
@@ -33,5 +30,4 @@ uint8_t EthLinkSpeed();
 #endif // if FEATURE_ETHERNET
 
 
-#endif 
 #endif

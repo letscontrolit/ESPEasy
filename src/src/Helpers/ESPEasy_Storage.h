@@ -1,6 +1,9 @@
 #ifndef HELPERS_ESPEASY_STORAGE_H
 #define HELPERS_ESPEASY_STORAGE_H
 
+
+#include "../../ESPEasy_common.h"
+
 #include <FS.h>
 
 #include "../DataStructs/ProvisioningStruct.h"
@@ -8,8 +11,6 @@
 #include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
-
-#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    file system error handling
@@ -183,7 +184,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings);
 
 
 
-
+#ifdef USES_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
@@ -195,7 +196,7 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
 
-
+#endif
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/

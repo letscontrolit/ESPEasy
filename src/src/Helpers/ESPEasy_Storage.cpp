@@ -1114,6 +1114,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 
 #endif
 
+#ifdef USES_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
@@ -1135,7 +1136,7 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
   #endif
   return LoadFromFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
-
+#endif
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
