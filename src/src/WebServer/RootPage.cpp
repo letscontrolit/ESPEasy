@@ -205,7 +205,7 @@ void handle_root() {
       }
   #endif // if FEATURE_ETHERNET
 
-      #ifdef FEATURE_MDNS
+      #if FEATURE_MDNS
       {
         addRowLabel(LabelType::M_DNS);
         addHtml(F("<a href='http://"));
@@ -214,7 +214,7 @@ void handle_root() {
         addHtml(getValue(LabelType::M_DNS));
         addHtml(F("</a>"));
       }
-      #endif // ifdef FEATURE_MDNS
+      #endif // if FEATURE_MDNS
 
       #ifdef USES_MQTT
       {

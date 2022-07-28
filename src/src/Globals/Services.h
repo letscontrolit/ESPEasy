@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 
-#ifdef FEATURE_MDNS
+#if FEATURE_MDNS
   //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
   #ifdef ESP8266
     #include <ESP8266mDNS.h>
