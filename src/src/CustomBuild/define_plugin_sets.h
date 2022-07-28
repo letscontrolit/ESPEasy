@@ -1976,7 +1976,7 @@ To create/register a plugin, you have to :
 
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
-#ifndef FEATURE_BLYNK
+#if !FEATURE_BLYNK
   #ifdef USES_C012
     #undef USES_C012
   #endif
