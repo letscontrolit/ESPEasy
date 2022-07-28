@@ -1329,7 +1329,7 @@ To create/register a plugin, you have to :
 
 // Collection of all NeoPixel plugins
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
-  #if !defined(FEATURE_SD) && !defined(ESP8266_1M)
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
     #define FEATURE_SD
   #endif
   #ifndef USES_P038

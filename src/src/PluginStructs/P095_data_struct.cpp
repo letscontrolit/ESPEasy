@@ -18,8 +18,10 @@ const __FlashStringHelper* ILI9xxx_type_toString(ILI9xxx_type_e device) {
     case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
     case ILI9xxx_type_e::ILI9481_CMI7_320x480: return F("ILI9481 320 x 480px (CMI7)");
     case ILI9xxx_type_e::ILI9481_CMI8_320x480: return F("ILI9481 320 x 480px (CMI8)");
+    # ifdef P095_ENABLE_ILI948X
     case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
     case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
+    # endif // ifdef P095_ENABLE_ILI948X
     case ILI9xxx_type_e::ILI9xxx_MAX: break;
   }
   return F("Unsupported type!");
@@ -43,8 +45,10 @@ void ILI9xxx_type_toResolution(ILI9xxx_type_e device, uint16_t& x, uint16_t& y) 
     case ILI9xxx_type_e::ILI9481_RGB_320x480:
     case ILI9xxx_type_e::ILI9481_CMI7_320x480:
     case ILI9xxx_type_e::ILI9481_CMI8_320x480:
+    # ifdef P095_ENABLE_ILI948X
     case ILI9xxx_type_e::ILI9486_320x480:
     case ILI9xxx_type_e::ILI9488_320x480:
+    # endif // ifdef P095_ENABLE_ILI948X
       x = 320;
       y = 480;
       break;
@@ -62,8 +66,10 @@ const __FlashStringHelper* P095_CommandTrigger_toString(P095_CommandTrigger cmd)
     case P095_CommandTrigger::ili9341: return F("ili9341");
     case P095_CommandTrigger::ili9342: return F("ili9342");
     case P095_CommandTrigger::ili9481: return F("ili9481");
+    # ifdef P095_ENABLE_ILI948X
     case P095_CommandTrigger::ili9486: return F("ili9486");
     case P095_CommandTrigger::ili9488: return F("ili9488");
+    # endif // ifdef P095_ENABLE_ILI948X
     case P095_CommandTrigger::MAX: return F("None");
   }
   return F("ili9341"); // Default command trigger

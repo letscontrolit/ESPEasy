@@ -4,15 +4,18 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P095
 
-# include <Adafruit_GFX.h>                              // include Adafruit graphics library
-# include <Adafruit_ILI9341.h>                          // include Adafruit ILI9341 TFT library
+# include <Adafruit_GFX.h>                  // include Adafruit graphics library
+# include <Adafruit_ILI9341.h>              // include Adafruit ILI9341 TFT library
 
-# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper object
+# include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
 
-# define P095_Nlines           24                       // The number of different lines which can be displayed
+# define P095_Nlines           24           // The number of different lines which can be displayed
 # define P095_Nchars           60
-# define P095_DebounceTreshold  5                       // number of 20 msec (fifty per second) ticks before the button has settled
+# define P095_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
+
+// # define P095_ENABLE_ILI948X                            // Enable or disable support for ILI9486 and ILI9488.
+// MUST reflect similar #define in Adafruit_ILI9341.h !
 
 # ifndef LIMIT_BUILD_SIZE
 #  define P095_SHOW_SPLASH                              // Enable to show initial splash (text)
@@ -75,11 +78,15 @@ enum class ILI9xxx_type_e : uint8_t {
   ILI9481_AUO317_320x480 = 5u,
   ILI9481_CMO35_320x480  = 6u,
   ILI9481_RGB_320x480    = 7u,
-  ILI9481_CMI7_320x480   = 10u,
-  ILI9481_CMI8_320x480   = 11u,
-  ILI9486_320x480        = 8u,
-  ILI9488_320x480        = 9u,
-  ILI9xxx_MAX            = 12u // last value = count
+  ILI9481_CMI7_320x480   = 8u,
+  ILI9481_CMI8_320x480   = 9u,
+  # ifdef P095_ENABLE_ILI948X
+  ILI9486_320x480 = 10u,
+  ILI9488_320x480 = 11u,
+  ILI9xxx_MAX     = 12u // last value = count
+  # else // ifdef P095_ENABLE_ILI948X
+  ILI9xxx_MAX = 10u     // last value = count
+  # endif // ifdef P095_ENABLE_ILI948X
 };
 
 enum class P095_CommandTrigger : uint8_t {
@@ -87,8 +94,10 @@ enum class P095_CommandTrigger : uint8_t {
   ili9341,
   ili9342,
   ili9481,
+  # ifdef P095_ENABLE_ILI948X
   ili9486,
   ili9488,
+  # endif // ifdef P095_ENABLE_ILI948X
   MAX // Keep as last item!
 };
 

@@ -43,6 +43,8 @@
 #include <Adafruit_SPITFT_Macros.h>
 #include <SPI.h>
 
+// #define ILI9341_ENABLE_ILI948X  ///< Enable ILI9486 and ILI9488 support, MUST reflect a similar #define in P095_data_struct.h !
+
 #define ILI9341_TFTWIDTH 240    ///< ILI9341 max TFT width
 #define ILI9341_TFTHEIGHT 320   ///< ILI9341 max TFT height
 
@@ -126,7 +128,7 @@
 #define ILI9341_PINK 0xFC18        ///< 255, 130, 198
 
 
-#define ILI_TYPE_9341           0  // Must match with enum class ILI9xxx_type_e in P095_data_struct.h
+#define ILI_TYPE_9341           0  // MUST match with enum class ILI9xxx_type_e in P095_data_struct.h !
 #define ILI_TYPE_9342           1
 #define ILI_TYPE_9481           2
 #define ILI_TYPE_9481_CPT29     3
@@ -134,10 +136,12 @@
 #define ILI_TYPE_9481_AUO317    5
 #define ILI_TYPE_9481_CMO35     6
 #define ILI_TYPE_9481_RGB       7
-#define ILI_TYPE_9481_CMI7      10
-#define ILI_TYPE_9481_CMI8      11
-#define ILI_TYPE_9486           8
-#define ILI_TYPE_9488           9
+#define ILI_TYPE_9481_CMI7      8
+#define ILI_TYPE_9481_CMI8      9
+#ifdef ILI9341_ENABLE_ILI948X
+# define ILI_TYPE_9486          10
+# define ILI_TYPE_9488          11
+#endif // ifndef ILI9341_ENABLE_ILI948X
 
 /**************************************************************************/
 
