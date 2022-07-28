@@ -1,5 +1,7 @@
 #include "../Commands/Blynk.h"
 
+#ifdef USES_C012
+
 #include "../Commands/Common.h"
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
@@ -12,7 +14,6 @@
 
 #include "../../ESPEasy_fdwdecl.h"
 
-#ifdef USES_C012
 
 controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {

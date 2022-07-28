@@ -1,11 +1,8 @@
 #include "../Commands/Provisioning.h"
 
-
 #if FEATURE_CUSTOM_PROVISIONING
 
 # include "../Commands/Common.h"
-
-# include "../../ESPEasy_common.h"
 # include "../DataTypes/ESPEasyFileType.h"
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../Helpers/ESPEasy_Storage.h"
@@ -22,10 +19,12 @@ String Command_Provisioning_Security(struct EventStruct *event, const char *Line
   return downloadFileType(FileType::SECURITY_DAT);
 }
 
+#ifdef USES_NOTIFIER
 String Command_Provisioning_Notification(struct EventStruct *event, const char *Line)
 {
   return downloadFileType(FileType::NOTIFICATION_DAT);
 }
+#endif
 
 String Command_Provisioning_Provision(struct EventStruct *event, const char *Line)
 {
