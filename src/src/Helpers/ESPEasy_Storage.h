@@ -1,6 +1,9 @@
 #ifndef HELPERS_ESPEASY_STORAGE_H
 #define HELPERS_ESPEASY_STORAGE_H
 
+
+#include "../../ESPEasy_common.h"
+
 #include <FS.h>
 
 #include "../DataStructs/ProvisioningStruct.h"
@@ -8,8 +11,6 @@
 #include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
-
-#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    file system error handling
@@ -79,16 +80,27 @@ String LoadSettings();
    Disable Plugin, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disablePlugin(uint8_t bootFailedCount);
+uint8_t disableAllPlugins(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disableController(uint8_t bootFailedCount);
+uint8_t disableAllControllers(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
+#ifdef USES_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount);
+uint8_t disableAllNotifications(uint8_t bootFailedCount);
+#endif
+
+/********************************************************************************************\
+   Disable Rules, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableRules(uint8_t bootFailedCount);
+
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);
 
@@ -185,7 +197,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings);
 
 
 
-
+#ifdef USES_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
@@ -196,6 +208,8 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
    Load Controller settings to file system
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
+#endif
+
 
 /********************************************************************************************\
    Handle certificate files on the file system.
@@ -203,7 +217,6 @@ String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int 
  \*********************************************************************************************/
 String SaveCertificate(const String& fname, const String& certificate);
 String LoadCertificate(const String& fname, String& certificate, bool cleanup = true);
-
 
 /********************************************************************************************\
    Init a file with zeros on file system

@@ -2,13 +2,14 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
-#include "../../ESPEasy_common.h"
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI

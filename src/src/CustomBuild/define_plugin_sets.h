@@ -439,6 +439,12 @@ To create/register a plugin, you have to :
         #ifdef WEBSERVER_NEW_RULES
             #undef WEBSERVER_NEW_RULES
         #endif
+        #ifdef SHOW_SYSINFO_JSON
+            #undef SHOW_SYSINFO_JSON
+        #endif
+        #ifndef WEBSERVER_SYSINFO_MINIMAL
+            #define WEBSERVER_SYSINFO_MINIMAL
+        #endif
 
 
     #endif // WEBSERVER_CUSTOM_BUILD_DEFINED

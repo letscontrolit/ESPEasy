@@ -1,6 +1,8 @@
 #ifndef HELPERS_HARDWARE_H
 #define HELPERS_HARDWARE_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../DataStructs/GpioFactorySettingsStruct.h"
@@ -10,8 +12,6 @@
 #include "../DataTypes/TaskIndex.h"
 
 #include "../Globals/ResetFactoryDefaultPref.h"
-
-#include "../../ESPEasy_common.h"
 
 #ifdef ESP32
 # include <driver/adc.h>

@@ -2,10 +2,11 @@
 #define CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H
 
 #include "../../ESPEasy_common.h"
-#include "../DataStructs/UnitMessageCount.h"
-#include "../Globals/CPlugins.h"
 
 #ifdef USES_MQTT
+
+#include "../DataStructs/UnitMessageCount.h"
+#include "../Globals/CPlugins.h"
 
 /*********************************************************************************************\
 * MQTT_queue_element for all MQTT base controllers

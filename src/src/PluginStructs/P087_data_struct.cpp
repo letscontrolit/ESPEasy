@@ -1,13 +1,13 @@
 #include "../PluginStructs/P087_data_struct.h"
 
+#ifdef USES_P087
+
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
 #include <Regexp.h>
 
-
-#ifdef USES_P087
 
 #include <vector>
 

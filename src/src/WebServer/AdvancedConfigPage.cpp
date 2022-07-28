@@ -1,5 +1,7 @@
 #include "../WebServer/AdvancedConfigPage.h"
 
+#ifdef WEBSERVER_ADVANCED
+
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -14,9 +16,6 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
-
-
-#ifdef WEBSERVER_ADVANCED
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
