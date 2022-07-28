@@ -35,9 +35,9 @@
 # include "../Helpers/PeriodicalActions.h"
 #endif // ifdef USE_RTOS_MULTITASKING
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 # include "../Helpers/OTA.h"
-#endif // ifdef FEATURE_ARDUINO_OTA
+#endif // if FEATURE_ARDUINO_OTA
 
 #ifdef ESP32
 #include <soc/boot_mode.h>
@@ -285,13 +285,13 @@ void ESPEasy_setup()
       toDisable = disableNotification(toDisable);
     }
   }
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
   // Do not call setNetworkMedium here as that may try to clean up settings.
   active_network_medium = Settings.NetworkMedium;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();
@@ -439,12 +439,12 @@ void ESPEasy_setup()
   ReportStatus();
   #endif // ifdef FEATURE_REPORTING
 
-  #ifdef FEATURE_ARDUINO_OTA
+  #if FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("ArduinoOTAInit()"));
   #endif
-  #endif // ifdef FEATURE_ARDUINO_OTA
+  #endif // if FEATURE_ARDUINO_OTA
 
   if (node_time.systemTimePresent()) {
     node_time.initTime();

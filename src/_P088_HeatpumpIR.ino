@@ -6,7 +6,7 @@
 
 #define PLUGIN_088
 #define PLUGIN_ID_088         88
-#define PLUGIN_NAME_088       "Energy (Heat) - Heatpump IR transmitter [TESTING]"
+#define PLUGIN_NAME_088       "Energy (Heat) - Heatpump IR transmitter"
 
 
 /*

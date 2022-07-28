@@ -82,7 +82,7 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::GATEWAY:           label = LabelType::GATEWAY; break;
     case SystemVariables::CLIENTIP:          label = LabelType::CLIENT_IP; break;
 
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
 
     case SystemVariables::ETHWIFIMODE:       label = LabelType::ETH_WIFI_MODE; break; // 0=WIFI, 1=ETH
     case SystemVariables::ETHCONNECTED:      label = LabelType::ETH_CONNECTED; break; // 0=disconnected, 1=connected
@@ -90,7 +90,7 @@ LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
     case SystemVariables::ETHSPEED:          label = LabelType::ETH_SPEED; break;
     case SystemVariables::ETHSTATE:          label = LabelType::ETH_STATE; break;
     case SystemVariables::ETHSPEEDSTATE:     label = LabelType::ETH_SPEED_STATE; break;
-    #endif // ifdef HAS_ETHERNET
+    #endif // if FEATURE_ETHERNET
     case SystemVariables::LCLTIME:           label = LabelType::LOCAL_TIME; break;
     case SystemVariables::MAC:               label = LabelType::STA_MAC; break;
     case SystemVariables::RSSI:              label = LabelType::WIFI_RSSI; break;
@@ -329,14 +329,14 @@ const __FlashStringHelper * SystemVariables::toString(SystemVariables::Enum enum
     case Enum::ISMQTTIMP:          return F("%ismqttimp%");
     case Enum::ISNTP:              return F("%isntp%");
     case Enum::ISWIFI:             return F("%iswifi%");
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
     case Enum::ETHWIFIMODE:        return F("%ethwifimode%");
     case Enum::ETHCONNECTED:       return F("%ethconnected%");
     case Enum::ETHDUPLEX:          return F("%ethduplex%");
     case Enum::ETHSPEED:           return F("%ethspeed%");
     case Enum::ETHSTATE:           return F("%ethstate%");
     case Enum::ETHSPEEDSTATE:      return F("%ethspeedstate%");
-    #endif // ifdef HAS_ETHERNET
+    #endif // if FEATURE_ETHERNET
     case Enum::LCLTIME:            return F("%lcltime%");
     case Enum::LCLTIME_AM:         return F("%lcltime_am%");
     case Enum::LF:                 return F("%LF%");
