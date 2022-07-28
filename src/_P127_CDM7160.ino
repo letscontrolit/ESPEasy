@@ -21,7 +21,7 @@
 
 # define PLUGIN_127
 # define PLUGIN_ID_127         127
-# define PLUGIN_NAME_127       "Gases - CO2 CDM7160 [TESTING]"
+# define PLUGIN_NAME_127       "Gases - CO2 CDM7160"
 # define PLUGIN_VALUENAME1_127 "CO2"
 
 

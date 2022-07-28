@@ -1,14 +1,17 @@
 #ifndef GLOBALS_CPLUGIN_H
 #define GLOBALS_CPLUGIN_H
 
-#include <map>
-#include <vector>
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../DataTypes/CPluginID.h"
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/ProtocolIndex.h"
+
+#include <map>
+//#include <vector>
 
 
 /********************************************************************************************\

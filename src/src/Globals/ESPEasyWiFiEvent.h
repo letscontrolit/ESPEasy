@@ -1,16 +1,17 @@
 #ifndef GLOBALS_ESPEASYWIFIEVENT_H
 #define GLOBALS_ESPEASYWIFIEVENT_H
 
-#include <Arduino.h>
-#include <IPAddress.h>
-#include <stdint.h>
 
 #include "../../ESPEasy_common.h"
 
 #include "../DataStructs/WiFiEventData.h"
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 #include "../DataStructs/EthernetEventData.h"
 #endif
+
+#include <Arduino.h>
+#include <IPAddress.h>
+#include <stdint.h>
 
 
 #ifdef ESP32
@@ -37,7 +38,7 @@ extern WiFiEventHandler APModeStationDisconnectedHandler;
 
 extern WiFiEventData_t WiFiEventData;
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 extern EthernetEventData_t EthEventData;
 #endif
 

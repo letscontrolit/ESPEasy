@@ -1,6 +1,8 @@
 #ifndef HELPERS_STRINGCONVERTER_H
 #define HELPERS_STRINGCONVERTER_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../Globals/Plugins.h"

@@ -67,7 +67,7 @@
 .. |P045_type| replace:: :cyan:`Gyro`
 .. |P045_typename| replace:: :cyan:`Gyro - MPU 6050`
 .. |P045_porttype| replace:: `.`
-.. |P045_status| replace:: :yellow:`TESTING`
+.. |P045_status| replace:: :yellow:`COLLECTION`
 .. |P045_github| replace:: P045_MPU6050.ino
 .. _P045_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P045_MPU6050.ino
 .. |P045_usedby| replace:: `.`
@@ -80,7 +80,7 @@
 .. |P046_type| replace:: :cyan:`Hardware`
 .. |P046_typename| replace:: :cyan:`Hardware - Ventus W266`
 .. |P046_porttype| replace:: `.`
-.. |P046_status| replace:: :yellow:`TESTING`
+.. |P046_status| replace:: :yellow:`COLLECTION`
 .. |P046_github| replace:: P046_VentusW266.ino
 .. _P046_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P046_VentusW266.ino
 .. |P046_usedby| replace:: :ref:`P046_Ventus_W266_page`
@@ -93,7 +93,7 @@
 .. |P047_type| replace:: :cyan:`Environment`
 .. |P047_typename| replace:: :cyan:`Environment - Soil moisture sensor`
 .. |P047_porttype| replace:: `.`
-.. |P047_status| replace:: :yellow:`TESTING`
+.. |P047_status| replace:: :yellow:`COLLECTION`
 .. |P047_github| replace:: P047_i2c-soil-moisture-sensor.ino
 .. _P047_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P047_i2c-soil-moisture-sensor.ino
 .. |P047_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P048_type| replace:: :cyan:`Motor`
 .. |P048_typename| replace:: :cyan:`Motor - Adafruit Motorshield v2`
 .. |P048_porttype| replace:: `.`
-.. |P048_status| replace:: :yellow:`TESTING`
+.. |P048_status| replace:: :yellow:`COLLECTION`
 .. |P048_github| replace:: P048_Motorshield_v2.ino
 .. _P048_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P048_Motorshield_v2.ino
 .. |P048_usedby| replace:: `.`

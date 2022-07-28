@@ -1,7 +1,7 @@
 #include "../Helpers/ESPEasyStatistics.h"
 
 
-#ifdef USES_TIMING_STATS
+#if FEATURE_TIMING_STATS
 
 #include "../DataStructs/TimingStats.h"
 #include "../WebServer/WebServer.h"
@@ -182,4 +182,4 @@ void jsonStatistics(bool clearStats) {
 }
 
 
-#endif
+#endif // if FEATURE_TIMING_STATS

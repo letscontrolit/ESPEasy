@@ -17,7 +17,7 @@
 // to reduce memory usage.
 // *********************************************
 
-#ifdef USES_CHART_JS
+#if FEATURE_CHART_JS
 
 struct ChartJS_title {
   ChartJS_title();
@@ -91,6 +91,6 @@ void add_ChartJS_dataset_footer(bool          hidden  = false,
 
 
 void add_ChartJS_chart_footer();
-#endif
+#endif // if FEATURE_CHART_JS
 
 #endif // ifndef WEBSERVER_CHART_JS_H

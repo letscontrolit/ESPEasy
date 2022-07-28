@@ -86,47 +86,39 @@ N.B. The initial chart on the setup page of an Analog Input task will only show 
 
 With ``Apply Factory Calibration`` checked, the Analog Input plugin in ESPEasy will perform the reading in mV.
 
+.. note:: Even though the various attenuation settings seem to have their own calibration, there is still some difference in reported measured voltage in mV per attentuation setting.
+
+
+
 
 Oversampling
 ------------
 
+The "Oversampling" mode has 3 options:
+
+* Use Current Sample
+* Oversampling
+* Binning
+
+"Use Current Sample" only takes a sample when the task is run.
+
 With ``Oversampling`` selected, the task will take a sample 10x per second.
 These are averaged over the period set by the ``Interval`` timer. (or shorter interval when the task is executed via the ``TaskRun`` command)
+
 This mode also takes out the highest and lowest sample values to make sure a single fluke measurement is not affecting the output value too much.
 
-Binning
--------
-
-Added: 2022/07/11
-
-For some use cases, a strict classification of data is needed.
-
-A typical use case is the wind vane of a very popular set, the DS-15901.
-
-.. image:: P002_DS-15901_wind_vane_schematics.png
-
-This wind vane uses a magnet to trigger a number of reed switches which will then activate a resistor.
-What makes this setup rather complex is that for some angles 2 resistors will be active and thus effectively lower the seen resistance between 2 other wind directions.
-
-Plot of voltage measured over the wind vane when using a 10k resistor in series with the wind vane:
-
-.. image:: P002_voltage_vs_wind_dir.png
+The returned value is the average of recorded samples over the ``Interval`` persiod, minus the minimum and maximum sample value in that period.
+Thus at 1 second interval, the average is typically taken over 8 samples.
 
 
-For this use case, it is not possible to use oversampling as this may result in very unstable readings.
-We need to map a range of values to a single output value.
+"Binning" can be compared to "sort and count" like those bank teller machines sorting coins.
+Only difference is that we're not interested in the total value of all the coins, but want to know which coin we had the most.
 
-Plotting the resistance range from the wind vane datasheet:
+So we're doing a classification of the most frequently occuring coin.
 
-.. image:: P002_range_resistance_per_bin.png
 
-As can be seen, the ranges are quite small for some and quite large for others.
-But also the wind direction is not increasing when the resistance increases.
-
-Therefore we need a look-up table. (see Multipoint Processing below)
-
-What binning does is it tries to match each sample to a specific bin (an entry in the Multipoint Processing table) and simply counts each occurence per bin.
-After a measurement period (the time between 2 calls to "run" the task, typically the "interval") the bin with the highest count is picked and the output value of this bin will be returned as output.
+Binning data processing differs from the other two.
+See also the section "Binning Processing" below.
 
 
 Two Point Calibration
@@ -152,6 +144,27 @@ The values below the chart  only taking the Two Point Calibration into account.
 * The minimum and maximum values are based on the maximum range which can be measured with the set attenuation.
 * The step size is the minimal step size of the output value.
 
+.. note:: It is possible to enter a floating point value as "ADC" input for the 2-point calibration.
+          Since this value is stored as an integer value, the calibrated values will be adjusted accordingly to still represent the same calibration curve.
+
+It is best to turn off the 2-point calibration and let the ESP run for a while with a stable voltage applied.
+The measured value (either in raw ADC or in mV on ESP32 with Factory Calibration enabled) can then be averaged over a longer period to get the most accurate value.
+
+For example the system is measuring the voltage over a 10k resistor (with another 330k resistor in series) and a diode.
+This means there is some voltage drop over de diode and thus we need 2 calibration sets.
+The attenuation is set to 0dB on an ESP32.
+
+Measured with 9.00V applied and 20.00V applied:
+
+* 240.88 mV => 9
+* 565.4957 mV => 20
+
+When entered in the 2-point calibration fields, the page will reload with these converted values:
+
+* 241 mV => 9.0041
+* 565 mV => 19.9832
+
+
 
 Multipoint Processing
 ---------------------
@@ -167,15 +180,98 @@ Often such curves will be modeled first in a spreadsheet program.
 To simply copy/paste 2 columns of data from a spreadsheet into the task settings, one has to check "Split-Paste Multipoint Fields" first and then paste these columns into the first field.
 By checking this checkbox, some JavaScript will be set active to decode the values and place them in separate fields.
 
+Example of some curve generated in a spreadsheet and paste into the fields:
+
+.. image:: P002_multipoint_processing.png
+
+To see the effect of all selected settings, a chart will be generated with simulated data using the input range of the ADC.
+Thus taking into account the set attenuation (on ESP32).
+
+.. image:: P002_multipoint_processing_simulated_curve1.png
+
+By default, only the curve matching the actual settings is displayed.
+But the others can be enabled by simply clicking their labels in the chart legend.
+
+For example, enabling the "2 Point Calibration only" curve too:
+
+.. image:: P002_multipoint_processing_simulated_curve2.png
+
+The purple line shows the mapping of input to output when only enabling the 2-point calibration.
+
+The blue line shows the mapping when using both 2-point calibration and the multipoint curve.
+
+The example multipoint curve used here was deliberately constructed to map an input of 16 to an output of 16 to show what happens "outside" the defined range of the multipoint curve.
+
+Those inputs (of the multipoint curve) higher than 16 will be extrapolated continuing the last 2 given points of the Multipoint curve.
+
+
+
+
+
+
+Binning Processing
+------------------
+
+Added: 2022/07/11
+
+For some use cases, a strict classification of data is needed.
+
+A typical use case is the wind vane of a very popular set to build your own weather station, the DS-15901.
+
+.. image:: P002_DS-15901_wind_vane_schematics.png
+
+This wind vane uses a magnet to trigger a number of reed switches which will then activate a resistor.
+What makes this setup rather complex is that for some angles 2 resistors will be active and thus effectively lower the seen resistance inbetween 2 other wind directions.
+
+The example setup measures the voltage over the wind vane, with a 10k resistor set as pull-up resistor to 3.3V.
+
+Here the plot of the measured voltage over the wind vane per direction:
+
+.. image:: P002_voltage_vs_wind_dir.png
+
+For this use case, it is not possible to use oversampling as this may result in very unstable readings.
+We need to map a range of values to a single output value.
+
+Plotting the resistance range from the wind vane datasheet:
+
+.. image:: P002_range_resistance_per_bin.png
+
+As can be seen, the ranges are quite small for some and quite large for others.
+But also the wind direction is not increasing when the resistance increases.
+
+Therefore we need a look-up table. 
+
+What binning does is it tries to match each sample to a specific bin (similar to an entry in the Multipoint Processing table) and simply counts each occurence per bin.
+After a measurement period (the time between 2 calls to "run" the task, typically the "interval") the bin with the highest count is picked and the output value of this bin will be returned as output.
 
 When using "Binning", it can be useful to also have some formula to process the data first before mapping the data to the correct bin.
 
 For example the wind vane with a 10k in series, connected to 3.3V.
 To convert the measured voltage into a resistance, one can use this formula: ``(-10000*%value%)/(%value%-3.3)``
 
-With the values converted into a resistance, one can simply use the stated values in the sensor datasheet.
+The 2-point calibration can be used to simply convert mVolt to Volt by entering just a single calibration point to convert ``1000`` -> ``1``.
+
+Or change the Binning Formula accordingly to handle mVolt instead of Volt: ``(-10000*%value%)/(%value%-3300)``
+
+.. note:: The Binning Formula will be processed before matching bins. The regular Formula field which is present on nearly all tasks at the bottom of the page is processing only the values sent to the "output" of a task.
+
+With the sampled values converted into a resistance, one can simply use the stated values in the sensor datasheet.
 
 .. image:: P002_multipoint_binning.png
+
+On each sample taken between two run calls of the task, the sample value will be processed by all set steps (Factory Calibration, 2-point calibration, Binning formula) and the resulting value will be matched against the range of each bin.
+The count for the matching bin will be incremented by 1.
+
+At the end of such a period of the task:
+
+* The bin with the highest count "wins".
+* The assigned value of the winning bin will be put as task value output and send to any connected controllers.
+* The counts in all bins will then also be cleared to be ready for the next run.
+
+.. note:: The values set to define a bin represent the center of the bin. The bin range is upto halfway the center of the next bin.
+
+
+
 
 
 Processing Order
@@ -186,7 +282,7 @@ All steps between ADC and output of the task are processed in the order they app
 * Attenuation (ESP32 only)
 * Factory Calibration  (ESP32 only)
 * Two Point Calibration
-* Multipoint Processing ("Binning formula" first when set to Binning)
+* Multipoint Processing or Binning Processing ("Binning formula" first when set to Binning)
 * Formula at the bottom, when set.
 
 
@@ -213,6 +309,7 @@ ESP32 has 2 ADCs present.
 Since the ``ADC2`` is shared with the WIFI module, which has higher priority, reading operation of ``adc2_get_raw()`` may fail between ``esp_wifi_start()`` and ``esp_wifi_stop()``.
 
 
+
 Use of Formula
 --------------
 
@@ -227,6 +324,7 @@ However this makes the measured voltage no longer linear to the measured resista
 Then we only need a way to compute the measured resistance instead of the voltage.
 
 For this we first need to make sure the calibration is done so the ADC plugin outputs the correct voltage applied to the configured analog input pin.
+On ESP32 this is relatively easy by enabling Factory Calibration. However the values are then in mVolt, not in Volt.
 
 Then we must derive a formula to convert the voltage into a resistance value.
 
@@ -243,6 +341,10 @@ This can be derived into:
 When using 10k as a value for r2, we can use this in the formula field:
 
 ``(-10000*%value%)/(%value%-3.3)``
+
+Or using the mVolt readings when using Factory Calibration:
+
+``(-10000*%value%)/(%value%-3300)``
 
 With proper calibration and this formula present, we now get the measured resistance on the output.
 
@@ -269,6 +371,8 @@ Change log
   ...
 
   |improved| 2020-04-25  Added support for ESP32 ADC pins + Hall Effect Sensor.
+  |improved| 2022-07-11  Added ESP32 Factory calibration, multipoint processing, binning and charts.
+  |improved| 2022-07-27  Improved resolution when using ESP32 Factory Calibration.
 
 .. versionadded:: 1.0
   ...
