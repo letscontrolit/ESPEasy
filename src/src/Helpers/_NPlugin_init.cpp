@@ -1,5 +1,7 @@
 #include "../Helpers/_NPlugin_init.h"
 
+#ifdef USES_NOTIFIER
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/TimingStats.h"
 
@@ -1074,3 +1076,4 @@ void NPluginInit()
   #endif
 
 }
+#endif

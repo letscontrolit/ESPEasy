@@ -1,6 +1,8 @@
 #ifndef CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 #define CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataStructs/UnitMessageCount.h"
