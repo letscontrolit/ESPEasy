@@ -184,9 +184,9 @@ void handle_root() {
         #endif
       }
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
       addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  #endif
+  #endif // if FEATURE_ETHERNET
 
       if (!WiFiEventData.WiFiDisconnected())
       {
@@ -198,12 +198,12 @@ void handle_root() {
         addHtml(')');
       }
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
       if(active_network_medium == NetworkMedium_t::Ethernet) {
         addRowLabelValue(LabelType::ETH_SPEED_STATE);
         addRowLabelValue(LabelType::ETH_IP_ADDRESS);
       }
-  #endif
+  #endif // if FEATURE_ETHERNET
 
       #ifdef FEATURE_MDNS
       {

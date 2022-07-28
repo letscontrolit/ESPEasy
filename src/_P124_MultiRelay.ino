@@ -23,7 +23,7 @@
 
 # define PLUGIN_124
 # define PLUGIN_ID_124          124
-# define PLUGIN_NAME_124        "Output - I2C Multi Relay [TESTING]"
+# define PLUGIN_NAME_124        "Output - I2C Multi Relay"
 # define PLUGIN_VALUENAME1_124  "State"
 # define PLUGIN_VALUENAME2_124  "Channel"
 # define PLUGIN_VALUENAME3_124  "Get"

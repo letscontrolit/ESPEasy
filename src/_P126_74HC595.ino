@@ -50,7 +50,7 @@
 
 # define PLUGIN_126
 # define PLUGIN_ID_126          126
-# define PLUGIN_NAME_126        "Output - Shift registers (74HC595) [TESTING]"
+# define PLUGIN_NAME_126        "Output - Shift registers (74HC595)"
 # define PLUGIN_VALUENAME1_126  "State_A"
 # define PLUGIN_VALUENAME2_126  "State_B"
 # define PLUGIN_VALUENAME3_126  "State_C"

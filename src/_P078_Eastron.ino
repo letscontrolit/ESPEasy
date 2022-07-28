@@ -14,7 +14,7 @@
 
 #define PLUGIN_078
 #define PLUGIN_ID_078         78
-#define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120C/220T/230/630 [TESTING]"
+#define PLUGIN_NAME_078       "Energy (AC) - Eastron SDM120C/220T/230/630"
 
 #define P078_DEV_ID          PCONFIG(0)
 #define P078_DEV_ID_LABEL    PCONFIG_LABEL(0)

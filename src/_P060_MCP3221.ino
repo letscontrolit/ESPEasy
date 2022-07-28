@@ -13,7 +13,7 @@
 
 #define PLUGIN_060
 #define PLUGIN_ID_060         60
-#define PLUGIN_NAME_060       "Analog input - MCP3221 [TESTING]"
+#define PLUGIN_NAME_060       "Analog input - MCP3221"
 #define PLUGIN_VALUENAME1_060 "Analog"
 
 

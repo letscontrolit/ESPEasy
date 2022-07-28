@@ -42,7 +42,7 @@
 
 #endif
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
   //enable Arduino OTA updating.
   //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
   extern bool ArduinoOTAtriggered;

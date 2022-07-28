@@ -1,14 +1,16 @@
 #include "../Helpers/Networking.h"
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/InternalCommands.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"
@@ -20,7 +22,12 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
+#include "../../ESPEasy-Globals.h"
+
 #include <IPAddress.h>
+#include <base64.h>
+#include <MD5Builder.h>
+
 
 // Generic Networking routines
 
@@ -55,14 +62,15 @@ void etharp_gratuitous_r(struct netif *netif) {
 
 #endif  // ifdef SUPPORT_ARP
 
-#ifdef USE_DOWNLOAD
+#if FEATURE_DOWNLOAD
 # ifdef ESP8266
 #  include <ESP8266HTTPClient.h>
 # endif // ifdef ESP8266
 # ifdef ESP32
 #  include <HTTPClient.h>
+#  include <Update.h>
 # endif // ifdef ESP32
-#endif
+#endif  // if FEATURE_DOWNLOAD
 
 #include <vector>
 
@@ -76,6 +84,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
     IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
 
     FeedSW_watchdog();
+
     if (portUDP.beginPacket(broadcastIP, Settings.SyslogPort) == 0) {
       // problem resolving the hostname or port
       return;
@@ -107,7 +116,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
       header += hostname;
       header += F(" EspEasy: ");
       #ifdef ESP8266
-      portUDP.write(header.c_str(), header.length());
+      portUDP.write(header.c_str(),                                    header.length());
       #endif // ifdef ESP8266
       #ifdef ESP32
       portUDP.write(reinterpret_cast<const uint8_t *>(header.c_str()), header.length());
@@ -115,6 +124,7 @@ void sendSyslog(uint8_t logLevel, const String& message)
     }
 
     const size_t messageLength = message.length();
+
     for (size_t i = 0; i < messageLength; ++i) {
       #ifdef ESP8266
       portUDP.write(message[i]);
@@ -129,7 +139,6 @@ void sendSyslog(uint8_t logLevel, const String& message)
   }
 }
 
-
 #if FEATURE_ESPEASY_P2P
 
 /*********************************************************************************************\
@@ -140,6 +149,7 @@ void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
   if (!NetworkConnected(10)) {
     return;
   }
+
   if (destUnit != 0)
   {
     sendUDP(destUnit, (const uint8_t *)data, dataLength);
@@ -170,14 +180,14 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
     return;
   }
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
     String log = F("UDP  : Send UDP message to ");
     log += unit;
     addLogMove(LOG_LEVEL_DEBUG_MORE, log);
   }
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 
   statusLED(true);
   FeedSW_watchdog();
@@ -290,9 +300,9 @@ void checkUDP()
                   break;
                 }
                 uint8_t unit = packetBuffer[12];
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
                 MAC_address mac;
-                uint8_t ip[4];
+                uint8_t     ip[4];
 
                 for (uint8_t x = 0; x < 6; x++) {
                   mac.mac[x] = packetBuffer[x + 2];
@@ -301,12 +311,13 @@ void checkUDP()
                 for (uint8_t x = 0; x < 4; x++) {
                   ip[x] = packetBuffer[x + 8];
                 }
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
                 {
-                  #ifdef USE_SECOND_HEAP
+                  # ifdef USE_SECOND_HEAP
                   HeapSelectIram ephemeral;
+
                   // TD-er: Disabled for now as it is suspect for crashes.
-                  #endif
+                  # endif // ifdef USE_SECOND_HEAP
 
                   Nodes[unit].age = 0; // Create a new element when not present
                 }
@@ -323,11 +334,11 @@ void checkUDP()
                     it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
                     char tmpNodeName[26] = { 0 };
                     memcpy(&tmpNodeName[0], reinterpret_cast<uint8_t *>(&packetBuffer[15]), 25);
-                    tmpNodeName[25]     = 0;
+                    tmpNodeName[25] = 0;
                     {
-                      #ifdef USE_SECOND_HEAP
+                      # ifdef USE_SECOND_HEAP
                       HeapSelectIram ephemeral;
-                      #endif
+                      # endif // ifdef USE_SECOND_HEAP
 
                       it->second.nodeName = tmpNodeName;
                       it->second.nodeName.trim();
@@ -341,7 +352,7 @@ void checkUDP()
                   }
                 }
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
                   String log;
@@ -353,7 +364,7 @@ void checkUDP()
                   log += unit;
                   addLogMove(LOG_LEVEL_DEBUG_MORE, log);
                 }
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
                 break;
               }
 
@@ -482,9 +493,9 @@ void sendSysInfoUDP(uint8_t repeats)
   // 1 uint8_t node type id
 
   // send my info to the world...
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 
   for (uint8_t counter = 0; counter < repeats; counter++)
   {
@@ -494,6 +505,7 @@ void sendSysInfoUDP(uint8_t repeats)
 
     {
       const MAC_address macread = NetworkMacAddress();
+
       for (uint8_t x = 0; x < 6; x++) {
         data[x + 2] = macread.mac[x];
       }
@@ -501,6 +513,7 @@ void sendSysInfoUDP(uint8_t repeats)
 
     {
       const IPAddress ip = NetworkLocalIP();
+
       for (uint8_t x = 0; x < 4; x++) {
         data[x + 8] = ip[x];
       }
@@ -527,13 +540,15 @@ void sendSysInfoUDP(uint8_t repeats)
   }
 
   {
-    #ifdef USE_SECOND_HEAP
+    # ifdef USE_SECOND_HEAP
+
     // HeapSelectIram ephemeral;
     // TD-er: disabled for now as it is suspect for crashes.
-    #endif
+    # endif // ifdef USE_SECOND_HEAP
 
     Nodes[Settings.Unit].age = 0; // Create new node when not already present.
   }
+
   // store my own info also in the list
   NodesMap::iterator it = Nodes.find(Settings.Unit);
 
@@ -554,7 +569,7 @@ void sendSysInfoUDP(uint8_t repeats)
 
 #if defined(ESP8266)
 
-# ifdef USES_SSDP
+# if FEATURE_SSDP
 
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
@@ -574,42 +589,42 @@ void SSDP_schema(WiFiClient& client) {
             (uint16_t)chipId        & 0xff);
 
   client.print(F(
-    "HTTP/1.1 200 OK\r\n"
-    "Content-Type: text/xml\r\n"
-    "Connection: close\r\n"
-    "Access-Control-Allow-Origin: *\r\n"
-    "\r\n"
-    "<?xml version=\"1.0\"?>"
-    "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
-    "<specVersion>"
-    "<major>1</major>"
-    "<minor>0</minor>"
-    "</specVersion>"
-    "<URLBase>http://"));
+                 "HTTP/1.1 200 OK\r\n"
+                 "Content-Type: text/xml\r\n"
+                 "Connection: close\r\n"
+                 "Access-Control-Allow-Origin: *\r\n"
+                 "\r\n"
+                 "<?xml version=\"1.0\"?>"
+                 "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
+                 "<specVersion>"
+                 "<major>1</major>"
+                 "<minor>0</minor>"
+                 "</specVersion>"
+                 "<URLBase>http://"));
 
   client.print(formatIP(ip));
   client.print(F(":80/</URLBase>"
-                   "<device>"
-                   "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
-                   "<friendlyName>"));
+                 "<device>"
+                 "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
+                 "<friendlyName>"));
   client.print(Settings.Name);
   client.print(F("</friendlyName>"
-                   "<presentationURL>/</presentationURL>"
-                   "<serialNumber>"));
+                 "<presentationURL>/</presentationURL>"
+                 "<serialNumber>"));
   client.print(String(ESP.getChipId()));
   client.print(F("</serialNumber>"
-                   "<modelName>ESP Easy</modelName>"
-                   "<modelNumber>"));
+                 "<modelName>ESP Easy</modelName>"
+                 "<modelNumber>"));
   client.print(getValue(LabelType::GIT_BUILD));
   client.print(F("</modelNumber>"
-                   "<modelURL>http://www.letscontrolit.com</modelURL>"
-                   "<manufacturer>http://www.letscontrolit.com</manufacturer>"
-                   "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
-                   "<UDN>uuid:"));
+                 "<modelURL>http://www.letscontrolit.com</modelURL>"
+                 "<manufacturer>http://www.letscontrolit.com</manufacturer>"
+                 "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
+                 "<UDN>uuid:"));
   client.print(String(uuid));
   client.print(F("</UDN></device>"
-                   "</root>\r\n"
-                   "\r\n"));
+                 "</root>\r\n"
+                 "\r\n"));
 }
 
 /********************************************************************************************\
@@ -644,12 +659,14 @@ bool SSDP_begin() {
 
   if (_server != nullptr) {
     _server->unref();
+
     // FIXME TD-er: Shouldn't this also call delete _server ?
 
-    _server = nullptr; 
+    _server = nullptr;
   }
 
   _server = new (std::nothrow) UdpContext;
+
   if (_server == nullptr) {
     return false;
   }
@@ -903,7 +920,7 @@ void SSDP_update() {
   }
 }
 
-# endif // ifdef USES_SSDP
+# endif // if FEATURE_SSDP
 #endif  // if defined(ESP8266)
 
 
@@ -1086,6 +1103,7 @@ bool hostReachable(const String& hostname) {
   if (resolveHostByName(hostname.c_str(), remote_addr)) {
     return hostReachable(remote_addr);
   }
+
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log = F("Hostname cannot be resolved: ");
 
@@ -1161,9 +1179,26 @@ bool splitHostPortString(const String& hostPortString, String& host, uint16_t& p
   return true;
 }
 
+bool splitUserPass_HostPortString(const String& hostPortString, String& user, String& pass, String& host, uint16_t& port)
+{
+  const int pos_at = hostPortString.indexOf('@');
+
+  if (pos_at != -1) {
+    user = hostPortString.substring(0, pos_at);
+    const int pos_colon = user.indexOf(':');
+
+    if (pos_colon != -1) {
+      pass = user.substring(pos_colon + 1);
+      user = user.substring(0, pos_colon);
+    }
+    return splitHostPortString(hostPortString.substring(pos_at + 1), host, port);
+  }
+  return splitHostPortString(hostPortString, host, port);
+}
+
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& host, uint16_t& port, String& file) {
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file) {
   int starthost = fullURL.indexOf(F("//"));
 
   if (starthost == -1) {
@@ -1173,7 +1208,7 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   }
   int endhost = fullURL.indexOf('/', starthost);
 
-  splitHostPortString(fullURL.substring(starthost, endhost), host, port);
+  splitUserPass_HostPortString(fullURL.substring(starthost, endhost), user, pass, host, port);
   int startfile = fullURL.lastIndexOf('/');
 
   if (startfile >= 0) {
@@ -1182,7 +1217,314 @@ String splitURL(const String& fullURL, String& host, uint16_t& port, String& fil
   return fullURL.substring(endhost);
 }
 
-#ifdef USE_DOWNLOAD
+String get_user_agent_string() {
+  static unsigned int agent_size = 20;
+  String userAgent;
+
+  userAgent.reserve(agent_size);
+  userAgent += F("ESP Easy/");
+  userAgent += BUILD;
+  userAgent += '/';
+  userAgent += get_build_date();
+  userAgent += ' ';
+  userAgent += get_build_time();
+  agent_size = userAgent.length();
+  return userAgent;
+}
+
+bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String& value) {
+  if (strpos < 0) {
+    return false;
+  }
+  int colonPos = multiHeaders.indexOf(':', strpos);
+
+  if (colonPos < 0) {
+    return false;
+  }
+  name = multiHeaders.substring(strpos, colonPos);
+  int valueEndPos = multiHeaders.indexOf('\n', colonPos + 1);
+
+  if (valueEndPos < 0) {
+    value  = multiHeaders.substring(colonPos + 1);
+    strpos = -1;
+  } else {
+    value  = multiHeaders.substring(colonPos + 1, valueEndPos);
+    strpos = valueEndPos + 1;
+  }
+  value.replace('\r', ' ');
+  value.trim();
+  return true;
+}
+
+String extractParam(const String& authReq, const String& param, const char delimit) {
+  int _begin = authReq.indexOf(param);
+
+  if (_begin == -1) { return EMPTY_STRING; }
+  return authReq.substring(_begin + param.length(), authReq.indexOf(delimit, _begin + param.length()));
+}
+
+String getCNonce(const int len) {
+  static const char alphanum[] = "0123456789"
+                                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                                 "abcdefghijklmnopqrstuvwxyz";
+  String s;
+
+  for (int i = 0; i < len; ++i) {
+    s += alphanum[rand() % (sizeof(alphanum) - 1)];
+  }
+
+  return s;
+}
+
+String getDigestAuth(const String& authReq,
+                     const String& username,
+                     const String& password,
+                     const String& method,
+                     const String& uri,
+                     unsigned int  counter) {
+  // extracting required parameters for RFC 2069 simpler Digest
+  const String realm  = extractParam(authReq, F("realm=\""), '"');
+  const String nonce  = extractParam(authReq, F("nonce=\""), '"');
+  const String cNonce = getCNonce(8);
+
+  char nc[9];
+
+  snprintf(nc, sizeof(nc), "%08x", counter);
+
+  // parameters for the RFC 2617 newer Digest
+  MD5Builder md5;
+
+  md5.begin();
+  md5.add(username + ':' + realm + ':' + password); // md5 of the user:realm:user
+  md5.calculate();
+  const String h1 = md5.toString();
+
+  md5.begin();
+  md5.add(method + ':' + uri);
+  md5.calculate();
+  const String h2 = md5.toString();
+
+  md5.begin();
+  md5.add(h1 + ':' + nonce + ':' + String(nc) + ':' + cNonce + F(":auth:") + h2);
+  md5.calculate();
+  const String response = md5.toString();
+
+  const String authorization =
+    String(F("Digest username=\"")) + username +
+    F("\", realm=\"") + realm +
+    F("\", nonce=\"") + nonce +
+    F("\", uri=\"") + uri +
+    F("\", algorithm=\"MD5\", qop=auth, nc=") + String(nc) +
+    F(", cnonce=\"") + cNonce +
+    F("\", response=\"") + response +
+    '"';
+
+  //  Serial.println(authorization);
+
+  return authorization;
+}
+
+void log_http_result(const HTTPClient& http,
+                     const String    & logIdentifier,
+                     const String    & host,
+                     const String    & HttpMethod,
+                     int               httpCode,
+                     const String    & response)
+{
+  uint8_t loglevel = LOG_LEVEL_ERROR;
+  bool    success  = false;
+
+  // HTTP codes:
+  // 1xx Informational response
+  // 2xx Success
+  if ((httpCode >= 100) && (httpCode < 300)) {
+    loglevel = LOG_LEVEL_INFO;
+    success  = true;
+  }
+
+  if (loglevelActiveFor(loglevel)) {
+    String log = F("HTTP : ");
+    log += logIdentifier;
+    log += ' ';
+    log += host;
+    log += ' ';
+    log += HttpMethod;
+    log += F("... ");
+
+    if (!success) {
+      log += F("failed ");
+    }
+    log += F("HTTP code: ");
+    log += String(httpCode);
+
+    if (!success) {
+      log += ' ';
+      log += http.errorToString(httpCode);
+    }
+
+    if (response.length() > 0) {
+      log += F(" Received reply: ");
+      log += response.substring(0, 100); // Returned string may be huge, so only log the first part.
+    }
+    addLogMove(loglevel, log);
+  }
+}
+
+int http_authenticate(const String& logIdentifier,
+                      WiFiClient  & client,
+                      HTTPClient  & http,
+                      uint16_t      timeout,
+                      const String& user,
+                      const String& pass,
+                      const String& host,
+                      uint16_t      port,
+                      const String& uri,
+                      const String& HttpMethod,
+                      const String& header,
+                      const String& postStr)
+{
+  int httpCode = 0;
+
+  http.setAuthorization(user.c_str(), pass.c_str());
+  http.setTimeout(timeout);
+  http.setUserAgent(get_user_agent_string());
+
+  if (Settings.SendToHTTP_follow_redirects()) {
+    http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+    http.setRedirectLimit(2);
+  }
+
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(timeout);                // in msec as it should be!
+  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+  // Add request header as fall back.
+  // When adding another "accept" header, it may be interpreted as:
+  // "if you have XXX, send it; or failing that, just give me what you've got."
+  http.addHeader(F("Accept"), F("*/*;q=0.1"));
+
+  delay(0);
+#if defined(CORE_POST_2_6_0) || defined(ESP32)
+  http.begin(client, host, port, uri, false); // HTTP
+#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+  http.begin(client, host, port, uri);
+#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+
+  const char *keys[] = { "WWW-Authenticate" };
+  http.collectHeaders(keys, 1);
+
+  {
+    int headerpos = 0;
+    String name, value;
+
+    while (splitHeaders(headerpos, header, name, value)) {
+      http.addHeader(name, value);
+    }
+  }
+
+  // start connection and send HTTP header (and body)
+  if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+    httpCode = http.sendRequest(HttpMethod.c_str());
+  } else {
+    httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+  }
+
+  // Check to see if we need to try digest auth
+  if (httpCode == 401) {
+    const String authReq = http.header(String(F("WWW-Authenticate")).c_str());
+
+    if (authReq.indexOf(F("Digest")) != -1) {
+      // Use Digest authorization
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLogMove(LOG_LEVEL_INFO, String(F("HTTP : Start Digest Authorization for ")) + host);
+      }
+
+      http.setAuthorization(""); // Clear Basic authorization
+      const String authorization = getDigestAuth(authReq, user, pass, "GET", uri, 1);
+
+      http.end();
+#if defined(CORE_POST_2_6_0) || defined(ESP32)
+      http.begin(client, host, port, uri, false); // HTTP, not HTTPS
+#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+      http.begin(client, host, port, uri);
+#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+
+      http.addHeader(F("Authorization"), authorization);
+
+      // start connection and send HTTP header (and body)
+      if (HttpMethod.equals(F("HEAD")) || HttpMethod.equals(F("GET"))) {
+        httpCode = http.sendRequest(HttpMethod.c_str());
+      } else {
+        httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+      }
+    }
+  }
+
+  if (Settings.UseRules) {
+    // Generate event with the HTTP return code
+    // e.g. http#hostname=401
+    String event = F("http#");
+    event += host;
+    event += '=';
+    event += httpCode;
+    eventQueue.addMove(std::move(event));
+  }
+  log_http_result(http, logIdentifier, host, HttpMethod, httpCode, EMPTY_STRING);
+  return httpCode;
+}
+
+String send_via_http(const String& logIdentifier,
+                     WiFiClient  & client,
+                     uint16_t      timeout,
+                     const String& user,
+                     const String& pass,
+                     const String& host,
+                     uint16_t      port,
+                     const String& uri,
+                     const String& HttpMethod,
+                     const String& header,
+                     const String& postStr,
+                     int         & httpCode,
+                     bool          must_check_reply) {
+  HTTPClient http;
+
+  httpCode = http_authenticate(
+    logIdentifier,
+    client,
+    http,
+    timeout,
+    user,
+    pass,
+    host,
+    port,
+    uri,
+    HttpMethod,
+    header,
+    postStr);
+
+  String response;
+
+  if ((httpCode > 0) && must_check_reply) {
+    response = http.getString();
+
+    if (!response.isEmpty()) {
+      log_http_result(http, logIdentifier, host, HttpMethod, httpCode, response);
+    }
+  }
+  http.end();
+  return response;
+}
+
+#if FEATURE_DOWNLOAD
+
+// FIXME TD-er: Must set the timeout somewhere
+# ifndef DOWNLOAD_FILE_TIMEOUT
+  #  define DOWNLOAD_FILE_TIMEOUT 2000
+# endif // ifndef DOWNLOAD_FILE_TIMEOUT
 
 // Download a file from a given URL and save to a local file named "file_save"
 // If the URL ends with a /, the file part will be assumed the same as file_save.
@@ -1194,10 +1536,18 @@ bool downloadFile(const String& url, String file_save) {
   return downloadFile(url, file_save, EMPTY_STRING, EMPTY_STRING, error);
 }
 
-bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
+// User and Pass may be updated if they occur in the hostname part.
+// Thus have to be copied instead of const reference.
+bool start_downloadFile(WiFiClient  & client,
+                        HTTPClient  & http,
+                        const String& url,
+                        String      & file_save,
+                        String        user,
+                        String        pass,
+                        String      & error) {
   String   host, file;
   uint16_t port;
-  String   uri = splitURL(url, host, port, file);
+  String   uri = splitURL(url, user, pass, host, port, file);
 
   if (file_save.isEmpty()) {
     file_save = file;
@@ -1205,8 +1555,9 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     // file = file_save;
     uri += file_save;
   }
+# ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("downloadFile: URL: ");
     log += url;
     log += F(" decoded: ");
@@ -1214,8 +1565,9 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     log += ':';
     log += port;
     log += uri;
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_DEBUG, log);
   }
+# endif // ifndef BUILD_NO_DEBUG
 
   if (file_save.isEmpty()) {
     error = F("Empty filename");
@@ -1223,31 +1575,20 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     return false;
   }
 
-  if (fileExists(file_save)) {
-    error = F("File exists: ");
-    error += file_save;
-    addLog(LOG_LEVEL_ERROR, error);
-    return false;
-  }
-  unsigned long timeout = millis() + 2000;
-  WiFiClient    client;
-  HTTPClient    http;
-
-  http.begin(client, host, port, uri);
-  {
-    if ((user.length() > 0) && (pass.length() > 0)) {
-      http.setAuthorization(user.c_str(), pass.c_str());
-    }
-
-    /*
-       String authHeader = get_auth_header(user, pass);
-
-       if (authHeader.length() > 0) {
-       http.setAuthorization(authHeader.c_str());
-       }
-     */
-  }
-  int httpCode = http.GET();
+  const int httpCode = http_authenticate(
+    F("DownloadFile"),
+    client,
+    http,
+    DOWNLOAD_FILE_TIMEOUT,
+    user,
+    pass,
+    host,
+    port,
+    uri,
+    F("GET"),
+    EMPTY_STRING, // header
+    EMPTY_STRING  // postStr
+    );
 
   if (httpCode != HTTP_CODE_OK) {
     error  = F("HTTP code: ");
@@ -1259,14 +1600,32 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     http.end();
     return false;
   }
+  return true;
+}
 
-  long len = http.getSize();
-  fs::File f   = tryOpenFile(file_save, "w");
+bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
+  WiFiClient client;
+  HTTPClient http;
+
+  if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
+    return false;
+  }
+
+  if (fileExists(file_save)) {
+    error  = F("File exists: ");
+    error += file_save;
+    addLog(LOG_LEVEL_ERROR, error);
+    return false;
+  }
+
+  long len   = http.getSize();
+  fs::File f = tryOpenFile(file_save, "w");
 
   if (f) {
     const size_t downloadBuffSize = 256;
     uint8_t buff[downloadBuffSize];
-    size_t  bytesWritten = 0;
+    size_t  bytesWritten  = 0;
+    unsigned long timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
     WiFiClient *stream = &client;
@@ -1274,10 +1633,15 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     // read all data from server
     while (http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
-      const size_t c = stream->readBytes(buff, std::min(static_cast<size_t>(len), downloadBuffSize));
+      size_t bytes_to_read = downloadBuffSize;
+
+      if ((len > 0) && (len < static_cast<int>(bytes_to_read))) {
+        bytes_to_read = len;
+      }
+      const size_t c = stream->readBytes(buff, bytes_to_read);
 
       if (c > 0) {
-        timeout = millis() + 2000;
+        timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (f.write(buff, c) != c) {
           error  = F("Error saving file: ");
@@ -1295,7 +1659,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       }
 
       if (timeOutReached(timeout)) {
-        error = F("Timeout: ");
+        error  = F("Timeout: ");
         error += file_save;
         addLog(LOG_LEVEL_ERROR, error);
         delay(0);
@@ -1306,18 +1670,119 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     }
     f.close();
     http.end();
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("downloadFile: ");
       log += file_save;
       log += F(" Success");
-      addLog(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, log);
     }
     return true;
   }
-  error = F("Failed to open file for writing: ");
+  http.end();
+  error  = F("Failed to open file for writing: ");
   error += file_save;
   addLog(LOG_LEVEL_ERROR, error);
   return false;
 }
 
-#endif
+bool downloadFirmware(const String& url, String& error)
+{
+  String file_save;
+  String user;
+  String pass;
+  WiFiClient client;
+  HTTPClient http;
+
+  if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
+    return false;
+  }
+
+  int len = http.getSize();
+
+  if (Update.begin(len, U_FLASH, Settings.Pin_status_led, Settings.Pin_status_led_Inversed ? LOW : HIGH)) {
+    const size_t downloadBuffSize = 256;
+    uint8_t buff[downloadBuffSize];
+    size_t  bytesWritten  = 0;
+    unsigned long timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
+
+    // get tcp stream
+    WiFiClient *stream = &client;
+
+    while (http.connected() && (len > 0 || len == -1)) {
+      // read up to downloadBuffSize at a time.
+      size_t bytes_to_read = downloadBuffSize;
+
+      if ((len > 0) && (len < static_cast<int>(bytes_to_read))) {
+        bytes_to_read = len;
+      }
+      const size_t c = stream->readBytes(buff, bytes_to_read);
+
+      if (c > 0) {
+        timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
+
+        if (Update.write(buff, c) != c) {
+          error  = F("Error saving firmware update: ");
+          error += file_save;
+          error += ' ';
+          error += bytesWritten;
+          error += F(" Bytes written");
+          addLog(LOG_LEVEL_ERROR, error);
+          Update.end();
+          http.end();
+          return false;
+        }
+        bytesWritten += c;
+
+        if (len > 0) { len -= c; }
+      }
+
+      if (timeOutReached(timeout)) {
+        error  = F("Timeout: ");
+        error += file_save;
+        addLog(LOG_LEVEL_ERROR, error);
+        delay(0);
+        Update.end();
+        http.end();
+        return false;
+      }
+
+      if (!UseRTOSMultitasking) {
+        // On ESP32 the schedule is executed on the 2nd core.
+        Scheduler.handle_schedule();
+      }
+      backgroundtasks();
+    }
+    http.end();
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("downloadFile: ");
+      log += file_save;
+      log += F(" Success");
+      addLogMove(LOG_LEVEL_INFO, log);
+    }
+
+    if (Update.end()) {
+      if (Settings.UseRules) {
+        String event = F("ProvisionFirmware#success=");
+        event += file_save;
+        eventQueue.addMove(std::move(event));
+      }
+    }
+    return true;
+  }
+  http.end();
+  Update.end();
+  error  = F("Failed update firmware: ");
+  error += file_save;
+  addLog(LOG_LEVEL_ERROR, error);
+
+  if (Settings.UseRules) {
+    String event = F("ProvisionFirmware#failed=");
+    event += file_save;
+    eventQueue.addMove(std::move(event));
+  }
+  return false;
+}
+
+#endif // if FEATURE_DOWNLOAD
