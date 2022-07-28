@@ -362,12 +362,12 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("CPluginInit()"));
   #endif
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   NPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("NPluginInit()"));
   #endif
-  #endif // ifdef USES_NOTIFIER
+  #endif // if FEATURE_NOTIFIER
 
   PluginInit();
   #ifndef BUILD_NO_RAM_TRACKER

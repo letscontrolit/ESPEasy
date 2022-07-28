@@ -20,7 +20,7 @@
 // Web Interface notifcations page
 // ********************************************************************************
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 #include "../Globals/NPlugins.h"
 
@@ -243,4 +243,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // USES_NOTIFIER
+#endif // FEATURE_NOTIFIER

@@ -40,10 +40,10 @@
 #include "../ControllerQueue/C016_queue_element.h"
 #endif
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 #include "../DataStructs/NotificationStruct.h"
 #include "../DataStructs/NotificationSettingsStruct.h"
-#endif
+#endif // if FEATURE_NOTIFIER
 
 
 // ********************************************************************************
@@ -85,9 +85,9 @@ void run_compiletime_checks() {
   #endif
   check_size<SettingsStruct,                        SettingsStructSize>();
   check_size<ControllerSettingsStruct,              820u>();
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   check_size<NotificationSettingsStruct,            996u>();
-  #endif
+  #endif // if FEATURE_NOTIFIER
   check_size<ExtraTaskSettingsStruct,               536u>();
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes
@@ -108,9 +108,9 @@ void run_compiletime_checks() {
   check_size<LogStruct,                             LogStructSize>(); // Is not stored
   check_size<DeviceStruct,                          8u>(); // Is not stored
   check_size<ProtocolStruct,                        6u>();
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
-  #endif
+  #endif // if FEATURE_NOTIFIER
   #if FEATURE_ESPEASY_P2P
   #if ESP_IDF_VERSION_MAJOR > 3
   // String class has increased with 4 bytes

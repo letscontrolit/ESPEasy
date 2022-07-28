@@ -1940,8 +1940,8 @@ To create/register a plugin, you have to :
 // Specific notifier plugins may be enabled via Custom.h, regardless
 // whether NOTIFIER_SET_NONE is defined
 #if defined(USES_N001) || defined(USES_N002)
-  #ifndef USES_NOTIFIER
-    #define USES_NOTIFIER
+  #ifndef FEATURE_NOTIFIER
+    #define FEATURE_NOTIFIER  1
   #endif
 #endif
 
