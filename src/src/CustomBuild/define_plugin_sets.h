@@ -1859,8 +1859,9 @@ To create/register a plugin, you have to :
     #undef FEATURE_TOOLTIPS
     #define FEATURE_TOOLTIPS  0
   #endif
-  #ifdef USES_BLYNK
-    #undef USES_BLYNK
+  #if FEATURE_BLYNK
+    #undef FEATURE_BLYNK
+    #define FEATURE_BLYNK 0
   #endif
   #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
@@ -1947,7 +1948,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C012) || defined (USES_C015)
-  #define USES_BLYNK
+  #define FEATURE_BLYNK 1
 #endif
 
 // Specific notifier plugins may be enabled via Custom.h, regardless
@@ -1975,7 +1976,7 @@ To create/register a plugin, you have to :
 
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
-#ifndef USES_BLYNK
+#ifndef FEATURE_BLYNK
   #ifdef USES_C012
     #undef USES_C012
   #endif
