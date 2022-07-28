@@ -138,6 +138,12 @@
 # undef USES_MODBUS
 #endif // ifdef USES_MODBUS
 
+#ifdef USE_NON_STANDARD_24_TASKS
+# warning "Custom.h has '#define USE_NON_STANDARD_24_TASKS' to be replaced with '#define FEATURE_NON_STANDARD_24_TASKS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_NON_STANDARD_24_TASKS  1
+# undef USE_NON_STANDARD_24_TASKS
+#endif // ifdef USE_NON_STANDARD_24_TASKS
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
