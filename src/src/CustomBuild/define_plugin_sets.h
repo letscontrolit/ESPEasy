@@ -390,9 +390,11 @@ To create/register a plugin, you have to :
 
     #if FEATURE_SERVO
       #undef FEATURE_SERVO
+      #define FEATURE_SERVO 0
     #endif
     #if FEATURE_RTTTL
       #undef FEATURE_RTTTL
+      #define FEATURE_RTTTL 0
     #endif
 #endif
 
@@ -1412,10 +1414,12 @@ To create/register a plugin, you have to :
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  0
   #endif
 #endif
 
@@ -1845,9 +1849,11 @@ To create/register a plugin, you have to :
 
   #if FEATURE_SERVO
     #undef FEATURE_SERVO
+    #define FEATURE_SERVO 0
   #endif
   #if FEATURE_RTTTL
     #undef FEATURE_RTTTL
+    #define FEATURE_RTTTL 0
   #endif
   #if FEATURE_TOOLTIPS
     #undef FEATURE_TOOLTIPS
@@ -1884,6 +1890,7 @@ To create/register a plugin, you have to :
   #endif
   #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 0
   #endif
   #if FEATURE_SSDP
     #undef FEATURE_SSDP
@@ -1891,9 +1898,11 @@ To create/register a plugin, you have to :
   #endif
   #if FEATURE_PLUGIN_STATS
     #undef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS
     #undef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  0
   #endif
 #endif
 
