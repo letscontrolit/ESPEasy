@@ -1748,7 +1748,7 @@ To create/register a plugin, you have to :
 
 
 #if defined(USES_C018)
-  #define USES_PACKED_RAW_DATA
+  #define FEATURE_PACKED_RAW_DATA 1
 #endif
 
 #if defined(USES_C019)

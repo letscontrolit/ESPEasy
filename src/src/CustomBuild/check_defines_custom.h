@@ -144,6 +144,12 @@
 # undef USE_NON_STANDARD_24_TASKS
 #endif // ifdef USE_NON_STANDARD_24_TASKS
 
+#ifdef USES_PACKED_RAW_DATA
+# warning "Custom.h has '#define USES_PACKED_RAW_DATA' to be replaced with '#define FEATURE_PACKED_RAW_DATA 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_PACKED_RAW_DATA  1
+# undef USES_PACKED_RAW_DATA
+#endif // ifdef USES_PACKED_RAW_DATA
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
