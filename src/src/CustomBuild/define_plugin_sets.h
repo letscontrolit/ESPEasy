@@ -1977,11 +1977,11 @@ To create/register a plugin, you have to :
 
 #if FEATURE_ARDUINO_OTA
   #ifndef FEATURE_MDNS
-    #define FEATURE_MDNS
+    #define FEATURE_MDNS  1
   #endif
 #endif
 
-#ifdef FEATURE_MDNS
+#if FEATURE_MDNS
   #ifndef FEATURE_DNS_SERVER
     #define FEATURE_DNS_SERVER
   #endif

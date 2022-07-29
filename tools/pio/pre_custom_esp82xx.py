@@ -58,7 +58,7 @@ else:
     "-DUSES_C019",  # ESPEasy-NOW
 
     "-DUSES_ESPEASY_NOW",
-#    "-DFEATURE_MDNS",
+#    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_I2CMULTIPLEXER=1",

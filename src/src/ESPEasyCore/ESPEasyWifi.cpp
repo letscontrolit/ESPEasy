@@ -1284,7 +1284,7 @@ void setWifiMode(WiFiMode_t wifimode) {
       setAPinternal(new_mode_AP_enabled);
     }
   }
-  #ifdef FEATURE_MDNS
+  #if FEATURE_MDNS
   #ifdef ESP8266
   // notifyAPChange() is not present in the ESP32 MDNSResponder
   MDNS.notifyAPChange();
