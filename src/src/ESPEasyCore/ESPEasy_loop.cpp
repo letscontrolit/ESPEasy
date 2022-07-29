@@ -140,7 +140,7 @@ void ESPEasy_loop()
   {
 #if FEATURE_MQTT
     runPeriodicalMQTT();
-#endif
+#endif // if FEATURE_MQTT
     // Now run all frequent tasks
     run50TimesPerSecond();
     run10TimesPerSecond();

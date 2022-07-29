@@ -462,7 +462,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   return LWTMessageDisconnect;
 }
 
-#endif
+#endif // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -506,7 +506,7 @@ void SendStatus(struct EventStruct *event, const String& status)
     case EventValueSource::Enum::VALUE_SOURCE_MQTT:
       MQTTStatus(event, status);
       break;
-#endif
+#endif // if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
       serialPrintln(status);
       break;
@@ -665,7 +665,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#endif
+#endif // if FEATURE_MQTT
 
 
 /*********************************************************************************************\

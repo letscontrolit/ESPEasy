@@ -58,6 +58,6 @@ public:
 #endif
 };
 
-#endif
+#endif // if FEATURE_MQTT
 
 #endif // CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H

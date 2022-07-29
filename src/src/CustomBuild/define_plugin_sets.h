@@ -1944,7 +1944,7 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
-  #define FEATURE_MQTT 1
+  #define FEATURE_MQTT  1
 #endif
 
 #if defined(USES_C012) || defined (USES_C015)
@@ -1972,7 +1972,7 @@ To create/register a plugin, you have to :
 #ifndef MQTT_MAX_PACKET_SIZE
   #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
 #endif
-#endif
+#endif //if FEATURE_MQTT
 
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined

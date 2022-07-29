@@ -20,7 +20,7 @@
 
 #if FEATURE_MQTT
 # include "../Commands/MQTT.h"
-#endif
+#endif // if FEATURE_MQTT
 
 #include "../Commands/Networks.h"
 #if FEATURE_NOTIFIER
@@ -405,7 +405,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
 #if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
-#endif
+#endif // if FEATURE_MQTT
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
@@ -443,7 +443,7 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
     #if FEATURE_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
-    #endif
+    #endif // if FEATURE_MQTT
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "sysload", Command_SysLoad,        0);     // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS

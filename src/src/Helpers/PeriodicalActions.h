@@ -52,7 +52,7 @@ void runPeriodicalMQTT();
 controllerIndex_t firstEnabledMQTT_ControllerIndex();
 
 
-#endif
+#endif //if FEATURE_MQTT
 
 
 void logTimerStatistics();

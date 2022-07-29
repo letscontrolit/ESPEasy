@@ -375,8 +375,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
           }
-          # if FEATURE_MQTT
-
+          #if FEATURE_MQTT
           if (Protocol[ProtocolIndex].usesMQTT) {
             addTableSeparator(F("MQTT"), 2, 3);
 
@@ -387,7 +386,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addFormNote(F("Updated on load of this page"));
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
           }
-          # endif
+          #endif // if FEATURE_MQTT
 
 
           if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
@@ -395,8 +394,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
           }
-          # if FEATURE_MQTT
-
+          #if FEATURE_MQTT
           if (Protocol[ProtocolIndex].usesMQTT)
           {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
@@ -406,7 +404,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
           }
-          # endif
+          #endif // if FEATURE_MQTT
         }
       }
 

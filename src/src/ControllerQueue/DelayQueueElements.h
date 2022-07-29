@@ -32,7 +32,7 @@ extern ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag);
 void exit_mqtt_delay_queue();
-#endif
+#endif // if FEATURE_MQTT
 
 
 /*********************************************************************************************\

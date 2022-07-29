@@ -67,4 +67,4 @@ void MQTT_queue_element::removeEmptyTopics() {
     _topic.replace(F("//"), F("/"));
   }
 }
-#endif
+#endif // if FEATURE_MQTT

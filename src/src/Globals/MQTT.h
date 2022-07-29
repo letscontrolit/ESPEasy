@@ -19,7 +19,7 @@ extern bool MQTTclient_must_send_LWT_connected;
 extern bool MQTTclient_connected;
 extern int  mqtt_reconnect_count;
 extern LongTermTimer MQTTclient_next_connect_attempt;
-#endif
+#endif // if FEATURE_MQTT
 
 #ifdef USES_P037
 

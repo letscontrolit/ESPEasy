@@ -485,7 +485,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 }
 
 
-#endif
+#endif //if FEATURE_MQTT
 
 
 
@@ -543,7 +543,7 @@ void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
 #if FEATURE_MQTT
     bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
-#endif
+#endif //if FEATURE_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
@@ -552,14 +552,14 @@ void flushAndDisconnectAllClients() {
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
       }
-#endif
+#endif //if FEATURE_MQTT
     }
 #if FEATURE_MQTT
     if (mqttControllerEnabled && MQTTclient.connected()) {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
-#endif
+#endif //if FEATURE_MQTT
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
@@ -571,7 +571,7 @@ void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
 #if FEATURE_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages
-#endif
+#endif // if FEATURE_MQTT
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();

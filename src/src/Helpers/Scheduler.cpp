@@ -429,7 +429,7 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
     case IntervalTimer_e::TIMER_MQTT:
 #if FEATURE_MQTT
       runPeriodicalMQTT();
-#endif
+#endif // if FEATURE_MQTT
       break;
     case IntervalTimer_e::TIMER_STATISTICS:       logTimerStatistics();    break;
     case IntervalTimer_e::TIMER_GRATUITOUS_ARP:
@@ -448,7 +448,7 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
     case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
 #if FEATURE_MQTT
       processMQTTdelayQueue();
-#endif
+#endif // if FEATURE_MQTT
       break;
     case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
   #ifdef USES_C001

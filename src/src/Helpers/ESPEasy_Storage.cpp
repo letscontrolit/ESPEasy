@@ -247,7 +247,7 @@ String BuildFixes()
         SaveControllerSettings(controller_idx, ControllerSettings);
       }
     }
-    #endif
+    #endif // if FEATURE_MQTT
   }
   if (Settings.Build < 20107) {
     Settings.WebserverPort = 80;

@@ -12,7 +12,7 @@
 
 #if FEATURE_MQTT
 const __FlashStringHelper * getMQTT_state();
-#endif
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information

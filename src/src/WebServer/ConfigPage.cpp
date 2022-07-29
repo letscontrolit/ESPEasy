@@ -55,11 +55,11 @@ void handle_config() {
       if (CPluginCall(CPlugin::Function::CPLUGIN_GOT_INVALID, 0)) { // inform controllers that the old name will be invalid from now on.
 #if FEATURE_MQTT
         MQTTDisconnect();                                           // disconnect form MQTT Server if invalid message was sent succesfull.
-#endif
+#endif // if FEATURE_MQTT
       }
 #if FEATURE_MQTT
       MQTTclient_should_reconnect = true;
-#endif
+#endif // if FEATURE_MQTT
     }
 
     // Unit name

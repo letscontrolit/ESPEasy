@@ -57,7 +57,7 @@ String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings)
 
 String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettings);
 
-#endif
+#endif // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -85,7 +85,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
 * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(struct EventStruct *event, const String& status);
-#endif
+#endif //if FEATURE_MQTT
 
 
 

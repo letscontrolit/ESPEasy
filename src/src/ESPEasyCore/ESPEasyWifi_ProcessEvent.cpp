@@ -449,7 +449,7 @@ void processGotIP() {
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
-#endif
+#endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)
@@ -746,7 +746,7 @@ void processEthernetGotIP() {
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
-#endif
+#endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)

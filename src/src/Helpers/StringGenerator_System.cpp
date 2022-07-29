@@ -28,7 +28,7 @@ const __FlashStringHelper * getMQTT_state() {
   return F("");
 }
 
-#endif
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information
