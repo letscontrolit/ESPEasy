@@ -156,6 +156,12 @@
 # undef USES_BLYNK
 #endif // ifdef USES_BLYNK
 
+#if defined(FEATURE_REPORTING) && (2 - FEATURE_REPORTING - 2 == 4) // 'Defined but empty' check
+# warning "Custom.h has '#define FEATURE_REPORTING' to be replaced with '#define FEATURE_REPORTING 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# undef FEATURE_REPORTING
+# define FEATURE_REPORTING  1
+#endif // if defined(FEATURE_REPORTING) && (2-FEATURE_REPORTING-2 == 4)
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H
