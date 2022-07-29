@@ -4,9 +4,9 @@
 // Original code from Paul Stoffregen
 // See: https://github.com/PaulStoffregen/OneWire/blob/master/util/OneWire_direct_gpio.h
 
-// This header should ONLY be included by GPIO_Helper.cpp.  These defines are
-// meant to be private, used within GPIO_Helper.cpp, but not exposed to Arduino
-// sketches or other libraries which may include GPIO_Helper.h.
+// This header should ONLY be included by .cpp files.  These defines are
+// meant to be private, used within this .cpp file, but not exposed to Arduino
+// sketches or other libraries which may include a .h file.
 
 #include <stdint.h>
 

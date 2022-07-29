@@ -11,7 +11,7 @@
 // Macros to perform direct access on GPIOs
 // Macros written by Paul Stoffregen
 // See: https://github.com/PaulStoffregen/OneWire/blob/master/util/
-#include "../DataTypes/GPIO_Direct_gpio.h"
+#include <GPIO_Direct_Access.h>
 
 
 
