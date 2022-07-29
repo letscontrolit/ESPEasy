@@ -614,10 +614,12 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   uint8_t retries = 125;
 
   IO_REG_TYPE mask_rx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_rx);
-  volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
-
   IO_REG_TYPE mask_tx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_tx);
+/*
+  // Not used on ESP platforms
+  volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
   volatile IO_REG_TYPE *reg_tx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_tx);
+*/
 
   noInterrupts();
   if(gpio_pin_rx == gpio_pin_tx) {
@@ -908,10 +910,12 @@ uint8_t IRAM_ATTR Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, un
   uint8_t r;
   {
     IO_REG_TYPE mask_rx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_rx);
-    volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
-
     IO_REG_TYPE mask_tx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_tx);
+/*
+    // Not used on ESP platforms
+    volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
     volatile IO_REG_TYPE *reg_tx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_tx);
+*/
 
     noInterrupts();
     DIRECT_WRITE_LOW(reg_tx, mask_tx);
@@ -969,12 +973,12 @@ void IRAM_ATTR Dallas_write_bit_ISR(uint8_t v,
                       uint64_t &start)
 {
   IO_REG_TYPE mask_rx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_rx);
-  volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
-
   IO_REG_TYPE mask_tx IO_REG_MASK_ATTR = PIN_TO_BITMASK(gpio_pin_tx);
+/*
+  // Not used on ESP platforms
+  volatile IO_REG_TYPE *reg_rx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_rx);
   volatile IO_REG_TYPE *reg_tx IO_REG_BASE_ATTR = PIN_TO_BASEREG(gpio_pin_tx);
-
-
+*/
   noInterrupts();
   DIRECT_WRITE_LOW(reg_tx, mask_tx);
   if(gpio_pin_rx == gpio_pin_tx) {
