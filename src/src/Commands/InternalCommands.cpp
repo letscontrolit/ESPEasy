@@ -372,7 +372,7 @@ bool executeInternalCommand(command_case_data & data)
     case 'n': {
       COMMAND_CASE_R(   "name", Command_Settings_Name,        1); // Settings.h
       COMMAND_CASE_R("nosleep", Command_System_NoSleep,       1); // System.h
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
       COMMAND_CASE_R( "notify", Command_Notifications_Notify, 2); // Notifications.h
 #endif
       COMMAND_CASE_R("ntphost", Command_NTPHost,              1); // Time.h
