@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 #include "../DataStructs/MessageRouteInfo.h"
 #include "../Globals/CPlugins.h"
@@ -58,6 +58,6 @@ public:
 #endif
 };
 
-#endif // USES_MQTT
+#endif
 
 #endif // CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H

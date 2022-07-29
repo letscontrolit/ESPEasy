@@ -223,7 +223,7 @@ String BuildFixes()
   }
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
-    #ifdef USES_MQTT
+    #if FEATURE_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
       MakeControllerSettings(ControllerSettings); //-V522
@@ -247,7 +247,7 @@ String BuildFixes()
         SaveControllerSettings(controller_idx, ControllerSettings);
       }
     }
-    #endif // USES_MQTT
+    #endif
   }
   if (Settings.Build < 20107) {
     Settings.WebserverPort = 80;

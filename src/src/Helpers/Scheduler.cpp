@@ -427,9 +427,9 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
     case IntervalTimer_e::TIMER_1SEC:             runOncePerSecond();      break;
     case IntervalTimer_e::TIMER_30SEC:            runEach30Seconds();      break;
     case IntervalTimer_e::TIMER_MQTT:
-#ifdef USES_MQTT
+#if FEATURE_MQTT
       runPeriodicalMQTT();
-#endif // USES_MQTT
+#endif
       break;
     case IntervalTimer_e::TIMER_STATISTICS:       logTimerStatistics();    break;
     case IntervalTimer_e::TIMER_GRATUITOUS_ARP:
@@ -446,9 +446,9 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
       }
       break;
     case IntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
-#ifdef USES_MQTT
+#if FEATURE_MQTT
       processMQTTdelayQueue();
-#endif // USES_MQTT
+#endif
       break;
     case IntervalTimer_e::TIMER_C001_DELAY_QUEUE:
   #ifdef USES_C001
@@ -1053,7 +1053,7 @@ void ESPEasy_Scheduler::schedule_plugin_task_event_timer(deviceIndex_t DeviceInd
   }
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 void ESPEasy_Scheduler::schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
                                                                 taskIndex_t   TaskIndex,
                                                                 uint8_t       Function,
@@ -1100,7 +1100,7 @@ unsigned long ESPEasy_Scheduler::createSystemEventMixedId(PluginPtrType ptr_type
   return getMixedId(SchedulerTimerType_e::SystemEventQueue, subId);
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                                              CPlugin::Function Function,
                                                              char             *c_topic,

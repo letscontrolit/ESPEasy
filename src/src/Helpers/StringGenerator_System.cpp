@@ -6,7 +6,7 @@
 \*********************************************************************************************/
 
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
@@ -28,7 +28,7 @@ const __FlashStringHelper * getMQTT_state() {
   return F("");
 }
 
-#endif // USES_MQTT
+#endif
 
 /********************************************************************************************\
    Get system information

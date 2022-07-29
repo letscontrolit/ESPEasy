@@ -1090,7 +1090,7 @@ bool ESPEasy_now_handler_t::sendToMQTT(
 
 bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merger& message, bool& mustKeep)
 {
-  # ifdef USES_MQTT
+  # if FEATURE_MQTT
 
   // FIXME TD-er: Quick hack to just echo all data to the first enabled MQTT controller
 
@@ -1131,7 +1131,7 @@ bool ESPEasy_now_handler_t::handle_MQTTControllerMessage(const ESPEasy_now_merge
     return success;
   }
 
-  # endif // ifdef USES_MQTT
+  # endif // if FEATURE_MQTT
   mustKeep = false;
   return false;
 }
@@ -1191,7 +1191,7 @@ bool ESPEasy_now_handler_t::sendMQTTCheckControllerQueue(const MAC_address      
 bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_merger& message, bool& mustKeep)
 {
   mustKeep = false;
-  # ifdef USES_MQTT
+  # if FEATURE_MQTT
 
   ESPEasy_Now_MQTT_queue_check_packet query;
   size_t payload_pos = 0;
@@ -1235,7 +1235,7 @@ bool ESPEasy_now_handler_t::handle_MQTTCheckControllerQueue(const ESPEasy_now_me
     }
   }
 
-  # endif // ifdef USES_MQTT
+  # endif // if FEATURE_MQTT
   return false;
 }
 

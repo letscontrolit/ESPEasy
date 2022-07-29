@@ -254,7 +254,7 @@ public:
                                         uint8_t              Function,
                                         struct EventStruct&& event);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
                                                taskIndex_t   TaskIndex,
                                                uint8_t       Function,
@@ -269,7 +269,7 @@ public:
                                        uint8_t              Function,
                                        struct EventStruct&& event);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                             CPlugin::Function Function,
                                             char             *c_topic,

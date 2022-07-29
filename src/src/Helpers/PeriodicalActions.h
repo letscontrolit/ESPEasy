@@ -29,7 +29,7 @@ void runOncePerSecond();
 \*********************************************************************************************/
 void runEach30Seconds();
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 void scheduleNextMQTTdelayQueue();
 void schedule_all_MQTTimport_tasks();
@@ -52,7 +52,7 @@ void runPeriodicalMQTT();
 controllerIndex_t firstEnabledMQTT_ControllerIndex();
 
 
-#endif //USES_MQTT
+#endif
 
 
 void logTimerStatistics();

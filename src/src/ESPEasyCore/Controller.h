@@ -25,7 +25,7 @@ bool validUserVar(struct EventStruct *event);
 void sendData_checkDuplicates(struct EventStruct *event, const String& compare_key);
 
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 /*********************************************************************************************\
 * Handle incoming MQTT messages
 \*********************************************************************************************/
@@ -57,7 +57,7 @@ String getLWT_messageConnect(const ControllerSettingsStruct& ControllerSettings)
 
 String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettings);
 
-#endif // USES_MQTT
+#endif
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -68,7 +68,7 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
 
 void SendStatus(struct EventStruct *event, const String& status);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx);
 
 #ifdef USES_ESPEASY_NOW
@@ -85,7 +85,7 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
 * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(struct EventStruct *event, const String& status);
-#endif //USES_MQTT
+#endif
 
 
 

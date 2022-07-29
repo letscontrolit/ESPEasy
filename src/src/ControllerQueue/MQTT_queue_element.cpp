@@ -1,6 +1,6 @@
 #include "../ControllerQueue/MQTT_queue_element.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 MQTT_queue_element::MQTT_queue_element(int ctrl_idx,
                                        taskIndex_t TaskIndex,
@@ -67,4 +67,4 @@ void MQTT_queue_element::removeEmptyTopics() {
     _topic.replace(F("//"), F("/"));
   }
 }
-#endif // USES_MQTT
+#endif

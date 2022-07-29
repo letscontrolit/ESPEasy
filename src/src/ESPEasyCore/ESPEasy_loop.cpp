@@ -138,9 +138,9 @@ void ESPEasy_loop()
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
   {
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     runPeriodicalMQTT();
-#endif // USES_MQTT
+#endif
     // Now run all frequent tasks
     run50TimesPerSecond();
     run10TimesPerSecond();

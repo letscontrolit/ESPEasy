@@ -39,7 +39,7 @@
 
 #include "../Static/WebStaticData.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Globals/MQTT.h"
 # include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
 #endif
@@ -547,7 +547,7 @@ void handle_sysinfo_NetworkServices() {
   addRowLabel(F("NTP Initialized"));
   addEnabled(statusNTPInitialized);
 
-  #ifdef USES_MQTT
+  #if FEATURE_MQTT
   if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
     addRowLabel(F("MQTT Client Connected"));
     addEnabled(MQTTclient_connected);

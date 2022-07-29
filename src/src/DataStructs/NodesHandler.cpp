@@ -517,7 +517,7 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
 bool NodesHandler::isEndpoint() const
 {
   // FIXME TD-er: Must check controller to see if it needs wifi (e.g. LoRa or cache controller do not need it)
-  #ifdef USES_MQTT
+  #if FEATURE_MQTT
   controllerIndex_t enabledMqttController = firstEnabledMQTT_ControllerIndex();
   if (validControllerIndex(enabledMqttController)) {
     // FIXME TD-er: Must call updateMQTTclient_connected() and see what effect
