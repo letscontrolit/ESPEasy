@@ -18,7 +18,7 @@
 
 # define PLUGIN_085
 # define PLUGIN_ID_085 85
-# define PLUGIN_NAME_085 "Energy - AccuEnergy AcuDC24x [TESTING]"
+# define PLUGIN_NAME_085 "Energy - AccuEnergy AcuDC24x"
 # define PLUGIN_VALUENAME1_085 ""
 
 

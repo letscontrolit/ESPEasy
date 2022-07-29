@@ -1,6 +1,6 @@
 #include "../DataStructs/PluginStats.h"
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 # include "../../_Plugin_Helper.h"
 
 # include "../Helpers/ESPEasy_math.h"
@@ -146,7 +146,7 @@ bool PluginStats::webformLoad_show_peaks(struct EventStruct *event) const
   return false;
 }
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 void PluginStats::plot_ChartJS_dataset() const
 {
   add_ChartJS_dataset_header(getLabel(), _ChartJS_dataset_config.color);
@@ -168,7 +168,7 @@ void PluginStats::plot_ChartJS_dataset() const
   add_ChartJS_dataset_footer(_ChartJS_dataset_config.hidden);
 }
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 PluginStats_array::PluginStats_array()
 {
@@ -200,10 +200,10 @@ void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
 
       if (_plugin_stats[taskVarIndex] != nullptr) {
         _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
-        # ifdef USES_CHART_JS
+        # if FEATURE_CHART_JS
         const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#EFF2C0"), F("#A4BAB7") };
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color = colors[taskVarIndex];
-        # endif // ifdef USES_CHART_JS
+        # endif // if FEATURE_CHART_JS
       }
     }
   }
@@ -318,7 +318,7 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event) const
   return somethingAdded;
 }
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
 void PluginStats_array::plot_ChartJS() const
 {
   const uint8_t nrSamples = nrSamplesPresent();
@@ -347,7 +347,7 @@ void PluginStats_array::plot_ChartJS() const
   add_ChartJS_chart_footer();
 }
 
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 
 PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex) const
@@ -366,4 +366,4 @@ PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex)
   return nullptr;
 }
 
-#endif // ifdef USES_PLUGIN_STATS
+#endif // if FEATURE_PLUGIN_STATS

@@ -207,29 +207,24 @@ See :ref:`Rules: Formatting refered values <Formatting values>` on how this can 
 Just remember such formatting cannot "make up" more decimals than what was set here in the task setup.
 
 
-
-
-
-
-
-
-
 List of official plugins
 ========================
 
 There are different released versions of ESP Easy:
 
-:green:`NORMAL` is the stable release, you can consider these plugins reliable and you can use these in production.
+:green:`NORMAL` is the regular set of plugins, you can consider these plugins stable with all secondary features enabled, like I2C multiplexer, RTTL, DEBUG logging, etc.
 
-:yellow:`TESTING` (split into A/B/C/D/E sets) with new plugins that have not yet been fully tested and proven stable. Because of space limitations, this collection is split into 5 sets. When only TESTING is mentioned, the plugin is available in all TESTING builds.
+:yellow:`COLLECTION` (split into sets A..x) with plugins that don't fit into the NORMAL builds. Because of space limitations, this collection is split into a number of sets. When only :yellow:`COLLECTION` is mentioned, the plugin is available in **all** :yellow:`COLLECTION` builds. Also, some features are disabled to save space in the .bin files, like the I2C multiplexer feature, RTTTL, tooltips, and some DEBUG logging.
 
-:red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all.
+:red:`DEVELOPMENT` is used for plugins that are still being developed and are not considered stable at all. Currently there are no DEVELOPMENT builds available.
 
 :yellow:`ENERGY` :yellow:`DISPLAY` :yellow:`IR` :yellow:`IRext` :yellow:`NEOPIXEL` are specialized builds holding all Energy-, Display-, Infra Red- (extended) and NeoPixel related plugins.
 
 :yellow:`MAX` is the build that has all plugins that are available in the ESPEasy repository. Only available for ESP32 16MB Flash units.
 
 :gray:`RETIRED` plugin has been retired from ESPEasy (though the source code is still available). Not included in any build.
+
+2022-07-22: :yellow:`TESTING` builds renamed to :yellow:`COLLECTION`.
 
 .. csv-table::
    :header: "Plugin name", "Build set", "Plugin number"

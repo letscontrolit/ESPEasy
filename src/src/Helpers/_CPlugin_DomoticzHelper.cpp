@@ -1,6 +1,6 @@
 #include "../Helpers/_CPlugin_DomoticzHelper.h"
 
-#ifdef USES_DOMOTICZ
+#if FEATURE_DOMOTICZ
 
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../DataTypes/TaskIndex.h"
@@ -316,4 +316,4 @@ String serializeDomoticzJson(struct EventStruct *event)
 
 # endif // ifdef USES_C002
 
-#endif  // ifdef USES_DOMOTICZ
+#endif  // if FEATURE_DOMOTICZ

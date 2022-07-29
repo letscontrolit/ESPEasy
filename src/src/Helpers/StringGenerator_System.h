@@ -1,7 +1,6 @@
 #ifndef HELPERS_STRINGGENERATOR_SYSTEM_H
 #define HELPERS_STRINGGENERATOR_SYSTEM_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 #include "../Globals/Statistics.h"

@@ -1,13 +1,11 @@
 #include "../DataStructs/TimingStats.h"
 
-#include "../../ESPEasy_common.h"
+#if FEATURE_TIMING_STATS
+
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../Globals/CPlugins.h"
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/StringConverter.h"
-
-
-#ifdef USES_TIMING_STATS
 
 
 std::map<int, TimingStats> pluginStats;
@@ -256,4 +254,4 @@ String getMiscStatsName(int stat) {
   return getMiscStatsName_F(stat);
 }
 
-#endif
+#endif // if FEATURE_TIMING_STATS

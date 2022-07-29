@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 
 #include "../DataStructs/MAC_address.h"
 
@@ -18,5 +18,5 @@ bool     ETHConnected();
 void     ethPower(bool enable);
 MAC_address ETHMacAddress();
 
-#endif // ifdef HAS_ETHERNET
+#endif // if FEATURE_ETHERNET
 #endif // ifndef ESPEASY_ETH_H

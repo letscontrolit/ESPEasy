@@ -195,7 +195,13 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
-  mqtt.setTimeout(ControllerSettings.ClientTimeout);
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  #else
+  mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
+  #endif
+  
   MQTTclient.setClient(mqtt);
 
   if (ControllerSettings.UseDNS) {

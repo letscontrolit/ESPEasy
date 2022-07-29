@@ -1,9 +1,9 @@
 #include "../DataStructs/Modbus.h"
 
+#ifdef USES_MODBUS
+
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-
-#ifdef USES_MODBUS
 
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
   TXRXstate(MODBUS_IDLE), RXavailable(0), payLoad(0) {}

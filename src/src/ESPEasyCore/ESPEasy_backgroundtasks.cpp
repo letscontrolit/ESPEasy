@@ -1,8 +1,8 @@
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 
+#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
@@ -14,7 +14,7 @@
 #include "../Helpers/Networking.h"
 
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 #include "../Helpers/OTA.h"
 #endif
 
@@ -91,7 +91,7 @@ void backgroundtasks()
   }
   #endif // ifdef FEATURE_DNS_SERVER
 
-  #ifdef FEATURE_ARDUINO_OTA
+  #if FEATURE_ARDUINO_OTA
 
   if (Settings.ArduinoOTAEnable) {
     ArduinoOTA_handle();
@@ -105,7 +105,7 @@ void backgroundtasks()
     ArduinoOTA_handle();
   }
 
-  #endif // ifdef FEATURE_ARDUINO_OTA
+  #endif // if FEATURE_ARDUINO_OTA
 
   #ifdef FEATURE_MDNS
 
