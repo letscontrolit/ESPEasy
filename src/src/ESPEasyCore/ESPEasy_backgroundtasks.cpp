@@ -83,13 +83,13 @@ void backgroundtasks()
     #endif
   }
 
-  #ifdef FEATURE_DNS_SERVER
+  #if FEATURE_DNS_SERVER
 
   // process DNS, only used if the ESP has no valid WiFi config
   if (dnsServerActive) {
     dnsServer.processNextRequest();
   }
-  #endif // ifdef FEATURE_DNS_SERVER
+  #endif // if FEATURE_DNS_SERVER
 
   #if FEATURE_ARDUINO_OTA
 

@@ -1086,12 +1086,12 @@ void setAPinternal(bool enable)
     #endif // ifdef ESP32
     WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
   } else {
-    #ifdef FEATURE_DNS_SERVER
+    #if FEATURE_DNS_SERVER
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
-    #endif
+    #endif // if FEATURE_DNS_SERVER
   }
 }
 
