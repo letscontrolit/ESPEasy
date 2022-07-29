@@ -120,6 +120,54 @@
 # undef USE_I2C_DEVICE_SCAN
 #endif // if USE_I2C_DEVICE_SCAN
 
+#if defined(FEATURE_MDNS) && (2 - FEATURE_MDNS - 2 == 4) // 'Defined but empty' check
+# warning "Custom.h has '#define FEATURE_MDNS' to be replaced with '#define FEATURE_MDNS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# undef FEATURE_MDNS
+# define FEATURE_MDNS  1
+#endif // if defined(FEATURE_MDNS) && (2-FEATURE_MDNS-2 == 4)
+
+#if FEATURE_NOTIFIER
+# warning "Custom.h has '#define USES_NOTIFIER' to be replaced with '#define FEATURE_NOTIFIER 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_NOTIFIER  1
+# undef USES_NOTIFIER
+#endif // if FEATURE_NOTIFIER
+
+#ifdef USES_MODBUS
+# warning "Custom.h has '#define USES_MODBUS' to be replaced with '#define FEATURE_MODBUS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_MODBUS  1
+# undef USES_MODBUS
+#endif // ifdef USES_MODBUS
+
+#ifdef USE_NON_STANDARD_24_TASKS
+# warning "Custom.h has '#define USE_NON_STANDARD_24_TASKS' to be replaced with '#define FEATURE_NON_STANDARD_24_TASKS 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_NON_STANDARD_24_TASKS  1
+# undef USE_NON_STANDARD_24_TASKS
+#endif // ifdef USE_NON_STANDARD_24_TASKS
+
+#ifdef USES_PACKED_RAW_DATA
+# warning "Custom.h has '#define USES_PACKED_RAW_DATA' to be replaced with '#define FEATURE_PACKED_RAW_DATA 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_PACKED_RAW_DATA  1
+# undef USES_PACKED_RAW_DATA
+#endif // ifdef USES_PACKED_RAW_DATA
+
+#ifdef USES_BLYNK
+# warning "Custom.h has '#define USES_BLYNK' to be replaced with '#define FEATURE_BLYNK 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# define FEATURE_BLYNK  1
+# undef USES_BLYNK
+#endif // ifdef USES_BLYNK
+
+#if defined(FEATURE_REPORTING) && (2 - FEATURE_REPORTING - 2 == 4) // 'Defined but empty' check
+# warning "Custom.h has '#define FEATURE_REPORTING' to be replaced with '#define FEATURE_REPORTING 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# undef FEATURE_REPORTING
+# define FEATURE_REPORTING  1
+#endif // if defined(FEATURE_REPORTING) && (2-FEATURE_REPORTING-2 == 4)
+
+#if defined(FEATURE_DNS_SERVER) && (2 - FEATURE_DNS_SERVER - 2 == 4) // 'Defined but empty' check
+# warning "Custom.h has '#define FEATURE_DNS_SERVER' to be replaced with '#define FEATURE_DNS_SERVER 1', see https://github.com/letscontrolit/ESPEasy/pull/4153"
+# undef FEATURE_DNS_SERVER
+# define FEATURE_DNS_SERVER  1
+#endif // if defined(FEATURE_DNS_SERVER) && (2-FEATURE_DNS_SERVER-2 == 4)
+
 /* *INDENT-ON* */
 
 #endif // ifndef CUSTOMBUILD_CHECK_DEFINES_CUSTOM_H

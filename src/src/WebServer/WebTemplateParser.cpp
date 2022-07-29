@@ -293,12 +293,12 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
-#ifndef USES_NOTIFIER
+#ifndef FEATURE_NOTIFIER
 
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif // ifndef USES_NOTIFIER
+#endif // ifndef FEATURE_NOTIFIER
 
       addHtml(F("<a "));
 

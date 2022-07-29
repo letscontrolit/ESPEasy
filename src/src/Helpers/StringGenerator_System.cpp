@@ -6,7 +6,7 @@
 \*********************************************************************************************/
 
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
@@ -28,7 +28,7 @@ const __FlashStringHelper * getMQTT_state() {
   return F("");
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information
@@ -183,9 +183,9 @@ String getPluginDescriptionString() {
   result += F(PLUGIN_DESCR);
   result += ']';
   #endif // ifdef PLUGIN_DESCR
-  #ifdef USE_NON_STANDARD_24_TASKS
+  #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
   result += F(" 24tasks");
-  #endif // ifdef USE_NON_STANDARD_24_TASKS
+  #endif // if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
   result.trim();
   return result;
 }

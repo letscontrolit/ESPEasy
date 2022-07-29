@@ -16,7 +16,7 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
     case Enum::ControllerSettings_Type:        return F("ControllerSettings");
     case Enum::CustomControllerSettings_Type:  return F("CustomControllerSettings");
     case Enum::NotificationSettings_Type:      
-    #ifdef USES_NOTIFIER
+    #if FEATURE_NOTIFIER
         return F("NotificationSettings");
     #else
         break;
@@ -83,7 +83,7 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     case Enum::NotificationSettings_Type:
     {
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
       max_index   = NOTIFICATION_MAX;
       offset      = index * (DAT_NOTIFICATION_SIZE);
       max_size    = DAT_NOTIFICATION_SIZE;

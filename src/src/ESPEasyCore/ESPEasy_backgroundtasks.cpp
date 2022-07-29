@@ -53,7 +53,7 @@ void backgroundtasks()
   lastRunBackgroundTasks = millis();
 
   START_TIMER
-  #ifdef FEATURE_MDNS
+  #if FEATURE_MDNS
   const bool networkConnected = NetworkConnected();
   #else
   NetworkConnected();
@@ -83,13 +83,13 @@ void backgroundtasks()
     #endif
   }
 
-  #ifdef FEATURE_DNS_SERVER
+  #if FEATURE_DNS_SERVER
 
   // process DNS, only used if the ESP has no valid WiFi config
   if (dnsServerActive) {
     dnsServer.processNextRequest();
   }
-  #endif // ifdef FEATURE_DNS_SERVER
+  #endif // if FEATURE_DNS_SERVER
 
   #if FEATURE_ARDUINO_OTA
 
@@ -107,7 +107,7 @@ void backgroundtasks()
 
   #endif // if FEATURE_ARDUINO_OTA
 
-  #ifdef FEATURE_MDNS
+  #if FEATURE_MDNS
 
   // Allow MDNS processing
   if (networkConnected) {
@@ -117,7 +117,7 @@ void backgroundtasks()
     MDNS.update();
     # endif // ifdef ESP8266
   }
-  #endif // ifdef FEATURE_MDNS
+  #endif // if FEATURE_MDNS
 
   delay(0);
 
