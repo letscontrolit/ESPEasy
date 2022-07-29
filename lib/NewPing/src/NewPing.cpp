@@ -12,6 +12,8 @@
 // ---------------------------------------------------------------------------
 
 NewPing::NewPing(uint8_t trigger_pin, uint8_t echo_pin, unsigned int max_cm_distance) {
+	_errorState = STATUS_SENSOR_READY;
+
 #if DO_BITWISE == true
 	_triggerBit = digitalPinToBitMask(trigger_pin); // Get the port register bitmask for the trigger pin.
 	_echoBit = digitalPinToBitMask(echo_pin);       // Get the port register bitmask for the echo pin.
@@ -57,16 +59,23 @@ unsigned int NewPing::ping(unsigned int max_cm_distance) {
 	#else
 		while (!digitalRead(_echoPin))                // Wait for the ping echo.
 	#endif
-			if (micros() > _max_time) return NO_ECHO; // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
+			if (micros() > _max_time) {
+				_errorState = STATUS_MAX_DISTANCE_EXCEEDED;
+			    return NO_ECHO; // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
+			}
 #else
 	#if DO_BITWISE == true
 		while (*_echoInput & _echoBit)                // Wait for the ping echo.
 	#else
 		while (digitalRead(_echoPin))                 // Wait for the ping echo.
 	#endif
-			if (micros() > _max_time) return NO_ECHO; // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
+			if (micros() > _max_time) {
+				_errorState = STATUS_MAX_DISTANCE_EXCEEDED;
+			    return NO_ECHO; // Stop the loop and return NO_ECHO (false) if we're beyond the set maximum distance.
+			}
 #endif
 
+    _errorState = STATUS_MEASUREMENT_VALID;
 	return (micros() - (_max_time - _maxEchoTime) - PING_OVERHEAD); // Calculate ping time, include overhead.
 }
 
@@ -139,15 +148,27 @@ boolean NewPing::ping_trigger() {
 	#endif
 
 	#if URM37_ENABLED == true
-		if (!(*_echoInput & _echoBit)) return false;            // Previous ping hasn't finished, abort.
+		if (!(*_echoInput & _echoBit)) {
+			_errorState = STATUS_ECHO_STATE_ERROR;
+		    return false;            // Previous ping hasn't finished, abort.
+		}
 		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (*_echoInput & _echoBit)                          // Wait for ping to start.
-			if (micros() > _max_time) return false;             // Took too long to start, abort.
+			if (micros() > _max_time) {
+				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
+				return false;             // Took too long to start, abort.
+			}
 	#else
-		if (*_echoInput & _echoBit) return false;               // Previous ping hasn't finished, abort.
+		if (*_echoInput & _echoBit) {
+			_errorState = STATUS_ECHO_STATE_ERROR;
+			return false;               // Previous ping hasn't finished, abort.
+		}
 		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (!(*_echoInput & _echoBit))                       // Wait for ping to start.
-			if (micros() > _max_time) return false;             // Took too long to start, abort.
+			if (micros() > _max_time) {
+				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
+				return false;             // Took too long to start, abort.
+			}
 	#endif
 #else
 	#if ONE_PIN_ENABLED == true
@@ -165,19 +186,32 @@ boolean NewPing::ping_trigger() {
 	#endif
 
 	#if URM37_ENABLED == true
-		if (!digitalRead(_echoPin)) return false;               // Previous ping hasn't finished, abort.
+		if (!digitalRead(_echoPin)) {
+			_errorState = STATUS_ECHO_STATE_ERROR;
+			return false;               // Previous ping hasn't finished, abort.
+		}
 		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (digitalRead(_echoPin))                           // Wait for ping to start.
-			if (micros() > _max_time) return false;             // Took too long to start, abort.
+			if (micros() > _max_time) {
+				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
+				return false;             // Took too long to start, abort.
+			}
 	#else
-		if (digitalRead(_echoPin)) return false;                // Previous ping hasn't finished, abort.
+		if (digitalRead(_echoPin)) {
+			_errorState = STATUS_ECHO_STATE_ERROR;
+			return false;                // Previous ping hasn't finished, abort.
+		}
 		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
 		while (!digitalRead(_echoPin))                          // Wait for ping to start.
-			if (micros() > _max_time) return false;             // Took too long to start, abort.
+			if (micros() > _max_time) {
+				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
+				return false;             // Took too long to start, abort.
+			}
 	#endif
 #endif
 
 	_max_time = micros() + _maxEchoTime; // Ping started, set the time-out.
+	_errorState = STATUS_ECHO_TRIGGERED;
 	return true;                         // Ping started successfully.
 }
 
@@ -362,4 +396,14 @@ unsigned int NewPing::convert_in(unsigned int echoTime) {
 #else
 	return NewPingConvert(echoTime, US_ROUNDTRIP_IN); // Convert uS to inches.
 #endif
+}
+
+
+float NewPing::convert_cm_F(unsigned int echoTime) {
+	return ((float)echoTime / US_ROUNDTRIP_CM);              // Convert uS to centimeters (no rounding).
+}
+
+
+float NewPing::convert_in_F(unsigned int echoTime) {
+	return ((float)echoTime / US_ROUNDTRIP_IN);              // Convert uS to inches (no rounding).
 }
