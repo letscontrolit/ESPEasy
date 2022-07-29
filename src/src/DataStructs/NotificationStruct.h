@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 /*********************************************************************************************\
 * NotificationStruct

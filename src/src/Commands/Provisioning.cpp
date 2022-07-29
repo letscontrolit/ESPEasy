@@ -19,7 +19,7 @@ String Command_Provisioning_Security(struct EventStruct *event, const char *Line
   return downloadFileType(FileType::SECURITY_DAT);
 }
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 String Command_Provisioning_Notification(struct EventStruct *event, const char *Line)
 {
   return downloadFileType(FileType::NOTIFICATION_DAT);

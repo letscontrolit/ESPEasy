@@ -1,6 +1,6 @@
 #include "../Commands/Notifications.h"
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 #include "../Commands/Common.h"
 
