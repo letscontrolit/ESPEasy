@@ -464,9 +464,9 @@ void ESPEasy_setup()
   #endif
 
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif // ifdef FEATURE_REPORTING
+  #endif // if FEATURE_REPORTING
 
   #if FEATURE_ARDUINO_OTA
   ArduinoOTAInit();

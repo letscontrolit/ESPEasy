@@ -13,7 +13,7 @@
 //enable reporting status to ESPEasy developers.
 //this informs us of crashes and stability issues.
 // not finished yet!
-// #define FEATURE_REPORTING
+// #define FEATURE_REPORTING  1
 
 //Select which plugin sets you want to build.
 //These are normally automaticly set via the Platformio build environment.

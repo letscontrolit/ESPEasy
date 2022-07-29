@@ -262,9 +262,9 @@ void runEach30Seconds()
   }
 #endif
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif
+  #endif // if FEATURE_REPORTING
 
 }
 
