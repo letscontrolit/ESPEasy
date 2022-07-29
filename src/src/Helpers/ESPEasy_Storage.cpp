@@ -231,7 +231,7 @@ String BuildFixes()
   }
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
-    #ifdef USES_MQTT
+    #if FEATURE_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
     if (validControllerIndex(controller_idx)) {
       MakeControllerSettings(ControllerSettings); //-V522
@@ -255,7 +255,7 @@ String BuildFixes()
         SaveControllerSettings(controller_idx, ControllerSettings);
       }
     }
-    #endif // USES_MQTT
+    #endif // if FEATURE_MQTT
   }
   if (Settings.Build < 20107) {
     Settings.WebserverPort = 80;
@@ -668,7 +668,7 @@ uint8_t disableAllControllers(uint8_t bootFailedCount) {
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount) {
   for (uint8_t i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
     if (Settings.NotificationEnabled[i]) {
@@ -1167,7 +1167,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 
 #endif
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/

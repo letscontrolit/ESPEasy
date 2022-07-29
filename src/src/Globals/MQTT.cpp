@@ -2,7 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 
 // MQTT client
@@ -28,7 +28,7 @@ bool MQTTclient_must_send_LWT_connected = false;
 bool MQTTclient_connected               = false;
 int  mqtt_reconnect_count               = 0;
 LongTermTimer MQTTclient_next_connect_attempt;
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 #ifdef USES_P037
 

@@ -22,8 +22,8 @@
 #endif
 
 
-#ifdef FEATURE_DNS_SERVER
+#if FEATURE_DNS_SERVER
   #include <DNSServer.h>
   DNSServer  dnsServer;
   bool dnsServerActive = false;
-#endif
+#endif // if FEATURE_DNS_SERVER

@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 #include "../DataStructs/UnitMessageCount.h"
 #include "../Globals/CPlugins.h"
@@ -54,6 +54,6 @@ public:
   UnitMessageCount_t UnitMessageCount;
 };
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 #endif // CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H

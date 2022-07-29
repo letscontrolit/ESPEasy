@@ -26,13 +26,13 @@
 // 
 
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../ControllerQueue/MQTT_queue_element.h"
 extern ControllerDelayHandlerStruct<MQTT_queue_element> *MQTTDelayHandler;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag);
 void exit_mqtt_delay_queue();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 
 /*********************************************************************************************\

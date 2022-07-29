@@ -107,7 +107,7 @@ bool validUserVar(struct EventStruct *event) {
   return true;
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Handle incoming MQTT messages
@@ -657,7 +657,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   return LWTMessageDisconnect;
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -697,11 +697,11 @@ void SendStatus(struct EventStruct *event, const String& status)
         printWebString += status;
       }
       break;
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_MQTT:
       MQTTStatus(event, status);
       break;
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
       serialPrintln(status);
       break;
@@ -711,7 +711,7 @@ void SendStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx) {
   if (MQTTDelayHandler == nullptr) {
     return true;
@@ -803,7 +803,6 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-
 #ifdef USE_MQTT_TLS
 bool GetTLSfingerprint(String& fp) 
 {
@@ -847,7 +846,7 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
 
 #endif
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 
 /*********************************************************************************************\

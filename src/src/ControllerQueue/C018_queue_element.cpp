@@ -12,7 +12,7 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
   TaskIndex(event->TaskIndex),
   controller_idx(event->ControllerIndex)
 {
-  # ifdef USES_PACKED_RAW_DATA
+  # if FEATURE_PACKED_RAW_DATA
     #ifdef USE_SECOND_HEAP
 //    HeapSelectIram ephemeral;
     #endif
@@ -24,7 +24,7 @@ C018_queue_element::C018_queue_element(struct EventStruct *event, uint8_t sample
       log += packed;
       addLogMove(LOG_LEVEL_INFO, log);
     }
-  # endif // USES_PACKED_RAW_DATA
+  # endif // if FEATURE_PACKED_RAW_DATA
 }
 
 size_t C018_queue_element::getSize() const {

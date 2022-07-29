@@ -100,7 +100,7 @@ void ArduinoOTAInit()
     reboot(ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error);
   });
 
-  #if defined(ESP8266) && defined(FEATURE_MDNS)
+  #if defined(ESP8266) && FEATURE_MDNS
   ArduinoOTA.begin(true);
   #else
   ArduinoOTA.begin();

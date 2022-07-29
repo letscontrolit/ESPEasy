@@ -245,9 +245,9 @@ void WebServerInit()
   web_server.on(F("/csv"),             handle_csvval);
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
-#endif // ifdef USES_NOTIFIER
+#endif // if FEATURE_NOTIFIER
   #ifdef WEBSERVER_PINSTATES
   web_server.on(F("/pinstates"),       handle_pinstates);
   #endif // ifdef WEBSERVER_PINSTATES
