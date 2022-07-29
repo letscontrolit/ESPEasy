@@ -278,7 +278,7 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
-    #ifdef USES_NOTIFIER
+    #if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
@@ -295,7 +295,7 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableAllControllers(toDisable);
     }
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableAllNotifications(toDisable);
     }

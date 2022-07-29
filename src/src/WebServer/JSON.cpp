@@ -560,7 +560,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
   {
     json_open(true, F("notifications"));
 

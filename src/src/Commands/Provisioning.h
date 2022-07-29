@@ -11,7 +11,7 @@ String Command_Provisioning_Config(struct EventStruct *event,
                                    const char         *Line);
 String Command_Provisioning_Security(struct EventStruct *event,
                                      const char         *Line);
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 String Command_Provisioning_Notification(struct EventStruct *event,
                                          const char         *Line);
 #endif

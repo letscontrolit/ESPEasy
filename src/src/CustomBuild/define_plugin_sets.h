@@ -2030,8 +2030,8 @@ To create/register a plugin, you have to :
   #undef USES_C019
 #endif
 
-#if defined(USES_C019) && !defined(USES_PACKED_RAW_DATA)
-  #define USES_PACKED_RAW_DATA
+#if defined(USES_C019) && !defined(FEATURE_PACKED_RAW_DATA)
+  #define FEATURE_PACKED_RAW_DATA  1
 #endif
 
 

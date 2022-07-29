@@ -1,11 +1,10 @@
 #include "../DataStructs/Modbus.h"
 
-#ifdef USES_MODBUS
+#if FEATURE_MODBUS
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
-#if FEATURE_MODBUS
 
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
   TXRXstate(MODBUS_IDLE), RXavailable(0), payLoad(0) {}

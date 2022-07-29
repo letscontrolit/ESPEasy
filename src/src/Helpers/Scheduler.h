@@ -75,7 +75,7 @@ public:
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
     ,NotificationPlugin
 #endif
   };
@@ -278,7 +278,7 @@ public:
 #endif
 
   // Note: The event will be moved
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
   void schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
                                          NPlugin::Function    Function,
                                          struct EventStruct&& event);

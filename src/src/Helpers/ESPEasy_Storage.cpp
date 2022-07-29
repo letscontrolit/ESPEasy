@@ -660,7 +660,7 @@ uint8_t disableAllControllers(uint8_t bootFailedCount) {
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount) {
   for (uint8_t i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
     if (Settings.NotificationEnabled[i]) {
@@ -1159,7 +1159,7 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 
 #endif
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/

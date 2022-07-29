@@ -1,6 +1,6 @@
 #include "../Globals/NPlugins.h"
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/NotificationStruct.h"
