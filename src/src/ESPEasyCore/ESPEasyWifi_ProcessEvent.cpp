@@ -540,7 +540,7 @@ void processConnectAPmode() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
-  #ifdef FEATURE_DNS_SERVER
+  #if FEATURE_DNS_SERVER
   // Start DNS, only used if the ESP has no valid WiFi config
   // It will reply with it's own address on all DNS requests
   // (captive portal concept)
@@ -548,7 +548,7 @@ void processConnectAPmode() {
     dnsServerActive = true;
     dnsServer.start(DNS_PORT, "*", apIP);
   }
-  #endif
+  #endif // if FEATURE_DNS_SERVER
 }
 
 // Switch of AP mode when timeout reached and no client connected anymore.

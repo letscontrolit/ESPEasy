@@ -49,11 +49,11 @@
 #endif
 
 
-#ifdef FEATURE_DNS_SERVER
+#if FEATURE_DNS_SERVER
   #include <DNSServer.h>
   extern DNSServer  dnsServer;
   extern bool dnsServerActive;
-#endif
+#endif // if FEATURE_DNS_SERVER
 
 
 #endif // GLOBALS_SERVICES_H

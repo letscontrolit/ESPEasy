@@ -1993,14 +1993,14 @@ To create/register a plugin, you have to :
 
 #if FEATURE_MDNS
   #ifndef FEATURE_DNS_SERVER
-    #define FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER  1
   #endif
 #endif
 
 #ifdef WEBSERVER_SETUP
   #ifndef PLUGIN_BUILD_MINIMAL_OTA
     #ifndef FEATURE_DNS_SERVER
-      #define FEATURE_DNS_SERVER
+      #define FEATURE_DNS_SERVER  1
     #endif
   #endif
 #endif
