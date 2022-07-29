@@ -130,7 +130,7 @@ void P037_data_struct::parseMappings() {
     int8_t idx;
     #  endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
     #  if P037_MAPPING_SUPPORT
-    int8_t idx = P037_MAX_MAPPINGS;
+    idx = P037_MAX_MAPPINGS;
 
     for (uint8_t mappingOffset = P037_END_MAPPINGS; mappingOffset >= P037_START_MAPPINGS && _maxIdx == 0; mappingOffset--) {
       if (!valueArray[mappingOffset].isEmpty()) {
