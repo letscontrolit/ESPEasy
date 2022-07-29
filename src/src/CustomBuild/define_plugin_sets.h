@@ -318,17 +318,17 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifdef FEATURE_FHEM
+#if FEATURE_FHEM
     #define USES_C009   // FHEM HTTP
 #endif
 
-#ifdef FEATURE_HOMEASSISTANT_OPENHAB
+#if FEATURE_HOMEASSISTANT_OPENHAB
     #define USES_C005   // Home Assistant (openHAB) MQTT
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
     // Disable ESPEasy p2p for minimal OTA builds.
-    #ifdef FEATURE_ESPEASY_P2P
+    #if FEATURE_ESPEASY_P2P
       #undef FEATURE_ESPEASY_P2P
       #define FEATURE_ESPEASY_P2P 0
     #endif
