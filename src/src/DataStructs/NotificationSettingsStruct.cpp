@@ -1,6 +1,6 @@
 #include "../DataStructs/NotificationSettingsStruct.h"
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 NotificationSettingsStruct::NotificationSettingsStruct() : Port(0), Pin1(-1), Pin2(-1) {
     ZERO_FILL(Server);

@@ -218,7 +218,7 @@ void handle_root() {
     }
 #endif
 
-    #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     {
       addRowLabel(LabelType::M_DNS);
       String html;
@@ -230,7 +230,7 @@ void handle_root() {
       html += F("</a>");
       addHtml(html);
     }
-    #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
 
     #ifdef USES_MQTT
     {

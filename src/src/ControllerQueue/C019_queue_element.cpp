@@ -7,10 +7,10 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 
-#ifdef USES_PACKED_RAW_DATA
+#if FEATURE_PACKED_RAW_DATA
 String getPackedFromPlugin(struct EventStruct *event,
                            uint8_t             sampleSetCount);
-#endif // USES_PACKED_RAW_DATA
+#endif
 
 #ifdef USE_SECOND_HEAP
 C019_queue_element::C019_queue_element(const C019_queue_element& other) :
@@ -31,7 +31,7 @@ C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
   controller_idx(event_p->ControllerIndex)
 {
   event.deep_copy(event_p);
-  #ifdef USES_PACKED_RAW_DATA
+  #if FEATURE_PACKED_RAW_DATA
   packed = getPackedFromPlugin(event_p, 0);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -39,7 +39,7 @@ C019_queue_element::C019_queue_element(struct EventStruct *event_p) :
     log += packed;
     addLog(LOG_LEVEL_INFO, log);
   }
-  #endif // USES_PACKED_RAW_DATA
+  #endif
 
   // Extra check to make sure sensorType is correct.
   event.sensorType = event.getSensorType();

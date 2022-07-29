@@ -79,7 +79,7 @@ const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::Plugi
   switch (pluginType) {
     case PluginPtrType::TaskPlugin:         return F("Plugin");
     case PluginPtrType::ControllerPlugin:   return F("Controller");
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
     case PluginPtrType::NotificationPlugin: return F("Notification");
 #endif
   }
@@ -1127,7 +1127,7 @@ void ESPEasy_Scheduler::schedule_mqtt_controller_event_timer(protocolIndex_t   P
 }
 #endif
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 void ESPEasy_Scheduler::schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
                                                           NPlugin::Function    Function,
                                                           struct EventStruct&& event) {
@@ -1182,7 +1182,7 @@ void ESPEasy_Scheduler::process_system_event_queue() {
     case PluginPtrType::ControllerPlugin:
       CPluginCall(Index, static_cast<CPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);
       break;
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
     case PluginPtrType::NotificationPlugin:
       NPlugin_ptr[Index](static_cast<NPlugin::Function>(Function), &ScheduledEventQueue.front().event, tmpString);
       break;
