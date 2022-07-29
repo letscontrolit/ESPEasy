@@ -1,7 +1,7 @@
 #ifndef HELPERS_DALLAS1WIREHELPER_H
 #define HELPERS_DALLAS1WIREHELPER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
@@ -12,7 +12,15 @@
 // We use the "standard speed" timings, not the "Overdrive speed"
 
 
+// IO register type to perform direct access on GPIOs
+// Written by Paul Stoffregen
+// See: https://github.com/PaulStoffregen/OneWire/blob/master/util/
+#include "../DataTypes/GPIO_Direct_RegType.h"
+
+
+
 struct Dallas_SensorData {
+
   bool check_sensor(int8_t gpio_rx,
                     int8_t gpio_tx,
                     int8_t res);
@@ -32,6 +40,7 @@ struct Dallas_SensorData {
   uint32_t read_success      = 0;
   uint32_t read_failed       = 0;  
   uint8_t  actual_res        = 0;
+
   bool     measurementActive = false;
   bool     valueRead         = false;
   bool     parasitePowered   = false;
