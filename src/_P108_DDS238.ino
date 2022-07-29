@@ -16,9 +16,9 @@
 //  Written by José Araújo (josemariaaraujo@gmail.com),
 //      with most code copied from plugin 085: _P085_AcuDC243.ino
 
-# ifndef USES_MODBUS
+# if !FEATURE_MODBUS
 #  error This code needs MODBUS library, it should be enabled in 'define_plugin_sets.h', or your 'custom.h'
-# endif // ifndef USES_MODBUS
+# endif // if !FEATURE_MODBUS
 
 /*
    DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see https://github.com/reaper7/SDM_Energy_Meter)
