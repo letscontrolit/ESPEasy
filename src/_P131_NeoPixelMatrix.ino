@@ -229,27 +229,27 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
           html_TD(); // Scroll
           addCheckBox(getPluginCustomArgName(varNr + 100), bitRead(optBits, P131_OPTBITS_SCROLL) == 1, false
-                      # ifdef ENABLE_TOOLTIPS
+                      # ifdef FEATURE_TOOLTIPS
                       , F("Scroll text")
-                      # endif // ifdef ENABLE_TOOLTIPS
+                      # endif // ifdef FEATURE_TOOLTIPS
                       );
           html_TD(); // Start with empty display, inverted setting
           addCheckBox(getPluginCustomArgName(varNr + 200), bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0, false
-                      # ifdef ENABLE_TOOLTIPS
+                      # ifdef FEATURE_TOOLTIPS
                       , F("Start and end scroll with empty display")
-                      # endif // ifdef ENABLE_TOOLTIPS
+                      # endif // ifdef FEATURE_TOOLTIPS
                       );
           html_TD(); // Scroll from right
           addCheckBox(getPluginCustomArgName(varNr + 300), bitRead(optBits, P131_OPTBITS_RIGHTSCROLL) == 1, false
-                      # ifdef ENABLE_TOOLTIPS
+                      # ifdef FEATURE_TOOLTIPS
                       , F("Scroll from left to right")
-                      # endif // ifdef ENABLE_TOOLTIPS
+                      # endif // ifdef FEATURE_TOOLTIPS
                       );
           html_TD(); // Pixels per step, offset with -1
           addNumericBox(getPluginCustomArgName(varNr + 400), get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1, 1, P131_MAX_SCROLL_STEPS
-                        # ifdef ENABLE_TOOLTIPS
+                        # ifdef FEATURE_TOOLTIPS
                         , EMPTY_STRING, F("Scroll 1..16 pixels / step")
-                        # endif // ifdef ENABLE_TOOLTIPS
+                        # endif // ifdef FEATURE_TOOLTIPS
                         );
 
           opts = parseString(strings[varNr], 3);
@@ -259,9 +259,9 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           if (scrollSpeed == 0) { scrollSpeed = 10; }
           html_TD(); // Speed 0.1 seconds per step
           addNumericBox(getPluginCustomArgName(varNr + 500), scrollSpeed, 1, P131_MAX_SCROLL_SPEED
-                        # ifdef ENABLE_TOOLTIPS
+                        # ifdef FEATURE_TOOLTIPS
                         , EMPTY_STRING, F("Scroll-speed in 0.1 seconds / step")
-                        # endif // ifdef ENABLE_TOOLTIPS
+                        # endif // ifdef FEATURE_TOOLTIPS
                         );
 
           remain -= (strings[varNr].length() + 1);
