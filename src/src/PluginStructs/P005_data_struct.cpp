@@ -78,7 +78,7 @@ bool P005_data_struct::waitState(int state)
   while (DIRECT_READ(reg, mask) != state)
   {
     if (usecTimeOutReached(timeout)) { return false; }
-    delayMicroseconds(1);
+//    delayMicroseconds(1);
   }
   return true;
 }
@@ -155,7 +155,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
           }
 
           // Wait at least 1 usec or else we might be computing a lot of time diffs.
-          delayMicroseconds(1);
+//          delayMicroseconds(1);
         }
 
         if (!readingAborted) {
