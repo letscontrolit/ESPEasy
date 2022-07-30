@@ -15,9 +15,9 @@
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Globals/MQTT.h"
-#endif // ifdef USES_MQTT
+#endif // if FEATURE_MQTT
 #include "../Globals/NetworkState.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
@@ -138,11 +138,11 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     case BSSID:             return String((WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr());
     case CR:                return String('\r');
     case IP4:               return String(static_cast<int>(NetworkLocalIP()[3])); // 4th IP octet
-    #ifdef USES_MQTT
+    #if FEATURE_MQTT
     case ISMQTT:            return String(MQTTclient_connected ? 1 : 0);
-    #else // ifdef USES_MQTT
+    #else // if FEATURE_MQTT
     case ISMQTT:            return String('0');
-    #endif // ifdef USES_MQTT
+    #endif // if FEATURE_MQTT
 
     #ifdef USES_P037
     case ISMQTTIMP:         return String(P037_MQTTImport_connected ? 1 : 0);

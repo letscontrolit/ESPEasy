@@ -7,11 +7,11 @@
 // Web Interface notifcations page
 // ********************************************************************************
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 void handle_notifications();
 
-#endif // USES_NOTIFIER
+#endif // FEATURE_NOTIFIER
 
 
 #endif

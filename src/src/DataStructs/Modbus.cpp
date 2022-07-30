@@ -1,9 +1,10 @@
 #include "../DataStructs/Modbus.h"
 
-#ifdef USES_MODBUS
+#if FEATURE_MODBUS
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+
 
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
   TXRXstate(MODBUS_IDLE), RXavailable(0), payLoad(0) {}
@@ -242,4 +243,4 @@ bool Modbus::tryRead(uint8_t ModbusID, uint16_t M_register,  MODBUS_registerType
   return false;
 }
 
-#endif // USES_MODBUS
+#endif // FEATURE_MODBUS
