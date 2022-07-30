@@ -280,10 +280,28 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
-
+    #if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
+    #endif
+
+    if (toDisable != 0) {
+      toDisable = disableRules(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllPlugins(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllControllers(toDisable);
+    }
+#if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableAllNotifications(toDisable);
+    }
+#endif
   }
   #if FEATURE_ETHERNET
 
@@ -362,12 +380,12 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("CPluginInit()"));
   #endif
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   NPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("NPluginInit()"));
   #endif
-  #endif // ifdef USES_NOTIFIER
+  #endif // if FEATURE_NOTIFIER
 
   PluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
@@ -435,9 +453,9 @@ void ESPEasy_setup()
   #endif
 
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif // ifdef FEATURE_REPORTING
+  #endif // if FEATURE_REPORTING
 
   #if FEATURE_ARDUINO_OTA
   ArduinoOTAInit();

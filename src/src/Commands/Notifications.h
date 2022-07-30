@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
 
 
 const __FlashStringHelper * Command_Notifications_Notify(struct EventStruct *event, const char* Line);

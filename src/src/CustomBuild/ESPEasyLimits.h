@@ -13,7 +13,7 @@
 
 // Performing a 2-stage define assignment using the _TMP defines
 // See: https://github.com/letscontrolit/ESPEasy/issues/2621
-#ifdef USE_NON_STANDARD_24_TASKS
+#if FEATURE_NON_STANDARD_24_TASKS
   #define TASKS_MAX_TMP                      24
 #else
   #define TASKS_MAX_TMP                      12

@@ -3,13 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-
-
-
-struct LabelType;
-
-// enum LabelType::Enum : short;
-
 struct LabelType {
   enum Enum : short {
     UNIT_NR,
@@ -87,9 +80,9 @@ struct LabelType {
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
     GATEWAY,                 // 192.168.1.1
     CLIENT_IP,               // 192.168.1.67
-  #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     M_DNS,                   // breadboard.local
-  #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
     DNS,                     // 192.168.1.1 / (IP unset)
     DNS_1,
     DNS_2,
