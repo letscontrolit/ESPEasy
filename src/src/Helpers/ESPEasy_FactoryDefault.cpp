@@ -109,9 +109,9 @@ void ResetFactory()
   // pad files with extra zeros for future extensions
   InitFile(SettingsType::SettingsFileEnum::FILE_CONFIG_type);
   InitFile(SettingsType::SettingsFileEnum::FILE_SECURITY_type);
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
-  #endif
+  #endif // if FEATURE_NOTIFIER
 
   InitFile(getRulesFileName(0), 0);
 

@@ -237,7 +237,7 @@ extern const String EMPTY_STRING;
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
 #ifndef FEATURE_ADC_VCC
-  #define FEATURE_ADC_VCC                  false
+  #define FEATURE_ADC_VCC                  0
 #endif
 
 #ifndef ARDUINO_OTA_PORT

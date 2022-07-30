@@ -75,7 +75,7 @@ public:
   enum class PluginPtrType {
     TaskPlugin,
     ControllerPlugin
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
     ,NotificationPlugin
 #endif
   };
@@ -254,7 +254,7 @@ public:
                                         uint8_t              Function,
                                         struct EventStruct&& event);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
                                                taskIndex_t   TaskIndex,
                                                uint8_t       Function,
@@ -269,7 +269,7 @@ public:
                                        uint8_t              Function,
                                        struct EventStruct&& event);
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                             CPlugin::Function Function,
                                             char             *c_topic,
@@ -278,7 +278,7 @@ public:
 #endif
 
   // Note: The event will be moved
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
   void schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
                                          NPlugin::Function    Function,
                                          struct EventStruct&& event);

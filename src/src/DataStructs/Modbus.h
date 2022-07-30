@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_MODBUS
+#if FEATURE_MODBUS
 
 enum MODBUS_states_t { MODBUS_IDLE, MODBUS_RECEIVE, MODBUS_RECEIVE_PAYLOAD };
 enum MODBUS_registerTypes_t { signed16, unsigned16, signed32, unsigned32, signed64, unsigned64 };
@@ -79,6 +79,6 @@ private:
 };
 
 
-#endif // ifdef USES_MODBUS
+#endif // if FEATURE_MODBUS
 
 #endif // ifndef DATASTRUCTS_MODBUS_H
