@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-07-30 tonhuisman: Remove Testing tag from plugin name.
  * 2022-06-12 tonhuisman: Optimizations and small fixes. Implement use of PCONFIG_ULONG()
  * 2022-02-25 tonhuisman: Rename command to ShiftIn,<subcommand>,<arg>...
  * 2022-02-23 tonhuisman: Add command handling.
@@ -28,7 +29,7 @@
 
 # define PLUGIN_129
 # define PLUGIN_ID_129          129
-# define PLUGIN_NAME_129        "Input - Shift registers (74HC165) [TESTING]"
+# define PLUGIN_NAME_129        "Input - Shift registers (74HC165)"
 # define PLUGIN_VALUENAME1_129  "State_A"
 # define PLUGIN_VALUENAME2_129  "State_B"
 # define PLUGIN_VALUENAME3_129  "State_C"
@@ -221,19 +222,19 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
           for (uint8_t j = 0; j < 8; j++) {
             html_TD();
-            # ifdef ENABLE_TOOLTIPS
+            # ifdef FEATURE_TOOLTIPS
             String toolTip = F("Chip ");
             toolTip += (i + 1);
             toolTip += F(" port D");
             toolTip += (7 - j);
             toolTip += F(", pin ");
             toolTip += i * 8 + (8 - j);
-            # endif // ifdef ENABLE_TOOLTIPS
+            # endif // ifdef FEATURE_TOOLTIPS
             addCheckBox(getPluginCustomArgName((i * 8 + (7 - j)) + 1), bitRead(bits, off * 8 + (7 - j))
-                        # ifdef ENABLE_TOOLTIPS
+                        # ifdef FEATURE_TOOLTIPS
                         , false // = not Disabled
                         , toolTip
-                        # endif // ifdef ENABLE_TOOLTIPS
+                        # endif // ifdef FEATURE_TOOLTIPS
                         );
           }
           off++;
