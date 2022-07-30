@@ -318,17 +318,17 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifdef FEATURE_FHEM
+#if FEATURE_FHEM
     #define USES_C009   // FHEM HTTP
 #endif
 
-#ifdef FEATURE_HOMEASSISTANT_OPENHAB
+#if FEATURE_HOMEASSISTANT_OPENHAB
     #define USES_C005   // Home Assistant (openHAB) MQTT
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
     // Disable ESPEasy p2p for minimal OTA builds.
-    #ifdef FEATURE_ESPEASY_P2P
+    #if FEATURE_ESPEASY_P2P
       #undef FEATURE_ESPEASY_P2P
       #define FEATURE_ESPEASY_P2P 0
     #endif
@@ -390,9 +390,11 @@ To create/register a plugin, you have to :
 
     #if FEATURE_SERVO
       #undef FEATURE_SERVO
+      #define FEATURE_SERVO 0
     #endif
     #if FEATURE_RTTTL
       #undef FEATURE_RTTTL
+      #define FEATURE_RTTTL 0
     #endif
 #endif
 
@@ -1418,10 +1420,12 @@ To create/register a plugin, you have to :
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  0
   #endif
 #endif
 
@@ -1749,12 +1753,12 @@ To create/register a plugin, you have to :
 
 
 #if defined(USES_C018)
-  #define USES_PACKED_RAW_DATA
+  #define FEATURE_PACKED_RAW_DATA 1
 #endif
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
-  #define USES_MODBUS
+  #define FEATURE_MODBUS  1
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
@@ -1783,7 +1787,7 @@ To create/register a plugin, you have to :
 
 // VCC builds need a bit more, disable timing stats to make it fit.
 #ifndef PLUGIN_BUILD_CUSTOM
-  #if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
+  #if FEATURE_ADC_VCC && !defined(PLUGIN_SET_MAX)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
     #endif
@@ -1844,16 +1848,19 @@ To create/register a plugin, you have to :
 
   #if FEATURE_SERVO
     #undef FEATURE_SERVO
+    #define FEATURE_SERVO 0
   #endif
   #if FEATURE_RTTTL
     #undef FEATURE_RTTTL
+    #define FEATURE_RTTTL 0
   #endif
   #if FEATURE_TOOLTIPS
     #undef FEATURE_TOOLTIPS
     #define FEATURE_TOOLTIPS  0
   #endif
-  #ifdef USES_BLYNK
-    #undef USES_BLYNK
+  #if FEATURE_BLYNK
+    #undef FEATURE_BLYNK
+    #define FEATURE_BLYNK 0
   #endif
   #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
@@ -1883,6 +1890,7 @@ To create/register a plugin, you have to :
   #endif
   #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 0
   #endif
   #if FEATURE_SSDP
     #undef FEATURE_SSDP
@@ -1890,9 +1898,11 @@ To create/register a plugin, you have to :
   #endif
   #if FEATURE_PLUGIN_STATS
     #undef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS
     #undef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  0
   #endif
 #endif
 
@@ -1933,18 +1943,18 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
-  #define USES_MQTT
+  #define FEATURE_MQTT  1
 #endif
 
 #if defined(USES_C012) || defined (USES_C015)
-  #define USES_BLYNK
+  #define FEATURE_BLYNK 1
 #endif
 
 // Specific notifier plugins may be enabled via Custom.h, regardless
 // whether NOTIFIER_SET_NONE is defined
 #if defined(USES_N001) || defined(USES_N002)
-  #ifndef USES_NOTIFIER
-    #define USES_NOTIFIER
+  #ifndef FEATURE_NOTIFIER
+    #define FEATURE_NOTIFIER  1
   #endif
 #endif
 
@@ -1956,16 +1966,16 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
   #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
 #endif
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
 
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
-#ifndef USES_BLYNK
+#if !FEATURE_BLYNK
   #ifdef USES_C012
     #undef USES_C012
   #endif
@@ -1976,20 +1986,20 @@ To create/register a plugin, you have to :
 
 #if FEATURE_ARDUINO_OTA
   #ifndef FEATURE_MDNS
-    #define FEATURE_MDNS
+    #define FEATURE_MDNS  1
   #endif
 #endif
 
-#ifdef FEATURE_MDNS
+#if FEATURE_MDNS
   #ifndef FEATURE_DNS_SERVER
-    #define FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER  1
   #endif
 #endif
 
 #ifdef WEBSERVER_SETUP
   #ifndef PLUGIN_BUILD_MINIMAL_OTA
     #ifndef FEATURE_DNS_SERVER
-      #define FEATURE_DNS_SERVER
+      #define FEATURE_DNS_SERVER  1
     #endif
   #endif
 #endif

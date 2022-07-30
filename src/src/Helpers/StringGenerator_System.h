@@ -10,9 +10,9 @@
    ESPEasy specific strings
 \*********************************************************************************************/
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 const __FlashStringHelper * getMQTT_state();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information
