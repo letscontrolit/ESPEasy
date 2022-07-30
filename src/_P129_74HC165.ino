@@ -222,19 +222,19 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
           for (uint8_t j = 0; j < 8; j++) {
             html_TD();
-            # ifdef FEATURE_TOOLTIPS
+            # if FEATURE_TOOLTIPS
             String toolTip = F("Chip ");
             toolTip += (i + 1);
             toolTip += F(" port D");
             toolTip += (7 - j);
             toolTip += F(", pin ");
             toolTip += i * 8 + (8 - j);
-            # endif // ifdef FEATURE_TOOLTIPS
-            addCheckBox(getPluginCustomArgName((i * 8 + (7 - j)) + 1), bitRead(bits, off * 8 + (7 - j))
-                        # ifdef FEATURE_TOOLTIPS
+            # endif // if FEATURE_TOOLTIPS
+            addCheckBox(getPluginCustomArgName((i * 8 + (7 - j)) + 1), bitRead(bits, off * 8 + (7 - j)) == 1
+                        # if FEATURE_TOOLTIPS
                         , false // = not Disabled
                         , toolTip
-                        # endif // ifdef FEATURE_TOOLTIPS
+                        # endif // if FEATURE_TOOLTIPS
                         );
           }
           off++;
