@@ -7,6 +7,10 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-07-30 tonhuisman: Add commands to set scroll-options (settext, setscroll, setstep, setspeed, setempty, setright)
+ *                        Fix issue that on startup the display wasn't cleared (unit reset should turn off the display)
+ *                        Changed initial Text print mode to 'Truncate exceeding message' to enable Scroll mode
+ *                        Removed Testing tag from the plugin name. It has been tested and proven stable.
  * 2022-07-15 tonhuisman: Implement horizontal scrolling (left/right, opt. empty start) for predefined content
  * 2022-07-11 tonhuisman: Fix Clear on Exit issue
  * 2022-06-13 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
@@ -23,7 +27,7 @@
 
 # define PLUGIN_131
 # define PLUGIN_ID_131      131
-# define PLUGIN_NAME_131    "Display - NeoPixel Matrix [TESTING]"
+# define PLUGIN_NAME_131    "Display - NeoPixel Matrix"
 
 # include "./src/PluginStructs/P131_data_struct.h"
 
@@ -66,6 +70,8 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       set8BitToUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE,
                   NEO_MATRIX_TOP | NEO_MATRIX_LEFT | NEO_MATRIX_ROWS | NEO_MATRIX_PROGRESSIVE |
                   NEO_TILE_TOP | NEO_TILE_LEFT | NEO_TILE_ROWS | NEO_TILE_PROGRESSIVE);
+
+      set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_MODE, static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage));
 
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_BRIGHTNESS, 40);  // Default brightness
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_MAXBRIGHT,  255); // Default max brightness
@@ -240,7 +246,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
                       # endif // ifdef ENABLE_TOOLTIPS
                       );
           html_TD(); // Pixels per step, offset with -1
-          addNumericBox(getPluginCustomArgName(varNr + 400), get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1, 1, 16
+          addNumericBox(getPluginCustomArgName(varNr + 400), get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1, 1, P131_MAX_SCROLL_STEPS
                         # ifdef ENABLE_TOOLTIPS
                         , EMPTY_STRING, F("Scroll 1..16 pixels / step")
                         # endif // ifdef ENABLE_TOOLTIPS
@@ -252,7 +258,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
           if (scrollSpeed == 0) { scrollSpeed = 10; }
           html_TD(); // Speed 0.1 seconds per step
-          addNumericBox(getPluginCustomArgName(varNr + 500), scrollSpeed, 1, 600
+          addNumericBox(getPluginCustomArgName(varNr + 500), scrollSpeed, 1, P131_MAX_SCROLL_SPEED
                         # ifdef ENABLE_TOOLTIPS
                         , EMPTY_STRING, F("Scroll-speed in 0.1 seconds / step")
                         # endif // ifdef ENABLE_TOOLTIPS

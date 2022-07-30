@@ -27,6 +27,9 @@
 # define P131_CONFIG_FLAGS_B        PCONFIG_ULONG(1)
 # define P131_CONFIG_COLORS         PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
+# define P131_MAX_SCROLL_STEPS 16                    // Max. stepsize
+# define P131_MAX_SCROLL_SPEED 600                   // Max. speed
+
 # define P131_FLAGS_MATRIX_TYPE             0        // MatrixType flags
 # define P131_FLAGS_MATRIX_TYPE_TOP         0        // MatrixType flags Top/Bottom/Left/Right
 # define P131_FLAGS_MATRIX_TYPE_RC          2        // MatrixType Row/Col
@@ -124,8 +127,11 @@ private:
   void updateFontMetrics();
   void cleanup();
   void display_content(struct EventStruct *event,
-                       bool                scrollOnly = false);
+                       bool                scrollOnly = false,
+                       uint8_t             line       = 255);
   void loadContent(struct EventStruct *event);
+  void initialize_content(struct EventStruct *event,
+                          uint8_t             x);
 
   Adafruit_NeoMatrix *matrix    = nullptr;
   AdafruitGFX_helper *gfxHelper = nullptr;

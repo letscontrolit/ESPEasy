@@ -119,6 +119,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->setRotation(_rotation);
       matrix->setBrightness(std::min(_maxbright, _brightness)); // Set brightness, so we don't get blinded by the light
       matrix->fillScreen(_bgcolor);                             // fill screen with black color
+      matrix->show();                                           // Update the display
 
       # ifdef P131_SHOW_SPLASH
 
@@ -209,20 +210,30 @@ void P131_data_struct::loadContent(struct EventStruct *event) {
 
     for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
       content[x] = P131_content_struct();
-      String   opts    = parseString(strings[x], 2);
-      uint32_t optBits = 0;
-      validUIntFromString(opts, optBits);
-      content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
-      content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
-      content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0;      // Inverted
-      content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1; // Add offset once
-      opts                   = parseString(strings[x], 3);
-      int speed = 0;
-      validIntFromString(opts, speed);
-      content[x].speed = speed;
+      initialize_content(event, x);
     }
     contentInitialized = true;
   }
+}
+
+/****************************************************************************
+ * initialize_content: set the content[x] flags from arguments provided
+ ***************************************************************************/
+void P131_data_struct::initialize_content(struct EventStruct *event,
+                                          uint8_t             x) {
+  String   opts    = parseString(strings[x], 2);
+  uint32_t optBits = 0;
+
+  validUIntFromString(opts, optBits);
+  content[x].active      = bitRead(optBits, P131_OPTBITS_SCROLL);
+  content[x].rightScroll = bitRead(optBits, P131_OPTBITS_RIGHTSCROLL);
+  content[x].startBlank  = bitRead(optBits, P131_OPTBITS_STARTBLANK) == 0;      // Inverted
+  content[x].stepWidth   = get4BitFromUL(optBits, P131_OPTBITS_SCROLLSTEP) + 1; // Add offset once
+  opts                   = parseString(strings[x], 3);
+  int speed = 0;
+
+  validIntFromString(opts, speed);
+  content[x].speed = speed;
 }
 
 /****************************************************************************
@@ -250,13 +261,22 @@ bool P131_data_struct::plugin_read(struct EventStruct *event) {
  * display_content: Re-display the text, and apply any scrolling offset
  ***************************************************************************/
 void P131_data_struct::display_content(struct EventStruct *event,
-                                       bool                scrollOnly) {
+                                       bool                scrollOnly,
+                                       uint8_t             line) {
   if (isInitialized() && (nullptr != gfxHelper)) {
     int16_t yPos   = 0;
     bool    useVal = gfxHelper->getValidation();
     gfxHelper->setValidation(false); // Ignore validation to enable scrolling
 
-    for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
+    uint8_t x     = 0;
+    uint8_t x_end = P131_CONFIG_TILE_HEIGHT;
+
+    if (line != 255) {
+      x     = line;
+      x_end = line + 1;
+    }
+
+    for (; x < x_end; x++) {
       if (!scrollOnly ||
           (scrollOnly && content[x].active)) {
         String   tmpString = parseStringKeepCase(strings[x], 1);
@@ -350,20 +370,92 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
     const String cmd = parseString(string, 1);
 
     if ((nullptr != matrix) && cmd.equals(_commandTriggerCmd)) {
-      String sub = parseString(string, 2);
+      String  sub = parseString(string, 2);
+      int16_t x   = event->Par2 - 1;
       success = true;
 
       if (sub.equals(F("clear"))) {
         matrix->fillScreen(_bgcolor);
-      }
-      else if (sub.startsWith(F("bright")) && (event->Par2 >= 0) && (event->Par2 <= 255)) {
+      } else if (sub.startsWith(F("bright")) && (event->Par2 >= 0) && (event->Par2 <= 255)) {
         if (parseString(string, 3).isEmpty()) {                     // No argument, then
           matrix->setBrightness(std::min(_maxbright, _brightness)); // use initial brightness
         } else {
           matrix->setBrightness(std::min(_maxbright, static_cast<uint8_t>(event->Par2)));
         }
+      } else if (sub.equals(F("settext"))
+                 && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))) { // line
+        String tmpString = parseStringToEnd(strings[x], 2);                            // settings to be transferred
+        strings[x]  = wrapWithQuotesIfContainsParameterSeparatorChar(parseStringToEndKeepCase(string, 4));
+        strings[x] += ',';
+        strings[x] += tmpString;
+      } else if ((sub.equals(F("setscroll")) ||                                     // neomatrixcmd,setscroll,<line>,0|1
+                  sub.equals(F("setempty")) ||                                      // neomatrixcmd,setempty,<line>,0|1
+                  sub.equals(F("setright"))                                         // neomatrixcmd,setright,<line>,0|1
+                  )
+                 && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT)) // line
+                 && ((event->Par3 >= 0) && (event->Par3 <= 1))) {                   // on/off
+        String   tmpString1 = parseStringKeepCase(strings[x], 1);                   // settings to be transferred
+        String   tmpString3 = parseString(strings[x], 3);                           // settings to be transferred
+        String   opts       = parseString(strings[x], 2);
+        uint32_t optBits    = 0;
+
+        validUIntFromString(opts, optBits);
+
+        if (sub[3] == 's') {                                            // setscroll
+          bitWrite(optBits, P131_OPTBITS_SCROLL, event->Par3 == 1);
+        } else if (sub[3] == 'e') {                                     // setempty
+          bitWrite(optBits, P131_OPTBITS_STARTBLANK, event->Par3 == 0); // Inverted value
+        } else if (sub[3] == 'r') {                                     // setright
+          bitWrite(optBits, P131_OPTBITS_RIGHTSCROLL, event->Par3 == 1);
+        }
+        strings[x]  = wrapWithQuotesIfContainsParameterSeparatorChar(tmpString1);
+        strings[x] += ',';
+        strings[x] += optBits;
+        strings[x] += ',';
+        strings[x] += tmpString3;
+      } else if (sub.equals(F("setstep"))                                            // neomatrixcmd,setstep,<line>,1..16
+                 && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))  // line
+                 && ((event->Par3 > 0) && (event->Par3 <= P131_MAX_SCROLL_STEPS))) { // 1..16
+        String   tmpString1 = parseStringKeepCase(strings[x], 1);                    // settings to be transferred
+        String   tmpString3 = parseString(strings[x], 3);                            // settings to be transferred
+        String   opts       = parseString(strings[x], 2);
+        uint32_t optBits    = 0;
+
+        validUIntFromString(opts, optBits);
+        set4BitToUL(optBits, P131_OPTBITS_SCROLLSTEP, event->Par3 - 1); // Use offset of -1
+        strings[x]  = wrapWithQuotesIfContainsParameterSeparatorChar(tmpString1);
+        strings[x] += ',';
+        strings[x] += optBits;
+        strings[x] += ',';
+        strings[x] += tmpString3;
+      } else if (sub.equals(F("setspeed"))                                           // neomatrixcmd,setspeed,<line>,1..600
+                 && ((event->Par2 > 0) && (event->Par2 <= P131_CONFIG_TILE_HEIGHT))  // line
+                 && ((event->Par3 > 0) && (event->Par3 <= P131_MAX_SCROLL_SPEED))) { // 1..600
+        String tmpString1 = parseStringKeepCase(strings[x], 1);                      // settings to be transferred
+        String tmpString2 = parseString(strings[x], 2);                              // settings to be transferred
+        strings[x]  = wrapWithQuotesIfContainsParameterSeparatorChar(tmpString1);
+        strings[x] += ',';
+        strings[x] += tmpString2;
+        strings[x] += ',';
+        strings[x] += event->Par3;
       } else {
         success = false;
+      }
+
+      if (success && sub.startsWith(F("set"))) {
+        initialize_content(event, x);     // Set up line parameters
+        content[x].loop = -1;             // Restart loop
+        display_content(event, false, x); // (re-)display line
+        # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("NEOMATRIX: set line ");
+          log += event->Par2;
+          log += F(": ");
+          log += strings[x];
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+        # endif // ifndef BUILD_NO_DEBUG
       }
     }
     else if (matrix && (cmd.equals(_commandTrigger) ||
@@ -419,7 +511,7 @@ bool P131_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     success = true;
 
     for (uint8_t x = 0; x < P131_CONFIG_TILE_HEIGHT; x++) {
-      if (content[x].active && content[x].length > _xpix) {
+      if (content[x].active && (content[x].length > _xpix)) {
         if (content[x].loop == -1) { content[x].loop = content[x].speed; } // Initialize
 
         if (!content[x].loop--) {

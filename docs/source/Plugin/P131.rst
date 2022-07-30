@@ -184,7 +184,7 @@ Available options:
    :alt: Text print mode
 
 * *Continue to next line* Simply 'prints' all text to the display, with automatic overflow to the next line(s) if the text doesn't fit on the current line.
-* *Truncate exceeding message* Display the provided message, but any excess at the right border of the display is discarded.
+* *Truncate exceeding message* (Default) Display the provided message, but any excess at the right border of the display is discarded.
 * *Clear then truncate exceeding message* Clear from the current cursor position to the width of the display, then display the provided message, but any excess at the right border of the display is discarded.
 
 Default setting is *Continue to next line*.
@@ -195,7 +195,7 @@ Default setting is *Continue to next line*.
 
 * **Font scaling** The scaling factor for the currently active font. Select a factor between 1 and 4.
 
-* **Clear display on exit** When checked, will clear the display when the task is disabled, either from settings or via the ``TaskDisable`` command. This will fill the display with all black pixels, turning all NeoPixels off.
+* **Clear display on exit** When checked, will clear the display when the task is disabled, either from settings or via the ``TaskDisable`` command. This will fill the display with black pixels, turning all NeoPixels off.
 
 * **Write Command trigger** The command to handle any commands for this device can be selected here. This way you can have different commands when multiple displays are configured. It is processing most commands via the ESPEasy Adafruit Graphics helper class.
 
@@ -228,7 +228,7 @@ If the Foreground and Background colors are the same, the background color will 
 Lines
 ^^^^^
 
-* **Line 1..n** Predefined content can be specified. The number of lines shown depends on the Tile height of the display, the font used and the font scaling that is set. On a 240x240 pixel display, with the default font, and font scling set ot 1, all 24 lines will be displayed, but when using font scaling 2, then only the first 12 lines are displayed. If more lines are needed, then they should be set from the rules or an external source, like commands via http.
+* **Line 1..n** Predefined content can be specified. The number of lines shown depends on the Tile height of the display.
 
 The usual variables, like ``[Taskname#Valuename]``, or ``%v1%``, system variables, formulas and functions can be used.
 
@@ -238,7 +238,7 @@ Per **Line** you can define if Scrolling should be used for displaying the conte
 
 * **Scroll**: Enables (horizontal) scrolling of the content. NB: Scrolling will *only* be enabled if the content length won't fit on the display!
 * **Empty start**: When checked, the display will start empty, and the text will be scrolled in. It will also scroll out until the display is empty again. (Default enabled). When unchecked, the display will start with the content that fits on the display, and scroll until the 'other' end of the text is visible. The display won't be empty when having this setting off.
-* **Scroll right**: By default, scrolling will be from right to left, when checked, scrolling will be from left to right direction.
+* **Scroll right**: By default, scrolling will be from right to left, when this option is checked, scrolling will be from left to right direction.
 * **Stepsize**: The number of pixels that each step will scroll. Range 1..16, default 1.
 * **Speed**: The number of 0.1 seconds before the next scroll step will be applied. Range 1..600 (0.1 second to 60 seconds), default 10 (1 step per second).
 
