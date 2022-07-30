@@ -1389,9 +1389,6 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
-   #ifndef USES_P131
-     #define USES_P131   // NeoMatrix
-   #endif
 #endif
 
 // Collection of all NeoPixel plugins
