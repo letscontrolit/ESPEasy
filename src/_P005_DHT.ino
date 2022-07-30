@@ -90,7 +90,7 @@ boolean Plugin_005(uint8_t function, struct EventStruct *event, String& string)
           static_cast<P005_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P005_data) {
-          success = P005_data->P005_do_plugin_read(event);
+          success = P005_data->readDHT(event);
         }
         break;
       }
