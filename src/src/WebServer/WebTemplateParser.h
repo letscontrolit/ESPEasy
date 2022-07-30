@@ -1,6 +1,8 @@
 #ifndef WEBSERVER_WEBTEMPLATEPARSER_H
 #define WEBSERVER_WEBTEMPLATEPARSER_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 

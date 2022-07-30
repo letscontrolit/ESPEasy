@@ -3,10 +3,10 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <Arduino.h>
-#include <map>
-
 #if FEATURE_SERVO
+
+# include <Arduino.h>
+# include <map>
 # include <Servo.h>
 
 // IRAM: doing servo stuff uses 740 bytes IRAM. (doesnt matter how many instances)

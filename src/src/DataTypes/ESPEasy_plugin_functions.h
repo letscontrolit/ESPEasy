@@ -1,6 +1,8 @@
 #ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
 #define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
+#include "../../ESPEasy_common.h"
+
 
 // ********************************************************************************
 //   Plugin (Task) function calls
@@ -37,7 +39,7 @@
 #define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
 #define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
 #define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
-                                              // Needs USES_PACKED_RAW_DATA
+                                              // Needs FEATURE_PACKED_RAW_DATA
 #define PLUGIN_ONLY_TIMER_IN               33 // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
 #define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
