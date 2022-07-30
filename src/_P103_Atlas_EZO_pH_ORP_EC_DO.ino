@@ -16,7 +16,7 @@
 
 #define PLUGIN_103
 #define PLUGIN_ID_103 103
-#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO [TESTING]"
+#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO"
 #define PLUGIN_VALUENAME1_103 "SensorData"
 #define PLUGIN_VALUENAME2_103 "Voltage"
 #define UNKNOWN 0

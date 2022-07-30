@@ -254,7 +254,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
     bitWrite(flags, 0, isFormItemChecked(F("taskdeviceflags0")));
   }
-# ifdef FEATURE_I2CMULTIPLEXER
+  # if FEATURE_I2CMULTIPLEXER
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && isI2CMultiplexerEnabled()) {
     int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
@@ -273,7 +273,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
       Settings.I2C_Multiplexer_Channel[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
     }
   }
-# endif // ifdef FEATURE_I2CMULTIPLEXER
+  # endif // if FEATURE_I2CMULTIPLEXER
 
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
     Settings.I2C_Flags[taskIndex] = flags;
@@ -521,9 +521,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] != 0) {
+          #if FEATURE_ESPEASY_P2P
           // Show originating node number
           const uint8_t remoteUnit = Settings.TaskDeviceDataFeed[x];
           format_originating_node(remoteUnit);
+          #endif
         } else {
           String portDescr;
 
@@ -751,6 +753,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   html_end_form();
 }
 
+#if FEATURE_ESPEASY_P2P
 void format_originating_node(uint8_t remoteUnit) {
   addHtml(F("Unit "));
   addHtmlInt(remoteUnit);
@@ -766,11 +769,12 @@ void format_originating_node(uint8_t remoteUnit) {
     }
   }
 }
+#endif
 
 void format_I2C_port_description(taskIndex_t x)
 {
   addHtml(F("I2C"));
-# ifdef FEATURE_I2CMULTIPLEXER
+  # if FEATURE_I2CMULTIPLEXER
 
   if (isI2CMultiplexerEnabled() && I2CMultiplexerPortSelectedForTask(x)) {
     String mux;
@@ -792,7 +796,7 @@ void format_I2C_port_description(taskIndex_t x)
     }
     addHtml(mux);
   }
-# endif // ifdef FEATURE_I2CMULTIPLEXER
+  # endif // if FEATURE_I2CMULTIPLEXER
 }
 
 void format_SPI_port_description(int8_t spi_gpios[3])
@@ -953,6 +957,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       }
     }
     else {
+      #if FEATURE_ESPEASY_P2P
       // Show remote feed information.
       addFormSubHeader(F("Data Source"));
       uint8_t remoteUnit = Settings.TaskDeviceDataFeed[taskIndex];
@@ -968,12 +973,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         }
       }
       addFormNote(F("0 = disable remote feed, 255 = broadcast")); // FIXME TD-er: Must verify if broadcast can be set.
+      #endif
     }
 
-#ifdef USES_PLUGIN_STATS
+    #if FEATURE_PLUGIN_STATS
     // Task statistics and historic data in a chart
     devicePage_show_task_statistics(taskIndex, DeviceIndex);
-#endif
+    #endif // if FEATURE_PLUGIN_STATS
 
     // section: Data Acquisition
     devicePage_show_controller_config(taskIndex, DeviceIndex);
@@ -1101,7 +1107,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
   PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);
   addFormCheckBox(F("Force Slow I2C speed"), F("taskdeviceflags0"), bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED));
 
-# ifdef FEATURE_I2CMULTIPLEXER
+  # if FEATURE_I2CMULTIPLEXER
 
   // Show selector for an I2C multiplexer port if a multiplexer is configured
   if (isI2CMultiplexerEnabled()) {
@@ -1176,7 +1182,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
                       taskDeviceI2CMuxPort);
     }
   }
-# endif // ifdef FEATURE_I2CMULTIPLEXER
+  # endif // if FEATURE_I2CMULTIPLEXER
 }
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
@@ -1204,7 +1210,7 @@ void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t Devic
   }
 }
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].PluginStats)
@@ -1215,12 +1221,12 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
       if (taskData->hasPluginStats()) {
         addFormSubHeader(F("Statistics"));
       }
-#ifdef USES_CHART_JS
+      #if FEATURE_CHART_JS
       if (taskData->nrSamplesPresent() > 0) {
         addRowLabel(F("Historic data"));
         taskData->plot_ChartJS();
       }
-#endif
+      #endif // if FEATURE_CHART_JS
 
       struct EventStruct TempEvent(taskIndex);
       String dummy;
@@ -1241,7 +1247,7 @@ void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t Device
     }
   }
 }
-#endif
+#endif // if FEATURE_PLUGIN_STATS
 
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {

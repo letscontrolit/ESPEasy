@@ -83,13 +83,13 @@ void sendHeadandTail(const __FlashStringHelper * tmplName, boolean Tail, boolean
   // This function is called twice per serving a web page.
   // So it must keep track of the timer longer than the scope of this function.
   // Therefore use a local static variable.
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   static uint64_t statisticsTimerStart = 0;
 
   if (!Tail) {
     statisticsTimerStart = getMicros64();
   }
-  #endif // ifdef USES_TIMING_STATS
+  #endif // if FEATURE_TIMING_STATS
   {
     const String fileName = String(tmplName) + F(".htm");
     fs::File f = tryOpenFile(fileName, "r");
@@ -228,9 +228,9 @@ void WebServerInit()
   #ifdef WEBSERVER_FACTORY_RESET
   web_server.on(F("/factoryreset"),    handle_factoryreset);
   #endif // ifdef WEBSERVER_FACTORY_RESET
-  #ifdef USE_SETTINGS_ARCHIVE
+  #if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/settingsarchive"), handle_settingsarchive);
-  #endif // ifdef USE_SETTINGS_ARCHIVE
+  #endif // if FEATURE_SETTINGS_ARCHIVE
   web_server.on(F("/favicon.ico"),     handle_favicon);
   #ifdef WEBSERVER_FILELIST
   web_server.on(F("/filelist"),        handle_filelist);
@@ -245,9 +245,9 @@ void WebServerInit()
   web_server.on(F("/csv"),             handle_csvval);
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
-#endif // ifdef USES_NOTIFIER
+#endif // if FEATURE_NOTIFIER
   #ifdef WEBSERVER_PINSTATES
   web_server.on(F("/pinstates"),       handle_pinstates);
   #endif // ifdef WEBSERVER_PINSTATES
@@ -263,9 +263,9 @@ void WebServerInit()
   web_server.on(F("/rules/delete"), handle_rules_delete);
   # endif // WEBSERVER_NEW_RULES
   #endif  // WEBSERVER_RULES
-#ifdef FEATURE_SD
+#if FEATURE_SD
   web_server.on(F("/SDfilelist"),  handle_SDfilelist);
-#endif   // ifdef FEATURE_SD
+#endif   // if FEATURE_SD
 #ifdef WEBSERVER_SETUP
   web_server.on(F("/setup"),       handle_setup);
 #endif // ifdef WEBSERVER_SETUP
@@ -297,7 +297,9 @@ void WebServerInit()
   web_server.on(F("/factoryreset_json"), handle_factoryreset_json);
   web_server.on(F("/filelist_json"),     handle_filelist_json);
   web_server.on(F("/i2cscanner_json"),   handle_i2cscanner_json);
+  #if FEATURE_ESPEASY_P2P
   web_server.on(F("/node_list_json"),    handle_nodes_list_json);
+  #endif
   web_server.on(F("/pinstates_json"),    handle_pinstates_json);
   web_server.on(F("/timingstats_json"),  handle_timingstats_json);
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
@@ -324,7 +326,7 @@ void WebServerInit()
 
   #if defined(ESP8266)
 
-  # ifdef USES_SSDP
+  # if FEATURE_SSDP
 
   if (Settings.UseSSDP)
   {
@@ -335,7 +337,7 @@ void WebServerInit()
     });
     SSDP_begin();
   }
-  # endif // USES_SSDP
+  # endif // if FEATURE_SSDP
   #endif  // if defined(ESP8266)
 }
 

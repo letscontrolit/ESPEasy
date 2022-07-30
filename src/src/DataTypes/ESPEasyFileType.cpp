@@ -31,6 +31,9 @@ const __FlashStringHelper * getFileName(FileType::Enum filetype) {
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
+    case FileType::FIRMWARE:
+      // File name may differ each time.
+      break;
 
     case FileType::MAX_FILETYPE:
       break;
@@ -68,6 +71,7 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
     case FileType::PROVISIONING_DAT: isChecked = ResetFactoryDefaultPreference.fetchProvisioningDat(); break;
       break;
 
+    case FileType::FIRMWARE: // FIXME TD-er: Must decide what to do with firmware description/protection on provisioning settings
     case FileType::MAX_FILETYPE:
       break;
   }

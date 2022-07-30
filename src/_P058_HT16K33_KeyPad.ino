@@ -31,7 +31,7 @@
 
 #define PLUGIN_058
 #define PLUGIN_ID_058         58
-#define PLUGIN_NAME_058       "Keypad - HT16K33 [TESTING]"
+#define PLUGIN_NAME_058       "Keypad - HT16K33"
 #define PLUGIN_VALUENAME1_058 "ScanCode"
 
 

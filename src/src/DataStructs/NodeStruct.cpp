@@ -15,8 +15,10 @@ const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType) {
   return F("");
 }
 
+#if FEATURE_ESPEASY_P2P
   NodeStruct::NodeStruct() :
     build(0), age(0), nodeType(0), webgui_portnumber(0)
   {
     for (uint8_t i = 0; i < 4; ++i) { ip[i] = 0; }
   }
+#endif

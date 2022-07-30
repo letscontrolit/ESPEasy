@@ -3,10 +3,10 @@
 
 #include "../WebServer/common.h"
 
+#ifdef WEBSERVER_ADVANCED
+
 #include "../DataTypes/TimeSource.h"
 
-
-#ifdef WEBSERVER_ADVANCED
 
 // ********************************************************************************
 // Web Interface config page

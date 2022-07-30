@@ -1,6 +1,8 @@
 #ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
 #define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
+#include "../../ESPEasy_common.h"
+
 
 // ********************************************************************************
 //   Plugin (Task) function calls
@@ -37,7 +39,7 @@
 #define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
 #define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
 #define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
-                                              // Needs USES_PACKED_RAW_DATA
+                                              // Needs FEATURE_PACKED_RAW_DATA
 #define PLUGIN_ONLY_TIMER_IN               33 // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
 #define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
@@ -45,9 +47,9 @@
 #define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 #define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
 #define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
-#endif
+#endif // if FEATURE_PLUGIN_STATS
 #define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
 #define PLUGIN_GET_DISPLAY_PARAMETERS      42 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
 #define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE

@@ -17,7 +17,7 @@
 
 # define PLUGIN_115
 # define PLUGIN_ID_115     115           // plugin id
-# define PLUGIN_NAME_115   "Energy - Fuel Gauge MAX1704x [TESTING]"
+# define PLUGIN_NAME_115   "Energy - Fuel Gauge MAX1704x"
 # define PLUGIN_VALUENAME1_115 "Voltage" // Battery voltage
 # define PLUGIN_VALUENAME2_115 "SOC"     // Battery state of charge in percentage
 # define PLUGIN_VALUENAME3_115 "Alert"   // (0 or 1) Alert when the battery SoC gets too low

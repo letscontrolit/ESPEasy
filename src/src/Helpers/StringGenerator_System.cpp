@@ -1,15 +1,12 @@
 #include "../Helpers/StringGenerator_System.h"
 
 
-#include <Arduino.h>
-
-
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
 
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 #include <PubSubClient.h>
 #include "../Globals/MQTT.h"
@@ -31,7 +28,7 @@ const __FlashStringHelper * getMQTT_state() {
   return F("");
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information
@@ -82,6 +79,7 @@ const __FlashStringHelper * getResetReasonString_f(uint8_t icore, bool& isDEEPSL
     case TG1WDT_CPU_RESET:       return F("Time Group1 reset CPU");                            // 17
     case SUPER_WDT_RESET:        return F("Super watchdog reset digital core and rtc module"); // 18
     case GLITCH_RTC_RESET:       return F("Glitch reset digital core and rtc module");         // 19
+    case EFUSE_RESET:            return F("EFUSE_RESET"); // FIXME TD-er: No idea what may cause this
     case NO_MEAN:                break; // Undefined, "No Meaning"
   }
 
@@ -174,9 +172,9 @@ String getPluginDescriptionString() {
   #ifdef PLUGIN_BUILD_NORMAL
   result += F(" [Normal]");
   #endif // ifdef PLUGIN_BUILD_NORMAL
-  #ifdef PLUGIN_BUILD_TESTING
-  result += F(" [Testing]");
-  #endif // ifdef PLUGIN_BUILD_TESTING
+  #ifdef PLUGIN_BUILD_COLLECTION
+  result += F(" [Collection]");
+  #endif // ifdef PLUGIN_BUILD_COLLECTION
   #ifdef PLUGIN_BUILD_DEV
   result += F(" [Development]");
   #endif // ifdef PLUGIN_BUILD_DEV
@@ -185,9 +183,9 @@ String getPluginDescriptionString() {
   result += F(PLUGIN_DESCR);
   result += ']';
   #endif // ifdef PLUGIN_DESCR
-  #ifdef USE_NON_STANDARD_24_TASKS
+  #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
   result += F(" 24tasks");
-  #endif // ifdef USE_NON_STANDARD_24_TASKS
+  #endif // if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
   result.trim();
   return result;
 }

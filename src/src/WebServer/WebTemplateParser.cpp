@@ -293,12 +293,12 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       if ((i == MENU_INDEX_RULES) && !Settings.UseRules) { // hide rules menu item
         continue;
       }
-#ifndef USES_NOTIFIER
+#ifndef FEATURE_NOTIFIER
 
       if (i == MENU_INDEX_NOTIFICATIONS) { // hide notifications menu item
         continue;
       }
-#endif // ifndef USES_NOTIFIER
+#endif // ifndef FEATURE_NOTIFIER
 
       addHtml(F("<a "));
 
@@ -332,9 +332,9 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
   else if (varName == F("js"))
   {
     html_add_JQuery_script();
-    #ifdef USES_CHART_JS
+    #if FEATURE_CHART_JS
     html_add_ChartJS_script();
-    #endif
+    #endif // if FEATURE_CHART_JS
     html_add_autosubmit_form();
     serve_JS(JSfiles_e::Toasting);
   }

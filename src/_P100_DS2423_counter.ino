@@ -11,7 +11,7 @@
 
 # define PLUGIN_100
 # define PLUGIN_ID_100         100
-# define PLUGIN_NAME_100       "Pulse Counter - DS2423 [TESTING]"
+# define PLUGIN_NAME_100       "Pulse Counter - DS2423"
 # define PLUGIN_VALUENAME1_100 "CountDelta"
 
 boolean Plugin_100(uint8_t function, struct EventStruct *event, String& string)

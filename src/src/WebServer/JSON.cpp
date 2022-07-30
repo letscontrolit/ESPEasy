@@ -8,6 +8,7 @@
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/NPlugins.h"
 
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -106,24 +107,28 @@ void handle_json()
   bool showSystem             = true;
   bool showWifi               = true;
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   bool showEthernet = true;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
   bool showDataAcquisition = true;
   bool showTaskDetails     = true;
+  #if FEATURE_ESPEASY_P2P
   bool showNodes           = true;
+  #endif
   {
     const String view = webArg(F("view"));
 
     if (view == F("sensorupdate")) {
       showSystem = false;
       showWifi   = false;
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       showEthernet = false;
-      #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
       showDataAcquisition = false;
       showTaskDetails     = false;
+      #if FEATURE_ESPEASY_P2P
       showNodes           = false;
+      #endif
     }
   }
 
@@ -207,9 +212,9 @@ void handle_json()
       static const LabelType::Enum labels[] PROGMEM =
       {
         LabelType::HOST_NAME,
-      #ifdef FEATURE_MDNS
+        #if FEATURE_MDNS
         LabelType::M_DNS,
-      #endif // ifdef FEATURE_MDNS
+        #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
         LabelType::IP_SUBNET,
@@ -256,7 +261,7 @@ void handle_json()
       stream_comma_newline();
     }
 
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
 
     if (showEthernet) {
       addHtml(F("\"Ethernet\":{\n"));
@@ -276,8 +281,9 @@ void handle_json()
       stream_json_object_values(labels);
       stream_comma_newline();
     }
-    #endif // ifdef HAS_ETHERNET
+    #endif // if FEATURE_ETHERNET
 
+  #if FEATURE_ESPEASY_P2P
     if (showNodes) {
       bool comma_between = false;
 
@@ -317,6 +323,7 @@ void handle_json()
         addHtml(F("],\n")); // close array if >0 nodes
       }
     }
+  #endif
   }
 
   taskIndex_t firstTaskIndex = 0;
@@ -419,7 +426,7 @@ void handle_json()
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
         stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
-#ifdef FEATURE_I2CMULTIPLEXER
+        #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
           if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
@@ -445,7 +452,7 @@ void handle_json()
             }
           }
         }
-#endif
+        #endif // if FEATURE_I2CMULTIPLEXER
       }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
       stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);
@@ -474,9 +481,9 @@ void handle_timingstats_json() {
   TXBuffer.startJsonStream();
   json_init();
   json_open();
-  # ifdef USES_TIMING_STATS
+  # if FEATURE_TIMING_STATS
   jsonStatistics(false);
-  # endif // ifdef USES_TIMING_STATS
+  # endif // if FEATURE_TIMING_STATS
   json_close();
   TXBuffer.endStream();
 }
@@ -484,6 +491,8 @@ void handle_timingstats_json() {
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_NEW_UI
+
+#if FEATURE_ESPEASY_P2P
 void handle_nodes_list_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -514,6 +523,7 @@ void handle_nodes_list_json() {
   json_close(true);
   TXBuffer.endStream();
 }
+#endif
 
 void handle_buildinfo() {
   if (!isLoggedIn()) { return; }
@@ -546,6 +556,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#if FEATURE_NOTIFIER
   {
     json_open(true, F("notifications"));
 
@@ -559,6 +570,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#endif
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);

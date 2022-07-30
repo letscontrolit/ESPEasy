@@ -24,7 +24,7 @@
 
 # define PLUGIN_068
 # define PLUGIN_ID_068         68
-# define PLUGIN_NAME_068       "Environment - SHT30/31/35 [TESTING]"
+# define PLUGIN_NAME_068       "Environment - SHT30/31/35"
 # define PLUGIN_VALUENAME1_068 "Temperature"
 # define PLUGIN_VALUENAME2_068 "Humidity"
 
