@@ -1,5 +1,8 @@
 #include "../WebServer/SysVarPage.h"
 
+
+#ifdef WEBSERVER_SYSVARS
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
@@ -11,7 +14,6 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
-#ifdef WEBSERVER_SYSVARS
 
 
 // ********************************************************************************

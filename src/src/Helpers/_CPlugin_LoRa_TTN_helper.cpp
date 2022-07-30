@@ -10,7 +10,7 @@
 // #  Helper functions to encode data for use on LoRa/TTN network.
 // #######################################################################################################
 
-#if defined(USES_PACKED_RAW_DATA)
+#if FEATURE_PACKED_RAW_DATA
 
 
 String getPackedFromPlugin(struct EventStruct *event, uint8_t sampleSetCount)
@@ -104,4 +104,4 @@ float getLoRaAirTime(uint8_t pl, uint8_t sf, uint16_t bw, uint8_t cr, uint8_t n_
   return t_air;
 }
 
-#endif // USES_PACKED_RAW_DATA
+#endif // if FEATURE_PACKED_RAW_DATA

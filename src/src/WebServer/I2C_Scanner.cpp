@@ -1,5 +1,7 @@
 #include "../WebServer/I2C_Scanner.h"
 
+#ifdef WEBSERVER_I2C_SCANNER
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -10,7 +12,6 @@
 #include "../Helpers/StringConverter.h"
 
 
-#ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
 
