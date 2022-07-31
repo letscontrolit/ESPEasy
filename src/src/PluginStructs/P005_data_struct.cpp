@@ -126,7 +126,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   }
 
   bool readingAborted = false;
-  uint8_t dht_dat[5];
+  uint8_t dht_dat[5] = { 0 };
 
   uint8_t  i             = 0;
   uint32_t avg_low_total = 0;
@@ -201,6 +201,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
         avg_low       /= 7;
         avg_low_total += avg_low;
 
+        dht_dat[i] = 0;
         for (uint8_t bit = 0; bit < 8; ++bit) {
           if (timings[2 * bit + 1] > avg_low) {
             dht_dat[i] |= (1 << (7 - bit));
