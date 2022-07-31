@@ -2,6 +2,11 @@
 
 #ifdef USES_P005
 
+
+// DEBUG code using logic analyzer for timings
+//#define DEBUG_LOGIC_ANALYZER_PIN  27 
+
+
 // Macros to perform direct access on GPIOs
 // Macros written by Paul Stoffregen
 // See: https://github.com/PaulStoffregen/OneWire/blob/master/util/
@@ -75,10 +80,20 @@ bool P005_data_struct::waitState(int state)
   const uint64_t   timeout          = getMicros64() + 100;
   IO_REG_TYPE mask IO_REG_MASK_ATTR = PIN_TO_BITMASK(DHT_pin);
 
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+  // DEBUG code using logic analyzer for timings
+  IO_REG_TYPE mask_debug_pin IO_REG_MASK_ATTR = PIN_TO_BITMASK(DEBUG_LOGIC_ANALYZER_PIN);
+  DIRECT_WRITE_LOW(reg, mask_debug_pin);
+#endif
+
   while (DIRECT_READ(reg, mask) != state)
   {
     if (usecTimeOutReached(timeout)) { return false; }
   }
+
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+  DIRECT_WRITE_HIGH(reg, mask_debug_pin);
+#endif
   return true;
 }
 
@@ -87,6 +102,13 @@ bool P005_data_struct::waitState(int state)
 \*********************************************************************************************/
 bool P005_data_struct::readDHT(struct EventStruct *event) {
   IO_REG_TYPE mask IO_REG_MASK_ATTR = PIN_TO_BITMASK(DHT_pin);
+
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+  // DEBUG code using logic analyzer for timings
+  IO_REG_TYPE mask_debug_pin IO_REG_MASK_ATTR = PIN_TO_BITMASK(DEBUG_LOGIC_ANALYZER_PIN);
+  DIRECT_MODE_OUTPUT(reg, mask_debug_pin);
+  DIRECT_WRITE_LOW(reg, mask_debug_pin);
+#endif
 
   // To begin asking the DHT22 for humidity and temperature data,
   // Start sequence to get data from a DHTxx sensor:
@@ -103,11 +125,18 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     case P005_SI7021: delayMicroseconds(500); break;
   }
 
-  // Direct access functions cannot set the pull-up, or at least I have no clue where to set it.
-  // However the timing here is not really critical as the ESP is supposed to
-  // pull the pin high and then wait for the sensor to pull it low, high, low
-  // to signal the starting sequence.
-  pinMode(DHT_pin, INPUT_PULLUP);
+  {
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+    DIRECT_WRITE_HIGH(reg, mask_debug_pin);
+#endif
+
+    DIRECT_MODE_INPUT(reg, mask);
+    // pinMode(DHT_pin, INPUT_PULLUP);  // Way too slow, takes upto 227 usec
+
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+    DIRECT_WRITE_LOW(reg, mask_debug_pin);
+#endif
+  }
 
   bool readingAborted = false;
   uint8_t dht_dat[5]  = { 0 };
@@ -122,8 +151,15 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   // Low for 50 usec
   bool receive_start;
 
+  uint8_t timings[16] = { 0 };
+
+
   noInterrupts();
   receive_start = waitState(0) && waitState(1) && waitState(0);
+
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+  DIRECT_WRITE_LOW(reg, mask_debug_pin);
+#endif
 
   if (receive_start) {
     // We know we're now at a "low" state.
@@ -133,12 +169,13 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     for (dht_byte = 0; dht_byte < 5 && !readingAborted; ++dht_byte)
     {
       // Start reading next byte
-      uint8_t timings[16] = { 0 };
-
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+      DIRECT_WRITE_HIGH(reg, mask_debug_pin);
+#endif
       for (uint8_t t = 0; t < 16 && !readingAborted; ++t) {
         // "even" index = "low" duration
         // "odd"  index = "high" duration
-        const uint32_t current_state = (dht_byte == 0 && t == 0) ? !(t & 1) : (t & 1);
+        const uint32_t current_state = (t & 1);
 
         // Wait till pin state has changed, or timeout.
         while (DIRECT_READ(reg, mask) == current_state && !readingAborted)
@@ -157,8 +194,13 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
           // We know it is less than 100 usec, so it does fit in the uint8_t timings array.
           timings[t] = usecPassedSince(prev_edge);
           prev_edge  = last_micros;
+        } else {
+          timings[t] = 255;
         }
       }
+#ifdef DEBUG_LOGIC_ANALYZER_PIN
+      DIRECT_WRITE_LOW(reg, mask_debug_pin);
+#endif
 
       if (!readingAborted) {
         // Evaluate the timings
@@ -198,6 +240,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   }
   interrupts();
 
+
   if (!receive_start) {
     P005_log(event, P005_logNr::P005_error_no_reading);
     return false;
@@ -212,7 +255,16 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       log += static_cast<float>(avg_low_total) / dht_byte;
       log += F(" usec ");
       log += dht_byte;
-      log += F(" bytes");
+      log += F(" bytes:");
+      for (int i = 0; i < dht_byte; ++i) {
+        log += ' ';
+        log += formatToHex(dht_dat[i]);
+      }
+      log += F(" timings:");
+      for (int i = 0; i < 16; ++i) {
+        log += ' ';
+        log += timings[i];
+      }
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
