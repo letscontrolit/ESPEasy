@@ -78,8 +78,6 @@ bool P005_data_struct::waitState(int state)
   while (DIRECT_READ(reg, mask) != state)
   {
     if (usecTimeOutReached(timeout)) { return false; }
-
-    //    delayMicroseconds(1);
   }
   return true;
 }
@@ -105,30 +103,16 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     case P005_SI7021: delayMicroseconds(500); break;
   }
 
-  {
-    const uint64_t moment_pull_high = getMicros64();
-
-    // Pull the pin high as we don't know how fast the DHT might pull it high if we just set the pin to input.
-    // The capacitance of the cable may delay this, but we need to make sure the logic level is high before we call waitState(0).
-    DIRECT_WRITE_HIGH(reg, mask); // Pull High
-    // Direct access functions cannot set the pull-up, or at least I have no clue where to set it.
-    // However the timing here is not really critical as the ESP is supposed to pull the pin high and then wait for the sensor to pull it
-    // low,
-    // high, low to signal the starting sequence.
-    pinMode(DHT_pin, INPUT_PULLUP);
-
-    // Wait for the signal to really be "high"
-    const uint64_t since_pull_high = usecPassedSince(moment_pull_high);
-
-    if (since_pull_high < 20) {
-      delayMicroseconds(20 - since_pull_high);
-    }
-  }
+  // Direct access functions cannot set the pull-up, or at least I have no clue where to set it.
+  // However the timing here is not really critical as the ESP is supposed to
+  // pull the pin high and then wait for the sensor to pull it low, high, low
+  // to signal the starting sequence.
+  pinMode(DHT_pin, INPUT_PULLUP);
 
   bool readingAborted = false;
-  uint8_t dht_dat[5] = { 0 };
+  uint8_t dht_dat[5]  = { 0 };
 
-  uint8_t  dht_byte             = 0;
+  uint8_t  dht_byte      = 0;
   uint32_t avg_low_total = 0;
 
 
@@ -154,7 +138,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       for (uint8_t t = 0; t < 16 && !readingAborted; ++t) {
         // "even" index = "low" duration
         // "odd"  index = "high" duration
-        const int current_state = (t & 1);
+        const uint32_t current_state = (dht_byte == 0 && t == 0) ? !(t & 1) : (t & 1);
 
         // Wait till pin state has changed, or timeout.
         while (DIRECT_READ(reg, mask) == current_state && !readingAborted)
@@ -167,9 +151,6 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
           if (timeDiff64(prev_edge, last_micros) > 100) {
             readingAborted = true;
           }
-
-          // Wait at least 1 usec or else we might be computing a lot of time diffs.
-          //          delayMicroseconds(1);
         }
 
         if (!readingAborted) {
@@ -206,6 +187,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
         avg_low_total += avg_low;
 
         dht_dat[dht_byte] = 0;
+
         for (uint8_t bit = 0; bit < 8; ++bit) {
           if (timings[2 * bit + 1] > avg_low) {
             dht_dat[dht_byte] |= (1 << (7 - bit));
