@@ -33,7 +33,7 @@ Has support for humidity, temperature and ADC values
 * ±0.4 °C (max), –10 to 85 °C (–40 to +125 °C operating range)
 * Operating Voltage (1.9 to 3.6 V)
 * Low Power Consumption: 150 μA active current ; 60 nA standby current
-* Analog To Digital convertor builtin.
+* Analog To Digital converter builtin.
 
 Datasheet: <https://www.silabs.com/sensors/humidity/si7006-13-20-21-34/device.si7013-a20-gm1>
 Direct link: <https://www.silabs.com/documents/public/data-sheets/Si7013-A20.pdf>
