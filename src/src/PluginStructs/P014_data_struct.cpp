@@ -254,7 +254,7 @@ uint8_t P014_data_struct::checkCRC(uint16_t data, uint8_t check)
 
 
 /* ======================================================================
-Function: Plugin_123_si7013_setResolution
+Function: setResolution
 Purpose : Sets the sensor resolution to one of four levels
 Input   : see #define default is SI7013_RESOLUTION_14T_12RH
 Output  : 0 if okay
@@ -284,7 +284,7 @@ bool P014_data_struct::setResolution(uint8_t i2caddr, uint8_t resolution)
 inline bool P014_data_struct::softReset(uint8_t i2caddr){
   // Prepare to write to the register value
     bool ret = I2C_write8(i2caddr, SI70xx_CMD_SOFT_RESET);
-    delay(50); //MFD: check the datasheet
+    //delay(50); //MFD: check the datasheet
     return ret;
 }
 
@@ -296,7 +296,8 @@ int8_t P014_data_struct::readRevision(uint8_t i2caddr) {
   Wire.endTransmission();
 
   uint32_t start = millis(); // start timeout
-  while (millis() - start < SI70xx_MEASUREMENT_DELAY) {
+  
+  while (!timeOutReached(start + SI70xx_MEASUREMENT_DELAY)) {
     if (Wire.requestFrom(i2caddr, 2u) == 2) {
       uint8_t rev = Wire.read();
       Wire.read(); //ignore CRC

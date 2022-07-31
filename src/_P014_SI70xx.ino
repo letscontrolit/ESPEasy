@@ -28,10 +28,11 @@ Do not use the single ended circuit as the Vout is connected directly to ground:
 # define PLUGIN_VALUENAME2_014 "Humidity"
 # define PLUGIN_VALUENAME3_014 "ADC"
 
-# define P014_I2C_ADDRESS         PCONFIG(0)
-# define P014_RESOLUTION          PCONFIG(1)
+# define P014_I2C_ADDRESS         PCONFIG(1)
+# define P014_RESOLUTION          PCONFIG(0)
 # define P014_FILTER_POWER        PCONFIG(2)
 # define P014_ERROR_STATE_OUTPUT  PCONFIG(3)
+# define P014_VALUES_COUNT        PCONFIG(4) 
 
 boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -51,8 +52,9 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 3;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      //Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].OutputDataType     = Output_Data_type_t::All;
       break;
     }
 
@@ -118,15 +120,29 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       P014_FILTER_POWER = getFormItemInt(F("p014_filter"));
         
       // Force device setup next time
-      P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (nullptr != P014_data) {
-        P014_data->state = P014_state::Uninitialized;
-      }
+      //P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
+      //if (nullptr != P014_data) {
+      //  P014_data->state = P014_state::Uninitialized;
+      //}
 
       success = true;
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = getValueCountFromSensorType(static_cast<Sensor_VType>(P014_VALUES_COUNT));
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(P014_VALUES_COUNT);
+      event->idx        = 4;
+      success           = true;
+      break;
+    }
 
     case PLUGIN_INIT:
     {
@@ -149,6 +165,8 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_READ:
     {
+      event->sensorType = static_cast<Sensor_VType>(P014_VALUES_COUNT);
+
       P014_data_struct *P014_data = static_cast<P014_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P014_data) {
