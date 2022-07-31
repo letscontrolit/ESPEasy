@@ -56,6 +56,7 @@
 #define CHIP_ID_SI7020  20 //  0x14=20=Si7020
 #define CHIP_ID_SI7021  21 //  0x15=21=Si7021
 
+#define SI70xx_RESET_DELAY            50 //delay in miliseconds for the reset to settle down
 #define SI70xx_MEASUREMENT_TIMEOUT   100 
 #define SI70xx_INIT_DELAY           1000 //delay in miliseconds between inits
 #define SI70xx_MEASUREMENT_DELAY     100 //delay in milliseconds for reading the values
@@ -78,6 +79,7 @@ measurement (use approximately 100 msec for the 0.1 µF filter, which has a time
 
 enum class P014_state {
   Uninitialized = 0,
+  Wait_for_reset,
   Initialized,
   Ready,
   Wait_for_temperature_samples,
@@ -93,7 +95,9 @@ struct P014_data_struct : public PluginTaskData_base {
     uint8_t checkCRC(uint16_t data, uint8_t check);
     bool    setResolution(uint8_t i2caddr, uint8_t resolution);
     bool    softReset(uint8_t i2caddr);
+    #ifndef LIMIT_BUILD_SIZE
     int8_t  readRevision(uint8_t i2caddr);
+    #endif
     int8_t  readSerialNumber(uint8_t i2caddr);
     bool    enablePowerForADC(uint8_t i2caddr);
     bool    disablePowerForADC(uint8_t i2caddr);
@@ -101,12 +105,11 @@ struct P014_data_struct : public PluginTaskData_base {
     bool    readADC(uint8_t i2caddr, uint8_t filter_power);
     bool    readHumidity(uint8_t i2caddr, uint8_t resolution);
     bool    readTemperature(uint8_t i2caddr, uint8_t resolution);
+    bool    startInit(uint8_t i2caddr);
+    bool    finalizeInit(uint8_t i2caddr, uint8_t resolution);
 
 public:
    P014_data_struct();
-
-   bool init(uint8_t i2caddr, uint8_t resolution);
-
 
    // Only perform the measurements with big interval to prevent the sensor from warming up.
    //This method runs the FSM step by step on each call

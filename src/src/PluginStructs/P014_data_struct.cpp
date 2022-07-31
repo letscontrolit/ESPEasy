@@ -9,7 +9,7 @@ P014_data_struct::P014_data_struct() {
 }
 
 
-bool P014_data_struct::init(uint8_t i2caddr, uint8_t resolution)
+bool P014_data_struct::startInit(uint8_t i2caddr)
 {
   state = P014_state::Uninitialized;
 
@@ -31,19 +31,29 @@ bool P014_data_struct::init(uint8_t i2caddr, uint8_t resolution)
     return false;
   }
 
+  return true;
+}
+
+
+bool P014_data_struct::finalizeInit(uint8_t i2caddr, uint8_t resolution)
+{
   //read the device ID and revision
-  //sHT devices do not have this capability so we are continuing if not available 
-  ret = readSerialNumber(i2caddr); //this will also set the device ID
+  //SHT devices do not have this capability so we are continuing if not available 
+  int8_t ret = readSerialNumber(i2caddr); //this will also set the device ID
   if (ret){
-          String log = F("SI70xx : Not able to read SN: ");
+          String log = F("SI70xx : Not able to read SN: addr=0x");
           log += String(i2caddr, HEX);
+          log += F(" err=");
+          log += String(ret, DEC);
           addLog(LOG_LEVEL_ERROR, log);
     
     //return false;
   }
 
   //at this point we know the chip_id
-  
+  String log = F("P014: chip_id=");
+         log += String(chip_id, DEC);
+      addLog(LOG_LEVEL_INFO, log);
   if (chip_id == CHIP_ID_SI7013){
     if (!I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, SI7013_REG2_DEFAULT )){
       return false;
@@ -59,7 +69,7 @@ bool P014_data_struct::init(uint8_t i2caddr, uint8_t resolution)
   }
   
   //SI7013 has ADC and we need to start the first measurement
-  if (chip_id = CHIP_ID_SI7013){
+  if (chip_id == CHIP_ID_SI7013){
     if (!requestADC(i2caddr))
       return false;
   }
@@ -74,9 +84,7 @@ bool P014_data_struct::init(uint8_t i2caddr, uint8_t resolution)
 //Only perform the measurements with big interval to prevent the sensor from warming up.
 //returns true when the state changes and false otherwise
 bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filter_power) {
-  //const unsigned long current_time = millis();
-  //int8_t ret=0;
-  
+
   switch(state){
     case P014_state::Uninitialized:
         //make sure we do not try to initialize too often
@@ -99,15 +107,31 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
           return false;
         }
 
-        if (init(i2caddr, resolution)){
-          state                 = P014_state::Initialized;
-          errCount              = 0;
+        if (startInit(i2caddr)){
+          state                 = P014_state::Wait_for_reset;
           return true;
         }
 
         errCount++;
         return false;
     //break;
+
+    case P014_state::Wait_for_reset:
+      //we need to wait for the chip to reset
+      if (!timeOutReached(last_measurement_time + SI70xx_RESET_DELAY)) {
+        return false;
+      }
+
+      if (!finalizeInit(i2caddr,resolution)){
+        state = P014_state::Uninitialized;
+        errCount++;
+        return true;
+      }
+
+      errCount = 0;
+      state = P014_state::Initialized;
+      return true;
+    //break;      
 
     case P014_state::Initialized:
       if (chip_id == CHIP_ID_SI7013){
@@ -145,21 +169,21 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
         }
 
         if (!readHumidity(i2caddr, resolution)) {
-          return false;
+          state = P014_state::Ready; //we go back to request the reading again
+          return true;
         }
         
         if (!readTemperature(i2caddr,resolution)){
           state = P014_state::Ready; //we go back to request the reading again
-          return false;
+          return true;
         }
 
         last_measurement_time = millis();
         if (chip_id == CHIP_ID_SI7013){
           if(!enablePowerForADC(i2caddr)){
             state = P014_state::Ready; //we go back to request the reading again
-            return false;
+            return true;
           }
-
           state = P014_state::RequestADC;
         }else{
           state = P014_state::New_Values_Available;
@@ -175,7 +199,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
 
         if (!requestADC(i2caddr)){
           state = P014_state::Ready; //we go back to request the reading again
-          return false;
+          return true;
         }
         
         state = P014_state::Wait_for_adc_samples;
@@ -283,11 +307,11 @@ bool P014_data_struct::setResolution(uint8_t i2caddr, uint8_t resolution)
 inline bool P014_data_struct::softReset(uint8_t i2caddr){
   // Prepare to write to the register value
     bool ret = I2C_write8(i2caddr, SI70xx_CMD_SOFT_RESET);
-    //delay(50); //MFD: check the datasheet
     return ret;
 }
 
 
+#ifndef LIMIT_BUILD_SIZE
 int8_t P014_data_struct::readRevision(uint8_t i2caddr) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)(SI70xx_CMD_FIRMREV >> 8));
@@ -312,6 +336,8 @@ int8_t P014_data_struct::readRevision(uint8_t i2caddr) {
   return -1; // Error timeout
 }
 
+#endif
+
 /*!
  *  @brief  Reads serial number and stores It in sernum_a and sernum_b variable
  */
@@ -319,48 +345,47 @@ int8_t P014_data_struct::readSerialNumber(uint8_t i2caddr) {
   
   bool ok = I2C_write8_reg(i2caddr,(uint8_t)(SI70xx_CMD_ID1 >> 8),(uint8_t)(SI70xx_CMD_ID1 & 0xFF));
   if (!ok) return -1; //error on sending command 
-
-
   
   if (Wire.requestFrom(i2caddr, 8u) != 8u) {
     return -2; //time out on the SNA read
   }
 
-  uint32_t sernum_a = Wire.read();
+  uint32_t sernum_a = Wire.read(); //SNA_3
   Wire.read(); //ignore CRC
   sernum_a <<= 8;
-  sernum_a |= Wire.read();
+  sernum_a |= Wire.read(); //SNA_2
   Wire.read(); //ignore CRC
   sernum_a <<= 8;
-  sernum_a |= Wire.read();
+  sernum_a |= Wire.read(); //SNA_1
   Wire.read(); //ignore CRC
   sernum_a <<= 8;
-  sernum_a |= Wire.read();
+  sernum_a |= Wire.read(); //SNA_0
   Wire.read(); //ignore CRC
 
   ok = I2C_write8_reg(i2caddr,(uint8_t)(SI70xx_CMD_ID2 >> 8),(uint8_t)(SI70xx_CMD_ID2 & 0xFF));
   if (!ok) return -3; //error on sending command 
 
-  if (Wire.requestFrom(i2caddr, 8u) != 8u) {
+  if (Wire.requestFrom(i2caddr, 6u) != 6u) {
     return -4; //time out on the SNA read
   }
 
-  uint32_t sernum_b = Wire.read(); //Device ID
+  uint32_t sernum_b = Wire.read(); //SNB_3 (Device ID)
   chip_id = sernum_b; //we save the chip identifier
+  //Wire.read(); //ignore CRC
+  sernum_b <<= 8;
+  sernum_b |= Wire.read(); //SNB_2
   Wire.read(); //ignore CRC
   sernum_b <<= 8;
-  sernum_b |= Wire.read();
-  Wire.read(); //ignore CRC
+  sernum_b |= Wire.read(); //SNB_1
+  //Wire.read(); //ignore CRC
   sernum_b <<= 8;
-  sernum_b |= Wire.read();
-  Wire.read(); //ignore CRC
-  sernum_b <<= 8;
-  sernum_b |= Wire.read();
+  sernum_b |= Wire.read(); //SNB_0
   Wire.read(); //ignore CRC
 
 
   String log = F("SI7013 : sn=");
   log += String(sernum_a,HEX);
+  log += F("-");
   log += String(sernum_b,HEX);
   addLog(LOG_LEVEL_INFO,log);
 

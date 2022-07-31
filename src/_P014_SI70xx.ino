@@ -152,13 +152,13 @@ boolean Plugin_014(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P014_data) {
         return success;
       }
-      if (P014_data->init(P014_I2C_ADDRESS, P014_RESOLUTION)) {
-        success = true;
-      }else{
+      //if (P014_data->init(P014_I2C_ADDRESS, P014_RESOLUTION)) {
+      //  success = true;
+      //}else{
         UserVar[event->BaseVarIndex]     = NAN;
         UserVar[event->BaseVarIndex + 1] = NAN;
         UserVar[event->BaseVarIndex + 2] = NAN;
-      }
+      //}
       break;
     }
 
