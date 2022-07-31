@@ -78,7 +78,8 @@ bool P005_data_struct::waitState(int state)
   while (DIRECT_READ(reg, mask) != state)
   {
     if (usecTimeOutReached(timeout)) { return false; }
-//    delayMicroseconds(1);
+
+    //    delayMicroseconds(1);
   }
   return true;
 }
@@ -104,13 +105,25 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     case P005_SI7021: delayMicroseconds(500); break;
   }
 
-  // Pull the pin high as we don't know how fast the DHT might pull it high if we just set the pin to input.
-  // The capacitance of the cable may delay this, but we need to make sure the logic level is high before we call waitState(0).
-  DIRECT_WRITE_HIGH(reg, mask); // Pull High
-  // Direct access functions cannot set the pull-up, or at least I have no clue where to set it.
-  // However the timing here is not really critical as the ESP is supposed to pull the pin high and then wait for the sensor to pull it low,
-  // high, low to signal the starting sequence.
-  pinMode(DHT_pin, INPUT_PULLUP);
+  {
+    const uint64_t moment_pull_high = getMicros64();
+
+    // Pull the pin high as we don't know how fast the DHT might pull it high if we just set the pin to input.
+    // The capacitance of the cable may delay this, but we need to make sure the logic level is high before we call waitState(0).
+    DIRECT_WRITE_HIGH(reg, mask); // Pull High
+    // Direct access functions cannot set the pull-up, or at least I have no clue where to set it.
+    // However the timing here is not really critical as the ESP is supposed to pull the pin high and then wait for the sensor to pull it
+    // low,
+    // high, low to signal the starting sequence.
+    pinMode(DHT_pin, INPUT_PULLUP);
+
+    // Wait for the signal to really be "high"
+    const uint64_t since_pull_high = usecPassedSince(moment_pull_high);
+
+    if (since_pull_high < 20) {
+      delayMicroseconds(20 - since_pull_high);
+    }
+  }
 
   bool readingAborted = false;
   uint8_t dht_dat[5];
@@ -122,7 +135,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   // Response from DHTxx: (N = 80 usec for DHT22)
   // Low for N usec
   // Hight for N usec
-  // Low for N usec
+  // Low for 50 usec
   bool receive_start;
 
   noInterrupts();
@@ -133,7 +146,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     uint64_t last_micros = getMicros64();
     uint64_t prev_edge   = last_micros;
 
-    for (i = 0; i < 5 && !readingAborted; i++)
+    for (i = 0; i < 5 && !readingAborted; ++i)
     {
       uint8_t timings[16] = { 0 };
 
@@ -143,10 +156,10 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
         const int current_state = (t & 1);
 
         // Wait till pin state has changed, or timeout.
-        while (DIRECT_READ(reg, mask) == (t & 1) && !readingAborted)
+        while (DIRECT_READ(reg, mask) == current_state && !readingAborted)
         {
           // Keep track of last microsecond the state had not yet changed.
-          // This way we are less dependent on any jitter caused by 
+          // This way we are less dependent on any jitter caused by
           // the delay call or rise times of the voltage on the pin.
           last_micros = getMicros64();
 
@@ -155,7 +168,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
           }
 
           // Wait at least 1 usec or else we might be computing a lot of time diffs.
-//          delayMicroseconds(1);
+          //          delayMicroseconds(1);
         }
 
         if (!readingAborted) {
