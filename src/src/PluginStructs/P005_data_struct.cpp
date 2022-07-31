@@ -128,7 +128,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   bool readingAborted = false;
   uint8_t dht_dat[5] = { 0 };
 
-  uint8_t  i             = 0;
+  uint8_t  dht_byte             = 0;
   uint32_t avg_low_total = 0;
 
 
@@ -146,13 +146,14 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     uint64_t last_micros = getMicros64();
     uint64_t prev_edge   = last_micros;
 
-    for (i = 0; i < 5 && !readingAborted; ++i)
+    for (dht_byte = 0; dht_byte < 5 && !readingAborted; ++dht_byte)
     {
+      // Start reading next byte
       uint8_t timings[16] = { 0 };
 
       for (uint8_t t = 0; t < 16 && !readingAborted; ++t) {
-        // "even" index = "low"
-        // "odd"  index = "high"
+        // "even" index = "low" duration
+        // "odd"  index = "high" duration
         const int current_state = (t & 1);
 
         // Wait till pin state has changed, or timeout.
@@ -173,18 +174,21 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
 
         if (!readingAborted) {
           // We know it is less than 100 usec, so it does fit in the uint8_t timings array.
-          timings[i] = usecPassedSince(prev_edge);
+          timings[t] = usecPassedSince(prev_edge);
           prev_edge  = last_micros;
         }
       }
 
       if (!readingAborted) {
         // Evaluate the timings
+        // timings on even indices represent "duration low"
+        // timings on odd  indices represent "duration high"
+        //
         // Timing for a single bit:
         // Logic "1":  50 usec low, 70 usec high
         // Logic "0":  50 usec low, 26 usec high
         // There is a significant difference between the "high" state durations
-        // Thus "high" time > avg_low => "1"
+        // Thus "high duration" > "avg_low duration" means it is an "1".
         //
         // By taking the average low duration, we get rid of
         // critical timing differences among modules and
@@ -201,10 +205,10 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
         avg_low       /= 7;
         avg_low_total += avg_low;
 
-        dht_dat[i] = 0;
+        dht_dat[dht_byte] = 0;
         for (uint8_t bit = 0; bit < 8; ++bit) {
           if (timings[2 * bit + 1] > avg_low) {
-            dht_dat[i] |= (1 << (7 - bit));
+            dht_dat[dht_byte] |= (1 << (7 - bit));
           }
         }
       }
@@ -219,13 +223,13 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
 
   # ifndef BUILD_NO_DEBUG
 
-  if (i != 0) {
+  if (dht_byte != 0) {
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("DHT  : ");
       log += F("Avg Low: ");
-      log += static_cast<float>(avg_low_total) / i;
+      log += static_cast<float>(avg_low_total) / dht_byte;
       log += F(" usec ");
-      log += i;
+      log += dht_byte;
       log += F(" bytes");
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
