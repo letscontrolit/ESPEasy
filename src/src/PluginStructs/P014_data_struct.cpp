@@ -84,7 +84,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
         if (!timeOutReached(last_measurement_time + errCount*SI70xx_INIT_DELAY)) {
           return false;
         }
-
+        last_measurement_time = millis();
         //we have to stop trying after a while
         if (errCount>P014_MAX_RETRY){
             state = P014_state::Error;
@@ -96,21 +96,18 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
           log += String(i2caddr, HEX);
           addLog(LOG_LEVEL_ERROR, log);
           errCount++;
-          last_measurement_time = millis();
           return false;
         }
 
         if (init(i2caddr, resolution)){
           state                 = P014_state::Initialized;
-          last_measurement_time = millis();
           errCount              = 0;
           return true;
         }
 
-        last_measurement_time = millis();
         errCount++;
         return false;
-    break;
+    //break;
 
     case P014_state::Initialized:
       if (chip_id == CHIP_ID_SI7013){
@@ -128,7 +125,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
       last_measurement_time = millis();
       state = P014_state::Ready;
       return true;
-    break;
+    //break;
 
     case P014_state::Ready:
         if (!I2C_write8(i2caddr,SI70xx_CMD_MEASURE_HUM)) { //measure humidity and temperature at the same time
@@ -138,7 +135,8 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
       
         last_measurement_time = millis();
         state = P014_state::Wait_for_humidity_samples;
-    break;
+      return true;
+    //break;
 
     case P014_state::Wait_for_humidity_samples:
         //make sure we wait for the measurement to complete
@@ -167,7 +165,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
           state = P014_state::New_Values_Available;
         }
         return true;
-    break;
+    //break;
 
     case P014_state ::RequestADC:
         //make sure we wait for the power to stabilize
@@ -182,7 +180,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
         
         state = P014_state::Wait_for_adc_samples;
         return true;
-    break;
+    //break;
 
     case P014_state::Wait_for_adc_samples:
         if (!readADC(i2caddr, filter_power)){
@@ -191,7 +189,7 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
         }
         state = P014_state::New_Values_Available;
         return true;
-    break;
+    //break;
 
     case P014_state::Error:
     case P014_state::New_Values_Available:
@@ -203,7 +201,8 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
     default: //anything not defined above sends the device for initialization
       state = P014_state::Uninitialized;
       return true;
-  }  
+  } 
+
   return false;
 }
 
