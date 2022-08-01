@@ -1240,6 +1240,7 @@ To create/register a plugin, you have to :
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
     #define USES_P105   // AHT10/20/21
+    #define USES_P134   // A02YYUW
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_B
