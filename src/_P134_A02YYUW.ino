@@ -58,9 +58,16 @@ boolean Plugin_134(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_output(F("RX PIN"));
-      event->String2 = formatGpioName_output(F("TX PIN"));
+      serialHelper_getGpioNames(event, false, true); // TX optional
 
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    {
+      string += serialHelper_getSerialTypeLabel(event);
+
+      success = true;
       break;
     }
 
