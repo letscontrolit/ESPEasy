@@ -4,7 +4,7 @@
 
 
 // DEBUG code using logic analyzer for timings
-#define DEBUG_LOGIC_ANALYZER_PIN  27 
+// #define DEBUG_LOGIC_ANALYZER_PIN  27 
 
 
 // Macros to perform direct access on GPIOs
