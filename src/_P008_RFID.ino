@@ -7,6 +7,7 @@
 
 /*
    History:
+   2022-08-02 tonhuisman: Reduce usage of iRam by optimizing the ISR
    2021-11-20 tonhuisman: Add optional switching of GPIO pins, new default will be 'swapped' existing settings stay unaltered
                           to ensure that existing codes keep working.
                           Apply casting by 'ull' postfix instead of explicit 'static_cast<uint64_t>(0x1)' where possible
@@ -301,15 +302,20 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+void IRAM_ATTR Plugin_008_shift_bit_in_buffer(uint8_t bit) {
+  Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1; // Left shift the number (effectively multiplying by 2)
+
+  if (bit) { Plugin_008_keyBuffer |= 1ull; }        // Add the 1 (not necessary for the zeroes)
+  Plugin_008_bitCount++;                            // Increment the bit count
+}
+
 /*********************************************************************/
 void Plugin_008_interrupt1()
 
 /*********************************************************************/
 {
   // We've received a 1 bit. (bit 0 = high, bit 1 = low)
-  Plugin_008_keyBuffer  = Plugin_008_keyBuffer << 1; // Left shift the number (effectively multiplying by 2)
-  Plugin_008_keyBuffer += 1;                         // Add the 1 (not necessary for the zeroes)
-  Plugin_008_bitCount++;                             // Increment the bit count
+  Plugin_008_shift_bit_in_buffer(1); // Shift in a 1
 }
 
 /*********************************************************************/
@@ -318,8 +324,7 @@ void Plugin_008_interrupt2()
 /*********************************************************************/
 {
   // We've received a 0 bit. (bit 0 = low, bit 1 = high)
-  Plugin_008_keyBuffer = Plugin_008_keyBuffer << 1; // Left shift the number (effectively multiplying by 2)
-  Plugin_008_bitCount++;                            // Increment the bit count
+  Plugin_008_shift_bit_in_buffer(0); // Shift in a 0
 }
 
 #endif // USES_P008
