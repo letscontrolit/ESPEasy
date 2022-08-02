@@ -26,8 +26,6 @@ P134_data_struct::P134_data_struct(uint8_t config_port,
 {
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(_config_port);
 
-  delete P134_Serial;
-
   P134_Serial = new ESPeasySerial(port, _config_pin1, _config_pin2);
 
   if (P134_Serial != nullptr) {
