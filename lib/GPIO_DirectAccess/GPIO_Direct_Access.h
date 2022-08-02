@@ -119,7 +119,19 @@
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 
+IO_REG_TYPE DIRECT_pinRead(IO_REG_TYPE pin);
+void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate);
+void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin);
+void DIRECT_PINMODE_INPUT(IO_REG_TYPE pin);
+
+IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin);
+void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
+void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
+void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
+
 #elif defined(ARDUINO_ARCH_ESP32)
+
+#include <esp32-hal-gpio.h>
 #include <driver/rtc_io.h>
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
@@ -225,6 +237,18 @@ void directModeOutput(IO_REG_TYPE pin)
 #define DIRECT_WRITE_HIGH(base, pin)    directWriteHigh(pin)
 #define DIRECT_MODE_INPUT(base, pin)    directModeInput(pin)
 #define DIRECT_MODE_OUTPUT(base, pin)   directModeOutput(pin)
+
+
+IO_REG_TYPE DIRECT_pinRead(IO_REG_TYPE pin);
+void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate);
+void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin);
+void DIRECT_PINMODE_INPUT(IO_REG_TYPE pin);
+
+IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate) IRAM_ATTR;
+void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+
 /*
 // https://github.com/PaulStoffregen/OneWire/pull/47
 // https://github.com/stickbreaker/OneWire/commit/6eb7fc1c11a15b6ac8c60e5671cf36eb6829f82c

@@ -60,14 +60,11 @@ unsigned int NewPing::ping(unsigned int max_cm_distance) {
 
 	if (!ping_trigger()) return NO_ECHO; // Trigger a ping, if it returns false, return NO_ECHO to the calling function.
 
-    IO_REG_TYPE mask_echo IO_REG_MASK_ATTR = PIN_TO_BITMASK(_echoPin);
-
-
 #if URM37_ENABLED == true
 	#if DO_BITWISE == true
 		while (!(*_echoInput & _echoBit))             // Wait for the ping echo.
 	#else
-		while (!DIRECT_READ(reg_echo, mask_echo))     // Wait for the ping echo.
+		while (!DIRECT_pinRead(_echoPin))     // Wait for the ping echo.
 	#endif
 			if (micros() > _max_time) {
 				_errorState = STATUS_MAX_DISTANCE_EXCEEDED;
@@ -77,7 +74,7 @@ unsigned int NewPing::ping(unsigned int max_cm_distance) {
 	#if DO_BITWISE == true
 		while (*_echoInput & _echoBit)                // Wait for the ping echo.
 	#else
-		while (DIRECT_READ(reg_echo, mask_echo))      // Wait for the ping echo.
+		while (DIRECT_pinRead(_echoPin))      // Wait for the ping echo.
 	#endif
 			if (micros() > _max_time) {
 				_errorState = STATUS_MAX_DISTANCE_EXCEEDED;
@@ -181,42 +178,39 @@ boolean NewPing::ping_trigger() {
 			}
 	#endif
 #else
-  IO_REG_TYPE mask_trigger IO_REG_MASK_ATTR = PIN_TO_BITMASK(_triggerPin);
-  IO_REG_TYPE mask_echo IO_REG_MASK_ATTR = PIN_TO_BITMASK(_echoPin);
-
 
 	#if ONE_PIN_ENABLED == true
-	    DIRECT_MODE_OUTPUT(reg_trigger, mask_trigger); // Set trigger pin to output.
+	    DIRECT_PINMODE_OUTPUT(_triggerPin); // Set trigger pin to output.
 	#endif
 	
-	DIRECT_WRITE_LOW(reg_trigger, mask_trigger);  // Set the trigger pin low, should already be low, but this will make sure it is.
+	DIRECT_pinWrite(_triggerPin, 0);  // Set the trigger pin low, should already be low, but this will make sure it is.
 	delayMicroseconds(4);                         // Wait for pin to go low.
-	DIRECT_WRITE_HIGH(reg_trigger, mask_trigger); // Set trigger pin high, this tells the sensor to send out a ping.
+	DIRECT_pinWrite(_triggerPin, 1); // Set trigger pin high, this tells the sensor to send out a ping.
 	delayMicroseconds(10);                        // Wait long enough for the sensor to realize the trigger pin is high. Sensor specs say to wait 10uS.
-	DIRECT_WRITE_LOW(reg_trigger, mask_trigger);  // Set trigger pin back to low.
+	DIRECT_pinWrite(_triggerPin, 0);  // Set trigger pin back to low.
 
 	#if ONE_PIN_ENABLED == true
-		DIRECT_MODE_INPUT(reg_trigger, mask_trigger);  // Set trigger pin to input (when using one Arduino pin, this is technically setting the echo pin to input as both are tied to the same Arduino pin).
+		DIRECT_PINMODE_INPUT(_triggerPin);  // Set trigger pin to input (when using one Arduino pin, this is technically setting the echo pin to input as both are tied to the same Arduino pin).
 	#endif
 
 	#if URM37_ENABLED == true
-		if (!DIRECT_READ(reg_echo, mask_echo)) {
+		if (!DIRECT_pinRead(_echoPin)) {
 			_errorState = STATUS_ECHO_STATE_ERROR;
 			return false;               // Previous ping hasn't finished, abort.
 		}
 		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
-		while (DIRECT_READ(reg_echo, mask_echo))                           // Wait for ping to start.
+		while (DIRECT_pinRead(_echoPin))                           // Wait for ping to start.
 			if (micros() > _max_time) {
 				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
 				return false;             // Took too long to start, abort.
 			}
 	#else
-		if (DIRECT_READ(reg_echo, mask_echo)) {
+		if (DIRECT_pinRead(_echoPin)) {
 			_errorState = STATUS_ECHO_STATE_ERROR;
 			return false;                // Previous ping hasn't finished, abort.
 		}
 		_max_time = micros() + _maxEchoTime + MAX_SENSOR_DELAY; // Maximum time we'll wait for ping to start (most sensors are <450uS, the SRF06 can take up to 34,300uS!)
-		while (!DIRECT_READ(reg_echo, mask_echo))                          // Wait for ping to start.
+		while (!DIRECT_pinRead(_echoPin))                          // Wait for ping to start.
 			if (micros() > _max_time) {
 				_errorState = STATUS_ECHO_START_TIMEOUT_DISTANCE;
 				return false;             // Took too long to start, abort.

@@ -78,21 +78,19 @@ P005_data_struct::P005_data_struct(struct EventStruct *event) {
 bool P005_data_struct::waitState(int state)
 {
   const uint64_t   timeout          = getMicros64() + 100;
-  IO_REG_TYPE mask IO_REG_MASK_ATTR = PIN_TO_BITMASK(DHT_pin);
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
   // DEBUG code using logic analyzer for timings
-  IO_REG_TYPE mask_debug_pin IO_REG_MASK_ATTR = PIN_TO_BITMASK(DEBUG_LOGIC_ANALYZER_PIN);
-  DIRECT_WRITE_LOW(reg, mask_debug_pin);
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
 #endif
 
-  while (DIRECT_READ(reg, mask) != state)
+  while (DIRECT_pinRead(DHT_pin) != state)
   {
     if (usecTimeOutReached(timeout)) { return false; }
   }
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
-  DIRECT_WRITE_HIGH(reg, mask_debug_pin);
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
 #endif
   return true;
 }
@@ -101,21 +99,18 @@ bool P005_data_struct::waitState(int state)
 * Perform the actual reading + interpreting of data.
 \*********************************************************************************************/
 bool P005_data_struct::readDHT(struct EventStruct *event) {
-  IO_REG_TYPE mask IO_REG_MASK_ATTR = PIN_TO_BITMASK(DHT_pin);
-
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
   // DEBUG code using logic analyzer for timings
-  IO_REG_TYPE mask_debug_pin IO_REG_MASK_ATTR = PIN_TO_BITMASK(DEBUG_LOGIC_ANALYZER_PIN);
-  DIRECT_MODE_OUTPUT(reg, mask_debug_pin);
-  DIRECT_WRITE_LOW(reg, mask_debug_pin);
+  DIRECT_PINMODE_OUTPUT(DEBUG_LOGIC_ANALYZER_PIN);
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
 #endif
 
   // To begin asking the DHT22 for humidity and temperature data,
   // Start sequence to get data from a DHTxx sensor:
   // Pin must be a logic 0 (low) for at least 500 microseconds (DHT22, others may need different timing)
   // followed by a logic 1 (high).
-  DIRECT_MODE_OUTPUT(reg, mask);
-  DIRECT_WRITE_LOW(reg, mask);           // Pull low
+  DIRECT_PINMODE_OUTPUT(DHT_pin);
+  DIRECT_pinWrite(DHT_pin, 0);           // Pull low
 
   switch (SensorModel) {
     case P005_DHT11:  delay(19); break;  // minimum 18ms
@@ -127,14 +122,14 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
 
   {
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
-    DIRECT_WRITE_HIGH(reg, mask_debug_pin);
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
 #endif
 
-    DIRECT_MODE_INPUT(reg, mask);
+    DIRECT_PINMODE_INPUT(DHT_pin);
     // pinMode(DHT_pin, INPUT_PULLUP);  // Way too slow, takes upto 227 usec
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
-    DIRECT_WRITE_LOW(reg, mask_debug_pin);
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
 #endif
   }
 
@@ -158,7 +153,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
   receive_start = waitState(0) && waitState(1) && waitState(0);
 
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
-  DIRECT_WRITE_LOW(reg, mask_debug_pin);
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
 #endif
 
   if (receive_start) {
@@ -170,7 +165,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
     {
       // Start reading next byte
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
-      DIRECT_WRITE_HIGH(reg, mask_debug_pin);
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
 #endif
       for (uint8_t t = 0; t < 16 && !readingAborted; ++t) {
         // "even" index = "low" duration
@@ -178,7 +173,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
         const uint32_t current_state = (t & 1);
 
         // Wait till pin state has changed, or timeout.
-        while (DIRECT_READ(reg, mask) == current_state && !readingAborted)
+        while (DIRECT_pinRead(DHT_pin) == current_state && !readingAborted)
         {
           // Keep track of last microsecond the state had not yet changed.
           // This way we are less dependent on any jitter caused by
@@ -199,7 +194,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
         }
       }
 #ifdef DEBUG_LOGIC_ANALYZER_PIN
-      DIRECT_WRITE_LOW(reg, mask_debug_pin);
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
 #endif
 
       if (!readingAborted) {
