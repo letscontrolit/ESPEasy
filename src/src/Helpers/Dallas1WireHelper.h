@@ -12,11 +12,6 @@
 // We use the "standard speed" timings, not the "Overdrive speed"
 
 
-// IO register type to perform direct access on GPIOs
-// Written by Paul Stoffregen
-// See: https://github.com/PaulStoffregen/OneWire/blob/master/util/
-#include "../DataTypes/GPIO_Direct_RegType.h"
-
 
 
 struct Dallas_SensorData {
