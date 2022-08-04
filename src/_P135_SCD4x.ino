@@ -103,7 +103,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
       if (P135_SENSOR_TYPE == static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41)) {
         addFormCheckBox(F("Single-shot measurements (SCD41 only)"), F("singleshot"), P135_MEASURE_SINGLE_SHOT == 1);
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("When enabled will start a single measurement every below Interval, duration 5 sec."));
+        addFormNote(F("When enabled will start a single measurement every Interval, duration 5 sec."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 

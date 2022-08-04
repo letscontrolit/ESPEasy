@@ -19,11 +19,11 @@
 # define P135_EXTEND_MEASURE_TIME       1000  // 1 second measuring time extension if not yet ready
 # define P135_STOP_MEASUREMENT_DELAY    500   // Delay after stopping or restarting the periodic measurements
 
-# ifndef LIMIT_BUILD_SIZE
-#  ifndef P135_ENABLE_RESET_COMMANDS
-#   define P135_ENABLE_RESET_COMMANDS   1 // Enable quite spacious (~950 bytes) selftest and factoryreset subcommands
-#  endif // ifndef P135_ENABLE_RESET_COMMANDS
-# endif // ifndef LIMIT_BUILD_SIZE
+// # ifndef LIMIT_BUILD_SIZE
+# ifndef P135_FEATURE_RESET_COMMANDS
+#  define P135_FEATURE_RESET_COMMANDS  1 // Enable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+# endif // ifndef P135_FEATURE_RESET_COMMANDS
+// # endif // ifndef LIMIT_BUILD_SIZE
 
 struct P135_data_struct : public PluginTaskData_base {
 public:
@@ -66,11 +66,11 @@ private:
   bool initialized       = false;
   bool singleShotStarted = false;
   bool firstRead         = true;
-  # if P135_ENABLE_RESET_COMMANDS
+  # if P135_FEATURE_RESET_COMMANDS
   String factoryResetCode;
   bool   mustRunFactoryReset = false;
   bool   mustRunSelfTest     = false;
-  # endif // if P135_ENABLE_RESET_COMMANDS
+  # endif // if P135_FEATURE_RESET_COMMANDS
 };
 
 #endif // ifdef USES_P135

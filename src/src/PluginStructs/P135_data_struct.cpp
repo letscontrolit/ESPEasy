@@ -133,7 +133,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + timerDelay);
     }
   } else {
-    # if P135_ENABLE_RESET_COMMANDS
+    # if P135_FEATURE_RESET_COMMANDS
 
     if (mustRunFactoryReset) {
       success = scd4x->performFactoryReset();
@@ -158,7 +158,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
         addLog(LOG_LEVEL_ERROR, F("SCD4x: Sensor self-test failed!"));
       }
     }
-    # endif // if P135_ENABLE_RESET_COMMANDS
+    # endif // if P135_FEATURE_RESET_COMMANDS
   }
   return success;
 }
@@ -174,14 +174,14 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
 
   if (command == F("scd4x")) {
     const String sub = parseString(string, 2);
-    # if P135_ENABLE_RESET_COMMANDS
+    # if P135_FEATURE_RESET_COMMANDS
     const bool doSelftest = sub.equals(F("selftest"));
-    # endif // if P135_ENABLE_RESET_COMMANDS
+    # endif // if P135_FEATURE_RESET_COMMANDS
 
     // scd4x,storesettings : SLOW! Store current Altitude and temperatureCorrection in on-sensor EEPROM
     if (sub == F("storesettings")) {
       success = scd4x->persistSettings(); // This may take up to 800 mSec
-    # if P135_ENABLE_RESET_COMMANDS
+    # if P135_FEATURE_RESET_COMMANDS
 
       // scd4x,factoryreset[,code] : SLOWER! Restore factory settings for sensor, code logged at ERROR level
       // scd4x,selftest[,code] : SLOWEST! Self-test for sensor, code logged at ERROR level
@@ -247,7 +247,7 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
         }
         factoryResetCode.clear();
       }
-    # endif // if P135_ENABLE_RESET_COMMANDS
+    # endif // if P135_FEATURE_RESET_COMMANDS
     }
   }
   return success;
