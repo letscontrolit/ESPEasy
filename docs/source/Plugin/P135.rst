@@ -26,7 +26,7 @@ Description
 
 The SCD40 and SDC41 are CO2 sensor units that also provide Humidity and Temperature measurement, support auto-calibration, and has temperature and altitude compensation settings. Using low-power operation the measurements will be available slower, but average power usage will be much lower.
 
-The SDC41 also supports single-shot measurements, to enable really low power consumption as it will enter a power-saving state when not measuring.
+The SDC41 also supports single-shot measurements, to enable really low averasge power consumption as it will enter a power-saving state when not measuring.
 
 Configuration
 -------------
@@ -68,9 +68,9 @@ When this setting is changed, the page is saved and reloaded to show/hide the ex
 
 * **Low-power measurement**: To use the low power mode of the chip, this option can be checked. Instead of the regular 5 seconds per measurement, it will take up to 30 seconds to obtain a result.
 
-* **Single-shot measurements (SCD41 only)**: (Not shown when **Sensor model** SCD40 is selected) This option enables the use of Single-shot measurements, that will be started on every **Interval** trigger, and provide a result 5 seconds later. By using this option with a long Interval the power consumption can be really low, as it does not continuously perform measurements, but puts the chip in a power-saving mode until the next measurement. This option only works when having a SCD41 sensor connected, when enabled on an SCD40 the values are undefined, even though they seem somewhat reasonable.
+* **Single-shot measurements (SCD41 only)**: (Not shown when **Sensor model** SCD40 is selected) This option enables the use of Single-shot measurements, that will be started on every **Interval** trigger, and provide a result 5 seconds later. By using this option with a long Interval the power consumption can be really low, as it does not continuously perform measurements, but puts the chip in a power-saving mode until the next measurement. This option only works when having a SCD41 sensor connected, when enabled on an SCD40 the values are undefined, even though they may seem somewhat reasonable.
 
-* **Automatic Self Calibration**: When enabled, the automatic self-calibration will be activated when the plugin is started. If the calibration is reset via the ``scd4x,factoryreset`` command, the calibration is reset to factory settings, and calibration data will have to be built up again.
+* **Automatic Self Calibration**: When enabled, the automatic self-calibration will be activated when the plugin is started. If the calibration is reset via the ``scd4x,factoryreset`` command, the calibration is reset to initial factory settings, and calibration data will have to be built up again.
 
 .. warning:: Automatic Self Calibration is a useful process to ensure long term stability of the sensor, and assumes the sensor is exposed to fresh air of 400 ppm at least once per 7 days.
 
@@ -94,7 +94,7 @@ Commands available
 Get Config Values
 ^^^^^^^^^^^^^^^^^
 
-Get Config Values retrieve values or settings from the sensor or plugin, and can be used in Rules, Display plugins, Formula's etc. The square brackets **are** part of the variable. Replace ``<taskname>`` by the **Name** of the task.
+Get Config Values retrieves values or settings from the sensor or plugin, and can be used in Rules, Display plugins, Formula's etc. The square brackets **are** part of the variable. Replace ``<taskname>`` by the **Name** of the task.
 
 .. include:: P135_config_values.repl
 

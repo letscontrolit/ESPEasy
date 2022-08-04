@@ -15,8 +15,6 @@
     | To protect the carefully built up calibration, this command has to be applied twice, a first time to generate a reset code (output to the log at ERROR level), and a second time with that code included to actually apply the reset. **This reset will take about 2.5 seconds, blocking the entire ESPEsy unit!** so be careful when applying this command.
 
     | After successful completion, this will be written to the log at INFO level, if unsuccessful it will report on ERROR log level.
-
-    | This command is not available in size-challenged builds!
     "
     "
     | ``scd4x,selftest[,selftestcode]``
@@ -26,6 +24,4 @@
     | To protect the regular operation of ESPEasy, this command has to be applied twice, a first time to generate a selftest code (output to the log at ERROR level), and a second time with that code included to actually apply the selftest.
 
     | After successful completion, this will be written to the log at INFO level, if unsuccessful it will report on ERROR log level.
-
-    | This command is not available in size-challenged builds!
     "
