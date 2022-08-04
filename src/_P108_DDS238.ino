@@ -16,9 +16,9 @@
 //  Written by José Araújo (josemariaaraujo@gmail.com),
 //      with most code copied from plugin 085: _P085_AcuDC243.ino
 
-# ifndef USES_MODBUS
+# if !FEATURE_MODBUS
 #  error This code needs MODBUS library, it should be enabled in 'define_plugin_sets.h', or your 'custom.h'
-# endif // ifndef USES_MODBUS
+# endif // if !FEATURE_MODBUS
 
 /*
    DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see https://github.com/reaper7/SDM_Energy_Meter)
@@ -255,7 +255,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-# ifdef USES_PACKED_RAW_DATA
+# if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       // FIXME TD-er: Same code as in P102, share in LoRa code.
@@ -278,7 +278,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
-# endif // USES_PACKED_RAW_DATA
+# endif // if FEATURE_PACKED_RAW_DATA
   }
   return success;
 }

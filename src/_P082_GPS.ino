@@ -521,7 +521,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
-# ifdef USES_PACKED_RAW_DATA
+# if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       P082_data_struct *P082_data =
@@ -550,7 +550,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
-# endif // USES_PACKED_RAW_DATA
+# endif // if FEATURE_PACKED_RAW_DATA
   }
   return success;
 }

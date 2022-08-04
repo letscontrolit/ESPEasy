@@ -119,9 +119,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return F("IP / Subnet");
     case LabelType::GATEWAY:                return F("Gateway");
     case LabelType::CLIENT_IP:              return F("Client IP");
-    #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     case LabelType::M_DNS:                  return F("mDNS");
-    #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
     case LabelType::DNS:                    return F("DNS");
     case LabelType::DNS_1:                  return F("DNS 1");
     case LabelType::DNS_2:                  return F("DNS 2");
@@ -318,9 +318,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
-    #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     case LabelType::M_DNS:                  return String(NetworkGetHostname()) + F(".local");
-    #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();

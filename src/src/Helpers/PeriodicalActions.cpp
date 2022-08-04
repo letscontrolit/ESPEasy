@@ -245,13 +245,13 @@ void runEach30Seconds()
   }
 #endif
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif
+  #endif // if FEATURE_REPORTING
 
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 
 void scheduleNextMQTTdelayQueue() {
@@ -387,7 +387,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 }
 
 
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
 
 
 
@@ -437,25 +437,25 @@ void updateLoopStats_30sec(uint8_t loglevel) {
  \*********************************************************************************************/
 void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
       CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);
-#ifdef USES_MQTT      
+#if FEATURE_MQTT      
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
       }
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
     }
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     if (mqttControllerEnabled && MQTTclient.connected()) {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
@@ -465,9 +465,9 @@ void flushAndDisconnectAllClients() {
 
 void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
