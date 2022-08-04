@@ -31,9 +31,9 @@ void updateLoopStats() {
   }
   const int64_t usecSince = usecPassedSince(lastLoopStart);
 
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   miscStats[LOOP_STATS].add(usecSince);
-  #endif // ifdef USES_TIMING_STATS
+  #endif // if FEATURE_TIMING_STATS
 
   loop_usec_duration_total += usecSince;
   lastLoopStart             = getMicros64();
@@ -138,9 +138,9 @@ void ESPEasy_loop()
   // Deep sleep mode, just run all tasks one (more) time and go back to sleep as fast as possible
   if ((firstLoopConnectionsEstablished || readyForSleep()) && isDeepSleepEnabled())
   {
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     runPeriodicalMQTT();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
     // Now run all frequent tasks
     run50TimesPerSecond();
     run10TimesPerSecond();

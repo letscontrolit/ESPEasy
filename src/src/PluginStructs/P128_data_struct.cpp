@@ -470,6 +470,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
           : str5i;
     }
 
+    # if P128_ENABLE_FAKETV
     else if (subCommand == F("faketv")) {
       success            = true;
       mode               = P128_modetype::FakeTV;
@@ -485,6 +486,7 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
           ? pixelCount
           : str4i;
     }
+    # endif // if P128_ENABLE_FAKETV
 
     else if (subCommand == F("fire")) {
       success = true;
@@ -768,9 +770,11 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
       dualwipe();
       break;
 
+    # if P128_ENABLE_FAKETV
     case P128_modetype::FakeTV:
       faketv();
       break;
+    # endif // if P128_ENABLE_FAKETV
 
     case P128_modetype::SimpleClock:
       Plugin_128_simpleclock();
@@ -895,6 +899,7 @@ void P128_data_struct::dualwipe(void) {
   }
 }
 
+# if P128_ENABLE_FAKETV
 void P128_data_struct::faketv(void) {
   if (counter20ms >= ftv_holdTime) {
     difference = abs(endpixel - startpixel);
@@ -956,6 +961,8 @@ void P128_data_struct::faketv(void) {
     ftv_pb = ftv_nb;
   }
 }
+
+# endif // if P128_ENABLE_FAKETV
 
 /*
  * Cycles a rainbow over the entire string of LEDs.
@@ -1541,7 +1548,9 @@ const __FlashStringHelper * P128_data_struct::P128_modeType_toString(P128_modety
     case P128_modetype::FireFlicker: return F("fireflicker");
     case P128_modetype::Wipe: return F("wipe");
     case P128_modetype::Dualwipe: return F("dualwipe");
+    # if P128_ENABLE_FAKETV
     case P128_modetype::FakeTV: return F("faketv");
+    # endif // if P128_ENABLE_FAKETV
     case P128_modetype::SimpleClock: return F("simpleclock");
   }
   return F("*unknown*");

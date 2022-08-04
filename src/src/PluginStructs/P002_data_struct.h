@@ -101,13 +101,20 @@ private:
   void load(struct EventStruct *event);
 # endif // ifndef LIMIT_BUILD_SIZE
 
+  void webformLoad_2p_calibPoint(
+    const __FlashStringHelper *label,
+    const __FlashStringHelper *id_point,
+    const __FlashStringHelper *id_value,
+    int                        point,
+    float                      value) const;
+
 public:
 
   void webformLoad(struct EventStruct *event);
 
-# ifdef USES_PLUGIN_STATS
+# if FEATURE_PLUGIN_STATS
   bool webformLoad_show_stats(struct EventStruct *event);
-# endif // ifdef USES_PLUGIN_STATS
+# endif // if FEATURE_PLUGIN_STATS
 
 private:
 
@@ -121,19 +128,19 @@ private:
 # ifdef ESP32
   static adc_atten_t                getAttenuation(struct EventStruct *event);
   static const __FlashStringHelper* AttenuationToString(adc_atten_t attenuation);
-  #  ifdef USES_CHART_JS
+  #  if FEATURE_CHART_JS
   static void                       webformLoad_calibrationCurve(struct EventStruct *event);
-  #  endif // ifdef USES_CHART_JS
+  #  endif // if FEATURE_CHART_JS
 # endif    // ifdef ESP32
 
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
   static const __FlashStringHelper* getChartXaxisLabel(struct EventStruct *event);
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
   static void                       getInputRange(struct EventStruct *event,
                                                   int               & min_value,
                                                   int               & max_value,
                                                   bool                ignoreCalibration = false);
-# ifdef USES_CHART_JS
+# if FEATURE_CHART_JS
   static void getChartRange(struct EventStruct *event,
                             int                 values[],
                             int                 count,
@@ -142,7 +149,7 @@ private:
   static void webformLoad_2pt_calibrationCurve(struct EventStruct *event);
 
   void        webformLoad_multipointCurve(struct EventStruct *event) const;
-# endif // ifdef USES_CHART_JS
+# endif // if FEATURE_CHART_JS
 
 public:
 
@@ -172,7 +179,7 @@ private:
   // Return -1 if no bin matched.
   int  getBinIndex(float currentValue) const;
 
-  int  computeADC_to_bin(int currentValue) const;
+  int  computeADC_to_bin(const int& currentValue) const;
 
   void addBinningValue(int currentValue);
 
@@ -184,7 +191,8 @@ public:
 
   // This needs to be a static function, as the object may not exist if the task is not enabled.
   static float applyCalibration(struct EventStruct *event,
-                                float               float_value);
+                                float               float_value,
+                                bool                force = false);
 
   static float getCurrentValue(struct EventStruct *event,
                                int               & raw_value);
@@ -192,13 +200,18 @@ public:
   float        applyCalibration(float float_value) const;
 
 # ifdef ESP32
-  static bool  applyFactoryCalibration(struct EventStruct *event);
+  static bool  useFactoryCalibration(struct EventStruct *event);
+
+  static float applyFactoryCalibration(float       raw_value,
+                                       adc_atten_t attenuation);
+
+
 # endif // ifdef ESP32
 
 private:
 
 # ifndef LIMIT_BUILD_SIZE
-  float        applyMultiPointInterpolation(float float_value) const;
+  float        applyMultiPointInterpolation(float float_value, bool force = false) const;
 # endif // ifndef LIMIT_BUILD_SIZE
 
   static float mapADCtoFloat(float float_value,

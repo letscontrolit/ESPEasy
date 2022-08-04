@@ -14,7 +14,7 @@
 
 #define PLUGIN_066
 #define PLUGIN_ID_066         66
-#define PLUGIN_NAME_066       "Color - VEML6040 [TESTING]"
+#define PLUGIN_NAME_066       "Color - VEML6040"
 #define PLUGIN_VALUENAME1_066 "R"
 #define PLUGIN_VALUENAME2_066 "G"
 #define PLUGIN_VALUENAME3_066 "B"

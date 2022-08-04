@@ -106,7 +106,7 @@ bool validUserVar(struct EventStruct *event) {
   return true;
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Handle incoming MQTT messages
@@ -195,7 +195,13 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
-  mqtt.setTimeout(ControllerSettings.ClientTimeout);
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  #else
+  mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
+  #endif
+  
   MQTTclient.setClient(mqtt);
 
   if (ControllerSettings.UseDNS) {
@@ -427,7 +433,7 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
   return LWTMessageDisconnect;
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * Send status info to request source
@@ -467,11 +473,11 @@ void SendStatus(struct EventStruct *event, const String& status)
         printWebString += status;
       }
       break;
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_MQTT:
       MQTTStatus(event, status);
       break;
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
     case EventValueSource::Enum::VALUE_SOURCE_SERIAL:
       serialPrintln(status);
       break;
@@ -481,7 +487,7 @@ void SendStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 bool MQTT_queueFull(controllerIndex_t controller_idx) {
   if (MQTTDelayHandler == nullptr) {
     return true;
@@ -573,7 +579,7 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 
 /*********************************************************************************************\

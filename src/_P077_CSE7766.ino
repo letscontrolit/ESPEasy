@@ -12,9 +12,9 @@
 # define PLUGIN_077
 # define PLUGIN_ID_077         77
 # ifdef PLUGIN_SET_SONOFF_POW
-  #  define PLUGIN_NAME_077       "Energy (AC) - CSE7766 (POW r2) [TESTING]"
+  #  define PLUGIN_NAME_077       "Energy (AC) - CSE7766 (POW r2)"
 # else // ifdef PLUGIN_SET_SONOFF_POW
-  #  define PLUGIN_NAME_077       "Energy (AC) - CSE7766 [TESTING]"
+  #  define PLUGIN_NAME_077       "Energy (AC) - CSE7766"
 # endif // ifdef PLUGIN_SET_SONOFF_POW
 # define PLUGIN_VALUENAME1_077 "Voltage"
 # define PLUGIN_VALUENAME2_077 "Power"

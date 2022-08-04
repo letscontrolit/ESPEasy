@@ -2,13 +2,14 @@
 #ifndef DATASTRUCTS_SETTINGSSTRUCT_H
 #define DATASTRUCTS_SETTINGSSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/DeviceStruct.h"
 #include "../DataTypes/EthernetParameters.h"
 #include "../DataTypes/NetworkMedium.h"
 #include "../DataTypes/TimeSource.h"
 #include "../Globals/Plugins.h"
-#include "../../ESPEasy_common.h"
 
 //we disable SPI if not defined
 #ifndef DEFAULT_SPI
@@ -135,6 +136,11 @@ class SettingsStruct_tmpl
   // Can be used if the configuration is later retrieved/restored manually
   bool AllowOTAUnlimited() const;
   void AllowOTAUnlimited(bool value);
+
+  // Default behavior is to not allow following redirects  
+  bool SendToHTTP_follow_redirects() const;
+  void SendToHTTP_follow_redirects(bool value);
+
 
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;

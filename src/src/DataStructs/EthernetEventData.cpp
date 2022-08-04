@@ -1,5 +1,7 @@
 #include "../DataStructs/EthernetEventData.h"
 
+#if FEATURE_ETHERNET
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 // Bit numbers for Eth status
@@ -153,3 +155,5 @@ String EthernetEventData_t::ESPEasyEthStatusToString() const {
   return log;
 
 }
+
+#endif

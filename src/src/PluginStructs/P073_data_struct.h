@@ -27,15 +27,15 @@
 # define P073_SCROLL_TEXT          // Enable scrolling of 7dtext by default
 # define P073_7DBIN_COMMAND        // Enable input of binary data via 7dbin,uint8_t,... command
 
-# ifndef PLUGIN_SET_TESTING
+# ifndef PLUGIN_SET_COLLECTION
 
 // #  define P073_DEBUG        // Leave out some debugging on demand, activates extra log info in the debug
-# else // ifndef PLUGIN_SET_TESTING
+# else // ifndef PLUGIN_SET_COLLECTION
 #  undef P073_7DDT_COMMAND  // Optionally activate if .bin file space is really problematic, to remove the 7ddt command
 #  undef P073_EXTRA_FONTS   // Optionally activate if .bin file space is really problematic, to remove the font selection and 7dfont command
 #  undef P073_SCROLL_TEXT   // Optionally activate if .bin file space is really problematic, to remove the scrolling text feature
 #  undef P073_7DBIN_COMMAND // Optionally activate if .bin file space is really problematic, to remove the 7dbin command
-# endif // ifndef PLUGIN_SET_TESTING
+# endif // ifndef PLUGIN_SET_COLLECTION
 
 # define TM1637_POWER_ON    B10001000
 # define TM1637_POWER_OFF   B10000000

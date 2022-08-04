@@ -118,7 +118,7 @@
 
 
 #if defined(ESP8266)
-  # ifdef USE_NON_STANDARD_24_TASKS
+  # if FEATURE_NON_STANDARD_24_TASKS
   #  ifndef DAT_OFFSET_TASKS
   #   define DAT_OFFSET_TASKS                 4096 // 0x1000 each task = 2k, (1024 basic + 1024 bytes custom)
   #  endif // ifndef DAT_OFFSET_TASKS
@@ -132,7 +132,7 @@
   #   define CONFIG_FILE_SIZE                65536
   #  endif // ifndef CONFIG_FILE_SIZE
 
-  # else // ifdef USE_NON_STANDARD_24_TASKS
+  # else // if FEATURE_NON_STANDARD_24_TASKS
 
   #  ifndef DAT_OFFSET_TASKS
   #   define DAT_OFFSET_TASKS                 4096 // each task = 2k, (1024 basic + 1024 bytes custom), 12 max
@@ -153,7 +153,7 @@
   #    define CONFIG_FILE_SIZE               65536
   #   endif // ifndef CONFIG_FILE_SIZE
   #  endif
-  # endif // ifdef USE_NON_STANDARD_24_TASKS
+  # endif // if FEATURE_NON_STANDARD_24_TASKS
 #endif     // if defined(ESP8266)
 
 #if defined(ESP32)

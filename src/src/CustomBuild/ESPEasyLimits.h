@@ -13,7 +13,7 @@
 
 // Performing a 2-stage define assignment using the _TMP defines
 // See: https://github.com/letscontrolit/ESPEasy/issues/2621
-#ifdef USE_NON_STANDARD_24_TASKS
+#if FEATURE_NON_STANDARD_24_TASKS
   #define TASKS_MAX_TMP                      24
 #else
   #define TASKS_MAX_TMP                      12
@@ -86,7 +86,7 @@
   # ifdef ESP32
     # define DEVICES_MAX                      130
   #else
-    #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+    #if defined(PLUGIN_BUILD_COLLECTION) || defined(PLUGIN_BUILD_DEV)
       #  define DEVICES_MAX                      95
     # else 
       #  define DEVICES_MAX                      60

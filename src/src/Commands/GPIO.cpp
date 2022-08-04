@@ -1,8 +1,9 @@
 #include "../Commands/GPIO.h"
 
+#include "../../ESPEasy_common.h"
+
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_common.h"
 
 #include "../Commands/Common.h"
 #include "../DataStructs/PinMode.h"
@@ -288,7 +289,7 @@ const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const c
 
 const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
 {
-  #ifdef USE_RTTTL
+  #if FEATURE_RTTTL
 
   // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
@@ -308,9 +309,9 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   if (play_rtttl(event->Par1, melody.c_str())) {
     return return_command_success();
   }
-  #else // ifdef USE_RTTTL
+  #else // if FEATURE_RTTTL
   addLog(LOG_LEVEL_ERROR, F("RTTTL : command not included in build"));
-  #endif // ifdef USE_RTTTL
+  #endif // if FEATURE_RTTTL
   return return_command_failed();
 }
 
