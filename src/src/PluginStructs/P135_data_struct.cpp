@@ -144,28 +144,69 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
   } else {
     # if P135_FEATURE_RESET_COMMANDS
 
-    if (mustRunFactoryReset) {
-      success = scd4x->performFactoryReset();
+    if (operation != SCD4x_Operations_e::None) {
+      switch (operation) {
+        case SCD4x_Operations_e::RunFactoryReset: { // May take up to 1200 mSec
+          success = scd4x->performFactoryReset();
 
-      if (success) {
-        initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
-        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-        addLog(LOG_LEVEL_INFO, F("SCD4x: Factory reset success."));
-      } else {
-        addLog(LOG_LEVEL_ERROR, F("SCD4x: Factory reset failed!"));
+          String  log = F("SCD4x: Factory reset ");
+          uint8_t lvl = LOG_LEVEL_INFO;
+
+          if (success) {
+            initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
+            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
+            log += F("success.");
+          } else {
+            lvl  = LOG_LEVEL_ERROR;
+            log += F("failed!");
+          }
+          addLog(lvl, log);
+          break;
+        }
+        case SCD4x_Operations_e::RunSelfTest: { // May take up to 10 seconds!
+          success = scd4x->performSelfTest();
+
+          String  log = F("SCD4x: Sensor self-test ");
+          uint8_t lvl = LOG_LEVEL_INFO;
+
+          if (success) {
+            initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
+            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
+            log += F("success.");
+          } else {
+            lvl  = LOG_LEVEL_ERROR;
+            log += F("failed!");
+          }
+          addLog(lvl, log);
+          break;
+        }
+        case SCD4x_Operations_e::RunForcedRecalibration: { // May take up to 400 mSec
+          float frcCorrection = 0.0f;
+          success  = scd4x->performForcedRecalibration(frcValue, &frcCorrection);
+          frcValue = 0;
+
+          String  log = F("SCD4x: Forced Recalibration ");
+          uint8_t lvl = LOG_LEVEL_INFO;
+
+          if (success) {
+            initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
+            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
+            log += F("success. New setting: ");
+            log += frcValue;
+            log += F(", correction: ");
+            log += toString(frcCorrection, 2);
+          } else {
+            lvl  = LOG_LEVEL_ERROR;
+            log += F("failed!");
+          }
+          addLog(lvl, log);
+          break;
+        }
+        case SCD4x_Operations_e::None: { // To keep the compiler and developer happy :-)
+          break;
+        }
       }
-    }
-
-    if (mustRunSelfTest) {
-      success = scd4x->performSelfTest();
-
-      if (success) {
-        initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
-        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-        addLog(LOG_LEVEL_INFO, F("SCD4x: Sensor self-test success."));
-      } else {
-        addLog(LOG_LEVEL_ERROR, F("SCD4x: Sensor self-test failed!"));
-      }
+      operation = SCD4x_Operations_e::None;
     }
     # endif // if P135_FEATURE_RESET_COMMANDS
   }
@@ -223,10 +264,11 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
           String log = F("SCD4x: ");
 
           if (doSelftest) {
-            log += F("Selftest code: ");
+            log += F("Selftest");
           } else {
-            log += F("Factory reset code: ");
+            log += F("Factory reset");
           }
+          log += F(" code: ");
           log += factoryResetCode;
           addLog(LOG_LEVEL_ERROR, log);
         }
@@ -237,28 +279,33 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
         if (code.equals(factoryResetCode)) {
           if (doSelftest) {
             addLog(LOG_LEVEL_ERROR, F("SCD4x: Selftest starting... (may take up to 11 seconds!)"));
+            operation = SCD4x_Operations_e::RunSelfTest;
           } else {
             addLog(LOG_LEVEL_ERROR, F("SCD4x: Factory reset starting... (may take up to 2.5 seconds!)"));
-          }
-
-          if (scd4x->stopPeriodicMeasurement()) {
-            initialized = false;
-            firstRead   = true; // To discard first measurement results
-
-            if (doSelftest) {
-              mustRunSelfTest = true;
-            } else {
-              mustRunFactoryReset = true;
-            }
-            Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-            success = true;
+            operation = SCD4x_Operations_e::RunFactoryReset;
           }
         }
         factoryResetCode.clear();
       }
+    } else if ((sub == F("setfrc")) && (event->Par2 >= 400) &&
+               (((_sensorType == scd4x_sensor_type_e::SCD4x_SENSOR_SCD40) && (event->Par2 <= 2000)) ||
+                ((_sensorType == scd4x_sensor_type_e::SCD4x_SENSOR_SCD41) && (event->Par2 <= 5000)))) {
+      addLog(LOG_LEVEL_INFO, F("SCD4x: Forced Recalibration starting... (may take up to 1 second!)"));
+      operation = SCD4x_Operations_e::RunForcedRecalibration; // Execute FRC
+      frcValue  = event->Par2;
     # endif // if P135_FEATURE_RESET_COMMANDS
     }
   }
+  # if P135_FEATURE_RESET_COMMANDS
+
+  // Prepare for a special operation, stop measurements and schedule a required delayed READ
+  if ((operation != SCD4x_Operations_e::None) && scd4x->stopPeriodicMeasurement()) {
+    initialized = false;
+    firstRead   = true; // To discard first measurement results
+    Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
+    success = true;
+  }
+  # endif // if P135_FEATURE_RESET_COMMANDS
   return success;
 }
 
@@ -282,6 +329,9 @@ bool P135_data_struct::plugin_get_config_value(struct EventStruct *event,
     success = true;
   } else if (var == F("getselfcalibration")) { // [<taskname>#getselfcalibration] = is self-calibration enabled? (1/0)
     string  = scd4x->getAutomaticSelfCalibrationEnabled();
+    success = true;
+  } else if (var == F("serialnumber")) {       // [<taskname>#serialnumber] = the devices electronic serial number
+    string  = String(serialNumber);
     success = true;
   }
   return success;

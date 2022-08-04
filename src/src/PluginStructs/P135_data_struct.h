@@ -19,14 +19,22 @@
 # define P135_EXTEND_MEASURE_TIME       1000  // 1 second measuring time extension if not yet ready
 # define P135_STOP_MEASUREMENT_DELAY    500   // Delay after stopping or restarting the periodic measurements
 
-# define P135_MAX_ERRORS               100    // After this amount of errors the plugin stops measuring
+# define P135_MAX_ERRORS                100   // After this count of consecutive errors the plugin stops measuring
 
 // # ifndef LIMIT_BUILD_SIZE
 # ifndef P135_FEATURE_RESET_COMMANDS
-#  define P135_FEATURE_RESET_COMMANDS  1 // Enable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
+#  define P135_FEATURE_RESET_COMMANDS  1 // Enable (~1700 bytes) 'selftest', 'factoryreset' and 'setfrc' subcommands
 # endif // ifndef P135_FEATURE_RESET_COMMANDS
 // # endif // ifndef LIMIT_BUILD_SIZE
 
+# if P135_FEATURE_RESET_COMMANDS
+enum class SCD4x_Operations_e : uint8_t {
+  None,
+  RunFactoryReset,
+  RunSelfTest,
+  RunForcedRecalibration,
+};
+# endif // if P135_FEATURE_RESET_COMMANDS
 struct P135_data_struct : public PluginTaskData_base {
 public:
 
@@ -70,9 +78,9 @@ private:
   bool     firstRead         = true;
   uint16_t errorCount        = 0;
   # if P135_FEATURE_RESET_COMMANDS
-  String factoryResetCode;
-  bool   mustRunFactoryReset = false;
-  bool   mustRunSelfTest     = false;
+  String             factoryResetCode;
+  SCD4x_Operations_e operation = SCD4x_Operations_e::None;
+  uint16_t           frcValue  = 0;
   # endif // if P135_FEATURE_RESET_COMMANDS
 };
 

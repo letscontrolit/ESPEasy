@@ -22,3 +22,8 @@
     ","
     | Returns ``1`` if Automatic Self Calibration is enabled at the sensor, and ``0`` if not.
     "
+    "
+    | ``[<taskname>#SerialNumber]``
+    ","
+    | Returns the electronic serial number of the sensor.
+    "

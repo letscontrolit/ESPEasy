@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /**
+ * 2022-08-04 tonhuisman: Add forced recalibration subcommand scd4x,setfrc,<frcvalue>
+ *                        Add [<taskname>#SerialNumber] get config value
  * 2022-08-04 tonhuisman: Stop plugin after 100 consecutive mis-readings have happened, as then most likely
  *                        something is wrong with the sensor. The CO2 value will be set to 0 in that case.
  *                        Describe Stats option in the documentation.
@@ -18,7 +20,7 @@
  **/
 # define PLUGIN_135
 # define PLUGIN_ID_135          135
-# define PLUGIN_NAME_135        "Gases - SCD4x [TESTING]"
+# define PLUGIN_NAME_135        "Gases - SCD4x [TESTING]" // TODO
 # define PLUGIN_VALUENAME1_135  "CO2"
 # define PLUGIN_VALUENAME2_135  "Humidity"
 # define PLUGIN_VALUENAME3_135  "Temperature"
