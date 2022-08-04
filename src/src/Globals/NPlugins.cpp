@@ -1,5 +1,6 @@
 #include "../Globals/NPlugins.h"
 
+#if FEATURE_NOTIFIER
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/NotificationStruct.h"
@@ -123,3 +124,5 @@ bool addNPlugin(npluginID_t npluginID, nprotocolIndex_t x) {
   */
   return false;
 }
+
+#endif

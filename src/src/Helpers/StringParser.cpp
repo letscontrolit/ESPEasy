@@ -1,5 +1,7 @@
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"

@@ -18,7 +18,7 @@
 
 # define PLUGIN_085
 # define PLUGIN_ID_085 85
-# define PLUGIN_NAME_085 "Energy - AccuEnergy AcuDC24x [TESTING]"
+# define PLUGIN_NAME_085 "Energy - AccuEnergy AcuDC24x"
 # define PLUGIN_VALUENAME1_085 ""
 
 
@@ -295,7 +295,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
-# ifdef USES_PACKED_RAW_DATA
+# if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       // FIXME TD-er: Same code as in P102, share in LoRa code.
@@ -318,7 +318,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
-# endif // USES_PACKED_RAW_DATA
+# endif // if FEATURE_PACKED_RAW_DATA
   }
   return success;
 }

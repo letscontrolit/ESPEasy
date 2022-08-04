@@ -81,4 +81,4 @@ Change log
 
 .. versionchanged:: 2.0
 
-  |added| 2021-05-08 Added to main repository as Plugin 115 Energy - Fuel Gauge MAX1704x [TESTING]
+  |added| 2021-05-08 Added to main repository as Plugin 115 Energy - Fuel Gauge MAX1704x

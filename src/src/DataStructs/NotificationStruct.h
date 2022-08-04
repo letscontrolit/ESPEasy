@@ -1,6 +1,9 @@
 #ifndef DATASTRUCTS_NOTIFICATIONSTRUCT_H
 #define DATASTRUCTS_NOTIFICATIONSTRUCT_H
 
+#include "../../ESPEasy_common.h"
+
+#if FEATURE_NOTIFIER
 
 /*********************************************************************************************\
 * NotificationStruct
@@ -14,6 +17,8 @@ struct NotificationStruct
   uint8_t usesGPIO;
   bool usesMessaging;
 };
+
+#endif
 
 
 #endif // DATASTRUCTS_NOTIFICATIONSTRUCT_H

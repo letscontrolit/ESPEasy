@@ -114,7 +114,7 @@
 .. |C011_name| replace:: :cyan:`Generic HTTP Advanced`
 .. |C011_type| replace:: :cyan:`Controller`
 .. |C011_typename| replace:: :cyan:`Controller - Generic HTTP Advanced`
-.. |C011_status| replace:: :yellow:`TESTING`
+.. |C011_status| replace:: :yellow:`COLLECTION`
 .. |C011_github| replace:: C011.cpp
 .. _C011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C011.cpp
 .. |C011_usedby| replace:: `.`
@@ -125,7 +125,7 @@
 .. |C012_name| replace:: :cyan:`Blynk`
 .. |C012_type| replace:: :cyan:`Controller`
 .. |C012_typename| replace:: :cyan:`Controller - Blynk`
-.. |C012_status| replace:: :yellow:`TESTING`
+.. |C012_status| replace:: :yellow:`COLLECTION`
 .. |C012_github| replace:: C012.cpp
 .. _C012_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C012.cpp
 .. |C012_usedby| replace:: `.`
@@ -147,7 +147,7 @@
 .. |C014_name| replace:: :cyan:`Homie MQTT (Version 3.0.1 & 4.0.0dev)`
 .. |C014_type| replace:: :cyan:`Controller`
 .. |C014_typename| replace:: :cyan:`Controller - Homie MQTT convention`
-.. |C014_status| replace:: :yellow:`TESTING`
+.. |C014_status| replace:: :yellow:`COLLECTION`
 .. |C014_github| replace:: C014.cpp
 .. _C014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C014.cpp
 .. |C014_usedby| replace:: `.`
@@ -169,7 +169,7 @@
 .. |C017_name| replace:: :cyan:`Zabbix`
 .. |C017_type| replace:: :cyan:`Controller`
 .. |C017_typename| replace:: :cyan:`Controller - Zabbix`
-.. |C017_status| replace:: :yellow:`TESTING`
+.. |C017_status| replace:: :yellow:`COLLECTION`
 .. |C017_github| replace:: C017.cpp
 .. _C017_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C017.cpp
 .. |C017_usedby| replace:: `.`
@@ -180,7 +180,7 @@
 .. |C018_name| replace:: :cyan:`LoRa TTN - RN2483/RN2903`
 .. |C018_type| replace:: :cyan:`Controller`
 .. |C018_typename| replace:: :cyan:`Controller - LoRa TTN - RN2483/RN2903`
-.. |C018_status| replace:: :yellow:`TESTING`
+.. |C018_status| replace:: :yellow:`COLLECTION`
 .. |C018_github| replace:: C018.cpp
 .. _C018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C018.cpp
 .. |C018_usedby| replace:: `.`
