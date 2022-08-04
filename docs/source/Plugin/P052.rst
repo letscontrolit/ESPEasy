@@ -26,7 +26,18 @@ Used libraries: |P052_usedlibraries|
 Supported hardware
 ------------------
 
-|P052_usedby|
+.. .. |P052_usedby|
+
+:ref:`P052_S8_page`
+
+:ref:`P052_S11_page`
+
+:ref:`P052_tSense_K70_page`
+
+Sensor
+^^^^^^
+
+See: :ref:`SerialHelper_page`
 
 Commands available
 ^^^^^^^^^^^^^^^^^^
