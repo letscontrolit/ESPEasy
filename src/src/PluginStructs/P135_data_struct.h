@@ -19,6 +19,8 @@
 # define P135_EXTEND_MEASURE_TIME       1000  // 1 second measuring time extension if not yet ready
 # define P135_STOP_MEASUREMENT_DELAY    500   // Delay after stopping or restarting the periodic measurements
 
+# define P135_MAX_ERRORS               100    // After this amount of errors the plugin stops measuring
+
 // # ifndef LIMIT_BUILD_SIZE
 # ifndef P135_FEATURE_RESET_COMMANDS
 #  define P135_FEATURE_RESET_COMMANDS  1 // Enable quite spacious (~950 bytes) 'selftest' and 'factoryreset' subcommands
@@ -63,9 +65,10 @@ private:
 
   char serialNumber[13] = { 0 };
 
-  bool initialized       = false;
-  bool singleShotStarted = false;
-  bool firstRead         = true;
+  bool     initialized       = false;
+  bool     singleShotStarted = false;
+  bool     firstRead         = true;
+  uint16_t errorCount        = 0;
   # if P135_FEATURE_RESET_COMMANDS
   String factoryResetCode;
   bool   mustRunFactoryReset = false;

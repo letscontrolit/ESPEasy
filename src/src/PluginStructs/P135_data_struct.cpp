@@ -109,11 +109,13 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
 
       singleShotStarted = false;
       firstRead         = false;      // No longer first read
+      errorCount        = 0;          // Reset
     } else {
       if (getMeasure && !firstRead) { // We got delayed somehow, let's wait a little more
         timerDelay = P135_EXTEND_MEASURE_TIME;
+        errorCount++;
       } else {
-        if (_useSingleShot) {         // Single-shot started?
+        if (_useSingleShot) { // Single-shot started?
           timerDelay = P135_SINGLE_SHOT_MEASURE_TIME;
         } else if (_lowPowerMeasurement) {
           timerDelay = P135_LOW_POWER_MEASURE_TIME;
@@ -121,6 +123,13 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
           timerDelay = P135_NORMAL_MEASURE_TIME;
         }
       }
+    }
+
+    if (errorCount > P135_MAX_ERRORS) {
+      initialized = false;
+      scd4x->stopPeriodicMeasurement(); // Stop measuring, no need to wait for completion
+      UserVar[event->BaseVarIndex] = 0; // Indicate an error state
+      addLog(LOG_LEVEL_ERROR, F("SCD4x: Max. read errors reached, plugin stopped."));
     }
 
     if (timerDelay != 0) { // Schedule next PLUGIN_READ

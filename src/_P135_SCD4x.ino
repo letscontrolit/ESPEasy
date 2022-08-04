@@ -6,6 +6,9 @@
 // #######################################################################################################
 
 /**
+ * 2022-08-04 tonhuisman: Stop plugin after 100 consecutive mis-readings have happened, as then most likely
+ *                        something is wrong with the sensor. The CO2 value will be set to 0 in that case.
+ *                        Describe Stats option in the documentation.
  * 2022-08-03 tonhuisman: Add single-shot measurement mode for SCD41, commands and get config values
  *                        Changed category from Environment to Gases, to match with other CO2 sensors
  * 2022-08-02 tonhuisman: Start plugin for SCD4x (SCD40/SDC41) CO2, Humidity and Temperature
