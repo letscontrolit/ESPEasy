@@ -86,6 +86,8 @@ Values
 
 The plugin provides measurements ``CO2`` in ppm, ``Humidity`` in a range of 0..100%, and ``Temperature`` in degrees Celcius, with the **Temp offset** applied.
 
+Per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
+
 Commands available
 ^^^^^^^^^^^^^^^^^^
 
