@@ -7,11 +7,11 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
@@ -367,8 +367,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   uint8_t nrDecimals = 0;
   if (Device[DeviceIndex].configurableDecimals()) {
-    LoadTaskSettings(event->TaskIndex);
-    nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+    nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
   String result = toString(f, nrDecimals);
@@ -925,8 +924,7 @@ void parseSingleControllerVariable(String            & s,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
   } else {
     repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -963,9 +961,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
 
   if (validTaskIndex(event->TaskIndex)) {
-    // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
   } else {
     repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -979,7 +975,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       vname += '%';
 
       if (validTaskIndex(event->TaskIndex)) {
-        repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
+        repl(vname, getTaskValueName(event->TaskIndex, i), s, useURLencode);
       } else {
         repl(vname, EMPTY_STRING, s, useURLencode);
       }
@@ -1103,7 +1099,9 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #define SMART_CONV(T, FUN) \
   while (getConvertArgument2((T), data)) { repl(data, (FUN)); }
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(data.arg1, data.arg2), 2))
+  #if FEATURE_ESPEASY_P2P
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(data.arg1, data.arg2))
+  #endif
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
   #undef SMART_CONV

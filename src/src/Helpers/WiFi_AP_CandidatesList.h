@@ -1,8 +1,9 @@
 #ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H
 #define HELPERS_WIFI_AP_CANDIDATESLIST_H
 
-#include "../DataStructs/WiFi_AP_Candidate.h"
 #include "../../ESPEasy_common.h"
+
+#include "../DataStructs/WiFi_AP_Candidate.h"
 
 #include <list>
 

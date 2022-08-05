@@ -28,7 +28,7 @@
 
 # define PLUGIN_120
 # define PLUGIN_ID_120          120 // plugin id
-# define PLUGIN_NAME_120        "Accelerometer - ADXL345 (I2C) [TESTING]"
+# define PLUGIN_NAME_120        "Accelerometer - ADXL345 (I2C)"
 # define PLUGIN_VALUENAME1_120  "X"
 # define PLUGIN_VALUENAME2_120  "Y"
 # define PLUGIN_VALUENAME3_120  "Z"
@@ -50,6 +50,7 @@ boolean Plugin_120(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].PluginStats    = true;
 
       break;
     }

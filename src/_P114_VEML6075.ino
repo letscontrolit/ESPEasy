@@ -11,7 +11,7 @@
 
 # define PLUGIN_114
 # define PLUGIN_ID_114          114
-# define PLUGIN_NAME_114        "UV - VEML6075 UVA/UVB Sensor [TESTING]"
+# define PLUGIN_NAME_114        "UV - VEML6075 UVA/UVB Sensor"
 # define PLUGIN_VALUENAME1_114  "UVA"
 # define PLUGIN_VALUENAME2_114  "UVB"
 # define PLUGIN_VALUENAME3_114  "UVIndex"
@@ -38,6 +38,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

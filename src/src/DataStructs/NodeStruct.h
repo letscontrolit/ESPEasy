@@ -17,6 +17,7 @@
 
 const __FlashStringHelper * getNodeTypeDisplayString(uint8_t nodeType);
 
+#if FEATURE_ESPEASY_P2P
 /*********************************************************************************************\
 * NodeStruct
 \*********************************************************************************************/
@@ -33,5 +34,6 @@ struct NodeStruct
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
 
+#endif //FEATURE_ESPEASY_P2P
 
 #endif // DATASTRUCTS_NODESTRUCT_H

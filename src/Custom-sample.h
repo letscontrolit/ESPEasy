@@ -21,6 +21,14 @@
     Here are some examples:
  */
 
+// --- Feature Flagging ---------------------------------------------------------
+// Can be set to 1 to enable, 0 to disable, or not set to use the default (usually via define_plugin_sets.h)
+
+#define FEATURE_ESPEASY_P2P       1     // (1/0) enables the ESP Easy P2P protocol
+#define FEATURE_ARDUINO_OTA       1     //enables the Arduino OTA capabilities
+// #define FEATURE_SD                1     // Enable SD card support
+// #define FEATURE_DOWNLOAD          1     // Enable downloading a file from an url
+
 #ifdef BUILD_GIT
 # undef BUILD_GIT
 #endif // ifdef BUILD_GIT
@@ -102,7 +110,7 @@
 #define DEFAULT_PIN_I2C_SDA                     4
 #define DEFAULT_PIN_I2C_SCL                     5
 #define DEFAULT_I2C_CLOCK_SPEED                 400000            // Use 100 kHz if working with old I2C chips
-#define USE_I2C_DEVICE_SCAN                     true
+#define FEATURE_I2C_DEVICE_SCAN                 1
 
 #define DEFAULT_SPI                             0                 //0=disabled 1=enabled and for ESP32 there is option 2 =HSPI
 
@@ -116,6 +124,8 @@
 #define DEFAULT_RULES_OLDENGINE                 true
 
 #define DEFAULT_MQTT_RETAIN                     false             // (true|false) Retain MQTT messages?
+#define DEFAULT_CONTROLLER_DELETE_OLDEST              false             // (true|false) to delete oldest message when queue is full
+#define DEFAULT_CONTROLLER_MUST_CHECK_REPLY     false             // (true|false) Check Acknowledgment
 #define DEFAULT_MQTT_DELAY                      100               // Time in milliseconds to retain MQTT messages
 #define DEFAULT_MQTT_LWT_TOPIC                  ""                // Default lwt topic
 #define DEFAULT_MQTT_LWT_CONNECT_MESSAGE        "Connected"       // Default lwt message
@@ -171,24 +181,34 @@
 
 // Allow for remote provisioning of a node.
 // This is only allowed for custom builds.
-// To setup the configuration of the provisioning file, one must also define USE_SETTINGS_ARCHIVE
+// To setup the configuration of the provisioning file, one must also define FEATURE_SETTINGS_ARCHIVE
 // Default setting is to not allow to configure a node remotely, unless explicitly enabled.
-// #define USE_CUSTOM_PROVISIONING
+// #define FEATURE_CUSTOM_PROVISIONING  1
 
-#define USES_SSDP
+#define FEATURE_SSDP  1
 
-#define USE_EXT_RTC                // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+#define FEATURE_EXT_RTC  1         // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+
+#define FEATURE_PLUGIN_STATS  1    // Support collecting historic data + computing stats on historic data
+#ifdef ESP8266
+#  define PLUGIN_STATS_NR_ELEMENTS 16
+#endif // ifdef ESP8266
+# ifdef ESP32
+#  define PLUGIN_STATS_NR_ELEMENTS 64
+#endif // ifdef ESP32
+#define FEATURE_CHART_JS  1        // Support for drawing charts, like PluginStats historic data
 
 
-// #define USE_SETTINGS_ARCHIVE
-// #define FEATURE_I2CMULTIPLEXER
-// #define USE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+// #define FEATURE_SETTINGS_ARCHIVE 1
+// #define FEATURE_I2CMULTIPLEXER 1
+// #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 1
 // #define PLUGIN_USES_ADAFRUITGFX // Used by Display plugins using Adafruit GFX library
 // #define ADAGFX_ARGUMENT_VALIDATION  0 // Disable argument validation in AdafruitGFX_helper
 // #define ADAGFX_SUPPORT_7COLOR  0 // Disable the support of 7-color eInk displays by AdafruitGFX_helper
 
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
 // #ifdef ESP32
 //  #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
@@ -214,7 +234,7 @@
 
 
 
-#define USES_SSDP
+#define FEATURE_SSDP  1
 
 /*
  #######################################################################################################
@@ -245,6 +265,7 @@
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
+#define SHOW_SYSINFO_JSON   //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
 
 /*
  #######################################################################################################
@@ -272,7 +293,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #######################################################################################################
  */
 
-// #define USE_NON_STANDARD_24_TASKS
+// #define FEATURE_NON_STANDARD_24_TASKS  1
 
 /*
  #######################################################################################################
@@ -291,7 +312,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
  #######################################################################################################
  */
 
-// #define USE_SERVO
+// #define FEATURE_SERVO  1   // Uncomment and set to 0 to explicitly disable SERVO support
 
 
 // #define USES_P001   // Switch
@@ -438,6 +459,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define P128_USES_RGBW
 // #define P128_USES_BRG
 // #define P128_USES_RBG
+// #define P128_ENABLE_FAKETV 1 // Enable(1)/Disable(0) FakeTV effect, disabled by default on ESP8266 (.bin size issue), enabled by default on ESP32
 
 
 // Special plugins needing IR library

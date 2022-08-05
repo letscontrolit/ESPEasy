@@ -17,7 +17,7 @@
 
 #define PLUGIN_051
 #define PLUGIN_ID_051        51
-#define PLUGIN_NAME_051       "Environment - AM2320 [TESTING]"
+#define PLUGIN_NAME_051       "Environment - AM2320"
 #define PLUGIN_VALUENAME1_051 "Temperature"
 #define PLUGIN_VALUENAME2_051 "Humidity"
 
@@ -41,6 +41,7 @@ boolean Plugin_051(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

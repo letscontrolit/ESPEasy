@@ -35,9 +35,9 @@
 # include "../Helpers/PeriodicalActions.h"
 #endif // ifdef USE_RTOS_MULTITASKING
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 # include "../Helpers/OTA.h"
-#endif // ifdef FEATURE_ARDUINO_OTA
+#endif // if FEATURE_ARDUINO_OTA
 
 #ifdef ESP32
 #include <soc/boot_mode.h>
@@ -52,7 +52,9 @@ void RTOS_TaskServers(void *parameter)
   while (true) {
     delay(100);
     web_server.handleClient();
+    #if FEATURE_ESPEASY_P2P
     checkUDP();
+    #endif
   }
 }
 
@@ -126,6 +128,7 @@ void ESPEasy_setup()
     }
   }
 #endif  // CONFIG_IDF_TARGET_ESP32
+  initADC();
 #endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
@@ -277,18 +280,36 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
-
+    #if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
+    #endif
+
+    if (toDisable != 0) {
+      toDisable = disableRules(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllPlugins(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllControllers(toDisable);
+    }
+#if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableAllNotifications(toDisable);
+    }
+#endif
   }
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
   // Do not call setNetworkMedium here as that may try to clean up settings.
   active_network_medium = Settings.NetworkMedium;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();
@@ -359,12 +380,12 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("CPluginInit()"));
   #endif
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   NPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("NPluginInit()"));
   #endif
-  #endif // ifdef USES_NOTIFIER
+  #endif // if FEATURE_NOTIFIER
 
   PluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
@@ -432,16 +453,16 @@ void ESPEasy_setup()
   #endif
 
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif // ifdef FEATURE_REPORTING
+  #endif // if FEATURE_REPORTING
 
-  #ifdef FEATURE_ARDUINO_OTA
+  #if FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("ArduinoOTAInit()"));
   #endif
-  #endif // ifdef FEATURE_ARDUINO_OTA
+  #endif // if FEATURE_ARDUINO_OTA
 
   if (node_time.systemTimePresent()) {
     node_time.initTime();

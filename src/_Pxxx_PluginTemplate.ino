@@ -27,7 +27,7 @@
      - implement plugin and perform testing
      - set plugin status to DEVELOPMENT and distribute to other users for testing
      - after sufficient usage and possible code correction, set plugin status to TESTING and perform testing with more users
-     - finally, plugin will be accepted in project
+     - finally, plugin will be accepted in project, then the TESTING tag can be removed.
    - along with the plugin source code, prepare a wiki page containing:
      - instructions on how to make the necessary configuration
      - instructions on commands (if any)
@@ -215,7 +215,7 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
       // Use any of the following (defined at web_server.ino):
       // addFormNote(F("not editable text added here"));
       // To add some html, which cannot be done in the existing functions, add it in the following way:
-      addHtml(F("<TR><TD>Analog Pin:<TD>"));
+      addRowLabel(F("Analog Pin"));
 
 
       // For strings, always use the F() macro, which stores the string in flash, not in memory.

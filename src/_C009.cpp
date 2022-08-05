@@ -103,119 +103,114 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c009_delay_queue(int controller_number, const C009_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  WiFiClient client;
-
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
-  LoadTaskSettings(element.TaskIndex);
-  String request;
+  String jsonString;
+  // Make an educated guess on the actual length, based on earlier requests.
+  static size_t expectedJsonLength = 100;
   {
-    // Place in separate scope, so we can destruct it jsonString before calling send_to_http.
-    String jsonString;
-    // Make an educated guess on the actual length, based on earlier requests.
-    static size_t expectedJsonLength = 100;
-    {
-      #ifdef USE_SECOND_HEAP
-      HeapSelectIram ephemeral;
-      #endif
-      // Reserve on the 2nd heap
-      if (!jsonString.reserve(expectedJsonLength)) {
-        // Not enough free memory
-        return false;
-      }
+    #ifdef USE_SECOND_HEAP
+    HeapSelectIram ephemeral;
+    #endif
+    // Reserve on the 2nd heap
+    if (!jsonString.reserve(expectedJsonLength)) {
+      // Not enough free memory
+      return false;
     }
+  }
+  {
+    jsonString += '{';
     {
-      jsonString += '{';
+      jsonString += to_json_object_value(F("module"),  F("ESPEasy"));
+      jsonString += ',';
+      jsonString += to_json_object_value(F("version"), F("1.04"));
+
+      // Create nested object "ESP" inside "data"
+      jsonString += ',';
+      jsonString += F("\"data\":{");
       {
-        jsonString += to_json_object_value(F("module"),  F("ESPEasy"));
-        jsonString += ',';
-        jsonString += to_json_object_value(F("version"), F("1.04"));
-
-        // Create nested object "ESP" inside "data"
-        jsonString += ',';
-        jsonString += F("\"data\":{");
+        jsonString += F("\"ESP\":{");
         {
-          jsonString += F("\"ESP\":{");
-          {
-            // Create nested objects in "ESP":
-            jsonString += to_json_object_value(F("name"), Settings.Name);
-            jsonString += ',';
-            jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
-            jsonString += ',';
-            jsonString += to_json_object_value(F("version"), String(Settings.Version));
-            jsonString += ',';
-            jsonString += to_json_object_value(F("build"), String(Settings.Build));
-            jsonString += ',';
-            jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
-            jsonString += ',';
-            jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
-            jsonString += ',';
-            jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
-            jsonString += ',';
-            jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
-
-            // embed IP, important if there is NAT/PAT
-            // char ipStr[20];
-            // IPAddress ip = NetworkLocalIP();
-            // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-            jsonString += ',';
-            jsonString += to_json_object_value(F("ip"), NetworkLocalIP().toString());
-          }
-          jsonString += '}'; // End "ESP"
-
+          // Create nested objects in "ESP":
+          jsonString += to_json_object_value(F("name"), Settings.Name);
           jsonString += ',';
+          jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("version"), String(Settings.Version));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("build"), String(Settings.Build));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
+          jsonString += ',';
+          jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
 
-          // Create nested object "SENSOR" json object inside "data"
-          jsonString += F("\"SENSOR\":{");
-          {
-            // char itemNames[valueCount][2];
-            for (uint8_t x = 0; x < element.valueCount; x++)
-            {
-              // Each sensor value get an own object (0..n)
-              // sprintf(itemNames[x],"%d",x);
-              if (x != 0) {
-                jsonString += ',';
-              }
-
-              jsonString += '"';
-              jsonString += x;
-              jsonString += F("\":{");
-              {
-                jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
-                jsonString += ',';
-                jsonString += to_json_object_value(F("valueName"), ExtraTaskSettings.TaskDeviceValueNames[x]);
-                jsonString += ',';
-                jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
-                jsonString += ',';
-                jsonString += to_json_object_value(F("value"), element.txt[x]);
-              }
-              jsonString += '}'; // End "sensor value N"
-            }
-          }
-          jsonString += '}';     // End "SENSOR"
+          // embed IP, important if there is NAT/PAT
+          // char ipStr[20];
+          // IPAddress ip = NetworkLocalIP();
+          // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
+          jsonString += ',';
+          jsonString += to_json_object_value(F("ip"), NetworkLocalIP().toString());
         }
-        jsonString += '}';       // End "data"
+        jsonString += '}'; // End "ESP"
+
+        jsonString += ',';
+
+        // Create nested object "SENSOR" json object inside "data"
+        jsonString += F("\"SENSOR\":{");
+        {
+          // char itemNames[valueCount][2];
+          for (uint8_t x = 0; x < element.valueCount; x++)
+          {
+            // Each sensor value get an own object (0..n)
+            // sprintf(itemNames[x],"%d",x);
+            if (x != 0) {
+              jsonString += ',';
+            }
+
+            jsonString += '"';
+            jsonString += x;
+            jsonString += F("\":{");
+            {
+              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element.TaskIndex));
+              jsonString += ',';
+              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element.TaskIndex, x));
+              jsonString += ',';
+              jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
+              jsonString += ',';
+              jsonString += to_json_object_value(F("value"), element.txt[x]);
+            }
+            jsonString += '}'; // End "sensor value N"
+          }
+        }
+        jsonString += '}';     // End "SENSOR"
       }
-      jsonString += '}';         // End JSON structure
+      jsonString += '}';       // End "data"
     }
-
-    if (expectedJsonLength < jsonString.length()) {
-      expectedJsonLength = jsonString.length();
-    }
-
-    // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
-    // addLog(LOG_LEVEL_INFO, jsonString);
-
-    // We now create a URI for the request
-    request = create_http_request_auth(
-      controller_number, element.controller_idx, ControllerSettings,
-      F("POST"), F("/ESPEasy"), jsonString.length());
-
-    request += jsonString;
+    jsonString += '}';         // End JSON structure
   }
 
-  return send_via_http(controller_number, client, request, ControllerSettings.MustCheckReply);
+  if (expectedJsonLength < jsonString.length()) {
+    expectedJsonLength = jsonString.length();
+  }
+
+  // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
+  // addLog(LOG_LEVEL_INFO, jsonString);
+
+  WiFiClient client;
+  int httpCode = -1;
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    client,
+    F("/ESPEasy"),
+    F("POST"),
+    EMPTY_STRING,
+    jsonString,
+    httpCode);
+  return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C009

@@ -1,7 +1,6 @@
 #ifndef HELPERS_STRINGGENERATOR_SYSTEM_H
 #define HELPERS_STRINGGENERATOR_SYSTEM_H
 
-#include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
 #include "../Globals/Statistics.h"
@@ -11,9 +10,9 @@
    ESPEasy specific strings
 \*********************************************************************************************/
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 const __FlashStringHelper * getMQTT_state();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 /********************************************************************************************\
    Get system information

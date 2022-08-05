@@ -5,13 +5,11 @@
 // ########################### Controller Plugin 012: Blynk  #############################################
 // #######################################################################################################
 
-// #ifdef PLUGIN_BUILD_TESTING
-
 # include "src/Commands/Blynk.h"
 
 # define CPLUGIN_012
 # define CPLUGIN_ID_012         12
-# define CPLUGIN_NAME_012       "Blynk HTTP [TESTING]"
+# define CPLUGIN_NAME_012       "Blynk HTTP"
 
 bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -54,7 +52,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
       if (C012_DelayHandler == nullptr) {
         break;
       }
-      LoadTaskSettings(event->TaskIndex);
+      //LoadTaskSettings(event->TaskIndex); // FIXME TD-er: This can probably be removed
 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);

@@ -7,7 +7,7 @@
 
 # define PLUGIN_095
 # define PLUGIN_ID_095         95
-# define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341 [TESTING]"
+# define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341"
 # define PLUGIN_VALUENAME1_095 "CursorX"
 # define PLUGIN_VALUENAME2_095 "CursorY"
 # define PLUGIN_095_MAX_DISPLAY 1
