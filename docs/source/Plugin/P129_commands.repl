@@ -20,7 +20,7 @@ The commands are all used to update configuration, not directly control the stat
     | Set the number of chips connected together. Is updated in the configuration, but not saved.
     "
     "
-    | ``ShiftIn,SampleFrequency,<0}1>``
+    | ``ShiftIn,SampleFrequency,<0|1>``
     ","
     | Select the sample frequency, 0 = 10/sec, 1 = 50/sec.
     "

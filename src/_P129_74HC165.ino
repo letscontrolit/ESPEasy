@@ -7,6 +7,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2022-08-05 tonhuisman: Fix issue with reading 8th bit of each byte (found during HW testing)
+ *                        Reduce number of Values to match the selected number of chips/4. Small UI improvements.
+ *                        Enable pin is no longer required, as it is not available or required on some boards.
  * 2022-07-30 tonhuisman: Remove Testing tag from plugin name.
  * 2022-06-12 tonhuisman: Optimizations and small fixes. Implement use of PCONFIG_ULONG()
  * 2022-02-25 tonhuisman: Rename command to ShiftIn,<subcommand>,<arg>...
@@ -118,20 +121,38 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_input(F("Data pin (Q7)"));
-      event->String2 = formatGpioName_output(F("Clock pin (CP)"));
-      event->String3 = formatGpioName_output(F("Enable pin (<SPAN STYLE=\"text-decoration:overline\">EN</SPAN>)"));
+      event->String1 = formatGpioName_input(F("Data (Q7)"));
+      event->String2 = formatGpioName_output(F("Clock (CP)"));
+      event->String3 = formatGpioName_output(F("Enable (<SPAN STYLE=\"text-decoration:overline\">EN</SPAN>) (opt.)"));
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = min(static_cast<uint8_t>(VARS_PER_TASK),
+                        static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0)));
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(
+        min(static_cast<uint8_t>(VARS_PER_TASK),
+            static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0))));
+      event->idx = 0;
+      success    = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormPinSelect(PinSelectPurpose::Generic_output,
-                       formatGpioName_output(F("Load pin (<SPAN STYLE=\"text-decoration:overline\">PL</SPAN>)")),
+                       formatGpioName_output(F("Load (<SPAN STYLE=\"text-decoration:overline\">PL</SPAN>)")),
                        F("load_pin"),
                        P129_CONFIG_LOAD_PIN);
       # ifndef LIMIT_BUILD_SIZE
-      addFormNote(F("All GPIO pins <B>must</B> be configured to correctly initialize the plugin."));
+      addFormNote(F("GPIO pins for Data, Clock and Load <B>must</B> be configured to correctly initialize the plugin."));
       # endif // ifndef LIMIT_BUILD_SIZE
 
       addFormSubHeader(F("Device configuration"));
@@ -318,12 +339,6 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifdef P129_DEBUG_LOG
       }
 
-      break;
-    }
-
-    case PLUGIN_EXIT:
-    {
-      success = true;
       break;
     }
 

@@ -66,7 +66,6 @@ public:
   const bool isInitialized() const { // All GPIO's defined
     return _dataPin != -1 &&
            _clockPin != -1 &&
-           _enablePin != -1 &&
            _loadPin != -1;
   }
 

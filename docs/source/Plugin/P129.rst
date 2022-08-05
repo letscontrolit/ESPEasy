@@ -24,7 +24,7 @@ Used libraries: |P129_usedlibraries|
 Description
 -----------
 
-The 74HC165 Shift registers can be used to connect many input pins to an ESP using only 4 GPIO pins, as these shift registers can easily be daisy chained.
+The 74HC165 Shift registers can be used to connect many input pins to an ESP using only 3 or 4 GPIO pins, as these shift registers can easily be daisy chained.
 
 When connecting many shift registers daisy-chained, it is important to ensure that not *too* many are connected to a single GPIO output pin, as that could overload that pin. It is advised to use a buffer chip for all used GPIOs for every 4 to 5 shift registers. When using a Schmitt-trigger buffer, it will also clean up the signal further down the line. Any buffer will introduce a small delay in the signal, possibly reducing the number of shift registers that can be controlled. A few useful answers are in this `Stack Exchange question`_ (issue is similar for input and output shift registers)
 
@@ -36,22 +36,22 @@ Configuration
 .. image:: P129_DeviceConfiguration.png
   :alt: Device configuration
 
-* **Name** A unique name should be entered here.
+* **Name**: A unique name should be entered here.
 
-* **Enabled** The device can be disabled or enabled. When not enabled the device should not use any resources.
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
 
 Actuator
 ^^^^^^^^
 
-* **GPIO -> Data pin (Q7)**: Select the GPIO pin that is connected to the Data out pin of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7`` pin of the previous shift register.
+* **GPIO -> Data (Q7)**: Select the GPIO pin that is connected to the Data out pin of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7`` pin of the previous shift register.
 
-* **GPIO -> Clock pin (CP)**: Select the Clock pin of all shift registers.
+* **GPIO -> Clock (CP)**: Select the Clock pin of all shift registers.
 
-* **GPIO -> Enable pin (EN)**: Select the Enable pin of all shift registers.
+* **GPIO -> Enable (EN) (optional)**: Select the Enable pin of all shift registers, or set to None if not used or not available.
 
-* **GPIO -> Load pin (PL)**: Select the Load pin of all shift registers.
+* **GPIO -> Load (PL)**: Select the Load pin of all shift registers.
 
-NB: All 4 pins need to be configured or the plugin will not start.
+NB: At least **Data**, **Clock** and **Load** GPIO pins need to be configured for the plugin to be able to function as intended.
 
 Device configuration
 ^^^^^^^^^^^^^^^^^^^^
@@ -90,7 +90,7 @@ These are the available options:
 .. image:: P129_OutputOptions.png
   :alt: Output selection options
 
-If ``Decimal & hex/bin`` is selected, the value is output twice, formatted as decimal and as hexadecimal or binary, separated by a comma.
+If ``Decimal & hex/bin`` is selected, the value is output twice, formatted as decimal and as hexadecimal (``0x`` prefix) or binary (``0b`` prefix), separated by a comma.
 
 If either of the Hex/bin options is selected, but no ``Values display (Off=Hex/On=Bin)`` option is available, then the output will be formatted as hexadecimal.
 
@@ -113,12 +113,18 @@ The Data Acquisition, Send to Controller and Interval settings are standard avai
 Values
 ^^^^^^
 
-The Values ``State_A`` to ``State_D`` are used to show the state of up to 16 shift registers. (Custom formatted)
+The Values ``State_A`` to ``State_D`` are used to show the state of up to 16 shift registers. (Custom formatted like set in **Output selection**.) Values that are not going to be filled are not shown here, and no events will be generated either.
 
 Commands
 ~~~~~~~~
 
 .. include:: P129_commands.repl
+
+
+Events
+~~~~~~
+
+.. include:: P129_events.repl
 
 
 

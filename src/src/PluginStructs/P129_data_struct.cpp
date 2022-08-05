@@ -24,12 +24,13 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
     }
 
     // Prepare all used GPIO pins
-    pinMode(_enablePin, OUTPUT);
-    pinMode(_loadPin,   OUTPUT);
-    pinMode(_clockPin,  OUTPUT);
-    pinMode(_dataPin,   INPUT);
-    digitalWrite(_loadPin,   HIGH);
-    digitalWrite(_enablePin, HIGH);
+    if (validGpio(_enablePin)) { pinMode(_enablePin, OUTPUT); }
+    pinMode(_loadPin,  OUTPUT);
+    pinMode(_clockPin, OUTPUT);
+    pinMode(_dataPin,  INPUT);
+    digitalWrite(_loadPin, HIGH);
+
+    if (validGpio(_enablePin)) { digitalWrite(_enablePin, HIGH); }
 
     return true;
   }
@@ -178,14 +179,14 @@ bool P129_data_struct::plugin_readData(struct EventStruct *event) {
     digitalWrite(_loadPin, HIGH);
     delayMicroseconds(5);
 
-    digitalWrite(_clockPin,  HIGH);
-    digitalWrite(_enablePin, LOW);
+    if (validGpio(_enablePin)) { digitalWrite(_enablePin, LOW); }
 
     for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
       prevBuffer[i] = readBuffer[i];
       readBuffer[i] = shiftIn(static_cast<uint8_t>(_dataPin), static_cast<uint8_t>(_clockPin), MSBFIRST);
     }
-    digitalWrite(_enablePin, HIGH);
+
+    if (validGpio(_enablePin)) { digitalWrite(_enablePin, HIGH); }
     delay(0);
 
     checkDiff(event);
