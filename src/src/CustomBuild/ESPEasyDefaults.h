@@ -177,7 +177,7 @@
 #define DEFAULT_PIN_I2C_SDA              4
 #endif
 #ifdef ESP32
-#define DEFAULT_PIN_I2C_SDA              21
+#define DEFAULT_PIN_I2C_SDA              -1                // Undefined
 #endif
 #endif
 #ifndef DEFAULT_PIN_I2C_SCL
@@ -185,7 +185,7 @@
 #define DEFAULT_PIN_I2C_SCL              5
 #endif
 #ifdef ESP32
-#define DEFAULT_PIN_I2C_SCL              22
+#define DEFAULT_PIN_I2C_SCL              -1                // Undefined
 #endif
 #endif
 #ifndef DEFAULT_I2C_CLOCK_SPEED
