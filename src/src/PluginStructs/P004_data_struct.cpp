@@ -55,10 +55,7 @@ bool P004_data_struct::initiate_read() {
         *   11 bits resolution -> 375 ms
         *   12 bits resolution -> 750 ms
         \*********************************************************************************************/
-        uint8_t res = _res;
-
-        if ((res < 9) || (res > 12)) { res = 12; }
-        _timer = millis() + (800 / (1 << (12 - res)));
+        _timer = millis() + (800 / (1 << (12 - _res)));
       }
       _sensors[i].measurementActive = true;
     }
