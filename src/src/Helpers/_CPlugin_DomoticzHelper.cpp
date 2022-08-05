@@ -1,13 +1,13 @@
 #include "../Helpers/_CPlugin_DomoticzHelper.h"
 
-#ifdef USES_DOMOTICZ
+#if FEATURE_DOMOTICZ
 
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../DataTypes/TaskIndex.h"
 
 # include "../ESPEasyCore/ESPEasy_Log.h"
 
-# include "../Globals/ExtraTaskSettings.h"
+# include "../Globals/Cache.h"
 
 # include "../Helpers/Convert.h"
 # include "../Helpers/StringConverter.h"
@@ -148,9 +148,9 @@ String formatDomoticzSensorType(struct EventStruct *event) {
       values += getBearing(UserVar[event->BaseVarIndex]); // WD = Wind direction (S, SW, NNW, etc.)
       values += ';';                                      // Needed after getBearing
       // Domoticz expects the wind speed in (m/s * 10)
-      values += toString((UserVar[event->BaseVarIndex + 1] * 10), ExtraTaskSettings.TaskDeviceValueDecimals[1]);
+      values += toString((UserVar[event->BaseVarIndex + 1] * 10), Cache.getTaskDeviceValueDecimals(event->TaskIndex, 1));
       values += ';';                                      // WS = 10 * Wind speed [m/s]
-      values += toString((UserVar[event->BaseVarIndex + 2] * 10), ExtraTaskSettings.TaskDeviceValueDecimals[2]);
+      values += toString((UserVar[event->BaseVarIndex + 2] * 10), Cache.getTaskDeviceValueDecimals(event->TaskIndex, 2));
       values += ';';                                      // WG = 10 * Gust [m/s]
       values += formatUserVarDomoticz(0);                 // Temperature
       values += formatUserVarDomoticz(0);                 // Temperature Windchill
@@ -316,4 +316,4 @@ String serializeDomoticzJson(struct EventStruct *event)
 
 # endif // ifdef USES_C002
 
-#endif  // ifdef USES_DOMOTICZ
+#endif  // if FEATURE_DOMOTICZ

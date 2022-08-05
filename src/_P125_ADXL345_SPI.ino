@@ -28,7 +28,7 @@
 
 # define PLUGIN_125
 # define PLUGIN_ID_125          125 // plugin id
-# define PLUGIN_NAME_125        "Accelerometer - ADXL345 (SPI) [TESTING]"
+# define PLUGIN_NAME_125        "Accelerometer - ADXL345 (SPI)"
 # define PLUGIN_VALUENAME1_125  "X"
 # define PLUGIN_VALUENAME2_125  "Y"
 # define PLUGIN_VALUENAME3_125  "Z"
@@ -50,6 +50,7 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
+      Device[deviceCount].PluginStats    = true;
 
       break;
     }

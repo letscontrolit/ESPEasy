@@ -74,8 +74,10 @@ public:
 
   enum class PluginPtrType {
     TaskPlugin,
-    ControllerPlugin,
-    NotificationPlugin
+    ControllerPlugin
+#if FEATURE_NOTIFIER
+    ,NotificationPlugin
+#endif
   };
 
   static const __FlashStringHelper* toString(PluginPtrType pluginType);
@@ -252,12 +254,14 @@ public:
                                         uint8_t              Function,
                                         struct EventStruct&& event);
 
+#if FEATURE_MQTT
   void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
                                                taskIndex_t   TaskIndex,
                                                uint8_t       Function,
                                                char         *c_topic,
                                                uint8_t      *b_payload,
                                                unsigned int  length);
+#endif
 
 
   // Note: the event will be moved
@@ -265,16 +269,20 @@ public:
                                        uint8_t              Function,
                                        struct EventStruct&& event);
 
+#if FEATURE_MQTT
   void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
                                             CPlugin::Function Function,
                                             char             *c_topic,
                                             uint8_t          *b_payload,
                                             unsigned int      length);
+#endif
 
   // Note: The event will be moved
+#if FEATURE_NOTIFIER
   void schedule_notification_event_timer(uint8_t              NotificationProtocolIndex,
                                          NPlugin::Function    Function,
                                          struct EventStruct&& event);
+#endif
 
 
   static unsigned long createSystemEventMixedId(PluginPtrType ptr_type,

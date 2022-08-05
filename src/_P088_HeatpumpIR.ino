@@ -6,7 +6,7 @@
 
 #define PLUGIN_088
 #define PLUGIN_ID_088         88
-#define PLUGIN_NAME_088       "Energy (Heat) - Heatpump IR transmitter [TESTING]"
+#define PLUGIN_NAME_088       "Energy (Heat) - Heatpump IR transmitter"
 
 
 /*
@@ -97,7 +97,7 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
 
         if (Settings.ControllerEnabled[controllerNr])
         {
-          addHtml(F("<TR><TD>IDX:<TD>"));
+          addRowLabel(F("IDX"));
           String id = F("TDID");   //="taskdeviceid"
           id += controllerNr + 1;
           addNumericBox(id, Settings.TaskDeviceID[controllerNr][event->TaskIndex], 0, 9999);

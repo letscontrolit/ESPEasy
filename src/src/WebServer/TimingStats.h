@@ -3,7 +3,7 @@
 
 #include "../WebServer/common.h"
 
-#if defined(WEBSERVER_TIMINGSTATS) && defined(USES_TIMING_STATS)
+#if defined(WEBSERVER_TIMINGSTATS) && FEATURE_TIMING_STATS
 
 #include "../DataStructs/TimingStats.h"
 

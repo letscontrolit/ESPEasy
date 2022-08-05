@@ -57,14 +57,14 @@ void addFormNote(const String& text, const String& id)
 // ********************************************************************************
 
 void addFormCheckBox_disabled(const String& label, const String& id, bool checked
-                              #ifdef ENABLE_TOOLTIPS
+                              #if FEATURE_TOOLTIPS
                               , const String& tooltip
-                              #endif // ifdef ENABLE_TOOLTIPS
+                              #endif // if FEATURE_TOOLTIPS
                               ) {
   addFormCheckBox(label, id, checked, true
-                  #ifdef ENABLE_TOOLTIPS
+                  #if FEATURE_TOOLTIPS
                   , tooltip
-                  #endif // ifdef ENABLE_TOOLTIPS
+                  #endif // if FEATURE_TOOLTIPS
                   );
 }
 
@@ -81,28 +81,28 @@ void addFormCheckBox(const __FlashStringHelper * label, const String& id, bool c
 }
 
 void addFormCheckBox(const String& label, const String& id, bool checked, bool disabled
-                     #ifdef ENABLE_TOOLTIPS
+                     #if FEATURE_TOOLTIPS
                      , const String& tooltip
-                     #endif // ifdef ENABLE_TOOLTIPS
+                     #endif // if FEATURE_TOOLTIPS
                      )
 {
   addRowLabel_tr_id(label, id);
   addCheckBox(id, checked, disabled
-              #ifdef ENABLE_TOOLTIPS
+              #if FEATURE_TOOLTIPS
               , tooltip
-              #endif // ifdef ENABLE_TOOLTIPS
+              #endif // if FEATURE_TOOLTIPS
               );
 }
 
 void addFormCheckBox(LabelType::Enum label, bool checked, bool disabled
-                     #ifdef ENABLE_TOOLTIPS
+                     #if FEATURE_TOOLTIPS
                      , const String& tooltip
-                     #endif // ifdef ENABLE_TOOLTIPS
+                     #endif // if FEATURE_TOOLTIPS
                      ) {
   addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled
-                  #ifdef ENABLE_TOOLTIPS
+                  #if FEATURE_TOOLTIPS
                   , tooltip
-                  #endif // ifdef ENABLE_TOOLTIPS
+                  #endif // if FEATURE_TOOLTIPS
                   );
 }
 
@@ -114,15 +114,15 @@ void addFormCheckBox_disabled(LabelType::Enum label, bool checked) {
 // Add a Numeric Box form
 // ********************************************************************************
 void addFormNumericBox(LabelType::Enum label, int value, int min, int max
-                       #ifdef ENABLE_TOOLTIPS
+                       #if FEATURE_TOOLTIPS
                        , const String& tooltip
-                       #endif // ifdef ENABLE_TOOLTIPS
+                       #endif // if FEATURE_TOOLTIPS
                        )
 {
   addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max
-                    #ifdef ENABLE_TOOLTIPS
+                    #if FEATURE_TOOLTIPS
                     , tooltip
-                    #endif // ifdef ENABLE_TOOLTIPS
+                    #endif // if FEATURE_TOOLTIPS
                     );
 }
 
@@ -131,43 +131,43 @@ void addFormNumericBox(const __FlashStringHelper * label,
                        int value, 
                        int min, 
                        int max
-                       #ifdef        ENABLE_TOOLTIPS
+                       #if FEATURE_TOOLTIPS
                        ,
                        const String& tooltip
-                       #endif // ifdef ENABLE_TOOLTIPS
+                       #endif // if FEATURE_TOOLTIPS
                        )
 {
   addFormNumericBox(String(label), String(id), value, min, max
-                    #ifdef ENABLE_TOOLTIPS
+                    #if FEATURE_TOOLTIPS
                     , tooltip
-                    #endif // ifdef ENABLE_TOOLTIPS
+                    #endif // if FEATURE_TOOLTIPS
                     );
 
 }
 
 void addFormNumericBox(const String& label, const String& id, int value, int min, int max
-                       #ifdef ENABLE_TOOLTIPS
+                       #if FEATURE_TOOLTIPS
                        , const String& tooltip
-                       #endif // ifdef ENABLE_TOOLTIPS
+                       #endif // if FEATURE_TOOLTIPS
                        )
 {
   addRowLabel_tr_id(label, id);
   addNumericBox(id, value, min, max
-                #ifdef ENABLE_TOOLTIPS
+                #if FEATURE_TOOLTIPS
                 , F("widenumber"), tooltip
-                #endif // ifdef ENABLE_TOOLTIPS
+                #endif // if FEATURE_TOOLTIPS
                 );
 }
 
 void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals, float stepsize
-                           #ifdef ENABLE_TOOLTIPS
+                           #if FEATURE_TOOLTIPS
                            , const String& tooltip
-                           #endif // ifdef ENABLE_TOOLTIPS
+                           #endif // if FEATURE_TOOLTIPS
                            ) {
   addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize
-                        #ifdef ENABLE_TOOLTIPS
+                        #if FEATURE_TOOLTIPS
                         , tooltip
-                        #endif // ifdef ENABLE_TOOLTIPS
+                        #endif // if FEATURE_TOOLTIPS
                         );
 }
 
@@ -178,17 +178,17 @@ void addFormFloatNumberBox(const String& label,
                            float         max,
                            uint8_t       nrDecimals,
                            float         stepsize
-                           #ifdef        ENABLE_TOOLTIPS
+                           #if FEATURE_TOOLTIPS
                            ,
                            const String& tooltip
-                           #endif // ifdef ENABLE_TOOLTIPS
+                           #endif // if FEATURE_TOOLTIPS
                            )
 {
   addRowLabel_tr_id(label, id);
   addFloatNumberBox(id, value, min, max, nrDecimals, stepsize
-                    #ifdef ENABLE_TOOLTIPS
+                    #if FEATURE_TOOLTIPS
                     , tooltip
-                    #endif // ifdef ENABLE_TOOLTIPS
+                    #endif // if FEATURE_TOOLTIPS
                     );
 }
 
@@ -199,17 +199,17 @@ void addFormFloatNumberBox(const __FlashStringHelper * label,
                            float         max,
                            uint8_t       nrDecimals,
                            float         stepsize
-                           #ifdef ENABLE_TOOLTIPS
+                           #if FEATURE_TOOLTIPS
                            ,
                            const String& tooltip
-                           #endif // ifdef ENABLE_TOOLTIPS
+                           #endif // if FEATURE_TOOLTIPS
                            )
 {
   addRowLabel_tr_id(label, id);
   addFloatNumberBox(id, value, min, max, nrDecimals, stepsize
-                    #ifdef ENABLE_TOOLTIPS
+                    #if FEATURE_TOOLTIPS
                     , tooltip
-                    #endif // ifdef ENABLE_TOOLTIPS
+                    #endif // if FEATURE_TOOLTIPS
                     );
 }
 
@@ -246,18 +246,42 @@ void addFormTextBox(const String  & label,
                     bool            readonly,
                     bool            required,
                     const String& pattern
-                    #ifdef          ENABLE_TOOLTIPS
+                    #if FEATURE_TOOLTIPS
                     , const String& tooltip
-                    #endif // ifdef ENABLE_TOOLTIPS
+                    #endif // if FEATURE_TOOLTIPS
                     )
 {
   addRowLabel_tr_id(label, id);
   addTextBox(id, value, maxlength, readonly, required, pattern, F("wide")
-             #ifdef ENABLE_TOOLTIPS
+             #if FEATURE_TOOLTIPS
              , tooltip
-             #endif // ifdef ENABLE_TOOLTIPS
+             #endif // if FEATURE_TOOLTIPS
              );
 }
+
+void addFormTextBox(const __FlashStringHelper * classname,
+                    const String& label,
+                    const String& id,
+                    const String& value,                    
+                    int           maxlength,
+                    bool          readonly ,
+                    bool          required ,
+                    const String& pattern  
+                    #if FEATURE_TOOLTIPS
+                    ,
+                    const String& tooltip 
+                    #endif // if FEATURE_TOOLTIPS
+                    )
+{
+  addRowLabel_tr_id(label, id);
+  addTextBox(id, value, maxlength, readonly, required, pattern, classname
+             #if FEATURE_TOOLTIPS
+             , tooltip
+             #endif // if FEATURE_TOOLTIPS
+             );
+}
+
+
 
 void addFormTextArea(const String  & label,
                      const String  & id,
@@ -267,16 +291,16 @@ void addFormTextArea(const String  & label,
                      int             columns,
                      bool            readonly,
                      bool            required
-                     #ifdef          ENABLE_TOOLTIPS
+                     #if FEATURE_TOOLTIPS
                      , const String& tooltip
-                     #endif // ifdef ENABLE_TOOLTIPS
+                     #endif // if FEATURE_TOOLTIPS
                      )
 {
   addRowLabel_tr_id(label, id);
   addTextArea(id, value, maxlength, rows, columns, readonly, required
-              #ifdef ENABLE_TOOLTIPS
+              #if FEATURE_TOOLTIPS
               , tooltip
-              #endif // ifdef ENABLE_TOOLTIPS
+              #endif // if FEATURE_TOOLTIPS
               );
 }
 
@@ -285,9 +309,9 @@ void addFormTextArea(const String  & label,
 // ********************************************************************************
 
 void addFormPasswordBox(const String& label, const String& id, const String& password, int maxlength
-                        #ifdef ENABLE_TOOLTIPS
+                        #if FEATURE_TOOLTIPS
                         , const String& tooltip
-                        #endif // ifdef ENABLE_TOOLTIPS
+                        #endif // if FEATURE_TOOLTIPS
                         )
 {
   addRowLabel_tr_id(label, id);
@@ -298,12 +322,12 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   addHtmlAttribute(F("name"),      id);
   addHtmlAttribute(F("maxlength"), maxlength);
 
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     addHtmlAttribute(F("title"), tooltip);
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
   addHtmlAttribute(F("value"), (password.length() == 0) ? F("") : F("*****"));
   addHtml('>');
 }
@@ -409,16 +433,16 @@ void addFormPinSelectI2C(const String& label, const String& id, int choice)
 }
 
 void addFormSelectorI2C(const String& id, int addressCount, const uint8_t addresses[], int selectedIndex
-                        #ifdef ENABLE_TOOLTIPS
+                        #if FEATURE_TOOLTIPS
                         , const String& tooltip
-                        #endif // ifdef ENABLE_TOOLTIPS
+                        #endif // if FEATURE_TOOLTIPS
                         )
 {
   addRowLabel_tr_id(F("I2C Address"), id);
   do_addSelector_Head(id, EMPTY_STRING, EMPTY_STRING, false
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , tooltip
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
 
   for (uint8_t x = 0; x < addressCount; x++)
@@ -459,15 +483,15 @@ void addFormSelector(const String  & label,
                      const String    options[],
                      const int       indices[],
                      int           selectedIndex
-                     #ifdef          ENABLE_TOOLTIPS
+                     #if FEATURE_TOOLTIPS
                      , const String& tooltip
-                     #endif // ifdef ENABLE_TOOLTIPS
+                     #endif // if FEATURE_TOOLTIPS
                      )
 {
   addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, false
-                  #ifdef ENABLE_TOOLTIPS
+                  #if FEATURE_TOOLTIPS
                   , tooltip
-                  #endif // ifdef ENABLE_TOOLTIPS
+                  #endif // if FEATURE_TOOLTIPS
                   );
 }
 
@@ -502,15 +526,15 @@ void addFormSelector(const String& label,
                      const int     indices[],
                      int           selectedIndex,
                      bool          reloadonchange
-                     #ifdef ENABLE_TOOLTIPS
+                     #if FEATURE_TOOLTIPS
                      , const String& tooltip
-                     #endif // ifdef ENABLE_TOOLTIPS
+                     #endif // if FEATURE_TOOLTIPS
                     )
 {
   addFormSelector(label, id, optionCount, options, indices, nullptr, selectedIndex, reloadonchange
-                  #ifdef ENABLE_TOOLTIPS
+                  #if FEATURE_TOOLTIPS
                   , tooltip
-                  #endif // ifdef ENABLE_TOOLTIPS
+                  #endif // if FEATURE_TOOLTIPS
                  );
 }
 
@@ -522,16 +546,16 @@ void addFormSelector(const String  & label,
                      const String    attr[],
                      int             selectedIndex,
                      bool       reloadonchange
-                     #ifdef          ENABLE_TOOLTIPS
+                     #if FEATURE_TOOLTIPS
                      , const String& tooltip
-                     #endif // ifdef ENABLE_TOOLTIPS
+                     #endif // if FEATURE_TOOLTIPS
                      )
 {
   addRowLabel_tr_id(label, id);
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, true, F("wide")
-              #ifdef ENABLE_TOOLTIPS
+              #if FEATURE_TOOLTIPS
               , tooltip
-              #endif // ifdef ENABLE_TOOLTIPS
+              #endif // if FEATURE_TOOLTIPS
               );
 }
 
@@ -543,16 +567,16 @@ void addFormSelector_script(const __FlashStringHelper * label,
                             const String  attr[],
                             int           selectedIndex,
                             const __FlashStringHelper * onChangeCall
-                            #ifdef          ENABLE_TOOLTIPS
+                            #if FEATURE_TOOLTIPS
                             , const String& tooltip
-                            #endif // ifdef ENABLE_TOOLTIPS
+                            #endif // if FEATURE_TOOLTIPS
                             )
 {
   addRowLabel_tr_id(label, id);
   do_addSelector_Head(id, F("wide"), onChangeCall, false
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , tooltip
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -566,16 +590,16 @@ void addFormSelector_script(const String  & label,
                             const String    attr[],
                             int             selectedIndex,
                             const __FlashStringHelper * onChangeCall
-                            #ifdef          ENABLE_TOOLTIPS
+                            #if FEATURE_TOOLTIPS
                             , const String& tooltip
-                            #endif // ifdef ENABLE_TOOLTIPS
+                            #endif // if FEATURE_TOOLTIPS
                             )
 {
   addRowLabel_tr_id(label, id);
   do_addSelector_Head(id, F("wide"), onChangeCall, false
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , tooltip
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();

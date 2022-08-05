@@ -1,6 +1,8 @@
 #ifndef HELPERS_STRINGCONVERTER_H
 #define HELPERS_STRINGCONVERTER_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../Globals/Plugins.h"
@@ -209,28 +211,34 @@ String to_internal_string(const String& input,
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
 String parseString(const String& string,
-                   uint8_t          indexFind,
-                   char          separator = ',');
+                   uint8_t       indexFind,
+                   char          separator = ',',
+                   bool          trimResult = true);
 
 String parseStringKeepCase(const String& string,
-                           uint8_t          indexFind,
-                           char          separator = ',');
+                           uint8_t       indexFind,
+                           char          separator = ',',
+                           bool          trimResult = true);
 
 String parseStringToEnd(const String& string,
-                        uint8_t          indexFind,
-                        char          separator = ',');
+                        uint8_t       indexFind,
+                        char          separator = ',',
+                        bool          trimResult = true);
 
 String parseStringToEndKeepCase(const String& string,
-                                uint8_t          indexFind,
-                                char          separator = ',');
+                                uint8_t       indexFind,
+                                char          separator = ',',
+                                bool          trimResult = true);
 
 String tolerantParseStringKeepCase(const char * string,
-                                   uint8_t          indexFind,
-                                   char          separator = ',');
+                                   uint8_t      indexFind,
+                                   char         separator = ',',
+                                   bool         trimResult = true);
 
 String tolerantParseStringKeepCase(const String& string,
-                                   uint8_t          indexFind,
-                                   char          separator = ',');
+                                   uint8_t       indexFind,
+                                   char          separator = ',',
+                                   bool          trimResult = true);
 
 // escapes special characters in strings for use in html-forms
 bool   htmlEscapeChar(char    c,

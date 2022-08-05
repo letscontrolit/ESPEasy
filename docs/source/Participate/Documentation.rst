@@ -12,17 +12,27 @@ for more documentation which has not been moved here.
 
 Needed Python packages::
 
-   pip install sphinx recommonmark sphinx_bootstrap_theme
+   cd docs
 
-PlatformIO with Atom
-====================
+   pip install -r requirements.txt
 
-With the ESPEasy project open in Atom, open the PIO terminal in Atom.
+PlatformIO with VSCode
+======================
+
+.. note:: 
+
+  Here used to be a reference to the Atom editor, but both Atom, and the PlatformIO plugin for Atom, are no longer maintained by their owners, so it was removed from this documentation.
+
+As an alternative, VSCode can be used as a development environment. See also :ref:`PlatformIO_page`
+
+With the ESPEasy project open in VSCode, open the PIO terminal in VSCode.
+
+.. image:: VSCode_OpenPIOTerminal.png
 
 Install dependencies::
 
    cd docs
-   pip install ... (see needed Python packages above)
+   pip install -r requirements.txt
 
 Build on Windows::
 
@@ -32,14 +42,10 @@ Build on Windows::
 Build on Linux/Mac::
 
    cd docs
-   ./make html
+   make html
+
+Any build errors are shown in the output in ``red`` (and should be acted upon, except for magick not being found). On Windows, an error may be shown about the magick tool not being found, but this Linux image processing tool is usually not installed on Windows (not a Python tool), but the images will show unaltered when previewing. In the actual processing for Read The Docs, this tool *is* available, so the images will be re-scaled when needed.
+
+After the build is completed, the result can be reviewed by opening the ``index.html`` file, that can be found in ``docs\build\html`` (for Linux/MacOS adjust ``\`` to ``/``).
 
 
-LaTeX (PDF) build on Linux
-==========================
-
-To build a PDF document of this documentation, you need to have LaTeX installed and some texlive packages.
-
-Via apt-get installed packages::
-
-  sudo apt-get install xzdec texlive-fonts-recommended texlive-latex-recommended texlive-latex-extra

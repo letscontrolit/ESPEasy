@@ -2,7 +2,7 @@
 .. |P050_type| replace:: :cyan:`Color`
 .. |P050_typename| replace:: :cyan:`Color - TCS34725`
 .. |P050_porttype| replace:: `.`
-.. |P050_status| replace:: :yellow:`TESTING`
+.. |P050_status| replace:: :yellow:`COLLECTION`
 .. |P050_github| replace:: P050_TCS34725.ino
 .. _P050_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P050_TCS34725.ino
 .. |P050_usedby| replace:: `.`
@@ -15,7 +15,7 @@
 .. |P051_type| replace:: :cyan:`Environment`
 .. |P051_typename| replace:: :cyan:`Environment - AM2320`
 .. |P051_porttype| replace:: `.`
-.. |P051_status| replace:: :yellow:`TESTING`
+.. |P051_status| replace:: :yellow:`COLLECTION`
 .. |P051_github| replace:: P051_AM2320.ino
 .. _P051_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P051_AM2320.ino
 .. |P051_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P054_type| replace:: :cyan:`Communication`
 .. |P054_typename| replace:: :cyan:`Communication - DMX512 TX`
 .. |P054_porttype| replace:: `.`
-.. |P054_status| replace:: :yellow:`TESTING`
+.. |P054_status| replace:: :yellow:`COLLECTION`
 .. |P054_github| replace:: P054_DMX512.ino
 .. _P054_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P054_DMX512.ino
 .. |P054_usedby| replace:: `.`
@@ -67,7 +67,7 @@
 .. |P055_type| replace:: :cyan:`Notify`
 .. |P055_typename| replace:: :cyan:`Notify - Chiming`
 .. |P055_porttype| replace:: `.`
-.. |P055_status| replace:: :yellow:`TESTING`
+.. |P055_status| replace:: :yellow:`COLLECTION`
 .. |P055_github| replace:: P055_Chiming.ino
 .. _P055_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P055_Chiming.ino
 .. |P055_usedby| replace:: `.`
@@ -93,7 +93,7 @@
 .. |P057_type| replace:: :cyan:`Display`
 .. |P057_typename| replace:: :cyan:`Display - HT16K33`
 .. |P057_porttype| replace:: `.`
-.. |P057_status| replace:: :yellow:`DISPLAY, TESTING`
+.. |P057_status| replace:: :yellow:`DISPLAY, COLLECTION`
 .. |P057_github| replace:: P057_HT16K33_LED.ino
 .. _P057_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P057_HT16K33_LED.ino
 .. |P057_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P058_type| replace:: :cyan:`Keypad`
 .. |P058_typename| replace:: :cyan:`Keypad - HT16K33`
 .. |P058_porttype| replace:: `.`
-.. |P058_status| replace:: :yellow:`TESTING`
+.. |P058_status| replace:: :yellow:`COLLECTION`
 .. |P058_github| replace:: P058_HT16K33_KeyPad.ino
 .. _P058_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P058_HT16K33_KeyPad.ino
 .. |P058_usedby| replace:: `.`

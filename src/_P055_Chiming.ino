@@ -54,7 +54,7 @@
 
 #define PLUGIN_055
 #define PLUGIN_ID_055         55
-#define PLUGIN_NAME_055       "Notify - Chiming [TESTING]"
+#define PLUGIN_NAME_055       "Notify - Chiming"
 
 #define PLUGIN_055_FIFO_SIZE 64   // must be power of 2
 #define PLUGIN_055_FIFO_MASK (PLUGIN_055_FIFO_SIZE-1)

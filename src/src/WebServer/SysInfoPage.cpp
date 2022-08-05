@@ -1,5 +1,7 @@
 #include "../WebServer/SysInfoPage.h"
 
+#if defined(WEBSERVER_SYSINFO) || defined(SHOW_SYSINFO_JSON)
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -37,7 +39,7 @@
 
 #include "../Static/WebStaticData.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Globals/MQTT.h"
 # include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
 #endif
@@ -47,8 +49,10 @@
 #endif // ifdef ESP32
 
 
-#ifdef WEBSERVER_NEW_UI
 
+
+
+#ifdef SHOW_SYSINFO_JSON
 // ********************************************************************************
 // Web Interface sysinfo page
 // ********************************************************************************
@@ -79,13 +83,13 @@ void handle_sysinfo_json() {
                 0
   # endif // ifndef BUILD_NO_RAM_TRACKER
                 ));
-  json_prop(F("low_ram_fn"),
+  json_prop(F("low_ram_fn"), String(
   # ifndef BUILD_NO_RAM_TRACKER
             lowestRAMfunction
   # else // ifndef BUILD_NO_RAM_TRACKER
             0
   # endif // ifndef BUILD_NO_RAM_TRACKER
-            );
+            ));
   json_number(F("stack"),     String(getCurrentFreeStack()));
   json_number(F("low_stack"), String(
   # ifndef BUILD_NO_RAM_TRACKER
@@ -94,13 +98,13 @@ void handle_sysinfo_json() {
                 0
   # endif // ifndef BUILD_NO_RAM_TRACKER
                 ));
-  json_prop(F("low_stack_fn"),
+  json_prop(F("low_stack_fn"), String(
   # ifndef BUILD_NO_RAM_TRACKER
             lowestFreeStackfunction
   # else // ifndef BUILD_NO_RAM_TRACKER
             0
   # endif // ifndef BUILD_NO_RAM_TRACKER
-            );
+            ));
   json_close();
 
   json_open(false, F("boot"));
@@ -132,7 +136,7 @@ void handle_sysinfo_json() {
   json_prop(F("ssid2"),         getValue(LabelType::WIFI_STORED_SSID2));
   json_close();
 
-# ifdef HAS_ETHERNET
+# if FEATURE_ETHERNET
   json_open(false, F("ethernet"));
   json_prop(F("ethwifimode"),   getValue(LabelType::ETH_WIFI_MODE));
   json_prop(F("ethconnected"),  getValue(LabelType::ETH_CONNECTED));
@@ -141,7 +145,7 @@ void handle_sysinfo_json() {
   json_prop(F("ethstate"),      getValue(LabelType::ETH_STATE));
   json_prop(F("ethspeedstate"), getValue(LabelType::ETH_SPEED_STATE));
   json_close();
-# endif // ifdef HAS_ETHERNET
+# endif // if FEATURE_ETHERNET
 
   json_open(false, F("firmware"));
   json_prop(F("build"),       String(BUILD));
@@ -212,7 +216,7 @@ void handle_sysinfo_json() {
   TXBuffer.endStream();
 }
 
-#endif // WEBSERVER_NEW_UI
+#endif // SHOW_SYSINFO_JSON
 
 #ifdef WEBSERVER_SYSINFO
 
@@ -252,18 +256,23 @@ void handle_sysinfo() {
 
   handle_sysinfo_basicInfo();
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
   handle_sysinfo_memory();
+#endif
 
   handle_sysinfo_Network();
 
-# ifdef HAS_ETHERNET
+# if FEATURE_ETHERNET
   handle_sysinfo_Ethernet();
-# endif // ifdef HAS_ETHERNET
+# endif // if FEATURE_ETHERNET
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
   handle_sysinfo_WiFiSettings();
+#endif
 
   handle_sysinfo_Firmware();
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
   handle_sysinfo_SystemStatus();
 
   handle_sysinfo_NetworkServices();
@@ -271,6 +280,7 @@ void handle_sysinfo() {
   handle_sysinfo_ESP_Board();
 
   handle_sysinfo_Storage();
+#endif
 
 
   html_end_table();
@@ -319,6 +329,7 @@ void handle_sysinfo_basicInfo() {
   addRowLabelValue(LabelType::SW_WD_COUNT);
 }
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_memory() {
   addTableSeparator(F("Memory"), 2, 3);
 
@@ -379,8 +390,9 @@ void handle_sysinfo_memory() {
   } 
 # endif // if defined(ESP32) && defined(BOARD_HAS_PSRAM)
 }
+#endif
 
-# ifdef HAS_ETHERNET
+# if FEATURE_ETHERNET
 void handle_sysinfo_Ethernet() {
   if (active_network_medium == NetworkMedium_t::Ethernet) {
     addTableSeparator(F("Ethernet"), 2, 3);
@@ -394,14 +406,14 @@ void handle_sysinfo_Ethernet() {
   }
 }
 
-# endif // ifdef HAS_ETHERNET
+# endif // if FEATURE_ETHERNET
 
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
-  # ifdef HAS_ETHERNET
+  # if FEATURE_ETHERNET
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  # endif // ifdef HAS_ETHERNET
+  # endif // if FEATURE_ETHERNET
 
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
@@ -458,6 +470,7 @@ void handle_sysinfo_Network() {
   html_TR();
 }
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_WiFiSettings() {
   addTableSeparator(F("WiFi Settings"), 2, 3);
   addRowLabelValue(LabelType::FORCE_WIFI_BG);
@@ -478,6 +491,7 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
+#endif
 
 void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
@@ -500,6 +514,7 @@ void handle_sysinfo_Firmware() {
   addRowLabelValue_copy(LabelType::GIT_HEAD);
 }
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_SystemStatus() {
   addTableSeparator(F("System Status"), 2, 3);
 
@@ -507,16 +522,18 @@ void handle_sysinfo_SystemStatus() {
   addRowLabelValue(LabelType::SYSLOG_LOG_LEVEL);
   addRowLabelValue(LabelType::SERIAL_LOG_LEVEL);
   addRowLabelValue(LabelType::WEB_LOG_LEVEL);
-    # ifdef FEATURE_SD
+  # if FEATURE_SD
   addRowLabelValue(LabelType::SD_LOG_LEVEL);
-    # endif // ifdef FEATURE_SD
+  # endif // if FEATURE_SD
 
   if (Settings.EnableClearHangingI2Cbus()) {
     addRowLabelValue(LabelType::I2C_BUS_STATE);
     addRowLabelValue(LabelType::I2C_BUS_CLEARED_COUNT);
   }
 }
+#endif
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_NetworkServices() {
   addTableSeparator(F("Network Services"), 2, 3);
 
@@ -526,14 +543,16 @@ void handle_sysinfo_NetworkServices() {
   addRowLabel(F("NTP Initialized"));
   addEnabled(statusNTPInitialized);
 
-  #ifdef USES_MQTT
+  #if FEATURE_MQTT
   if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
     addRowLabel(F("MQTT Client Connected"));
     addEnabled(MQTTclient_connected);
   }
   #endif
 }
+#endif
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
@@ -560,7 +579,9 @@ void handle_sysinfo_ESP_Board() {
   addRowLabelValue(LabelType::ESP_CHIP_CORES);
   addRowLabelValue(LabelType::ESP_BOARD_NAME);
 }
+#endif
 
+#ifndef WEBSERVER_SYSINFO_MINIMAL
 void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
@@ -737,5 +758,9 @@ void handle_sysinfo_Storage() {
   getPartitionTableSVG(ESP_PARTITION_TYPE_APP, 0xab56e6);
   # endif // ifdef ESP32
 }
+#endif
 
 #endif    // ifdef WEBSERVER_SYSINFO
+
+
+#endif
