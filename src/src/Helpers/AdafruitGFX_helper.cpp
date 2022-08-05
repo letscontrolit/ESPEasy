@@ -242,9 +242,24 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
                                  AdaGFXColorDepth           colorDepth) {
   String color = AdaGFXcolorToString(foregroundColor, colorDepth);
 
-  addFormTextBox(F("Foreground color"), foregroundId, color, 11);
+  AdaGFXHtmlColorDepthDataList(F("adagfxFGBGcolors"), colorDepth);
+  addRowLabel(F("Foreground color"));
+  addTextBox(foregroundId, color, 11, false, false,
+             EMPTY_STRING, EMPTY_STRING
+             # ifdef TOUCH_USE_TOOLTIPS
+             , F("Foreground color")
+             # endif // ifdef TOUCH_USE_TOOLTIPS
+             , F("adagfxFGBGcolors")
+             );
   color = AdaGFXcolorToString(backgroundColor, colorDepth);
-  addFormTextBox(F("Background color"), backgroundId, color, 11);
+  addRowLabel(F("Background color"));
+  addTextBox(backgroundId, color, 11, false, false,
+             EMPTY_STRING, EMPTY_STRING
+             # ifdef TOUCH_USE_TOOLTIPS
+             , F("Background color")
+             # endif // ifdef TOUCH_USE_TOOLTIPS
+             , F("adagfxFGBGcolors")
+             );
   # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
   addFormNote(F("NB: Colors stored as RGB565 value!"));
@@ -656,12 +671,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if ((nullptr == _display) || _trigger.isEmpty()) { return success; }
 
-  String   cmd        = parseString(string, 1); // lower case
-  String   subcommand = parseString(string, 2);
-  uint16_t res_x      = _res_x;
-  uint16_t res_y      = _res_y;
-  uint16_t _xo        = 0;
-  uint16_t _yo        = 0;
+  String cmd        = parseString(string, 1); // lower case
+  String subcommand = parseString(string, 2);
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW || ADAGFX_ARGUMENT_VALIDATION
+  uint16_t res_x = _res_x;
+  uint16_t res_y = _res_y;
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW || ADAGFX_ARGUMENT_VALIDATION
+  uint16_t _xo = 0;
+  uint16_t _yo = 0;
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
   getWindowLimits(res_x, res_y);
@@ -1806,11 +1824,14 @@ void AdafruitGFX_helper::printText(const char     *string,
   int16_t  oTop      = 0;
   int16_t  oBottom   = 0;
   int16_t  oLeft     = 0;
-  uint16_t res_x     = _res_x;
-  uint16_t res_y     = _res_y;
   uint16_t xOffset   = 0;
-  uint16_t yOffset   = 0;
   String   newString = string;
+  uint16_t res_x     = _res_x;
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  uint16_t res_y   = _res_y;
+  uint16_t yOffset = 0;
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   # if ADAGFX_ENABLE_FRAMED_WINDOW
   getWindowLimits(res_x, res_y);
