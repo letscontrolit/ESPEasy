@@ -12,11 +12,6 @@
 // We use the "standard speed" timings, not the "Overdrive speed"
 
 
-// IO register type to perform direct access on GPIOs
-// Written by Paul Stoffregen
-// See: https://github.com/PaulStoffregen/OneWire/blob/master/util/
-#include "../DataTypes/GPIO_Direct_RegType.h"
-
 
 
 struct Dallas_SensorData {
@@ -178,7 +173,7 @@ void    Dallas_write(uint8_t ByteToWrite,
 *  See https://github.com/espressif/arduino-esp32/issues/1335
 \*********************************************************************************************/
 uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx);
-uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start);
+uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint64_t& start);
 
 /*********************************************************************************************\
 *  Dallas Write bit
