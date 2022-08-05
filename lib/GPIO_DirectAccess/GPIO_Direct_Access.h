@@ -4,9 +4,9 @@
 // Original code from Paul Stoffregen
 // See: https://github.com/PaulStoffregen/OneWire/blob/master/util/OneWire_direct_gpio.h
 
-// This header should ONLY be included by GPIO_Helper.cpp.  These defines are
-// meant to be private, used within GPIO_Helper.cpp, but not exposed to Arduino
-// sketches or other libraries which may include GPIO_Helper.h.
+// This header should ONLY be included by .cpp files.  These defines are
+// meant to be private, used within this .cpp file, but not exposed to Arduino
+// sketches or other libraries which may include a .h file.
 
 #include <stdint.h>
 
@@ -119,7 +119,19 @@
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 
+IO_REG_TYPE DIRECT_pinRead(IO_REG_TYPE pin);
+void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate);
+void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin);
+void DIRECT_PINMODE_INPUT(IO_REG_TYPE pin);
+
+IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin);
+void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
+void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
+void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
+
 #elif defined(ARDUINO_ARCH_ESP32)
+
+#include <esp32-hal-gpio.h>
 #include <driver/rtc_io.h>
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
@@ -225,6 +237,19 @@ void directModeOutput(IO_REG_TYPE pin)
 #define DIRECT_WRITE_HIGH(base, pin)    directWriteHigh(pin)
 #define DIRECT_MODE_INPUT(base, pin)    directModeInput(pin)
 #define DIRECT_MODE_OUTPUT(base, pin)   directModeOutput(pin)
+
+
+IO_REG_TYPE DIRECT_pinRead(IO_REG_TYPE pin);
+void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate);
+void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin);
+void DIRECT_PINMODE_INPUT(IO_REG_TYPE pin);
+
+IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate) IRAM_ATTR;
+void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+
+/*
 // https://github.com/PaulStoffregen/OneWire/pull/47
 // https://github.com/stickbreaker/OneWire/commit/6eb7fc1c11a15b6ac8c60e5671cf36eb6829f82c
 #ifdef  interrupts
@@ -236,6 +261,7 @@ void directModeOutput(IO_REG_TYPE pin)
 #define noInterrupts() {portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;portENTER_CRITICAL(&mux)
 #define interrupts() portEXIT_CRITICAL(&mux);}
 //#warning "ESP32 OneWire testing"
+*/
 
 #elif defined(ARDUINO_ARCH_STM32)
 #define PIN_TO_BASEREG(pin)             (0)
