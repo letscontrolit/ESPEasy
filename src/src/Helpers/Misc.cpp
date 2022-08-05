@@ -14,7 +14,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
 #endif
 
@@ -210,8 +210,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
    Handler for keeping ExtraTaskSettings up to date using cache
  \*********************************************************************************************/
 String getTaskDeviceName(taskIndex_t TaskIndex) {
-  LoadTaskSettings(TaskIndex);
-  return ExtraTaskSettings.TaskDeviceName;
+  return Cache.getTaskDeviceName(TaskIndex);
 }
 
 /********************************************************************************************\
@@ -221,10 +220,11 @@ String getTaskDeviceName(taskIndex_t TaskIndex) {
    - maximum number of variables <= defined number of variables in plugin
  \*********************************************************************************************/
 String getTaskValueName(taskIndex_t TaskIndex, uint8_t TaskValueIndex) {
-  TaskValueIndex = (TaskValueIndex < getValueCountForTask(TaskIndex) ? TaskValueIndex : getValueCountForTask(TaskIndex));
-
-  LoadTaskSettings(TaskIndex);
-  return ExtraTaskSettings.TaskDeviceValueNames[TaskValueIndex];
+  const int valueCount = getValueCountForTask(TaskIndex);
+  if (TaskValueIndex < valueCount) {
+    return Cache.getTaskDeviceValueName(TaskIndex, TaskValueIndex);
+  }
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -282,18 +282,17 @@ void FeedSW_watchdog()
 
 void SendValueLogger(taskIndex_t TaskIndex)
 {
-#if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
+#if !defined(BUILD_NO_DEBUG) || FEATURE_SD
   bool   featureSD = false;
   String logger;
-  # ifdef FEATURE_SD
+  # if FEATURE_SD
   featureSD = true;
-  # endif // ifdef FEATURE_SD
+  # endif // if FEATURE_SD
 
   if (featureSD || loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
     if (validDeviceIndex(DeviceIndex)) {
-      LoadTaskSettings(TaskIndex);
       const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
       for (uint8_t varNr = 0; varNr < valueCount; varNr++)
@@ -306,7 +305,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
         logger += ',';
         logger += getTaskDeviceName(TaskIndex);
         logger += ',';
-        logger += ExtraTaskSettings.TaskDeviceValueNames[varNr];
+        logger += getTaskValueName(TaskIndex, varNr);
         logger += ',';
         logger += formatUserVarNoCheck(TaskIndex, varNr);
         logger += F("\r\n");
@@ -314,9 +313,9 @@ void SendValueLogger(taskIndex_t TaskIndex)
       addLog(LOG_LEVEL_DEBUG, logger);
     }
   }
-#endif // if !defined(BUILD_NO_DEBUG) || defined(FEATURE_SD)
+#endif // if !defined(BUILD_NO_DEBUG) || FEATURE_SD
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
   String filename = F("VALUES.CSV");
   fs::File   logFile  = SD.open(filename, FILE_WRITE);
 
@@ -324,7 +323,7 @@ void SendValueLogger(taskIndex_t TaskIndex)
     logFile.print(logger);
   }
   logFile.close();
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 }
 
 // #######################################################################################################

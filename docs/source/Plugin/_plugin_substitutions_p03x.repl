@@ -2,7 +2,7 @@
 .. |P030_type| replace:: :cyan:`Environment`
 .. |P030_typename| replace:: :cyan:`Environment - BMP280`
 .. |P030_porttype| replace:: `.`
-.. |P030_status| replace:: :green:`NORMAL`
+.. |P030_status| replace:: :gray:`RETIRED`
 .. |P030_github| replace:: P030_BMP280.ino
 .. _P030_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P030_BMP280.ino
 .. |P030_usedby| replace:: :ref:`P030_BMP280_page`

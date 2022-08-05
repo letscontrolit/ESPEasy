@@ -24,7 +24,7 @@ HLW8012 *Plugin_076_hlw = nullptr;
 #define PLUGIN_076
 #define PLUGIN_ID_076 76
 #define PLUGIN_076_DEBUG true // activate extra log info in the debug
-#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937  [TESTING]"
+#define PLUGIN_NAME_076 "Energy (AC) - HLW8012/BL0937"
 #define PLUGIN_VALUENAME1_076 "Voltage"
 #define PLUGIN_VALUENAME2_076 "Current"
 #define PLUGIN_VALUENAME3_076 "Power"
@@ -125,6 +125,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
     Device[deviceCount].SendDataOption = true;
     Device[deviceCount].TimerOption = true;
     Device[deviceCount].GlobalSyncOption = false;
+    Device[deviceCount].PluginStats        = true;
     break;
   }
 
@@ -433,6 +434,7 @@ boolean Plugin_076(uint8_t function, struct EventStruct *event, String &string) 
         // Library expects an interrupt on both edges
         attachInterrupt(CF1_PIN, p076_hlw8012_cf1_interrupt, cf1_trigger);
         attachInterrupt(CF_PIN, p076_hlw8012_cf_interrupt, cf_trigger);
+
         success = true;
       }
     }

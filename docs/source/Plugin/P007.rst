@@ -152,7 +152,7 @@ Change log
   |added|
   2021-08-06 Selection of 1 to 4 input values to be read.
 
-  |added|
+  |changed|
   2021-08-03 Replaced single Port inputfield with separate I2CAddress and Port selections.
 
   |added|

@@ -6,13 +6,13 @@
 }
 .red {
   background-color: #EF483D;
-  color: #000000;
+  color: #FFFFFF;
   padding: 4px 7px;
   border-radius: 3px;
 }
 .green {
   background-color: #00AE41;
-  color: #000000;
+  color: #FFFFFF;
   padding: 4px 7px;
   border-radius: 3px;
 }
@@ -37,6 +37,12 @@
 .purple {
   background-color: #FF00FF;
   color: #000000;
+  padding: 4px 7px;
+  border-radius: 3px;
+}
+.gray {
+  background-color: gray;
+  color: #FFFFFF;
   padding: 4px 7px;
   border-radius: 3px;
 }

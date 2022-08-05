@@ -17,7 +17,7 @@
 
 #define PLUGIN_111
 #define PLUGIN_ID_111         111
-#define PLUGIN_NAME_111       "RFID - RC522 [TESTING]"
+#define PLUGIN_NAME_111       "RFID - RC522"
 #define PLUGIN_VALUENAME1_111 "Tag"
 
 #include "src/PluginStructs/P111_data_struct.h"

@@ -24,7 +24,7 @@
 
 #define PLUGIN_050
 #define PLUGIN_ID_050         50
-#define PLUGIN_NAME_050       "Color - TCS34725  [TESTING]"
+#define PLUGIN_NAME_050       "Color - TCS34725"
 #define PLUGIN_VALUENAME1_050 "Red"
 #define PLUGIN_VALUENAME2_050 "Green"
 #define PLUGIN_VALUENAME3_050 "Blue"
@@ -53,6 +53,7 @@ boolean Plugin_050(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

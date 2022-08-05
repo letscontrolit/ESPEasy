@@ -1,7 +1,7 @@
 #ifndef HELPERS_DALLAS1WIREHELPER_H
 #define HELPERS_DALLAS1WIREHELPER_H
 
-#include <Arduino.h>
+#include "../../ESPEasy_common.h"
 
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
@@ -12,7 +12,10 @@
 // We use the "standard speed" timings, not the "Overdrive speed"
 
 
+
+
 struct Dallas_SensorData {
+
   bool check_sensor(int8_t gpio_rx,
                     int8_t gpio_tx,
                     int8_t res);
@@ -32,6 +35,7 @@ struct Dallas_SensorData {
   uint32_t read_success      = 0;
   uint32_t read_failed       = 0;  
   uint8_t  actual_res        = 0;
+
   bool     measurementActive = false;
   bool     valueRead         = false;
   bool     parasitePowered   = false;
@@ -169,7 +173,7 @@ void    Dallas_write(uint8_t ByteToWrite,
 *  See https://github.com/espressif/arduino-esp32/issues/1335
 \*********************************************************************************************/
 uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx);
-uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, unsigned long start);
+uint8_t Dallas_read_bit_ISR(int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint64_t& start);
 
 /*********************************************************************************************\
 *  Dallas Write bit

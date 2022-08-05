@@ -3,7 +3,7 @@
 
 #include "../WebServer/common.h"
 
-#ifdef USE_SETTINGS_ARCHIVE
+#if FEATURE_SETTINGS_ARCHIVE
 
 #include "../DataTypes/ESPEasyFileType.h"
 
@@ -22,6 +22,6 @@ void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr 
 
 bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
 
-#endif // ifdef USE_SETTINGS_ARCHIVE
+#endif // if FEATURE_SETTINGS_ARCHIVE
 
 #endif

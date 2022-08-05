@@ -28,7 +28,7 @@
 
 # define PLUGIN_117
 # define PLUGIN_ID_117         117
-# define PLUGIN_NAME_117       "Gases - CO2 SCD30 [TESTING]"
+# define PLUGIN_NAME_117       "Gases - CO2 SCD30"
 # define PLUGIN_VALUENAME1_117 "CO2"
 # define PLUGIN_VALUENAME2_117 "Humidity"
 # define PLUGIN_VALUENAME3_117 "Temperature"
@@ -55,6 +55,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

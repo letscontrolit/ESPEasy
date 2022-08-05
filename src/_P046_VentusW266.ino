@@ -1,7 +1,7 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P046
 //#######################################################################################################
-//#################################### Plugin 046: Ventus W266 [Testing] ################################
+//#################################### Plugin 046: Ventus W266 ################################
 //#######################################################################################################
 
 // Purpose: Sniff the data received by the Ventus W266 display unit and send it to Domoticz
@@ -86,7 +86,7 @@
 
 #define PLUGIN_046                                              // Mandatory framework constants
 #define PLUGIN_ID_046               46
-#define PLUGIN_NAME_046             "Hardware - Ventus W266 [TESTING]"
+#define PLUGIN_NAME_046             "Hardware - Ventus W266"
 #define PLUGIN_VALUENAME1_046       ""
 #define PLUGIN_VALUENAME2_046       ""
 #define PLUGIN_VALUENAME3_046       ""

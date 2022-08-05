@@ -23,7 +23,7 @@
 
 # define PLUGIN_082
 # define PLUGIN_ID_082          82
-# define PLUGIN_NAME_082       "Position - GPS [TESTING]"
+# define PLUGIN_NAME_082       "Position - GPS"
 # define PLUGIN_VALUENAME1_082 "Longitude"
 # define PLUGIN_VALUENAME2_082 "Latitude"
 # define PLUGIN_VALUENAME3_082 "Altitude"
@@ -80,6 +80,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -520,7 +521,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
       break;
     }
-# ifdef USES_PACKED_RAW_DATA
+# if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       P082_data_struct *P082_data =
@@ -549,7 +550,7 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
       }
       break;
     }
-# endif // USES_PACKED_RAW_DATA
+# endif // if FEATURE_PACKED_RAW_DATA
   }
   return success;
 }
@@ -593,7 +594,7 @@ void P082_logStats(struct EventStruct *event) {
   if (log.reserve(128)) {
     log  = F("GPS:");
     log += F(" Fix: ");
-    log += String(P082_data->hasFix(P082_TIMEOUT));
+    log += P082_data->hasFix(P082_TIMEOUT) ? 1 : 0;
     log += F(" #sat: ");
     log += P082_data->gps->satellites.value();
     log += F(" #SNR: ");
@@ -711,7 +712,7 @@ void P082_html_show_stats(struct EventStruct *event) {
   P082_html_show_satStats(event, false, false);
 
   addRowLabel(F("HDOP"));
-  addHtml(toString(P082_data->gps->hdop.value() / 100.0f));
+  addHtmlFloat(P082_data->gps->hdop.value() / 100.0f);
 
   addRowLabel(F("UTC Time"));
   struct tm dateTime;

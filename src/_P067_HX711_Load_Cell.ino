@@ -19,7 +19,7 @@
 
 #define PLUGIN_067
 #define PLUGIN_ID_067           67
-#define PLUGIN_NAME_067         "Weight - HX711 Load Cell [TESTING]"
+#define PLUGIN_NAME_067         "Weight - HX711 Load Cell"
 #define PLUGIN_VALUENAME1_067   "WeightChanA"
 #define PLUGIN_VALUENAME2_067   "WeightChanB"
 
@@ -160,6 +160,7 @@ boolean Plugin_067(uint8_t function, struct EventStruct *event, String& string)
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].TimerOptional = false;
         Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].PluginStats        = true;
         break;
       }
 
