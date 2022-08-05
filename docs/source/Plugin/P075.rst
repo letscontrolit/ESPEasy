@@ -156,7 +156,7 @@ Follow these steps to configure ESPEasy's Nextion plugin.
 
 1. Use your favorite web browser and connect to your ESPEasy device.
 2. Go to the *Devices* Tab and pick an empty task.
-3. Choose the task *Add* button and select the *Display - Nextion [TESTING]* entry.
+3. Choose the task *Add* button and select the *Display - Nextion* entry.
 4. Configure the Nextion display as needed by your application.
    See the *Configuration Settings Summary* below.
 5. Click the submit button.

@@ -38,7 +38,7 @@
 // ********************************************************************************
 void handle_unprocessedNetworkEvents()
 {
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   if (EthEventData.unprocessedEthEvents()) {
     // Process disconnect events before connect events.
     if (!EthEventData.processedDisconnect) {
@@ -82,7 +82,7 @@ void handle_unprocessedNetworkEvents()
     }
     EthEventData.setEthServicesInitialized();
   }
-#endif
+#endif // if FEATURE_ETHERNET
   if (WiFiEventData.unprocessedWifiEvents()) {
     // Process disconnect events before connect events.
     if (!WiFiEventData.processedDisconnect) {
@@ -203,7 +203,7 @@ void handle_unprocessedNetworkEvents()
       }
     }
   }
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   // Check if DNS is still valid, as this may have been reset by the WiFi module turned off.
   if (EthEventData.EthServicesInitialized() && 
       active_network_medium == NetworkMedium_t::Ethernet &&
@@ -219,9 +219,11 @@ void handle_unprocessedNetworkEvents()
       }
     }
   }
-#endif
+#endif // if FEATURE_ETHERNET
 
+#if FEATURE_ESPEASY_P2P
   updateUDPport();
+#endif
 }
 
 // ********************************************************************************
@@ -426,13 +428,13 @@ void processGotIP() {
   if (node_time.systemTimePresent()) {
     node_time.initTime();
   }
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)
@@ -453,7 +455,9 @@ void processGotIP() {
     WiFiEventData.processedGotIP = true;
     WiFiEventData.setWiFiGotIP();
   }
+  #if FEATURE_ESPEASY_P2P
   refreshNodeList();
+  #endif
   logConnectionStatus();
 }
 
@@ -487,7 +491,7 @@ void processConnectAPmode() {
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
-  #ifdef FEATURE_DNS_SERVER
+  #if FEATURE_DNS_SERVER
   // Start DNS, only used if the ESP has no valid WiFi config
   // It will reply with it's own address on all DNS requests
   // (captive portal concept)
@@ -495,7 +499,7 @@ void processConnectAPmode() {
     dnsServerActive = true;
     dnsServer.start(DNS_PORT, "*", apIP);
   }
-  #endif
+  #endif // if FEATURE_DNS_SERVER
 }
 
 // Switch of AP mode when timeout reached and no client connected anymore.
@@ -558,7 +562,7 @@ void processScanDone() {
 
 
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 
 void processEthernetConnected() {
   if (EthEventData.processedConnect) return;
@@ -660,13 +664,13 @@ void processEthernetGotIP() {
   if (node_time.systemTimePresent()) {
     node_time.initTime();
   }
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   mqtt_reconnect_count        = 0;
   MQTTclient_should_reconnect = true;
   timermqtt_interval          = 100;
   Scheduler.setIntervalTimer(ESPEasy_Scheduler::IntervalTimer_e::TIMER_MQTT);
   scheduleNextMQTTdelayQueue();
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
   Scheduler.sendGratuitousARP_now();
 
   if (Settings.UseRules)
@@ -681,4 +685,4 @@ void processEthernetGotIP() {
   CheckRunningServices();
 }
 
-#endif
+#endif // if FEATURE_ETHERNET

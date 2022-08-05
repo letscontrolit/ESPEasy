@@ -1,5 +1,8 @@
 #include "../WebServer/SysVarPage.h"
 
+
+#ifdef WEBSERVER_SYSVARS
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
@@ -11,7 +14,6 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/SystemVariables.h"
 
-#ifdef WEBSERVER_SYSVARS
 
 
 // ********************************************************************************
@@ -66,7 +68,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::BSSID);
   addSysVar_enum_html(SystemVariables::WI_CH);
 
-#ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   addTableSeparator(F("Ethernet"), 3, 3);
   addSysVar_enum_html(SystemVariables::ETHWIFIMODE);
   addSysVar_enum_html(SystemVariables::ETHCONNECTED);
@@ -74,7 +76,7 @@ void handle_sysvars() {
   addSysVar_enum_html(SystemVariables::ETHSPEED);
   addSysVar_enum_html(SystemVariables::ETHSTATE);
   addSysVar_enum_html(SystemVariables::ETHSPEEDSTATE);
- #endif
+  #endif // if FEATURE_ETHERNET
 
   addTableSeparator(F("System"), 3, 3);
   addSysVar_enum_html(SystemVariables::UNIT_sysvar);

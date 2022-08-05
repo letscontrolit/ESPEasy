@@ -1,6 +1,6 @@
 // not finished yet
 
-#ifdef FEATURE_REPORTING
+#if defined(FEATURE_REPORTING) && FEATURE_REPORTING
 
 
 #include <ArduinoJson.h>
@@ -8,7 +8,7 @@
 // NO, too big: #include <ESP8266HTTPClient.h>
 
 #define REPORT_HOST "espeasy.datux.nl"
-#define FEATURE_REPORTING
+#define FEATURE_REPORTING 1
 
 void ReportStatus()
 {
@@ -94,4 +94,4 @@ void ReportStatus()
    }
  */
 
-#endif // ifdef FEATURE_REPORTING
+#endif // if defined(FEATURE_REPORTING) && FEATURE_REPORTING

@@ -11,7 +11,7 @@
 
 # define PLUGIN_133
 # define PLUGIN_ID_133         133
-# define PLUGIN_NAME_133       "UV - LTR390 [TESTING]"
+# define PLUGIN_NAME_133       "UV - LTR390"
 # define PLUGIN_VALUENAME1_133 "UV"
 # define PLUGIN_VALUENAME2_133 "UVIndex"
 # define PLUGIN_VALUENAME3_133 "Ambient"
@@ -38,6 +38,7 @@ boolean Plugin_133(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

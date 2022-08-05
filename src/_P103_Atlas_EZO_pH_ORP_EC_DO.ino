@@ -16,7 +16,7 @@
 
 #define PLUGIN_103
 #define PLUGIN_ID_103 103
-#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO [TESTING]"
+#define PLUGIN_NAME_103 "Environment - Atlas EZO pH ORP EC DO"
 #define PLUGIN_VALUENAME1_103 "SensorData"
 #define PLUGIN_VALUENAME2_103 "Voltage"
 #define UNKNOWN 0
@@ -192,7 +192,7 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       addUnit('V');
 
       addRowLabel(F("Sensor Data"));
-      addHtml(toString(UserVar[event->BaseVarIndex]));
+      addHtmlFloat(UserVar[event->BaseVarIndex]);
       switch (board_type)
       {
       case PH:

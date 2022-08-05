@@ -26,7 +26,7 @@
 
 # define PLUGIN_119
 # define PLUGIN_ID_119          119 // plugin id
-# define PLUGIN_NAME_119        "Gyro - ITG3205 [TESTING]"
+# define PLUGIN_NAME_119        "Gyro - ITG3205"
 # define PLUGIN_VALUENAME1_119  "X"
 # define PLUGIN_VALUENAME2_119  "Y"
 # define PLUGIN_VALUENAME3_119  "Z"
@@ -56,7 +56,7 @@ boolean Plugin_119(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true;
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].TimerOptional  = true;
-
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 

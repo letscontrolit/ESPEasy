@@ -11,7 +11,7 @@
 
 # define PLUGIN_080
 # define PLUGIN_ID_080         80
-# define PLUGIN_NAME_080       "Input - iButton [TESTING]"
+# define PLUGIN_NAME_080       "Input - iButton"
 # define PLUGIN_VALUENAME1_080 "iButton"
 
 
@@ -94,6 +94,11 @@ boolean Plugin_080(uint8_t function, struct EventStruct *event, String& string)
 
       if (validGpio(Plugin_080_DallasPin)) {
         uint8_t addr[8];
+
+        // Explicitly set the pinMode using the "slow" pinMode function
+        // This way we know for sure the state of any pull-up or -down resistor is known.
+        pinMode(Plugin_080_DallasPin, INPUT);
+
         Dallas_plugin_get_addr(addr, event->TaskIndex);
         Dallas_startConversion(addr, Plugin_080_DallasPin, Plugin_080_DallasPin);
 
