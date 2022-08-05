@@ -58,7 +58,7 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
     Plugin_task_data[taskIndex]                     = data;
     Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.TaskDeviceNumber[taskIndex];
 
-#ifdef USES_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
     const uint8_t valueCount = getValueCountForTask(taskIndex);
     LoadTaskSettings(taskIndex);
     for (size_t i = 0; i < valueCount; ++i) {

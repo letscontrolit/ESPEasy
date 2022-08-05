@@ -67,7 +67,7 @@
 # define PLUGIN_ID_092         92
 
 // #define PLUGIN_092_DEBUG    // additional debug messages in the log
-# define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)  [TESTING]"
+# define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)"
 # define PLUGIN_VALUENAME1_092 "Value"
 
 // global values needed for all tasks

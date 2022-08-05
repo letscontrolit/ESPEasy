@@ -1086,12 +1086,12 @@ void setAPinternal(bool enable)
     #endif // ifdef ESP32
     WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_DURATION);
   } else {
-    #ifdef FEATURE_DNS_SERVER
+    #if FEATURE_DNS_SERVER
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
-    #endif
+    #endif // if FEATURE_DNS_SERVER
   }
 }
 
@@ -1215,7 +1215,7 @@ void setWifiMode(WiFiMode_t wifimode) {
     // Mode has changed
     setAPinternal(new_mode_AP_enabled);
   }
-  #ifdef FEATURE_MDNS
+  #if FEATURE_MDNS
   #ifdef ESP8266
   // notifyAPChange() is not present in the ESP32 MDNSResponder
   MDNS.notifyAPChange();

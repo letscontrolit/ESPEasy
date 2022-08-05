@@ -1,5 +1,7 @@
 #include "../WebServer/ToolsPage.h"
 
+#ifdef WEBSERVER_TOOLS
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -9,9 +11,6 @@
 #include "../Helpers/OTA.h"
 
 #include "../../ESPEasy-Globals.h"
-
-
-#ifdef WEBSERVER_TOOLS
 
 # include "../Commands/InternalCommands.h"
 # include "../Helpers/WebServer_commandHelper.h"
@@ -165,12 +164,12 @@ void handle_tools() {
 
   addWideButtonPlusDescription(F("filelist"),         F("File browser"),     F("Show files on internal flash file system"));
   addWideButtonPlusDescription(F("/factoryreset"),    F("Factory Reset"),    F("Select pre-defined configuration or full erase of settings"));
-  # ifdef USE_SETTINGS_ARCHIVE
+  # if FEATURE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
-  # endif // ifdef USE_SETTINGS_ARCHIVE
-# ifdef FEATURE_SD
+  # endif // if FEATURE_SETTINGS_ARCHIVE
+# if FEATURE_SD
   addWideButtonPlusDescription(F("SDfilelist"),       F("SD Card"),          F("Show files on SD-Card"));
-# endif   // ifdef FEATURE_SD
+# endif   // if FEATURE_SD
 
   html_end_table();
   html_end_form();

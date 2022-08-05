@@ -184,8 +184,8 @@
 #ifndef DEFAULT_I2C_CLOCK_SPEED_SLOW
 #define DEFAULT_I2C_CLOCK_SPEED_SLOW      100000            // Use 100 kHz for old/slow I2C chips
 #endif
-#ifndef USE_I2C_DEVICE_SCAN
-#define USE_I2C_DEVICE_SCAN              true               // Show device name in I2C scan
+#ifndef FEATURE_I2C_DEVICE_SCAN
+#define FEATURE_I2C_DEVICE_SCAN           1                 // Show device name in I2C scan
 #endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
@@ -217,7 +217,7 @@
 #define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
 #ifndef DEFAULT_NETWORK_MEDIUM
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
   #else
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
@@ -322,7 +322,7 @@
 #endif
 
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
   #ifndef DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL
     #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
   #endif
@@ -368,7 +368,7 @@
   #ifndef DEFAULT_PROVISIONING_PASS
     #define DEFAULT_PROVISIONING_PASS               ""
   #endif
-#endif
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #ifndef BUILD_IN_WEBHEADER
 #define BUILD_IN_WEBHEADER                      false
