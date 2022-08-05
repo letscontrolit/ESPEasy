@@ -17,6 +17,7 @@
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
+// 2022-08-05 tonhuisman: Remove [TESTING] tag, Improvement: INIT, 10/sec and READ events now return false if errors occur during processing
 // 2022-06-17 tonhuisman: Remove I2C address selector, as there is nothing to choose...
 //   Clean up source, avoid (memory) inefficient code
 // 2022-03-21 tonhuisman: Attempt to stop the sensor from blocking ESPEasy, by dropping out after 32 loops in reading gesture data
@@ -32,7 +33,7 @@
 
 # define PLUGIN_064
 # define PLUGIN_ID_064             64
-# define PLUGIN_NAME_064           "Gesture - APDS9960 [TESTING]"
+# define PLUGIN_NAME_064           "Gesture - APDS9960"
 # define PLUGIN_GPL_VALUENAME1_064 "Gesture"
 # define PLUGIN_GPL_VALUENAME2_064 "Proximity"
 # define PLUGIN_GPL_VALUENAME3_064 "Light"
@@ -240,6 +241,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P064_data) {
         String log = F("APDS : ");
+        success = true;
 
         if (P064_data->sensor.init(P064_GGAIN, P064_GLDRIVE, P064_PGAIN, P064_AGAIN, P064_LDRIVE)) {
           log += F("Init");
@@ -247,24 +249,27 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
           P064_data->sensor.enablePower();
 
           if (!P064_data->sensor.enableLightSensor(false)) {
-            log += F("Error during light sensor init!");
+            log    += F("Error during light sensor init!");
+            success = false;
           }
 
           if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
             if (!P064_data->sensor.enableProximitySensor(false)) {
-              log += F("Error during proximity sensor init!");
+              log    += F("Error during proximity sensor init!");
+              success = false;
             }
 
             if (!P064_data->sensor.enableGestureSensor(false, P064_LED_BOOST)) {
-              log += F("Error during gesture sensor init!");
+              log    += F("Error during gesture sensor init!");
+              success = false;
             }
           }
         } else {
-          log += F("Error during APDS-9960 init!");
+          log    += F("Error during APDS-9960 init!");
+          success = false;
         }
 
         addLogMove(LOG_LEVEL_INFO, log);
-        success = true;
       }
       break;
     }
@@ -305,9 +310,9 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
         event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
 
         sendData(event); // Process immediately
+        success = true;
       }
 
-      success = true;
       break;
     }
 
@@ -317,28 +322,27 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P064_data) {
         // Gesture - work is done in PLUGIN_TEN_PER_SECOND
+        success = true;
 
         if (P064_IS_GPL_SENSOR) { // Gesture/Proximity/ALS mode
           uint8_t proximity_data = 0;
-          P064_data->sensor.readProximity(proximity_data);
+          success                          = success && P064_data->sensor.readProximity(proximity_data);
           UserVar[event->BaseVarIndex + 1] = static_cast<float>(proximity_data);
 
           uint16_t ambient_light = 0;
-          P064_data->sensor.readAmbientLight(ambient_light);
+          success                          = success && P064_data->sensor.readAmbientLight(ambient_light);
           UserVar[event->BaseVarIndex + 2] = static_cast<float>(ambient_light);
         } else {
           uint16_t red_light   = 0;
           uint16_t green_light = 0;
           uint16_t blue_light  = 0;
-          P064_data->sensor.readRedLight(red_light);
-          P064_data->sensor.readGreenLight(green_light);
-          P064_data->sensor.readBlueLight(blue_light);
+          success = success && (P064_data->sensor.readRedLight(red_light) &&
+                                P064_data->sensor.readGreenLight(green_light) &&
+                                P064_data->sensor.readBlueLight(blue_light));
           UserVar[event->BaseVarIndex + 0] = static_cast<float>(red_light);
           UserVar[event->BaseVarIndex + 1] = static_cast<float>(green_light);
           UserVar[event->BaseVarIndex + 2] = static_cast<float>(blue_light);
         }
-
-        success = true;
       }
       break;
     }
