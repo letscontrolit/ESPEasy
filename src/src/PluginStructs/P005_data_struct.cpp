@@ -258,7 +258,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       log += F(" bytes:");
       for (int i = 0; i < dht_byte; ++i) {
         log += ' ';
-        log += formatToHex(dht_dat[i]);
+        log += formatToHex_no_prefix(dht_dat[i], 2);
       }
       log += F(" timings:");
       for (int i = 0; i < 16; ++i) {
