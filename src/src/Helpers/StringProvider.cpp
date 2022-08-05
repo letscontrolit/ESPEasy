@@ -384,19 +384,19 @@ String getValue(LabelType::Enum label) {
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
   #endif // if FEATURE_SD
 
-    case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId());
+    case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId(), 6);
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return String(getFlashChipId());
-    case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF);
+    case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:
     {
       const uint32_t flashChipId = getFlashChipId();
       const uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-      return formatToHex(flashDevice);
+      return formatToHex(flashDevice, 4);
     }
     case LabelType::FLASH_CHIP_REAL_SIZE:   return String(getFlashRealSizeInBytes());
     case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed() / 1000000);
