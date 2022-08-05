@@ -8,7 +8,7 @@
 
 #define PLUGIN_072
 #define PLUGIN_ID_072         72
-#define PLUGIN_NAME_072       "Environment - HDC1080 (I2C) [TESTING]"
+#define PLUGIN_NAME_072       "Environment - HDC1080 (I2C)"
 #define PLUGIN_VALUENAME1_072 "Temperature"
 #define PLUGIN_VALUENAME2_072 "Humidity"
 
@@ -34,6 +34,7 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

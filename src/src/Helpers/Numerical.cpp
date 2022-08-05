@@ -22,13 +22,15 @@ bool validIntFromString(const String& tBuf, int& result) {
       (detectedType == NumericalType::HexadecimalUInt)) {
     unsigned int tmp;
     bool isvalid = validUIntFromString(numerical, tmp);
+
+    // FIXME TD-er: What to do here if the uint value > max_int ?
     result = static_cast<int>(tmp);
     return isvalid;
   }
   const bool isvalid = numerical.length() > 0;
 
   if (isvalid) {
-    result = numerical.toInt();
+    result = strtol(numerical.c_str(), nullptr, DEC);
   }
   return isvalid;
 }
@@ -48,7 +50,7 @@ bool validInt64FromString(const String& tBuf, int64_t& result) {
   const bool isvalid = numerical.length() > 0;
 
   if (isvalid) {
-    result = atoll(numerical.c_str());
+    result = strtoll(numerical.c_str(), nullptr, DEC);
   }
   return isvalid;
 }
@@ -117,7 +119,7 @@ bool validFloatFromString(const String& tBuf, float& result) {
 }
 
 bool validDoubleFromString(const String& tBuf, double& result) {
-  #ifdef CORE_POST_2_5_0
+  #if defined(CORE_POST_2_5_0) || defined(ESP32)
 
   // String.toDouble() is introduced in core 2.5.0
   NumericalType detectedType;
@@ -137,12 +139,12 @@ bool validDoubleFromString(const String& tBuf, double& result) {
     result = numerical.toDouble();
   }
   return isvalid;
-  #else // ifdef CORE_POST_2_5_0
+  #else // if defined(CORE_POST_2_5_0) || defined(ESP32)
   float tmp = static_cast<float>(result);
   bool  res = validFloatFromString(tBuf, tmp);
   result = static_cast<double>(tmp);
   return res;
-  #endif // ifdef CORE_POST_2_5_0
+  #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
 }
 
 bool mustConsiderAsString(NumericalType detectedType) {
@@ -165,10 +167,10 @@ bool mustConsiderAsJSONString(const String& value) {
   }
 
   NumericalType detectedType;
-  const bool isNum  = isNumerical(value, detectedType);
-  const bool isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
+  const bool    isNum  = isNumerical(value, detectedType);
+  const bool    isBool = (Settings.JSONBoolWithoutQuotes() && ((value.equalsIgnoreCase(F("true")) || value.equalsIgnoreCase(F("false")))));
 
-  return (!isBool && (!isNum || value.isEmpty() || mustConsiderAsString(detectedType)));
+  return !isBool && (!isNum || value.isEmpty() || mustConsiderAsString(detectedType));
 }
 
 String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
@@ -176,11 +178,32 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   unsigned int firstDec        = 0;
   String result;
 
+  // Strip leading spaces
   while (firstDec < bufLength && tBuf.charAt(firstDec) == ' ') {
     ++firstDec;
   }
 
-  if (firstDec >= bufLength) { 
+  // Strip leading zeroes until next char is a '.' or one of the "0x" and "0b" prefixes
+  // or the zero remains as last character of the string
+  // See: https://github.com/letscontrolit/ESPEasy/issues/4134
+  bool doneStrippingZeroes = false;
+
+  while ((firstDec + 1) < bufLength && tBuf.charAt(firstDec) == '0' && !doneStrippingZeroes) {
+    const char nextChar = tBuf.charAt(firstDec + 1);
+
+    if ((nextChar != '.') && 
+        (nextChar != '+') && (nextChar != '-') && // +/-
+        (nextChar != 'x') && (nextChar != 'X') && // Matching "0x"
+        (nextChar != 'b') && (nextChar != 'B'))   // Matching "0b"
+    {
+      ++firstDec;
+    }
+    else { 
+      doneStrippingZeroes = true;
+    }
+  }
+
+  if (firstDec >= bufLength) {
     detectedType = NumericalType::Not_a_number;
     return result;
   }
@@ -196,11 +219,13 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         result += c;
       }
       ++firstDec;
+
       if (firstDec < bufLength) {
         c = tBuf.charAt(firstDec);
       }
     }
-  } 
+  }
+
   if (c == '0') {
     ++firstDec;
     result += c;
@@ -222,8 +247,8 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
           // N.B. intentional "reverse order" of reading char and ++firstDec
           c = tBuf.charAt(firstDec);
           ++firstDec;
-        }      
-      } else if (NumericalType::FloatingPoint == requestedType && c == '.') {
+        }
+      } else if ((NumericalType::FloatingPoint == requestedType) && (c == '.')) {
         // Only floating point numbers should start with '0.'
         // All other combinations are not valid.
         ++firstDec;
@@ -241,13 +266,14 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
   } else {
     // Does not start with a 0 and already tested for +/-
     // Only allowed to have a '.' or digits.
-    if (c != '.' && !isdigit(c)) {
+    if ((c != '.') && !isdigit(c)) {
       detectedType = NumericalType::Not_a_number;
       return result;
     }
   }
 
   bool done = false;
+
   result.reserve(bufLength - firstDec + result.length());
 
   for (unsigned int x = firstDec; !done && x < bufLength; ++x) {
@@ -288,10 +314,12 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
           break;
       }
     }
+
     if (!done) {
       result += c;
     }
   }
+
   if (result == F("-")) {
     detectedType = NumericalType::Not_a_number;
     return emptyString;
@@ -302,7 +330,9 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
 bool isNumerical(const String& tBuf, NumericalType& detectedType) {
   NumericalType requestedType = NumericalType::FloatingPoint;
   const String  result        = getNumerical(tBuf, requestedType, detectedType);
-  if (detectedType == NumericalType::Not_a_number) return false;
+
+  if (detectedType == NumericalType::Not_a_number) { return false; }
+
   if (result.length() > 0)
   {
     String tmp(tBuf);

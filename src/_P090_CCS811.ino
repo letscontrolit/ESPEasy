@@ -21,7 +21,7 @@
 
 #define PLUGIN_090
 #define PLUGIN_ID_090         90
-#define PLUGIN_NAME_090       "Gases - CCS811 TVOC/eCO2 [TESTING]"
+#define PLUGIN_NAME_090       "Gases - CCS811 TVOC/eCO2"
 #define PLUGIN_VALUENAME1_090 "TVOC"
 #define PLUGIN_VALUENAME2_090 "eCO2"
 
@@ -88,6 +88,7 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].ValueCount         = 2;
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

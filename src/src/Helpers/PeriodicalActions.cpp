@@ -1,6 +1,5 @@
 #include "../Helpers/PeriodicalActions.h"
 
-#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
 
@@ -204,7 +203,7 @@ void runEach30Seconds()
     log += F(" FreeMem ");
     log += FreeMem();
     bool logWiFiStatus = true;
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
     if(active_network_medium == NetworkMedium_t::Ethernet) {
       logWiFiStatus = false;
       log += F( " EthSpeedState ");
@@ -212,7 +211,7 @@ void runEach30Seconds()
       log += F(" ETH status: ");
       log += EthEventData.ESPEasyEthStatusToString();
     }
-    #endif
+    #endif // if FEATURE_ETHERNET
     if (logWiFiStatus) {
       log += F(" WiFiStatus ");
       log += ArduinoWifiStatusToString(WiFi.status());
@@ -225,18 +224,20 @@ void runEach30Seconds()
     addLogMove(LOG_LEVEL_INFO, log);
   }
   WiFi_AP_Candidates.purge_expired();
+  #if FEATURE_ESPEASY_P2P
   sendSysInfoUDP(1);
   refreshNodeList();
+  #endif
 
   // sending $stats to homie controller
   CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
 
   #if defined(ESP8266)
-  #ifdef USES_SSDP
+  #if FEATURE_SSDP
   if (Settings.UseSSDP)
     SSDP_update();
 
-  #endif // USES_SSDP
+  #endif // if FEATURE_SSDP
   #endif
 #if FEATURE_ADC_VCC
   if (!WiFiEventData.wifiConnectInProgress) {
@@ -244,13 +245,13 @@ void runEach30Seconds()
   }
 #endif
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif
+  #endif // if FEATURE_REPORTING
 
 }
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 
 void scheduleNextMQTTdelayQueue() {
@@ -386,7 +387,7 @@ controllerIndex_t firstEnabledMQTT_ControllerIndex() {
 }
 
 
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
 
 
 
@@ -436,25 +437,25 @@ void updateLoopStats_30sec(uint8_t loglevel) {
  \*********************************************************************************************/
 void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
     unsigned long timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
       CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);
-#ifdef USES_MQTT      
+#if FEATURE_MQTT      
       if (mqttControllerEnabled && MQTTclient.connected()) {
         MQTTclient.loop();
       }
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
     }
-#ifdef USES_MQTT
+#if FEATURE_MQTT
     if (mqttControllerEnabled && MQTTclient.connected()) {
       MQTTclient.disconnect();
       updateMQTTclient_connected();
     }
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
@@ -464,9 +465,9 @@ void flushAndDisconnectAllClients() {
 
 void prepareShutdown(ESPEasy_Scheduler::IntendedRebootReason_e reason)
 {
-#ifdef USES_MQTT
+#if FEATURE_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();

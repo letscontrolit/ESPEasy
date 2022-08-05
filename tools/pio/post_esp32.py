@@ -38,12 +38,19 @@ def esp32_create_combined_bin(source, target, env):
     firmware_name = env.subst("$BUILD_DIR/${PROGNAME}.bin")
     chip = env.get("BOARD_MCU")
     flash_size = env.BoardConfig().get("upload.flash_size")
+    flash_freq = env.BoardConfig().get("build.f_flash", '40m')
+    flash_freq = flash_freq.replace('000000L', 'm')
+    flash_mode = env.BoardConfig().get("build.flash_mode")
     cmd = [
         "--chip",
         chip,
         "merge_bin",
         "-o",
         new_file_name,
+        "--flash_mode",
+        flash_mode,
+        "--flash_freq",
+        flash_freq,
         "--flash_size",
         flash_size,
     ]
@@ -57,7 +64,7 @@ def esp32_create_combined_bin(source, target, env):
     print(f" - {hex(app_offset)} | {firmware_name}")
     cmd += [hex(app_offset), firmware_name]
 
-    # print('Using esptool.py arguments: %s' % ' '.join(cmd))
+    print('Using esptool.py arguments: %s' % ' '.join(cmd))
 
     esptool.main(cmd)
 

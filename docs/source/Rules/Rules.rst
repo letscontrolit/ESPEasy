@@ -1,5 +1,6 @@
+#####
 Rules
-*****
+#####
 
 Introduction
 ============
@@ -16,10 +17,30 @@ Enable Rules
 
 To enable rules, :menuselection:`Tools --> Advanced` and check the Rules checkbox.
 
-After clicking Submit, you will find a new page added. Here you can start
-experimenting with Rules:
+After clicking Submit, you will find the Rules tab added. Here you can start experimenting with Rules:
 
-[ADD_GUI_PICTURE]
+.. image:: Advanced_RulesOptions.png
+  :alt: Rules options
+
+* **Rules**: Enable the use of rules. If disabled, also (most) events will no longer be generated, as they won't be processed, though data will still be sent to Controllers.
+* **Enable Rules Cache**: For faster processing of rules they can be (partially) cached in memory. If memory is really low this option can be disabled.
+* **Tolerant last parameter**: A few commands can use, for backward compatibility, a more tolerant handling of the last parameter, as suggested in the note. This feature should be enabled if it is needed.
+
+.. code:: none
+
+  on System#Boot do
+    GPIO,12,0
+    LoopTimerSet,1,10
+  endon
+
+  on Rules#Timer=1 do
+    if [E1SW1#State]=1
+      GPIO,12,0
+    else
+      GPIO,12,1
+    endif
+  endon
+
 
 The example above shows an experiment with a LED, connected via a resistor of
 1k to GPIO12 and to ground.
@@ -64,6 +85,23 @@ Special Notations
  Formulas used in tasks (thus not using the rules) may refer to ``%value%`` for the new current value and ``%pvalue%`` for the previous value before ``PLUGIN_READ`` was called.
  These notations cannot be used in the rules.
  If a previous value is needed, one has to use variables for it.
+
+
+Dot Notation
+^^^^^^^^^^^^
+
+The dot (``.``) can be used to refer to something "belonging" to something else.
+For example calling a command on a specific task (``pulsecounter.resetpulsecounter``) to reset the pulse counter on a specific Pulse Counter task.
+
+(Added: 2022/07/11)
+For task values with "Stats" enabled, one can also access statistical properties of the data or call commands on this statistical data.
+
+For example using just like normal task value data:
+
+* ``[bme#temp.avg]`` Compute the average over the last N samples in the historic buffer (typically: 64 samples on ESP32, 16 on ESP8266)
+
+See :ref:`Task Value Statistics:  <Task Value Statistics>` for more examples.
+
 
 
 Syntax
@@ -154,6 +192,8 @@ for the limitation of not being able to nest. An "event" can be called from a
 consumption of stack space (IRAM). Depending on plug-ins in use this might
 lead to unpredictable, unreliable behavior, advice is not to exceed 3 levels
 of nesting.
+
+To avoid nesting of events, ``AsyncEvent`` can be used, using the same syntax as ``Event``, that will add the event to the end of the current event queue, for processing after other events are completed.
 
 .. code-block:: none
 
@@ -743,6 +783,8 @@ The reason this behavior was changed from before 2019/11 was that the old implem
 
 Formatting refered values
 -------------------------
+
+.. _Formatting values:
 
 When referring another value, some basic formatting can be used.
 
@@ -1770,6 +1812,14 @@ There is the following workaround:
 .. code-block:: none
 
    SendToHTTP 192.168.0.243,8080,/json.htm?type=param=switchlight&command&idx=174&switchcmd=On
+
+Added: 2022/07/23
+
+* ``SendToHTTP`` can now also be called with a full URL starting with ``http://``, so no longer the host, port and uri have to be separated. (it is still possible of course)
+* HTTP return value will be made available as event to be evaluated in the rules. Example event: ``http#hostname=404``
+* Calls made to a HTTP server can now also follow redirects. (GET and HEAD calls only) This has to be enabled in Tools->Advanced page.
+* Host name can contain user credentials. For example: ``http://username:pass@hostname:portnr/foo.html``
+* HTTP user credentials now can handle Basic Auth and Digest Auth.
 
 
 Dew Point for temp/humidity sensors (BME280 for example)

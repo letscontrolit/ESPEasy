@@ -7,7 +7,9 @@
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
-bool tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) {
+bool tone_espEasy(int8_t _pin, unsigned int frequency, unsigned long duration) {
+  if (_pin<0) return false;
+
   // Duty cycle can be used as some kind of volume.
   if (!set_Gpio_PWM_pct(_pin, 50, frequency)) return false;
   if (duration > 0) {
@@ -15,14 +17,17 @@ bool tone_espEasy(uint8_t _pin, unsigned int frequency, unsigned long duration) 
     return set_Gpio_PWM(_pin, 0, frequency);
   }
   return true;
+  
 }
 
 /********************************************************************************************\
    Play RTTTL string on specified pin
  \*********************************************************************************************/
-#ifdef USE_RTTTL
-bool play_rtttl(uint8_t _pin, const char *p)
+#if FEATURE_RTTTL
+bool play_rtttl(int8_t _pin, const char *p)
 {
+  if (_pin<0) return false;
+  
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("play_rtttl"));
   #endif
@@ -191,4 +196,4 @@ bool play_rtttl(uint8_t _pin, const char *p)
   #endif
   return true;
 }
-#endif
+#endif // if FEATURE_RTTTL

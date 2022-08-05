@@ -1,6 +1,8 @@
 #ifndef HELPERS_ESPEASY_TIME_H
 #define HELPERS_ESPEASY_TIME_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../DataTypes/ESPEasyTimeSource.h"

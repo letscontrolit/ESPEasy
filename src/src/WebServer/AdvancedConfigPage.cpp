@@ -1,5 +1,7 @@
 #include "../WebServer/AdvancedConfigPage.h"
 
+#ifdef WEBSERVER_ADVANCED
+
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -14,9 +16,6 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
-
-
-#ifdef WEBSERVER_ADVANCED
 
 void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
@@ -57,9 +56,9 @@ void handle_advanced() {
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
-#ifdef FEATURE_SD
+#if FEATURE_SD
     setLogLevelFor(LOG_TO_SDCARD, LabelType::SD_LOG_LEVEL);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
     Settings.UseValueLogger              = isFormItemChecked(F("valuelogger"));
     Settings.BaudRate                    = getFormItemInt(F("baudrate"));
     Settings.UseNTP(isFormItemChecked(F("usentp")));
@@ -68,9 +67,9 @@ void handle_advanced() {
     );
     Settings.DST                         = isFormItemChecked(F("dst"));
     Settings.WDI2CAddress                = getFormItemInt(F("wdi2caddress"));
-    #ifdef USES_SSDP
+    #if FEATURE_SSDP
     Settings.UseSSDP                     = isFormItemChecked(F("usessdp"));
-    #endif // USES_SSDP
+    #endif // if FEATURE_SSDP
     Settings.WireClockStretchLimit       = getFormItemInt(F("wireclockstretchlimit"));
     Settings.UseRules                    = isFormItemChecked(F("userules"));
     Settings.ConnectionFailuresThreshold = getFormItemInt(LabelType::CONNECTION_FAIL_THRESH);
@@ -88,6 +87,7 @@ void handle_advanced() {
     #endif // WEBSERVER_NEW_RULES
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
+    Settings.SendToHTTP_follow_redirects(isFormItemChecked(F("sendtohttp_redir")));
     Settings.ForceWiFi_bg_mode(isFormItemChecked(LabelType::FORCE_WIFI_BG));
     Settings.WiFiRestart_connection_lost(isFormItemChecked(LabelType::RESTART_WIFI_LOST_CONN));
     Settings.EcoPowerMode(isFormItemChecked(LabelType::CPU_ECO_MODE));
@@ -116,7 +116,7 @@ void handle_advanced() {
     #endif
 
     Settings.EnableRulesCaching(isFormItemChecked(LabelType::ENABLE_RULES_CACHING));
-    Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER));
+//    Settings.EnableRulesEventReorder(isFormItemChecked(LabelType::ENABLE_RULES_EVENT_REORDER)); // TD-er: Disabled for now
 
     Settings.AllowOTAUnlimited(isFormItemChecked(LabelType::ALLOW_OTA_UNLIMITED));
 
@@ -139,11 +139,12 @@ void handle_advanced() {
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
   #endif // WEBSERVER_NEW_RULES
   addFormCheckBox(LabelType::ENABLE_RULES_CACHING, Settings.EnableRulesCaching());
-  addFormCheckBox(LabelType::ENABLE_RULES_EVENT_REORDER, Settings.EnableRulesEventReorder());
+//  addFormCheckBox(LabelType::ENABLE_RULES_EVENT_REORDER, Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
 
   addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
+  addFormCheckBox(F("SendToHTTP Follow Redirects"), F("sendtohttp_redir"), Settings.SendToHTTP_follow_redirects());
 
   /*
   // MQTT settings now moved to the controller settings.
@@ -187,11 +188,11 @@ void handle_advanced() {
   addFormLogLevelSelect(LabelType::SERIAL_LOG_LEVEL, Settings.SerialLogLevel);
   addFormLogLevelSelect(LabelType::WEB_LOG_LEVEL,    Settings.WebLogLevel);
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
   addFormLogLevelSelect(LabelType::SD_LOG_LEVEL,     Settings.SDLogLevel);
 
   addFormCheckBox(F("SD Card Value Logger"), F("valuelogger"), Settings.UseValueLogger);
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 
   addFormSubHeader(F("Serial Settings"));
@@ -222,17 +223,17 @@ void handle_advanced() {
   #ifdef ESP32
   addUnit(F("1/80 usec"));
   #endif
-  #if defined(FEATURE_ARDUINO_OTA)
+  #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
-  #endif // if defined(FEATURE_ARDUINO_OTA)
+  #endif // if FEATURE_ARDUINO_OTA
   #if defined(ESP32)
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
 
   addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
-  #ifdef USES_TIMING_STATS
+  #if FEATURE_TIMING_STATS
   addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
-  #endif
+  #endif // if FEATURE_TIMING_STATS
 #ifndef BUILD_NO_RAM_TRACKER
   addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
 #endif
@@ -251,9 +252,9 @@ void handle_advanced() {
   #endif
 
 
-  #ifdef USES_SSDP
+  #if FEATURE_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
-  #endif // ifdef USES_SSDP
+  #endif // if FEATURE_SSDP
 
   addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
 #ifdef ESP8266
@@ -298,8 +299,7 @@ void handle_advanced() {
 #endif
   {
     addFormNumericBox(LabelType::WIFI_NR_EXTRA_SCANS, Settings.NumberExtraWiFiScans, 0, 5);
-    String note = F("Number of extra times to scan all channels to have higher chance of finding the desired AP");
-    addFormNote(note);
+    addFormNote(F("Number of extra times to scan all channels to have higher chance of finding the desired AP"));
   }
   addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
 
@@ -326,37 +326,41 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
   }
   TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
   {
-    String weeklabel = isStart ? F("Start")  : F("End");
-    weeklabel += F(" (week, dow, month)");
-    String weekid  = isStart ? F("dststartweek")  : F("dstendweek");
     const __FlashStringHelper *  week[5] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
     int    weekValues[5] = { 0, 1, 2, 3, 4 };
 
-    addRowLabel(weeklabel);
-    addSelector(weekid, 5, week, weekValues, nullptr, rule.week);
+    {
+      String weeklabel = isStart ? F("Start")  : F("End");
+      weeklabel += F(" (week, dow, month)");
+      addRowLabel(weeklabel);
+    }
+    addSelector(
+      isStart ? F("dststartweek")  : F("dstendweek"), 
+      5, week, weekValues, nullptr, rule.week);
   }
   html_BR();
   {
-    String dowid   = isStart ? F("dststartdow")   : F("dstenddow");
     const __FlashStringHelper *  dow[7] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
     int    dowValues[7]  = { 1, 2, 3, 4, 5, 6, 7 };
 
-    addSelector(dowid, 7, dow, dowValues, nullptr, rule.dow);
+    addSelector(
+      isStart ? F("dststartdow")   : F("dstenddow"),
+      7, dow, dowValues, nullptr, rule.dow);
   }
   html_BR();
   {
-    String monthid = isStart ? F("dststartmonth") : F("dstendmonth");
     const __FlashStringHelper * month[12] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
                              "Dec") };
     int    monthValues[12] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
-    addSelector(monthid, 12, month, monthValues, nullptr, rule.month);
+    addSelector(isStart ? F("dststartmonth") : F("dstendmonth"),
+                12, month, monthValues, nullptr, rule.month);
   }
   {
-    String hourid  = isStart ? F("dststarthour")  : F("dstendhour");
-    String hourlabel = isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)");
-
-    addFormNumericBox(hourlabel, hourid, rule.hour, 0, 23);
+    addFormNumericBox(
+      isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)"),
+      isStart ? F("dststarthour")  : F("dstendhour"),
+      rule.hour, 0, 23);
     addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
   }
 }

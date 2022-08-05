@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_DOMOTICZ
+#if FEATURE_DOMOTICZ
 
 # include "../Helpers/_CPlugin_Helper.h"
 
@@ -39,7 +39,7 @@ bool   deserializeDomoticzJson(const String& json,
 String serializeDomoticzJson(struct EventStruct *event);
 
 # endif // ifdef USES_C002
-#endif // ifdef USES_DOMOTICZ
+#endif // if FEATURE_DOMOTICZ
 
 
 #endif // ifndef HELPERS__CPLUGIN_DOMOTICZHELPER_H

@@ -51,7 +51,8 @@ void serve_favicon() {
 }
 
 void serve_JS(JSfiles_e JSfile) {
-    String url;
+    const __FlashStringHelper * url = F("");
+
     switch (JSfile) {
         case JSfiles_e::UpdateSensorValuesDevicePage:
           url = F("update_sensor_values_device_page.js");
@@ -71,15 +72,23 @@ void serve_JS(JSfiles_e JSfile) {
         case JSfiles_e::Toasting:
           url = F("toasting.js");
           break;
+        case JSfiles_e::SplitPasteInput:
+          url = F("split_paste.js");
+          break;
     }
 
-    if (!fileExists(url))
+    // Work-around for shortening the filename when stored on SPIFFS file system
+    // Files cannot be longer than 31 characters
+    const __FlashStringHelper * fname = 
+      (JSfile == JSfiles_e::UpdateSensorValuesDevicePage) ?
+      F("upd_values_device_page.js") : url;
+
+    if (!fileExists(fname))
     {
         #ifndef WEBSERVER_INCLUDE_JS
-        url = generate_external_URL(url);
         addHtml(F("<script"));
         addHtml(F(" defer"));
-        addHtmlAttribute(F("src"), url);
+        addHtmlAttribute(F("src"), generate_external_URL(url));
         addHtml('>');
         html_add_script_end();
         return;
@@ -115,6 +124,11 @@ void serve_JS(JSfiles_e JSfile) {
             addHtml(F("Submitted"));
             TXBuffer.addFlashString((PGM_P)FPSTR(jsToastMessageEnd));
             break;
+          case JSfiles_e::SplitPasteInput:
+            TXBuffer.addFlashString((PGM_P)FPSTR(jsSplitMultipleFields));
+            // After this, make sure to call it, like this:
+            // split('$', ".query-input")
+            break;
 
         }
         html_add_script_end();
@@ -123,6 +137,6 @@ void serve_JS(JSfiles_e JSfile) {
     }
     // Now stream the file directly from the file system.
     html_add_script(false);
-    streamFromFS(url);
+    streamFromFS(fname);
     html_add_script_end();
 }

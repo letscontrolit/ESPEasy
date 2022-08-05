@@ -5,10 +5,9 @@
 
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
-# if defined(FEATURE_SD) && defined(ADAGFX_ENABLE_BMP_DISPLAY)
+# if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 #  include <SD.h>
-# endif // if defined(FEATURE_SD) && defined(ADAGFX_ENABLE_BMP_DISPLAY)
-# include <vector>
+# endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 
 # if ADAGFX_FONTS_INCLUDED
 #  include "../Static/Fonts/Seven_Segment24pt7b.h"
@@ -288,7 +287,7 @@ void AdaGFXFormBacklight(const __FlashStringHelper *backlightPinId,
                          int8_t                     backlightPin,
                          const __FlashStringHelper *backlightPercentageId,
                          uint16_t                   backlightPercentage) {
-  addFormPinSelect(formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
+  addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output_optional(F("Backlight ")), backlightPinId, backlightPin);
 
   addFormNumericBox(F("Backlight percentage"), backlightPercentageId, backlightPercentage, 1, 100);
   addUnit(F("1-100%"));
@@ -303,7 +302,7 @@ void AdaGFXFormDisplayButton(const __FlashStringHelper *buttonPinId,
                              bool                       buttonInverse,
                              const __FlashStringHelper *displayTimeoutId,
                              int                        displayTimeout) {
-  addFormPinSelect(F("Display button"), buttonPinId, buttonPin);
+  addFormPinSelect(PinSelectPurpose::Generic_input, F("Display button"), buttonPinId, buttonPin);
 
   addFormCheckBox(F("Inversed Logic"), buttonInverseId, buttonInverse);
 
@@ -2621,12 +2620,12 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
   // Open requested file on storage
   // Search flash file system first, then SD if present
   file = tryOpenFile(filename, "r");
-  #  ifdef FEATURE_SD
+  #  if FEATURE_SD
 
   if (!file) {
     file = SD.open(filename.c_str(), "r");
   }
-  #  endif // ifdef FEATURE_SD
+  #  endif // if FEATURE_SD
 
   if (!file) {
     addLog(LOG_LEVEL_ERROR, F("showBmp: file not found"));

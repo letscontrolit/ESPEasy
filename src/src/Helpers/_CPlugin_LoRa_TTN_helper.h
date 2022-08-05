@@ -8,7 +8,7 @@
 // #  Helper functions to encode data for use on LoRa/TTN network.
 // #######################################################################################################
 
-#if defined(USES_PACKED_RAW_DATA)
+#if FEATURE_PACKED_RAW_DATA
 
 #include "../DataStructs/ESPEasy_packed_raw_data.h"
 
@@ -32,7 +32,7 @@ float getLoRaAirTime(uint8_t  pl,
                      bool     header     = true,
                      bool     crc        = true);
 
-#endif // USES_PACKED_RAW_DATA
+#endif // if FEATURE_PACKED_RAW_DATA
 
 
 

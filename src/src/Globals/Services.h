@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 
 
-#ifdef FEATURE_MDNS
+#if FEATURE_MDNS
   //enable mDNS mode (adds about 6kb ram and some bytes IRAM)
   #ifdef ESP8266
     #include <ESP8266mDNS.h>
@@ -42,18 +42,18 @@
 
 #endif
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
   //enable Arduino OTA updating.
   //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
   extern bool ArduinoOTAtriggered;
 #endif
 
 
-#ifdef FEATURE_DNS_SERVER
+#if FEATURE_DNS_SERVER
   #include <DNSServer.h>
   extern DNSServer  dnsServer;
   extern bool dnsServerActive;
-#endif
+#endif // if FEATURE_DNS_SERVER
 
 
 #endif // GLOBALS_SERVICES_H

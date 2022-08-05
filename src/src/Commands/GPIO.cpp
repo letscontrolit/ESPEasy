@@ -1,8 +1,9 @@
 #include "../Commands/GPIO.h"
 
+#include "../../ESPEasy_common.h"
+
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_common.h"
 
 #include "../Commands/Common.h"
 #include "../DataStructs/PinMode.h"
@@ -288,7 +289,7 @@ const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const c
 
 const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const char *Line)
 {
-  #ifdef USE_RTTTL
+  #if FEATURE_RTTTL
 
   // FIXME: Absolutely no error checking in play_rtttl, until then keep it only in testing
   // play a tune via a RTTTL string, look at https://www.letscontrolit.com/forum/viewtopic.php?f=4&t=343&hilit=speaker&start=10 for
@@ -308,9 +309,9 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
   if (play_rtttl(event->Par1, melody.c_str())) {
     return return_command_success();
   }
-  #else // ifdef USE_RTTTL
+  #else // if FEATURE_RTTTL
   addLog(LOG_LEVEL_ERROR, F("RTTTL : command not included in build"));
-  #endif // ifdef USE_RTTTL
+  #endif // if FEATURE_RTTTL
   return return_command_failed();
 }
 
@@ -782,7 +783,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
     uint8_t readValue;
     const uint8_t    currentVal            = data.initVal + i;
     const uint8_t    currentAddress        = static_cast<int>(currentVal / 2);
-    const uint8_t    currentMask           = (data.mask  >> (8 * i)) & 0xFF;
+    uint8_t          currentMask           = (data.mask  >> (8 * i)) & 0xFF;
     const uint8_t    currentInvertedMask   = 0xFF - currentMask;
     const uint8_t    currentWrite          = (data.write >> (8 * i)) & 0xFF;
     const uint8_t    currentGPIORegister   = ((currentVal % 2) == 0) ? MCP23017_GPIOA : MCP23017_GPIOB;
@@ -805,9 +806,8 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
     }
 
     const uint8_t   mode = (onLine) ? PIN_MODE_OUTPUT : PIN_MODE_OFFLINE;
-    for (uint8_t j = 0; j < 8; j++) {
-      // if ((currentMask & (uint8_t(pow(2,j)))) >> j) { //only for the pins in the mask
-      if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
+    for (uint8_t j = 0; currentMask != 0 && j < 8; j++) {
+      if (currentMask & 1) {  // only for the pins in the mask
         uint8_t currentPin    = data.firstPin + j + 8 * i;
         const uint32_t key = createKey(PLUGIN_MCP, currentPin);
 
@@ -823,6 +823,7 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
         addLog(LOG_LEVEL_INFO, log);
         SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, log, 0);
       }
+      currentMask >>= 1; // Shift the mask 1 position
     }
   }
   return onLine;
@@ -867,7 +868,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
       uint8_t currentPin    = data.firstPin + j + 8 * i;
       const uint32_t key = createKey(PLUGIN_PCF, currentPin);
 
-      if ((currentMask & (1 << j)) >> j) { // only for the pins in the mask
+      if (currentMask & 1) {  // only for the pins in the mask
         state = onLine ? ((writeGPIOValue & (1 << j)) >> j) : -1;
 
         createAndSetPortStatus_Mode_State(key, mode, state);
@@ -882,6 +883,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
           readValue |= (1 << j); // set port j = 1
         }
       }
+      currentMask >>= 1; // Shift the mask 1 position
     }
 
     if (onLine) {

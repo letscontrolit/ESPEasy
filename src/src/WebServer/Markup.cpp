@@ -16,24 +16,16 @@
 // ********************************************************************************
 // Add Selector
 // ********************************************************************************
-void addSelector(const String             & id,
+void addSelector(const __FlashStringHelper *id,
                  int                        optionCount,
                  const __FlashStringHelper *options[],
                  const int                  indices[],
                  const String               attr[],
-                 int                        selectedIndex)
+                 int                        selectedIndex,
+                 bool                       reloadonchange,
+                 bool                       enabled)
 {
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
-}
-
-void addSelector(const String& id,
-                 int           optionCount,
-                 const String  options[],
-                 const int     indices[],
-                 const String  attr[],
-                 int           selectedIndex)
-{
-  addSelector(id, optionCount, options, indices, attr, selectedIndex, false, true, F("wide"));
+  addSelector(String(id), optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
 }
 
 void addSelector(const String             & id,
@@ -42,7 +34,7 @@ void addSelector(const String             & id,
                  const int                  indices[],
                  const String               attr[],
                  int                        selectedIndex,
-                 boolean                    reloadonchange,
+                 bool                       reloadonchange,
                  bool                       enabled)
 {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
@@ -54,7 +46,7 @@ void addSelector(const String& id,
                  const int     indices[],
                  const String  attr[],
                  int           selectedIndex,
-                 boolean       reloadonchange,
+                 bool          reloadonchange,
                  bool          enabled)
 {
   addSelector(id, optionCount, options, indices, attr, selectedIndex, reloadonchange, enabled, F("wide"));
@@ -66,27 +58,27 @@ void addSelector(const String             & id,
                  const int                  indices[],
                  const String               attr[],
                  int                        selectedIndex,
-                 boolean                    reloadonchange,
+                 bool                       reloadonchange,
                  bool                       enabled,
                  const String& classname
-                 #ifdef                     ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  , const String           & tooltip
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  )
 {
-  // FIXME TD-er Change boolean to disabled
+  // FIXME TD-er Change bool    to disabled
   if (reloadonchange)
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled
-                                    #ifdef ENABLE_TOOLTIPS
+                                    #if FEATURE_TOOLTIPS
                                     , tooltip
-                                    #endif // ifdef ENABLE_TOOLTIPS
+                                    #endif // if FEATURE_TOOLTIPS
                                     );
   } else {
     do_addSelector_Head(id, classname, EMPTY_STRING, !enabled
-                        #ifdef ENABLE_TOOLTIPS
+                        #if FEATURE_TOOLTIPS
                         , tooltip
-                        #endif // ifdef ENABLE_TOOLTIPS
+                        #endif // if FEATURE_TOOLTIPS
                         );
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
@@ -103,17 +95,17 @@ void addSelector_reloadOnChange(
                  const String& onChangeCall,
                  bool          enabled,
                  const String& classname
-                 #ifdef        ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  ,
                  const String& tooltip
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  )
 {
-  // FIXME TD-er Change boolean to disabled
+  // FIXME TD-er Change bool    to disabled
   do_addSelector_Head(id, classname, onChangeCall, !enabled
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , tooltip
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
   addSelector_Foot();
@@ -126,27 +118,27 @@ void addSelector(const String  & id,
                  const int       indices[],
                  const String    attr[],
                  int             selectedIndex,
-                 boolean         reloadonchange,
+                 bool            reloadonchange,
                  bool            enabled,
                  const String& classname
-                 #ifdef          ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  , const String& tooltip
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  )
 {
-  // FIXME TD-er Change boolean to disabled
+  // FIXME TD-er Change bool    to disabled
   if (reloadonchange)
   {
     addSelector_Head_reloadOnChange(id, classname, !enabled
-                                    #ifdef ENABLE_TOOLTIPS
+                                    #if FEATURE_TOOLTIPS
                                     , tooltip
-                                    #endif // ifdef ENABLE_TOOLTIPS
+                                    #endif // if FEATURE_TOOLTIPS
                                     );
   } else {
     do_addSelector_Head(id, classname, EMPTY_STRING, !enabled
-                        #ifdef ENABLE_TOOLTIPS
+                        #if FEATURE_TOOLTIPS
                         , tooltip
-                        #endif // ifdef ENABLE_TOOLTIPS
+                        #endif // if FEATURE_TOOLTIPS
                         );
   }
   addSelector_options(optionCount, options, indices, attr, selectedIndex);
@@ -201,9 +193,9 @@ void addSelector_options(int optionCount, const String options[], const int indi
 
 void addSelector_Head(const String& id) {
   do_addSelector_Head(id, F("wide"), EMPTY_STRING, false
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , F("")
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
 }
 
@@ -212,33 +204,33 @@ void addSelector_Head_reloadOnChange(const String& id) {
 }
 
 void addSelector_Head_reloadOnChange(const String& id, const String& classname, bool disabled
-                                     #ifdef ENABLE_TOOLTIPS
+                                     #if FEATURE_TOOLTIPS
                                      , const String& tooltip
-                                     #endif // ifdef ENABLE_TOOLTIPS
+                                     #endif // if FEATURE_TOOLTIPS
                                      ) {
   do_addSelector_Head(id, classname, F("return dept_onchange(frmselect)"), disabled
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , tooltip
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
 }
 
 void addSelector_Head_reloadOnChange(const String& id, const String& classname, const String& onChangeCall, bool disabled
-                                     #ifdef ENABLE_TOOLTIPS
+                                     #if FEATURE_TOOLTIPS
                                      , const String& tooltip
-                                     #endif // ifdef ENABLE_TOOLTIPS
+                                     #endif // if FEATURE_TOOLTIPS
                                      ) {
   do_addSelector_Head(id, classname, onChangeCall, disabled
-                      #ifdef ENABLE_TOOLTIPS
+                      #if FEATURE_TOOLTIPS
                       , tooltip
-                      #endif // ifdef ENABLE_TOOLTIPS
+                      #endif // if FEATURE_TOOLTIPS
                       );
 }
 
 void do_addSelector_Head(const String& id, const String& classname, const String& onChangeCall, const bool& disabled
-                         #ifdef ENABLE_TOOLTIPS
+                         #if FEATURE_TOOLTIPS
                          , const String& tooltip
-                         #endif // ifdef ENABLE_TOOLTIPS
+                         #endif // if FEATURE_TOOLTIPS
                          )
 {
   addHtml(F("<select "));
@@ -246,12 +238,12 @@ void do_addSelector_Head(const String& id, const String& classname, const String
   addHtmlAttribute(F("name"),  id);
   addHtmlAttribute(F("id"),    id);
 
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     addHtmlAttribute(F("title"), tooltip);
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
 
   if (disabled) {
     addDisabled();
@@ -263,7 +255,7 @@ void do_addSelector_Head(const String& id, const String& classname, const String
   addHtml('>');
 }
 
-void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int gpio, boolean selected, boolean disabled, const String& attr)
+void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int gpio, bool    selected, bool    disabled, const String& attr)
 {
   if (gpio != -1) // empty selection can never be disabled...
   {
@@ -273,18 +265,18 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
       bool includeI2C = true;
       bool includeSPI = true;
-        #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       bool includeEthernet = true;
-        #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
 
       switch (purpose) {
         case PinSelectPurpose::SPI:
           includeSPI = false;
           break;
         case PinSelectPurpose::Ethernet:
-            #ifdef HAS_ETHERNET
+          #if FEATURE_ETHERNET
           includeEthernet = false;
-            #endif // ifdef HAS_ETHERNET
+          #endif // if FEATURE_ETHERNET
           break;
         case PinSelectPurpose::Generic:
 
@@ -332,12 +324,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
         disabled = true;
       }
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
       if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
         disabled = true;
       }
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
     }
   }
 
@@ -347,7 +339,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
                    disabled);
 }
 
-void addSelector_Item(const __FlashStringHelper *option, int index, boolean selected, boolean disabled, const String& attr)
+void addSelector_Item(const __FlashStringHelper *option, int index, bool    selected, bool    disabled, const String& attr)
 {
   addHtml(F("<option "));
   addHtmlAttribute(F("value"), index);
@@ -370,7 +362,7 @@ void addSelector_Item(const __FlashStringHelper *option, int index, boolean sele
   addHtml(F("</option>"));
 }
 
-void addSelector_Item(const String& option, int index, boolean selected, boolean disabled, const String& attr)
+void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
 {
   addHtml(F("<option "));
   addHtmlAttribute(F("value"), index);
@@ -421,20 +413,28 @@ void addUnit(char unit)
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const __FlashStringHelper *id)
 {
-  addRowLabel_tr_id(String(label), String(id));
+  addRowLabel_tr_id(label, String(id));
 }
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const String& id)
 {
-  addRowLabel_tr_id(String(label), id);
+  if (id.isEmpty()) {
+    addRowLabel(label);
+  } else {
+    addRowLabel_tr_id(String(label), id);
+  }
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
 {
-  String tr_id = F("tr_");
+  if (id.isEmpty()) {
+    addRowLabel(label);
+  } else {
+    String tr_id = F("tr_");
 
-  tr_id += id;
-  addRowLabel(label, tr_id);
+    tr_id += id;
+    addRowLabel(label, tr_id);
+  }
 }
 
 void addRowLabel(const __FlashStringHelper *label)
@@ -591,15 +591,15 @@ void addFormSubHeader(const String& header)
 // ********************************************************************************
 // Add a checkbox
 // ********************************************************************************
-void addCheckBox(const __FlashStringHelper *id, boolean checked, bool disabled)
+void addCheckBox(const __FlashStringHelper *id, bool    checked, bool disabled)
 {
   addCheckBox(String(id), checked, disabled);
 }
 
-void addCheckBox(const String& id, boolean checked, bool disabled
-                 #ifdef ENABLE_TOOLTIPS
+void addCheckBox(const String& id, bool    checked, bool disabled
+                 #if FEATURE_TOOLTIPS
                  , const String& tooltip
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  )
 {
   addHtml(F("<label class='container'>&nbsp;"));
@@ -617,12 +617,12 @@ void addCheckBox(const String& id, boolean checked, bool disabled
 
   if (disabled) { addDisabled(); }
   addHtml('\'');
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     addHtmlAttribute(F("title"), tooltip);
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
   addHtml(F("></span></label>"));
 }
 
@@ -635,26 +635,26 @@ void addNumericBox(const __FlashStringHelper *id, int value, int min, int max)
 }
 
 void addNumericBox(const String& id, int value, int min, int max
-                   #ifdef ENABLE_TOOLTIPS
+                   #if FEATURE_TOOLTIPS
                    , const String& classname, const String& tooltip
-                   #endif // ifdef ENABLE_TOOLTIPS
+                   #endif // if FEATURE_TOOLTIPS
                    )
 {
   addHtml(F("<input "));
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
   addHtmlAttribute(F("class"), classname);
-  #else // ifdef ENABLE_TOOLTIPS
+  #else // if FEATURE_TOOLTIPS
   addHtmlAttribute(F("class"), F("widenumber"));
-  #endif  // ifdef ENABLE_TOOLTIPS
+  #endif  // if FEATURE_TOOLTIPS
   addHtmlAttribute(F("type"),  F("number"));
   addHtmlAttribute(F("name"),  id);
 
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     addHtmlAttribute(F("title"), tooltip);
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
 
   if (value < min) {
     value = min;
@@ -677,18 +677,18 @@ void addNumericBox(const String& id, int value, int min, int max
   addHtml('>');
 }
 
-#ifdef ENABLE_TOOLTIPS
+#if FEATURE_TOOLTIPS
 void addNumericBox(const String& id, int value, int min, int max)
 {
   addNumericBox(id, value, min, max, F("widenumber"));
 }
 
-#endif // ifdef ENABLE_TOOLTIPS
+#endif // if FEATURE_TOOLTIPS
 
 void addFloatNumberBox(const String& id, float value, float min, float max, unsigned int nrDecimals, float stepsize
-                       #ifdef ENABLE_TOOLTIPS
+                       #if FEATURE_TOOLTIPS
                        , const String& tooltip
-                       #endif // ifdef ENABLE_TOOLTIPS
+                       #endif // if FEATURE_TOOLTIPS
                        )
 {
   String html;
@@ -718,14 +718,14 @@ void addFloatNumberBox(const String& id, float value, float min, float max, unsi
   html += F(" style='width:7em;' value=");
   html += toString(value, nrDecimals);
 
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     html += F("title='");
     html += tooltip;
     html += F("' ");
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
   html += '>';
 
   addHtml(html);
@@ -745,16 +745,18 @@ void addTextBox(const String  & id,
                 bool            required,
                 const String  & pattern,
                 const String& classname
-                #ifdef          ENABLE_TOOLTIPS
+                #if FEATURE_TOOLTIPS
                 , const String& tooltip
-                #endif // ifdef ENABLE_TOOLTIPS
+                #endif // if FEATURE_TOOLTIPS
                 )
 {
   addHtml(F("<input "));
   addHtmlAttribute(F("class"),     classname);
-  addHtmlAttribute(F("type"),      F("text"));
+  addHtmlAttribute(F("type"),      F("search"));
   addHtmlAttribute(F("name"),      id);
-  addHtmlAttribute(F("maxlength"), maxlength);
+  if (maxlength > 0) {
+    addHtmlAttribute(F("maxlength"), maxlength);
+  }
   addHtmlAttribute(F("value"),     value);
 
   if (readonly) {
@@ -769,12 +771,12 @@ void addTextBox(const String  & id,
     addHtmlAttribute(F("pattern"), pattern);
   }
 
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     addHtmlAttribute(F("title"), tooltip);
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
   addHtml('>');
 }
 
@@ -788,16 +790,18 @@ void addTextArea(const String  & id,
                  int             columns,
                  bool            readonly,
                  bool          required
-                 #ifdef          ENABLE_TOOLTIPS
+                 #if FEATURE_TOOLTIPS
                  , const String& tooltip
-                 #endif // ifdef ENABLE_TOOLTIPS
+                 #endif // if FEATURE_TOOLTIPS
                  )
 {
   addHtml(F("<textarea "));
   addHtmlAttribute(F("class"),     F("wide"));
   addHtmlAttribute(F("type"),      F("text"));
   addHtmlAttribute(F("name"),      id);
-  addHtmlAttribute(F("maxlength"), maxlength);
+  if (maxlength > 0) {
+    addHtmlAttribute(F("maxlength"), maxlength);
+  }
   addHtmlAttribute(F("rows"),      rows);
   addHtmlAttribute(F("cols"),      columns);
 
@@ -809,12 +813,12 @@ void addTextArea(const String  & id,
     addHtml(F(" required "));
   }
 
-  #ifdef ENABLE_TOOLTIPS
+  #if FEATURE_TOOLTIPS
 
   if (tooltip.length() > 0) {
     addHtmlAttribute(F("title"), tooltip);
   }
-  #endif // ifdef ENABLE_TOOLTIPS
+  #endif // if FEATURE_TOOLTIPS
   addHtml('>');
   addHtml(value);
   addHtml(F("</textarea>"));
