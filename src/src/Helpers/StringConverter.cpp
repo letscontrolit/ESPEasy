@@ -166,17 +166,25 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-String formatToHex(unsigned long value, const __FlashStringHelper * prefix) {
+String formatToHex(unsigned long value, 
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits) {
   String result = prefix;
   String hex(value, HEX);
 
   hex.toUpperCase();
+  if (hex.length() < minimal_hex_digits) {
+    const size_t leading_zeros = minimal_hex_digits - hex.length();
+    for (size_t i = 0; i < leading_zeros; ++i) {
+      result += '0';
+    }
+  }
   result += hex;
   return result;
 }
 
-String formatToHex(unsigned long value) {
-  return formatToHex(value, F("0x"));
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F("0x"), minimal_hex_digits);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
