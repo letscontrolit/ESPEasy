@@ -93,7 +93,7 @@
 .. |P129_type| replace:: :cyan:`Input`
 .. |P129_typename| replace:: :cyan:`Input - Shift registers (74HC165)`
 .. |P129_porttype| replace:: `.`
-.. |P129_status| replace:: :yellow:`TESTING E`
+.. |P129_status| replace:: :yellow:`COLLECTION E`
 .. |P129_github| replace:: P129_74HC165.ino
 .. _P129_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P129_74HC165.ino
 .. |P129_usedby| replace:: `.`
