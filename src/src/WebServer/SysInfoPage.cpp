@@ -564,10 +564,8 @@ void handle_sysinfo_ESP_Board() {
   addRowLabel(LabelType::ESP_CHIP_ID);
   {
     addHtmlInt(getChipId());
-    addHtml(F(" (0x"));
-    String espChipId(getChipId(), HEX);
-    espChipId.toUpperCase();
-    addHtml(espChipId);
+    addHtml(' ', '(');
+    addHtml(formatToHex(getChipId(), 6));
     addHtml(')');
   }
 

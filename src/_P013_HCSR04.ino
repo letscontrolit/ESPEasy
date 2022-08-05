@@ -14,7 +14,7 @@
 
 # include <Arduino.h>
 # include <map>
-# include <NewPingESP8266.h>
+# include <NewPing.h>
 
 // PlugIn specific defines
 // operatingMode
@@ -30,7 +30,7 @@
 # define FILTER_MEDIAN       (1)
 
 // map of sensors
-std::map<unsigned int, std::shared_ptr<NewPingESP8266> > P_013_sensordefs;
+std::map<unsigned int, std::shared_ptr<NewPing> > P_013_sensordefs;
 
 // Forward declaration
 const __FlashStringHelper* Plugin_013_getErrorStatusString(taskIndex_t taskIndex);
@@ -175,7 +175,7 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       // create sensor instance and add to std::map
       P_013_sensordefs.erase(event->TaskIndex);
       P_013_sensordefs[event->TaskIndex] =
-        std::shared_ptr<NewPingESP8266>(new NewPingESP8266(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm));
+        std::shared_ptr<NewPing>(new NewPing(Plugin_013_TRIG_Pin, Plugin_013_IRQ_Pin, max_distance_cm));
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("ULTRASONIC : TaskNr: ");
@@ -316,10 +316,10 @@ float Plugin_013_read(taskIndex_t taskIndex)
   }
 
   if (measuringUnit == UNIT_CM) {
-    return NewPingESP8266::convert_cm_F(echoTime);
+    return NewPing::convert_cm_F(echoTime);
   }
   else {
-    return NewPingESP8266::convert_in_F(echoTime);
+    return NewPing::convert_in_F(echoTime);
   }
 }
 
@@ -333,31 +333,31 @@ const __FlashStringHelper* Plugin_013_getErrorStatusString(taskIndex_t taskIndex
   }
 
   switch ((P_013_sensordefs[taskIndex])->getErrorState()) {
-    case NewPingESP8266::STATUS_SENSOR_READY: {
+    case NewPing::STATUS_SENSOR_READY: {
       return F("Sensor ready");
     }
 
-    case NewPingESP8266::STATUS_MEASUREMENT_VALID: {
+    case NewPing::STATUS_MEASUREMENT_VALID: {
       return F("no error, measurement valid");
     }
 
-    case NewPingESP8266::STATUS_ECHO_TRIGGERED: {
+    case NewPing::STATUS_ECHO_TRIGGERED: {
       return F("Echo triggered, waiting for Echo end");
     }
 
-    case NewPingESP8266::STATUS_ECHO_STATE_ERROR: {
+    case NewPing::STATUS_ECHO_STATE_ERROR: {
       return F("Echo pulse error, Echopin not low on trigger");
     }
 
-    case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_50ms: {
+    case NewPing::STATUS_ECHO_START_TIMEOUT_50ms: {
       return F("Echo timeout error, no echo start whithin 50 ms");
     }
 
-    case NewPingESP8266::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
+    case NewPing::STATUS_ECHO_START_TIMEOUT_DISTANCE: {
       return F("Echo timeout error, no echo start whithin time for max. distance");
     }
 
-    case NewPingESP8266::STATUS_MAX_DISTANCE_EXCEEDED: {
+    case NewPing::STATUS_MAX_DISTANCE_EXCEEDED: {
       return F("Echo too late, maximum distance exceeded");
     }
 
