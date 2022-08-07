@@ -13,8 +13,12 @@
 // Set flags to enable (1) or disable (0) the DECODE_ and/or SEND_ feature for a specific IR device
 // To limit ESPEasy build-size you can disable DECODE_ or SEND_ flags for devices not needed
 
-// #define DECODE_RAW 0 // RAW support should be left to default unless explicitly disabled via P016_P035_USE_RAW_RAW2
-// #define SEND_RAW 0
+// SEND-ONLY protocols:
+// #define SEND_GLOBALCACHE 0
+// #define SEND_PRONTO 0
+// #define SEND_RAW 0 // SEND_RAW support should be left to default unless explicitly disabled via P016_P035_USE_RAW_RAW2
+// #define SEND_SHERWOOD 0
+// #define SEND_SONY_38K 0
 
 // Standard: Use defaults for up to library version 2.8.2
 // Change as desired after copying CustomIR-sample.h to CustomIR.h
@@ -55,8 +59,6 @@
 // #define SEND_DENON 0
 // #define DECODE_KELVINATOR 0
 // #define SEND_KELVINATOR 0
-// #define DECODE_SHERWOOD 0
-// #define SEND_SHERWOOD 0
 // #define DECODE_MITSUBISHI_AC 0
 // #define SEND_MITSUBISHI_AC 0
 // #define DECODE_RCMM 0
@@ -67,8 +69,6 @@
 // #define SEND_RC5X 0
 // #define DECODE_GREE 0
 // #define SEND_GREE 0
-// #define DECODE_PRONTO 0
-// #define SEND_PRONTO 0
 // #define DECODE_NEC_LIKE 0
 // #define SEND_NEC_LIKE 0
 // #define DECODE_ARGO 0
@@ -77,8 +77,6 @@
 // #define SEND_TROTEC 0
 // #define DECODE_NIKAI 0
 // #define SEND_NIKAI 0
-// #define DECODE_GLOBALCACHE 0
-// #define SEND_GLOBALCACHE 0
 // #define DECODE_TOSHIBA_AC 0
 // #define SEND_TOSHIBA_AC 0
 // #define DECODE_FUJITSU_AC 0
@@ -163,8 +161,6 @@
 // #define SEND_MITSUBISHI112 0
 // #define DECODE_HITACHI_AC424 0
 // #define SEND_HITACHI_AC424 0
-// #define DECODE_SONY_38K 0
-// #define SEND_SONY_38K 0
 // #define DECODE_EPSON 0
 // #define SEND_EPSON 0
 // #define DECODE_SYMPHONY 0
