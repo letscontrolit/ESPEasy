@@ -75,7 +75,7 @@ P005_data_struct::P005_data_struct(struct EventStruct *event) {
 /*********************************************************************************************\
 * DHT sub to wait until a pin is in a certain state
 \*********************************************************************************************/
-bool P005_data_struct::waitState(int state)
+bool P005_data_struct::waitState(uint32_t state)
 {
   const uint64_t   timeout          = getMicros64() + 100;
 

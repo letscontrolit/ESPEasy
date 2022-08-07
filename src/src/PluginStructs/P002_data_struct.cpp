@@ -568,7 +568,7 @@ void P002_data_struct::webformLoad_multipointCurve(struct EventStruct *event) co
       useBinning ? F("Bins") : F("Multipoint Values"),
       F("rgb(255, 99, 132)"));
 
-    for (int i = 0; i < _multipoint.size(); ++i) {
+    for (size_t i = 0; i < _multipoint.size(); ++i) {
       if (i != 0) {
         addHtml(',');
       }
