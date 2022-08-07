@@ -74,13 +74,13 @@ bool Internal_GPIO_pulseHelper::init()
     pulseModeData.Step1counter   = ISRdata.pulseTotalCounter;
     pulseModeData.Step2OKcounter = ISRdata.pulseTotalCounter;
     pulseModeData.Step3OKcounter = ISRdata.pulseTotalCounter;
-    #endif
+    #endif // ifdef PULSE_STATISTIC
 
     const int intPinMode = static_cast<int>(config.interruptPinMode) & MODE_INTERRUPT_MASK;
     attachInterruptArg(
       digitalPinToInterrupt(config.gpio),
-      config.useEdgeMode() ? 
-        reinterpret_cast<void (*)(void *)>(ISR_pulseCheck_edgeMode) : 
+      config.useEdgeMode() ?
+        reinterpret_cast<void (*)(void *)>(ISR_edgeCheck) :
         reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
       this,
       intPinMode);
@@ -365,7 +365,7 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
   ISRdata.processingFlags = false;
 }
 
-void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck_edgeMode(Internal_GPIO_pulseHelper *self)
+void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_edgeCheck(Internal_GPIO_pulseHelper *self)
 {
   noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
 
@@ -440,7 +440,8 @@ void Internal_GPIO_pulseHelper::doStatisticLogging(uint8_t logLevel)
 {
   if (loglevelActiveFor(logLevel)) {
     // Statistic to logfile. E.g: ... [123/1|111|100/5|80/3/4|40] [12243|3244]
-    String log; 
+    String log;
+
     if (log.reserve(125)) {
       log  = F("Pulse:");
       log += F("Stats (GPIO) [step0|1|2|3|tot(ok/nok/ign)] [lo|hi]= (");
@@ -468,6 +469,7 @@ void Internal_GPIO_pulseHelper::doTimingLogging(uint8_t logLevel)
   if (loglevelActiveFor(logLevel)) {
     // Timer to logfile. E.g: ... [4|12000|13444|12243|3244]
     String log;
+
     if (log.reserve(120)) {
       log  = F("Pulse:");
       log += F("OverDueStats (GPIO) [dbTim] {step0OdCnt} [maxOdTimeStep0|1|2|3]= (");
