@@ -77,9 +77,11 @@ bool Internal_GPIO_pulseHelper::init()
     const int intPinMode = static_cast<int>(config.interruptPinMode) & MODE_INTERRUPT_MASK;
     attachInterruptArg(
       digitalPinToInterrupt(config.gpio),
-      reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
-      this, intPinMode);
-
+      config.useEdgeMode() ? 
+        reinterpret_cast<void (*)(void *)>(ISR_pulseCheck_edgeMode) : 
+        reinterpret_cast<void (*)(void *)>(ISR_pulseCheck),
+      this,
+      intPinMode);
     return true;
   }
   return false;
@@ -361,42 +363,42 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
   ISRdata.processingFlags = false;
 }
 
+void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck_edgeMode(Internal_GPIO_pulseHelper *self)
+{
+  noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
+
+  // legacy edge Mode types
+  // KP: we use here P003_currentStableStartTime[taskID] to persist the PulseTime (pulseTimePrevious)
+  const uint64_t currentTime          = getMicros64();
+  const uint64_t timeSinceLastTrigger = currentTime -
+                                        self->ISRdata.currentStableStartTime;
+
+  if (timeSinceLastTrigger > self->config.debounceTime_micros) // check with debounce time for this task
+  {
+    self->ISRdata.pulseCounter++;
+    self->ISRdata.pulseTotalCounter++;
+    self->ISRdata.pulseTime              = timeSinceLastTrigger;
+    self->ISRdata.currentStableStartTime = currentTime; // reset when counted to determine interval between counted pulses
+  }
+  interrupts(); // enable interrupts again.
+}
+
 void IRAM_ATTR Internal_GPIO_pulseHelper::ISR_pulseCheck(Internal_GPIO_pulseHelper *self)
 {
   noInterrupts(); // s0170071: avoid nested interrups due to bouncing.
 
-  if (self->config.useEdgeMode())
-  {
-    // legacy edge Mode types
-    // KP: we use here P003_currentStableStartTime[taskID] to persist the PulseTime (pulseTimePrevious)
-    const uint64_t currentTime          = getMicros64();
-    const uint64_t timeSinceLastTrigger = currentTime -
-                                          self->ISRdata.currentStableStartTime;
-
-    if (timeSinceLastTrigger > self->config.debounceTime_micros) // check with debounce time for this task
-    {
-      self->ISRdata.pulseCounter++;
-      self->ISRdata.pulseTotalCounter++;
-      self->ISRdata.pulseTime              = timeSinceLastTrigger;
-      self->ISRdata.currentStableStartTime = currentTime; // reset when counted to determine interval between counted pulses
-    }
-  }
-  else
-
   // processing for new PULSE mode types
-  {
-    #ifdef PULSE_STATISTIC
-    self->ISRdata.Step0counter++;
-    #endif // PULSE_STATISTIC
+  #ifdef PULSE_STATISTIC
+  self->ISRdata.Step0counter++;
+  #endif // PULSE_STATISTIC
 
-    // check if processing is allowed (not blocked) for this task (taskID)
-    if (!self->ISRdata.processingFlags)
-    {
-      // initiate processing
-      self->ISRdata.processingFlags  = true; // block further initiations as long as async processing is taking place
-      self->ISRdata.initStepsFlags   = true; // PLUGIN_FIFTY_PER_SECOND is polling for this flag set
-      self->ISRdata.triggerTimestamp = getMicros64();
-    }
+  // check if processing is allowed (not blocked) for this task (taskID)
+  if (!self->ISRdata.processingFlags)
+  {
+    // initiate processing
+    self->ISRdata.processingFlags  = true; // block further initiations as long as async processing is taking place
+    self->ISRdata.initStepsFlags   = true; // PLUGIN_FIFTY_PER_SECOND is polling for this flag set
+    self->ISRdata.triggerTimestamp = getMicros64();
   }
   interrupts(); // enable interrupts again.
 }

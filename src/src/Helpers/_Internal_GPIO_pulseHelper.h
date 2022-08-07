@@ -109,8 +109,8 @@ struct Internal_GPIO_pulseHelper {
     uint64_t        debounceTime_micros = 0; // 64 bit version of debounceTime in micoseconds
     uint16_t        debounceTime        = 0;
     taskIndex_t     taskIndex           = INVALID_TASK_INDEX;
-    uint8_t            gpio                = -1;
-    uint8_t            pullupPinMode       = INPUT_PULLUP;
+    uint8_t         gpio                = -1;
+    uint8_t         pullupPinMode       = INPUT_PULLUP;
     GPIOtriggerMode interruptPinMode    = GPIOtriggerMode::Change;
   };
 
@@ -157,6 +157,7 @@ private:
   volatile pulseCounterISRdata_t ISRdata;
   const pulseCounterConfig       config;
 
+  static void ISR_pulseCheck_edgeMode(Internal_GPIO_pulseHelper *self);
   static void ISR_pulseCheck(Internal_GPIO_pulseHelper *self);
 
 
