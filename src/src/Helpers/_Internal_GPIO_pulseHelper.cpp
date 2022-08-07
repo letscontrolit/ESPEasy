@@ -11,6 +11,8 @@
 
 #include <Arduino.h>
 
+#include <GPIO_Direct_Access.h>
+
 #define GPIO_PLUGIN_ID  1
 
 
@@ -158,7 +160,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       #endif // PULSE_STATISTIC
 
       //  read current state from this tasks's GPIO
-      pulseModeData.lastCheckState = digitalRead(config.gpio);
+      pulseModeData.lastCheckState = DIRECT_pinRead(config.gpio);
 
       // after debounceTime/2, do step 2
       Scheduler.setPluginTaskTimer(config.debounceTime >> 1, config.taskIndex, GPIO_PULSE_HELPER_PROCESSING_STEP_2);
@@ -178,7 +180,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       #endif // PULSE_STATISTIC
 
       //  read current state from this tasks's GPIO
-      const int pinState = digitalRead(config.gpio);
+      const int pinState = DIRECT_pinRead(config.gpio);
 
       if (pinState == pulseModeData.lastCheckState)
 
@@ -231,7 +233,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
       }
 
       //  read current state from this tasks's GPIO
-      const int pinState = digitalRead(config.gpio);
+      const int pinState = DIRECT_pinRead(config.gpio);
 
       if (pinState == pulseModeData.lastCheckState)
 
