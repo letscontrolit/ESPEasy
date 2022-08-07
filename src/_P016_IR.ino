@@ -335,9 +335,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           std::vector<String> decodeTypes;
           std::vector<int>    decodeTypeOptions;
 
+          int protocolCount = 0;
           for (int i = 0; i < size; i++) {
-            decodeTypeOptions.push_back(i);
-            decodeTypes.push_back(typeToString(static_cast<decode_type_t>(i), false));
+            const String protocol = typeToString(static_cast<decode_type_t>(i), false);
+            if (protocol.length() > 1) {
+              decodeTypeOptions.push_back(i);
+              decodeTypes.push_back(protocol);
+              protocolCount++;
+            }
 
             // addLog(LOG_LEVEL_INFO, decodeTypes[i]); // For development debugging purposes
             delay(0);
@@ -372,7 +377,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), size, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
+              addSelector(getPluginCustomArgName(rowCnt + 0), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
                           static_cast<int>(line.CodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
@@ -387,7 +392,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), size, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
+              addSelector(getPluginCustomArgName(rowCnt + 3), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
                           static_cast<int>(line.AlternativeCodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();

@@ -14,11 +14,11 @@
 // To limit ESPEasy build-size you can disable DECODE_ or SEND_ flags for devices not needed
 
 // SEND-ONLY protocols:
-// #define SEND_GLOBALCACHE 0
+// #define SEND_GLOBALCACHE 0 // Is used by many sending protocols, so should probably be left to default
 // #define SEND_PRONTO 0
 // #define SEND_RAW 0 // SEND_RAW support should be left to default unless explicitly disabled via P016_P035_USE_RAW_RAW2
 // #define SEND_SHERWOOD 0
-// #define SEND_SONY_38K 0
+// UNUSED (exception) // #define SEND_SONY_38K 0 // is enabled/disabled via SEND_SONY
 
 // Standard: Use defaults for up to library version 2.8.2
 // Change as desired after copying CustomIR-sample.h to CustomIR.h
