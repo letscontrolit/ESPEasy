@@ -244,6 +244,7 @@ void handle_sysvars() {
   addSysVar_html(F("Mins to days: %c_m2day%(1900)"));
   addSysVar_html(F("Mins to dh:   %c_m2dh%(1900)"));
   addSysVar_html(F("Mins to dhm:  %c_m2dhm%(1900)"));
+  addSysVar_html(F("Mins to hcm:  %c_m2hcm%(482)"));
   addSysVar_html(F("Secs to dhms: %c_s2dhms%(100000)"));
   addFormSeparator(3);
   addSysVar_html(F("To HEX: %c_2hex%(100000)"));

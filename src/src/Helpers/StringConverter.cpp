@@ -1108,6 +1108,7 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2day%"),  toString(minutesToDay(data.arg1), 2))
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
+  SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
   SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
   #undef SMART_CONV
