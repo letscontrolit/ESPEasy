@@ -251,15 +251,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((nullptr != irReceiver) && (irPin == -1))
-      {
-        irReceiver->disableIRIn();
-        delete irReceiver;
-        irReceiver = nullptr;
-        # ifdef PLUGIN_016_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver destroyed"));
-        # endif // PLUGIN_016_DEBUG
-      }
+      // if ((nullptr != irReceiver) && (irPin == -1)) // Unreachable code
+      // {
+      //   irReceiver->disableIRIn();
+      //   delete irReceiver;
+      //   irReceiver = nullptr;
+      //   # ifdef PLUGIN_016_DEBUG
+      //   addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver destroyed"));
+      //   # endif // PLUGIN_016_DEBUG
+      // }
 
       # ifdef PLUGIN_016_DEBUG
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT done"));
@@ -316,14 +316,18 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addUnit(F("100..1024"));
       addFormNote(F("Increase buffer size if IR commands are received incomplete."));
 
+
       addFormSubHeader(F("Content"));
 
+      # if P016_FEATURE_COMMAND_HANDLING
       bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
       addFormCheckBox(F("Add new received code to command lines"), F("pAddNewCode"),        bAddNewCode);
       bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
       addFormCheckBox(F("Execute commands"),                       F("pExecuteCmd"),        bExecuteCmd);
+      # endif // if P016_FEATURE_COMMAND_HANDLING
       bool bAcceptUnknownType = bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType);
       addFormCheckBox(F("Accept DecodeType UNKNOWN"),              F("pAcceptUnknownType"), bAcceptUnknownType);
+      # if P016_FEATURE_COMMAND_HANDLING
       addFormNumericBox(F("Inhibit time for the same command [ms]"),
                         F("pcmdinhibit"),
                         P016_CMDINHIBIT,
@@ -443,6 +447,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      # endif // if P016_FEATURE_COMMAND_HANDLING
+
       # ifdef PLUGIN_016_DEBUG
       P016_infoLogMemory(F("after load"));
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_LOAD done"));
@@ -464,20 +470,26 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
       uint32_t lSettings = 0;
+      # if P016_FEATURE_COMMAND_HANDLING
       bitWrite(lSettings, P016_BitAddNewCode,        isFormItemChecked(F("pAddNewCode")));
       bitWrite(lSettings, P016_BitExecuteCmd,        isFormItemChecked(F("pExecuteCmd")));
+      # endif // if P016_FEATURE_COMMAND_HANDLING
       bitWrite(lSettings, P016_BitAcceptUnknownType, isFormItemChecked(F("pAcceptUnknownType")));
 
       bEnableIRcodeAdding = true;
       PCONFIG_LONG(0)     = lSettings;
-      P016_CMDINHIBIT     = getFormItemInt(F("pcmdinhibit"));
-      P016_BUFFERSIZE     = getFormItemInt(F("pbuffersize"));
+      # if P016_FEATURE_COMMAND_HANDLING
+      P016_CMDINHIBIT = getFormItemInt(F("pcmdinhibit"));
+      # endif // if P016_FEATURE_COMMAND_HANDLING
+      P016_BUFFERSIZE = getFormItemInt(F("pbuffersize"));
 
-      # ifdef PLUGIN_016_DEBUG
-      P016_infoLogMemory(F("before save"));
-      # endif // ifdef PLUGIN_016_DEBUG
+      # if P016_FEATURE_COMMAND_HANDLING
 
       {
+        #  ifdef PLUGIN_016_DEBUG
+        P016_infoLogMemory(F("before save"));
+        #  endif // ifdef PLUGIN_016_DEBUG
+
         String strError;
         strError.reserve(30); // Length of expected string, needed for strings > 11 chars
 
@@ -537,10 +549,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           P016_data_struct::saveCommandLine(event, line, varNr);
         }
 
-          # ifdef PLUGIN_016_DEBUG
+        #  ifdef PLUGIN_016_DEBUG
         P016_infoLogMemory(F("after save"));
-          # endif // ifdef PLUGIN_016_DEBUG
+        #  endif // ifdef PLUGIN_016_DEBUG
       }
+      # endif // if P016_FEATURE_COMMAND_HANDLING
 
       # ifdef PLUGIN_016_DEBUG
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_SAVE Done"));
@@ -549,6 +562,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if P016_FEATURE_COMMAND_HANDLING
     case PLUGIN_ONCE_A_SECOND:
     {
       P016_data_struct *P016_data =
@@ -558,14 +572,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         if (P016_data->bCodeChanged) { // code has been added -> SaveCustomTaskSettings
           P016_data->saveCommandLines(event);
           P016_data->bCodeChanged = false;
-          # ifdef PLUGIN_016_DEBUG
+          #  ifdef PLUGIN_016_DEBUG
           addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_ONCE_A_SECOND CustomTaskSettings Saved"));
-          # endif // PLUGIN_016_DEBUG
+          #  endif // PLUGIN_016_DEBUG
         }
       }
       success = true;
       break;
     }
+    # endif // if P016_FEATURE_COMMAND_HANDLING
 
     case PLUGIN_TEN_PER_SECOND:
     {
@@ -616,6 +631,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             event->String2 = std::move(output);
           }
 
+          # if P016_FEATURE_COMMAND_HANDLING
+
           // Check if this is a code we have a command for or we have to add
           P016_data_struct *P016_data =
             static_cast<P016_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -645,6 +662,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               }
             }
           }
+          # endif // if P016_FEATURE_COMMAND_HANDLING
         }
 
         if  (!bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)) {
@@ -711,8 +729,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-        if (IRac::isProtocolSupported(results.decode_type)) // Check If there is a replayable AC state and show the JSON command that can be
-                                                            // send
+        if (IRac::isProtocolSupported(results.decode_type) && // Check If there is a replayable AC state and show the JSON command that can
+            (typeToString(results.decode_type).length() > 1)) // be sent
         {
           IRAcUtils::decodeToState(&results, &state);
           StaticJsonDocument<300> doc;

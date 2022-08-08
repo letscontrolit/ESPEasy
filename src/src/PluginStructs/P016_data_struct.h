@@ -37,6 +37,14 @@
 # define P16_FLAGS_REPEAT    0 // Repeat code
 // # define P16_FLAGS_HASH      1  // Code is a Hash
 
+# ifndef P016_FEATURE_COMMAND_HANDLING
+#  define P016_FEATURE_COMMAND_HANDLING 1 // Enable Command handling and table
+# endif // ifndef P016_FEATURE_COMMAND_HANDLING
+
+# if !P016_FEATURE_COMMAND_HANDLING && defined(P16_SETTINGS_V1)
+#  undef P16_SETTINGS_V1
+# endif // if !P016_FEATURE_COMMAND_HANDLING && defined(P16_SETTINGS_V1)
+
 # ifdef P16_SETTINGS_V1
 typedef struct {
   char     Command[P16_Nchars] = { 0 };
@@ -45,12 +53,13 @@ typedef struct {
 } tCommandLinesV1;
 # endif // ifdef P16_SETTINGS_V1
 
+# if P016_FEATURE_COMMAND_HANDLING
 struct tCommandLinesV2 {
-  # ifdef P16_SETTINGS_V1
+  #  ifdef P16_SETTINGS_V1
   tCommandLinesV2() = default;
   tCommandLinesV2(const tCommandLinesV1& lineV1,
                   uint8_t                i);
-  # endif // ifdef P16_SETTINGS_V1
+  #  endif // ifdef P16_SETTINGS_V1
 
   char          Command[P16_Nchars]       = { 0 };
   uint64_t      Code                      = 0; // received code (can be added automatically)
@@ -60,7 +69,7 @@ struct tCommandLinesV2 {
   uint16_t      CodeFlags                 = 0;
   uint16_t      AlternativeCodeFlags      = 0;
 };
-
+# endif // if P016_FEATURE_COMMAND_HANDLING
 
 struct P016_data_struct : public PluginTaskData_base {
 public:
@@ -69,17 +78,18 @@ public:
 
   void        init(struct EventStruct *event,
                    uint16_t            CmdInhibitTime);
+  # if P016_FEATURE_COMMAND_HANDLING
   void        loadCommandLines(struct EventStruct *event);
   void        saveCommandLines(struct EventStruct *event);
 
   static void loadCommandLine(struct EventStruct *event,
                               tCommandLinesV2   & line,
                               uint8_t             lineNr);
-  # ifdef P16_SETTINGS_V1
+  #  ifdef P16_SETTINGS_V1
   static void loadCommandLinev1(struct EventStruct *event,
                                 tCommandLinesV2   & line,
                                 uint8_t             lineNr);
-  # endif // ifdef P16_SETTINGS_V1
+  #  endif // ifdef P16_SETTINGS_V1
   static void saveCommandLine(struct EventStruct    *event,
                               const tCommandLinesV2& line,
                               uint8_t                lineNr);
@@ -95,19 +105,22 @@ public:
   std::vector<tCommandLinesV2>CommandLines; // holds the CustomTaskSettings V2
 
   bool bCodeChanged = false;                // set if code has been added and CommandLines need to be saved (in PLUGIN_ONCE_A_SECOND)
+  # endif // if P016_FEATURE_COMMAND_HANDLING
 
 private:
 
+  # if P016_FEATURE_COMMAND_HANDLING
   bool validateCode(int           i,
                     uint64_t      Code,
                     decode_type_t DecodeType,
                     uint16_t      CodeFlags);
 
-  uint64_t      iLastCmd        = 0;                      // last command send
+  uint64_t      iLastCmd = 0;                             // last command send
   uint32_t      iLastCmdTime    = 0;                      // time while last command was send
   decode_type_t iLastDecodeType = decode_type_t::UNKNOWN; // last decode_type sent
   uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again
   uint16_t      iLastCodeFlags  = 0;                      // last flags sent
+  # endif // if P016_FEATURE_COMMAND_HANDLING
 };
 
 #endif // ifdef USES_P016
