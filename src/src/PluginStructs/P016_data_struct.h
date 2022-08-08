@@ -23,6 +23,8 @@
 # define P16_Nchars   64              // max chars per command line
 # define P16_Cchars   20              // max chars per code
 # define P016_DEFAULT_BUFFERSIZE 150  // default buffer size, range: 100..1024
+# define P016_MIN_BUFFERSIZE     100  // Minimum
+# define P016_MAX_BUFFERSIZE     1024 // Maximum buffer size
 
 # define P16_SETTINGS_V1              // Settings v1 original settings when enabled, settings conversion is also enabled
 // Settings v2 includes 64 bit codes and some separated flags
@@ -115,7 +117,7 @@ private:
                     decode_type_t DecodeType,
                     uint16_t      CodeFlags);
 
-  uint64_t      iLastCmd = 0;                             // last command send
+  uint64_t      iLastCmd        = 0;                      // last command send
   uint32_t      iLastCmdTime    = 0;                      // time while last command was send
   decode_type_t iLastDecodeType = decode_type_t::UNKNOWN; // last decode_type sent
   uint16_t      iCmdInhibitTime = 0;                      // inhibit time for sending the same command again

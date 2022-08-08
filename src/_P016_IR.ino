@@ -21,6 +21,13 @@
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
 // That commands format is:
 // IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
+
+/** Changelog:
+ * 2022-08-08 tonhuisman: Optionally (compile-time) disable command handling by setting #define P016_FEATURE_COMMAND_HDNLING 0
+ *                        Make reserved buffer size for receiver configurable 100..1024 uint16_t = 200-2048 bytes
+ *                        Change UI to show buffer size in bytes instead of 'units' to avoid confusion.
+ * 2022-08-08 tonhuisman: Add Changelog, older changes not clearly registered, add newer changelog lines on the top of this list.
+ */
 # include <ArduinoJson.h>
 # include <IRremoteESP8266.h>
 # include <IRutils.h>
@@ -235,7 +242,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
         uint16_t bufsize = P016_BUFFERSIZE;
 
-        if ((bufsize < 100) || (bufsize > 1024)) { bufsize = P016_DEFAULT_BUFFERSIZE; } // safety check
+        if ((bufsize < P016_MIN_BUFFERSIZE) || (bufsize > P016_MAX_BUFFERSIZE)) { bufsize = P016_DEFAULT_BUFFERSIZE; } // safety check
 
         irReceiver = new (std::nothrow) IRrecv(irPin, bufsize, P016_TIMEOUT, true);
         # ifdef PLUGIN_016_DEBUG
@@ -312,8 +319,13 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(F("Info"));
       addHtml(F("Check serial or web log for replay solutions via Communication - IR Transmit plugin"));
 
-      addFormNumericBox(F("Receiver buffer size"), F("pbuffersize"), P016_BUFFERSIZE, 100, 1024);
-      addUnit(F("100..1024"));
+      addFormNumericBox(F("Receiver buffer size"), F("pbuffersize"), P016_BUFFERSIZE * 2, P016_MIN_BUFFERSIZE * 2, P016_MAX_BUFFERSIZE * 2);
+      String unit;
+      unit += P016_MIN_BUFFERSIZE * 2;
+      unit += F("..");
+      unit += P016_MAX_BUFFERSIZE * 2;
+      unit += F(" bytes");
+      addUnit(unit);
       addFormNote(F("Increase buffer size if IR commands are received incomplete."));
 
 
@@ -481,7 +493,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       # if P016_FEATURE_COMMAND_HANDLING
       P016_CMDINHIBIT = getFormItemInt(F("pcmdinhibit"));
       # endif // if P016_FEATURE_COMMAND_HANDLING
-      P016_BUFFERSIZE = getFormItemInt(F("pbuffersize"));
+      P016_BUFFERSIZE = ceil(getFormItemInt(F("pbuffersize")) / 2.0f); // UI shows bytes, we store buffer unit = uint16_t
 
       # if P016_FEATURE_COMMAND_HANDLING
 
