@@ -284,6 +284,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   struct EventStruct TempEvent(taskIndex);
 
   ExtraTaskSettings.clear();
+  Cache.clearTaskCaches();
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   // Save selected output type.
@@ -381,6 +382,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     String dummy;
 
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
+      SaveTaskSettings(taskIndex);
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
 

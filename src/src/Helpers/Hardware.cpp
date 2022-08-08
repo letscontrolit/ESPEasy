@@ -2000,5 +2000,4 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
   Settings.TaskDevicePin1[taskIndex] = pin1;
   Settings.TaskDevicePin2[taskIndex] = pin2;
   Settings.TaskDevicePin3[taskIndex] = pin3;
-  SaveTaskSettings(taskIndex);
 }
