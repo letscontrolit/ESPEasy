@@ -6,9 +6,12 @@
 
 # include <IRremoteESP8266.h>
 
-#include <vector>
+# include <vector>
 
-# define PLUGIN_016_DEBUG             // additional debug messages in the log
+# define PLUGIN_016_DEBUG // additional debug messages in the log
+# if defined(LIMIT_BUILD_SIZE) && defined(PLUGIN_016_DEBUG)
+#  undef PLUGIN_016_DEBUG
+# endif // if defined(LIMIT_BUILD_SIZE) && defined(PLUGIN_016_DEBUG)
 
 // bit definition in PCONFIG_LONG(0)
 # define P016_BitAddNewCode  0        // Add automatically new code into Code of the command structure
