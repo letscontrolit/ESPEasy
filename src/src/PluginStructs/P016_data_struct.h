@@ -22,6 +22,7 @@
 # define P16_Nlines   10              // The number of different lines which can be displayed - each line is 64 chars max
 # define P16_Nchars   64              // max chars per command line
 # define P16_Cchars   20              // max chars per code
+# define P016_DEFAULT_BUFFERSIZE 150  // default buffer size, range: 100..1024
 
 # define P16_SETTINGS_V1              // Settings v1 original settings when enabled, settings conversion is also enabled
 // Settings v2 includes 64 bit codes and some separated flags

@@ -235,7 +235,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
         uint16_t bufsize = P016_BUFFERSIZE;
 
-        if ((bufsize < 100) || (bufsize > 1024)) { bufsize = 100u; } // safety check
+        if ((bufsize < 100) || (bufsize > 1024)) { bufsize = P016_DEFAULT_BUFFERSIZE; } // safety check
 
         irReceiver = new (std::nothrow) IRrecv(irPin, bufsize, P016_TIMEOUT, true);
         # ifdef PLUGIN_016_DEBUG
@@ -297,6 +297,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_SET_DEFAULTS ..."));
       # endif // PLUGIN_016_DEBUG
 
+      P016_BUFFERSIZE       = P016_DEFAULT_BUFFERSIZE;
       P016_SETTINGS_VERSION = P16_SETTINGS_LATEST; // New installs don't need conversion
       break;
     }
