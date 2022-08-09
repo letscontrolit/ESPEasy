@@ -260,11 +260,11 @@ boolean Plugin_017_Init(int8_t resetPin)
   if (versiondata) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("PN532: Found chip PN5");
-      log += String((versiondata >> 24) & 0xFF, HEX);
+      log += formatToHex_no_prefix((versiondata >> 24) & 0xFF, 2);
       log += F(" FW: ");
-      log += String((versiondata >> 16) & 0xFF, HEX);
+      log += formatToHex_no_prefix((versiondata >> 16) & 0xFF, 2);
       log += '.';
-      log += String((versiondata >> 8) & 0xFF, HEX);
+      log += formatToHex_no_prefix((versiondata >> 8) & 0xFF, 2);
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
