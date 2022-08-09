@@ -461,6 +461,7 @@ void parse_string_commands(String& line) {
             && validIntFromString(arg2, endpos)) {
           replacement = arg3.substring(startpos, endpos);
         }
+      #ifndef LIMIT_BUILD_SIZE
       } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
         // time to minutes, transform a substring hh:mm to minutes
         // time to seconds, transform a substring hh:mm:ss to seconds
@@ -480,6 +481,7 @@ void parse_string_commands(String& line) {
             }
           }
         }
+      #endif // ifndef LIMIT_BUILD_SIZE
       } else if (cmd_s_lower.equals(F("strtol"))) {
         // string to long integer (from cstdlib)
         // Syntax like 1234{strtol:16:38}7890
