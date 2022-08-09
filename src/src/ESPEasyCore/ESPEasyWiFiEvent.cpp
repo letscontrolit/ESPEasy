@@ -374,7 +374,7 @@ void onWiFiScanDone(void *arg, STATUS status) {
   }
 
   WiFiMode_t mode = WiFi.getMode();
-  WiFi.mode(WIFI_OFF);
+  //WiFi.mode(WIFI_OFF);
   WiFi.mode(mode);
 }
 

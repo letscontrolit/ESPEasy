@@ -94,7 +94,7 @@ void handle_unprocessedNetworkEvents()
   }
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
-    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
+    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents() || WiFiEventData.wifiConnectAttemptNeeded) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
         if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
           WiFiEventData.last_wifi_connect_attempt_moment.clear();
@@ -231,6 +231,7 @@ void handle_unprocessedNetworkEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
+  addLog(LOG_LEVEL_INFO, F("WiFi : processDisconnect()"));
   if (WiFiEventData.processingDisconnect.isSet()) {
     if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
       WiFiEventData.processingDisconnect.clear();
@@ -265,7 +266,7 @@ void processDisconnect() {
 
 
   // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
-  bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
   }

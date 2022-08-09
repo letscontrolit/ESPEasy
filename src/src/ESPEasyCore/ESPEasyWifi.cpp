@@ -777,6 +777,11 @@ WiFiConnectionProtocol getConnectionProtocol() {
 // ********************************************************************************
 void WifiDisconnect()
 {
+  // Prevent recursion
+  static bool processingDisconnect = false;
+  if (processingDisconnect) return;
+  processingDisconnect = true;
+  addLog(LOG_LEVEL_INFO, F("WiFi : WifiDisconnect()"));
   #ifdef ESP32
   WiFi.disconnect();
   WiFi.removeEvent(wm_event_id);
@@ -790,8 +795,9 @@ void WifiDisconnect()
   #endif
   #ifdef ESP8266
   // Only call disconnect when STA is active
-  if (WifiIsSTA(WiFiMode())) {
+  if (WifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
+//    WiFi.disconnect();
   }
   station_config conf{};
   memset(&conf, 0, sizeof(conf));
@@ -805,6 +811,8 @@ void WifiDisconnect()
     RTC.clearLastWiFi();
   }
   delay(1);
+  processDisconnect();
+  processingDisconnect = false;
 }
 
 // ********************************************************************************
@@ -1056,13 +1064,21 @@ void setAPinternal(bool enable)
       addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
     }
 
-    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str())) {
+    int channel = 1;
+    if (WifiIsSTA(WiFi.getMode())) {
+      if (WiFi.isConnected())
+        channel = WiFi.channel();
+    }
+
+    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         eventQueue.add(F("WiFi#APmodeEnabled"));
         String log(F("WIFI : AP Mode ssid will be "));
         log += softAPSSID;
         log += F(" with address ");
         log += WiFi.softAPIP().toString();
+        log += F(" ch: ");
+        log += channel;
         addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
@@ -1149,6 +1165,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (wifimode == WIFI_OFF) {
     WifiDisconnect();
+    processDisconnect();
     WiFiEventData.markWiFiTurnOn();
     delay(100);
     #if defined(ESP32)
