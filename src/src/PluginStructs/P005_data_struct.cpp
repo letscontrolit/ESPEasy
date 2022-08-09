@@ -75,7 +75,7 @@ P005_data_struct::P005_data_struct(struct EventStruct *event) {
 /*********************************************************************************************\
 * DHT sub to wait until a pin is in a certain state
 \*********************************************************************************************/
-bool P005_data_struct::waitState(int state)
+bool P005_data_struct::waitState(uint32_t state)
 {
   const uint64_t   timeout          = getMicros64() + 100;
 
@@ -258,7 +258,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       log += F(" bytes:");
       for (int i = 0; i < dht_byte; ++i) {
         log += ' ';
-        log += formatToHex(dht_dat[i]);
+        log += formatToHex_no_prefix(dht_dat[i], 2);
       }
       log += F(" timings:");
       for (int i = 0; i < 16; ++i) {
