@@ -461,6 +461,25 @@ void parse_string_commands(String& line) {
             && validIntFromString(arg2, endpos)) {
           replacement = arg3.substring(startpos, endpos);
         }
+      } else if (cmd_s_lower.equals(F("timetomin")) || cmd_s_lower.equals(F("timetosec"))) {
+        // time to minutes, transform a substring hh:mm to minutes
+        // time to seconds, transform a substring hh:mm:ss to seconds
+        // syntax similar to substring
+        int startpos, endpos = -1;
+        struct tm tm;
+
+        if (validIntFromString(arg1, startpos)
+            && validIntFromString(arg2, endpos)) {
+          if (cmd_s_lower.equals(F("timetosec"))) {
+            if (strptime(arg3.substring(startpos, endpos).c_str(), "%H:%M:%S", &tm) != NULL) {
+              replacement = tm.tm_hour * 3600 + tm.tm_min * 60 + tm.tm_sec;
+            }
+          } else { // timetomin
+            if (strptime(arg3.substring(startpos, endpos).c_str(), "%H:%M", &tm) != NULL) {
+              replacement = tm.tm_hour * 60 + tm.tm_min;
+            }
+          }
+        }
       } else if (cmd_s_lower.equals(F("strtol"))) {
         // string to long integer (from cstdlib)
         // Syntax like 1234{strtol:16:38}7890

@@ -121,7 +121,7 @@ String minutesToDayHourMinute(int minutes) {
 String minutesToHourColonMinute(int minutes) {
   int  hours = (minutes % 1440) / 60;
   int  mins  = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
+  char TimeString[8] = {0};
 
   sprintf_P(TimeString, PSTR("%02d%c%02d"), hours, ':', mins);
   return TimeString;
