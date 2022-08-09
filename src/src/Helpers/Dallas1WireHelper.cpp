@@ -203,6 +203,12 @@ void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
   addRowLabel(F("Samples Read Success"));
   addHtmlInt(sensor_data.read_success);
 
+  addRowLabel(F("Samples Read Init Failed"));
+  addHtmlInt(sensor_data.start_read_failed);
+
+  addRowLabel(F("Samples Read Retry"));
+  addHtmlInt(sensor_data.read_retry);
+
   addRowLabel(F("Samples Read Failed"));
   addHtmlInt(sensor_data.read_failed);
 }
@@ -605,13 +611,13 @@ bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx,
       return true;
     }
 
-    Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx);
+    if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) return false;
     Dallas_write(0x4E,          gpio_pin_rx, gpio_pin_tx); // Write to EEPROM
     Dallas_write(ScratchPad[2], gpio_pin_rx, gpio_pin_tx); // high alarm temp
     Dallas_write(ScratchPad[3], gpio_pin_rx, gpio_pin_tx); // low alarm temp
     Dallas_write(ScratchPad[4], gpio_pin_rx, gpio_pin_tx); // configuration register
 
-    Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx);
+    if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) return false;
 
     // save the newly written values to eeprom
     Dallas_write(0x48, gpio_pin_rx, gpio_pin_tx);
@@ -1126,9 +1132,12 @@ bool Dallas_SensorData::initiate_read(int8_t gpio_rx, int8_t gpio_tx, int8_t res
   }
 
   if (!Dallas_address_ROM(tmpaddr, gpio_rx, gpio_tx)) {
-    ++read_failed;
-    lastReadError = true;
-    return false;
+    ++start_read_retry;
+    if (!Dallas_address_ROM(tmpaddr, gpio_rx, gpio_tx)) {
+      ++start_read_failed;
+      lastReadError = true;
+      return false;
+    }
   }
   Dallas_write(0x44, gpio_rx, gpio_tx); // Take temperature measurement
   return true;
@@ -1139,20 +1148,25 @@ bool Dallas_SensorData::collect_value(int8_t gpio_rx, int8_t gpio_tx) {
     uint8_t tmpaddr[8];
     Dallas_uint64_to_addr(addr, tmpaddr);
 
-    if (Dallas_readTemp(tmpaddr, &value, gpio_rx, gpio_tx)) {
-      ++read_success;
-      lastReadError = false;
-      valueRead     = true;
-      return true;
+    if (!Dallas_readTemp(tmpaddr, &value, gpio_rx, gpio_tx)) {
+      ++read_retry;
+      if (!Dallas_readTemp(tmpaddr, &value, gpio_rx, gpio_tx)) {
+        ++read_failed;
+        lastReadError = true;
+        return false;
+      }
     }
-    ++read_failed;
-    lastReadError = true;
+
+    ++read_success;
+    lastReadError = false;
+    valueRead     = true;
+    return true;
   }
   return false;
 }
 
 String Dallas_SensorData::get_formatted_address() const {
-  if (addr == 0) { return ""; }
+  if (addr == 0) { return EMPTY_STRING; }
 
   uint8_t tmpaddr[8];
 

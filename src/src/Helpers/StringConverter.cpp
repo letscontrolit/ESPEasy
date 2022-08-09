@@ -166,17 +166,34 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-String formatToHex(unsigned long value, const __FlashStringHelper * prefix) {
+String formatToHex(unsigned long value, 
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits) {
   String result = prefix;
   String hex(value, HEX);
 
   hex.toUpperCase();
+  if (hex.length() < minimal_hex_digits) {
+    const size_t leading_zeros = minimal_hex_digits - hex.length();
+    for (size_t i = 0; i < leading_zeros; ++i) {
+      result += '0';
+    }
+  }
   result += hex;
   return result;
 }
 
-String formatToHex(unsigned long value) {
-  return formatToHex(value, F("0x"));
+String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix) {
+  return formatToHex(value, prefix, 0);
+}
+
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F("0x"), minimal_hex_digits);
+}
+
+String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F(""), minimal_hex_digits);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -1092,7 +1109,7 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, F("")))
+  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
   #undef SMART_CONV
 
   // Conversions with 2 parameters
