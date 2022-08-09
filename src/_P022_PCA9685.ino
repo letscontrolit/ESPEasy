@@ -216,8 +216,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         success = true;
 
         // "log" is also sent along with the SendStatusOnlyIfNeeded
-        log  = F("PCA 0x");
-        log += String(address, HEX);
+        log  = formatToHex(address, F("PCA 0x"), 2);
         log += F(": PWM ");
         log += event->Par1;
         const uint32_t dutyCycle       = event->Par2;
@@ -322,8 +321,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par1;
           savePortStatus(key, newStatus);
 
-          log  = F("PCA 0x");
-          log += String(address, HEX);
+          log  = formatToHex(address, F("PCA 0x"), 2);
           log += F(": FREQ ");
           log += event->Par1;
           addLog(LOG_LEVEL_INFO, log);
@@ -333,8 +331,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
         else {
           addLog(LOG_LEVEL_ERROR,
-                 String(F("PCA 0x")) +
-                 String(address, HEX) + F(" The frequency ") + String(event->Par1) + F(" is out of range."));
+                 String(F("PCA ")) +
+                 formatToHex(address, 2) + F(" The frequency ") + String(event->Par1) + F(" is out of range."));
         }
       }
 
@@ -350,16 +348,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-          log  = F("PCA 0x");
-          log += String(address, HEX);
-          log += F(": MODE2 0x");
-          log += String(event->Par1, HEX);
+          log  = formatToHex(address, F("PCA 0x"), 2);
+          log += ':';
+          log += formatToHex(event->Par1, F(" MODE2 0x"), 2);
           addLog(LOG_LEVEL_INFO, log);
         }
         else {
-          addLog(LOG_LEVEL_ERROR,
-                 String(F("PCA 0x")) +
-                 String(address, HEX) + F(" MODE2 0x") + String(event->Par1, HEX) + F(" is out of range."));
+          addLog(LOG_LEVEL_ERROR, 
+                 formatToHex(address, F("PCA 0x"), 2) + 
+                 formatToHex(event->Par1, F(" MODE2 0x"), 2) + F(" is out of range."));
         }
       }
 
@@ -384,8 +381,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       if (instanceCommand && (command == F("gpio")))
       {
         success = true;
-        log     = F("PCA 0x");
-        log    += String(address, HEX);
+        log     = formatToHex(address, F("PCA 0x"), 2);
         log    += F(": GPIO ");
         const bool allPins = parseString(string, 2) == F("all");
 
@@ -444,8 +440,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       if (instanceCommand && (command == F("pulse")))
       {
         success = true;
-        log     = F("PCA 0x");
-        log    += String(address, HEX);
+        log     = formatToHex(address, F("PCA 0x"), 2);
         log    += F(": GPIO ");
         log    += event->Par1;
 
@@ -527,8 +522,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P022_data) {
-        String log = F("PCA 0x");
-        log += String(address, HEX);
+        String log = formatToHex(address, F("PCA 0x"), 2);
         log += F(": GPIO ");
         log += event->Par1;
         int autoreset = event->Par4;

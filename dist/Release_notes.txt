@@ -1,4 +1,264 @@
 -------------------------------------------------
+Changes in release mega-20220809 (since mega-20220616)
+-------------------------------------------------
+
+Release date: di  9 aug 2022  8:58:50 CEST
+
+DMoosh (1):
+      Update README.md
+
+Florin (1):
+      Notification Page to Display GPIO pins when in use.
+
+TD-er (145):
+      [ESP8285] Remove ESP8285 specific builds, detect at runtime (#3848)
+      [Provisioning] Add command to download firmware OTA
+      [Provisioning] Fix missing includes
+      [Build] Fix missing line in .ini file due to merge issues
+      [PlatformIO] Update to PIO 6.0.1
+      [PlatformIO] Clean requirements.txt files to only the essentials
+      [Provisioning] Fix missing include
+      [P002 ADC] Move PluginTaskData to separate file
+      [ADC] Add binning and multi-point processing of values
+      [ADC] Improve binning stability
+      [ADC] Speed up formula parsing
+      [ADC] Add caching for binning range
+      [ADC] Add fields to load/save multipoint values.
+      [ADC] Add option to paste many variables at once
+      [Cleanup] Small optimizations to reduce bin size
+      [Cleanup] Reduce loading controller settings when not ready to process
+      [Cleanup] Add function addFormSelector_YesNo to remove code duplication
+      [Cleanup] Reduce build size by combining controller queue types
+      [Controller Queue] Add missing includes
+      [PVS Studio] Fix some hints provided by PVS Studio
+      [P073, PVS Studio] Fix bug in font handling for Siekoo display
+      [ADC] Fix compiler warnings + remove binning for LIMIT_BUILD_SIZE builds
+      [Firmware Download] Fix downloading with no content length set
+      [Download] Fix warning signed/unsigned
+      [BME280] Allow to take samples using taskRun (#3879)
+      [BME280] Clean-up code
+      [BME280] Proper handling error states, send error event.
+      [BME280] Make TaskError event more useful by adding error string
+      [BME280] Update comment to reflect actual behaviour
+      [Cleanup] Reduce build size web form functions
+      [Cleanup] Reduce bin size deduplicate webform switch plugins (001/009/019)
+      [Cleanup] Uncrustify
+      [Cleanup] Minor optimizations to reduce build size
+      [Static Files] Fix option to local store dev page JS file (#4102)
+      [Build] Show proper ESP board name on ESP8266 sysinfo
+      [Build] Do not use commas in ESP board name
+      [PIO] Update to esp8266/Arduino @ 4.0.1
+      [Rules] Disable rules reorder optimization (#4062)
+      [MCP/PCF] Small optimization in code to set MCP/PCF pin range
+      [2nd Heap] No longer use "2nd heap" on all "beta" builds (unstable)
+      [Build] Disable ESP8266 custom beta debug build due to size
+      [Cleanup] Apply minor suggestions from PVS Studio
+      [PlatformIO] Fix upload size for 16M boards, causing bootloops
+      [ADC] Add support for ESP32 ADC factory calibration
+      [PlatformIO] Fix boot loop issues on 16M ESP32 boards
+      [ADC] Fix building on ESP32-S2
+      [Cleanup] Uncrustify Helpers/Hardware.cpp
+      [ADC] Fix build on ESP8266
+      [ADC] Fix crash when importing older ADC task settings enabling binning
+      [ADC] Add charts to show the factory calibration
+      [ADC] Hide Factory calibration data + fix build on ESP8266
+      [ADC] Add chart axis options (e.g. label)
+      [ADC] Add chart to show simulated ADC to output
+      [ADC] Add attenuation option for ESP32
+      [Cleanup] Remove some unneeded HTML code
+      [ADC] Fix building on builds with LIMIT_BUILD_SIZE
+      [ADC] Add pseudo task values via PLUGIN_GET_CONFIG
+      [ADC] Fix reading + cleanup UI
+      [ADC] Add PluginStats to keep history of values
+      [ADC] Fix build issue on LIMIT_BUILD_SIZE
+      [PluginStats] Add generic statistics for tasks
+      [Plugin Stats] Add option for average over last N samples.
+      [Plugin Stats] Use task specific error value
+      [Plugin Stats] Make Plugin Stats optional per task value
+      [Plugin Stats] Add version transitions to ExtraTaskSettings
+      [Plugin Stats] Enable Plugin Stats for all plugins with task data
+      [Plugin Stats] Show statistics + historic samples on all supported tasks
+      [Plugin Stats] Add missing plugins to use the plugin stats too
+      [PluginStats] Add build flags USES_PLUGIN_STATS and USES_CHART_JS
+      [PluginStats] Exclude PluginStats and ChartJS from NeopixelESP8266 build
+      [ADC] Change order of items shown in statistics
+      [ADC] Use set nr of decimals for stats
+      [Cleanup] Move PluginTaskData_base structs to Pxxx_data_struct.h/.cpp
+      [SVG] Revert changes to draw SVG since we're now using ChartJS
+      [ADC] Add computed output values for peaks + fix typo
+      [ADC] Document new options
+      [Plugin Stats] Add stats to plugins to support stats.
+      [Docs] Document accessing Plugin Stats
+      [Docs] Document typical task setup page and task value stats
+      [Plugin Stats] Enable Stats for Sysinfo tasks
+      [Plugin Stats] Reduce memory usage when no stats are used.
+      [Build] Do not limit build size for custom builds with VCC. (#4129)
+      [Plugin Stats] Make labels more clear.
+      [Plugin Stats] Fix strange issues PLUGIN_INIT
+      [Plugin Stats] Fix editing disabled tasks
+      [Plugin Stats] Fix memory leak / low loop count
+      [ESP32] Add cache for ExtraTaskSettings due to load speed on ESP32
+      [Build] Add apt-get update to build.yml
+      [Rules] Fix matching rules with system variables in on...do
+      [SendToHttp] Add option to add credentials in the URL
+      [Rules] Strip leading zeroes (#4134)
+      [Rules] Move logs regarding rules caching to debug
+      [Build] Disable ESPEasy p2p for minimal OTA builds
+      [sendToHTTP] Use same send_via_http as used in Adv. HTTP controller
+      [Cleanup] Reduce build size ESPEasySerial inline functions to .cpp
+      [ESP32] Move to Espressif32 SDK 2.0.4
+      [ESPEasySerial] Fix case sensitive include
+      [ESPEasySerial] Fix incorrect use of `static` for ESP8266
+      [SendToHTTP] Add Digest Auth
+      [SendToHttp] Clear Basic Auth before using Digest Auth
+      [HTTP] Use the same function for all HTTP controllers + fix timeout
+      [SendToHttp] Generate event with HTTP return code
+      [Web tools] Fix command via Tools page lower case
+      [ESP8285] Clearly state absence of separate ESP8285 builds in README.md
+      [Download] Update using new HTTP Digest Auth implementation
+      [Download] Fix missing include
+      [SendToHTTP] Allow to use http:// formatted URL
+      [HTTP] Document changes to handling HTTP calls + add follow redirects
+      [ADC] Improve factory calibration resolution (ESP32)
+      [ADC] Fix Binning
+      [ADC] Make multipoint charts more intuitive.
+      [ADC] Improve settings UI for Binning + adjust 2-point calibration
+      [ADC] Update docs
+      [ADC] Update documentation
+      [Build] Fix missing #include "ESPEasy_common.h"
+      [Build] Remove Notification code when notifiers disabled
+      [Build] Move some USES_xxx checks and add missing ESPEasy_common.h
+      [Dallas] Fix Dallas 1Wire plugins on ESP32
+      [Dallas] Reduce iRAM usage on ESP8266
+      [NewPing] Rename library from NewPingESP8266 to NewPing
+      [NewPing] Update Library to 1.9.4
+      [NewPing] Re-apply ESPEasy specific additions to NewPing library
+      [NewPing] Use Direct GPIO access to reduce jitter on ultrasonic sensors
+      [DHT] Use Direct GPIO access for DHTxx sensors
+      [DHT] Remove timing critical aspects from reading DHT sensors
+      [DHT] Remove short calls to delayMicroseconds
+      [DHT] Add delay right after waking sensor
+      [DHT] Add missing initialization
+      [DHT] Fix using correct index when recording timings + comments update
+      [DHT] Fix GPIO not yet set to input when DHT wake up.
+      [DHT] Fix switching pinMode(INPUT_PULLUP) way too slow
+      [Direct GPIO] Reduce iRAM usage
+      [DHT] Set the GPIO pull-up resistor explicitly
+      [DHT] Forgot to disable logic analyzer debug pin
+      Revert accidental commit of pre_custom_esp82xx.py
+      [Dallas] Fine tune timings for Dallas sensors
+      [Direct GPIO] Fix using GPIO-16 on ESP8266 (#4175)
+      [Dallas] Add retry to init read or collect data from temp sensor
+      Allow to use leading zeroes on HEX formatted strings
+      [ESP32] Move to framework core 2.0.4.1
+      [PulseCounter] Make ISR function smaller
+      [PulseCounter] Use direct GPIO access to read pin state
+      [PulseCount] Enable PluginStats for pulse counter
+      [Cleanup] Fix some signed/unsigned warnings
+      [Task Settings Cache] Fix save taskValueNames on ESP32
+
+Ton (1):
+      libraries/ITG3205: Missing 'paragraph' from library\nITG3205: Missing 'url' from library
+
+Ton Huisman (72):
+      [Docs] Add missing Tools/Advanced (Rules) screenshot
+      [Docs] Update extensions list for VSCode, remove Atom reference, update some text
+      [Docs] Fix some heading level warnings
+      [Docs] Update styling contrast, add gray and changed options, Retired plugin category, apply changed where appropriate
+      [Docs] Add improved reference to open PIO Terminal
+      [Docs] Updates on writing documentation, remove unused Linux pdf generation setup
+      [P128] Add Max brightness setting
+      [P128] Update documentation
+      [P128] Improvements: Rename variable
+      [Docs] Procedure for configuring a RTC chip
+      [Docs] Add alternatives for RTC configuration, update Rules options after recent change
+      [P116] Add support for ST7735 80x160px with inverted color
+      [P087] Add 'Serial Config' options
+      [P087] Lower minimum baudrate to 300 from 2400
+      [Helpers] enable parseString() family of functions optionally to not trim off white-space
+      [P087] Don't trim white-space from serialproxy_write command argument so f.e. CR/LF can be used to terminate a message
+      [TaskCache] Fix for TaskName not always loaded in cache
+      [TaskCache] Simplify code
+      [P128] [Build] Make FakeTV effect compile-time optional
+      [P128] Update documentation
+      [P128] Fix compiler warning
+      [P128] Fix typo (it's been a hot day)
+      [Build] Rename TEST builds to COLLECTION to reduce confusion about build-names
+      [Build] Remove TESTING tag from Stable plugins
+      [Build] Remove TESTING tag from Stable plugins, fix some plugin names
+      [Build] Update documentation to use COLLECTION instead of TESTING
+      [Build] Some documentation improvements
+      [Build] Update README.md and fix a documentation typo
+      [Build] Change FEATURE_SD to use 0/1 state
+      [Build] Change FEATURE_ARDUINO_OTA to use 0/1 state
+      [Build] Rename USE_DOWNLOAD to FEATURE_DOWNLOAD and use 0/1 state
+      [Build] Rename USE_CUSTOM_PROVISIONING to FEATURE_CUSTOM_PROVISIONING and use 0/1 state
+      [Build] Rename USE_SETTINGS_ARCHIVE to FEATURE_SETTINGS_ARCHIVE and use 0/1 state
+      [Build] Rename USE_TRIGONOMETRIC_FUNCTIONS_RULES to FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES and use 0/1 state
+      [Build] Change FEATURE_I2CMULTIPLEXER to use 0/1 state
+      [Build] Rename USES_SSDP to FEATURE_SSDP and use 0/1 state
+      [Build] Rename USES_TIMING_STATS to FEATURE_TIMING_STATS and use 0/1 state
+      [Build] Rename USE_EXT_RTC to FEATURE_EXT_RTC and use 0/1 state
+      [Build] Rename ENABLE_TOOLTIPS to FEATURE_TOOLTIPS and use 0/1 state
+      [Build] Fix typo in FEATURE_I2CMULTIPLEXER check
+      [Sysinfo json] Fix compilation error
+      [Build] Add check for renamed #define variables
+      [Build] Rename HAS_ETHERNET to FEATURE_ETHERNET and use 0/1 state
+      [Build] Move checks file to CustomBuild folder, move include to ESPEasy.ino to show warnings only once
+      [Build] Rename USES_DOMOTICZ to FEATURE_DOMOTICZ and use 0/1 state
+      [Build] Rename USES_FHEM to FEATURE_FHEM and use 0/1 state
+      [Build] Rename USES_FHEM to FEATURE_FHEM and use 0/1 state
+      [Build] Rename USES_HOMEASSISTANT_OPENHAB to FEATURE_HOMEASSISTANT_OPENHAB and use 0/1 state
+      [Build] Rename USES_PLUGIN_STATS to FEATURE_PLUGIN_STATS and use 0/1 state
+      [Build] Rename USES_CHART_JS to FEATURE_CHART_JS and use 0/1 state
+      [Build] Rename USE_SERVO to FEATURE_SERVO and use 0/1 state
+      [Build] Rename USE_SERVO to FEATURE_SERVO and use 0/1 state
+      [Build] Rename USE_RTTTL to FEATURE_RTTTL and use 0/1 state
+      [Build] Rename USE_RTTTL to FEATURE_RTTTL and use 0/1 state
+      [Build] Rename USE_I2C_DEVICE_SCAN to FEATURE_I2C_DEVICE_SCAN and use 0/1 state
+      [Build] Move checks file to CustomBuild folder, warnings will probably show multiple times
+      [Build] Remove unused #define
+      [Build] Change FEATURE_MDNS to use 0/1 state
+      [Build] Add some missing #define featureflag 0
+      [Build] Rename USES_NOTIFIER to FEATURE_NOTIFIER and use 0/1 state
+      [Build] Add check for FEATURE_MDNS and USES_NOTIFIER
+      [Build] Rename USES_MODBUS to FEATURE_MODBUS and use 0/1 state
+      [Build] Rename USE_NON_STANDARD_24_TASKS to FEATURE_NON_STANDARD_24_TASKS and use 0/1 state
+      [Build] Rename USES_PACKED_RAW_DATA to FEATURE_PACKED_RAW_DATA and use 0/1 state
+      [Build] Rename USES_BLYNK to FEATURE_BLYNK and use 0/1 state
+      [Build] Fix typo in USES_BLYNK to FEATURE_BLYNK
+      [Build] Change FEATURE_ADC_VCC to use 1/0 instead of true/false, fix issues with test for FEATURE_ADC_VCC active
+      [P037] Fix build errors on more/less limited builds, apply uncrustify improvements
+      [P037] Fix typo
+      [Build] Change FEATURE_REPORTING to use 1/0
+      [Build] Change FEATURE_DNS_SERVER to use 1/0 state
+      [Build] Correct a few FEATURE_flag checks
+
+dependabot[bot] (6):
+      Bump actions/github-script from 4 to 6
+      Bump actions/setup-python from 2 to 4
+      Bump actions/upload-artifact from 2 to 3
+      Bump actions/cache from 2 to 3
+      Bump actions/download-artifact from 2 to 3
+      Bump actions/checkout from 2 to 3
+
+fmuntean (9):
+      Allow sysinfo_json page to be enabled separately from the new Web UI
+      add support for: DEFAULT_MQTT_DELETE_OLDEST, DEFAULT_CONTROLLER_MUST_CHECK_REPLY flags
+      renamed DEFAULT_MQTT_DELETE_OLDEST to DEFAULT_CONTROLLER_DELETE_OLDEST
+      used addGpioHtml
+      Feature Flagging FEATURE_ESPEASY_P2P the ESP EASY P2P custom protocol
+      [Fix] rename to FEATURE_ESPEASY_P2P
+      enabled when PLUGIN_BUILD_CUSTOM  is not set
+      [FEATURE_ESPEASY_P2P] enable it by default if not defined
+      [Fix] Notification Page to display GPIO
+
+naveen (2):
+      chore: Set permissions for GitHub actions
+      chore: Included githubactions in the dependabot config
+
+
+-------------------------------------------------
 Changes in release mega-20220616 (since mega-20220427)
 -------------------------------------------------
 
