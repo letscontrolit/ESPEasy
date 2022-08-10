@@ -5,39 +5,45 @@
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
-P118_data_struct::P118_data_struct(uint8_t logData)
-  : PLUGIN_118_Log(logData) {}
+P118_data_struct::P118_data_struct(int8_t csPin,
+                                   int8_t irqPin,
+                                   bool   logData,
+                                   bool   rfLog)
+  : _csPin(csPin), _irqPin(irqPin), _log(logData), _rfLog(rfLog) {}
 
 // **************************************************************************/
 // Destructor
 // **************************************************************************/
 P118_data_struct::~P118_data_struct() {
-  delete PLUGIN_118_rf;
-  PLUGIN_118_rf = nullptr;
+  delete _rf;
+  _rf = nullptr;
 }
 
 bool P118_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
-  LoadCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
+  LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&_ExtraSettings, sizeof(_ExtraSettings));
   # ifdef P118_DEBUG_LOG
-  addLog(LOG_LEVEL_INFO, F("Extra Settings PLUGIN_118 loaded"));
+  addLog(LOG_LEVEL_INFO, F("ITHO: Extra Settings PLUGIN_118 loaded"));
   # endif // ifdef P118_DEBUG_LOG
 
-  PLUGIN_118_rf = new (std::nothrow) IthoCC1101(PIN(1));
+  _rf = new (std::nothrow) IthoCC1101(_csPin);
 
-  if (nullptr != PLUGIN_118_rf) {
+  if (nullptr != _rf) {
     // DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
-    PLUGIN_118_rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
-    PLUGIN_118_rf->init();
+    _rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
+    _rf->init();
 
-    attachInterruptArg(digitalPinToInterrupt(Plugin_118_IRQ_pin),
-                       reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
-                       this,
-                       FALLING);
-
-    PLUGIN_118_rf->initReceive();
-    PLUGIN_118_InitRunned = true;
+    if (validGpio(_irqPin)) {
+      attachInterruptArg(digitalPinToInterrupt(_irqPin),
+                         reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
+                         this,
+                         FALLING);
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("ITHO: Interrupt pin disabled, sending is OK, not receiving data!"));
+    }
+    _rf->initReceive();
+    _InitRunned = true;
 
     success = true;
   }
@@ -46,46 +52,48 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
 
 bool P118_data_struct::plugin_exit(struct EventStruct *event) {
   // remove interupt when plugin is removed
-  detachInterrupt(digitalPinToInterrupt(Plugin_118_IRQ_pin));
+  if (validGpio(_irqPin)) {
+    detachInterrupt(digitalPinToInterrupt(_irqPin));
+  }
 
   return true;
 }
 
 bool P118_data_struct::plugin_once_a_second(struct EventStruct *event) {
   // decrement timer when timermode is running
-  if (PLUGIN_118_State >= 10) { PLUGIN_118_Timer--; }
+  if (_State >= 10) { _Timer--; }
 
   // if timer has elapsed set Fan state to low
-  if ((PLUGIN_118_State >= 10) && (PLUGIN_118_Timer <= 0))
+  if ((_State >= 10) && (_Timer <= 0))
   {
-    PLUGIN_118_State = 1;
-    PLUGIN_118_Timer = 0;
+    _State = 1;
+    _Timer = 0;
   }
 
   // Publish new data when vars are changed or init has runned or timer is running (update every 2 sec)
-  if  ((PLUGIN_118_OldState != PLUGIN_118_State) || ((PLUGIN_118_Timer > 0) && (PLUGIN_118_Timer % 2 == 0)) ||
-       (PLUGIN_118_OldLastIDindex != PLUGIN_118_LastIDindex) || PLUGIN_118_InitRunned)
+  if  ((_OldState != _State) || ((_Timer > 0) && (_Timer % 2 == 0)) ||
+       (_OldLastIDindex != _LastIDindex) || _InitRunned)
   {
     # ifdef P118_DEBUG_LOG
-    addLog(LOG_LEVEL_DEBUG, F("UPDATE by PLUGIN_ONCE_A_SECOND"));
+    addLog(LOG_LEVEL_DEBUG, F("ITHO: UPDATE by PLUGIN_ONCE_A_SECOND"));
     # endif // ifdef P118_DEBUG_LOG
     PublishData(event);
     sendData(event);
 
     // reset flag set by init
-    PLUGIN_118_InitRunned = false;
+    _InitRunned = false;
   }
 
   // Remeber current state for next cycle
-  PLUGIN_118_OldState       = PLUGIN_118_State;
-  PLUGIN_118_OldLastIDindex = PLUGIN_118_LastIDindex;
+  _OldState       = _State;
+  _OldLastIDindex = _LastIDindex;
   return true;
 }
 
 bool P118_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
-  if (PLUGIN_118_Int) {
+  if (_Int) {
     ITHOcheck();
-    PLUGIN_118_Int = false; // reset flag
+    _Int = false; // reset flag
   }
 
   return true;
@@ -94,7 +102,7 @@ bool P118_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 bool P118_data_struct::plugin_read(struct EventStruct *event) {
   // This ensures that even when Values are not changing, data is send at the configured interval for aquisition
   # ifdef P118_DEBUG_LOG
-  addLog(LOG_LEVEL_DEBUG, F("UPDATE by PLUGIN_READ"));
+  addLog(LOG_LEVEL_DEBUG, F("ITHO: UPDATE by PLUGIN_READ"));
   # endif // ifdef P118_DEBUG_LOG
   PublishData(event);
 
@@ -105,116 +113,109 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if (cmd.equals(F("state")))
-  {
+  if (cmd.equals(F("state"))) {
+    success = true;
+
     switch (event->Par1) {
       case 1111: // Join command
       {
-        PLUGIN_118_rf->sendCommand(IthoJoin);
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoJoin);
+        _rf->initReceive();
         PluginWriteLog(F("join"));
-        success = true;
         break;
       }
       case 9999: // Leave command
       {
-        PLUGIN_118_rf->sendCommand(IthoLeave);
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoLeave);
+        _rf->initReceive();
         PluginWriteLog(F("leave"));
-        success = true;
         break;
       }
       case 0: // Off command
       {
-        PLUGIN_118_rf->sendCommand(IthoStandby);
-        PLUGIN_118_State       = 0;
-        PLUGIN_118_Timer       = 0;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoStandby);
+        _State       = 0;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("standby"));
-        success = true;
         break;
       }
       case 1: // Fan low
       {
-        PLUGIN_118_rf->sendCommand(IthoLow);
-        PLUGIN_118_State       = 1;
-        PLUGIN_118_Timer       = 0;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoLow);
+        _State       = 1;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("low speed"));
-        success = true;
         break;
       }
       case 2: // Fan medium
       {
-        PLUGIN_118_rf->sendCommand(IthoMedium);
-        PLUGIN_118_State       = 2;
-        PLUGIN_118_Timer       = 0;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoMedium);
+        _State       = 2;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("medium speed"));
-        success = true;
         break;
       }
       case 3: // Fan high
       {
-        PLUGIN_118_rf->sendCommand(IthoHigh);
-        PLUGIN_118_State       = 3;
-        PLUGIN_118_Timer       = 0;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoHigh);
+        _State       = 3;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("high speed"));
-        success = true;
         break;
       }
       case 4: // Fan full
       {
-        PLUGIN_118_rf->sendCommand(IthoFull);
-        PLUGIN_118_State       = 4;
-        PLUGIN_118_Timer       = 0;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoFull);
+        _State       = 4;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("full speed"));
-        success = true;
         break;
       }
       case 13: // Timer1 - 10 min
       {
-        PLUGIN_118_rf->sendCommand(IthoTimer1);
-        PLUGIN_118_State       = 13;
-        PLUGIN_118_Timer       = PLUGIN_118_Time1;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoTimer1);
+        _State       = 13;
+        _Timer       = PLUGIN_118_Time1;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("timer 1"));
-        success = true;
         break;
       }
       case 23: // Timer2 - 20 min
       {
-        PLUGIN_118_rf->sendCommand(IthoTimer2);
-        PLUGIN_118_State       = 23;
-        PLUGIN_118_Timer       = PLUGIN_118_Time2;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoTimer2);
+        _State       = 23;
+        _Timer       = PLUGIN_118_Time2;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("timer 2"));
-        success = true;
         break;
       }
       case 33: // Timer3 - 30 min
       {
-        PLUGIN_118_rf->sendCommand(IthoTimer3);
-        PLUGIN_118_State       = 33;
-        PLUGIN_118_Timer       = PLUGIN_118_Time3;
-        PLUGIN_118_LastIDindex = 0;
-        PLUGIN_118_rf->initReceive();
+        _rf->sendCommand(IthoTimer3);
+        _State       = 33;
+        _Timer       = PLUGIN_118_Time3;
+        _LastIDindex = 0;
+        _rf->initReceive();
         PluginWriteLog(F("timer 3"));
-        success = true;
         break;
       }
       default:
       {
         PluginWriteLog(F("INVALID"));
+        success = true;
+        break;
       }
     }
   }
@@ -222,132 +223,138 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
 }
 
 void P118_data_struct::ITHOcheck() {
-  if (PLUGIN_118_Log) {
-    addLog(LOG_LEVEL_DEBUG, "RF signal received"); // All logs statements contain if-statement to disable logging to
-  }                                                // reduce log clutter when many RF sources are present
+  bool _dbgLog = _log && loglevelActiveFor(LOG_LEVEL_DEBUG);
 
-  if (PLUGIN_118_rf->checkForNewPacket()) {
-    IthoCommand cmd = PLUGIN_118_rf->getLastCommand();
-    String Id       = PLUGIN_118_rf->getLastIDstr();
+  if (_dbgLog) {
+    addLog(LOG_LEVEL_DEBUG, "ITHO: RF signal received"); // All logs statements contain if-statement to disable logging to
+  }                                                      // reduce log clutter when many RF sources are present
+
+  if (_rf->checkForNewPacket()) {
+    IthoCommand cmd = _rf->getLastCommand();
+    String Id       = _rf->getLastIDstr();
+
+    if (_rfLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log = F("ITHO: Received ID: ");
+      log += Id;
+      log += F("; raw cmd: ");
+      log += cmd;
+      addLog(LOG_LEVEL_INFO, log);
+    }
 
     // Move check here to prevent function calling within ISR
     byte index = 0;
 
-    if (Id == PLUGIN_118_ExtraSettings.ID1) {
+    if (Id == _ExtraSettings.ID1) {
       index = 1;
     }
-    else if (Id == PLUGIN_118_ExtraSettings.ID2) {
+    else if (Id == _ExtraSettings.ID2) {
       index = 2;
     }
-    else if (Id == PLUGIN_118_ExtraSettings.ID3) {
+    else if (Id == _ExtraSettings.ID3) {
       index = 3;
     }
 
-    // int index = PLUGIN_118_RFRemoteIndex(Id);
-    // IF id is know index should be >0
     String log;
 
     if (index > 0) {
-      if (PLUGIN_118_Log) {
+      if (_dbgLog) {
         log += F("Command received from remote-ID: ");
         log += Id;
         log += F(", command: ");
-
-        // addLog(LOG_LEVEL_DEBUG, log);
       }
 
       switch (cmd) {
         case IthoUnknown:
 
-          if (PLUGIN_118_Log) { log += F("unknown"); }
+          if (_dbgLog) { log += F("unknown"); }
           break;
         case IthoStandby:
         case DucoStandby:
 
-          if (PLUGIN_118_Log) { log += F("standby"); }
-          PLUGIN_118_State       = 0;
-          PLUGIN_118_Timer       = 0;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("standby"); }
+          _State       = 0;
+          _Timer       = 0;
+          _LastIDindex = index;
           break;
         case IthoLow:
         case DucoLow:
 
-          if (PLUGIN_118_Log) { log += F("low"); }
-          PLUGIN_118_State       = 1;
-          PLUGIN_118_Timer       = 0;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("low"); }
+          _State       = 1;
+          _Timer       = 0;
+          _LastIDindex = index;
           break;
         case IthoMedium:
         case DucoMedium:
 
-          if (PLUGIN_118_Log) { log += F("medium"); }
-          PLUGIN_118_State       = 2;
-          PLUGIN_118_Timer       = 0;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("medium"); }
+          _State       = 2;
+          _Timer       = 0;
+          _LastIDindex = index;
           break;
         case IthoHigh:
         case DucoHigh:
 
-          if (PLUGIN_118_Log) { log += F("high"); }
-          PLUGIN_118_State       = 3;
-          PLUGIN_118_Timer       = 0;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("high"); }
+          _State       = 3;
+          _Timer       = 0;
+          _LastIDindex = index;
           break;
         case IthoFull:
 
-          if (PLUGIN_118_Log) { log += F("full"); }
-          PLUGIN_118_State       = 4;
-          PLUGIN_118_Timer       = 0;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("full"); }
+          _State       = 4;
+          _Timer       = 0;
+          _LastIDindex = index;
           break;
         case IthoTimer1:
 
-          if (PLUGIN_118_Log) { log += +F("timer1"); }
-          PLUGIN_118_State       = 13;
-          PLUGIN_118_Timer       = PLUGIN_118_Time1;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += +F("timer1"); }
+          _State       = 13;
+          _Timer       = PLUGIN_118_Time1;
+          _LastIDindex = index;
           break;
         case IthoTimer2:
 
-          if (PLUGIN_118_Log) { log += F("timer2"); }
-          PLUGIN_118_State       = 23;
-          PLUGIN_118_Timer       = PLUGIN_118_Time2;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("timer2"); }
+          _State       = 23;
+          _Timer       = PLUGIN_118_Time2;
+          _LastIDindex = index;
           break;
         case IthoTimer3:
 
-          if (PLUGIN_118_Log) { log += F("timer3"); }
-          PLUGIN_118_State       = 33;
-          PLUGIN_118_Timer       = PLUGIN_118_Time3;
-          PLUGIN_118_LastIDindex = index;
+          if (_dbgLog) { log += F("timer3"); }
+          _State       = 33;
+          _Timer       = PLUGIN_118_Time3;
+          _LastIDindex = index;
           break;
         case IthoJoin:
 
-          if (PLUGIN_118_Log) { log += F("join"); }
+          if (_dbgLog) { log += F("join"); }
           break;
         case IthoLeave:
 
-          if (PLUGIN_118_Log) { log += F("leave"); }
+          if (_dbgLog) { log += F("leave"); }
           break;
       }
     } else {
-      if (PLUGIN_118_Log) {
+      if (_dbgLog) {
         log += F("Device-ID: ");
         log += Id;
         log += F(" IGNORED");
       }
     }
 
-    if (PLUGIN_118_Log) {
+    if (_dbgLog) {
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
 }
 
 void P118_data_struct::PublishData(struct EventStruct *event) {
-  UserVar[event->BaseVarIndex]     = PLUGIN_118_State;
-  UserVar[event->BaseVarIndex + 1] = PLUGIN_118_Timer;
-  UserVar[event->BaseVarIndex + 2] = PLUGIN_118_LastIDindex;
+  UserVar[event->BaseVarIndex]     = _State;
+  UserVar[event->BaseVarIndex + 1] = _Timer;
+  UserVar[event->BaseVarIndex + 2] = _LastIDindex;
 
   # ifndef BUILD_NO_DEBUG
 
@@ -372,7 +379,10 @@ void P118_data_struct::PluginWriteLog(const String& command) {
   String log = F("Send Itho command for: ");
 
   log += command;
-  addLog(LOG_LEVEL_INFO, log);
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, log);
+  }
   printWebString += log;
 }
 
@@ -380,7 +390,7 @@ void P118_data_struct::PluginWriteLog(const String& command) {
 // Interrupt handler
 // **************************************************************************/
 void P118_data_struct::ISR_ithoCheck(P118_data_struct *self) {
-  self->PLUGIN_118_Int = true;
+  self->_Int = true;
 }
 
 #endif // ifdef USES_P118

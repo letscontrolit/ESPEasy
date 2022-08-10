@@ -12,15 +12,22 @@
 
 # define P118_DEBUG_LOG // Enable for some (extra) logging
 
+# if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
+#  undef P118_DEBUG_LOG
+# endif // if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
+
+# define P118_CSPIN           PIN(1)
+# define P118_IRQPIN          PIN(0)
 # define P118_CONFIG_LOG      PCONFIG(0)
 # define P118_CONFIG_DEVID1   PCONFIG(1)
 # define P118_CONFIG_DEVID2   PCONFIG(2)
 # define P118_CONFIG_DEVID3   PCONFIG(3)
+# define P118_CONFIG_RF_LOG   PCONFIG(4)
 
 // Timer values for hardware timer in Fan in seconds
-# define PLUGIN_118_Time1      10 * 60
-# define PLUGIN_118_Time2      20 * 60
-# define PLUGIN_118_Time3      30 * 60
+# define PLUGIN_118_Time1     10 * 60
+# define PLUGIN_118_Time2     20 * 60
+# define PLUGIN_118_Time3     30 * 60
 
 // This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN_118_ExtraSettingsStruct {
@@ -32,7 +39,10 @@ struct PLUGIN_118_ExtraSettingsStruct {
 struct P118_data_struct : public PluginTaskData_base {
 public:
 
-  P118_data_struct(uint8_t logData);
+  P118_data_struct(int8_t csPin,
+                   int8_t irqPin,
+                   bool   logData,
+                   bool   rfLog);
 
   P118_data_struct() = delete;
   ~P118_data_struct();
@@ -52,25 +62,28 @@ private:
   void PluginWriteLog(const String& command);
 
   bool isInitialized() {
-    return PLUGIN_118_rf != nullptr;
+    return _rf != nullptr;
   }
 
-  IthoCC1101 *PLUGIN_118_rf = nullptr;
+  IthoCC1101 *_rf = nullptr;
 
   // extra for interrupt handling
-  bool   PLUGIN_118_ITHOhasPacket  = false;
-  int    PLUGIN_118_State          = 1; // after startup it is assumed that the fan is running low
-  int    PLUGIN_118_OldState       = 1;
-  int    PLUGIN_118_Timer          = 0;
-  int    PLUGIN_118_LastIDindex    = 0;
-  int    PLUGIN_118_OldLastIDindex = 0;
-  int8_t Plugin_118_IRQ_pin        = -1;
-  bool   PLUGIN_118_InitRunned     = false;
-  bool   PLUGIN_118_Log            = false;
+  bool _ITHOhasPacket  = false;
+  int  _State          = 1; // after startup it is assumed that the fan is running low
+  int  _OldState       = 1;
+  int  _Timer          = 0;
+  int  _LastIDindex    = 0;
+  int  _OldLastIDindex = 0;
+  bool _InitRunned     = false;
 
-  PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
+  int8_t _csPin  = -1;
+  int8_t _irqPin = -1;
+  bool   _log    = false;
+  bool   _rfLog  = false;
 
-  volatile bool PLUGIN_118_Int = false;
+  PLUGIN_118_ExtraSettingsStruct _ExtraSettings;
+
+  volatile bool _Int = false;
 
   static void ISR_ithoCheck(P118_data_struct *self) ICACHE_RAM_ATTR;
 };
