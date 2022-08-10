@@ -26,12 +26,14 @@ Fan states
   :widths: 5, 5, 40
 
   "0", "Standby", "Itho ventilation unit on standby (not supported on most models)"
-  "1", "Low", "Itho ventilation  to lowest speed"
-  "2", "Medium", "Itho ventilation  to medium speed"
-  "3", "High", "Itho ventilation  to high speed"
-  "4", "Full", "Itho ventilation  to full speed (same as high on most models)"
+  "1", "Low", "Itho ventilation to lowest speed"
+  "2", "Medium", "Itho ventilation to medium speed"
+  "3", "High", "Itho ventilation to high speed"
+  "4", "Full", "Itho ventilation to full speed (same as high on most models)"
   "13", "Timer1", "Itho to high speed with hardware timer (10 min)"
   "23", "Timer2", "Itho to high speed with hardware timer (20 min)"
   "33", "Timer3", "Itho to high speed with hardware timer (30 min)"
+  "1111", "", "Join with an ITHO ventilation unit that is waiting for join requests (first minutes after power-on)"
+  "9999", "", "Leave connection with an ITHO ventilation unit (maybe not supported on all models). Needs a new Join (1111) to be able to control a unit."
   
 Two special states exist: 1111 for a join command and 9999 for a leave command, check the Itho manual on how to put your fain into pairing mode.
