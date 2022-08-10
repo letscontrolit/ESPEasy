@@ -466,6 +466,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // Special plugins needing IR library
 // #define USES_P016   // IR
 // #define P016_SEND_IR_TO_CONTROLLER false //IF true then the JSON replay solution is transmited back to the condroller.
+// #define P016_FEATURE_COMMAND_HANDLING 0 // By default set to 1 to have the command table, that can be dsabled here
 // #define USES_P035   // IRTX
 // #define P016_P035_Extended_AC // The following define is needed for extended decoding of A/C Messages and or using standardised 
                                  //common arguments for controlling all deeply supported A/C units
