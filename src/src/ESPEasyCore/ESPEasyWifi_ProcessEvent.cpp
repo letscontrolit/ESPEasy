@@ -467,6 +467,13 @@ void processDisconnectAPmode() {
   if (WiFiEventData.processedDisconnectAPmode) { return; }
   WiFiEventData.processedDisconnectAPmode = true;
 
+  if (WiFi.softAPgetStationNum() == 0) {
+    if (WiFiEventData.timerAPoff.timeReached()) {
+      // Extend timer to switch off AP.
+      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_EXTENSION);
+    }
+  }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");

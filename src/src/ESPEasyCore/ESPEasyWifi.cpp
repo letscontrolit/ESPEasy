@@ -797,7 +797,6 @@ void WifiDisconnect()
   // Only call disconnect when STA is active
   if (WifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
-//    WiFi.disconnect();
   }
   station_config conf{};
   memset(&conf, 0, sizeof(conf));
@@ -1051,7 +1050,7 @@ void setAP(bool enable) {
 }
 
 // Only internal scope
-void setAPinternal(bool enable)
+void setAPinternal(bool enable, int APchannel)
 {
   if (enable) {
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
@@ -1064,13 +1063,7 @@ void setAPinternal(bool enable)
       addLog(LOG_LEVEL_ERROR, F("WIFI : [AP] softAPConfig failed!"));
     }
 
-    int channel = 1;
-    if (WifiIsSTA(WiFi.getMode())) {
-      if (WiFi.isConnected())
-        channel = WiFi.channel();
-    }
-
-    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
+    if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), APchannel)) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         eventQueue.add(F("WiFi#APmodeEnabled"));
         String log(F("WIFI : AP Mode ssid will be "));
@@ -1078,7 +1071,7 @@ void setAPinternal(bool enable)
         log += F(" with address ");
         log += WiFi.softAPIP().toString();
         log += F(" ch: ");
-        log += channel;
+        log += APchannel;
         addLogMove(LOG_LEVEL_INFO, log);
       }
     } else {
@@ -1130,6 +1123,16 @@ void setWifiMode(WiFiMode_t wifimode) {
   if (cur_mode == wifimode) {
     return;
   }
+
+  int APchannel = 1;
+  if (WifiIsSTA(WiFi.getMode()) && WiFi.isConnected()) {
+    APchannel = WiFi.channel();
+  } else {
+    if (WiFiEventData.usedChannel != 0) {
+      APchannel = WiFiEventData.usedChannel;
+    }
+  }
+
 
   if (cur_mode == WIFI_OFF) {
     WiFiEventData.markWiFiTurnOn();
@@ -1230,7 +1233,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 
   if (WifiIsAP(cur_mode) != new_mode_AP_enabled) {
     // Mode has changed
-    setAPinternal(new_mode_AP_enabled);
+    setAPinternal(new_mode_AP_enabled, APchannel);
   }
   #if FEATURE_MDNS
   #ifdef ESP8266
@@ -1299,7 +1302,8 @@ bool wifiAPmodeActivelyUsed()
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
   }
-  return WiFi.softAPgetStationNum() != 0;
+  if (WiFi.softAPgetStationNum() != 0) return true;
+  return !WiFiEventData.timerAPoff.timeReached();
 
   // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
   // reconnect?
