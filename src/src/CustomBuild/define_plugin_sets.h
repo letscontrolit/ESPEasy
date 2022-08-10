@@ -1291,6 +1291,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
+    #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
 #endif
 
@@ -1661,7 +1662,7 @@ To create/register a plugin, you have to :
     #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
-//    #define USES_P129   //
+    #define USES_P129   // 74HC165 Input shiftregisters
   #endif
   #ifndef USES_P130
 //    #define USES_P130   //

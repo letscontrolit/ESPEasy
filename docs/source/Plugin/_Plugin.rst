@@ -354,6 +354,7 @@ There are different released versions of ESP Easy:
    ":ref:`P126_page`","|P126_status|","P126"
    ":ref:`P127_page`","|P127_status|","P127"
    ":ref:`P128_page`","|P128_status|","P128"
+   ":ref:`P129_page`","|P129_status|","P129"
    ":ref:`P132_page`","|P132_status|","P132"
    ":ref:`P133_page`","|P133_status|","P133"
 
@@ -452,6 +453,11 @@ Hardware
 Plugins: |Plugin_Hardware|
 
 Hardware: |P046_usedby|
+
+Input
+-----
+
+Plugins: |Plugin_Input|
 
 Keypad
 ------

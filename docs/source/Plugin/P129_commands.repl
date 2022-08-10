@@ -1,0 +1,31 @@
+The commands are all used to update configuration, not directly control the state of the shift registers.
+
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``ShiftIn,PinEvent,<pin>,<0|1>``
+    ","
+    | Enables or disables an event to be generated for the pin. Is updated in the configuration, but not saved.
+    "
+    "
+    | ``ShiftIn,ChipEvent,<chip>,<0|1>``
+    ","
+    | Enables or disables an event to be generated for all pins of the selected chip. Is updated in the configuration, but not saved.
+    "
+    "
+    | ``ShiftIn,SetChipCount,<count>``
+    ","
+    | Set the number of chips connected together. Is updated in the configuration, but not saved.
+    "
+    "
+    | ``ShiftIn,SampleFrequency,<0|1>``
+    ","
+    | Select the sample frequency, 0 = 10/sec, 1 = 50/sec.
+    "
+    "
+    | ``ShiftIn,EventPerPin,<0|1>``
+    ","
+    | Set or reset the ``Separate event per pin`` option. Is updated in the configuration, but not saved.
+    "
