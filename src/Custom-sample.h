@@ -449,6 +449,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P126   // 74HC595 Shift register
 // #define USES_P127   // CDM7160
 // #define USES_P129   // 74HC165 Input shiftregisters
+// #define USES_P131   // NeoMatrix
 // #define USES_P132   // INA3221
 // #define USES_P133   // LTR390 UV
 

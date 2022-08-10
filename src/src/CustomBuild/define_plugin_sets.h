@@ -1418,6 +1418,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
+  #ifndef USES_P131
+    #define USES_P131   // NeoMatrix
+  #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_PLUGIN_STATS
@@ -1668,7 +1671,7 @@ To create/register a plugin, you have to :
 //    #define USES_P130   //
   #endif
   #ifndef USES_P131
-//    #define USES_P131   //
+    #define USES_P131   // NeoMatrix
   #endif
   #ifndef USES_P132
     #define USES_P132   // INA3221
@@ -1740,7 +1743,7 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
   #endif
