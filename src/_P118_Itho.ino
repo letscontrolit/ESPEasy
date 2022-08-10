@@ -23,6 +23,8 @@
 //			tonhuisman, 28-12-2021 - Move interrupt handling to Plugin_data_struct, lifting the limit on nr. of plugins
 //      tonhuisman, 03-01-2022 - Review source after structural-crash report, fix interrupt handler
 //      tonhuisman, 21-06-2022 - Minor improvements
+//      tonhuisman, 10-08-2022 - Fix bugs, add 3 second limit to formerly perpetual while loops in IthoCC1101 library
+//                               Restructure source somewhat, rename variables, clean up stuff generally
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -126,12 +128,13 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:          // Set defaults address to the one used in old versions of the library for backwards compatability
     {
-      PIN(0)             = -1;         // Interrupt pin undefined by default
-      PIN(1)             = PIN_SPI_SS; // CS pin use the previous default of PIN_SPI_SS/gpio 15
-      P118_CONFIG_LOG    = 1;
+      P118_IRQPIN        = -1;         // Interrupt pin undefined by default
+      P118_CSPIN         = PIN_SPI_SS; // CS pin use the previous default of PIN_SPI_SS/gpio 15
+      P118_CONFIG_LOG    = 0;          // RF DEBUG log disabled
       P118_CONFIG_DEVID1 = 10;
       P118_CONFIG_DEVID2 = 87;
       P118_CONFIG_DEVID3 = 81;
+      P118_CONFIG_RF_LOG = 1; // RF INFO log enabled
       success            = true;
       break;
     }
@@ -141,11 +144,19 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       # ifdef P118_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, F("INIT PLUGIN_118"));
       # endif // ifdef P118_DEBUG_LOG
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P118_data_struct(P118_CONFIG_LOG));
-      P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P118_data) {
-        success = P118_data->plugin_init(event);
+      if (validGpio(P118_CSPIN) && (P118_IRQPIN != P118_CSPIN)) {
+        initPluginTaskData(event->TaskIndex, new (std::nothrow) P118_data_struct(P118_CSPIN,
+                                                                                 P118_IRQPIN,
+                                                                                 P118_CONFIG_LOG == 1,
+                                                                                 P118_CONFIG_RF_LOG == 1));
+        P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P118_data) {
+          success = P118_data->plugin_init(event);
+        }
+      } else {
+        addLog(LOG_LEVEL_ERROR, F("ITHO: CS pin not correctly configured, plugin can not start!"));
       }
 
       break;
@@ -211,19 +222,21 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       PLUGIN_118_ExtraSettingsStruct PLUGIN_118_ExtraSettings;
-      LoadCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&PLUGIN_118_ExtraSettings), sizeof(PLUGIN_118_ExtraSettings));
       addFormSubHeader(F("Remote RF Controls"));
       addFormTextBox(F("Unit ID remote 1"), F("pID1"), PLUGIN_118_ExtraSettings.ID1, 8);
       addFormTextBox(F("Unit ID remote 2"), F("pID2"), PLUGIN_118_ExtraSettings.ID2, 8);
       addFormTextBox(F("Unit ID remote 3"), F("pID3"), PLUGIN_118_ExtraSettings.ID3, 8);
-      addFormCheckBox(F("Enable RF receive log"), F("plog"), P118_CONFIG_LOG); // Makes RF logging optional to reduce clutter in the log
-                                                                               // file
-      // in RF noisy environments
+
+      addFormCheckBox(F("Enable RF DEBUG log"),        F("plog"),   P118_CONFIG_LOG);    // Makes RF logging optional to reduce clutter in
+                                                                                         // the log
+      addFormCheckBox(F("Enable minimal RF INFO log"), F("prflog"), P118_CONFIG_RF_LOG); // Log only the received Device ID's at INFO level
+
       addFormNumericBox(F("Device ID byte 1"), F("pdevid1"), P118_CONFIG_DEVID1, 0, 255);
       addFormNumericBox(F("Device ID byte 2"), F("pdevid2"), P118_CONFIG_DEVID2, 0, 255);
       addFormNumericBox(F("Device ID byte 3"), F("pdevid3"), P118_CONFIG_DEVID3, 0, 255);
-      addFormNote(F(
-                    "Device ID of your ESP, should not be the same as your neighbours ;-). Defaults to 10,87,81 which corresponds to the old Itho library"));
+      addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). "
+                    "Defaults to 10,87,81 which corresponds to the old Itho library"));
       success = true;
       break;
     }
@@ -234,9 +247,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       strcpy(PLUGIN_118_ExtraSettings.ID1, web_server.arg(F("pID1")).c_str());
       strcpy(PLUGIN_118_ExtraSettings.ID2, web_server.arg(F("pID2")).c_str());
       strcpy(PLUGIN_118_ExtraSettings.ID3, web_server.arg(F("pID3")).c_str());
-      SaveCustomTaskSettings(event->TaskIndex, (byte *)&PLUGIN_118_ExtraSettings, sizeof(PLUGIN_118_ExtraSettings));
+      SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&PLUGIN_118_ExtraSettings), sizeof(PLUGIN_118_ExtraSettings));
 
-      P118_CONFIG_LOG = isFormItemChecked(F("plog"));
+      P118_CONFIG_LOG    = isFormItemChecked(F("plog"));
+      P118_CONFIG_RF_LOG = isFormItemChecked(F("prflog"));
 
       P118_CONFIG_DEVID1 = getFormItemInt(F("pdevid1"), 10);
       P118_CONFIG_DEVID2 = getFormItemInt(F("pdevid2"), 87);
