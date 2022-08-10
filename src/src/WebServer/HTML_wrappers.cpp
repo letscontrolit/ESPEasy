@@ -83,6 +83,12 @@ void html_TD() {
   addHtml(F("<TD>"));
 }
 
+void html_TD(const String& style) {
+  addHtml(F("<TD style=\""));
+  addHtml(style);
+  addHtml(F(";\">"));
+}
+
 void html_TD(int td_cnt) {
   for (int i = 0; i < td_cnt; ++i) {
     html_TD();
