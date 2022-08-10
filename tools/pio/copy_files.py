@@ -18,7 +18,7 @@ def get_max_bin_size(env_name, file_suffix):
     if "_1M_OTA" in env_name:
         # max 600 kiB - 16 bytes
         max_bin_size = 614384
-    if "4M316k" in env_name:
+    if "4M316k" in env_name or "_ESP32_4M2M" in env_name:
         # ESP32 with 1800k of sketch space.
         max_bin_size = 1900544
         if "factory" in file_suffix:

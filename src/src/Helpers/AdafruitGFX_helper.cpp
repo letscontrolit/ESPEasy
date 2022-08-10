@@ -1305,6 +1305,19 @@ void AdafruitGFX_helper::printText(const char *string,
 }
 
 /****************************************************************************
+ * getTextSize length and height in pixels
+ ***************************************************************************/
+uint16_t AdafruitGFX_helper::getTextSize(const String& text,
+                                         uint16_t    & h) {
+  int16_t  x;
+  int16_t  y;
+  uint16_t w;
+
+  _display->getTextBounds(text.c_str(), 0, 0, &x, &y, &w, &h); // Count length and height in pixels
+  return w;
+}
+
+/****************************************************************************
  * color565: convert r, g, b colors to rgb565 (by bit-shifting)
  ***************************************************************************/
 uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
@@ -1796,6 +1809,10 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
 }
 
 # endif // if ADAGFX_ARGUMENT_VALIDATION
+
+void AdafruitGFX_helper::setValidation(const bool& state) {
+  _useValidation = state;
+}
 
 void AdafruitGFX_helper::setRotation(uint8_t m) {
   uint8_t rotation = m & 3;
