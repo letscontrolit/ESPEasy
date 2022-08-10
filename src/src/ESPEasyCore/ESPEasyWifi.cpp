@@ -360,9 +360,12 @@ void WiFiConnectRelaxed() {
     // Still need to process WiFi events
     return;
   }
+
+/*
   if (!WiFiEventData.wifiSetupConnect && wifiAPmodeActivelyUsed()) {
     return;
   }
+  */
 
 
   // FIXME TD-er: Should not try to prepare when a scan is still busy.
@@ -604,6 +607,7 @@ void SetWiFiTXpower(float dBm) {
 }
 
 void SetWiFiTXpower(float dBm, float rssi) {
+  /*
   const WiFiMode_t cur_mode = WiFi.getMode();
   if (cur_mode == WIFI_OFF) {
     return;
@@ -719,6 +723,7 @@ void SetWiFiTXpower(float dBm, float rssi) {
     }
   }
   #endif
+  */
 }
 #endif
 
@@ -794,6 +799,8 @@ void WifiDisconnect()
   }
   #endif
   #ifdef ESP8266
+  WiFi.disconnect();
+  /*
   // Only call disconnect when STA is active
   if (WifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
@@ -803,6 +810,7 @@ void WifiDisconnect()
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
+  */
   #endif // if defined(ESP32)
   WiFiEventData.setWiFiDisconnected();
   WiFiEventData.markDisconnect(WIFI_DISCONNECT_REASON_ASSOC_LEAVE);
@@ -1215,6 +1223,7 @@ void setWifiMode(WiFiMode_t wifimode) {
 #ifdef ESP8266
     SetWiFiTXpower();
 #endif
+/*
     if (WifiIsSTA(wifimode)) {
       if (WiFi.getAutoConnect()) {
         WiFi.setAutoConnect(false); 
@@ -1223,6 +1232,7 @@ void setWifiMode(WiFiMode_t wifimode) {
         WiFi.setAutoReconnect(false);
       }
     }
+*/
     delay(100); // Must allow for some time to init.
   }
   const bool new_mode_AP_enabled = WifiIsAP(wifimode);
@@ -1298,6 +1308,7 @@ bool wifiConnectTimeoutReached() {
 
 bool wifiAPmodeActivelyUsed()
 {
+  if (!WiFiEventData.processedDisconnectAPmode) return true;
   if (!WifiIsAP(WiFi.getMode()) || (!WiFiEventData.timerAPoff.isSet())) {
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;

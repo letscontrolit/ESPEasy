@@ -231,19 +231,17 @@ void handle_unprocessedNetworkEvents()
 // These functions are called from Setup() or Loop() and thus may call delay() or yield()
 // ********************************************************************************
 void processDisconnect() {
-  addLog(LOG_LEVEL_INFO, F("WiFi : processDisconnect()"));
   if (WiFiEventData.processingDisconnect.isSet()) {
     if (WiFiEventData.processingDisconnect.millisPassedSince() > 5000 || WiFiEventData.processedDisconnect) {
       WiFiEventData.processingDisconnect.clear();
     }
   }
 
-
   if (WiFiEventData.processedDisconnect || 
       WiFiEventData.processingDisconnect.isSet()) { return; }
+  addLog(LOG_LEVEL_INFO, F("WiFi : processDisconnect()"));
   WiFiEventData.processingDisconnect.setNow();
   WiFiEventData.setWiFiDisconnected();
-  WiFiEventData.wifiConnectAttemptNeeded = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -270,8 +268,9 @@ void processDisconnect() {
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
   }
-
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
+
+  WiFiEventData.processedDisconnect = true;
   if (mustRestartWiFi) {
     WifiScan(false);
     delay(100);
@@ -283,8 +282,8 @@ void processDisconnect() {
     }
   }
   logConnectionStatus();
-  WiFiEventData.processedDisconnect = true;
   WiFiEventData.processingDisconnect.clear();
+  WiFiEventData.wifiConnectAttemptNeeded = true;
 }
 
 void processConnect() {
@@ -468,10 +467,7 @@ void processDisconnectAPmode() {
   WiFiEventData.processedDisconnectAPmode = true;
 
   if (WiFi.softAPgetStationNum() == 0) {
-    if (WiFiEventData.timerAPoff.timeReached()) {
-      // Extend timer to switch off AP.
-      WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_EXTENSION);
-    }
+    WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_EXTENSION);
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -480,6 +476,11 @@ void processDisconnectAPmode() {
     log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
+    if (nrStationsConnected == 0) {
+      log += F(" AP turn off timer: ");
+      log += WIFI_AP_OFF_TIMER_EXTENSION/1000;
+      log += 's';
+    }
     addLogMove(LOG_LEVEL_INFO, log);
   }
 }
