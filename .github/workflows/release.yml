@@ -112,12 +112,12 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const tagRefObj = await github.git.getRef({
+            const tagRefObj = await github.rest.git.getRef({
               ...context.repo,
               ref: context.ref.replace('refs/', '')
             });
 
-            const tagObj = await github.git.getTag({
+            const tagObj = await github.rest.git.getTag({
               ...context.repo,
               tag_sha: tagRefObj.data.object.sha
             });

@@ -74,9 +74,9 @@ struct pulseModeData_t {
   unsigned int Step3IGNcounter = 0; // counts how often step 3 detected the wrong pin state (2nd verification failed)
   unsigned int Step0ODcounter  = 0; // counts how often the debounce time timed out before step 0 was reached
   long         StepOverdueMax[P003_PSTEP_MAX + 1] = { 0 }; // longest recognised overdue time per step in ms
-  uint8_t         StatsLogLevel = PULSE_STATS_ADHOC_LOG_LEVEL; // log level for regular statistics logging
+  uint8_t      StatsLogLevel = PULSE_STATS_ADHOC_LOG_LEVEL; // log level for regular statistics logging
 
-#endif
+#endif // ifdef PULSE_STATISTIC
 };
 
 struct Internal_GPIO_pulseHelper {
@@ -109,8 +109,8 @@ struct Internal_GPIO_pulseHelper {
     uint64_t        debounceTime_micros = 0; // 64 bit version of debounceTime in micoseconds
     uint16_t        debounceTime        = 0;
     taskIndex_t     taskIndex           = INVALID_TASK_INDEX;
-    uint8_t            gpio                = -1;
-    uint8_t            pullupPinMode       = INPUT_PULLUP;
+    uint8_t         gpio                = -1;
+    uint8_t         pullupPinMode       = INPUT_PULLUP;
     GPIOtriggerMode interruptPinMode    = GPIOtriggerMode::Change;
   };
 
@@ -157,12 +157,14 @@ private:
   volatile pulseCounterISRdata_t ISRdata;
   const pulseCounterConfig       config;
 
+  static void ISR_edgeCheck(Internal_GPIO_pulseHelper *self);
   static void ISR_pulseCheck(Internal_GPIO_pulseHelper *self);
 
 
-#ifdef PULSE_STATISTIC
 
 public:
+
+#ifdef PULSE_STATISTIC
 
   // adjust the statistical step counters relative to TotalCounter, in order to keep statistic correct
   void updateStatisticalCounters(int par1);
@@ -183,7 +185,7 @@ public:
   *  write collected timing values to logfile
   \*********************************************************************************************/
   void doTimingLogging(uint8_t logLevel);
-  #endif // ifdef PULSE_STATISTIC
+#endif // ifdef PULSE_STATISTIC
 };
 
 

@@ -16,7 +16,7 @@ struct P005_data_struct : public PluginTaskData_base {
   /*********************************************************************************************\
   * DHT sub to wait until a pin is in a certain state
   \*********************************************************************************************/
-  bool waitState(int state);
+  bool waitState(uint32_t state);
 
   /*********************************************************************************************\
   * Perform the actual reading + interpreting of data.
