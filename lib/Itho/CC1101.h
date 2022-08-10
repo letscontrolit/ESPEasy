@@ -1,5 +1,6 @@
 /*
  * Author: Klusjesman, modified bij supersjimmie for Arduino/ESP8266
+ * tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
  */
 
 #ifndef __CC1101_H__

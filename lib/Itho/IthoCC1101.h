@@ -1,5 +1,6 @@
 /*
  * Author: Klusjesman, supersjimmie, modified and reworked by arjenhiemstra
+ * tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
  */
 
 #ifndef __ITHOCC1101_H__

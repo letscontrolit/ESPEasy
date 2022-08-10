@@ -259,8 +259,11 @@ void CC1101::sendData(CC1101Packet *packet)
     while (index < packet->length)
     {
       // check if there is free space in the fifo
+      uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+
       while ((txStatus = (readRegisterMedian3(CC1101_TXBYTES | CC1101_STATUS_REGISTER) & CC1101_BITS_RX_BYTES_IN_FIFO)) >
-             (CC1101_DATA_LEN - 2)) {}
+             (CC1101_DATA_LEN - 2) &&
+             millis() < maxWait) {}
 
       // calculate how many bytes we can send
       length = (CC1101_DATA_LEN - txStatus);
@@ -276,11 +279,14 @@ void CC1101::sendData(CC1101Packet *packet)
   }
 
   // wait until transmission is finished (TXOFF_MODE is expected to be set to 0/IDLE or TXFIFO_UNDERFLOW)
+  uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+
   do
   {
     MarcState = (readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER) & CC1101_BITS_MARCSTATE);
 
     //		if (MarcState == CC1101_MARCSTATE_TXFIFO_UNDERFLOW) Serial.print(F("TXFIFO_UNDERFLOW occured in sendData() \n"));
   }
-  while ((MarcState != CC1101_MARCSTATE_IDLE) && (MarcState != CC1101_MARCSTATE_TXFIFO_UNDERFLOW));
+  while ((MarcState != CC1101_MARCSTATE_IDLE) && (MarcState != CC1101_MARCSTATE_TXFIFO_UNDERFLOW) &&
+         millis() < maxWait);
 }

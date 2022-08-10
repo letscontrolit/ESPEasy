@@ -188,7 +188,12 @@ void IthoCC1101::initReceive()
   writeCommand(CC1101_SCAL);
 
   // wait for calibration to finish
-  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE) { yield(); }
+  uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+
+  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE &&
+         millis() < maxWait) {
+    yield();
+  }
 
   writeRegister(CC1101_FSCAL2,   0x00);
   writeRegister(CC1101_MCSM0,    0x18); // no auto calibrate
@@ -233,7 +238,12 @@ void IthoCC1101::initReceive()
   writeCommand(CC1101_SCAL);
 
   // wait for calibration to finish
-  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE) { yield(); }
+  maxWait = millis() + 3000; // Wait for max. 3 seconds
+
+  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE &&
+         millis() < maxWait) {
+    yield();
+  }
 
   writeRegister(CC1101_MCSM0, 0x18); // no auto calibrate
 
@@ -246,7 +256,12 @@ void IthoCC1101::initReceive()
 
   writeCommand(CC1101_SRX);
 
-  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_RX) { yield(); }
+  maxWait = millis() + 3000; // Wait for max. 3 seconds
+
+  while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_RX &&
+         millis() < maxWait) {
+    yield();
+  }
 
   initReceiveMessage();
 }
@@ -272,10 +287,14 @@ void IthoCC1101::initReceiveMessage()
   writeRegister(CC1101_MDMCFG2,  MDMCFG2);
   writeRegister(CC1101_PKTCTRL1, 0x00);
 
-  writeCommand(CC1101_SRX); // switch to RX state
+  writeCommand(CC1101_SRX);           // switch to RX state
 
   // Check that the RX state has been entered
-  while (((marcState = readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) & CC1101_BITS_MARCSTATE) != CC1101_MARCSTATE_RX)
+  uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+
+  while (((marcState =
+             readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) & CC1101_BITS_MARCSTATE) != CC1101_MARCSTATE_RX &&
+         millis() < maxWait)
   {
     if (marcState == CC1101_MARCSTATE_RXFIFO_OVERFLOW) { // RX_OVERFLOW
       writeCommand(CC1101_SFRX);                         // flush RX buffer
@@ -648,17 +667,19 @@ uint8_t IthoCC1101::getCounter2(IthoPacket *itho, uint8_t len) {
 
 uint8_t IthoCC1101::messageEncode(IthoPacket *itho, CC1101Packet *packet) {
   // FIXME TD-er: lenOutbuf not used????
-  /*
-  uint8_t lenOutbuf = 0;
 
-  if ((itho->length * 20) % 8 == 0) { // inData len fits niecly in out buffer length
-    lenOutbuf = itho->length * 2.5;
-  }
-  else {                              // is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra, padding
+  /*
+     uint8_t lenOutbuf = 0;
+
+     if ((itho->length * 20) % 8 == 0) { // inData len fits niecly in out buffer length
+     lenOutbuf = itho->length * 2.5;
+     }
+     else {                              // is this an issue? inData last byte does not fill out buffer length, add 1 out byte extra,
+        padding
                                       // is done after encode
-    lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
-  }
-  */
+     lenOutbuf = (uint8_t)(itho->length * 2.5) + 0.5;
+     }
+   */
 
   uint8_t out_bytecounter    = 14; // index of Outbuf, start at offset 14, first part of the message is set manually
   uint8_t out_bitcounter     = 0;  // bit position of current outbuf byte
