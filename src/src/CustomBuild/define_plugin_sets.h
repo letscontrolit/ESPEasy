@@ -1291,6 +1291,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
+    #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
 #endif
 
@@ -1344,6 +1345,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
+   #if !defined(FEATURE_SD)
+     #define FEATURE_SD 1
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1395,6 +1399,9 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_NEOPIXEL_COLLECTION
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "NeoPixel"
+  #endif
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
+    #define FEATURE_SD  1
   #endif
   #ifndef USES_P038
     #define USES_P038   // NeoPixel
@@ -1658,7 +1665,7 @@ To create/register a plugin, you have to :
     #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
-//    #define USES_P129   //
+    #define USES_P129   // 74HC165 Input shiftregisters
   #endif
   #ifndef USES_P130
 //    #define USES_P130   //
