@@ -1,0 +1,43 @@
+.. csv-table::
+    :header: "Event", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``<taskname>=<state>,<chip>,<port>,<pin>``
+
+    | ``state``: ``0`` or ``1``.
+
+    | ``chip``: range 1..16, depending on the number of chips configured.
+
+    | ``port``: range 1..8.
+
+    | ``pin``: range 1..128, depending on the number of chips configured.
+    ","
+    | Generic event for each activated input pin, that is enabled in the **Event configuration** matrix.
+    
+    | Generated if **Separate events per pin** is *unchecked*/*disabled*.
+    "
+    "
+    | ``<taskname>#<pin>=<state>,<chip>,<port>,<pin>``
+
+    | ``state``: ``0`` or ``1``.
+
+    | ``chip``: range 1..16, depending on the number of chips configured.
+
+    | ``port``: range 1..8.
+
+    | ``pin``: range 1..128, depending on the number of chips configured.
+    ","
+    | Generic event for each activated input pin, that is enabled in the **Event configuration** matrix.
+    
+    | Generated if **Separate events per pin** is **enabled**.
+    "
+    "
+    | ``<taskname>#<valuename>=[<decimalvalue>][,][<hex/binvalue>]``
+
+    | Values provided depend on the setting **Output selection**.
+    ","
+    | The generic event per Value ``State_A`` .. ``State_D``, that are available, depending on the number of chips configured.
+
+    | Only sent if **Interval** is greater than 0, or an explicit ``TaskRun`` command for this task is executed.
+    "
