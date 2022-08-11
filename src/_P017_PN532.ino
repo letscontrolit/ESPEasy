@@ -6,44 +6,78 @@
 // #######################################################################################################
 
 
-#define PLUGIN_017
-#define PLUGIN_ID_017         17
-#define PLUGIN_NAME_017       "RFID - PN532"
-#define PLUGIN_VALUENAME1_017 "Tag"
+/*
+ ################## WARNING!!!!! ################
+   See this conversation whenever new issues are reported for this plugin:
+   https://github.com/letscontrolit/ESPEasy/issues/4170#issuecomment-1211901726
+ */
 
-#define PN532_I2C_ADDRESS             0x24
+# define PLUGIN_017
+# define PLUGIN_ID_017         17
+# define PLUGIN_NAME_017       "RFID - PN532"
+# define PLUGIN_VALUENAME1_017 "Tag"
 
-#define PN532_PREAMBLE                (0x00)
-#define PN532_STARTCODE1              (0x00)
-#define PN532_STARTCODE2              (0xFF)
-#define PN532_POSTAMBLE               (0x00)
-#define PN532_HOSTTOPN532             (0xD4)
-#define PN532_PN532TOHOST             (0xD5)
-#define PN532_ACK_WAIT_TIME           (5)
-#define PN532_INVALID_ACK             (-1)
-#define PN532_TIMEOUT                 (-2)
-#define PN532_INVALID_FRAME           (-3)
-#define PN532_NO_SPACE                (-4)
+# define PN532_I2C_ADDRESS             0x24
 
-#define PN532_COMMAND_GETFIRMWAREVERSION    (0x02)
-#define PN532_COMMAND_SAMCONFIGURATION      (0x14)
-#define PN532_COMMAND_INLISTPASSIVETARGET   (0x4A)
-#define PN532_RESPONSE_INLISTPASSIVETARGET  (0x4B)
-#define PN532_MIFARE_ISO14443A              (0x00)
-#define PN532_COMMAND_POWERDOWN             (0x16)
+# define PN532_PREAMBLE                (0x00)
+# define PN532_STARTCODE1              (0x00)
+# define PN532_STARTCODE2              (0xFF)
+# define PN532_POSTAMBLE               (0x00)
+# define PN532_HOSTTOPN532             (0xD4)
+# define PN532_PN532TOHOST             (0xD5)
+# define PN532_ACK_WAIT_TIME           (5)
+# define PN532_INVALID_ACK             (-1)
+# define PN532_TIMEOUT                 (-2)
+# define PN532_INVALID_FRAME           (-3)
+# define PN532_NO_SPACE                (-4)
+
+# define PN532_COMMAND_GETFIRMWAREVERSION    (0x02)
+# define PN532_COMMAND_SAMCONFIGURATION      (0x14)
+# define PN532_COMMAND_INLISTPASSIVETARGET   (0x4A)
+# define PN532_RESPONSE_INLISTPASSIVETARGET  (0x4B)
+# define PN532_MIFARE_ISO14443A              (0x00)
+# define PN532_COMMAND_POWERDOWN             (0x16)
+
+// This plugin uses PLUGIN_TASKTIMER_IN to perform stages at specific intervals
+// The PLUGIN_TEN_PER_SECOND etc. are too generic for this
+# define PN532_TIMER_TYPE_REMOVE_TAG         1
+# define PN532_TIMER_TYPE_START_READ_TAG     2
+# define PN532_TIMER_TYPE_READ_TAG_RESPONSE  3
+
+# define PN532_INTERVAL_BETWEEN_READS   300 // Perform a read roughly every 300 msec.
+// Delay between PN532_TIMER_TYPE_START_READ_TAG and PN532_TIMER_TYPE_READ_TAG_RESPONSE
+// 20 msec seems to work fine, but just to be sure set to 30 msec.
+# define PN532_DELAY_READ_TAG_RESPONSE  30
+
+# define P017_AUTO_TAG_REMOVAL      PCONFIG(0)
+# define P017_EVENT_ON_TAG_REMOVAL  PCONFIG(1)
+# define P017_NO_TAG_DETECTED_VALUE PCONFIG_LONG(0)
+# define P017_REMOVAL_TIMEOUT       PCONFIG_LONG(1)
 
 
 // DEBUG code using logic analyzer for timings
-#define DEBUG_LOGIC_ANALYZER_PIN  25
-#define DEBUG_LOGIC_ANALYZER_PIN_INIT  33
-
+# define DEBUG_LOGIC_ANALYZER_PIN  25
+# define DEBUG_LOGIC_ANALYZER_PIN_INIT  33
 
 # include <GPIO_Direct_Access.h>
 
-uint8_t Plugin_017_pn532_packetbuffer[64];
 uint8_t Plugin_017_command;
 
-boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
+
+// Forward declarations
+bool     P017_handle_timer_in(struct EventStruct *event);
+boolean  Plugin_017_Init(int8_t resetPin);
+uint8_t  Plugin_017_readPassiveTargetID(uint8_t *uid,
+                                        uint8_t *uidLength);
+uint8_t  Plugin_017_StartReadPassiveTargetID(uint8_t cardbaudrate);
+uint32_t getFirmwareVersion(void);
+void     Plugin_017_powerDown(void);
+int8_t   Plugin_017_writeCommand(const uint8_t *header,
+                                 uint8_t        hlen);
+int16_t  Plugin_017_readResponse(uint8_t buf[],
+                                 uint8_t len);
+
+boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -96,16 +130,23 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       // FIXME TD-er: Why is this using pin3 and not pin1? And why isn't this using the normal pin selection functions?
       addFormPinSelect(PinSelectPurpose::Generic, F("Reset Pin"), F("taskdevicepin3"), CONFIG_PIN3);
 
-      bool autoTagRemoval = PCONFIG(0) == 0; // Inverted state!
+      const bool autoTagRemoval = P017_AUTO_TAG_REMOVAL == 0; // Inverted state!
       addFormCheckBox(F("Automatic Tag removal"), F("p017_autotagremoval"), autoTagRemoval);
 
-      if (PCONFIG_LONG(1) == 0) PCONFIG_LONG(1) = 500; // Defaulty 500 mSec (was hardcoded value)
-      addFormNumericBox(F("Automatic Tag removal after"),F("p017_removaltimeout"), PCONFIG_LONG(1), 250, 60000); // 0.25 to 60 seconds
+      if (P017_REMOVAL_TIMEOUT == 0) { 
+        P017_REMOVAL_TIMEOUT = 500; // Defaulty 500 mSec (was hardcoded value)
+      }
+      // 0.25 to 60 seconds
+      addFormNumericBox(F("Automatic Tag removal after"), F("p017_removaltimeout"), P017_REMOVAL_TIMEOUT, 250, 60000); 
       addUnit(F("mSec."));
 
-      addFormNumericBox(F("Value to set on Tag removal"),F("p017_removalvalue"), PCONFIG_LONG(0), 0, 2147483647); // Max allowed is int = 0x7FFFFFFF ...
+      
+      addFormNumericBox(F("Value to set on Tag removal"), F("p017_removalvalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647); 
+      // Max allowed is int
+      // =
+      // 0x7FFFFFFF ...
 
-      bool eventOnRemoval = PCONFIG(1) == 1; // Normal state!
+      const bool eventOnRemoval = P017_EVENT_ON_TAG_REMOVAL == 1; // Normal state!
       addFormCheckBox(F("Event on Tag removal"), F("p017_sendreset"), eventOnRemoval);
 
       success = true;
@@ -114,10 +155,10 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(0)      = isFormItemChecked(F("p017_autotagremoval")) ? 0 : 1; // Inverted logic!
-      PCONFIG(1)      = isFormItemChecked(F("p017_sendreset")) ? 1 : 0;
-      PCONFIG_LONG(0) = getFormItemInt(F("p017_removalvalue"));
-      PCONFIG_LONG(1) = getFormItemInt(F("p017_removaltimeout"));
+      P017_AUTO_TAG_REMOVAL      = isFormItemChecked(F("p017_autotagremoval")) ? 0 : 1; // Inverted logic!
+      P017_EVENT_ON_TAG_REMOVAL  = isFormItemChecked(F("p017_sendreset")) ? 1 : 0;
+      P017_NO_TAG_DETECTED_VALUE = getFormItemInt(F("p017_removalvalue"));
+      P017_REMOVAL_TIMEOUT       = getFormItemInt(F("p017_removaltimeout"));
 
       success = true;
       break;
@@ -130,14 +171,16 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       // if (!Settings.WireClockStretchLimit)
       //   Wire.setClockStretchLimit(2000);
 
-      #ifdef DEBUG_LOGIC_ANALYZER_PIN
+      # ifdef DEBUG_LOGIC_ANALYZER_PIN
+
       // DEBUG code using logic analyzer for timings
       pinMode(DEBUG_LOGIC_ANALYZER_PIN, OUTPUT);
-      #endif
-      #ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+      # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+      # ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
       // DEBUG code using logic analyzer for timings
       pinMode(DEBUG_LOGIC_ANALYZER_PIN_INIT, OUTPUT);
-      #endif
+      # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
 
       for (uint8_t x = 0; x < 3; x++)
@@ -147,122 +190,175 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
         }
         delay(100);
       }
+      Scheduler.setPluginTaskTimer(PN532_INTERVAL_BETWEEN_READS, event->TaskIndex, PN532_TIMER_TYPE_START_READ_TAG);
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
+      success = P017_handle_timer_in(event);
+      break;
+    }
+  }
+  return success;
+}
+
+bool P017_handle_timer_in(struct EventStruct *event)
+{
+  bool success = false;
+
+  static unsigned long tempcounter = 0;
+  static uint8_t errorCount        = 0;
+
+  switch (event->Par1) {
+    case PN532_TIMER_TYPE_REMOVE_TAG:
+    {
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
+      // DEBUG code using logic analyzer for timings
+      // Mark we cleared the card anyway.
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
       // Reset card id on timeout
-      if (PCONFIG(0) == 0) {
-        UserVar.setSensorTypeLong(event->TaskIndex, PCONFIG_LONG(0));
+      if (P017_AUTO_TAG_REMOVAL == 0) {
+        UserVar.setSensorTypeLong(event->TaskIndex, P017_NO_TAG_DETECTED_VALUE);
         addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
-        if (PCONFIG(1) == 1) {
+
+        if (P017_EVENT_ON_TAG_REMOVAL == 1) {
           sendData(event);
         }
         success = true;
       }
       break;
     }
-
-    case PLUGIN_TEN_PER_SECOND:
+    case PN532_TIMER_TYPE_START_READ_TAG:
     {
-      static unsigned long tempcounter = 0;
-      static uint8_t counter = 0;
-      static uint8_t errorCount = 0;
+        # ifdef DEBUG_LOGIC_ANALYZER_PIN
 
-      counter++;
+      // DEBUG code using logic analyzer for timings
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
+        # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
-      if (counter == 3)
+      // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
+      if (Settings.isI2CEnabled()
+          && ((DIRECT_pinRead(Settings.Pin_i2c_sda) == 0) || (DIRECT_pinRead(Settings.Pin_i2c_scl) == 0)))
       {
-        #ifdef DEBUG_LOGIC_ANALYZER_PIN
-          // DEBUG code using logic analyzer for timings
-          DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
-        #endif
+        addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
+        Plugin_017_Init(CONFIG_PIN3);
+      }
 
-        // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
-        if (Settings.isI2CEnabled()
-            && ((DIRECT_pinRead(Settings.Pin_i2c_sda) == 0) || (DIRECT_pinRead(Settings.Pin_i2c_scl) == 0)))
-        {
-          addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
-          Plugin_017_Init(CONFIG_PIN3);
+      if (Plugin_017_StartReadPassiveTargetID(PN532_MIFARE_ISO14443A) == 0) {
+        // Successful start
+        // Schedule to fetch the data
+        Scheduler.setPluginTaskTimer(PN532_DELAY_READ_TAG_RESPONSE, event->TaskIndex, PN532_TIMER_TYPE_READ_TAG_RESPONSE);
+      }
 
-          // delay(1000);
+      // Schedule the next start read
+      Scheduler.setPluginTaskTimer(PN532_INTERVAL_BETWEEN_READS, event->TaskIndex, PN532_TIMER_TYPE_START_READ_TAG);
+
+      # ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+      // DEBUG code using logic analyzer for timings
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
+      # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+      break;
+    }
+    case PN532_TIMER_TYPE_READ_TAG_RESPONSE:
+    {
+              # ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+      // DEBUG code using logic analyzer for timings
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
+        # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+      uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
+      uint8_t uidLength;
+      uint8_t error = Plugin_017_readPassiveTargetID(uid, &uidLength);
+
+      # ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+      // DEBUG code using logic analyzer for timings
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
+      # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+
+      if (error == 1)
+      {
+        errorCount++;
+
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("PN532: Read error: ");
+          log += errorCount;
+          addLogMove(LOG_LEVEL_ERROR, log);
         }
-        counter = 0;
-        uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
-        uint8_t uidLength;
-        uint8_t    error = Plugin_017_readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+      }
+      else {
+        errorCount = 0;
+      }
 
-      #ifdef DEBUG_LOGIC_ANALYZER_PIN
+      if (errorCount > 2) // if three consecutive I2C errors, reset PN532
+      {
+        Plugin_017_Init(CONFIG_PIN3);
+      }
+
+
+      if (error == 0) {
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
         // DEBUG code using logic analyzer for timings
-        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-      #endif
+        // Mark we read a card
+        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
+        unsigned long key = uid[0];
 
-        if (error == 1)
-        {
-          errorCount++;
-          if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-            String log = F("PN532: Read error: ");
-            log += errorCount;
-            addLogMove(LOG_LEVEL_ERROR, log);
-          }
+        for (uint8_t i = 1; i < 4; i++) {
+          key <<= 8;
+          key  += uid[i];
         }
-        else {
-          errorCount = 0;
-        }
+        unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
+        bool new_key          = false;
 
-        if (errorCount > 2) // if three consecutive I2C errors, reset PN532
-        {
-          Plugin_017_Init(CONFIG_PIN3);
+        if (old_key != key) {
+          UserVar.setSensorTypeLong(event->TaskIndex, key);
+          new_key = true;
         }
 
+        tempcounter++;
 
-        if (error == 0) {
-          unsigned long key = uid[0];
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("PN532: ");
 
-          for (uint8_t i = 1; i < 4; i++) {
-            key <<= 8;
-            key  += uid[i];
+          if (new_key) {
+            log += F("New Tag: ");
+          } else {
+            log += F("Old Tag: ");
           }
-          unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-          bool new_key          = false;
-
-          if (old_key != key) {
-            UserVar.setSensorTypeLong(event->TaskIndex, key);
-            new_key                          = true;
-          }
-
-          tempcounter++;
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("PN532: ");
-
-            if (new_key) {
-              log += F("New Tag: ");
-            } else {
-              log += F("Old Tag: ");
-            }
-            log += key;
-            log += ' ';
-            log += tempcounter;
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
-
-          if (new_key) { sendData(event); }
-          uint32_t resetTimer = PCONFIG_LONG(1);
-          if (resetTimer < 250) resetTimer = 250;
-          Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, event->Par1);
+          log += key;
+          log += ' ';
+          log += tempcounter;
+          addLogMove(LOG_LEVEL_INFO, log);
         }
+
+        if (new_key) { sendData(event); }
+        uint32_t resetTimer = P017_REMOVAL_TIMEOUT;
+
+        if (resetTimer < 250) { resetTimer = 250; }
+        Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, PN532_TIMER_TYPE_REMOVE_TAG);
       } else {
-    #ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
-        // DEBUG code using logic analyzer for timings
-        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-    #endif
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
+        // DEBUG code using logic analyzer for timings
+        // Mark we no longer see the card
+        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
       }
       break;
     }
   }
+
   return success;
 }
 
@@ -271,10 +367,11 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 boolean Plugin_017_Init(int8_t resetPin)
 {
-#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
   // DEBUG code using logic analyzer for timings
   DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
   if (validGpio(resetPin))
   {
@@ -309,13 +406,16 @@ boolean Plugin_017_Init(int8_t resetPin)
     }
   }
   else {
-#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
-  // DEBUG code using logic analyzer for timings
-  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-#endif
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
+    // DEBUG code using logic analyzer for timings
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
     return false;
   }
+
+  uint8_t Plugin_017_pn532_packetbuffer[64] = { 0 };
 
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_SAMCONFIGURATION;
   Plugin_017_pn532_packetbuffer[1] = 0x01; // normal mode;
@@ -323,10 +423,11 @@ boolean Plugin_017_Init(int8_t resetPin)
   Plugin_017_pn532_packetbuffer[3] = 0x01; // use IRQ pin!
 
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 4)) {
-#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
-  // DEBUG code using logic analyzer for timings
-  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-#endif
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
+    // DEBUG code using logic analyzer for timings
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
     return false;
   }
@@ -335,10 +436,11 @@ boolean Plugin_017_Init(int8_t resetPin)
   Wire.beginTransmission(PN532_I2C_ADDRESS);
   Wire.endTransmission();
   delay(1);
-#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+# ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+
   // DEBUG code using logic analyzer for timings
   DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-#endif
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
 
   return true;
 }
@@ -349,6 +451,7 @@ boolean Plugin_017_Init(int8_t resetPin)
 uint32_t getFirmwareVersion(void)
 {
   uint32_t response;
+  uint8_t  Plugin_017_pn532_packetbuffer[64] = { 0 };
 
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
 
@@ -376,6 +479,8 @@ uint32_t getFirmwareVersion(void)
 
 void Plugin_017_powerDown(void)
 {
+  uint8_t Plugin_017_pn532_packetbuffer[64] = { 0 };
+
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_POWERDOWN;
   Plugin_017_pn532_packetbuffer[1] = 1 << 7; // allowed wakeup source is i2c
 
@@ -390,8 +495,10 @@ void Plugin_017_powerDown(void)
 /*********************************************************************************************\
 * PN532 read tag
 \*********************************************************************************************/
-uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8_t *uidLength)
+uint8_t Plugin_017_StartReadPassiveTargetID(uint8_t cardbaudrate)
 {
+  uint8_t Plugin_017_pn532_packetbuffer[64] = { 0 };
+
   Plugin_017_pn532_packetbuffer[0] = PN532_COMMAND_INLISTPASSIVETARGET;
   Plugin_017_pn532_packetbuffer[1] = 1; // max 1 cards at once
   Plugin_017_pn532_packetbuffer[2] = cardbaudrate;
@@ -399,12 +506,17 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 3)) {
     return 0x1; // command failed
   }
+  return 0;
+}
 
-  delay(20);
+uint8_t Plugin_017_readPassiveTargetID(uint8_t *uid, uint8_t *uidLength)
+{
+  uint8_t Plugin_017_pn532_packetbuffer[64] = { 0 };
 
   // read data packet
-  const int16_t read_code = 
+  const int16_t read_code =
     Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer));
+
   if (read_code < 0) {
     // if no tag read, need to clear something ?
     // it seems that without this code, the next read fails, taking another read to work again...
@@ -413,24 +525,12 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8
     Wire.beginTransmission(PN532_I2C_ADDRESS);
     Wire.endTransmission();
 
-#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
-    // DEBUG code using logic analyzer for timings
-    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
-    delay(-1 * read_code);
-    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-#endif
-
     return 0x2;
   }
 
   if (Plugin_017_pn532_packetbuffer[0] != 1) {
     return 0x3;
   }
-
-#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
-    // DEBUG code using logic analyzer for timings
-    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
-#endif
 
   uint16_t sens_res = Plugin_017_pn532_packetbuffer[2];
 
@@ -445,8 +545,7 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8
   }
 
   // Plugin_017_Init(-1);
-//  Plugin_017_powerDown();
-
+  //  Plugin_017_powerDown();
 
 
   return 0;

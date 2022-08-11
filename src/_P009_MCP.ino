@@ -507,7 +507,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       GPIO_MCP_Write(event->Par1, event->Par2);
 
@@ -525,7 +525,7 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_ONLY_TIMER_IN:
+    case PLUGIN_DEVICETIMER_IN:
     {
       GPIO_MCP_Write(event->Par1, event->Par2);
 

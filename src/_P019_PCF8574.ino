@@ -570,7 +570,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;
@@ -590,7 +590,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_ONLY_TIMER_IN:
+    case PLUGIN_DEVICETIMER_IN:
     {
       // setPinState(PLUGIN_ID_019, event->Par1, PIN_MODE_OUTPUT, event->Par2);
       portStatusStruct tempStatus;

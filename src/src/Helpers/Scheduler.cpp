@@ -65,10 +65,10 @@ const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::Sched
   switch (timerType) {
     case SchedulerTimerType_e::SystemEventQueue:       return F("SystemEventQueue");
     case SchedulerTimerType_e::ConstIntervalTimer:     return F("Const Interval");
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:      return F("PLUGIN_TIMER_IN");
+    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:      return F("PLUGIN_TASKTIMER_IN");
     case SchedulerTimerType_e::TaskDeviceTimer:        return F("PLUGIN_READ");
     case SchedulerTimerType_e::GPIO_timer:             return F("GPIO_timer");
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e: return F("PLUGIN_ONLY_TIMER_IN");
+    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e: return F("PLUGIN_DEVICETIMER_IN");
     case SchedulerTimerType_e::RulesTimer:             return F("Rules#Timer");
     case SchedulerTimerType_e::IntendedReboot:         return F("Intended Reboot");
   }
@@ -599,22 +599,21 @@ void ESPEasy_Scheduler::process_interval_timer(IntervalTimer_e id, unsigned long
 /*********************************************************************************************\
 * Plugin Task Timer
 \*********************************************************************************************/
-unsigned long ESPEasy_Scheduler::createPluginTaskTimerId(deviceIndex_t deviceIndex, int Par1) {
+unsigned long ESPEasy_Scheduler::createPluginTaskTimerId(taskIndex_t taskIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
-  const unsigned long mixed = (Par1 << 8) + deviceIndex;
+  const unsigned long mixed = (Par1 << 8) + taskIndex;
 
   return mixed & mask;
 }
 
 void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_t taskIndex, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
-  // plugin number and par1 form a unique key that can be used to restart a timer
-  // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.
-  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
-
-  if (!validDeviceIndex(deviceIndex)) { return; }
-
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, createPluginTaskTimerId(deviceIndex, Par1));
+  // taskIndex and par1 form a unique key that can be used to restart a timer
+  if (!validTaskIndex(taskIndex)) return;
+  if (!Settings.TaskDeviceEnabled[taskIndex]) return;
+  const unsigned long mixedTimerId = getMixedId(
+    SchedulerTimerType_e::PLUGIN_TIMER_IN_e, 
+    createPluginTaskTimerId(taskIndex, Par1));
 
   systemTimerStruct timer_data;
 
@@ -669,10 +668,10 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
     if (validUserVarIndex(TempEvent.BaseVarIndex)) {
       // checkDeviceVTypeForTask(&TempEvent);
       String dummy;
-      Plugin_ptr[deviceIndex](PLUGIN_TIMER_IN, &TempEvent, dummy);
+      Plugin_ptr[deviceIndex](PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
     }
   }
-  STOP_TIMER(PROC_SYS_TIMER);
+  STOP_TIMER_TASK(deviceIndex, PLUGIN_TASKTIMER_IN);
 }
 
 /*********************************************************************************************\
@@ -803,8 +802,8 @@ bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
 
 /*********************************************************************************************\
 * Plugin Timer
-* Essentially calling PLUGIN_ONLY_TIMER_IN
-* Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+* Essentially calling PLUGIN_DEVICETIMER_IN
+* Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
 \*********************************************************************************************/
 unsigned long ESPEasy_Scheduler::createPluginTimerId(deviceIndex_t deviceIndex, int Par1) {
   const unsigned long mask  = (1 << TIMER_ID_SHIFT) - 1;
@@ -824,7 +823,7 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
   const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
-  // PLUGIN_ONLY_TIMER_IN does not address a task, so don't set TaskIndex
+  // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
   timer_data.Par1            = Par1;
   timer_data.Par2            = Par2;
   timer_data.Par3            = Par3;
@@ -847,7 +846,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   struct EventStruct TempEvent;
 
-  // PLUGIN_ONLY_TIMER_IN does not address a task, so don't set TaskIndex
+  // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
 
   // extract deviceID from timer id:
   const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
@@ -876,9 +875,9 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    Plugin_ptr[deviceIndex](PLUGIN_ONLY_TIMER_IN, &TempEvent, dummy);
+    Plugin_ptr[deviceIndex](PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
   }
-  STOP_TIMER(PROC_SYS_TIMER);
+  STOP_TIMER(PLUGIN_CALL_DEVICETIMER_IN);
 }
 
 /*********************************************************************************************\

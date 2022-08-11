@@ -64,7 +64,7 @@ public:
     PLUGIN_TIMER_IN_e      = 2, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
     TaskDeviceTimer        = 3, // Essentially calling PLUGIN_READ
     GPIO_timer             = 4,
-    PLUGIN_ONLY_TIMER_IN_e = 5, // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+    PLUGIN_ONLY_TIMER_IN_e = 5, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
     RulesTimer             = 6,
     IntendedReboot         = 15 // Used to show intended reboot
   };
@@ -145,10 +145,11 @@ public:
                                               unsigned long   lasttimer);
 
   /*********************************************************************************************\
-  * Plugin Task Timer
+  * Plugin Task Timer  (PLUGIN_TASKTIMER_IN)
+  * Can be scheduled per combo taskIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
-  static unsigned long createPluginTaskTimerId(deviceIndex_t deviceIndex,
-                                               int           Par1);
+  static unsigned long createPluginTaskTimerId(taskIndex_t taskIndex,
+                                               int         Par1);
 
   void                 setPluginTaskTimer(unsigned long msecFromNow,
                                           taskIndex_t   taskIndex,
@@ -184,7 +185,9 @@ public:
 
 
   /*********************************************************************************************\
-  * Plugin Timer
+  * Plugin Timer  (PLUGIN_DEVICETIMER_IN)
+  * Does not reflect a specific task, but rather a plugin.
+  * Can be scheduled per combo deviceIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
   static unsigned long createPluginTimerId(deviceIndex_t deviceIndex,
                                            int           Par1);
