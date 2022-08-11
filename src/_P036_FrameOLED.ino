@@ -14,6 +14,10 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-08-11
+// CHG: using css style xwide as default (define P036_USE_XWIDE deleted)
+// CHG: correct English text (requested by tonhuisman)
+// CHG: addFormNote() not used with LIMIT_BUILD_SIZE (proposed by tonhuisman) 
 // @uwekaditz: 2022-05-09
 // NEW: right alignment with trailing spaces
 // @uwekaditz: 2022-05-08
