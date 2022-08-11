@@ -612,6 +612,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       if (validDeviceIndex(DeviceIndex)) {
         if (Settings.TaskDeviceDataFeed[x] == 0)
         {
+          String description;
+          bool pluginHasGPIODescription = pluginWebformShowGPIOdescription(x, F("<BR>"), description);
+
           bool showpin1 = false;
           bool showpin2 = false;
           bool showpin3 = false;
@@ -620,18 +623,19 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_I2C:
             {
               format_I2C_pin_description(x);
+              html_BR();
               break;
             }
             case DEVICE_TYPE_SPI3:
-              showpin3 = true;
+              showpin3 = !pluginHasGPIODescription;
 
             // Fall Through
             case DEVICE_TYPE_SPI2:
-              showpin2 = true;
+              showpin2 = !pluginHasGPIODescription;
 
             // Fall Through
             case DEVICE_TYPE_SPI:
-              format_SPI_pin_description(spi_gpios, x);
+              format_SPI_pin_description(spi_gpios, x, !pluginHasGPIODescription);
               break;
             case DEVICE_TYPE_ANALOG:
             {
@@ -680,9 +684,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_CUSTOM0:
             {
               showpin1 = true;
-              String description;
-
-              if (pluginWebformShowGPIOdescription(x, F("<BR>"), description) || (Device[DeviceIndex].Type == DEVICE_TYPE_CUSTOM0)) {
+              if (pluginHasGPIODescription || (Device[DeviceIndex].Type == DEVICE_TYPE_CUSTOM0)) {
                 addHtml(description);
                 showpin1 = false;
                 showpin2 = false;
@@ -716,13 +718,12 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           }
 
           // Allow for tasks to show their own specific GPIO pins.
-          if (!Device[DeviceIndex].isCustom()) {
-            String description;
-
-            if (pluginWebformShowGPIOdescription(x, F("<BR>"), description)) {
+          if (!Device[DeviceIndex].isCustom() &&
+              pluginHasGPIODescription) {
+            if (showpin1 || showpin2 || showpin3) {
               html_BR();
-              addHtml(description);
             }
+            addHtml(description);
           }
         }
       }
@@ -824,7 +825,7 @@ void format_I2C_pin_description(taskIndex_t x)
   }
 }
 
-void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
+void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSpin)
 {
   if (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) {
     for (int i = 0; i < 3; ++i) {
@@ -837,7 +838,9 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
       }
       html_BR();
     }
-    Label_Gpio_toHtml(F("CS"), formatGpioLabel(Settings.TaskDevicePin1[x], false));
+    if (showCSpin) {
+      Label_Gpio_toHtml(F("CS"), formatGpioLabel(Settings.TaskDevicePin1[x], false));
+    }
   }
 }
 

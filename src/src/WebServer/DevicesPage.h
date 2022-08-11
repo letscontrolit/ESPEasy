@@ -46,7 +46,7 @@ void format_SPI_port_description(int8_t spi_gpios[3]);
 
 void format_I2C_pin_description(taskIndex_t x);
 
-void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x);
+void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSpin = true);
 
 
 
