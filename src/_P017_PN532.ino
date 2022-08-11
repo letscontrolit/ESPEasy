@@ -19,7 +19,7 @@
 #define PN532_POSTAMBLE               (0x00)
 #define PN532_HOSTTOPN532             (0xD4)
 #define PN532_PN532TOHOST             (0xD5)
-#define PN532_ACK_WAIT_TIME           (3)
+#define PN532_ACK_WAIT_TIME           (5)
 #define PN532_INVALID_ACK             (-1)
 #define PN532_TIMEOUT                 (-2)
 #define PN532_INVALID_FRAME           (-3)
@@ -31,6 +31,14 @@
 #define PN532_RESPONSE_INLISTPASSIVETARGET  (0x4B)
 #define PN532_MIFARE_ISO14443A              (0x00)
 #define PN532_COMMAND_POWERDOWN             (0x16)
+
+
+// DEBUG code using logic analyzer for timings
+#define DEBUG_LOGIC_ANALYZER_PIN  25
+#define DEBUG_LOGIC_ANALYZER_PIN_INIT  33
+
+
+# include <GPIO_Direct_Access.h>
 
 uint8_t Plugin_017_pn532_packetbuffer[64];
 uint8_t Plugin_017_command;
@@ -122,12 +130,22 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       // if (!Settings.WireClockStretchLimit)
       //   Wire.setClockStretchLimit(2000);
 
+      #ifdef DEBUG_LOGIC_ANALYZER_PIN
+      // DEBUG code using logic analyzer for timings
+      pinMode(DEBUG_LOGIC_ANALYZER_PIN, OUTPUT);
+      #endif
+      #ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+      // DEBUG code using logic analyzer for timings
+      pinMode(DEBUG_LOGIC_ANALYZER_PIN_INIT, OUTPUT);
+      #endif
+
+
       for (uint8_t x = 0; x < 3; x++)
       {
         if (Plugin_017_Init(CONFIG_PIN3)) {
           break;
         }
-        delay(1000);
+        delay(100);
       }
       break;
     }
@@ -149,16 +167,21 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TEN_PER_SECOND:
     {
       static unsigned long tempcounter = 0;
-      static uint8_t counter;
+      static uint8_t counter = 0;
       static uint8_t errorCount = 0;
 
       counter++;
 
       if (counter == 3)
       {
+        #ifdef DEBUG_LOGIC_ANALYZER_PIN
+          // DEBUG code using logic analyzer for timings
+          DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
+        #endif
+
         // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
         if (Settings.isI2CEnabled()
-            && ((digitalRead(Settings.Pin_i2c_sda) == 0) || (digitalRead(Settings.Pin_i2c_scl) == 0)))
+            && ((DIRECT_pinRead(Settings.Pin_i2c_sda) == 0) || (DIRECT_pinRead(Settings.Pin_i2c_scl) == 0)))
         {
           addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
           Plugin_017_Init(CONFIG_PIN3);
@@ -169,6 +192,12 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
         uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
         uint8_t uidLength;
         uint8_t    error = Plugin_017_readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength);
+
+      #ifdef DEBUG_LOGIC_ANALYZER_PIN
+        // DEBUG code using logic analyzer for timings
+        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
+      #endif
+
 
         if (error == 1)
         {
@@ -224,6 +253,12 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
           if (resetTimer < 250) resetTimer = 250;
           Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, event->Par1);
         }
+      } else {
+    #ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+        // DEBUG code using logic analyzer for timings
+        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+    #endif
+
       }
       break;
     }
@@ -236,6 +271,11 @@ boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 \*********************************************************************************************/
 boolean Plugin_017_Init(int8_t resetPin)
 {
+#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+  // DEBUG code using logic analyzer for timings
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
+#endif
+
   if (validGpio(resetPin))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -269,6 +309,11 @@ boolean Plugin_017_Init(int8_t resetPin)
     }
   }
   else {
+#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+  // DEBUG code using logic analyzer for timings
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+#endif
+
     return false;
   }
 
@@ -278,13 +323,22 @@ boolean Plugin_017_Init(int8_t resetPin)
   Plugin_017_pn532_packetbuffer[3] = 0x01; // use IRQ pin!
 
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 4)) {
+#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+  // DEBUG code using logic analyzer for timings
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+#endif
+
     return false;
   }
 
   // to prevent nack on next read
   Wire.beginTransmission(PN532_I2C_ADDRESS);
   Wire.endTransmission();
-  delay(5);
+  delay(1);
+#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+  // DEBUG code using logic analyzer for timings
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+#endif
 
   return true;
 }
@@ -301,8 +355,6 @@ uint32_t getFirmwareVersion(void)
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 1)) {
     return 0;
   }
-
-  delay(50); // we can try to read faster, but it will only put extra load on the I2C bus...
 
   // read data packet
   int16_t status = Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer));
@@ -331,8 +383,6 @@ void Plugin_017_powerDown(void)
     return;
   }
 
-  // delay(50); // we can try to read faster, but it will only put extra load on the I2C bus...
-
   // read and ignore response
   Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer));
 }
@@ -350,22 +400,37 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8
     return 0x1; // command failed
   }
 
-  delay(50);    // we can try to read faster, but it will only put extra load on the I2C bus...
+  delay(20);
 
   // read data packet
-  if (Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer)) < 0) {
+  const int16_t read_code = 
+    Plugin_017_readResponse(Plugin_017_pn532_packetbuffer, sizeof(Plugin_017_pn532_packetbuffer));
+  if (read_code < 0) {
     // if no tag read, need to clear something ?
     // it seems that without this code, the next read fails, taking another read to work again...
 
     // to prevent nack on next read
     Wire.beginTransmission(PN532_I2C_ADDRESS);
     Wire.endTransmission();
+
+#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+    // DEBUG code using logic analyzer for timings
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
+    delay(-1 * read_code);
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
+#endif
+
     return 0x2;
   }
 
   if (Plugin_017_pn532_packetbuffer[0] != 1) {
     return 0x3;
   }
+
+#ifdef DEBUG_LOGIC_ANALYZER_PIN_INIT
+    // DEBUG code using logic analyzer for timings
+    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
+#endif
 
   uint16_t sens_res = Plugin_017_pn532_packetbuffer[2];
 
@@ -380,7 +445,8 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t cardbaudrate, uint8_t *uid, uint8
   }
 
   // Plugin_017_Init(-1);
-  Plugin_017_powerDown();
+//  Plugin_017_powerDown();
+
 
 
   return 0;
@@ -432,6 +498,8 @@ int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
 \*********************************************************************************************/
 int16_t Plugin_017_readResponse(uint8_t buf[], uint8_t len)
 {
+  delay(1); // Need to wait a little as the PN53x may not 'see' the request if we send it too quickly.
+
   if (!Wire.requestFrom(PN532_I2C_ADDRESS, len + 2)) {
     return -1;
   }
@@ -488,6 +556,8 @@ int16_t Plugin_017_readResponse(uint8_t buf[], uint8_t len)
 \*********************************************************************************************/
 int8_t Plugin_017_readAckFrame()
 {
+  delay(1); // Need to wait a little as the PN53x may not 'see' the request if we send it too quickly.
+
   const uint8_t PN532_ACK[] = { 0, 0, 0xFF, 0, 0xFF, 0 };
   uint8_t ackBuf[sizeof(PN532_ACK)];
 
@@ -500,7 +570,7 @@ int8_t Plugin_017_readAckFrame()
       }
     }
 
-    delay(5);
+    delay(1);
     time++;
 
     if (time > PN532_ACK_WAIT_TIME) {
