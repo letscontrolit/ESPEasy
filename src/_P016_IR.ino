@@ -21,6 +21,13 @@
 // If the IR library can encode those kind of messages then a JSON formated command will be given, that can be replayed by P035 as well.
 // That commands format is:
 // IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
+
+/** Changelog:
+ * 2022-08-08 tonhuisman: Optionally (compile-time) disable command handling by setting #define P016_FEATURE_COMMAND_HDNLING 0
+ *                        Make reserved buffer size for receiver configurable 100..1024 uint16_t = 200-2048 bytes
+ *                        Change UI to show buffer size in bytes instead of 'units' to avoid confusion.
+ * 2022-08-08 tonhuisman: Add Changelog, older changes not clearly registered, add newer changelog lines on the top of this list.
+ */
 # include <ArduinoJson.h>
 # include <IRremoteESP8266.h>
 # include <IRutils.h>
@@ -41,6 +48,7 @@
 # define PLUGIN_NAME_016 "Communication - IR Receive (TSOP4838)"
 # define PLUGIN_VALUENAME1_016 "IR"
 # define P016_CMDINHIBIT       PCONFIG(1)
+# define P016_BUFFERSIZE       PCONFIG(2)
 # define P016_SETTINGS_VERSION PCONFIG(7) // 0 = V1, 2 = V2
 
 # ifndef P016_SEND_IR_TO_CONTROLLER
@@ -48,6 +56,8 @@
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
 // History
+// @tonhuisman: 2022-08-08
+// FIX: Resolve high memory use bu having the default buffer size reduced from 1024 to 100, and make that a setting
 // @tonhuisman: 2021-08-05
 // FIX: Resolve stack size issues by replacing 2 arrays by std::vectors
 // CHG: Remove unneeded #define for nr. of decoding types
@@ -78,7 +88,7 @@
 // ==================== start of TUNEABLE PARAMETERS ====================
 // As this program is a special purpose capture/decoder, let us use a larger
 // than normal buffer so we can handle Air Conditioner remote codes.
-const uint16_t kCaptureBufferSize = 1024;
+// const uint16_t kCaptureBufferSize = 1024; // Replaced by setting P016_BUFFERSIZE
 
 // kTimeout is the Nr. of milli-Seconds of no-more-data before we consider a
 // message ended.
@@ -143,9 +153,10 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 # endif // ifdef P016_P035_USE_RAW_RAW2
 
 # ifdef PLUGIN_016_DEBUG
-void P016_infoLogMemory(const __FlashStringHelper * text) {
+void P016_infoLogMemory(const __FlashStringHelper *text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
+
     if (log.reserve(40 + strlen_P((PGM_P)text))) {
       log += F("P016: Free memory ");
       log += text;
@@ -228,29 +239,34 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("INIT: IR RX"));
           addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_));
         }
-        irReceiver = new (std::nothrow) IRrecv(irPin, kCaptureBufferSize, P016_TIMEOUT, true);
+
+        uint16_t bufsize = P016_BUFFERSIZE;
+
+        if ((bufsize < P016_MIN_BUFFERSIZE) || (bufsize > P016_MAX_BUFFERSIZE)) { bufsize = P016_DEFAULT_BUFFERSIZE; } // safety check
+
+        irReceiver = new (std::nothrow) IRrecv(irPin, bufsize, P016_TIMEOUT, true);
         # ifdef PLUGIN_016_DEBUG
         addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver created"));
         # endif // PLUGIN_016_DEBUG
 
         if (nullptr != irReceiver) {
           irReceiver->setUnknownThreshold(kMinUnknownSize); // Ignore messages with less than minimum on or off pulses.
-          irReceiver->enableIRIn(); // Start the receiver
+          irReceiver->enableIRIn();                         // Start the receiver
           # ifdef PLUGIN_016_DEBUG
           addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver initialized"));
           # endif // PLUGIN_016_DEBUG
         }
       }
 
-      if ((nullptr != irReceiver) && (irPin == -1))
-      {
-        irReceiver->disableIRIn();
-        delete irReceiver;
-        irReceiver = nullptr;
-        # ifdef PLUGIN_016_DEBUG
-        addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver destroyed"));
-        # endif // PLUGIN_016_DEBUG
-      }
+      // if ((nullptr != irReceiver) && (irPin == -1)) // Unreachable code
+      // {
+      //   irReceiver->disableIRIn();
+      //   delete irReceiver;
+      //   irReceiver = nullptr;
+      //   # ifdef PLUGIN_016_DEBUG
+      //   addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT IR receiver destroyed"));
+      //   # endif // PLUGIN_016_DEBUG
+      // }
 
       # ifdef PLUGIN_016_DEBUG
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_INIT done"));
@@ -288,6 +304,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_SET_DEFAULTS ..."));
       # endif // PLUGIN_016_DEBUG
 
+      P016_BUFFERSIZE       = P016_DEFAULT_BUFFERSIZE;
       P016_SETTINGS_VERSION = P16_SETTINGS_LATEST; // New installs don't need conversion
       break;
     }
@@ -302,16 +319,29 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addRowLabel(F("Info"));
       addHtml(F("Check serial or web log for replay solutions via Communication - IR Transmit plugin"));
 
+      addFormNumericBox(F("Receiver buffer size"), F("pbuffersize"), P016_BUFFERSIZE * 2, P016_MIN_BUFFERSIZE * 2, P016_MAX_BUFFERSIZE * 2);
+      String unit;
+      unit += P016_MIN_BUFFERSIZE * 2;
+      unit += F("..");
+      unit += P016_MAX_BUFFERSIZE * 2;
+      unit += F(" bytes");
+      addUnit(unit);
+      addFormNote(F("Increase buffer size if IR commands are received incomplete."));
+
+
       addFormSubHeader(F("Content"));
 
+      # if P016_FEATURE_COMMAND_HANDLING
       bool bAddNewCode = bitRead(PCONFIG_LONG(0), P016_BitAddNewCode);
-      addFormCheckBox(F("Add new received code to command lines"), F("p016_AddNewCode"), bAddNewCode);
+      addFormCheckBox(F("Add new received code to command lines"), F("pAddNewCode"),        bAddNewCode);
       bool bExecuteCmd = bitRead(PCONFIG_LONG(0), P016_BitExecuteCmd);
-      addFormCheckBox(F("Execute commands"),                       F("p016_ExecuteCmd"), bExecuteCmd);
+      addFormCheckBox(F("Execute commands"),                       F("pExecuteCmd"),        bExecuteCmd);
+      # endif // if P016_FEATURE_COMMAND_HANDLING
       bool bAcceptUnknownType = bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType);
-      addFormCheckBox(F("Accept DecodeType UNKNOWN"),              F("p016_AcceptUnknownType"), bAcceptUnknownType);
+      addFormCheckBox(F("Accept DecodeType UNKNOWN"),              F("pAcceptUnknownType"), bAcceptUnknownType);
+      # if P016_FEATURE_COMMAND_HANDLING
       addFormNumericBox(F("Inhibit time for the same command [ms]"),
-                        F("p016_cmdinhibit"),
+                        F("pcmdinhibit"),
                         P016_CMDINHIBIT,
                         1,
                         2000);
@@ -322,26 +352,35 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           int size = static_cast<int>(decode_type_t::kLastDecodeType) + 1;
 
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log; // Log this always
-            if (log.reserve(30)) {
-              log += F("IR: available decodetypes: ");
-              log += size;
-              addLogMove(LOG_LEVEL_INFO, log);
-            }
-          }
-
           // Fill a vector with all supported decode_type_t names
-          std::vector<String> decodeTypes;
-          std::vector<int>    decodeTypeOptions;
+          std::vector<String>decodeTypes;
+          std::vector<int>decodeTypeOptions;
+
+          int protocolCount = 0;
 
           for (int i = 0; i < size; i++) {
-            decodeTypeOptions.push_back(i);
-            decodeTypes.push_back(typeToString(static_cast<decode_type_t>(i), false));
+            const String protocol = typeToString(static_cast<decode_type_t>(i), false);
+
+            if (protocol.length() > 1) {
+              decodeTypeOptions.push_back(i);
+              decodeTypes.push_back(protocol);
+              protocolCount++;
+            }
 
             // addLog(LOG_LEVEL_INFO, decodeTypes[i]); // For development debugging purposes
             delay(0);
           }
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log; // Log this always
+
+            if (log.reserve(30)) {
+              log += F("IR: available decodetypes: ");
+              log += protocolCount;
+              addLogMove(LOG_LEVEL_INFO, log);
+            }
+          }
+
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
                                                                              // default
           addRowLabel(F("Code - command map"));
@@ -372,7 +411,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             addHtmlInt(varNr + 1); // #
             html_TD();
             {                      // Decode type
-              addSelector(getPluginCustomArgName(rowCnt + 0), size, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
+              addSelector(getPluginCustomArgName(rowCnt + 0), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
                           static_cast<int>(line.CodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
@@ -387,7 +426,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             html_TD();
             {
-              addSelector(getPluginCustomArgName(rowCnt + 3), size, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
+              addSelector(getPluginCustomArgName(rowCnt + 3), protocolCount, &decodeTypes[0], &decodeTypeOptions[0], nullptr,
                           static_cast<int>(line.AlternativeCodeDecodeType), false, true, EMPTY_STRING);
             }
             html_TD();
@@ -420,6 +459,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      # endif // if P016_FEATURE_COMMAND_HANDLING
+
       # ifdef PLUGIN_016_DEBUG
       P016_infoLogMemory(F("after load"));
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_LOAD done"));
@@ -441,81 +482,90 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
       uint32_t lSettings = 0;
-      bitWrite(lSettings, P016_BitAddNewCode, isFormItemChecked(F("p016_AddNewCode")));
-      bitWrite(lSettings, P016_BitExecuteCmd, isFormItemChecked(F("p016_ExecuteCmd")));
-      bitWrite(lSettings, P016_BitAcceptUnknownType, isFormItemChecked(F("p016_AcceptUnknownType")));
+      # if P016_FEATURE_COMMAND_HANDLING
+      bitWrite(lSettings, P016_BitAddNewCode,        isFormItemChecked(F("pAddNewCode")));
+      bitWrite(lSettings, P016_BitExecuteCmd,        isFormItemChecked(F("pExecuteCmd")));
+      # endif // if P016_FEATURE_COMMAND_HANDLING
+      bitWrite(lSettings, P016_BitAcceptUnknownType, isFormItemChecked(F("pAcceptUnknownType")));
 
       bEnableIRcodeAdding = true;
       PCONFIG_LONG(0)     = lSettings;
-      P016_CMDINHIBIT     = getFormItemInt(F("p016_cmdinhibit"));
+      # if P016_FEATURE_COMMAND_HANDLING
+      P016_CMDINHIBIT = getFormItemInt(F("pcmdinhibit"));
+      # endif // if P016_FEATURE_COMMAND_HANDLING
+      P016_BUFFERSIZE = ceil(getFormItemInt(F("pbuffersize")) / 2.0f); // UI shows bytes, we store buffer unit = uint16_t
 
-      # ifdef PLUGIN_016_DEBUG
-      P016_infoLogMemory(F("before save"));
-      # endif // ifdef PLUGIN_016_DEBUG
+      # if P016_FEATURE_COMMAND_HANDLING
 
       {
-          String strError;
-          strError.reserve(30); // Length of expected string, needed for strings > 11 chars
+        #  ifdef PLUGIN_016_DEBUG
+        P016_infoLogMemory(F("before save"));
+        #  endif // ifdef PLUGIN_016_DEBUG
 
-          int rowCnt = 0;
+        String strError;
+        strError.reserve(30); // Length of expected string, needed for strings > 11 chars
 
-          for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
-            tCommandLinesV2 line;
+        int rowCnt = 0;
 
-            strError.clear();
+        for (uint8_t varNr = 0; varNr < P16_Nlines; varNr++) {
+          tCommandLinesV2 line;
 
-            // Normal Code & flags
-            line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
-            bitWrite(line.CodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 1)));
-            line.Code = 0;
+          strError.clear();
 
-            char strCode[P16_Cchars] = {0};
-            if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 2)), P16_Cchars)) {
-              strError += F("Code ");
-              strError += (varNr + 1);
-              strError += ' ';
-            } else {
-              line.Code = hexToULL(strCode); // convert string with hexnumbers to uint64_t
-            }
+          // Normal Code & flags
+          line.CodeDecodeType = static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 0)));
+          bitWrite(line.CodeFlags, P16_FLAGS_REPEAT, isFormItemChecked(getPluginCustomArgName(rowCnt + 1)));
+          line.Code = 0;
 
-            delay(0);
+          char strCode[P16_Cchars] = { 0 };
 
-            // Alternate Code & flags
-            line.AlternativeCodeDecodeType =
-              static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 3)));
-            bitWrite(line.AlternativeCodeFlags, P16_FLAGS_REPEAT,
-                     isFormItemChecked(getPluginCustomArgName(rowCnt + 4)));
-            line.AlternativeCode = 0;
-
-            if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 5)), P16_Cchars)) {
-              strError += F("Alt.Code ");
-              strError += (varNr + 1);
-              strError += ' ';
-            } else {
-              line.AlternativeCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
-            }
-
-            // Command
-            if (!safe_strncpy(line.Command, webArg(getPluginCustomArgName(rowCnt + 6)), P16_Nchars)) {
-              strError += F("Command ");
-              strError += (varNr + 1);
-            }
-            line.Command[P16_Nchars - 1] = 0; // Terminate string
-
-            if (!strError.isEmpty()) {
-              addHtmlError(strError);
-            }
-
-            rowCnt += 7;
-            delay(0);
-
-            P016_data_struct::saveCommandLine(event, line, varNr);
+          if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 2)), P16_Cchars)) {
+            strError += F("Code ");
+            strError += (varNr + 1);
+            strError += ' ';
+          } else {
+            line.Code = hexToULL(strCode); // convert string with hexnumbers to uint64_t
           }
 
-          # ifdef PLUGIN_016_DEBUG
-          P016_infoLogMemory(F("after save"));
-          # endif // ifdef PLUGIN_016_DEBUG
+          delay(0);
+
+          // Alternate Code & flags
+          line.AlternativeCodeDecodeType =
+            static_cast<decode_type_t>(getFormItemInt(getPluginCustomArgName(rowCnt + 3)));
+          bitWrite(line.AlternativeCodeFlags, P16_FLAGS_REPEAT,
+                   isFormItemChecked(getPluginCustomArgName(rowCnt + 4)));
+          line.AlternativeCode = 0;
+
+          if (!safe_strncpy(strCode, webArg(getPluginCustomArgName(rowCnt + 5)), P16_Cchars)) {
+            strError += F("Alt.Code ");
+            strError += (varNr + 1);
+            strError += ' ';
+          } else {
+            line.AlternativeCode = hexToULL(strCode); // convert string with hexnumbers to uint64_t
+          }
+
+          // Command
+          if (!safe_strncpy(line.Command, webArg(getPluginCustomArgName(rowCnt + 6)), P16_Nchars)) {
+            strError += F("Command ");
+            strError += (varNr + 1);
+          }
+          line.Command[P16_Nchars - 1] = 0; // Terminate string
+
+          if (!strError.isEmpty()) {
+            addHtmlError(strError);
+          }
+
+          rowCnt += 7;
+          delay(0);
+
+          P016_data_struct::saveCommandLine(event, line, varNr);
+        }
+
+        #  ifdef PLUGIN_016_DEBUG
+        P016_infoLogMemory(F("after save"));
+        #  endif // ifdef PLUGIN_016_DEBUG
       }
+      # endif // if P016_FEATURE_COMMAND_HANDLING
 
       # ifdef PLUGIN_016_DEBUG
       addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_WEBFORM_SAVE Done"));
@@ -524,6 +574,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if P016_FEATURE_COMMAND_HANDLING
     case PLUGIN_ONCE_A_SECOND:
     {
       P016_data_struct *P016_data =
@@ -533,14 +584,15 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         if (P016_data->bCodeChanged) { // code has been added -> SaveCustomTaskSettings
           P016_data->saveCommandLines(event);
           P016_data->bCodeChanged = false;
-          # ifdef PLUGIN_016_DEBUG
+          #  ifdef PLUGIN_016_DEBUG
           addLog(LOG_LEVEL_INFO, F("P016_PLUGIN_ONCE_A_SECOND CustomTaskSettings Saved"));
-          # endif // PLUGIN_016_DEBUG
+          #  endif // PLUGIN_016_DEBUG
         }
       }
       success = true;
       break;
     }
+    # endif // if P016_FEATURE_COMMAND_HANDLING
 
     case PLUGIN_TEN_PER_SECOND:
     {
@@ -554,7 +606,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         {
           addLog(LOG_LEVEL_ERROR, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
           success = false;
-          break;             // Do not continue and risk hanging the ESP
+          break; // Do not continue and risk hanging the ESP
         }
 
         // Display the basic output of what we found.
@@ -563,9 +615,11 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           {
             String output;
             output.reserve(100); // Length of expected string, needed for strings > 11 chars
-            // String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' + resultToHexidecimal(&results)
+            // String output = String(F("IRSEND,")) + typeToString(results.decode_type, results.repeat) + ',' +
+            // resultToHexidecimal(&results)
             // + ',' + uint64ToString(results.bits);
-            // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old style
+            // addLog(LOG_LEVEL_INFO, output); //Show the appropriate command to the user, so he can replay the message via P035 // Old
+            // style
             // command
             output += F("{\"protocol\":\"");
             output += typeToString(results.decode_type, results.repeat);
@@ -577,6 +631,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String Log;
+
               if (Log.reserve(output.length() + 22)) {
                 Log += F("IRSEND,\'");
                 Log += output;
@@ -587,6 +642,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             }
             event->String2 = std::move(output);
           }
+
+          # if P016_FEATURE_COMMAND_HANDLING
 
           // Check if this is a code we have a command for or we have to add
           P016_data_struct *P016_data =
@@ -605,7 +662,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
               if (iCodeDecodeType == decode_type_t::UNKNOWN) {
                 // set iCodeDecodeType UNKNOWN to RAW, otherwise AddCode() or ExecuteCode() will fail
-                iCodeDecodeType=decode_type_t::RAW;
+                iCodeDecodeType = decode_type_t::RAW;
               }
 
               if (bitRead(PCONFIG_LONG(0), P016_BitAddNewCode) && bEnableIRcodeAdding) {
@@ -617,6 +674,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               }
             }
           }
+          # endif // if P016_FEATURE_COMMAND_HANDLING
         }
 
         if  (!bitRead(PCONFIG_LONG(0), P016_BitAcceptUnknownType)) {
@@ -631,13 +689,14 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           # endif // ifdef P016_P035_USE_RAW_RAW2
           {
             addLog(LOG_LEVEL_INFO,
-                  F("IR: No replay solutions found! Press button again or try RAW encoding (timings are in the serial output)"));
+                   F("IR: No replay solutions found! Press button again or try RAW encoding (timings are in the serial output)"));
             serialPrint(F("IR: RAW TIMINGS: "));
             serialPrint(resultToSourceCode(&results));
             event->String2 = F("NaN");
             yield(); // Feed the WDT as it can take a while to print.
-                    // addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as RAW
-                    // source code //not showing up nicely in the web log
+                     // addLog(LOG_LEVEL_DEBUG,(String(F("IR: RAW TIMINGS: ")) + resultToSourceCode(&results))); // Output the results as
+                     // RAW
+                     // source code //not showing up nicely in the web log
           }
         }
 
@@ -673,6 +732,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             // If we got a human-readable description of the message, display it.
             String log;
+
             if (log.reserve(10 + description.length())) {
               log += F("AC State: ");
               log += description;
@@ -681,8 +741,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           }
         }
 
-        if (IRac::isProtocolSupported(results.decode_type)) // Check If there is a replayable AC state and show the JSON command that can be
-                                                            // send
+        if (IRac::isProtocolSupported(results.decode_type) && // Check If there is a replayable AC state and show the JSON command that can
+            (typeToString(results.decode_type).length() > 1)) // be sent
         {
           IRAcUtils::decodeToState(&results, &state);
           StaticJsonDocument<300> doc;
@@ -754,6 +814,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             // Show the command that the user can put to replay the AC state with P035
             String log;
+
             if (log.reserve(12 + event->String2.length())) {
               log += F("IRSENDAC,'");
               log += event->String2;
@@ -800,7 +861,8 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
 {
   uint16_t div[2];
 
-  #ifndef BUILD_NO_DEBUG
+  #  ifndef BUILD_NO_DEBUG
+
   // print the values: either pulses or blanks
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String line;
@@ -810,7 +872,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
     }
     addLogMove(LOG_LEVEL_DEBUG, line); // Display the RAW timings
   }
-  #endif
+  #  endif // ifndef BUILD_NO_DEBUG
 
   // Find a common denominator divisor for odd indexes (pulses) and then even indexes (blanks).
   for (uint16_t p = 0; p < 2; p++)
@@ -877,7 +939,8 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
     }
     div[p] = bstDiv;
 
-    #ifndef BUILD_NO_DEBUG
+    #  ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String line;
       line  = p ? F("Blank: ") : F("Pulse: ");
@@ -891,7 +954,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results)
       line += ((char)((bstMul - (uint16_t)bstMul) * 10) + '0');
       addLogMove(LOG_LEVEL_DEBUG, line);
     }
-    #endif
+    #  endif // ifndef BUILD_NO_DEBUG
   }
 
   // Generate the B32 Hex string, per the divisors found.
