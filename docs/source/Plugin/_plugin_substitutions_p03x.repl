@@ -106,7 +106,7 @@
 .. |P038_type| replace:: :cyan:`Output`
 .. |P038_typename| replace:: :cyan:`Output - NeoPixel (Basic)`
 .. |P038_porttype| replace:: `.`
-.. |P038_status| replace:: :green:`NORMAL` :yellow:`DISPLAY, NEOPIXEL`
+.. |P038_status| replace:: :green:`NORMAL` :yellow:`NEOPIXEL`
 .. |P038_github| replace:: P038_NeoPixel.ino
 .. _P038_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P038_NeoPixel.ino
 .. |P038_usedby| replace:: `NeoPixel RGB and RGBW LEDs and LED Strips`
