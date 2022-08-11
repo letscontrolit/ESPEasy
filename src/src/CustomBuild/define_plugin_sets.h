@@ -1356,21 +1356,21 @@ To create/register a plugin, you have to :
    #ifndef USES_P036
     #define USES_P036   // FrameOLED
    #endif
-   #ifndef USES_P038
-    #define USES_P038   // NeoPixel
-   #endif
-   #ifndef USES_P041
-    #define USES_P041   // NeoClock
-   #endif
-   #ifndef USES_P042
-    #define USES_P042   // Candle
-   #endif
+  //  #ifndef USES_P038
+  //   #define USES_P038   // NeoPixel
+  //  #endif
+  //  #ifndef USES_P041
+  //   #define USES_P041   // NeoClock
+  //  #endif
+  //  #ifndef USES_P042
+  //   #define USES_P042   // Candle
+  //  #endif
    #ifndef USES_P057
     #define USES_P057   // HT16K33_LED
    #endif
-   #ifndef USES_P070
-    #define USES_P070   // NeoPixel_Clock
-   #endif
+  //  #ifndef USES_P070
+  //   #define USES_P070   // NeoPixel_Clock
+  //  #endif
    #ifndef USES_P075
     #define USES_P075   // Nextion
    #endif
