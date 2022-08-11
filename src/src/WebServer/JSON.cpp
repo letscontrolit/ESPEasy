@@ -154,6 +154,8 @@ void handle_json()
         LabelType::SYSTEM_LIBRARIES,
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
+        LabelType::BUILD_TIME,
+        LabelType::BINARY_FILENAME,
         LabelType::LOCAL_TIME,
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
@@ -198,6 +200,12 @@ void handle_json()
         LabelType::TIMEZONE_OFFSET,
         LabelType::LATITUDE,
         LabelType::LONGITUDE,
+        LabelType::SYSLOG_LOG_LEVEL,
+        LabelType::SERIAL_LOG_LEVEL,
+        LabelType::WEB_LOG_LEVEL,
+        #if FEATURE_SD
+        LabelType::SD_LOG_LEVEL,
+        #endif // if FEATURE_SD
 
 
         LabelType::MAX_LABEL

@@ -1,0 +1,60 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    This plugin allows dynamic configuration of the command-trigger. Available triggers are:
+
+    * ``neomatrix``
+    * ``neo``
+
+    The default trigger is ``neomatrix``
+    ","
+    Some commands are postfixed with ``cmd``, indicating device specific commands. Not device-specific commands are genericly applicable to all *Adafruit Graphics Helper* enabled devices, using the ESPEasy ``AdafruitGFX_helper`` module.
+    "
+    "
+    | ``neomatrixcmd,clear``
+    ","
+    | Clear the display, using the default background color.
+    "
+    "
+    | ``neomatrixcmd,bright[,<brightness>]``
+    ","
+    | Set the level of display brightness, range: 1..255. If no brightness or 0 is provided, the Initial brightness setting is used.
+
+    | The maximum brightness allowed is determined by the Maximum allowed brightness setting.
+    "
+    "
+    | ``neomatrixcmd,settext,<line>,<text>``
+    ","
+    | Set the text for a specific line of the matrix. When Scroll is enabled for that line, the text will be scrolled as configured.
+    "
+    "
+    | ``neomatrixcmd,setscroll,<line>,<0|1>``
+    ","
+    | Set scrolling off or on for the text of a specific line of the matrix. When Scroll is enabled the text will be scrolled if it doesn't fit on the display.
+    "
+    "
+    | ``neomatrixcmd,setempty,<line>,<0|1>``
+    ","
+    | Set scrolling with empty start off or on for the text of a specific line of the matrix.
+    "
+    "
+    | ``neomatrixcmd,setright,<line>,<0|1>``
+    ","
+    | Set scrolling to right off or on for the text of a specific line of the matrix.
+    "
+    "
+    | ``neomatrixcmd,setstep,<line>,<1..16>``
+    ","
+    | Set the scroll step size for a line. Range is from 1 .. 16 pixels.
+    "
+    "
+    | ``neomatrixcmd,setspeed,<line>,<1..600>``
+    ","
+    | Set the scroll speed for a line. Range is from 1 .. 600 x 0.1 second (0.1 .. 1 minute/step).
+    "
+    "
+    | NB: The settings changed via ``neomatrixcmd,set*...`` commands will **not** be reflected in the device configuration!
+    ","
+    "
