@@ -14,6 +14,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
+#include "../Helpers/I2C_Plugin_Helper.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 
@@ -43,7 +44,7 @@ void format_I2C_port_description(taskIndex_t x);
 
 void format_SPI_port_description(int8_t spi_gpios[3]);
 
-void format_I2C_pin_description();
+void format_I2C_pin_description(taskIndex_t x);
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x);
 
