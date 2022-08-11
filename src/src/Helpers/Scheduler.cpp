@@ -632,14 +632,10 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   HeapSelectDram ephemeral;
   #endif
 
-  START_TIMER;
-
   const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
-
-  const deviceIndex_t deviceIndex = getDeviceIndex_from_TaskIndex(it->second.TaskIndex);
 
   struct EventStruct TempEvent(it->second.TaskIndex);
 
@@ -664,14 +660,10 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
    */
   systemTimers.erase(mixedTimerId);
 
-  if (validDeviceIndex(deviceIndex)) {
-    if (validUserVarIndex(TempEvent.BaseVarIndex)) {
-      // checkDeviceVTypeForTask(&TempEvent);
-      String dummy;
-      Plugin_ptr[deviceIndex](PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
-    }
+  {
+    String dummy;
+    PluginCall(PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
   }
-  STOP_TIMER_TASK(deviceIndex, PLUGIN_TASKTIMER_IN);
 }
 
 /*********************************************************************************************\
