@@ -27,25 +27,45 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
   addLog(LOG_LEVEL_INFO, F("ITHO: Extra Settings PLUGIN_118 loaded"));
   # endif // ifdef P118_DEBUG_LOG
 
-  _rf = new (std::nothrow) IthoCC1101(_csPin);
+  int8_t   spi_pins[3];
+  uint32_t startInit = 0;
+
+  if (Settings.getSPI_pins(spi_pins) && validGpio(spi_pins[1])) {
+    startInit = millis();
+    _rf       = new (std::nothrow) IthoCC1101(_csPin, spi_pins[1]); // Pass CS and MISO
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("ITHO: SPI configuration not correct!"));
+  }
 
   if (nullptr != _rf) {
+    success = true;
+
     // DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
     _rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
     _rf->init();
+    uint32_t finishInit = millis();
 
-    if (validGpio(_irqPin)) {
-      attachInterruptArg(digitalPinToInterrupt(_irqPin),
-                         reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
-                         this,
-                         FALLING);
-    } else {
-      addLog(LOG_LEVEL_ERROR, F("ITHO: Interrupt pin disabled, sending is OK, not receiving data!"));
+    if (finishInit - startInit > P118_TIMEOUT_LIMIT) {
+      String log = F("ITHO: Init duration was: ");
+      log += finishInit - startInit;
+      log += F("msec. suggesting that the CC1101 board is not (correctly) connected.");
+      addLog(LOG_LEVEL_ERROR, log);
+      success = false;
     }
-    _rf->initReceive();
-    _InitRunned = true;
 
-    success = true;
+    if (success) {
+      if (validGpio(_irqPin)) {
+        attachInterruptArg(digitalPinToInterrupt(_irqPin),
+                           reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
+                           this,
+                           FALLING);
+        addLog(LOG_LEVEL_INFO, F("ITHO: Interrupts enabled."));
+      } else {
+        addLog(LOG_LEVEL_ERROR, F("ITHO: Interrupt pin disabled, sending is OK, not receiving data!"));
+      }
+      _rf->initReceive();
+      _InitRunned = true;
+    }
   }
   return success;
 }
@@ -234,7 +254,7 @@ void P118_data_struct::ITHOcheck() {
     String Id       = _rf->getLastIDstr();
 
     if (_rfLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("ITHO: Received ID: ");
+      String log = F("ITHO: Received from ID: ");
       log += Id;
       log += F("; raw cmd: ");
       log += cmd;

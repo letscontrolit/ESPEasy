@@ -1,6 +1,7 @@
 /*
  * Author: Klusjesman, supersjimmie, modified and reworked by arjenhiemstra
- * tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
+ * 2022-08-10 tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
+ * 2022-08-11 tonhuisman: Change 3000 to #define ITHO_MAX_WAIT for easy adjustment
  */
 
 #ifndef __ITHOCC1101_H__
@@ -24,13 +25,13 @@ const uint8_t ithoMessageRVMediumCommandBytes[] = { 34, 241, 3, 0, 3, 7 };
 const uint8_t ithoMessageLowCommandBytes[]      = { 34, 241, 3, 0, 2, 4 };
 const uint8_t ithoMessageRVLowCommandBytes[]    = { 49, 224, 4, 0, 0, 1 };
 const uint8_t ithoMessageRVAutoCommandBytes[]   = { 34, 241, 3, 0, 5, 7 };
-const uint8_t ithoMessageStandByCommandBytes[]  = { 0, 0, 0, 0, 0, 0 };           // unkown, tbd
-const uint8_t ithoMessageTimer1CommandBytes[]   = { 34, 243, 3, 0, 0, 10 };      // 10 minutes full speed
-const uint8_t ithoMessageTimer2CommandBytes[]   = { 34, 243, 3, 0, 0, 20 };      // 20 minutes full speed
-const uint8_t ithoMessageTimer3CommandBytes[]   = { 34, 243, 3, 0, 0, 30 };      // 30 minutes full speed
+const uint8_t ithoMessageStandByCommandBytes[]  = { 0, 0, 0, 0, 0, 0 };         // unkown, tbd
+const uint8_t ithoMessageTimer1CommandBytes[]   = { 34, 243, 3, 0, 0, 10 };     // 10 minutes full speed
+const uint8_t ithoMessageTimer2CommandBytes[]   = { 34, 243, 3, 0, 0, 20 };     // 20 minutes full speed
+const uint8_t ithoMessageTimer3CommandBytes[]   = { 34, 243, 3, 0, 0, 30 };     // 30 minutes full speed
 const uint8_t ithoMessageJoinCommandBytes[]     = { 31, 201, 12, 0, 34, 241 };
 const uint8_t ithoMessageJoin2CommandBytes[]    = { 31, 201, 12, 99, 34, 248 }; // join command of RFT AUTO Co2 remote
-const uint8_t ithoMessageRVJoinCommandBytes[]   = { 31, 201, 24, 0, 49, 224 };   // join command of RFT-RV
+const uint8_t ithoMessageRVJoinCommandBytes[]   = { 31, 201, 24, 0, 49, 224 };  // join command of RFT-RV
 const uint8_t ithoMessageLeaveCommandBytes[]    = { 31, 201, 6, 0, 31, 201 };
 
 // itho rft-rv
@@ -64,13 +65,14 @@ private:
 public:
 
   IthoCC1101(int8_t  CSpin     = PIN_SPI_SS,
+             int8_t  MISOpin   = MISO,
              uint8_t counter   = 0,
              uint8_t sendTries = 3); // set initial counter value
   ~IthoCC1101();
 
   // init
   void init() {
-    CC1101::init(); 
+    CC1101::init();
     initReceive();
   } // init,reset CC1101
 
@@ -103,7 +105,7 @@ public:
 
   uint8_t ReadRSSI();
   bool    checkID(const uint8_t *id);
-  int   * getLastID();
+  int*    getLastID();
   String  getLastIDstr(bool ashex      = true);
   String  getLastMessagestr(bool ashex = true);
   String  LastMessageDecoded();
@@ -131,22 +133,22 @@ private:
                                const uint8_t commandBytes[]);
 
   // send
-  void     createMessageStart(IthoPacket   *itho,
-                              CC1101Packet *packet);
-  void     createMessageCommand(IthoPacket   *itho,
-                                CC1101Packet *packet);
-  void     createMessageJoin(IthoPacket   *itho,
-                             CC1101Packet *packet);
-  void     createMessageLeave(IthoPacket   *itho,
-                              CC1101Packet *packet);
+  void           createMessageStart(IthoPacket   *itho,
+                                    CC1101Packet *packet);
+  void           createMessageCommand(IthoPacket   *itho,
+                                      CC1101Packet *packet);
+  void           createMessageJoin(IthoPacket   *itho,
+                                   CC1101Packet *packet);
+  void           createMessageLeave(IthoPacket   *itho,
+                                    CC1101Packet *packet);
   const uint8_t* getMessageCommandBytes(IthoCommand command);
-  uint8_t  getCounter2(IthoPacket *itho,
-                       uint8_t     len);
+  uint8_t        getCounter2(IthoPacket *itho,
+                             uint8_t     len);
 
-  uint8_t  messageEncode(IthoPacket   *itho,
-                         CC1101Packet *packet);
-  void     messageDecode(CC1101Packet *packet,
-                         IthoPacket   *itho);
+  uint8_t        messageEncode(IthoPacket   *itho,
+                               CC1101Packet *packet);
+  void           messageDecode(CC1101Packet *packet,
+                               IthoPacket   *itho);
 }; // IthoCC1101
 
 #endif // __ITHOCC1101_H__

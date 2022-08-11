@@ -42,7 +42,7 @@
 #define MDMCFG2 0x02 // 16bit sync word / 16bit specific
 
 // default constructor
-IthoCC1101::IthoCC1101(int8_t CSpin, uint8_t counter, uint8_t sendTries) : CC1101(CSpin)
+IthoCC1101::IthoCC1101(int8_t CSpin, int8_t MISOpin, uint8_t counter, uint8_t sendTries) : CC1101(CSpin, MISOpin)
 {
   this->outIthoPacket.counter = counter;
   this->sendTries             = sendTries;
@@ -188,7 +188,7 @@ void IthoCC1101::initReceive()
   writeCommand(CC1101_SCAL);
 
   // wait for calibration to finish
-  uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+  uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
 
   while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE &&
          millis() < maxWait) {
@@ -238,7 +238,7 @@ void IthoCC1101::initReceive()
   writeCommand(CC1101_SCAL);
 
   // wait for calibration to finish
-  maxWait = millis() + 3000; // Wait for max. 3 seconds
+  maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
 
   while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_IDLE &&
          millis() < maxWait) {
@@ -256,7 +256,7 @@ void IthoCC1101::initReceive()
 
   writeCommand(CC1101_SRX);
 
-  maxWait = millis() + 3000; // Wait for max. 3 seconds
+  maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
 
   while ((readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) != CC1101_MARCSTATE_RX &&
          millis() < maxWait) {
@@ -287,10 +287,10 @@ void IthoCC1101::initReceiveMessage()
   writeRegister(CC1101_MDMCFG2,  MDMCFG2);
   writeRegister(CC1101_PKTCTRL1, 0x00);
 
-  writeCommand(CC1101_SRX);           // switch to RX state
+  writeCommand(CC1101_SRX);                    // switch to RX state
 
   // Check that the RX state has been entered
-  uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+  uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
 
   while (((marcState =
              readRegisterWithSyncProblem(CC1101_MARCSTATE, CC1101_STATUS_REGISTER)) & CC1101_BITS_MARCSTATE) != CC1101_MARCSTATE_RX &&

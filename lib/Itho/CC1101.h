@@ -1,6 +1,7 @@
 /*
  * Author: Klusjesman, modified bij supersjimmie for Arduino/ESP8266
- * tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
+ * 2022-08-10 tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
+ * 2022-08-11 tonhuisman: Change 3000 to #define ITHO_MAX_WAIT for easy adjustment
  */
 
 #ifndef __CC1101_H__
@@ -14,6 +15,10 @@
 #ifndef PIN_SPI_SS
 # define PIN_SPI_SS   (15)
 #endif // ifndef PIN_SPI_SS
+
+#ifndef ITHO_MAX_WAIT
+# define ITHO_MAX_WAIT                    1000 // Wait no longer than this nr of milliseconds
+#endif // ifndef ITHO_MAX_WAIT
 
 /*	Type of transfers */
 #define CC1101_WRITE_BURST                 0x40
@@ -186,7 +191,8 @@ protected:
 
 public:
 
-  CC1101(int8_t CSpin = PIN_SPI_SS);
+  CC1101(int8_t CSpin   = PIN_SPI_SS,
+         int8_t MISOpin = MISO);
   ~CC1101();
 
   // spi
@@ -223,6 +229,7 @@ private:
   void    deselect(void);
 
   int8_t _CSpin = PIN_SPI_SS;
+  int8_t _MISOpin;
 
 protected:
 

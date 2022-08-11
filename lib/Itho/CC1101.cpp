@@ -5,12 +5,10 @@
 #include "CC1101.h"
 
 // default constructor
-CC1101::CC1101(int8_t CSpin) : _CSpin(CSpin)
+CC1101::CC1101(int8_t CSpin, int8_t MISOpin) : _CSpin(CSpin), _MISOpin(MISOpin)
 {
-  // SPI.begin(); // Done by ESPEasy
-  #ifdef ESP8266
+  // SPI.begin(); // Done already by ESPEasy
   pinMode(_CSpin, OUTPUT);
-  #endif // ifdef ESP8266
 } // CC1101
 
 // default destructor
@@ -30,7 +28,11 @@ inline void CC1101::deselect(void) {
 
 void CC1101::spi_waitMiso()
 {
-  while (digitalRead(MISO) == HIGH) { yield(); }
+  uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
+
+  while (digitalRead(_MISOpin) == HIGH && millis() < maxWait) {
+    yield();
+  }
 }
 
 void CC1101::init()
@@ -259,11 +261,12 @@ void CC1101::sendData(CC1101Packet *packet)
     while (index < packet->length)
     {
       // check if there is free space in the fifo
-      uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+      uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
 
       while ((txStatus = (readRegisterMedian3(CC1101_TXBYTES | CC1101_STATUS_REGISTER) & CC1101_BITS_RX_BYTES_IN_FIFO)) >
              (CC1101_DATA_LEN - 2) &&
-             millis() < maxWait) {}
+             millis() < maxWait) {
+      }
 
       // calculate how many bytes we can send
       length = (CC1101_DATA_LEN - txStatus);
@@ -279,7 +282,7 @@ void CC1101::sendData(CC1101Packet *packet)
   }
 
   // wait until transmission is finished (TXOFF_MODE is expected to be set to 0/IDLE or TXFIFO_UNDERFLOW)
-  uint32_t maxWait = millis() + 3000; // Wait for max. 3 seconds
+  uint32_t maxWait = millis() + ITHO_MAX_WAIT; // Wait for max. x seconds
 
   do
   {

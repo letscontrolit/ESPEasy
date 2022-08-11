@@ -25,6 +25,12 @@
 //      tonhuisman, 21-06-2022 - Minor improvements
 //      tonhuisman, 10-08-2022 - Fix bugs, add 3 second limit to formerly perpetual while loops in IthoCC1101 library
 //                               Restructure source somewhat, rename variables, clean up stuff generally
+//      tonhuisman, 11-08-2022 - Fix issue with ESP32 support, the MISO pin was predefined, but not matching the ESPEasy
+//                               actual configuration.
+//                               Added time-out check (5s) to initialization, usually an indication of incorrect hardware
+//                               configuration, defective or disconnected board.
+//                               Reduced time-out checks in IthoCC1101 library to 1 second (from 3)
+//                               Improved display of GPIO pins in Devices page
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -123,6 +129,17 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
     {
       event->String1 = formatGpioName_input(F("Interrupt pin (CC1101 GDO2)"));
       event->String2 = formatGpioName_output(F("CS pin (CC1101 CSN)"));
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      string  = F("GDO2: ");
+      string += formatGpioLabel(P118_IRQPIN, false);
+      string += event->String1;
+      string += F("CSN: ");
+      string += formatGpioLabel(P118_CSPIN, false);
+      success = true;
       break;
     }
 

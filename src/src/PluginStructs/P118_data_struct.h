@@ -16,6 +16,8 @@
 #  undef P118_DEBUG_LOG
 # endif // if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
 
+# define P118_TIMEOUT_LIMIT   5000 // If initialization takes > 5 seconds, most likely the hardware is not correctly connected
+
 # define P118_CSPIN           PIN(1)
 # define P118_IRQPIN          PIN(0)
 # define P118_CONFIG_LOG      PCONFIG(0)
