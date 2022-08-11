@@ -17,7 +17,6 @@
 # define P036_DisplayIsOn (UserVar[event->BaseVarIndex] > 0)
 # define P036_SetDisplayOn(uint8_t) (UserVar[event->BaseVarIndex] = uint8_t)
 
-// # define P036_USE_XWIDE // CSS needs to be changed for 'xWide'
 // # define PLUGIN_036_DEBUG    // additional debug messages in the log
 // # define P036_FONT_CALC_LOG  // Enable to add extra logging during font calculation (selection)
 // # define P036_SCROLL_CALC_LOG   // Enable to add extra logging during scrolling calculation (selection)

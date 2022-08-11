@@ -27,17 +27,24 @@ Description
 
 The Framed OLED plugin does allow a bit more fancy look and feel compared to P023 OLED.
 
-The plugin allows to show several "pages" of information.
+The plugin allows to show several "pages or frames" of information.
 The number of pages depends on the number of set lines of text and the font size.
+
+The maximum number of 'Lines per frame' depends on the display size (height).
+Checkbox 'Reduce no. of lines to fit font' (default: off) can be used to reduce the lines per frame to fit the set font for the lines.
+If not checked the maximum used font size is limited.
 
 Switching between pages can be "instant" or "scrolling".
 Please note that scrolling may need more resources of the ESP, which can have an effect on other active tasks of the node.
+If 'Disable all scrolling while WiFi is disconnected' is checked switching between the pages is always "instant" and long lines are not scrolling as long as no Wifi connection is established.
+The Wifi connection attempts use a lot of resources and the scrolling looks ugly.
 
-Setting up a Display Button, allows to configure a Display Timeout and wake the display on demand. Inversed Logic should be checked when using a button that connects the input to ground when pressed.
+Setting up a 'Display Button', allows to configure a Display Timeout and wake the display on demand.
+'Inversed Logic' should be checked when using a button that connects the input to ground when pressed.
 
-When enabling "Step through pages with Display button", the button can also be used to step through the pages, when having multiple pages, to display the content on demand. If this option is unchecked, then, when available, the next page will be displayed after Interval seconds have passed. Pressing the button restarts the Display Timeout timer. When holding the button pressed, the next page will be shown after a 1 second delay.
+When enabling 'Step through pages with Display button', the button can also be used to step through the pages, when having multiple pages, to display the content on demand. If this option is unchecked, then, when available, the next page will be displayed after Interval seconds have passed. Pressing the button restarts the Display Timeout timer. When holding the button pressed, the next page will be shown after a 1 second delay.
 
-The Display Timeout setting sets the numbers of seconds after which the display is turned off. When set to 0 no timeout is active.
+The 'Display Timeout' setting sets the numbers of seconds after which the display is turned off. When set to 0 no timeout is active.
 
 The plugin allows for a header line, which may show some user selectable information. And an optional footer line that can show a page indicator, when using a 128x64 display.
 

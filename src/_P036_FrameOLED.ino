@@ -280,8 +280,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       }
 # ifdef P036_ENABLE_LEFT_ALIGN
       {
-        addFormCheckBox(F("Reduce line number to fit font"), F("p036_ReduceLineNo"), bitRead(P036_FLAGS_1, P036_FLAG_REDUCE_LINE_NO));
+        addFormCheckBox(F("Reduce no. of lines to fit font"), F("p036_ReduceLineNo"), bitRead(P036_FLAGS_1, P036_FLAG_REDUCE_LINE_NO));
+# ifndef P036_LIMIT_BUILD_SIZE
         addFormNote(F("When checked, 'Lines per Frame' will be automatically reduced to fit the individual line settings."));
+# endif // ifndef P036_LIMIT_BUILD_SIZE
       }
 # endif // ifdef P036_ENABLE_LEFT_ALIGN
       {
@@ -340,7 +342,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       addFormCheckBox(F("Disable all scrolling while WiFi is disconnected"), F("p036_ScrollWithoutWifi"),
                       !bitRead(P036_FLAGS_0, P036_FLAG_SCROLL_WITHOUTWIFI)); // Bit 24
+# ifndef P036_LIMIT_BUILD_SIZE
       addFormNote(F("When checked, all scrollings (pages and lines) are disabled as long as WiFi is not connected."));
+# endif // ifndef P036_LIMIT_BUILD_SIZE
 
 # ifdef P036_SEND_EVENTS
       {
@@ -355,8 +359,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         const int optionValues[3] = { 0, 1, 3 }; // Bitmap
         addFormSelector(F("Generate events"), F("p036_generateEvents"), 3, options, optionValues, choice);
 
+# ifndef P036_LIMIT_BUILD_SIZE
         addFormNote(F("Events: &lt;taskname&gt; #display=1/0 (on/off), #contrast=0/1/2 (low/med/high),"));
         addFormNote(F("and #frame=&lt;framenr&gt;, #line=&lt;linenr&gt; and #linecount=&lt;lines&gt;"));
+# endif // ifndef P036_LIMIT_BUILD_SIZE
       }
 # endif // ifdef P036_SEND_EVENTS
 
@@ -401,7 +407,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 
       addFormCheckBox(F("Wake display on receiving text"), F("p036_NoDisplay"),   !bitRead(P036_FLAGS_0, P036_FLAG_NODISPLAY_ONRECEIVE));
 
+# ifndef P036_LIMIT_BUILD_SIZE
       addFormNote(F("When checked, the display wakes up at receiving remote updates."));
+# endif // ifndef P036_LIMIT_BUILD_SIZE
 
       addFormSubHeader(F("Lines"));
 # ifdef P036_ENABLE_LEFT_ALIGN
@@ -471,7 +479,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             html_TR_TD(); // All columns use max. width available
             addHtml(F("&nbsp;"));
             addHtmlInt(varNr + 1);
-# ifdef P036_USE_XWIDE
             html_TD(F("padding-right: 8px")); // text box is (100% - 8 pixel) on right side wide
             addTextBox(getPluginCustomArgName(varNr),
                        String(P036_lines.DisplayLinesV1[varNr].Content),
@@ -481,13 +488,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
                        EMPTY_STRING,                  // pattern,
                        F("xwide")
                        );                             // class name
-# else // ifdef P036_CSS_Changed
-            html_TD();                                // content
-            addTextBox(getPluginCustomArgName(varNr), // column oly 80% width!
-                       String(P036_lines.DisplayLinesV1[varNr].Content),
-                       P36_NcharsV1 - 1
-                       );
-# endif // ifdef P036_CSS_Changed
             html_TD(); // font
             strID             = F("FontID");
             strID            += (varNr + 1);
