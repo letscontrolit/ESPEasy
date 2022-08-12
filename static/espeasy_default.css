@@ -124,7 +124,8 @@ textarea {
 
 input.wide,
 select.wide {
-	width: 95%
+	width: 95%;
+	max-width: 350px;
 }
 
 .widenumber {
