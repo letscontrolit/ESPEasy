@@ -855,7 +855,7 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
     return 0;
   }
 
-  // page scrolling (using PLUGIN_TIMER_IN)
+  // page scrolling (using PLUGIN_TASKTIMER_IN)
   display->setColor(BLACK);
 
   // We allow 12 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!
