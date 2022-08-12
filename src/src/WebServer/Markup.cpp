@@ -856,7 +856,7 @@ void addHelpButton(const String& url, bool isRTD)
   addHtmlLink(
     F("button help"),
     makeDocLink(url, isRTD),
-    isRTD ? F("&#8505;") : F("&#10068;"));
+    isRTD ? F("i") : F("?"));
   #endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 

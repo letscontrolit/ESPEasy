@@ -107,8 +107,9 @@ textarea {
 }
 
 .button.help {
-	border-radius: 50%;
-	padding: 2px 4px
+    border-radius: 50%;
+    font-family: monospace;
+    padding: 2px 7px;
 }
 
 .checkmark,
