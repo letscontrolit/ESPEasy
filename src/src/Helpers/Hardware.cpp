@@ -328,9 +328,11 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
     // No need to change the clock speed.
     return;
   }
+  #ifdef ESP32
   if ((sda != last_sda) || (scl != last_scl)) {
     Wire.end();
   }
+  #endif
   lastI2CClockSpeed = clockFreq;
   last_scl          = scl;
   last_sda          = sda;
