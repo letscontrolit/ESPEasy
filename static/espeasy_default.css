@@ -119,13 +119,15 @@ input,
 select,
 textarea {
 	background-color: #eee;
-	padding: 4px 8px
+	padding: 4px 8px;
+	margin-bottom: 5px;
 }
 
 input.wide,
 select.wide {
 	width: 95%;
 	max-width: 350px;
+	margin: 5px;
 }
 
 .widenumber {
