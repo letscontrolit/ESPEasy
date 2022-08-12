@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -192,6 +193,10 @@ void ESPEasy_setup()
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
+    log += getValue(LabelType::BINARY_FILENAME);
+    log += F(", (");
+    log += get_build_origin();
+    log += F(") ");
     log += getValue(LabelType::GIT_BUILD);
     log += F(" (");
     log += getSystemLibraryString();
