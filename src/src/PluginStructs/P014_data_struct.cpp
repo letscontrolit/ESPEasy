@@ -15,19 +15,21 @@ bool P014_data_struct::startInit(uint8_t i2caddr)
 
   uint8_t ret = I2C_wakeup(i2caddr);
   if (ret){
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)){
       String log = F("SI70xx : Not available at address: ");
       log += String(i2caddr, HEX);
       addLog(LOG_LEVEL_ERROR, log);
-    
+    }
     return false;
   }
 
   //reset the device
   if (!softReset(i2caddr)){
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)){
       String log = F("SI70xx : Not able to reset: ");
       log += String(i2caddr, HEX);
       addLog(LOG_LEVEL_ERROR, log);
-    
+    }
     return false;
   }
 
@@ -41,19 +43,22 @@ bool P014_data_struct::finalizeInit(uint8_t i2caddr, uint8_t resolution)
   //SHT devices do not have this capability so we are continuing if not available 
   int8_t ret = readSerialNumber(i2caddr); //this will also set the device ID
   if (ret){
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)){
           String log = F("SI70xx : Not able to read SN: addr=0x");
           log += String(i2caddr, HEX);
           log += F(" err=");
           log += String(ret, DEC);
           addLog(LOG_LEVEL_ERROR, log);
-    
+      }
     //return false;
   }
 
   //at this point we know the chip_id
-  String log = F("P014: chip_id=");
-         log += String(chip_id, DEC);
-      addLog(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)){
+    String log = F("P014: chip_id=");
+    log += String(chip_id, DEC);
+    addLog(LOG_LEVEL_INFO, log);
+  }
   if (chip_id == CHIP_ID_SI7013){
     if (!I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, SI7013_REG2_DEFAULT )){
       return false;
@@ -100,9 +105,11 @@ bool P014_data_struct::update(uint8_t i2caddr, uint8_t resolution, uint8_t filte
         }
 
         if (I2C_wakeup(i2caddr)!=0){
-          String log = F("SI70xx : Not available at address: ");
-          log += String(i2caddr, HEX);
-          addLog(LOG_LEVEL_ERROR, log);
+          if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+            String log = F("SI70xx : Not available at address: ");
+            log += String(i2caddr, HEX);
+            addLog(LOG_LEVEL_ERROR, log);
+          }
           errCount++;
           return false;
         }
@@ -295,9 +302,11 @@ bool P014_data_struct::setResolution(uint8_t i2caddr, uint8_t resolution)
   }
 
   if (!ok) {
-      String log = F("SI70xx : Unable to set resolution: ");
-      log += String(i2caddr, HEX);
-      addLog(LOG_LEVEL_ERROR, log);
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)){
+        String log = F("SI70xx : Unable to set resolution: ");
+        log += String(i2caddr, HEX);
+        addLog(LOG_LEVEL_ERROR, log);
+      }
   }
 
   return ok;
@@ -325,9 +334,11 @@ int8_t P014_data_struct::readRevision(uint8_t i2caddr) {
       uint8_t rev = Wire.read();
       Wire.read(); //ignore CRC
 
-      String log = F("SI7013 : revision=");
-      log += String(rev,HEX);
-      addLog(LOG_LEVEL_INFO,log);
+      if (loglevelActiveFor(LOG_LEVEL_INFO)){
+        String log = F("SI7013 : revision=");
+        log += String(rev,HEX);
+        addLog(LOG_LEVEL_INFO,log);
+      }
       
       return 0;
     }
@@ -382,13 +393,13 @@ int8_t P014_data_struct::readSerialNumber(uint8_t i2caddr) {
   sernum_b |= Wire.read(); //SNB_0
   Wire.read(); //ignore CRC
 
-
-  String log = F("SI7013 : sn=");
-  log += String(sernum_a,HEX);
-  log += F("-");
-  log += String(sernum_b,HEX);
-  addLog(LOG_LEVEL_INFO,log);
-
+  if (loglevelActiveFor(LOG_LEVEL_INFO)){
+    String log = F("SI7013 : sn=");
+    log += String(sernum_a,HEX);
+    log += F("-");
+    log += String(sernum_b,HEX);
+    addLog(LOG_LEVEL_INFO,log);
+  }
   return 0; //ok
 }
 
