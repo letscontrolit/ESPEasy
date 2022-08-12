@@ -773,7 +773,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
       {
         uint8_t par3 = 0;
 

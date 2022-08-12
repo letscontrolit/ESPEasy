@@ -42,7 +42,7 @@
 # define P36_WaitScrollLines            5                         // wait 0.5s before and after scrolling line
 # define P36_PageScrollTimer           25                         // timer in msec for page Scrolling
 # define P36_PageScrollTick            (P36_PageScrollTimer + 20) // total time for one PageScrollTick (including the handling time of 20ms
-                                                                  // in PLUGIN_TIMER_IN)
+                                                                  // in PLUGIN_TASKTIMER_IN)
 # define P36_PageScrollPix              4                         // min pixel change while page scrolling
 # define P36_DebounceTreshold           5                         // number of 20 msec (fifty per second) ticks before the button has
                                                                   // settled

@@ -91,7 +91,7 @@
 // CHG: Header content only changed once within display interval. before every second
 // CHG: more predefined constants to understand the meaning of the values
 // @uwekaditz: 2019-11-11
-// CHG: PageScrolling based on Timer (PLUGIN_TIMER_IN) to reduce time for PLUGIN_READ (blocking) from 700ms to 80ms
+// CHG: PageScrolling based on Timer (PLUGIN_TASKTIMER_IN) to reduce time for PLUGIN_READ (blocking) from 700ms to 80ms
 // @uwekaditz: 2019-11-05
 // NEW: Optional scrolling for long lines (wider than display width)
 // @uwekaditz: 2019-11-04
@@ -709,7 +709,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       if (Settings.TaskDeviceEnabled[event->TaskIndex] == false) {
         # ifdef PLUGIN_036_DEBUG
