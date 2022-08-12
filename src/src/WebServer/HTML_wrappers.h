@@ -30,6 +30,8 @@ void html_TR_TD_height(int height);
 
 void html_TD();
 
+void html_TD(const String& style);
+
 void html_TD(int td_cnt);
 
 extern int copyTextCounter;
