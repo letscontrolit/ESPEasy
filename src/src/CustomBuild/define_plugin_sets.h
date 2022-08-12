@@ -318,17 +318,17 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
-#ifdef FEATURE_FHEM
+#if FEATURE_FHEM
     #define USES_C009   // FHEM HTTP
 #endif
 
-#ifdef FEATURE_HOMEASSISTANT_OPENHAB
+#if FEATURE_HOMEASSISTANT_OPENHAB
     #define USES_C005   // Home Assistant (openHAB) MQTT
 #endif
 
 #ifdef PLUGIN_BUILD_MINIMAL_OTA
     // Disable ESPEasy p2p for minimal OTA builds.
-    #ifdef FEATURE_ESPEASY_P2P
+    #if FEATURE_ESPEASY_P2P
       #undef FEATURE_ESPEASY_P2P
       #define FEATURE_ESPEASY_P2P 0
     #endif
@@ -390,9 +390,11 @@ To create/register a plugin, you have to :
 
     #if FEATURE_SERVO
       #undef FEATURE_SERVO
+      #define FEATURE_SERVO 0
     #endif
     #if FEATURE_RTTTL
       #undef FEATURE_RTTTL
+      #define FEATURE_RTTTL 0
     #endif
 #endif
 
@@ -438,6 +440,12 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_NEW_RULES
             #undef WEBSERVER_NEW_RULES
+        #endif
+        #ifdef SHOW_SYSINFO_JSON
+            #undef SHOW_SYSINFO_JSON
+        #endif
+        #ifndef WEBSERVER_SYSINFO_MINIMAL
+            #define WEBSERVER_SYSINFO_MINIMAL
         #endif
 
 
@@ -1283,6 +1291,7 @@ To create/register a plugin, you have to :
     #define USES_P121   // HMC5883L 
     #define USES_P125   // ADXL345 SPI
     #define USES_P126  // 74HC595 Shift register
+    #define USES_P129   // 74HC165 Input shiftregisters
     #define USES_P133   // LTR390 UV
 #endif
 
@@ -1336,6 +1345,9 @@ To create/register a plugin, you have to :
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
      #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
    #endif
+   #if !defined(FEATURE_SD)
+     #define FEATURE_SD 1
+   #endif
    #ifndef USES_P012
      #define USES_P012   // LCD
    #endif
@@ -1345,20 +1357,20 @@ To create/register a plugin, you have to :
    #ifndef USES_P036
     #define USES_P036   // FrameOLED
    #endif
-   #ifndef USES_P038
-    #define USES_P038   // NeoPixel
+   #ifdef USES_P038
+    #undef USES_P038   // DISABLE NeoPixel
    #endif
-   #ifndef USES_P041
-    #define USES_P041   // NeoClock
+   #ifdef USES_P041
+    #undef USES_P041   // DISABLE NeoClock
    #endif
-   #ifndef USES_P042
-    #define USES_P042   // Candle
+   #ifdef USES_P042
+    #undef USES_P042   // DISABLE Candle
    #endif
    #ifndef USES_P057
     #define USES_P057   // HT16K33_LED
    #endif
-   #ifndef USES_P070
-    #define USES_P070   // NeoPixel_Clock
+   #ifdef USES_P070
+    #undef USES_P070   // DISABLE NeoPixel_Clock
    #endif
    #ifndef USES_P075
     #define USES_P075   // Nextion
@@ -1388,6 +1400,9 @@ To create/register a plugin, you have to :
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "NeoPixel"
   #endif
+  #if !defined(FEATURE_SD) && !defined(ESP8266)
+    #define FEATURE_SD  1
+  #endif
   #ifndef USES_P038
     #define USES_P038   // NeoPixel
   #endif
@@ -1403,13 +1418,18 @@ To create/register a plugin, you have to :
   #ifndef USES_P128
     #define USES_P128   // NeoPixelBusFX
   #endif
+  #ifndef USES_P131
+    #define USES_P131   // NeoMatrix
+  #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  0
   #endif
 #endif
 
@@ -1645,13 +1665,13 @@ To create/register a plugin, you have to :
     #define USES_P128   // NeoPixelBusFX
   #endif
   #ifndef USES_P129
-//    #define USES_P129   //
+    #define USES_P129   // 74HC165 Input shiftregisters
   #endif
   #ifndef USES_P130
 //    #define USES_P130   //
   #endif
   #ifndef USES_P131
-//    #define USES_P131   //
+    #define USES_P131   // NeoMatrix
   #endif
   #ifndef USES_P132
     #define USES_P132   // INA3221
@@ -1723,7 +1743,7 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116)
+#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
   #endif
@@ -1737,12 +1757,12 @@ To create/register a plugin, you have to :
 
 
 #if defined(USES_C018)
-  #define USES_PACKED_RAW_DATA
+  #define FEATURE_PACKED_RAW_DATA 1
 #endif
 
 #if defined(USES_P085) || defined (USES_P052) || defined(USES_P078) || defined(USES_P108)
   // FIXME TD-er: Is this correct? Those plugins use Modbus_RTU.
-  #define USES_MODBUS
+  #define FEATURE_MODBUS  1
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
@@ -1771,7 +1791,7 @@ To create/register a plugin, you have to :
 
 // VCC builds need a bit more, disable timing stats to make it fit.
 #ifndef PLUGIN_BUILD_CUSTOM
-  #if defined(FEATURE_ADC_VCC) && !defined(PLUGIN_SET_MAX)
+  #if FEATURE_ADC_VCC && !defined(PLUGIN_SET_MAX)
     #ifndef LIMIT_BUILD_SIZE
       #define LIMIT_BUILD_SIZE
     #endif
@@ -1832,16 +1852,19 @@ To create/register a plugin, you have to :
 
   #if FEATURE_SERVO
     #undef FEATURE_SERVO
+    #define FEATURE_SERVO 0
   #endif
   #if FEATURE_RTTTL
     #undef FEATURE_RTTTL
+    #define FEATURE_RTTTL 0
   #endif
   #if FEATURE_TOOLTIPS
     #undef FEATURE_TOOLTIPS
     #define FEATURE_TOOLTIPS  0
   #endif
-  #ifdef USES_BLYNK
-    #undef USES_BLYNK
+  #if FEATURE_BLYNK
+    #undef FEATURE_BLYNK
+    #define FEATURE_BLYNK 0
   #endif
   #if !defined(PLUGIN_SET_COLLECTION) && !defined(PLUGIN_SET_SONOFF_POW)
     #ifdef USES_P076
@@ -1871,6 +1894,7 @@ To create/register a plugin, you have to :
   #endif
   #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES && !defined(KEEP_TRIGONOMETRIC_FUNCTIONS_RULES)
     #undef FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+    #define FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES 0
   #endif
   #if FEATURE_SSDP
     #undef FEATURE_SSDP
@@ -1878,9 +1902,11 @@ To create/register a plugin, you have to :
   #endif
   #if FEATURE_PLUGIN_STATS
     #undef FEATURE_PLUGIN_STATS
+    #define FEATURE_PLUGIN_STATS  0
   #endif
   #if FEATURE_CHART_JS
     #undef FEATURE_CHART_JS
+    #define FEATURE_CHART_JS  0
   #endif
 #endif
 
@@ -1921,18 +1947,18 @@ To create/register a plugin, you have to :
 #endif
 
 #if defined(USES_C002) || defined (USES_C005) || defined(USES_C006) || defined(USES_C014) || defined(USES_P037)
-  #define USES_MQTT
+  #define FEATURE_MQTT  1
 #endif
 
 #if defined(USES_C012) || defined (USES_C015)
-  #define USES_BLYNK
+  #define FEATURE_BLYNK 1
 #endif
 
 // Specific notifier plugins may be enabled via Custom.h, regardless
 // whether NOTIFIER_SET_NONE is defined
 #if defined(USES_N001) || defined(USES_N002)
-  #ifndef USES_NOTIFIER
-    #define USES_NOTIFIER
+  #ifndef FEATURE_NOTIFIER
+    #define FEATURE_NOTIFIER  1
   #endif
 #endif
 
@@ -1944,16 +1970,16 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 // MQTT_MAX_PACKET_SIZE : Maximum packet size
 #ifndef MQTT_MAX_PACKET_SIZE
   #define MQTT_MAX_PACKET_SIZE 1024 // Is also used in PubSubClient
 #endif
-#endif //USES_MQTT
+#endif //if FEATURE_MQTT
 
 
 // It may have gotten undefined to fit a build. Make sure the Blynk controllers are not defined
-#ifndef USES_BLYNK
+#if !FEATURE_BLYNK
   #ifdef USES_C012
     #undef USES_C012
   #endif
@@ -1964,20 +1990,20 @@ To create/register a plugin, you have to :
 
 #if FEATURE_ARDUINO_OTA
   #ifndef FEATURE_MDNS
-    #define FEATURE_MDNS
+    #define FEATURE_MDNS  1
   #endif
 #endif
 
-#ifdef FEATURE_MDNS
+#if FEATURE_MDNS
   #ifndef FEATURE_DNS_SERVER
-    #define FEATURE_DNS_SERVER
+    #define FEATURE_DNS_SERVER  1
   #endif
 #endif
 
 #ifdef WEBSERVER_SETUP
   #ifndef PLUGIN_BUILD_MINIMAL_OTA
     #ifndef FEATURE_DNS_SERVER
-      #define FEATURE_DNS_SERVER
+      #define FEATURE_DNS_SERVER  1
     #endif
   #endif
 #endif

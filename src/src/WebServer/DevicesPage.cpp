@@ -282,6 +282,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   struct EventStruct TempEvent(taskIndex);
 
   ExtraTaskSettings.clear();
+  Cache.clearTaskCaches();
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   // Save selected output type.
@@ -379,6 +380,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
     String dummy;
 
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
+      SaveTaskSettings(taskIndex);
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
 
@@ -617,7 +619,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
           switch (Device[DeviceIndex].Type) {
             case DEVICE_TYPE_I2C:
             {
-              format_I2C_pin_description();
+              format_I2C_pin_description(x);
               break;
             }
             case DEVICE_TYPE_SPI3:
@@ -634,11 +636,11 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_ANALOG:
             {
               # ifdef ESP8266
-                #  if FEATURE_ADC_VCC
+              #  if FEATURE_ADC_VCC
               addHtml(F("ADC (VDD)"));
-                #  else // if FEATURE_ADC_VCC
+              #  else // if FEATURE_ADC_VCC
               addHtml(F("ADC (TOUT)"));
-                #  endif // if FEATURE_ADC_VCC
+              #  endif // if FEATURE_ADC_VCC
               # endif // ifdef ESP8266
               # ifdef ESP32
               showpin1 = true;
@@ -813,11 +815,13 @@ void format_SPI_port_description(int8_t spi_gpios[3])
   # endif // ifdef ESP8266
 }
 
-void format_I2C_pin_description()
+void format_I2C_pin_description(taskIndex_t x)
 {
-  Label_Gpio_toHtml(F("SDA"), formatGpioLabel(Settings.Pin_i2c_sda, false));
-  html_BR();
-  Label_Gpio_toHtml(F("SCL"), formatGpioLabel(Settings.Pin_i2c_scl, false));
+  if (checkI2CConfigValid_toHtml(x)) {
+    Label_Gpio_toHtml(F("SDA"), formatGpioLabel(Settings.Pin_i2c_sda, false));
+    html_BR();
+    Label_Gpio_toHtml(F("SCL"), formatGpioLabel(Settings.Pin_i2c_scl, false));
+  }
 }
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x)
@@ -1038,11 +1042,6 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     addFormNote(F("SPI Interface is not configured yet (Hardware page)."));
   }
 
-  if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C)
-      && !Settings.isI2CEnabled()) {
-    addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
-  }
-
   if (Device[DeviceIndex].connectedToGPIOpins()) {
     // get descriptive GPIO-names from plugin
     struct EventStruct TempEvent(taskIndex);
@@ -1102,6 +1101,11 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex)
   struct EventStruct TempEvent(taskIndex);
 
   addFormSubHeader(F("I2C options"));
+
+  if (!Settings.isI2CEnabled()) {
+    addFormNote(F("I2C Interface is not configured yet (Hardware page)."));
+  }
+
   String dummy;
 
   PluginCall(PLUGIN_WEBFORM_SHOW_I2C_PARAMS, &TempEvent, dummy);

@@ -1,5 +1,7 @@
 #include "../WebServer/HardwarePage.h"
 
+#ifdef WEBSERVER_HARDWARE
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
@@ -16,8 +18,6 @@
 #include "../Helpers/Hardware.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
-
-#ifdef WEBSERVER_HARDWARE
 
 // ********************************************************************************
 // Web Interface hardware page
@@ -121,19 +121,23 @@ void handle_hardware() {
   addFormSubHeader(F("I2C Multiplexer"));
   // Select the type of multiplexer to use
   {
-    const __FlashStringHelper * i2c_muxtype_options[5];
-    int    i2c_muxtype_choices[5];
-    i2c_muxtype_options[0] = F("- None -");
-    i2c_muxtype_choices[0] = -1;
-    i2c_muxtype_options[1] = F("TCA9548a - 8 channel");
-    i2c_muxtype_choices[1] = I2C_MULTIPLEXER_TCA9548A;
-    i2c_muxtype_options[2] = F("TCA9546a - 4 channel");
-    i2c_muxtype_choices[2] = I2C_MULTIPLEXER_TCA9546A;
-    i2c_muxtype_options[3] = F("TCA9543a - 2 channel");
-    i2c_muxtype_choices[3] = I2C_MULTIPLEXER_TCA9543A;
-    i2c_muxtype_options[4] = F("PCA9540 - 2 channel (experimental)");
-    i2c_muxtype_choices[4] = I2C_MULTIPLEXER_PCA9540;
-    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), 5, i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
+    # define I2C_MULTIPLEXER_OPTIONCOUNT  5 // Nr. of supported devices + 'None'
+    const __FlashStringHelper *i2c_muxtype_options[] = {
+      F("- None -"),
+      F("TCA9548a - 8 channel"),
+      F("TCA9546a - 4 channel"),
+      F("TCA9543a - 2 channel"),
+      F("PCA9540 - 2 channel (experimental)")
+    };
+    const int i2c_muxtype_choices[] = {
+      -1,
+      I2C_MULTIPLEXER_TCA9548A,
+      I2C_MULTIPLEXER_TCA9546A,
+      I2C_MULTIPLEXER_TCA9543A,
+      I2C_MULTIPLEXER_PCA9540
+    };
+    addFormSelector(F("I2C Multiplexer type"), F("pi2cmuxtype"), I2C_MULTIPLEXER_OPTIONCOUNT,
+                    i2c_muxtype_options, i2c_muxtype_choices, Settings.I2C_Multiplexer_Type);
   }
   // Select the I2C address for a port multiplexer
   {

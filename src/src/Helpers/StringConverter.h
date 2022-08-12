@@ -1,6 +1,8 @@
 #ifndef HELPERS_STRINGCONVERTER_H
 #define HELPERS_STRINGCONVERTER_H
 
+#include "../../ESPEasy_common.h"
+
 #include <Arduino.h>
 
 #include "../Globals/Plugins.h"
@@ -71,9 +73,15 @@ unsigned long long hexToULL(const String& input_c,
                             size_t        nrHexDecimals);
 
 String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits);
+
+String formatToHex(unsigned long value,
                    const __FlashStringHelper * prefix);
 
-String formatToHex(unsigned long value);
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits = 0);
+
+String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits = 0);
 
 String formatHumanReadable(unsigned long value,
                            unsigned long factor);

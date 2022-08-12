@@ -36,9 +36,9 @@ bool P037_data_struct::loadSettings() {
       String tmp[1];
 
       LoadCustomTaskSettings(_taskIndex, tmp,
-                            1, 41, offset);
-      globalTopicPrefix  = std::move(tmp[0]);
-      offset += 41;
+                             1, 41, offset);
+      globalTopicPrefix = std::move(tmp[0]);
+      offset           += 41;
     }
 
 
@@ -51,34 +51,36 @@ bool P037_data_struct::loadSettings() {
 
 String P037_data_struct::saveSettings() {
   String res;
+
   if (_taskIndex < TASKS_MAX) {
     size_t offset = 0;
     res += SaveCustomTaskSettings(_taskIndex, mqttTopics,
-                           VARS_PER_TASK, 41, offset);
+                                  VARS_PER_TASK, 41, offset);
     offset += VARS_PER_TASK * 41;
 
     res += SaveCustomTaskSettings(_taskIndex, jsonAttributes,
-                           VARS_PER_TASK, 21, offset);
+                                  VARS_PER_TASK, 21, offset);
     offset += VARS_PER_TASK * 21;
 
     {
       String tmp[1];
       tmp[0] = globalTopicPrefix;
-      res += SaveCustomTaskSettings(_taskIndex, tmp,
-                            1, 41, offset);
+      res   += SaveCustomTaskSettings(_taskIndex, tmp,
+                                      1, 41, offset);
       offset += 41;
     }
 
 
     res += SaveCustomTaskSettings(_taskIndex, valueArray,
-                           P037_ARRAY_SIZE, 0, offset + 1);
+                                  P037_ARRAY_SIZE, 0, offset + 1);
   }
   return res;
 }
 
 String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
   String topic;
-  if (taskValueIndex < VARS_PER_TASK && mqttTopics[taskValueIndex].length() > 0) {
+
+  if ((taskValueIndex < VARS_PER_TASK) && (mqttTopics[taskValueIndex].length() > 0)) {
     topic.reserve(globalTopicPrefix.length() + mqttTopics[taskValueIndex].length());
     topic = globalTopicPrefix;
     topic.trim();
@@ -88,9 +90,9 @@ String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
   return topic;
 }
 
-
 bool P037_data_struct::shouldSubscribeToMQTTtopic(const String& topic) const {
-  if (topic.length() == 0) return false;
+  if (topic.length() == 0) { return false; }
+
   for (uint8_t x = 0; x < VARS_PER_TASK; x++)
   {
     if (topic.equalsIgnoreCase(getFullMQTTTopic(x))) {
@@ -124,8 +126,11 @@ void P037_data_struct::parseMappings() {
     _maxFilter = 0; // Initialize to empty
     #  endif // if P037_FILTER_SUPPORT
 
+    #  if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
+    int8_t idx;
+    #  endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
     #  if P037_MAPPING_SUPPORT
-    int8_t idx = P037_MAX_MAPPINGS;
+    idx = P037_MAX_MAPPINGS;
 
     for (uint8_t mappingOffset = P037_END_MAPPINGS; mappingOffset >= P037_START_MAPPINGS && _maxIdx == 0; mappingOffset--) {
       if (!valueArray[mappingOffset].isEmpty()) {
@@ -200,20 +205,20 @@ bool P037_data_struct::webform_load(
       html_TR_TD();
       addHtml(F("&nbsp;"));
       addHtmlInt(varNr + 1);
-      html_TD();
+      html_TD(F("padding-right: 8px"));
       id  = F("template");
       id += (varNr + 1);
       addTextBox(id,
                  mqttTopics[varNr],
                  40,
-                 false, false, EMPTY_STRING, F("wide"));
-      html_TD();
+                 false, false, EMPTY_STRING, F("xwide"));
+      html_TD(F("padding-right: 8px"));
       id  = F("attribute");
       id += (varNr + 1);
       addTextBox(id,
                  jsonAttributes[varNr],
                  20,
-                 false, false, EMPTY_STRING, EMPTY_STRING);
+                 false, false, EMPTY_STRING, F("xwide"));
       html_TD();
     } else
     # endif // ifdef P037_JSON_SUPPORT
@@ -475,7 +480,6 @@ bool P037_data_struct::webform_load(
   return success;
 } // webform_load
 
-
 bool P037_data_struct::webform_save(
   # if P037_FILTER_SUPPORT
   bool filterEnabled
@@ -503,8 +507,8 @@ bool P037_data_struct::webform_save(
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
-      argName  = F("attribute");
-      argName += (varNr + 1);
+      argName               = F("attribute");
+      argName              += (varNr + 1);
       jsonAttributes[varNr] = web_server.arg(argName);
     }
     # endif // P037_JSON_SUPPORT
@@ -515,6 +519,7 @@ bool P037_data_struct::webform_save(
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
   bool   firstError;
+  int8_t idx = 0;
   # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
   // Mappings are processed first
@@ -522,7 +527,6 @@ bool P037_data_struct::webform_save(
   firstError = true;
   String  operands = P037_OPERAND_LIST;
   uint8_t mapNr    = 1;
-  int8_t  idx      = 0;
   left.reserve(32);
   right.reserve(32);
 

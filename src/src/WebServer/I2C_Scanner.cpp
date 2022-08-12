@@ -1,5 +1,7 @@
 #include "../WebServer/I2C_Scanner.h"
 
+#ifdef WEBSERVER_I2C_SCANNER
+
 #include "../WebServer/WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -10,7 +12,6 @@
 #include "../Helpers/StringConverter.h"
 
 
-#ifdef WEBSERVER_I2C_SCANNER
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -44,7 +45,7 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
       if ((error == 0) || (error == 4))
       {
         json_open();
-        json_prop(F("addr"), String(formatToHex(address)));
+        json_prop(F("addr"), formatToHex(address, 2));
         #if FEATURE_I2CMULTIPLEXER
         if (muxAddr != -1) {
           if (channel == -1){
@@ -368,7 +369,7 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
           html_TD();
         }
         #endif // if FEATURE_I2CMULTIPLEXER
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         html_TD();
         String description = getKnownI2Cdevice(address);
 
@@ -385,14 +386,14 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
       {
         html_TR_TD();
         addHtml(F("NACK on transmit data to address "));
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         break;
       }
       case 4:
       {
         html_TR_TD();
         addHtml(F("SDA low at address "));
-        addHtml(formatToHex(address));
+        addHtml(formatToHex(address, 2));
         I2CForceResetBus_swap_pins(address);
         addHtml(F(" Reset bus attempted"));
         break;

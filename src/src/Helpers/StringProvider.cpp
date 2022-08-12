@@ -34,7 +34,6 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/AccessControl.h"
 
-#include "../../ESPEasy_common.h"
 
 String getInternalLabel(LabelType::Enum label, char replaceSpace) {
   return to_internal_string(getLabel(label), replaceSpace);
@@ -120,9 +119,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::IP_ADDRESS_SUBNET:      return F("IP / Subnet");
     case LabelType::GATEWAY:                return F("Gateway");
     case LabelType::CLIENT_IP:              return F("Client IP");
-    #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     case LabelType::M_DNS:                  return F("mDNS");
-    #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
     case LabelType::DNS:                    return F("DNS");
     case LabelType::DNS_1:                  return F("DNS 1");
     case LabelType::DNS_2:                  return F("DNS 2");
@@ -319,9 +318,9 @@ String getValue(LabelType::Enum label) {
     case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
-    #ifdef FEATURE_MDNS
+    #if FEATURE_MDNS
     case LabelType::M_DNS:                  return String(NetworkGetHostname()) + F(".local");
-    #endif // ifdef FEATURE_MDNS
+    #endif // if FEATURE_MDNS
     case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
@@ -385,19 +384,19 @@ String getValue(LabelType::Enum label) {
     case LabelType::SD_LOG_LEVEL:           return getLogLevelDisplayString(Settings.SDLogLevel);
   #endif // if FEATURE_SD
 
-    case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId());
+    case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId(), 6);
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
     case LabelType::FLASH_CHIP_ID:          return String(getFlashChipId());
-    case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF);
+    case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:
     {
       const uint32_t flashChipId = getFlashChipId();
       const uint32_t flashDevice = (flashChipId & 0xFF00) | ((flashChipId >> 16) & 0xFF);
-      return formatToHex(flashDevice);
+      return formatToHex(flashDevice, 4);
     }
     case LabelType::FLASH_CHIP_REAL_SIZE:   return String(getFlashRealSizeInBytes());
     case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed() / 1000000);

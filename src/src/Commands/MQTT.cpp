@@ -1,7 +1,7 @@
 #include "../../ESPEasy_common.h"
 #include "../Globals/MQTT.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 
 
 
@@ -117,4 +117,4 @@ const __FlashStringHelper * Command_MQTT_Subscribe(struct EventStruct *event, co
 }
 
 
-#endif // ifdef USES_MQTT
+#endif // if FEATURE_MQTT

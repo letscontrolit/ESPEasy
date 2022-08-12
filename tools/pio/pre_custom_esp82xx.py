@@ -56,7 +56,7 @@ else:
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
-#    "-DFEATURE_MDNS",
+#    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_I2CMULTIPLEXER=1",
@@ -83,6 +83,5 @@ print("\u001b[32m ------------------------------- \u001b[0m")
 if (len(my_defines) == 0):
   print("\u001b[31m No defines are set, probably configuration error. \u001b[0m")
   raise ValueError
-
 
 

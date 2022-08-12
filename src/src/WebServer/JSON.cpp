@@ -154,6 +154,8 @@ void handle_json()
         LabelType::SYSTEM_LIBRARIES,
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
+        LabelType::BUILD_TIME,
+        LabelType::BINARY_FILENAME,
         LabelType::LOCAL_TIME,
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
@@ -198,6 +200,12 @@ void handle_json()
         LabelType::TIMEZONE_OFFSET,
         LabelType::LATITUDE,
         LabelType::LONGITUDE,
+        LabelType::SYSLOG_LOG_LEVEL,
+        LabelType::SERIAL_LOG_LEVEL,
+        LabelType::WEB_LOG_LEVEL,
+        #if FEATURE_SD
+        LabelType::SD_LOG_LEVEL,
+        #endif // if FEATURE_SD
 
 
         LabelType::MAX_LABEL
@@ -212,9 +220,9 @@ void handle_json()
       static const LabelType::Enum labels[] PROGMEM =
       {
         LabelType::HOST_NAME,
-      #ifdef FEATURE_MDNS
+        #if FEATURE_MDNS
         LabelType::M_DNS,
-      #endif // ifdef FEATURE_MDNS
+        #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
         LabelType::IP_SUBNET,
@@ -556,6 +564,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#if FEATURE_NOTIFIER
   {
     json_open(true, F("notifications"));
 
@@ -569,6 +578,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#endif
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);
