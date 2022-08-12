@@ -265,7 +265,7 @@ void Internal_GPIO_pulseHelper::doPulseStepProcessing(int pStep)
     {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String log; log.reserve(48);
-        log = F("_P003:PLUGIN_TIMER_IN: Invalid processingStep: "); log += pStep;
+        log = F("_P003:PLUGIN_TASKTIMER_IN: Invalid processingStep: "); log += pStep;
         addLogMove(LOG_LEVEL_ERROR, log);
       }
       break;
@@ -339,7 +339,7 @@ void Internal_GPIO_pulseHelper::processStablePulse(int pinState, uint64_t pulseC
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
           String log;
           log.reserve(48);
-          log  = F("_P003:PLUGIN_TIMER_IN: Invalid modeType: ");
+          log  = F("_P003:PLUGIN_TASKTIMER_IN: Invalid modeType: ");
           log += static_cast<int>(config.interruptPinMode);
           addLogMove(LOG_LEVEL_ERROR, log);
         }

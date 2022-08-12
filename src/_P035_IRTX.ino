@@ -6,6 +6,7 @@
 // #######################################################################################################
 //
 // Changelog:
+// 2022-08-08, tonhuisman:  Fix listProtocols()/listACProtocols() to ignore 1-character type names 
 // 2022-01-11, tonhuisman:  Move all code and globals to PluginStructs/P035_data_struct to enable multi-instance use
 // No previous changelog recorded.
 
@@ -75,7 +76,7 @@ boolean Plugin_035(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addRowLabel(F("Command"));
-      addHtml(F("IRSEND,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0"));
+      addHtml(F("IRSEND,[PROTOCOL],[DATA],[BITS optional],[REPEATS optional]<BR>BITS and REPEATS are optional and default to 0<BR/>"));
       addHtml(F("IRSENDAC,{JSON formated AC command}"));
 
       success = true;

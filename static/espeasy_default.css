@@ -141,6 +141,12 @@ select.wide {
 	width: 80%
 }
 
+input.xwide,
+select.xwide {
+	max-width: 500px;
+	width: 100%
+}
+
 .widenumber {
 	max-width: 500px;
 	width: 100px

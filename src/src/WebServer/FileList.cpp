@@ -402,7 +402,7 @@ void handle_SDfilelist() {
   while (entry)
   {
     html_TR_TD();
-    size_t entrynameLength = strlen(entry.name());
+    // size_t entrynameLength = strlen(entry.name());
     if (entry.isDirectory())
     {
       char SDcardChildDir[80];
