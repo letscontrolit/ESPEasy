@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2022-08-12, tonhuisman: Introduce plugin-specific P037_LIMIT_BUILD_SIZE feature-flag
  * 2022-04-09, tonhuisman: Add features Deduplicate Events, and Max event-queue size
  * 2022-04-09, tonhuisman: Bugfix sending (extra) events only when enabled
  * 2021-10-23, tonhuisman: Fix stability issues when parsing JSON payloads
@@ -145,39 +146,39 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
       addFormSelector_YesNo(F("Apply mappings"),      F("p037_apply_mappings"), P037_APPLY_MAPPINGS, true);
       # endif // if P037_MAPPING_SUPPORT
       # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
-      #  if !defined(LIMIT_BUILD_SIZE)
+      #  if !defined(P037_LIMIT_BUILD_SIZE)
       addFormNote(F("Changing a Yes/No option will reload the page. Changing to No will clear corresponding settings!"));
-      #  endif // if !defined(LIMIT_BUILD_SIZE)
+      #  endif // if !defined(P037_LIMIT_BUILD_SIZE)
       # endif  // if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT || P037_FILTER_SUPPORT
       addFormCheckBox(F("Generate events for accepted topics"),
                       F("p037_send_events"), P037_SEND_EVENTS);
-      # if !defined(LIMIT_BUILD_SIZE)
+      # if !defined(P037_LIMIT_BUILD_SIZE)
       addFormNote(F("Event: &lt;TaskName&gt;#&lt;topic&gt;=&lt;payload&gt;"));
       #  if P037_JSON_SUPPORT
       addFormNote(F("Events when JSON enabled and JSON payload: &lt;Topic&gt;#&lt;json-attribute&gt;=&lt;value&gt;"));
       #  endif // if P037_JSON_SUPPORT
-      # endif  // if !defined(LIMIT_BUILD_SIZE)
+      # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
 
       {
         addFormCheckBox(F("Deduplicate events"), F("p037_deduplicate"), P037_DEDUPLICATE_EVENTS == 1);
-        # if !defined(LIMIT_BUILD_SIZE)
+        # if !defined(P037_LIMIT_BUILD_SIZE)
         addFormNote(F("When enabled will not (re-)generate events that are already in the queue."));
-        # endif  // if !defined(LIMIT_BUILD_SIZE)
+        # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
       }
 
       {
-        # if !defined(LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
+        # if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         String toolTip = F("0..");
         toolTip += P037_MAX_QUEUEDEPTH;
         toolTip += F(" entries");
         addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH, toolTip);
-        # else // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
+        # else // if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         addFormNumericBox(F("Max. # entries in event queue"), F("p037_queuedepth"), P037_QUEUEDEPTH_EVENTS, 0, P037_MAX_QUEUEDEPTH);
-        # endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
+        # endif // if !defined(P037_LIMIT_BUILD_SIZE) && FEATURE_TOOLTIPS
         addUnit(F("0 = no check"));
-        # if !defined(LIMIT_BUILD_SIZE)
+        # if !defined(P037_LIMIT_BUILD_SIZE)
         addFormNote(F("New events will be discarded if the event queue has more entries queued."));
-        # endif  // if !defined(LIMIT_BUILD_SIZE)
+        # endif  // if !defined(P037_LIMIT_BUILD_SIZE)
       }
       # if P037_REPLACE_BY_COMMA_SUPPORT
       {
@@ -512,7 +513,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     Payload = parseString(Payload, jIndex, ';');
                   }
 
-                  #  if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+                  #  if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     String log = F("IMPT : MQTT fetched json attribute: ");
@@ -527,7 +528,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     }
                     addLogMove(LOG_LEVEL_INFO, log);
                   }
-                  #  endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+                  #  endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
                   continueProcessing = false; // no need to loop over all attributes, the configured one is found
                 } else {
                   key             = P037_data->iter->key().c_str();
@@ -569,7 +570,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     log.reserve(64);
                     log += event->String1;
                     addLog(LOG_LEVEL_ERROR, log);
-                    # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+                    # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                       log.clear();
@@ -579,7 +580,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                       log += getTaskDeviceName(event->TaskIndex);
                       addLogMove(LOG_LEVEL_INFO, log);
                     }
-                    # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+                    # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
                     success = false;
                     break;
                   }
@@ -600,7 +601,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 }
 
                 // Log the event
-                # if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+                # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                 if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                   String log = F("IMPT : [");
@@ -616,7 +617,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   log += doublePayload;
                   addLogMove(LOG_LEVEL_INFO, log);
                 }
-                # endif // if !defined(LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+                # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                 // Generate event for rules processing - proposed by TridentTD
 
