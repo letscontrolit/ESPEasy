@@ -126,10 +126,10 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
       if (lux != -1) {
         UserVar[event->BaseVarIndex] = lux;
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("BH1750 Address: 0x");
-          log += String(address, HEX);
-          log += F(" Mode: 0x");
-          log += String(mode);
+          String log = F("BH1750 Address: ");
+          log += formatToHex(address, 2);
+          log += F(" Mode: ");
+          log += formatToHex(mode, 2);
           log += F(" : Light intensity: ");
           log += formatUserVarNoCheck(event->TaskIndex, 0);
           addLogMove(LOG_LEVEL_INFO, log);
