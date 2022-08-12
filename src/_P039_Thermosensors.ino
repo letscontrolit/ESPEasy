@@ -645,7 +645,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN: 
+    case PLUGIN_TASKTIMER_IN: 
     {
       P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 

@@ -17,7 +17,7 @@
   # define PULSE_STATS_ADHOC_LOG_LEVEL    LOG_LEVEL_INFO
 #endif // ifdef PULSE_STATISTIC
 
-// processing Steps in PLUGIN_TIMER_IN
+// processing Steps in PLUGIN_TASKTIMER_IN
 #define GPIO_PULSE_HELPER_PROCESSING_STEP_0             0
 #define GPIO_PULSE_HELPER_PROCESSING_STEP_1             1
 #define GPIO_PULSE_HELPER_PROCESSING_STEP_2             2
@@ -136,7 +136,7 @@ struct Internal_GPIO_pulseHelper {
   void resetPulseCounter();
 
   // Process recorded pulse data on regular intervals.
-  // Typically from PLUGIN_FIFTY_PER_SECOND or PLUGIN_TIMER_IN
+  // Typically from PLUGIN_FIFTY_PER_SECOND or PLUGIN_TASKTIMER_IN
   void doPulseStepProcessing(int pStep);
 
   pulseModeData_t pulseModeData;
