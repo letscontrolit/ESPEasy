@@ -246,7 +246,7 @@ void initI2C() {
       #if defined(ESP8266)
     Wire.setClockStretchLimit(Settings.WireClockStretchLimit);
       #endif // if defined(ESP8266)
-      #ifdef ESP32S2
+      #ifdef ESP32
     Wire.setTimeOut(Settings.WireClockStretchLimit);
       #endif // ifdef ESP32S2
   }
@@ -319,7 +319,11 @@ void I2CForceResetBus_swap_pins(uint8_t address) {
 }
 
 void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
+  #ifdef ESP32
+  uint32_t lastI2CClockSpeed = Wire.getClock();
+  #else
   static uint32_t lastI2CClockSpeed = 0;
+  #endif
   static int8_t last_sda            = -1;
   static int8_t last_scl            = -1;
 
@@ -327,12 +331,18 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq) {
     // No need to change the clock speed.
     return;
   }
+  #ifdef ESP32
+  if ((sda != last_sda) || (scl != last_scl)) {
+    Wire.end();
+  }
+  #endif
   lastI2CClockSpeed = clockFreq;
   last_scl          = scl;
   last_sda          = sda;
 
   #ifdef ESP32
-  Wire.begin(sda, scl, clockFreq);
+  Wire.begin(sda, scl, clockFreq); // Will only set the clock when not yet initialized.
+  Wire.setClock(clockFreq); 
   #else // ifdef ESP32
   Wire.begin(sda, scl);
   Wire.setClock(clockFreq);

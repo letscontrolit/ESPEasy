@@ -254,13 +254,13 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   uint8_t flags = 0;
 
   if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C) {
-    bitWrite(flags, 0, isFormItemChecked(F("taskdeviceflags0")));
+    bitWrite(flags, I2C_FLAGS_SLOW_SPEED, isFormItemChecked(F("taskdeviceflags0")));
   }
   # if FEATURE_I2CMULTIPLEXER
 
   if ((Device[DeviceIndex].Type == DEVICE_TYPE_I2C) && isI2CMultiplexerEnabled()) {
     int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
-    bitWrite(flags, 1, multipleMuxPortsOption == 1);
+    bitWrite(flags, I2C_FLAGS_MUX_MULTICHANNEL, multipleMuxPortsOption == 1);
 
     if (multipleMuxPortsOption == 1) {
       uint8_t selectedPorts = 0;
