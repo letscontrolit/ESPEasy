@@ -26,6 +26,11 @@ Supported hardware
 
 |P041_usedby|
 
+Power consumption
+~~~~~~~~~~~~~~~~~
+
+.. include:: NeoPixel_Power.rst
+
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^
 
