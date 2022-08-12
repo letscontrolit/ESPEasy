@@ -365,10 +365,8 @@ textarea {
 }
 
 tbody {
-	border-radius: 10px;
 	display: inline-block;
 	overflow: auto;
-	border: #444 0.1px solid;
 }
 
 table.multirow th,
@@ -417,7 +415,7 @@ table.multirow tr:nth-child(odd) {
 }
 
 .highlight td {
-	background-color: #FFAF1A;;
+	background-color: #dbff0075;
 }
 
 .apheader,
@@ -531,7 +529,7 @@ a.menu {
 
 section {
 	overflow-x: auto;
-	padding: 10px 5px 10px 5px;
+	padding: 10px 0px;
 }
 
 footer {
