@@ -537,7 +537,7 @@ footer {
 	padding: 0px 5px;
 }
 
-@media screen and (max-width: 750px) {
+@media screen and (max-width: 780px) {
 	.showmenulabel {
 		display: none;
 	}
