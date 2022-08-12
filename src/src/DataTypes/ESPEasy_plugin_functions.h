@@ -27,7 +27,7 @@
 #define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
 #define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
 #define PLUGIN_CLOCK_IN                    20 // Called every new minute
-#define PLUGIN_TASKTIMER_IN                    21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+#define PLUGIN_TASKTIMER_IN                21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
 #define PLUGIN_FIFTY_PER_SECOND            22 // Called 50 times per second
 #define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
 #define PLUGIN_GET_DEVICEGPIONAMES         24 // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
@@ -40,7 +40,7 @@
 #define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
 #define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
                                               // Needs FEATURE_PACKED_RAW_DATA
-#define PLUGIN_DEVICETIMER_IN               33 // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
+#define PLUGIN_DEVICETIMER_IN              33 // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
 #define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
 #define PLUGIN_MQTT_CONNECTION_STATE       36 // Signal when connection to MQTT broker is re-established

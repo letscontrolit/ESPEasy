@@ -508,23 +508,6 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
     }
 
     case PLUGIN_TASKTIMER_IN:
-    {
-      GPIO_MCP_Write(event->Par1, event->Par2);
-
-      // setPinState(PLUGIN_ID_009, event->Par1, PIN_MODE_OUTPUT, event->Par2);
-      portStatusStruct tempStatus;
-
-      // WARNING: operator [] creates an entry in the map if key does not exist
-      const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
-      tempStatus = globalMapPortStatus[key];
-
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
-      savePortStatus(key, tempStatus);
-      break;
-    }
-
     case PLUGIN_DEVICETIMER_IN:
     {
       GPIO_MCP_Write(event->Par1, event->Par2);
@@ -536,9 +519,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
       const uint32_t key = createKey(PLUGIN_ID_009, event->Par1);
       tempStatus = globalMapPortStatus[key];
 
-      tempStatus.state                               = event->Par2;
-      tempStatus.mode                                = PIN_MODE_OUTPUT;
-      (tempStatus.monitor) ? tempStatus.forceMonitor = 1 : tempStatus.forceMonitor = 0; // added to send event for longpulse command
+      tempStatus.state        = event->Par2;
+      tempStatus.mode         = PIN_MODE_OUTPUT;
+      tempStatus.forceMonitor = (tempStatus.monitor) ?  1 :  0; // added to send event for longpulse command
       savePortStatus(key, tempStatus);
       break;
     }

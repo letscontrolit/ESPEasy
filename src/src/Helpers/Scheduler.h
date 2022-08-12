@@ -61,10 +61,10 @@ public:
   enum class SchedulerTimerType_e {
     SystemEventQueue       = 0, // Not really a timer.
     ConstIntervalTimer     = 1,
-    PLUGIN_TIMER_IN_e      = 2, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+    PLUGIN_TASKTIMER_IN_e  = 2, // Called with a previously defined event at a specific time, set via setPluginTaskTimer
     TaskDeviceTimer        = 3, // Essentially calling PLUGIN_READ
     GPIO_timer             = 4,
-    PLUGIN_ONLY_TIMER_IN_e = 5, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
+    PLUGIN_DEVICETIMER_IN_e = 5, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
     RulesTimer             = 6,
     IntendedReboot         = 15 // Used to show intended reboot
   };

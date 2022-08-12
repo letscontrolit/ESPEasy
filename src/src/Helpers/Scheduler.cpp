@@ -63,14 +63,14 @@ String ESPEasy_Scheduler::toString(ESPEasy_Scheduler::IntervalTimer_e timer) {
 
 const __FlashStringHelper * ESPEasy_Scheduler::toString(ESPEasy_Scheduler::SchedulerTimerType_e timerType) {
   switch (timerType) {
-    case SchedulerTimerType_e::SystemEventQueue:       return F("SystemEventQueue");
-    case SchedulerTimerType_e::ConstIntervalTimer:     return F("Const Interval");
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:      return F("PLUGIN_TASKTIMER_IN");
-    case SchedulerTimerType_e::TaskDeviceTimer:        return F("PLUGIN_READ");
-    case SchedulerTimerType_e::GPIO_timer:             return F("GPIO_timer");
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e: return F("PLUGIN_DEVICETIMER_IN");
-    case SchedulerTimerType_e::RulesTimer:             return F("Rules#Timer");
-    case SchedulerTimerType_e::IntendedReboot:         return F("Intended Reboot");
+    case SchedulerTimerType_e::SystemEventQueue:        return F("SystemEventQueue");
+    case SchedulerTimerType_e::ConstIntervalTimer:      return F("Const Interval");
+    case SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e:   return F("PLUGIN_TASKTIMER_IN");
+    case SchedulerTimerType_e::TaskDeviceTimer:         return F("PLUGIN_READ");
+    case SchedulerTimerType_e::GPIO_timer:              return F("GPIO_timer");
+    case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e: return F("PLUGIN_DEVICETIMER_IN");
+    case SchedulerTimerType_e::RulesTimer:              return F("Rules#Timer");
+    case SchedulerTimerType_e::IntendedReboot:          return F("Intended Reboot");
   }
   return F("unknown");
 }
@@ -164,19 +164,21 @@ String ESPEasy_Scheduler::decodeSchedulerId(unsigned long mixed_id) {
       return result;
     }
     case SchedulerTimerType_e::ConstIntervalTimer:
+    {
       result +=  toString(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id));
       return result;
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:
+    }
+    case SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e:
     {
-      const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
+      const taskIndex_t taskIndex = ((1 << 8) - 1) & id;
 
-      if (validDeviceIndex(deviceIndex)) {
-        idStr = getPluginNameFromDeviceIndex(deviceIndex);
+      if (validTaskIndex(taskIndex)) {
+        idStr = getTaskDeviceName(taskIndex);
       }
       result += idStr;
       return result;
     }
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e:
+    case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e:
     {
       const deviceIndex_t deviceIndex = ((1 << 8) - 1) & id;
 
@@ -282,10 +284,10 @@ void ESPEasy_Scheduler::handle_schedule() {
     case SchedulerTimerType_e::ConstIntervalTimer:
       process_interval_timer(static_cast<ESPEasy_Scheduler::IntervalTimer_e>(id), timer);
       break;
-    case SchedulerTimerType_e::PLUGIN_TIMER_IN_e:
+    case SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e:
       process_plugin_task_timer(id);
       break;
-    case SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e:
+    case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e:
       process_plugin_timer(id);
       break;
     case SchedulerTimerType_e::RulesTimer:
@@ -612,7 +614,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(unsigned long msecFromNow, taskIndex_
   if (!validTaskIndex(taskIndex)) return;
   if (!Settings.TaskDeviceEnabled[taskIndex]) return;
   const unsigned long mixedTimerId = getMixedId(
-    SchedulerTimerType_e::PLUGIN_TIMER_IN_e, 
+    SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e, 
     createPluginTaskTimerId(taskIndex, Par1));
 
   systemTimerStruct timer_data;
@@ -632,7 +634,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(unsigned long id) {
   HeapSelectDram ephemeral;
   #endif
 
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TIMER_IN_e, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_TASKTIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
@@ -812,7 +814,7 @@ void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t plu
 
   if (!validDeviceIndex(deviceIndex)) { return; }
 
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, createPluginTimerId(deviceIndex, Par1));
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e, createPluginTimerId(deviceIndex, Par1));
   systemTimerStruct   timer_data;
 
   // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
@@ -831,7 +833,7 @@ void ESPEasy_Scheduler::process_plugin_timer(unsigned long id) {
   #endif
 
   START_TIMER;
-  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_ONLY_TIMER_IN_e, id);
+  const unsigned long mixedTimerId = getMixedId(SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e, id);
   auto it                          = systemTimers.find(mixedTimerId);
 
   if (it == systemTimers.end()) { return; }
