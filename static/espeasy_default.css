@@ -242,7 +242,7 @@ table.multirow th,table.normal th {
 	align-content:center;
 	background-color:#444;
 	border-color:silver;
-	border-width:.1px;
+	border-width:thin;
 	color:#FFF;
 	padding:6px;
 	text-align:center;
