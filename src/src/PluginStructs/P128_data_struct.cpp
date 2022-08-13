@@ -694,15 +694,9 @@ bool P128_data_struct::plugin_write(struct EventStruct *event,
 
 void P128_data_struct::rgb2colorStr() {
   colorStr.clear();
-
-  if (rgb.R < 16) { colorStr += '0'; }
-  colorStr += formatToHex(rgb.R, {});
-
-  if (rgb.G < 16) { colorStr += '0'; }
-  colorStr += formatToHex(rgb.G, {});
-
-  if (rgb.B < 16) { colorStr += '0'; }
-  colorStr += formatToHex(rgb.B, {});
+  colorStr += formatToHex_no_prefix(rgb.R, 2);
+  colorStr += formatToHex_no_prefix(rgb.G, 2);
+  colorStr += formatToHex_no_prefix(rgb.B, 2);
 }
 
 bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {

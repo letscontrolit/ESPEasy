@@ -33,6 +33,7 @@
     * 0 : Continue to next line (wrap text onto the next line)
     * 1 : Truncate exceeding message (cut-off text that won't fit on the screen width)
     * 2 : Clear then truncate exceeding message (Clear to width of screen, then print the message)
+    * 3 : Truncate and center message in available space, when maxTextWidthPixels is provided in ``txtfull`` subcommand. Will act like 1 : Truncate exceeding message if no width provided.
     "
     "
     ``<trigger>,txt,<text>``
@@ -69,11 +70,15 @@
     Set font scaling option. Only values from 0 to 10 are accepted. 0 assumes 1 by default.
     "
     "
-    ``<trigger>,txtfull,<x>,<y>,<size=1>,<foreColor=white>,<backColor=transparent>,<text>``
+    ``<trigger>,txtfull,<x>,<y>,<size=1>,<foreColor=current>,<backColor=foreColor>,<textPrintMode=current>,<maxTextWidthPixels=0>,<text>``
     ","
     Write text at position X/Y with all options. Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
     
     All options that have a default specified (size, foreColor, backColor) can be left out, but text is expected. ForeColor and BackColor use the last set Foreground and Background colors (that will by default be white and transparent if not provided).
+
+    ``textPrintMode`` can be passed an invalid value (f.e. -1) to use the current setting.
+
+    ``maxTextWidthPixels`` can be used to have textPrintMode > 0 (see ``tpm`` subcommand) but clear only a limited area width instead of clearing until the right edge of the screen. 0 implies that the right edge of the screen is used.
     "
     "
     ``<trigger>,asciitable[,<offset>,<fontscaling>]``
