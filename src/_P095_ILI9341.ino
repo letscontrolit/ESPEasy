@@ -7,18 +7,20 @@
 
 # define PLUGIN_095
 # define PLUGIN_ID_095         95
-# define PLUGIN_NAME_095       "Display - TFT 2.4 inches ILI9341"
+# define PLUGIN_NAME_095       "Display - TFT ILI934x/ILI948x"
 # define PLUGIN_VALUENAME1_095 "CursorX"
 # define PLUGIN_VALUENAME2_095 "CursorY"
 # define PLUGIN_095_MAX_DISPLAY 1
 
 
-# if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
-  #  define PLUGIN_095_FONT_INCLUDED // enable to use fonts in this plugin
-# endif // if !defined(LIMIT_BUILD_SIZE) && !defined(PLUGIN_095_FONT_INCLUDED)
-
 /**
  * Changelog:
+ * 2022-07-20 tonhuisman: Made support for ILI9486/ILI9488 optional and excluded by default as these are not available as
+ *                        regular SPI devices (3/4 wire SPI)
+ *                        NOTE: Renumbered enum with display types.
+ * 2022-07-16 tonhuisman: Add support for some more ILI9481 sub-types (Again cloned from TFT_eSPI library)
+ *                        WARNING: ILI9481 does *NOT* support changing rotation and keep writing on the display!
+ *                                 Display memory is restructured by the rotation change, but the content is not adjusted.
  * 2022-06-14 tonhuisman: Improved Splash handling, non-blocking delay, default 3 seconds
  * 2022-06-11 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details. Code optimization
  * 2022-05-17 tonhuisman: Add setting for Splash during plugin startup, default on, when compiled in
@@ -232,8 +234,12 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_AUO317_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMO35_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI7_320x480),
+          ILI9xxx_type_toString(ILI9xxx_type_e::ILI9481_CMI8_320x480),
+          # ifdef P095_ENABLE_ILI948X
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9486_320x480),
           ILI9xxx_type_toString(ILI9xxx_type_e::ILI9488_320x480),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         const int hardwareOptions[] = {
           static_cast<int>(ILI9xxx_type_e::ILI9341_240x320),
@@ -244,8 +250,12 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ILI9xxx_type_e::ILI9481_AUO317_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_CMO35_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9481_RGB_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMI7_320x480),
+          static_cast<int>(ILI9xxx_type_e::ILI9481_CMI8_320x480),
+          # ifdef P095_ENABLE_ILI948X
           static_cast<int>(ILI9xxx_type_e::ILI9486_320x480),
           static_cast<int>(ILI9xxx_type_e::ILI9488_320x480),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         addFormSelector(F("TFT display model"),
                         F("dsptype"),
@@ -275,16 +285,20 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9341),
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9342),
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9481),
+          # ifdef P095_ENABLE_ILI948X
           P095_CommandTrigger_toString(P095_CommandTrigger::ili9486),
-          P095_CommandTrigger_toString(P095_CommandTrigger::ili9488)
+          P095_CommandTrigger_toString(P095_CommandTrigger::ili9488),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         const int commandTriggerOptions[] = {
           static_cast<int>(P095_CommandTrigger::tft),
           static_cast<int>(P095_CommandTrigger::ili9341),
           static_cast<int>(P095_CommandTrigger::ili9342),
           static_cast<int>(P095_CommandTrigger::ili9481),
+          # ifdef P095_ENABLE_ILI948X
           static_cast<int>(P095_CommandTrigger::ili9486),
-          static_cast<int>(P095_CommandTrigger::ili9488)
+          static_cast<int>(P095_CommandTrigger::ili9488),
+          # endif // ifdef P095_ENABLE_ILI948X
         };
         addFormSelector(F("Write Command trigger"),
                         F("commandtrigger"),
@@ -314,22 +328,23 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       if (P095_CONFIG_COLORS == 0) { // For migrating from older release task settings
         P095_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
       }
-      AdaGFXFormForeAndBackColors(F("foregroundcolor"),
+      AdaGFXFormForeAndBackColors(F("pfgcolor"),
                                   P095_CONFIG_GET_COLOR_FOREGROUND,
-                                  F("backgroundcolor"),
+                                  F("pbgcolor"),
                                   P095_CONFIG_GET_COLOR_BACKGROUND);
 
-      String strings[P095_Nlines];
-      LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
-
-      String   line; // Default reserved length is plenty
       uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
+      {
+        String strings[P095_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
-      for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
-        line  = F("Line ");
-        line += (varNr + 1);
-        addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P095_Nchars);
-        remain -= (strings[varNr].length() + 1);
+
+        for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
+          String line = F("Line ");
+          line += (varNr + 1);
+          addFormTextBox(line, getPluginCustomArgName(varNr), strings[varNr], P095_Nchars);
+          remain -= (strings[varNr].length() + 1);
+        }
       }
       String remainStr;
       remainStr.reserve(15);
@@ -370,25 +385,24 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P095_CONFIG_FLAG_TYPE,        getFormItemInt(F("dsptype")));         // Bit 20..24 Hardwaretype
       P095_CONFIG_FLAGS = lSettings;
 
-      String   color   = web_server.arg(F("foregroundcolor"));
-      uint16_t fgcolor = ADAGFX_WHITE;     // Default to white when empty
+      String   color   = web_server.arg(F("pfgcolor"));
+      uint16_t fgcolor = ADAGFX_WHITE;                                                                  // Default to white when empty
 
       if (!color.isEmpty()) {
-        fgcolor = AdaGFXparseColor(color); // Reduce to rgb565
+        fgcolor = AdaGFXparseColor(color);                                                              // Reduce to rgb565
       }
-      color = web_server.arg(F("backgroundcolor"));
-      const uint16_t bgcolor = AdaGFXparseColor(color);
+      color = web_server.arg(F("pbgcolor"));
+      uint16_t bgcolor = AdaGFXparseColor(color);
 
       P095_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
 
       String strings[P095_Nlines];
-      String error;
 
       for (uint8_t varNr = 0; varNr < P095_Nlines; varNr++) {
         strings[varNr] = web_server.arg(getPluginCustomArgName(varNr));
       }
 
-      error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
+      String error = SaveCustomTaskSettings(event->TaskIndex, strings, P095_Nlines, 0);
 
       if (error.length() > 0) {
         addHtmlError(error);

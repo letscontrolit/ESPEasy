@@ -44,12 +44,12 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
     }
   }
 
-  if ((Plugin_035_irSender != nullptr) && (_gpioPin == -1)) {
-    addLog(LOG_LEVEL_INFO, F("INIT: IR TX Removed"));
-    delete Plugin_035_irSender;
-    Plugin_035_irSender = nullptr;
-    success             = false;
-  }
+  // if ((Plugin_035_irSender != nullptr) && (_gpioPin == -1)) { // This can never be true because of the validGpio() check above
+  //   addLog(LOG_LEVEL_INFO, F("INIT: IR TX Removed"));
+  //   delete Plugin_035_irSender;
+  //   Plugin_035_irSender = nullptr;
+  //   success             = false;
+  // }
 
   # ifdef P016_P035_Extended_AC
 
@@ -63,12 +63,12 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
     Plugin_035_commonAc = new (std::nothrow) IRac(_gpioPin);
   }
 
-  if ((Plugin_035_commonAc != nullptr) && (_gpioPin == -1)) {
-    addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
-    delete Plugin_035_commonAc;
-    Plugin_035_commonAc = nullptr;
-    success             = false;
-  }
+  // if ((Plugin_035_commonAc != nullptr) && (_gpioPin == -1)) { // This can never be true because of the validGpio() check above
+  //   addLog(LOG_LEVEL_INFO, F("INIT AC: IR TX Removed"));
+  //   delete Plugin_035_commonAc;
+  //   Plugin_035_commonAc = nullptr;
+  //   success             = false;
+  // }
   # endif // ifdef P016_P035_Extended_AC
   return success;
 }
@@ -425,6 +425,7 @@ void P035_data_struct::printToLog(const String& protocol, const String& data, in
     tmp += F(" Repeats: ");
     tmp += repeats;
   }
+
   if (printToWeb) {
     printWebString = tmp;
   }
@@ -435,9 +436,16 @@ void P035_data_struct::printToLog(const String& protocol, const String& data, in
 String P035_data_struct::listProtocols() {
   String temp;
 
-  for (uint32_t i = 0; i <= kLastDecodeType; i++) {
-    if (IRsend::defaultBits((decode_type_t)i) > 0) {
-      temp += typeToString((decode_type_t)i) + ' ';
+  if (temp.reserve(1024)) {
+    for (uint32_t i = 0; i <= kLastDecodeType; i++) {
+      if (IRsend::defaultBits((decode_type_t)i) > 0) {
+        String typ = typeToString((decode_type_t)i);
+
+        if (typ.length() > 1) {
+          temp += typ;
+          temp += ' ';
+        }
+      }
     }
   }
   return temp;
@@ -449,9 +457,16 @@ String P035_data_struct::listProtocols() {
 String P035_data_struct::listACProtocols() {
   String temp;
 
-  for (uint32_t i = 0; i <= kLastDecodeType; i++) {
-    if (hasACState((decode_type_t)i)) {
-      temp += typeToString((decode_type_t)i) + ' ';
+  if (temp.reserve(1024)) {
+    for (uint32_t i = 0; i <= kLastDecodeType; i++) {
+      if (hasACState((decode_type_t)i)) {
+        const String typ = typeToString((decode_type_t)i);
+
+        if (typ.length() > 1) {
+          temp +=  typ;
+          temp += ' ';
+        }
+      }
     }
   }
   return temp;

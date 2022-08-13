@@ -16,11 +16,19 @@ const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
     case ILI9xxx_type_e::ILI9481_AUO317_320x480: return F("ILI9481 320 x 480px (AUO317)");
     case ILI9xxx_type_e::ILI9481_CMO35_320x480: return F("ILI9481 320 x 480px (CMO35)");
     case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
+    case ILI9xxx_type_e::ILI9481_CMI7_320x480: return F("ILI9481 320 x 480px (CMI7)");
+    case ILI9xxx_type_e::ILI9481_CMI8_320x480: return F("ILI9481 320 x 480px (CMI8)");
+    # ifdef P095_ENABLE_ILI948X
     case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
     case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
+    # endif // ifdef P095_ENABLE_ILI948X
     case ILI9xxx_type_e::ILI9xxx_MAX: break;
   }
+  # ifndef BUILD_NO_DEBUG
   return F("Unsupported type!");
+  # else // ifndef BUILD_NO_DEBUG
+  return F("");
+  # endif // ifndef BUILD_NO_DEBUG
 }
 
 /****************************************************************************
@@ -41,8 +49,12 @@ void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
     case ILI9xxx_type_e::ILI9481_AUO317_320x480:
     case ILI9xxx_type_e::ILI9481_CMO35_320x480:
     case ILI9xxx_type_e::ILI9481_RGB_320x480:
+    case ILI9xxx_type_e::ILI9481_CMI7_320x480:
+    case ILI9xxx_type_e::ILI9481_CMI8_320x480:
+    # ifdef P095_ENABLE_ILI948X
     case ILI9xxx_type_e::ILI9486_320x480:
     case ILI9xxx_type_e::ILI9488_320x480:
+    # endif // ifdef P095_ENABLE_ILI948X
       x = 320;
       y = 480;
       break;
@@ -60,8 +72,10 @@ const __FlashStringHelper* P095_CommandTrigger_toString(const P095_CommandTrigge
     case P095_CommandTrigger::ili9341: return F("ili9341");
     case P095_CommandTrigger::ili9342: return F("ili9342");
     case P095_CommandTrigger::ili9481: return F("ili9481");
+    # ifdef P095_ENABLE_ILI948X
     case P095_CommandTrigger::ili9486: return F("ili9486");
     case P095_CommandTrigger::ili9488: return F("ili9488");
+    # endif // ifdef P095_ENABLE_ILI948X
     case P095_CommandTrigger::MAX: return F("None");
   }
   return F("ili9341"); // Default command trigger
@@ -111,7 +125,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (nullptr == tft) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ILI9341: Init start."));
+    # endif // ifndef BUILD_NO_DEBUG
 
     tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
 
@@ -208,7 +224,9 @@ void P095_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P095_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("ILI9341: Exit."));
+  # endif // ifndef BUILD_NO_DEBUG
 
   if ((nullptr != tft) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     tft->fillScreen(ADAGFX_BLACK); // fill screen with black color
@@ -340,42 +358,30 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
       }
     }
     else if (arg1.equals(F("backlight"))) {
-      String arg2 = parseString(string, 3);
-      int    nArg2;
-
-      if ((P095_CONFIG_BACKLIGHT_PIN != -1) && // All is valid?
-          validIntFromString(arg2, nArg2) &&
-          (nArg2 > 0) &&
-          (nArg2 <= 100)) {
-        P095_CONFIG_BACKLIGHT_PERCENT = nArg2; // Set but don't store
+      if ((P095_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
+          (event->Par2 > 0) &&
+          (event->Par2 <= 100)) {
+        P095_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
         displayOnOff(true);
       } else {
         success = false;
       }
     }
-    else if (arg1.equals(F("inv")))
-    {
-      String arg2 = parseString(string, 3);
-      int    nArg2;
-
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0) &&
-          (nArg2 <= 1)) {
-        tft->invertDisplay(nArg2);
+    else if (arg1.equals(F("inv"))) {
+      if ((event->Par2 >= 0) &&
+          (event->Par2 <= 1)) {
+        tft->invertDisplay(event->Par2);
       } else {
         success = false;
       }
     }
-    else if (arg1.equals(F("rot")))
-    {
-      ///control?cmd=tftcmd,rot,0
-      // not working to verify
-      String arg2 = parseString(string, 3);
-      int    nArg2;
-
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0)) {
-        tft->setRotation(nArg2 % 4);
+    else if (arg1.equals(F("rot"))) {
+      if ((event->Par2 >= 0)) {
+        if (nullptr != gfxHelper) {
+          gfxHelper->setRotation(event->Par2 % 4);
+        } else {
+          tft->setRotation(event->Par2 % 4);
+        }
       } else {
         success = false;
       }
@@ -440,11 +446,7 @@ void P095_data_struct::displayOnOff(bool state) {
     # endif // if defined(ESP32)
   }
 
-  if (state) {
-    tft->sendCommand(ILI9341_DISPON);
-  } else {
-    tft->sendCommand(ILI9341_DISPOFF);
-  }
+  tft->sendCommand(state ? ILI9341_DISPON : ILI9341_DISPOFF);
   _displayTimer = (state ? _displayTimeout : 0);
 }
 

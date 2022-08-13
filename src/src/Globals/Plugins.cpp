@@ -236,9 +236,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   I2CMultiplexerOff();
   #endif // if FEATURE_I2CMULTIPLEXER
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
-    I2CSelectHighClockSpeed();  // Reset
-  }
+  I2CSelectHighClockSpeed();  // Reset
 }
 
 // Add an event to the event queue.
@@ -592,6 +590,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     case PLUGIN_WEBFORM_LOAD:
     case PLUGIN_READ:
     case PLUGIN_GET_PACKED_RAW_DATA:
+    case PLUGIN_TASKTIMER_IN:
     {
       // FIXME TD-er: Code duplication with PluginCallForTask
       if (!validTaskIndex(event->TaskIndex)) {
