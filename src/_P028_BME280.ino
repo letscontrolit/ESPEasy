@@ -276,8 +276,8 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 
             if (log.reserve(40)) { // Prevent re-allocation
               log  = P028_data->getDeviceName();
-              log += F(" : Address: 0x");
-              log += String(P028_I2C_ADDRESS, HEX);
+              log += F(" : Address: ");
+              log += formatToHex(P028_I2C_ADDRESS, 2);
               addLogMove(LOG_LEVEL_INFO, log);
 
               // addLogMove does also clear the string.

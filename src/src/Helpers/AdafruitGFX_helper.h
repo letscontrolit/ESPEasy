@@ -458,6 +458,14 @@ public:
   bool deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
+  uint16_t getTextSize(const String& text,
+                       uint16_t    & h); // return length and height in pixels using current font
+
+  void     setValidation(const bool& state);
+  bool     getValidation() const {
+    return _useValidation;
+  }
+
 private:
 
   void initialize();

@@ -3,7 +3,7 @@
 .. |P070_type| replace:: :cyan:`Output`
 .. |P070_typename| replace:: :cyan:`Output -  NeoPixel Ring Clock`
 .. |P070_porttype| replace:: `.`
-.. |P070_status| replace:: :yellow:`DISPLAY, NEOPIXEL, COLLECTION A`
+.. |P070_status| replace:: :yellow:`NEOPIXEL, COLLECTION A`
 .. |P070_github| replace:: P070_NeoPixel_Clock.ino
 .. _P070_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P070_NeoPixel_Clock.ino
 .. |P070_usedby| replace:: `.`
