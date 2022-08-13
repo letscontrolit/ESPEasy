@@ -516,7 +516,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
