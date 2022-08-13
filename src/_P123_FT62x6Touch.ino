@@ -108,7 +108,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       {
         addRowLabel(F("Display task"));
         addTaskSelect(F("dsptask"), P123_CONFIG_DISPLAY_TASK);
+        #ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
+        #endif // ifndef LIMIT_BUILD_SIZE
       }
 
       uint16_t width_      = P123_CONFIG_X_RES;
