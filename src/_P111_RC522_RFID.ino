@@ -6,7 +6,7 @@
 // #######################################################################################################
 
 // Changelog:
-// 2022-06-24, tonhuidmsn: Move plugin_ten_per_second handler to pluginstruct so it can properly handle the reset procedure
+// 2022-06-24, tonhuisman: Move plugin_ten_per_second handler to pluginstruct so it can properly handle the reset procedure
 // 2022-06-23, tonhuisman: Reformat source (uncrustify), optimize somewhat for size
 //                         Replace delay() call in reset by handling via plugin_fifty_per_second
 // 2021-03-13, tonhuisman: Disabled tag removal detection, as it seems impossible to achieve with the MFRC522.
