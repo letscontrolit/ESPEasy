@@ -32,7 +32,10 @@ struct Dallas_SensorData {
 
   uint64_t addr              = 0;
   float    value             = 0.0f;
+  uint32_t start_read_failed = 0;  
+  uint32_t start_read_retry  = 0;  
   uint32_t read_success      = 0;
+  uint32_t read_retry        = 0;
   uint32_t read_failed       = 0;  
   uint8_t  actual_res        = 0;
 
