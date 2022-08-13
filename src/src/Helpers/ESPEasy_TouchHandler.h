@@ -11,6 +11,9 @@
 
 /*****
  * Changelog:
+ * 2022-08-13 tonhuisman: Replace _ om object name and on/off captions by space, to ease the use of object name as caption
+ *                        On save, any spaces in captions are replaced by _ to avoid using 2 quotes around the value.
+ *                        This implies that no underscores wil be shown in captions!
  * 2022-06-09 tonhuisman: Change method arguments to const-by-reference where possible for improved compile-time checks
  * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling from P123
  *                        Move PLUGIN_GET_CONFIG_VALUE handling from P123.

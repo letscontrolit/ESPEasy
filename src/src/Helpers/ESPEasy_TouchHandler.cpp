@@ -1005,8 +1005,10 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  , F("adagfx65kcolors")
                  );
       html_TD(); // ON Caption
+      parsed = TouchObjects[objectNr].captionOn;
+      parsed.replace('_', ' ');
       addTextBox(getPluginCustomArgName(objectNr + 1300),
-                 TouchObjects[objectNr].captionOn,
+                 parsed,
                  TOUCH_MaxCaptionNameLength,
                  false,
                  false,
@@ -1107,8 +1109,10 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                  , F("adagfx65kcolors")
                  );
       html_TD(); // OFF Caption
+      parsed = TouchObjects[objectNr].captionOff;
+      parsed.replace('_', ' ');
       addTextBox(getPluginCustomArgName(objectNr + 1400),
-                 TouchObjects[objectNr].captionOff,
+                 parsed,
                  TOUCH_MaxCaptionNameLength,
                  false,
                  false,
@@ -1302,9 +1306,13 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
       colorInput = webArg(getPluginCustomArgName(objectNr + 1500)); // Color caption
       config    += toStringNoZero(AdaGFXparseColor(colorInput, _colorDepth, true));
       config    += TOUCH_SETTINGS_SEPARATOR;                        // Caption ON
-      config    += wrapWithQuotesIfContainsParameterSeparatorChar(webArg(getPluginCustomArgName(objectNr + 1300)));
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1300));
+      colorInput.replace(' ', '_');                                 // Replace spaces by '_', often cheaper than 2 quotes...
+      config    += wrapWithQuotesIfContainsParameterSeparatorChar(colorInput);
       config    += TOUCH_SETTINGS_SEPARATOR;                        // Caption OFF
-      config    += wrapWithQuotesIfContainsParameterSeparatorChar(webArg(getPluginCustomArgName(objectNr + 1400)));
+      colorInput = webArg(getPluginCustomArgName(objectNr + 1400));
+      colorInput.replace(' ', '_');                                 // Replace spaces by '_', often cheaper than 2 quotes...
+      config    += wrapWithQuotesIfContainsParameterSeparatorChar(colorInput);
       config    += TOUCH_SETTINGS_SEPARATOR;
       colorInput = webArg(getPluginCustomArgName(objectNr + 1700)); // Color Border
       config    += toStringNoZero(AdaGFXparseColor(colorInput, _colorDepth, true));
@@ -1717,14 +1725,25 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
     eventCommand += ','; // (12 = Font scaling)
     eventCommand += get4BitFromUL(TouchObjects[objectIndex].flags, TOUCH_OBJECT_FLAG_FONTSCALE);
     eventCommand += ','; // (13 = ON caption, default=object name)
-    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(TouchObjects[objectIndex].captionOn.isEmpty() ?
-                                                                   TouchObjects[objectIndex].objectName :
-                                                                   TouchObjects[objectIndex].captionOn);
-    eventCommand += ','; // (14 = OFF caption)
-    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(TouchObjects[objectIndex].captionOff.isEmpty() ?
-                                                                   TouchObjects[objectIndex].objectName :
-                                                                   TouchObjects[objectIndex].captionOff);
-    eventCommand += ','; // (15 = Border color)
+    String _capt;
+
+    if (TouchObjects[objectIndex].captionOn.isEmpty()) {
+      _capt = TouchObjects[objectIndex].objectName;
+    } else {
+      _capt = TouchObjects[objectIndex].captionOn;
+    }
+    _capt.replace('_', ' '); // Replace all '_' by space
+    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(_capt);
+    eventCommand += ',';     // (14 = OFF caption)
+
+    if (TouchObjects[objectIndex].captionOff.isEmpty()) {
+      _capt = TouchObjects[objectIndex].objectName;
+    } else {
+      _capt = TouchObjects[objectIndex].captionOff;
+    }
+    _capt.replace('_', ' '); // Replace all '_' by space
+    eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(_capt);
+    eventCommand += ',';     // (15 = Border color)
     eventCommand += AdaGFXcolorToString(TouchObjects[objectIndex].colorBorder == 0
                                         ? Touch_Settings.colorBorder
                                         : TouchObjects[objectIndex].colorBorder,
