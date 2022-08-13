@@ -135,9 +135,8 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
-      // Timer is triggered from plugin_ten_per_second handler after a successful read
       // Reset card id on timeout
       if (P111_TAG_AUTOREMOVAL == 0
           # ifdef P111_USE_REMOVAL
