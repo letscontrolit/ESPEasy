@@ -249,7 +249,7 @@ table.multirow th,table.normal th {
 	width:100vw 
 }
 tr td {
-	border-width:.1px 
+	border-width:thin 
 }
 table.multirow,table.normal {
 	border-spacing:0;
