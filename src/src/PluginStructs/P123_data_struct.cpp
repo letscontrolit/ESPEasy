@@ -65,7 +65,7 @@ bool P123_data_struct::init(struct EventStruct *event) {
     # ifdef PLUGIN_123_DEBUG
     addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Plugin & touchscreen initialized."));
   } else {
-    addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialisation FAILED."));
+    addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
     # endif // PLUGIN_123_DEBUG
   }
   return isInitialized();
@@ -145,7 +145,7 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
     } else if (subcommand.equals(F("flip"))) { // touch,flip,<0|1> : Flip rotation by 0 or 180 degrees
       setRotationFlipped(event->Par2 > 0);
       success = true;
-    } else {                                   // Rest of the commands handled by
+    } else {                                   // Rest of the commands handled by ESPEasy_TouchHandler
       success = touchHandler->plugin_write(event, string);
     }
   }
@@ -156,26 +156,27 @@ bool P123_data_struct::plugin_write(struct EventStruct *event,
  * Every 1/50th second we check if the screen is touched
  */
 bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
-  bool success = false;
-
   if (isInitialized()) {
     if (touched()) {
-      int16_t x = 0, y = 0, ox = 0, oy = 0, rx, ry;
-      int16_t z = 0;
+      int16_t x  = 0;
+      int16_t y  = 0;
+      int16_t z  = 0;
+      int16_t ox = 0;
+      int16_t oy = 0;
       readData(x, y, z, ox, oy);
 
-      rx = x;
-      ry = y;
+      int16_t rx = x;             // Keep raw values
+      int16_t ry = y;
       scaleRawToCalibrated(x, y); // Map to screen coordinates if so configured
 
-      success = touchHandler->plugin_fifty_per_second(event, x, y, ox, oy, rx, ry, z);
+      return touchHandler->plugin_fifty_per_second(event, x, y, ox, oy, rx, ry, z);
     }
   }
-  return success;
+  return false;
 }
 
 /**
- * Handle getting config values, mostly delegated to ESPEasy_TouchHandler
+ * Handle getting config values, delegated to ESPEasy_TouchHandler
  */
 bool P123_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
@@ -345,7 +346,7 @@ void P123_data_struct::scaleRawToCalibrated(int16_t& x,
       }
       float x_fact = static_cast<float>(touchHandler->Touch_Settings.bottom_right.x - touchHandler->Touch_Settings.top_left.x) /
                      static_cast<float>(_ts_x_res);
-      x = static_cast<uint16_t>(round(lx / x_fact));
+      x = static_cast<int16_t>(round(lx / x_fact));
     }
     int16_t ly = y - touchHandler->Touch_Settings.top_left.y;
 
@@ -356,7 +357,7 @@ void P123_data_struct::scaleRawToCalibrated(int16_t& x,
         ly = touchHandler->Touch_Settings.bottom_right.y;
       }
       float y_fact = (touchHandler->Touch_Settings.bottom_right.y - touchHandler->Touch_Settings.top_left.y) / _ts_y_res;
-      y = static_cast<uint16_t>(round(ly / y_fact));
+      y = static_cast<int16_t>(round(ly / y_fact));
     }
   }
 }

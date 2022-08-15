@@ -2,27 +2,32 @@
 #define PLUGINSTRUCTS_P123_DATA_STRUCT_H
 
 #include "../../_Plugin_Helper.h"
-#include "../../ESPEasy_common.h"
-#include "../Helpers/AdafruitGFX_helper.h"
-#include "../Helpers/ESPEasy_TouchHandler.h"
 
 #ifdef USES_P123
+
+# include "../../ESPEasy_common.h"
+# include "../Helpers/AdafruitGFX_helper.h"
+# include "../Helpers/ESPEasy_TouchHandler.h"
 
 # include <Adafruit_FT6206.h>
 
 # ifndef LIMIT_BUILD_SIZE
-#  define PLUGIN_123_DEBUG // Additional debugging information
+#  define PLUGIN_123_DEBUG      // Additional debugging information
+# else // ifndef LIMIT_BUILD_SIZE
+#  ifndef P123_LIMIT_BUILD_SIZE // Can be set from elsewhere
+#   define P123_LIMIT_BUILD_SIZE
+#  endif // ifndef P123_LIMIT_BUILD_SIZE
 # endif // ifndef LIMIT_BUILD_SIZE
 
-# define P123_CONFIG_DISPLAY_TASK PCONFIG(0)
+# define P123_CONFIG_DISPLAY_TASK   PCONFIG(0)
 
-# define P123_COLOR_DEPTH         PCONFIG_LONG(1)
-# define P123_CONFIG_THRESHOLD    PCONFIG(1)
-# define P123_CONFIG_ROTATION     PCONFIG(2)
-# define P123_CONFIG_X_RES        PCONFIG(3)
-# define P123_CONFIG_Y_RES        PCONFIG(4)
+# define P123_COLOR_DEPTH           PCONFIG_LONG(1)
+# define P123_CONFIG_THRESHOLD      PCONFIG(1)
+# define P123_CONFIG_ROTATION       PCONFIG(2)
+# define P123_CONFIG_X_RES          PCONFIG(3)
+# define P123_CONFIG_Y_RES          PCONFIG(4)
 
-# define P123_CONFIG_DISPLAY_PREV PCONFIG(7)
+# define P123_CONFIG_DISPLAY_PREV   PCONFIG(7)
 
 // Default settings values
 # define P123_TS_THRESHOLD          40            // Threshold before the value is registered as a proper touch
@@ -30,13 +35,13 @@
 # define P123_TS_X_RES              320           // Pixels, should match with the screen it is mounted on
 # define P123_TS_Y_RES              480
 
-# define P123_TOUCH_X_NATIVE        P123_TS_X_RES // Native touchscreen resolution, same as display resolution
+# define P123_TOUCH_X_NATIVE        P123_TS_X_RES // Native touchscreen resolution, same as default display resolution
 # define P123_TOUCH_Y_NATIVE        P123_TS_Y_RES
 
-# define P123_ROTATION_0   0
-# define P123_ROTATION_90  1
-# define P123_ROTATION_180 2
-# define P123_ROTATION_270 3
+# define P123_ROTATION_0            0
+# define P123_ROTATION_90           1
+# define P123_ROTATION_180          2
+# define P123_ROTATION_270          3
 
 // Data structure
 struct P123_data_struct : public PluginTaskData_base

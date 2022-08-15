@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-08-15 tonhuisman: UI improvement, settings table uses alternate color per 2 rows, code improvements
  * 2022-06-10 tonhuisman: Remove p123_ prefixes on Settings variables
  * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling mostly to ESPEasy_TouchHandler (only rot and flip subcommands remain)
  *                        Move PLUGIN_GET_CONFIG_VALUE handling to ESPEasy_TouchHandler
@@ -108,9 +109,9 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       {
         addRowLabel(F("Display task"));
         addTaskSelect(F("dsptask"), P123_CONFIG_DISPLAY_TASK);
-        #ifndef LIMIT_BUILD_SIZE
+        #ifndef P123_LIMIT_BUILD_SIZE
         addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
-        #endif // ifndef LIMIT_BUILD_SIZE
+        #endif // ifndef P123_LIMIT_BUILD_SIZE
       }
 
       uint16_t width_      = P123_CONFIG_X_RES;
