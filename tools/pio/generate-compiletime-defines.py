@@ -72,11 +72,14 @@ print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BOARD_NAME:     \u001b[0m  {}".format(get_board_name()))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
+print("\u001b[33m Cores:          \u001b[0m  {}".format(env.BoardConfig().get("build.core")))
+
 print("\u001b[32m ------------------------------- \u001b[0m")
 print("\u001b[32m Flash configuration \u001b[0m")
 print("\u001b[33m --flash-size: \u001b[0m  {}".format(env.BoardConfig().get("upload.flash_size", "4MB")))
 print("\u001b[33m --flash-freq: \u001b[0m  {}".format(env.BoardConfig().get("build.f_flash")))
 print("\u001b[33m --flash-mode: \u001b[0m  {}".format(env.BoardConfig().get("build.flash_mode")))
+print("\u001b[33m  memory_type: \u001b[0m  {}".format(env.BoardConfig().get("build.arduino.memory_type", "-")))
 
 
 env.AddBuildMiddleware(gen_compiletime_defines)
