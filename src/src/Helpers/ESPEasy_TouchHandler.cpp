@@ -817,7 +817,11 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     addRowLabel(F("Object"));
 
     {
-      html_table(EMPTY_STRING, false); // Sub-table
+      # ifdef TOUCH_USE_EXTENDED_TOUCH
+      html_table(F("multi2row"), false); // Sub-table with alternating highlight per 2 rows
+      # else // ifdef TOUCH_USE_EXTENDED_TOUCH
+      html_table(EMPTY_STRING,   false); // Sub-table
+      # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
       html_table_header(F("&nbsp;#&nbsp;"));
       html_table_header(F("On"));
       html_table_header(F("Objectname"));
@@ -1176,9 +1180,7 @@ String toStringNoZero(int64_t value) {
 bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   String config;
 
-  # ifdef TOUCH_DEBUG
   uint16_t saveSize = 0;
-  # endif // ifdef TOUCH_DEBUG
 
   # ifdef TOUCH_USE_EXTENDED_TOUCH
   String colorInput;
@@ -1238,9 +1240,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
 
   settingsArray[TOUCH_CALIBRATION_START] = config;
-  # ifdef TOUCH_DEBUG
-  saveSize += config.length() + 1;
-  # endif // ifdef TOUCH_DEBUG
+  saveSize                              += config.length() + 1;
 
   # ifdef TOUCH_DEBUG
 
@@ -1342,9 +1342,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
     }
 
     settingsArray[objectNr + TOUCH_OBJECT_INDEX_START] = config;
-    # ifdef TOUCH_DEBUG
-    saveSize += config.length() + 1;
-    # endif // ifdef TOUCH_DEBUG
+    saveSize                                          += config.length() + 1;
 
     # ifdef TOUCH_DEBUG
 
@@ -1367,14 +1365,11 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
 
   error = SaveCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
 
-  # ifdef TOUCH_DEBUG
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("TOUCH Save settings size: ");
     log += saveSize;
     addLogMove(LOG_LEVEL_INFO, log);
   }
-  # endif // ifdef TOUCH_DEBUG
 
   if (!error.isEmpty()) {
     addLog(LOG_LEVEL_ERROR, error);

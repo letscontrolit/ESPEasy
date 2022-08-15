@@ -63,9 +63,9 @@
 #   undef TOUCH_USE_EXTENDED_TOUCH
 #  endif // ifdef TOUCH_USE_EXTENDED_TOUCH
 # endif  // ifdef LIMIT_BUILD_SIZE
-# if defined(TOUCH_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
+# if defined(TOUCH_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
 #  undef TOUCH_USE_TOOLTIPS
-# endif  // if defined(TOUCH_USE_TOOLTIPS) && !defined(ENABLE_TOOLTIPS)
+# endif  // if defined(TOUCH_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
 
 // Global Settings flags
 # define TOUCH_FLAGS_SEND_XY            0  // Send X and Y coordinate events
