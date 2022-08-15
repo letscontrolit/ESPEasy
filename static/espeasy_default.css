@@ -393,6 +393,7 @@ textarea:hover {
 }
 
 table.multirow th,
+table.multi2row th,
 table.normal th {
 	background-color: #444;
 	border-color: #888;
@@ -404,6 +405,7 @@ table.normal th {
 }
 
 table.multirow,
+table.multi2row,
 table.normal {
 	border-collapse: collapse;
 	color: #000;
@@ -412,6 +414,7 @@ table.normal {
 }
 
 table.multirow tr,
+table.multi2row tr,
 table.normal td,
 table.normal tr {
 	padding: 4px
@@ -427,7 +430,16 @@ table.multirow td {
 	text-align: center
 }
 
-table.multirow tr:nth-child(even) {
+table.multi2row td {
+	height: 30px;
+	padding: 4px;
+	align-content: flex-start;
+	text-align: left
+}
+
+table.multirow tr:nth-child(even),
+table.multi2row tr:nth-child(4n+1),
+table.multi2row tr:nth-child(4n+2) {
 	background-color: #DEE6FF
 }
 
