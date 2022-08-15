@@ -27,7 +27,7 @@
  \*********************************************************************************************/
 void ResetFactory()
 {
-  #ifdef USE_CUSTOM_PROVISIONING
+  #if FEATURE_CUSTOM_PROVISIONING
   if (ResetFactoryDefaultPreference.getPreference() == 0)
   {
     ResetFactoryDefaultPreference.setDeviceModel(static_cast<DeviceModel>(DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL));
@@ -93,7 +93,7 @@ void ResetFactory()
     return;
   }
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
   {
     MakeProvisioningSettings(ProvisioningSettings);
     if (AllocatedProvisioningSettings()) {
@@ -109,9 +109,9 @@ void ResetFactory()
   // pad files with extra zeros for future extensions
   InitFile(SettingsType::SettingsFileEnum::FILE_CONFIG_type);
   InitFile(SettingsType::SettingsFileEnum::FILE_SECURITY_type);
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
-  #endif
+  #endif // if FEATURE_NOTIFIER
 
   InitFile(getRulesFileName(0), 0);
 
@@ -194,7 +194,7 @@ void ResetFactory()
   Settings.Pin_sd_cs               = -1;
   Settings.Pin_Reset               = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]             = DEFAULT_PROTOCOL;
-  Settings.deepSleep_wakeTime      = false;
+  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
   Settings.CustomCSS               = false;
   Settings.InitSPI                 = DEFAULT_SPI;
 

@@ -199,11 +199,11 @@ void P036_data_struct::setContrast(uint8_t OLED_contrast) {
       contrast = 10; precharge = 5; comdetect = 0;
       break;
     case P36_CONTRAST_MED:
-      contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
+      contrast = P36_CONTRAST_MED; precharge = 0x1F; // comdetect = 64;
       break;
     case P36_CONTRAST_HIGH:
     default:
-      contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
+      contrast = P36_CONTRAST_HIGH; precharge = 241; // comdetect = 64;
       break;
   }
   display->displayOn();
@@ -855,7 +855,7 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
     return 0;
   }
 
-  // page scrolling (using PLUGIN_TIMER_IN)
+  // page scrolling (using PLUGIN_TASKTIMER_IN)
   display->setColor(BLACK);
 
   // We allow 12 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!

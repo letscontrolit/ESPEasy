@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_NOTIFIER
+
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataStructs/NotificationStruct.h"
 #include "../DataStructs/NotificationSettingsStruct.h"
@@ -29,7 +31,7 @@ extern NotificationStruct Notification[NPLUGIN_MAX];
 extern int notificationCount;
 
 
-uint8_t          NPluginCall(NPlugin::Function   Function,
+bool             NPluginCall(NPlugin::Function   Function,
                              struct EventStruct *event);
 
 bool             validNProtocolIndex(nprotocolIndex_t index);
@@ -40,5 +42,7 @@ String           getNPluginNameFromNotifierIndex(notifierIndex_t NotifierIndex);
 nprotocolIndex_t getNProtocolIndex(npluginID_t Number);
 nprotocolIndex_t getNProtocolIndex_from_NotifierIndex(notifierIndex_t index);
 bool             addNPlugin(npluginID_t npluginID, nprotocolIndex_t x);
+
+#endif
 
 #endif // GLOBALS_NPLUGIN_H

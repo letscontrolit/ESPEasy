@@ -1,6 +1,8 @@
 #ifndef DATATYPES_ESPEASY_PLUGIN_DEFS_H
 #define DATATYPES_ESPEASY_PLUGIN_DEFS_H
 
+#include "../../ESPEasy_common.h"
+
 
 // ********************************************************************************
 //   Plugin (Task) function calls
@@ -25,7 +27,7 @@
 #define PLUGIN_SERIAL_IN                   18 // Called on received data via serial port Serial0 (N.B. this may conflict with sending commands via serial)
 #define PLUGIN_UDP_IN                      19 // Called for received UDP data via ESPEasy p2p which isn't a standard p2p packet. (See C013 for handling standard p2p packets)
 #define PLUGIN_CLOCK_IN                    20 // Called every new minute
-#define PLUGIN_TIMER_IN                    21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
+#define PLUGIN_TASKTIMER_IN                21 // Called with a previously defined event at a specific time, set via setPluginTaskTimer
 #define PLUGIN_FIFTY_PER_SECOND            22 // Called 50 times per second
 #define PLUGIN_SET_CONFIG                  23 // Counterpart of PLUGIN_GET_CONFIG_VALUE to allow to set a config via a command.
 #define PLUGIN_GET_DEVICEGPIONAMES         24 // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
@@ -37,19 +39,23 @@
 #define PLUGIN_MONITOR                     30 // Replaces PLUGIN_UNCONDITIONAL_POLL
 #define PLUGIN_SET_DEFAULTS                31 // Called when assigning a plugin to a task, to set some default config.
 #define PLUGIN_GET_PACKED_RAW_DATA         32 // Return all data in a compact binary format specific for that plugin.
-                                              // Needs USES_PACKED_RAW_DATA
-#define PLUGIN_ONLY_TIMER_IN               33 // Similar to PLUGIN_TIMER_IN, addressed to a plugin instead of a task.
+                                              // Needs FEATURE_PACKED_RAW_DATA
+#define PLUGIN_DEVICETIMER_IN              33 // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
 #define PLUGIN_WEBFORM_SHOW_I2C_PARAMS     34 // Show I2C parameters like address.
 #define PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS  35 // When needed, show additional parameters like baudrate or specific serial config
 #define PLUGIN_MQTT_CONNECTION_STATE       36 // Signal when connection to MQTT broker is re-established
 #define PLUGIN_MQTT_IMPORT                 37 // For P037 MQTT import
 #define PLUGIN_FORMAT_USERVAR              38 // Allow plugin specific formatting of a task variable (event->idx = variable)
 #define PLUGIN_WEBFORM_SHOW_GPIO_DESCR     39 // Show GPIO description on devices overview tab
-#define PLUGIN_I2C_HAS_ADDRESS             40 // Check the I2C addresses from the plugin, output in 'success'
-#define PLUGIN_GET_DISPLAY_PARAMETERS      41 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
-#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 42 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
-#define PLUGIN_INIT_VALUE_RANGES           43 // Initialize the ranges of values, called just before PLUGIN_INIT
-#define PLUGIN_GET_ERROR_VALUE_STATE       44 // Should we return the error values or not, called when PLUGIN_READ returns false, must also set error values into UserVar[]
+#if FEATURE_PLUGIN_STATS
+#define PLUGIN_WEBFORM_LOAD_SHOW_STATS     40 // Show PluginStats on task config page
+#endif // if FEATURE_PLUGIN_STATS
+#define PLUGIN_I2C_HAS_ADDRESS             41 // Check the I2C addresses from the plugin, output in 'success'
+#define PLUGIN_GET_DISPLAY_PARAMETERS      42 // Fetch X/Y resolution and Rotation setting from the plugin, output in 'success'
+#define PLUGIN_WEBFORM_SHOW_ERRORSTATE_OPT 43 // Show Error State Value options, so be saved during PLUGIN_WEBFORM_SAVE
+#define PLUGIN_INIT_VALUE_RANGES           44 // Initialize the ranges of values, called just before PLUGIN_INIT
+#define PLUGIN_READ_ERROR_OCCURED          45 // Function returns "true" when last measurement was an error, called when PLUGIN_READ returns false
+
 
 
 
@@ -63,7 +69,7 @@ public:
   // As these function values are also used in the timing stats, make sure there is no overlap with the PLUGIN_xxx numbering.
 
   enum class Function {
-    CPLUGIN_PROTOCOL_ADD = 40, // Called at boot for letting a controller adding itself to list of available controllers
+    CPLUGIN_PROTOCOL_ADD = 127, // Called at boot for letting a controller adding itself to list of available controllers
     CPLUGIN_PROTOCOL_TEMPLATE,
     CPLUGIN_PROTOCOL_SEND,
     CPLUGIN_PROTOCOL_RECV,

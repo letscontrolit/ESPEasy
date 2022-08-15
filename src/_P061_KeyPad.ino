@@ -77,7 +77,7 @@
 
 # define PLUGIN_061
 # define PLUGIN_ID_061         61
-# define PLUGIN_NAME_061       "Keypad - PCF8574 / MCP23017 / PCF8575 [TESTING]"
+# define PLUGIN_NAME_061       "Keypad - PCF8574 / MCP23017 / PCF8575"
 # define PLUGIN_VALUENAME1_061 "ScanCode"
 
 

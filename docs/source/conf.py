@@ -299,11 +299,13 @@ rst_prolog = """
 .. role:: orange
 .. role:: cyan
 .. role:: purple
+.. role:: gray
 
 .. |affiliate| replace:: :yellow:`$` = affiliate links which will give us some money to keep this project running, thank you for using those.
 
 .. |added| replace:: :green:`added`
 .. |improved| replace:: :orange:`improved`
+.. |changed| replace:: :yellow:`changed`
 .. |removed| replace:: :red:`removed`
 .. |fixed| replace:: :purple:`fixed`
 

@@ -1,6 +1,6 @@
 #include "../DataStructs/ProvisioningStruct.h"
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/Hardware.h"
@@ -37,4 +37,4 @@ bool ProvisioningStruct::setUrl(const String& url_str)
   return safe_strncpy(url, url_str, sizeof(url));
 }
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+#endif // if FEATURE_CUSTOM_PROVISIONING

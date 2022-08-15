@@ -7,10 +7,10 @@
 
 #ifdef WEBSERVER_I2C_SCANNER
 
-#ifdef FEATURE_I2CMULTIPLEXER
+#if FEATURE_I2CMULTIPLEXER
 #include <vector>
 typedef std::vector<bool> i2c_addresses_t;
-#endif
+#endif // if FEATURE_I2CMULTIPLEXER
 
 #ifdef WEBSERVER_NEW_UI
 
@@ -22,9 +22,9 @@ int scanI2CbusForDevices_json( // Utility function for scanning the I2C bus for 
         int8_t muxAddr
       , int8_t channel
       , int nDevices
-#ifdef FEATURE_I2CMULTIPLEXER
+      #if FEATURE_I2CMULTIPLEXER
       , i2c_addresses_t &excludeDevices
-#endif
+      #endif // if FEATURE_I2CMULTIPLEXER
 );
 
 void handle_i2cscanner_json();
@@ -37,9 +37,9 @@ int scanI2CbusForDevices( // Utility function for scanning the I2C bus for valid
         int8_t muxAddr
       , int8_t channel
       , int nDevices
-#ifdef FEATURE_I2CMULTIPLEXER
+      #if FEATURE_I2CMULTIPLEXER
       , i2c_addresses_t &excludeDevices
-#endif
+      #endif // if FEATURE_I2CMULTIPLEXER
 );
 
 // FIXME TD-er: Query all included plugins for their supported addresses (return name of plugin)

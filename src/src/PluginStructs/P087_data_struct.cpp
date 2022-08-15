@@ -1,13 +1,13 @@
 #include "../PluginStructs/P087_data_struct.h"
 
+#ifdef USES_P087
+
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 #include <ESPeasySerial.h>
 #include <Regexp.h>
 
-
-#ifdef USES_P087
 
 #include <vector>
 
@@ -24,7 +24,7 @@ void P087_data_struct::reset() {
   }
 }
 
-bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate) {
+bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate, uint8_t config) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -32,7 +32,11 @@ bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, con
   easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
   if (isInitialized()) {
-    easySerial->begin(baudrate);
+    # if defined(ESP8266)
+    easySerial->begin(baudrate, (SerialConfig)config);
+    # elif defined(ESP32)
+    easySerial->begin(baudrate, config);
+    # endif // if defined(ESP8266)
     return true;
   }
   return false;

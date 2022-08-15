@@ -4,8 +4,18 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P128
 
+# ifndef P128_ENABLE_FAKETV
+#  if defined(ESP32)
+#   define P128_ENABLE_FAKETV 1 // Enable FakeTV on ESP32 by default
+#  endif // if defined(ESP32)
+#  if defined(ESP8266)
+#   define P128_ENABLE_FAKETV 0 // Disable FakeTV effect on ESP8266 to conserve a chunk of .bin space (~25kB)
+#  endif // if defined(ESP8266)
+# endif // ifndef P128_ENABLE_FAKETV
+
 // This is a copy of faketv.h, as provided by https://github.com/djcysmic/NeopixelBusFX
 
+# if P128_ENABLE_FAKETV
 const uint8_t PROGMEM ftv_gamma8[] = {
   0X01, 0X01, 0X01, 0X02, 0X02, 0X02, 0X03, 0X03, 0X03, 0X04, 0X04, 0X04,
   0X05, 0X05, 0X05, 0X06, 0X06, 0X06, 0X07, 0X07, 0X07, 0X08, 0X08, 0X08,
@@ -28,8 +38,8 @@ const uint8_t PROGMEM ftv_gamma8[] = {
   0XBD, 0XBF, 0XC0, 0XC2, 0XC3, 0XC5, 0XC7, 0XC8, 0XCA, 0XCC, 0XCD, 0XCF,
   0XD1, 0XD2, 0XD4, 0XD6, 0XD7, 0XD9, 0XDB, 0XDC, 0XDE, 0XE0, 0XE1, 0XE3,
   0XE5, 0XE6, 0XE8, 0XEA, 0XEC, 0XED, 0XEF, 0XF1, 0XF3, 0XF4, 0XF6, 0XF8,
-  0XFA, 0XFB, 0XFD, 0XFF },
-                      ftv_colors[] = {
+  0XFA, 0XFB, 0XFD, 0XFF };
+const uint8_t PROGMEM ftv_colors[] = {
   0X8C, 0XD8, 0X8C, 0XF9, 0X8C, 0XD8, 0X84, 0X98, 0X7C, 0X77, 0X64, 0X16,
   0X43, 0X94, 0X4B, 0XB4, 0X43, 0X32, 0X42, 0XF1, 0X53, 0X51, 0X5B, 0X70,
   0X94, 0XF7, 0X8C, 0X94, 0X7C, 0X10, 0X84, 0X31, 0X8C, 0X72, 0X8C, 0X72,
@@ -2197,11 +2207,13 @@ const uint8_t PROGMEM ftv_gamma8[] = {
   0X18, 0XE4, 0X10, 0XA2, 0X10, 0XA2, 0X21, 0XA7, 0X21, 0X66, 0X29, 0X66,
   0X21, 0X86, 0X19, 0X04, 0X29, 0X66, 0X29, 0X45, 0X19, 0X25, 0X21, 0X25,
   0X20, 0XE4, 0X21, 0XA6, 0X29, 0XE7, 0X32, 0X28 };
+# endif // if P128_ENABLE_FAKETV
 
 # include <NeoPixelBrightnessBus.h>
 # include "../../ESPEasy-Globals.h"
 
 # define P128_CONFIG_LED_COUNT  PCONFIG(0)
+# define P128_CONFIG_MAX_BRIGHT PCONFIG(1)
 
 # define SPEED_MAX 50
 # define ARRAYSIZE 300 // Max LED Count
@@ -2254,19 +2266,28 @@ const uint8_t PROGMEM ftv_gamma8[] = {
   #  define FEATURE NeoGrbFeature
 # endif // if defined GRB
 
-# define  NUMPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
+# if P128_ENABLE_FAKETV
+#  define NUMPixels (sizeof(ftv_colors) / sizeof(ftv_colors[0]))
+# else // if P128_ENABLE_FAKETV
+#  define NUMPixels (26000)
+# endif // if P128_ENABLE_FAKETV
 
 enum class P128_modetype {
   Off, On, Fade, ColorFade, Rainbow, Kitt, Comet,
   Theatre, Scan, Dualscan, Twinkle, TwinkleFade, Sparkle, Fire,
-  FireFlicker, Wipe, Dualwipe,  FakeTV, SimpleClock
+  FireFlicker, Wipe, Dualwipe,
+  # if P128_ENABLE_FAKETV
+  FakeTV,
+  # endif // if P128_ENABLE_FAKETV
+  SimpleClock
 };
 
 struct P128_data_struct : public PluginTaskData_base {
 public:
 
   P128_data_struct(int8_t   _gpioPin,
-                   uint16_t _pixelCount);
+                   uint16_t _pixelCount,
+                   uint8_t  _maxBright);
 
   P128_data_struct() = delete;
   ~P128_data_struct();
@@ -2288,7 +2309,6 @@ private:
   uint16_t difference = 0;
   uint16_t fps        = 50;
   uint16_t colorcount = 0;
-  int8_t   gpioPin    = -1;
 
 # if defined(RGBW) || defined(GRBW)
   RgbwColor rgb_target[ARRAYSIZE],
@@ -2310,9 +2330,12 @@ private:
            rgb_s      = HtmlColor(0xFF0000);
 # endif // if defined(RGBW) || defined(GRBW)
 
+  int8_t   gpioPin;
+  uint16_t pixelCount;
+  uint8_t  maxBright;
+
   int16_t fadedelay = 20;
 
-  uint16_t pixelCount = ARRAYSIZE;
 
   int8_t defaultspeed  = 25;
   int8_t rainbowspeed  = 1;
@@ -2322,9 +2345,12 @@ private:
 
   uint32_t _counter_mode_step = 0u;
   uint32_t fadetime           = 1000u;
-  uint32_t ftv_holdTime       = 0u;
-  uint32_t pixelNum           = 0u;
+  # if P128_ENABLE_FAKETV
+  uint32_t ftv_holdTime = 0u;
+  # endif // if P128_ENABLE_FAKETV
+  uint32_t pixelNum = 0u;
 
+  # if P128_ENABLE_FAKETV
   uint16_t ftv_pr        = 0;
   uint16_t ftv_pg        = 0;
   uint16_t ftv_pb        = 0; // Prev R, G, B;
@@ -2345,6 +2371,7 @@ private:
   uint8_t  ftv_r8        = 0;
   uint8_t  ftv_g8        = 0;
   uint8_t  ftv_b8        = 0;
+  # endif // if P128_ENABLE_FAKETV
 
   String colorStr;
   String backgroundcolorStr;

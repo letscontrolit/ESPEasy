@@ -18,7 +18,7 @@
 
 #define PLUGIN_132
 #define PLUGIN_ID_132         132
-#define PLUGIN_NAME_132       "Energy (DC) - INA3221 [TESTING]"
+#define PLUGIN_NAME_132       "Energy (DC) - INA3221"
 #define PLUGIN_VALUENAME1_132 "Value1"
 #define PLUGIN_VALUENAME2_132 "Value2"
 #define PLUGIN_VALUENAME3_132 "Value3"
@@ -45,6 +45,7 @@ boolean Plugin_132(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

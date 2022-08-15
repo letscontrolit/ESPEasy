@@ -1,5 +1,6 @@
 #include "../Globals/NPlugins.h"
 
+#if FEATURE_NOTIFIER
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/NotificationStruct.h"
@@ -19,7 +20,7 @@ NotificationStruct Notification[NPLUGIN_MAX];
 int notificationCount = -1;
 
 
-uint8_t NPluginCall(NPlugin::Function Function, struct EventStruct *event)
+bool NPluginCall(NPlugin::Function Function, struct EventStruct *event)
 {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
@@ -123,3 +124,5 @@ bool addNPlugin(npluginID_t npluginID, nprotocolIndex_t x) {
   */
   return false;
 }
+
+#endif

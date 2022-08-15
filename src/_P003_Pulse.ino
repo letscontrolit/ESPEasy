@@ -74,6 +74,8 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
+      Device[deviceCount].PluginLogsPeaks    = true;
       break;
     }
 
@@ -216,6 +218,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
         switch (PCONFIG(P003_IDX_COUNTERTYPE))
         {
           case P003_CT_INDEX_COUNTER:
+          case P003_CT_INDEX_TOTAL:
           {
             event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
             break;
@@ -223,11 +226,6 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
           case P003_CT_INDEX_COUNTER_TOTAL_TIME:
           {
             event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
-            break;
-          }
-          case P003_CT_INDEX_TOTAL:
-          {
-            event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
             break;
           }
           case P003_CT_INDEX_COUNTER_TOTAL:
@@ -343,7 +341,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       P003_data_struct *P003_data =
         static_cast<P003_data_struct *>(getPluginTaskData(event->TaskIndex));

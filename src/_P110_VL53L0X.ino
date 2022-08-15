@@ -16,7 +16,7 @@
 
 #define PLUGIN_110
 #define PLUGIN_ID_110         110
-#define PLUGIN_NAME_110       "Distance - VL53L0X (200cm) [TESTING]"
+#define PLUGIN_NAME_110       "Distance - VL53L0X (200cm)"
 #define PLUGIN_VALUENAME1_110 "Distance"
 
 
@@ -45,6 +45,7 @@ boolean Plugin_110(uint8_t function, struct EventStruct *event, String& string)
         Device[deviceCount].SendDataOption = true;
         Device[deviceCount].TimerOption = true;
         Device[deviceCount].GlobalSyncOption = true;
+        Device[deviceCount].PluginStats        = true;
         break;
       }
 

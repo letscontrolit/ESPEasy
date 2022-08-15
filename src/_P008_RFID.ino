@@ -135,7 +135,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       if (Plugin_008_init && (PCONFIG(2) == 0)) { // PCONFIG(2) check uses inversed logic!
         // Reset card id on timeout

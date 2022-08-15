@@ -3,7 +3,6 @@
 
 # include "src/Commands/InternalCommands.h"
 # include "src/Globals/EventQueue.h"
-# include "src/Globals/ExtraTaskSettings.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "src/Helpers/StringParser.h"
 # include "_Plugin_Helper.h"
@@ -80,7 +79,6 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       String pubname         = CPlugin_005_pubname;
       bool   mqtt_retainFlag = CPlugin_005_mqtt_retainFlag;
 
-      LoadTaskSettings(event->TaskIndex);
       parseControllerVariables(pubname, event, false);
 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
@@ -88,7 +86,7 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       for (uint8_t x = 0; x < valueCount; x++)
       {
         // MFD: skip publishing for values with empty labels (removes unnecessary publishing of unwanted values)
-        if (ExtraTaskSettings.TaskDeviceValueNames[x][0] == 0) {
+        if (getTaskValueName(event->TaskIndex, x).isEmpty()) {
           continue; // we skip values with empty labels
         }
         String tmppubname = pubname;

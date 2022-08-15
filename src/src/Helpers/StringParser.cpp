@@ -1,5 +1,7 @@
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/GPIO.h"
@@ -609,14 +611,12 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   if (result != Cache.taskIndexValueName.end()) {
     return result->second;
   }
-  LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
-
   const uint8_t valCount = getValueCountForTask(taskIndex);
 
   for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
-    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
+    if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
     {
       Cache.taskIndexValueName[cache_valueName] = valueNr;
       return valueNr;

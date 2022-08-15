@@ -15,7 +15,7 @@
 .. |P041_type| replace:: :cyan:`Output`
 .. |P041_typename| replace:: :cyan:`Output - NeoPixel (Word Clock)`
 .. |P041_porttype| replace:: `.`
-.. |P041_status| replace:: :green:`NORMAL` :yellow:`DISPLAY, NEOPIXEL`
+.. |P041_status| replace:: :green:`NORMAL` :yellow:`NEOPIXEL`
 .. |P041_github| replace:: P041_NeoClock.ino
 .. _P041_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P041_NeoClock.ino
 .. |P041_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P042_type| replace:: :cyan:`Output`
 .. |P042_typename| replace:: :cyan:`Output - NeoPixel (Candle)`
 .. |P042_porttype| replace:: `.`
-.. |P042_status| replace:: :green:`NORMAL` :yellow:`DISPLAY, NEOPIXEL`
+.. |P042_status| replace:: :green:`NORMAL` :yellow:`NEOPIXEL`
 .. |P042_github| replace:: P042_Candle.ino
 .. _P042_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P042_Candle.ino
 .. |P042_usedby| replace:: `.`
@@ -67,7 +67,7 @@
 .. |P045_type| replace:: :cyan:`Gyro`
 .. |P045_typename| replace:: :cyan:`Gyro - MPU 6050`
 .. |P045_porttype| replace:: `.`
-.. |P045_status| replace:: :yellow:`TESTING`
+.. |P045_status| replace:: :yellow:`COLLECTION`
 .. |P045_github| replace:: P045_MPU6050.ino
 .. _P045_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P045_MPU6050.ino
 .. |P045_usedby| replace:: `.`
@@ -80,7 +80,7 @@
 .. |P046_type| replace:: :cyan:`Hardware`
 .. |P046_typename| replace:: :cyan:`Hardware - Ventus W266`
 .. |P046_porttype| replace:: `.`
-.. |P046_status| replace:: :yellow:`TESTING`
+.. |P046_status| replace:: :yellow:`COLLECTION`
 .. |P046_github| replace:: P046_VentusW266.ino
 .. _P046_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P046_VentusW266.ino
 .. |P046_usedby| replace:: :ref:`P046_Ventus_W266_page`
@@ -93,7 +93,7 @@
 .. |P047_type| replace:: :cyan:`Environment`
 .. |P047_typename| replace:: :cyan:`Environment - Soil moisture sensor`
 .. |P047_porttype| replace:: `.`
-.. |P047_status| replace:: :yellow:`TESTING`
+.. |P047_status| replace:: :yellow:`COLLECTION`
 .. |P047_github| replace:: P047_i2c-soil-moisture-sensor.ino
 .. _P047_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P047_i2c-soil-moisture-sensor.ino
 .. |P047_usedby| replace:: `.`
@@ -106,7 +106,7 @@
 .. |P048_type| replace:: :cyan:`Motor`
 .. |P048_typename| replace:: :cyan:`Motor - Adafruit Motorshield v2`
 .. |P048_porttype| replace:: `.`
-.. |P048_status| replace:: :yellow:`TESTING`
+.. |P048_status| replace:: :yellow:`COLLECTION`
 .. |P048_github| replace:: P048_Motorshield_v2.ino
 .. _P048_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P048_Motorshield_v2.ino
 .. |P048_usedby| replace:: `.`

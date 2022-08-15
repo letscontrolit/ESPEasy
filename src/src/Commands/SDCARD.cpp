@@ -8,7 +8,7 @@
 
 
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 
 #include <SD.h>
 

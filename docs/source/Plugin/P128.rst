@@ -33,6 +33,11 @@ LED strips (sometimes called stripes) using the WS281x type (and clones) of mult
 
 |P128_usedby|
 
+Power consumption
+~~~~~~~~~~~~~~~~~
+
+.. include:: NeoPixel_Power.rst
+
 Configuration
 -------------
 
@@ -54,6 +59,8 @@ Due to the design of the used library and the methods used, on ESP8266 only GPIO
   :alt: ESP8266 GPIO instruction
 
 * **Led Count**: Set up the number of leds that are available on the stripe. (Current maximum is 300).
+
+* **Max brightness**: The maximum brightness allowed for the stripe. Range: 1..255. This is also the initial brightness set during initialization. Can *not* be overridden by the ``dim`` subcommand, and also the maximum value for the ``rainbow`` subcommand.
 
 Data Aquisition
 ^^^^^^^^^^^^^^^
@@ -83,6 +90,9 @@ Change log
 
 .. versionadded:: 2.0
   ...
+
+  |added|
+  2022-07-02: Max brightness setting.
 
   |added|
   Initial release version.

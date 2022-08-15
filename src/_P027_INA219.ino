@@ -41,6 +41,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -132,8 +133,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         String     log;
 
         if (mustLog) {
-          log  = F("INA219 0x");
-          log += String(i2caddr, HEX);
+          log  = formatToHex(i2caddr, F("INA219 0x"), 2);
           log += F(" setting Range to: ");
         }
 
@@ -194,8 +194,7 @@ boolean Plugin_027(uint8_t function, struct EventStruct *event, String& string)
         String     log;
 
         if (mustLog) {
-          log  = F("INA219 0x");
-          log += String(P027_I2C_ADDR, HEX);
+          log  = formatToHex(P027_I2C_ADDR, F("INA219 0x"), 2);
         }
 
         // for backward compability we allow the user to select if only one measurement should be returned

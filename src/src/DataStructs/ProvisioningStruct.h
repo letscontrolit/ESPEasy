@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USE_CUSTOM_PROVISIONING
+#if FEATURE_CUSTOM_PROVISIONING
 # include "../CustomBuild/ESPEasyLimits.h"
 # include "../DataStructs/FactoryDefaultPref.h"
 
@@ -42,6 +42,6 @@ typedef std::shared_ptr<ProvisioningStruct> ProvisioningStruct_ptr_type;
 # define AllocatedProvisioningSettings() (ProvisioningStruct_ptr.get() != nullptr)
 
 
-#endif // ifdef USE_CUSTOM_PROVISIONING
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #endif // ifndef DATASTRUCTS_PROVISIONINGSTRUCT_H

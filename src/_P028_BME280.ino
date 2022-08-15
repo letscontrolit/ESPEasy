@@ -37,6 +37,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
       Device[deviceCount].ErrorStateValues   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -57,14 +58,14 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT_VALUE_RANGES:
     {
       // Min/Max values obtained from the BMP280/BME280 datasheets (both have equal ranges)
-      ExtraTaskSettings.TaskDeviceMinValue[0] = -40.0f; // Temperature min/max
-      ExtraTaskSettings.TaskDeviceMaxValue[0] = 85.0f;
-      ExtraTaskSettings.TaskDeviceMinValue[1] = 0.0f;   // Humidity min/max
-      ExtraTaskSettings.TaskDeviceMaxValue[1] = 100.0f;
-      ExtraTaskSettings.TaskDeviceMinValue[2] = 300.0f; // Barometric Pressure min/max
-      ExtraTaskSettings.TaskDeviceMaxValue[2] = 1100.0f;
+      ExtraTaskSettings.setAllowedRange(0, -40.0f, 85.0f);   // Temperature min/max
+      ExtraTaskSettings.setAllowedRange(1, 0.0f,   100.0f);  // Humidity min/max
+      ExtraTaskSettings.setAllowedRange(2, 300.0f, 1100.0f); // Barometric Pressure min/max
 
-      switch (P028_ERROR_STATE_OUTPUT) {                // Only temperature error is configurable
+      switch (P028_ERROR_STATE_OUTPUT) {                     // Only temperature error is configurable
+        case P028_ERROR_IGNORE:
+          ExtraTaskSettings.setIgnoreRangeCheck(0);
+          break;
         case P028_ERROR_MIN_RANGE:
           ExtraTaskSettings.TaskDeviceErrorValue[0] = ExtraTaskSettings.TaskDeviceMinValue[0] - 1.0f;
           break;
@@ -89,12 +90,15 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       ExtraTaskSettings.TaskDeviceErrorValue[1] = -1.0f; // Humidity error
       ExtraTaskSettings.TaskDeviceErrorValue[2] = -1.0f; // Pressure error
 
-      break;                                             // No return state needed
+      success = true;
+      break;
     }
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS));
+      const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
+      initPluginTaskData(event->TaskIndex,
+                         new (std::nothrow) P028_data_struct(P028_I2C_ADDRESS, tempOffset));
       P028_data_struct *P028_data =
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -126,9 +130,9 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        if (P028_data->sensorID != Unknown_DEVICE) {
+        if (P028_data->sensorID != P028_data_struct::Unknown_DEVICE) {
           String detectedString = F("Detected: ");
-          detectedString += P028_data->getFullDeviceName();
+          detectedString += P028_data->getDeviceName();
           addUnit(detectedString);
         }
       }
@@ -189,13 +193,17 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_ERROR_VALUE_STATE:                          // Called if PLUGIN_READ returns false
+    case PLUGIN_READ_ERROR_OCCURED:
     {
-      success = (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE); // return state
+      // Called if PLUGIN_READ returns false
+      // Function returns "true" when last measurement was an error.
+      P028_data_struct *P028_data =
+        static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (success) {
-        for (uint8_t i = 0; i < 3; i++) {
-          UserVar[event->BaseVarIndex + i] = ExtraTaskSettings.TaskDeviceErrorValue[i];
+      if (nullptr != P028_data) {
+        if (P028_data->lastMeasurementError) {
+          success = true; // "success" may be a confusing name here
+          string = F("Sensor Not Found");
         }
       }
       break;
@@ -216,9 +224,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        const float tempOffset = P028_TEMPERATURE_OFFSET / 10.0f;
-
-        if (P028_data->updateMeasurements(tempOffset, event->TaskIndex)) {
+        if (P028_data->updateMeasurements(event->TaskIndex)) {
           // Update was succesfull, schedule a read.
           Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
         }
@@ -232,57 +238,69 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P028_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P028_data) {
-        if (P028_data->state != BMx_New_values) {
-          break;
-        }
+        // PLUGIN_READ is called from `TaskRun` or on the set interval or it has re-scheduled itself to output read samples.
+        // So if there aren't any new values, it must have been called to get a new sample.
+        if (P028_data->state != P028_data_struct::BMx_New_values) {
+          P028_data->startMeasurement();
 
-        P028_data->state = BMx_Values_read;
+          if (P028_ERROR_STATE_OUTPUT != P028_ERROR_IGNORE) {
+            if (P028_data->lastMeasurementError) {
+              success = true; // "success" may be a confusing name here
 
-        if (!P028_data->hasHumidity()) {
-          // Patch the sensor type to output only the measured values.
-          event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
-        }
-        UserVar[event->BaseVarIndex]     = P028_data->last_temp_val;
-        UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
-        const int elev = P028_ALTITUDE;
-
-        if (elev != 0) {
-          UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
+              for (uint8_t i = 0; i < 3; i++) {
+                UserVar[event->BaseVarIndex + i] = ExtraTaskSettings.TaskDeviceErrorValue[i];
+              }
+            }
+          }
         } else {
-          UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
-        }
+          P028_data->state = P028_data_struct::BMx_Values_read;
+
+          if (!P028_data->hasHumidity()) {
+            // Patch the sensor type to output only the measured values.
+            event->sensorType = Sensor_VType::SENSOR_TYPE_TEMP_EMPTY_BARO;
+          }
+          UserVar[event->BaseVarIndex]     = ExtraTaskSettings.checkAllowedRange(0, P028_data->last_temp_val);
+          UserVar[event->BaseVarIndex + 1] = P028_data->last_hum_val;
+          const int elev = P028_ALTITUDE;
+
+          if (elev != 0) {
+            UserVar[event->BaseVarIndex + 2] = pressureElevation(P028_data->last_press_val, elev);
+          } else {
+            UserVar[event->BaseVarIndex + 2] = P028_data->last_press_val;
+          }
 
         # ifndef LIMIT_BUILD_SIZE
 
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            String log;
 
-          if (log.reserve(40)) { // Prevent re-allocation
-            log  = P028_data->getDeviceName();
-            log += F(" : Address: 0x");
-            log += String(P028_I2C_ADDRESS, HEX);
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            // addLogMove does also clear the string.
-            log  = P028_data->getDeviceName();
-            log += F(" : Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            if (P028_data->hasHumidity()) {
+            if (log.reserve(40)) { // Prevent re-allocation
               log  = P028_data->getDeviceName();
-              log += F(" : Humidity: ");
-              log += formatUserVarNoCheck(event->TaskIndex, 1);
+              log += F(" : Address: ");
+              log += formatToHex(P028_I2C_ADDRESS, 2);
+              addLogMove(LOG_LEVEL_INFO, log);
+
+              // addLogMove does also clear the string.
+              log  = P028_data->getDeviceName();
+              log += F(" : Temperature: ");
+              log += formatUserVarNoCheck(event->TaskIndex, 0);
+              addLogMove(LOG_LEVEL_INFO, log);
+
+              if (P028_data->hasHumidity()) {
+                log  = P028_data->getDeviceName();
+                log += F(" : Humidity: ");
+                log += formatUserVarNoCheck(event->TaskIndex, 1);
+                addLogMove(LOG_LEVEL_INFO, log);
+              }
+              log  = P028_data->getDeviceName();
+              log += F(" : Barometric Pressure: ");
+              log += formatUserVarNoCheck(event->TaskIndex, 2);
               addLogMove(LOG_LEVEL_INFO, log);
             }
-            log  = P028_data->getDeviceName();
-            log += F(" : Barometric Pressure: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 2);
-            addLogMove(LOG_LEVEL_INFO, log);
           }
-        }
         # endif // ifndef LIMIT_BUILD_SIZE
-        success = true;
+          success = true;
+        }
       }
       break;
     }

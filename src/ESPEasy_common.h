@@ -61,10 +61,14 @@ namespace std
 //  #define PLUGIN_BUILD_NORMAL
 #endif
 
+// Check if any deprecated '#define <variable>' (Custom.h) or '-D<variable>' (pre_custom_esp82xx.py/pre_custom_esp32.py) are used
+#include "./src/CustomBuild/check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
+
 #include "src/CustomBuild/ESPEasyDefaults.h"
 #include "src/DataStructs/NodeStruct.h"
 #include "src/Globals/RamTracker.h"
-
+#include "src/ESPEasyCore/ESPEasy_Log.h"
+#include "src/Helpers/ESPEasy_math.h"
 
 #ifndef FS_NO_GLOBALS
   #define FS_NO_GLOBALS
@@ -161,7 +165,7 @@ namespace std
 #include <Wire.h>
 #include <SPI.h>
 #include <FS.h>
-#ifdef FEATURE_SD
+#if FEATURE_SD
 #include <SD.h>
 #else
 using namespace fs;
@@ -233,7 +237,7 @@ extern const String EMPTY_STRING;
 // Please note that the TOUT pin has to be disconnected in this mode
 // Use the "System Info" device to read the VCC value
 #ifndef FEATURE_ADC_VCC
-  #define FEATURE_ADC_VCC                  false
+  #define FEATURE_ADC_VCC                  0
 #endif
 
 #ifndef ARDUINO_OTA_PORT

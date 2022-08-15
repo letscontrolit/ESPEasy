@@ -23,7 +23,7 @@
 
 # define PLUGIN_124
 # define PLUGIN_ID_124          124
-# define PLUGIN_NAME_124        "Output - I2C Multi Relay [TESTING]"
+# define PLUGIN_NAME_124        "Output - I2C Multi Relay"
 # define PLUGIN_VALUENAME1_124  "State"
 # define PLUGIN_VALUENAME2_124  "Channel"
 # define PLUGIN_VALUENAME3_124  "Get"
@@ -99,9 +99,9 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       const __FlashStringHelper *optionsMode2[] = {
-        F("2 relays"),
-        F("4 relays"),
-        F("8 relays") };
+        F("2"),
+        F("4"),
+        F("8") };
       int optionValuesMode2[] { 2, 4, 8 };
       addFormSelector(F("Number of relays"), F("plugin_124_relays"), 3, optionsMode2, optionValuesMode2, P124_CONFIG_RELAY_COUNT, true);
 
