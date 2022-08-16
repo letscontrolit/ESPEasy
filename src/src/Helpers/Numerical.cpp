@@ -173,7 +173,7 @@ bool mustConsiderAsJSONString(const String& value) {
   return !isBool && (!isNum || value.isEmpty() || mustConsiderAsString(detectedType));
 }
 
-String doGetNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
+String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
   const unsigned int bufLength = tBuf.length();
   unsigned int firstDec        = 0;
   String result;
@@ -204,6 +204,12 @@ String doGetNumerical(const String& tBuf, NumericalType requestedType, Numerical
         c = tBuf.charAt(firstDec);
       }
     }
+  }
+
+  // Strip leading zeroes
+  while (c == '0' && isdigit(tBuf.charAt(firstDec + 1))) {
+    ++firstDec;
+    c = tBuf.charAt(firstDec);
   }
 
   if (c == '0') {
@@ -306,38 +312,6 @@ String doGetNumerical(const String& tBuf, NumericalType requestedType, Numerical
   }
   return result;
 }
-
-String getNumerical(const String& tBuf, NumericalType requestedType, NumericalType& detectedType) {
-  String numString = doGetNumerical(tBuf, requestedType, detectedType);
-  const unsigned int numStringLength = numString.length();
-  unsigned int firstDec    = 0;
-
-
-  // Strip leading zeroes until next char is a '.' or one of the "0x" and "0b" prefixes
-  // or the zero remains as last character of the string
-  // See: https://github.com/letscontrolit/ESPEasy/issues/4134
-  bool doneStrippingZeroes = numStringLength <= 1;
-
-  while ((firstDec + 1) < numStringLength && numString.charAt(firstDec) == '0' && !doneStrippingZeroes) {
-    const char nextChar = numString.charAt(firstDec + 1);
-
-    if ((nextChar != '\0') && (nextChar != '.') && 
-        (nextChar != '+') && (nextChar != '-') && // +/-
-        (nextChar != 'x') && (nextChar != 'X') && // Matching "0x"
-        (nextChar != 'b') && (nextChar != 'B'))   // Matching "0b"
-    {
-      ++firstDec;
-    }
-    else { 
-      doneStrippingZeroes = true;
-    }
-  }
-  if (firstDec == 0) {
-    return numString;
-  }
-  return numString.substring(firstDec);
-}
-
 
 bool isNumerical(const String& tBuf, NumericalType& detectedType) {
   NumericalType requestedType = NumericalType::FloatingPoint;
