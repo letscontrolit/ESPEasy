@@ -1385,7 +1385,11 @@ int http_authenticate(const String& logIdentifier,
 {
   int httpCode = 0;
 
-  http.setAuthorization(user.c_str(), pass.c_str());
+  if (user.length() && pass.length()) {
+    http.setAuthorization(user.c_str(), pass.c_str());
+  } else {
+    http.setAuthorization(""); // Clear Basic authorization
+  }
   http.setTimeout(timeout);
   http.setUserAgent(get_user_agent_string());
 
