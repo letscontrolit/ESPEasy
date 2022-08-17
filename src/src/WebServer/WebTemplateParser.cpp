@@ -338,9 +338,9 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif // if FEATURE_CHART_JS
     html_add_autosubmit_form();
     serve_JS(JSfiles_e::Toasting);
-    serve_CMJS(CMfiles_e::CMPlugins);
     serve_CMJS(CMfiles_e::Codemirror);
     serve_CMJS(CMfiles_e::EspPlugin);
+    serve_CMJS(CMfiles_e::CMPlugins);
   }
 
   else if (varName == F("error"))

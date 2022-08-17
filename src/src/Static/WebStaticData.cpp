@@ -145,14 +145,14 @@ void serve_CMJS(CMfiles_e CMfile) {
     const __FlashStringHelper * url = F("");
 
     switch (CMfile) {
-        case CMfiles_e::CMPlugins:
-          url = F("cm-plugins.min.js");
-          break;
         case CMfiles_e::Codemirror:
           url = F("codemirror.min.js");
           break;
         case CMfiles_e::EspPlugin:
           url = F("espeasy.min.js");
+          break;
+        case CMfiles_e::CMPlugins:
+          url = F("cm-plugins.min.js");
           break;
     }
 

@@ -28,9 +28,9 @@ enum class JSfiles_e {
 void serve_JS(JSfiles_e JSfile);
 
 enum class CMfiles_e {
-  CMPlugins,
   Codemirror,
   EspPlugin,
+  CMPlugins,
 };
 
 void serve_CMJS(CMfiles_e CMfile);
