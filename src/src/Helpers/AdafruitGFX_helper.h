@@ -12,6 +12,8 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-08-16 tonhuisman: Add drawing of Slide/Gauge controls via btn subcommand, horizontal or vertical depending on width/height ratio
+ * 2022-08-15 tonhuisman: Add initial support for slide/gauge controls
  * 2022-06-07 tonhuisman: Code improvements in initialization, move offset calculation to printText() function
  * 2022-06-06 tonhuisman: Process any special characters for lenght and textheight values for correct sizing
  * 2022-06-05 tonhuisman: Add support for getting config values: win (current window id), iswin (exists?), width & height (current window),
@@ -59,17 +61,20 @@
 #  define ADAGFX_FONTS_INCLUDED       1     // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
 # ifndef ADAGFX_PARSE_SUBCOMMAND
-#  define ADAGFX_PARSE_SUBCOMMAND     1     // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
+#  define ADAGFX_PARSE_SUBCOMMAND     1     // Enable/disable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 # ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#  define ADAGFX_ENABLE_EXTRA_CMDS    1     // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
+#  define ADAGFX_ENABLE_EXTRA_CMDS    1     // Enable/disable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
 # endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
 # ifndef ADAGFX_ENABLE_BMP_DISPLAY
-#  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable subcommands for displaying .bmp files on supported displays (color)
+#  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable/disable subcommands for displaying .bmp files on supported displays (color)
 # endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
 # ifndef ADAGFX_ENABLE_BUTTON_DRAW
-#  define ADAGFX_ENABLE_BUTTON_DRAW    1    // Enable subcommands for displaying button-like shapes
+#  define ADAGFX_ENABLE_BUTTON_DRAW   1     // Enable/disable subcommands for displaying button-like shapes
 # endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
+# ifndef ADAGFX_ENABLE_BUTTON_SLIDER
+#  define ADAGFX_ENABLE_BUTTON_SLIDER 1     // Enable/disable displaying button-shape with slider-actions
+# endif // ifndef ADAGFX_ENABLE_BUTTON_SLIDER
 # ifndef ADAGFX_ENABLE_FRAMED_WINDOW
 #  define ADAGFX_ENABLE_FRAMED_WINDOW 1     // Enable framed window features
 # endif // ifndef ADAGFX_ENABLE_BUTTON_DRAW
@@ -109,30 +114,41 @@
 # define ADAGFX_FONTS_EXTRA_20PT_WHITERABBiT
 
 # ifdef LIMIT_BUILD_SIZE
-#  ifdef ADAGFX_FONTS_INCLUDED
+#  if ADAGFX_FONTS_INCLUDED
 #   undef ADAGFX_FONTS_INCLUDED
-#  endif // ifdef ADAGFX_FONTS_INCLUDED
-#  ifdef ADAGFX_ARGUMENT_VALIDATION
+#   define ADAGFX_FONTS_INCLUDED  0
+#  endif // if ADAGFX_FONTS_INCLUDED
+#  if ADAGFX_ARGUMENT_VALIDATION
 #   undef ADAGFX_ARGUMENT_VALIDATION
-#  endif // ifdef ADAGFX_ARGUMENT_VALIDATION
-#  ifdef ADAGFX_USE_ASCIITABLE
+#   define ADAGFX_ARGUMENT_VALIDATION 0
+#  endif // if ADAGFX_ARGUMENT_VALIDATION
+#  if ADAGFX_USE_ASCIITABLE
 #   undef ADAGFX_USE_ASCIITABLE
-#  endif // ifdef ADAGFX_USE_ASCIITABLE
-#  ifdef ADAGFX_SUPPORT_8and16COLOR
+#   define ADAGFX_USE_ASCIITABLE  0
+#  endif // if ADAGFX_USE_ASCIITABLE
+#  if ADAGFX_SUPPORT_8and16COLOR
 #   undef ADAGFX_SUPPORT_8and16COLOR
-#  endif // ifdef ADAGFX_SUPPORT_8and16COLOR
-// #  ifdef ADAGFX_ENABLE_BMP_DISPLAY
+#   define ADAGFX_SUPPORT_8and16COLOR 0
+#  endif // if ADAGFX_SUPPORT_8and16COLOR
+// #  if ADAGFX_ENABLE_BMP_DISPLAY
 // #   undef ADAGFX_ENABLE_BMP_DISPLAY
-// #  endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
-// #  ifdef ADAGFX_ENABLE_BUTTON_DRAW
+// #   define ADAGFX_ENABLE_BMP_DISPLAY  0
+// #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+// #  if ADAGFX_ENABLE_BUTTON_DRAW
 // #   undef ADAGFX_ENABLE_BUTTON_DRAW
-// #  endif // ifdef ADAGFX_ENABLE_BUTTON_DRAW
-#  ifdef ADAGFX_ENABLE_FRAMED_WINDOW
+// #   define ADAGFX_ENABLE_BUTTON_DRAW  0
+// #  endif // if ADAGFX_ENABLE_BUTTON_DRAW
+#  if ADAGFX_ENABLE_FRAMED_WINDOW
 #   undef ADAGFX_ENABLE_FRAMED_WINDOW
-#  endif // ifdef ADAGFX_ENABLE_FRAMED_WINDOW
+#   define ADAGFX_ENABLE_FRAMED_WINDOW  0
+#  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 // #  ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
 // #   undef ADAGFX_ENABLE_GET_CONFIG_VALUE
 // #  endif // ifdef ADAGFX_ENABLE_GET_CONFIG_VALUE
+#  if ADAGFX_ENABLE_BUTTON_SLIDER
+#   undef ADAGFX_ENABLE_BUTTON_SLIDER
+#   define ADAGFX_ENABLE_BUTTON_SLIDER  0 // Disable displaying button-shape with slider-actions
+#  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 # endif  // ifdef LIMIT_BUILD_SIZE
 
 # ifdef PLUGIN_SET_MAX // Include all fonts in MAX builds
@@ -279,7 +295,12 @@ enum class Button_layout_e : uint8_t {
   LeftBottomAligned  = 0x80,
   NoCaption          = 0x90,
   Bitmap             = 0xA0,
-  Alignment_MAX      = 11u // options-count, max possible values: 16
+  #  if ADAGFX_ENABLE_BUTTON_SLIDER
+  Slider        = 0xB0,
+  Alignment_MAX = 12u // options-count, max possible values: 16
+  #  else // if ADAGFX_ENABLE_BUTTON_SLIDER
+  Alignment_MAX = 11u // options-count, max possible values: 16
+  #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
 };
 
 const __FlashStringHelper* toString(const Button_type_e button);
@@ -455,7 +476,7 @@ public:
                        const int16_t& h,
                        int16_t        windowId = -1,
                        const int8_t & rotation = -1);
-  bool deleteWindow(const uint8_t& windowId);
+  bool     deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   uint16_t getTextSize(const String& text,
