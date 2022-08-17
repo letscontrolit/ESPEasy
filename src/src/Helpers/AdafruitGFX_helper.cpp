@@ -1495,9 +1495,13 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       // Clear the area?
       if ((buttonType != Button_type_e::None) ||
           clearArea) {
-        drawButtonShape(buttonLayout == Button_layout_e::Slider ? Button_type_e::Square : buttonType, // Clear full square for slider
-                        nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
-                        _bgcolor, _bgcolor);
+        drawButtonShape(
+          #  if ADAGFX_ENABLE_BUTTON_SLIDER
+          buttonLayout == Button_layout_e::Slider ? Button_type_e::Square :
+          #  endif // if ADAGFX_ENABLE_BUTTON_SLIDER
+          buttonType, // Clear full square for slider
+          nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
+          _bgcolor, _bgcolor);
       }
 
       // Check button-type bits (mask: 0x0F) to draw correct shape
@@ -1757,7 +1761,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
