@@ -11,7 +11,13 @@
 
 /*****
  * Changelog:
- * 2022-08-13 tonhuisman: Replace _ om object name and on/off captions by space, to ease the use of object name as caption
+ * 2022-08-17 tonhuisman: Add support for range (x..y) for sliders
+ * 2022-08-16 tonhuisman: Changed validButtonGroup() to ignore group 0 by default, and setButtonGroup(), and setgrp subcommand,
+ *                        to allow group 0
+ *                        Add setting for swapping (reversing) menu-swipe direction
+ * 2022-08-15 tonhuisman: Add optional swipe/slider support, add swipe subcommand, add GetConfigValue options and docs
+ *                        Replace ifdef *_USE_* defines by if *_FEATURE_*
+ * 2022-08-13 tonhuisman: Replace _ in object name and on/off captions by space, to ease the use of object name as caption
  *                        On save, any spaces in captions are replaced by _ to avoid using 2 quotes around the value.
  *                        This implies that no underscores wil be shown in captions!
  * 2022-06-09 tonhuisman: Change method arguments to const-by-reference where possible for improved compile-time checks
@@ -37,7 +43,9 @@
  * touch,disable,<objectName|Nr>[,...]      : Disable enabled objectname(s)
  * touch,on,<buttonObjectName|Nr>[,...]     : Switch TouchButton(s) on (must be enabled)
  * touch,off,<buttonObjectName|Nr>[,...]    : Switch TouchButton(s) off (must be enabled)
+ * touch,set,<buttonObjectName|Nr>,<value>  : Set TouchObject to value (slider) or 0=off >0=on (must be enabled)
  * touch,toggle,<buttonObjectName|Nr>[,...] : Switch TouchButton(s) to the other state (must be enabled)
+ * touch,swipe,<swipeValue>                 : Switch button group according to swipe direction
  * touch,setgrp,<group>                     : Switch to button group
  * touch,incgrp                             : Switch to next button group
  * touch,decgrp                             : Switch to previous button group
@@ -45,27 +53,45 @@
  * touch,decpage                            : Switch to previous button group page (-10)
  * touch,updatebutton,<buttonName|Nr>[,<group>[,<mode>]] : Update a button by name or number
  */
+/**
+ * Get Config Variables supported: [<taskname>#<configvalue>{,arguments}]
+ * <configvalue>{,arguments}    : Description
+ * buttongroup                  : Get current buttongroup
+ * hasgroup,groupNr             : Check if group exists, ignores group 0
+ * enabled,objectName|objectNr  : Check if object is enabled
+ * state,objectName|objectNr    : Get current object state (buttons: on = 1, off = 0, sliders: value 0..100 (=percentage))
+ * pagemode                     : Get the PageUp/PageDown mode, 0 = up=pgup, 1 = up=pgdown
+ * swipedir,directionId         : Get the name for the direction provided in numeric form
+ */
 
-# define TOUCH_DEBUG              // Additional debugging information
+# define TOUCH_DEBUG                    // Additional debugging information
 
-# define TOUCH_USE_TOOLTIPS       // Enable tooltips in UI
-
-# define TOUCH_USE_EXTENDED_TOUCH // Enable extended touch settings
+# define TOUCH_FEATURE_TOOLTIPS       1 // Enable/disable tooltips in UI
+# define TOUCH_FEATURE_EXTENDED_TOUCH 1 // Enable/disable extended touch settings
+# define TOUCH_FEATURE_SWIPE          1 // Enable/disable Swipe support
 
 # ifdef LIMIT_BUILD_SIZE
-#  ifdef TOUCH_USE_TOOLTIPS
-#   undef TOUCH_USE_TOOLTIPS
-#  endif // ifdef TOUCH_USE_TOOLTIPS
+#  if TOUCH_FEATURE_TOOLTIPS
+#   undef TOUCH_FEATURE_TOOLTIPS
+#   define TOUCH_FEATURE_TOOLTIPS  0
+#  endif // if TOUCH_FEATURE_TOOLTIPS
 #  ifdef TOUCH_DEBUG
 #   undef TOUCH_DEBUG
 #  endif // ifdef TOUCH_DEBUG
-#  ifdef TOUCH_USE_EXTENDED_TOUCH
-#   undef TOUCH_USE_EXTENDED_TOUCH
-#  endif // ifdef TOUCH_USE_EXTENDED_TOUCH
+#  if TOUCH_FEATURE_EXTENDED_TOUCH
+#   undef TOUCH_FEATURE_EXTENDED_TOUCH
+#   define TOUCH_FEATURE_EXTENDED_TOUCH  0
+#  endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+// #  if TOUCH_FEATURE_SWIPE
+// #   undef TOUCH_FEATURE_SWIPE
+// #   define TOUCH_FEATURE_SWIPE  0
+// #  endif // if TOUCH_FEATURE_SWIPE
 # endif  // ifdef LIMIT_BUILD_SIZE
-# if defined(TOUCH_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
-#  undef TOUCH_USE_TOOLTIPS
-# endif  // if defined(TOUCH_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
+
+# if TOUCH_FEATURE_TOOLTIPS && !FEATURE_TOOLTIPS
+#  undef TOUCH_FEATURE_TOOLTIPS
+#  define TOUCH_FEATURE_TOOLTIPS   0
+# endif  // if TOUCH_FEATURE_TOOLTIPS && !FEATURE_TOOLTIPS
 
 // Global Settings flags
 # define TOUCH_FLAGS_SEND_XY            0  // Send X and Y coordinate events
@@ -80,6 +106,7 @@
 # define TOUCH_FLAGS_DRAWBTN_VIA_RULES  16 // Draw buttons using rule
 # define TOUCH_FLAGS_AUTO_PAGE_ARROWS   17 // Automatically enable/disable paging buttons
 # define TOUCH_FLAGS_PGUP_BELOW_MENU    18 // Group-page below current menu (reverts Up/Down buttons)
+# define TOUCH_FLAGS_SWAP_LEFT_RIGHT    19 // Swaps Left and Right, Up and Down swipe directions for menu actions
 
 # define TOUCH_VALUE_X UserVar[event->BaseVarIndex + 0]
 # define TOUCH_VALUE_Y UserVar[event->BaseVarIndex + 1]
@@ -95,6 +122,8 @@
 # define TOUCH_TS_X_RES               320   // Pixels, should match with the screen it is mounted on
 # define TOUCH_TS_Y_RES               480
 # define TOUCH_DEBOUNCE_MILLIS        100   // Debounce delay for On/Off button function
+# define TOUCH_DEF_SWIPE_MINIMAL        3   // Minimal swipe pixels
+# define TOUCH_DEF_SWIPE_MARGIN        10   // Default swipe margin
 
 # define TOUCH_MAX_COLOR_INPUTLENGTH  11    // 11 Characters is enough to type in all recognized color names and values
 # define TOUCH_MaxObjectNameLength    15    // 15 character objectnames
@@ -119,14 +148,19 @@
 # define TOUCH_CALIBRATION_BOTTOM_Y         6  // Bottom Y
 # define TOUCH_COMMON_DEBOUNCE_MS           7  // Debounce milliseconds
 # define TOUCH_COMMON_FLAGS                 8  // Common flags
-# ifdef TOUCH_USE_EXTENDED_TOUCH
+# if TOUCH_FEATURE_EXTENDED_TOUCH
 #  define TOUCH_COMMON_DEF_COLOR_ON         9  // Default Color ON (rgb565, uint16_t)
 #  define TOUCH_COMMON_DEF_COLOR_OFF        10 // Default Color OFF
 #  define TOUCH_COMMON_DEF_COLOR_BORDER     11 // Default Color Border
 #  define TOUCH_COMMON_DEF_COLOR_CAPTION    12 // Default Color Caption
 #  define TOUCH_COMMON_DEF_COLOR_DISABLED   13 // Default Disabled Color
 #  define TOUCH_COMMON_DEF_COLOR_DISABCAPT  14 // Default Disabled Caption Color
-# endif // ifdef TOUCH_USE_EXTENDED_TOUCH
+#  define TOUCH_COMMON_SWIPE_MINIMAL        15 // Minimal swipe pixels
+#  define TOUCH_COMMON_SWIPE_MARGIN         16 // Swipe margin
+# else // if TOUCH_FEATURE_EXTENDED_TOUCH
+#  define TOUCH_COMMON_SWIPE_MINIMAL         9 // Minimal swipe pixels
+#  define TOUCH_COMMON_SWIPE_MARGIN         10 // Swipe margin
+# endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
 // Settings array field offsets: Touch objects
 # define TOUCH_OBJECT_INDEX_START           (TOUCH_CALIBRATION_START + 1)
@@ -137,7 +171,7 @@
 # define TOUCH_OBJECT_COORD_TOP_Y           4  // Top Y
 # define TOUCH_OBJECT_COORD_WIDTH           5  // Width
 # define TOUCH_OBJECT_COORD_HEIGHT          6  // Height
-# ifdef TOUCH_USE_EXTENDED_TOUCH
+# if TOUCH_FEATURE_EXTENDED_TOUCH
 #  define TOUCH_OBJECT_COLOR_ON             7  // Color ON (rgb565, uint16_t)
 #  define TOUCH_OBJECT_COLOR_OFF            8  // Color OFF
 #  define TOUCH_OBJECT_COLOR_CAPTION        9  // Color Caption
@@ -147,7 +181,7 @@
 #  define TOUCH_OBJECT_COLOR_DISABLED       13 // Disabled Color
 #  define TOUCH_OBJECT_COLOR_DISABCAPT      14 // Disabled Caption Color
 #  define TOUCH_OBJECT_GROUPFLAGS           15 // Group flags
-# endif // ifdef TOUCH_USE_EXTENDED_TOUCH
+# endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
 # define TOUCH_OBJECT_FLAG_ENABLED          0  // Enabled
 # define TOUCH_OBJECT_FLAG_BUTTON           1  // Button behavior
@@ -156,6 +190,7 @@
 # define TOUCH_OBJECT_FLAG_BUTTONTYPE       7  // 4 bits used as button type (low 4 bits)
 # define TOUCH_OBJECT_FLAG_BUTTONALIGN      11 // 4 bits used as button caption layout (high 4 bits)
 # define TOUCH_OBJECT_FLAG_GROUP            16 // 8 bits used as button group
+# define TOUCH_OBJECT_FLAG_SLIDER           24 // Slider object
 
 # define TOUCH_OBJECT_GROUP_ACTIONGROUP     8  // 8 bits used as action group
 # define TOUCH_OBJECT_GROUP_ACTION          16 // 4 bits used as action option
@@ -173,15 +208,13 @@ struct tTouch_Point
 // For touch objects we store a name, 2 coordinates, flags and other options
 struct tTouchObjects
 {
-  String       objectName;
-  String       captionOn;
-  String       captionOff;
   uint32_t     flags        = 0u;
   uint32_t     SurfaceAreas = 0u;
   uint32_t     TouchTimers  = 0u;
   tTouch_Point top_left;
   tTouch_Point width_height;
-  # ifdef TOUCH_USE_EXTENDED_TOUCH
+  int16_t      TouchStates = 0;
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   uint32_t groupFlags           = 0u;
   uint16_t colorOn              = 0u;
   uint16_t colorOff             = 0u;
@@ -189,8 +222,10 @@ struct tTouchObjects
   uint16_t colorBorder          = 0u;
   uint16_t colorDisabled        = 0u;
   uint16_t colorDisabledCaption = 0u;
-  # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
-  bool TouchStates = false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+  String objectName;
+  String captionOn;
+  String captionOff;
 };
 
 // Touch actions
@@ -204,7 +239,28 @@ enum class Touch_action_e : uint8_t {
   TouchAction_MAX = 6u // Last item is count, max 16!
 };
 
+# if TOUCH_FEATURE_SWIPE
+
+// Swipe actions, start at 12 o'çlock, clock-wise
+enum class Swipe_action_e : uint8_t {
+  None            = 0u,
+  Up              = 1u,
+  UpRight         = 2u,
+  Right           = 3u,
+  RightDown       = 4u,
+  Down            = 5u,
+  DownLeft        = 6u,
+  Left            = 7u,
+  LeftUp          = 8u,
+  SwipeAction_MAX = 9u // Last item is count
+};
+# endif // if TOUCH_FEATURE_SWIPE
+
 const __FlashStringHelper* toString(Touch_action_e action);
+
+# if TOUCH_FEATURE_SWIPE
+const __FlashStringHelper* toString(Swipe_action_e action);
+# endif // if TOUCH_FEATURE_SWIPE
 
 class ESPEasy_TouchHandler {
 public:
@@ -221,39 +277,48 @@ public:
                                     const int16_t& y,
                                     String       & selectedObjectName,
                                     int8_t       & selectedObjectIndex);
-  int8_t getTouchObjectIndex(struct EventStruct *event,
-                             const String      & touchObject,
-                             const bool        & isButton = false);
-  bool   setTouchObjectState(struct EventStruct *event,
-                             const String      & touchObject,
-                             const bool        & state);
-  int8_t getTouchObjectState(struct EventStruct *event,
-                             const String      & touchObject);
-  bool   setTouchButtonOnOff(struct EventStruct *event,
-                             const String      & touchObject,
-                             const bool        & state);
-  int8_t getTouchButtonOnOff(struct EventStruct *event,
-                             const String      & touchObject);
-  bool   plugin_webform_load(struct EventStruct *event);
-  bool   plugin_webform_save(struct EventStruct *event);
-  bool   plugin_fifty_per_second(struct EventStruct *event,
-                                 const int16_t     & x,
-                                 const int16_t     & y,
-                                 const int16_t     & ox,
-                                 const int16_t     & oy,
-                                 const int16_t     & rx,
-                                 const int16_t     & ry,
-                                 const int16_t     & z);
+  int8_t  getTouchObjectIndex(struct EventStruct *event,
+                              const String      & touchObject,
+                              const bool        & isButton = false);
+  bool    setTouchObjectState(struct EventStruct *event,
+                              const String      & touchObject,
+                              const bool        & state);
+  int8_t  getTouchObjectState(struct EventStruct *event,
+                              const String      & touchObject);
+  bool    setTouchButtonOnOff(struct EventStruct *event,
+                              const String      & touchObject,
+                              const bool        & state);
+  int16_t getTouchObjectValue(struct EventStruct *event,
+                              const String      & touchObject);
+  bool    setTouchObjectValue(struct EventStruct *event,
+                              const String      & touchObject,
+                              const uint16_t    & value);
+  bool    plugin_webform_load(struct EventStruct *event);
+  bool    plugin_webform_save(struct EventStruct *event);
+  bool    plugin_fifty_per_second(struct EventStruct *event,
+                                  const int16_t     & x,
+                                  const int16_t     & y,
+                                  const int16_t     & ox,
+                                  const int16_t     & oy,
+                                  const int16_t     & rx,
+                                  const int16_t     & ry,
+                                  const int16_t     & z);
   bool    plugin_write(struct EventStruct *event,
                        const String      & string);
   bool    plugin_get_config_value(struct EventStruct *event,
                                   String            & string);
+  void    releaseTouch(struct EventStruct *event);
   int16_t getButtonGroup() {
     return _buttonGroup;
   }
 
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   bool validButtonGroup(const int16_t& group,
-                        const bool   & ignoreZero = false);
+                        const bool   & ignoreZero = true);
+  #  if TOUCH_FEATURE_SWIPE
+  bool handleButtonSwipe(struct EventStruct *event,
+                         const int16_t     & swipeValue);
+  #  endif // if TOUCH_FEATURE_SWIPE
   bool setButtonGroup(struct EventStruct *event,
                       const int16_t     & buttonGroup);
   bool incrementButtonGroup(struct EventStruct *event);
@@ -267,6 +332,7 @@ public:
                      const int8_t      & buttonNr,
                      const int16_t     & buttonGroup = -1,
                      int8_t              mode        = 0);
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
 private:
 
@@ -276,7 +342,7 @@ private:
                        const int    & defaultValue = 0);
   void generateObjectEvent(struct EventStruct *event,
                            const int8_t      & objectIndex,
-                           const int8_t      & onOffState,
+                           const int16_t     & onOffState,
                            const int8_t      & mode        = 0,
                            const bool        & groupSwitch = false,
                            const int8_t      & factor      = 1);
@@ -289,21 +355,35 @@ private:
   std::set<int16_t>_buttonGroups;
 
   bool _settingsLoaded = false;
+  bool _stillTouching  = false;
+
+  // Used to generate events on touch-release
+  int8_t _lastObjectIndex = -1;
+  String _lastObjectName;
+  tTouch_Point _last_point;
+  tTouch_Point _last_point_z; // Only used to store z in the x member
+  # if TOUCH_FEATURE_SWIPE
+  Swipe_action_e _lastSwipe = Swipe_action_e::None;
+  int16_t _last_delta_x;
+  int16_t _last_delta_y;
+  # endif // if TOUCH_FEATURE_SWIPE
 
   struct tTouch_Globals
   {
     uint32_t     flags = 0u;
     tTouch_Point top_left;
     tTouch_Point bottom_right;
-    # ifdef TOUCH_USE_EXTENDED_TOUCH
+    # if TOUCH_FEATURE_EXTENDED_TOUCH
     uint16_t colorOn              = 0u;
     uint16_t colorOff             = 0u;
     uint16_t colorCaption         = 0u;
     uint16_t colorBorder          = 0u;
     uint16_t colorDisabled        = 0u;
     uint16_t colorDisabledCaption = 0u;
-    # endif // ifdef TOUCH_USE_EXTENDED_TOUCH
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
     uint8_t debounceMs         = 0u;
+    uint8_t swipeMargin        = 0u;
+    uint8_t swipeMinimal       = 0u;
     bool    calibrationEnabled = false;
     bool    logEnabled         = false;
   };
