@@ -140,3 +140,56 @@ void serve_JS(JSfiles_e JSfile) {
     streamFromFS(fname);
     html_add_script_end();
 }
+
+void serve_CM(CMfiles_e CMfile) {
+    const __FlashStringHelper * url = F("");
+
+    switch (CMfile) {
+        case CMfiles_e::CMPlugins:
+          url = F("cm-plugins.min.js");
+          break;
+        case CMfiles_e::Codemirror:
+          url = F("codemirror.min.js");
+          break;
+        case CMfiles_e::CodemirrorCss:
+          url = F("codemirror.min.css");
+          break;
+        case CMfiles_e::EspPlugin:
+          url = F("espeasy.min.js");
+          break;
+    }
+
+    if (!fileExists(fname))
+    {
+        html_add_script(true);
+        switch (CMfile) {
+          case CMfiles_e::UpdateSensorValuesDevicePage:
+            #ifdef WEBSERVER_DEVICES
+            TXBuffer.addFlashString((PGM_P)FPSTR(CM_PLUGINS_MIN_JS));
+            #endif
+            break;
+          case CMfiles_e::FetchAndParseLog:
+            #ifdef WEBSERVER_LOG
+            TXBuffer.addFlashString((PGM_P)FPSTR(CODEMIRROR_MIN_JS));
+            #endif
+            break;
+          case CMfiles_e::SaveRulesFile:
+            #ifdef WEBSERVER_RULES
+            TXBuffer.addFlashString((PGM_P)FPSTR(CODEMIRROR_MIN_CSS));
+            #endif
+            break;
+          case JSfiles_e::GitHubClipboard:
+            #ifdef WEBSERVER_GITHUB_COPY
+            TXBuffer.addFlashString((PGM_P)FPSTR(ESPEASY_MIN_JS));
+            #endif
+            break;
+        }
+        html_add_script_end();
+        return;
+        #endif
+    }
+    // Now stream the file directly from the file system.
+    html_add_script(false);
+    streamFromFS(fname);
+    html_add_script_end();
+}
