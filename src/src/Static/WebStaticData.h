@@ -11,6 +11,8 @@ String generate_external_URL(const String& fname);
 
 void serve_CSS();
 
+void serve_CMCSS();
+
 void serve_favicon();
 
 enum class JSfiles_e {
@@ -21,10 +23,17 @@ enum class JSfiles_e {
   Reboot,
   Toasting,
   SplitPasteInput,
-
 };
 
 void serve_JS(JSfiles_e JSfile);
+
+enum class CMfiles_e {
+  CMPlugins,
+  Codemirror,
+  EspPlugin,
+};
+
+void serve_CMJS(CMfiles_e CMfile);
 
 
 #ifdef WEBSERVER_FAVICON
