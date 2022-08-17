@@ -77,7 +77,9 @@ bool P123_data_struct::init(struct EventStruct *event) {
 void P123_data_struct::displayButtonGroup(struct EventStruct *event,
                                           int16_t             buttonGroup,
                                           int8_t              mode) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   touchHandler->displayButtonGroup(event, buttonGroup, mode);
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
@@ -87,7 +89,11 @@ bool P123_data_struct::displayButton(struct EventStruct *event,
                                      const int8_t      & buttonNr,
                                      int16_t             buttonGroup,
                                      int8_t              mode) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->displayButton(event, buttonNr, buttonGroup, mode);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
@@ -170,6 +176,8 @@ bool P123_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
       scaleRawToCalibrated(x, y); // Map to screen coordinates if so configured
 
       return touchHandler->plugin_fifty_per_second(event, x, y, ox, oy, rx, ry, z);
+    } else {
+      touchHandler->releaseTouch(event);
     }
   }
   return false;
@@ -374,7 +382,11 @@ int16_t P123_data_struct::getButtonGroup() {
  */
 bool P123_data_struct::validButtonGroup(int16_t buttonGroup,
                                         bool    ignoreZero) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->validButtonGroup(buttonGroup, ignoreZero);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
@@ -382,35 +394,55 @@ bool P123_data_struct::validButtonGroup(int16_t buttonGroup,
  */
 bool P123_data_struct::setButtonGroup(struct EventStruct *event,
                                       int16_t             buttonGroup) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->setButtonGroup(event, buttonGroup);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
  * Increment button group, if max. group > 0 then min. group = 1
  */
 bool P123_data_struct::incrementButtonGroup(struct EventStruct *event) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->incrementButtonGroup(event);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
  * Decrement button group, if max. group > 0 then min. group = 1
  */
 bool P123_data_struct::decrementButtonGroup(struct EventStruct *event) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->decrementButtonGroup(event);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
  * Increment button group page (+10), if max. group > 0 then min. group page (+10) = 1
  */
 bool P123_data_struct::incrementButtonPage(struct EventStruct *event) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->incrementButtonPage(event);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 /**
  * Decrement button group page (-10), if max. group > 0 then min. group = 1
  */
 bool P123_data_struct::decrementButtonPage(struct EventStruct *event) {
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
   return touchHandler->decrementButtonPage(event);
+  # else // if TOUCH_FEATURE_EXTENDED_TOUCH
+  return false;
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 }
 
 #endif // ifdef USES_P123

@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2022-08-15 tonhuisman: Add Swipe and Slider support (to TouchHandler)
  * 2022-08-15 tonhuisman: UI improvement, settings table uses alternate color per 2 rows, code improvements
  * 2022-06-10 tonhuisman: Remove p123_ prefixes on Settings variables
  * 2022-06-06 tonhuisman: Move PLUGIN_WRITE handling mostly to ESPEasy_TouchHandler (only rot and flip subcommands remain)
