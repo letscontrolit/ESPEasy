@@ -628,7 +628,6 @@ void handle_sysinfo_Storage() {
   addHtml(F(" MHz"));
 
   // Please check what is supported for the ESP32
-  # if defined(ESP8266)
   addRowLabel(LabelType::FLASH_IDE_SPEED);
   addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
@@ -645,7 +644,6 @@ void handle_sysinfo_Storage() {
         addHtml(getUnknownString()); break;
     }
   }
-  # endif // if defined(ESP8266)
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {
