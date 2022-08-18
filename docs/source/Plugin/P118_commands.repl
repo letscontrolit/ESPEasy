@@ -35,5 +35,17 @@ Fan states
   "33", "Timer3", "Itho to high speed with hardware timer (30 min)"
   "1111", "", "Join with an ITHO ventilation unit that is waiting for join requests (first minutes after power-on)"
   "9999", "", "Leave connection with an ITHO ventilation unit (maybe not supported on all models). Needs a new Join (1111) to be able to control a unit."
+  "100", "Orcon standBy", "Orcon ventilation unit on standby"
+  "101", "Orcon low speed", "Orcon ventilation to lowest speed"
+  "102", "Orcon medium speed", "Orcon ventilation to medium speed"
+  "103", "Orcon high speed", "Itho ventilation to high speed"
+  "104", "Orcon auto speed", "Itho ventilation to auto speed (based on Humidity and/or CO2)"
+  "110", "Orcon Timer 0", "Orcon ventilation unit on standby for 12*60 minutes"
+  "111", "Orcon Timer 1", "Orcon ventilation to lowest speed for 60 minutes"
+  "112", "Orcon Timer 2", "Orcon ventilation unit to medium speed for 13*60 minutes"
+  "113", "Orcon Timer 3", "Orcon ventilation unit to high speed for 60 minutes"
+  "114", "Orcon Auto CO2", "Itho ventilation to auto speed for 60 minutes (based on Humidity and/or CO2)"
   
 Two special states exist: 1111 for a join command and 9999 for a leave command, check the Itho manual on how to put your fain into pairing mode.
+
+For Orcon the Unit ID remote 1 will be used as the spoofed sender ID

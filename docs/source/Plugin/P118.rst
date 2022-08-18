@@ -78,6 +78,7 @@ Remote RF Controls
 
 * **Device ID byte 1..3**: Device ID of the ESPEasy plugin, defaults to 10,87,81. The plugin acts as a remote and can have a unique ID. Can be changed from default if you have interference with neighbours. After a change you should again join the ESP with the fan.
 
+* **Enable Orcon support**: Enables the extra protocol for the Orcon brand of ventilation units, that use the same protocol, but with a different command set. To avoid possible interference, it is disabled by default.
 
 Data Acquisition
 ^^^^^^^^^^^^^^^^
@@ -141,6 +142,9 @@ Change log
 
 .. versionchanged:: 2.0
 	.
+
+  |added|
+	2022-08-18: Add support for Orcon devices.
 
   |added|
 	2022-08-10: Made multi-instance compatible, CS pin configurable and interrupt pin usage optional.
