@@ -26,7 +26,18 @@ enum IthoCommand
   DucoStandby = 11,
   DucoLow     = 12,
   DucoMedium  = 13,
-  DucoHigh    = 14
+  DucoHigh    = 14,
+
+  OrconStandBy = 100,
+  OrconLow     = 101,
+  OrconMedium  = 102,
+  OrconHigh    = 103,
+  OrconAuto    = 104,
+  OrconTimer0  = 110,
+  OrconTimer1  = 111,
+  OrconTimer2  = 112,
+  OrconTimer3  = 113,
+  OrconAutoCO2 = 114
 };
 
 

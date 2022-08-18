@@ -324,21 +324,32 @@ bool IthoCC1101::parseMessageCommand() {
   // counter1
   inIthoPacket.counter = inIthoPacket.dataDecoded[4];
 
-  bool isHighCommand     = checkIthoCommand(&inIthoPacket, ithoMessageHighCommandBytes);
-  bool isRVHighCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVHighCommandBytes);
-  bool isMediumCommand   = checkIthoCommand(&inIthoPacket, ithoMessageMediumCommandBytes);
-  bool isRVMediumCommand = checkIthoCommand(&inIthoPacket, ithoMessageRVMediumCommandBytes);
-  bool isLowCommand      = checkIthoCommand(&inIthoPacket, ithoMessageLowCommandBytes);
-  bool isRVLowCommand    = checkIthoCommand(&inIthoPacket, ithoMessageRVLowCommandBytes);
-  bool isRVAutoCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVAutoCommandBytes);
-  bool isStandByCommand  = checkIthoCommand(&inIthoPacket, ithoMessageStandByCommandBytes);
-  bool isTimer1Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer1CommandBytes);
-  bool isTimer2Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer2CommandBytes);
-  bool isTimer3Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer3CommandBytes);
-  bool isJoinCommand     = checkIthoCommand(&inIthoPacket, ithoMessageJoinCommandBytes);
-  bool isJoin2Command    = checkIthoCommand(&inIthoPacket, ithoMessageJoin2CommandBytes);
-  bool isRVJoinCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes);
-  bool isLeaveCommand    = checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes);
+  const bool isHighCommand     = checkIthoCommand(&inIthoPacket, ithoMessageHighCommandBytes);
+  const bool isRVHighCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVHighCommandBytes);
+  const bool isMediumCommand   = checkIthoCommand(&inIthoPacket, ithoMessageMediumCommandBytes);
+  const bool isRVMediumCommand = checkIthoCommand(&inIthoPacket, ithoMessageRVMediumCommandBytes);
+  const bool isLowCommand      = checkIthoCommand(&inIthoPacket, ithoMessageLowCommandBytes);
+  const bool isRVLowCommand    = checkIthoCommand(&inIthoPacket, ithoMessageRVLowCommandBytes);
+  const bool isRVAutoCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVAutoCommandBytes);
+  const bool isStandByCommand  = checkIthoCommand(&inIthoPacket, ithoMessageStandByCommandBytes);
+  const bool isTimer1Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer1CommandBytes);
+  const bool isTimer2Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer2CommandBytes);
+  const bool isTimer3Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer3CommandBytes);
+  const bool isJoinCommand     = checkIthoCommand(&inIthoPacket, ithoMessageJoinCommandBytes);
+  const bool isJoin2Command    = checkIthoCommand(&inIthoPacket, ithoMessageJoin2CommandBytes);
+  const bool isRVJoinCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes);
+  const bool isLeaveCommand    = checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes);
+
+  const bool isOrconStandByCommand = checkIthoCommand(&inIthoPacket, orconMessageStandByCommandBytes);
+  const bool isOrconLowCommand     = checkIthoCommand(&inIthoPacket, orconMessageLowCommandBytes);
+  const bool isOrconMediumCommand  = checkIthoCommand(&inIthoPacket, orconMessageMediumCommandBytes);
+  const bool isOrconFullCommand    = checkIthoCommand(&inIthoPacket, orconMessageFullCommandBytes);
+  const bool isOrconAutoCommand    = checkIthoCommand(&inIthoPacket, orconMessageAutoCommandBytes);
+  const bool isOrconTimer0Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer0CommandBytes);
+  const bool isOrconTimer1Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer1CommandBytes);
+  const bool isOrconTimer2Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer2CommandBytes);
+  const bool isOrconTimer3Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer3CommandBytes);
+  const bool isOrconAutoCO2Command = checkIthoCommand(&inIthoPacket, orconMessageAutoCO2CommandBytes);
 
   // determine command
   inIthoPacket.command = IthoUnknown;
@@ -373,7 +384,31 @@ bool IthoCC1101::parseMessageCommand() {
 
   if (isLeaveCommand) { inIthoPacket.command = IthoLeave; }
 
-#if defined(CRC_FILTER)
+  if (_enableOrcon) {
+    if (isOrconStandByCommand) { inIthoPacket.command = OrconStandBy; }
+
+    if (isOrconLowCommand) { inIthoPacket.command = OrconLow; }
+
+    if (isOrconMediumCommand) { inIthoPacket.command = OrconMedium; }
+
+    if (isOrconFullCommand) { inIthoPacket.command = OrconHigh; }
+
+    if (isOrconAutoCommand) { inIthoPacket.command = OrconAuto; }
+
+    if (isOrconTimer0Command) { inIthoPacket.command = OrconTimer0; }
+
+    if (isOrconTimer1Command) { inIthoPacket.command = OrconTimer1; }
+
+    if (isOrconTimer2Command) { inIthoPacket.command = OrconTimer2; }
+
+    if (isOrconTimer3Command) { inIthoPacket.command = OrconTimer3; }
+
+    if (isOrconAutoCO2Command) { inIthoPacket.command = OrconAutoCO2; }
+  }
+
+  #if defined(CRC_FILTER)
+
+  // TODO nl0pvm: make this orcon proof
   uint8_t mLen = 0;
 
   if (isPowerCommand || isHighCommand || isMediumCommand || isLowCommand || isStandByCommand || isTimer1Command || isTimer2Command ||
@@ -394,7 +429,7 @@ bool IthoCC1101::parseMessageCommand() {
     inIthoPacket.command = IthoUnknown;
     return false;
   }
-#endif // if defined(CRC_FILTER)
+  #endif // if defined(CRC_FILTER)
 
   return true;
 }
@@ -402,12 +437,30 @@ bool IthoCC1101::parseMessageCommand() {
 bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]) {
   uint8_t offset = 0;
 
+  // this is quite hacky as not even the opcode is checked for itho. Because of that orcon 31E0 messages are wrongly recognised as itho
+  // standby messages.
+  // TODO nl0pvm: FIX THIS :D
+
+  // first byte is the header of the message, this determines the structure of the rest of the message
+  // The bits are used as follows <00TTAAPP>
+  // 00 - Unused
+  // TT - Message type
+  // AA - Present DeviceID fields
+  // PP - Present Params
+
   if ((itho->deviceType == 28) || (itho->deviceType == 24)) { offset = 2; }
 
-  for (int i = 4; i < 6; i++)
+  // for (int i = 4; i < 6; i++)
+  // for Orcon: the code above makes that only 3 bytes (byte 4, 5 and 6) are checked. That gives false positves
+  for (int i = 0; i < 6; i++)
+
   {
-    // if (i == 2 || i == 3) continue; //skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different number
-    // there
+    // this is required for differentiating between Orcon and Itho commands. However I don't know what the reason was to comment this out.
+    // thus this needs to be verified by Itho users
+    if ((i == 2) || (i == 3)) { continue; // skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different
+                                          // number there
+    }
+
     if ((itho->dataDecoded[i + 5 + offset] != commandBytes[i]) && (itho->dataDecodedChk[i + 5 + offset] != commandBytes[i])) {
       return false;
     }
@@ -415,7 +468,7 @@ bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]
   return true;
 }
 
-void IthoCC1101::sendCommand(IthoCommand command)
+void IthoCC1101::sendCommand(IthoCommand command, uint8_t srcId[3], uint8_t destId[3])
 {
   CC1101Packet outMessage;
   uint8_t maxTries  = sendTries;
@@ -438,6 +491,23 @@ void IthoCC1101::sendCommand(IthoCommand command)
       // the leave command needs to be transmitted for 1 second according the manual
       maxTries  = 30;
       delaytime = 4;
+      break;
+
+    case OrconStandBy:
+    case OrconLow:
+    case OrconMedium:
+    case OrconHigh:
+    case OrconAuto:
+    case OrconTimer0:
+    case OrconTimer1:
+    case OrconTimer2:
+    case OrconTimer3:
+    case OrconAutoCO2:
+
+      if (_enableOrcon) {
+        maxTries = 1;
+        createOrconMessageCommand(&outIthoPacket, &outMessage, srcId, destId);
+      }
       break;
 
     default:
@@ -474,6 +544,65 @@ void IthoCC1101::createMessageStart(IthoPacket *itho, CC1101Packet *packet)
   packet->data[13] = 42;
 
   // [start of command specific data]
+}
+
+void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packet, uint8_t srcId[3], uint8_t destId[3])
+{
+  // set start message structure
+  createMessageStart(itho, packet);
+
+  // first byte is the header of the message, this determines the structure of the rest of the message
+  // The bits are used as follows <00TTAAPP>
+  // 00 - Unused
+  // TT - Message type
+  // AA - Present DeviceID fields
+  // PP - Present Params
+  uint8_t header = 0b00011100;
+
+  itho->dataDecoded[0] = header; // 00TTAAPP
+  // set source deviceID
+  itho->dataDecoded[1] = srcId[0];
+  itho->dataDecoded[2] = srcId[1];
+  itho->dataDecoded[3] = srcId[2];
+
+  // set destination deviceID
+  itho->dataDecoded[4] = destId[0];
+  itho->dataDecoded[5] = destId[1];
+  itho->dataDecoded[6] = destId[2];
+
+  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+
+  for (uint8_t i = 0; i < getMessageCommandLength(itho->command); i++) {
+    itho->dataDecoded[i + 7] = commandBytes[i];
+  }
+
+  itho->length = 7 + 1 + getMessageCommandLength(itho->command);
+
+  itho->dataDecoded[itho->length - 1] = getCRC(itho, itho->length - 1);
+  itho->length                       += 1;
+
+  packet->length = messageEncode(itho, packet) - 2; // delete the last two itho bytes (0x55, 0x95) so we can reuse messageEncode() without
+                                                    // modifications
+
+  // set compex orcon specific end bytes
+  packet->data[packet->length] = 0xAC;
+  packet->length              += 1;
+  packet->data[packet->length] = 0xAA;
+  packet->length              += 1;
+  packet->data[packet->length] = 0xBF;
+  packet->length              += 1;
+  packet->data[packet->length] = 0x0E;
+  packet->length              += 1;
+}
+
+uint8_t IthoCC1101::getCRC(IthoPacket *itho, uint8_t len) {
+  uint8_t val = 0;
+
+  for (uint8_t i = 0; i < len; i++) {
+    val += itho->dataDecoded[i];
+  }
+
+  return 0x100 - (val & 0xFF);
 }
 
 void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
@@ -645,8 +774,82 @@ const uint8_t * IthoCC1101::getMessageCommandBytes(IthoCommand command)
       return &ithoMessageJoinCommandBytes[0];
     case IthoLeave:
       return &ithoMessageLeaveCommandBytes[0];
+
+    case OrconStandBy:
+      return &orconMessageStandByCommandBytes[0];
+    case OrconLow:
+      return &orconMessageLowCommandBytes[0];
+    case OrconMedium:
+      return &orconMessageMediumCommandBytes[0];
+    case OrconHigh:
+      return &orconMessageFullCommandBytes[0];
+    case OrconAuto:
+      return &orconMessageAutoCommandBytes[0];
+    case OrconTimer0:
+      return &orconMessageTimer0CommandBytes[0];
+    case OrconTimer1:
+      return &orconMessageTimer1CommandBytes[0];
+    case OrconTimer2:
+      return &orconMessageTimer2CommandBytes[0];
+    case OrconTimer3:
+      return &orconMessageTimer3CommandBytes[0];
+    case OrconAutoCO2:
+      return &orconMessageAutoCO2CommandBytes[0];
+
     default:
       return &ithoMessageLowCommandBytes[0];
+  }
+}
+
+uint8_t IthoCC1101::getMessageCommandLength(IthoCommand command)
+{
+  switch (command)
+  {
+    case IthoStandby:
+      return sizeof(ithoMessageStandByCommandBytes) / sizeof(uint8_t);
+    case IthoHigh:
+      return sizeof(ithoMessageHighCommandBytes) / sizeof(uint8_t);
+    case IthoFull:
+      return sizeof(ithoMessageFullCommandBytes) / sizeof(uint8_t);
+    case IthoMedium:
+      return sizeof(ithoMessageMediumCommandBytes) / sizeof(uint8_t);
+    case IthoLow:
+      return sizeof(ithoMessageLowCommandBytes) / sizeof(uint8_t);
+    case IthoTimer1:
+      return sizeof(ithoMessageTimer1CommandBytes) / sizeof(uint8_t);
+    case IthoTimer2:
+      return sizeof(ithoMessageTimer2CommandBytes) / sizeof(uint8_t);
+    case IthoTimer3:
+      return sizeof(ithoMessageTimer3CommandBytes) / sizeof(uint8_t);
+    case IthoJoin:
+      return sizeof(ithoMessageJoinCommandBytes) / sizeof(uint8_t);
+    case IthoLeave:
+      return sizeof(ithoMessageLeaveCommandBytes) / sizeof(uint8_t);
+
+    case OrconStandBy:
+      return sizeof(orconMessageStandByCommandBytes) / sizeof(uint8_t);
+    case OrconLow:
+      return sizeof(orconMessageLowCommandBytes) / sizeof(uint8_t);
+    case OrconMedium:
+      return sizeof(orconMessageMediumCommandBytes) / sizeof(uint8_t);
+    case OrconHigh:
+      return sizeof(orconMessageFullCommandBytes) / sizeof(uint8_t);
+    case OrconAuto:
+      return sizeof(orconMessageAutoCommandBytes) / sizeof(uint8_t);
+    case OrconTimer0:
+      return sizeof(orconMessageTimer0CommandBytes) / sizeof(uint8_t);
+    case OrconTimer1:
+      return sizeof(orconMessageTimer1CommandBytes) / sizeof(uint8_t);
+    case OrconTimer2:
+      return sizeof(orconMessageTimer2CommandBytes) / sizeof(uint8_t);
+    case OrconTimer3:
+      return sizeof(orconMessageTimer3CommandBytes) / sizeof(uint8_t);
+    case OrconAutoCO2:
+      return sizeof(orconMessageAutoCO2CommandBytes) / sizeof(uint8_t);
+
+
+    default:
+      return sizeof(ithoMessageLowCommandBytes) / sizeof(uint8_t);
   }
 }
 

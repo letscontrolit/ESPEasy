@@ -17,6 +17,19 @@ const uint8_t ithoPaTableSend[8]    = { 0x6F, 0x26, 0x2E, 0x8C, 0x87, 0xCD, 0xC7
 const uint8_t ithoPaTableReceive[8] = { 0x6F, 0x26, 0x2E, 0x7F, 0x8A, 0x84, 0xCA, 0xC4 };
 
 // message command bytes
+
+const uint8_t orconMessageStandByCommandBytes[] = { 34, 241, 3, 0, 0, 4 };
+const uint8_t orconMessageLowCommandBytes[]     =     { 34, 241, 3, 0, 1, 4 };
+const uint8_t orconMessageMediumCommandBytes[]  =  { 34, 241, 3, 0, 2, 4 };
+const uint8_t orconMessageFullCommandBytes[]    =    { 34, 241, 3, 0, 3, 4 };
+const uint8_t orconMessageAutoCommandBytes[]    =    { 34, 241, 3, 0, 4, 4 };
+
+const uint8_t orconMessageTimer0CommandBytes[]  =    { 34, 243, 7, 0, 82, 12, 0, 4, 4, 4 }; //  Timer 12*60 minuten @ speed 0
+const uint8_t orconMessageTimer1CommandBytes[]  =    { 34, 243, 7, 0, 18, 60, 1, 4, 4, 4 }; //  Timer 60 minuten @ speed 1
+const uint8_t orconMessageTimer2CommandBytes[]  =    { 34, 243, 7, 0, 82, 13, 2, 4, 4, 4 }; //  Timer 13*60 minuten @ speed 2
+const uint8_t orconMessageTimer3CommandBytes[]  =    { 34, 243, 7, 0, 18, 60, 3, 4, 4, 4 }; //  Timer 60 minuten @ speed 3
+const uint8_t orconMessageAutoCO2CommandBytes[] =   { 34, 243, 7, 0, 18, 60, 4, 4, 4, 4 };  //  Timer 60 minuten @ speed auto
+
 const uint8_t ithoMessageRVHighCommandBytes[]   = { 49, 224, 4, 0, 0, 200 };
 const uint8_t ithoMessageHighCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
 const uint8_t ithoMessageFullCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
@@ -111,7 +124,13 @@ public:
   String  LastMessageDecoded();
 
   // send
-  void    sendCommand(IthoCommand command);
+  void    sendCommand(IthoCommand command,
+                      uint8_t     srcId[3]  = 0,
+                      uint8_t     destId[3] = 0);
+
+  void enableOrcon(bool state) {
+    _enableOrcon = state;
+  }
 
 protected:
 
@@ -133,15 +152,24 @@ private:
                                const uint8_t commandBytes[]);
 
   // send
-  void           createMessageStart(IthoPacket   *itho,
-                                    CC1101Packet *packet);
-  void           createMessageCommand(IthoPacket   *itho,
-                                      CC1101Packet *packet);
+  void createMessageStart(IthoPacket   *itho,
+                          CC1101Packet *packet);
+  void createMessageCommand(IthoPacket   *itho,
+                            CC1101Packet *packet);
+  void createOrconMessageCommand(IthoPacket   *itho,
+                                 CC1101Packet *packet,
+                                 uint8_t       srcId[3],
+                                 uint8_t       destId[3]);
+  uint8_t        getCRC(IthoPacket *itho,
+                        uint8_t     len);
   void           createMessageJoin(IthoPacket   *itho,
                                    CC1101Packet *packet);
   void           createMessageLeave(IthoPacket   *itho,
                                     CC1101Packet *packet);
   const uint8_t* getMessageCommandBytes(IthoCommand command);
+
+  uint8_t        getMessageCommandLength(IthoCommand command);
+
   uint8_t        getCounter2(IthoPacket *itho,
                              uint8_t     len);
 
@@ -149,6 +177,7 @@ private:
                                CC1101Packet *packet);
   void           messageDecode(CC1101Packet *packet,
                                IthoPacket   *itho);
+  bool _enableOrcon = false;
 }; // IthoCC1101
 
 #endif // __ITHOCC1101_H__
