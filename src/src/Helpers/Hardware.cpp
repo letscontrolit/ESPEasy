@@ -4,6 +4,7 @@
 #include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasyEth.h"
 
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
