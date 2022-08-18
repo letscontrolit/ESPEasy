@@ -39,6 +39,9 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
 
   if (nullptr != _rf) {
     success = true;
+    # if P118_FEATURE_ORCON
+    _rf->enableOrcon(P118_CONFIG_ORCON == 1); // Enabled?
+    # endif // if P118_FEATURE_ORCON
 
     // DeviceID used to send commands, can also be changed on the fly for multi itho control, 10,87,81 corresponds with old library
     _rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
@@ -81,13 +84,21 @@ bool P118_data_struct::plugin_exit(struct EventStruct *event) {
 
 bool P118_data_struct::plugin_once_a_second(struct EventStruct *event) {
   // decrement timer when timermode is running
-  if (_State >= 10) { _Timer--; }
+  if ((_State >= 10) && (_Timer > 0)) {
+    _Timer--;
+
+    if (_Timer == 0) { _Timer--; }
+  }
 
   // if timer has elapsed set Fan state to low
-  if ((_State >= 10) && (_Timer <= 0))
+  if ((_State >= 10) && (_Timer < 0))
   {
-    _State = 1;
-    _Timer = 0;
+    if (_State < 100) {
+      _State = 1;   // Itho low
+    } else {
+      _State = 101; // Orcon low
+    }
+    _Timer = 0;     // Avoid doing this again
   }
 
   // Publish new data when vars are changed or init has runned or timer is running (update every 2 sec)
@@ -231,6 +242,151 @@ bool P118_data_struct::plugin_write(struct EventStruct *event, const String& str
         PluginWriteLog(F("timer 3"));
         break;
       }
+      # if P118_FEATURE_ORCON
+      case 100: // Fan StandBy
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconStandBy, srcID, destID);
+        _State       = 100;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon standBy"));
+        success = true;
+        break;
+      }
+      case 101: // Fan low
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconLow, srcID, destID);
+        _State       = 101;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon low speed"));
+        success = true;
+        break;
+      }
+      case 102: // Fan medium
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconMedium, srcID, destID);
+        _State       = 102;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon medium speed"));
+        success = true;
+        break;
+      }
+      case 103: // Fan high
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconHigh, srcID, destID);
+        _State       = 103;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon high speed"));
+        success = true;
+        break;
+      }
+      case 104: // Fan auto
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconAuto, srcID, destID);
+        _State       = 104;
+        _Timer       = 0;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon auto speed"));
+        success = true;
+        break;
+      }
+      case 110: //  Timer 12*60 minutes @ speed 0
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconTimer0, srcID, destID);
+        _State       = 110;
+        _Timer       = PLUGIN_118_OrconTime0;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon Timer 0"));
+        success = true;
+        break;
+      }
+      case 111: //  Timer 60 minutes @ speed 1
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconTimer1, srcID, destID);
+        _State       = 111;
+        _Timer       = PLUGIN_118_OrconTime1;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon Timer 1"));
+        success = true;
+        break;
+      }
+      case 112: //  Timer 13*60 minutes @ speed 2
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconTimer2, srcID, destID);
+        _State       = 112;
+        _Timer       = PLUGIN_118_OrconTime2;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon Timer 2"));
+        success = true;
+        break;
+      }
+      case 113: //  Timer 60 minutes @ speed 3
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconTimer3, srcID, destID);
+        _State       = 113;
+        _Timer       = PLUGIN_118_OrconTime3;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon Timer 3"));
+        success = true;
+        break;
+      }
+      case 114:
+      {
+        uint8_t srcID[3], destID[3];
+        SetDestIDSrcID(event, srcID, destID, _ExtraSettings.ID1);
+        _rf->sendCommand(OrconAutoCO2, srcID, destID);
+        _State       = 114;
+        _Timer       = PLUGIN_118_OrconTime3;
+        _LastIDindex = 0;
+        _rf->initReceive();
+        PluginWriteLog(F("Orcon Auto CO2"));
+        success = true;
+        break;
+      }
+      # else // if P118_FEATURE_ORCON
+      case 100:
+      case 101:
+      case 102:
+      case 103:
+      case 104:
+      case 110:
+      case 111:
+      case 112:
+      case 113:
+      case 114:
+        PluginWriteLog(F("Orcon support not included!"));
+        break;
+      # endif // if P118_FEATURE_ORCON
       default:
       {
         PluginWriteLog(F("INVALID"));
@@ -356,6 +512,90 @@ void P118_data_struct::ITHOcheck() {
 
           if (_dbgLog) { log += F("leave"); }
           break;
+        # if P118_FEATURE_ORCON
+        case OrconStandBy:
+
+          if (_dbgLog) { log += F("Orcon standby"); }
+          _State       = 100;
+          _Timer       = 0;
+          _LastIDindex = index;
+          break;
+        case OrconLow:
+
+          if (_dbgLog) { log += F("Orcon low"); }
+          _State       = 101;
+          _Timer       = 0;
+          _LastIDindex = index;
+          break;
+        case OrconMedium:
+
+          if (_dbgLog) { log += F("Orcon medium"); }
+          _State       = 102;
+          _Timer       = 0;
+          _LastIDindex = index;
+          break;
+        case OrconHigh:
+
+          if (_dbgLog) { log += F("Orcon high"); }
+          _State       = 103;
+          _Timer       = 0;
+          _LastIDindex = index;
+          break;
+        case OrconAuto:
+
+          if (_dbgLog) { log += F("Orcon auto"); }
+          _State       = 104;
+          _Timer       = 0;
+          _LastIDindex = index;
+          break;
+        case OrconTimer0:
+
+          if (_dbgLog) { log += +F("Orcon Timer0"); }
+          _State       = 110;
+          _Timer       = PLUGIN_118_OrconTime0;
+          _LastIDindex = index;
+          break;
+        case OrconTimer1:
+
+          if (_dbgLog) { log += +F("Orcon Timer1"); }
+          _State       = 111;
+          _Timer       = PLUGIN_118_OrconTime1;
+          _LastIDindex = index;
+          break;
+        case OrconTimer2:
+
+          if (_dbgLog) { log += +F("Orcon Timer2"); }
+          _State       = 112;
+          _Timer       = PLUGIN_118_OrconTime2;
+          _LastIDindex = index;
+          break;
+        case OrconTimer3:
+
+          if (_dbgLog) { log += +F("Orcon Timer3"); }
+          _State       = 113;
+          _Timer       = PLUGIN_118_OrconTime3;
+          _LastIDindex = index;
+          break;
+        case OrconAutoCO2:
+
+          if (_dbgLog) { log += +F("Orcon AutoCO2"); }
+          _State       = 114;
+          _Timer       = 0;
+          _LastIDindex = index;
+          break;
+        # else // if P118_FEATURE_ORCON
+        case OrconStandBy:
+        case OrconLow:
+        case OrconMedium:
+        case OrconHigh:
+        case OrconAuto:
+        case OrconTimer0:
+        case OrconTimer1:
+        case OrconTimer2:
+        case OrconTimer3:
+        case OrconAutoCO2:
+          break;
+        # endif // if P118_FEATURE_ORCON
       }
     } else {
       if (_dbgLog) {
@@ -412,5 +652,67 @@ void P118_data_struct::PluginWriteLog(const String& command) {
 void P118_data_struct::ISR_ithoCheck(P118_data_struct *self) {
   self->_Int = true;
 }
+
+# if P118_FEATURE_ORCON
+
+/**
+ * Orcon specific: Set Destination ID
+ */
+void P118_data_struct::SetDestIDSrcID(struct EventStruct *event, uint8_t (& srcID)[3], uint8_t (& destID)[3], char (& tmpTmpID)[9])
+{
+  destID[0] = PCONFIG(1) - 0;
+  destID[1] = PCONFIG(2) - 0;
+  destID[2] = PCONFIG(3) - 0;
+
+  const char *delimiter = ",";
+  char *token;
+
+  // char tmpID[9] = PLUGIN_118_ExtraSettings.ID1; // copy needed otherwise we modify PLUGIN_118_ExtraSettings.ID1 itself
+  char tmpID[9];
+
+  memcpy(tmpID, tmpTmpID, 9);
+  token = strtok(tmpID, delimiter);     // select the first part
+
+  if (token) {
+    srcID[0] = strtol(token, NULL, 16); // convert first string part (hex) to int
+  } else {
+    srcID[0] = 0;
+  }
+  token = strtok(NULL, delimiter);
+
+  if (token) {
+    srcID[1] = strtol(token, NULL, 16); // convert first string part (hex) to int
+  } else {
+    srcID[1] = 0;
+  }
+  token = strtok(NULL, delimiter);
+
+  if (token) {
+    srcID[2] = strtol(token, NULL, 16); // convert first string part (hex) to int
+  } else {
+    srcID[2] = 0;
+  }
+
+  #  ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = (F("srcID: "));
+    log += String(srcID[0]);
+    log += (F(","));
+    log += String(srcID[1]);
+    log += (F(","));
+    log += String(srcID[2]);
+    log += (F(" destID: "));
+    log += String(destID[0]);
+    log += (F(","));
+    log += String(destID[1]);
+    log += (F(","));
+    log += String(destID[2]);
+    addLogMove(LOG_LEVEL_DEBUG, log);
+  }
+  #  endif // ifndef BUILD_NO_DEBUG
+}
+
+# endif // if P118_FEATURE_ORCON
 
 #endif // ifdef USES_P118

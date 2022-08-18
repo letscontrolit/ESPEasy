@@ -10,11 +10,18 @@
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
-# define P118_DEBUG_LOG // Enable for some (extra) logging
+# define P118_DEBUG_LOG         // Enable for some (extra) logging
+# define P118_FEATURE_ORCON   1 // Enable use of Orcon commands
 
 # if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
 #  undef P118_DEBUG_LOG
 # endif // if defined(LIMIT_BUILD_SIZE) && defined(P118_DEBUG_LOG)
+# ifdef LIMIT_BUILD_SIZE
+// #  if P118_FEATURE_ORCON
+// #   undef P118_FEATURE_ORCON
+// #   define P118_FEATURE_ORCON   0
+// #  endif // if P118_FEATURE_ORCON
+# endif // ifdef LIMIT_BUILD_SIZE
 
 # define P118_TIMEOUT_LIMIT   5000 // If initialization takes > 5 seconds, most likely the hardware is not correctly connected
 
@@ -25,11 +32,21 @@
 # define P118_CONFIG_DEVID2   PCONFIG(2)
 # define P118_CONFIG_DEVID3   PCONFIG(3)
 # define P118_CONFIG_RF_LOG   PCONFIG(4)
+# define P118_CONFIG_ORCON    PCONFIG(5)
 
 // Timer values for hardware timer in Fan in seconds
-# define PLUGIN_118_Time1     10 * 60
-# define PLUGIN_118_Time2     20 * 60
-# define PLUGIN_118_Time3     30 * 60
+# define PLUGIN_118_Time1     (10 * 60)
+# define PLUGIN_118_Time2     (20 * 60)
+# define PLUGIN_118_Time3     (30 * 60)
+
+// For reference only as the Orcon ventilation unit runs the timer inside
+# if P118_FEATURE_ORCON
+#  define PLUGIN_118_OrconTime0       (12 * 60 * 60)
+#  define PLUGIN_118_OrconTime1       (60 * 60)
+#  define PLUGIN_118_OrconTime2       (13 * 60 * 60)
+#  define PLUGIN_118_OrconTime3       (60 * 60)
+# endif // if P118_FEATURE_ORCON
+
 
 // This extra settings struct is needed because the default settingsstruct doesn't support strings
 struct PLUGIN_118_ExtraSettingsStruct {
@@ -66,6 +83,13 @@ private:
   bool isInitialized() {
     return _rf != nullptr;
   }
+
+  # if P118_FEATURE_ORCON
+  void SetDestIDSrcID(struct EventStruct *event,
+                      uint8_t (&srcID)[3],
+                      uint8_t (&destID)[3],
+                      char(&tmpTmpID)[9]);
+  # endif // if P118_FEATURE_ORCON
 
   IthoCC1101 *_rf = nullptr;
 

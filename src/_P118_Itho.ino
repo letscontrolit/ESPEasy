@@ -31,6 +31,10 @@
 //                               configuration, defective or disconnected board.
 //                               Reduced time-out checks in IthoCC1101 library to 1 second (from 3)
 //                               Improved display of GPIO pins in Devices page
+//      tonhuisman, 18-08-2022 - Merge Orcon related code from PR #4099 (https://github.com/letscontrolit/ESPEasy/pull/4099)
+//                               Orcon code can be partially disabled by setting P118_FEATURE_ORCON 0 in P118_data_struc.h
+//                               Support for orcon must be enabled in settings, to avoid possible interference with Itho.
+//                               Re-enabled timer support for Orcon, as it is only a status update, NOT a ventilator update
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -46,6 +50,17 @@
 // 23 - set itho to high speed with hardware timer (20 min)
 // 33 - set itho to high speed with hardware timer (30 min)
 
+// 100 - set Orcon ventilation unit to standby
+// 101 - set Orcon ventilation unit to low speed
+// 102 - set Orcon ventilation unit to medium speed
+// 103 - set Orcon ventilation unit to high speed
+// 104 - set Orcon ventilation unit to Auto
+// 111 - set Orcon to standby with hardware timer (12 hours)
+// 111 - set Orcon to low speed with hardware timer (1 hour)
+// 112 - set Orcon to medium speed with hardware timer (13 hours)
+// 113 - set Orcon to high speed with hardware timer (1 hour)
+// 113 - set Orcon to AutoCO2 mode
+
 // List of States:
 
 // 1 - Itho ventilation unit to lowest speed
@@ -55,6 +70,17 @@
 // 13 -Itho to high speed with hardware timer (10 min)
 // 23 -Itho to high speed with hardware timer (20 min)
 // 33 -Itho to high speed with hardware timer (30 min)
+
+// 100 - Orcon ventilation unit to standby
+// 101 - Orcon ventilation unit to low speed
+// 102 - Orcon ventilation unit to medium speed
+// 103 - Orcon ventilation unit to high speed
+// 104 - Orcon ventilation unit to Auto
+// 111 - Orcon to standby with hardware timer (12 hours)
+// 111 - Orcon to low speed with hardware timer (1 hour)
+// 112 - Orcon to medium speed with hardware timer (13 hours)
+// 113 - Orcon to high speed with hardware timer (1 hour)
+// 113 - Orcon to AutoCO2 mode
 
 // Usage for http (not case sensitive):
 // http://ip/control?cmd=STATE,1111
@@ -242,6 +268,9 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&PLUGIN_118_ExtraSettings), sizeof(PLUGIN_118_ExtraSettings));
       addFormSubHeader(F("Remote RF Controls"));
       addFormTextBox(F("Unit ID remote 1"), F("pID1"), PLUGIN_118_ExtraSettings.ID1, 8);
+      # if P118_FEATURE_ORCON
+      addFormNote(F("For Orcon: The addres of remote 1 will be used as source/sender address"));
+      # endif // if P118_FEATURE_ORCON
       addFormTextBox(F("Unit ID remote 2"), F("pID2"), PLUGIN_118_ExtraSettings.ID2, 8);
       addFormTextBox(F("Unit ID remote 3"), F("pID3"), PLUGIN_118_ExtraSettings.ID3, 8);
 
@@ -254,6 +283,11 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Device ID byte 3"), F("pdevid3"), P118_CONFIG_DEVID3, 0, 255);
       addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). "
                     "Defaults to 10,87,81 which corresponds to the old Itho library"));
+      # if P118_FEATURE_ORCON
+      addFormNote(F("For Orcon: This is the destination ID a.k.a. the ID of the Ventilation unit."));
+
+      addFormCheckBox(F("Enable Orcon support"), F("orcon"), P118_CONFIG_ORCON);
+      # endif // if P118_FEATURE_ORCON
       success = true;
       break;
     }
@@ -272,7 +306,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       P118_CONFIG_DEVID1 = getFormItemInt(F("pdevid1"), 10);
       P118_CONFIG_DEVID2 = getFormItemInt(F("pdevid2"), 87);
       P118_CONFIG_DEVID3 = getFormItemInt(F("pdevid3"), 81);
-      success            = true;
+      # if P118_FEATURE_ORCON
+      P118_CONFIG_ORCON = isFormItemChecked(F("orcon")) ? 1 : 0;
+      # endif // if P118_FEATURE_ORCON
+      success = true;
       break;
     }
   }
