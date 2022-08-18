@@ -1276,15 +1276,15 @@ To create/register a plugin, you have to :
     #define USES_P114  // VEML6075 UVA/UVB sensor
     #define USES_P115  // Fuel Gauge MAX1704x
     #define USES_P117  // SCD30
-      // Disable Itho when using second heap as it no longer fits.
-    #if !defined(USE_SECOND_HEAP)
-      #define USES_P118  // Itho ventilation control
-    #endif
     #define USES_P124  // I2C MultiRelay
     #define USES_P127  // CDM7160
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_E
+      // Disable Itho when using second heap as it no longer fits.
+    #if !defined(USE_SECOND_HEAP)
+      #define USES_P118  // Itho ventilation control
+    #endif
     #define USES_P119   // ITG3205 Gyro
     #define USES_P120   // ADXL345 I2C
     #define USES_P121   // HMC5883L 
