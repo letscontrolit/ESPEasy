@@ -1,0 +1,40 @@
+language: c
+
+before_install:
+  - "/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_1.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :1 -ac -screen 0 1280x1024x16"
+  - sleep 3
+  - export DISPLAY=:1.0
+  - wget http://downloads.arduino.cc/arduino-${IDE_VERSION}-linux64.tar.xz
+  - tar xf arduino-${IDE_VERSION}-linux64.tar.xz
+  - sudo mv arduino-${IDE_VERSION} /usr/local/share/arduino
+  - sudo ln -s /usr/local/share/arduino/arduino /usr/local/bin/arduino
+  
+install:
+  - ln -s $PWD /usr/local/share/arduino/libraries/CircularBuffer
+  
+script:
+  - arduino --verify --board ${BOARD} $PWD/examples/CircularBuffer/CircularBuffer.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/EventLogging/EventLogging.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/Queue/Queue.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/Stack/Stack.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/Struct/Struct.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/Object/Object.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/Interrupts/Interrupts.ino
+  - arduino --verify --board ${BOARD} $PWD/examples/Test/Test.ino
+  
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+    
+env:
+  global:
+    - IDE_VERSION=1.6.6
+  matrix:
+    - BOARD=arduino:avr:uno IDE_VERSION=1.8.8
+    - BOARD=arduino:avr:uno
+    - BOARD=arduino:avr:nano:cpu=atmega168
+    - BOARD=arduino:avr:nano:cpu=atmega328
+    - BOARD=arduino:avr:mega:cpu=atmega1280
+    - BOARD=arduino:avr:mega:cpu=atmega2560
+    - BOARD=arduino:avr:leonardo
