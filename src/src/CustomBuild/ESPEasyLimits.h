@@ -1,7 +1,7 @@
 #ifndef CUSTOMBUILD_ESPEASY_LIMITS_H
 #define CUSTOMBUILD_ESPEASY_LIMITS_H
 
-#include "ESPEasy_config.h"
+#include "../../../include/ESPEasy_config.h"
 
 // ***********************************************************************
 // * These limits have direct impact on the settings files
