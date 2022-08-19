@@ -311,6 +311,14 @@ bool IthoCC1101::checkForNewPacket() {
 }
 
 bool IthoCC1101::parseMessageCommand() {
+  // TODO nl0pvm: make this orcon proof?
+  #if defined(CRC_FILTER)
+  uint8_t mLen = 0;
+  # define SET_MLEN(n) mLen = n;
+  #else // if defined(CRC_FILTER)
+  # define SET_MLEN(n)
+  #endif // if defined(CRC_FILTER)
+
   messageDecode(&inMessage, &inIthoPacket);
 
   // deviceType of message type?
@@ -324,108 +332,78 @@ bool IthoCC1101::parseMessageCommand() {
   // counter1
   inIthoPacket.counter = inIthoPacket.dataDecoded[4];
 
-  const bool isHighCommand     = checkIthoCommand(&inIthoPacket, ithoMessageHighCommandBytes);
-  const bool isRVHighCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVHighCommandBytes);
-  const bool isMediumCommand   = checkIthoCommand(&inIthoPacket, ithoMessageMediumCommandBytes);
-  const bool isRVMediumCommand = checkIthoCommand(&inIthoPacket, ithoMessageRVMediumCommandBytes);
-  const bool isLowCommand      = checkIthoCommand(&inIthoPacket, ithoMessageLowCommandBytes);
-  const bool isRVLowCommand    = checkIthoCommand(&inIthoPacket, ithoMessageRVLowCommandBytes);
-  const bool isRVAutoCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVAutoCommandBytes);
-  const bool isStandByCommand  = checkIthoCommand(&inIthoPacket, ithoMessageStandByCommandBytes);
-  const bool isTimer1Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer1CommandBytes);
-  const bool isTimer2Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer2CommandBytes);
-  const bool isTimer3Command   = checkIthoCommand(&inIthoPacket, ithoMessageTimer3CommandBytes);
-  const bool isJoinCommand     = checkIthoCommand(&inIthoPacket, ithoMessageJoinCommandBytes);
-  const bool isJoin2Command    = checkIthoCommand(&inIthoPacket, ithoMessageJoin2CommandBytes);
-  const bool isRVJoinCommand   = checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes);
-  const bool isLeaveCommand    = checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes);
-
-  const bool isOrconStandByCommand = checkIthoCommand(&inIthoPacket, orconMessageStandByCommandBytes);
-  const bool isOrconLowCommand     = checkIthoCommand(&inIthoPacket, orconMessageLowCommandBytes);
-  const bool isOrconMediumCommand  = checkIthoCommand(&inIthoPacket, orconMessageMediumCommandBytes);
-  const bool isOrconFullCommand    = checkIthoCommand(&inIthoPacket, orconMessageFullCommandBytes);
-  const bool isOrconAutoCommand    = checkIthoCommand(&inIthoPacket, orconMessageAutoCommandBytes);
-  const bool isOrconTimer0Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer0CommandBytes);
-  const bool isOrconTimer1Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer1CommandBytes);
-  const bool isOrconTimer2Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer2CommandBytes);
-  const bool isOrconTimer3Command  = checkIthoCommand(&inIthoPacket, orconMessageTimer3CommandBytes);
-  const bool isOrconAutoCO2Command = checkIthoCommand(&inIthoPacket, orconMessageAutoCO2CommandBytes);
-
   // determine command
   inIthoPacket.command = IthoUnknown;
 
-  if (isHighCommand) { inIthoPacket.command = IthoHigh; }
-
-  if (isRVHighCommand) { inIthoPacket.command = IthoHigh; }
-
-  if (isMediumCommand) { inIthoPacket.command = IthoMedium; }
-
-  if (isRVMediumCommand) { inIthoPacket.command = IthoMedium; }
-
-  if (isLowCommand) { inIthoPacket.command = IthoLow; }
-
-  if (isRVLowCommand) { inIthoPacket.command = IthoLow; }
-
-  if (isRVAutoCommand) { inIthoPacket.command = IthoStandby; }
-
-  if (isStandByCommand) { inIthoPacket.command = IthoStandby; }
-
-  if (isTimer1Command) { inIthoPacket.command = IthoTimer1; }
-
-  if (isTimer2Command) { inIthoPacket.command = IthoTimer2; }
-
-  if (isTimer3Command) { inIthoPacket.command = IthoTimer3; }
-
-  if (isJoinCommand) { inIthoPacket.command = IthoJoin; }
-
-  if (isJoin2Command) { inIthoPacket.command = IthoJoin; }
-
-  if (isRVJoinCommand) { inIthoPacket.command = IthoJoin; }
-
-  if (isLeaveCommand) { inIthoPacket.command = IthoLeave; }
-
-  if (_enableOrcon) {
-    if (isOrconStandByCommand) { inIthoPacket.command = OrconStandBy; }
-
-    if (isOrconLowCommand) { inIthoPacket.command = OrconLow; }
-
-    if (isOrconMediumCommand) { inIthoPacket.command = OrconMedium; }
-
-    if (isOrconFullCommand) { inIthoPacket.command = OrconHigh; }
-
-    if (isOrconAutoCommand) { inIthoPacket.command = OrconAuto; }
-
-    if (isOrconTimer0Command) { inIthoPacket.command = OrconTimer0; }
-
-    if (isOrconTimer1Command) { inIthoPacket.command = OrconTimer1; }
-
-    if (isOrconTimer2Command) { inIthoPacket.command = OrconTimer2; }
-
-    if (isOrconTimer3Command) { inIthoPacket.command = OrconTimer3; }
-
-    if (isOrconAutoCO2Command) { inIthoPacket.command = OrconAutoCO2; }
+  // TODO: When enabling CRC_FILTER, most likely commands without SET_MLEN() need that check too
+  if (checkIthoCommand(&inIthoPacket, ithoMessageHighCommandBytes)) {
+    inIthoPacket.command = IthoHigh;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVHighCommandBytes)) {
+    inIthoPacket.command = IthoHigh;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageMediumCommandBytes)) {
+    inIthoPacket.command = IthoMedium;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVMediumCommandBytes)) {
+    inIthoPacket.command = IthoMedium;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageLowCommandBytes)) {
+    inIthoPacket.command = IthoLow;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVLowCommandBytes)) {
+    inIthoPacket.command = IthoLow;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVAutoCommandBytes)) {
+    inIthoPacket.command = IthoStandby;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageStandByCommandBytes)) {
+    inIthoPacket.command = IthoStandby;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageTimer1CommandBytes)) {
+    inIthoPacket.command = IthoTimer1;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageTimer2CommandBytes)) {
+    inIthoPacket.command = IthoTimer2;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageTimer3CommandBytes)) {
+    inIthoPacket.command = IthoTimer3;
+    SET_MLEN(11)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageJoinCommandBytes)) {
+    inIthoPacket.command = IthoJoin;
+    SET_MLEN(20)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageJoin2CommandBytes)) {
+    inIthoPacket.command = IthoJoin;
+    SET_MLEN(20)
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageRVJoinCommandBytes)) {
+    inIthoPacket.command = IthoJoin;
+  } else if (checkIthoCommand(&inIthoPacket, ithoMessageLeaveCommandBytes)) {
+    inIthoPacket.command = IthoLeave;
+    SET_MLEN(14)
+  } else if (_enableOrcon) {
+    if (checkIthoCommand(&inIthoPacket, orconMessageStandByCommandBytes)) {
+      inIthoPacket.command = OrconStandBy;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageLowCommandBytes)) {
+      inIthoPacket.command = OrconLow;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageMediumCommandBytes)) {
+      inIthoPacket.command = OrconMedium;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageFullCommandBytes)) {
+      inIthoPacket.command = OrconHigh;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageAutoCommandBytes)) {
+      inIthoPacket.command = OrconAuto;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer0CommandBytes)) {
+      inIthoPacket.command = OrconTimer0;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer1CommandBytes)) {
+      inIthoPacket.command = OrconTimer1;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer2CommandBytes)) {
+      inIthoPacket.command = OrconTimer2;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageTimer3CommandBytes)) {
+      inIthoPacket.command = OrconTimer3;
+    } else if (checkIthoCommand(&inIthoPacket, orconMessageAutoCO2CommandBytes)) {
+      inIthoPacket.command = OrconAutoCO2;
+    }
   }
+  #undef SET_MLEN
 
   #if defined(CRC_FILTER)
 
-  // TODO nl0pvm: make this orcon proof
-  uint8_t mLen = 0;
-
-  if (isPowerCommand || isHighCommand || isMediumCommand || isLowCommand || isStandByCommand || isTimer1Command || isTimer2Command ||
-      isTimer3Command) {
-    mLen = 11;
-  }
-  else if (isJoinCommand || isJoin2Command) {
-    mLen = 20;
-  }
-  else if (isLeaveCommand) {
-    mLen = 14;
-  }
-  else {
-    return true;
-  }
-
-  if (getCounter2(&inIthoPacket, mLen) != inIthoPacket.dataDecoded[mLen]) {
+  if ((mLen != 0) && (getCounter2(&inIthoPacket, mLen) != inIthoPacket.dataDecoded[mLen])) {
     inIthoPacket.command = IthoUnknown;
     return false;
   }
@@ -448,20 +426,21 @@ bool IthoCC1101::checkIthoCommand(IthoPacket *itho, const uint8_t commandBytes[]
   // AA - Present DeviceID fields
   // PP - Present Params
 
-  if ((itho->deviceType == 28) || (itho->deviceType == 24)) { offset = 2; }
+  if ((itho->deviceType == 28) || (itho->deviceType == 24)) {
+    offset = 2;
+  }
 
   // for (int i = 4; i < 6; i++)
   // for Orcon: the code above makes that only 3 bytes (byte 4, 5 and 6) are checked. That gives false positves
-  for (int i = 0; i < 6; i++)
-
-  {
+  for (int i = 0; i < 6; i++) {
     // this is required for differentiating between Orcon and Itho commands. However I don't know what the reason was to comment this out.
     // thus this needs to be verified by Itho users
-    if ((i == 2) || (i == 3)) { continue; // skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different
-                                          // number there
+    if ((i == 2) || (i == 3)) {
+      continue; // skip byte3 and byte4, rft-rv and co2-auto remote device seem to sometimes have a different number there
     }
 
-    if ((itho->dataDecoded[i + 5 + offset] != commandBytes[i]) && (itho->dataDecodedChk[i + 5 + offset] != commandBytes[i])) {
+    if ((itho->dataDecoded[i + 5 + offset] != pgm_read_byte(&(commandBytes[i]))) &&
+        (itho->dataDecodedChk[i + 5 + offset] != pgm_read_byte(&(commandBytes[i])))) {
       return false;
     }
   }
@@ -570,13 +549,14 @@ void IthoCC1101::createOrconMessageCommand(IthoPacket *itho, CC1101Packet *packe
   itho->dataDecoded[5] = destId[1];
   itho->dataDecoded[6] = destId[2];
 
-  const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
+  const uint8_t *commandBytes  = getMessageCommandBytes(itho->command);
+  const uint8_t  commandLength = getMessageCommandLength(itho->command);
 
-  for (uint8_t i = 0; i < getMessageCommandLength(itho->command); i++) {
-    itho->dataDecoded[i + 7] = commandBytes[i];
+  for (uint8_t i = 0; i < commandLength; i++) {
+    itho->dataDecoded[i + 7] = pgm_read_byte(&(commandBytes[i]));
   }
 
-  itho->length = 7 + 1 + getMessageCommandLength(itho->command);
+  itho->length = 7 + 1 + commandLength;
 
   itho->dataDecoded[itho->length - 1] = getCRC(itho, itho->length - 1);
   itho->length                       += 1;
@@ -625,7 +605,7 @@ void IthoCC1101::createMessageCommand(IthoPacket *itho, CC1101Packet *packet)
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
-    itho->dataDecoded[i + 5] = commandBytes[i];
+    itho->dataDecoded[i + 5] = pgm_read_byte(&(commandBytes[i]));
   }
 
   // set counter2
@@ -667,7 +647,7 @@ void IthoCC1101::createMessageJoin(IthoPacket *itho, CC1101Packet *packet)
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
-    itho->dataDecoded[i + 5] = commandBytes[i];
+    itho->dataDecoded[i + 5] = pgm_read_byte(&(commandBytes[i]));
   }
 
   // set deviceID
@@ -723,7 +703,7 @@ void IthoCC1101::createMessageLeave(IthoPacket *itho, CC1101Packet *packet)
   const uint8_t *commandBytes = getMessageCommandBytes(itho->command);
 
   for (uint8_t i = 0; i < 6; i++) {
-    itho->dataDecoded[i + 5] = commandBytes[i];
+    itho->dataDecoded[i + 5] = pgm_read_byte(&(commandBytes[i]));
   }
 
   // set deviceID
@@ -1024,36 +1004,36 @@ void IthoCC1101::messageDecode(CC1101Packet *packet, IthoPacket *itho) {
   }
 }
 
-uint8_t IthoCC1101::ReadRSSI()
-{
-  uint8_t rssi  = 0;
-  uint8_t value = 0;
+// uint8_t IthoCC1101::ReadRSSI()
+// {
+//   uint8_t rssi  = 0;
+//   uint8_t value = 0;
 
-  rssi = (readRegister(CC1101_RSSI, CC1101_STATUS_REGISTER));
+//   rssi = (readRegister(CC1101_RSSI, CC1101_STATUS_REGISTER));
 
-  if (rssi >= 128)
-  {
-    value  = 255 - rssi;
-    value /= 2;
-    value += 74;
-  }
-  else
-  {
-    value  = rssi / 2;
-    value += 74;
-  }
-  return value;
-}
+//   if (rssi >= 128)
+//   {
+//     value  = 255 - rssi;
+//     value /= 2;
+//     value += 74;
+//   }
+//   else
+//   {
+//     value  = rssi / 2;
+//     value += 74;
+//   }
+//   return value;
+// }
 
-bool IthoCC1101::checkID(const uint8_t *id)
-{
-  for (uint8_t i = 0; i < 3; i++) {
-    if (id[i] != inIthoPacket.deviceId[i]) {
-      return false;
-    }
-  }
-  return true;
-}
+// bool IthoCC1101::checkID(const uint8_t *id) const
+// {
+//   for (uint8_t i = 0; i < 3; i++) {
+//     if (id[i] != inIthoPacket.deviceId[i]) {
+//       return false;
+//     }
+//   }
+//   return true;
+// }
 
 String IthoCC1101::getLastIDstr(bool ashex) {
   String str;
@@ -1067,51 +1047,51 @@ String IthoCC1101::getLastIDstr(bool ashex) {
   return str;
 }
 
-int * IthoCC1101::getLastID() {
-  static int id[3];
+// int * IthoCC1101::getLastID() {
+//   static int id[3];
 
-  for (uint8_t i = 0; i < 3; i++) {
-    id[i] = inIthoPacket.deviceId[i];
-  }
-  return id;
-}
+//   for (uint8_t i = 0; i < 3; i++) {
+//     id[i] = inIthoPacket.deviceId[i];
+//   }
+//   return id;
+// }
 
-String IthoCC1101::getLastMessagestr(bool ashex) {
-  String str = F("Length=");
+// String IthoCC1101::getLastMessagestr(bool ashex) {
+//   String str = F("Length=");
 
-  str += inMessage.length;
-  str += '.';
+//   str += inMessage.length;
+//   str += '.';
 
-  for (uint8_t i = 0; i < inMessage.length; i++) {
-    if (ashex) { str += String(inMessage.data[i], HEX); }
-    else { str += String(inMessage.data[i]); }
+//   for (uint8_t i = 0; i < inMessage.length; i++) {
+//     if (ashex) { str += String(inMessage.data[i], HEX); }
+//     else { str += String(inMessage.data[i]); }
 
-    if (i < inMessage.length - 1) { str += ':'; }
-  }
-  return str;
-}
+//     if (i < inMessage.length - 1) { str += ':'; }
+//   }
+//   return str;
+// }
 
-String IthoCC1101::LastMessageDecoded() {
-  String str;
+// String IthoCC1101::LastMessageDecoded() const {
+//   String str;
 
-  if (inIthoPacket.length > 11) {
-    str += F("Device type?: ");
-    str += String(inIthoPacket.deviceType);
-    str += F(" - CMD: ");
+//   if (inIthoPacket.length > 11) {
+//     str += F("Device type?: ");
+//     str += String(inIthoPacket.deviceType);
+//     str += F(" - CMD: ");
 
-    for (int i = 4; i < inIthoPacket.length; i++) {
-      str += String(inIthoPacket.dataDecoded[i]);
+//     for (int i = 4; i < inIthoPacket.length; i++) {
+//       str += String(inIthoPacket.dataDecoded[i]);
 
-      if (i < inIthoPacket.length - 1) { str += ','; }
-    }
-  }
-  else {
-    for (uint8_t i = 0; i < inIthoPacket.length; i++) {
-      str += String(inIthoPacket.dataDecoded[i]);
+//       if (i < inIthoPacket.length - 1) { str += ','; }
+//     }
+//   }
+//   else {
+//     for (uint8_t i = 0; i < inIthoPacket.length; i++) {
+//       str += String(inIthoPacket.dataDecoded[i]);
 
-      if (i < inIthoPacket.length - 1) { str += ','; }
-    }
-  }
-  str += '\n';
-  return str;
-}
+//       if (i < inIthoPacket.length - 1) { str += ','; }
+//     }
+//   }
+//   str += '\n';
+//   return str;
+// }

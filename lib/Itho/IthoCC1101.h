@@ -2,6 +2,7 @@
  * Author: Klusjesman, supersjimmie, modified and reworked by arjenhiemstra
  * 2022-08-10 tonhuisman: Fixed perpetual blocking while loops by limiting these to 3000 msec.
  * 2022-08-11 tonhuisman: Change 3000 to #define ITHO_MAX_WAIT for easy adjustment
+ * 2022-08-19 tonhuisman: Fix excessive memory use, comment unused methods to reduce bin size
  */
 
 #ifndef __ITHOCC1101_H__
@@ -13,39 +14,39 @@
 
 
 // pa table settings
-const uint8_t ithoPaTableSend[8]    = { 0x6F, 0x26, 0x2E, 0x8C, 0x87, 0xCD, 0xC7, 0xC0 };
-const uint8_t ithoPaTableReceive[8] = { 0x6F, 0x26, 0x2E, 0x7F, 0x8A, 0x84, 0xCA, 0xC4 };
+static const uint8_t ithoPaTableSend[8]    PROGMEM = { 0x6F, 0x26, 0x2E, 0x8C, 0x87, 0xCD, 0xC7, 0xC0 };
+static const uint8_t ithoPaTableReceive[8] PROGMEM = { 0x6F, 0x26, 0x2E, 0x7F, 0x8A, 0x84, 0xCA, 0xC4 };
 
 // message command bytes
 
-const uint8_t orconMessageStandByCommandBytes[] = { 34, 241, 3, 0, 0, 4 };
-const uint8_t orconMessageLowCommandBytes[]     =     { 34, 241, 3, 0, 1, 4 };
-const uint8_t orconMessageMediumCommandBytes[]  =  { 34, 241, 3, 0, 2, 4 };
-const uint8_t orconMessageFullCommandBytes[]    =    { 34, 241, 3, 0, 3, 4 };
-const uint8_t orconMessageAutoCommandBytes[]    =    { 34, 241, 3, 0, 4, 4 };
+static const uint8_t orconMessageStandByCommandBytes[] PROGMEM = { 34, 241, 3, 0, 0, 4 };
+static const uint8_t orconMessageLowCommandBytes[]     PROGMEM = { 34, 241, 3, 0, 1, 4 };
+static const uint8_t orconMessageMediumCommandBytes[]  PROGMEM = { 34, 241, 3, 0, 2, 4 };
+static const uint8_t orconMessageFullCommandBytes[]    PROGMEM = { 34, 241, 3, 0, 3, 4 };
+static const uint8_t orconMessageAutoCommandBytes[]    PROGMEM = { 34, 241, 3, 0, 4, 4 };
 
-const uint8_t orconMessageTimer0CommandBytes[]  =    { 34, 243, 7, 0, 82, 12, 0, 4, 4, 4 }; //  Timer 12*60 minuten @ speed 0
-const uint8_t orconMessageTimer1CommandBytes[]  =    { 34, 243, 7, 0, 18, 60, 1, 4, 4, 4 }; //  Timer 60 minuten @ speed 1
-const uint8_t orconMessageTimer2CommandBytes[]  =    { 34, 243, 7, 0, 82, 13, 2, 4, 4, 4 }; //  Timer 13*60 minuten @ speed 2
-const uint8_t orconMessageTimer3CommandBytes[]  =    { 34, 243, 7, 0, 18, 60, 3, 4, 4, 4 }; //  Timer 60 minuten @ speed 3
-const uint8_t orconMessageAutoCO2CommandBytes[] =   { 34, 243, 7, 0, 18, 60, 4, 4, 4, 4 };  //  Timer 60 minuten @ speed auto
+static const uint8_t orconMessageTimer0CommandBytes[]  PROGMEM = { 34, 243, 7, 0, 82, 12, 0, 4, 4, 4 }; //  Timer 12*60 minutes @ speed 0
+static const uint8_t orconMessageTimer1CommandBytes[]  PROGMEM = { 34, 243, 7, 0, 18, 60, 1, 4, 4, 4 }; //  Timer 60 minutes @ speed 1
+static const uint8_t orconMessageTimer2CommandBytes[]  PROGMEM = { 34, 243, 7, 0, 82, 13, 2, 4, 4, 4 }; //  Timer 13*60 minutes @ speed 2
+static const uint8_t orconMessageTimer3CommandBytes[]  PROGMEM = { 34, 243, 7, 0, 18, 60, 3, 4, 4, 4 }; //  Timer 60 minutes @ speed 3
+static const uint8_t orconMessageAutoCO2CommandBytes[] PROGMEM = { 34, 243, 7, 0, 18, 60, 4, 4, 4, 4 }; //  Timer 60 minutes @ speed auto
 
-const uint8_t ithoMessageRVHighCommandBytes[]   = { 49, 224, 4, 0, 0, 200 };
-const uint8_t ithoMessageHighCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
-const uint8_t ithoMessageFullCommandBytes[]     = { 34, 241, 3, 0, 4, 4 };
-const uint8_t ithoMessageMediumCommandBytes[]   = { 34, 241, 3, 0, 3, 4 };
-const uint8_t ithoMessageRVMediumCommandBytes[] = { 34, 241, 3, 0, 3, 7 };
-const uint8_t ithoMessageLowCommandBytes[]      = { 34, 241, 3, 0, 2, 4 };
-const uint8_t ithoMessageRVLowCommandBytes[]    = { 49, 224, 4, 0, 0, 1 };
-const uint8_t ithoMessageRVAutoCommandBytes[]   = { 34, 241, 3, 0, 5, 7 };
-const uint8_t ithoMessageStandByCommandBytes[]  = { 0, 0, 0, 0, 0, 0 };         // unkown, tbd
-const uint8_t ithoMessageTimer1CommandBytes[]   = { 34, 243, 3, 0, 0, 10 };     // 10 minutes full speed
-const uint8_t ithoMessageTimer2CommandBytes[]   = { 34, 243, 3, 0, 0, 20 };     // 20 minutes full speed
-const uint8_t ithoMessageTimer3CommandBytes[]   = { 34, 243, 3, 0, 0, 30 };     // 30 minutes full speed
-const uint8_t ithoMessageJoinCommandBytes[]     = { 31, 201, 12, 0, 34, 241 };
-const uint8_t ithoMessageJoin2CommandBytes[]    = { 31, 201, 12, 99, 34, 248 }; // join command of RFT AUTO Co2 remote
-const uint8_t ithoMessageRVJoinCommandBytes[]   = { 31, 201, 24, 0, 49, 224 };  // join command of RFT-RV
-const uint8_t ithoMessageLeaveCommandBytes[]    = { 31, 201, 6, 0, 31, 201 };
+static const uint8_t ithoMessageRVHighCommandBytes[]   PROGMEM = { 49, 224, 4, 0, 0, 200 };
+static const uint8_t ithoMessageHighCommandBytes[]     PROGMEM = { 34, 241, 3, 0, 4, 4 };
+static const uint8_t ithoMessageFullCommandBytes[]     PROGMEM = { 34, 241, 3, 0, 4, 4 };
+static const uint8_t ithoMessageMediumCommandBytes[]   PROGMEM = { 34, 241, 3, 0, 3, 4 };
+static const uint8_t ithoMessageRVMediumCommandBytes[] PROGMEM = { 34, 241, 3, 0, 3, 7 };
+static const uint8_t ithoMessageLowCommandBytes[]      PROGMEM = { 34, 241, 3, 0, 2, 4 };
+static const uint8_t ithoMessageRVLowCommandBytes[]    PROGMEM = { 49, 224, 4, 0, 0, 1 };
+static const uint8_t ithoMessageRVAutoCommandBytes[]   PROGMEM = { 34, 241, 3, 0, 5, 7 };
+static const uint8_t ithoMessageStandByCommandBytes[]  PROGMEM = { 0, 0, 0, 0, 0, 0 };         // unkown, tbd
+static const uint8_t ithoMessageTimer1CommandBytes[]   PROGMEM = { 34, 243, 3, 0, 0, 10 };     // 10 minutes full speed
+static const uint8_t ithoMessageTimer2CommandBytes[]   PROGMEM = { 34, 243, 3, 0, 0, 20 };     // 20 minutes full speed
+static const uint8_t ithoMessageTimer3CommandBytes[]   PROGMEM = { 34, 243, 3, 0, 0, 30 };     // 30 minutes full speed
+static const uint8_t ithoMessageJoinCommandBytes[]     PROGMEM = { 31, 201, 12, 0, 34, 241 };
+static const uint8_t ithoMessageJoin2CommandBytes[]    PROGMEM = { 31, 201, 12, 99, 34, 248 }; // join command of RFT AUTO Co2 remote
+static const uint8_t ithoMessageRVJoinCommandBytes[]   PROGMEM = { 31, 201, 24, 0, 49, 224 };  // join command of RFT-RV
+static const uint8_t ithoMessageLeaveCommandBytes[]    PROGMEM = { 31, 201, 6, 0, 31, 201 };
 
 // itho rft-rv
 // unknown, high
@@ -90,13 +91,13 @@ public:
   } // init,reset CC1101
 
   void    initReceive();
-  uint8_t getLastCounter() {
-    return outIthoPacket.counter;
-  } // counter is increased before sending a command
+  // uint8_t getLastCounter() const {
+  //   return outIthoPacket.counter;
+  // } // counter is increased before sending a command
 
-  void setSendTries(uint8_t sendTries) {
-    this->sendTries = sendTries;
-  }
+  // void setSendTries(uint8_t sendTries) {
+  //   this->sendTries = sendTries;
+  // }
 
   void setDeviceID(uint8_t byte0, uint8_t byte1, uint8_t byte2) {
     this->outIthoPacket.deviceId[0] = byte0; this->outIthoPacket.deviceId[1] = byte1; this->outIthoPacket.deviceId[2] = byte2;
@@ -104,24 +105,24 @@ public:
 
   // receive
   bool       checkForNewPacket(); // check RX fifo for new data
-  IthoPacket getLastPacket() {
-    return inIthoPacket;
-  }                               // retrieve last received/parsed packet from remote
+  // IthoPacket getLastPacket() const {
+  //   return inIthoPacket;
+  // }                               // retrieve last received/parsed packet from remote
 
-  IthoCommand getLastCommand() {
+  IthoCommand getLastCommand() const {
     return inIthoPacket.command;
   } // retrieve last received/parsed command from remote
 
-  uint8_t getLastInCounter() {
-    return inIthoPacket.counter;
-  } // retrieve last received/parsed command from remote
+  // uint8_t getLastInCounter() const {
+  //   return inIthoPacket.counter;
+  // } // retrieve last received/parsed command from remote
 
-  uint8_t ReadRSSI();
-  bool    checkID(const uint8_t *id);
-  int*    getLastID();
+  // uint8_t ReadRSSI();
+  // bool    checkID(const uint8_t *id) const;
+  // int*    getLastID();
   String  getLastIDstr(bool ashex      = true);
-  String  getLastMessagestr(bool ashex = true);
-  String  LastMessageDecoded();
+  // String  getLastMessagestr(bool ashex = true);
+  // String  LastMessageDecoded() const;
 
   // send
   void    sendCommand(IthoCommand command,

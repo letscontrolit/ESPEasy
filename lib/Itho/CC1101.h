@@ -17,7 +17,7 @@
 #endif // ifndef PIN_SPI_SS
 
 #ifndef ITHO_MAX_WAIT
-# define ITHO_MAX_WAIT                    1000 // Wait no longer than this nr of milliseconds
+# define ITHO_MAX_WAIT                     1000 // Wait no longer than this nr of milliseconds
 #endif // ifndef ITHO_MAX_WAIT
 
 /*	Type of transfers */
