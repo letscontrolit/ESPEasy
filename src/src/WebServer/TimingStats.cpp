@@ -2,7 +2,7 @@
 
 #if defined(WEBSERVER_TIMINGSTATS) && FEATURE_TIMING_STATS
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"

@@ -49,6 +49,9 @@
 # include <SD.h>
 #endif // if FEATURE_SD
 
+
+#include <SPI.h>
+
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
  \*********************************************************************************************/
