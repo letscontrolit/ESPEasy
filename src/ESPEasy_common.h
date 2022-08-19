@@ -101,15 +101,9 @@
 
 
 #include <WiFiUdp.h>
-//#include <Wire.h>
-//#include <SPI.h>
-//#include <base64.h>
+#include <Wire.h>
+#include <SPI.h>
 
-
-#ifdef ESP32
-#include <esp8266-compat.h>
-
-#endif
 
 extern const String EMPTY_STRING;
 

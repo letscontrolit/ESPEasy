@@ -51,6 +51,7 @@
 
 
 #include <SPI.h>
+#include <Wire.h>
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
