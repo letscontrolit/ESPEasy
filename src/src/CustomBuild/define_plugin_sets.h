@@ -333,6 +333,19 @@ To create/register a plugin, you have to :
       #define FEATURE_ESPEASY_P2P 0
     #endif
 
+    #ifdef FEATURE_MDNS
+      #undef FEATURE_MDNS
+    #endif
+    #define FEATURE_MDNS 0
+    #ifndef DISABLE_SC16IS752_Serial
+      #define DISABLE_SC16IS752_Serial
+    #endif
+
+    #ifdef FEATURE_ARDUINO_OTA
+      #undef FEATURE_ARDUINO_OTA
+    #endif
+    #define FEATURE_ARDUINO_OTA 0
+
     #ifndef PLUGIN_DESCR
       #define PLUGIN_DESCR  "Minimal 1M OTA"
     #endif
