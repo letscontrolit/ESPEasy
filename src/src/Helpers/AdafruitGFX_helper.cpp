@@ -511,15 +511,23 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
   String log;
-  String sParams[ADAGFX_PARSE_MAX_ARGS + 1];
-  int    nParams[ADAGFX_PARSE_MAX_ARGS + 1];
-  int    argCount = 0;
-  bool   loop     = true;
+  std::vector<String> sParams;
+  std::vector<int>    nParams;
+  uint8_t emptyCount = 0;
+  int     argCount   = 0;
+  bool    loop       = true;
 
-  while (argCount <= ADAGFX_PARSE_MAX_ARGS && loop) {
-    sParams[argCount] = parseStringKeepCase(string, argCount + 3); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+  while (loop) {                                                  // Process all provided arguments
+    sParams.push_back(parseStringKeepCase(string, argCount + 3)); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+    nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
-    loop = !sParams[argCount].isEmpty();
+
+    if (sParams[argCount].isEmpty()) {
+      emptyCount++;
+    } else {
+      emptyCount = 0;                                           // Reset empty counter
+    }
+    loop = emptyCount < 3 || argCount <= ADAGFX_PARSE_MAX_ARGS; // Keep picking up arguments until we have the last 3 empty
 
     # ifndef BUILD_NO_DEBUG
 
@@ -534,6 +542,20 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
     if (loop) { argCount++; }
   }
+  { // Guarantee minimal nParams/sParams size
+    int args = argCount;
+
+    while (args <= ADAGFX_PARSE_MAX_ARGS) {
+      sParams.push_back(EMPTY_STRING);
+      nParams.push_back(0);
+      args++;
+    }
+  }
+
+  while (sParams[argCount].isEmpty() && argCount > 0) { // Strip down to actual argument count
+    argCount--;
+  }
+
   success = true; // If we get this far, we'll flip the flag if something wrong is found
 
   # ifndef BUILD_NO_DEBUG
@@ -585,8 +607,28 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       } else {
         _display->setCursor(nParams[0], nParams[1]);
       }
-      _display->println(parseStringToEndKeepCase(string, 5));                   // Print entire rest of provided line
+      _display->println(parseStringToEndKeepCase(string, 5)); // Print entire rest of provided line
     }
+  }
+  else if (subcommand.equals(F("txl")) && (argCount >= 2))    // txl: Text at line(s)
+  {
+    uint8_t _line              = 0;
+    uint8_t _column            = 0;
+    uint8_t idx                = 0;
+    bool    currentColRowState = _columnRowMode;
+    setColumnRowMode(true); // this command is by default set to Column/Row mode
+
+    while (idx < argCount && !sParams[idx + 1].isEmpty()) {
+      if (nParams[idx] > 0) {
+        _line = nParams[idx];
+      } else {
+        _line++;
+      }
+      printText(sParams[idx + 1].c_str(), _column, _line - 1, _fontscaling, _fgcolor, _bgcolor);
+      addLog(LOG_LEVEL_INFO, sParams[idx + 1]);
+      idx += 2;
+    }
+    setColumnRowMode(currentColRowState);
   }
   else if (subcommand.equals(F("txc")) && ((argCount == 1) || (argCount == 2))) // txc: Textcolor, fg and opt. bg colors
   {

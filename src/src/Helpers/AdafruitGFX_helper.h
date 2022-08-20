@@ -10,6 +10,12 @@
 /****************************************************************************
  * helper class and functions for displays that use Adafruit_GFX library
  ***************************************************************************/
+/************
+ * Changelog:
+ * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr, 
+ *                        always in row/column mode.
+ *                        Improved argument parsing to allow up to 2 empty arguments between filled arguments
+ */
 # include <Arduino.h>
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPITFT.h>
