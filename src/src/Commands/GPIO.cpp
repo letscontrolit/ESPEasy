@@ -204,7 +204,6 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
 
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {
-  bool success = true;
   bool sendStatusFlag;
   uint8_t pluginID = 0;
 
@@ -214,31 +213,31 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
       pluginID       = PLUGIN_GPIO;
       sendStatusFlag = true;
       break;
-    case 'm': // mcp
 #ifdef USES_P009
+    case 'm': // mcp
       pluginID       = PLUGIN_MCP;
       sendStatusFlag = GPIO_MCP_Read(event->Par2) == -1;
-#endif
       break;
-    case 'p': // pcf
+#endif
 #ifdef USES_P019
+    case 'p': // pcf
       pluginID       = PLUGIN_PCF;
       sendStatusFlag = GPIO_PCF_Read(event->Par2) == -1;
-#endif
       break;
+#endif
     default:
-      success = false;
+      addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+      return return_command_failed();
   }
 
-  if (success && checkValidPortRange(pluginID, event->Par2))
+  if (!checkValidPortRange(pluginID, event->Par2))
   {
-    const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
-    String dummy;
-    SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
-    return return_command_success();
-  } else {
     return return_command_failed();
   }
+  const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
+  String dummy;
+  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
+  return return_command_success();
 }
 
 const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const char *Line)
@@ -465,16 +464,21 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
           setInternalGPIOPullupMode(event->Par1);
           state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
           break;
-        case PLUGIN_MCP:
 #ifdef USES_P009
+        case PLUGIN_MCP:
           setMCPInputAndPullupMode(event->Par1, true);
           GPIO_Read(PLUGIN_MCP, event->Par1, state);
-#endif
           break;
+#endif
+#ifdef USES_P019
         case PLUGIN_PCF:
           // PCF8574 specific: only can read 0/low state, so we must send 1
           state = 1;
           break;
+#endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+          return return_command_failed();
       }
     } else { // OUTPUT
       mode  = PIN_MODE_OUTPUT;
@@ -584,8 +588,6 @@ void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t new
 
 bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefix)
 {
-  bool success = true;
-
   switch (tolower(selection))
   {
     case 'g': // gpio
@@ -593,19 +595,23 @@ bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefi
       pluginID  = PLUGIN_GPIO;
       logPrefix = F("GPIO");
       break;
+#ifdef USES_P009
     case 'm': // mcp & mcplongpulse
       pluginID  = PLUGIN_MCP;
       logPrefix = F("MCP");
       break;
+#endif
+#ifdef USES_P019
     case 'p': // pcf & pcflongpulse
       pluginID  = PLUGIN_PCF;
       logPrefix = F("PCF");
       break;
+#endif
     default:
-      logPrefix = F("PluginID out of range. Error");
-      success   = false;
+      logPrefix = F("Plugin not included in build");
+      return false;
   }
-  return success;
+  return true;
 }
 
 struct range_pattern_helper_data {
@@ -1051,17 +1057,20 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
         case PLUGIN_GPIO:
           /* setSuccess = */ setGPIOMode(pin, mode);
           break;
+#ifdef USES_P019
         case PLUGIN_PCF:
           // set pin = 1 when INPUT
-#ifdef USES_P019
           /* setSuccess = */ setPCFMode(pin, mode);
-#endif
           break;
-        case PLUGIN_MCP:
+#endif
 #ifdef USES_P009
+        case PLUGIN_MCP:
           /* setSuccess = */ setMCPMode(pin, mode);
-#endif
           break;
+#endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+          return false;
       }
 
       const uint32_t key = createKey(pluginID, pin);
@@ -1122,21 +1131,24 @@ bool getGPIOPinStateValues(String& str) {
           success   = true;
           break;
 
-        case 'm':
 #ifdef USES_P009
+        case 'm':
           str       = GPIO_MCP_Read(par1);
           logPrefix = F("MCP");
           success   = true;
-#endif
           break;
+#endif
 
-        case 'p':
 #ifdef USES_P019
+        case 'p':
           str       = GPIO_PCF_Read(par1);
           logPrefix = F("PCF");
           success   = true;
-#endif
           break;
+#endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+          return false;
       }
     }
 
@@ -1162,27 +1174,31 @@ bool getGPIOPinStateValues(String& str) {
     if (successPar) {
 
       switch (device[0]) {
-        case 'm':
 #ifdef USES_P009
+        case 'm':
         {
           uint16_t tempValue = 0;
           logPrefix = F("MCP");
           success   = mcpgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
+          break;
         }
 #endif
-          break;
 
-        case 'p':
 #ifdef USES_P019
+        case 'p':
         {
           uint16_t tempValue = 0;
           logPrefix = F("PCF");
           success   = pcfgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
-        }
-#endif
           break;
+        }
+          #endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("PLUGIN PINSTATE. Plugin not included in build"));
+          return false;
+
       }
 
       if (success) {
