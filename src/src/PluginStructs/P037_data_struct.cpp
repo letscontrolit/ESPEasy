@@ -989,7 +989,7 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr != root) {
-    deserializeJson(*root, message.c_str());
+    deserializeJson(*root, message);
 
     if (!root->isNull()) {
       result = true;
