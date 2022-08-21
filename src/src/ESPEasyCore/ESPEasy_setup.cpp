@@ -25,7 +25,7 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringGenerator_System.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 
 #ifdef USE_RTOS_MULTITASKING

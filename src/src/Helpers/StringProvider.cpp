@@ -317,20 +317,20 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::WIFI_CONNECTION:        break;
     case LabelType::WIFI_RSSI:              return String(WiFi.RSSI());
-    case LabelType::IP_CONFIG:              return useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
-        LabelType::IP_CONFIG_DYNAMIC);
+    case LabelType::IP_CONFIG:              return String(useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
+        LabelType::IP_CONFIG_DYNAMIC));
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
     case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
     case LabelType::IP_SUBNET:              return NetworkSubnetMask().toString();
-    case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
+    case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
     case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
     #if FEATURE_MDNS
-    case LabelType::M_DNS:                  return String(NetworkGetHostname()) + F(".local");
+    case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
     #endif // if FEATURE_MDNS
-    case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
+    case LabelType::DNS:                    return getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2);
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();

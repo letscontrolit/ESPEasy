@@ -185,8 +185,6 @@ class SettingsStruct_tmpl
 
   void clearMisc();
 
-  void clearAll();
-
   void clearTask(taskIndex_t task);
 
   // Return hostname + unit when selected to add unit.

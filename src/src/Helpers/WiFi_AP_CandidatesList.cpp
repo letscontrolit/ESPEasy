@@ -25,6 +25,13 @@ WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   load_knownCredentials();
 }
 
+WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
+  candidates.clear();
+  known.clear();
+  scanned.clear();
+  scanned_new.clear();
+}
+
 void WiFi_AP_CandidatesList::load_knownCredentials() {
   if (!_mustLoadCredentials) { return; }
   _mustLoadCredentials = false;

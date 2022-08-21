@@ -1,7 +1,7 @@
 #ifndef CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 #define CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 
-#include "../../ESPEasy_common.h"
+#include "../../../include/ESPEasy_config.h"
 
 /*
 #################################################
@@ -332,6 +332,19 @@ To create/register a plugin, you have to :
       #undef FEATURE_ESPEASY_P2P
       #define FEATURE_ESPEASY_P2P 0
     #endif
+
+    #ifdef FEATURE_MDNS
+      #undef FEATURE_MDNS
+    #endif
+    #define FEATURE_MDNS 0
+    #ifndef DISABLE_SC16IS752_Serial
+      #define DISABLE_SC16IS752_Serial
+    #endif
+
+    #ifdef FEATURE_ARDUINO_OTA
+      #undef FEATURE_ARDUINO_OTA
+    #endif
+    #define FEATURE_ARDUINO_OTA 0
 
     #ifndef PLUGIN_DESCR
       #define PLUGIN_DESCR  "Minimal 1M OTA"
@@ -1734,7 +1747,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -1755,7 +1768,6 @@ To create/register a plugin, you have to :
 #include <the_required_lib.h>
 #endif
 */
-
 
 #if defined(USES_C018)
   #define FEATURE_PACKED_RAW_DATA 1
@@ -1821,6 +1833,7 @@ To create/register a plugin, you have to :
   #if FEATURE_SD
     #undef FEATURE_SD  // Unlikely on 1M units
     #define FEATURE_SD 0
+    #define NO_GLOBAL_SD
   #endif
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE

@@ -19,6 +19,7 @@
 
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 

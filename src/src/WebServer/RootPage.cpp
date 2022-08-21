@@ -3,7 +3,7 @@
 
 #ifdef WEBSERVER_ROOT
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Markup.h"

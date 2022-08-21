@@ -12,7 +12,13 @@
 
 template<unsigned int N_TASKS>
 SettingsStruct_tmpl<N_TASKS>::SettingsStruct_tmpl() : ResetFactoryDefaultPreference(0) { //-V730
-  clearAll();
+  clearMisc();
+  clearTimeSettings();
+  clearNotifications();
+  clearControllers();
+  clearTasks();
+  clearLogSettings();
+  clearUnitNameSettings();
   clearNetworkSettings();
 }
 
@@ -505,17 +511,6 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   DoNotStartAP(DEFAULT_DONT_ALLOW_START_AP);
 }
 
-template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::clearAll() {
-  clearMisc();
-  clearTimeSettings();
-  clearNetworkSettings();
-  clearNotifications();
-  clearControllers();
-  clearTasks();
-  clearLogSettings();
-  clearUnitNameSettings();
-}
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {

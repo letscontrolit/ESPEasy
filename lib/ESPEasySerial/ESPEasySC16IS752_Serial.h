@@ -1,6 +1,7 @@
 #ifndef ESPeasySC16IS752_Serial_h
 #define ESPeasySC16IS752_Serial_h
 
+#ifndef DISABLE_SC16IS752_Serial
 #include <inttypes.h>
 #include <Stream.h>
 
@@ -40,5 +41,7 @@ private:
   SC16IS752_channel _channel;
   bool _pingReplied = false;
 };
+
+#endif
 
 #endif // ESPeasySC16IS752_Serial_h

@@ -6,7 +6,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 #include "../ESPEasyCore/ESPEasyWifi.h"
 

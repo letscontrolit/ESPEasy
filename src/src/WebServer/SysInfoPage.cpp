@@ -2,7 +2,7 @@
 
 #if defined(WEBSERVER_SYSINFO) || defined(SHOW_SYSINFO_JSON)
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -200,7 +200,7 @@ void handle_sysinfo_json() {
     case FM_DIO:   json_prop(F("mode"), F("DIO"));  break;
     case FM_DOUT:  json_prop(F("mode"), F("DOUT")); break;
     default:
-      json_prop(F("mode"), getUnknownString()); break;
+      json_prop(F("mode"), F("Unknown")); break;
   }
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
@@ -641,7 +641,7 @@ void handle_sysinfo_Storage() {
       case FM_DIO:   addHtml(F("DIO"));  break;
       case FM_DOUT:  addHtml(F("DOUT")); break;
       default:
-        addHtml(getUnknownString()); break;
+        addHtml(F("Unknown")); break;
     }
   }
 

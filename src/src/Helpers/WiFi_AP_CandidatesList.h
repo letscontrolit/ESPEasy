@@ -12,6 +12,8 @@ typedef std::list<WiFi_AP_Candidate>::const_iterator WiFi_AP_Candidate_const_ite
 struct WiFi_AP_CandidatesList {
   WiFi_AP_CandidatesList();
 
+  ~WiFi_AP_CandidatesList();
+
   // Load the known credentials from the settings
   void load_knownCredentials();
 
