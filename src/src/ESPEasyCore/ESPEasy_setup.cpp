@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -357,7 +358,7 @@ void ESPEasy_setup()
   #endif
 
 
-  if (Settings.Build != BUILD) {
+  if (Settings.Build != get_build_nr()) {
     BuildFixes();
   }
 

@@ -376,7 +376,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::FORCE_ESPEASY_NOW_CHANNEL: return String(Settings.ForceESPEasyNOWchannel);
     #endif
 
-    case LabelType::BUILD_DESC:             return String(BUILD);
+    case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:              
       { 
         const String res(F(BUILD_GIT));

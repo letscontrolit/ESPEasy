@@ -4,6 +4,8 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
@@ -16,6 +18,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
@@ -316,7 +319,7 @@ void handle_json()
                                         (it->first != Settings.Unit) ? it->second.getNodeName() : Settings.Name);
 
           if (it->second.build) {
-            stream_next_json_object_value(F("build"), it->second.build);
+            stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
           }
 
           if (it->second.nodeType) {
@@ -525,7 +528,7 @@ void handle_nodes_list_json() {
       json_number(F("first"), String(it->first));
       json_prop(F("name"), isThisUnit ? Settings.Name : it->second.getNodeName());
 
-      if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
+      if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), it->second.getNodeTypeDisplayString());
       json_prop(F("ip"),   it->second.ip.toString());
       json_number(F("age"), String(it->second.getAge() / 1000)); // time in seconds

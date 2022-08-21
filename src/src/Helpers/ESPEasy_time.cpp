@@ -56,40 +56,6 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
   return result;
 }
 
-void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
-  uint32_t time = (uint32_t)timeInput;
-  tm.tm_sec  = time % 60;
-  time      /= 60;                   // now it is minutes
-  tm.tm_min  = time % 60;
-  time      /= 60;                   // now it is hours
-  tm.tm_hour = time % 24;
-  time      /= 24;                   // now it is days
-  tm.tm_wday = ((time + 4) % 7) + 1; // Sunday is day 1
-
-  int      year = 1970;
-  unsigned long days = 0;
-  while ((unsigned)(days += (isLeapYear(year) ? 366 : 365)) <= time) {
-    year++;
-  }
-  tm.tm_year = year - 1900; // tm_year starts at 1900
-
-  days -= isLeapYear(year) ? 366 : 365;
-  time -= days;      // now it is days in this year, starting at 0
-
-  uint8_t month = 0;
-  for (month = 0; month < 12; month++) {
-    const uint8_t monthLength = getMonthDays(year, month);
-    if (time >= monthLength) {
-      time -= monthLength;
-    } else {
-      break;
-    }
-  }
-  tm.tm_mon  = month;     // Jan is month 0
-  tm.tm_mday = time + 1;  // day of month start at 1
-}
-
-
 void ESPEasy_time::restoreFromRTC()
 {
   static bool firstCall = true;
@@ -487,82 +453,30 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
  \*********************************************************************************************/
 String ESPEasy_time::getDateString(char delimiter) const
 {
-  return getDateString(tm, delimiter);
+  return formatDateString(tm, delimiter);
 }
 
-String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
-  // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-  char DateString[20]; // 19 digits plus the null char
-  const int year = 1900 + ts.tm_year;
-
-  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon + 1, delimiter, ts.tm_mday);
-  return DateString;
-}
 
 String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, false, show_seconds, hour_prefix);
+  return formatTimeString(tm, delimiter, false, show_seconds, hour_prefix);
 }
 
 String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, true, show_seconds, hour_prefix);
+  return formatTimeString(tm, delimiter, true, show_seconds, hour_prefix);
 }
 
-// returns the current Time separated by the given delimiter
-// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String ESPEasy_time::getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix /*='\0'*/)
-{
-  char TimeString[20]; // 19 digits plus the null char
-  char hour_prefix_s[2] = { 0 };
 
-  if (am_pm) {
-    uint8_t hour(ts.tm_hour % 12);
-
-    if (hour == 0) { hour = 12; }
-    const char a_or_p = ts.tm_hour < 12 ? 'A' : 'P';
-    if (hour < 10) { hour_prefix_s[0] = hour_prefix; }
-
-    if (show_seconds) {
-      sprintf_P(TimeString, PSTR("%s%d%c%02d%c%02d %cM"),
-                hour_prefix_s, hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
-    } else {
-      sprintf_P(TimeString, PSTR("%s%d%c%02d %cM"),
-                hour_prefix_s, hour, delimiter, ts.tm_min, a_or_p);
-    }
-  } else {
-    if (show_seconds) {
-      sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
-                ts.tm_hour, delimiter, ts.tm_min, delimiter, ts.tm_sec);
-    } else {
-      if (ts.tm_hour < 10) { hour_prefix_s[0] = hour_prefix; }
-      sprintf_P(TimeString, PSTR("%s%d%c%02d"),
-                hour_prefix_s, ts.tm_hour, delimiter, ts.tm_min);
-    }
-  }
-  return TimeString;
-}
 
 String ESPEasy_time::getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) const {
-  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
+  return formatDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
 }
 
 String ESPEasy_time::getDateTimeString_ampm(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) const {
-  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
+  return formatDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
 }
 
-String ESPEasy_time::getDateTimeString(const struct tm& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
-{
-  // if called like this: getDateTimeString('\0', '\0', '\0');
-  // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-  String ret = getDateString(ts, dateDelimiter);
-
-  if (dateTimeDelimiter != '\0') {
-    ret += dateTimeDelimiter;
-  }
-  ret += getTimeString(ts, timeDelimiter, am_pm, true);
-  return ret;
-}
 
 /********************************************************************************************\
    Get current time/date
@@ -629,25 +543,25 @@ int ESPEasy_time::getSecOffset(const String& format) {
 }
 
 String ESPEasy_time::getSunriseTimeString(char delimiter) const {
-  return getTimeString(sunRise, delimiter, false, false);
+  return formatTimeString(sunRise, delimiter, false, false);
 }
 
 String ESPEasy_time::getSunsetTimeString(char delimiter) const {
-  return getTimeString(sunSet, delimiter, false, false);
+  return formatTimeString(sunSet, delimiter, false, false);
 }
 
 String ESPEasy_time::getSunriseTimeString(char delimiter, int secOffset) const {
   if (secOffset == 0) {
     return getSunriseTimeString(delimiter);
   }
-  return getTimeString(getSunRise(secOffset), delimiter, false, false);
+  return formatTimeString(getSunRise(secOffset), delimiter, false, false);
 }
 
 String ESPEasy_time::getSunsetTimeString(char delimiter, int secOffset) const {
   if (secOffset == 0) {
     return getSunsetTimeString(delimiter);
   }
-  return getTimeString(getSunSet(secOffset), delimiter, false, false);
+  return formatTimeString(getSunSet(secOffset), delimiter, false, false);
 }
 
 float ESPEasy_time::sunDeclination(int doy) {

@@ -22,6 +22,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/WebServer_commandHelper.h"
 
 
@@ -322,7 +323,7 @@ void handle_root() {
 
         if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
           if (it->second.build) {
-            addHtmlInt(it->second.build);
+            addHtml(formatSystemBuildNr(it->second.build));
           }
           html_TD();
         }
