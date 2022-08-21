@@ -3,7 +3,7 @@
 
 #ifdef WEBSERVER_SYSVARS
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
