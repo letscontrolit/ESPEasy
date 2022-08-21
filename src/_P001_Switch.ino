@@ -229,10 +229,13 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         // used to track if LP has fired
         PCONFIG(6) = 0;
 
-        // store millis for debounce, doubleclick and long press
-        PCONFIG_LONG(0) = millis(); // debounce timer
-        PCONFIG_LONG(1) = millis(); // doubleclick timer
-        PCONFIG_LONG(2) = millis(); // longpress timer
+        {
+          // store millis for debounce, doubleclick and long press
+          const unsigned long cur_millis = millis();
+          PCONFIG_LONG(0) = cur_millis; // debounce timer
+          PCONFIG_LONG(1) = cur_millis; // doubleclick timer
+          PCONFIG_LONG(2) = cur_millis; // longpress timer
+        }
 
         // set minimum value for doubleclick MIN interval speed
         if (P001_DC_MAX_INT < SWITCH_DOUBLECLICK_MIN_INTERVAL) {

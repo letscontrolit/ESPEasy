@@ -2,7 +2,7 @@
 
 #if defined(WEBSERVER_SYSINFO) || defined(SHOW_SYSINFO_JSON)
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -148,7 +148,7 @@ void handle_sysinfo_json() {
 # endif // if FEATURE_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),       String(BUILD));
+  json_prop(F("build"),       getSystemBuildString());
   json_prop(F("notes"),       F(BUILD_NOTES));
   json_prop(F("libraries"),   getSystemLibraryString());
   json_prop(F("git_version"), getValue(LabelType::GIT_BUILD));
@@ -200,7 +200,7 @@ void handle_sysinfo_json() {
     case FM_DIO:   json_prop(F("mode"), F("DIO"));  break;
     case FM_DOUT:  json_prop(F("mode"), F("DOUT")); break;
     default:
-      json_prop(F("mode"), getUnknownString()); break;
+      json_prop(F("mode"), F("Unknown")); break;
   }
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
@@ -624,7 +624,6 @@ void handle_sysinfo_Storage() {
   addHtml(F(" MHz"));
 
   // Please check what is supported for the ESP32
-  # if defined(ESP8266)
   addRowLabel(LabelType::FLASH_IDE_SPEED);
   addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
@@ -638,10 +637,9 @@ void handle_sysinfo_Storage() {
       case FM_DIO:   addHtml(F("DIO"));  break;
       case FM_DOUT:  addHtml(F("DOUT")); break;
       default:
-        addHtml(getUnknownString()); break;
+        addHtml(F("Unknown")); break;
     }
   }
-  # endif // if defined(ESP8266)
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {
