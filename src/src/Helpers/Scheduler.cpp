@@ -913,9 +913,7 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
   uint8_t pinNumber     = static_cast<uint8_t>((id >> 8) & 0xFF);
   uint8_t pinStateValue = static_cast<uint8_t>((id >> 16) & 0xFF);
 
-  bool success = true;
-
-  uint8_t pluginID;
+  uint8_t pluginID = PLUGIN_GPIO;
 
   switch (GPIOType)
   {
@@ -923,39 +921,37 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
       GPIO_Internal_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_GPIO;
       break;
-    case GPIO_TYPE_MCP:
 #ifdef USES_P009
+    case GPIO_TYPE_MCP:
       GPIO_MCP_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_MCP;
-#endif
       break;
-    case GPIO_TYPE_PCF:
+#endif
 #ifdef USES_P019
+    case GPIO_TYPE_PCF:
       GPIO_PCF_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_PCF;
-#endif
       break;
+#endif
     default:
-      success = false;
+      return;
   }
 
-  if (success) {
-    const uint32_t key = createKey(pluginID, pinNumber);
+  const uint32_t key = createKey(pluginID, pinNumber);
 
-    // WARNING: operator [] creates an entry in the map if key does not exist
-    portStatusStruct tempStatus = globalMapPortStatus[key];
+  // WARNING: operator [] creates an entry in the map if key does not exist
+  portStatusStruct tempStatus = globalMapPortStatus[key];
 
-    tempStatus.mode    = PIN_MODE_OUTPUT;
-    tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
+  tempStatus.mode    = PIN_MODE_OUTPUT;
+  tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
 
-    if (tempStatus.state != pinStateValue) {
-      tempStatus.state        = pinStateValue;
-      tempStatus.output       = pinStateValue;
-      tempStatus.forceEvent   = 1;
-      tempStatus.forceMonitor = 1;
-    }
-    savePortStatus(key, tempStatus);
+  if (tempStatus.state != pinStateValue) {
+    tempStatus.state        = pinStateValue;
+    tempStatus.output       = pinStateValue;
+    tempStatus.forceEvent   = 1;
+    tempStatus.forceMonitor = 1;
   }
+  savePortStatus(key, tempStatus);
 }
 
 /*********************************************************************************************\
