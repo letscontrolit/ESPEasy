@@ -242,6 +242,7 @@ float P026_get_value(int type)
       return FreeMem2ndHeap();
       #else
       break;
+      #endif
     case 14: return p026_read_count;
   }
   return 0.0f;

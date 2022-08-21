@@ -15,6 +15,8 @@
 */
 
 #include <Arduino.h>
+
+
 // User configuration
 #include "../include/ESPEasy_config.h"
 #include "./src/CustomBuild/ESPEasyDefaults.h"
@@ -38,10 +40,11 @@
 # define SUPPORT_ARP
 #endif
 
-#include "src/DataStructs/NodeStruct.h"
-#include "src/Globals/RamTracker.h"
-#include "src/ESPEasyCore/ESPEasy_Log.h"
-#include "src/Helpers/ESPEasy_math.h"
+#include "./src/DataTypes/NodeTypeID.h"
+#include "./src/DataStructs/NodeStruct.h"
+#include "./src/Globals/RamTracker.h"
+#include "./src/ESPEasyCore/ESPEasy_Log.h"
+#include "./src/Helpers/ESPEasy_math.h"
 
 #if defined(ESP8266)
 
