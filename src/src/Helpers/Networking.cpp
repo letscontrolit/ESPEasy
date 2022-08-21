@@ -1223,7 +1223,7 @@ String get_user_agent_string() {
 
   userAgent.reserve(agent_size);
   userAgent += F("ESP Easy/");
-  userAgent += BUILD;
+  userAgent += get_build_nr();
   userAgent += '/';
   userAgent += get_build_date();
   userAgent += ' ';

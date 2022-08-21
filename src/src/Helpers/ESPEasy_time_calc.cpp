@@ -65,6 +65,120 @@ uint32_t makeTime(const struct tm& tm) {
   return seconds;
 }
 
+void breakTime(unsigned long timeInput, struct tm& tm) {
+  uint32_t time = (uint32_t)timeInput;
+  tm.tm_sec  = time % 60;
+  time      /= 60;                   // now it is minutes
+  tm.tm_min  = time % 60;
+  time      /= 60;                   // now it is hours
+  tm.tm_hour = time % 24;
+  time      /= 24;                   // now it is days
+  tm.tm_wday = ((time + 4) % 7) + 1; // Sunday is day 1
+
+  int      year = 1970;
+  unsigned long days = 0;
+  while ((unsigned)(days += (isLeapYear(year) ? 366 : 365)) <= time) {
+    year++;
+  }
+  tm.tm_year = year - 1900; // tm_year starts at 1900
+
+  days -= isLeapYear(year) ? 366 : 365;
+  time -= days;      // now it is days in this year, starting at 0
+
+  uint8_t month = 0;
+  for (month = 0; month < 12; month++) {
+    const uint8_t monthLength = getMonthDays(year, month);
+    if (time >= monthLength) {
+      time -= monthLength;
+    } else {
+      break;
+    }
+  }
+  tm.tm_mon  = month;     // Jan is month 0
+  tm.tm_mday = time + 1;  // day of month start at 1
+}
+
+
+String formatDateString(const struct tm& ts, char delimiter) {
+  // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+  char DateString[20]; // 19 digits plus the null char
+  const int year = 1900 + ts.tm_year;
+  if (delimiter == '\0') {
+    sprintf_P(DateString, PSTR("%4d%02d%02d"), year, ts.tm_mon + 1, ts.tm_mday);
+  } else {
+    sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon + 1, delimiter, ts.tm_mday);
+  }
+  return DateString;
+}
+
+
+// returns the current Time separated by the given delimiter
+// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
+String formatTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds, char hour_prefix /*='\0'*/)
+{
+  char TimeString[20]; // 19 digits plus the null char
+  char hour_prefix_s[2] = { 0 };
+
+  if (am_pm) {
+    uint8_t hour(ts.tm_hour % 12);
+
+    if (hour == 0) { hour = 12; }
+    const char a_or_p = ts.tm_hour < 12 ? 'A' : 'P';
+    if (hour < 10) { hour_prefix_s[0] = hour_prefix; }
+
+    if (show_seconds) {
+      if (delimiter == '\0') {
+        sprintf_P(TimeString, PSTR("%s%d%02d%02d %cM"),
+                  hour_prefix_s, hour, ts.tm_min, ts.tm_sec, a_or_p);
+      } else {
+        sprintf_P(TimeString, PSTR("%s%d%c%02d%c%02d %cM"),
+                  hour_prefix_s, hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
+      }
+    } else {
+      if (delimiter == '\0') {
+        sprintf_P(TimeString, PSTR("%s%d%02d %cM"),
+                  hour_prefix_s, hour, ts.tm_min, a_or_p);
+      } else {
+        sprintf_P(TimeString, PSTR("%s%d%c%02d %cM"),
+                  hour_prefix_s, hour, delimiter, ts.tm_min, a_or_p);
+      }
+    }
+  } else {
+    if (show_seconds) {
+      if (delimiter == '\0') {
+        sprintf_P(TimeString, PSTR("%02d%02d%02d"),
+                  ts.tm_hour, ts.tm_min, ts.tm_sec);
+      } else {
+        sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
+                  ts.tm_hour, delimiter, ts.tm_min, delimiter, ts.tm_sec);
+      }
+    } else {
+      if (ts.tm_hour < 10) { hour_prefix_s[0] = hour_prefix; }
+      if (delimiter == '\0') {
+        sprintf_P(TimeString, PSTR("%s%d%02d"),
+                  hour_prefix_s, ts.tm_hour, ts.tm_min);
+      } else {
+        sprintf_P(TimeString, PSTR("%s%d%c%02d"),
+                  hour_prefix_s, ts.tm_hour, delimiter, ts.tm_min);
+      }
+    }
+  }
+  return TimeString;
+}
+
+
+String formatDateTimeString(const struct tm& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
+{
+  // if called like this: getDateTimeString('\0', '\0', '\0');
+  // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
+  String ret = formatDateString(ts, dateDelimiter);
+
+  if (dateTimeDelimiter != '\0') {
+    ret += dateTimeDelimiter;
+  }
+  ret += formatTimeString(ts, timeDelimiter, am_pm, true);
+  return ret;
+}
 
 /********************************************************************************************\
    Time computations for rules.
