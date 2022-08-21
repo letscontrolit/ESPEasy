@@ -138,7 +138,7 @@ String getResetReasonString(uint8_t icore) {
     return reason;
   }
 
-  return getUnknownString();
+  return F("Unknown");
 }
 
 #endif // ifdef ESP32
@@ -231,3 +231,4 @@ String getLWIPversion() {
 }
 
 #endif // ifdef ESP8266
+

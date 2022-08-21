@@ -1,5 +1,5 @@
 # include "../WebServer/Metrics.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../../ESPEasy-Globals.h"
 # include "../Commands/Diagnostic.h"
 # include "../ESPEasyCore/ESPEasyNetwork.h"

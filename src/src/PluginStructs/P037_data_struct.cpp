@@ -6,7 +6,7 @@
 # include "../Helpers/Numerical.h"
 # include "../Helpers/RulesMatcher.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
@@ -989,7 +989,7 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr != root) {
-    deserializeJson(*root, message.c_str());
+    deserializeJson(*root, message);
 
     if (!root->isNull()) {
       result = true;
