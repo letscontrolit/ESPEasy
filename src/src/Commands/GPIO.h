@@ -21,11 +21,15 @@ const __FlashStringHelper * Command_GPIO_Monitor(struct EventStruct *event, cons
 const __FlashStringHelper * Command_GPIO_UnMonitor(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char* Line);
 
+#ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIORange(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char* Line);
+#endif
 
+#ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIORange(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char* Line);
+#endif
 
 const __FlashStringHelper * Command_GPIO_Mode(struct EventStruct *event, const char* Line);
 const __FlashStringHelper * Command_GPIO_ModeRange(struct EventStruct *event, const char* Line);

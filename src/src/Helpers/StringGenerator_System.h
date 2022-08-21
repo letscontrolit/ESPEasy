@@ -29,6 +29,8 @@ String  getResetReasonString();
 
 String  getSystemBuildString();
 
+String  formatSystemBuildNr(uint16_t buildNr);
+
 String  getPluginDescriptionString();
 
 String  getSystemLibraryString();

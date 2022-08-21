@@ -30,15 +30,27 @@ void logErrorGpioNotOutput(const String& prefix, int port);
 void logErrorModeOutOfRange(const String& prefix, int port);
 bool gpio_monitor_helper(int port, struct EventStruct *event, const char* Line);
 bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char* Line);
+#ifdef USES_P009
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+#endif
+#ifdef USES_P019
 bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+#endif
 bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char* Line);
+#ifdef USES_P019
 uint8_t getPcfAddress(uint8_t pin);
+#endif
 bool setGPIOMode(uint8_t pin, uint8_t mode);
+#ifdef USES_P019
 bool setPCFMode(uint8_t pin, uint8_t mode);
+#endif
+#ifdef USES_P009
 bool setMCPMode(uint8_t pin, uint8_t mode);
 bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
+#endif
+#ifdef USES_P019
 bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
+#endif
 
 
 /*************************************************************************/
@@ -192,7 +204,6 @@ const __FlashStringHelper * Command_GPIO_LongPulse_Ms(struct EventStruct *event,
 
 const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const char *Line)
 {
-  bool success = true;
   bool sendStatusFlag;
   uint8_t pluginID = 0;
 
@@ -202,27 +213,31 @@ const __FlashStringHelper * Command_GPIO_Status(struct EventStruct *event, const
       pluginID       = PLUGIN_GPIO;
       sendStatusFlag = true;
       break;
+#ifdef USES_P009
     case 'm': // mcp
       pluginID       = PLUGIN_MCP;
       sendStatusFlag = GPIO_MCP_Read(event->Par2) == -1;
       break;
+#endif
+#ifdef USES_P019
     case 'p': // pcf
       pluginID       = PLUGIN_PCF;
       sendStatusFlag = GPIO_PCF_Read(event->Par2) == -1;
       break;
+#endif
     default:
-      success = false;
+      addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+      return return_command_failed();
   }
 
-  if (success && checkValidPortRange(pluginID, event->Par2))
+  if (!checkValidPortRange(pluginID, event->Par2))
   {
-    const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
-    String dummy;
-    SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
-    return return_command_success();
-  } else {
     return return_command_failed();
   }
+  const uint32_t key = createKey(pluginID, event->Par2); // WARNING: 'status' uses Par2 instead of Par1
+  String dummy;
+  SendStatusOnlyIfNeeded(event, sendStatusFlag, key, dummy, 0);
+  return return_command_success();
 }
 
 const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const char *Line)
@@ -449,14 +464,21 @@ const __FlashStringHelper * Command_GPIO(struct EventStruct *event, const char *
           setInternalGPIOPullupMode(event->Par1);
           state = GPIO_Read_Switch_State(event->Par1, PIN_MODE_INPUT_PULLUP);
           break;
+#ifdef USES_P009
         case PLUGIN_MCP:
           setMCPInputAndPullupMode(event->Par1, true);
           GPIO_Read(PLUGIN_MCP, event->Par1, state);
           break;
+#endif
+#ifdef USES_P019
         case PLUGIN_PCF:
           // PCF8574 specific: only can read 0/low state, so we must send 1
           state = 1;
           break;
+#endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+          return return_command_failed();
       }
     } else { // OUTPUT
       mode  = PIN_MODE_OUTPUT;
@@ -566,8 +588,6 @@ void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t new
 
 bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefix)
 {
-  bool success = true;
-
   switch (tolower(selection))
   {
     case 'g': // gpio
@@ -575,19 +595,23 @@ bool getPluginIDAndPrefix(char selection, pluginID_t& pluginID, String& logPrefi
       pluginID  = PLUGIN_GPIO;
       logPrefix = F("GPIO");
       break;
+#ifdef USES_P009
     case 'm': // mcp & mcplongpulse
       pluginID  = PLUGIN_MCP;
       logPrefix = F("MCP");
       break;
+#endif
+#ifdef USES_P019
     case 'p': // pcf & pcflongpulse
       pluginID  = PLUGIN_PCF;
       logPrefix = F("PCF");
       break;
+#endif
     default:
-      logPrefix = F("PluginID out of range. Error");
-      success   = false;
+      logPrefix = F("Plugin not included in build");
+      return false;
   }
-  return success;
+  return true;
 }
 
 struct range_pattern_helper_data {
@@ -731,15 +755,19 @@ range_pattern_helper_data range_pattern_helper_shared(pluginID_t plugin, struct 
 **     mask = 973 = '1111001101'
 **     write pattern after mask = '1000xx11x1' where x indicates that the pin will not be changed
 ******************************************************************************/
+#ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIOPattern(struct EventStruct *event, const char *Line)
 {
   return mcpgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
 }
+#endif
 
+#ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *event, const char *Line)
 {
   return pcfgpio_range_pattern_helper(event, Line, true) ? return_command_success() : return_command_failed();
 }
+#endif
 
 /******************************************************************************
 ** Par1=starting pin
@@ -760,16 +788,21 @@ const __FlashStringHelper * Command_GPIO_PcfGPIOPattern(struct EventStruct *even
 **     mask = 973 = '1111001101'
 **     write pattern after mask = '1111xx11x1' where x indicates that the pin will not be changed
 ******************************************************************************/
+#ifdef USES_P009
 const __FlashStringHelper * Command_GPIO_McpGPIORange(struct EventStruct *event, const char *Line)
 {
   return mcpgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
 }
+#endif
 
+#ifdef USES_P019
 const __FlashStringHelper * Command_GPIO_PcfGPIORange(struct EventStruct *event, const char *Line)
 {
   return pcfgpio_range_pattern_helper(event, Line, false) ? return_command_success() : return_command_failed();
 }
+#endif
 
+#ifdef USES_P009
 bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, bool isWritePattern)
 {
   range_pattern_helper_data data = range_pattern_helper_shared(PLUGIN_MCP, event, Line, isWritePattern);
@@ -828,7 +861,9 @@ bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   }
   return onLine;
 }
+#endif
 
+#ifdef USES_P019
 uint8_t getPcfAddress(uint8_t pin)
 {
   uint8_t retValue = static_cast<int>((pin - 1) / 8) + 0x20;
@@ -895,6 +930,7 @@ bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char *Line, b
   }
   return onLine;
 }
+#endif
 
 bool setGPIOMode(uint8_t pin, uint8_t mode)
 {
@@ -916,6 +952,7 @@ bool setGPIOMode(uint8_t pin, uint8_t mode)
   }
 }
 
+#ifdef USES_P009
 bool setMCPMode(uint8_t pin, uint8_t mode)
 {
   if (checkValidPortRange(PLUGIN_MCP, pin)) {
@@ -935,7 +972,9 @@ bool setMCPMode(uint8_t pin, uint8_t mode)
     return false;
   }
 }
+#endif
 
+#ifdef USES_P019
 bool setPCFMode(uint8_t pin, uint8_t mode)
 {
   if (checkValidPortRange(PLUGIN_PCF, pin)) {
@@ -953,6 +992,7 @@ bool setPCFMode(uint8_t pin, uint8_t mode)
     return false;
   }
 }
+#endif
 
 /***********************************************
  * event->Par1: PIN to be set
@@ -1017,14 +1057,20 @@ bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *ev
         case PLUGIN_GPIO:
           /* setSuccess = */ setGPIOMode(pin, mode);
           break;
+#ifdef USES_P019
         case PLUGIN_PCF:
           // set pin = 1 when INPUT
-
           /* setSuccess = */ setPCFMode(pin, mode);
           break;
+#endif
+#ifdef USES_P009
         case PLUGIN_MCP:
           /* setSuccess = */ setMCPMode(pin, mode);
           break;
+#endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+          return false;
       }
 
       const uint32_t key = createKey(pluginID, pin);
@@ -1085,19 +1131,24 @@ bool getGPIOPinStateValues(String& str) {
           success   = true;
           break;
 
+#ifdef USES_P009
         case 'm':
-
           str       = GPIO_MCP_Read(par1);
           logPrefix = F("MCP");
           success   = true;
           break;
+#endif
 
+#ifdef USES_P019
         case 'p':
-
           str       = GPIO_PCF_Read(par1);
           logPrefix = F("PCF");
           success   = true;
           break;
+#endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("Plugin not included in build"));
+          return false;
       }
     }
 
@@ -1121,20 +1172,33 @@ bool getGPIOPinStateValues(String& str) {
     }
 
     if (successPar) {
-      uint16_t tempValue = 0;
 
       switch (device[0]) {
+#ifdef USES_P009
         case 'm':
+        {
+          uint16_t tempValue = 0;
           logPrefix = F("MCP");
           success   = mcpgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
           break;
+        }
+#endif
 
+#ifdef USES_P019
         case 'p':
+        {
+          uint16_t tempValue = 0;
           logPrefix = F("PCF");
           success   = pcfgpio_plugin_range_helper(par1, par2, tempValue);
           str       = String(tempValue);
           break;
+        }
+          #endif
+        default:
+          addLog(LOG_LEVEL_ERROR, F("PLUGIN PINSTATE. Plugin not included in build"));
+          return false;
+
       }
 
       if (success) {
@@ -1161,6 +1225,7 @@ bool getGPIOPinStateValues(String& str) {
   return success;
 }
 
+#ifdef USES_P009
 bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t& result)
 {
   const range_pattern_helper_data data = range_helper_shared(PLUGIN_MCP, pin1, pin2);
@@ -1195,7 +1260,9 @@ bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t& result)
 
   return success;
 }
+#endif
 
+#ifdef USES_P019
 bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t& result)
 {
   const range_pattern_helper_data data = range_helper_shared(PLUGIN_PCF, pin1, pin2);
@@ -1229,3 +1296,4 @@ bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t& result)
 
   return success;
 }
+#endif
