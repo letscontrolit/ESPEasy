@@ -22,7 +22,7 @@
 
 // Deprecated define.
 // Use get_build_nr() from CustomBuild/CompiletimeDefines.h
-#define BUILD                           20116    // git version e.g. "20103" can be read as "2.1.03" (stored in int16_t)
+//#define BUILD                           20116    // git version e.g. "20103" can be read as "2.1.03" (stored in int16_t)
 
 
 #ifndef BUILD_NOTES

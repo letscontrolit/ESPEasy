@@ -29,7 +29,9 @@ uint16_t get_build_nr() {
   return SET_BUILD_VERSION;
   #else
   #pragma message ( "Build is not based on current date" )
-  return BUILD;
+  // Last used version for BUILD was 20116, 
+  // so make sure we can recognize a build not made using the compile time defines.
+  return 20117; 
   #endif
 }
 
