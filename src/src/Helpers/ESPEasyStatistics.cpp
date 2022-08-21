@@ -4,7 +4,7 @@
 #if FEATURE_TIMING_STATS
 
 #include "../DataStructs/TimingStats.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../Globals/Protocol.h"
 #include "../Helpers/Convert.h"
 

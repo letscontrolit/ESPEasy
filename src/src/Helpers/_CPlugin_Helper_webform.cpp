@@ -9,7 +9,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/Networking.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 

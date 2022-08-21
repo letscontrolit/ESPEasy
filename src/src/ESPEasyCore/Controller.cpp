@@ -356,14 +356,14 @@ MQTTclient.setClient(mqtt);
   MQTTclient.setCallback(incoming_mqtt_callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = getMQTTclientID(ControllerSettings);
+  const String clientid = getMQTTclientID(ControllerSettings);
 
-  String  LWTTopic             = getLWT_topic(ControllerSettings);
-  String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
-  bool    MQTTresult           = false;
-  uint8_t willQos              = 0;
-  bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
-  bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
+  const String  LWTTopic             = getLWT_topic(ControllerSettings);
+  const String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
+  bool          MQTTresult           = false;
+  const uint8_t willQos              = 0;
+  const bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
+  const bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -445,7 +445,6 @@ MQTTclient.setClient(mqtt);
 
   #endif
 
-
   if (!MQTTresult) {
     #ifdef USE_MQTT_TLS
     if ((mqtt_tls_last_error != 0) && loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -469,7 +468,6 @@ MQTTclient.setClient(mqtt);
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
     String log = F("MQTT : Connected to broker with client ID: ");
-
     log += clientid;
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -682,6 +680,11 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
       break;
   }
   return false;
+}
+
+void SendStatus(struct EventStruct *event, const __FlashStringHelper * status)
+{
+  SendStatus(event, String(status));
 }
 
 void SendStatus(struct EventStruct *event, const String& status)

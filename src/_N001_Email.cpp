@@ -24,6 +24,8 @@
 #include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
 #include "src/Helpers/_NPlugin_init.h"
 
+#include <base64.h>
+
 // Forward declaration
 bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, const String& aSub, String& aMesg);
 bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass);

@@ -54,6 +54,7 @@ void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key
 
 bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
 
+void SendStatus(struct EventStruct *event, const __FlashStringHelper * status);
 void SendStatus(struct EventStruct *event, const String& status);
 
 #if FEATURE_MQTT

@@ -4,7 +4,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#include <FS.h>
+#include "../Helpers/FS_Helper.h"
 
 #include "../DataStructs/ProvisioningStruct.h"
 #include "../DataTypes/ESPEasyFileType.h"
