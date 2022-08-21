@@ -12,15 +12,20 @@
 
 // End of defines being patched by the Python build script.
 
+// Uncrustify must not be used on macros, so turn it off.
+// *INDENT-OFF*
+
 // Need to add quotes around defines as the PIO build tools make it hard to include the string quotes.
 #define STRINGIFY(s) STRINGIFY1(s)
-#define STRINGIFY1(s) # s
+#define STRINGIFY1(s) #s
+// Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
+// *INDENT-ON*
 
 const __FlashStringHelper* get_binary_filename() {
  #ifndef SET_BUILD_BINARY_FILENAME
   return F("firmware.bin");
  #else // ifndef SET_BUILD_BINARY_FILENAME
-  return F(STRINGIFY(SET_BUILD_BINARY_FILENAME));
+  return F(SET_BUILD_BINARY_FILENAME);
  #endif // ifndef SET_BUILD_BINARY_FILENAME
 }
 
@@ -46,7 +51,7 @@ const __FlashStringHelper* get_build_platform() {
  #ifndef SET_BUILD_PLATFORM
   return F("");
   #else // ifndef SET_BUILD_PLATFORM
-  return F(STRINGIFY(SET_BUILD_PLATFORM));
+  return F(SET_BUILD_PLATFORM);
  #endif // ifndef SET_BUILD_PLATFORM
 }
 
@@ -54,13 +59,13 @@ const __FlashStringHelper* get_git_head() {
  #ifndef SET_BUILD_GIT_HEAD
   return F("");
  #else // ifndef SET_BUILD_GIT_HEAD
-  return F(STRINGIFY(SET_BUILD_GIT_HEAD));
+  return F(SET_BUILD_GIT_HEAD);
  #endif // ifndef SET_BUILD_GIT_HEAD
 }
 
 const __FlashStringHelper * get_board_name() {
   #ifdef SET_BOARD_NAME
-  return F(STRINGIFY(SET_BOARD_NAME));
+  return F(SET_BOARD_NAME);
   #elif defined(ARDUINO_BOARD)
   return F(ARDUINO_BOARD);
   #else

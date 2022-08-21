@@ -22,7 +22,7 @@ def get_git_description():
         from pygit2 import Repository
         try:
             repo = Repository('.')
-            return "'{0}_{1}'".format(repo.head.shorthand, repo.revparse_single('HEAD').short_id)
+            return "{0}_{1}".format(repo.head.shorthand, repo.revparse_single('HEAD').short_id)
         except:
             return 'No_.git_dir'
     except ImportError:
@@ -56,10 +56,10 @@ def gen_compiletime_defines(node):
     return env.Object(
         node,
         CPPDEFINES=env["CPPDEFINES"]
-        + [("SET_BUILD_BINARY_FILENAME", create_binary_filename())]
-        + [("SET_BOARD_NAME", get_board_name())]
-        + [("SET_BUILD_PLATFORM", platform.platform())]
-        + [("SET_BUILD_GIT_HEAD", get_git_description())],
+        + [("SET_BUILD_BINARY_FILENAME", '\\"%s\\"' % create_binary_filename())]
+        + [("SET_BOARD_NAME", '\\"%s\\"' % get_board_name())]
+        + [("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform())]
+        + [("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description())],
         CCFLAGS=env["CCFLAGS"]
     )
 
