@@ -51,6 +51,13 @@
     Set text position (move the cursor) and print the text. Combines the ``txp`` and ``txt`` commands in 1. Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
     "
     "
+    ``<trigger>,txl,[<line>],<text>[,[<line>],<text>...]``
+    ","
+    Print 1 or more texts on specified lines, starting at column 1. If a ``<line>`` is not specified (the comma must still be there!) the next display-line will be used, depending on current font-height, if the initial ``<line>`` is not specified, starts at line 1. ``<line>`` must be a positive integer value.
+
+    Always uses column/rows mode (and restores the currently active pixels or column/rows mode).
+    "
+    "
     ``<trigger>,txc,<foreColor>[,<backgroundColor>]``
     ","
     Set text color (background is transparent if not provided, or the same as the foreground color).
