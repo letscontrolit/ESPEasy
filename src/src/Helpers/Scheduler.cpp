@@ -926,12 +926,16 @@ void ESPEasy_Scheduler::process_gpio_timer(unsigned long id) {
       pluginID = PLUGIN_GPIO;
       break;
     case GPIO_TYPE_MCP:
+#ifdef USES_P009
       GPIO_MCP_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_MCP;
+#endif
       break;
     case GPIO_TYPE_PCF:
+#ifdef USES_P019
       GPIO_PCF_Write(pinNumber, pinStateValue);
       pluginID = PLUGIN_PCF;
+#endif
       break;
     default:
       success = false;

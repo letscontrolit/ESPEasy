@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 // Is stored in settings
-enum class NetworkMedium_t : uint8_t {
+enum class NetworkMedium_t : unsigned char {
   WIFI     = 0,
   Ethernet = 1
 };
