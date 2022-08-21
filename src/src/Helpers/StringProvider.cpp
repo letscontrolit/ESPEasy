@@ -361,7 +361,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
-    case LabelType::BUILD_DESC:             return String(BUILD);
+    case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:              
       { 
         const String res(F(BUILD_GIT));

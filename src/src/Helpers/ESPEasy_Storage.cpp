@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/StorageLayout.h"
 
 #include "../DataStructs/TimingStats.h"
@@ -320,7 +321,7 @@ String BuildFixes()
   #endif
 
 
-  Settings.Build = BUILD;
+  Settings.Build = get_build_nr();
   return SaveSettings();
 }
 

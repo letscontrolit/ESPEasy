@@ -1,5 +1,7 @@
 #include "../CustomBuild/CompiletimeDefines.h"
 
+#include "../CustomBuild/ESPEasy_buildinfo.h"
+
 // This file will be "patched" at compiletime by
 // tools/pio/generate-compiletime-defines.py
 // Therefore this one may not include ESPEasy_common.h
@@ -20,6 +22,16 @@
 #define STRINGIFY1(s) #s
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
+
+
+uint16_t get_build_nr() {
+  #ifdef SET_BUILD_VERSION
+  return SET_BUILD_VERSION;
+  #else
+  #pragma message ( "Build is not based on current date" )
+  return BUILD;
+  #endif
+}
 
 const __FlashStringHelper* get_binary_filename() {
  #ifndef SET_BUILD_BINARY_FILENAME
