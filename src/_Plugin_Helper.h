@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "ESPEasy_common.h"
+#include "../../include/ESPEasy_config.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"
 
@@ -53,7 +53,7 @@
 #include "src/WebServer/HTML_wrappers.h"
 #include "src/WebServer/Markup.h"
 #include "src/WebServer/Markup_Forms.h"
-#include "src/WebServer/WebServer.h"
+#include "src/WebServer/ESPEasy_WebServer.h"
 
 
 // Defines to make plugins more readable.
