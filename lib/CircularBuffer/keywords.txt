@@ -1,0 +1,30 @@
+#######################################
+# CircularBuffer
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+CircularBuffer	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+push	KEYWORD2
+shift	KEYWORD2
+pop	KEYWORD2
+unshift	KEYWORD2
+first	KEYWORD2
+last	KEYWORD2
+size	KEYWORD2
+available	KEYWORD2
+capacity	KEYWORD2
+isEmpty	KEYWORD2
+isFull	KEYWORD2
+clear	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

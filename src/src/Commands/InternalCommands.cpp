@@ -342,6 +342,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
+#ifdef USES_P009
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
@@ -354,6 +355,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "mcpmoderange", Command_GPIO_ModeRange,    3); // Gpio.h   
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
+#endif
       COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
       COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange, 3); // GPIO.h   
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -374,6 +376,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'p': {
+#ifdef USES_P019
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
         COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
@@ -386,6 +389,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_ModeRange,       3); // Gpio.h   ************
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
+#endif
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
 #if FEATURE_CUSTOM_PROVISIONING
       COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
