@@ -7,6 +7,13 @@ from datetime import date
 import json
 
 
+def compute_version_date():
+    d0 = date(2022, 8, 18)
+    today = date.today()
+    delta = today - d0
+    return 20200 + delta.days
+
+
 def create_binary_filename():
     today = date.today()
     d1 = today.strftime("%Y%m%d")
@@ -22,7 +29,7 @@ def get_git_description():
         from pygit2 import Repository
         try:
             repo = Repository('.')
-            return "'{0}_{1}'".format(repo.head.shorthand, repo.revparse_single('HEAD').short_id)
+            return "{0}_{1}".format(repo.head.shorthand, repo.revparse_single('HEAD').short_id)
         except:
             return 'No_.git_dir'
     except ImportError:
@@ -56,10 +63,11 @@ def gen_compiletime_defines(node):
     return env.Object(
         node,
         CPPDEFINES=env["CPPDEFINES"]
-        + [("SET_BUILD_BINARY_FILENAME", create_binary_filename())]
-        + [("SET_BOARD_NAME", get_board_name())]
-        + [("SET_BUILD_PLATFORM", platform.platform())]
-        + [("SET_BUILD_GIT_HEAD", get_git_description())],
+        + [("SET_BUILD_BINARY_FILENAME", '\\"%s\\"' % create_binary_filename())]
+        + [("SET_BOARD_NAME", '\\"%s\\"' % get_board_name())]
+        + [("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform())]
+        + [("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description())]
+        + [("SET_BUILD_VERSION", compute_version_date())],
         CCFLAGS=env["CCFLAGS"]
     )
 
@@ -72,6 +80,7 @@ print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BOARD_NAME:     \u001b[0m  {}".format(get_board_name()))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
+print("\u001b[33m BUILD_VERSION:  \u001b[0m  {}".format(compute_version_date()))
 
 print("\u001b[32m ------------------------------- \u001b[0m")
 print("\u001b[32m Flash configuration \u001b[0m")
