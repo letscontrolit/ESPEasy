@@ -32,6 +32,7 @@
 #ifdef ESP32
 
   #include <WiFi.h>
+  #include <FS.h>
   #include <WebServer.h>
   
   extern WebServer web_server;

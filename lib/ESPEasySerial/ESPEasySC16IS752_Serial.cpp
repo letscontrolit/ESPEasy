@@ -1,5 +1,7 @@
 #include <ESPEasySC16IS752_Serial.h>
 
+#ifndef DISABLE_SC16IS752_Serial
+
 #include <map>
 
 
@@ -141,3 +143,5 @@ void ESPEasySC16IS752_Serial::flush(void)
     _i2cuart->flush(_channel);
   }
 }
+
+#endif

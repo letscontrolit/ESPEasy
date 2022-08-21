@@ -2,7 +2,7 @@
 
 #ifdef WEBSERVER_DOWNLOAD
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
