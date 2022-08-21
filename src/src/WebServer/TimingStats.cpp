@@ -44,7 +44,7 @@ void handle_timingstats() {
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
   struct tm startPeriod = node_time.addSeconds(node_time.tm, -1.0f * timespan, false);
-  addHtml(ESPEasy_time::getDateTimeString(startPeriod, '-', ':', ' ', false));
+  addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
   addHtmlFloat(timespan);
