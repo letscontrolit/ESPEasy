@@ -391,10 +391,10 @@ void transformValue(
             break;
           }
           case 'F': // FLOOR (round down)
-            value = static_cast<int>(floorf(valFloat));
+            value = static_cast<int>(floor(valFloat));
             break;
           case 'E': // CEILING (round up)
-            value = static_cast<int>(ceilf(valFloat));
+            value = static_cast<int>(ceil(valFloat));
             break;
           default:
             value = F("ERR");
