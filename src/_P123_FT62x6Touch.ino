@@ -105,8 +105,6 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormSubHeader(F("Screen"));
-
       {
         addRowLabel(F("Display task"));
         addTaskSelect(F("dsptask"), P123_CONFIG_DISPLAY_TASK);
@@ -115,7 +113,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
         #endif // ifndef P123_LIMIT_BUILD_SIZE
       }
 
-      uint16_t width_      = P123_CONFIG_X_RES;
+      uint16_t width_ = P123_CONFIG_X_RES;
       uint16_t height_     = P123_CONFIG_Y_RES;
       uint16_t rotation_   = P123_CONFIG_ROTATION;
       uint16_t colorDepth_ = P123_COLOR_DEPTH;
@@ -143,8 +141,8 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Touch minimum pressure"), F("threshold"), P123_CONFIG_THRESHOLD, 0, 255);
 
       {
-        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
         bool deleteP123_data        = false;
+        P123_data_struct *P123_data = static_cast<P123_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr == P123_data) {
           P123_data       = new (std::nothrow) P123_data_struct();
@@ -152,10 +150,6 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
         }
 
         if (nullptr != P123_data) {
-          if (deleteP123_data) {
-            P123_data->loadTouchObjects(event);
-          }
-
           P123_data->plugin_webform_load(event);
 
           if (deleteP123_data) {
