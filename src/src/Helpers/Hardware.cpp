@@ -621,35 +621,9 @@ uint32_t getFlashRealSizeInBytes() {
 }
 
 #ifdef ESP32
-uint32_t getAbpFrequency() {
-  # if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
-  return APB_CLK_FREQ;
-  # else // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
-  rtc_cpu_freq_config_t conf;
-
-  // Get current CPU clock configuration
-  rtc_clk_cpu_freq_get_config(&conf);
-
-  /*
-     // Debug code
-     String log = F("getAbpFrequency: source = ");
-     log += conf.source;
-     log += F(" source_freq_mhz = ");
-     log += conf.source_freq_mhz;
-     log += F(" div = ");
-     log += conf.div;
-     log += F(" freq_mhz = ");
-     log += conf.freq_mhz;
-     addLog(LOG_LEVEL_INFO, log);
-   */
-
-  if (conf.freq_mhz >= 80) {
-    return 80 * 1000000;
-  }
-  return (conf.source_freq_mhz * 1000000) / conf.div;
-  # endif // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S3
+uint32_t getXtalFrequencyMHz() {
+  return rtc_clk_xtal_freq_get();
 }
-
 #endif // ifdef ESP32
 
 
@@ -659,10 +633,9 @@ uint32_t getFlashChipSpeed() {
   #else // ifdef ESP8266
   const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(0));
 
-
   if (spi_clock & BIT(31)) {
     // spi_clk is equal to system clock
-    return getAbpFrequency();
+    return getApbFrequency();
   }
 
   /* SPI_CLKCNT_N : R/W ;bitpos:[17:12] ;default: 6'h3 ; */
@@ -672,25 +645,7 @@ uint32_t getFlashChipSpeed() {
   const uint32_t spi_clkdiv_pre = (spi_clock >> 18) & 0x1FFF;
   const uint32_t spi_clkcnt_n   = (spi_clock >> 12) & 0x3F;
 
-  /*
-     // Debug code
-     const uint32_t spi_clkcnt_h = (spi_clock >> 6) & 0x3F;
-     const uint32_t spi_clkcnt_l = (spi_clock) & 0x3F;
-
-     String log = F("Flash freq: APB_CLK_FREQ = ");
-     log += getAbpFrequency();
-     log += F(" spi_clkdiv_pre = ");
-     log += spi_clkdiv_pre;
-     log += F(" spi_clkcnt_n = ");
-     log += spi_clkcnt_n;
-     log += F(" spi_clkcnt_h = ");
-     log += spi_clkcnt_h;
-     log += F(" spi_clkcnt_l = ");
-     log += spi_clkcnt_l;
-     addLog(LOG_LEVEL_INFO, log);
-   */
-
-  return (getAbpFrequency() / (spi_clkdiv_pre + 1)) / (spi_clkcnt_n + 1);
+  return (getApbFrequency() / (spi_clkdiv_pre + 1)) / (spi_clkcnt_n + 1);
   #endif // ifdef ESP8266
 }
 

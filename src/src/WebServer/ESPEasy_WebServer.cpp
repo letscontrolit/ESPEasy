@@ -305,7 +305,7 @@ void WebServerInit()
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
   web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
-#ifdef SHOW_SYSINFO_JSON
+#if SHOW_SYSINFO_JSON
     web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
 #endif//SHOW_SYSINFO_JSON
 

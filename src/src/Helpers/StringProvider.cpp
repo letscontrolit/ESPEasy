@@ -170,7 +170,8 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
 #ifdef ESP32
-    case LabelType::ESP_CHIP_ABP_FREQ:      return F("ESP ABP Frequency");
+    case LabelType::ESP_CHIP_XTAL_FREQ:     return F("ESP Crystal Frequency");
+    case LabelType::ESP_CHIP_APB_FREQ:      return F("ESP APB Frequency");
 #endif
     case LabelType::ESP_CHIP_MODEL:         return F("ESP Chip Model");
     case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
@@ -390,7 +391,8 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId(), 6);
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
 #ifdef ESP32
-    case LabelType::ESP_CHIP_ABP_FREQ:      return String(getApbFrequency() / 1000000);
+    case LabelType::ESP_CHIP_XTAL_FREQ:     return String(getXtalFrequencyMHz());
+    case LabelType::ESP_CHIP_APB_FREQ:      return String(getApbFrequency() / 1000000);
 #endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());

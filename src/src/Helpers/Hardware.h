@@ -100,7 +100,7 @@ uint32_t                   getFlashRealSizeInBytes();
 uint32_t                   getFlashChipSpeed();
 
 #ifdef ESP32
-uint32_t                   getAbpFrequency();
+uint32_t                   getXtalFrequencyMHz();
 #endif // ifdef ESP32
 
 const __FlashStringHelper* getFlashChipMode();
