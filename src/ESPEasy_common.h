@@ -18,7 +18,7 @@
 
 
 // User configuration
-#include "../include/ESPEasy_config.h"
+#include "include/ESPEasy_config.h"
 #include "./src/CustomBuild/ESPEasyDefaults.h"
 
 
