@@ -148,7 +148,7 @@ void handle_sysinfo_json() {
 # endif // if FEATURE_ETHERNET
 
   json_open(false, F("firmware"));
-  json_prop(F("build"),       String(BUILD));
+  json_prop(F("build"),       getSystemBuildString());
   json_prop(F("notes"),       F(BUILD_NOTES));
   json_prop(F("libraries"),   getSystemLibraryString());
   json_prop(F("git_version"), getValue(LabelType::GIT_BUILD));

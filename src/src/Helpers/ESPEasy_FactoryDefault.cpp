@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/StorageLayout.h"
 
 #include "../DataStructs/ControllerSettingsStruct.h"
@@ -184,7 +185,7 @@ void ResetFactory()
 
   Settings.PID     = ESP_PROJECT_PID;
   Settings.Version = VERSION;
-  Settings.Build   = BUILD;
+  Settings.Build   = get_build_nr();
 
   //  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
   Settings.Delay                   = DEFAULT_DELAY;
