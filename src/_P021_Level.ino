@@ -211,7 +211,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
         if (UserVar.getUint32(event->TaskIndex, 3) == 0) {
           if (UserVar.getUint32(event->TaskIndex, 2) != 0) {
-            addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saved changed 'Set Level',"));
+            addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saved changed 'Set Level'."));
             SaveSettings();
             UserVar.setUint32(event->TaskIndex, 2, 0);
           }
