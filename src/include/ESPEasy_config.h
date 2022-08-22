@@ -91,17 +91,17 @@
 #ifdef USE_CUSTOM_H
   // make the compiler show a warning to confirm that this file is inlcuded
   //#warning "**** Using Settings from Custom.h File ***"
-  #include "../src/Custom.h"
+  #include "../Custom.h"
 #endif
 
 // Check if any deprecated '#define <variable>' (Custom.h) or '-D<variable>' (pre_custom_esp82xx.py/pre_custom_esp32.py) are used
 
-#include "../src/src/CustomBuild/check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
+#include "../src/CustomBuild/check_defines_custom.h" // Check for replaced #define variables, see https://github.com/letscontrolit/ESPEasy/pull/4153
 
 // Include custom first, then build info. (one may want to set BUILD_GIT for example)
-#include "../src/src/CustomBuild/ESPEasy_buildinfo.h"
-#include "../src/src/CustomBuild/ESPEasyLimits.h"
-#include "../src/src/CustomBuild/define_plugin_sets.h"
+#include "../src/CustomBuild/ESPEasy_buildinfo.h"
+#include "../src/CustomBuild/ESPEasyLimits.h"
+#include "../src/CustomBuild/define_plugin_sets.h"
 
 
 #endif // ifdef __cplusplus
