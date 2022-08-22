@@ -638,7 +638,7 @@ uint32_t getFlashChipSpeed() {
   #ifdef ESP8266
   return ESP.getFlashChipSpeed();
   #else // ifdef ESP8266
-  const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(1));
+  const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(FSPI));
 
   if (spi_clock & BIT(31)) {
     // spi_clk is equal to system clock
