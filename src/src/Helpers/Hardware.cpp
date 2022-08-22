@@ -631,21 +631,13 @@ uint32_t getFlashChipSpeed() {
   #ifdef ESP8266
   return ESP.getFlashChipSpeed();
   #else // ifdef ESP8266
-  const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(0));
+  const uint32_t spi_clock = REG_READ(SPI_CLOCK_REG(1));
 
   if (spi_clock & BIT(31)) {
     // spi_clk is equal to system clock
     return getApbFrequency();
   }
-
-  /* SPI_CLKCNT_N : R/W ;bitpos:[17:12] ;default: 6'h3 ; */
-
-  // description: In the master mode it is the divider of spi_clk.
-  // So spi_clk frequencyis system/(spi_clkdiv_pre+1)/(spi_clkcnt_N+1)
-  const uint32_t spi_clkdiv_pre = (spi_clock >> 18) & 0x1FFF;
-  const uint32_t spi_clkcnt_n   = (spi_clock >> 12) & 0x3F;
-
-  return (getApbFrequency() / (spi_clkdiv_pre + 1)) / (spi_clkcnt_n + 1);
+  return spiClockDivToFrequency(spi_clock);
   #endif // ifdef ESP8266
 }
 
@@ -662,23 +654,54 @@ const __FlashStringHelper* getFlashChipMode() {
 #else // ifdef ESP8266
 
   // Source: https://github.com/letscontrolit/ESPEasy/pull/4200#issuecomment-1221607332
-  const uint32_t spi_ctrl = REG_READ(SPI_CTRL_REG(0));
+  // + discussion: https://github.com/espressif/arduino-esp32/issues/7140#issuecomment-1222274417
+  const uint32_t spi_ctrl = REG_READ(PERIPHS_SPI_FLASH_CTRL);
 
-  /* Not all of the following constants are already defined in older versions of spi_reg.h, so do it manually for now*/
-  if (spi_ctrl & BIT(24)) {         // SPI_FREAD_QIO
-    return F("QIO");
-  } else if (spi_ctrl & BIT(20)) {  // SPI_FREAD_QUAD
-    return F("QOUT");
-  } else if (spi_ctrl &  BIT(23)) { // SPI_FREAD_DIO
-    return F("DIO");
-  } else if (spi_ctrl & BIT(14)) {  // SPI_FREAD_DUAL
-    return F("DOUT");
-  } else if (spi_ctrl & BIT(13)) {  // SPI_FASTRD_MODE
-    return F("Fast");
-  } else {
+  # if ESP_IDF_VERSION_MAJOR > 3      // IDF 4+
+    #  if CONFIG_IDF_TARGET_ESP32     // ESP32/PICO-D4
+      if (spi_ctrl & SPI_FREAD_QIO) {  
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QOUT");
+      } else if (spi_ctrl & SPI_FREAD_DIO) {
+        return F("DIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DOUT");
+      } else if (spi_ctrl & SPI_FASTRD_MODE) {
+        return F("Fast");
+      }
+      return F("Slow");
+    #  elif CONFIG_IDF_TARGET_ESP32S2 // ESP32-S2
+      if (spi_ctrl & SPI_FREAD_OCT) {  
+        return F("OCT");
+      } else if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DIO");
+      }
+      return F("DOUT");
+    #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
+      if (spi_ctrl & SPI_FREAD_QUAD) { 
+        return F("QIO");
+      } else if (spi_ctrl & SPI_FREAD_DUAL) {
+        return F("DIO");
+      }
+      return F("DOUT");
+    #  endif // if CONFIG_IDF_TARGET_ESP32
+  # else // ESP32 Before IDF 4.0
+    if (spi_ctrl & (BIT(24))) {  
+      return F("QIO");
+    } else if (spi_ctrl & (BIT(20))) { 
+      return F("QOUT");
+    } else if (spi_ctrl & (BIT(23))) {
+      return F("DIO");
+    } else if (spi_ctrl & (BIT(14))) {
+      return F("DOUT");
+    } else if (spi_ctrl & (BIT(13))) {
+      return F("Fast");
+    }
     return F("Slow");
-  }
-  return F("DOUT");
+  # endif    // if ESP_IDF_VERSION_MAJOR > 3
 #endif // ifdef ESP8266
 }
 
