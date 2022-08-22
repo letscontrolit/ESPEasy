@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-#include "../../include/ESPEasy_config.h"
+#include "include/ESPEasy_config.h"
 
 #include "src/CustomBuild/ESPEasyLimits.h"
 
