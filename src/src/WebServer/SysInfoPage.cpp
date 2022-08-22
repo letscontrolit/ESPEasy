@@ -173,11 +173,9 @@ void handle_sysinfo_json() {
 
   json_open(false, F("storage"));
 
-  uint32_t flashChipId = getFlashChipId();
-
   // Set to HEX may be something like 0x1640E0.
   // Where manufacturer is 0xE0 and device is 0x4016.
-  json_number(F("chip_id"), String(flashChipId));
+  json_number(F("chip_id"), getValue(LabelType::FLASH_CHIP_ID));
   if (flashChipVendorPuya()) {
     if (puyaSupport()) {
       json_prop(F("vendor"), F("puya, supported"));

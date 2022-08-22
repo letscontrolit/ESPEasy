@@ -398,7 +398,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
-    case LabelType::FLASH_CHIP_ID:          return String(getFlashChipId());
+    case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
     case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:
     {
