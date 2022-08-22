@@ -20,6 +20,7 @@
 #include "src/Helpers/ESPEasy_Storage.h"
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/Networking.h"
+#include "src/Helpers/StringGenerator_System.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_CPlugin_Helper.h" // safeReadStringUntil
 #include "src/Helpers/_NPlugin_init.h"
@@ -142,7 +143,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 		mailheader.replace(F("$emailfrom"), notificationsettings.Sender);
 		mailheader.replace(F("$ato"), notificationsettings.Receiver);
 		mailheader.replace(F("$subject"), aSub);
-		mailheader.replace(F("$espeasyversion"), String(BUILD));
+		mailheader.replace(F("$espeasyversion"), getSystemBuildString());
 		aMesg.replace(F("\r"), F("<br/>")); // re-write line breaks for Content-type: text/html
 
 		// Wait for Client to Start Sending
