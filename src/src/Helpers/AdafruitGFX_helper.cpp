@@ -1702,21 +1702,22 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
           const bool showAsCircle = borderColor == fillColor;
 
           // determine value and range
-          int16_t offI2      = 5;  // half of indicator width
-          int16_t offG2      = 3;  // half of Gauge width
-          int16_t offP       = 0;  // Offset for indicator
-          int16_t zeroLine   = -1; // Draw a range zero-line at this offset? only when >= 0
-          int     percentage = 0;
-          float   gaugeValue = 0.0f;
-          int16_t lowRange   = 0;
-          int16_t highRange  = 100;
-          float   rangeFrom  = 0.0f;
-          float   rangeTo    = 0.0f;
-          float   range      = 100.0f; // For percentage the range is 100
-          bool    useRange   = false;
+          int16_t offI2            = 5;  // half of indicator width
+          int16_t offG2            = 3;  // half of Gauge width
+          int16_t offP             = 0;  // Offset for indicator
+          int16_t zeroLine         = -1; // Draw a range zero-line at this offset? only when >= 0
+          int     percentage       = 0;
+          float   gaugeValue       = 0.0f;
+          int16_t lowRange         = 0;
+          int16_t highRange        = 100;
+          float   rangeFrom        = 0.0f;
+          float   rangeTo          = 0.0f;
+          float   range            = 100.0f; // For percentage the range is 100
+          bool    useRange         = false;
+          bool    hasRangeReversed = false;  // Range low value left or top, high value right or bottom
 
           if (!validFloatFromString(newString, gaugeValue)) {
-            percentage = nParams[0]; // Value as provided
+            percentage = nParams[0];         // Value as provided
           }
 
           // Have a range?
@@ -1727,9 +1728,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
             if (validFrom && validFloatFromString(tmp, rangeTo) &&
                 !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
-              useRange  = true;
-              lowRange  = static_cast<uint16_t>(min(rangeFrom, rangeTo));
-              highRange = static_cast<uint16_t>(max(rangeTo, rangeFrom));
+              useRange         = true;
+              lowRange         = static_cast<uint16_t>(rangeFrom);
+              highRange        = static_cast<uint16_t>(rangeTo);
+              hasRangeReversed = lowRange > highRange; // Range high value left or top, low value right or bottom?
             }
           }
 
@@ -1751,13 +1753,18 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
               gaugeValue -= min(rangeFrom, rangeTo); // Give it the correct Offset
             }
 
-            if ((lowRange < 0) &&
-                (highRange > 0)) {
+            if (((lowRange < 0) && (highRange > 0)) ||
+                ((lowRange > 0) && (highRange < 0))) {
               zeroLine = map(0, lowRange, highRange, 0, isVertical ? nParams[5] : nParams[4]);
             }
           }
           percentage = static_cast<int>(gaugeValue);
-          offP       = ((((isVertical ? nParams[5] : nParams[4]) - (2 * offI2)) / range) * percentage) - 1; // keep within button borders
+
+          offP = ((((isVertical ? nParams[5] : nParams[4]) - (2 * offI2)) / range) * percentage) - 1; // keep within button borders
+
+          if (hasRangeReversed) {
+            offP = (isVertical ? nParams[5] : nParams[4]) - (2 * offI2) - offP - 1;                   // flip
+          }
 
           if (isVertical) {
             // centerline
@@ -1770,8 +1777,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             }
 
             // Gauge
-            _display->fillRoundRect(nParams[2] + _xo + (nParams[4] / 2) - offG2, nParams[3] + _yo + (nParams[5] - offI2 - offP - 1),
-                                    2 * offG2, offP, offG2, textColor);
+            if (hasRangeReversed) {
+              int16_t bar = nParams[5] - (2 * offI2);
+              _display->fillRoundRect(nParams[2] + _xo + (nParams[4] / 2) - offG2, nParams[3] + _yo + offI2 + 0,
+                                      2 * offG2, bar - offP, offG2, textColor);
+            } else {
+              _display->fillRoundRect(nParams[2] + _xo + (nParams[4] / 2) - offG2, nParams[3] + _yo + (nParams[5] - offI2 - offP - 1),
+                                      2 * offG2, offP, offG2, textColor);
+            }
 
             // Indicator/drag-handle
             if (showAsCircle) { // Circle indicator
@@ -1779,10 +1792,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                                    nParams[3] + _yo + (nParams[5] - offI2 - offP - 2) + (percentage == 100 ? 1 : 0),
                                    trunc(nParams[4] / 4), textColor);
             } else {
-              _display->fillRoundRect(nParams[2] + _xo + 1, nParams[3] + _yo + (nParams[5] - (2 * offI2) - offP - 1),
+              _display->fillRoundRect(nParams[2] + _xo + 1, nParams[3] + _yo + (nParams[5] - (2 * offI2) - offP - (hasRangeReversed ? 0 : 1)),
                                       nParams[4] - 2, 2 * offI2, offI2, textColor);
             }
-          } else { // : if !isVertical
+          } else { // : if !isVertical -> isHorizontal
             // centerline
             _display->drawLine(nParams[2] + _xo + offI2 + 1, nParams[3] + _yo + nParams[5] / 2,
                                nParams[2] + _xo + nParams[4] - offI2, nParams[3] + _yo + nParams[5] / 2, textColor);
@@ -1793,8 +1806,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             }
 
             // Gauge
-            _display->fillRoundRect(nParams[2] + _xo + offI2 + 1, nParams[3] + _yo + (nParams[5] / 2) - offG2,
-                                    offP, offG2 * 2, offG2, textColor);
+            if (hasRangeReversed) {
+              int16_t bar = nParams[4] - (2 * offI2);
+              _display->fillRoundRect(nParams[2] + _xo + offI2 + offP + 2, nParams[3] + _yo + (nParams[5] / 2) - offG2,
+                                      bar - offP, offG2 * 2, offG2, textColor);
+            } else {
+              _display->fillRoundRect(nParams[2] + _xo + offI2 + 1, nParams[3] + _yo + (nParams[5] / 2) - offG2,
+                                      offP, offG2 * 2, offG2, textColor);
+            }
 
             // Indicator/drag-handle
             if (showAsCircle) { // Circle indicator
@@ -1802,7 +1821,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
                                    nParams[3] + _yo + (nParams[5] / 2),
                                    trunc(nParams[5] / 4), textColor);
             } else {
-              _display->fillRoundRect(nParams[2] + _xo + offP + 1, nParams[3] + _yo + 1,
+              _display->fillRoundRect(nParams[2] + _xo + offP + (hasRangeReversed ? 0 : 1), nParams[3] + _yo + 1,
                                       2 * offI2, nParams[5] - 2, offI2, textColor);
             }
           }

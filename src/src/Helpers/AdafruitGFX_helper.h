@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-08-22 tonhuisman: Improve drawing of slider when using a range, so a reverse range (40,-10) is displayed 'flipped'
  * 2022-08-16 tonhuisman: Add drawing of Slide/Gauge controls via btn subcommand, horizontal or vertical depending on width/height ratio
  * 2022-08-15 tonhuisman: Add initial support for slide/gauge controls
  * 2022-06-07 tonhuisman: Code improvements in initialization, move offset calculation to printText() function
