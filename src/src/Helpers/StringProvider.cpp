@@ -169,6 +169,9 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
+#ifdef ESP32
+    case LabelType::ESP_CHIP_ABP_FREQ:      return F("ESP ABP Frequency");
+#endif
     case LabelType::ESP_CHIP_MODEL:         return F("ESP Chip Model");
     case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
     case LabelType::ESP_CHIP_CORES:         return F("ESP Chip Cores");
@@ -386,6 +389,9 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId(), 6);
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
+#ifdef ESP32
+    case LabelType::ESP_CHIP_ABP_FREQ:      return String(getApbFrequency() / 1000000);
+#endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
@@ -402,7 +408,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed() / 1000000);
     case LabelType::FLASH_IDE_SIZE:         break;
     case LabelType::FLASH_IDE_SPEED:        break;
-    case LabelType::FLASH_IDE_MODE:         break;
+    case LabelType::FLASH_IDE_MODE:         return getFlashChipMode();
     case LabelType::FLASH_WRITE_COUNT:      break;
     case LabelType::SKETCH_SIZE:            break;
     case LabelType::SKETCH_FREE:            break;

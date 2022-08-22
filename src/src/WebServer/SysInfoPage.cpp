@@ -192,16 +192,7 @@ void handle_sysinfo_json() {
   // Please check what is supported for the ESP32
   json_number(F("flash_speed"), getValue(LabelType::FLASH_CHIP_SPEED));
 
-  FlashMode_t ideMode = ESP.getFlashChipMode();
-
-  switch (ideMode) {
-    case FM_QIO:   json_prop(F("mode"), F("QIO"));  break;
-    case FM_QOUT:  json_prop(F("mode"), F("QOUT")); break;
-    case FM_DIO:   json_prop(F("mode"), F("DIO"));  break;
-    case FM_DOUT:  json_prop(F("mode"), F("DOUT")); break;
-    default:
-      json_prop(F("mode"), F("Unknown")); break;
-  }
+  json_prop(F("mode"), getFlashChipMode());
 
   json_number(F("writes"),        String(RTC.flashDayCounter));
   json_number(F("flash_counter"), String(RTC.flashCounter));
@@ -565,9 +556,12 @@ void handle_sysinfo_ESP_Board() {
     addHtml(')');
   }
 
-  addRowLabel(LabelType::ESP_CHIP_FREQ);
-  addHtmlInt(ESP.getCpuFreqMHz());
+  addRowLabelValue(LabelType::ESP_CHIP_FREQ);
   addHtml(F(" MHz"));
+#ifdef ESP32
+  addRowLabelValue(LabelType::ESP_CHIP_ABP_FREQ);
+  addHtml(F(" MHz"));
+#endif
 
   addRowLabelValue(LabelType::ESP_CHIP_MODEL);
 
@@ -628,18 +622,7 @@ void handle_sysinfo_Storage() {
   addHtmlInt(ESP.getFlashChipSpeed() / 1000000);
   addHtml(F(" MHz"));
 
-  FlashMode_t ideMode = ESP.getFlashChipMode();
-  addRowLabel(LabelType::FLASH_IDE_MODE);
-  {
-    switch (ideMode) {
-      case FM_QIO:   addHtml(F("QIO"));  break;
-      case FM_QOUT:  addHtml(F("QOUT")); break;
-      case FM_DIO:   addHtml(F("DIO"));  break;
-      case FM_DOUT:  addHtml(F("DOUT")); break;
-      default:
-        addHtml(F("Unknown")); break;
-    }
-  }
+  addRowLabelValue(LabelType::FLASH_IDE_MODE);
 
   addRowLabel(LabelType::FLASH_WRITE_COUNT);
   {
