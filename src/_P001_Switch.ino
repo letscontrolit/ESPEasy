@@ -60,6 +60,23 @@
 # define P001_LP_MIN_INT    PCONFIG_FLOAT(2)
 # define P001_SAFE_BTN      PCONFIG_FLOAT(3)
 
+// TD-er: Needed to fix a mistake in earlier fixes.
+uint8_t P001_getSwitchType(struct EventStruct *event) {
+  uint8_t choice = PCONFIG(0);
+
+  switch (choice) {
+    case 2: // Old implementation for Dimmer
+    case PLUGIN_001_TYPE_DIMMER:
+      choice = PLUGIN_001_TYPE_DIMMER;
+      break;
+    case 1: // Old implementation for switch
+    case PLUGIN_001_TYPE_SWITCH:
+    default:
+      choice = PLUGIN_001_TYPE_SWITCH;
+      break;
+  }
+  return choice;
+}
 
 boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -713,24 +730,6 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-// TD-er: Needed to fix a mistake in earlier fixes.
-uint8_t P001_getSwitchType(struct EventStruct *event) {
-  uint8_t choice = PCONFIG(0);
-
-  switch (choice) {
-    case 2: // Old implementation for Dimmer
-    case PLUGIN_001_TYPE_DIMMER:
-      choice = PLUGIN_001_TYPE_DIMMER;
-      break;
-    case 1: // Old implementation for switch
-    case PLUGIN_001_TYPE_SWITCH:
-    default:
-      choice = PLUGIN_001_TYPE_SWITCH;
-      break;
-  }
-  return choice;
 }
 
 #endif // USES_P001
