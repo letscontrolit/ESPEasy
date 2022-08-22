@@ -9,6 +9,8 @@
 
     * If a text has comma's or spaces, then it should be 'wrapped' in either double quotes ``^"``, single quotes ``^'`` or back-ticks ``^```.
     * For ``color`` arguments, see how colors can be defined in the ``txc`` subcommand description.
+
+    * Commands and subcommands are not case-sensitive.
     "
     "
     ``<trigger>,clear[,<color>]``
@@ -68,6 +70,8 @@
     ``<trigger>,txs,<size>``
     ","
     Set font scaling option. Only values from 0 to 10 are accepted. 0 assumes 1 by default.
+
+    Some display types may limit or extend the maximum accepted size.
     "
     "
     ``<trigger>,txtfull,<x>,<y>,<size=1>,<foreColor=current>,<backColor=foreColor>,<textPrintMode=current>,<maxTextWidthPixels=0>,<text>``
@@ -106,23 +110,37 @@
     * *sevenseg18* A somewhat less large 7-segment 16 * 34 font
     * *freesans* A sans-serif 10 * 21 font
 
-    Usually disabled fonts: (can be enabled in a Custom build, default included in the MAX builds)
+    Usually disabled fonts: (can be enabled in a Custom build, default enabled in the MAX builds)
 
     * *angelina8prop* A proportional, handwriting, 6 * 16 font
     * *novamono8pt* A modern 9 * 16 font
     * *unispace8pt* A modern 12 * 24 font
     * *unispaceitalic8pt* A modern italic (slanted) 12 * 24 font
     * *whiterabbit8pt* A modern 12 * 24 font
+    * *robotomono8pt* A modern 8 * 10 font
     * *angelina12prop* A proportional, handwriting, 8 * 24 font
     * *novamono12pt* A modern 13 * 34 font
     * *repetitionscrolling12pt* A modern 13 * 24 font
     * *unispace12pt* A modern 13 * 18 font
     * *unispaceitalic12pt* A modern italic (slanted) 13 * 18 font
     * *whiterabbit12pt* A modern 13 * 18 font
+    * *robotomono12pt* A modern 13 * 18 font
     * *amerikasans16pt* A proportional 17 * 20 font
     * *whiterabbit16pt* A modern 16 * 20 font
+    * *robotomono16pt* A modern 16 * 20 font
     * *whiterabbit18pt* A modern 18 * 22 font
     * *whiterabbit20pt* A modern 20 * 24 font
+
+    Standard disabled fonts (even on MAX builds), that can be enabled in a custom build:
+
+    * *roboto8pt* A modern 9 * 16 font (proportionally spaced)
+    * *roboto12pt* A modern 13 * 18 font (proportionally spaced)
+    * *roboto16pt* A modern 16 * 20 font (proportionally spaced)
+    * *robotocond8pt* A modern 9 * 16 font (Roboto Condensed, proportionally spaced)
+    * *robotocond12pt* A modern 13 * 18 font (Roboto Condensed, proportionally spaced)
+    * *robotocond16pt* A modern 16 * 20 font (Roboto Condensed, proportionally spaced)
+
+    NB: Roboto is used as the default Android font since Android 4.1, and very readable, even when using small fonts on a small display.
     "
     "
     ``<trigger>,l,<x1>,<y1>,<x2>,<y2>,<color>``

@@ -61,13 +61,13 @@
 #  define ADAGFX_FONTS_INCLUDED       1     // 3 extra fonts, also controls enable/disable of below 8pt/12pt fonts
 # endif // ifndef ADAGFX_FONTS_INCLUDED
 # ifndef ADAGFX_PARSE_SUBCOMMAND
-#  define ADAGFX_PARSE_SUBCOMMAND     1     // Enable/disable parsing of subcommands (pre/postfix below) to be executed by the helper
+#  define ADAGFX_PARSE_SUBCOMMAND     1     // Enable parsing of subcommands (pre/postfix below) to be executed by the helper
 # endif // ifndef ADAGFX_PARSE_SUBCOMMAND
 # ifndef ADAGFX_ENABLE_EXTRA_CMDS
-#  define ADAGFX_ENABLE_EXTRA_CMDS    1     // Enable/disable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
+#  define ADAGFX_ENABLE_EXTRA_CMDS    1     // Enable extra subcommands like lm (line-multi) and lmr (line-multi, relative)
 # endif // ifndef ADAGFX_ENABLE_EXTRA_CMDS
 # ifndef ADAGFX_ENABLE_BMP_DISPLAY
-#  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable/disable subcommands for displaying .bmp files on supported displays (color)
+#  define ADAGFX_ENABLE_BMP_DISPLAY   1     // Enable subcommands for displaying .bmp files on supported displays (color)
 # endif // ifndef ADAGFX_ENABLE_BMP_DISPLAY
 # ifndef ADAGFX_ENABLE_BUTTON_DRAW
 #  define ADAGFX_ENABLE_BUTTON_DRAW   1     // Enable/disable subcommands for displaying button-like shapes
@@ -82,9 +82,9 @@
 #  define ADAGFX_ENABLE_GET_CONFIG_VALUE  1 // Enable getting values features
 # endif // ifndef ADAGFX_ENABLE_GET_CONFIG_VALUE
 
-// # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 5 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~10,4 kB
-// # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 6 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~19,8 kB
-// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 2 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~7.7 kB
+// # define ADAGFX_FONTS_EXTRA_8PT_INCLUDED  // 8 extra 8pt fonts, should probably only be enabled in a private custom build, adds ~15.4 kB
+// # define ADAGFX_FONTS_EXTRA_12PT_INCLUDED // 9 extra 12pt fonts, should probably only be enabled in a private custom build, adds ~28 kB
+// # define ADAGFX_FONTS_EXTRA_16PT_INCLUDED // 5 extra 16pt fonts, should probably only be enabled in a private custom build, adds ~19.9 kB
 // # define ADAGFX_FONTS_EXTRA_18PT_INCLUDED // 1 extra 18pt fonts, should probably only be enabled in a private custom build, adds ~4.3 kB
 // # define ADAGFX_FONTS_EXTRA_20PT_INCLUDED // 1 extra 20pt fonts, should probably only be enabled in a private custom build, adds ~5.3 kB
 
@@ -95,6 +95,10 @@
 # define ADAGFX_FONTS_EXTRA_8PT_UNISPACEITALIC
 # define ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
 
+// # define ADAGFX_FONTS_EXTRA_8PT_ROBOTO          // This font is proportinally spaced!
+// # define ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+
 // To enable/disable 12pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_12PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_12PT_ANGELINA // This font is proportinally spaced!
 # define ADAGFX_FONTS_EXTRA_12PT_NOVAMONO
@@ -103,9 +107,17 @@
 # define ADAGFX_FONTS_EXTRA_12PT_UNISPACEITALIC
 # define ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
 
+// # define ADAGFX_FONTS_EXTRA_12PT_ROBOTO          // This font is proportinally spaced!
+// # define ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+
 // To enable/disable 16pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_16PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS // This font is proportinally spaced!
 # define ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+
+// # define ADAGFX_FONTS_EXTRA_16PT_ROBOTO          // This font is proportinally spaced!
+// # define ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED // This font is proportinally spaced!
+# define ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 
 // To enable/disable 18pt fonts separately: (will only be enabled if ADAGFX_FONTS_EXTRA_18PT_INCLUDED is defined)
 # define ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
@@ -262,7 +274,7 @@ enum class AdaGFXColorDepth : uint16_t {
   EightColor   = 8u,          // 8 regular colors
   SixteenColor = 16u,         // 16 colors
   # endif // if ADAGFX_SUPPORT_8and16COLOR
-  FullColor = 65535u          // 65535 colors (max. supported by RGB565)
+  FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
 };
 
 # if ADAGFX_ENABLE_BUTTON_DRAW
@@ -476,7 +488,7 @@ public:
                        const int16_t& h,
                        int16_t        windowId = -1,
                        const int8_t & rotation = -1);
-  bool     deleteWindow(const uint8_t& windowId);
+  bool deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   uint16_t getTextSize(const String& text,

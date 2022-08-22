@@ -19,6 +19,15 @@
 #   include "../Static/Fonts/unispace8pt7b.h"
 #   include "../Static/Fonts/unispace_italic8pt7b.h"
 #   include "../Static/Fonts/whitrabt8pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+#    include "../Static/Fonts/Roboto_Regular8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+#    include "../Static/Fonts/RobotoCondensed_Regular8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+#    include "../Static/Fonts/RobotoMono_Regular8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #   include "../Static/Fonts/angelina12pt7b.h"
@@ -27,10 +36,28 @@
 #   include "../Static/Fonts/unispace12pt7b.h"
 #   include "../Static/Fonts/unispace_italic12pt7b.h"
 #   include "../Static/Fonts/whitrabt12pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+#    include "../Static/Fonts/Roboto_Regular12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+#    include "../Static/Fonts/RobotoCondensed_Regular12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+#    include "../Static/Fonts/RobotoMono_Regular12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #   include "../Static/Fonts/AmerikaSans16pt7b.h"
 #   include "../Static/Fonts/whitrabt16pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#    include "../Static/Fonts/Roboto_Regular16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+#    include "../Static/Fonts/RobotoCondensed_Regular16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+#    include "../Static/Fonts/RobotoMono_Regular16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #   include "../Static/Fonts/whitrabt18pt7b.h"
@@ -1035,6 +1062,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&whitrabt8pt7b);
       calculateTextMetrics(10, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+    } else if (sParams[0].equals(F("roboto8pt"))) { // Proportional font!
+      _display->setFont(&Roboto_Regular8pt7b);
+      calculateTextMetrics(10, 16, 12, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+    } else if (sParams[0].equals(F("robotocond8pt"))) { // Proportional font!
+      _display->setFont(&RobotoCondensed_Regular8pt7b);
+      calculateTextMetrics(9, 16, 12, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+    } else if (sParams[0].equals(F("robotomono8pt"))) {
+      _display->setFont(&RobotoMono_Regular8pt7b);
+      calculateTextMetrics(10, 16, 12);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
       // Extra 12pt fonts:
     #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
@@ -1068,6 +1110,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&whitrabt12pt7b);
       calculateTextMetrics(13, 20, 16);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+    } else if (sParams[0].equals(F("roboto12pt"))) { // Proportional font!
+      _display->setFont(&Roboto_Regular12pt7b);
+      calculateTextMetrics(13, 20, 16, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+    } else if (sParams[0].equals(F("robotocond12pt"))) { // Proportional font!
+      _display->setFont(&RobotoCondensed_Regular12pt7b);
+      calculateTextMetrics(13, 20, 16, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+    } else if (sParams[0].equals(F("robotomono12pt"))) {
+      _display->setFont(&RobotoMono_Regular12pt7b);
+      calculateTextMetrics(13, 20, 16);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
@@ -1080,6 +1137,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&whitrabt16pt7b);
       calculateTextMetrics(18, 26, 22);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+    } else if (sParams[0].equals(F("roboto16pt"))) { // Proportional font!
+      _display->setFont(&Roboto_Regular16pt7b);
+      calculateTextMetrics(18, 27, 23, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+    } else if (sParams[0].equals(F("robotocond16pt"))) { // Proportional font!
+      _display->setFont(&RobotoCondensed_Regular16pt7b);
+      calculateTextMetrics(18, 27, 23, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+    } else if (sParams[0].equals(F("robotomono16pt"))) {
+      _display->setFont(&RobotoMono_Regular16pt7b);
+      calculateTextMetrics(18, 27, 23);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT

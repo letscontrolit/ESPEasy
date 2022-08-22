@@ -92,6 +92,7 @@ ESPeasySerial::ESPeasySerial(
       _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
   }
 
+#ifndef DISABLE_SC16IS752_Serial
   switch (_serialtype) {
     case ESPEasySerialPort::sc16is752:
     {
@@ -103,6 +104,7 @@ ESPeasySerial::ESPeasySerial(
     default:
       break;
   }
+#endif
 
 }
 

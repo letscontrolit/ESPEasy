@@ -450,7 +450,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       int dotPos = command.indexOf('.');                      // Find first period
       if (Function == PLUGIN_WRITE                            // Only applicable on PLUGIN_WRITE function
         && dotPos > -1) {                                     // First precondition is just a quick check for a period (fail-fast strategy)
-        String arg0 = parseString(command, 1);                // Get first argument
+        const String arg0 = parseString(command, 1);                // Get first argument
         dotPos = arg0.indexOf('.');
         if (dotPos > -1) {
           String thisTaskName = parseString(arg0, 1, '.');    // Extract taskname prefix
@@ -540,9 +540,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        bool retval = PluginCallForTask(taskIndex, Function, &TempEvent, str);
-
-        if (retval) {
+        if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
           #ifndef BUILD_NO_RAM_TRACKER
           checkRAM(F("PluginCallUDP"), taskIndex);
           #endif

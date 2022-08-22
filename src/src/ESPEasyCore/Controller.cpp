@@ -212,14 +212,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   MQTTclient.setCallback(incoming_mqtt_callback);
 
   // MQTT needs a unique clientname to subscribe to broker
-  String clientid = getMQTTclientID(ControllerSettings);
+  const String clientid = getMQTTclientID(ControllerSettings);
 
-  String  LWTTopic             = getLWT_topic(ControllerSettings);
-  String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
-  bool    MQTTresult           = false;
-  uint8_t willQos              = 0;
-  bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
-  bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
+  const String  LWTTopic             = getLWT_topic(ControllerSettings);
+  const String  LWTMessageDisconnect = getLWT_messageDisconnect(ControllerSettings);
+  bool          MQTTresult           = false;
+  const uint8_t willQos              = 0;
+  const bool    willRetain           = ControllerSettings.mqtt_willRetain() && ControllerSettings.mqtt_sendLWT();
+  const bool    cleanSession         = ControllerSettings.mqtt_cleanSession(); // As suggested here:
 
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
@@ -247,10 +247,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-
-  uint8_t controller_number = Settings.Protocol[controller_idx];
-
-  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
+  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx]);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();
@@ -259,8 +256,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
     return false;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("MQTT : Connected to broker with client ID: ");
-
+    String log;
+    log += F("MQTT : Connected to broker with client ID: ");
     log += clientid;
     addLogMove(LOG_LEVEL_INFO, log);
   }
@@ -458,6 +455,11 @@ bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource)
       break;
   }
   return false;
+}
+
+void SendStatus(struct EventStruct *event, const __FlashStringHelper * status)
+{
+  SendStatus(event, String(status));
 }
 
 void SendStatus(struct EventStruct *event, const String& status)

@@ -1,7 +1,8 @@
 {
   "build": {
     "arduino":{
-      "ldscript": "esp32c3_out.ld"
+      "ldscript": "esp32c3_out.ld",
+      "memory_type": "dout_qspi"
     },
     "core": "esp32",
     "extra_flags": "-DARDUINO_USB_CDC_ON_BOOT=0 -DESP32_4M -DESP32C3",

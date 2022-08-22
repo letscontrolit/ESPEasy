@@ -1,5 +1,5 @@
-#ifndef WEBSERVER_WEBSERVER_H
-#define WEBSERVER_WEBSERVER_H
+#ifndef WEBSERVER_ESPEASY_WEBSERVER_H
+#define WEBSERVER_ESPEASY_WEBSERVER_H
 
 #include "../WebServer/common.h"
 
@@ -212,4 +212,4 @@ String webArg(const String& arg);
 String webArg(int i);
 #endif 
 
-#endif // ifndef WEBSERVER_WEBSERVER_H
+#endif // ifndef WEBSERVER_ESPEASY_WEBSERVER_H

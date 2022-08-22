@@ -1,4 +1,4 @@
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 #include "../WebServer/404.h"
 #include "../WebServer/AccessControl.h"
