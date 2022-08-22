@@ -36,6 +36,7 @@ const __FlashStringHelper* toString(Swipe_action_e action) {
     case Swipe_action_e::Left: return F("Left");
     case Swipe_action_e::LeftUp: return F("Left-Up");
     case Swipe_action_e::None: return F("None");
+    case Swipe_action_e::SwipeAction_MAX: break;
   }
   return F("Unknown");
 }
@@ -170,6 +171,35 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
         TouchObjects[t].SurfaceAreas = 0u; // Reset runtime stuff
         TouchObjects[t].TouchTimers  = 0u;
         TouchObjects[t].TouchStates  = 0;
+
+        # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
+
+        // Check if a slider/gauge with range not including 0 is used, then set starting value closest to 0
+        if (bitRead(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_SLIDER) && !TouchObjects[t].captionOff.isEmpty()) {
+          float  rangeFrom     = 0.0f;
+          float  rangeTo       = 0.0f;
+          String tmp           = parseString(TouchObjects[t].captionOff, 1);
+          const bool validFrom = validFloatFromString(tmp, rangeFrom);
+          tmp = parseString(TouchObjects[t].captionOff, 2);
+
+          if (validFrom && validFloatFromString(tmp, rangeTo) &&
+              !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
+            if (definitelyGreaterThan(rangeFrom, 0.0f) && definitelyGreaterThan(rangeTo, 0.0f)) {
+              if (definitelyGreaterThan(rangeFrom, rangeTo)) {
+                TouchObjects[t].TouchStates = rangeTo;
+              } else {
+                TouchObjects[t].TouchStates = rangeFrom;
+              }
+            } else if (definitelyLessThan(rangeFrom, 0.0f) && definitelyLessThan(rangeTo, 0.0f)) {
+              if (definitelyGreaterThan(rangeFrom, rangeTo)) {
+                TouchObjects[t].TouchStates = rangeFrom;
+              } else {
+                TouchObjects[t].TouchStates = rangeTo;
+              }
+            }
+          }
+        }
+        # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
         t++;
 
@@ -753,6 +783,11 @@ bool ESPEasy_TouchHandler::decrementButtonPage(struct EventStruct *event) {
  * Load the settings onto the webpage
  */
 bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
+  if (!_settingsLoaded) {
+    loadTouchObjects(event);
+    _settingsLoaded = true;
+  }
+
   addFormSubHeader(F("Touch configuration"));
 
   addFormCheckBox(F("Flip rotation 180&deg;"), F("rotation_flipped"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_ROTATION_FLIPPED));
@@ -940,7 +975,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_AUTO_PAGE_ARROWS));
     addFormCheckBox(F("PageUp/PageDown reversed"), F("page_below"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU));
-    addFormCheckBox(F("Swipe Left/Right/Up/Down menu reversed"), F("swipeswap"),
+    addFormCheckBox(F("Swipe Left/Right/Up/Down menu reversed"), F("swipe_swap"),
                     bitRead(Touch_Settings.flags, TOUCH_FLAGS_SWAP_LEFT_RIGHT));
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
@@ -1304,8 +1339,8 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
     addUnit(F("1..25px"));
 
     addFormNumericBox(F("Maximum swipe margin"), F("swipemax"),
-                      Touch_Settings.swipeMargin, 5, 100);
-    addUnit(F("5..100px"));
+                      Touch_Settings.swipeMargin, 5, 250);
+    addUnit(F("5..250px"));
     # endif // if TOUCH_FEATURE_SWIPE
   }
   return false;
@@ -1349,7 +1384,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   bitWrite(lSettings, TOUCH_FLAGS_DRAWBTN_VIA_RULES, isFormItemChecked(F("via_rules")));
   bitWrite(lSettings, TOUCH_FLAGS_AUTO_PAGE_ARROWS,  isFormItemChecked(F("page_buttons")));
   bitWrite(lSettings, TOUCH_FLAGS_PGUP_BELOW_MENU,   isFormItemChecked(F("page_below")));
-  bitWrite(lSettings, TOUCH_FLAGS_SWAP_LEFT_RIGHT,   isFormItemChecked(F("swipeswap")));
+  bitWrite(lSettings, TOUCH_FLAGS_SWAP_LEFT_RIGHT,   isFormItemChecked(F("swipe_swap")));
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
   config += getFormItemInt(F("use_calibration")); // First value should NEVER be empty, or parseString() wil get confused
@@ -1545,7 +1580,8 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
 }
 
 /**
- * Every 20 milliseconds we check if the screen is touched
+ * Every 20 milliseconds we check if the screen is touched,
+ * handles button switching, swiping and slider-sliding
  */
 bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
                                                    const int16_t     & x,
@@ -1571,7 +1607,7 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
       loglevelActiveFor(LOG_LEVEL_INFO)) { // REQUIRED for calibration and setting up objects, so do not make this optional!
     String log;
     log.reserve(72);
-    log  = F("Touch calibration rx= ");    // Space before the logged values added for readability
+    log  = F("Touch calibration rx= ");    // Space before the logged values for readability
     log += rx;
     log += F(", ry= ");
     log += ry;
@@ -1667,8 +1703,8 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           # if TOUCH_FEATURE_SWIPE
           (swipe == Swipe_action_e::None) &&
           # endif // if TOUCH_FEATURE_SWIPE
-          ((TouchObjects[selectedObjectIndex].TouchTimers == 0)
-           || (TouchObjects[selectedObjectIndex].TouchTimers < (millis() - (1.5 * Touch_Settings.debounceMs)))
+          ((TouchObjects[selectedObjectIndex].TouchTimers == 0) ||
+           (TouchObjects[selectedObjectIndex].TouchTimers < (millis() - (1.5 * Touch_Settings.debounceMs)))
           )) {
           // From now wait the debounce time
           TouchObjects[selectedObjectIndex].TouchTimers = millis() + Touch_Settings.debounceMs;
@@ -1690,7 +1726,8 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               // Button touched
               _lastObjectIndex = selectedObjectIndex; // Handle on release
             # if TOUCH_FEATURE_SWIPE
-            } else if ((selectedObjectIndex > -1) && bitRead(TouchObjects[selectedObjectIndex].flags, TOUCH_OBJECT_FLAG_SLIDER)) {
+            } else if ((swipe != Swipe_action_e::None) &&
+                       (selectedObjectIndex > -1) && bitRead(TouchObjects[selectedObjectIndex].flags, TOUCH_OBJECT_FLAG_SLIDER)) {
               // Handle slider immediately to move/set absolute position
               _lastObjectIndex = -1; // Handled
               const bool isVertical = TouchObjects[selectedObjectIndex].width_height.x < TouchObjects[selectedObjectIndex].width_height.y;
@@ -1721,8 +1758,8 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               }
 
               if (useRange) { // Calculate range-boundaries
-                lowRange                                      = static_cast<uint16_t>(min(rangeFrom, rangeTo));
-                highRange                                     = static_cast<uint16_t>(max(rangeTo, rangeFrom));
+                lowRange                                      = static_cast<uint16_t>(rangeFrom);
+                highRange                                     = static_cast<uint16_t>(rangeTo);
                 position                                      = map(position, 0, 100, lowRange, highRange);
                 TouchObjects[selectedObjectIndex].TouchStates = position;
               } else if (position < lowRange) {

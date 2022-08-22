@@ -11,6 +11,7 @@
 
 /*****
  * Changelog:
+ * 2022-08-22 tonhuisman: Improve Slider range handling so a reverse range (40,-10) can also be used.
  * 2022-08-17 tonhuisman: Add support for range (x..y) for sliders
  * 2022-08-16 tonhuisman: Changed validButtonGroup() to ignore group 0 by default, and setButtonGroup(), and setgrp subcommand,
  *                        to allow group 0
