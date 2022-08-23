@@ -27,6 +27,7 @@
 # define P021_DONT_ALWAYS_SAVE    PCONFIG(2)
 # define P021_TRIGGER_LEVEL       PCONFIG_FLOAT(0)
 # define P021_TRIGGER_HYSTERESIS  PCONFIG_FLOAT(1)
+# define P021_TRIGGER_LAST_STORED PCONFIG_FLOAT(2)
 # define P021_AUTOSAVE_TIMER      PCONFIG_LONG(0)
 
 boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
@@ -106,12 +107,13 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P021_CHECK_TASK         = getFormItemInt(F("ptask"));
-      P021_CHECK_VALUE        = getFormItemInt(F("pvalue"));
-      P021_DONT_ALWAYS_SAVE   = isFormItemChecked(F("psave_always")) ? 0 : 1; // inverted flag!
-      P021_TRIGGER_LEVEL      = getFormItemFloat(F("psetvalue"));
-      P021_TRIGGER_HYSTERESIS = getFormItemFloat(F("physt"));
-      P021_AUTOSAVE_TIMER     = getFormItemInt(F("pautosave")) * 60;          // Store in seconds
+      P021_CHECK_TASK          = getFormItemInt(F("ptask"));
+      P021_CHECK_VALUE         = getFormItemInt(F("pvalue"));
+      P021_DONT_ALWAYS_SAVE    = isFormItemChecked(F("psave_always")) ? 0 : 1; // inverted flag!
+      P021_TRIGGER_LEVEL       = getFormItemFloat(F("psetvalue"));
+      P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
+      P021_TRIGGER_HYSTERESIS  = getFormItemFloat(F("physt"));
+      P021_AUTOSAVE_TIMER      = getFormItemInt(F("pautosave")) * 60; // Store in seconds
 
       success = true;
       break;
@@ -130,14 +132,19 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             P021_TRIGGER_LEVEL = result;
 
             if (P021_DONT_ALWAYS_SAVE == 0) {                                       // save only if explicitly enabled
+              P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
               SaveSettings();
             } else {
-              UserVar.setUint32(event->TaskIndex, 2, 1);                            // Set flag for auto-save
+              UserVar.setUint32(event->TaskIndex, 2, 1);                     // Set flag for auto-save
 
-              if ((P021_AUTOSAVE_TIMER > 0) &&                                      // - Autosave is set
-                  (P021_DONT_ALWAYS_SAVE != 0) &&                                   // - Save is off
-                  (UserVar.getUint32(event->TaskIndex, 3) == 0)) {                  // - Timer not yet started
-                UserVar.setUint32(event->TaskIndex, 3, P021_AUTOSAVE_TIMER);        // Start timer
+              if ((P021_AUTOSAVE_TIMER > 0) &&                               // - Autosave is set
+                  (P021_DONT_ALWAYS_SAVE != 0) &&                            // - Save is off
+                  ((UserVar.getUint32(event->TaskIndex, 3) <= 0) ||          // - Timer not yet started or uninitialized
+                   (UserVar.getUint32(event->TaskIndex, 3) > P021_AUTOSAVE_TIMER))) {
+                UserVar.setUint32(event->TaskIndex, 3, P021_AUTOSAVE_TIMER); // Start timer
+                # ifndef LIMIT_BUILD_SIZE
+                addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-save timer started."));
+                # endif // ifndef LIMIT_BUILD_SIZE
               }
             }
           }
@@ -210,8 +217,10 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setUint32(event->TaskIndex, 3, UserVar.getUint32(event->TaskIndex, 3) - 1u); // Count down per second
 
         if (UserVar.getUint32(event->TaskIndex, 3) == 0) {
-          if (UserVar.getUint32(event->TaskIndex, 2) != 0) {
-            addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saved changed 'Set Level'."));
+          if ((UserVar.getUint32(event->TaskIndex, 2) != 0) &&
+              !essentiallyEqual(P021_TRIGGER_LEVEL, P021_TRIGGER_LAST_STORED)) {
+            addLogMove(LOG_LEVEL_INFO, F("LEVEL: Auto-saving changed 'Set Level'."));
+            P021_TRIGGER_LAST_STORED = P021_TRIGGER_LEVEL;
             SaveSettings();
             UserVar.setUint32(event->TaskIndex, 2, 0);
           }
