@@ -224,7 +224,6 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
             SaveSettings();
             UserVar.setUint32(event->TaskIndex, 2, 0);
           }
-          UserVar.setUint32(event->TaskIndex, 3, P021_AUTOSAVE_TIMER); // Restart timer
         }
       }
       success = true;
