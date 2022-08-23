@@ -197,6 +197,10 @@ void handle_json()
         LabelType::PSRAM_MAX_FREE_BLOCK,
         #endif // BOARD_HAS_PSRAM
     #endif // ifdef ESP32
+        LabelType::ESP_CHIP_MODEL,
+    #ifdef ESP32
+        LabelType::ESP_CHIP_REVISION,
+    #endif // ifdef ESP32
 
         LabelType::SUNRISE,
         LabelType::SUNSET,
