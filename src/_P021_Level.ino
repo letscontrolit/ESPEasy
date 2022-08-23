@@ -213,7 +213,9 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_ONCE_A_SECOND:
     {
       // When set but not Save after change is set, don't want to save twice
-      if ((P021_AUTOSAVE_TIMER > 0) && (P021_DONT_ALWAYS_SAVE != 0)) {
+      if ((P021_AUTOSAVE_TIMER > 0) && (P021_DONT_ALWAYS_SAVE != 0) &&
+          (0 != UserVar.getUint32(event->TaskIndex, 3)) &&                                   // Only check if timer is running
+          (UserVar.getUint32(event->TaskIndex, 3) <= P021_AUTOSAVE_TIMER)) {
         UserVar.setUint32(event->TaskIndex, 3, UserVar.getUint32(event->TaskIndex, 3) - 1u); // Count down per second
 
         if (UserVar.getUint32(event->TaskIndex, 3) == 0) {
