@@ -29,11 +29,12 @@ P141_data_struct::P141_data_struct(uint8_t             rotation,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill)
+                                   bool                textBackFill,
+                                   bool                displayInverted)
   : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
   _backlightPercentage(backlightPercentage), _contrast(contrast), _displayTimer(displayTimer),
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _textBackFill(textBackFill)
+  _textBackFill(textBackFill), _displayInverted(displayInverted)
 {
   updateFontMetrics();
   _commandTrigger.toLowerCase();
@@ -86,6 +87,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
   if (nullptr != pcd8544) {
     pcd8544->begin(); // Start the display
+    pcd8544->invertDisplay(_displayInverted);
     gfxHelper = new (std::nothrow) AdafruitGFX_helper(pcd8544,
                                                       _commandTrigger,
                                                       _xpix,
@@ -100,30 +102,32 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
     displayOnOff(true);
 
-    pcd8544->setContrast(_contrast);
-    gfxHelper->setRotation(_rotation);
-    pcd8544->fillScreen(_bgcolor);             // fill screen with black color
-    pcd8544->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+    if (nullptr != gfxHelper) {
+      pcd8544->setContrast(_contrast);
+      gfxHelper->setRotation(_rotation);
+      pcd8544->fillScreen(_bgcolor);             // fill screen with black color
+      pcd8544->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
-    # ifdef P141_SHOW_SPLASH
-    uint16_t yPos = 0;
-    gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 2, ST77XX_WHITE, ST77XX_BLUE);
-    yPos += (2 * _fontheight);
-    gfxHelper->printText(String(F("PCD8544")).c_str(), 0, yPos, 1, ST77XX_BLUE,  ST77XX_WHITE);
-    delay(100); // Splash
-    # endif // ifdef P141_SHOW_SPLASH
+      # ifdef P141_SHOW_SPLASH
+      uint16_t yPos = 0;
+      gfxHelper->printText(String(F("ESPEasy")).c_str(), 0, yPos, 2, ST77XX_WHITE, ST77XX_BLUE);
+      yPos += (2 * _fontheight);
+      gfxHelper->printText(String(F("PCD8544")).c_str(), 0, yPos, 1, ST77XX_BLUE,  ST77XX_WHITE);
+      delay(100); // Splash
+      # endif // ifdef P141_SHOW_SPLASH
 
-    gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW));
-    pcd8544->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-    pcd8544->setCursor(0, 0);           // move cursor to position (0, 0) pixel
-    pcd8544->display();
-    updateFontMetrics();
+      gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW));
+      pcd8544->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      pcd8544->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      pcd8544->display();
+      updateFontMetrics();
 
 
-    if (P141_CONFIG_BUTTON_PIN != -1) {
-      pinMode(P141_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      if (P141_CONFIG_BUTTON_PIN != -1) {
+        pinMode(P141_CONFIG_BUTTON_PIN, INPUT_PULLUP);
+      }
+      success = true;
     }
-    success = true;
   }
   return success;
 }
@@ -183,7 +187,7 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
     if (hasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
 
-      int yPos = 0;
+      int yPos = 1;                       // Bound to the display
 
       for (uint8_t x = 0; x < P141_Nlines; x++) {
         String newString = AdaGFXparseTemplate(strings[x], _textcols, gfxHelper);
@@ -254,6 +258,16 @@ bool P141_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
     else if (arg1.equals(F("clear"))) {
       pcd8544->fillScreen(_bgcolor);
+      pcd8544->display();                     // Put on display
+    }
+    else if (arg1.equals(F("inv")) &&         // Invert display
+             (event->Par2 >= 0) && (event->Par2 <= 1)) {
+      if (parseString(string, 3).isEmpty()) { // No argument: flip previous state
+        _displayInverted != _displayInverted;
+        pcd8544->invertDisplay(_displayInverted);
+      } else {
+        pcd8544->invertDisplay(event->Par2 == 1);
+      }
       pcd8544->display();                            // Put on display
     }
     else if (arg1.equals(F("backlight"))) {

@@ -37,29 +37,31 @@
 # define P141_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
 # define P141_CONFIG_FLAG_CMD_TRIGGER   20              // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
 # define P141_CONFIG_FLAG_BACK_FILL     28              // Flag: Background fill when printing text
+# define P141_CONFIG_FLAG_INVERTED      29              // Flag: Invert display content
 
 // Getters
 # define P141_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_MODE))
 # define P141_CONFIG_FLAG_GET_ROTATION      (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_ROTATION))
 # define P141_CONFIG_FLAG_GET_FONTSCALE     (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_FONTSCALE))
+
 // # define P141_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_TYPE))
 # define P141_CONFIG_FLAG_GET_CMD_TRIGGER   (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CMD_TRIGGER))
 # define P141_CONFIG_GET_COLOR_FOREGROUND   (P141_CONFIG_COLORS & 0xFFFF)
 # define P141_CONFIG_GET_COLOR_BACKGROUND   ((P141_CONFIG_COLORS >> 16) & 0xFFFF)
 
 // Define the default values for both ESP32/lolin32 and D1 Mini
-#ifdef ESP32
-  # define P141_LCD_CS      14
-  # define P141_LCD_CS_HSPI 26 // when connected to Hardware-SPI GPIO-14 is already used
-  # define P141_LCD_DC      27
-  # define P141_LCD_RST     33
-#else // ifdef ESP32
+# ifdef ESP32
+  #  define P141_LCD_CS      14
+  #  define P141_LCD_CS_HSPI 26 // when connected to Hardware-SPI GPIO-14 is already used
+  #  define P141_LCD_DC      27
+  #  define P141_LCD_RST     33
+# else // ifdef ESP32
 
 // for D1 Mini
-  # define P141_LCD_CS  16 // D0
-  # define P141_LCD_DC  15 // D8
-  # define P141_LCD_RST -1
-#endif // ifdef ESP32
+  #  define P141_LCD_CS  16 // D0
+  #  define P141_LCD_DC  15 // D8
+  #  define P141_LCD_RST -1
+# endif // ifdef ESP32
 
 enum class P141_CommandTrigger : uint8_t {
   pcd8544 = 0u,
@@ -80,9 +82,10 @@ public:
                    uint8_t             contrast,
                    uint32_t            displayTimer,
                    String              commandTrigger,
-                   uint16_t            fgcolor      = ADAGFX_WHITE,
-                   uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true);
+                   uint16_t            fgcolor         = ADAGFX_WHITE,
+                   uint16_t            bgcolor         = ADAGFX_BLACK,
+                   bool                textBackFill    = true,
+                   bool                displayInverted = false);
   ~P141_data_struct();
 
   bool plugin_init(struct EventStruct *event);
@@ -129,6 +132,7 @@ private:
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   bool                _textBackFill;
+  bool                _displayInverted;
 
   String _commandTriggerCmd;
 

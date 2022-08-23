@@ -3,18 +3,20 @@
 #ifdef USES_P141
 
 // #######################################################################################################
-// ########################### Plugin 141: Nokia 5110 LCD display ########################################
+// ########################### Plugin 141: PCD8544 Nokia 5110 LCD display ################################
 // #######################################################################################################
 
 
 /** Changelog:
+ * 2022-08-23 tonhuisman: Add <trigger>cmd,inv[,0|1] subcommand for inverting the display, also an extra Config option
+ *                        is added to set 'Invert display' as the default.
  * 2022-08-20 tonhuisman: Migrate/rewrite from ESPEasy PluginPlayground _P208_Nokia_LCD_5110.ino, now based
  *                        on Plugin 116 PCD8544
  */
 
 # define PLUGIN_141
 # define PLUGIN_ID_141         141
-# define PLUGIN_NAME_141       "Display - PCD8544 Nokia 5110"
+# define PLUGIN_NAME_141       "Display - PCD8544 Nokia 5110 LCD"
 # define PLUGIN_VALUENAME1_141 "CursorX"
 # define PLUGIN_VALUENAME2_141 "CursorY"
 
@@ -57,8 +59,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_output(F("CS"));
-      event->String2 = formatGpioName_output(F("DC"));
+      event->String1 = formatGpioName_output(F("SCE"));
+      event->String2 = formatGpioName_output(F("D/C"));
       event->String3 = formatGpioName_output_optional(F("RST "));
       break;
     }
@@ -86,7 +88,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       // Truncate exceeding message
       set4BitToUL(lSettings, P141_CONFIG_FLAG_MODE,        static_cast<int>(AdaGFXTextPrintMode::TruncateExceedingMessage));
       set4BitToUL(lSettings, P141_CONFIG_FLAG_FONTSCALE,   1);
-      set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, 0); // Default trigger on pcd8544
+      set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, static_cast<int>(P141_CommandTrigger::pcd8544));
       P141_CONFIG_FLAGS = lSettings;
 
       P141_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
@@ -113,6 +115,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       AdaGFXFormTextPrintMode(F("pmode"), P141_CONFIG_FLAG_GET_MODE);
 
       AdaGFXFormFontScaling(F("pfontscale"), P141_CONFIG_FLAG_GET_FONTSCALE);
+
+      addFormCheckBox(F("Invert display"),        F("pinvert"),      bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED));
 
       addFormCheckBox(F("Clear display on exit"), F("pclearOnExit"), bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CLEAR_ON_EXIT));
 
@@ -199,6 +203,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P141_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("pcmdtrigger")));    // Bit 20..23 Command trigger
 
       bitWrite(lSettings, P141_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("pbackfill")));       // Bit 28 Back fill text (inv)
+      bitWrite(lSettings, P141_CONFIG_FLAG_INVERTED,  isFormItemChecked(F("pinvert")));          // Bit 29 Invert display
       P141_CONFIG_FLAGS = lSettings;
 
       String   color   = web_server.arg(F("pfgcolor"));
@@ -255,7 +260,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P141_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P141_CONFIG_GET_COLOR_FOREGROUND,
                                                                P141_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0));
+                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0,
+                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1));
         P141_data_struct *P141_data = static_cast<P141_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         if (nullptr != P141_data) {
