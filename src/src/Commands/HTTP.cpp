@@ -26,7 +26,7 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
 
     const String arg1 = parseStringKeepCase(Line, 2);
 
-    if (arg1.indexOf('/') != -1) {
+    if (arg1.indexOf(F("://")) != -1) {
       // Full url given
       path = splitURL(arg1, user, pass, host, port, file);
     } else {
@@ -73,10 +73,8 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
 #endif // ifndef BUILD_NO_DEBUG
 
     int httpCode = -1;
-    WiFiClient client;
     send_via_http(
       F("SendToHTTP"),
-      client,
       CONTROLLER_CLIENTTIMEOUT_MAX,
       user,
       pass,

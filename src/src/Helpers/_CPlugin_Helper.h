@@ -56,7 +56,6 @@ bool client_available(WiFiClient& client);
 String send_via_http(int                             controller_number,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
-                     WiFiClient                    & client,
                      const String                  & uri,
                      const String                  & HttpMethod,
                      const String                  & header,

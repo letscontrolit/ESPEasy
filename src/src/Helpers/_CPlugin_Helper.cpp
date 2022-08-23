@@ -125,7 +125,10 @@ bool count_connection_results(bool success, const __FlashStringHelper *prefix, i
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   START_TIMER;
 
-  if (!NetworkConnected()) { return false; }
+  if (!NetworkConnected()) { 
+    client.stop();
+    return false; 
+  }
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
@@ -138,6 +141,9 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
   bool success      = ControllerSettings.beginPacket(client);
+  if (!success) {
+    client.stop();
+  }
   const bool result = count_connection_results(
     success,
     F("UDP  : "), controller_number);
@@ -155,7 +161,10 @@ bool try_connect_host(int                        controller_number,
                       const __FlashStringHelper *loglabel) {
   START_TIMER;
 
-  if (!NetworkConnected()) { return false; }
+  if (!NetworkConnected()) { 
+    client.stop();
+    return false;
+  }
 
   // Use WiFiClient class to create TCP connections
   delay(0);
@@ -171,6 +180,9 @@ bool try_connect_host(int                        controller_number,
   log_connecting_to(loglabel, controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
   const bool success = ControllerSettings.connectToHost(client);
+  if (!success) {
+    client.stop();
+  }
   const bool result  = count_connection_results(
     success,
     loglabel, controller_number);
@@ -189,7 +201,6 @@ bool client_available(WiFiClient& client) {
 String send_via_http(int                             controller_number,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
-                     WiFiClient                    & client,
                      const String                  & uri,
                      const String                  & HttpMethod,
                      const String                  & header,
@@ -197,7 +208,6 @@ String send_via_http(int                             controller_number,
                      int                           & httpCode) {
   const String result = send_via_http(
     get_formatted_Controller_number(controller_number),
-    client,
     ControllerSettings.ClientTimeout,
     getControllerUser(controller_idx, ControllerSettings),
     getControllerPass(controller_idx, ControllerSettings),
