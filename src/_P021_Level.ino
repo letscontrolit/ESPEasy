@@ -139,7 +139,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
               if ((P021_AUTOSAVE_TIMER > 0) &&                               // - Autosave is set
                   (P021_DONT_ALWAYS_SAVE != 0) &&                            // - Save is off
-                  ((UserVar.getUint32(event->TaskIndex, 3) = 0u) ||          // - Timer not yet started or uninitialized
+                  ((UserVar.getUint32(event->TaskIndex, 3) == 0u) ||         // - Timer not yet started or uninitialized
                    (UserVar.getUint32(event->TaskIndex, 3) > P021_AUTOSAVE_TIMER))) {
                 UserVar.setUint32(event->TaskIndex, 3, P021_AUTOSAVE_TIMER); // Start timer
                 # ifndef LIMIT_BUILD_SIZE
