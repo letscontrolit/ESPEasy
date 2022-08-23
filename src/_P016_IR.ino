@@ -745,7 +745,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
             (typeToString(results.decode_type).length() > 1)) // be sent
         {
           IRAcUtils::decodeToState(&results, &state);
-          StaticJsonDocument<300> doc;
+          DynamicJsonDocument doc(300);
 
           // Checks if a particular state is something else than the default and only then it adds it to the JSON document
           doc[F("protocol")] = typeToString(state.protocol);

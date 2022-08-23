@@ -3,11 +3,12 @@
 
 #ifdef WEBSERVER_ROOT
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
+#include "../WebServer/Markup_Forms.h"
 
 #include "../Commands/InternalCommands.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -21,6 +22,7 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/WebServer_commandHelper.h"
 
 
@@ -298,7 +300,7 @@ void handle_root() {
 
           if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
             if (it->second.build) {
-              addHtmlInt(it->second.build);
+              addHtml(formatSystemBuildNr(it->second.build));
             }
             html_TD();
           }
