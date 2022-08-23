@@ -676,6 +676,41 @@ void AdafruitGFX_helper::getCursorXY(int16_t& currentX,
 }
 
 /****************************************************************************
+ * setTxtfullCompensation: x and/or y values defined here are subtracted from x and y position
+ * - set to 1 for x-1/y-1 pixel for P095 and P096
+ * - set to 2 for y+1 pixel
+ * - set to 3 for x+1 pixel
+ ***************************************************************************/
+void AdafruitGFX_helper::setTxtfullCompensation(uint8_t compensation) {
+  switch (compensation) {
+    case 1: // P095
+    {
+      _x_compensation = 1;
+      _y_compensation = 1;
+      break;
+    }
+    case 2:
+    {
+      _x_compensation = 0;
+      _y_compensation = -1;
+      break;
+    }
+    case 3:
+    {
+      _x_compensation = -1;
+      _y_compensation = 0;
+      break;
+    }
+    default:
+    {
+      _x_compensation = 0;
+      _y_compensation = 0;
+      break;
+    }
+  }
+}
+
+/****************************************************************************
  * processCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
  ***************************************************************************/
 bool AdafruitGFX_helper::processCommand(const String& string) {
@@ -729,9 +764,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     # endif // ifndef BUILD_NO_DEBUG
 
-    if (loop) { argCount++; }
+    argCount++;
   }
-  success = true; // If we get this far, we'll flip the flag if something wrong is found
+  argCount -= emptyCount; // Not counting the empty arguments
+  success   = true;       // If we get this far, we'll flip the flag if something wrong is found
 
   # ifndef BUILD_NO_DEBUG
 
@@ -764,7 +800,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       if (_columnRowMode) {
         _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
       } else {
-        _display->setCursor(nParams[0] + _xo - _p095_compensation, nParams[1] + _yo - _p095_compensation);
+        _display->setCursor(nParams[0] + _xo - _x_compensation, nParams[1] + _yo - _y_compensation);
       }
     }
   }
@@ -833,14 +869,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[2].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     _fontscaling,
                     _fgcolor,
                     _fgcolor); // transparent bg
@@ -850,14 +886,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[3].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     _fgcolor,
                     _fgcolor); // transparent bg
@@ -867,15 +903,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           uint16_t color = AdaGFXparseColor(sParams[3], _colorDepth);
           printText(sParams[4].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     color,
                     color); // transparent bg
@@ -885,14 +921,14 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
         {
           printText(sParams[5].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     AdaGFXparseColor(sParams[3], _colorDepth),
                     AdaGFXparseColor(sParams[4], _colorDepth));
@@ -903,7 +939,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         # if ADAGFX_ARGUMENT_VALIDATION
 
-        if (invalidCoordinates(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation, _columnRowMode)) {
+        if (invalidCoordinates(nParams[0] - _x_compensation, nParams[1] - _y_compensation, _columnRowMode)) {
           success = false;
         } else
         # endif // if ADAGFX_ARGUMENT_VALIDATION
@@ -915,8 +951,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
             _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
           }
           printText(sParams[argCount - 1].c_str(),
-                    nParams[0] - _p095_compensation,
-                    nParams[1] - _p095_compensation,
+                    nParams[0] - _x_compensation,
+                    nParams[1] - _y_compensation,
                     nParams[2],
                     AdaGFXparseColor(sParams[3], _colorDepth),
                     AdaGFXparseColor(sParams[4], _colorDepth),
@@ -1679,7 +1715,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 

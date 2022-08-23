@@ -12,7 +12,8 @@
  ***************************************************************************/
 /************
  * Changelog:
- * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr, 
+ * 2022-08-23 tonhuisman: Several small improvements, and a few bugfixes
+ * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr,
  *                        always in row/column mode.
  *                        Improved argument parsing to allow up to 2 empty arguments between filled arguments
  * 2022-06-07 tonhuisman: Code improvements in initialization, move offset calculation to printText() function
@@ -174,9 +175,9 @@
 #  endif // ifndef ADAGFX_SUPPORT_8and16COLOR
 # endif  // ifdef PLUGIN_SET_MAX
 
-# define ADAGFX_PARSE_PREFIX      F("~")            // Subcommand-trigger prefix and postfix strings
+# define ADAGFX_PARSE_PREFIX      F("~")              // Subcommand-trigger prefix and postfix strings
 # define ADAGFX_PARSE_PREFIX_LEN  1
-# define ADAGFX_PARSE_POSTFIX     F("~")            // Will be removed before the normal template parsing is done
+# define ADAGFX_PARSE_POSTFIX     F("~")              // Will be removed before the normal template parsing is done
 # define ADAGFX_PARSE_POSTFIX_LEN 1
 
 # define ADAGFX_UNIVERSAL_TRIGGER F("adagfx_trigger") // Universal command trigger
@@ -235,16 +236,16 @@ enum class AdaGFXTextPrintMode : uint8_t {
 
 # if ADAGFX_SUPPORT_7COLOR
 #  if ADAGFX_SUPPORT_8and16COLOR
-#  define ADAGFX_COLORDEPTH_COUNT 7
-#  define ADAGFX_MONOCOLORS_COUNT 4
+#   define ADAGFX_COLORDEPTH_COUNT 7
+#   define ADAGFX_MONOCOLORS_COUNT 4
 #  else // if ADAGFX_SUPPORT_8and16COLOR
 #   define ADAGFX_COLORDEPTH_COUNT 5
 #   define ADAGFX_MONOCOLORS_COUNT 4
 #  endif // if ADAGFX_SUPPORT_8and16COLOR
 # else // if ADAGFX_SUPPORT_7COLOR
 #  if ADAGFX_SUPPORT_8and16COLOR
-#  define ADAGFX_COLORDEPTH_COUNT 6
-#  define ADAGFX_MONOCOLORS_COUNT 3
+#   define ADAGFX_COLORDEPTH_COUNT 6
+#   define ADAGFX_MONOCOLORS_COUNT 3
 #  else // if ADAGFX_SUPPORT_8and16COLOR
 #   define ADAGFX_COLORDEPTH_COUNT 4
 #   define ADAGFX_MONOCOLORS_COUNT 3
@@ -261,7 +262,7 @@ enum class AdaGFXColorDepth : uint16_t {
   EightColor   = 8u,          // 8 regular colors
   SixteenColor = 16u,         // 16 colors
   # endif // if ADAGFX_SUPPORT_8and16COLOR
-  FullColor    = 65535u       // 65535 colors (max. supported by RGB565)
+  FullColor = 65535u          // 65535 colors (max. supported by RGB565)
 };
 
 # if ADAGFX_ENABLE_BUTTON_DRAW
@@ -429,20 +430,20 @@ public:
                       uint16_t& ypix);
   void getColors(uint16_t& fgcolor,
                  uint16_t& bgcolor);
-  void getCursorXY(int16_t& currentX,                 // Get last known (text)cursor position, recalculates to col/row if that
-                   int16_t& currentY);                // setting is acive
+  void getCursorXY(int16_t& currentX,                // Get last known (text)cursor position, recalculates to col/row if that
+                   int16_t& currentY);               // setting is acive
 
-  void setTxtfullCompensation(uint8_t compensation) { // Set to 1 for backward comp. with P095/P096 txtfull subcommands, uses offset -1
-    _p095_compensation = compensation;
+  void setTxtfullCompensation(uint8_t compensation); // Set to 1 for backward comp. with P095/P096 txtfull subcommands, uses offset -1
+                                                     // Set to 2 for extra offset of +1 on y axis
+                                                     // Set to 3 for extra offset of +1 on x axis
+
+  void setRotation(uint8_t m);                       // Set the helper-rotation the same as the display object rotation
+
+  void setColumnRowMode(bool state) {                // When true, addressing for txp, txtfull commands is in columns/rows, default in
+    _columnRowMode = state;                          // pixels NOT compatible with _x_compensation!
   }
 
-  void setRotation(uint8_t m);        // Set the helper-rotation the same as the display object rotation
-
-  void setColumnRowMode(bool state) { // When true, addressing for txp, txtfull commands is in columns/rows, default in pixels
-    _columnRowMode = state;           // NOT compatible with _p095_compensation!
-  }
-
-  String getTrigger() {               // Returns the current trigger
+  String getTrigger() {                              // Returns the current trigger
     return _trigger;
   }
 
@@ -470,7 +471,7 @@ public:
                        const int16_t& h,
                        int16_t        windowId = -1,
                        const int8_t & rotation = -1);
-  bool deleteWindow(const uint8_t& windowId);
+  bool     deleteWindow(const uint8_t& windowId);
   # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   uint16_t getTextSize(const String& text,
@@ -516,13 +517,14 @@ private:
   uint16_t _textrows;
   int16_t _lastX;
   int16_t _lastY;
-  uint8_t _fontwidth         = 6; // Default font characteristics
-  uint8_t _fontheight        = 10;
-  int8_t _heightOffset       = 0;
-  bool _isProportional       = false;
-  uint8_t _p095_compensation = 0;
-  bool _columnRowMode        = false;
-  int8_t _rotation           = 0;
+  uint8_t _fontwidth     = 6; // Default font characteristics
+  uint8_t _fontheight    = 10;
+  int8_t _heightOffset   = 0;
+  bool _isProportional   = false;
+  int8_t _x_compensation = 0;
+  int8_t _y_compensation = 0;
+  bool _columnRowMode    = false;
+  int8_t _rotation       = 0;
 
   uint16_t _display_x;
   uint16_t _display_y;
