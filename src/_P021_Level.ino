@@ -28,7 +28,7 @@
 # define P021_TRIGGER_LEVEL       PCONFIG_FLOAT(0)
 # define P021_TRIGGER_HYSTERESIS  PCONFIG_FLOAT(1)
 # define P021_TRIGGER_LAST_STORED PCONFIG_FLOAT(2)
-# define P021_AUTOSAVE_TIMER      PCONFIG_LONG(0)
+# define P021_AUTOSAVE_TIMER      PCONFIG_ULONG(0)
 
 boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -139,7 +139,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
 
               if ((P021_AUTOSAVE_TIMER > 0) &&                               // - Autosave is set
                   (P021_DONT_ALWAYS_SAVE != 0) &&                            // - Save is off
-                  ((UserVar.getUint32(event->TaskIndex, 3) <= 0) ||          // - Timer not yet started or uninitialized
+                  ((UserVar.getUint32(event->TaskIndex, 3) = 0u) ||          // - Timer not yet started or uninitialized
                    (UserVar.getUint32(event->TaskIndex, 3) > P021_AUTOSAVE_TIMER))) {
                 UserVar.setUint32(event->TaskIndex, 3, P021_AUTOSAVE_TIMER); // Start timer
                 # ifndef LIMIT_BUILD_SIZE
