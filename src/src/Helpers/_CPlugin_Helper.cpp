@@ -130,9 +130,13 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
     client.stop();
     return false; 
   }
-  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
-    controller_number, 
-    ControllerSettings.ClientTimeout);
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
 
   client.setTimeout(timeout); // in msec as it should be!
   delay(0);
@@ -172,9 +176,13 @@ bool try_connect_host(int                        controller_number,
   // Use WiFiClient class to create TCP connections
   delay(0);
 
-  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
-    controller_number, 
-    ControllerSettings.ClientTimeout);
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
 
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -221,9 +229,14 @@ String send_via_http(int                             controller_number,
                      const String                  & header,
                      const String                  & postStr,
                      int                           & httpCode) {
-  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
-    controller_number, 
-    ControllerSettings.ClientTimeout);
+
+  // Ignoring the ACK from the HTTP server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(controller_number, ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
 
   const unsigned long connect_start_time = millis();
   const String result = send_via_http(

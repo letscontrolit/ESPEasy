@@ -196,9 +196,14 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
 
-  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
-    Settings.Protocol[controller_idx], 
-    ControllerSettings.ClientTimeout);
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
+
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
