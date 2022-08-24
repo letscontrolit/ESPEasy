@@ -1406,7 +1406,7 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
-  #if !defined(USES_P137) && defined(ESP32)
+  #ifndef USES_P137
     #define USES_P137   // AXP192
   #endif
 #endif
@@ -1437,7 +1437,7 @@ To create/register a plugin, you have to :
   #ifndef USES_P131
     #define USES_P131   // NeoMatrix
   #endif
-  #if !defined(USES_P137) && defined(ESP32)
+  #ifndef USES_P137
     #define USES_P137   // AXP192
   #endif
   #if FEATURE_PLUGIN_STATS && defined(ESP8266)
