@@ -1,7 +1,7 @@
 #ifndef CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 #define CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 
-#include "../../../include/ESPEasy_config.h"
+#include "../../include/ESPEasy_config.h"
 
 /*
 #################################################
