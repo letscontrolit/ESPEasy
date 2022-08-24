@@ -95,9 +95,7 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
       getMeasure        = false;
       singleShotStarted = true;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, F("SCD4x: SingleShot measurement started."));
-      }
+      addLog(LOG_LEVEL_INFO, F("SCD4x: SingleShot measurement started."));
     }
 
     if (getMeasure && scd4x->readMeasurement()) {

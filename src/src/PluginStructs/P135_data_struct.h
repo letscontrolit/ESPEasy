@@ -21,10 +21,15 @@
 
 # define P135_MAX_ERRORS                100   // After this count of consecutive errors the plugin stops measuring
 
-// # ifndef LIMIT_BUILD_SIZE
+// # ifndef LIMIT_BUILD_SIZE                  // Only activate if really needed
 # ifndef P135_FEATURE_RESET_COMMANDS
 #  define P135_FEATURE_RESET_COMMANDS  1 // Enable (~1700 bytes) 'selftest', 'factoryreset' and 'setfrc' subcommands
 # endif // ifndef P135_FEATURE_RESET_COMMANDS
+// # else // ifndef LIMIT_BUILD_SIZE
+// #  ifdef P135_FEATURE_RESET_COMMANDS
+// #   undef P135_FEATURE_RESET_COMMANDS
+// #  endif // ifdef P135_FEATURE_RESET_COMMANDS
+// #  define P135_FEATURE_RESET_COMMANDS   0 // Explicitly disable
 // # endif // ifndef LIMIT_BUILD_SIZE
 
 # if P135_FEATURE_RESET_COMMANDS
