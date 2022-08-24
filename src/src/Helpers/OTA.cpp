@@ -5,6 +5,7 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
