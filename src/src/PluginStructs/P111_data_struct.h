@@ -33,19 +33,20 @@ struct P111_data_struct : public PluginTaskData_base {
   P111_data_struct(int8_t csPin,
                    int8_t rstPin);
   ~P111_data_struct();
-  void    init();
-  uint8_t readCardStatus(uint32_t *key,
-                         bool     *removedTag);
-  String  getCardName();
-  bool    plugin_ten_per_second(struct EventStruct *event);
-  bool    plugin_fifty_per_second();
+
+  void init();
+  bool plugin_ten_per_second(struct EventStruct *event);
+  bool plugin_fifty_per_second();
+
+private:
 
   MFRC522 *mfrc522 = nullptr;
 
   uint8_t counter = 0;
 
-private:
-
+  String  getCardName();
+  uint8_t readCardStatus(uint32_t *key,
+                         bool     *removedTag);
   bool    reset(int8_t csPin,
                 int8_t resetPin);
   uint8_t readPassiveTargetID(uint8_t *uid,

@@ -59,10 +59,10 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES:                                   // define 'GPIO 1st' name in webserver
+    case PLUGIN_GET_DEVICEGPIONAMES:                                  // define 'GPIO 1st' name in webserver
     {
-      event->String1 = formatGpioName_output(F("CS PIN"));             // P111_CS_PIN
-      event->String2 = formatGpioName_output(F("RST PIN (optional)")); // P111_RST_PIN
+      event->String1 = formatGpioName_output(F("CS PIN"));            // P111_CS_PIN
+      event->String2 = formatGpioName_output_optional(F("RST PIN ")); // P111_RST_PIN
       break;
     }
 
