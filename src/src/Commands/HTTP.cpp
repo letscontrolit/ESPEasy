@@ -72,10 +72,17 @@ const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, co
     }
 #endif // ifndef BUILD_NO_DEBUG
 
+    // Some servers don't give an ack.
+    // For these it is adviced to uncheck to wait for an acknowledgement.
+    // However the default timeout of 4000 msec is then way too long
+    const int timeout = Settings.SendToHttp_ack() 
+       ? CONTROLLER_CLIENTTIMEOUT_MAX : 1000;
+    // FIXME TD-er: Make sendToHttp timeout a setting.       
+
     int httpCode = -1;
     send_via_http(
       F("SendToHTTP"),
-      CONTROLLER_CLIENTTIMEOUT_MAX,
+      timeout,
       user,
       pass,
       host,
