@@ -1,10 +1,12 @@
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
 
+#include "../CustomBuild/CompiletimeDefines.h"
 
 #if FEATURE_MQTT
 
@@ -138,7 +140,7 @@ String getResetReasonString(uint8_t icore) {
     return reason;
   }
 
-  return getUnknownString();
+  return F("Unknown");
 }
 
 #endif // ifdef ESP32
@@ -158,12 +160,21 @@ String getResetReasonString() {
 }
 
 String getSystemBuildString() {
-  String result;
+  return formatSystemBuildNr(get_build_nr());
+}
 
-  result += BUILD;
-  result += ' ';
-  result += F(BUILD_NOTES);
-  return result;
+String formatSystemBuildNr(uint16_t buildNr) {
+  if (buildNr < 20200) return String(buildNr);
+
+  // Build NR is used as a "revision" nr for settings
+  // As of 2022-08-18, it is the nr of days since 2022-08-18 + 20200
+  const uint32_t seconds_since_start = (buildNr - 20200) * 86400;
+  const uint32_t unix_time_start = 1660780800; // Thu Aug 18 2022 00:00:00 GMT+0000
+  struct tm build_time;
+  breakTime(unix_time_start + seconds_since_start, build_time);
+
+  String res = formatDateString(build_time, '\0');
+  return res;
 }
 
 String getPluginDescriptionString() {
@@ -231,3 +242,4 @@ String getLWIPversion() {
 }
 
 #endif // ifdef ESP8266
+

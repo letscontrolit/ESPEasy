@@ -19,6 +19,13 @@
 #include "../Helpers/StringConverter.h"
 
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
+
 // #include "../../ESPEasy-Globals.h"
 
 #ifdef ESP32
@@ -48,6 +55,10 @@
 #if FEATURE_SD
 # include <SD.h>
 #endif // if FEATURE_SD
+
+
+#include <SPI.h>
+#include <Wire.h>
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)

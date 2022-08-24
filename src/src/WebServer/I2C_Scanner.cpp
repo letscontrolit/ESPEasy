@@ -2,7 +2,7 @@
 
 #ifdef WEBSERVER_I2C_SCANNER
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
