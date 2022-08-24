@@ -1,8 +1,10 @@
 #include "../PluginStructs/P137_data_struct.h"
 
 #ifdef USES_P137
-# ifdef ESP32
 
+// **************************************************************************/
+// toString: convert P137_valueOptions_e enum to value-name or display-name
+// **************************************************************************/
 const __FlashStringHelper* toString(const P137_valueOptions_e value, bool displayString) {
   switch (value) {
     case P137_valueOptions_e::None: return displayString ? F("None") : F("none");
@@ -29,7 +31,6 @@ const __FlashStringHelper* toString(const P137_valueOptions_e value, bool displa
 // **************************************************************************/
 P137_data_struct::P137_data_struct(struct EventStruct *event) {
   addLog(LOG_LEVEL_INFO, F("AXP192: Init."));
-  delete axp192;
 
   axp192 = new (std::nothrow) I2C_AXP192(); // Default address and I2C Wire object
 
@@ -111,7 +112,7 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if (cmd.equals(F("axp")) && isInitialized()) { // Command trigger
+  if (isInitialized() && cmd.equals(F("axp"))) { // Command trigger
     cmd = parseString(string, 2);                // sub command
     const bool empty3 = parseString(string, 3).isEmpty();
     const bool empty4 = parseString(string, 4).isEmpty();
@@ -173,49 +174,38 @@ bool P137_data_struct::plugin_write(struct EventStruct *event,
  ***************************************************************************/
 bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
                                                String            & string) {
-  bool   success = false;
+  bool   success = true;
   String command = parseString(string, 1);
   float  value;
 
   if (command == F("batvoltage")) {          // batvoltage
-    value   = read_value(P137_valueOptions_e::BatteryVoltage);
-    success = true;
+    value = read_value(P137_valueOptions_e::BatteryVoltage);
   } else if (command == F("batdischarge")) { // batdischarge
-    value   = read_value(P137_valueOptions_e::BatteryDischargeCurrent);
-    success = true;
+    value = read_value(P137_valueOptions_e::BatteryDischargeCurrent);
   } else if (command == F("batcharge")) {    // batcharge
-    value   = read_value(P137_valueOptions_e::BatteryChargeCurrent);
-    success = true;
+    value = read_value(P137_valueOptions_e::BatteryChargeCurrent);
   } else if (command == F("batpower")) {     // batpower
-    value   = read_value(P137_valueOptions_e::BatteryPower);
-    success = true;
+    value = read_value(P137_valueOptions_e::BatteryPower);
   } else if (command == F("inpvoltage")) {   // inpvoltage
-    value   = read_value(P137_valueOptions_e::AcinVoltage);
-    success = true;
+    value = read_value(P137_valueOptions_e::AcinVoltage);
   } else if (command == F("inpcurrent")) {   // inpcurrent
-    value   = read_value(P137_valueOptions_e::AcinCurrent);
-    success = true;
+    value = read_value(P137_valueOptions_e::AcinCurrent);
   } else if (command == F("vbusvolt")) {     // vbusvolt
-    value   = read_value(P137_valueOptions_e::VbusVoltage);
-    success = true;
+    value = read_value(P137_valueOptions_e::VbusVoltage);
   } else if (command == F("vbuscurr")) {     // vbuscurr
-    value   = read_value(P137_valueOptions_e::VbusCurrent);
-    success = true;
+    value = read_value(P137_valueOptions_e::VbusCurrent);
   } else if (command == F("inttemp")) {      // inttemp
-    value   = read_value(P137_valueOptions_e::InternalTemperature);
-    success = true;
+    value = read_value(P137_valueOptions_e::InternalTemperature);
   } else if (command == F("apsvolt")) {      // apsvolt
-    value   = read_value(P137_valueOptions_e::ApsVoltage);
-    success = true;
+    value = read_value(P137_valueOptions_e::ApsVoltage);
   } else if (command == F("ldo2volt")) {     // ldo2volt
-    value   = read_value(P137_valueOptions_e::LDO2);
-    success = true;
+    value = read_value(P137_valueOptions_e::LDO2);
   } else if (command == F("ldo3volt")) {     // ldo3volt
-    value   = read_value(P137_valueOptions_e::LDO3);
-    success = true;
+    value = read_value(P137_valueOptions_e::LDO3);
   } else if (command == F("gpio0volt")) {    // gpio0volt
-    value   = read_value(P137_valueOptions_e::GPIO0);
-    success = true;
+    value = read_value(P137_valueOptions_e::GPIO0);
+  } else {
+    success = false;
   }
 
   if (success) {
@@ -224,5 +214,4 @@ bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
   return success;
 }
 
-# endif // ifdef ESP32
 #endif // ifdef USES_P137

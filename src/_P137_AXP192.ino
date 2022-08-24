@@ -1,5 +1,5 @@
+#include "_Plugin_Helper.h"
 #ifdef USES_P137
-#ifdef ESP32
 
 // #######################################################################################################
 // #################################### Plugin 137: AXP192 Powermanagement ###############################
@@ -7,13 +7,15 @@
 
 /**
  * Changelog:
- * 2022-07-18, tonhuisman: Add missing Get Config values
- * 2022-07-05, tonhuisman: Add commands for setting LDO2, LDO3 and GPIO0 pins to voltage, or percentage, mapped to range
- *                         Supported commands see list below.
- *                         Include LDO2, LDO3 and GPIO0 in available values (not available from library)
- * 2022-07-04, tonhuisman: Add configurable values for LDO2, LDO3, GPIO0 (of AXP192)
- *                         Get values via Get Config option, using [<taskname>#<configname>] (see below for list)
- * 2022-07-03, tonhuisman: Initial plugin development, only available for ESP32, as the library uses ESP_LOGD, not available for ESP8266
+ * 2022-08-24 tonhuisman: Remove [TESTING] tag, move include for _Plugin_helper.h to correct line
+ *                        Removed ESP32 requirement from builds
+ * 2022-07-18 tonhuisman: Add missing Get Config values
+ * 2022-07-05 tonhuisman: Add commands for setting LDO2, LDO3 and GPIO0 pins to voltage, or percentage, mapped to range
+ *                        Supported commands see list below.
+ *                        Include LDO2, LDO3 and GPIO0 in available values (not available from library)
+ * 2022-07-04 tonhuisman: Add configurable values for LDO2, LDO3, GPIO0 (of AXP192)
+ *                        Get values via Get Config option, using [<taskname>#<configname>] (see below for list)
+ * 2022-07-03 tonhuisman: Initial plugin development, only available for ESP32, as the library uses ESP_LOGD, not available for ESP8266
  **/
 
 /**
@@ -45,11 +47,10 @@
  * [<taskname>#gpio0volt]     : GPIO0 voltage
  **/
 
-# include "_Plugin_Helper.h"
 
 # define PLUGIN_137
 # define PLUGIN_ID_137         137
-# define PLUGIN_NAME_137       "Power mgt - AXP192 Power management [TESTING]"
+# define PLUGIN_NAME_137       "Power mgt - AXP192 Power management"
 
 # include "./src/PluginStructs/P137_data_struct.h"
 
@@ -256,5 +257,4 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-#endif // ifdef ESP32
 #endif // USES_P137
