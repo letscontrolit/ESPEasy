@@ -1499,6 +1499,14 @@ int http_authenticate(const String& logIdentifier,
     }
   }
 
+  if (!must_check_reply) {
+    // There are services which do not send an ack.
+    // So if the return code matches a read timeout, we change it into HTTP code 200
+    if (httpCode == HTTPC_ERROR_READ_TIMEOUT) {
+      httpCode = 200;
+    }
+  }
+
   if (Settings.UseRules) {
     // Generate event with the HTTP return code
     // e.g. http#hostname=401
