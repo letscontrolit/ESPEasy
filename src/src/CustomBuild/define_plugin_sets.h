@@ -1228,6 +1228,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+    #if !defined(USES_P137) && defined(ESP32)
+      #define USES_P137   // AXP192
+    #endif
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
