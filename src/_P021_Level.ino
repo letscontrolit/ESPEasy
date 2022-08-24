@@ -159,7 +159,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
       String command = parseString(string, 1);
 
       if (command == F("getlevel")) {
-        string  = P021_TRIGGER_LEVEL;
+        string  = toString(P021_TRIGGER_LEVEL);
         success = true;
       }
       break;
