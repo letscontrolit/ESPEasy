@@ -102,7 +102,17 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
 	// Use WiFiClient class to create TCP connections
 	WiFiClient client;
-	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+
+	#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+	// See: https://github.com/espressif/arduino-esp32/pull/6676
+	client.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+	Client *pClient = &client;
+	pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+	#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+	client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+	#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+	
 	String aHost = notificationsettings.Server;
 	if (loglevelActiveFor(LOG_LEVEL_DEBUG))
 		addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);

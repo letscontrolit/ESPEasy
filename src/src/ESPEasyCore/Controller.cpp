@@ -198,6 +198,8 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  Client *pClient = &mqtt;
+  pClient->setTimeout(ControllerSettings.ClientTimeout);
   #else
   mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
   #endif

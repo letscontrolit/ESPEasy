@@ -1425,6 +1425,8 @@ int http_authenticate(const String& logIdentifier,
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+  Client *pClient = &client;
+  pClient->setTimeout(timeout);
   #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   client.setTimeout(timeout);                // in msec as it should be!
   #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS

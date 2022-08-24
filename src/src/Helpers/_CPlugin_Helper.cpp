@@ -129,13 +129,7 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
     client.stop();
     return false; 
   }
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-
-  // See: https://github.com/espressif/arduino-esp32/pull/6676
-  client.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   client.setTimeout(ControllerSettings.ClientTimeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   delay(0);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
@@ -172,6 +166,8 @@ bool try_connect_host(int                        controller_number,
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  Client *pClient = &client;
+  pClient->setTimeout(ControllerSettings.ClientTimeout);
   #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   client.setTimeout(ControllerSettings.ClientTimeout);                // in msec as it should be!
   #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
