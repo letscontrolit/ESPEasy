@@ -7,7 +7,13 @@
 // No SoftwareSerial
 // Only support HW serial on Serial 0 .. 1
 // ****************************************
-ESPeasySerial::ESPeasySerial(ESPEasySerialPort port, int receivePin, int transmitPin, bool inverse_logic, unsigned int buffSize)
+ESPeasySerial::ESPeasySerial(
+  ESPEasySerialPort port, 
+  int receivePin, 
+  int transmitPin, 
+  bool inverse_logic, 
+  unsigned int buffSize,
+  bool         forceSWserial)
   : _receivePin(receivePin), _transmitPin(transmitPin)
 {
   _serialtype = ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
@@ -259,11 +265,6 @@ unsigned long ESPeasySerial::detectBaudrate(time_t timeoutMillis) {
 
 
 bool ESPeasySerial::listen() {
-  if (isValid()) {
-# ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-    return _swserial->listen();
-# endif // ifndef ARDUINO_ESP8266_RELEASE_2_3_0
-  }
   return false;
 }
 

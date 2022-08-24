@@ -13,8 +13,6 @@
 #endif
 
 #ifdef ESP32
-  #include <WiFi.h>
-  #include <WebServer.h>
   WebServer web_server(80);
   #ifndef NO_HTTP_UPDATER
   ESP32HTTPUpdateServer httpUpdater(true);
@@ -23,7 +21,6 @@
 
 
 #if FEATURE_DNS_SERVER
-  #include <DNSServer.h>
   DNSServer  dnsServer;
   bool dnsServerActive = false;
 #endif // if FEATURE_DNS_SERVER

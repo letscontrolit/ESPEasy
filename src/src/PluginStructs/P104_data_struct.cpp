@@ -5,7 +5,7 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Numerical.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
