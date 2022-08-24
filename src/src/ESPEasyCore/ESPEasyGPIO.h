@@ -26,6 +26,7 @@ bool GPIO_Internal_Read(int pin);
 bool GPIO_Read_Switch_State(struct EventStruct *event);
 bool GPIO_Read_Switch_State(int pinNumber, uint8_t pinMode);
 
+#ifdef USES_P009
 //********************************************************************************
 // MCP23017 read
 //********************************************************************************
@@ -41,7 +42,9 @@ void GPIO_MCP_WriteRegister(uint8_t mcpAddr, uint8_t regAddr, uint8_t regValue);
 //********************************************************************************
 // MCP23017 pullUP
 //********************************************************************************
+#endif
 
+#ifdef USES_P019
 //********************************************************************************
 // PCF8574 read
 //********************************************************************************
@@ -54,6 +57,7 @@ bool GPIO_PCF_ReadAllPins(uint8_t address, uint8_t *retValue);
 //********************************************************************************
 bool GPIO_PCF_Write(int Par1, uint8_t Par2);
 void GPIO_PCF_WriteAllPins(uint8_t Par1, uint8_t Par2);
+#endif
 
 //*********************************************************
 // GPIO_Monitor10xSec:
