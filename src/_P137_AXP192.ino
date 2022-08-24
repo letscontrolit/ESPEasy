@@ -1,6 +1,8 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P137
 
+# ifdef ESP32
+
 // #######################################################################################################
 // #################################### Plugin 137: AXP192 Powermanagement ###############################
 // #######################################################################################################
@@ -8,7 +10,6 @@
 /**
  * Changelog:
  * 2022-08-24 tonhuisman: Remove [TESTING] tag, move include for _Plugin_helper.h to correct line
- *                        Removed ESP32 requirement from builds
  * 2022-07-18 tonhuisman: Add missing Get Config values
  * 2022-07-05 tonhuisman: Add commands for setting LDO2, LDO3 and GPIO0 pins to voltage, or percentage, mapped to range
  *                        Supported commands see list below.
@@ -48,11 +49,11 @@
  **/
 
 
-# define PLUGIN_137
-# define PLUGIN_ID_137         137
-# define PLUGIN_NAME_137       "Power mgt - AXP192 Power management"
+#  define PLUGIN_137
+#  define PLUGIN_ID_137         137
+#  define PLUGIN_NAME_137       "Power mgt - AXP192 Power management"
 
-# include "./src/PluginStructs/P137_data_struct.h"
+#  include "./src/PluginStructs/P137_data_struct.h"
 
 boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -257,4 +258,5 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
+# endif // ifdef ESP32
 #endif // USES_P137

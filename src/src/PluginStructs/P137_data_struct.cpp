@@ -2,6 +2,8 @@
 
 #ifdef USES_P137
 
+# ifdef ESP32
+
 // **************************************************************************/
 // toString: convert P137_valueOptions_e enum to value-name or display-name
 // **************************************************************************/
@@ -214,4 +216,5 @@ bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
   return success;
 }
 
+# endif // ifdef ESP32
 #endif // ifdef USES_P137

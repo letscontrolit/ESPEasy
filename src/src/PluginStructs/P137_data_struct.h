@@ -4,23 +4,25 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P137
 
-# include <I2C_AXP192.h>
+# ifdef ESP32
 
-# define P137_DEBUG_LOG            // Enable for some (extra) logging
+#  include <I2C_AXP192.h>
 
-# define P137_CONFIG_BASE        0 // Uses PCONFIG(0)..PCONFIG(3) to store the selection for 4 output values
-# define P137_SENSOR_TYPE_INDEX  (P137_CONFIG_BASE + VARS_PER_TASK)
-# define P137_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P137_SENSOR_TYPE_INDEX)))
-# define P137_CONFIG_DECIMALS    PCONFIG(P137_CONFIG_BASE + VARS_PER_TASK + 1)
+#  define P137_DEBUG_LOG            // Enable for some (extra) logging
 
-# define P137_CONFIG_LDO2        PCONFIG_LONG(0) // LDO2
-# define P137_CONFIG_LDO3        PCONFIG_LONG(1) // LDO3
-# define P137_CONFIG_GPIO0       PCONFIG_LONG(2) // GPIO0
+#  define P137_CONFIG_BASE        0 // Uses PCONFIG(0)..PCONFIG(3) to store the selection for 4 output values
+#  define P137_SENSOR_TYPE_INDEX  (P137_CONFIG_BASE + VARS_PER_TASK)
+#  define P137_NR_OUTPUT_VALUES   getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P137_SENSOR_TYPE_INDEX)))
+#  define P137_CONFIG_DECIMALS    PCONFIG(P137_CONFIG_BASE + VARS_PER_TASK + 1)
 
-# define P137_CONST_1_PERCENT    1               // Lowest used percentage, 0 = off
-# define P137_CONST_100_PERCENT  100             // Max percentage
-# define P137_CONST_MIN_LDO      1800            // Min. accepted LDO output voltage
-# define P137_CONST_MAX_LDO      3300            // Max. safe LDO output voltage
+#  define P137_CONFIG_LDO2        PCONFIG_LONG(0) // LDO2
+#  define P137_CONFIG_LDO3        PCONFIG_LONG(1) // LDO3
+#  define P137_CONFIG_GPIO0       PCONFIG_LONG(2) // GPIO0
+
+#  define P137_CONST_1_PERCENT    1               // Lowest used percentage, 0 = off
+#  define P137_CONST_100_PERCENT  100             // Max percentage
+#  define P137_CONST_MIN_LDO      1800            // Min. accepted LDO output voltage
+#  define P137_CONST_MAX_LDO      3300            // Max. safe LDO output voltage
 
 enum class P137_valueOptions_e : uint8_t {
   None                    = 0x00,
@@ -75,5 +77,6 @@ private:
   int      gpio0_value;
 };
 
+# endif // ifdef ESP32
 #endif // ifdef USES_P137
 #endif // ifndef PLUGINSTRUCTS_P137_DATA_STRUCT_H
