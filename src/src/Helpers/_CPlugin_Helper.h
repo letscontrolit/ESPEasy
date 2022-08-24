@@ -38,7 +38,7 @@ void log_connecting_to(const __FlashStringHelper * prefix, int controller_number
 
 void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number);
 
-bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number);
+bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number, unsigned long connect_start_time);
 
 bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 

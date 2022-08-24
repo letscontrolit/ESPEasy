@@ -195,13 +195,17 @@ bool MQTTConnect(controllerIndex_t controller_idx)
 
   //  mqtt = WiFiClient(); // workaround see: https://github.com/esp8266/Arduino/issues/4497#issuecomment-373023864
   delay(0);
+
+  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
+    Settings.Protocol[controller_idx], 
+    ControllerSettings.ClientTimeout);
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   // See: https://github.com/espressif/arduino-esp32/pull/6676
-  mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &mqtt;
-  pClient->setTimeout(ControllerSettings.ClientTimeout);
+  pClient->setTimeout(timeout);
   #else
-  mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
+  mqtt.setTimeout(timeout); // in msec as it should be!  
   #endif
   
   MQTTclient.setClient(mqtt);
@@ -226,6 +230,9 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
+
+  const unsigned long connect_start_time = millis();
+
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
   if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
     MQTTresult =
@@ -249,7 +256,7 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
   delay(0);
 
-  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx]);
+  count_connection_results(MQTTresult, F("MQTT : Broker "), Settings.Protocol[controller_idx], connect_start_time);
 
   if (!MQTTresult) {
     MQTTclient.disconnect();

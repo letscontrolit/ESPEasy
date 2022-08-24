@@ -214,3 +214,13 @@ String WiFiEventData_t::ESPeasyWifiStatusToString() const {
   }
   return log;
 }
+
+
+uint32_t WiFiEventData_t::getSuggestedTimeout(int index, uint32_t minimum_timeout) const {
+  auto it = connectDurations.find(index);
+  if (it == connectDurations.end()) {
+    return 3 * minimum_timeout;
+  }
+  const uint32_t res = 3 * it->second;
+  return constrain(res, minimum_timeout, CONTROLLER_CLIENTTIMEOUT_MAX);
+}

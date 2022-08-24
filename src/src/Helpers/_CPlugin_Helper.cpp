@@ -107,7 +107,8 @@ void log_connecting_fail(const __FlashStringHelper *prefix, int controller_numbe
   }
 }
 
-bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number) {
+bool count_connection_results(bool success, const __FlashStringHelper *prefix, int controller_number, unsigned long connect_start_time) {
+  WiFiEventData.connectDurations[controller_number] = timePassedSince(connect_start_time);
   if (!success)
   {
     ++WiFiEventData.connectionFailures;
@@ -129,18 +130,26 @@ bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettings
     client.stop();
     return false; 
   }
-  client.setTimeout(ControllerSettings.ClientTimeout);                // in msec as it should be!
+  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
+    controller_number, 
+    ControllerSettings.ClientTimeout);
+
+  client.setTimeout(timeout); // in msec as it should be!
   delay(0);
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(F("UDP  : "), controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
+
+  const unsigned long connect_start_time = millis();  
   bool success      = ControllerSettings.beginPacket(client);
   if (!success) {
     client.stop();
   }
   const bool result = count_connection_results(
     success,
-    F("UDP  : "), controller_number);
+    F("UDP  : "), 
+    controller_number,
+    connect_start_time);
   STOP_TIMER(TRY_CONNECT_HOST_UDP);
   return result;
 }
@@ -162,26 +171,36 @@ bool try_connect_host(int                        controller_number,
 
   // Use WiFiClient class to create TCP connections
   delay(0);
+
+  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
+    controller_number, 
+    ControllerSettings.ClientTimeout);
+
   #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
-  client.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
+  client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
-  pClient->setTimeout(ControllerSettings.ClientTimeout);
+  pClient->setTimeout(timeout);
   #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(ControllerSettings.ClientTimeout);                // in msec as it should be!
+  client.setTimeout(timeout);                // in msec as it should be!
   #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
 #ifndef BUILD_NO_DEBUG
   log_connecting_to(loglabel, controller_number, ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
+
+  const unsigned long connect_start_time = millis();
+
   const bool success = ControllerSettings.connectToHost(client);
   if (!success) {
     client.stop();
   }
   const bool result  = count_connection_results(
     success,
-    loglabel, controller_number);
+    loglabel, 
+    controller_number,
+    connect_start_time);
   STOP_TIMER(TRY_CONNECT_HOST_TCP);
   return result;
 }
@@ -202,9 +221,14 @@ String send_via_http(int                             controller_number,
                      const String                  & header,
                      const String                  & postStr,
                      int                           & httpCode) {
+  const uint32_t timeout = WiFiEventData.getSuggestedTimeout(
+    controller_number, 
+    ControllerSettings.ClientTimeout);
+
+  const unsigned long connect_start_time = millis();
   const String result = send_via_http(
     get_formatted_Controller_number(controller_number),
-    ControllerSettings.ClientTimeout,
+    timeout,
     getControllerUser(controller_idx, ControllerSettings),
     getControllerPass(controller_idx, ControllerSettings),
     ControllerSettings.getHost(),
@@ -223,7 +247,8 @@ String send_via_http(int                             controller_number,
   count_connection_results(
     success,
     F("HTTP  : "),
-    controller_number);
+    controller_number,
+    connect_start_time);
 
   return result;
 }
