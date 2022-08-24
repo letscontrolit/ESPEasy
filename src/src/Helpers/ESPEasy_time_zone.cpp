@@ -62,8 +62,8 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
 
     if (m_dstLoc != 0) {
       struct tm tmp;
-      ESPEasy_time::breakTime(m_dstLoc, tmp);
-      log += ESPEasy_time::getDateTimeString(tmp, '-', ':', ' ', false);
+      breakTime(m_dstLoc, tmp);
+      log += formatDateTimeString(tmp, '-', ':', ' ', false);
     }
     log += F(" offset: ");
     log += m_dst.offset;
@@ -75,8 +75,8 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
 
   if (m_stdLoc != 0) {
     struct tm tmp;
-    ESPEasy_time::breakTime(m_stdLoc, tmp);
-    log += ESPEasy_time::getDateTimeString(tmp, '-', ':', ' ', false);
+    breakTime(m_stdLoc, tmp);
+    log += formatDateTimeString(tmp, '-', ':', ' ', false);
   }
   log += F(" offset: ");
   log += m_std.offset;

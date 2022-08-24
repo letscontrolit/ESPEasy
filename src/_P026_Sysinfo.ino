@@ -212,73 +212,34 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
 
 float P026_get_value(int type)
 {
-  float value = 0;
-
   switch (type)
   {
-    case 0:
-    {
-      value = getUptimeMinutes();
-      break;
-    }
-    case 1:
-    {
-      value = FreeMem();
-      break;
-    }
-    case 2:
-    {
-      value = WiFi.RSSI();
-      break;
-    }
+    case 0: return getUptimeMinutes();
+    case 1: return FreeMem();
+    case 2: return WiFi.RSSI();
     case 3:
-    {
 # if FEATURE_ADC_VCC
-      value = vcc;
+      return vcc;
 # else // if FEATURE_ADC_VCC
-      value = -1.0f;
+      return -1.0f;
 # endif // if FEATURE_ADC_VCC
-      break;
-    }
-    case 4:
-    {
-      value = getCPUload();
-      break;
-    }
+    case 4: return getCPUload();
     case 5:
     case 6:
     case 7:
     case 8:
-    {
-      value = NetworkLocalIP()[type - 5];
-      break;
-    }
-    case 9:
-    {
-      value = timePassedSince(lastWeb) / 1000.0f; // respond in seconds
-      break;
-    }
-    case 10:
-    {
-      value = getCurrentFreeStack();
-      break;
-    }
-    case 12:
-    {
-      value = WiFiEventData.wifi_TX_pwr;
-      break;
-    }
+      return NetworkLocalIP()[type - 5];
+    case 9:  return timePassedSince(lastWeb) / 1000.0f; // respond in seconds
+    case 10: return getCurrentFreeStack();
+    case 12: return WiFiEventData.wifi_TX_pwr;
     case 13:
-    {
       #ifdef USE_SECOND_HEAP
-      value = FreeMem2ndHeap();
-      #endif
+      return FreeMem2ndHeap();
+      #else
       break;
-    }
-
-
+      #endif
   }
-  return value;
+  return 0.0f;
 }
 
 #endif // USES_P026

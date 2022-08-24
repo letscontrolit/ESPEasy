@@ -1,6 +1,6 @@
 #include "../WebServer/Log.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/404.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/JSON.h"
