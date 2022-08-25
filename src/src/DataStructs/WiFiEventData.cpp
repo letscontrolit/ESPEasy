@@ -17,6 +17,8 @@
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
 #define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
 
+#define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
+
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
   if (wifiSetupConnect) return true;
@@ -213,4 +215,14 @@ String WiFiEventData_t::ESPeasyWifiStatusToString() const {
     }
   }
   return log;
+}
+
+
+uint32_t WiFiEventData_t::getSuggestedTimeout(int index, uint32_t minimum_timeout) const {
+  auto it = connectDurations.find(index);
+  if (it == connectDurations.end()) {
+    return 3 * minimum_timeout;
+  }
+  const uint32_t res = 3 * it->second;
+  return constrain(res, minimum_timeout, CONNECT_TIMEOUT_MAX);
 }
