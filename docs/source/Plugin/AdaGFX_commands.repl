@@ -74,7 +74,7 @@
     Some display types may limit or extend the maximum accepted size.
     "
     "
-    ``<trigger>,txtfull,<x>,<y>,<size=1>,<foreColor=current>,<backColor=foreColor>,<textPrintMode=current>,<maxTextWidthPixels=0>,<text>``
+    ``<trigger>,txtfull,<x>,<y>,<size=1>,<foreColor=current>,<backColor=foreColor>, <textPrintMode=current>,<maxTextWidthPixels=0>,<text>``
     ","
     Write text at position X/Y with all options. Depending on the setting **Text Coordinates in col/row**, these coordinates are pixels (default) or column/rows.
     
@@ -245,7 +245,7 @@
     The file can be read from SD-card, when available, and the bmp file is not found on the internal file storage.
     "
     "
-    ``<trigger>,btn,<state>,<mode>,<x>,<y>,<w>,<h>,<id>,<type>,<ONcolor=blue>,<OFFcolor=red>,<CaptionColor=white>,<fontsize>,<ONcaption>,<OFFcaption>,<BorderColor=white>,<DisabledColor=0x9410>,<DisabledCaptionColor=0x5A69>,<TaskIndex>,<Group>,<SelectGroup>,<objectname>``
+    ``<trigger>,btn,<state>,<mode>,<x>,<y>,<w>,<h>,<id>,<type>,<ONcolor=blue>,<OFFcolor=red>, <CaptionColor=white>,<fontsize>,<ONcaption>,<OFFcaption>,<BorderColor=white>, <DisabledColor=0x9410>,<DisabledCaptionColor=0x5A69>,<TaskIndex>,<Group>, <SelectGroup>,<objectname>``
     ","
     As a companion to the ESPEasy_TouchHelper, the AdafruitGFX_helper takes care of drawing button objects via this subcommand.
 
