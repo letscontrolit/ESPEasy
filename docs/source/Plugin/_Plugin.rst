@@ -358,6 +358,7 @@ There are different released versions of ESP Easy:
    ":ref:`P131_page`","|P131_status|","P131"
    ":ref:`P132_page`","|P132_status|","P132"
    ":ref:`P133_page`","|P133_status|","P133"
+   ":ref:`P137_page`","|P137_status|","P137"
 
 
 Internal GPIO handling
@@ -503,6 +504,11 @@ Position
 Plugins: |Plugin_Position|
 
 Hardware: |P013_usedby|, |P082_usedby|
+
+Power management
+----------------
+
+Plugins: |Plugin_PowerMgt|
 
 Regulator
 ---------
