@@ -1351,6 +1351,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+  #if !defined(USES_P137) && defined(ESP32)
+    #define USES_P137   // AXP192
+  #endif
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
