@@ -16,28 +16,28 @@
 
 // # define P141_SHOW_SPLASH                               // Enable to show splash (text)
 
-# define P141_CS_PIN                    PIN(0)          // CS pin
-# define P141_DC_PIN                    PIN(1)          // DC pin
-# define P141_RST_PIN                   PIN(2)          // RST pin
-# define P141_CONFIG_BUTTON_PIN         PIN(3)          // Pin for display-button
-# define P141_CONFIG_DISPLAY_TIMEOUT    PCONFIG(1)      // Time-out when display-button is enabled
-# define P141_CONFIG_CONTRAST           PCONFIG(2)      // Contrast
-# define P141_CONFIG_BACKLIGHT_PIN      PCONFIG(3)      // Backlight pin
-# define P141_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)      // Backlight percentage
-# define P141_CONFIG_COLORS             PCONFIG_LONG(3) // 2 Colors fit in 1 long
+# define P141_CS_PIN                    PIN(0)           // CS pin
+# define P141_DC_PIN                    PIN(1)           // DC pin
+# define P141_RST_PIN                   PIN(2)           // RST pin
+# define P141_CONFIG_BUTTON_PIN         PIN(3)           // Pin for display-button
+# define P141_CONFIG_DISPLAY_TIMEOUT    PCONFIG(1)       // Time-out when display-button is enabled
+# define P141_CONFIG_CONTRAST           PCONFIG(2)       // Contrast
+# define P141_CONFIG_BACKLIGHT_PIN      PCONFIG(3)       // Backlight pin
+# define P141_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)       // Backlight percentage
+# define P141_CONFIG_COLORS             PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
-# define P141_CONFIG_FLAGS              PCONFIG_LONG(0) // All flags
-# define P141_CONFIG_FLAG_NO_WAKE       0               // Flag: Don't wake display
-# define P141_CONFIG_FLAG_INVERT_BUTTON 1               // Flag: Inverted button state
-# define P141_CONFIG_FLAG_CLEAR_ON_EXIT 2               // Flag: Clear display on exit
-# define P141_CONFIG_FLAG_USE_COL_ROW   3               // Flag: Use Col/Row text addressing in commands
-# define P141_CONFIG_FLAG_MODE          4               // Flag-offset to store 4 bits for Mode, uses bits 4, 5, 6 and 7
-# define P141_CONFIG_FLAG_ROTATION      8               // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10 and 11
-# define P141_CONFIG_FLAG_FONTSCALE     12              // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
-# define P141_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
-# define P141_CONFIG_FLAG_CMD_TRIGGER   20              // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
-# define P141_CONFIG_FLAG_BACK_FILL     28              // Flag: Background fill when printing text
-# define P141_CONFIG_FLAG_INVERTED      29              // Flag: Invert display content
+# define P141_CONFIG_FLAGS              PCONFIG_ULONG(0) // All flags
+# define P141_CONFIG_FLAG_NO_WAKE       0                // Flag: Don't wake display
+# define P141_CONFIG_FLAG_INVERT_BUTTON 1                // Flag: Inverted button state
+# define P141_CONFIG_FLAG_CLEAR_ON_EXIT 2                // Flag: Clear display on exit
+# define P141_CONFIG_FLAG_USE_COL_ROW   3                // Flag: Use Col/Row text addressing in commands
+# define P141_CONFIG_FLAG_MODE          4                // Flag-offset to store 4 bits for Mode, uses bits 4, 5, 6 and 7
+# define P141_CONFIG_FLAG_ROTATION      8                // Flag-offset to store 4 bits for Rotation, uses bits 8, 9, 10 and 11
+# define P141_CONFIG_FLAG_FONTSCALE     12               // Flag-offset to store 4 bits for Font scaling, uses bits 12, 13, 14 and 15
+// # define P141_CONFIG_FLAG_TYPE          16               // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
+# define P141_CONFIG_FLAG_CMD_TRIGGER   20               // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
+# define P141_CONFIG_FLAG_BACK_FILL     28               // Flag: Background fill when printing text
+# define P141_CONFIG_FLAG_INVERTED      29               // Flag: Invert display content
 
 // Getters
 # define P141_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_MODE))
@@ -66,10 +66,9 @@
 enum class P141_CommandTrigger : uint8_t {
   pcd8544 = 0u,
   lcd     = 1u,
-  tft     = 2u,
 };
 
-const __FlashStringHelper* P141_CommandTrigger_toString(P141_CommandTrigger cmd);
+const __FlashStringHelper* toString(P141_CommandTrigger cmd);
 
 struct P141_data_struct : public PluginTaskData_base {
 public:

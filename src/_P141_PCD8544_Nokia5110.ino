@@ -8,6 +8,8 @@
 
 
 /** Changelog:
+ * 2022-08-25 tonhuisman: Remove strange option 'tft' for command trigger, as this has nothing to with a tft display
+ *                        Clear screen with correct color on exit when inverted is active
  * 2022-08-23 tonhuisman: Add <trigger>cmd,inv[,0|1] subcommand for inverting the display, also an extra Config option
  *                        is added to set 'Invert display' as the default.
  * 2022-08-20 tonhuisman: Migrate/rewrite from ESPEasy PluginPlayground _P208_Nokia_LCD_5110.ino, now based
@@ -122,14 +124,12 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum
-          P141_CommandTrigger_toString(P141_CommandTrigger::pcd8544),
-          P141_CommandTrigger_toString(P141_CommandTrigger::lcd),
-          P141_CommandTrigger_toString(P141_CommandTrigger::tft),
+          toString(P141_CommandTrigger::pcd8544),
+          toString(P141_CommandTrigger::lcd),
         };
         const int commandTriggerOptions[] = {
           static_cast<int>(P141_CommandTrigger::pcd8544),
           static_cast<int>(P141_CommandTrigger::lcd),
-          static_cast<int>(P141_CommandTrigger::tft),
         };
         addFormSelector(F("Write Command trigger"),
                         F("pcmdtrigger"),
@@ -256,8 +256,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                P141_CONFIG_BACKLIGHT_PERCENT,
                                                                P141_CONFIG_CONTRAST,
                                                                P141_CONFIG_DISPLAY_TIMEOUT,
-                                                               P141_CommandTrigger_toString(static_cast<P141_CommandTrigger>(
-                                                                                              P141_CONFIG_FLAG_GET_CMD_TRIGGER)),
+                                                               toString(static_cast<P141_CommandTrigger>(
+                                                                          P141_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P141_CONFIG_GET_COLOR_FOREGROUND,
                                                                P141_CONFIG_GET_COLOR_BACKGROUND,
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0,

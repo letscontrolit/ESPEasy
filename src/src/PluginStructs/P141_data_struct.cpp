@@ -5,12 +5,11 @@
 # include "../Helpers/Hardware.h"
 
 /****************************************************************************
- * P141_CommandTrigger_toString: return the command string selected
+ * toString: return the command string selected
  ***************************************************************************/
-const __FlashStringHelper* P141_CommandTrigger_toString(P141_CommandTrigger cmd) {
+const __FlashStringHelper* toString(P141_CommandTrigger cmd) {
   switch (cmd) {
     case P141_CommandTrigger::lcd: return F("lcd");
-    case P141_CommandTrigger::tft: return F("tft");
     case P141_CommandTrigger::pcd8544: break;
   }
   return F("pcd8544"); // Default command trigger
@@ -87,7 +86,6 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
   if (nullptr != pcd8544) {
     pcd8544->begin(); // Start the display
-    pcd8544->invertDisplay(_displayInverted);
     gfxHelper = new (std::nothrow) AdafruitGFX_helper(pcd8544,
                                                       _commandTrigger,
                                                       _xpix,
@@ -104,6 +102,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
     if (nullptr != gfxHelper) {
       pcd8544->setContrast(_contrast);
+      gfxHelper->invertDisplay(_displayInverted);
       gfxHelper->setRotation(_rotation);
       pcd8544->fillScreen(_bgcolor);             // fill screen with black color
       pcd8544->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
@@ -152,7 +151,10 @@ bool P141_data_struct::plugin_exit(struct EventStruct *event) {
   addLog(LOG_LEVEL_INFO, F("PCD8544: Exit."));
 
   if ((nullptr != pcd8544) && bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CLEAR_ON_EXIT)) {
-    pcd8544->fillScreen(ADAGFX_BLACK); // fill screen with black color
+    pcd8544->fillScreen(_displayInverted
+                        ? ADAGFX_WHITE
+                        : ADAGFX_BLACK); // fill screen with black or white color
+    pcd8544->display();
     displayOnOff(false);
   }
   cleanup();
@@ -242,7 +244,8 @@ bool P141_data_struct::plugin_once_a_second(struct EventStruct *event) {
 /****************************************************************************
  * plugin_write: Handle commands
  ***************************************************************************/
-bool P141_data_struct::plugin_write(struct EventStruct *event, const String& string) {
+bool P141_data_struct::plugin_write(struct EventStruct *event,
+                                    const String      & string) {
   bool   success = false;
   String cmd     = parseString(string, 1);
 
@@ -250,31 +253,37 @@ bool P141_data_struct::plugin_write(struct EventStruct *event, const String& str
     String arg1 = parseString(string, 2);
     success = true;
 
-    if (arg1.equals(F("off"))) {
+    if (arg1.equals(F("off"))) {               // Screen off
       displayOnOff(false);
     }
-    else if (arg1.equals(F("on"))) {
+    else if (arg1.equals(F("on"))) {           // Screen on
       displayOnOff(true);
     }
-    else if (arg1.equals(F("clear"))) {
+    else if (arg1.equals(F("clear"))) {        // Empty screen
       pcd8544->fillScreen(_bgcolor);
-      pcd8544->display();                     // Put on display
+      pcd8544->display();                      // Put on display
     }
-    else if (arg1.equals(F("inv")) &&         // Invert display
+    else if (arg1.equals(F("inv")) &&          // Invert display
              (event->Par2 >= 0) && (event->Par2 <= 1)) {
-      if (parseString(string, 3).isEmpty()) { // No argument: flip previous state
+      if (parseString(string, 3).isEmpty()) {  // No argument: flip previous state
         _displayInverted != _displayInverted;
-        pcd8544->invertDisplay(_displayInverted);
       } else {
-        pcd8544->invertDisplay(event->Par2 == 1);
+        _displayInverted = (event->Par2 == 1); // Set state
+      }
+
+      if (nullptr != gfxHelper) {
+        gfxHelper->invertDisplay(_displayInverted);
+      } else {
+        pcd8544->invertDisplay(_displayInverted);
       }
       pcd8544->display();                            // Put on display
     }
-    else if (arg1.equals(F("backlight"))) {
+    else if (arg1.equals(F("backlight"))) {          // Backlight percentage
       if ((P141_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
           (event->Par2 > 0) &&
           (event->Par2 <= 100)) {
         P141_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
+        _backlightPercentage          = event->Par2; // Also set to current
         displayOnOff(true);
       } else {
         success = false;
@@ -331,7 +340,8 @@ void P141_data_struct::displayOnOff(bool state) {
 /****************************************************************************
  * registerButtonState: the button has been pressed, apply some debouncing
  ***************************************************************************/
-void P141_data_struct::registerButtonState(uint8_t newButtonState, bool bPin3Invers) {
+void P141_data_struct::registerButtonState(uint8_t newButtonState,
+                                           bool    bPin3Invers) {
   if ((ButtonLastState == 0xFF) || (bPin3Invers != (!!newButtonState))) {
     ButtonLastState = newButtonState;
     DebounceCounter++;
