@@ -90,9 +90,6 @@ public:
     // See: https://stackoverflow.com/a/63730321/8708166
     static int cert_to_pem(const mbedtls_x509_crt *crt, String& pem, String& subject);
 
-
-    int setTimeout(uint32_t seconds){ return 0; }
-
     operator bool()
     {
         return connected();

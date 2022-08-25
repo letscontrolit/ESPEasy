@@ -227,12 +227,23 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   switch(TLS_type) {
     case TLS_types::NoTLS:
     {
-#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-     // See: https://github.com/espressif/arduino-esp32/pull/6676
-     mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
-#else
-     mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
-#endif
+    // Ignoring the ACK from the server is probably set for a reason.
+    // For example because the server does not give an acknowledgement.
+    // This way, we always need the set amount of timeout to handle the request.
+    // Thus we should not make the timeout dynamic here if set to ignore ack.
+    const uint32_t timeout = ControllerSettings.MustCheckReply 
+      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
+      : ControllerSettings.ClientTimeout;
+
+  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+      // See: https://github.com/espressif/arduino-esp32/pull/6676
+      mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+      Client *pClient = &mqtt;
+      pClient->setTimeout(timeout);
+  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      mqtt.setTimeout(timeout);                // in msec as it should be!
+  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
       MQTTclient.setClient(mqtt);
       break;
     }
@@ -317,12 +328,23 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   if (TLS_type != TLS_types::NoTLS && mqtt_tls != nullptr) {
     // Certificate expiry not enabled in Mbed TLS.
 //    mqtt_tls->setX509Time(node_time.getUnixTime());
+    // Ignoring the ACK from the server is probably set for a reason.
+    // For example because the server does not give an acknowledgement.
+    // This way, we always need the set amount of timeout to handle the request.
+    // Thus we should not make the timeout dynamic here if set to ignore ack.
+    const uint32_t timeout = ControllerSettings.MustCheckReply 
+      ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
+      : ControllerSettings.ClientTimeout;
+
 #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-     // See: https://github.com/espressif/arduino-esp32/pull/6676
-    mqtt_tls->setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
-#else
-    mqtt_tls->setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
-#endif
+
+      // See: https://github.com/espressif/arduino-esp32/pull/6676
+      mqtt_tls->setTimeout((timeout + 500) / 1000); // in seconds!!!!
+      Client *pClient = mqtt_tls;
+      pClient->setTimeout(timeout);
+#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      mqtt_tls->setTimeout(timeout);                // in msec as it should be!
+#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
 #ifdef ESP8266
     mqtt_tls->setBufferSizes(1024,1024);
@@ -338,14 +360,25 @@ bool MQTTConnect(controllerIndex_t controller_idx)
   }
 
 #else
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  // See: https://github.com/espressif/arduino-esp32/pull/6676
-  mqtt.setTimeout((ControllerSettings.ClientTimeout + 500) / 1000); // in seconds!!!!
-  #else
-  mqtt.setTimeout(ControllerSettings.ClientTimeout); // in msec as it should be!  
-  #endif
+  // Ignoring the ACK from the server is probably set for a reason.
+  // For example because the server does not give an acknowledgement.
+  // This way, we always need the set amount of timeout to handle the request.
+  // Thus we should not make the timeout dynamic here if set to ignore ack.
+  const uint32_t timeout = ControllerSettings.MustCheckReply 
+    ? WiFiEventData.getSuggestedTimeout(Settings.Protocol[controller_idx], ControllerSettings.ClientTimeout)
+    : ControllerSettings.ClientTimeout;
 
-MQTTclient.setClient(mqtt);
+#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    mqtt.setTimeout((timeout + 500) / 1000); // in seconds!!!!
+    Client *pClient = &mqtt;
+    pClient->setTimeout(timeout);
+#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    mqtt.setTimeout(timeout);                // in msec as it should be!
+#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+  MQTTclient.setClient(mqtt);
 #endif
 
   if (ControllerSettings.UseDNS) {
@@ -368,6 +401,8 @@ MQTTclient.setClient(mqtt);
   if (MQTTclient_should_reconnect) {
     addLog(LOG_LEVEL_ERROR, F("MQTT : Intentional reconnect"));
   }
+
+  const unsigned long connect_start_time = millis();
 
   // https://github.com/knolleary/pubsubclient/issues/458#issuecomment-493875150
   if (hasControllerCredentialsSet(controller_idx, ControllerSettings)) {
@@ -395,7 +430,7 @@ MQTTclient.setClient(mqtt);
 
   uint8_t controller_number = Settings.Protocol[controller_idx];
 
-  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number);
+  count_connection_results(MQTTresult, F("MQTT : Broker "), controller_number, connect_start_time);
   #ifdef USE_MQTT_TLS
   if (mqtt_tls != nullptr)
   {

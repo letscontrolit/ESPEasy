@@ -105,13 +105,11 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
     serialPrintln(url);
   }
 
-  WiFiClient client;
   int httpCode = -1;
   send_via_http(
     controller_number,
     ControllerSettings,
     element.controller_idx,
-    client,
     url,
     F("GET"),
     EMPTY_STRING,

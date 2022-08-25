@@ -6,6 +6,7 @@
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringGenerator_System.h"
 
 
 // ********************************************************************************
@@ -35,7 +36,7 @@ void handle_download()
   str += F("_U");
   str += Settings.Unit;
   str += F("_Build");
-  str += BUILD;
+  str += getSystemBuildString();
   str += '_';
 
   if (node_time.systemTimePresent())

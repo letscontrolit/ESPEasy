@@ -2,6 +2,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/StorageLayout.h"
 
 #include "../DataStructs/TimingStats.h"
@@ -327,8 +328,12 @@ String BuildFixes()
   }
   #endif
 
+  // Starting 2022/08/18
+  // Use get_build_nr() value for settings transitions.
+  // This value will also be shown when building using PlatformIO, when showing the  Compile time defines 
 
-  Settings.Build = BUILD;
+
+  Settings.Build = get_build_nr();
   return SaveSettings();
 }
 
