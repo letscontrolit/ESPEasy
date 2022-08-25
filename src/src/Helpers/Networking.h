@@ -190,11 +190,11 @@ int http_authenticate(const String& logIdentifier,
                       const String& uri,
                       const String& HttpMethod,
                       const String& header,
-                      const String& postStr);
+                      const String& postStr,
+                      bool          must_check_reply);
 
 
 String send_via_http(const String& logIdentifier,
-                     WiFiClient  & client,
                      uint16_t      timeout,
                      const String& user,
                      const String& pass,
