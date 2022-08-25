@@ -12,6 +12,7 @@
  ***************************************************************************/
 /************
  * Changelog:
+ * 2022-08-25 tonhuisman: Add invertDisplay() functionality, often used for monochrome displays
  * 2022-08-23 tonhuisman: Several small improvements, and a few bugfixes
  * 2022-08-20 tonhuisman: Add txl subcommand to display text on 1 or more lines, autoincrementing the line nr,
  *                        always in row/column mode.
@@ -482,6 +483,8 @@ public:
     return _useValidation;
   }
 
+  void invertDisplay(bool i);
+
 private:
 
   void initialize();
@@ -525,6 +528,7 @@ private:
   int8_t _y_compensation = 0;
   bool _columnRowMode    = false;
   int8_t _rotation       = 0;
+  bool _displayInverted  = false;
 
   uint16_t _display_x;
   uint16_t _display_y;

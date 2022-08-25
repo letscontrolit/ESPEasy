@@ -711,6 +711,14 @@ void AdafruitGFX_helper::setTxtfullCompensation(uint8_t compensation) {
 }
 
 /****************************************************************************
+ * invertDisplay(): Store display-inverted state and proxy to _display
+ ***************************************************************************/
+void AdafruitGFX_helper::invertDisplay(bool i) {
+  _displayInverted = i;
+  _display->invertDisplay(_displayInverted);
+}
+
+/****************************************************************************
  * processCommand: Parse string to <command>,<subcommand>[,<arguments>...] and execute that command
  ***************************************************************************/
 bool AdafruitGFX_helper::processCommand(const String& string) {
@@ -1715,7 +1723,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     #  if ADAGFX_ARGUMENT_VALIDATION
     const int16_t curWin = getWindow();
 
-    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+    if (curWin != 0) { selectWindow(0); }           // Validate against raw window coordinates
 
     if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
 
