@@ -31,6 +31,14 @@
 #include "../Helpers/StringProvider.h"
 
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
+
+
 String getReplacementString(const String& format, String& s) {
   int startpos = s.indexOf(format);
   int endpos   = s.indexOf('%', startpos + 1);

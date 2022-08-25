@@ -198,13 +198,11 @@ bool do_process_c009_delay_queue(int controller_number, const C009_queue_element
   // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
   // addLog(LOG_LEVEL_INFO, jsonString);
 
-  WiFiClient client;
   int httpCode = -1;
   send_via_http(
     controller_number,
     ControllerSettings,
     element.controller_idx,
-    client,
     F("/ESPEasy"),
     F("POST"),
     EMPTY_STRING,
