@@ -373,7 +373,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   const bool addJS   = true;
   const bool addMeta = true;
 
-  if (tmplName == F("TmplAP"))
+  if (tmplName.equals(F("TmplAP")))
   {
 
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
@@ -391,7 +391,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName == F("TmplMsg"))
+  else if (tmplName.equals(F("TmplMsg")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {
@@ -401,7 +401,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName == F("TmplDsh"))
+  else if (tmplName.equals(F("TmplDsh")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
     parser.process(F(

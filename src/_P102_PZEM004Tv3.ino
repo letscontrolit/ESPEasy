@@ -347,7 +347,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       {
         String command = parseString(string, 1);
 
-        if ((command == F("resetenergy")) && (P102_PZEM_FIRST == event->TaskIndex))
+        if ((command.equals(F("resetenergy"))) && (P102_PZEM_FIRST == event->TaskIndex))
         {
           if ((event->Par1 >= 0) && (event->Par1 <= 247))
           {
