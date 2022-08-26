@@ -1228,6 +1228,9 @@ To create/register a plugin, you have to :
     #define USES_P081   // Cron
     #define USES_P082   // GPS
     #define USES_P089   // Ping
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
 #endif
 
 #ifdef PLUGIN_SET_COLLECTION_A
@@ -1348,6 +1351,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P132
      #define USES_P132   // INA3221
    #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
 #endif
 
 // Collection of all display plugins. (also NeoPixel)
@@ -1406,6 +1412,9 @@ To create/register a plugin, you have to :
    #ifndef USES_P116
      #define USES_P116   // ST77xx
    #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
+  #endif
 #endif
 
 // Collection of all NeoPixel plugins
@@ -1443,6 +1452,9 @@ To create/register a plugin, you have to :
     // Does not fit in build
     #undef FEATURE_CHART_JS
     #define FEATURE_CHART_JS  0
+  #endif
+  #if !defined(USES_P138) && defined(ESP32)
+    #define USES_P138   // IP5306
   #endif
 #endif
 
