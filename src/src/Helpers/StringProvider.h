@@ -130,6 +130,10 @@ struct LabelType {
 
     ESP_CHIP_ID,
     ESP_CHIP_FREQ,
+#ifdef ESP32
+    ESP_CHIP_XTAL_FREQ,
+    ESP_CHIP_APB_FREQ,
+#endif
     ESP_CHIP_MODEL,
     ESP_CHIP_REVISION,
     ESP_CHIP_CORES,
