@@ -25,6 +25,13 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   currentFunction = function;
   incomingValue   = type;
   resultReceived  = false;
+  if (ModbusClient) {
+    ModbusClient->flush();
+    ModbusClient->stop();
+    delete (ModbusClient);
+    delay(1);
+    ModbusClient = nullptr;
+  }
   ModbusClient    = new (std::nothrow) WiFiClient();
   if (ModbusClient == nullptr) {
     return false;
@@ -55,6 +62,9 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
       if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
       #endif
       return false;
+    } else {
+      // Make sure no stale connection is left
+      ModbusClient->stop();
     }
   }
   #ifndef BUILD_NO_DEBUG

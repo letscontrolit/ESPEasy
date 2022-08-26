@@ -1564,6 +1564,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_SD
     #define FEATURE_SD 1
   #endif
+  #ifndef SHOW_SYSINFO_JSON
+    #define SHOW_SYSINFO_JSON 1
+  #endif
 
   // Plugins
   #ifndef USES_P016
@@ -2037,7 +2040,7 @@ To create/register a plugin, you have to :
 
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
 #ifdef WEBSERVER_NEW_UI
-  #define SHOW_SYSINFO_JSON
+  #define SHOW_SYSINFO_JSON 1
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
