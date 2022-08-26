@@ -180,31 +180,31 @@ bool P137_data_struct::plugin_get_config_value(struct EventStruct *event,
   String command = parseString(string, 1);
   float  value;
 
-  if (command == F("batvoltage")) {          // batvoltage
+  if (command.equals(F("batvoltage"))) {          // batvoltage
     value = read_value(P137_valueOptions_e::BatteryVoltage);
-  } else if (command == F("batdischarge")) { // batdischarge
+  } else if (command.equals(F("batdischarge"))) { // batdischarge
     value = read_value(P137_valueOptions_e::BatteryDischargeCurrent);
-  } else if (command == F("batcharge")) {    // batcharge
+  } else if (command.equals(F("batcharge"))) {    // batcharge
     value = read_value(P137_valueOptions_e::BatteryChargeCurrent);
-  } else if (command == F("batpower")) {     // batpower
+  } else if (command.equals(F("batpower"))) {     // batpower
     value = read_value(P137_valueOptions_e::BatteryPower);
-  } else if (command == F("inpvoltage")) {   // inpvoltage
+  } else if (command.equals(F("inpvoltage"))) {   // inpvoltage
     value = read_value(P137_valueOptions_e::AcinVoltage);
-  } else if (command == F("inpcurrent")) {   // inpcurrent
+  } else if (command.equals(F("inpcurrent"))) {   // inpcurrent
     value = read_value(P137_valueOptions_e::AcinCurrent);
-  } else if (command == F("vbusvolt")) {     // vbusvolt
+  } else if (command.equals(F("vbusvolt"))) {     // vbusvolt
     value = read_value(P137_valueOptions_e::VbusVoltage);
-  } else if (command == F("vbuscurr")) {     // vbuscurr
+  } else if (command.equals(F("vbuscurr"))) {     // vbuscurr
     value = read_value(P137_valueOptions_e::VbusCurrent);
-  } else if (command == F("inttemp")) {      // inttemp
+  } else if (command.equals(F("inttemp"))) {      // inttemp
     value = read_value(P137_valueOptions_e::InternalTemperature);
-  } else if (command == F("apsvolt")) {      // apsvolt
+  } else if (command.equals(F("apsvolt"))) {      // apsvolt
     value = read_value(P137_valueOptions_e::ApsVoltage);
-  } else if (command == F("ldo2volt")) {     // ldo2volt
+  } else if (command.equals(F("ldo2volt"))) {     // ldo2volt
     value = read_value(P137_valueOptions_e::LDO2);
-  } else if (command == F("ldo3volt")) {     // ldo3volt
+  } else if (command.equals(F("ldo3volt"))) {     // ldo3volt
     value = read_value(P137_valueOptions_e::LDO3);
-  } else if (command == F("gpio0volt")) {    // gpio0volt
+  } else if (command.equals(F("gpio0volt"))) {    // gpio0volt
     value = read_value(P137_valueOptions_e::GPIO0);
   } else {
     success = false;
