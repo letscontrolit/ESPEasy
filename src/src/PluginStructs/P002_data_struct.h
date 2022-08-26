@@ -5,7 +5,7 @@
 
 #ifdef USES_P002
 
-# include "src/Helpers/Hardware.h"
+# include "../Helpers/Hardware.h"
 # include <vector>
 
 # ifdef ESP32

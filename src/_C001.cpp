@@ -148,13 +148,11 @@ bool do_process_c001_delay_queue(int controller_number, const C001_queue_element
   }
   # endif // ifndef BUILD_NO_DEBUG
 
-  WiFiClient client;
   int httpCode = -1;
   send_via_http(
     controller_number,
     ControllerSettings,
     element.controller_idx,
-    client,
     element.txt,
     F("GET"),
     EMPTY_STRING,
