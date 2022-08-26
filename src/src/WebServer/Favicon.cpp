@@ -1,7 +1,7 @@
 
 #include "../WebServer/Favicon.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/404.h"
 
 #include "../Globals/RamTracker.h"

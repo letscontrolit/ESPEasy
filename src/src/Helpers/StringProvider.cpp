@@ -169,6 +169,10 @@ const __FlashStringHelper * getLabel(LabelType::Enum label) {
 
     case LabelType::ESP_CHIP_ID:            return F("ESP Chip ID");
     case LabelType::ESP_CHIP_FREQ:          return F("ESP Chip Frequency");
+#ifdef ESP32
+    case LabelType::ESP_CHIP_XTAL_FREQ:     return F("ESP Crystal Frequency");
+    case LabelType::ESP_CHIP_APB_FREQ:      return F("ESP APB Frequency");
+#endif
     case LabelType::ESP_CHIP_MODEL:         return F("ESP Chip Model");
     case LabelType::ESP_CHIP_REVISION:      return F("ESP Chip Revision");
     case LabelType::ESP_CHIP_CORES:         return F("ESP Chip Cores");
@@ -308,20 +312,20 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::WIFI_CONNECTION:        break;
     case LabelType::WIFI_RSSI:              return String(WiFi.RSSI());
-    case LabelType::IP_CONFIG:              return useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
-        LabelType::IP_CONFIG_DYNAMIC);
+    case LabelType::IP_CONFIG:              return String(useStaticIP() ? getLabel(LabelType::IP_CONFIG_STATIC) : getLabel(
+        LabelType::IP_CONFIG_DYNAMIC));
     case LabelType::IP_CONFIG_STATIC:       break;
     case LabelType::IP_CONFIG_DYNAMIC:      break;
     case LabelType::IP_ADDRESS:             return NetworkLocalIP().toString();
     case LabelType::IP_SUBNET:              return NetworkSubnetMask().toString();
-    case LabelType::IP_ADDRESS_SUBNET:      return String(getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET));
+    case LabelType::IP_ADDRESS_SUBNET:      return getValue(LabelType::IP_ADDRESS) + F(" / ") + getValue(LabelType::IP_SUBNET);
     case LabelType::GATEWAY:                return NetworkGatewayIP().toString();
     case LabelType::CLIENT_IP:              return formatIP(web_server.client().remoteIP());
 
     #if FEATURE_MDNS
-    case LabelType::M_DNS:                  return String(NetworkGetHostname()) + F(".local");
+    case LabelType::M_DNS:                  return NetworkGetHostname() + F(".local");
     #endif // if FEATURE_MDNS
-    case LabelType::DNS:                    return String(getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2));
+    case LabelType::DNS:                    return getValue(LabelType::DNS_1) + F(" / ") + getValue(LabelType::DNS_2);
     case LabelType::DNS_1:                  return NetworkDnsIP(0).toString();
     case LabelType::DNS_2:                  return NetworkDnsIP(1).toString();
     case LabelType::ALLOWED_IP_RANGE:       return describeAllowedIPrange();
@@ -361,7 +365,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::PERIODICAL_GRAT_ARP:    return jsonBool(Settings.gratuitousARP());
     case LabelType::CONNECTION_FAIL_THRESH: return String(Settings.ConnectionFailuresThreshold);
 
-    case LabelType::BUILD_DESC:             return String(BUILD);
+    case LabelType::BUILD_DESC:             return getSystemBuildString();
     case LabelType::GIT_BUILD:              
       { 
         const String res(F(BUILD_GIT));
@@ -386,11 +390,15 @@ String getValue(LabelType::Enum label) {
 
     case LabelType::ESP_CHIP_ID:            return formatToHex(getChipId(), 6);
     case LabelType::ESP_CHIP_FREQ:          return String(ESP.getCpuFreqMHz());
+#ifdef ESP32
+    case LabelType::ESP_CHIP_XTAL_FREQ:     return String(getXtalFrequencyMHz());
+    case LabelType::ESP_CHIP_APB_FREQ:      return String(getApbFrequency() / 1000000);
+#endif
     case LabelType::ESP_CHIP_MODEL:         return getChipModel();
     case LabelType::ESP_CHIP_REVISION:      return String(getChipRevision());
     case LabelType::ESP_CHIP_CORES:         return String(getChipCores());
     case LabelType::ESP_BOARD_NAME:         return get_board_name();
-    case LabelType::FLASH_CHIP_ID:          return String(getFlashChipId());
+    case LabelType::FLASH_CHIP_ID:          return formatToHex(getFlashChipId(), 6);
     case LabelType::FLASH_CHIP_VENDOR:      return formatToHex(getFlashChipId() & 0xFF, 2);
     case LabelType::FLASH_CHIP_MODEL:
     {
@@ -402,7 +410,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::FLASH_CHIP_SPEED:       return String(getFlashChipSpeed() / 1000000);
     case LabelType::FLASH_IDE_SIZE:         break;
     case LabelType::FLASH_IDE_SPEED:        break;
-    case LabelType::FLASH_IDE_MODE:         break;
+    case LabelType::FLASH_IDE_MODE:         return getFlashChipMode();
     case LabelType::FLASH_WRITE_COUNT:      break;
     case LabelType::SKETCH_SIZE:            break;
     case LabelType::SKETCH_FREE:            break;
