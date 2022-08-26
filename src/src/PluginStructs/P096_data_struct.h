@@ -4,33 +4,39 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P096
 
-# include <Adafruit_GFX.h>             // include Adafruit graphics library
-# include <LOLIN_EPD.h>                // include Adafruit Lolin eInk/ePaper library
+# include <Adafruit_GFX.h>              // include Adafruit graphics library
+# include <LOLIN_EPD.h>                 // include Adafruit Lolin eInk/ePaper library
 
-# define P096_USE_ADA_GRAPHICS         // Use AdafruitGFX_helper
+# define P096_USE_ADA_GRAPHICS          // Use AdafruitGFX_helper
 
 # ifndef P096_USE_EXTENDED_SETTINGS
-#  define P096_USE_EXTENDED_SETTINGS 1 // Allow more settings/options, made available by the AdaGFX helper
+#  define P096_USE_EXTENDED_SETTINGS  1 // Allow more settings/options, made available by the AdaGFX helper
 # endif // ifndef P096_USE_EXTENDED_SETTINGS
 
-# if !P096_USE_WAVESHARE_2IN7
-#  define P096_USE_WAVESHARE_2IN7 1                     // Include the Waveshare 2.7 inch ePaper display
-# endif // if !P096_USE_WAVESHARE_2IN7
+# ifndef P096_USE_WAVESHARE_2IN7
+#  define P096_USE_WAVESHARE_2IN7     1                  // Include the Waveshare 2.7 inch ePaper display
+# endif // ifndef P096_USE_WAVESHARE_2IN7
+# ifndef P096_USE_WAVESHARE_1IN54B
+#  define P096_USE_WAVESHARE_1IN54B   1                  // Include the Waveshare 1.54 inch 200x200 ePaper display
+# endif // ifndef P096_USE_WAVESHARE_1IN54B
+# ifndef P096_USE_MH_ET_LIVE_1IN54
+#  define P096_USE_MH_ET_LIVE_1IN54   1                  // Include the MH-ET Live 1.54 inch 200x200 white/black/red ePaper display
+# endif // ifndef P096_USE_MH_ET_LIVE_1IN54
 
-# include "../Helpers/AdafruitGFX_helper.h"             // Use Adafruit graphics helper objecr
+# include "../Helpers/AdafruitGFX_helper.h"              // Use Adafruit graphics helper objecr
 # include "../CustomBuild/StorageLayout.h"
 
-# define P096_Nlines 24                                 // The number of different lines which can be displayed
+# define P096_Nlines 24                                  // The number of different lines which can be displayed
 # define P096_Nchars 60
 
-# define P096_CONFIG_VERSION            PCONFIG(0)      // Settings version
-# define P096_CONFIG_ROTATION           PCONFIG(1)      // Rotation
-# define P096_CONFIG_WIDTH              PCONFIG(2)      // Display width
-# define P096_CONFIG_HEIGHT             PCONFIG(3)      // Display height
+# define P096_CONFIG_VERSION            PCONFIG(0)       // Settings version
+# define P096_CONFIG_ROTATION           PCONFIG(1)       // Rotation
+# define P096_CONFIG_WIDTH              PCONFIG(2)       // Display width
+# define P096_CONFIG_HEIGHT             PCONFIG(3)       // Display height
 
-# define P096_CONFIG_COLORS             PCONFIG_LONG(3) // 2 Colors fit in 1 long
+# define P096_CONFIG_COLORS             PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
-# define P096_CONFIG_FLAGS              PCONFIG_LONG(0) // All flags, 32 bits available
+# define P096_CONFIG_FLAGS              PCONFIG_ULONG(0) // All flags, 32 bits available
 // # define P096_CONFIG_FLAG_NO_WAKE       0               // Flag: Don't wake display
 // # define P096_CONFIG_FLAG_INVERT_BUTTON 1               // Flag: Inverted button state
 // # define P096_CONFIG_FLAG_CLEAR_ON_EXIT 2               // Flag: Clear display on exit
@@ -55,16 +61,18 @@
 # ifdef ESP32
 
 // for D32 Pro with TFT connector
-  #  define P096_TFT_CS        14
-  #  define P096_TFT_CS_HSPI   26 // when connected to Hardware-SPI GPIO-14 is already used
-  #  define P096_TFT_DC        27
-  #  define P096_TFT_RST       -1 // 33
+  #  define P096_EPD_CS        14
+  #  define P096_EPD_CS_HSPI   26 // when connected to Hardware-SPI GPIO-14 is already used
+  #  define P096_EPD_DC        27
+  #  define P096_EPD_RST       -1 // 33
+  #  define P096_EPD_BUSY      -1
 # else // ifdef ESP32
 
 // Was: for D1 Mini with shield connection
-  #  define P096_TFT_CS        D3 //  0   // D0
-  #  define P096_TFT_DC        D2 //  4   // D8
-  #  define P096_TFT_RST       -1 // D4 // -1
+  #  define P096_EPD_CS        15 // D8
+  #  define P096_EPD_DC        2  // D4
+  #  define P096_EPD_RST       -1 // D4 // -1
+  #  define P096_EPD_BUSY      -1
 # endif // ifdef ESP32
 
 enum class EPD_type_e : uint8_t {
@@ -74,7 +82,12 @@ enum class EPD_type_e : uint8_t {
   # if P096_USE_WAVESHARE_2IN7
   EPD_WS2IN7 = 3u,
   # endif // if P096_USE_WAVESHARE_2IN7
-  EPD_MAX // must be last value in enum
+  # if P096_USE_WAVESHARE_1IN54B
+  EPD_WS1IN54B = 4u,
+  # endif // if P096_USE_WAVESHARE_1IN54B
+  # if P096_USE_MH_ET_LIVE_1IN54
+  EPD_MHET1IN54 = 5u,
+  # endif // if P096_USE_MH_ET_LIVE_1IN54
 };
 
 enum class P096_CommandTrigger : uint8_t {
@@ -87,12 +100,16 @@ enum class P096_CommandTrigger : uint8_t {
   # if P096_USE_WAVESHARE_2IN7
   ws2in7 = 6u,
   # endif // if P096_USE_WAVESHARE_2IN7
-
-  MAX // Keep as last item!
+  # if P096_USE_WAVESHARE_1IN54B
+  ws1in54b = 7u,
+  # endif // if P096_USE_WAVESHARE_1IN54B
+  # if P096_USE_MH_ET_LIVE_1IN54
+  mhet1in54 = 8u,
+  # endif // if P096_USE_MH_ET_LIVE_1IN54
 };
 
-const __FlashStringHelper* EPD_type_toString(EPD_type_e device);
-const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd);
+const __FlashStringHelper* toString(EPD_type_e device);
+const __FlashStringHelper* toString(P096_CommandTrigger cmd);
 void                       EPD_type_toResolution(EPD_type_e device,
                                                  uint16_t & x,
                                                  uint16_t & y);
@@ -109,8 +126,8 @@ public:
                    uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
                    String              commandTrigger,
-                   uint16_t            fgcolor      = ADAGFX_WHITE,
-                   uint16_t            bgcolor      = ADAGFX_BLACK,
+                   uint16_t            fgcolor      = ADAGFX_BLACK,
+                   uint16_t            bgcolor      = ADAGFX_WHITE,
                    AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
                    bool                textBackFill = true);
   ~P096_data_struct();
@@ -129,7 +146,7 @@ private:
 
   AdafruitGFX_helper *gfxHelper = nullptr;
 
-  bool plugin_096_sequence_in_progress = false;
+  bool _sequence_in_progress = false;
 
   EPD_type_e _display;
   uint16_t   _xpix;
