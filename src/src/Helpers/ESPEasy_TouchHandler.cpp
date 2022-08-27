@@ -360,7 +360,9 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
     String part = touchObject.substring(0, idx);
     int    grp  = -1;
 
-    if (validIntFromString(part, grp) && validButtonGroup(static_cast<uint16_t>(grp), false)) {
+    # if TOUCH_FEATURE_EXTENDED_TOUCH
+
+    if (validIntFromString(part, grp) && validButtonGroup(static_cast<int16_t>(grp), false)) {
       part = touchObject.substring(idx + 1);
       int btn = -1;
 
@@ -384,6 +386,7 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
     } else {
       return -1;   // Invalid group number
     }
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   }
 
   // ATTENTION: Any externally provided objectNumber is 1-based, result is 0-based
