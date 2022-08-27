@@ -121,7 +121,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view == F("sensorupdate")) {
+    if (view.equals(F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
