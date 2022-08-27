@@ -379,8 +379,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   {
     String dummy;
 
+    SaveTaskSettings(taskIndex);
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
-      SaveTaskSettings(taskIndex);
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
 
