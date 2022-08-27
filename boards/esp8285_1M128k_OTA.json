@@ -15,9 +15,7 @@
     "wifi"
   ],
   "frameworks": [
-    "arduino",
-    "esp8266-rtos-sdk",
-    "esp8266-nonos-sdk"
+    "arduino"
   ],
   "name": "Espressif Generic ESP8285 ESPEasy 1M Flash 128k FS",
   "upload": {
