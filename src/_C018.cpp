@@ -32,6 +32,12 @@
 # endif // ifndef C018_FORCE_SW_SERIAL
 
 struct C018_data_struct {
+private:
+  void C018_logError(const __FlashStringHelper* command) const;
+  void updateCacheOnInit();
+  
+public:
+
   C018_data_struct() : C018_easySerial(nullptr), myLora(nullptr) {}
 
   ~C018_data_struct() {
@@ -335,10 +341,6 @@ struct C018_data_struct {
   }
 
 private:
-
-  void C018_logError(const __FlashStringHelper* command) const;
-
-  void updateCacheOnInit();
 
   void triggerAutobaud() {
     if ((C018_easySerial == nullptr) || (myLora == nullptr)) {
