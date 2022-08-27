@@ -684,7 +684,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
 
-      if (command == F("inputswitchstate")) {
+      if (command.equals(F("inputswitchstate"))) {
         success = true;
 
         // @giig1967g deprecated since 2019-11-26

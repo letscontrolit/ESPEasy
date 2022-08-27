@@ -583,7 +583,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
         if (Plugin_091_init)
         {
-          if ( command == F("relay") ) // deal with relay change command
+          if ( command.equals(F("relay"))) // deal with relay change command
           {
             success = true;
 
@@ -633,7 +633,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             }
           }
 
-          if ( command == F("relaypulse") )
+          if ( command.equals(F("relaypulse")))
           {
             success = true;
 
@@ -685,7 +685,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
             }
           }
 
-          if ( command == F("relaylongpulse") )
+          if ( command.equals(F("relaylongpulse")))
           {
             success = true;
 
@@ -737,7 +737,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
               addLogMove(LOG_LEVEL_INFO, log);
             }
           }
-          if ( command == F("ydim") ) // deal with dimmer command
+          if ( command.equals(F("ydim")) ) // deal with dimmer command
           {
             if (( (Plugin_091_globalpar0 == SER_SWITCH_YEWE) && (Plugin_091_numrelay > 1)) || (Plugin_091_globalpar0 == SER_SWITCH_WIFIDIMMER)) { // only on tuya dimmer
               success = true;
