@@ -133,7 +133,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
       #endif
 
       // success ?
-      if (line.substring(0, 15) == F("HTTP/1.1 200 OK")) {
+      if (line.substring(0, 15).equals(F("HTTP/1.1 200 OK"))) {
         #ifndef BUILD_NO_DEBUG
         strcpy_P(log, PSTR("HTTP : Success"));
         #endif
@@ -141,10 +141,10 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
         if (!data) { success = true; }
       }
       #ifndef BUILD_NO_DEBUG
-      else if (line.substring(0, 24) == F("HTTP/1.1 400 Bad Request")) {
+      else if (line.substring(0, 24).equals(F("HTTP/1.1 400 Bad Request"))) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
-      else if (line.substring(0, 25) == F("HTTP/1.1 401 Unauthorized")) {
+      else if (line.substring(0, 25).equals(F("HTTP/1.1 401 Unauthorized"))) {
         strcpy_P(log, PSTR("HTTP : Unauthorized"));
       }
       addLog(LOG_LEVEL_DEBUG, log);
