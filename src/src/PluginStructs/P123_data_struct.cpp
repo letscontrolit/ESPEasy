@@ -203,7 +203,7 @@ void P123_data_struct::loadTouchObjects(struct EventStruct *event) {
  */
 bool P123_data_struct::touched() {
   if (isInitialized()) {
-    return touchscreen->touched();
+    return touchHandler->touchEnabled() && touchscreen->touched();
   }
   return false;
 }
