@@ -99,19 +99,19 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String &string)
       String version = boardInfo.substring(boardInfo.lastIndexOf(',') + 1);
       addHtml(board);
 
-      if (board == F("pH"))
+      if (board.equals(F("pH")))
       {
         board_type = PH;
       }
-      else if (board == F("ORP"))
+      else if (board.equals(F("ORP")))
       {
         board_type = ORP;
       }
-      else if (board == F("EC"))
+      else if (board.equals(F("EC")))
       {
         board_type = EC;
       }
-      else if (board == F("D.O."))
+      else if (board.equals(F("D.O.")))
       {
         board_type = DO;
       }
