@@ -24,7 +24,7 @@
     "maximum_ram_size": 81920,
     "maximum_size": 1040316,
     "require_upload_port": true,
-    "resetmethod": "ck",
+    "resetmethod": "nodemcu",
     "speed": 115200
   },
   "url": "http://www.esp8266.com/wiki/doku.php?id=esp8266-module-family",

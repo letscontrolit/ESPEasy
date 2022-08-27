@@ -24,7 +24,7 @@
     "maximum_ram_size": 81920,
     "maximum_size": 1040316,
     "require_upload_port": true,
-    "resetmethod": "ck",
+    "resetmethod": "nodemcu",
     "speed": 115200
   },
   "url": "https://templates.blakadder.com/sonoff_ZBBridge.html",
