@@ -106,7 +106,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command == F("setlevel")) {
+      if (command.equals(F("setlevel"))) {
         String value  = parseString(string, 2);
         double result = 0.0;
 
@@ -128,7 +128,7 @@ boolean Plugin_021(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command == F("getlevel")) {
+      if (command.equals(F("getlevel"))) {
         string  = PCONFIG_FLOAT(0);
         success = true;
       }

@@ -15,16 +15,14 @@
     "wifi"
   ],
   "frameworks": [
-    "arduino",
-    "esp8266-rtos-sdk",
-    "esp8266-nonos-sdk"
+    "arduino"
   ],
   "name": "Espressif Generic ESP8266 ESPEasy 1M Flash 128k FS",
   "upload": {
     "maximum_ram_size": 81920,
     "maximum_size": 616448,
     "require_upload_port": true,
-    "resetmethod": "ck",
+    "resetmethod": "nodemcu",
     "speed": 115200
   },
   "url": "http://www.esp8266.com/wiki/doku.php?id=esp8266-module-family",
