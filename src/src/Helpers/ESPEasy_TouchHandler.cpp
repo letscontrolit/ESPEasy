@@ -48,7 +48,7 @@ const __FlashStringHelper* toString(Swipe_action_e action) {
  */
 ESPEasy_TouchHandler::ESPEasy_TouchHandler() {}
 
-ESPEasy_TouchHandler::ESPEasy_TouchHandler(const uint16_t        & displayTask,
+ESPEasy_TouchHandler::ESPEasy_TouchHandler(const taskIndex_t     & displayTask,
                                            const AdaGFXColorDepth& colorDepth)
   : _displayTask(displayTask), _colorDepth(colorDepth) {}
 
@@ -176,27 +176,25 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
 
         // Check if a slider/gauge with range not including 0 is used, then set starting value closest to 0
         if (bitRead(TouchObjects[t].flags, TOUCH_OBJECT_FLAG_SLIDER) && !TouchObjects[t].captionOff.isEmpty()) {
-          float  rangeFrom     = 0.0f;
-          float  rangeTo       = 0.0f;
-          String tmp           = parseString(TouchObjects[t].captionOff, 1);
-          const bool validFrom = validFloatFromString(tmp, rangeFrom);
-          tmp = parseString(TouchObjects[t].captionOff, 2);
+          int16_t _value    = 0;
+          int16_t lowRange  = 0;
+          int16_t highRange = 100;
 
-          if (validFrom && validFloatFromString(tmp, rangeTo) &&
-              !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
-            if (definitelyGreaterThan(rangeFrom, 0.0f) && definitelyGreaterThan(rangeTo, 0.0f)) {
-              if (definitelyGreaterThan(rangeFrom, rangeTo)) {
-                TouchObjects[t].TouchStates = rangeTo;
-              } else {
-                TouchObjects[t].TouchStates = rangeFrom;
+          if (parseRangeToInt16(TouchObjects[t].captionOff, lowRange, highRange)) {
+            if (lowRange > highRange) {
+              if (_value < highRange) {
+                _value = highRange;
+              } else if (_value > lowRange) {
+                _value = lowRange;
               }
-            } else if (definitelyLessThan(rangeFrom, 0.0f) && definitelyLessThan(rangeTo, 0.0f)) {
-              if (definitelyGreaterThan(rangeFrom, rangeTo)) {
-                TouchObjects[t].TouchStates = rangeFrom;
-              } else {
-                TouchObjects[t].TouchStates = rangeTo;
+            } else {
+              if (_value < lowRange) {
+                _value = lowRange;
+              } else if (_value > highRange) {
+                _value = highRange;
               }
             }
+            TouchObjects[t].TouchStates = _value;
           }
         }
         # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
@@ -219,6 +217,7 @@ void ESPEasy_TouchHandler::init(struct EventStruct *event) {
   }
 
   # if TOUCH_FEATURE_EXTENDED_TOUCH
+  _touchEnabled = bitRead(TOUCH_COMMON_FLAGS, TOUCH_FLAGS_IGNORE_TOUCH);
 
   if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME) &&
       bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT)) {
@@ -355,6 +354,38 @@ int8_t ESPEasy_TouchHandler::getTouchObjectIndex(struct EventStruct *event,
 
   int index = -1;
 
+  int16_t idx = -1;
+
+  if ((idx = touchObject.indexOf('.')) > -1) {
+    String part = touchObject.substring(0, idx);
+    int    grp  = -1;
+
+    if (validIntFromString(part, grp) && validButtonGroup(static_cast<uint16_t>(grp), false)) {
+      part = touchObject.substring(idx + 1);
+      int btn = -1;
+
+      if (validIntFromString(part, btn)) {
+        idx = 0;
+
+        for (size_t objectNr = 0; objectNr < TouchObjects.size(); objectNr++) {
+          if (!TouchObjects[objectNr].objectName.isEmpty()
+              && (get8BitFromUL(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_GROUP) == grp)
+              && (!isButton || bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_BUTTON))) {
+            idx++;
+
+            if (idx == btn) {
+              return static_cast<int8_t>(objectNr);
+            }
+          }
+        }
+      } else {
+        return -1; // Invalid button name
+      }
+    } else {
+      return -1;   // Invalid group number
+    }
+  }
+
   // ATTENTION: Any externally provided objectNumber is 1-based, result is 0-based
   if (validIntFromString(touchObject, index) &&
       (index > 0) &&
@@ -401,7 +432,7 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
     }
     # ifdef TOUCH_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("TOUCH setTouchObjectState: obj: ");
       log += touchObject;
       log += '/';
@@ -414,7 +445,7 @@ bool ESPEasy_TouchHandler::setTouchObjectState(struct EventStruct *event,
       } else {
         log += F(" failed!");
       }
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
   }
@@ -465,14 +496,14 @@ bool ESPEasy_TouchHandler::setTouchButtonOnOff(struct EventStruct *event,
     }
     # ifdef TOUCH_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("TOUCH setTouchButtonOnOff: obj: ");
       log += touchObject;
       log += '/';
       log += objectNr;
       log += F(", new state: ");
       log += (state ? F("on") : F("off"));
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
   }
@@ -506,7 +537,7 @@ int16_t ESPEasy_TouchHandler::getTouchObjectValue(struct EventStruct *event,
  */
 bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
                                                const String      & touchObject,
-                                               const uint16_t    & value) {
+                                               const int16_t     & value) {
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
@@ -517,28 +548,74 @@ bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
     success = true; // Always success if matched object
 
     if (value != TouchObjects[objectNr].TouchStates) {
-      TouchObjects[objectNr].TouchStates = value;
+      int16_t _value = value;
+
+      if (bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_SLIDER)) {
+        int16_t lowRange  = 0;
+        int16_t highRange = 100;
+
+        if (!TouchObjects[objectNr].captionOff.isEmpty()) { // Off caption can hold range: <from>,<to>
+          parseRangeToInt16(TouchObjects[objectNr].captionOff, lowRange, highRange);
+
+          if (lowRange > highRange) {
+            if (_value < highRange) {
+              _value = highRange;
+            } else if (_value > lowRange) {
+              _value = lowRange;
+            }
+          } else {
+            if (_value < lowRange) {
+              _value = lowRange;
+            } else if (_value > highRange) {
+              _value = highRange;
+            }
+          }
+        }
+      }
+      TouchObjects[objectNr].TouchStates = _value;
 
       // Send event like it was pressed
       if (bitRead(Touch_Settings.flags, TOUCH_FLAGS_SEND_OBJECTNAME) &&
           bitRead(Touch_Settings.flags, TOUCH_FLAGS_INIT_OBJECTEVENT)) {
-        generateObjectEvent(event, objectNr, value);
+        generateObjectEvent(event, objectNr, _value);
       }
     }
     # ifdef TOUCH_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("TOUCH setTouchObjectValue: obj: ");
       log += touchObject;
       log += '/';
       log += objectNr;
       log += F(", new value: ");
       log += value;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
   }
   return success;
+}
+
+/**
+ * parseRangeToInt16: get the low and high values of a range and convert to int16_t
+ */
+bool ESPEasy_TouchHandler::parseRangeToInt16(const String& range,
+                                             int16_t     & lowRange,
+                                             int16_t     & highRange) {
+  float  rangeFrom     = 0.0f;
+  float  rangeTo       = 0.0f;
+  String tmp           = parseString(range, 1);
+  const bool validFrom = validFloatFromString(tmp, rangeFrom);
+
+  tmp = parseString(range, 2);
+
+  if (validFrom && validFloatFromString(tmp, rangeTo) &&
+      !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
+    lowRange  = static_cast<int16_t>(rangeFrom);
+    highRange = static_cast<int16_t>(rangeTo);
+    return true;
+  }
+  return false;
 }
 
 /**
@@ -827,6 +904,13 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
 
   addFormCheckBox(F("Prevent duplicate events"), F("deduplicate"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_DEDUPLICATE));
 
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  addFormCheckBox(F("Ignore touch-screen"),      F("ignoretouch"), bitRead(Touch_Settings.flags, TOUCH_FLAGS_IGNORE_TOUCH));
+  #  ifndef LIMIT_BUILD_SIZE
+  addFormNote(F("To enable the use of touch-object display-functions only."));
+  #  endif // ifndef LIMIT_BUILD_SIZE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+
   # ifndef LIMIT_BUILD_SIZE
 
   if (!Settings.UseRules) {
@@ -851,10 +935,10 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
   if (Touch_Settings.calibrationEnabled) {
     addRowLabel(F("Calibration"));
     html_table(EMPTY_STRING, false); // Sub-table
-    html_table_header(F(""));
+    html_table_header(EMPTY_STRING);
     html_table_header(F("x"));
     html_table_header(F("y"));
-    html_table_header(F(""));
+    html_table_header(EMPTY_STRING);
     html_table_header(F("x"));
     html_table_header(F("y"));
 
@@ -1385,6 +1469,7 @@ bool ESPEasy_TouchHandler::plugin_webform_save(struct EventStruct *event) {
   bitWrite(lSettings, TOUCH_FLAGS_AUTO_PAGE_ARROWS,  isFormItemChecked(F("page_buttons")));
   bitWrite(lSettings, TOUCH_FLAGS_PGUP_BELOW_MENU,   isFormItemChecked(F("page_below")));
   bitWrite(lSettings, TOUCH_FLAGS_SWAP_LEFT_RIGHT,   isFormItemChecked(F("swipe_swap")));
+  bitWrite(lSettings, TOUCH_FLAGS_IGNORE_TOUCH,      isFormItemChecked(F("ignoretouch")));
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
   config += getFormItemInt(F("use_calibration")); // First value should NEVER be empty, or parseString() wil get confused
@@ -1734,19 +1819,10 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               int16_t    position   = 0;
               int16_t    lowRange   = 0;
               int16_t    highRange  = 100;
-              float rangeFrom       = 0.0f;
-              float rangeTo         = 0.0f;
-              bool  useRange        = false;
+              bool useRange         = false;
 
               if (!TouchObjects[selectedObjectIndex].captionOff.isEmpty()) { // Off caption can hold range: <from>,<to>
-                String tmp           = parseString(TouchObjects[selectedObjectIndex].captionOff, 1);
-                const bool validFrom = validFloatFromString(tmp, rangeFrom);
-                tmp = parseString(TouchObjects[selectedObjectIndex].captionOff, 2);
-
-                if (validFrom && validFloatFromString(tmp, rangeTo) &&
-                    !essentiallyEqual(rangeFrom, 0.0f) && !essentiallyEqual(rangeTo, 0.0f)) {
-                  useRange = true;
-                }
+                useRange = parseRangeToInt16(TouchObjects[selectedObjectIndex].captionOff, lowRange, highRange);
               }
 
               if (isVertical) {
@@ -1758,8 +1834,6 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
               }
 
               if (useRange) { // Calculate range-boundaries
-                lowRange                                      = static_cast<uint16_t>(rangeFrom);
-                highRange                                     = static_cast<uint16_t>(rangeTo);
                 position                                      = map(position, 0, 100, lowRange, highRange);
                 TouchObjects[selectedObjectIndex].TouchStates = position;
               } else if (position < lowRange) {
@@ -1871,14 +1945,14 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
   String  arguments;
   uint8_t arg = 3;
 
-  arguments.reserve(24);
-  command    = parseString(string, 1);
-  subcommand = parseString(string, 2);
+  command = parseString(string, 1);
 
   if (command.equals(F("touch"))) {
+    arguments.reserve(24);
+    subcommand = parseString(string, 2);
     # ifdef TOUCH_DEBUG
 
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("TOUCH PLUGIN_WRITE arguments Par1:");
       log += event->Par1;
       log += F(", 2: ");
@@ -1889,7 +1963,7 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
       log += event->Par4;
       log += F(", string: ");
       log += string;
-      addLog(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
 
@@ -1987,11 +2061,11 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
   bool success         = false;
   const String command = parseString(string, 1);
 
-  if (command == F("buttongroup")) {
+  if (command.equals(F("buttongroup"))) {
     string  = getButtonGroup();
     success = true;
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (command == F("hasgroup")) {
+  } else if (command.equals(F("hasgroup"))) {
     int group; // We'll be ignoring group 0 if there are multiple button groups
 
     if (validIntFromString(parseString(string, 2), group)) {
@@ -2001,7 +2075,7 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
       string = '0'; // invalid number = false
     }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (command == F("enabled")) {
+  } else if (command.equals(F("enabled"))) {
     const String arguments = parseStringKeepCase(string, 2);
     int8_t enabled         = getTouchObjectState(event, arguments);
 
@@ -2009,21 +2083,19 @@ bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
       string  = enabled;
       success = true;
     }
-  } else if (command == F("state")) {
+  } else if (command.equals(F("state"))) {
     const String arguments = parseStringKeepCase(string, 2);
-    int8_t state           = getTouchObjectValue(event, arguments);
+    int16_t state          = getTouchObjectValue(event, arguments);
 
-    if (state > -1) {
-      string  = state;
-      success = true;
-    }
+    string  = state;
+    success = true;
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (command == F("pagemode")) {
+  } else if (command.equals(F("pagemode"))) {
     string  = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
     success = true;
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   # if TOUCH_FEATURE_SWIPE
-  } else if (command == F("swipedir")) {
+  } else if (command.equals(F("swipedir"))) {
     int state;
 
     if (validIntFromString(parseString(string, 2), state)) {

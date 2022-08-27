@@ -11,6 +11,10 @@
 
 /*****
  * Changelog:
+ * 2022-08-27 tonhuisman: Enable identifying an object using the <groupnr>.<objectnr> notation, where groupnr = 0..255, and objectnr
+ *                        range starts at 1, in sequential order for the objects in that group
+ *                        Add option to disable polling the touch-screen, to be able to only use the object/button draw features
+ *                        f.e. when using a device like an M5Stack Core that has buttons below the screen
  * 2022-08-22 tonhuisman: Improve Slider range handling so a reverse range (40,-10) can also be used.
  * 2022-08-17 tonhuisman: Add support for range (x..y) for sliders
  * 2022-08-16 tonhuisman: Changed validButtonGroup() to ignore group 0 by default, and setButtonGroup(), and setgrp subcommand,
@@ -108,6 +112,7 @@
 # define TOUCH_FLAGS_AUTO_PAGE_ARROWS   17 // Automatically enable/disable paging buttons
 # define TOUCH_FLAGS_PGUP_BELOW_MENU    18 // Group-page below current menu (reverts Up/Down buttons)
 # define TOUCH_FLAGS_SWAP_LEFT_RIGHT    19 // Swaps Left and Right, Up and Down swipe directions for menu actions
+# define TOUCH_FLAGS_IGNORE_TOUCH       20 // Disable touch, use for object/button features only
 
 # define TOUCH_VALUE_X UserVar[event->BaseVarIndex + 0]
 # define TOUCH_VALUE_Y UserVar[event->BaseVarIndex + 1]
@@ -267,7 +272,7 @@ class ESPEasy_TouchHandler {
 public:
 
   ESPEasy_TouchHandler();
-  ESPEasy_TouchHandler(const uint16_t        & displayTask,
+  ESPEasy_TouchHandler(const taskIndex_t     & displayTask,
                        const AdaGFXColorDepth& colorDepth);
   virtual ~ESPEasy_TouchHandler() {}
 
@@ -293,7 +298,7 @@ public:
                               const String      & touchObject);
   bool    setTouchObjectValue(struct EventStruct *event,
                               const String      & touchObject,
-                              const uint16_t    & value);
+                              const int16_t     & value);
   bool    plugin_webform_load(struct EventStruct *event);
   bool    plugin_webform_save(struct EventStruct *event);
   bool    plugin_fifty_per_second(struct EventStruct *event,
@@ -335,6 +340,10 @@ public:
                      int8_t              mode        = 0);
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
 
+  bool touchEnabled() {
+    return _touchEnabled;
+  }
+
 private:
 
   int parseStringToInt(const String & string,
@@ -347,6 +356,9 @@ private:
                            const int8_t      & mode        = 0,
                            const bool        & groupSwitch = false,
                            const int8_t      & factor      = 1);
+  bool parseRangeToInt16(const String& range,
+                         int16_t     & lowRange,
+                         int16_t     & highRange);
 
   bool _deduplicate            = false;
   uint16_t _displayTask        = 0u;
@@ -357,6 +369,7 @@ private:
 
   bool _settingsLoaded = false;
   bool _stillTouching  = false;
+  bool _touchEnabled   = true;
 
   // Used to generate events on touch-release
   int8_t _lastObjectIndex = -1;
