@@ -1,8 +1,6 @@
 #ifndef ESPEASY_CUSTOM_H
 #define ESPEASY_CUSTOM_H
 
-#include <Arduino.h>
-
 /*
     To modify the stock configuration without changing the EspEasy.ino file :
     1) rename this file to "Custom.h" (It is ignored by Git)
@@ -265,7 +263,7 @@
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 
-#define SHOW_SYSINFO_JSON   //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
+#define SHOW_SYSINFO_JSON 1  //Enables the sysinfo_json page (by default is enabled when WEBSERVER_NEW_UI is enabled too)
 
 /*
  #######################################################################################################

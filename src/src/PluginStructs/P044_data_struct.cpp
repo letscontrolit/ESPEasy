@@ -78,7 +78,17 @@ bool P044_Task::hasClientConnected() {
   {
     if (P1GatewayClient) { P1GatewayClient.stop(); }
     P1GatewayClient = P1GatewayServer->available();
-    P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+
+    #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+    // See: https://github.com/espressif/arduino-esp32/pull/6676
+    P1GatewayClient.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+    Client *pClient = &P1GatewayClient;
+    pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+    #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+    P1GatewayClient.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+    #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
     addLog(LOG_LEVEL_INFO, F("P1   : Client connected!"));
   }
 

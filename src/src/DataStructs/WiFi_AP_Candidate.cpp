@@ -9,8 +9,12 @@
 #include "../Helpers/StringGenerator_WiFi.h"
 #include "../../ESPEasy_common.h"
 
-
-
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
 
 #define WIFI_AP_CANDIDATE_MAX_AGE   300000  // 5 minutes in msec
 

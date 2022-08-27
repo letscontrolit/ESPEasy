@@ -1,6 +1,6 @@
 #include "../WebServer/404.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Rules.h"
 
