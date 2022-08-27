@@ -1,7 +1,8 @@
 {
   "build": {
     "arduino":{
-      "ldscript": "esp32_out.ld"
+      "ldscript": "esp32_out.ld",
+      "memory_type": "dout_qspi"
     },
     "core": "esp32",
     "extra_flags": "-DARDUINO_M5STACK_Core2 -DBOARD_HAS_PSRAM -DARDUINO_USB_CDC_ON_BOOT=0 -DESP32_16M",

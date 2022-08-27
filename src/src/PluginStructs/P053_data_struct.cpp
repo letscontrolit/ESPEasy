@@ -258,7 +258,7 @@ bool P053_data_struct::processData(struct EventStruct *event) {
   }
   uint16_t data[PMS_RECEIVE_BUFFER_SIZE] = { 0 }; // uint8_t data_low, data_high;
 
-  for (uint8_t i = 0; i < frameData; i++) {
+  for (uint8_t i = 0; i < frameData && i < PMS_RECEIVE_BUFFER_SIZE; i++) {
     SerialRead16(data[i], &checksum);
   }
 

@@ -14,7 +14,7 @@
 
 # include "src/Helpers/ESPEasy_math.h"
 # include "src/Helpers/Rules_calculate.h"
-# include "src/WebServer/WebServer.h"
+# include "src/WebServer/ESPEasy_WebServer.h"
 
 # define PLUGIN_021
 # define PLUGIN_ID_021          21
