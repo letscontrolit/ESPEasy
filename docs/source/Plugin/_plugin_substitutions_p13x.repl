@@ -37,9 +37,9 @@
 .. |P133_compileinfo| replace:: `.`
 .. |P133_usedlibraries| replace:: `https://github.com/RAKWireless/RAK12019_LTR390 (modified local copy)`
 
-.. |P135_name| replace:: :cyan:`SCD4x`
+.. |P135_name| replace:: :cyan:`CO2 SCD4x`
 .. |P135_type| replace:: :cyan:`Gases`
-.. |P135_typename| replace:: :cyan:`Gases - SCD4x`
+.. |P135_typename| replace:: :cyan:`Gases - CO2 SCD4x`
 .. |P135_porttype| replace:: `.`
 .. |P135_status| replace:: :yellow:`COLLECTION E`
 .. |P135_github| replace:: P135_SCD4x.ino

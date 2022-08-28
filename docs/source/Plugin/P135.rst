@@ -24,9 +24,9 @@ Used libraries: |P135_usedlibraries|
 Description
 -----------
 
-The SCD40 and SDC41 are CO2 sensor units that also provide Humidity and Temperature measurement, support auto-calibration, and has temperature and altitude compensation settings. Using low-power operation the measurements will be available slower, but average power usage will be much lower.
+The SCD40 and SCD41 are CO2 sensor units that also provide Humidity and Temperature measurement, support auto-calibration, and have temperature and altitude compensation settings. By using the low-power operation option the measurements will be available slower, but average power usage will be much lower.
 
-The SDC41 also supports single-shot measurements, to enable really low averasge power consumption as it will enter a power-saving state when not measuring.
+The SCD41 measures CO2 values up to 5000 ppm (SCD40 up to 2000 ppm), and also supports single-shot measurement, to enable really low average power consumption as it will enter a power-saving state when not measuring.
 
 Configuration
 -------------
@@ -49,14 +49,14 @@ The available settings here depend on the build used. At least the **Force Slow 
 Device Settings
 ^^^^^^^^^^^^^^^
 
-* **Device model**: Select the sensor model used, available options:
+* **Sensor model**: Select the sensor model used, available options:
 
 .. image:: P135_SensorModelOptions.png
   :alt: Sensor model options
 
-* *SDC40* The default, 'basic', sensor model, that does not support Single-shot measurements (might show values when configured, but the values are undefined).
+* *SCD40* The default, 'basic', sensor model, that can measure CO2 up to 2000 ppm and does not support Single-shot measurements (might show values when configured, but the values are undefined).
 
-* *SCD41* The 'advanced' model that supports Single-shot measurements.
+* *SCD41* The 'advanced' model that supports measuring CO2 up to 5000 ppm and Single-shot measurements.
 
 When this setting is changed, the page is saved and reloaded to show/hide the extra setting to enable **Single-shot measurements (SCD41 only)**.
 

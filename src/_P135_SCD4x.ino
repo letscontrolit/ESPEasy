@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /**
+ * 2022-08-28 tonhuisman: Include 'CO2' in plugin name, to be in line with other CO2 plugins
  * 2022-08-24 tonhuisman: Removed [TESTING] tag
  * 2022-08-04 tonhuisman: Add forced recalibration subcommand scd4x,setfrc,<frcvalue>
  *                        Add [<taskname>#SerialNumber] get config value
@@ -21,7 +22,7 @@
  **/
 # define PLUGIN_135
 # define PLUGIN_ID_135          135
-# define PLUGIN_NAME_135        "Gases - SCD4x"
+# define PLUGIN_NAME_135        "Gases - CO2 SCD4x"
 # define PLUGIN_VALUENAME1_135  "CO2"
 # define PLUGIN_VALUENAME2_135  "Humidity"
 # define PLUGIN_VALUENAME3_135  "Temperature"
