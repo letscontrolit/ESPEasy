@@ -1,13 +1,14 @@
 {
   "build": {
     "arduino":{
-      "ldscript": "esp32s2_out.ld"
+      "ldscript": "esp32s2_out.ld",
+      "memory_type": "dio_qspi"
     },
     "core": "esp32",
     "extra_flags": "-DBOARD_HAS_PSRAM -DESP32_4M -DESP32S2",
     "f_cpu": "240000000L",
     "f_flash": "80000000L",
-    "flash_mode": "dout",
+    "flash_mode": "dio",
     "mcu": "esp32s2",
     "variant": "esp32s2",
     "partitions": "esp32_partition_app1810k_spiffs316k.csv"
@@ -26,7 +27,7 @@
   "upload": {
     "flash_size": "4MB",
     "maximum_ram_size": 327680,
-    "maximum_size": 1900544,
+    "maximum_size": 4194304,
     "require_upload_port": true,
     "speed": 460800
   },

@@ -1,13 +1,14 @@
 {
   "build": {
     "arduino":{
-      "ldscript": "esp32_out.ld"
+      "ldscript": "esp32_out.ld",
+      "memory_type": "dio_qspi"
     },
     "core": "esp32",
     "extra_flags": "-DARDUINO_M5STACK_Core2 -DBOARD_HAS_PSRAM -DARDUINO_USB_CDC_ON_BOOT=0 -DESP32_16M",
     "f_cpu": "240000000L",
     "f_flash": "80000000L",
-    "flash_mode": "dout",
+    "flash_mode": "dio",
     "mcu": "esp32",
     "variant": "m5stack_core2",
     "partitions": "esp32_partition_app4096k_spiffs8124k.csv"

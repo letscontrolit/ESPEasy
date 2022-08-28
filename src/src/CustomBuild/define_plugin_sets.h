@@ -1,7 +1,7 @@
 #ifndef CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 #define CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 
-#include "../../ESPEasy_common.h"
+#include "../../include/ESPEasy_config.h"
 
 /*
 #################################################
@@ -332,6 +332,19 @@ To create/register a plugin, you have to :
       #undef FEATURE_ESPEASY_P2P
       #define FEATURE_ESPEASY_P2P 0
     #endif
+
+    #ifdef FEATURE_MDNS
+      #undef FEATURE_MDNS
+    #endif
+    #define FEATURE_MDNS 0
+    #ifndef DISABLE_SC16IS752_Serial
+      #define DISABLE_SC16IS752_Serial
+    #endif
+
+    #ifdef FEATURE_ARDUINO_OTA
+      #undef FEATURE_ARDUINO_OTA
+    #endif
+    #define FEATURE_ARDUINO_OTA 0
 
     #ifndef PLUGIN_DESCR
       #define PLUGIN_DESCR  "Minimal 1M OTA"
@@ -1301,6 +1314,15 @@ To create/register a plugin, you have to :
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Energy"
   #endif
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    // #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Energy plugins
+    #ifndef P036_LIMIT_BUILD_SIZE
+      #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+    #endif
+    #ifndef P037_LIMIT_BUILD_SIZE
+      #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+    #endif
+  #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
    #endif
@@ -1343,7 +1365,9 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Display"
   #endif
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
-     #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #ifndef PLUGIN_BUILD_MAX_ESP32
+       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #endif
    #endif
    #if !defined(FEATURE_SD)
      #define FEATURE_SD 1
@@ -1550,6 +1574,9 @@ To create/register a plugin, you have to :
   #ifndef FEATURE_SD
     #define FEATURE_SD 1
   #endif
+  #ifndef SHOW_SYSINFO_JSON
+    #define SHOW_SYSINFO_JSON 1
+  #endif
 
   // Plugins
   #ifndef USES_P016
@@ -1733,7 +1760,7 @@ To create/register a plugin, you have to :
 /******************************************************************************\
  * Libraries dependencies *****************************************************
 \******************************************************************************/
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056) || defined(USES_P071) || defined(USES_P075) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P105) || defined(USES_P108) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -1754,7 +1781,6 @@ To create/register a plugin, you have to :
 #include <the_required_lib.h>
 #endif
 */
-
 
 #if defined(USES_C018)
   #define FEATURE_PACKED_RAW_DATA 1
@@ -1814,6 +1840,7 @@ To create/register a plugin, you have to :
   #if FEATURE_SD
     #undef FEATURE_SD  // Unlikely on 1M units
     #define FEATURE_SD 0
+    #define NO_GLOBAL_SD
   #endif
   #ifndef LIMIT_BUILD_SIZE
     #define LIMIT_BUILD_SIZE
@@ -1821,6 +1848,12 @@ To create/register a plugin, you have to :
   #if FEATURE_EXT_RTC
     #undef FEATURE_EXT_RTC
     #define FEATURE_EXT_RTC 0
+  #endif
+#endif
+
+#ifdef PLUGIN_BUILD_MAX_ESP32
+  #ifdef LIMIT_BUILD_SIZE
+    #undef LIMIT_BUILD_SIZE
   #endif
 #endif
 
@@ -2023,7 +2056,7 @@ To create/register a plugin, you have to :
 
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
 #ifdef WEBSERVER_NEW_UI
-  #define SHOW_SYSINFO_JSON
+  #define SHOW_SYSINFO_JSON 1
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

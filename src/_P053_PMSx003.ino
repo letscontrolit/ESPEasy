@@ -374,12 +374,12 @@ boolean Plugin_053(uint8_t function, struct EventStruct *event, String& string)
         String command    = parseString(string, 1);
         String subcommand = parseString(string, 2);
 
-        if (command == F("pmsx003")) {
-          if (subcommand == F("wake")) {
+        if (command.equals(F("pmsx003"))) {
+          if (subcommand.equals(F("wake"))) {
             success = P053_data->wakeSensor();
-          } else if (subcommand == F("sleep")) {
+          } else if (subcommand.equals(F("sleep"))) {
             success = P053_data->sleepSensor();
-          } else if (subcommand == F("reset")) {
+          } else if (subcommand.equals(F("reset"))) {
             success = P053_data->resetSensor();
           }
         }

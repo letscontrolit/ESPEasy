@@ -21,9 +21,18 @@ void ReportStatus()
 
 
   WiFiClient client;
-  client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
 
-  if (!connectClient(client, host.c_str(), 80, CONTROLLER_CLIENTTIMEOUT_DFLT))
+#ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+  // See: https://github.com/espressif/arduino-esp32/pull/6676
+  client.setTimeout((CONTROLLER_CLIENTTIMEOUT_MAX + 500) / 1000); // in seconds!!!!
+  Client *pClient = &client;
+  pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
+#else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX); // in msec as it should be!
+#endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+  if (!connectClient(client, host.c_str(), 80, CONTROLLER_CLIENTTIMEOUT_MAX))
   {
     addLog(LOG_LEVEL_ERROR, F("REP  : connection failed"));
     return;

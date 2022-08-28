@@ -10,40 +10,67 @@
 # endif // if FEATURE_SD && defined(ADAGFX_ENABLE_BMP_DISPLAY)
 
 # if ADAGFX_FONTS_INCLUDED
-#  include "src/Static/Fonts/Seven_Segment24pt7b.h"
-#  include "src/Static/Fonts/Seven_Segment18pt7b.h"
-#  include "src/Static/Fonts/FreeSans9pt7b.h"
+#  include "../Static/Fonts/Seven_Segment24pt7b.h"
+#  include "../Static/Fonts/Seven_Segment18pt7b.h"
+#  include "../Static/Fonts/FreeSans9pt7b.h"
 #  ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
-#   include "src/Static/Fonts/angelina8pt7b.h"
-#   include "src/Static/Fonts/NovaMono8pt7b.h"
-#   include "src/Static/Fonts/unispace8pt7b.h"
-#   include "src/Static/Fonts/unispace_italic8pt7b.h"
-#   include "src/Static/Fonts/whitrabt8pt7b.h"
+#   include "../Static/Fonts/angelina8pt7b.h"
+#   include "../Static/Fonts/NovaMono8pt7b.h"
+#   include "../Static/Fonts/unispace8pt7b.h"
+#   include "../Static/Fonts/unispace_italic8pt7b.h"
+#   include "../Static/Fonts/whitrabt8pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+#    include "../Static/Fonts/Roboto_Regular8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+#    include "../Static/Fonts/RobotoCondensed_Regular8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+#    include "../Static/Fonts/RobotoMono_Regular8pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
-#   include "src/Static/Fonts/angelina12pt7b.h"
-#   include "src/Static/Fonts/NovaMono12pt7b.h"
-#   include "src/Static/Fonts/RepetitionScrolling12pt7b.h"
-#   include "src/Static/Fonts/unispace12pt7b.h"
-#   include "src/Static/Fonts/unispace_italic12pt7b.h"
-#   include "src/Static/Fonts/whitrabt12pt7b.h"
+#   include "../Static/Fonts/angelina12pt7b.h"
+#   include "../Static/Fonts/NovaMono12pt7b.h"
+#   include "../Static/Fonts/RepetitionScrolling12pt7b.h"
+#   include "../Static/Fonts/unispace12pt7b.h"
+#   include "../Static/Fonts/unispace_italic12pt7b.h"
+#   include "../Static/Fonts/whitrabt12pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+#    include "../Static/Fonts/Roboto_Regular12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+#    include "../Static/Fonts/RobotoCondensed_Regular12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+#    include "../Static/Fonts/RobotoMono_Regular12pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
-#   include "src/Static/Fonts/AmerikaSans16pt7b.h"
-#   include "src/Static/Fonts/whitrabt16pt7b.h"
+#   include "../Static/Fonts/AmerikaSans16pt7b.h"
+#   include "../Static/Fonts/whitrabt16pt7b.h"
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#    include "../Static/Fonts/Roboto_Regular16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+#    include "../Static/Fonts/RobotoCondensed_Regular16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+#   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+#    include "../Static/Fonts/RobotoMono_Regular16pt7b.h"
+#   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
 #  endif // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
-#   include "src/Static/Fonts/whitrabt18pt7b.h"
+#   include "../Static/Fonts/whitrabt18pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
 #  ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
-#   include "src/Static/Fonts/whitrabt20pt7b.h"
+#   include "../Static/Fonts/whitrabt20pt7b.h"
 #  endif // ifdef ADAGFX_FONTS_EXTRA_20PT_INCLUDED
 # endif  // if ADAGFX_FONTS_INCLUDED
 
 /******************************************************************************************
  * get the display text for a 'text print mode' enum value
  *****************************************************************************************/
-const __FlashStringHelper* toString(AdaGFXTextPrintMode mode) {
+const __FlashStringHelper* toString(const AdaGFXTextPrintMode& mode) {
   switch (mode) {
     case AdaGFXTextPrintMode::ContinueToNextLine: return F("Continue to next line");
     case AdaGFXTextPrintMode::TruncateExceedingMessage: return F("Truncate exceeding message");
@@ -57,7 +84,7 @@ const __FlashStringHelper* toString(AdaGFXTextPrintMode mode) {
 /******************************************************************************************
  * get the display text for a color depth enum value
  *****************************************************************************************/
-const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth) {
+const __FlashStringHelper* toString(const AdaGFXColorDepth& colorDepth) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome: return F("Monochrome");
     case AdaGFXColorDepth::BlackWhiteRed: return F("Monochrome + 1 color");
@@ -65,12 +92,57 @@ const __FlashStringHelper* toString(AdaGFXColorDepth colorDepth) {
     # if ADAGFX_SUPPORT_7COLOR
     case AdaGFXColorDepth::SevenColor: return F("eInk - 7 colors");
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor: return F("TFT - 8 colors");
     case AdaGFXColorDepth::SixteenColor: return F("TFT - 16 colors");
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor: return F("Full color - 65535 colors");
   }
   return F("None");
 }
+
+# if ADAGFX_ENABLE_BUTTON_DRAW
+
+/******************************************************************************************
+ * get the display text for a button type enum value
+ *****************************************************************************************/
+const __FlashStringHelper* toString(const Button_type_e button) {
+  switch (button) {
+    case Button_type_e::None: return F("None");
+    case Button_type_e::Square: return F("Square");
+    case Button_type_e::Rounded: return F("Rounded");
+    case Button_type_e::Circle: return F("Circle");
+    case Button_type_e::ArrowLeft: return F("Arrow, left");
+    case Button_type_e::ArrowUp: return F("Arrow, up");
+    case Button_type_e::ArrowRight: return F("Arrow, right");
+    case Button_type_e::ArrowDown: return F("Arrow, down");
+    case Button_type_e::Button_MAX: break;
+  }
+  return F("Unsupported!");
+}
+
+/******************************************************************************************
+ * get the display text for a button layout enum value
+ *****************************************************************************************/
+const __FlashStringHelper* toString(const Button_layout_e layout) {
+  switch (layout) {
+    case Button_layout_e::CenterAligned: return F("Centered");
+    case Button_layout_e::LeftAligned: return F("Left-aligned");
+    case Button_layout_e::TopAligned: return F("Top-aligned");
+    case Button_layout_e::RightAligned: return F("Right-aligned");
+    case Button_layout_e::BottomAligned: return F("Bottom-aligned");
+    case Button_layout_e::LeftTopAligned: return F("Left-Top-aligned");
+    case Button_layout_e::RightTopAligned: return F("Right-Top-aligned");
+    case Button_layout_e::RightBottomAligned: return F("Right-Bottom-aligned");
+    case Button_layout_e::LeftBottomAligned: return F("Left-Bottom-aligned");
+    case Button_layout_e::NoCaption: return F("No Caption");
+    case Button_layout_e::Bitmap: return F("Bitmap image");
+    case Button_layout_e::Alignment_MAX: break;
+  }
+  return F("Unsupported!");
+}
+
+# endif // if ADAGFX_ENABLE_BUTTON_DRAW
 
 /*****************************************************************************************
  * Show a selector for all available 'Text print mode' options, for use in PLUGIN_WEBFORM_LOAD
@@ -98,9 +170,17 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
                           uint16_t                   selectedIndex,
                           bool                       enabled) {
   # if ADAGFX_SUPPORT_7COLOR
+  #  if ADAGFX_SUPPORT_8and16COLOR
   const int colorDepthCount = 7 + 1;
+  #  else // if ADAGFX_SUPPORT_8and16COLOR
+  const int colorDepthCount = 5 + 1;
+  #  endif // if ADAGFX_SUPPORT_8and16COLOR
   # else // if ADAGFX_SUPPORT_7COLOR
+  #  if ADAGFX_SUPPORT_8and16COLOR
   const int colorDepthCount = 6 + 1;
+  #  else // if ADAGFX_SUPPORT_8and16COLOR
+  const int colorDepthCount = 4 + 1;
+  #  endif // if ADAGFX_SUPPORT_8and16COLOR
   # endif // if ADAGFX_SUPPORT_7COLOR
   const __FlashStringHelper *colorDepths[colorDepthCount] = { // Be sure to use all available modes from enum!
     toString(static_cast<AdaGFXColorDepth>(0)),               // include None
@@ -110,8 +190,10 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
     # if ADAGFX_SUPPORT_7COLOR
     toString(AdaGFXColorDepth::SevenColor),
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     toString(AdaGFXColorDepth::EightColor),
     toString(AdaGFXColorDepth::SixteenColor),
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     toString(AdaGFXColorDepth::FullColor)
   };
   const int colorDepthOptions[colorDepthCount] = {
@@ -122,8 +204,10 @@ void AdaGFXFormColorDepth(const __FlashStringHelper *id,
     # if ADAGFX_SUPPORT_7COLOR
     static_cast<int>(AdaGFXColorDepth::SevenColor),
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     static_cast<int>(AdaGFXColorDepth::EightColor),
     static_cast<int>(AdaGFXColorDepth::SixteenColor),
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     static_cast<int>(AdaGFXColorDepth::FullColor)
   };
 
@@ -148,7 +232,9 @@ void AdaGFXFormRotation(const __FlashStringHelper *id,
 void AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
                                   uint8_t                    selectedIndex) {
   addFormCheckBox(F("Background-fill for text"), id, selectedIndex);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Fill entire line-height with background color."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -157,7 +243,9 @@ void AdaGFXFormTextBackgroundFill(const __FlashStringHelper *id,
 void AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
                               bool                       selectedState) {
   addFormCheckBox(F("Text Coordinates in col/row"), id, selectedState);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Unchecked: Coordinates in pixels. Applies only to 'txp', 'txz' and 'txtfull' subcommands."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -166,7 +254,9 @@ void AdaGFXFormTextColRowMode(const __FlashStringHelper *id,
 void AdaGFXFormOnePixelCompatibilityOption(const __FlashStringHelper *id,
                                            uint8_t                    selectedIndex) {
   addFormCheckBox(F("Use -1px offset for txp &amp; txtfull"), id, selectedIndex);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("This is for compatibility with the original plugin implementation."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -177,14 +267,17 @@ void AdaGFXFormForeAndBackColors(const __FlashStringHelper *foregroundId,
                                  const __FlashStringHelper *backgroundId,
                                  uint16_t                   backgroundColor,
                                  AdaGFXColorDepth           colorDepth) {
-  String color;
+  String color = AdaGFXcolorToString(foregroundColor, colorDepth);
 
-  color = AdaGFXcolorToString(foregroundColor, colorDepth);
   addFormTextBox(F("Foreground color"), foregroundId, color, 11);
   color = AdaGFXcolorToString(backgroundColor, colorDepth);
   addFormTextBox(F("Background color"), backgroundId, color, 11);
+  # ifndef LIMIT_BUILD_SIZE
   addFormNote(F("Use Color name, '#RGB565' (# + 1..4 hex nibbles) or '#RRGGBB' (# + 6 hex nibbles RGB color)."));
   addFormNote(F("NB: Colors stored as RGB565 value!"));
+  # else // ifndef LIMIT_BUILD_SIZE
+  addFormNote(F("Use Color name, # + 1..4 hex RGB565 or # + 6 hex nibbles RGB color."));
+  # endif // ifndef LIMIT_BUILD_SIZE
 }
 
 /*****************************************************************************************
@@ -234,12 +327,9 @@ void AdaGFXFormFontScaling(const __FlashStringHelper *fontScalingId,
 /****************************************************************************
  * AdaGFXparseTemplate: Replace variables and adjust unicode special characters to Adafruit font
  ***************************************************************************/
-String AdaGFXparseTemplate(String            & tmpString,
-                           uint8_t             lineSize,
+String AdaGFXparseTemplate(const String      & tmpString,
+                           const uint8_t       lineSize,
                            AdafruitGFX_helper *gfxHelper) {
-  // Änderung WDS: Tabelle vorerst Abgeschaltet !!!!
-  // Perform some specific changes for LCD display
-  // https://www.letscontrolit.com/forum/viewtopic.php?t=2368
   # if ADAGFX_PARSE_SUBCOMMAND
 
   String result = tmpString;
@@ -341,6 +431,23 @@ String AdaGFXparseTemplate(String            & tmpString,
     const char quart[3]       = { 0xc2, 0xbc, 0 };   // Unicode quart 1/4 symbol
     const char quart_ascii[2] = { 0xac, 0 };         // quart 1/4 symbol
     result.replace(quart, quart_ascii);
+
+    const char sup2[3]       = { 0xc2, 0xb2, 0 };    // Unicode superscript 2 symbol
+    const char sup2_ascii[2] = { 0xfc, 0 };          // superscript 2 symbol
+    result.replace(sup2, sup2_ascii);
+
+    // Unsupported characters, replace by something useful
+    const char sup1[3]       = { 0xc2, 0xb9, 0 };   // Unicode superscript 1 symbol
+    const char sup1_ascii[2] = { 0x31, 0 };         // regular 1 (missing from font)
+    result.replace(sup1, sup1_ascii);
+
+    const char sup3[3]       = { 0xc2, 0xb3, 0 };   // Unicode superscript 3 symbol
+    const char sup3_ascii[2] = { 0x33, 0 };         // regular 3 (missing from font)
+    result.replace(sup3, sup3_ascii);
+
+    const char frac34[3]       = { 0xc2, 0xbe, 0 }; // Unicode fraction 3/4 symbol
+    const char frac34_ascii[2] = { 0x5c, 0 };       // regular \ (missing from font)
+    result.replace(frac34, frac34_ascii);
     delay(0);
   }
 
@@ -378,9 +485,40 @@ String AdaGFXparseTemplate(String            & tmpString,
     result.replace(divide_uni, divide_ascii);
 
     const char umlaut_sz_uni[3]   = { 0xc3, 0x9f, 0 }; // Unicode Umlaute sz
-    const char umlaut_sz_ascii[2] = { 0xe0, 0 };       // Umlaute
+    const char umlaut_sz_ascii[2] = { 0xe0, 0 };       // Umlaute B
     result.replace(umlaut_sz_uni, umlaut_sz_ascii);
+
+    // Unsupported characters, replace by something useful
+    const char times[3]       = { 0xc3, 0x97, 0 }; // Unicode multiplication symbol
+    const char times_ascii[2] = { 0x78, 0 };       // regular x (missing from font)
+    result.replace(times, times_ascii);
     delay(0);
+  }
+
+  // Handle '{0xNN...}' hex values in template, where NN can be any hex value from 01..FF (practically 20..FF).
+  int16_t hexPrefix = 0;
+  int16_t hexPostfix;
+  const String hexSeparators = F(" ,.:;-");
+
+  while (((hexPrefix = result.indexOf(F("{0x"), hexPrefix)) > -1) &&
+         ((hexPostfix = result.indexOf('}', hexPrefix)) > -1)) {
+    String replace;
+
+    for (int16_t ci = hexPrefix + 3; ci < hexPostfix - 1; ci += 2) { // Multiple of 2 only
+      uint32_t hexValue = hexToUL(result.substring(ci, ci + 2));
+
+      if (hexValue > 0) {
+        replace += static_cast<char>(hexValue);
+      }
+
+      while (hexSeparators.indexOf(result.substring(ci + 2, ci + 3)) > -1 && ci < hexPostfix) {
+        ci++;
+      }
+    }
+
+    if (!replace.isEmpty()) {
+      result.replace(result.substring(hexPrefix, hexPostfix + 1), replace);
+    }
   }
 
   for (uint16_t l = result.length(); l > 0 && isSpace(result[l - 1]); l--) { // Right-trim
@@ -406,17 +544,17 @@ String AdaGFXparseTemplate(String            & tmpString,
 /****************************************************************************
  * parameterized constructors
  ***************************************************************************/
-AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
-                                       const String      & trigger,
-                                       uint16_t            res_x,
-                                       uint16_t            res_y,
-                                       AdaGFXColorDepth    colorDepth,
-                                       AdaGFXTextPrintMode textPrintMode,
-                                       uint8_t             fontscaling,
-                                       uint16_t            fgcolor,
-                                       uint16_t            bgcolor,
-                                       bool                useValidation,
-                                       bool                textBackFill)
+AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX              *display,
+                                       const String             & trigger,
+                                       const uint16_t             res_x,
+                                       const uint16_t             res_y,
+                                       const AdaGFXColorDepth   & colorDepth,
+                                       const AdaGFXTextPrintMode& textPrintMode,
+                                       const uint8_t              fontscaling,
+                                       const uint16_t             fgcolor,
+                                       const uint16_t             bgcolor,
+                                       const bool                 useValidation,
+                                       const bool                 textBackFill)
   : _display(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _useValidation(useValidation), _textBackFill(textBackFill)
@@ -425,28 +563,31 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX       *display,
   initialize();
 }
 
-# ifdef ADAGFX_ENABLE_BMP_DISPLAY
-AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT    *display,
-                                       const String      & trigger,
-                                       uint16_t            res_x,
-                                       uint16_t            res_y,
-                                       AdaGFXColorDepth    colorDepth,
-                                       AdaGFXTextPrintMode textPrintMode,
-                                       uint8_t             fontscaling,
-                                       uint16_t            fgcolor,
-                                       uint16_t            bgcolor,
-                                       bool                useValidation,
-                                       bool                textBackFill)
+# if ADAGFX_ENABLE_BMP_DISPLAY
+AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
+                                       const String             & trigger,
+                                       const uint16_t             res_x,
+                                       const uint16_t             res_y,
+                                       const AdaGFXColorDepth   & colorDepth,
+                                       const AdaGFXTextPrintMode& textPrintMode,
+                                       const uint8_t              fontscaling,
+                                       const uint16_t             fgcolor,
+                                       const uint16_t             bgcolor,
+                                       const bool                 useValidation,
+                                       const bool                 textBackFill)
   : _tft(display), _trigger(trigger), _res_x(res_x), _res_y(res_y), _colorDepth(colorDepth),
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _useValidation(useValidation), _textBackFill(textBackFill)
 {
   _display = _tft;
-  addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
+  String log = F("AdaGFX_helper: TFT Init. ");
+
+  log += getFeatures();
+  addLog(LOG_LEVEL_INFO, log);
   initialize();
 }
 
-# endif // ifdef ADAGFX_ENABLE_BMP_DISPLAY
+# endif // if ADAGFX_ENABLE_BMP_DISPLAY
 
 /****************************************************************************
  * common initialization, called from constructors
@@ -466,12 +607,18 @@ void AdafruitGFX_helper::initialize() {
     log += static_cast<uint16_t>(_colorDepth);
     log += F(", trigger: ");
     log += _trigger;
+    log += F(", ");
+    log += getFeatures();
     addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   # endif // ifndef BUILD_NO_DEBUG
 
   _display_x = _res_x; // Store initial resolution
   _display_y = _res_y;
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  defineWindow(0, 0, _res_x, _res_y, 0, 0); // Add window 0 at rotation 0
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   if (_fontscaling < 1) { _fontscaling = 1; }
 
@@ -480,6 +627,37 @@ void AdafruitGFX_helper::initialize() {
     _display->setTextColor(_fgcolor, _bgcolor); // initialize text colors
     _display->setTextWrap(_textPrintMode == AdaGFXTextPrintMode::ContinueToNextLine);
   }
+}
+
+/****************************************************************************
+ * Show enabled features of the helper
+ ***************************************************************************/
+String AdafruitGFX_helper::getFeatures() {
+  String log = F("Features:");
+
+  # if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+  log += F(" asciitable,");
+  # endif // if (defined(ADAGFX_USE_ASCIITABLE) && ADAGFX_USE_ASCIITABLE)
+  # if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+  log += F(" lm/lmr,");
+  # endif // if (defined(ADAGFX_ENABLE_EXTRA_CMDS) && ADAGFX_ENABLE_EXTRA_CMDS)
+  # if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+  log += F(" bmp,");
+  # endif // if (defined(ADAGFX_ENABLE_BMP_DISPLAY) && ADAGFX_ENABLE_BMP_DISPLAY)
+  # if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)
+  log += F(" btn,");
+  # endif // if (defined(ADAGFX_ENABLE_BUTTON_DRAW) && ADAGFX_ENABLE_BUTTON_DRAW)`
+  # if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
+  log += F(" win,");
+  # endif // if (defined(ADAGFX_ENABLE_FRAMED_WINDOW) && ADAGFX_ENABLE_FRAMED_WINDOW)
+  # if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+  log += F(" getconf,");
+  # endif // if (defined(ADAGFX_ENABLE_GET_CONFIG_VALUE) && ADAGFX_ENABLE_GET_CONFIG_VALUE)
+
+  if (log.endsWith(F(","))) {
+    log.remove(log.length() - 1);
+  }
+  return log;
 }
 
 /****************************************************************************
@@ -505,19 +683,31 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
   if ((nullptr == _display) || _trigger.isEmpty()) { return success; }
 
-  String cmd        = parseString(string, 1); // lower case
-  String subcommand = parseString(string, 2);
+  String   cmd        = parseString(string, 1); // lower case
+  String   subcommand = parseString(string, 2);
+  uint16_t res_x      = _res_x;
+  uint16_t res_y      = _res_y;
+  uint16_t _xo        = 0;
+  uint16_t _yo        = 0;
 
-  if (!cmd.equals(_trigger) || subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  getWindowLimits(res_x, res_y);
+  getWindowOffsets(_xo, _yo);
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+
+  if (!(cmd.equals(_trigger) ||
+        isAdaGFXTrigger(cmd)) ||
+      subcommand.isEmpty()) { return success; } // Only support own trigger, and at least a non=empty subcommand
 
   String log;
-  String sParams[ADAGFX_PARSE_MAX_ARGS + 1];
-  int    nParams[ADAGFX_PARSE_MAX_ARGS + 1];
-  int    argCount = 0;
-  bool   loop     = true;
+  std::vector<String> sParams;
+  std::vector<int>    nParams;
+  int  argCount = 0;
+  bool loop     = true;
 
-  while (argCount <= ADAGFX_PARSE_MAX_ARGS && loop) {
-    sParams[argCount] = parseStringKeepCase(string, argCount + 3); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+  while (loop) {                                                  // Process all provided arguments
+    sParams.push_back(parseStringKeepCase(string, argCount + 3)); // 0-offset + 1st and 2nd argument used by trigger/subcommand
+    nParams.push_back(0);
     validIntFromString(sParams[argCount], nParams[argCount]);
     loop = !sParams[argCount].isEmpty();
 
@@ -533,6 +723,15 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // ifndef BUILD_NO_DEBUG
 
     if (loop) { argCount++; }
+  }
+  { // Guarantee minimal nParams/sParams size
+    int args = argCount;
+
+    while (args <= ADAGFX_PARSE_MAX_ARGS) {
+      sParams.push_back(EMPTY_STRING);
+      nParams.push_back(0);
+      args++;
+    }
   }
   success = true; // If we get this far, we'll flip the flag if something wrong is found
 
@@ -565,9 +764,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
+        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
       } else {
-        _display->setCursor(nParams[0] - _p095_compensation, nParams[1] - _p095_compensation);
+        _display->setCursor(nParams[0] + _xo - _p095_compensation, nParams[1] + _yo - _p095_compensation);
       }
     }
   }
@@ -581,9 +780,9 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       if (_columnRowMode) {
-        _display->setCursor(nParams[0] * _fontwidth, nParams[1] * _fontheight);
+        _display->setCursor(nParams[0] * _fontwidth + _xo, nParams[1] * _fontheight + _yo);
       } else {
-        _display->setCursor(nParams[0], nParams[1]);
+        _display->setCursor(nParams[0] + _xo, nParams[1] + _yo);
       }
       _display->println(parseStringToEndKeepCase(string, 5));                   // Print entire rest of provided line
     }
@@ -718,11 +917,22 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   }
   else if (subcommand.equals(F("clear"))) // Clear display
   {
-    if (argCount >= 1) {
-      _display->fillScreen(AdaGFXparseColor(sParams[0], _colorDepth));
-    } else {
-      _display->fillScreen(_bgcolor);
+    # if ADAGFX_ENABLE_FRAMED_WINDOW
+
+    if (_window == 0)
+    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+    {
+      _display->fillScreen(argCount == 0 ? _bgcolor : AdaGFXparseColor(sParams[0], _colorDepth));
     }
+    # if ADAGFX_ENABLE_FRAMED_WINDOW
+    else {
+      // logWindows(F("clear ")); // Use for debugging only
+      uint16_t _w = 0, _h = 0;
+      getWindowLimits(_w, _h);
+      _display->fillRect(_xo, _yo, _w, _h,
+                         argCount == 0 ? _bgcolor : AdaGFXparseColor(sParams[0], _colorDepth));
+    }
+    # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   }
   else if (subcommand.equals(F("rot")) && (argCount == 1)) // Rotation
   {
@@ -744,10 +954,10 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   # if ADAGFX_USE_ASCIITABLE
   else if (subcommand.equals(F("asciitable"))) // Show ASCII table
   {
-    String  line;
-    int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
-    uint8_t scale        = (argCount == 2 && nParams[1] > 0 && nParams[1] <= 10 ? nParams[1] : 2);
-    uint8_t currentScale = _fontscaling;
+    String line;
+    const int16_t start        = 0x80 + (argCount >= 1 && nParams[0] >= -4 && nParams[0] < 4 ? nParams[0] * 0x20 : 0);
+    const uint8_t scale        = (argCount == 2 && nParams[1] > 0 && nParams[1] <= 10 ? nParams[1] : 2);
+    const uint8_t currentScale = _fontscaling;
 
     if (_fontscaling != scale) { // Set fontscaling
       _fontscaling = scale;
@@ -756,8 +966,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     }
     line.reserve(_textcols);
     _display->setCursor(0, 0);
-    int16_t row     = 0;
-    bool    colMode = _columnRowMode;
+    int16_t row        = 0;
+    const bool colMode = _columnRowMode;
     _columnRowMode = true;
 
     for (int16_t i = start; i <= 0xFF && row < _textrows; i++) {
@@ -831,6 +1041,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&whitrabt8pt7b);
       calculateTextMetrics(10, 16, 12);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_WHITERABBiT
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+    } else if (sParams[0].equals(F("roboto8pt"))) { // Proportional font!
+      _display->setFont(&Roboto_Regular8pt7b);
+      calculateTextMetrics(10, 16, 12, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTO
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+    } else if (sParams[0].equals(F("robotocond8pt"))) { // Proportional font!
+      _display->setFont(&RobotoCondensed_Regular8pt7b);
+      calculateTextMetrics(9, 16, 12, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOCONDENSED
+    #   ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
+    } else if (sParams[0].equals(F("robotomono8pt"))) {
+      _display->setFont(&RobotoMono_Regular8pt7b);
+      calculateTextMetrics(10, 16, 12);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_8PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_8PT_INCLUDED
       // Extra 12pt fonts:
     #  ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
@@ -864,6 +1089,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&whitrabt12pt7b);
       calculateTextMetrics(13, 20, 16);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_WHITERABBiT
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+    } else if (sParams[0].equals(F("roboto12pt"))) { // Proportional font!
+      _display->setFont(&Roboto_Regular12pt7b);
+      calculateTextMetrics(13, 20, 16, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTO
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+    } else if (sParams[0].equals(F("robotocond12pt"))) { // Proportional font!
+      _display->setFont(&RobotoCondensed_Regular12pt7b);
+      calculateTextMetrics(13, 20, 16, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOCONDENSED
+    #   ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
+    } else if (sParams[0].equals(F("robotomono12pt"))) {
+      _display->setFont(&RobotoMono_Regular12pt7b);
+      calculateTextMetrics(13, 20, 16);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_12PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_12PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_16PT_AMERIKASANS
@@ -876,6 +1116,21 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
       _display->setFont(&whitrabt16pt7b);
       calculateTextMetrics(18, 26, 22);
     #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_WHITERABBiT
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+    } else if (sParams[0].equals(F("roboto16pt"))) { // Proportional font!
+      _display->setFont(&Roboto_Regular16pt7b);
+      calculateTextMetrics(18, 27, 23, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTO
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+    } else if (sParams[0].equals(F("robotocond16pt"))) { // Proportional font!
+      _display->setFont(&RobotoCondensed_Regular16pt7b);
+      calculateTextMetrics(18, 27, 23, true);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOCONDENSED
+    #   ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
+    } else if (sParams[0].equals(F("robotomono16pt"))) {
+      _display->setFont(&RobotoMono_Regular16pt7b);
+      calculateTextMetrics(18, 27, 23);
+    #   endif // ifdef ADAGFX_FONTS_EXTRA_16PT_ROBOTOMONO
     #  endif  // ifdef ADAGFX_FONTS_EXTRA_16PT_INCLUDED
     #  ifdef ADAGFX_FONTS_EXTRA_18PT_INCLUDED
     #   ifdef ADAGFX_FONTS_EXTRA_18PT_WHITERABBiT
@@ -910,29 +1165,29 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
+      _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
   else if (subcommand.equals(F("lh")) && (argCount == 3)) { // lh: Horizontal line
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if ((nParams[0] < 0) || (nParams[0] > _res_x)) {
+    if ((nParams[0] < 0) || (nParams[0] > res_x)) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawFastHLine(0, nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
+      _display->drawFastHLine(_xo, nParams[0] + _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
   else if (subcommand.equals(F("lv")) && (argCount == 3)) { // lv: Vertical line
     # if ADAGFX_ARGUMENT_VALIDATION
 
-    if ((nParams[0] < 0) || (nParams[0] > _res_y)) {
+    if ((nParams[0] < 0) || (nParams[0] > res_y)) {
       success = false;
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawFastVLine(nParams[0], 0, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
+      _display->drawFastVLine(nParams[0] + _xo, _yo, nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
   # if ADAGFX_ENABLE_EXTRA_CMDS
@@ -998,7 +1253,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
           log += AdaGFXcolorToString(mcolor, _colorDepth);
           addLog(LOG_LEVEL_INFO, log);
           #  endif // ifndef BUILD_NO_DEBUG
-          _display->drawLine(nParams[0], nParams[1], nParams[2], nParams[3], mcolor);
+          _display->drawLine(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, mcolor);
 
           if ((cx == -1) && (cy == -1)) {
             cx = nParams[0];
@@ -1021,7 +1276,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
+      _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
   else if (subcommand.equals(F("rf")) && (argCount == 6)) { // rf: Rectangled, filled
@@ -1033,8 +1288,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillRect(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
-      _display->drawRect(nParams[0], nParams[1], nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
+      _display->fillRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[5], _colorDepth));
+      _display->drawRect(nParams[0] + _xo, nParams[1] + _yo, nParams[2], nParams[3], AdaGFXparseColor(sParams[4], _colorDepth));
     }
   }
   else if (subcommand.equals(F("c")) && (argCount == 4)) { // c: Circle
@@ -1046,7 +1301,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
+      _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
   else if (subcommand.equals(F("cf")) && (argCount == 5)) { // cf: Circle, filled
@@ -1058,8 +1313,8 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
-      _display->drawCircle(nParams[0], nParams[1], nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
+      _display->fillCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[4], _colorDepth));
+      _display->drawCircle(nParams[0] + _xo, nParams[1] + _yo, nParams[2], AdaGFXparseColor(sParams[3], _colorDepth));
     }
   }
   else if (subcommand.equals(F("t")) && (argCount == 7)) { // t: Triangle
@@ -1072,7 +1327,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawTriangle(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], nParams[5],
+      _display->drawTriangle(nParams[0] + _xo, nParams[1] + _yo, nParams[2] + _xo, nParams[3] + _yo, nParams[4] + _xo, nParams[5] + _yo,
                              AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
@@ -1086,19 +1341,19 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillTriangle(nParams[0],
-                             nParams[1],
-                             nParams[2],
-                             nParams[3],
-                             nParams[4],
-                             nParams[5],
+      _display->fillTriangle(nParams[0] + _xo,
+                             nParams[1] + _yo,
+                             nParams[2] + _xo,
+                             nParams[3] + _yo,
+                             nParams[4] + _xo,
+                             nParams[5] + _yo,
                              AdaGFXparseColor(sParams[7], _colorDepth));
-      _display->drawTriangle(nParams[0],
-                             nParams[1],
-                             nParams[2],
-                             nParams[3],
-                             nParams[4],
-                             nParams[5],
+      _display->drawTriangle(nParams[0] + _xo,
+                             nParams[1] + _yo,
+                             nParams[2] + _xo,
+                             nParams[3] + _yo,
+                             nParams[4] + _xo,
+                             nParams[5] + _yo,
                              AdaGFXparseColor(sParams[6], _colorDepth));
     }
   }
@@ -1112,7 +1367,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[5], _colorDepth));
+      _display->drawRoundRect(nParams[0] + _xo,
+                              nParams[1] + _yo,
+                              nParams[2],
+                              nParams[3],
+                              nParams[4],
+                              AdaGFXparseColor(sParams[5], _colorDepth));
     }
   }
   else if (subcommand.equals(F("rrf")) && (argCount == 7)) { // rrf: Rounded rectangle, filled
@@ -1125,8 +1385,18 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif  // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->fillRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[6], _colorDepth));
-      _display->drawRoundRect(nParams[0], nParams[1], nParams[2], nParams[3], nParams[4], AdaGFXparseColor(sParams[5], _colorDepth));
+      _display->fillRoundRect(nParams[0] + _xo,
+                              nParams[1] + _yo,
+                              nParams[2],
+                              nParams[3],
+                              nParams[4],
+                              AdaGFXparseColor(sParams[6], _colorDepth));
+      _display->drawRoundRect(nParams[0] + _xo,
+                              nParams[1] + _yo,
+                              nParams[2],
+                              nParams[3],
+                              nParams[4],
+                              AdaGFXparseColor(sParams[5], _colorDepth));
     }
   }
   else if (subcommand.equals(F("px")) && (argCount == 3)) { // px: Pixel
@@ -1137,7 +1407,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     } else
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
-      _display->drawPixel(nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
+      _display->drawPixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
     }
   }
   else if ((subcommand.equals(F("pxh")) || subcommand.equals(F("pxv"))) && (argCount > 2)) { // pxh/pxv: Pixels, hor./vert. incremented
@@ -1149,7 +1419,7 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
     # endif // if ADAGFX_ARGUMENT_VALIDATION
     {
       _display->startWrite();
-      _display->writePixel(nParams[0], nParams[1], AdaGFXparseColor(sParams[2], _colorDepth));
+      _display->writePixel(nParams[0] + _xo, nParams[1] + _yo, AdaGFXparseColor(sParams[2], _colorDepth));
       loop = true;
       uint8_t h     = 0;
       uint8_t v     = 0;
@@ -1166,12 +1436,12 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 
         if (color.isEmpty()
             # if ADAGFX_ARGUMENT_VALIDATION
-            || invalidCoordinates(nParams[0] + h, nParams[1] + v)
+            || invalidCoordinates(nParams[0] + h + _xo, nParams[1] + v + _yo)
             # endif // if ADAGFX_ARGUMENT_VALIDATION
             ) {
           loop = false;
         } else {
-          _display->writePixel(nParams[0] + h, nParams[1] + v, AdaGFXparseColor(color, _colorDepth));
+          _display->writePixel(nParams[0] + h + _xo, nParams[1] + v + _yo, AdaGFXparseColor(color, _colorDepth));
 
           if (isPxh) {
             h++;
@@ -1187,12 +1457,264 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
   # if ADAGFX_ENABLE_BMP_DISPLAY
   else if (subcommand.equals(F("bmp")) && (argCount == 3)) { // bmp,x,y,filename.bmp : show bmp from file
     if (!sParams[2].isEmpty()) {
-      success = showBmp(sParams[2], nParams[0], nParams[1]);
+      success = showBmp(sParams[2], nParams[0] + _xo, nParams[1] + _yo);
     } else {
       success = false;
     }
   }
   # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+  # if ADAGFX_ENABLE_BUTTON_DRAW
+  else if (subcommand.equals(F("btn")) && (argCount >= 8) && (nParams[7] != 0))
+  { // btn,state,m,x,y,w,h,id,type[,ONclr,OFFclr,Captionclr,fontscale,ONcaption,OFFcapt,Borderclr,DisabClr,DisabCaptclr],TaskIndex,Group,SelGrp,objectname
+    // ev: 1     2 3 4 5 6 7  8     9     10     11         12        13        14      15        16       17,18,19,20,21
+    // nP: 0     1 2 3 4 5 6  7     8     9      10         11        12        13      14        15       16,17,18,19,20
+    // : Draw a button
+    // m=mode: -2 = disabled, -1 = initial, 0 = default
+    // state:  0 = off, 1 = on, -2 = off + disabled, -1 = on + disabled
+    // id: < 0 = clear area
+    // type & 0x0F: 0 = none, 1 = rectangle, 2 = rounded rect., 3 = circle,
+    // type & 0xF0 = CenterAligned, LeftAligned, TopAligned, RightAligned, BottomAligned, LeftTopAligned, RightTopAligned,
+    //               RightBottomAligned, LeftBottomAligned, NoCaption
+    // (*clr = color, TaskIndex, Group and SelGrp are ignored)
+    #  if ADAGFX_ARGUMENT_VALIDATION
+
+    if (invalidCoordinates(nParams[2], nParams[3]) ||
+        invalidCoordinates(nParams[2] + nParams[4], nParams[3] + nParams[5])) {
+      success = false;
+    } else
+    #  endif  // if ADAGFX_ARGUMENT_VALIDATION
+    {
+      // All checked out OK
+      // Default values
+      uint16_t onColor              = ADAGFX_BLUE;
+      uint16_t offColor             = ADAGFX_RED;
+      uint16_t captionColor         = ADAGFX_WHITE;
+      uint8_t  fontScale            = 0;
+      uint16_t borderColor          = ADAGFX_WHITE;
+      uint16_t disabledColor        = 0x9410; // Medium grey
+      uint16_t disabledCaptionColor = 0x5A69; // Dark grey
+
+      if (!sParams[8].isEmpty()) { onColor = AdaGFXparseColor(sParams[8], _colorDepth); }
+
+      if (!sParams[9].isEmpty()) { offColor = AdaGFXparseColor(sParams[9], _colorDepth); }
+
+      if (!sParams[10].isEmpty()) { captionColor = AdaGFXparseColor(sParams[10], _colorDepth); }
+
+      if ((nParams[11] > 0) && (nParams[11] <= 10)) { fontScale = nParams[11]; }
+
+      if (!sParams[14].isEmpty()) { borderColor = AdaGFXparseColor(sParams[14], _colorDepth); }
+
+      if (!sParams[15].isEmpty()) { disabledColor = AdaGFXparseColor(sParams[15], _colorDepth); }
+
+      if (!sParams[16].isEmpty()) { disabledCaptionColor = AdaGFXparseColor(sParams[16], _colorDepth); }
+
+      uint16_t fillColor = onColor;
+      uint16_t textColor = captionColor;
+      bool     clearArea = nParams[7] < 0;
+      nParams[7] = std::abs(nParams[7]);
+
+      Button_type_e   buttonType   = static_cast<Button_type_e>(nParams[7] & 0x0F);
+      Button_layout_e buttonLayout = static_cast<Button_layout_e>(nParams[7] & 0xF0);
+
+      // Check mode & state: -2, -1, 0, 1 to select used colors
+      if (nParams[0] == 0) {
+        fillColor = offColor;
+      }
+
+      if ((nParams[1] == -2) || (nParams[0] < 0)) {
+        fillColor = disabledColor;
+        textColor = disabledCaptionColor;
+      } else if (clearArea) {
+        fillColor   = _bgcolor; //
+        borderColor = _bgcolor;
+      }
+
+      // Clear the area?
+      if ((buttonType != Button_type_e::None) ||
+          clearArea) {
+        drawButtonShape(buttonType,
+                        nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
+                        _bgcolor, _bgcolor);
+      }
+
+      // Check button-type bits (mask: 0x0F) to draw correct shape
+      if (!clearArea) {
+        drawButtonShape(buttonType,
+                        nParams[2] + _xo, nParams[3] + _yo, nParams[4], nParams[5],
+                        fillColor, borderColor);
+      }
+
+      // Display caption? (or bitmap)
+      if (!clearArea &&
+          (buttonLayout != Button_layout_e::NoCaption)) {
+        int16_t  x1, y1;
+        uint16_t w1, h1, w2, h2;
+        String   newString;
+
+        // Determine alignment parameters
+        if ((nParams[0] == 1) || (nParams[0] == -1)) { // 1 = on+enabled, -1 = on+disabled
+          newString = sParams[12].isEmpty() ? sParams[6] : sParams[12];
+        } else {
+          newString = sParams[13].isEmpty() ? sParams[6] : sParams[13];
+        }
+        newString = AdaGFXparseTemplate(newString, 20);
+
+        _display->setTextSize(fontScale);                             // set scaling
+        _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // get caption length and height in pixels
+        _display->getTextBounds(F(" "),    0, 0, &x1, &y1, &w2, &h2); // measure space width for little margins
+
+        // Check button-alignment bits (mask 0xF0) for caption placement, modifies the x/y arguments passed!
+        // Little margin is: from left/right: half of the width of a space, from top/bottom: half of height of the font used
+
+        switch (buttonLayout) {
+          case Button_layout_e::CenterAligned:
+            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
+            break;
+          case Button_layout_e::LeftAligned:
+            nParams[2] += w2 / 2;                     // A little margin from left
+            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
+            break;
+          case Button_layout_e::TopAligned:
+            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+            nParams[3] += h1 / 2;                     // A little margin from top
+            break;
+          case Button_layout_e::RightAligned:
+            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+            nParams[3] += (nParams[5] / 2 - h1 / 2);  // center vertically
+            break;
+          case Button_layout_e::BottomAligned:
+            nParams[2] += (nParams[4] / 2 - w1 / 2);  // center horizontically
+            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
+            break;
+          case Button_layout_e::LeftTopAligned:
+            nParams[2] += w2 / 2;                     // A little margin from left
+            nParams[3] += h1 / 2;                     // A little margin from top
+            break;
+          case Button_layout_e::RightTopAligned:
+            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+            nParams[3] += h1 / 2;                     // A little margin from top
+            break;
+          case Button_layout_e::RightBottomAligned:
+            nParams[2] += (nParams[4] - w1) - w2 / 2; // right-align + a little margin
+            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
+            break;
+          case Button_layout_e::LeftBottomAligned:
+            nParams[2] += w2 / 2;                     // A little margin from left
+            nParams[3] += (nParams[5] - h1 * 1.5);    // bottom align + a little margin
+            break;
+          case Button_layout_e::Bitmap:
+          {                                           // Use ON/OFF caption to specify (full) bitmap filename
+            #  if ADAGFX_ENABLE_BMP_DISPLAY
+
+            if (!newString.isEmpty()) {
+              int offX = 0; // Allow optional arguments for x and y offset values, usage:
+              int offY = 0; // [x,[y,]]filename.bmp
+
+              if (newString.indexOf(',') > -1) {
+                String tmp = parseString(newString, 1);
+                validIntFromString(tmp, offX);
+                newString = parseStringToEndKeepCase(newString, 2);
+
+                if (newString.indexOf(',') > -1) {
+                  tmp = parseString(newString, 1);
+                  validIntFromString(tmp, offY);
+                  newString = parseStringToEndKeepCase(newString, 2);
+                }
+              }
+              success = showBmp(newString, nParams[2] + _xo + offX, nParams[3] + _yo + offY);
+            } else
+            #  endif // if ADAGFX_ENABLE_BMP_DISPLAY
+            {
+              success = false;
+            }
+            break;
+          }
+          case Button_layout_e::NoCaption:
+          case Button_layout_e::Alignment_MAX:
+            break;
+        }
+
+        if ((buttonLayout != Button_layout_e::NoCaption) &&
+            (buttonLayout != Button_layout_e::Bitmap)) {
+          // Set position and colors, then print
+          _display->setCursor(nParams[2] + _xo, nParams[3] + _yo);
+          _display->setTextColor(textColor, textColor); // transparent bg results in button color
+          _display->print(newString);
+
+          // restore colors
+          _display->setTextColor(_fgcolor, _bgcolor);
+        }
+
+        // restore font scaling
+        _display->setTextSize(_fontscaling);
+      }
+    }
+  }
+  # endif // if ADAGFX_ENABLE_BUTTON_DRAW
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  else if (subcommand.equals(F("win")) && (argCount >= 1) && (argCount <= 2)) {    // win: select window by id
+    success = selectWindow(nParams[0], nParams[1]);
+  }
+  else if (subcommand.equals(F("defwin")) && (argCount >= 5) && (argCount <= 6)) { // defwin: define window
+    const int8_t rot = _rotation;
+    #  if ADAGFX_ARGUMENT_VALIDATION
+    const int16_t curWin = getWindow();
+
+    if (curWin != 0) { selectWindow(0); } // Validate against raw window coordinates
+
+    if (argCount == 6) { setRotation(nParams[5]); } // Use requested rotation
+
+    if (invalidCoordinates(nParams[0], nParams[1]) ||
+        invalidCoordinates(nParams[0] + nParams[2], nParams[1] + nParams[3])) {
+      success = false;
+
+      if (curWin != 0) { selectWindow(curWin); }  // restore current window
+
+      if (rot != _rotation) { setRotation(rot); } // Restore rotation
+    } else
+    #  endif  // if ADAGFX_ARGUMENT_VALIDATION
+    {
+      #  if ADAGFX_ARGUMENT_VALIDATION
+
+      if (curWin != 0) { selectWindow(curWin); } // restore current window
+      #  endif // if ADAGFX_ARGUMENT_VALIDATION
+
+      if (nParams[4] > 0) { // Window 0 is the raw window, having the full size, created at initialization of this helper instance
+        #  ifndef BUILD_NO_DEBUG
+        int16_t win = // avoid compiler warning
+        #  endif // ifndef BUILD_NO_DEBUG
+        defineWindow(nParams[0],
+                     nParams[1],
+                     nParams[2],
+                     nParams[3],
+                     nParams[4],
+                     argCount == 6 ? nParams[5] : _rotation);
+        #  ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+          String log = F("AdaGFX defined window id: ");
+          log += win;
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+        #  endif // ifndef BUILD_NO_DEBUG
+
+        if (rot != _rotation) { setRotation(rot); } // Restore rotation, also update new window
+      } else {
+        success = false;
+      }
+
+      // logWindows(F(" deFwin ")); // Use for debugging only?
+    }
+  }
+  else if (subcommand.equals(F("delwin")) && (argCount == 1)) { // delwin: delete window
+    // logWindows(F(" deLwin ")); // use for debugging only
+
+    if (nParams[0] > 0) {                                       // don't delete window 0
+      success = deleteWindow(nParams[0]);
+    }
+  }
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   else {
     success = false;
   }
@@ -1201,23 +1723,173 @@ bool AdafruitGFX_helper::processCommand(const String& string) {
 }
 
 /****************************************************************************
+ * Get a config value from the plugin
+ ***************************************************************************/
+# if ADAGFX_ENABLE_GET_CONFIG_VALUE
+bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
+  bool   success = false;
+  String command = parseString(string, 1);
+
+  if (command.equals(F("win"))) {          // win: get current window id
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+    string  = getWindow();
+    success = true;
+    #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+  } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
+    command = parseString(string, 2);
+    int win = 0;
+
+    if (validIntFromString(command, win)) {
+      string = validWindow(static_cast<uint8_t>(win));
+    } else {
+      string = '0';
+    }
+    success = true;                     // Always correct, just return 'false' if wrong
+    #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+  } else if ((command.equals(F("width"))) || // width/height: get window width or height
+             (command.equals(F("height")))) {
+    #  if ADAGFX_ENABLE_FRAMED_WINDOW   // if feature enabled
+    uint16_t w = 0, h = 0;
+    getWindowLimits(w, h);
+
+    if (command.equals(F("width"))) {
+      string = w;
+    } else {
+      string = h;
+    }
+    success = true;
+    #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+  } else if ((command.equals(F("length"))) || // length/textheight: get text length or height
+             (command.equals(F("textheight")))) {
+    int16_t  x1, y1;
+    uint16_t w1, h1;
+    String   newString = AdaGFXparseTemplate(parseStringToEndKeepCase(string, 2), 0);
+    _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
+
+    if (command.equals(F("length"))) {
+      string = w1;
+    } else {
+      string = h1;
+    }
+    success = true;
+  } else if (command.equals(F("rot"))) { // rot: get current rotation setting
+    string  = _rotation;
+    success = true;
+  } else if (command.equals(F("txs"))) { // txs: get current text scaling setting
+    string  = _fontscaling;
+    success = true;
+  } else if (command.equals(F("tpm"))) { // tpm: get current text print mode setting
+    string  = static_cast<int>(_textPrintMode);
+    success = true;
+  }
+
+  return success;
+}
+
+# endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
+
+/****************************************************************************
+ * draw a button shape with provided color, can also clear a previously drawn button
+ ***************************************************************************/
+void AdafruitGFX_helper::drawButtonShape(const Button_type_e& buttonType,
+                                         const int          & x,
+                                         const int          & y,
+                                         const int          & w,
+                                         const int          & h,
+                                         const uint16_t     & fillColor,
+                                         const uint16_t     & borderColor) {
+  switch (buttonType) {
+    case Button_type_e::Square: // Rectangle
+    {
+      _display->fillRect(x, y, w, h, fillColor);
+      _display->drawRect(x, y, w, h, borderColor);
+      break;
+    }
+    case Button_type_e::Rounded:     // Rounded Rectangle
+    {
+      int16_t radius = (w + h) / 20; // average 10 % corner radius w/h
+      _display->fillRoundRect(x, y, w, h, radius, fillColor);
+      _display->drawRoundRect(x, y, w, h, radius, borderColor);
+      break;
+    }
+    case Button_type_e::Circle:     // Circle
+    {
+      int16_t radius = (w + h) / 4; // average radius
+      _display->fillCircle(x + (w / 2), y + (h / 2), radius, fillColor);
+      _display->drawCircle(x + (w / 2), y + (h / 2), radius, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowLeft:
+    { // draw: left-center, right-top, right-bottom
+      _display->fillTriangle(x, y + h / 2, x + w, y,
+                             x + w, y + h, fillColor);
+      _display->drawTriangle(x, y + h / 2, x + w, y,
+                             x + w, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowUp:
+    { // draw: top-center, right-bottom, left-bottom
+      _display->fillTriangle(x + w / 2, y, x + w, y + h,
+                             x, y + h, fillColor);
+      _display->drawTriangle(x + w / 2, y, x + w, y + h,
+                             x, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowRight:
+    { // draw: left-top, right-center, left-bottom
+      _display->fillTriangle(x, y, x + w, y + h / 2,
+                             x, y + h, fillColor);
+      _display->drawTriangle(x, y, x + w, y + h / 2,
+                             x, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::ArrowDown:
+    { // draw: left-top, right-top, bottom-center
+      _display->fillTriangle(x, y, x + w, y,
+                             x + w / 2, y + h, fillColor);
+      _display->drawTriangle(x, y, x + w, y,
+                             x + w / 2, y + h, borderColor);
+      break;
+    }
+    case Button_type_e::None:
+    case Button_type_e::Button_MAX:
+      break;
+  }
+}
+
+/****************************************************************************
  * printText: Print text on display at a specific pixel or column/row location
  ***************************************************************************/
-void AdafruitGFX_helper::printText(const char *string,
-                                   int16_t     X,
-                                   int16_t     Y,
-                                   uint8_t     textSize,
-                                   uint16_t    color,
-                                   uint16_t    bkcolor,
-                                   uint16_t    maxWidth) {
-  int16_t  _x = X;
-  int16_t  _y = Y + (_heightOffset * textSize);
-  uint16_t _w = 0;
-  int16_t  x1 = 0, y1 = 0;
-  uint16_t w1 = 0, h1 = 0;
-  int16_t  ot = 0, ob = 0, ol = 0;
+void AdafruitGFX_helper::printText(const char     *string,
+                                   const int16_t & X,
+                                   const int16_t & Y,
+                                   const uint8_t & textSize,
+                                   const uint16_t& color,
+                                   uint16_t        bkcolor,
+                                   const uint16_t& maxWidth) {
+  int16_t  _x        = X;
+  int16_t  _y        = Y + (_heightOffset * textSize);
+  uint16_t _w        = 0;
+  int16_t  xText     = 0;
+  int16_t  yText     = 0;
+  uint16_t wText     = 0;
+  uint16_t hText     = 0;
+  int16_t  oTop      = 0;
+  int16_t  oBottom   = 0;
+  int16_t  oLeft     = 0;
   uint16_t res_x     = _res_x;
+  uint16_t res_y     = _res_y;
+  uint16_t xOffset   = 0;
+  uint16_t yOffset   = 0;
   String   newString = string;
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  getWindowLimits(res_x, res_y);
+  getWindowOffsets(xOffset, yOffset);
+  _x += xOffset;
+  _y += yOffset;
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
   if (_columnRowMode) {
     _x = X * (_fontwidth * textSize); // We need this multiple times
@@ -1229,39 +1901,32 @@ void AdafruitGFX_helper::printText(const char *string,
   _display->setTextSize(textSize);
 
   if (_textPrintMode != AdaGFXTextPrintMode::ContinueToNextLine) {
-    if (_isProportional) {                                              // Proportional font. This is rather slow!
-      _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1);   // Count length
+    _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText);   // Count length
 
-      while ((newString.length() > 0) && ((_x + w1) > res_x)) {
-        newString.remove(newString.length() - 1);                       // Cut last character off
-        _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1); // Re-count length
-      }
-    }
-    else {                                                              // Fixed width font
-      if (newString.length() > static_cast<uint16_t>(_textcols - (_x / (_fontwidth * textSize)))) {
-        newString = newString.substring(0, _textcols - (_x / (_fontwidth * textSize)));
-      }
+    while ((newString.length() > 0) && (((_x - xOffset) + wText) > res_x)) {
+      newString.remove(newString.length() - 1);                                   // Cut last character off
+      _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Re-count length
     }
   }
 
-  _display->getTextBounds(newString, _x, _y, &x1, &y1, &w1, &h1); // Count length
+  _display->getTextBounds(newString, _x, _y, &xText, &yText, &wText, &hText); // Count length
 
-  if ((maxWidth > 0) && (_x + maxWidth <= _res_x)) {
-    res_x = _x + maxWidth;
+  if ((maxWidth > 0) && ((_x - xOffset) + maxWidth <= res_x)) {
+    res_x = (_x - xOffset) + maxWidth;
     _w    = maxWidth;
 
     if ((_textPrintMode == AdaGFXTextPrintMode::TruncateExceedingCentered) &&
-        (maxWidth > w1)) {
-      ol = (_w - (w1 + 2 * (x1 - _x))) / 2;
+        (maxWidth > wText)) {
+      oLeft = (_w - (wText + 2 * (xText - _x))) / 2;
     }
   } else {
-    _w = w1 + 2 * (x1 - _x);
+    _w = wText + 2 * (xText - _x);
   }
 
   if (_textBackFill && (color != bkcolor)) { // Fill extra space above and below text
-    ot -= textSize;
-    ob += textSize;
-    _y += textSize;
+    oTop    -= textSize;
+    oBottom += textSize;
+    _y      += textSize;
   }
 
   if ((_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) ||
@@ -1271,16 +1936,20 @@ void AdafruitGFX_helper::printText(const char *string,
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       String log = F("printText: clear: _x:");
       log += _x;
+      log += F(", oTop:");
+      log += oTop;
       log += F(", _y:");
       log += _y;
-      log += F(", x1:");
-      log += x1;
-      log += F(", y1:");
-      log += y1;
-      log += F(", w1:");
-      log += w1;
-      log += F(", h1:");
-      log += h1;
+      log += F(", xTx:");
+      log += xText;
+      log += F(", yTx:");
+      log += yText;
+      log += F(", wTx:");
+      log += wText;
+      log += F(", hTx:");
+      log += hText;
+      log += F(", oBot:");
+      log += oBottom;
       log += F(", _res_x/max:");
       log += _res_x;
       log += '/';
@@ -1291,16 +1960,19 @@ void AdafruitGFX_helper::printText(const char *string,
     }
     # endif // ifndef BUILD_NO_DEBUG
 
-    if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) {
-      _display->fillRect(_x + ot, y1, res_x - _x, h1 + ob, bkcolor); // Clear text area to right edge of screen
+    if (bkcolor == color) { bkcolor = _bgcolor; } // To get at least the text readable
+
+    if (_textPrintMode == AdaGFXTextPrintMode::ClearThenTruncate) { // oTop is negative so subtract to add...
+      _display->fillRect(_x + oTop, yText, res_x - (_x - xOffset), hText + oBottom - oTop, bkcolor); // Clear text area to right edge of
+                                                                                                     // screen
     } else {
-      _display->fillRect(_x + ot, y1, _w, h1 + ob, bkcolor);         // Clear text area
+      _display->fillRect(_x + oTop, yText, _w, hText + oBottom - oTop, bkcolor); // Clear text area
     }
 
     delay(0);
   }
 
-  _display->setCursor(_x + ol, _y); // add left offset to center, _y may be updated
+  _display->setCursor(_x + oLeft, _y); // add left offset to center, _y may be updated
   _display->print(newString);
 }
 
@@ -1320,7 +1992,9 @@ uint16_t AdafruitGFX_helper::getTextSize(const String& text,
 /****************************************************************************
  * color565: convert r, g, b colors to rgb565 (by bit-shifting)
  ***************************************************************************/
-uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
+uint16_t color565(const uint8_t& red,
+                  const uint8_t& green,
+                  const uint8_t& blue) {
   return ((red & 0xF8) << 8) | ((green & 0xFC) << 3) | (blue >> 3);
 }
 
@@ -1334,7 +2008,9 @@ uint16_t color565(uint8_t red, uint8_t green, uint8_t blue) {
 // Param [in] colorDepth: The requiresed color depth, default: FullColor
 // param [in] defaultWhite: Return White color if empty, default: true
 // return : color (default ADAGFX_WHITE)
-uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBlack) {
+uint16_t AdaGFXparseColor(String                & s,
+                          const AdaGFXColorDepth& colorDepth,
+                          const bool              emptyIsBlack) {
   s.toLowerCase();
   int32_t result = -1; // No result yet
 
@@ -1422,7 +2098,7 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
   // Parse default hex #RRGGBB string (must be 6 hex nibbles!)
   if ((result == -1) && (s.length() == 7) && (s[0] == '#')) {
     // convrt to long value in base16, then split up into r, g, b values
-    uint32_t number = hexToUL(&s[1]);
+    const uint32_t number = hexToUL(&s[1]);
 
     // uint32_t r = number >> 16 & 0xFF;
     // uint32_t g = number >> 8 & 0xFF;
@@ -1432,13 +2108,17 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
   }
 
   if ((result == -1) || (result == ADAGFX_WHITE)) { // Default & don't convert white
+    # if ADAGFX_SUPPORT_8and16COLOR
+
     if (
       # if ADAGFX_SUPPORT_7COLOR
       (colorDepth >= AdaGFXColorDepth::SevenColor) &&
       # endif // if ADAGFX_SUPPORT_7COLOR
       (colorDepth <= AdaGFXColorDepth::SixteenColor)) {
       result = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK); // Monochrome fallback, compatible 7-color
-    } else {
+    } else
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
+    {
       if (emptyIsBlack) {
         result = ADAGFX_BLACK;
       } else {
@@ -1458,23 +2138,25 @@ uint16_t AdaGFXparseColor(String& s, AdaGFXColorDepth colorDepth, bool emptyIsBl
         result = AdaGFXrgb565ToColor7(result); // Convert
         break;
       # endif  // if ADAGFX_SUPPORT_7COLOR
+      # if ADAGFX_SUPPORT_8and16COLOR
       case AdaGFXColorDepth::EightColor:
         result = color565((result >> 11 & 0x1F) / 4, (result >> 5 & 0x3F) / 4, (result & 0x1F) / 4); // reduce colors factor 4
         break;
       case AdaGFXColorDepth::SixteenColor:
         result = color565((result >> 11 & 0x1F) / 2, (result >> 5 & 0x3F) / 2, (result & 0x1F) / 2); // reduce colors factor 2
         break;
+      # endif // if ADAGFX_SUPPORT_8and16COLOR
       case AdaGFXColorDepth::FullColor:
         // No color reduction
         break;
     }
   }
-  return result;
+  return static_cast<uint16_t>(result);
 }
 
-const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
-                                                        AdaGFXColorDepth colorDepth,
-                                                        bool             blackIsEmpty);
+const __FlashStringHelper* AdaGFXcolorToString_internal(const uint16_t        & color,
+                                                        const AdaGFXColorDepth& colorDepth,
+                                                        bool                    blackIsEmpty);
 
 // Add a single optionvalue of a color to a datalist (internal/private)
 void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
@@ -1494,7 +2176,7 @@ void AdaGFXaddHtmlDataListColorOptionValue(uint16_t         color,
  * Generate a html 'datalist' of the colors available for selected colorDepth, with id provided
  ****************************************************************************************/
 void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
-                                  AdaGFXColorDepth           colorDepth) {
+                                  const AdaGFXColorDepth   & colorDepth) {
   addHtml(F("<datalist id=\""));
   addHtml(id);
   addHtml(F("\">"));
@@ -1523,8 +2205,10 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
       break;
     }
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor: // TODO: Sort out the actual 8/16 color options
     case AdaGFXColorDepth::SixteenColor:
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor:
     {
       AdaGFXaddHtmlDataListColorOptionValue(ADAGFX_BLACK,       colorDepth);
@@ -1555,9 +2239,9 @@ void AdaGFXHtmlColorDepthDataList(const __FlashStringHelper *id,
 /*****************************************************************************************
  * Convert an RGB565 color (number) to it's name or the #rgb565 hex string, based on depth
  ****************************************************************************************/
-String AdaGFXcolorToString(uint16_t         color,
-                           AdaGFXColorDepth colorDepth,
-                           bool             blackIsEmpty) {
+String AdaGFXcolorToString(const uint16_t        & color,
+                           const AdaGFXColorDepth& colorDepth,
+                           bool                    blackIsEmpty) {
   String result = AdaGFXcolorToString_internal(color, colorDepth, blackIsEmpty);
 
   if (result.equals(F("*"))) {
@@ -1568,9 +2252,9 @@ String AdaGFXcolorToString(uint16_t         color,
   return result;
 }
 
-const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
-                                                        AdaGFXColorDepth colorDepth,
-                                                        bool             blackIsEmpty) {
+const __FlashStringHelper* AdaGFXcolorToString_internal(const uint16_t        & color,
+                                                        const AdaGFXColorDepth& colorDepth,
+                                                        bool                    blackIsEmpty) {
   switch (colorDepth) {
     case AdaGFXColorDepth::Monochrome:
     case AdaGFXColorDepth::BlackWhiteRed:
@@ -1607,8 +2291,10 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
       break;
     }
     # endif // if ADAGFX_SUPPORT_7COLOR
+    # if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::EightColor:
     case AdaGFXColorDepth::SixteenColor:
+    # endif // if ADAGFX_SUPPORT_8and16COLOR
     case AdaGFXColorDepth::FullColor:
     {
       switch (color) {
@@ -1646,18 +2332,17 @@ const __FlashStringHelper* AdaGFXcolorToString_internal(uint16_t         color,
  * AdaGFXrgb565ToColor7: Convert a rgb565 color to the 7 colors supported by 7-color eInk displays
  * Borrowed from https://github.com/ZinggJM/GxEPD2 color7() routine
  ***************************************************************************/
-uint16_t AdaGFXrgb565ToColor7(uint16_t color) {
-  uint16_t cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); // Default = white
-
-  uint16_t red   = (color & 0xF800);
-  uint16_t green = (color & 0x07E0) << 5;
-  uint16_t blue  = (color & 0x001F) << 11;
+uint16_t AdaGFXrgb565ToColor7(const uint16_t& color) {
+  const uint16_t red   = (color & 0xF800);
+  const uint16_t green = (color & 0x07E0) << 5;
+  const uint16_t blue  = (color & 0x001F) << 11;
+  uint16_t cv7         = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); // Default = white
 
   if ((red < 0x8000) && (green < 0x8000) && (blue < 0x8000)) {
-    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK); // black
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_BLACK);                // black
   }
   else if ((red >= 0x8000) && (green >= 0x8000) && (blue >= 0x8000)) {
-    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE); // white
+    cv7 = static_cast<uint16_t>(AdaGFX7Colors::ADAGFX7C_WHITE);                // white
   }
   else if ((red >= 0x8000) && (blue >= 0x8000)) {
     if (red > blue) {
@@ -1713,8 +2398,12 @@ void AdafruitGFX_helper::getTextMetrics(uint16_t& textcols,
   fontheight   = _fontheight;
   fontscaling  = _fontscaling;
   heightOffset = _heightOffset;
-  xpix         = _res_x;
-  ypix         = _res_y;
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  getWindowLimits(xpix, ypix);
+  # else // if ADAGFX_ENABLE_FRAMED_WINDOW
+  xpix = _res_x;
+  ypix = _res_y;
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 }
 
 /****************************************************************************
@@ -1729,16 +2418,23 @@ void AdafruitGFX_helper::getColors(uint16_t& fgcolor,
 /****************************************************************************
  * calculateTextMetrics: Recalculate the text mertics based on supplied font parameters
  ***************************************************************************/
-void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
-                                              uint8_t fontheight,
-                                              int8_t  heightOffset,
-                                              bool    isProportional) {
+void AdafruitGFX_helper::calculateTextMetrics(const uint8_t fontwidth,
+                                              const uint8_t fontheight,
+                                              const int8_t  heightOffset,
+                                              const bool    isProportional) {
+  uint16_t res_x = _res_x;
+  uint16_t res_y = _res_y;
+
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+  getWindowLimits(res_x, res_y);
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+
   _fontwidth      = fontwidth;
   _fontheight     = fontheight;
   _heightOffset   = heightOffset;
   _isProportional = isProportional;
-  _textcols       = _res_x / (_fontwidth * _fontscaling);
-  _textrows       = _res_y / ((_fontheight + _heightOffset) * _fontscaling);
+  _textcols       = res_x / (_fontwidth * _fontscaling);
+  _textrows       = res_y / ((_fontheight + _heightOffset) * _fontscaling);
 
   # ifndef BUILD_NO_DEBUG
 
@@ -1752,9 +2448,9 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
       log += _trigger;
     }
     log += F(" x: ");
-    log += _res_x;
+    log += res_x;
     log += F(", y: ");
-    log += _res_y;
+    log += res_y;
     log += F(", text columns: ");
     log += _textcols;
     log += F(" rows: ");
@@ -1772,9 +2468,16 @@ void AdafruitGFX_helper::calculateTextMetrics(uint8_t fontwidth,
  * If Y == 0 then X is allowed the max. value of the display size.
  * *** Returns TRUE when invalid !! ***
  ***************************************************************************/
-bool AdafruitGFX_helper::invalidCoordinates(int  X,
-                                            int  Y,
-                                            bool colRowMode) {
+bool AdafruitGFX_helper::invalidCoordinates(const int  X,
+                                            const int  Y,
+                                            const bool colRowMode) {
+  uint16_t res_x = _res_x;
+  uint16_t res_y = _res_y;
+
+  #  if ADAGFX_ENABLE_FRAMED_WINDOW
+  getWindowLimits(res_x, res_y);
+  #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
+
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(ADAGFX_LOG_LEVEL)) {
@@ -1784,11 +2487,11 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
     log += F("invalidCoordinates: X:");
     log += X;
     log += '/';
-    log += (colRowMode ? _textcols : _res_x);
+    log += (colRowMode ? _textcols : res_x);
     log += F(" Y:");
     log += Y;
     log += '/';
-    log += (colRowMode ? _textrows : _res_y);
+    log += (colRowMode ? _textrows : res_y);
     addLogMove(ADAGFX_LOG_LEVEL, log);
   }
   #  endif // ifndef BUILD_NO_DEBUG
@@ -1800,10 +2503,10 @@ bool AdafruitGFX_helper::invalidCoordinates(int  X,
              (Y >= 0) && (Y <= _textrows));
   } else {
     if (Y == 0) { // Y == 0: Accept largest x/y size value for x
-      return !((X >= 0) && (X <= std::max(_res_x, _res_y)));
+      return !((X >= 0) && (X <= std::max(res_x, res_y)));
     } else {
-      return !((X >= 0) && (X <= _res_x) &&
-               (Y >= 0) && (Y <= _res_y));
+      return !((X >= 0) && (X <= res_x) &&
+               (Y >= 0) && (Y <= res_y));
     }
   }
 }
@@ -1814,10 +2517,14 @@ void AdafruitGFX_helper::setValidation(const bool& state) {
   _useValidation = state;
 }
 
+/****************************************************************************
+ * rotate the display (and all windows)
+ ***************************************************************************/
 void AdafruitGFX_helper::setRotation(uint8_t m) {
-  uint8_t rotation = m & 3;
+  const uint8_t rotation = m & 3;
 
   _display->setRotation(m); // Set rotation 0/1/2/3
+  _rotation = rotation;
 
   switch (rotation) {
     case 0:
@@ -1831,51 +2538,92 @@ void AdafruitGFX_helper::setRotation(uint8_t m) {
       _res_y = _display_x;
       break;
   }
+  # if ADAGFX_ENABLE_FRAMED_WINDOW
+
+  for (uint8_t i = 0; i < _windows.size(); i++) {                // Swap x/y for all matching windows
+    switch (rotation) {
+      case 0:                                                    // 0 degrees
+        _windows[i].top_left.x     = _windows[i].org_top_left.x; // All original
+        _windows[i].top_left.y     = _windows[i].org_top_left.y;
+        _windows[i].width_height.x = _windows[i].org_width_height.x;
+        _windows[i].width_height.y = _windows[i].org_width_height.y;
+        break;
+      case 1:                                                        // +90 degrees
+        _windows[i].top_left.x     = _windows[i].org_top_left.y;
+        _windows[i].top_left.y     = _display_x - (_windows[i].org_top_left.x + _windows[i].org_width_height.x);
+        _windows[i].width_height.x = _windows[i].org_width_height.y; // swapped width/height
+        _windows[i].width_height.y = _windows[i].org_width_height.x;
+        break;
+      case 2:                                                        // +180 degrees
+        _windows[i].top_left.x     = _display_x - (_windows[i].org_top_left.x + _windows[i].org_width_height.x);
+        _windows[i].top_left.y     = _display_y - (_windows[i].org_top_left.y + _windows[i].org_width_height.y);
+        _windows[i].width_height.x = _windows[i].org_width_height.x;
+        _windows[i].width_height.y = _windows[i].org_width_height.y;
+        break;
+      case 3:                                                        // +270 degrees
+        _windows[i].top_left.x     = _display_y - (_windows[i].org_top_left.y + _windows[i].org_width_height.y);
+        _windows[i].top_left.y     = _windows[i].org_top_left.x;
+        _windows[i].width_height.x = _windows[i].org_width_height.y; // swapped width/height
+        _windows[i].width_height.y = _windows[i].org_width_height.x;
+        break;
+    }
+    _windows[i].rotation = rotation;
+  }
+
+  // logWindows(F("rot ")); // For debugging only
+  # endif // if ADAGFX_ENABLE_FRAMED_WINDOW
   calculateTextMetrics(_fontwidth, _fontheight, _heightOffset, _isProportional);
 }
 
 # if ADAGFX_ENABLE_BMP_DISPLAY
 
-/**
+/****************************************************************************
  * CPA (Copy/paste/adapt) from Adafruit_ImageReader::coreBMP()
  * Changes:
  * - No 'load to memory' feature
  * - No special handling of SD Filesystem/FAT, but File only
  * - Adds support for non-SPI displays (like NeoPixel Matrix, and possibly I2C displays, once supported)
- */
+ ***************************************************************************/
 bool AdafruitGFX_helper::showBmp(const String& filename,
                                  int16_t       x,
                                  int16_t       y) {
-  bool transact = true;           // Enable transaction support to work proper with SD czrd, when enabled
-  bool status   = false;          // IMAGE_SUCCESS on valid file
+  uint32_t offset;               // Start of image data in file
+  uint32_t headerSize;           // Indicates BMP version
+  uint32_t compression = 0;      // BMP compression mode
+  uint32_t colors      = 0;      // Number of colors in palette
+  uint32_t rowSize;              // >bmpWidth if scanline padding
+  uint8_t  sdbuf[3 * BUFPIXELS]; // BMP read buf (R+G+B/pixel)
+
+  uint32_t destidx = 0;
+  uint32_t bmpPos  = 0;          // Next pixel position in file
+  int bmpWidth;                  // BMP width & height in pixels
+  int bmpHeight;
+  int loadWidth;
+  int loadHeight;                // Region being loaded (clipped)
+  int loadX;
+  int loadY;                     // "
+  int row;                       // Current pixel pos.
+  int col;
+  uint16_t *quantized = NULL;    // 16-bit 5/6/5 color palette
   uint16_t  tftbuf[BUFPIXELS];
-  uint16_t *dest = tftbuf;        // TFT working buffer, or NULL if to canvas
-  uint32_t  offset;               // Start of image data in file
-  uint32_t  headerSize;           // Indicates BMP version
-  uint8_t   planes;               // BMP planes
-  uint8_t   depth;                // BMP bit depth
-  uint32_t  compression = 0;      // BMP compression mode
-  uint32_t  colors      = 0;      // Number of colors in palette
-  uint16_t *quantized   = NULL;   // 16-bit 5/6/5 color palette
-  uint32_t  rowSize;              // >bmpWidth if scanline padding
-  uint8_t   sdbuf[3 * BUFPIXELS]; // BMP read buf (R+G+B/pixel)
-  int bmpWidth, bmpHeight;        // BMP width & height in pixels
+  uint16_t *dest = tftbuf;       // TFT working buffer, or NULL if to canvas
+  int16_t   drow = 0;
+  int16_t   dcol = 0;
+  uint8_t   planes;              // BMP planes
+  uint8_t   depth;               // BMP bit depth
+  uint8_t   r;                   // Current pixel colors
+  uint8_t   g;
+  uint8_t   b;
+  uint8_t   bitIn = 0;           // Bit number for 1-bit data in
 
   #  if ((3 * BUFPIXELS) <= 255)
-  uint8_t srcidx = sizeof sdbuf;  // Current position in sdbuf
+  uint8_t srcidx = sizeof sdbuf; // Current position in sdbuf
   #  else // if ((3 * BUFPIXELS) <= 255)
   uint16_t srcidx = sizeof sdbuf;
   #  endif // if ((3 * BUFPIXELS) <= 255)
-  uint32_t destidx = 0;
-  bool     flip = true;      // BMP is stored bottom-to-top
-  uint32_t bmpPos = 0;       // Next pixel position in file
-  int loadWidth, loadHeight, // Region being loaded (clipped)
-      loadX, loadY;          // "
-  int row, col;              // Current pixel pos.
-  uint8_t r, g, b;           // Current pixel color
-  uint8_t bitIn = 0;         // Bit number for 1-bit data in
-  int16_t drow  = 0;
-  int16_t dcol  = 0;
+  bool flip     = true;  // BMP is stored bottom-to-top
+  bool transact = true;  // Enable transaction support to work proper with SD czrd, when enabled
+  bool status   = false; // IMAGE_SUCCESS on valid file
 
   bool canTransact = (nullptr != _tft);
 
@@ -1992,7 +2740,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       log.clear();
-      log += F("showBmp: x: ");
+      log += F("showBmp: x:");
       log += x;
       log += F(", y:");
       log += y;
@@ -2195,5 +2943,181 @@ uint32_t AdafruitGFX_helper::readLE32(void) {
 }
 
 # endif // if ADAGFX_ENABLE_BMP_DISPLAY
+
+# if ADAGFX_ENABLE_FRAMED_WINDOW
+
+/****************************************************************************
+ * Check if the requested id is a valid window id
+ ***************************************************************************/
+bool AdafruitGFX_helper::validWindow(const uint8_t& windowId) {
+  return getWindowIndex(windowId) != -1;
+}
+
+/****************************************************************************
+ * Select this window id as the default
+ ***************************************************************************/
+bool AdafruitGFX_helper::selectWindow(const uint8_t& windowId,
+                                      const int8_t & rotation) {
+  const int16_t result = getWindowIndex(windowId);
+
+  if (result != -1) {
+    _windowIndex = result;
+    _window      = windowId;
+  }
+  return result != -1;
+}
+
+/****************************************************************************
+ * Return the index of the windowId in _windows, -1 if not found
+ ***************************************************************************/
+int16_t AdafruitGFX_helper::getWindowIndex(const int16_t& windowId) {
+  size_t result = 0;
+
+  for (auto win = _windows.begin(); win != _windows.end(); win++, result++) {
+    if ((*win).id == windowId) {
+      break;
+    }
+  }
+  return result == _windows.size() ? -1 : result;
+}
+
+/****************************************************************************
+ * Get the offset for the currently active window
+ ***************************************************************************/
+void AdafruitGFX_helper::getWindowOffsets(uint16_t& xOffset,
+                                          uint16_t& yOffset) {
+  xOffset = _windows[_windowIndex].top_left.x;
+  yOffset = _windows[_windowIndex].top_left.y;
+}
+
+/****************************************************************************
+ * Get the limits for the currently active window
+ ***************************************************************************/
+void AdafruitGFX_helper::getWindowLimits(uint16_t& xLimit,
+                                         uint16_t& yLimit) {
+  xLimit = _windows[_windowIndex].width_height.x;
+  yLimit = _windows[_windowIndex].width_height.y;
+}
+
+/****************************************************************************
+ * Define a window and return the ID
+ ***************************************************************************/
+uint8_t AdafruitGFX_helper::defineWindow(const int16_t& x,
+                                         const int16_t& y,
+                                         const int16_t& w,
+                                         const int16_t& h,
+                                         int16_t        windowId,
+                                         const int8_t & rotation) {
+  int16_t result = getWindowIndex(windowId);
+
+  if (result < 0) {
+    result = _windows.size();            // previous size
+    _windows.push_back(tWindowObject()); // add new
+
+    if (windowId < 0) {
+      windowId = 0;
+
+      for (auto it = _windows.begin(); it != _windows.end(); it++) {
+        if ((*it).id == windowId) { windowId++; } // Generate a new window id
+      }
+    }
+    _windows[result].id = windowId;
+  }
+  _windows[result].top_left.x     = x;
+  _windows[result].top_left.y     = y;
+  _windows[result].width_height.x = w;
+  _windows[result].width_height.y = h;
+
+  if (rotation >= 0) {
+    _windows[result].rotation = rotation & 3;
+  } else {
+    _windows[result].rotation = _rotation;
+  }
+
+  // Adjust original coordinate/sizes based on rotation
+  switch (_windows[result].rotation) {
+    case 0:                                    // 0 degrees
+      _windows[result].org_top_left.x     = x; // All original
+      _windows[result].org_top_left.y     = y;
+      _windows[result].org_width_height.x = w;
+      _windows[result].org_width_height.y = h;
+      break;
+    case 1:                                                       // +90 degrees
+      _windows[result].org_top_left.x     = _display_x - (y + h); // swapped x/y
+      _windows[result].org_top_left.y     = x;
+      _windows[result].org_width_height.x = h;                    // swapped width/height
+      _windows[result].org_width_height.y = w;
+      break;
+    case 2:                                                       // +180 degrees
+      _windows[result].org_top_left.x     = _display_x - (x + w);
+      _windows[result].org_top_left.y     = _display_y - (y + h);
+      _windows[result].org_width_height.x = w;                    // unchanged
+      _windows[result].org_width_height.y = h;
+      break;
+    case 3:                                                       // +270 degrees
+      _windows[result].org_top_left.x     = y;
+      _windows[result].org_top_left.y     = _display_x - (x + w);
+      _windows[result].org_width_height.x = h;                    // swapped width/height
+      _windows[result].org_width_height.y = w;
+      break;
+  }
+
+  return _windows[result].id;
+}
+
+/****************************************************************************
+ * Remove a window definition
+ ***************************************************************************/
+bool AdafruitGFX_helper::deleteWindow(const uint8_t& windowId) {
+  const int16_t result = getWindowIndex(windowId);
+
+  if (result > -1) {
+    _windows.erase(_windows.begin() + result);
+    return true;
+  }
+  return false;
+}
+
+/****************************************************************************
+ * log all current known window definitions
+ ***************************************************************************/
+void AdafruitGFX_helper::logWindows(const String& prefix) {
+  #  ifndef BUILD_NO_DEBUG
+  String log;
+
+  log.reserve(50);
+
+  for (auto it = _windows.begin(); it != _windows.end(); it++) {
+    log.clear();
+    log += F("AdaGFX window ");
+    log += prefix;
+    log += F(": ");
+    log += (*it).id;
+    log += F(", x:");
+    log += (*it).top_left.x;
+    log += F(", y:");
+    log += (*it).top_left.y;
+    log += F(", w:");
+    log += (*it).width_height.x;
+    log += F(", h:");
+    log += (*it).width_height.y;
+    log += F(", rot:");
+    log += (*it).rotation;
+    log += F(", current: ");
+    log += getWindow();
+    log += F(", org x:");
+    log += (*it).org_top_left.x;
+    log += F(", y:");
+    log += (*it).org_top_left.y;
+    log += F(", w:");
+    log += (*it).org_width_height.x;
+    log += F(", h:");
+    log += (*it).org_width_height.y;
+    addLogMove(LOG_LEVEL_INFO, log);
+  }
+  #  endif // ifndef BUILD_NO_DEBUG
+}
+
+# endif // if ADAGFX_ENABLE_FRAMED_WINDOW
 
 #endif // ifdef PLUGIN_USES_ADAFRUITGFX
