@@ -60,6 +60,23 @@
 # define P001_LP_MIN_INT    PCONFIG_FLOAT(2)
 # define P001_SAFE_BTN      PCONFIG_FLOAT(3)
 
+// TD-er: Needed to fix a mistake in earlier fixes.
+uint8_t P001_getSwitchType(struct EventStruct *event) {
+  uint8_t choice = PCONFIG(0);
+
+  switch (choice) {
+    case 2: // Old implementation for Dimmer
+    case PLUGIN_001_TYPE_DIMMER:
+      choice = PLUGIN_001_TYPE_DIMMER;
+      break;
+    case 1: // Old implementation for switch
+    case PLUGIN_001_TYPE_SWITCH:
+    default:
+      choice = PLUGIN_001_TYPE_SWITCH;
+      break;
+  }
+  return choice;
+}
 
 boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -229,10 +246,13 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         // used to track if LP has fired
         PCONFIG(6) = 0;
 
-        // store millis for debounce, doubleclick and long press
-        PCONFIG_LONG(0) = millis(); // debounce timer
-        PCONFIG_LONG(1) = millis(); // doubleclick timer
-        PCONFIG_LONG(2) = millis(); // longpress timer
+        {
+          // store millis for debounce, doubleclick and long press
+          const unsigned long cur_millis = millis();
+          PCONFIG_LONG(0) = cur_millis; // debounce timer
+          PCONFIG_LONG(1) = cur_millis; // doubleclick timer
+          PCONFIG_LONG(2) = cur_millis; // longpress timer
+        }
 
         // set minimum value for doubleclick MIN interval speed
         if (P001_DC_MAX_INT < SWITCH_DOUBLECLICK_MIN_INTERVAL) {
@@ -664,7 +684,7 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
       // WARNING: don't read "globalMapPortStatus[key]" here, as it will create a new entry if key does not exist
 
 
-      if (command == F("inputswitchstate")) {
+      if (command.equals(F("inputswitchstate"))) {
         success = true;
 
         // @giig1967g deprecated since 2019-11-26
@@ -710,24 +730,6 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
     }
   }
   return success;
-}
-
-// TD-er: Needed to fix a mistake in earlier fixes.
-uint8_t P001_getSwitchType(struct EventStruct *event) {
-  uint8_t choice = PCONFIG(0);
-
-  switch (choice) {
-    case 2: // Old implementation for Dimmer
-    case PLUGIN_001_TYPE_DIMMER:
-      choice = PLUGIN_001_TYPE_DIMMER;
-      break;
-    case 1: // Old implementation for switch
-    case PLUGIN_001_TYPE_SWITCH:
-    default:
-      choice = PLUGIN_001_TYPE_SWITCH;
-      break;
-  }
-  return choice;
 }
 
 #endif // USES_P001

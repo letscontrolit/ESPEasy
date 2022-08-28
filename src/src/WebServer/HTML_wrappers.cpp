@@ -6,6 +6,7 @@
 
 #include "../Helpers/StringConverter.h"
 
+#include "../Globals/Settings.h"
 
 // ********************************************************************************
 // HTML string re-use to keep the executable smaller

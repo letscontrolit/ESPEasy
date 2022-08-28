@@ -3,7 +3,7 @@
 
 #ifdef WEBSERVER_CONTROLLERS
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -138,6 +138,9 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
 
   // Load some templates from the controller.
   struct EventStruct TempEvent;
+
+  // Hand over the controller settings in the Data pointer, so the controller can set some defaults.
+  TempEvent.Data = (uint8_t*)(&ControllerSettings);
 
   if (Protocol[ProtocolIndex].usesTemplate) {
     String dummy;

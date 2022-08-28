@@ -4,7 +4,7 @@
 #include "../WebServer/common.h"
 
 
-#ifdef SHOW_SYSINFO_JSON
+#if SHOW_SYSINFO_JSON
 
 // ********************************************************************************
 // Web Interface sysinfo page

@@ -8,9 +8,35 @@
 // Macro used to make file system operations a bit more readable.
 #define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 
-#ifndef FS_NO_GLOBALS
-  #define FS_NO_GLOBALS
+#ifdef USE_LITTLEFS
+  #ifdef ESP32
+    #if ESP_IDF_VERSION_MAJOR >= 4
+      #include <LittleFS.h>
+      #define ESPEASY_FS LittleFS
+    #else
+      #include <LITTLEFS.h>
+      #define ESPEASY_FS LITTLEFS
+    #endif
+  #else
+    #include <LittleFS.h>
+    #define ESPEASY_FS LittleFS
+  #endif
+#else 
+  #ifdef ESP32
+    #include <SPIFFS.h>
+  #endif
+  #define ESPEASY_FS SPIFFS
 #endif
+
+
+#include <FS.h>
+#if FEATURE_SD
+#include <SD.h>
+#else
+using namespace fs;
+#endif
+
+
 #if defined(ESP8266)
   extern "C" {
     #include <spi_flash.h>

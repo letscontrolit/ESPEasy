@@ -4,6 +4,8 @@
 
 #include "../Commands/Common.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
 
@@ -15,6 +17,7 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_System.h"
 
 
 String Command_Settings_Build(struct EventStruct *event, const char* Line)
@@ -94,7 +97,7 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 
 	serialPrintln(F("System Info"));
 	serialPrint(F("  IP Address    : ")); serialPrintln(NetworkLocalIP().toString());
-	serialPrint(F("  Build         : ")); serialPrintln(String(static_cast<int>(BUILD)));
+	serialPrint(F("  Build         : ")); serialPrintln(String(get_build_nr()) + '/' + getSystemBuildString());
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.Name);
 	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));
 	serialPrint(F("  WifiSSID      : ")); serialPrintln(SecuritySettings.WifiSSID);
