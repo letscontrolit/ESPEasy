@@ -68,6 +68,7 @@
 //                                The bar width is determined by the number of graph-strings
 //
 // History:
+// 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
 // 2021-10-03 tonhuisman: Add Inverted option per zone
 // 2021-09    tonhuisman: Minor improvements, attempts to fix stack failures
 // 2021-08-08 tonhuisman: Reworked loading & saving the settings from A huge fixed size pre-allocated block to dynamic allocation
@@ -106,7 +107,7 @@
 
 # define PLUGIN_104
 # define PLUGIN_ID_104           104
-# define PLUGIN_NAME_104         "Display - MAX7219 dot matrix [DEVELOPMENT]"
+# define PLUGIN_NAME_104         "Display - MAX7219 dot matrix"
 
 # define PLUGIN_104_DEBUG        true // activate extra log info in the debug
 

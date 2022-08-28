@@ -52,7 +52,7 @@ void handle_log_JSON() {
   String webrequest = webArg(F("view"));
   addHtml(F("{\"Log\": {"));
 
-  if (webrequest == F("legend")) {
+  if (webrequest.equals(F("legend"))) {
     addHtml(F("\"Legend\": ["));
 
     for (uint8_t i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
