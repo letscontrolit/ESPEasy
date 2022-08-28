@@ -146,7 +146,7 @@ fs::File tryOpenFile(const String& fname, const String& mode) {
   bool exists = fileExists(fname);
 
   if (!exists) {
-    if (mode == F("r")) {
+    if (mode.equals(F("r"))) {
       return f;
     }
     Cache.fileExistsMap.clear();

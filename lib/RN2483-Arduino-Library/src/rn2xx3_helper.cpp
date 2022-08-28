@@ -41,7 +41,7 @@ bool rn2xx3_helper::isHexStr_of_length(const String& str, size_t length)
 
 String rn2xx3_helper::base16decode(const String& input_c)
 {
-  if (!isHexStr(input_c)) { return ""; }
+  if (!isHexStr(input_c)) { return emptyString; }
   String input(input_c); // Make a deep copy to be able to do trim()
   input.trim();
   const size_t inputLength  = input.length();
