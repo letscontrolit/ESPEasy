@@ -1314,6 +1314,15 @@ To create/register a plugin, you have to :
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Energy"
   #endif
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    // #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Energy plugins
+    #ifndef P036_LIMIT_BUILD_SIZE
+      #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+    #endif
+    #ifndef P037_LIMIT_BUILD_SIZE
+      #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+    #endif
+  #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
    #endif
@@ -1356,7 +1365,9 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Display"
   #endif
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
-     #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #ifndef PLUGIN_BUILD_MAX_ESP32
+       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #endif
    #endif
    #if !defined(FEATURE_SD)
      #define FEATURE_SD 1
@@ -1562,6 +1573,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef FEATURE_SD
     #define FEATURE_SD 1
+  #endif
+  #ifndef SHOW_SYSINFO_JSON
+    #define SHOW_SYSINFO_JSON 1
   #endif
 
   // Plugins
@@ -1837,6 +1851,12 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifdef PLUGIN_BUILD_MAX_ESP32
+  #ifdef LIMIT_BUILD_SIZE
+    #undef LIMIT_BUILD_SIZE
+  #endif
+#endif
+
 // Disable some diagnostic parts to make builds fit.
 #ifdef LIMIT_BUILD_SIZE
   #ifdef WEBSERVER_TIMINGSTATS
@@ -2036,7 +2056,7 @@ To create/register a plugin, you have to :
 
 // By default we enable the SHOW_SYSINFO_JSON when we enable the WEBSERVER_NEW_UI
 #ifdef WEBSERVER_NEW_UI
-  #define SHOW_SYSINFO_JSON
+  #define SHOW_SYSINFO_JSON 1
 #endif
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

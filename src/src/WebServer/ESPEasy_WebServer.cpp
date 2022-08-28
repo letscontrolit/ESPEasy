@@ -305,7 +305,7 @@ void WebServerInit()
   web_server.on(F("/upload_json"),       HTTP_POST, handle_upload_json, handleFileUpload);
   web_server.on(F("/wifiscanner_json"),  handle_wifiscanner_json);
 #endif // WEBSERVER_NEW_UI
-#ifdef SHOW_SYSINFO_JSON
+#if SHOW_SYSINFO_JSON
     web_server.on(F("/sysinfo_json"),      handle_sysinfo_json);
 #endif//SHOW_SYSINFO_JSON
 
@@ -332,7 +332,17 @@ void WebServerInit()
   {
     web_server.on(F("/ssdp.xml"), HTTP_GET, []() {
       WiFiClient client(web_server.client());
-      client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+
+      #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
+      // See: https://github.com/espressif/arduino-esp32/pull/6676
+      client.setTimeout((CONTROLLER_CLIENTTIMEOUT_DFLT + 500) / 1000); // in seconds!!!!
+      Client *pClient = &client;
+      pClient->setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);
+      #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+      client.setTimeout(CONTROLLER_CLIENTTIMEOUT_DFLT);                // in msec as it should be!
+      #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+
       SSDP_schema(client);
     });
     SSDP_begin();
@@ -363,7 +373,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   const bool addJS   = true;
   const bool addMeta = true;
 
-  if (tmplName == F("TmplAP"))
+  if (tmplName.equals(F("TmplAP")))
   {
 
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
@@ -381,7 +391,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName == F("TmplMsg"))
+  else if (tmplName.equals(F("TmplMsg")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {
@@ -391,7 +401,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultContentSection(parser);
     getWebPageTemplateDefaultFooter(parser);
   }
-  else if (tmplName == F("TmplDsh"))
+  else if (tmplName.equals(F("TmplDsh")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
     parser.process(F(

@@ -113,13 +113,11 @@ bool do_process_c004_delay_queue(int controller_number, const C004_queue_element
     ControllerSettings.UseDNS = true;
   }
 
-  WiFiClient client;
   int httpCode = -1;
   send_via_http(
     controller_number,
     ControllerSettings,
     element.controller_idx,
-    client,
     F("/update"), // uri
     F("POST"),
     F("Content-Type: application/x-www-form-urlencoded\r\n"),

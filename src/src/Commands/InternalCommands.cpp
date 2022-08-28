@@ -663,6 +663,12 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
     }
     #endif
 
+    if (!handled) {
+      // Try a controller
+      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
+
+    }
+
     if (handled) {
       SendStatus(&TempEvent, return_command_success());
       return true;
