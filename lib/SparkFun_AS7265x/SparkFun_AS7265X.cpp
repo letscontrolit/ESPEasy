@@ -479,7 +479,7 @@ uint8_t AS7265X::virtualReadRegister(uint8_t virtualAddr)
   status = readRegister(AS7265X_STATUS_REG);
   if ((status & AS7265X_RX_VALID) != 0) //There is data to be read
   {
-    uint8_t incoming = readRegister(AS7265X_READ_REG); //Read the byte but do nothing with it
+    readRegister(AS7265X_READ_REG); //Read the byte but do nothing with it
   }
 
   //Wait for WRITE flag to clear

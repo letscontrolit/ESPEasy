@@ -17,6 +17,7 @@
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
+// 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
 // 2022-08-05 tonhuisman: Remove [TESTING] tag, Improvement: INIT, 10/sec and READ events now return false if errors occur during processing
 // 2022-06-17 tonhuisman: Remove I2C address selector, as there is nothing to choose...
 //   Clean up source, avoid (memory) inefficient code

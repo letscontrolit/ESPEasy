@@ -285,7 +285,7 @@ void transformValue(
               maskChar = tempValueFormat[1];
             }
 
-            if (value == F("0")) {
+            if (value.equals(F("0"))) {
               value = String();
             } else {
               const int valueLength = value.length();
