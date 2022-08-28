@@ -69,8 +69,6 @@ bool P109_data_struct::plugin_webform_save(struct EventStruct *event) {
  * Initialize plugin
  *************************************************************************/
 bool P109_data_struct::plugin_init(struct EventStruct *event) {
-  bool success = false;
-
   _lastWiFiState = P109_WIFI_STATE_UNSET;
 
   // Load the custom settings from flash
@@ -93,12 +91,14 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   }
 
   if (nullptr == _display) {
-    return success; // Premature exit
+    return false;   // Premature exit
   }
   _display->init(); // call to local override of init function
   _display->displayOn();
 
   OLedSetContrast(_display, P109_CONFIG_CONTRAST);
+
+  # ifndef LIMIT_BUILD_SIZE
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String logstr = F("Thermo : Btn L:");
@@ -109,6 +109,7 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
     logstr += CONFIG_PIN3;
     addLogMove(LOG_LEVEL_INFO, logstr);
   }
+  # endif // ifndef LIMIT_BUILD_SIZE
 
   for (uint8_t pin = 0; pin < 3; pin++) {
     if (validGpio(PIN(pin))) {
@@ -169,29 +170,23 @@ bool P109_data_struct::plugin_init(struct EventStruct *event) {
   _display->display();
   _initialized = true;
 
-  success = true;
-
-  return success;
+  return _initialized;
 }
 
 /**************************************************************************
  * De-initialize, pre-destructor
  *************************************************************************/
 bool P109_data_struct::plugin_exit(struct EventStruct *event) {
-  bool success = true;
-
   // TODO: Add 'clear on exit' option?
   _initialized = false;
 
-  return success;
+  return true;
 }
 
 /**************************************************************************
  * Check button state
  *************************************************************************/
 bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  bool success = false;
-
   if (_initialized) {
     uint32_t current_time;
 
@@ -275,15 +270,13 @@ bool P109_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     }
   }
 
-  return success;
+  return _initialized;
 }
 
 /**************************************************************************
  * Update display
  *************************************************************************/
 bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
-  bool success = false;
-
   if (_initialized) {
     if (_display && display_wifibars()) {
       // WiFi symbol was updated.
@@ -322,17 +315,14 @@ bool P109_data_struct::plugin_once_a_second(struct EventStruct *event) {
       }
       addLog(LOG_LEVEL_INFO, F("Thermo : Save UserVars to SPIFFS"));
     }
-    success = true;
   }
-  return success;
+  return _initialized;
 }
 
 /**************************************************************************
  * Handle data
  *************************************************************************/
 bool P109_data_struct::plugin_read(struct EventStruct *event) {
-  bool success = false;
-
   if (_initialized) {
     //      Update display
     display_header();
@@ -368,10 +358,8 @@ bool P109_data_struct::plugin_read(struct EventStruct *event) {
     display_timeout();
 
     _display->display();
-
-    success = true;
   }
-  return success;
+  return _initialized;
 }
 
 /**************************************************************************
@@ -379,47 +367,54 @@ bool P109_data_struct::plugin_read(struct EventStruct *event) {
  *************************************************************************/
 bool P109_data_struct::plugin_write(struct EventStruct *event,
                                     String            & string) {
-  bool   success    = false;
-  String command    = parseString(string, 1);
-  String subcommand = parseString(string, 2);
+  bool   success = false;
+  String command = parseString(string, 1);
 
   if (_initialized) {
-    if (command == F("oledframedcmd")) {
+    String subcommand = parseString(string, 2);
+
+    if (command.equals(F("oledframedcmd"))) {
       success = true;
 
-      if (subcommand == F("off")) {
+      if (subcommand.equals(F("off"))) {
         OLedSetContrast(_display, OLED_CONTRAST_OFF);
       }
-      else if (subcommand == F("on")) {
+      else if (subcommand.equals(F("on"))) {
         _display->displayOn();
       }
-      else if (subcommand == F("low")) {
+      else if (subcommand.equals(F("low"))) {
         OLedSetContrast(_display, OLED_CONTRAST_LOW);
       }
-      else if (subcommand == F("med")) {
+      else if (subcommand.equals(F("med"))) {
         OLedSetContrast(_display, OLED_CONTRAST_MED);
       }
-      else if (subcommand == F("high")) {
+      else if (subcommand.equals(F("high"))) {
         OLedSetContrast(_display, OLED_CONTRAST_HIGH);
+      } else {
+        success = false;
       }
-      SendStatus(event, F("\nOk")); // Will cause duplicate Ok message
     }
 
-    if (command == F("thermo")) {
+    if (!success && command.equals(F("thermo"))) {
       success = true;
       String par1 = parseString(string, 3);
 
-      if (subcommand == F("setpoint")) {
+      if (subcommand.equals(F("setpoint"))) {
         setSetpoint(par1);
       }
-      else if (subcommand == F("heating")) {
+      else if (subcommand.equals(F("heating"))) {
         setHeater(par1);
         _changed = 1;
       }
-      else if (subcommand == F("mode")) {
+      else if (subcommand.equals(F("mode"))) {
         setMode(par1, parseString(string, 4));
+      } else {
+        success = false;
       }
-      SendStatus(event, F("\nOk")); // Will cause duplicate Ok message
+    }
+
+    if (success) {
+      SendStatus(event, F("\nOk")); // FIXME: Will cause duplicate Ok message, why?
     }
   }
   return success;
@@ -457,11 +452,7 @@ void P109_data_struct::display_time() {
   String newString = parseTemplate(dtime);
 
   _display->setTextAlignment(TEXT_ALIGN_LEFT);
-  _display->setFont(getDialog_plain_12());
-  _display->setColor(BLACK);
-  _display->fillRect(0, 0, 28, 13);
-  _display->setColor(WHITE);
-  _display->drawString(0, 0, newString.substring(0, 5));
+  displayBigText(0, 0, 28, 13, getDialog_plain_12(), 0, 0, newString.substring(0, 5));
 }
 
 /**
@@ -469,11 +460,7 @@ void P109_data_struct::display_time() {
  */
 void P109_data_struct::display_title(const String& title) {
   _display->setTextAlignment(TEXT_ALIGN_CENTER);
-  _display->setFont(getDialog_plain_12());
-  _display->setColor(BLACK);
-  _display->fillRect(0, 0, 128, 15); // Underscores use an extra line, clear also.
-  _display->setColor(WHITE);
-  _display->drawString(64, 0, title);
+  displayBigText(0, 0, 128, 15, getDialog_plain_12(), 64, 0, title);
 }
 
 /**
@@ -540,12 +527,9 @@ void P109_data_struct::display_current_temp() {
     atemp = (round(atemp * 10.0f)) / 10.0f;
 
     if (_prev_temp != atemp) {
-      _display->setColor(BLACK);
-      _display->fillRect(3, 19, 47, 25);
-      _display->setColor(WHITE);
       tmpString = toString(atemp, 1);
-      _display->setFont(getArialMT_Plain_24());
-      _display->drawString(3, 19, tmpString.substring(0, 5));
+      displayBigText(3, 19, 47, 25, getArialMT_Plain_24(), 3, 19, tmpString.substring(0, 5));
+
       _prev_temp = atemp;
     }
   }
@@ -558,13 +542,10 @@ void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
   if (UserVar[_varIndex + 2] == 1) {
     float stemp = (round(UserVar[_varIndex] * 10.0f)) / 10.0f;
 
-    if ((_prev_setpoint != stemp) || (force == 1)) {
-      _display->setColor(BLACK);
-      _display->fillRect(86, 35, 41, 21);
-      _display->setColor(WHITE);
+    if ((!essentiallyEqual(_prev_setpoint, stemp)) || (force == 1)) {
       String tmpString = toString(stemp, 1);
-      _display->setFont(getDialog_plain_18());
-      _display->drawString(86, 35, tmpString.substring(0, 5));
+      displayBigText(86, 35, 41, 21, getDialog_plain_18(), 86, 35, tmpString.substring(0, 5));
+
       _prev_setpoint = stemp;
       _changed       = 1;
     }
@@ -577,6 +558,7 @@ void P109_data_struct::display_setpoint_temp(const uint8_t& force) {
 void P109_data_struct::display_timeout() {
   if (UserVar[_varIndex + 2] == 2) {
     if (_prev_timeout >= (UserVar[_varIndex + 3] + 60.0f)) {
+      // TODO: Start
       float  timeinmin = UserVar[_varIndex + 3] / 60.0f;
       String thour     = toString((static_cast<int>(timeinmin / 60.0f)), 0);
       thour += ':';
@@ -586,11 +568,11 @@ void P109_data_struct::display_timeout() {
         thour += '0';
       }
       thour += thour2;
-      _display->setColor(BLACK);
-      _display->fillRect(86, 35, 41, 21);
-      _display->setColor(WHITE);
-      _display->setFont(getDialog_plain_18());
-      _display->drawString(86, 35, thour.substring(0, 5));
+
+      // TODO: replace above lines after merge of: https://github.com/letscontrolit/ESPEasy/pull/4184
+      // String thour = minutesToHourColonMinute(static_cast<int>(UserVar[_varIndex + 3] / 60.0f));
+      displayBigText(86, 35, 41, 21, getDialog_plain_18(), 86, 35, thour.substring(0, 5));
+
       _prev_timeout = UserVar[_varIndex + 3];
     }
   }
@@ -614,13 +596,25 @@ void P109_data_struct::display_mode() {
         tmpString = 'M';
         break;
     }
-    _display->setColor(BLACK);
-    _display->fillRect(61, 49, 12, 17);
-    _display->setColor(WHITE);
-    _display->setFont(getArialMT_Plain_16());
-    _display->drawString(61, 49, tmpString.substring(0, 5));
+    displayBigText(61, 49, 12, 17, getArialMT_Plain_16(), 61, 49, tmpString.substring(0, 5));
+
     _prev_mode = UserVar[_varIndex + 2];
   }
+}
+
+void P109_data_struct::displayBigText(int16_t       x1,
+                                      int16_t       y1,
+                                      int16_t       w1,
+                                      int16_t       h1,
+                                      const char   *font,
+                                      int16_t       x2,
+                                      int16_t       y2,
+                                      const String& text) {
+  _display->setColor(BLACK);
+  _display->fillRect(x1, y1, w1, h1);
+  _display->setColor(WHITE);
+  _display->setFont(font);
+  _display->drawString(x2, y2, text);
 }
 
 /**
@@ -644,9 +638,6 @@ void P109_data_struct::display_heat() {
  */
 void P109_data_struct::display_page() {
   // init with full clear
-  _display->setColor(BLACK);
-  _display->fillRect(0, 15, 128, 49);
-  _display->setColor(WHITE);
 
   _prev_temp     = P109_TEMP_STATE_UNSET;
   _prev_setpoint = P109_SETPOINT_STATE_UNSET;
@@ -654,12 +645,11 @@ void P109_data_struct::display_page() {
   _prev_mode     = P109_MODE_STATE_UNSET;
   _prev_timeout  = P109_TIMEOUT_STATE_UNSET;
 
-  _display->setFont(getDialog_plain_12());
-  _display->setTextAlignment(TEXT_ALIGN_LEFT);
   String tstr      = F("{D}C");
   String newString = parseTemplate(tstr);
 
-  _display->drawString(18, 46, newString.substring(0, 5));
+  _display->setTextAlignment(TEXT_ALIGN_LEFT);
+  displayBigText(0, 15, 128, 49, getDialog_plain_12(), 18, 46, newString.substring(0, 5));
 
   display_heat();
 
@@ -715,7 +705,7 @@ void P109_data_struct::setHeatRelay(const uint8_t& state) {
  * Change the heater state and update the display
  */
 void P109_data_struct::setHeater(const String& heater) {
-  if ((heater.charAt(0) == '1') || (heater == F("on")) ||
+  if ((heater.charAt(0) == '1') || (heater.equals(F("on"))) ||
       ((heater.length() == 0) && (UserVar[_varIndex + 1] == 0))) {
     UserVar[_varIndex + 1] = 1;
     setHeatRelay(HIGH);

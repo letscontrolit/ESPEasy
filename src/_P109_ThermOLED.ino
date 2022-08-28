@@ -40,10 +40,13 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
-   2022-06-17 tonhuisman: Optimizations
-   2022-06-18 tonhuisman: More optimizations, use #defines where appropriate
+   2022-08-28 tonhuisman: Changelog reversed order to newest on top
+                          Deduplicate code for displaying text on display
    2022-06-18 tonhuisman: Enable multi-instance use, implement OLed_helper functions,
                           remove P109/Plugin_109 prefixes on variables and methods where appropriate
+   2022-06-18 tonhuisman: More optimizations, use #defines where appropriate
+   2022-06-17 tonhuisman: Optimizations
+   No older changelog recorded.
  */
 
 # define PLUGIN_109
@@ -106,6 +109,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
       string  = F("Btn L: ");
@@ -122,6 +126,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
+    # endif // ifndef LIMIT_BUILD_SIZE
 
     case PLUGIN_WEBFORM_LOAD:
     {

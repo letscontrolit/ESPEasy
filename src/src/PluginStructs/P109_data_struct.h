@@ -104,6 +104,14 @@ private:
   void setHeater(const String& heater);
   void setMode(const String& amode,
                const String& atimeout);
+  void displayBigText(int16_t       x1,
+                      int16_t       y1,
+                      int16_t       w1,
+                      int16_t       h1,
+                      const char   *font,
+                      int16_t       x2,
+                      int16_t       y2,
+                      const String& text);
 };
 
 #endif // ifdef USES_P109
