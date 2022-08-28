@@ -28,10 +28,10 @@ bool remoteConfig(struct EventStruct *event, const String& string)
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command == F("config"))
+  if (command.equals(F("config")))
   {
     // Command: "config,task,<taskname>,<actual Set Config command>"
-    if (parseString(string, 2) == F("task"))
+    if (parseString(string, 2).equals(F("task")))
     {
       String configTaskName = parseStringKeepCase(string, 3);
 
