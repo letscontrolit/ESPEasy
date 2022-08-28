@@ -121,7 +121,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view == F("sensorupdate")) {
+    if (view.equals(F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
@@ -196,6 +196,10 @@ void handle_json()
         LabelType::PSRAM_MIN_FREE,
         LabelType::PSRAM_MAX_FREE_BLOCK,
         #endif // BOARD_HAS_PSRAM
+    #endif // ifdef ESP32
+        LabelType::ESP_CHIP_MODEL,
+    #ifdef ESP32
+        LabelType::ESP_CHIP_REVISION,
     #endif // ifdef ESP32
 
         LabelType::SUNRISE,

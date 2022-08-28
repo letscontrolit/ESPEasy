@@ -570,41 +570,41 @@ boolean Plugin_109(byte function, struct EventStruct *event, String& string)
       String logstr;
 
       if (Plugin_109_init) {
-        if (command == F("oledframedcmd"))
+        if (command.equals(F("oledframedcmd")))
         {
           success = true;
 
-          if (subcommand == F("off")) {
+          if (subcommand.equals(F("off"))) {
             P109_setContrast(P109_CONTRAST_OFF);
           }
-          else if (subcommand == F("on")) {
+          else if (subcommand.equals(F("on"))) {
             P109_display->displayOn();
           }
-          else if (subcommand == F("low")) {
+          else if (subcommand.equals(F("low"))) {
             P109_setContrast(P109_CONTRAST_LOW);
           }
-          else if (subcommand == F("med")) {
+          else if (subcommand.equals(F("med"))) {
             P109_setContrast(P109_CONTRAST_MED);
           }
-          else if (subcommand == F("high")) {
+          else if (subcommand.equals(F("high"))) {
             P109_setContrast(P109_CONTRAST_HIGH);
           }
           logstr = F("\nOk");
           SendStatus(event, logstr);
         }
 
-        if (command == F("thermo"))
+        if (command.equals(F("thermo")))
         {
           success = true;
           String par1 = parseString(string, 3);
 
-          if (subcommand == F("setpoint")) {
+          if (subcommand.equals(F("setpoint"))) {
             P109_setSetpoint(par1);
           }
-          else if (subcommand == F("heating")) {
+          else if (subcommand.equals(F("heating"))) {
             P109_setHeater(par1); Plugin_109_changed = 1;
           }
-          else if (subcommand == F("mode")) {
+          else if (subcommand.equals(F("mode"))) {
             P109_setMode(par1, parseString(string, 4));
           }
           logstr = F("\nOk");
@@ -910,10 +910,10 @@ void P109_setHeatRelay(byte state) {
 }
 
 void P109_setHeater(String heater) {
-  if ((heater == F("1")) || (heater == F("on"))) {
+  if ((heater.equals(F("1"))) || (heater.equals(F("on")))) {
     UserVar[Plugin_109_varindex + 1] = 1;
     P109_setHeatRelay(HIGH);
-  } else if ((heater == F("0")) || (heater == F("off"))) {
+  } else if ((heater.equals(F("0"))) || (heater.equals(F("off")))) {
     UserVar[Plugin_109_varindex + 1] = 0;
     P109_setHeatRelay(LOW);
   } else if (UserVar[Plugin_109_varindex + 1] == 0) {
@@ -927,16 +927,16 @@ void P109_setHeater(String heater) {
 }
 
 void P109_setMode(String amode, String atimeout) {
-  if ((amode == F("0")) || (amode == F("x"))) {
+  if ((amode.equals(F("0"))) || (amode.equals(F("x")))) {
     UserVar[Plugin_109_varindex + 2] = 0;
     P109_setHeater(F("0"));
     P109_display->setColor(BLACK);
     P109_display->fillRect(86, 35, 41, 21);
     Plugin_109_prev_setpoint = 0;
-  } else if ((amode == F("1")) || (amode == F("a"))) {
+  } else if ((amode.equals(F("1"))) || (amode.equals(F("a")))) {
     UserVar[Plugin_109_varindex + 2] = 1;
     P109_display_setpoint_temp(1);
-  } else if ((amode == F("2")) || (amode == F("m"))) {
+  } else if ((amode.equals(F("2"))) || (amode.equals(F("m")))) {
     UserVar[Plugin_109_varindex + 2] = 2;
     UserVar[Plugin_109_varindex + 3] = (atimeout.toFloat() * 60);
     Plugin_109_prev_timeout          = 32768;

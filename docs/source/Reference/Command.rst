@@ -653,6 +653,8 @@ P095 :ref:`P095_page`
 
 .. include:: ../Plugin/P095_commands.repl
 
+See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
+
 P099 :ref:`P099_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -670,12 +672,17 @@ P104 :ref:`P104_page`
 
 .. include:: ../Plugin/P104_commands.repl
 
-
-
 P115 :ref:`P115_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P115_commands.repl
+
+P116 :ref:`P116_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P116_commands.repl
+
+See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
 
 P117 :ref:`P117_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -707,7 +714,27 @@ P129 :ref:`P129_page`
 
 .. include:: ../Plugin/P129_commands.repl
 
+P131 :ref:`P131_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P131_commands.repl
+
+See also the :ref:`AdafruitGFX Helper commands <AdafruitGFX Helper commands>`, below.
+
 P137 :ref:`P137_page`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. include:: ../Plugin/P137_commands.repl
+
+
+.. .. *** Insert regular plugin commands above this remark! ***
+
+.. _AdafruitGFX Helper commands:
+
+AdafruitGFX Helper commands
+---------------------------
+
+For all displays that use the AdafruitGFX Helper, these commands are available in addition to the display-specific commands:
+
+.. include:: ../Plugin/AdaGFX_commands.repl
+

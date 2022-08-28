@@ -90,7 +90,7 @@ boolean Plugin_033(uint8_t function, struct EventStruct *event, String& string)
     {
       String command = parseString(string, 1);
 
-      if (command == F("dummyvalueset"))
+      if (command.equals(F("dummyvalueset")))
       {
         if (event->Par1 == event->TaskIndex + 1) // make sure that this instance is the target
         {
