@@ -285,6 +285,8 @@ bool P135_data_struct::plugin_write(struct EventStruct *event,
         }
         factoryResetCode.clear();
       }
+
+      // scd4x,setfrc,co2level : Correct the current level reference to this, externally determined, co2level
     } else if ((sub.equals(F("setfrc"))) && (event->Par2 >= 400) &&
                (((_sensorType == scd4x_sensor_type_e::SCD4x_SENSOR_SCD40) && (event->Par2 <= 2000)) ||
                 ((_sensorType == scd4x_sensor_type_e::SCD4x_SENSOR_SCD41) && (event->Par2 <= 5000)))) {
