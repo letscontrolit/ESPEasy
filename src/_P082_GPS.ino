@@ -676,7 +676,7 @@ void P082_html_show_stats(struct EventStruct *event) {
     return;
   }
   addRowLabel(F("Fix"));
-  addHtmlInt(P082_data->hasFix(P082_TIMEOUT));
+  addEnabled(P082_data->hasFix(P082_TIMEOUT));
 
   addRowLabel(F("Fix Quality"));
 
@@ -721,7 +721,7 @@ void P082_html_show_stats(struct EventStruct *event) {
 
   if (P082_data->getDateTime(dateTime, age, pps_sync)) {
     dateTime = node_time.addSeconds(dateTime, (age / 1000), false);
-    addHtml(ESPEasy_time::getDateTimeString(dateTime));
+    addHtml(formatDateTimeString(dateTime));
   } else {
     addHtml('-');
   }

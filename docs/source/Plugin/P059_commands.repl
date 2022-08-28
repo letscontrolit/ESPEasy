@@ -1,0 +1,9 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``encwrite,<count>>``
+    ","
+    | Set the **Counter** value, and generate an event for it, as if a pulse was received.
+    "

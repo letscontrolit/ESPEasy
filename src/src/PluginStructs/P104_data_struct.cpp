@@ -5,7 +5,7 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Numerical.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
@@ -333,7 +333,7 @@ void P104_data_struct::loadSettings() {
     while (zoneIndex < expectedZones) {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
-      if (zones[zoneIndex].text == F("\"\"")) { // Special case
+      if (zones[zoneIndex].text.equals(F("\"\""))) { // Special case
         zones[zoneIndex].text.clear();
       }
 
