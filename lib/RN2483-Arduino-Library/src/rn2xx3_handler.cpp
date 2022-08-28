@@ -9,13 +9,18 @@ rn2xx3_handler::rn2xx3_handler(Stream& serial) : _serial(serial)
   clearSerialBuffer();
 }
 
+String rn2xx3_handler::sendRawCommand(const __FlashStringHelper* command)
+{
+  return sendRawCommand(String(command));
+}
+
 String rn2xx3_handler::sendRawCommand(const String& command)
 {
   unsigned long timer = millis();
 
   if (!prepare_raw_command(command)) {
     setLastError(F("sendRawCommand: Prepare fail"));
-    return "";
+    return emptyString;
   }
 
   if (wait_command_finished() == RN_state::timeout) {
@@ -272,14 +277,14 @@ bool rn2xx3_handler::init()
   // Switch off automatic replies, because this library can not
   // handle more than one mac_rx per tx. See RN2483 datasheet,
   // 2.4.8.14, page 27 and the scenario on page 19.
-  setAutomaticReply(false);
+  setAutomaticReply(true);
 
   // Semtech and TTN both use a non default RX2 window freq and SF.
   // Maybe we should not specify this for other networks.
-  // if (_moduleType == RN2xx3_datatypes::Model::RN2483)
-  // {
-  //   set2ndRecvWindow(3, 869525000);
-  // }
+  if (_moduleType == RN2xx3_datatypes::Model::RN2483)
+  {
+    setFrequencyPlan(_fp, _rx2_frequency);
+  }
   // Disabled for now because an OTAA join seems to work fine without.
 
   if (_asyncMode) {
@@ -365,6 +370,16 @@ bool rn2xx3_handler::initABP(const String& devAddr, const String& AppSKey, const
   _otaa    = false;
   return init();
 }
+
+RN2xx3_datatypes::TX_return_type rn2xx3_handler::txCommand(
+    const __FlashStringHelper* command, 
+    const String& data, 
+    bool shouldEncode, 
+    uint8_t port)
+{
+  return txCommand(String(command), data, shouldEncode, port);
+}
+
 
 RN2xx3_datatypes::TX_return_type rn2xx3_handler::txCommand(const String& command, const String& data, bool shouldEncode, uint8_t port)
 {
@@ -506,7 +521,7 @@ void rn2xx3_handler::setLastUsedJoinMode(bool isOTAA) {
   }
 }
 
-bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
+bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp, uint32_t rx2_freq)
 {
   bool returnValue = false;
 
@@ -516,9 +531,11 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
     {
       if (_moduleType == RN2xx3_datatypes::Model::RN2483)
       {
+        if (rx2_freq == 0)
+          rx2_freq = 869525000;
         // mac set rx2 <dataRate> <frequency>
         // set2ndRecvWindow(5, 868100000); //use this for "strict" one channel gateways
-        set2ndRecvWindow(3, 869525000); // use for "non-strict" one channel gateways
+        set2ndRecvWindow(3, rx2_freq); // use for "non-strict" one channel gateways
         setChannelDutyCycle(0, 99);     // 1% duty cycle for this channel
         setChannelDutyCycle(1, 65535);  // almost never use this channel
         setChannelDutyCycle(2, 65535);  // almost never use this channel
@@ -571,7 +588,10 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
         }
 
         // RX window 2
-        set2ndRecvWindow(3, 869525000);
+        if (rx2_freq == 0)
+          rx2_freq = 869525000;
+
+        set2ndRecvWindow(3, rx2_freq);
 
         returnValue = true;
       }
@@ -624,6 +644,7 @@ bool rn2xx3_handler::setFrequencyPlan(RN2xx3_datatypes::Freq_plan fp)
     }
   }
   _fp = fp;
+  _rx2_frequency = rx2_freq;
 
   return returnValue;
 }
@@ -708,6 +729,11 @@ String rn2xx3_handler::getLastError()
 
   _lastError = "";
   return res;
+}
+
+void rn2xx3_handler::setLastError(const __FlashStringHelper* error)
+{
+  setLastError(String(error));
 }
 
 void rn2xx3_handler::setLastError(const String& error)
@@ -1207,12 +1233,22 @@ void rn2xx3_handler::handle_reply_received() {
   }
 }
 
+int rn2xx3_handler::readIntValue(const __FlashStringHelper* command)
+{
+  return readIntValue(String(command));
+}
+
 int rn2xx3_handler::readIntValue(const String& command)
 {
   String value = sendRawCommand(command);
 
   value.trim();
   return value.toInt();
+}
+
+bool rn2xx3_handler::readUIntMacGet(const __FlashStringHelper* param, uint32_t& value)
+{
+  return readUIntMacGet(String(param), value);
 }
 
 bool rn2xx3_handler::readUIntMacGet(const String& param, uint32_t& value)
@@ -1232,6 +1268,11 @@ bool rn2xx3_handler::readUIntMacGet(const String& param, uint32_t& value)
   return true;
 }
 
+bool rn2xx3_handler::sendMacSet(const __FlashStringHelper* param, const String& value)
+{
+  return sendMacSet(String(param), value);
+}
+
 bool rn2xx3_handler::sendMacSet(const String& param, const String& value)
 {
   String command;
@@ -1249,7 +1290,7 @@ bool rn2xx3_handler::sendMacSet(const String& param, const String& value)
   return RN2xx3_received_types::determineReceivedDataType(sendRawCommand(command)) == RN2xx3_received_types::ok;
 }
 
-bool rn2xx3_handler::sendMacSetEnabled(const String& param, bool enabled)
+bool rn2xx3_handler::sendMacSetEnabled(const __FlashStringHelper* param, bool enabled)
 {
   return sendMacSet(param, enabled ? F("on") : F("off"));
 }
@@ -1271,6 +1312,14 @@ bool rn2xx3_handler::sendMacSetCh(const String& param, unsigned int channel, uin
 {
   return sendMacSetCh(param, channel, String(value));
 }
+
+bool rn2xx3_handler::sendMacSetCh(const __FlashStringHelper* param,
+                    unsigned int  channel,
+                    uint32_t      value)
+{
+  return sendMacSetCh(String(param), channel, String(value));
+}
+
 
 bool rn2xx3_handler::setChannelDutyCycle(unsigned int channel, unsigned int dutyCycle)
 {
@@ -1394,7 +1443,7 @@ bool rn2xx3_handler::check_set_keys()
       {
         // The default address to use on TTN if no address is defined.
         // This one falls in the "testing" address space.
-        _devaddr = F("03FFBEEF");
+        _devaddr = F("00000000");
       }
     }
     return true;
