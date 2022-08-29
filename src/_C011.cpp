@@ -201,7 +201,6 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c011_delay_queue(int controller_number, const C011_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  WiFiClient client;
 
   if (!NetworkConnected()) { return false; }
 
@@ -211,7 +210,6 @@ bool do_process_c011_delay_queue(int controller_number, const C011_queue_element
     controller_number,
     ControllerSettings,
     element.controller_idx,
-    client,
     element.uri,
     element.HttpMethod,
     element.header,

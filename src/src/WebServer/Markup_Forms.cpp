@@ -1,6 +1,6 @@
 #include "../WebServer/Markup_Forms.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -766,7 +766,7 @@ bool isFormItemChecked(const __FlashStringHelper * id)
 
 bool isFormItemChecked(const String& id)
 {
-  return webArg(id) == F("on");
+  return webArg(id).equals(F("on"));
 }
 
 bool isFormItemChecked(const LabelType::Enum& id)

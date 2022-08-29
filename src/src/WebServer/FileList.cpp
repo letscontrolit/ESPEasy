@@ -1,6 +1,6 @@
 #include "../WebServer/FileList.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
@@ -330,17 +330,17 @@ void handle_SDfilelist() {
   String parent_dir;
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
-    if (web_server.argName(i) == F("delete"))
+    if (web_server.argName(i).equals(F("delete")))
     {
       fdelete = webArg(i);
     }
 
-    if (web_server.argName(i) == F("deletedir"))
+    if (web_server.argName(i).equals(F("deletedir")))
     {
       ddelete = webArg(i);
     }
 
-    if (web_server.argName(i) == F("chgto"))
+    if (web_server.argName(i).equals(F("chgto")))
     {
       change_to_dir = webArg(i);
     }

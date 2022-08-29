@@ -7,7 +7,7 @@
 
 #include "../WebServer/CustomPage.h"
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 #if FEATURE_SD
 # include <SD.h>

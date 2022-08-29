@@ -1,6 +1,6 @@
 #include "../WebServer/Log.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/404.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/JSON.h"
@@ -52,7 +52,7 @@ void handle_log_JSON() {
   String webrequest = webArg(F("view"));
   addHtml(F("{\"Log\": {"));
 
-  if (webrequest == F("legend")) {
+  if (webrequest.equals(F("legend"))) {
     addHtml(F("\"Legend\": ["));
 
     for (uint8_t i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
