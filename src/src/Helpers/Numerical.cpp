@@ -242,7 +242,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
         decPt        = true;
         detectedType = NumericalType::FloatingPoint;
       } else {
-        if (result == F("-")) {
+        if (result.equals(F("-"))) {
           detectedType = NumericalType::Not_a_number;
           return emptyString;
         }
@@ -306,7 +306,7 @@ String getNumerical(const String& tBuf, NumericalType requestedType, NumericalTy
     }
   }
 
-  if (result == F("-")) {
+  if (result.equals(F("-"))) {
     detectedType = NumericalType::Not_a_number;
     return emptyString;
   }

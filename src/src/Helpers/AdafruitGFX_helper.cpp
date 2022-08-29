@@ -1921,12 +1921,12 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
   bool   success = false;
   String command = parseString(string, 1);
 
-  if (command == F("win")) {          // win: get current window id
+  if (command.equals(F("win"))) {          // win: get current window id
     #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
     string  = getWindow();
     success = true;
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  } else if (command == F("iswin")) { // iswin: check if windows exists
+  } else if (command.equals(F("iswin"))) { // iswin: check if windows exists
     #  if ADAGFX_ENABLE_FRAMED_WINDOW // if feature enabled
     command = parseString(string, 2);
     int win = 0;
@@ -1938,39 +1938,39 @@ bool AdafruitGFX_helper::pluginGetConfigValue(String& string) {
     }
     success = true;                     // Always correct, just return 'false' if wrong
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  } else if ((command == F("width")) || // width/height: get window width or height
-             (command == F("height"))) {
+  } else if ((command.equals(F("width"))) || // width/height: get window width or height
+             (command.equals(F("height")))) {
     #  if ADAGFX_ENABLE_FRAMED_WINDOW   // if feature enabled
     uint16_t w = 0, h = 0;
     getWindowLimits(w, h);
 
-    if (command == F("width")) {
+    if (command.equals(F("width"))) {
       string = w;
     } else {
       string = h;
     }
     success = true;
     #  endif // if ADAGFX_ENABLE_FRAMED_WINDOW
-  } else if ((command == F("length")) || // length/textheight: get text length or height
-             (command == F("textheight"))) {
+  } else if ((command.equals(F("length"))) || // length/textheight: get text length or height
+             (command.equals(F("textheight")))) {
     int16_t  x1, y1;
     uint16_t w1, h1;
     String   newString = AdaGFXparseTemplate(parseStringToEndKeepCase(string, 2), 0);
     _display->getTextBounds(newString, 0, 0, &x1, &y1, &w1, &h1); // Count length and height
 
-    if (command == F("length")) {
+    if (command.equals(F("length"))) {
       string = w1;
     } else {
       string = h1;
     }
     success = true;
-  } else if (command == F("rot")) { // rot: get current rotation setting
+  } else if (command.equals(F("rot"))) { // rot: get current rotation setting
     string  = _rotation;
     success = true;
-  } else if (command == F("txs")) { // txs: get current text scaling setting
+  } else if (command.equals(F("txs"))) { // txs: get current text scaling setting
     string  = _fontscaling;
     success = true;
-  } else if (command == F("tpm")) { // tpm: get current text print mode setting
+  } else if (command.equals(F("tpm"))) { // tpm: get current text print mode setting
     string  = static_cast<int>(_textPrintMode);
     success = true;
   }

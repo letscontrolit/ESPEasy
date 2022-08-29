@@ -184,7 +184,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
         if (P_059_sensordefs.count(event->TaskIndex) != 0)
         {
             String command = parseString(string, 1);
-            if (command == F("encwrite"))
+            if (command.equals(F("encwrite")))
             {
               if (event->Par1 >= 0)
               {

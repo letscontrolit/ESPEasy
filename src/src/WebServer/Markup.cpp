@@ -559,7 +559,7 @@ void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *rtdHelpButton)
 {
   html_TR();
-  html_table_header(header, helpButton, rtdHelpButton, 225);
+  html_table_header(header, helpButton, rtdHelpButton, 300);
   html_table_header(F(""));
 }
 
@@ -861,7 +861,7 @@ void addHelpButton(const String& url, bool isRTD)
   addHtmlLink(
     F("button help"),
     makeDocLink(url, isRTD),
-    isRTD ? F("&#8505;") : F("&#10068;"));
+    isRTD ? F("i") : F("?"));
   #endif // ifndef WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 }
 

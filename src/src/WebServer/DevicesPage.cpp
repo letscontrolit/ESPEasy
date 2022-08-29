@@ -379,8 +379,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   {
     String dummy;
 
+    SaveTaskSettings(taskIndex);
     if (Device[DeviceIndex].ExitTaskBeforeSave) {
-      SaveTaskSettings(taskIndex);
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
     }
 
@@ -1326,7 +1326,7 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
 
   if (!Device[DeviceIndex].Custom && (valueCount > 0))
   {
-    int colCount = 1;
+    int colCount = 2;
     addFormSubHeader(F("Values"));
     html_end_table();
     html_table_class_normal();
