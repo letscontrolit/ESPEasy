@@ -76,14 +76,14 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
 
   float value;
 
-  if (command == F("min")) {        // [taskname#valuename.min] Lowest value seen since value reset
+  if (command.equals(F("min"))) {        // [taskname#valuename.min] Lowest value seen since value reset
     value   = getPeakLow();
     success = true;
-  } else if (command == F("max")) { // [taskname#valuename.max] Highest value seen since value reset
+  } else if (command.equals(F("max"))) { // [taskname#valuename.max] Highest value seen since value reset
     value   = getPeakHigh();
     success = true;
   } else if (command.startsWith(F("avg"))) {
-    if (command == F("avg")) { // [taskname#valuename.avg] Average value of the last N kept samples
+    if (command.equals(F("avg"))) { // [taskname#valuename.avg] Average value of the last N kept samples
       value   = getSampleAvg();
       success = true;
     } else {

@@ -1,8 +1,10 @@
 #include "../WebServer/JSON.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
+
+#include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
@@ -16,6 +18,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
@@ -118,7 +121,7 @@ void handle_json()
   {
     const String view = webArg(F("view"));
 
-    if (view == F("sensorupdate")) {
+    if (view.equals(F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
       #if FEATURE_ETHERNET
@@ -193,6 +196,10 @@ void handle_json()
         LabelType::PSRAM_MIN_FREE,
         LabelType::PSRAM_MAX_FREE_BLOCK,
         #endif // BOARD_HAS_PSRAM
+    #endif // ifdef ESP32
+        LabelType::ESP_CHIP_MODEL,
+    #ifdef ESP32
+        LabelType::ESP_CHIP_REVISION,
     #endif // ifdef ESP32
 
         LabelType::SUNRISE,
@@ -312,7 +319,7 @@ void handle_json()
                                         (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
 
           if (it->second.build) {
-            stream_next_json_object_value(F("build"), it->second.build);
+            stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
           }
 
           if (it->second.nodeType) {
@@ -521,7 +528,7 @@ void handle_nodes_list_json() {
       json_number(F("first"), String(it->first));
       json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
 
-      if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
+      if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
       json_prop(F("ip"),   it->second.ip.toString());
       json_number(F("age"), String(it->second.age));

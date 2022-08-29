@@ -31,9 +31,15 @@
 # endif // if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
+// # define P037_LIMIT_BUILD_SIZE // Only limit build size for this plugin (to be defined in Custom.h etc.)
 
 # ifndef PLUGIN_BUILD_MAX_ESP32
-#  if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE) // Leave out the fancy stuff if available flash is tight
+
+// Leave out the fancy stuff if available flash is tight
+#  if (defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)) || defined(P037_LIMIT_BUILD_SIZE)
+#   ifndef P037_LIMIT_BUILD_SIZE
+#    define P037_LIMIT_BUILD_SIZE // Use this flag exclusively in P037 sources
+#   endif // ifndef P037_LIMIT_BUILD_SIZE
 #   ifdef PLUGIN_037_DEBUG
 #    undef PLUGIN_037_DEBUG
 #   endif // ifdef PLUGIN_037_DEBUG
@@ -50,7 +56,7 @@
 //   #undef P037_JSON_SUPPORT
 //   #define P037_JSON_SUPPORT 0
 // #endif
-#  endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
+#  endif // if (defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)) || defined(P037_LIMIT_BUILD_SIZE)
 
 #  ifdef PLUGIN_DISPLAY_COLLECTION
 #   if P037_FILTER_SUPPORT
@@ -166,15 +172,16 @@ struct P037_data_struct : public PluginTaskData_base
 
   String getFullMQTTTopic(uint8_t taskValueIndex) const;
 
-  bool shouldSubscribeToMQTTtopic(const String& topic) const;
+  bool   shouldSubscribeToMQTTtopic(const String& topic) const;
 
-  bool loadSettings();
+  bool   loadSettings();
 
 private:
+
   String saveSettings();
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
-  void parseMappings();
+  void   parseMappings();
   # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   taskIndex_t _taskIndex = TASKS_MAX;
   # if P037_MAPPING_SUPPORT

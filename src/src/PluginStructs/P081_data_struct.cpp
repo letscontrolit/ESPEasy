@@ -175,7 +175,7 @@ String P081_formatExecTime(taskIndex_t taskIndex, uint8_t varNr) {
   time_t exec_time = P081_getCronExecTime(taskIndex, varNr);
 
   if (exec_time != CRON_INVALID_INSTANT) {
-    return ESPEasy_time::getDateTimeString(*gmtime(&exec_time));
+    return formatDateTimeString(*gmtime(&exec_time));
   }
   return F("-");
 }

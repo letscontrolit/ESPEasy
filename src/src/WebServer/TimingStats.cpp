@@ -2,7 +2,7 @@
 
 #if defined(WEBSERVER_TIMINGSTATS) && FEATURE_TIMING_STATS
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
@@ -44,7 +44,7 @@ void handle_timingstats() {
   addFormHeader(F("Statistics"));
   addRowLabel(F("Start Period"));
   struct tm startPeriod = node_time.addSeconds(node_time.tm, -1.0f * timespan, false);
-  addHtml(ESPEasy_time::getDateTimeString(startPeriod, '-', ':', ' ', false));
+  addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
   addRowLabelValue(LabelType::LOCAL_TIME);
   addRowLabel(F("Time span"));
   addHtmlFloat(timespan);
