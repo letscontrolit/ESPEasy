@@ -225,7 +225,6 @@ input.wide,select.wide {
 	overflow:auto 
 }
 tbody {
-	display:inline-block;
 	overflow:auto 
 }
 table.multirow th,table.normal th {
@@ -238,7 +237,8 @@ table.multirow,table.normal {
 	border-spacing:0;
 	border-style:none;
 	min-width:420px;
-	padding-bottom:5px 
+	padding-bottom:5px;
+	width:100%
 }
 table.multirow tr,table.normal td,table.normal tr {
 	padding:4px 
