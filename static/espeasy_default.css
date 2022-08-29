@@ -241,14 +241,21 @@ tbody {
 table.multirow th,
 table.multi2row th,
 table.normal th {
-	align-content:center;
 	background-color:#444;
 	border-color:silver;
 	border-width:thin;
 	color:#FFF;
 	padding:6px;
-	text-align:center;
 	width:100vw 
+}
+table.multirow th,
+table.normal th {
+	align-content:center;
+	text-align:center;
+}
+table.multi2row th{
+	align-content:flex-start;
+	text-align:left
 }
 tr td {
 	border-width:thin 
@@ -274,10 +281,10 @@ table.multirow td {
 	text-align:center 
 }
 table.multi2row td {
-	height: 30px;
-	padding: 4px;
-	align-content: flex-start;
-	text-align: left
+	height:30px;
+	padding:4px;
+	align-content:flex-start;
+	text-align:left
 }
 
 table.multirow tr:nth-child(odd),
