@@ -376,3 +376,70 @@ footer {
 		user-select:none 
    }
 }
+@media (prefers-color-scheme:dark) {
+    input,select {
+        background-color:#444 
+   }
+    h3 {
+        background-color:#2e2e2e 
+   }
+    .dotmark {
+        background-color:#eee 
+   }
+    .container2 .dotmark:after {
+        background:#fff 
+   }
+    #toastmessage {
+        background-color:#00000085;
+        color:#fff 
+   }
+    table.multirow th,table.normal th {
+        background-color:#444;
+        border-color:#545454;
+        color:#dfdfdf 
+   }
+    table.multirow td {
+        border-color:#545454 
+   }
+    table.multirow tr:nth-child(odd) {
+        background-color:#2a2c2e 
+   }
+    .highlight td {
+        background-color:#553044 
+   }
+    .note {
+        color:#7b7b7b 
+   }
+    .menu {
+        background-color:transparent;
+        color:#fff 
+   }
+    .menu.active {
+        background-color:#222;
+        border-color:transparent;
+        color:#fff 
+   }
+    .menu:hover {
+        background:#00000030;
+        color:#fff 
+   }
+    .div_r {
+        background-color:#30553d 
+   }
+    .alert,.warning {
+        color:#fff 
+   }
+    .closebtn:hover {
+        color:#000 
+   }
+    .apheader,.bodymenu,.checkmark,table.multirow tr,table.normal td,table.normal tr,tbody,textarea {
+        background-color:#222 
+   }
+    *,.closebtn,.div_r,.textarea,h1,h6,input.wide,select.wide,textarea {
+        color:#c3c3c3 
+   }
+    .button,.container input:checked~.checkmark,.headermenu {
+        background-color:#44607a 
+   }
+}
+
