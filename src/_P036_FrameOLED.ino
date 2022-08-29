@@ -1090,42 +1090,27 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 }
 
 # ifdef P036_SEND_EVENTS
+const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
+{
+  switch (eventId) {
+    case P036_EVENT_DISPLAY:   return F("display");
+    case P036_EVENT_CONTRAST:  return F("contrast");
+    case P036_EVENT_FRAME:     return F("frame");
+    case P036_EVENT_LINE:      return F("line");
+    #  ifdef P036_ENABLE_LINECOUNT
+    case P036_EVENT_LINECNT:   return F("linecount");
+    #  endif // P036_ENABLE_LINECOUNT
+  }
+  return F("");
+}
+
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
   if (Settings.UseRules) {
     String RuleEvent;
     RuleEvent.reserve(32); // Guesstimate
     RuleEvent += getTaskDeviceName(event->TaskIndex);
     RuleEvent += '#';
-
-    switch (eventId) {
-      case P036_EVENT_DISPLAY:
-      {
-        RuleEvent += F("display");
-        break;
-      }
-      case P036_EVENT_CONTRAST:
-      {
-        RuleEvent += F("contrast");
-        break;
-      }
-      case P036_EVENT_FRAME:
-      {
-        RuleEvent += F("frame");
-        break;
-      }
-      case P036_EVENT_LINE:
-      {
-        RuleEvent += F("line");
-        break;
-      }
-      #  ifdef P036_ENABLE_LINECOUNT
-      case P036_EVENT_LINECNT:
-      {
-        RuleEvent += F("linecount");
-        break;
-      }
-      #  endif // P036_ENABLE_LINECOUNT
-    }
+    RuleEvent += P36_eventId_toString(eventId);
     RuleEvent += '=';
     RuleEvent += eventValue;
     eventQueue.addMove(std::move(RuleEvent));
