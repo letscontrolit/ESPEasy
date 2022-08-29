@@ -24,6 +24,21 @@ def get_board_name():
     return env.BoardConfig().get("name").replace('"', "")
 
 
+def get_cdn_url_prefix():
+    try:
+        from pygit2 import Repository
+        import re
+        try:
+            regex = re.compile('^/tags/mega-{0}'.format(date.today().strftime("%Y%m%d")))
+            repo = Repository('.')
+            tag_today = [r for r in repo.references if regex.match(restr)][0]
+            return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@{0}/static/".format(tag_today)
+        except:
+            return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+    except ImportError:
+        return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
+
+
 def get_git_description():
     try:
         from pygit2 import Repository
@@ -67,6 +82,7 @@ def gen_compiletime_defines(node):
         + [("SET_BOARD_NAME", '\\"%s\\"' % get_board_name())]
         + [("SET_BUILD_PLATFORM", '\\"%s\\"' % platform.platform())]
         + [("SET_BUILD_GIT_HEAD", '\\"%s\\"' % get_git_description())]
+        + [("SET_BUILD_CDN_URL",  '\\"%s\\"' % get_cdn_url_prefix())]
         + [("SET_BUILD_VERSION", compute_version_date())],
         CCFLAGS=env["CCFLAGS"]
     )
@@ -80,6 +96,7 @@ print("\u001b[33m PROGNAME:       \u001b[0m  {}".format(env['PROGNAME']))
 print("\u001b[33m BOARD_NAME:     \u001b[0m  {}".format(get_board_name()))
 print("\u001b[33m BUILD_PLATFORM: \u001b[0m  {}".format(platform.platform()))
 print("\u001b[33m GIT_HEAD:       \u001b[0m  {}".format(get_git_description()))
+print("\u001b[33m CDN_URL:        \u001b[0m  {}".format(get_cdn_url_prefix()))
 print("\u001b[33m BUILD_VERSION:  \u001b[0m  {}".format(compute_version_date()))
 
 print("\u001b[32m ------------------------------- \u001b[0m")

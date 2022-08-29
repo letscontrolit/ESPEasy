@@ -86,3 +86,13 @@ const __FlashStringHelper * get_board_name() {
   return F("");
   #endif
 }
+
+const __FlashStringHelper * get_CDN_url_prefix() {
+  #ifdef CUSTOM_BUILD_CDN_URL
+    return F(CUSTOM_BUILD_CDN_URL);
+  #elif defined(SET_BUILD_CDN_URL)
+    return F(SET_BUILD_CDN_URL);
+  #else
+    return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/");
+  #endif
+}

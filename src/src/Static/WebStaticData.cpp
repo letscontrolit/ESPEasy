@@ -1,5 +1,6 @@
 #include "../Static/WebStaticData.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -8,7 +9,7 @@
 String generate_external_URL(const String& fname) {
     String url;
     url.reserve(80 + fname.length());
-    url = F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20211224/static/");
+    url = get_CDN_url_prefix();
     url += fname;
     return url;
 }
