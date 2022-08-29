@@ -544,15 +544,14 @@ bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
   if (touchObject.isEmpty()) { return false; }
   bool success = false;
 
-  int8_t objectNr = getTouchObjectIndex(event, touchObject, false);
+  int8_t  objectNr = getTouchObjectIndex(event, touchObject, false);
+  int16_t _value   = value;
 
   if ((objectNr > -1)
       && bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_ENABLED)) {
     success = true; // Always success if matched object
 
-    if (value != TouchObjects[objectNr].TouchStates) {
-      int16_t _value = value;
-
+    if (_value != TouchObjects[objectNr].TouchStates) {
       if (bitRead(TouchObjects[objectNr].flags, TOUCH_OBJECT_FLAG_SLIDER)) {
         int16_t lowRange  = 0;
         int16_t highRange = 100;
@@ -591,7 +590,7 @@ bool ESPEasy_TouchHandler::setTouchObjectValue(struct EventStruct *event,
       log += '/';
       log += objectNr;
       log += F(", new value: ");
-      log += value;
+      log += _value;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
     # endif // ifdef TOUCH_DEBUG
@@ -976,7 +975,7 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
   addFormCheckBox(F("Enable logging for calibration"), F("log_calibration"),
                   Touch_Settings.logEnabled);
 
-  addFormSubHeader(F("Touch objects"));
+  addFormSubHeader(F("Object settings"));
 
   # if TOUCH_FEATURE_EXTENDED_TOUCH
 
@@ -1067,14 +1066,28 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
   }
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
   {
-    addRowLabel(F("Object"));
+    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("debounce"),
+                      Touch_Settings.debounceMs, 0, 255);
+    addUnit(F("0..255 msec."));
+
+    # if TOUCH_FEATURE_SWIPE
+    addFormNumericBox(F("Minimal swipe movement"), F("swipemin"),
+                      Touch_Settings.swipeMinimal, 1, 25);
+    addUnit(F("1..25px"));
+
+    addFormNumericBox(F("Maximum swipe margin"), F("swipemax"),
+                      Touch_Settings.swipeMargin, 5, 250);
+    addUnit(F("5..250px"));
+    # endif // if TOUCH_FEATURE_SWIPE
+  }
+  {
+    addFormSubHeader(F("Touch objects"));
 
     {
-      # if TOUCH_FEATURE_EXTENDED_TOUCH
+      # if !TOUCH_FEATURE_EXTENDED_TOUCH
+      addRowLabel(F("Object"));
+      # endif // if !TOUCH_FEATURE_EXTENDED_TOUCH
       html_table(F("multi2row"), false); // Sub-table with alternating highlight per 2 rows
-      # else // if TOUCH_FEATURE_EXTENDED_TOUCH
-      html_table(EMPTY_STRING,   false); // Sub-table
-      # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
       html_table_header(F("&nbsp;#&nbsp;"));
       html_table_header(F("On"));
       html_table_header(F("Objectname"));
@@ -1414,21 +1427,6 @@ bool ESPEasy_TouchHandler::plugin_webform_load(struct EventStruct *event) {
       # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
     }
     html_end_table();
-  }
-  {
-    addFormNumericBox(F("Debounce delay for On/Off buttons"), F("debounce"),
-                      Touch_Settings.debounceMs, 0, 255);
-    addUnit(F("0..255 msec."));
-
-    # if TOUCH_FEATURE_SWIPE
-    addFormNumericBox(F("Minimal swipe movement"), F("swipemin"),
-                      Touch_Settings.swipeMinimal, 1, 25);
-    addUnit(F("1..25px"));
-
-    addFormNumericBox(F("Maximum swipe margin"), F("swipemax"),
-                      Touch_Settings.swipeMargin, 5, 250);
-    addUnit(F("5..250px"));
-    # endif // if TOUCH_FEATURE_SWIPE
   }
   return false;
 }
