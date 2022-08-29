@@ -840,7 +840,7 @@ void processMatchedRule(String& action, const String& event,
     }
   }
 
-  if ((lcAction == F("else")) && !fakeIfBlock) // in case of an "else" block of
+  if ((lcAction.equals(F("else"))) && !fakeIfBlock) // in case of an "else" block of
                                                // actions, set ifBranche to
                                                // false
   {
@@ -858,7 +858,7 @@ void processMatchedRule(String& action, const String& event,
 #endif // ifndef BUILD_NO_DEBUG
   }
 
-  if (lcAction == F("endif")) // conditional block ends here
+  if (lcAction.equals(F("endif"))) // conditional block ends here
   {
     if (fakeIfBlock) {
       fakeIfBlock--;

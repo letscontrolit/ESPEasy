@@ -1052,12 +1052,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       bool sendEvents = bitRead(P036_FLAGS_0, P036_FLAG_SEND_EVENTS); // Bit 28 Send Events
       # endif // ifdef P036_SEND_EVENTS
 
-      if ((command == F("oledframedcmd")) && P036_data->isInitialized()) {
-        if (subcommand == F("display")) {
+      if ((command.equals(F("oledframedcmd"))) && P036_data->isInitialized()) {
+        if (subcommand.equals(F("display"))) {
           // display functions
           String para1 = parseString(string, 3);
 
-          if (para1 == F("on")) {
+          if (para1.equals(F("on"))) {
             success                 = true;
             P036_data->displayTimer = P036_TIMER;
             P036_data->display->displayOn();
@@ -1071,7 +1071,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
           }
 
-          if (para1 == F("off")) {
+          if (para1.equals(F("off"))) {
             success                 = true;
             P036_data->displayTimer = 0;
             P036_data->display->displayOff();
@@ -1085,7 +1085,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
           }
 
-          if (para1 == F("low")) {
+          if (para1.equals(F("low"))) {
             success = true;
             P036_data->setContrast(P36_CONTRAST_LOW);
             # ifdef P036_SEND_EVENTS
@@ -1101,7 +1101,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
 
-          if (para1 == F("med")) {
+          if (para1.equals(F("med"))) {
             success = true;
             P036_data->setContrast(P36_CONTRAST_MED);
             # ifdef P036_SEND_EVENTS
@@ -1117,7 +1117,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
 
-          if (para1 == F("high")) {
+          if (para1.equals(F("high"))) {
             success = true;
             P036_data->setContrast(P36_CONTRAST_HIGH);
             # ifdef P036_SEND_EVENTS
@@ -1153,7 +1153,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
             # endif // ifdef P036_SEND_EVENTS
             P036_SetDisplayOn(1); //  Save the fact that the display is now ON
           }
-        } else if ((subcommand == F("frame")) &&
+        } else if ((subcommand.equals(F("frame"))) &&
                    (event->Par2 >= 0) &&
                    (event->Par2 <= P036_data->MaxFramesToDisplay + 1)) {
           success = true;
@@ -1180,7 +1180,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           # endif // ifdef P036_SEND_EVENTS
         }
         # ifdef P036_ENABLE_LINECOUNT
-        else if ((subcommand == F("linecount")) &&
+        else if ((subcommand.equals(F("linecount"))) &&
                  (event->Par2 >= 1) &&
                  (event->Par2 <= 4)) {
           success = true;
@@ -1198,7 +1198,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
         # endif // P036_ENABLE_LINECOUNT
         # ifdef P036_ENABLE_LEFT_ALIGN
-        else if ((subcommand == F("leftalign")) && // for compatibility
+        else if ((subcommand.equals(F("leftalign"))) &&
                  ((event->Par2 == 0) ||
                   (event->Par2 == 1))) {
           success = true;
@@ -1327,42 +1327,27 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 }
 
 # ifdef P036_SEND_EVENTS
+const __FlashStringHelper* P36_eventId_toString(uint8_t eventId)
+{
+  switch (eventId) {
+    case P036_EVENT_DISPLAY:   return F("display");
+    case P036_EVENT_CONTRAST:  return F("contrast");
+    case P036_EVENT_FRAME:     return F("frame");
+    case P036_EVENT_LINE:      return F("line");
+    #  ifdef P036_ENABLE_LINECOUNT
+    case P036_EVENT_LINECNT:   return F("linecount");
+    #  endif // P036_ENABLE_LINECOUNT
+  }
+  return F("");
+}
+
 void P036_SendEvent(struct EventStruct *event, uint8_t eventId, int16_t eventValue) {
   if (Settings.UseRules) {
     String RuleEvent;
     RuleEvent.reserve(32); // Guesstimate
     RuleEvent += getTaskDeviceName(event->TaskIndex);
     RuleEvent += '#';
-
-    switch (eventId) {
-      case P036_EVENT_DISPLAY:
-      {
-        RuleEvent += F("display");
-        break;
-      }
-      case P036_EVENT_CONTRAST:
-      {
-        RuleEvent += F("contrast");
-        break;
-      }
-      case P036_EVENT_FRAME:
-      {
-        RuleEvent += F("frame");
-        break;
-      }
-      case P036_EVENT_LINE:
-      {
-        RuleEvent += F("line");
-        break;
-      }
-      #  ifdef P036_ENABLE_LINECOUNT
-      case P036_EVENT_LINECNT:
-      {
-        RuleEvent += F("linecount");
-        break;
-      }
-      #  endif // P036_ENABLE_LINECOUNT
-    }
+    RuleEvent += P36_eventId_toString(eventId);
     RuleEvent += '=';
     RuleEvent += eventValue;
     eventQueue.addMove(std::move(RuleEvent));
