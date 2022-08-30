@@ -119,6 +119,18 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+#ifdef WEBSERVER_CSS
+  #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #endif
+    #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
+      #define EMBED_ESPEASY_AUTO_MIN_CSS
+    #endif
+  #endif
+#endif
+
+
 #ifndef PLUGIN_BUILD_CUSTOM
     #ifndef FEATURE_SSDP
         #define FEATURE_SSDP  1
@@ -432,6 +444,14 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_CSS
             #undef WEBSERVER_CSS
+        #endif
+        #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+          #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+            #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+          #endif
+          #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
+            #undef EMBED_ESPEASY_AUTO_MIN_CSS
+          #endif
         #endif
         #ifdef WEBSERVER_INCLUDE_JS
             #undef WEBSERVER_INCLUDE_JS
@@ -1876,6 +1896,12 @@ To create/register a plugin, you have to :
   #ifndef WEBSERVER_USE_CDN_JS_CSS
     #define WEBSERVER_USE_CDN_JS_CSS
   #endif
+  #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+  #endif
+  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
+    #undef EMBED_ESPEASY_AUTO_MIN_CSS
+  #endif
 
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
@@ -1985,6 +2011,12 @@ To create/register a plugin, you have to :
   #endif
   #ifdef WEBSERVER_INCLUDE_JS
     #undef WEBSERVER_INCLUDE_JS
+  #endif
+  #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+  #endif
+  #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
+    #undef EMBED_ESPEASY_AUTO_MIN_CSS
   #endif
 #endif
 
