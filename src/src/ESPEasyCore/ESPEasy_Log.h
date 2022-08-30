@@ -13,7 +13,7 @@
 #define LOG_LEVEL_DEBUG_DEV                 9 // use for testing/debugging only, not for regular use
 #define LOG_LEVEL_NRELEMENTS                5 // Update this and getLogLevelDisplayString() when new log levels are added
 #else
-#define LOG_LEVEL_NRELEMENTS                3 // Update this and getLogLevelDisplayString() when new log levels are added
+#define LOG_LEVEL_NRELEMENTS                2 // Update this and getLogLevelDisplayString() when new log levels are added
 #endif
 
 #define LOG_TO_SERIAL         1
