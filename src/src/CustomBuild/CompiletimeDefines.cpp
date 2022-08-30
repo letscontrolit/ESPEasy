@@ -93,6 +93,9 @@ const __FlashStringHelper * get_CDN_url_prefix() {
   #elif defined(SET_BUILD_CDN_URL)
     return F(SET_BUILD_CDN_URL);
   #else
-    return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/");
+    // Some fallback tag
+    // FIXME TD-er: Not sure which is better, serving the latest (which will have caching issues) or a tag which will become outdated
+    return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega-20220809/static/");
+    //return F("https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/");
   #endif
 }

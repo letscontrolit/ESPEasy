@@ -7,16 +7,32 @@
 #include "../WebServer/LoadFromFS.h"
 
 String generate_external_URL(const String& fname) {
-    String url;
-    url.reserve(80 + fname.length());
-    url = get_CDN_url_prefix();
-    url += fname;
-    return url;
+  String url;
+  url.reserve(80 + fname.length());
+  url = get_CDN_url_prefix();
+  url += fname;
+  return url;
+}
+
+void serve_CDN_CSS(const __FlashStringHelper * fname) {
+  addHtml(F("<link"));
+  addHtmlAttribute(F("rel"), F("stylesheet"));
+  addHtmlAttribute(F("type"), F("text/css"));
+  addHtmlAttribute(F("href"), generate_external_URL(fname));
+  addHtml('/', '>');
+}
+
+void serve_CDN_JS(const __FlashStringHelper * fname) {
+  addHtml(F("<script"));
+  addHtml(F(" defer"));
+  addHtmlAttribute(F("src"), generate_external_URL(fname));
+  addHtml('>');
+  html_add_script_end();
 }
 
 
 void serve_CSS() {
-  const String cssFile = F("esp.css");
+  const String cssFile(F("esp.css"));
   if (fileExists(cssFile))
   {
     addHtml(F("<style>"));
@@ -25,12 +41,7 @@ void serve_CSS() {
     return;
   }
   #ifndef WEBSERVER_CSS
-  addHtml(F("<link"));
-  addHtmlAttribute(F("rel"), F("stylesheet"));
-  addHtmlAttribute(F("type"), F("text/css"));
-  addHtmlAttribute(F("href"), generate_external_URL(F("espeasy_default.css")));
-  addHtml('/');
-  addHtml('>');
+  serve_CDN_CSS(F("espeasy_default.css"));
   #else
   addHtml(F("<style>"));
 
@@ -87,11 +98,7 @@ void serve_JS(JSfiles_e JSfile) {
     if (!fileExists(fname))
     {
         #ifndef WEBSERVER_INCLUDE_JS
-        addHtml(F("<script"));
-        addHtml(F(" defer"));
-        addHtmlAttribute(F("src"), generate_external_URL(url));
-        addHtml('>');
-        html_add_script_end();
+        serve_CDN_JS(url);
         return;
         #else
         html_add_script(true);

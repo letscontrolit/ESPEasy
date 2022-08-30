@@ -29,10 +29,23 @@ def get_cdn_url_prefix():
         from pygit2 import Repository
         import re
         try:
-            regex = re.compile('^/tags/mega-{0}'.format(date.today().strftime("%Y%m%d")))
             repo = Repository('.')
-            tag_today = [r for r in repo.references if regex.match(restr)][0]
-            return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@{0}/static/".format(tag_today)
+            try:
+                # Test to see if the current checkout is a tag
+                regex = re.compile('^refs/tags/mega-{0}'.format(repo.head.shorthand))
+                tags = [r for r in repo.references if regex.match(r)]
+                tag = tags[0]
+                tag = tag.replace('refs/tags/','@')
+                return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy{0}/static/".format(tag)
+            except:
+                # Not currently on a tag, thus use the last tag.
+                regex = re.compile('^refs/tags/mega')
+                tags = [r for r in repo.references if regex.match(r)]
+                tags.sort()
+                tags.reverse()
+                tag = tags[0]
+                tag = tag.replace('refs/tags/','@')
+                return "https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy{0}/static/".format(tag)
         except:
             return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy/static/'
     except ImportError:
