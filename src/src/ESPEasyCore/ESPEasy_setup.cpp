@@ -193,6 +193,10 @@ void ESPEasy_setup()
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
+    log += getValue(LabelType::BINARY_FILENAME);
+    log += F(", (");
+    log += get_build_origin();
+    log += F(") ");
     log += getValue(LabelType::GIT_BUILD);
     log += F(" (");
     log += getSystemLibraryString();
@@ -370,10 +374,11 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+# ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
+#endif
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();

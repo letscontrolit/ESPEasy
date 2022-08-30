@@ -20,11 +20,13 @@ String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
 }
 
 void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2) {
+  # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Serial : ");
     log += serialHelper_getGpioDescription(typeHint, config_pin1, config_pin2, " ");
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 }
 
 String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2, const String& newline) {

@@ -4,9 +4,9 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P129
 
-# ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 #  define P129_DEBUG_LOG // Enable for some (extra) logging
-# endif // ifndef LIMIT_BUILD_SIZE
+# endif
 
 # define P129_CONFIG_CHIP_COUNT       PCONFIG(0)
 # define P129_CONFIG_DATA_PIN         PIN(0)
