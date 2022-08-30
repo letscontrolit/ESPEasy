@@ -311,7 +311,7 @@ bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(const int16_t& x,
         lastObjectArea      = TouchObjects[objectNr].SurfaceAreas;
         selected            = true;
       }
-      # if defined(TOUCH_DEBUG) && !defined(BUILD_NO_DEBUG)
+      # ifdef TOUCH_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
         String log = F("TOUCH DEBUG Touched: obj: ");
@@ -338,7 +338,7 @@ bool ESPEasy_TouchHandler::isValidAndTouchedTouchObject(const int16_t& x,
         log += selected ? 'T' : 'f';
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
-      # endif // if defined(TOUCH_DEBUG) && !defined(BUILD_NO_DEBUG)
+      # endif // ifdef TOUCH_DEBUG
     }
   }
   return selected;
