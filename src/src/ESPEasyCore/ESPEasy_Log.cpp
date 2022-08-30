@@ -37,9 +37,11 @@ const __FlashStringHelper * getLogLevelDisplayString(int logLevel) {
     case LOG_LEVEL_NONE:       return F("None");
     case LOG_LEVEL_ERROR:      return F("Error");
     case LOG_LEVEL_INFO:       return F("Info");
+# ifndef BUILD_NO_DEBUG
     case LOG_LEVEL_DEBUG:      return F("Debug");
     case LOG_LEVEL_DEBUG_MORE: return F("Debug More");
     case LOG_LEVEL_DEBUG_DEV:  return F("Debug dev");
+#endif
 
     default:
     break;
@@ -51,9 +53,11 @@ const __FlashStringHelper * getLogLevelDisplayStringFromIndex(uint8_t index, int
   switch (index) {
     case 0: logLevel = LOG_LEVEL_ERROR;      break;
     case 1: logLevel = LOG_LEVEL_INFO;       break;
+# ifndef BUILD_NO_DEBUG
     case 2: logLevel = LOG_LEVEL_DEBUG;      break;
     case 3: logLevel = LOG_LEVEL_DEBUG_MORE; break;
     case 4: logLevel = LOG_LEVEL_DEBUG_DEV;  break;
+#endif
 
     default: logLevel = -1; return F("");
   }
