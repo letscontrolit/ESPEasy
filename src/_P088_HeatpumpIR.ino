@@ -178,7 +178,9 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
 
             addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR code transmitted"));
 #ifdef IR_DEBUG_PACKET
+# ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, IRPacket);
+#endif
 #endif
             if (printToWeb)
             {

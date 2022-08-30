@@ -313,7 +313,9 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
           log.reserve(24 + nextionArguments.length()); // Prevent re-allocation
           log  = F("NEXTION075 : WRITE = ");
           log += nextionArguments;
+          # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, log);
+          #endif
           SendStatus(event, log); // Reply (echo) to sender. This will print message on browser.
         }
 

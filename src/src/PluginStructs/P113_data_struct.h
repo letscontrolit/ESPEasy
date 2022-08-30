@@ -5,7 +5,9 @@
 #ifdef USES_P113
 
 # define P113_DEBUG       // Enable debugging output (INFO loglevel)
+# ifndef BUILD_NO_DEBUG
 # define P113_DEBUG_DEBUG // Enable extended debugging output (DEBUG loglevel)
+#endif
 
 # ifdef LIMIT_BUILD_SIZE
   #  ifdef P113_DEBUG_DEBUG
