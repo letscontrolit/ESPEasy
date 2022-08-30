@@ -2,9 +2,6 @@
 
 #ifdef USES_P093
 
-
-# define PLUGIN_093_DEBUG
-
 /*
  *
  * Bi-directional communication with the heat pump.
@@ -263,7 +260,9 @@ void P093_data_struct::responseReceived() {
 }
 
 void P093_data_struct::updateStatus() {
+  # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("M-AC: US: ")) + _infoModeIndex);
+  #endif
 
   uint8_t packet[PACKET_LEN] = { 0xfc, 0x42, 0x01, 0x30, 0x10 };
 
@@ -320,7 +319,9 @@ void P093_data_struct::applySettings() {
 }
 
 void P093_data_struct::connect() {
+  # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, String(F("M-AC: Connect ")) + getBaudRate());
+  #endif
 
   _serial.begin(getBaudRate(), SERIAL_8E1);
   const uint8_t buffer[] = { 0xfc, 0x5a, 0x01, 0x30, 0x02, 0xca, 0x01, 0xa8 };
@@ -346,7 +347,9 @@ void P093_data_struct::addByteToReadBuffer(uint8_t value) {
     _readBuffer[_readPos] = value;
     ++_readPos;
   } else {
+    # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("M-AC: ABTRB(0)"));
+    #endif
     _readPos = 0;
   }
 }
@@ -369,7 +372,9 @@ bool P093_data_struct::readIncommingBytes() {
       if (value == 0xfc) {
         addByteToReadBuffer(value);
       } else {
+        # ifdef PLUGIN_093_DEBUG
         addLog(LOG_LEVEL_DEBUG, String(F("M-AC: RIB(0) ")) + formatToHex(value));
+        #endif
       }
     } else if ((_readPos <= DATA_LEN_INDEX) || (_readPos <= DATA_LEN_INDEX + _readBuffer[DATA_LEN_INDEX])) {
       // Read header + data part - data length is at index 4.
@@ -410,7 +415,9 @@ bool P093_data_struct::processIncomingPacket(const uint8_t *packet, uint8_t leng
 
 bool P093_data_struct::parseValues(const uint8_t *data, size_t length) {
   if (length == 0) {
+    # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(0)"));
+    #endif
     return false;
   }
 
@@ -459,8 +466,9 @@ bool P093_data_struct::parseValues(const uint8_t *data, size_t length) {
       }
       break;
   }
-
+  # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("M-AC: PV(1)"));
+  #endif
   return false;
 }
 
@@ -470,14 +478,18 @@ P093_data_struct::State P093_data_struct::checkIncomingPacket(const uint8_t *pac
 # endif // ifdef PLUGIN_093_DEBUG
 
   if ((packet[2] != 0x01) || (packet[3] != 0x30)) {
+    # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("M-AC: CIP(0)"));
+    #endif
     return Invalid;
   }
 
   uint8_t calculatedChecksum = checkSum(packet, length);
 
   if (calculatedChecksum != checksum) {
+    # ifdef PLUGIN_093_DEBUG
     addLog(LOG_LEVEL_DEBUG, String(F("M-AC: CIP(1) ")) + calculatedChecksum);
+    #endif
     return Invalid;
   }
 
@@ -517,7 +529,7 @@ bool P093_data_struct::findByMapping(const String& mapping, const Tuple list[], 
   for (size_t index = 0; index < count; ++index) {
     const Tuple& tuple = list[index];
 
-    if (mapping == tuple.mapping) {
+    if (mapping.equals(tuple.mapping)) {
       value = tuple.value;
       return true;
     }

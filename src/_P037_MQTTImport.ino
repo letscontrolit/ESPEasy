@@ -82,7 +82,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
   } else {
     result = false;
   }
-
+# ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("MQTT: Event added: ");
 
@@ -93,6 +93,7 @@ bool P037_addEventToQueue(struct EventStruct *event, String& newEvent) {
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
+#endif
   return result;
 }
 
@@ -440,13 +441,14 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
         #   endif // P037_FILTER_PER_TOPIC
         #  endif  // if P037_JSON_SUPPORT
       }
-
+# ifndef BUILD_NO_DEBUG
       if (matchedTopic && P037_data->hasFilters() && // Single log statement
           loglevelActiveFor(LOG_LEVEL_DEBUG)) {      // Reduce standard logging
         String log = F("IMPT : MQTT filter result: ");
         log += processData ? F("true") : F("false");
         addLogMove(LOG_LEVEL_DEBUG, log);
       }
+#endif
       # endif // if P037_FILTER_SUPPORT
 
       if (!processData) { // Nothing to do? then clean up
