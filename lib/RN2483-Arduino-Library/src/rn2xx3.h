@@ -282,10 +282,12 @@ public:
 
   /*
    * Set the active channels to use.
+   * Optional rx2_freq to set/override the default frequency for RX2
+   * 
    * Returns true if setting the channels is possible.
    * Returns false if you are trying to use the wrong channels on the wrong module type.
    */
-  bool                     setFrequencyPlan(RN2xx3_datatypes::Freq_plan);
+  bool                     setFrequencyPlan(RN2xx3_datatypes::Freq_plan, uint32_t rx2_freq = 0);
 
   /*
    * Set version of TTN stack to use.

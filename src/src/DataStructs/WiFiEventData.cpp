@@ -138,7 +138,9 @@ void WiFiEventData_t::setWiFiConnected() {
 
 void WiFiEventData_t::setWiFiServicesInitialized() {
   if (!unprocessedWifiEvents() && WiFiConnected() && WiFiGotIP()) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
+    #endif
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
 

@@ -14,6 +14,7 @@ const __FlashStringHelper * get_build_origin();
 const __FlashStringHelper * get_build_platform();
 const __FlashStringHelper * get_git_head();
 const __FlashStringHelper * get_board_name();
+const __FlashStringHelper * get_CDN_url_prefix();
 
 
 #endif // CUSTOMBUILD_COMPILETIMEDEFINES_H

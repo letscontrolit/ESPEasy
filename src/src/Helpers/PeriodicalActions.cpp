@@ -497,7 +497,11 @@ void logTimerStatistics() {
     firstRun = false;
   }
 
-  uint8_t loglevel = LOG_LEVEL_DEBUG;
+# ifndef BUILD_NO_DEBUG
+  const uint8_t loglevel = LOG_LEVEL_DEBUG;
+#else
+  const uint8_t loglevel = LOG_LEVEL_NONE;
+#endif
   updateLoopStats_30sec(loglevel);
 #ifndef BUILD_NO_DEBUG
 //  logStatistics(loglevel, true);

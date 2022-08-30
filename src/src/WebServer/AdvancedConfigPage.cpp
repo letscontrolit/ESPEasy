@@ -401,6 +401,10 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
+  #ifdef BUILD_NO_DEBUG
+  if (choice > LOG_LEVEL_INFO) choice = LOG_LEVEL_INFO;
+  #endif
+
   addRowLabel(getLabel(label));
   const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
   int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };

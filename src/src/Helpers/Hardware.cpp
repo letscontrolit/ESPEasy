@@ -656,10 +656,11 @@ const __FlashStringHelper* getFlashChipMode() {
 #ifdef ESP8266
 
   switch (ESP.getFlashChipMode()) {
-    case FM_QIO:   return F("QIO");
-    case FM_QOUT:  return F("QOUT");
-    case FM_DIO:   return F("DIO");
-    case FM_DOUT:  return F("DOUT");
+    case FM_QIO:     return F("QIO");
+    case FM_QOUT:    return F("QOUT");
+    case FM_DIO:     return F("DIO");
+    case FM_DOUT:    return F("DOUT");
+    case FM_UNKNOWN: break;
   }
   return F("Unknown");
 #else // ifdef ESP8266

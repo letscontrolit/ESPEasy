@@ -539,12 +539,13 @@ void logErrorGpioOffline(const String& prefix, int port)
 void logErrorGpioOutOfRange(const String& prefix, int port, const char *Line)
 {
   logErrorGpio(prefix, port, F(" is out of range"));
-
+  # ifndef BUILD_NO_DEBUG
   if (port >= 0) {
     if (Line != nullptr) {
       addLog(LOG_LEVEL_DEBUG, Line);
     }
   }
+  #endif
 }
 
 void logErrorGpioNotOutput(const String& prefix, int port)
