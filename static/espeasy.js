@@ -128,7 +128,8 @@ var EXTRAWORDS = commonAtoms.concat(commonPlugins, commonKeywords, commonCommand
 
 var rEdit;
 function initCM() {
-  var onlongtouch;
+  //this is causing issues
+  /*var onlongtouch;
   var timer;
   var touchduration = 800; 
 
@@ -150,7 +151,7 @@ function initCM() {
   document.addEventListener("DOMContentLoaded", function (event) {
     window.addEventListener("touchstart", touchstart, false);
     window.addEventListener("touchend", touchend, false);
-  });
+  });*/
   CodeMirror.commands.autocomplete = function (cm) { cm.showHint({ hint: CodeMirror.hint.anyword }); }
   rEdit = CodeMirror.fromTextArea(document.getElementById('rules'), {
     tabSize: 2, indentWithTabs: false, lineNumbers: true, autoCloseBrackets: true,
