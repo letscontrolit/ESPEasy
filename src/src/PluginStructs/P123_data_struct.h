@@ -19,6 +19,10 @@
 #  endif // ifndef P123_LIMIT_BUILD_SIZE
 # endif // ifndef LIMIT_BUILD_SIZE
 
+# if defined(BUILD_NO_DEBUG) && defined(PLUGIN_123_DEBUG)
+#  undef PLUGIN_123_DEBUG
+# endif // if defined(BUILD_NO_DEBUG) && defined(PLUGIN_123_DEBUG)
+
 # define P123_CONFIG_DISPLAY_TASK   PCONFIG(0)
 
 # define P123_COLOR_DEPTH           PCONFIG_LONG(1)
