@@ -119,6 +119,18 @@ To create/register a plugin, you have to :
     #endif
 #endif
 
+#ifdef WEBSERVER_CSS
+  #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+    #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #endif
+    #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
+      #define EMBED_ESPEASY_AUTO_MIN_CSS
+    #endif
+  #endif
+#endif
+
+
 #ifndef PLUGIN_BUILD_CUSTOM
     #ifndef FEATURE_SSDP
         #define FEATURE_SSDP  1
@@ -432,6 +444,14 @@ To create/register a plugin, you have to :
         #endif
         #ifdef WEBSERVER_CSS
             #undef WEBSERVER_CSS
+        #endif
+        #ifndef WEBSERVER_EMBED_CUSTOM_CSS
+          #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+            #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+          #endif
+          #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
+            #undef EMBED_ESPEASY_AUTO_MIN_CSS
+          #endif
         #endif
         #ifdef WEBSERVER_INCLUDE_JS
             #undef WEBSERVER_INCLUDE_JS
@@ -1314,6 +1334,15 @@ To create/register a plugin, you have to :
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Energy"
   #endif
+  #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
+    // #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Energy plugins
+    #ifndef P036_LIMIT_BUILD_SIZE
+      #define P036_LIMIT_BUILD_SIZE // Reduce build size for P036 (FramedOLED) only
+    #endif
+    #ifndef P037_LIMIT_BUILD_SIZE
+      #define P037_LIMIT_BUILD_SIZE // Reduce build size for P037 (MQTT Import) only
+    #endif
+  #endif
    #ifndef USES_P025
      #define USES_P025   // ADS1115
    #endif
@@ -1356,7 +1385,9 @@ To create/register a plugin, you have to :
     #define PLUGIN_DESCR  "Display"
   #endif
    #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
-     #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #ifndef PLUGIN_BUILD_MAX_ESP32
+       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
+     #endif
    #endif
    #if !defined(FEATURE_SD)
      #define FEATURE_SD 1
@@ -1840,6 +1871,12 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifdef PLUGIN_BUILD_MAX_ESP32
+  #ifdef LIMIT_BUILD_SIZE
+    #undef LIMIT_BUILD_SIZE
+  #endif
+#endif
+
 // Disable some diagnostic parts to make builds fit.
 #ifdef LIMIT_BUILD_SIZE
   #ifdef WEBSERVER_TIMINGSTATS
@@ -1849,6 +1886,12 @@ To create/register a plugin, you have to :
   // Do not include large blobs but fetch them from CDN
   #ifndef WEBSERVER_USE_CDN_JS_CSS
     #define WEBSERVER_USE_CDN_JS_CSS
+  #endif
+  #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+  #endif
+  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
+    #undef EMBED_ESPEASY_AUTO_MIN_CSS
   #endif
 
   #ifndef BUILD_NO_DEBUG
@@ -1959,6 +2002,12 @@ To create/register a plugin, you have to :
   #endif
   #ifdef WEBSERVER_INCLUDE_JS
     #undef WEBSERVER_INCLUDE_JS
+  #endif
+  #ifdef EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #undef EMBED_ESPEASY_DEFAULT_MIN_CSS
+  #endif
+  #ifndef EMBED_ESPEASY_AUTO_MIN_CSS
+    #undef EMBED_ESPEASY_AUTO_MIN_CSS
   #endif
 #endif
 

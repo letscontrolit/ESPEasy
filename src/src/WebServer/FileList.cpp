@@ -330,17 +330,19 @@ void handle_SDfilelist() {
   String parent_dir;
 
   for (uint8_t i = 0; i < web_server.args(); i++) {
-    if (web_server.argName(i) == F("delete"))
+    // FIXME TD-er: This only checks for arguments in the URL, not in POST args
+    // It also takes only the last matching argument.
+    if (web_server.argName(i).equals(F("delete")))
     {
       fdelete = webArg(i);
     }
 
-    if (web_server.argName(i) == F("deletedir"))
+    if (web_server.argName(i).equals(F("deletedir")))
     {
       ddelete = webArg(i);
     }
 
-    if (web_server.argName(i) == F("chgto"))
+    if (web_server.argName(i).equals(F("chgto")))
     {
       change_to_dir = webArg(i);
     }
@@ -384,8 +386,7 @@ void handle_SDfilelist() {
   }
 
 
-  String subheader = "SD Card: " + current_dir;
-  addFormSubHeader(subheader);
+  addFormSubHeader(String(F("SD Card: ")) + current_dir);
   html_BR();
   html_table_class_multirow();
   html_table_header(F(""), 50);
