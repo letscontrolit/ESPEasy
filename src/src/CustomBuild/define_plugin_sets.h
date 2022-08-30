@@ -266,6 +266,13 @@ To create/register a plugin, you have to :
   #define CONTROLLER_SET_COLLECTION
   #define NOTIFIER_SET_COLLECTION
   #define PLUGIN_BUILD_NORMAL     // add stable
+
+  #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
+    #undef EMBED_ESPEASY_AUTO_MIN_CSS
+    #ifndef EMBED_ESPEASY_DEFAULT_MIN_CSS
+      #define EMBED_ESPEASY_DEFAULT_MIN_CSS
+    #endif
+  #endif
 #endif
 
 #ifdef PLUGIN_BUILD_COLLECTION_B
@@ -1215,6 +1222,11 @@ To create/register a plugin, you have to :
     #endif
     #ifndef NOTIFIER_SET_NONE
       #define NOTIFIER_SET_NONE
+    #endif
+    
+    // Do not include large blobs but fetch them from CDN
+    #ifndef WEBSERVER_USE_CDN_JS_CSS
+      #define WEBSERVER_USE_CDN_JS_CSS
     #endif
   #endif
 #endif
