@@ -383,9 +383,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
                                                                              // default
-          addRowLabel(F("Code - command map"));
-
-          html_table(EMPTY_STRING);
+          addHtml(F("<TR><TD colspan=\"2\">"));
+          html_table(F("sub"));
           html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Decode type"));
           html_table_header(F("Repeat"));
@@ -393,7 +392,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Alt. Decode type"));
           html_table_header(F("Repeat"));
           html_table_header(F("Alt. Code [Hex]"));
-
+          addHtml(F("</TD></TR>"));
           int rowCnt = 0;
 
           String strCode;
