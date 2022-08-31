@@ -231,6 +231,7 @@ table.multirow th,table.normal th {
 	background-color:#444;
 	color:#fff;
 	padding:6px;
+	width: 100vw
 }
 table.multirow,table.normal {
 	border-spacing:0;
@@ -253,6 +254,10 @@ table.multirow td {
 }
 table.multirow tr:nth-child(odd) {
 	background-color:#e8e8e8 
+}
+table.sub {
+    max-width:100px;
+    display:block
 }
 .highlight td {
 	background-color:#dbff0075 

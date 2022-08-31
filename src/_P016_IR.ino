@@ -393,6 +393,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Repeat"));
           html_table_header(F("Alt. Code [Hex]"));
           addHtml(F("</TD></TR>"));
+
           int rowCnt = 0;
 
           String strCode;
