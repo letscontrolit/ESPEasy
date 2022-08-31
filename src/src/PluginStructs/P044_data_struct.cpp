@@ -237,7 +237,9 @@ void P044_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t
 #elif defined(ESP32)
       P1EasySerial->begin(baud, config);
 #endif // if defined(ESP8266)
+# ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Serial opened"));
+#endif
     }
   }
   state = ParserState::WAITING;
@@ -247,7 +249,9 @@ void P044_Task::serialEnd() {
   if (nullptr != P1EasySerial) {
     delete P1EasySerial;
     P1EasySerial = nullptr;
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Serial closed"));
+#endif
   }
 }
 
@@ -275,8 +279,9 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
   if (done) {
     P1GatewayClient.print(serial_buffer);
     P1GatewayClient.flush();
-
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : data send!"));
+#endif
     blinkLED();
 
     if (Settings.UseRules)
@@ -291,7 +296,9 @@ void P044_Task::handleSerialIn(struct EventStruct *event) {
 
 bool P044_Task::handleChar(char ch) {
   if (serial_buffer.length() >= P044_DATAGRAM_MAX_SIZE - 2) { // room for cr/lf
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Buffer overflow, discarded input."));
+#endif
     state = ParserState::WAITING;                             // reset
   }
 
@@ -321,7 +328,9 @@ bool P044_Task::handleChar(char ch) {
           done = true;
         }
       } else if (ch == P044_DATAGRAM_START_CHAR) {
+# ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Start detected, discarded input."));
+#endif
         state = ParserState::WAITING; // reset
         return handleChar(ch);
       } else {
@@ -345,7 +354,9 @@ bool P044_Task::handleChar(char ch) {
 
   if (invalid) {
     // input is not a datagram char
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("P1   : Error: DATA corrupt, discarded input."));
+#endif
 
     #ifdef PLUGIN_044_DEBUG
       serialPrint(F("faulty char>"));
@@ -364,9 +375,13 @@ bool P044_Task::handleChar(char ch) {
       addChar('\r');
       addChar('\n');
     } else if (CRCcheck) {
+# ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid CRC, dropped data"));
+#endif
     } else {
+# ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("P1   : Error: Invalid datagram, dropped data"));
+#endif
     }
     state = ParserState::WAITING; // prepare for next one
   }
