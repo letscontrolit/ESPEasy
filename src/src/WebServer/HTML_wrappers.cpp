@@ -312,7 +312,7 @@ void html_add_script(bool defer) {
   if (defer) {
     addHtml(F(" defer"));
   }
-  addHtml(F('>'));
+  addHtml('>');
 }
 
 void html_add_script_end() {
