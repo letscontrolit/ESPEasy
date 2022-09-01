@@ -258,7 +258,9 @@ boolean Plugin_009(uint8_t function, struct EventStruct *event, String& string)
         // CASE 1: using SafeButton, so wait 1 more 100ms cycle to acknowledge the status change
         if (round(P009_SAFE_BTN) && (state != currentStatus.state) && (PCONFIG_LONG(3) == 0))
         {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, F("MCP :SafeButton 1st click."));
+          #endif
           PCONFIG_LONG(3) = 1;
         }
 

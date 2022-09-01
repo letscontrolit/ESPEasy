@@ -557,16 +557,16 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
     }
     sensordata[sensor_bytes_received] = '\0';
 
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    switch (i2c_response_code)
     {
-      switch (i2c_response_code)
-      {
       case 1:
       {
         #ifndef BUILD_NO_DEBUG
-        String log = F("< success, answer = ");
-        log += sensordata;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          String log = F("< success, answer = ");
+          log += sensordata;
+          addLogMove(LOG_LEVEL_DEBUG, log);
+        }
         #endif
         break;
       }
@@ -588,7 +588,6 @@ bool _P103_send_I2C_command(uint8_t I2Caddress, const String &cmd, char *sensord
         addLog(LOG_LEVEL_DEBUG, F("< no data"));
         #endif
         return false;
-      }
     }
   }
 
