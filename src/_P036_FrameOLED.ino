@@ -472,7 +472,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           uint8_t AlignmentChoice[P36_Nlines];
 
           addRowLabel(F("Line"));
-          html_table(EMPTY_STRING); // Sub-table
+          html_table(F("sub"));
           html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Content"), 500);
           html_table_header(F("Modify font"));
