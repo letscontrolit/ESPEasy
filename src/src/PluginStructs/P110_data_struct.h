@@ -7,7 +7,7 @@
 #define P110_DEBUG        // Enable debugging output (INFO loglevel)
 #define P110_DEBUG_DEBUG  // Enable extended debugging output (DEBUG loglevel)
 
-#ifdef LIMIT_BUILD_SIZE
+#ifdef BUILD_NO_DEBUG
   #ifdef P110_DEBUG_DEBUG
   #undef P110_DEBUG_DEBUG
   #endif

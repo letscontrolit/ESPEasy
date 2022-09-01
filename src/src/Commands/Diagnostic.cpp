@@ -153,7 +153,13 @@ const __FlashStringHelper * Command_logentry(struct EventStruct *event, const ch
 {
   uint8_t level = LOG_LEVEL_INFO;
   // An extra optional parameter to set log level.
-  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= LOG_LEVEL_DEBUG_MORE) { level = event->Par2; }
+  if (event->Par2 > LOG_LEVEL_NONE && event->Par2 <= 
+  # ifndef BUILD_NO_DEBUG
+    LOG_LEVEL_DEBUG_MORE
+  #else
+    LOG_LEVEL_INFO
+  #endif
+    ) { level = event->Par2; }
   addLog(level, tolerantParseStringKeepCase(Line, 2));
   return return_command_success();
 }
