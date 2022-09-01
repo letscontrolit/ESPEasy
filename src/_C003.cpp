@@ -110,12 +110,15 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
     if (line.startsWith(F("Enter your password:")))
     {
       success = true;
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_DEBUG, F("TELNT: Password request ok"));
+      #endif
     }
     delay(1);
   }
-
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: Sending pw"));
+  #endif
   client.println(getControllerPass(element.controller_idx, ControllerSettings));
   delay(100);
 
@@ -123,7 +126,9 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
     client.read();
   }
 
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: Sending cmd"));
+  #endif
   client.print(element.txt);
   delay(10);
 
@@ -131,7 +136,9 @@ bool do_process_c003_delay_queue(int controller_number, const C003_queue_element
     client.read();
   }
 
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("TELNT: closing connection"));
+  #endif
 
   client.stop();
   return success;

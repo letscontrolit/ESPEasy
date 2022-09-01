@@ -286,7 +286,9 @@ void checkUDP()
           if (static_cast<uint8_t>(packetBuffer[0]) != 255)
           {
             packetBuffer[len] = 0;
+            # ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_DEBUG, &packetBuffer[0]);
+            #endif
             ExecuteCommand_all(EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]);
           }
           else

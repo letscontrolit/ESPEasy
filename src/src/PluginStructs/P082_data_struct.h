@@ -7,7 +7,7 @@
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 # define P082_SEND_GPS_TO_LOG
 //# define P082_USE_U_BLOX_SPECIFIC // TD-er: Disabled for now, as it is not working reliable/predictable
 #endif
