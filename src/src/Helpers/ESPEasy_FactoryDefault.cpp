@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../CustomBuild/StorageLayout.h"
 
 #include "../DataStructs/ControllerSettingsStruct.h"
@@ -19,6 +20,7 @@
 
 #include "../Helpers/_CPlugin_Helper.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
@@ -27,6 +29,25 @@
  \*********************************************************************************************/
 void ResetFactory()
 {
+  #if FEATURE_CUSTOM_PROVISIONING
+  if (ResetFactoryDefaultPreference.getPreference() == 0)
+  {
+    ResetFactoryDefaultPreference.setDeviceModel(static_cast<DeviceModel>(DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL));
+    ResetFactoryDefaultPreference.fetchRulesTXT(0, DEFAULT_PROVISIONING_FETCH_RULES1);
+    ResetFactoryDefaultPreference.fetchRulesTXT(1, DEFAULT_PROVISIONING_FETCH_RULES2);
+    ResetFactoryDefaultPreference.fetchRulesTXT(2, DEFAULT_PROVISIONING_FETCH_RULES3);
+    ResetFactoryDefaultPreference.fetchRulesTXT(3, DEFAULT_PROVISIONING_FETCH_RULES4);
+    ResetFactoryDefaultPreference.fetchNotificationDat(DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS);
+    ResetFactoryDefaultPreference.fetchSecurityDat(DEFAULT_PROVISIONING_FETCH_SECURITY);
+    ResetFactoryDefaultPreference.fetchConfigDat(DEFAULT_PROVISIONING_FETCH_CONFIG);
+    ResetFactoryDefaultPreference.fetchProvisioningDat(DEFAULT_PROVISIONING_FETCH_PROVISIONING);
+    ResetFactoryDefaultPreference.saveURL(DEFAULT_PROVISIONING_SAVE_URL);
+    ResetFactoryDefaultPreference.storeCredentials(DEFAULT_PROVISIONING_SAVE_CREDENTIALS);
+    ResetFactoryDefaultPreference.allowFetchByCommand(DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND);
+  }
+  #endif
+
+
   const GpioFactorySettingsStruct gpio_settings(ResetFactoryDefaultPreference.getDeviceModel());
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ResetFactory"));
@@ -63,9 +84,9 @@ void ResetFactory()
   saveToRTC();
 
   // always format on factory reset, in case of corrupt FS
-  ESPEASY_FS.end();
+//  ESPEASY_FS.end();
   serialPrintln(F("RESET: formatting..."));
-  ESPEASY_FS.format();
+  FS_format();
   serialPrintln(F("RESET: formatting done..."));
 
   if (!ESPEASY_FS.begin())
@@ -74,15 +95,27 @@ void ResetFactory()
     return;
   }
 
+#if FEATURE_CUSTOM_PROVISIONING
+  {
+    MakeProvisioningSettings(ProvisioningSettings);
+    if (AllocatedProvisioningSettings()) {
+      ProvisioningSettings.setUser(F(DEFAULT_PROVISIONING_USER));
+      ProvisioningSettings.setPass(F(DEFAULT_PROVISIONING_PASS));
+      ProvisioningSettings.setUrl(F(DEFAULT_PROVISIONING_URL));
+      ProvisioningSettings.ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+      saveProvisioningSettings(ProvisioningSettings);
+    }
+  }
+#endif
 
   // pad files with extra zeros for future extensions
   InitFile(SettingsType::SettingsFileEnum::FILE_CONFIG_type);
   InitFile(SettingsType::SettingsFileEnum::FILE_SECURITY_type);
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   InitFile(SettingsType::SettingsFileEnum::FILE_NOTIFICATION_type);
-  #endif
+  #endif // if FEATURE_NOTIFIER
 
-  InitFile(F(FILE_RULES), 0);
+  InitFile(getRulesFileName(0), 0);
 
   Settings.clearMisc();
 
@@ -152,7 +185,7 @@ void ResetFactory()
 
   Settings.PID     = ESP_PROJECT_PID;
   Settings.Version = VERSION;
-  Settings.Build   = BUILD;
+  Settings.Build   = get_build_nr();
 
   //  Settings.IP_Octet				 = DEFAULT_IP_OCTET;
   Settings.Delay                   = DEFAULT_DELAY;
@@ -163,7 +196,7 @@ void ResetFactory()
   Settings.Pin_sd_cs               = -1;
   Settings.Pin_Reset               = DEFAULT_PIN_RESET_BUTTON;
   Settings.Protocol[0]             = DEFAULT_PROTOCOL;
-  Settings.deepSleep_wakeTime      = false;
+  Settings.deepSleep_wakeTime      = 0; // Sleep disabled
   Settings.CustomCSS               = false;
   Settings.InitSPI                 = DEFAULT_SPI;
 

@@ -1,10 +1,8 @@
-#include "ESPEasyTimeSource.h"
+#include "../DataTypes/ESPEasyTimeSource.h"
 
 #include <Arduino.h>
 
 #include "../../ESPEasy_common.h"
-
-#define ESPEASY_NOW_NAME "ESPEasy NOW"
 
 const __FlashStringHelper* toString(timeSource_t timeSource)
 {

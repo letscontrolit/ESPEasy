@@ -7,7 +7,7 @@
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef BUILD_NO_DEBUG
 # define P082_SEND_GPS_TO_LOG
 //# define P082_USE_U_BLOX_SPECIFIC // TD-er: Disabled for now, as it is not working reliable/predictable
 #endif
@@ -33,6 +33,8 @@ enum class P082_query : uint8_t {
 };
 
 const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString);
+
+P082_query Plugin_082_from_valuename(const String& valuename);
 
 
 enum class P082_PowerMode : uint8_t {

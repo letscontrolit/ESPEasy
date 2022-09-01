@@ -1,13 +1,12 @@
-#include "SettingsType.h"
+#include "../DataTypes/SettingsType.h"
 
 #include "../CustomBuild/StorageLayout.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
+#include "../DataStructs/ExtraTaskSettingsStruct.h"
 #include "../DataStructs/NotificationSettingsStruct.h"
 #include "../DataStructs/SecurityStruct.h"
-#include "../DataStructs/ControllerSettingsStruct.h"
-
-#include "../Globals/ExtraTaskSettings.h"
+#include "../DataTypes/ESPEasyFileType.h"
 #include "../Globals/Settings.h"
-
 
 const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsType) {
   switch (settingsType) {
@@ -16,7 +15,12 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
     case Enum::CustomTaskSettings_Type:        return F("CustomTaskSettings");
     case Enum::ControllerSettings_Type:        return F("ControllerSettings");
     case Enum::CustomControllerSettings_Type:  return F("CustomControllerSettings");
-    case Enum::NotificationSettings_Type:      return F("NotificationSettings");
+    case Enum::NotificationSettings_Type:      
+    #if FEATURE_NOTIFIER
+        return F("NotificationSettings");
+    #else
+        break;
+    #endif
     case Enum::SecuritySettings_Type:          return F("SecuritySettings");
     case Enum::ExtdControllerCredentials_Type: return F("ExtendedControllerCredentials");
 
@@ -79,10 +83,12 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     case Enum::NotificationSettings_Type:
     {
+#if FEATURE_NOTIFIER
       max_index   = NOTIFICATION_MAX;
       offset      = index * (DAT_NOTIFICATION_SIZE);
       max_size    = DAT_NOTIFICATION_SIZE;
       struct_size = sizeof(NotificationSettingsStruct);
+#endif
       break;
     }
     case Enum::SecuritySettings_Type:
@@ -206,9 +212,9 @@ String SettingsType::getSettingsFileName(Enum settingsType) {
 
 const __FlashStringHelper * SettingsType::getSettingsFileName(SettingsType::SettingsFileEnum file_type) {
   switch (file_type) {
-    case SettingsFileEnum::FILE_CONFIG_type:        return F(FILE_CONFIG);
-    case SettingsFileEnum::FILE_NOTIFICATION_type:  return F(FILE_NOTIFICATION);
-    case SettingsFileEnum::FILE_SECURITY_type:      return F(FILE_SECURITY);
+    case SettingsFileEnum::FILE_CONFIG_type:        return getFileName(FileType::CONFIG_DAT);
+    case SettingsFileEnum::FILE_NOTIFICATION_type:  return getFileName(FileType::NOTIFICATION_DAT);
+    case SettingsFileEnum::FILE_SECURITY_type:      return getFileName(FileType::SECURITY_DAT);
     case SettingsFileEnum::FILE_UNKNOWN_type:       break;
   }
   return F("");

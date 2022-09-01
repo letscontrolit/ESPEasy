@@ -38,7 +38,7 @@
 
 # define PLUGIN_065
 # define PLUGIN_ID_065         65
-# define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3 [TESTING]"
+# define PLUGIN_NAME_065       "Notify - DFPlayer-Mini MP3"
 # define PLUGIN_VALUENAME1_065 ""
 
 # include <ESPeasySerial.h>
@@ -141,19 +141,19 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
       int    value;
       bool   valueValid = validIntFromString(param, value);
 
-      if (valueValid && (command == F("play")))
+      if (valueValid && (command.equals(F("play"))))
       {
         Plugin_065_Play(value);
         success = true;
       }
 
-      if (command == F("stop"))
+      if (command.equals(F("stop")))
       {
         Plugin_065_SendCmd(0x0E, 0);
         success = true;
       }
 
-      if (valueValid && (command == F("vol")))
+      if (valueValid && (command.equals(F("vol"))))
       {
         if (value == 0) { value = 30; }
         PCONFIG(0) = value;
@@ -161,19 +161,19 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
 
-      if (valueValid && (command == F("eq")))
+      if (valueValid && (command.equals(F("eq"))))
       {
         Plugin_065_SetEQ(value);
         success = true;
       }
 
-      if (valueValid && (command == F("mode")))
+      if (valueValid && (command.equals(F("mode"))))
       {
         Plugin_065_SetMode(value);
         success = true;
       }
 
-      if (valueValid && (command == F("repeat")))
+      if (valueValid && (command.equals(F("repeat"))))
       {
         Plugin_065_SetRepeat(value);
         success = true;
@@ -185,7 +185,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         log  = F("MP3  : ");
         log += command;
 
-        if (command != F("stop")) {
+        if (!command.equals(F("stop"))) {
           log += '=';
           log += value;
         }

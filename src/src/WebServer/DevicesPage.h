@@ -14,6 +14,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../Helpers/_Plugin_SensorTypeHelper.h"
+#include "../Helpers/I2C_Plugin_Helper.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 
@@ -36,13 +37,14 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 // ********************************************************************************
 void handle_devicess_ShowAllTasksTable(uint8_t page);
 
+#if FEATURE_ESPEASY_P2P
 void format_originating_node(uint8_t remoteUnit);
-
+#endif
 void format_I2C_port_description(taskIndex_t x);
 
 void format_SPI_port_description(int8_t spi_gpios[3]);
 
-void format_I2C_pin_description();
+void format_I2C_pin_description(taskIndex_t x);
 
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x);
 
@@ -60,6 +62,10 @@ void devicePage_show_serial_config(taskIndex_t taskIndex);
 void devicePage_show_I2C_config(taskIndex_t taskIndex);
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+
+#if FEATURE_PLUGIN_STATS
+void devicePage_show_task_statistics(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+#endif // if FEATURE_PLUGIN_STATS
 
 void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 

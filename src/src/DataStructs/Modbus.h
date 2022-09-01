@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef USES_MODBUS
+#if FEATURE_MODBUS
 
 enum MODBUS_states_t { MODBUS_IDLE, MODBUS_RECEIVE, MODBUS_RECEIVE_PAYLOAD };
 enum MODBUS_registerTypes_t { signed16, unsigned16, signed32, unsigned32, signed64, unsigned64 };
@@ -56,29 +56,29 @@ public:
 
 private:
 
-  WiFiClient *ModbusClient;             // pointer to tcp client
-  unsigned int errcnt;
+  WiFiClient *ModbusClient = nullptr;             // pointer to tcp client
+  unsigned int errcnt = 0;
   char sendBuffer[12] =  { 0, 1, 0, 0, 0, 6, 0x7e, 4, 0x9d, 7, 0, 1 };
   #ifndef BUILD_NO_DEBUG
   String LogString;                     // for debug logging
   #endif
-  unsigned long timeout;                // send and read timeout
-  MODBUS_states_t TXRXstate;            // state for handle() state machine
-  unsigned int RXavailable;
-  unsigned int payLoad;                 // number of bytes to receive as payload. Payload may come as seperate frame.
+  unsigned long timeout = 0;                // send and read timeout
+  MODBUS_states_t TXRXstate = MODBUS_IDLE;            // state for handle() state machine
+  unsigned int RXavailable = 0;
+  unsigned int payLoad = 0;                 // number of bytes to receive as payload. Payload may come as seperate frame.
   bool hasTimeout();
-  MODBUS_registerTypes_t incomingValue; // how to interpret the incoming value
-  double result;                        // incoming value, converted to double
-  bool resultReceived;                  // incoming value is valid ?
+  MODBUS_registerTypes_t incomingValue = signed16; // how to interpret the incoming value
+  double result = 0.0;                        // incoming value, converted to double
+  bool resultReceived = false;                  // incoming value is valid ?
   bool isBusy(void) {
     return TXRXstate != MODBUS_IDLE;
   }
 
-  uint16_t currentRegister;
-  uint8_t currentFunction;
+  uint16_t currentRegister = 0;
+  uint8_t currentFunction = 0;
 };
 
 
-#endif // ifdef USES_MODBUS
+#endif // if FEATURE_MODBUS
 
 #endif // ifndef DATASTRUCTS_MODBUS_H

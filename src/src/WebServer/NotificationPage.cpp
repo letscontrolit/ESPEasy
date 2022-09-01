@@ -1,6 +1,8 @@
 #include "../WebServer/NotificationPage.h"
 
-#include "../WebServer/WebServer.h"
+#if FEATURE_NOTIFIER
+
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -20,7 +22,6 @@
 // Web Interface notifcations page
 // ********************************************************************************
 
-#ifdef USES_NOTIFIER
 
 #include "../Globals/NPlugins.h"
 
@@ -56,7 +57,7 @@ void handle_notifications() {
     }
     else
     {
-      if (Settings.Notification != 0)
+      if (Settings.Notification[notificationindex] != 0)
       {
         nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
@@ -65,8 +66,8 @@ void handle_notifications() {
           NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_SAVE, 0, dummyString);
         }
         NotificationSettings.Port                       = getFormItemInt(F("port"), 0);
-        NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), 0);
-        NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), 0);
+        NotificationSettings.Pin1                       = getFormItemInt(F("pin1"), -1);
+        NotificationSettings.Pin2                       = getFormItemInt(F("pin2"), -1);
         Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
         strncpy_webserver_arg(NotificationSettings.Domain,   F("domain"));
         strncpy_webserver_arg(NotificationSettings.Server,   F("server"));
@@ -140,9 +141,20 @@ void handle_notifications() {
         html_TD();
         addHtml(NotificationSettings.Server);
         html_TD();
-        addHtmlInt(NotificationSettings.Port);
+        if (NotificationSettings.Port){
+          addHtmlInt(NotificationSettings.Port);
+        } else {
+          //MFD: we display the GPIO 
+          addGpioHtml(NotificationSettings.Pin1);
+
+          if (NotificationSettings.Pin2>=0)
+          {
+            html_BR();
+            addGpioHtml(NotificationSettings.Pin2);
+          }
+        }
       }
-      else {
+      else{
         html_TD(3);
       }
     }
@@ -232,4 +244,4 @@ void handle_notifications() {
   TXBuffer.endStream();
 }
 
-#endif // USES_NOTIFIER
+#endif // FEATURE_NOTIFIER

@@ -7,7 +7,7 @@
 
 #define PLUGIN_086
 #define PLUGIN_ID_086         86
-#define PLUGIN_NAME_086       "Generic - Homie receiver [TESTING]"
+#define PLUGIN_NAME_086       "Generic - Homie receiver"
 
 // empty default names because settings will be ignored / not used if value name is empty
 #define PLUGIN_VALUENAME1_086 ""
@@ -180,7 +180,7 @@ boolean Plugin_086(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WRITE:
       {
         String command = parseString(string, 1);
-        if (command == F("homievalueset"))
+        if (command.equals(F("homievalueset")))
         {
           const taskVarIndex_t taskVarIndex = event->Par2 - 1;
           const userVarIndex_t userVarIndex = event->BaseVarIndex + taskVarIndex;

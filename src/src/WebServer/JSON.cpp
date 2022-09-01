@@ -1,12 +1,16 @@
 #include "../WebServer/JSON.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../CustomBuild/CompiletimeDefines.h"
+
+#include "../Globals/Cache.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
+#include "../Globals/NPlugins.h"
 
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Helpers/ESPEasy_Storage.h"
@@ -14,6 +18,7 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
@@ -59,7 +64,6 @@ void handle_csvval()
 
     if (validDeviceIndex(DeviceIndex))
     {
-      LoadTaskSettings(taskNr);
       const uint8_t taskValCount = getValueCountForTask(taskNr);
 
       if (printHeader)
@@ -68,7 +72,7 @@ void handle_csvval()
         {
           if (valNr == INVALID_VALUE_NUM || valNr == x)
           {
-            addHtml(String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+            addHtml(getTaskValueName(taskNr, x));
             if (x != taskValCount - 1)
             {
               addHtml(';');
@@ -106,24 +110,28 @@ void handle_json()
   bool showSystem             = true;
   bool showWifi               = true;
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   bool showEthernet = true;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
   bool showDataAcquisition = true;
   bool showTaskDetails     = true;
+  #if FEATURE_ESPEASY_P2P
   bool showNodes           = true;
+  #endif
   {
     const String view = webArg(F("view"));
 
-    if (view == F("sensorupdate")) {
+    if (view.equals(F("sensorupdate"))) {
       showSystem = false;
       showWifi   = false;
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       showEthernet = false;
-      #endif // ifdef HAS_ETHERNET
+      #endif // if FEATURE_ETHERNET
       showDataAcquisition = false;
       showTaskDetails     = false;
+      #if FEATURE_ESPEASY_P2P
       showNodes           = false;
+      #endif
     }
   }
 
@@ -149,6 +157,8 @@ void handle_json()
         LabelType::SYSTEM_LIBRARIES,
         LabelType::PLUGIN_COUNT,
         LabelType::PLUGIN_DESCRIPTION,
+        LabelType::BUILD_TIME,
+        LabelType::BINARY_FILENAME,
         LabelType::LOCAL_TIME,
         LabelType::TIME_SOURCE,
         LabelType::TIME_WANDER,
@@ -180,12 +190,16 @@ void handle_json()
     #ifdef ESP32
         LabelType::HEAP_SIZE,
         LabelType::HEAP_MIN_FREE,
-        #ifdef ESP32_ENABLE_PSRAM
+        #ifdef BOARD_HAS_PSRAM
         LabelType::PSRAM_SIZE,
         LabelType::PSRAM_FREE,
         LabelType::PSRAM_MIN_FREE,
         LabelType::PSRAM_MAX_FREE_BLOCK,
-        #endif // ESP32_ENABLE_PSRAM
+        #endif // BOARD_HAS_PSRAM
+    #endif // ifdef ESP32
+        LabelType::ESP_CHIP_MODEL,
+    #ifdef ESP32
+        LabelType::ESP_CHIP_REVISION,
     #endif // ifdef ESP32
 
         LabelType::SUNRISE,
@@ -193,6 +207,12 @@ void handle_json()
         LabelType::TIMEZONE_OFFSET,
         LabelType::LATITUDE,
         LabelType::LONGITUDE,
+        LabelType::SYSLOG_LOG_LEVEL,
+        LabelType::SERIAL_LOG_LEVEL,
+        LabelType::WEB_LOG_LEVEL,
+        #if FEATURE_SD
+        LabelType::SD_LOG_LEVEL,
+        #endif // if FEATURE_SD
 
 
         LabelType::MAX_LABEL
@@ -207,9 +227,9 @@ void handle_json()
       static const LabelType::Enum labels[] PROGMEM =
       {
         LabelType::HOST_NAME,
-      #ifdef FEATURE_MDNS
+        #if FEATURE_MDNS
         LabelType::M_DNS,
-      #endif // ifdef FEATURE_MDNS
+        #endif // if FEATURE_MDNS
         LabelType::IP_CONFIG,
         LabelType::IP_ADDRESS,
         LabelType::IP_SUBNET,
@@ -236,10 +256,12 @@ void handle_json()
         LabelType::PERIODICAL_GRAT_ARP,
 #endif // ifdef SUPPORT_ARP
         LabelType::CONNECTION_FAIL_THRESH,
+#ifdef ESP8266 // TD-er: Disable setting TX power on ESP32 as it seems to cause issues on IDF4.4
         LabelType::WIFI_TX_MAX_PWR,
         LabelType::WIFI_CUR_TX_PWR,
         LabelType::WIFI_SENS_MARGIN,
         LabelType::WIFI_SEND_AT_MAX_TX_PWR,
+#endif
         LabelType::WIFI_NR_EXTRA_SCANS,
         LabelType::WIFI_USE_LAST_CONN_FROM_RTC,
         LabelType::WIFI_RSSI,
@@ -254,7 +276,7 @@ void handle_json()
       stream_comma_newline();
     }
 
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
 
     if (showEthernet) {
       addHtml(F("\"Ethernet\":{\n"));
@@ -274,8 +296,9 @@ void handle_json()
       stream_json_object_values(labels);
       stream_comma_newline();
     }
-    #endif // ifdef HAS_ETHERNET
+    #endif // if FEATURE_ETHERNET
 
+  #if FEATURE_ESPEASY_P2P
     if (showNodes) {
       bool comma_between = false;
 
@@ -296,7 +319,7 @@ void handle_json()
                                         (it->first != Settings.Unit) ? it->second.nodeName : Settings.Name);
 
           if (it->second.build) {
-            stream_next_json_object_value(F("build"), it->second.build);
+            stream_next_json_object_value(F("build"), formatSystemBuildNr(it->second.build));
           }
 
           if (it->second.nodeType) {
@@ -315,6 +338,7 @@ void handle_json()
         addHtml(F("],\n")); // close array if >0 nodes
       }
     }
+  #endif
   }
 
   taskIndex_t firstTaskIndex = 0;
@@ -347,7 +371,7 @@ void handle_json()
     if (validDeviceIndex(DeviceIndex))
     {
       const unsigned long taskInterval = Settings.TaskDeviceTimer[TaskIndex];
-      LoadTaskSettings(TaskIndex);
+      //LoadTaskSettings(TaskIndex);
       addHtml('{', '\n');
 
       unsigned long ttl_json = 60; // Default value
@@ -373,14 +397,14 @@ void handle_json()
         {
           addHtml('{');
           const String value = formatUserVarNoCheck(TaskIndex, x);
-          uint8_t nrDecimals    = ExtraTaskSettings.TaskDeviceValueDecimals[x];
+          uint8_t nrDecimals    = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
 
           if (mustConsiderAsJSONString(value)) {
             // Flag as not to treat as a float
             nrDecimals = 255;
           }
           stream_next_json_object_value(F("ValueNumber"), x + 1);
-          stream_next_json_object_value(F("Name"),        String(ExtraTaskSettings.TaskDeviceValueNames[x]));
+          stream_next_json_object_value(F("Name"),        getTaskValueName(TaskIndex, x));
           stream_next_json_object_value(F("NrDecimals"),  nrDecimals);
           stream_last_json_object_value(F("Value"), value);
 
@@ -415,9 +439,9 @@ void handle_json()
       if (showTaskDetails) {
         stream_next_json_object_value(F("TaskInterval"),     taskInterval);
         stream_next_json_object_value(F("Type"),             getPluginNameFromDeviceIndex(DeviceIndex));
-        stream_next_json_object_value(F("TaskName"),         String(ExtraTaskSettings.TaskDeviceName));
+        stream_next_json_object_value(F("TaskName"),         getTaskDeviceName(TaskIndex));
         stream_next_json_object_value(F("TaskDeviceNumber"), Settings.TaskDeviceNumber[TaskIndex]);
-#ifdef FEATURE_I2CMULTIPLEXER
+        #if FEATURE_I2CMULTIPLEXER
         if (Device[DeviceIndex].Type == DEVICE_TYPE_I2C && isI2CMultiplexerEnabled()) {
           int8_t channel = Settings.I2C_Multiplexer_Channel[TaskIndex];
           if (bitRead(Settings.I2C_Flags[TaskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
@@ -443,7 +467,7 @@ void handle_json()
             }
           }
         }
-#endif
+        #endif // if FEATURE_I2CMULTIPLEXER
       }
       stream_next_json_object_value(F("TaskEnabled"), jsonBool(Settings.TaskDeviceEnabled[TaskIndex]));
       stream_last_json_object_value(F("TaskNumber"), TaskIndex + 1);
@@ -472,9 +496,9 @@ void handle_timingstats_json() {
   TXBuffer.startJsonStream();
   json_init();
   json_open();
-  # ifdef USES_TIMING_STATS
+  # if FEATURE_TIMING_STATS
   jsonStatistics(false);
-  # endif // ifdef USES_TIMING_STATS
+  # endif // if FEATURE_TIMING_STATS
   json_close();
   TXBuffer.endStream();
 }
@@ -482,6 +506,8 @@ void handle_timingstats_json() {
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_NEW_UI
+
+#if FEATURE_ESPEASY_P2P
 void handle_nodes_list_json() {
   if (!isLoggedIn()) { return; }
   TXBuffer.startJsonStream();
@@ -502,7 +528,7 @@ void handle_nodes_list_json() {
       json_number(F("first"), String(it->first));
       json_prop(F("name"), isThisUnit ? Settings.Name : it->second.nodeName);
 
-      if (it->second.build) { json_prop(F("build"), String(it->second.build)); }
+      if (it->second.build) { json_prop(F("build"), formatSystemBuildNr(it->second.build)); }
       json_prop(F("type"), getNodeTypeDisplayString(it->second.nodeType));
       json_prop(F("ip"),   it->second.ip.toString());
       json_number(F("age"), String(it->second.age));
@@ -512,6 +538,7 @@ void handle_nodes_list_json() {
   json_close(true);
   TXBuffer.endStream();
 }
+#endif
 
 void handle_buildinfo() {
   if (!isLoggedIn()) { return; }
@@ -544,6 +571,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#if FEATURE_NOTIFIER
   {
     json_open(true, F("notifications"));
 
@@ -557,6 +585,7 @@ void handle_buildinfo() {
     }
     json_close(true);
   }
+#endif
   json_prop(LabelType::BUILD_DESC);
   json_prop(LabelType::GIT_BUILD);
   json_prop(LabelType::SYSTEM_LIBRARIES);

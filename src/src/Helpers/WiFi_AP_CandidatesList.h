@@ -1,8 +1,9 @@
 #ifndef HELPERS_WIFI_AP_CANDIDATESLIST_H
 #define HELPERS_WIFI_AP_CANDIDATESLIST_H
 
-#include "../DataStructs/WiFi_AP_Candidate.h"
 #include "../../ESPEasy_common.h"
+
+#include "../DataStructs/WiFi_AP_Candidate.h"
 
 #include <list>
 
@@ -10,6 +11,8 @@ typedef std::list<WiFi_AP_Candidate>::const_iterator WiFi_AP_Candidate_const_ite
 
 struct WiFi_AP_CandidatesList {
   WiFi_AP_CandidatesList();
+
+  ~WiFi_AP_CandidatesList();
 
   // Load the known credentials from the settings
   void load_knownCredentials();

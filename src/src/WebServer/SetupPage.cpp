@@ -3,7 +3,7 @@
 
 #ifdef WEBSERVER_SETUP
 
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/AccessControl.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../WebServer/Markup.h"
@@ -157,13 +157,16 @@ void handle_setup() {
 
       html_table_class_normal();
       html_TR();
-      
+#if defined(WEBSERVER_SYSINFO) && !defined(WEBSERVER_SYSINFO_MINIMAL)
       handle_sysinfo_NetworkServices();
+#endif
       if (connected) {
 
         //addFormHeader(F("Current network configuration"));
 
+#ifdef WEBSERVER_SYSINFO
         handle_sysinfo_Network();
+#endif
 
         addFormSeparator(2);
 

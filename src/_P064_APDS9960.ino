@@ -16,6 +16,7 @@
 
 // Note: The chip has a wide view-of-angle. If housing is in this angle the chip blocks!
 
+// 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
 // 2020-04-25 tonhuisman: Added Plugin Mode setting to switch between Proximity/Ambient Light Sensor or R/G/B Colors.
 //   Added settings for Gain (Gesture, Proximity, Ambient Light Sensor), Led Power (Gesture and Proximity/ALS) and Led Boost (Gesture)
 //   to allow better tuning for use of the sensor. Also adapted the SparkFun_APDS9960 driver for enabling this.
@@ -25,7 +26,7 @@
 
 #define PLUGIN_064
 #define PLUGIN_ID_064             64
-#define PLUGIN_NAME_064           "Gesture - APDS9960 [DEVELOPMENT]"
+#define PLUGIN_NAME_064           "Gesture - APDS9960"
 #define PLUGIN_GPL_VALUENAME1_064 "Gesture"
 #define PLUGIN_GPL_VALUENAME2_064 "Proximity"
 #define PLUGIN_GPL_VALUENAME3_064 "Light"
@@ -74,6 +75,7 @@ boolean Plugin_064(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].TimerOptional      = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 

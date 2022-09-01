@@ -1,9 +1,10 @@
 #include "../DataStructs/Modbus.h"
 
+#if FEATURE_MODBUS
+
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
-#ifdef USES_MODBUS
 
 Modbus::Modbus() : ModbusClient(nullptr), errcnt(0), timeout(0),
   TXRXstate(MODBUS_IDLE), RXavailable(0), payLoad(0) {}
@@ -24,6 +25,13 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
   currentFunction = function;
   incomingValue   = type;
   resultReceived  = false;
+  if (ModbusClient) {
+    ModbusClient->flush();
+    ModbusClient->stop();
+    delete (ModbusClient);
+    delay(1);
+    ModbusClient = nullptr;
+  }
   ModbusClient    = new (std::nothrow) WiFiClient();
   if (ModbusClient == nullptr) {
     return false;
@@ -54,6 +62,9 @@ bool Modbus::begin(uint8_t function, uint8_t ModbusID, uint16_t ModbusRegister, 
       if (LogString.length() > 1) { addLog(LOG_LEVEL_DEBUG, LogString); }
       #endif
       return false;
+    } else {
+      // Make sure no stale connection is left
+      ModbusClient->stop();
     }
   }
   #ifndef BUILD_NO_DEBUG
@@ -142,6 +153,7 @@ bool Modbus::handle() {
         errcnt++;
         TXRXstate = MODBUS_IDLE;
       }
+      // FIXME TD-er: Missing break?
 
     case MODBUS_RECEIVE_PAYLOAD:
 
@@ -241,4 +253,4 @@ bool Modbus::tryRead(uint8_t ModbusID, uint16_t M_register,  MODBUS_registerType
   return false;
 }
 
-#endif // USES_MODBUS
+#endif // FEATURE_MODBUS

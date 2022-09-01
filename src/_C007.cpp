@@ -85,12 +85,6 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 // *INDENT-OFF*
 bool do_process_c007_delay_queue(int controller_number, const C007_queue_element& element, ControllerSettingsStruct& ControllerSettings) {
 // *INDENT-ON*
-  WiFiClient client;
-
-  if (!try_connect_host(controller_number, client, ControllerSettings)) {
-    return false;
-  }
-
   String url = F("/emoncms/input/post.json?node=");
 
   url += Settings.Unit;
@@ -107,13 +101,23 @@ bool do_process_c007_delay_queue(int controller_number, const C007_queue_element
   url += F("&apikey=");
   url += getControllerPass(element.controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
 
+#ifndef BUILD_NO_DEBUG
   if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
     serialPrintln(url);
   }
+#endif
 
-  return send_via_http(controller_number, client,
-                       create_http_get_request(controller_number, ControllerSettings, url),
-                       ControllerSettings.MustCheckReply);
+  int httpCode = -1;
+  send_via_http(
+    controller_number,
+    ControllerSettings,
+    element.controller_idx,
+    url,
+    F("GET"),
+    EMPTY_STRING,
+    EMPTY_STRING,
+    httpCode);
+  return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C007

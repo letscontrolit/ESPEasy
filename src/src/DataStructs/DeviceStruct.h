@@ -77,11 +77,11 @@ struct DeviceStruct
 
   bool isCustom() const;
 
-  uint8_t               Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
-  uint8_t               Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
+  uint8_t            Number;         // Plugin ID number.   (PLUGIN_ID_xxx)
+  uint8_t            Type;           // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
   Sensor_VType       VType;          // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-  uint8_t               Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
-  uint8_t               ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
+  uint8_t            Ports;          // Port to use when device has multiple I/O pins  (N.B. not used much)
+  uint8_t            ValueCount;     // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
   Output_Data_type_t OutputDataType; // Subset of selectable output data types (Default = no selection)
                                      
   bool PullUpOption       : 1;       // Allow to set internal pull-up resistors.
@@ -94,6 +94,9 @@ struct DeviceStruct
   bool TimerOptional      : 1;       // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
   bool DecimalsOnly       : 1;       // Allow to set the number of decimals (otherwise treated a 0 decimals)
   bool ExitTaskBeforeSave : 1;       // Optimization in memory usage, Do not exit when task data is needed during save.
+  bool ErrorStateValues   : 1;       // Support Error State Values, can be called to retrieve surrogate values when PLUGIN_READ returns false
+  bool PluginStats        : 1;       // Support for PluginStats to record last N task values, show charts etc.
+  bool PluginLogsPeaks    : 1;       // When PluginStats is enabled, a call to PLUGIN_READ will also check for peaks. With this enabled, the plugin must call to check for peaks itself.
 };
 typedef std::vector<DeviceStruct> DeviceVector;
 

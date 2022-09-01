@@ -1,12 +1,13 @@
 #include "../PluginStructs/P082_data_struct.h"
 
+#ifdef USES_P082
+
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-#ifdef USES_P082
 
 const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displayString) {
   switch (value_nr) {
@@ -25,6 +26,16 @@ const __FlashStringHelper * Plugin_082_valuename(P082_query value_nr, bool displ
     case P082_query::P082_NR_OUTPUT_OPTIONS: break;
   }
   return F("");
+}
+
+P082_query Plugin_082_from_valuename(const String& valuename)
+{
+  for (uint8_t query = 0; query < static_cast<uint8_t>(P082_query::P082_NR_OUTPUT_OPTIONS); ++query) {
+    if (valuename.equalsIgnoreCase(Plugin_082_valuename(static_cast<P082_query>(query), false))) {
+      return static_cast<P082_query>(query);
+    }
+  }
+  return P082_query::P082_NR_OUTPUT_OPTIONS;
 }
 
 const __FlashStringHelper* toString(P082_PowerMode mode) {

@@ -3,7 +3,7 @@
 
 #ifdef WEBSERVER_CONTROLLERS
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
@@ -138,6 +138,9 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
 
   // Load some templates from the controller.
   struct EventStruct TempEvent;
+
+  // Hand over the controller settings in the Data pointer, so the controller can set some defaults.
+  TempEvent.Data = (uint8_t*)(&ControllerSettings);
 
   if (Protocol[ProtocolIndex].usesTemplate) {
     String dummy;
@@ -362,7 +365,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PASS);
           }
-          #ifdef USES_MQTT
+          #if FEATURE_MQTT
           if (Protocol[ProtocolIndex].usesMQTT) {
             addTableSeparator(F("MQTT"), 2, 3);
 
@@ -373,7 +376,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addFormNote(F("Updated on load of this page"));
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINFLAG);
           }
-          #endif // USES_MQTT
+          #endif // if FEATURE_MQTT
 
 
           if (Protocol[ProtocolIndex].usesTemplate || Protocol[ProtocolIndex].usesMQTT)
@@ -381,7 +384,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_SUBSCRIBE);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_PUBLISH);
           }
-          #ifdef USES_MQTT
+          #if FEATURE_MQTT
           if (Protocol[ProtocolIndex].usesMQTT)
           {
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_LWT_TOPIC);
@@ -391,7 +394,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_WILL_RETAIN);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLEAN_SESSION);
           }
-          #endif // USES_MQTT
+          #endif // if FEATURE_MQTT
         }
       }
       // End of scope for ControllerSettings, destruct it to save memory.

@@ -1,19 +1,20 @@
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 
+#include "../../ESPEasy_common.h"
 
 #include "../../ESPEasy-Globals.h"
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/TimingStats.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Network.h"
 #include "../Helpers/Networking.h"
 
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 #include "../Helpers/OTA.h"
 #endif
 
@@ -45,8 +46,14 @@ void backgroundtasks()
   {
     return;
   }
+
+  // Rate limit calls to run backgroundtasks
+  static uint32_t lastRunBackgroundTasks = 0;
+  if (timePassedSince(lastRunBackgroundTasks) < 5) return;
+  lastRunBackgroundTasks = millis();
+
   START_TIMER
-  #ifdef FEATURE_MDNS
+  #if FEATURE_MDNS
   const bool networkConnected = NetworkConnected();
   #else
   NetworkConnected();
@@ -71,19 +78,20 @@ void backgroundtasks()
     if (webserverRunning) {
       web_server.handleClient();
     }
-
+    #if FEATURE_ESPEASY_P2P
     checkUDP();
+    #endif
   }
 
-  #ifdef FEATURE_DNS_SERVER
+  #if FEATURE_DNS_SERVER
 
   // process DNS, only used if the ESP has no valid WiFi config
   if (dnsServerActive) {
     dnsServer.processNextRequest();
   }
-  #endif // ifdef FEATURE_DNS_SERVER
+  #endif // if FEATURE_DNS_SERVER
 
-  #ifdef FEATURE_ARDUINO_OTA
+  #if FEATURE_ARDUINO_OTA
 
   if (Settings.ArduinoOTAEnable) {
     ArduinoOTA_handle();
@@ -97,9 +105,9 @@ void backgroundtasks()
     ArduinoOTA_handle();
   }
 
-  #endif // ifdef FEATURE_ARDUINO_OTA
+  #endif // if FEATURE_ARDUINO_OTA
 
-  #ifdef FEATURE_MDNS
+  #if FEATURE_MDNS
 
   // Allow MDNS processing
   if (networkConnected) {
@@ -109,7 +117,7 @@ void backgroundtasks()
     MDNS.update();
     # endif // ifdef ESP8266
   }
-  #endif // ifdef FEATURE_MDNS
+  #endif // if FEATURE_MDNS
 
   delay(0);
 

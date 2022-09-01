@@ -5,10 +5,11 @@
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
+#include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
   //enable Arduino OTA updating.
   //Note: This adds around 10kb to the firmware size, and 1kb extra ram.
   #include <ArduinoOTA.h>
@@ -37,7 +38,9 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
   if (maxSketchSize > MAX_SKETCH_SIZE) { maxSketchSize = MAX_SKETCH_SIZE; }
   return otaPossible;
 #elif defined(ESP32)
-  maxSketchSize = MAX_SKETCH_SIZE;
+  // ESP32 writes an OTA image to the "other" app partition.
+  // Thus what is reported as "free" sketch space is the size of the not used app partition.
+  maxSketchSize = getFreeSketchSpace();
   use2step      = false;
   return true;
 #else // if defined(ESP8266)
@@ -45,7 +48,7 @@ bool OTA_possible(uint32_t& maxSketchSize, bool& use2step) {
 #endif // if defined(ESP8266)
 }
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 
 /********************************************************************************************\
    Allow updating via the Arduino OTA-protocol. (this allows you to upload directly from platformio)
@@ -98,7 +101,7 @@ void ArduinoOTAInit()
     reboot(ESPEasy_Scheduler::IntendedRebootReason_e::OTA_error);
   });
 
-  #if defined(ESP8266) && defined(FEATURE_MDNS)
+  #if defined(ESP8266) && FEATURE_MDNS
   ArduinoOTA.begin(true);
   #else
   ArduinoOTA.begin();
@@ -116,4 +119,4 @@ void ArduinoOTA_handle()
   ArduinoOTA.handle();
 }
 
-#endif // ifdef FEATURE_ARDUINO_OTA
+#endif // if FEATURE_ARDUINO_OTA

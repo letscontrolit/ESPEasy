@@ -184,8 +184,8 @@
 #ifndef DEFAULT_I2C_CLOCK_SPEED_SLOW
 #define DEFAULT_I2C_CLOCK_SPEED_SLOW      100000            // Use 100 kHz for old/slow I2C chips
 #endif
-#ifndef USE_I2C_DEVICE_SCAN
-#define USE_I2C_DEVICE_SCAN              true               // Show device name in I2C scan
+#ifndef FEATURE_I2C_DEVICE_SCAN
+#define FEATURE_I2C_DEVICE_SCAN           1                 // Show device name in I2C scan
 #endif
 
 #ifndef DEFAULT_PIN_STATUS_LED
@@ -217,7 +217,7 @@
 #define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
 #endif
 #ifndef DEFAULT_NETWORK_MEDIUM
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
   #else
     #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
@@ -250,6 +250,15 @@
 #ifndef DEFAULT_MQTT_RETAIN
 #define DEFAULT_MQTT_RETAIN                     false   // (true|false) Retain MQTT messages?
 #endif
+
+#ifndef DEFAULT_CONTROLLER_DELETE_OLDEST
+#define DEFAULT_CONTROLLER_DELETE_OLDEST              false  // (true|false) to delete oldest message when queue is full
+#endif
+
+#ifndef DEFAULT_CONTROLLER_MUST_CHECK_REPLY 
+#define DEFAULT_CONTROLLER_MUST_CHECK_REPLY            false  // (true|false) Check Acknowledgment
+#endif
+
 #ifndef DEFAULT_MQTT_DELAY
 #define DEFAULT_MQTT_DELAY                      100    // Time in milliseconds to retain MQTT messages
 #endif
@@ -309,8 +318,57 @@
 #endif
 
 #ifndef DEFAULT_SYNC_UDP_PORT
-#define DEFAULT_SYNC_UDP_PORT                   0                       // Used for ESPEasy p2p. (IANA registered port: 8266)
+#define DEFAULT_SYNC_UDP_PORT                   8266                    // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
+
+// --- Defaults to be used for custom automatic provisioning builds ------------------------------------
+#if FEATURE_CUSTOM_PROVISIONING
+  #ifndef DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL
+    #define DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL  0 // DeviceModel_default
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_RULES1
+    #define DEFAULT_PROVISIONING_FETCH_RULES1      false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_RULES2
+    #define DEFAULT_PROVISIONING_FETCH_RULES2      false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_RULES3
+    #define DEFAULT_PROVISIONING_FETCH_RULES3      false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_RULES4
+    #define DEFAULT_PROVISIONING_FETCH_RULES4      false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS
+    #define DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_SECURITY
+    #define DEFAULT_PROVISIONING_FETCH_SECURITY     false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_CONFIG
+    #define DEFAULT_PROVISIONING_FETCH_CONFIG       false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_FETCH_PROVISIONING
+    #define DEFAULT_PROVISIONING_FETCH_PROVISIONING false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_SAVE_URL
+    #define DEFAULT_PROVISIONING_SAVE_URL           false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_SAVE_CREDENTIALS
+    #define DEFAULT_PROVISIONING_SAVE_CREDENTIALS   false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND
+    #define DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND false
+  #endif
+  #ifndef DEFAULT_PROVISIONING_URL
+    #define DEFAULT_PROVISIONING_URL                ""
+  #endif
+  #ifndef DEFAULT_PROVISIONING_USER
+    #define DEFAULT_PROVISIONING_USER               ""
+  #endif
+  #ifndef DEFAULT_PROVISIONING_PASS
+    #define DEFAULT_PROVISIONING_PASS               ""
+  #endif
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #ifndef BUILD_IN_WEBHEADER
 #define BUILD_IN_WEBHEADER                      false
@@ -326,6 +384,11 @@
 # define GITHUB_RELEASES_LINK_SUFFIX "</a>"
 #endif
 
+
+// --- We define the default features to be enabled here
+#ifndef FEATURE_ESPEASY_P2P
+  #define FEATURE_ESPEASY_P2P   1
+#endif
 
 /*
 // --- Experimental Advanced Settings (NOT ACTIVES at this time) ------------------------------------

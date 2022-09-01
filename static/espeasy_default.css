@@ -1,18 +1,13 @@
-.closebtn,
-h1,
-h2,
-h3 {
-	font-weight: 700
-}
-
 h1,
 h6 {
-	color: #07D
+	color: #07d
 }
 
 .checkmark:after,
 .dotmark:after {
-	content: ''
+	content: '';
+	display: none;
+	position: absolute
 }
 
 .button,
@@ -27,16 +22,15 @@ h6 {
 
 .closebtn,
 .div_r {
-	float: right;
-	color: #fff
+	color: #fff;
+	float: right
 }
 
 * {
 	box-sizing: border-box;
 	font-family: sans-serif;
 	font-size: 12pt;
-	margin: 0;
-	padding: 0
+	margin: 0
 }
 
 h1 {
@@ -44,23 +38,10 @@ h1 {
 	margin: 8px 0
 }
 
-h2,
 h3 {
-	font-size: 12pt
-}
-
-h2 {
-	background-color: #444;
-	color: #FFF;
-	margin: 0 -4px;
+	background-color: #cacaca;
+	margin: -5px;
 	padding: 6px
-}
-
-h3 {
-	background-color: #EEE;
-	color: #444;
-	margin: 16px -4px 0;
-	padding: 4px
 }
 
 h6 {
@@ -73,15 +54,14 @@ pre,
 samp,
 tt,
 xmp {
-	font-family: monospace, monospace;
-	font-size: 1em
+	font: 1em monospace, monospace
 }
 
 .button {
-	background-color: #07D;
-	border: none;
-	border-radius: 4px;
-	color: #FFF;
+	background-color: #07d;
+	border: 0;
+	border-radius: 5px;
+	color: #fff;
 	margin: 4px;
 	padding: 4px 16px
 }
@@ -108,23 +88,19 @@ textarea {
 
 .button.help {
 	border-radius: 50%;
-	padding: 2px 4px
+	font-family: monospace;
+	padding: 2px 7px
 }
 
 .checkmark,
 input,
 select,
 textarea {
-	border-radius: 4px
+	border-radius: 5px
 }
 
 .button:hover {
 	background: #369
-}
-
-input:hover,
-select:hover {
-	background-color: #ccc
 }
 
 input,
@@ -135,10 +111,14 @@ textarea {
 	padding: 4px 8px
 }
 
-input.wide,
-select.wide {
-	max-width: 500px;
-	width: 80%
+.wide {
+	margin-bottom: 5px;
+	max-width: 350px;
+	width: 95%
+}
+
+.xwide {
+	width: 350px
 }
 
 .widenumber {
@@ -148,26 +128,18 @@ select.wide {
 
 .container,
 .container2 {
+	cursor: pointer;
 	font-size: 12pt;
-	padding-left: 35px;
-	cursor: pointer
+	padding-left: 35px
 }
 
 .container {
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-webkit-user-select: none;
 	display: block;
+	height: 30px;
 	margin-left: 4px;
 	margin-top: 0;
 	position: relative;
 	user-select: none
-}
-
-.container input {
-	cursor: pointer;
-	opacity: 0;
-	position: absolute
 }
 
 .checkmark.disabled {
@@ -183,27 +155,7 @@ select.wide {
 	width: 25px
 }
 
-.container:hover input~.checkmark {
-	background-color: #ccc
-}
-
-.container input:checked~.checkmark {
-	background-color: #07D
-}
-
-.checkmark:after {
-	display: none;
-	position: absolute
-}
-
-.container input:checked~.checkmark:after,
-.container2 {
-	display: block
-}
-
 .container .checkmark:after {
-	-ms-transform: rotate(45deg);
-	-webkit-transform: rotate(45deg);
 	border: solid #fff;
 	border-width: 0 3px 3px 0;
 	height: 10px;
@@ -226,19 +178,10 @@ select.wide {
 }
 
 .container2 {
-	-moz-user-select: none;
-	-ms-user-select: none;
-	-webkit-user-select: none;
 	margin-bottom: 20px;
 	margin-left: 9px;
 	position: relative;
 	user-select: none
-}
-
-.container2 input {
-	cursor: pointer;
-	opacity: 0;
-	position: absolute
 }
 
 .dotmark {
@@ -249,23 +192,6 @@ select.wide {
 	position: absolute;
 	top: 0;
 	width: 26px
-}
-
-.container2:hover input~.dotmark {
-	background-color: #ccc
-}
-
-.container2 input:checked~.dotmark {
-	background-color: #07D
-}
-
-.dotmark:after {
-	display: none;
-	position: absolute
-}
-
-.container2 input:checked~.dotmark:after {
-	display: block
 }
 
 .container2 .dotmark:after {
@@ -280,14 +206,13 @@ select.wide {
 .logviewer,
 textarea {
 	font-family: 'Lucida Console', Monaco, monospace;
-	max-width: 1000px;
-	padding: 4px 8px;
-	width: 80%
+	height: 60vh;
+	width: -webkit-fill-available
 }
 
 #toastmessage {
-	background-color: #07D;
-	border-radius: 4px;
+	background-color: #07d;
+	border-radius: 5px;
 	bottom: 30%;
 	color: #fff;
 	font-size: 17px;
@@ -302,20 +227,26 @@ textarea {
 }
 
 #toastmessage.show {
-	-webkit-animation: fadein .5s, fadeout .5s 2.5s;
 	animation: fadein .5s, fadeout .5s 2.5s;
 	visibility: visible
 }
 
-@-webkit-keyframes fadein {
-	from {
-		bottom: 20%;
-		opacity: 0
-	}
-	to {
-		bottom: 30%;
-		opacity: .9
-	}
+.container input,
+.container2 input {
+	cursor: pointer;
+	opacity: 0;
+	position: absolute
+}
+
+.container input:checked~.checkmark,
+.container2 input:checked~.dotmark {
+	background-color: #07d
+}
+
+.container input:checked~.checkmark:after,
+.container2,
+.container2 input:checked~.dotmark:after {
+	display: block
 }
 
 @keyframes fadein {
@@ -323,20 +254,10 @@ textarea {
 		bottom: 20%;
 		opacity: 0
 	}
-	to {
-		bottom: 30%;
-		opacity: .9
-	}
-}
 
-@-webkit-keyframes fadeout {
-	from {
+	to {
 		bottom: 30%;
 		opacity: .9
-	}
-	to {
-		bottom: 0;
-		opacity: 0
 	}
 }
 
@@ -345,6 +266,7 @@ textarea {
 		bottom: 30%;
 		opacity: .9
 	}
+
 	to {
 		bottom: 0;
 		opacity: 0
@@ -352,77 +274,80 @@ textarea {
 }
 
 .level_0 {
-	color: #F1F1F1
+	color: #f1f1f1
 }
 
 .level_1 {
-	color: #FCFF95
+	color: #fcff95
 }
 
 .level_2 {
-	color: #9DCEFE
+	color: #9dcefe
 }
 
 .level_3 {
-	color: #A4FC79
+	color: #a4fc79
 }
 
 .level_4 {
-	color: #F2AB39
+	color: #f2ab39
 }
 
 .level_9 {
-	color: #F50
+	color: #f50
 }
 
 .logviewer {
 	background-color: #272727;
-	color: #F1F1F1;
-	height: 530px;
+	color: #f1f1f1;
 	overflow: auto
 }
 
-textarea:hover {
-	background-color: #ccc
+tbody {
+	overflow: auto
 }
 
-table.multirow th,
-table.normal th {
+.multirow th,
+.normal th {
 	background-color: #444;
-	border-color: #888;
-	color: #FFF;
-	font-weight: 700;
-	padding: 6px;
-	align-content: center;
-	text-align: center
+	color: #fff;
+	padding: 5px;
+	width: 100vw
 }
 
-table.multirow,
-table.normal {
-	border-collapse: collapse;
-	color: #000;
+.multirow,
+.normal {
+	border-spacing: 0;
+	border-style: none;
 	min-width: 420px;
+	padding-bottom: 5px;
 	width: 100%
 }
 
-table.multirow tr,
-table.normal td,
-table.normal tr {
-	padding: 4px
+.multirow tr,
+.normal td,
+.normal tr {
+	padding: 5px
 }
 
-table.normal td {
+.normal td {
 	height: 30px
 }
 
-table.multirow td {
+.multirow td {
+	border-color: silver;
 	height: 30px;
 	padding: 4px;
 	text-align: center
 }
 
-table.multirow tr:nth-child(even) {
-	background-color: #DEE6FF
+.multirow tr:nth-child(odd) {
+	background-color: #e8e8e8
+}
+
+.sub {
+	max-width: 100px;
+	display: block
 }
 
 .highlight td {
@@ -431,8 +356,9 @@ table.multirow tr:nth-child(even) {
 
 .apheader,
 .headermenu {
-	background-color: #F8F8F8;
-	padding: 8px 12px
+	background-color: #f8f8f8;
+	padding: 8px 12px;
+	width: 100vw
 }
 
 .note {
@@ -441,41 +367,49 @@ table.multirow tr:nth-child(even) {
 }
 
 .headermenu {
-	border-bottom: 1px solid #DDD;
-	height: 90px;
-	left: 0;
+	border-bottom: .1px solid #444;
+	height: 100px;
 	position: fixed;
-	right: 0;
 	top: 0;
 	z-index: 1
 }
 
 .bodymenu {
-	margin-top: 96px
+	background-color: #fff;
+	height: 100vh;
+	padding-top: 100px
 }
 
 .menubar {
 	position: inherit;
-	top: 55px
+	top: 54px;
+	width: 100%
+}
+
+a.menu {
+	align-items: center;
+	display: flex;
+	height: 46px;
+	justify-content: center
 }
 
 .menu {
-	border: solid transparent;
-	border-radius: 4px 4px 0 0;
-	border-width: 4px 1px 1px;
+	border: solid transparent 1px;
+	border-radius: 5px 5px 0 0;
 	color: #444;
-	padding: 4px 16px 8px;
+	padding: 10px 10px 8px;
 	white-space: nowrap
 }
 
 .menu.active {
-	background-color: #FFF;
-	border-color: #07D #DDD #FFF;
+	background-color: #fff;
+	border-color: #444 #444 #fff;
+	border-width: .1px;
 	color: #000
 }
 
 .menu:hover {
-	background: #DEF;
+	background: #bdbdbd;
 	color: #000
 }
 
@@ -484,7 +418,7 @@ table.multirow tr:nth-child(even) {
 }
 
 .on {
-	color: green
+	color: #029b34
 }
 
 .off {
@@ -492,7 +426,7 @@ table.multirow tr:nth-child(even) {
 }
 
 .div_r {
-	background-color: #080;
+	background-color: #029b34;
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -500,9 +434,9 @@ table.multirow tr:nth-child(even) {
 
 .alert,
 .warning {
+	color: #fff;
 	margin-bottom: 15px;
-	padding: 20px;
-	color: #fff
+	padding: 20px
 }
 
 .div_br {
@@ -531,15 +465,37 @@ table.multirow tr:nth-child(even) {
 
 section {
 	overflow-x: auto;
-	width: 100%
+	padding: 10px 0
 }
 
-@media screen and (max-width: 960px) {
+footer {
+	padding: 0 5px;
+	word-break: break-all
+}
+
+@media screen and (max-width:780px) {
 	.showmenulabel {
 		display: none
 	}
-	.menu {
-		max-width: 11vw;
-		max-width: 48px
+
+	a.menu {
+		width: 12%
+	}
+}
+
+@media screen and (max-width:450px) {
+	.normal {
+		min-width: 300px
+	}
+
+	input.wide:focus {
+		left: 4px;
+		position: absolute;
+		z-index: 1
+	}
+
+	.container {
+		display: inline;
+		user-select: none
 	}
 }

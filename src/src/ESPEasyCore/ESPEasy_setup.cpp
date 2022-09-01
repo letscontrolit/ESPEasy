@@ -4,6 +4,7 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../../_Plugin_Helper.h"
+#include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/ESPEasyWifi.h"
@@ -27,7 +28,7 @@
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringGenerator_System.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 
 #ifdef USE_RTOS_MULTITASKING
@@ -35,13 +36,14 @@
 # include "../Helpers/PeriodicalActions.h"
 #endif // ifdef USE_RTOS_MULTITASKING
 
-#ifdef FEATURE_ARDUINO_OTA
+#if FEATURE_ARDUINO_OTA
 # include "../Helpers/OTA.h"
-#endif // ifdef FEATURE_ARDUINO_OTA
+#endif // if FEATURE_ARDUINO_OTA
 
 #ifdef ESP32
 #include <soc/boot_mode.h>
 #include <soc/gpio_reg.h>
+#include <soc/efuse_reg.h>
 #endif
 
 
@@ -51,7 +53,9 @@ void RTOS_TaskServers(void *parameter)
   while (true) {
     delay(100);
     web_server.handleClient();
+    #if FEATURE_ESPEASY_P2P
     checkUDP();
+    #endif
   }
 }
 
@@ -95,25 +99,46 @@ void sw_watchdog_callback(void *arg)
 \*********************************************************************************************/
 void ESPEasy_setup()
 {
-#ifdef ESP8266_DISABLE_EXTRA4K
+#if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)
   disable_extra4k_at_link_time();
-#endif // ifdef ESP8266_DISABLE_EXTRA4K
+#endif
 #ifdef PHASE_LOCKED_WAVEFORM
   enablePhaseLockedWaveform();
-#endif // ifdef PHASE_LOCKED_WAVEFORM
+#endif
 #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
 #endif
-  initWiFi();
+#ifdef ESP32
+#ifdef DISABLE_ESP32_BROWNOUT
+  DisableBrownout();      // Workaround possible weak LDO resulting in brownout detection during Wifi connection
+#endif  // DISABLE_ESP32_BROWNOUT
 
-  run_compiletime_checks();
-#ifdef ESP32_ENABLE_PSRAM
+#ifdef BOARD_HAS_PSRAM
   psramInit();
 #endif
+
+#ifdef CONFIG_IDF_TARGET_ESP32
+  // restore GPIO16/17 if no PSRAM is found
+  if (!FoundPSRAM()) {
+    // test if the CPU is not pico
+    uint32_t chip_ver = REG_GET_FIELD(EFUSE_BLK0_RDATA3_REG, EFUSE_RD_CHIP_VER_PKG);
+    uint32_t pkg_version = chip_ver & 0x7;
+    if (pkg_version <= 3) {   // D0WD, S0WD, D2WD
+      gpio_reset_pin(GPIO_NUM_16);
+      gpio_reset_pin(GPIO_NUM_17);
+    }
+  }
+#endif  // CONFIG_IDF_TARGET_ESP32
+  initADC();
+#endif  // ESP32
 #ifndef BUILD_NO_RAM_TRACKER
   lowestFreeStack = getFreeStackWatermark();
   lowestRAM       = FreeMem();
 #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  initWiFi();
+
+  run_compiletime_checks();
 #ifdef ESP8266
 
   //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
@@ -145,13 +170,15 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("initLog()"));
   #endif
-  #ifdef ESP32_ENABLE_PSRAM
-  if (psramFound()) {
-    addLog(LOG_LEVEL_INFO, F("Found PSRAM"));
+  #ifdef BOARD_HAS_PSRAM
+  if (FoundPSRAM()) {
+    if (UsePSRAM()) {
+      addLog(LOG_LEVEL_INFO, F("Using PSRAM"));
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("PSRAM found, unable to use"));
+    }
   }
   #endif
-
-
 
   if (SpiffsSectors() < 32)
   {
@@ -166,6 +193,10 @@ void ESPEasy_setup()
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F("\n\n\rINIT : Booting version: ");
+    log += getValue(LabelType::BINARY_FILENAME);
+    log += F(", (");
+    log += get_build_origin();
+    log += F(") ");
     log += getValue(LabelType::GIT_BUILD);
     log += F(" (");
     log += getSystemLibraryString();
@@ -254,18 +285,36 @@ void ESPEasy_setup()
     if (toDisable != 0) {
       toDisable = disableController(toDisable);
     }
-
+    #if FEATURE_NOTIFIER
     if (toDisable != 0) {
       toDisable = disableNotification(toDisable);
     }
+    #endif
+
+    if (toDisable != 0) {
+      toDisable = disableRules(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllPlugins(toDisable);
+    }
+
+    if (toDisable != 0) {
+      toDisable = disableAllControllers(toDisable);
+    }
+#if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableAllNotifications(toDisable);
+    }
+#endif
   }
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
   // This only works after LoadSettings();
   // Do not call setNetworkMedium here as that may try to clean up settings.
   active_network_medium = Settings.NetworkMedium;
-  #endif // ifdef HAS_ETHERNET
+  #endif // if FEATURE_ETHERNET
 
   if (active_network_medium == NetworkMedium_t::WIFI) {
     WiFi_AP_Candidates.load_knownCredentials();
@@ -315,7 +364,7 @@ void ESPEasy_setup()
   #endif
 
 
-  if (Settings.Build != BUILD) {
+  if (Settings.Build != get_build_nr()) {
     BuildFixes();
   }
 
@@ -325,10 +374,11 @@ void ESPEasy_setup()
     addLogMove(LOG_LEVEL_INFO, log);
   }
 
+# ifndef BUILD_NO_DEBUG
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
     Serial.setDebugOutput(true);
   }
-
+#endif
 
   timermqtt_interval      = 250; // Interval for checking MQTT
   timerAwakeFromDeepSleep = millis();
@@ -336,12 +386,12 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("CPluginInit()"));
   #endif
-  #ifdef USES_NOTIFIER
+  #if FEATURE_NOTIFIER
   NPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("NPluginInit()"));
   #endif
-  #endif // ifdef USES_NOTIFIER
+  #endif // if FEATURE_NOTIFIER
 
   PluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
@@ -409,16 +459,16 @@ void ESPEasy_setup()
   #endif
 
 
-  #ifdef FEATURE_REPORTING
+  #if FEATURE_REPORTING
   ReportStatus();
-  #endif // ifdef FEATURE_REPORTING
+  #endif // if FEATURE_REPORTING
 
-  #ifdef FEATURE_ARDUINO_OTA
+  #if FEATURE_ARDUINO_OTA
   ArduinoOTAInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("ArduinoOTAInit()"));
   #endif
-  #endif // ifdef FEATURE_ARDUINO_OTA
+  #endif // if FEATURE_ARDUINO_OTA
 
   if (node_time.systemTimePresent()) {
     node_time.initTime();

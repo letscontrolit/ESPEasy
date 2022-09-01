@@ -2,7 +2,7 @@
 .. |P120_type| replace:: :cyan:`Acceleration`
 .. |P120_typename| replace:: :cyan:`Acceleration - ADXL345 (I2C)`
 .. |P120_porttype| replace:: `.`
-.. |P120_status| replace:: :yellow:`TESTING E`
+.. |P120_status| replace:: :yellow:`COLLECTION E`
 .. |P120_github| replace:: P120_ADXL345_Accelerometer.ino
 .. _P120_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P120_ADXL345_Accelerometer.ino
 .. |P120_usedby| replace:: `.`
@@ -15,7 +15,7 @@
 .. |P121_type| replace:: :cyan:`Position`
 .. |P121_typename| replace:: :cyan:`Position - HMC5883L`
 .. |P121_porttype| replace:: `.`
-.. |P121_status| replace:: :yellow:`TESTING E`
+.. |P121_status| replace:: :yellow:`COLLECTION E`
 .. |P121_github| replace:: P121_HMC5883L.ino
 .. _P121_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P121_HMC5883L.ino
 .. |P121_usedby| replace:: `.`
@@ -28,7 +28,7 @@
 .. |P124_type| replace:: :cyan:`Output`
 .. |P124_typename| replace:: :cyan:`Output - I2C Multi Relay`
 .. |P124_porttype| replace:: `.`
-.. |P124_status| replace:: :yellow:`TESTING D`
+.. |P124_status| replace:: :yellow:`COLLECTION D`
 .. |P124_github| replace:: P124_MultiTelay.ino
 .. _P124_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P124_MyltiRelay.ino
 .. |P124_usedby| replace:: `.`
@@ -41,7 +41,7 @@
 .. |P125_type| replace:: :cyan:`Acceleration`
 .. |P125_typename| replace:: :cyan:`Acceleration - ADXL345 (SPI)`
 .. |P125_porttype| replace:: `.`
-.. |P125_status| replace:: :yellow:`TESTING E`
+.. |P125_status| replace:: :yellow:`COLLECTION E`
 .. |P125_github| replace:: P125_ADXL345_SPI.ino
 .. _P125_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P125_ADXL345_SPI.ino
 .. |P125_usedby| replace:: `.`
@@ -54,7 +54,7 @@
 .. |P126_type| replace:: :cyan:`Output`
 .. |P126_typename| replace:: :cyan:`Output - Shift registers (74HC595)`
 .. |P126_porttype| replace:: `.`
-.. |P126_status| replace:: :yellow:`TESTING E`
+.. |P126_status| replace:: :yellow:`COLLECTION E`
 .. |P126_github| replace:: P126_74HC595.ino
 .. _P126_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P126_74HC595.ino
 .. |P126_usedby| replace:: `.`
@@ -67,7 +67,7 @@
 .. |P127_type| replace:: :cyan:`Gases`
 .. |P127_typename| replace:: :cyan:`Gases - CO2 CDM7160`
 .. |P127_porttype| replace:: `.`
-.. |P127_status| replace:: :yellow:`TESTING D`
+.. |P127_status| replace:: :yellow:`COLLECTION D`
 .. |P127_github| replace:: P127_CDM7160.ino
 .. _P127_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P127_CDM7160.ino
 .. |P127_usedby| replace:: `.`
@@ -75,3 +75,29 @@
 .. |P127_maintainer| replace:: `tonhuisman, V0JT4`
 .. |P127_compileinfo| replace:: `.`
 .. |P127_usedlibraries| replace:: `.`
+
+.. |P128_name| replace:: :cyan:`NeoPixel (BusFX)`
+.. |P128_type| replace:: :cyan:`Output`
+.. |P128_typename| replace:: :cyan:`Output - NeoPixel (BusFX)`
+.. |P128_porttype| replace:: `.`
+.. |P128_status| replace:: :yellow:`NEOPIXEL`
+.. |P128_github| replace:: P128_NeoPixelBusFX.ino
+.. _P128_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P128_NeoPixelBusFX.ino
+.. |P128_usedby| replace:: `.`
+.. |P128_shortinfo| replace:: `NeoPixel special effects library BusFX`
+.. |P128_maintainer| replace:: `tonhuisman`
+.. |P128_compileinfo| replace:: `.`
+.. |P128_usedlibraries| replace:: `https://github.com/Makuna/NeoPixelBus and https://github.com/djcysmic/NeopixelBusFX (forked from ESPEasyPluginPlayground)`
+
+.. |P129_name| replace:: :cyan:`Shift registers (74HC165)`
+.. |P129_type| replace:: :cyan:`Input`
+.. |P129_typename| replace:: :cyan:`Input - Shift registers (74HC165)`
+.. |P129_porttype| replace:: `.`
+.. |P129_status| replace:: :yellow:`COLLECTION E`
+.. |P129_github| replace:: P129_74HC165.ino
+.. _P129_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P129_74HC165.ino
+.. |P129_usedby| replace:: `.`
+.. |P129_shortinfo| replace:: `Parallel - serial input shift registers`
+.. |P129_maintainer| replace:: `tonhuisman`
+.. |P129_compileinfo| replace:: `.`
+.. |P129_usedlibraries| replace:: `.`

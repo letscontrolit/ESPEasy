@@ -7,11 +7,11 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
+#include "../Globals/Cache.h"
 #include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
@@ -129,21 +129,8 @@ String formatIP(const IPAddress& ip) {
 
 // Convert max. 8 hex decimals to unsigned long
 unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
-  size_t nr_decimals = nrHexDecimals;
-
-  if (nr_decimals > 8) {
-    nr_decimals = 8;
-  }
-  size_t inputLength = input_c.length();
-
-  if (nr_decimals > inputLength) {
-    nr_decimals = inputLength;
-  } else if (input_c.startsWith(F("0x"))) { // strtoul handles that prefix nicely
-    nr_decimals += 2;
-  }
-  String tmp = input_c.substring(0, nr_decimals);
-
-  return strtoul(tmp.c_str(), 0, 16);
+  const unsigned long long resULL = hexToULL(input_c, nrHexDecimals);
+  return static_cast<unsigned long>(resULL & 0xFFFFFFFFull);
 }
 
 unsigned long hexToUL(const String& input_c) {
@@ -161,16 +148,14 @@ unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
   if (nr_decimals > 16) {
     nr_decimals = 16;
   }
-  size_t inputLength = input_c.length();
+  const size_t inputLength = input_c.length();
 
   if (nr_decimals > inputLength) {
     nr_decimals = inputLength;
   } else if (input_c.startsWith(F("0x"))) { // strtoull handles that prefix nicely
     nr_decimals += 2;
   }
-  String tmp = input_c.substring(0, nr_decimals);
-
-  return strtoull(tmp.c_str(), 0, 16);
+  return strtoull(input_c.substring(0, nr_decimals).c_str(), 0, 16);
 }
 
 unsigned long long hexToULL(const String& input_c) {
@@ -181,17 +166,34 @@ unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHex
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-String formatToHex(unsigned long value, const __FlashStringHelper * prefix) {
+String formatToHex(unsigned long value, 
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits) {
   String result = prefix;
   String hex(value, HEX);
 
   hex.toUpperCase();
+  if (hex.length() < minimal_hex_digits) {
+    const size_t leading_zeros = minimal_hex_digits - hex.length();
+    for (size_t i = 0; i < leading_zeros; ++i) {
+      result += '0';
+    }
+  }
   result += hex;
   return result;
 }
 
-String formatToHex(unsigned long value) {
-  return formatToHex(value, F("0x"));
+String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix) {
+  return formatToHex(value, prefix, 0);
+}
+
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F("0x"), minimal_hex_digits);
+}
+
+String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
+  return formatToHex(value, F(""), minimal_hex_digits);
 }
 
 String formatHumanReadable(unsigned long value, unsigned long factor) {
@@ -213,7 +215,7 @@ String formatHumanReadable(unsigned long value, unsigned long factor, int NrDeci
   String result = toString(floatValue, NrDecimals);
 
   switch (steps) {
-    case 0: return String(value);
+    case 0: break;
     case 1: result += 'k'; break;
     case 2: result += 'M'; break;
     case 3: result += 'G'; break;
@@ -382,8 +384,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 
   uint8_t nrDecimals = 0;
   if (Device[DeviceIndex].configurableDecimals()) {
-    LoadTaskSettings(event->TaskIndex);
-    nrDecimals = ExtraTaskSettings.TaskDeviceValueDecimals[rel_index];
+    nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, rel_index);
   }
 
   String result = toString(f, nrDecimals);
@@ -465,6 +466,33 @@ String wrapIfContains(const String& value, char contains, char wrap) {
   return value;
 }
 
+String wrapWithQuotes(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  // Try to find unused quote char and wrap
+  char quotechar = '_';
+  if (!findUnusedQuoteChar(text, quotechar)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      String log = F("No unused quote to wrap: _");
+      log += text;
+      log += '_';
+      addLogMove(LOG_LEVEL_ERROR, log);
+    }
+  }
+  return wrap_String(text, quotechar);
+}
+
+String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
+  if (isWrappedWithQuotes(text)) {
+    return text;
+  }
+  if (stringContainsSeparatorChar(text)) {
+    return wrapWithQuotes(text);
+  }
+  return text;
+}
+
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
@@ -526,7 +554,7 @@ String to_json_value(const String& value, bool wrapInQuotes) {
    Strip wrapping chars (e.g. quotes)
 \*********************************************************************************************/
 String stripWrappingChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
     return text.substring(1, length - 1);
@@ -535,20 +563,40 @@ String stripWrappingChar(const String& text, char wrappingChar) {
 }
 
 bool stringWrappedWithChar(const String& text, char wrappingChar) {
-  unsigned int length = text.length();
+  const unsigned int length = text.length();
 
   if (length < 2) { return false; }
-
-  if (text.charAt(0) != wrappingChar) { return false; }
-  return text.charAt(length - 1) == wrappingChar;
+  return (text.charAt(0) == wrappingChar) && 
+         (text.charAt(length - 1) == wrappingChar);
 }
 
 bool isQuoteChar(char c) {
   return c == '\'' || c == '"' || c == '`';
 }
 
+bool findUnusedQuoteChar(const String& text, char& quotechar) {
+  quotechar = '_';
+  if (text.indexOf('\'') == -1) quotechar = '\'';
+  else if (text.indexOf('"') == -1) quotechar = '"';
+  else if (text.indexOf('`') == -1) quotechar = '`';
+  
+  return isQuoteChar(quotechar);
+}
+
 bool isParameterSeparatorChar(char c) {
   return c == ',' || c == ' ';
+}
+
+bool stringContainsSeparatorChar(const String& text) {
+  return text.indexOf(',') != -1 || text.indexOf(' ') != -1;
+}
+
+bool isWrappedWithQuotes(const String& text) {
+  if (text.length() < 2) {
+    return false;
+  }
+  const char quoteChar = text[0];
+  return isQuoteChar(quoteChar) && stringWrappedWithChar(text, quoteChar);
 }
 
 String stripQuotes(const String& text) {
@@ -608,31 +656,33 @@ String to_internal_string(const String& input, char replaceSpace) {
    IndexFind = 1 => command.
     // FIXME TD-er: parseString* should use index starting at 0.
 \*********************************************************************************************/
-String parseString(const String& string, uint8_t indexFind, char separator) {
-  String result = parseStringKeepCase(string, indexFind, separator);
+String parseString(const String& string, uint8_t indexFind, char separator, bool trimResult) {
+  String result = parseStringKeepCase(string, indexFind, separator, trimResult);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringKeepCase(const String& string, uint8_t indexFind, char separator) {
+String parseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
     return EMPTY_STRING;
   }
-  result.trim();
+  if (trimResult) {
+    result.trim();
+  }
   return stripQuotes(result);
 }
 
-String parseStringToEnd(const String& string, uint8_t indexFind, char separator) {
-  String result = parseStringToEndKeepCase(string, indexFind, separator);
+String parseStringToEnd(const String& string, uint8_t indexFind, char separator, bool trimResult) {
+  String result = parseStringToEndKeepCase(string, indexFind, separator, trimResult);
 
   result.toLowerCase();
   return result;
 }
 
-String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator) {
+String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult) {
   // Loop over the arguments to find the first and last pos of the arguments.
   int  pos_begin = string.length();
   int  pos_end = pos_begin;
@@ -654,29 +704,32 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
     ++nextArgument;
   }
 
-  if (!hasArgument || (pos_begin < 0)) {
+  if (!hasArgument || (pos_begin < 0) || (pos_begin == pos_end)) {
     return EMPTY_STRING;
   }
   String result = string.substring(pos_begin, pos_end);
 
-  result.trim();
+  if (trimResult) {
+    result.trim();
+  }
   return stripQuotes(result);
 }
 
 String tolerantParseStringKeepCase(const char * string,
-                                   uint8_t          indexFind,
-                                   char          separator)
+                                   uint8_t      indexFind,
+                                   char         separator,
+                                   bool         trimResult)
 {
-  return tolerantParseStringKeepCase(String(string), indexFind, separator);
+  return tolerantParseStringKeepCase(String(string), indexFind, separator, trimResult);
 }
 
 
-String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator)
+String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char separator, bool trimResult)
 {
   if (Settings.TolerantLastArgParse()) {
-    return parseStringToEndKeepCase(string, indexFind, separator);
+    return parseStringToEndKeepCase(string, indexFind, separator, trimResult);
   }
-  return parseStringKeepCase(string, indexFind, separator);
+  return parseStringKeepCase(string, indexFind, separator, trimResult);
 }
 
 // escapes special characters in strings for use in html-forms
@@ -786,6 +839,17 @@ void repl(const __FlashStringHelper * key,
   repl(String(key), String(val), s, useURLencode);
 }
 
+void repl(const __FlashStringHelper * key1,
+           const __FlashStringHelper * key2,
+           const char* val,
+           String      & s,
+           bool       useURLencode)
+{
+  repl(key1, val, s, useURLencode);
+  repl(key2, val, s, useURLencode);
+}
+
+
 void repl(const String& key, const String& val, String& s, bool useURLencode)
 {
   if (useURLencode) {
@@ -820,16 +884,13 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     // Angle quotes
     const char laquo[3] = { 0xc2, 0xab, 0 }; // Unicode left angle quotes symbol
     const char raquo[3] = { 0xc2, 0xbb, 0 }; // Unicode right angle quotes symbol
-    repl(F("{<<}"),    laquo, s, useURLencode);
-    repl(F("&laquo;"), laquo, s, useURLencode);
-    repl(F("{>>}"),    raquo, s, useURLencode);
-    repl(F("&raquo;"), raquo, s, useURLencode);
+    repl(F("{<<}"), F("&laquo;"), laquo, s, useURLencode);
+    repl(F("{>>}"), F("&raquo;"), raquo, s, useURLencode);
   }
   {
     // Greek letter Mu
     const char mu[3] = { 0xc2, 0xb5, 0 }; // Unicode greek letter mu
-    repl(F("{u}"),     mu, s, useURLencode);
-    repl(F("&micro;"), mu, s, useURLencode);
+    repl(F("{u}"), F("&micro;"), mu, s, useURLencode);
   }
   {
     // Currency
@@ -837,14 +898,10 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     const char yen[3]   = { 0xc2, 0xa5, 0 };       // Unicode yen symbol
     const char pound[3] = { 0xc2, 0xa3, 0 };       // Unicode pound symbol
     const char cent[3]  = { 0xc2, 0xa2, 0 };       // Unicode cent symbol
-    repl(F("{E}"),     euro,  s, useURLencode);
-    repl(F("&euro;"),  euro,  s, useURLencode);
-    repl(F("{Y}"),     yen,   s, useURLencode);
-    repl(F("&yen;"),   yen,   s, useURLencode);
-    repl(F("{P}"),     pound, s, useURLencode);
-    repl(F("&pound;"), pound, s, useURLencode);
-    repl(F("{c}"),     cent,  s, useURLencode);
-    repl(F("&cent;"),  cent,  s, useURLencode);
+    repl(F("{E}"), F("&euro;"),  euro,  s, useURLencode);
+    repl(F("{Y}"), F("&yen;"),   yen,   s, useURLencode);
+    repl(F("{P}"), F("&pound;"), pound, s, useURLencode);
+    repl(F("{c}"), F("&cent;"),  cent,  s, useURLencode);
   }
   {
     // Math symbols
@@ -857,24 +914,15 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     const char plusmn[3] = { 0xc2, 0xb1, 0 }; // Unicode plusmn symbol
     const char times[3]  = { 0xc3, 0x97, 0 }; // Unicode times symbol
     const char divide[3] = { 0xc3, 0xb7, 0 }; // Unicode divide symbol
-    repl(F("{^1}"),     sup1,   s, useURLencode);
-    repl(F("&sup1;"),   sup1,   s, useURLencode);
-    repl(F("{^2}"),     sup2,   s, useURLencode);
-    repl(F("&sup2;"),   sup2,   s, useURLencode);
-    repl(F("{^3}"),     sup3,   s, useURLencode);
-    repl(F("&sup3;"),   sup3,   s, useURLencode);
-    repl(F("{1_4}"),    frac14, s, useURLencode);
-    repl(F("&frac14;"), frac14, s, useURLencode);
-    repl(F("{1_2}"),    frac12, s, useURLencode);
-    repl(F("&frac12;"), frac12, s, useURLencode);
-    repl(F("{3_4}"),    frac34, s, useURLencode);
-    repl(F("&frac34;"), frac34, s, useURLencode);
-    repl(F("{+-}"),     plusmn, s, useURLencode);
-    repl(F("&plusmn;"), plusmn, s, useURLencode);
-    repl(F("{x}"),      times,  s, useURLencode);
-    repl(F("&times;"),  times,  s, useURLencode);
-    repl(F("{..}"),     divide, s, useURLencode);
-    repl(F("&divide;"), divide, s, useURLencode);
+    repl(F("{^1}"),  F("&sup1;"),   sup1,   s, useURLencode);
+    repl(F("{^2}"),  F("&sup2;"),   sup2,   s, useURLencode);
+    repl(F("{^3}"),  F("&sup3;"),   sup3,   s, useURLencode);
+    repl(F("{1_4}"), F("&frac14;"), frac14, s, useURLencode);
+    repl(F("{1_2}"), F("&frac12;"), frac12, s, useURLencode);
+    repl(F("{3_4}"), F("&frac34;"), frac34, s, useURLencode);
+    repl(F("{+-}"),  F("&plusmn;"), plusmn, s, useURLencode);
+    repl(F("{x}"),   F("&times;"),  times,  s, useURLencode);
+    repl(F("{..}"),  F("&divide;"), divide, s, useURLencode);
   }
 #endif // ifndef BUILD_NO_SPECIAL_CHARACTERS_STRINGCONVERTER
 }
@@ -893,8 +941,7 @@ void parseSingleControllerVariable(String            & s,
                                    uint8_t                taskValueIndex,
                                    bool             useURLencode) {
   if (validTaskIndex(event->TaskIndex)) {
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%valname%"), ExtraTaskSettings.TaskDeviceValueNames[taskValueIndex], s, useURLencode);
+    repl(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex), s, useURLencode);
   } else {
     repl(F("%valname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -931,9 +978,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
 
   if (validTaskIndex(event->TaskIndex)) {
-    // These replacements use ExtraTaskSettings, so make sure the correct TaskIndex is set in the event.
-    LoadTaskSettings(event->TaskIndex);
-    repl(F("%tskname%"), ExtraTaskSettings.TaskDeviceName, s, useURLencode);
+    repl(F("%tskname%"), getTaskDeviceName(event->TaskIndex), s, useURLencode);
   } else {
     repl(F("%tskname%"), EMPTY_STRING, s, useURLencode);
   }
@@ -947,7 +992,7 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
       vname += '%';
 
       if (validTaskIndex(event->TaskIndex)) {
-        repl(vname, ExtraTaskSettings.TaskDeviceValueNames[i], s, useURLencode);
+        repl(vname, getTaskValueName(event->TaskIndex, i), s, useURLencode);
       } else {
         repl(vname, EMPTY_STRING, s, useURLencode);
       }
@@ -970,7 +1015,7 @@ bool getConvertArgument2(const __FlashStringHelper * marker, const String& s, fl
   String argumentString;
 
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
-    int pos_comma = argumentString.indexOf(',');
+    const int pos_comma = argumentString.indexOf(',');
 
     if (pos_comma == -1) { return false; }
 
@@ -1017,18 +1062,16 @@ bool getConvertArgumentString(const String& marker,
 // FIXME TD-er: These macros really increase build size
 struct ConvertArgumentData {
   ConvertArgumentData(String& s, bool useURLencode) 
-    : str(s),
-      arg1(0.0f), arg2(0.0f),
-      startIndex(0), endIndex(0),
+    : str(s), arg1(0.0f), arg2(0.0f), startIndex(0), endIndex(0),
       URLencode(useURLencode) {}
 
   ConvertArgumentData() = delete;
 
   String& str;
-  float arg1, arg2 = 0.0f;
-  int   startIndex = 0;
-  int   endIndex   = 0;
-  bool  URLencode  = false;
+  float arg1, arg2;
+  int   startIndex;
+  int   endIndex;
+  bool  URLencode;
 };
 
 void repl(ConvertArgumentData& data, const String& repl_str) {
@@ -1066,14 +1109,16 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2dh%"),   minutesToDayHour(data.arg1))
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex(data.arg1, F("")))
+  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
   #undef SMART_CONV
 
   // Conversions with 2 parameters
   #define SMART_CONV(T, FUN) \
   while (getConvertArgument2((T), data)) { repl(data, (FUN)); }
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(data.arg1, data.arg2), 2))
+  #if FEATURE_ESPEASY_P2P
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(data.arg1, data.arg2))
+  #endif
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
   #undef SMART_CONV
@@ -1102,10 +1147,10 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
     for (int i = pos_begin; i < pos_end; ++i) {
       argvString += string[i];
     }
+    argvString.trim();
+    argvString = stripQuotes(argvString);
   }
-  argvString.trim();
-  argvString = stripQuotes(argvString);
-  return argvString.length() > 0;
+  return true;
 }
 
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
@@ -1118,21 +1163,37 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
 
   while (string_pos < string_len)
   {
-    char c, d; // c = current char, d = next char (if available)
+    char c, d, e; // c = current char, d,e = next char (if available)
     c = string[string_pos];
     d = 0;
+    e = 0;
 
     if ((string_pos + 1) < string_len) {
       d = string[string_pos + 1];
     }
+    if ((string_pos + 2) < string_len) {
+      e = string[string_pos + 2];
+    }
 
-    if       (!parenthesis && (c == ' ') && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d == separator)) {}
-    else if  (!parenthesis && (c == separator) && (d == ' ')) {}
-    else if  (!parenthesis && (c == ' ') && (d >= 33) && (d <= 126)) {}
-    else if  (!parenthesis && (c == separator) && (d >= 33) && (d <= 126)) {}
+    if  (!parenthesis && (((c == ' ') && (d == ' ')) || 
+                          ((c == separator) && (d == ' ')))) {
+      // Consider multiple consequitive spaces as one.
+    }
+    else if  (!parenthesis && ((d == ' ') && (e == separator))) {
+      // Skip the space.      
+    }
     else
     {
+      // Found the start of the new argument.
+      if (pos_begin == -1 && !parenthesis && !((c == separator) || isParameterSeparatorChar(c))) {
+        pos_begin = string_pos;
+        pos_end   = string_pos;
+      }
+      if (pos_end != -1) {
+        ++pos_end;
+      }
+
+      // Check if we're in a set of parenthesis (any quote char or [])
       if (!parenthesis && (isQuoteChar(c) || (c == '['))) {
         parenthesis          = true;
         matching_parenthesis = c;
@@ -1144,23 +1205,16 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
         parenthesis = false;
       }
 
-      if (pos_begin == -1) {
-        pos_begin = string_pos;
-        pos_end   = string_pos;
-      }
-      ++pos_end;
-
       if (!parenthesis && (isParameterSeparatorChar(d) || (d == separator) || (d == 0))) // end of word
       {
         argc_pos++;
-
         if (argc_pos == argc)
         {
           return true;
         }
+        // new Argument separator found
         pos_begin = -1;
         pos_end   = -1;
-        string_pos++;
       }
     }
     string_pos++;

@@ -1,13 +1,12 @@
 #include "../WebServer/CustomPage.h"
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
 #include "../Commands/InternalCommands.h"
-#include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
@@ -38,6 +37,7 @@ bool handle_custom(const String& path) {
     return false;    // unknown file that does not exist...
   }
 
+  #if FEATURE_ESPEASY_P2P
   if (dashboardPage) // for the dashboard page, create a default unit dropdown selector
   {
     // handle page redirects to other unit's as requested by the unit dropdown selector
@@ -65,6 +65,10 @@ bool handle_custom(const String& path) {
 
     TXBuffer.startStream();
     sendHeadandTail(F("TmplDsh"), _HEAD);
+    html_add_JQuery_script();
+    #if FEATURE_CHART_JS
+    html_add_ChartJS_script();
+    #endif // if FEATURE_CHART_JS
     html_add_autosubmit_form();
     html_add_form();
 
@@ -121,6 +125,7 @@ bool handle_custom(const String& path) {
     addHtmlInt(next);
     addHtml(F("'>&gt;</a>"));
   }
+  #endif
 
   // handle commands from a custom page
   String webrequest = webArg(F("cmd"));
@@ -141,14 +146,14 @@ bool handle_custom(const String& path) {
     String line;
     line.reserve(128);
     while (available > 0) {
-      uint32_t chunksize = 64;
-      if (available < static_cast<int>(chunksize)) {
+      int32_t chunksize = 64;
+      if (available < chunksize) {
         chunksize = available;
       }
       uint8_t buf[64] = {0};
-      const size_t read = dataFile.read(buf, chunksize);
+      const int read = dataFile.read(buf, chunksize);
       if (read == chunksize) {
-        for (uint32_t i = 0; i < chunksize; ++i) {
+        for (int32_t i = 0; i < chunksize; ++i) {
           const char c = (char)buf[i];
           line += c;
           if (c == '\n') {
@@ -183,22 +188,22 @@ bool handle_custom(const String& path) {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
           if (validDeviceIndex(DeviceIndex)) {
-            LoadTaskSettings(x);
             html_TR_TD();
-            addHtml(ExtraTaskSettings.TaskDeviceName);
+            addHtml(getTaskDeviceName(x));
 
             const uint8_t valueCount = getValueCountForTask(x);
 
             for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
             {
+              const String taskValueName = getTaskValueName(x, varNr);
               if ((varNr < valueCount) &&
-                  (ExtraTaskSettings.TaskDeviceValueNames[varNr][0] != 0))
+                  (!taskValueName.isEmpty()))
               {
                 if (varNr > 0) {
                   html_TR_TD();
                 }
                 html_TD();
-                addHtml(ExtraTaskSettings.TaskDeviceValueNames[varNr]);
+                addHtml(taskValueName);
                 html_TD();
                 addHtml(formatUserVarNoCheck(x, varNr));
               }

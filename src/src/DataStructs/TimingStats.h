@@ -1,12 +1,12 @@
 #ifndef DATASTRUCTS_TIMINGSTATS_H
 #define DATASTRUCTS_TIMINGSTATS_H
 
-#include "../DataTypes/ESPEasy_plugin_functions.h"
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_TIMING_STATS
 
-#ifdef USES_TIMING_STATS
-
+#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
 # include <Arduino.h>
@@ -30,7 +30,7 @@
 # define CPLUGIN_CALL_50PS       9
 # define SEND_DATA_STATS         10
 # define COMPUTE_FORMULA_STATS   11
-# define PROC_SYS_TIMER          12
+# define PLUGIN_CALL_DEVICETIMER_IN     12
 # define SET_NEW_TIMER           13
 # define TIME_DIFF_COMPUTE       14
 # define MQTT_DELAY_QUEUE        15
@@ -75,14 +75,18 @@
 # define PARSE_SYSVAR_NOCHANGE   54
 # define PARSE_TEMPLATE_PADDED   55
 # define RULES_PROCESSING        56
-# define GRAT_ARP_STATS          57
-# define SAVE_TO_RTC             58
-# define BACKGROUND_TASKS        59
-# define HANDLE_SCHEDULER_IDLE   60
-# define HANDLE_SCHEDULER_TASK   61
-# define HANDLE_SERVING_WEBPAGE  62
-# define WIFI_SCAN_ASYNC         63
-# define WIFI_SCAN_SYNC          64
+# define RULES_PARSE_LINE        57
+# define RULES_PROCESS_MATCHED   58
+# define RULES_MATCH             59
+# define GRAT_ARP_STATS          60
+# define SAVE_TO_RTC             61
+# define BACKGROUND_TASKS        62
+# define PROCESS_SYSTEM_EVENT_QUEUE 63
+# define HANDLE_SCHEDULER_IDLE   64
+# define HANDLE_SCHEDULER_TASK   65
+# define HANDLE_SERVING_WEBPAGE  66
+# define WIFI_SCAN_ASYNC         67
+# define WIFI_SCAN_SYNC          68
 
 
 class TimingStats {
@@ -131,7 +135,7 @@ extern unsigned long timingstats_last_reset;
 // Add a timer statistic value in usec.
 # define ADD_TIMER_STAT(L, T) if (Settings.EnableTimingStats()) { miscStats[L].add(T); }
 
-#else // ifdef USES_TIMING_STATS
+#else // if FEATURE_TIMING_STATS
 
 # define START_TIMER ;
 # define STOP_TIMER_TASK(T, F) ;
@@ -145,6 +149,6 @@ extern unsigned long timingstats_last_reset;
 // Meaning we must make sure the forward declaration of the TimingStats class is made, since it is used as an argument in some function.
 class TimingStats;
 
-#endif // ifdef USES_TIMING_STATS
+#endif // if FEATURE_TIMING_STATS
 
 #endif // DATASTRUCTS_TIMINGSTATS_H

@@ -7,11 +7,11 @@
 
 #include "../WebServer/CustomPage.h"
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
-#ifdef FEATURE_SD
+#if FEATURE_SD
 # include <SD.h>
-#endif // ifdef FEATURE_SD
+#endif // if FEATURE_SD
 
 bool match_ext(const String& path, const __FlashStringHelper *ext) {
   return path.endsWith(ext) || path.endsWith(String(ext) + F(".gz"));
@@ -102,11 +102,11 @@ bool loadFromFS(String path) {
 
   // Search flash file system first, then SD if present
   f = tryOpenFile(path.c_str(), "r");
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
   if (!f) {
     f = SD.open(path.c_str(), "r");
   }
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
   if (!f) {
     return false;
@@ -139,11 +139,11 @@ size_t streamFromFS(String path, bool htmlEscape) {
 
   // Search flash file system first, then SD if present
   f = tryOpenFile(path.c_str(), "r");
-  #ifdef FEATURE_SD
+  #if FEATURE_SD
   if (!f) {
     f = SD.open(path.c_str(), "r");
   }
-  #endif // ifdef FEATURE_SD
+  #endif // if FEATURE_SD
 
   if (!f) {
     return bytesStreamed;
@@ -152,14 +152,14 @@ size_t streamFromFS(String path, bool htmlEscape) {
   int available = f.available();
   String escaped;
   while (available > 0) {
-    uint32_t chunksize = 64;
-    if (available < static_cast<int>(chunksize)) {
+    int32_t chunksize = 64;
+    if (available < chunksize) {
       chunksize = available;
     }
     uint8_t buf[64] = {0};
-    const size_t read = f.read(buf, chunksize);
+    const int read = f.read(buf, chunksize);
     if (read == chunksize) {
-      for (uint32_t i = 0; i < chunksize; ++i) {
+      for (int32_t i = 0; i < chunksize; ++i) {
         const char c = (char)buf[i];
         if (htmlEscape && htmlEscapeChar(c, escaped)) {
           addHtml(escaped);
@@ -172,6 +172,10 @@ size_t streamFromFS(String path, bool htmlEscape) {
     } else {
       available = 0;
     }
+  }
+
+  while (f.available()) { 
+    addHtml((char)f.read()); 
   }
   statusLED(true);
 

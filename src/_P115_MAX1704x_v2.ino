@@ -17,7 +17,7 @@
 
 # define PLUGIN_115
 # define PLUGIN_ID_115     115           // plugin id
-# define PLUGIN_NAME_115   "Energy - Fuel Gauge MAX1704x [TESTING]"
+# define PLUGIN_NAME_115   "Energy - Fuel Gauge MAX1704x"
 # define PLUGIN_VALUENAME1_115 "Voltage" // Battery voltage
 # define PLUGIN_VALUENAME2_115 "SOC"     // Battery state of charge in percentage
 # define PLUGIN_VALUENAME3_115 "Alert"   // (0 or 1) Alert when the battery SoC gets too low
@@ -48,9 +48,10 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
 
-      // Device[deviceCount].TimerOptional = false;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].DecimalsOnly     = true;
+      // Device[deviceCount].TimerOptional   = false;
+      Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].DecimalsOnly       = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -170,7 +171,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
-        if ((command == F("max1704xclearalert")))
+        if ((command.equals(F("max1704xclearalert"))))
         {
           P115_data->clearAlert();
           success = true;

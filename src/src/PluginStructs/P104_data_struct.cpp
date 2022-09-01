@@ -5,7 +5,7 @@
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Numerical.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
@@ -333,8 +333,8 @@ void P104_data_struct::loadSettings() {
     while (zoneIndex < expectedZones) {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
-      if (zones[zoneIndex].text == F("\"\"")) { // Special case
-        zones[zoneIndex].text = EMPTY_STRING;
+      if (zones[zoneIndex].text.equals(F("\"\""))) { // Special case
+        zones[zoneIndex].text.clear();
       }
 
       zoneIndex++;
@@ -1535,32 +1535,6 @@ void P104_data_struct::checkRepeatTimer(uint8_t z) {
   }
 }
 
-/******************************************
- * enquoteString wrap in ", ' or ` unless all 3 quote types are used
- *****************************************/
-String P104_data_struct::enquoteString(const String& input) {
-  char quoteChar = '"';
-
-  if (input.indexOf(quoteChar) > -1) {
-    quoteChar = '\'';
-
-    if (input.indexOf(quoteChar) > -1) {
-      quoteChar = '`';
-
-      if (input.indexOf(quoteChar) > -1) {
-        return input; // All types of supported quotes used, return original string
-      }
-    }
-  }
-  String result;
-
-  result.reserve(input.length() + 2);
-  result  = quoteChar;
-  result += input;
-  result += quoteChar;
-
-  return result;
-}
 
 /***************************************
  * saveSettings gather the zones data from the UI and store in customsettings
@@ -1623,7 +1597,7 @@ bool P104_data_struct::saveSettings() {
       zones.push_back(P104_zone_struct(zoneIndex + 1));
 
       zones[zoneIndex].size          = getFormItemIntCustomArgName(index + P104_OFFSET_SIZE);
-      zones[zoneIndex].text          = enquoteString(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
+      zones[zoneIndex].text          = wrapWithQuotes(webArg(getPluginCustomArgName(index + P104_OFFSET_TEXT)));
       zones[zoneIndex].content       = getFormItemIntCustomArgName(index + P104_OFFSET_CONTENT);
       zones[zoneIndex].alignment     = getFormItemIntCustomArgName(index + P104_OFFSET_ALIGNMENT);
       zones[zoneIndex].animationIn   = getFormItemIntCustomArgName(index + P104_OFFSET_ANIM_IN);
@@ -1683,7 +1657,7 @@ bool P104_data_struct::saveSettings() {
 
   if (zbuffer.reserve(P104_SETTINGS_BUFFER_V2 + 2)) {
     for (auto it = zones.begin(); it != zones.end() && error.length() == 0; ++it) {
-      zbuffer = EMPTY_STRING;
+      zbuffer.clear();
 
       // WARNING: Order of values should match the numeric order of P104_OFFSET_* values
       zbuffer += it->size;          // 2

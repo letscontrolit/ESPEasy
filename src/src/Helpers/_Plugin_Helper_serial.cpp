@@ -12,32 +12,21 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include <ESPEasySerialType.h>
+
 
 String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType) {
-  int portnr = 0;
-
-  switch (serType) {
-    case ESPEasySerialPort::software:        return F("SoftwareSerial");
-    case ESPEasySerialPort::sc16is752:       return F("I2C Serial");
-    case ESPEasySerialPort::serial0_swap:    return F("HW Serial0 swap");
-    case ESPEasySerialPort::serial0:         portnr = 0; break;
-    case ESPEasySerialPort::serial1:         portnr = 1; break;
-    case ESPEasySerialPort::serial2:         portnr = 2; break;
-    default:
-      return "";
-  }
-  String label = F("HW Serial");
-
-  label += portnr;
-  return label;
+  return ESPEasySerialPort_toString(serType);
 }
 
 void serialHelper_log_GpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2) {
+  # ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("Serial : ");
     log += serialHelper_getGpioDescription(typeHint, config_pin1, config_pin2, " ");
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
+  #endif
 }
 
 String serialHelper_getGpioDescription(ESPEasySerialPort typeHint, int config_pin1, int config_pin2, const String& newline) {

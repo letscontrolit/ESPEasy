@@ -30,11 +30,14 @@ void P036_data_struct::reset() {
   }
 }
 
+// FIXME TD-er: with using functions to get the font, this object is stored in .dram0.data
+// The same as when using the DRAM_ATTR attribute used for interrupt code.
+// This is very precious memory, so we must find something other way to define this.
 const tFontSizes FontSizes[P36_MaxFontCount] = {
-  { ArialMT_Plain_24, 24,    28                 }, // 9643
-  { ArialMT_Plain_16, 16,    19                 }, // 5049
-  { Dialog_plain_12,  13,    15                 }, // 3707
-  { ArialMT_Plain_10, 10,    13                 }, // 2731
+  { getArialMT_Plain_24(), 24,    28                 }, // 9643
+  { getArialMT_Plain_16(), 16,    19                 }, // 5049
+  { getDialog_plain_12(),  13,    15                 }, // 3707
+  { getArialMT_Plain_10(), 10,    13                 }, // 2731
 };
 
 const tSizeSettings SizeSettings[P36_MaxSizesCount] = {
@@ -196,11 +199,11 @@ void P036_data_struct::setContrast(uint8_t OLED_contrast) {
       contrast = 10; precharge = 5; comdetect = 0;
       break;
     case P36_CONTRAST_MED:
-      contrast = P36_CONTRAST_MED; precharge = 0x1F; comdetect = 64;
+      contrast = P36_CONTRAST_MED; precharge = 0x1F; // comdetect = 64;
       break;
     case P36_CONTRAST_HIGH:
     default:
-      contrast = P36_CONTRAST_HIGH; precharge = 241; comdetect = 64;
+      contrast = P36_CONTRAST_HIGH; precharge = 241; // comdetect = 64;
       break;
   }
   display->displayOn();
@@ -331,7 +334,7 @@ void P036_data_struct::display_time() {
 
   parseSystemVariables(dtime, false);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(ArialMT_Plain_10);
+  display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, 28, GetHeaderHeight() - 2);
   display->setColor(WHITE);
@@ -342,7 +345,7 @@ void P036_data_struct::display_title(const String& title) {
   if (!isInitialized()) {
     return;
   }
-  display->setFont(ArialMT_Plain_10);
+  display->setFont(getArialMT_Plain_10());
   display->setColor(BLACK);
   display->fillRect(0, TopLineOffset, P36_MaxDisplayWidth, GetHeaderHeight()); // don't clear line under title.
   display->setColor(WHITE);
@@ -852,7 +855,7 @@ uint8_t P036_data_struct::display_scroll_timer(bool             initialScroll,
     return 0;
   }
 
-  // page scrolling (using PLUGIN_TIMER_IN)
+  // page scrolling (using PLUGIN_TASKTIMER_IN)
   display->setColor(BLACK);
 
   // We allow 12 pixels (including underline) at the top because otherwise the wifi indicator gets too squashed!!

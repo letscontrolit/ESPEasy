@@ -11,7 +11,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/MDNS_Helper.h"
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 #include <ETH.h>
 #endif
 
@@ -21,7 +21,7 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
   }
   switch (active_network_medium) {
     case NetworkMedium_t::Ethernet:
-      #ifdef HAS_ETHERNET
+      #if FEATURE_ETHERNET
       // FIXME TD-er: How to 'end' ETH?
 //      ETH.end();
       if (new_medium == NetworkMedium_t::WIFI) {
@@ -44,11 +44,11 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 
 
 /*********************************************************************************************\
-   Ethernet or Wifi Support for ESP32 Build flag HAS_ETHERNET
+   Ethernet or Wifi Support for ESP32 Build flag FEATURE_ETHERNET
 \*********************************************************************************************/
 void NetworkConnectRelaxed() {
   if (NetworkConnected()) return;
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if (ETHConnectRelaxed()) {
       return;
@@ -62,7 +62,7 @@ void NetworkConnectRelaxed() {
 }
 
 bool NetworkConnected() {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     return ETHConnected();
   }
@@ -71,7 +71,7 @@ bool NetworkConnected() {
 }
 
 IPAddress NetworkLocalIP() {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {
       return ETH.localIP();
@@ -85,7 +85,7 @@ IPAddress NetworkLocalIP() {
 }
 
 IPAddress NetworkSubnetMask() {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {
       return ETH.subnetMask();
@@ -99,7 +99,7 @@ IPAddress NetworkSubnetMask() {
 }
 
 IPAddress NetworkGatewayIP() {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {
       return ETH.gatewayIP();
@@ -113,10 +113,10 @@ IPAddress NetworkGatewayIP() {
 }
 
 IPAddress NetworkDnsIP (uint8_t dns_no) {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     if(EthEventData.ethInitSuccess) {
-      return ETH.dnsIP();
+      return ETH.dnsIP(dns_no);
     } else {
       addLog(LOG_LEVEL_ERROR, F("Call NetworkDnsIP(uint8_t dns_no) only on connected Ethernet!"));
       return IPAddress();
@@ -127,7 +127,7 @@ IPAddress NetworkDnsIP (uint8_t dns_no) {
 }
 
 MAC_address NetworkMacAddress() {
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
   if(active_network_medium == NetworkMedium_t::Ethernet) {
     return ETHMacAddress();
   }
@@ -139,7 +139,7 @@ MAC_address NetworkMacAddress() {
 
 String NetworkGetHostname() {
     #ifdef ESP32
-      #ifdef HAS_ETHERNET 
+      #if FEATURE_ETHERNET 
       if(Settings.NetworkMedium == NetworkMedium_t::Ethernet && EthEventData.ethInitSuccess) {
         return String(ETH.getHostname());
       }
@@ -222,13 +222,15 @@ String WifiSTAmacAddress() {
 
 void CheckRunningServices() {
   set_mDNS();
+  #ifdef ESP8266
   if (active_network_medium == NetworkMedium_t::WIFI) 
   {
     SetWiFiTXpower();
   }
+  #endif
 }
 
-#ifdef HAS_ETHERNET
+#if FEATURE_ETHERNET
 bool EthFullDuplex()
 {
   if (EthEventData.ethInitSuccess)
@@ -238,15 +240,22 @@ bool EthFullDuplex()
 
 bool EthLinkUp()
 {
-  if (EthEventData.ethInitSuccess)
+  if (EthEventData.ethInitSuccess) {
+    #ifdef ESP_IDF_VERSION_MAJOR
+    // FIXME TD-er: See: https://github.com/espressif/arduino-esp32/issues/6105
+    return EthEventData.EthConnected();
+    #else
     return ETH.linkUp();
+    #endif
+  }
   return false;
 }
 
 uint8_t EthLinkSpeed()
 {
-  if (EthEventData.ethInitSuccess)
+  if (EthEventData.ethInitSuccess) {
     return ETH.linkSpeed();
+  }
   return 0;
 }
 #endif

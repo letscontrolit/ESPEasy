@@ -5,10 +5,10 @@
 #include "../../_Plugin_Helper.h"
 #include "../Globals/Settings.h"
 
-#ifdef USES_BLYNK
+#if FEATURE_BLYNK
 # include "../Commands/Blynk.h"
 # include "../Commands/Blynk_c015.h"
-#endif // ifdef USES_BLYNK
+#endif // if FEATURE_BLYNK
 
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"
@@ -17,12 +17,15 @@
 #include "../Commands/HTTP.h"
 #include "../Commands/i2c.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Commands/MQTT.h"
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
 
 #include "../Commands/Networks.h"
+#if FEATURE_NOTIFIER
 #include "../Commands/Notifications.h"
+#endif
+#include "../Commands/Provisioning.h"
 #include "../Commands/RTC.h"
 #include "../Commands/Rules.h"
 #include "../Commands/SDCARD.h"
@@ -193,7 +196,7 @@ bool do_command_case_check(command_case_data         & data,
   if (mustCheckNrArguments) {
     if (!checkNrArguments(data.cmd, data.line, nrArguments)) {
       data.status = return_incorrect_nr_arguments();
-      data.retval = false;
+      //data.retval = false;
       return true; // Command is handled
     }
   }
@@ -288,7 +291,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'e': {
-    #ifdef HAS_ETHERNET
+    #if FEATURE_ETHERNET
       COMMAND_CASE_R(   "ethphyadr", Command_ETH_Phy_Addr,   1); // Network Command
       COMMAND_CASE_R(   "ethpinmdc", Command_ETH_Pin_mdc,    1); // Network Command
       COMMAND_CASE_R(  "ethpinmdio", Command_ETH_Pin_mdio,   1); // Network Command
@@ -299,8 +302,9 @@ bool executeInternalCommand(command_case_data & data)
       COMMAND_CASE_R(  "ethgateway", Command_ETH_Gateway,    1); // Network Command
       COMMAND_CASE_R(   "ethsubnet", Command_ETH_Subnet,     1); // Network Command  
       COMMAND_CASE_R(      "ethdns", Command_ETH_DNS,        1); // Network Command
+      COMMAND_CASE_A("ethdisconnect", Command_ETH_Disconnect, 0); // Network Command
       COMMAND_CASE_R( "ethwifimode", Command_ETH_Wifi_Mode,  1); // Network Command
-    #endif // HAS_ETHERNET
+    #endif // FEATURE_ETHERNET
       COMMAND_CASE_R("erasesdkwifi", Command_WiFi_Erase,     0); // WiFi.h
       COMMAND_CASE_A(       "event", Command_Rules_Events,  -1); // Rule.h
       COMMAND_CASE_A("executerules", Command_Rules_Execute, -1); // Rule.h
@@ -338,6 +342,7 @@ bool executeInternalCommand(command_case_data & data)
       break;
     }
     case 'm': {
+#ifdef USES_P009
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "mcpgpio", Command_GPIO,              2); // Gpio.h
         COMMAND_CASE_A(   "mcpgpiorange", Command_GPIO_McpGPIORange, -1); // Gpio.h
@@ -350,6 +355,7 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "mcpmoderange", Command_GPIO_ModeRange,    3); // Gpio.h   
         COMMAND_CASE_A(       "mcppulse", Command_GPIO_Pulse,        3); // GPIO.h
       }
+#endif
       COMMAND_CASE_A(          "monitor", Command_GPIO_Monitor,      2); // GPIO.h
       COMMAND_CASE_A(     "monitorrange", Command_GPIO_MonitorRange, 3); // GPIO.h   
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -363,13 +369,14 @@ bool executeInternalCommand(command_case_data & data)
     case 'n': {
       COMMAND_CASE_R(   "name", Command_Settings_Name,        1); // Settings.h
       COMMAND_CASE_R("nosleep", Command_System_NoSleep,       1); // System.h
-#ifdef USES_NOTIFIER
+#if FEATURE_NOTIFIER
       COMMAND_CASE_R( "notify", Command_Notifications_Notify, 2); // Notifications.h
 #endif
       COMMAND_CASE_R("ntphost", Command_NTPHost,              1); // Time.h
       break;
     }
     case 'p': {
+#ifdef USES_P019
       if (cmd_lc_length > 3 && data.cmd_lc[3] == 'g') {
         COMMAND_CASE_A(        "pcfgpio", Command_GPIO,                 2); // Gpio.h
         COMMAND_CASE_A(   "pcfgpiorange", Command_GPIO_PcfGPIORange,   -1); // Gpio.h
@@ -382,11 +389,22 @@ bool executeInternalCommand(command_case_data & data)
         COMMAND_CASE_A(   "pcfmoderange", Command_GPIO_ModeRange,       3); // Gpio.h   ************
         COMMAND_CASE_A(       "pcfpulse", Command_GPIO_Pulse,           3); // GPIO.h
       }
+#endif
       COMMAND_CASE_R("password", Command_Settings_Password, 1); // Settings.h
+#if FEATURE_CUSTOM_PROVISIONING
+      COMMAND_CASE_A(       "provisionconfig", Command_Provisioning_Config,       0); // Provisioning.h
+      COMMAND_CASE_A(     "provisionsecurity", Command_Provisioning_Security,     0); // Provisioning.h
+      #if FEATURE_NOTIFIER
+      COMMAND_CASE_A( "provisionnotification", Command_Provisioning_Notification, 0); // Provisioning.h
+      #endif
+      COMMAND_CASE_A(    "provisionprovision", Command_Provisioning_Provision,    0); // Provisioning.h
+      COMMAND_CASE_A(        "provisionrules", Command_Provisioning_Rules,        1); // Provisioning.h
+      COMMAND_CASE_A(     "provisionfirmware", Command_Provisioning_Firmware,     1); // Provisioning.h
+#endif
       COMMAND_CASE_A(   "pulse", Command_GPIO_Pulse,        3); // GPIO.h
-#ifdef USES_MQTT
+#if FEATURE_MQTT
       COMMAND_CASE_A( "publish", Command_MQTT_Publish,      2); // MQTT.h
-#endif // USES_MQTT
+#endif // if FEATURE_MQTT
       COMMAND_CASE_A(     "pwm", Command_GPIO_PWM,          4); // GPIO.h
       break;
     }
@@ -401,15 +419,17 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 's': {
       COMMAND_CASE_R(    "save", Command_Settings_Save, 0); // Settings.h
-    #ifdef FEATURE_SD
+    #if FEATURE_SD
       COMMAND_CASE_R(  "sdcard", Command_SD_LS,         0); // SDCARDS.h
       COMMAND_CASE_R("sdremove", Command_SD_Remove,     1); // SDCARDS.h
-    #endif // ifdef FEATURE_SD
+    #endif // if FEATURE_SD
 
       if (data.cmd_lc[1] == 'e') {
+      #if FEATURE_ESPEASY_P2P
         COMMAND_CASE_A(    "sendto", Command_UPD_SendTo,      2); // UDP.h    // FIXME TD-er: These send commands, can we determine the nr
                                                                   // of
                                                                   // arguments?
+      #endif
         COMMAND_CASE_A("sendtohttp", Command_HTTP_SendToHTTP, 3); // HTTP.h
         COMMAND_CASE_A( "sendtoudp", Command_UDP_SendToUPD,   3); // UDP.h
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -420,9 +440,9 @@ bool executeInternalCommand(command_case_data & data)
       }
       COMMAND_CASE_A("status", Command_GPIO_Status,          2); // GPIO.h
       COMMAND_CASE_R("subnet", Command_Subnet, 1);                // Network Command
-    #ifdef USES_MQTT
+    #if FEATURE_MQTT
       COMMAND_CASE_A("subscribe", Command_MQTT_Subscribe, 1);     // MQTT.h
-    #endif // USES_MQTT
+    #endif // if FEATURE_MQTT
     #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
       COMMAND_CASE_A(  "sysload", Command_SysLoad,        0);     // Diagnostic.h
     #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
@@ -450,7 +470,9 @@ bool executeInternalCommand(command_case_data & data)
     }
     case 'u': {
       COMMAND_CASE_R("udpport", Command_UDP_Port,      1);    // UDP.h
+    #if FEATURE_ESPEASY_P2P
       COMMAND_CASE_R("udptest", Command_UDP_Test,      2);    // UDP.h
+    #endif
       COMMAND_CASE_R(   "unit", Command_Settings_Unit, 1);    // Settings.h
       COMMAND_CASE_A("unmonitor", Command_GPIO_UnMonitor, 2); // GPIO.h
       COMMAND_CASE_A("unmonitorrange", Command_GPIO_UnMonitorRange, 3); // GPIO.h
@@ -576,13 +598,13 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     {
       String log = F("Command: ");
       log += cmd;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
-#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, Line); // for debug purposes add the whole line.
     {
       String parameters;
@@ -599,8 +621,8 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       parameters += TempEvent.Par5;
       addLogMove(LOG_LEVEL_DEBUG, parameters);
     }
-#endif // ifndef BUILD_NO_DEBUG
   }
+#endif // ifndef BUILD_NO_DEBUG
 
 
   if (tryInternal) {
@@ -640,6 +662,12 @@ bool ExecuteCommand(taskIndex_t            taskIndex,
       }
     }
     #endif
+
+    if (!handled) {
+      // Try a controller
+      handled = CPluginCall(CPlugin::Function::CPLUGIN_WRITE, &TempEvent, tmpAction);
+
+    }
 
     if (handled) {
       SendStatus(&TempEvent, return_command_success());

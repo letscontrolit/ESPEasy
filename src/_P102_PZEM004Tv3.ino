@@ -17,7 +17,7 @@
 # define PLUGIN_102
 # define PLUGIN_ID_102        102
 # define PLUGIN_102_DEBUG     true       // activate extra log info in the debug
-# define PLUGIN_NAME_102      "PZEM-004Tv30-Multiple [TESTING]"
+# define PLUGIN_NAME_102      "PZEM-004Tv30-Multiple"
 
 # define P102_PZEM_mode       PCONFIG(1) // 0=read value ; 1=reset energy; 2=programm address
 # define P102_PZEM_ADDR       PCONFIG(2)
@@ -309,7 +309,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-#ifdef USES_PACKED_RAW_DATA
+#if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
       // Matching JS code:
@@ -337,7 +337,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       success = true;
       break;
     }
-#endif // USES_PACKED_RAW_DATA
+#endif // if FEATURE_PACKED_RAW_DATA
 
 
 
@@ -347,7 +347,7 @@ boolean Plugin_102(uint8_t function, struct EventStruct *event, String& string)
       {
         String command = parseString(string, 1);
 
-        if ((command == F("resetenergy")) && (P102_PZEM_FIRST == event->TaskIndex))
+        if ((command.equals(F("resetenergy"))) && (P102_PZEM_FIRST == event->TaskIndex))
         {
           if ((event->Par1 >= 0) && (event->Par1 <= 247))
           {

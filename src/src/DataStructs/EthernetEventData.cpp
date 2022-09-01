@@ -1,5 +1,7 @@
 #include "../DataStructs/EthernetEventData.h"
 
+#if FEATURE_ETHERNET
+
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 // Bit numbers for Eth status
@@ -32,7 +34,6 @@ void EthernetEventData_t::clearAll() {
   lastGetIPmoment.clear();
   last_eth_connect_attempt_moment.clear();
 
-  setEthDisconnected();
   lastEthResetMoment.setNow();
   eth_considered_stable = false;
 
@@ -45,7 +46,6 @@ void EthernetEventData_t::clearAll() {
 }
 
 void EthernetEventData_t::markEthBegin() {
-  setEthDisconnected();
   lastDisconnectMoment.clear();
   lastConnectMoment.clear();
   lastGetIPmoment.clear();
@@ -60,6 +60,7 @@ bool EthernetEventData_t::EthDisconnected() const {
 }
 
 bool EthernetEventData_t::EthGotIP() const {
+
   return bitRead(ethStatus, ESPEASY_ETH_GOT_IP);
 }
 
@@ -72,6 +73,11 @@ bool EthernetEventData_t::EthServicesInitialized() const {
 }
 
 void EthernetEventData_t::setEthDisconnected() {
+  processedConnect          = true;
+  processedDisconnect       = true;
+  processedGotIP            = true;
+  processedDHCPTimeout      = true;
+
   ethStatus = ESPEASY_ETH_DISCONNECTED;
 }
 
@@ -123,7 +129,6 @@ void EthernetEventData_t::markDisconnect() {
     lastConnectedDuration_us = lastConnectMoment.timeDiff(lastDisconnectMoment);
   }
   lastConnectMoment.clear();
-  setEthDisconnected();
   processedDisconnect  = false;
 }
 
@@ -132,3 +137,23 @@ void EthernetEventData_t::markConnected() {
   processedConnect    = false;
 }
 
+String EthernetEventData_t::ESPEasyEthStatusToString() const {
+  String log;
+  if (EthDisconnected()) {
+    log = F("DISCONNECTED");
+  } else {
+    if (EthConnected()) {
+      log += F("Conn. ");
+    }
+    if (EthGotIP()) {
+      log += F("IP ");
+    }
+    if (EthServicesInitialized()) {
+      log += F("Init");
+    }
+  }
+  return log;
+
+}
+
+#endif

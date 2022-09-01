@@ -1,5 +1,7 @@
 #include "../Helpers/_NPlugin_init.h"
 
+#if FEATURE_NOTIFIER
+
 #include "../DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/TimingStats.h"
 
@@ -33,7 +35,8 @@ void NPluginInit()
   // Clear pointer table for all plugins
   for (x = 0; x < NPLUGIN_MAX; x++)
   {
-    NPlugin_ptr[x]                 = nullptr;
+    NPlugin_ptr[x] = nullptr;
+    NPlugin_id[x]  = INVALID_N_PLUGIN_ID;
 //    ProtocolIndex_to_NPlugin_id[x] = INVALID_N_PLUGIN_ID;
     // Do not initialize NPlugin_id_to_ProtocolIndex[x] to an invalid value. (it is map)
   }
@@ -1073,3 +1076,4 @@ void NPluginInit()
   #endif
 
 }
+#endif

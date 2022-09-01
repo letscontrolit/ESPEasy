@@ -17,6 +17,8 @@
 #define WIFI_RECONNECT_WAIT                  20000  // in milliSeconds
 #define WIFI_PROCESS_EVENTS_TIMEOUT          10000  // in milliSeconds
 
+#define CONNECT_TIMEOUT_MAX                  4000   // in milliSeconds
+
 bool WiFiEventData_t::WiFiConnectAllowed() const {
   if (!wifiConnectAttemptNeeded) return false;
   if (wifiSetupConnect) return true;
@@ -128,7 +130,9 @@ void WiFiEventData_t::setWiFiConnected() {
 
 void WiFiEventData_t::setWiFiServicesInitialized() {
   if (!unprocessedWifiEvents() && WiFiConnected() && WiFiGotIP()) {
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_DEBUG, F("WiFi : WiFi services initialized"));
+    #endif
     bitSet(wifiStatus, ESPEASY_WIFI_SERVICES_INITIALIZED);
     wifiConnectInProgress = false;
   }
@@ -194,4 +198,33 @@ void WiFiEventData_t::markDisconnectedAPmode(const uint8_t mac[6]) {
 
 void WiFiEventData_t::setAuthMode(uint8_t newMode) {
   auth_mode = newMode;
+}
+
+
+String WiFiEventData_t::ESPeasyWifiStatusToString() const {
+  String log;
+  if (WiFiDisconnected()) {
+    log = F("DISCONNECTED");
+  } else {
+    if (WiFiConnected()) {
+      log += F("Conn. ");
+    }
+    if (WiFiGotIP()) {
+      log += F("IP ");
+    }
+    if (WiFiServicesInitialized()) {
+      log += F("Init");
+    }
+  }
+  return log;
+}
+
+
+uint32_t WiFiEventData_t::getSuggestedTimeout(int index, uint32_t minimum_timeout) const {
+  auto it = connectDurations.find(index);
+  if (it == connectDurations.end()) {
+    return 3 * minimum_timeout;
+  }
+  const uint32_t res = 3 * it->second;
+  return constrain(res, minimum_timeout, CONNECT_TIMEOUT_MAX);
 }

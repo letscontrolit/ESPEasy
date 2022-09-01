@@ -24,7 +24,7 @@ Used libraries: |P007_usedlibraries|
 Introduction
 ------------
 
-The PCF8591 is an Analog to Digital converter, connected via an I2C bus. The plugin supports to read from 1 up to 4 input values. If desired, multiple Tasks *can* be defined, addressing other, or duplicate, inputs.
+The PCF8591 is an Analog to Digital and Digital to Analog converter, connected via an I2C bus. The plugin supports to read from 1 up to 4 input values, and has a single analog output that can be changed by a command. If desired, multiple Tasks *can* be defined, addressing other, or duplicate, inputs.
 
 Supported hardware
 ------------------
@@ -53,6 +53,8 @@ I2C Options
 ^^^^^^^^^^^^
 
 The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+
+As the chip is specified to only work correctly up to 100 kHz, the **Force Slow I2C speed** checkbox should normally be *enabled*.
 
 * **I2C Address**: The address the device is using. There are a number of addresses the module can use, and they can usually be set at the board using jumper pins.
 
@@ -88,6 +90,34 @@ When selecting f.e. the Quad option and saving the settings, the number of outpu
 
    For any 'excess' values, events *will* be generated!
 
+Hardware configuration
+^^^^^^^^^^^^^^^^^^^^^^
+
+* **Input mode** The chip supports several input modes, the desired mode can be selected here.
+
+Available options are:
+
+.. image:: P007_InputModeOptions.png
+  :alt: Input mode options
+
+* *4 single-ended inputs* De standard configuration is to have 4 inputs that are measured with regards to GND.
+* *3 differential inputs, A0/A1/A2 differential with AIN3* AIN0 .. AIN2 are measured differential to AIN3, resulting in 3 available values.
+* *2 single-ended, A0, A1, AIN2/AIN3 differential -> A2* AIN0 and AIN1 are measured with regards to GND into the first 2 values, the third value is measured differentially from AIN2 and AIN3.
+* *AIN0/AIN1 differential -> A0, AIN2/AIN3 differential -> A1* 2 values are measured, the first differentially from AIN0 and AIN1, and the second differentially from AIN2 and AIN3.
+
+When configuring a differential option from above list, the 4th and 3rd values are undefined when not used, but can still be read. The results are then undefined.
+
+The chip documentation describes it like this:
+
+.. image:: P007_InputModeSchematics.png
+  :alt: Chip documentation for Input mode
+
+* **Enable Analog output (AOUT)** Enabling the Analog output has 2 effects:
+
+1) The AOUT pin can be set to a linear value in the range 0..255 between 0V and Vref (Vref can sometimes be set using a potentiometer on the board) using the ``analogout`` command (see below).
+
+2) The internal oscillator will be enabled continuesly, causing higher power usage, but also improved measurements when reading an analog input as it avoids the startup time of the oscillator that can cause inaccurate readings.
+
 Data Acquisition
 ^^^^^^^^^^^^^^^^
 
@@ -100,10 +130,10 @@ Values
 
 The name for the value(s) is initially set to a default name, but can be changed if desired. Also, a formula can be entered to re-calculate a value before display/sending to a controller, and the number of decimals can be changed, for a Temperature, usually 1 decimal is enough to be displayed (value will be rounded).
 
-.. Commands available
-.. ^^^^^^^^^^^^^^^^^^
+Commands available
+^^^^^^^^^^^^^^^^^^
 
-.. .. include:: P007_commands.repl
+.. include:: P007_commands.repl
 
 .. Events
 .. ~~~~~~
@@ -117,9 +147,12 @@ Change log
   ...
 
   |added|
-  2021-08-06 Selection of 1 to 4 input values to be read.
+  2022-05-08 Selection of Input mode, Enable Analog output (AOUT) and ``analogout`` command.
 
   |added|
+  2021-08-06 Selection of 1 to 4 input values to be read.
+
+  |changed|
   2021-08-03 Replaced single Port inputfield with separate I2CAddress and Port selections.
 
   |added|

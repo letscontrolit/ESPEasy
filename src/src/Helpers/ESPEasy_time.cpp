@@ -1,5 +1,7 @@
 #include "../Helpers/ESPEasy_time.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataTypes/TimeSource.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -21,7 +23,7 @@
 
 #include <time.h>
 
-#ifdef USE_EXT_RTC
+#if FEATURE_EXT_RTC
 #include <RTClib.h>
 #endif
 
@@ -29,11 +31,11 @@
 
 
 ESPEasy_time::ESPEasy_time() {
-  memset(&tm, 0, sizeof(tm));
-  memset(&tsRise, 0, sizeof(tm));
-  memset(&tsSet, 0, sizeof(tm));
+  memset(&tm,      0, sizeof(tm));
+  memset(&tsRise,  0, sizeof(tm));
+  memset(&tsSet,   0, sizeof(tm));
   memset(&sunRise, 0, sizeof(tm));
-  memset(&sunSet, 0, sizeof(tm));
+  memset(&sunSet,  0, sizeof(tm));
 }
 
 struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime) const {
@@ -49,41 +51,6 @@ struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLoca
   return result;
 }
 
-
-void ESPEasy_time::breakTime(unsigned long timeInput, struct tm& tm) {
-  uint32_t time = (uint32_t)timeInput;
-  tm.tm_sec  = time % 60;
-  time      /= 60;                   // now it is minutes
-  tm.tm_min  = time % 60;
-  time      /= 60;                   // now it is hours
-  tm.tm_hour = time % 24;
-  time      /= 24;                   // now it is days
-  tm.tm_wday = ((time + 4) % 7) + 1; // Sunday is day 1
-
-  int      year = 1970;
-  unsigned long days = 0;
-  while ((unsigned)(days += (isLeapYear(year) ? 366 : 365)) <= time) {
-    year++;
-  }
-  tm.tm_year = year - 1900; // tm_year starts at 1900
-
-  days -= isLeapYear(year) ? 366 : 365;
-  time -= days;      // now it is days in this year, starting at 0
-
-  uint8_t month = 0;
-  for (month = 0; month < 12; month++) {
-    const uint8_t monthLength = getMonthDays(year, month);
-    if (time >= monthLength) {
-      time -= monthLength;
-    } else {
-      break;
-    }
-  }
-  tm.tm_mon  = month;     // Jan is month 0
-  tm.tm_mday = time + 1;  // day of month start at 1
-}
-
-
 void ESPEasy_time::restoreFromRTC()
 {
   static bool firstCall = true;
@@ -98,6 +65,8 @@ void ESPEasy_time::restoreFromRTC()
     firstCall = false;
     setExternalTimeSource(RTC.lastSysTime, timeSource_t::Restore_RTC_time_source);
     // Do not add the current uptime as offset. This will be done when calling now()
+    lastSyncTime = 0;
+    initTime();
   }
 }
 
@@ -162,9 +131,10 @@ unsigned long ESPEasy_time::now() {
         // Clock instability in msec/second
         timeWander = ((time_offset * 1000000.0) / timePassedSince(lastTimeWanderCalculation));
       }
-      lastTimeWanderCalculation = millis();
 
       prevMillis = millis(); // restart counting from now (thanks to Korman for this fix)
+      lastTimeWanderCalculation = prevMillis;
+      
       timeSynced = true;
 
       sysTime = unixTime_d;
@@ -226,6 +196,7 @@ unsigned long ESPEasy_time::now() {
 
   if (timeSynced) {
     calcSunRiseAndSet();
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("Local time: ");
       log += getDateTimeString('-', ':', ' ');
@@ -248,7 +219,6 @@ unsigned long ESPEasy_time::now() {
   }
   return (unsigned long)localSystime;
 }
-
 
 bool ESPEasy_time::reportNewMinute()
 {
@@ -344,10 +314,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   while (udp.parsePacket() > 0) { // discard any previously received packets
   }
   memset(packetBuffer, 0, NTP_PACKET_SIZE);
-  packetBuffer[0]  = 0b11100011;  // LI, Version, Mode
-  packetBuffer[1]  = 0;           // Stratum, or type of clock
-  packetBuffer[2]  = 6;           // Polling Interval
-  packetBuffer[3]  = 0xEC;        // Peer Clock Precision
+  packetBuffer[0]  = 0b11100011; // LI, Version, Mode
+  packetBuffer[1]  = 0;          // Stratum, or type of clock
+  packetBuffer[2]  = 6;          // Polling Interval
+  packetBuffer[3]  = 0xEC;       // Peer Clock Precision
   packetBuffer[12] = 49;
   packetBuffer[13] = 0x4E;
   packetBuffer[14] = 49;
@@ -381,6 +351,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           log += F(") unsynchronized");
           addLogMove(LOG_LEVEL_ERROR, log);
         }
+
         if (!useNTPpool) {
           // Does not make sense to try it very often if a single host is used which is not synchronized.
           nextSyncTime = sysTime + 120;
@@ -401,6 +372,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
       secsSince1900 |= (unsigned long)packetBuffer[41] << 16;
       secsSince1900 |= (unsigned long)packetBuffer[42] << 8;
       secsSince1900 |= (unsigned long)packetBuffer[43];
+
       if (secsSince1900 == 0) {
         // No time stamp received
 
@@ -471,95 +443,41 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   return false;
 }
 
-
 /********************************************************************************************\
    Date/Time string formatters
  \*********************************************************************************************/
-
 String ESPEasy_time::getDateString(char delimiter) const
 {
-  return getDateString(tm, delimiter);
+  return formatDateString(tm, delimiter);
 }
 
-String ESPEasy_time::getDateString(const struct tm& ts, char delimiter) {
-  // time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-  char DateString[20]; // 19 digits plus the null char
-  const int year = 1900 + ts.tm_year;
 
-  sprintf_P(DateString, PSTR("%4d%c%02d%c%02d"), year, delimiter, ts.tm_mon + 1, delimiter, ts.tm_mday);
-  return DateString;
-}
-
-String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/) const
+String ESPEasy_time::getTimeString(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, false, show_seconds);
+  return formatTimeString(tm, delimiter, false, show_seconds, hour_prefix);
 }
 
-String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/) const
+String ESPEasy_time::getTimeString_ampm(char delimiter, bool show_seconds /*=true*/, char hour_prefix /*='\0'*/) const
 {
-  return getTimeString(tm, delimiter, true, show_seconds);
+  return formatTimeString(tm, delimiter, true, show_seconds, hour_prefix);
 }
 
 
-// returns the current Time separated by the given delimiter
-// time format example with ':' delimiter: 23:59:59 (HH:MM:SS)
-String ESPEasy_time::getTimeString(const struct tm& ts, char delimiter, bool am_pm, bool show_seconds)
-{
-  char TimeString[20]; // 19 digits plus the null char
-
-  if (am_pm) {
-    uint8_t hour(ts.tm_hour % 12);
-
-    if (hour == 0) { hour = 12; }
-    const char a_or_p = ts.tm_hour < 12 ? 'A' : 'P';
-
-    if (show_seconds) {
-      sprintf_P(TimeString, PSTR("%d%c%02d%c%02d %cM"),
-                hour, delimiter, ts.tm_min, delimiter, ts.tm_sec, a_or_p);
-    } else {
-      sprintf_P(TimeString, PSTR("%d%c%02d %cM"),
-                hour, delimiter, ts.tm_min, a_or_p);
-    }
-  } else {
-    if (show_seconds) {
-      sprintf_P(TimeString, PSTR("%02d%c%02d%c%02d"),
-                ts.tm_hour, delimiter, ts.tm_min, delimiter, ts.tm_sec);
-    } else {
-      sprintf_P(TimeString, PSTR("%d%c%02d"),
-                ts.tm_hour, delimiter, ts.tm_min);
-    }
-  }
-  return TimeString;
-}
 
 String ESPEasy_time::getDateTimeString(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) const {
-  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
+  return formatDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, false);
 }
 
 String ESPEasy_time::getDateTimeString_ampm(char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter) const {
-  return getDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
-}
-
-String ESPEasy_time::getDateTimeString(const struct tm& ts, char dateDelimiter, char timeDelimiter,  char dateTimeDelimiter, bool am_pm)
-{
-  // if called like this: getDateTimeString('\0', '\0', '\0');
-  // it will give back this: 20161231235959  (YYYYMMDDHHMMSS)
-  String ret = getDateString(ts, dateDelimiter);
-
-  if (dateTimeDelimiter != '\0') {
-    ret += dateTimeDelimiter;
-  }
-  ret += getTimeString(ts, timeDelimiter, am_pm, true);
-  return ret;
+  return formatDateTimeString(tm, dateDelimiter, timeDelimiter, dateTimeDelimiter, true);
 }
 
 
 /********************************************************************************************\
    Get current time/date
  \*********************************************************************************************/
-
 int ESPEasy_time::year(unsigned long t)
- {
+{
   struct tm tmp;
 
   breakTime(t, tmp);
@@ -574,25 +492,21 @@ int ESPEasy_time::weekday(unsigned long t)
   return tmp.tm_wday;
 }
 
-String ESPEasy_time::weekday_str(int wday) 
+String ESPEasy_time::weekday_str(int wday)
 {
-	const String weekDays = F("SunMonTueWedThuFriSat");
-	return weekDays.substring(wday * 3, wday * 3 + 3);
+  const String weekDays = F("SunMonTueWedThuFriSat");
+
+  return weekDays.substring(wday * 3, wday * 3 + 3);
 }
 
-String ESPEasy_time::weekday_str() const 
+String ESPEasy_time::weekday_str() const
 {
-	return weekday_str(weekday()-1);
+  return weekday_str(weekday() - 1);
 }
-
-
-
-
 
 /********************************************************************************************\
    Sunrise/Sunset calculations
  \*********************************************************************************************/
-
 int ESPEasy_time::getSecOffset(const String& format) {
   int position_minus = format.indexOf('-');
   int position_plus  = format.indexOf('+');
@@ -623,29 +537,27 @@ int ESPEasy_time::getSecOffset(const String& format) {
   return value;
 }
 
-
 String ESPEasy_time::getSunriseTimeString(char delimiter) const {
-  return getTimeString(sunRise, delimiter, false, false);
+  return formatTimeString(sunRise, delimiter, false, false);
 }
 
 String ESPEasy_time::getSunsetTimeString(char delimiter) const {
-  return getTimeString(sunSet, delimiter, false, false);
+  return formatTimeString(sunSet, delimiter, false, false);
 }
 
 String ESPEasy_time::getSunriseTimeString(char delimiter, int secOffset) const {
   if (secOffset == 0) {
     return getSunriseTimeString(delimiter);
   }
-  return getTimeString(getSunRise(secOffset), delimiter, false, false);
+  return formatTimeString(getSunRise(secOffset), delimiter, false, false);
 }
 
 String ESPEasy_time::getSunsetTimeString(char delimiter, int secOffset) const {
   if (secOffset == 0) {
     return getSunsetTimeString(delimiter);
   }
-  return getTimeString(getSunSet(secOffset), delimiter, false, false);
+  return formatTimeString(getSunSet(secOffset), delimiter, false, false);
 }
-
 
 float ESPEasy_time::sunDeclination(int doy) {
   // Declination of the sun in radians
@@ -659,7 +571,7 @@ float ESPEasy_time::diurnalArc(float dec, float lat) {
   float height = -50.0f / 60.0f * rad;
   float latRad = lat * rad;
 
-  return 12.0 * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
+  return 12.0f * acos((sin(height) - sin(latRad) * sin(dec)) / (cos(latRad) * cos(dec))) / M_PI;
 }
 
 float ESPEasy_time::equationOfTime(int doy) {
@@ -705,7 +617,7 @@ void ESPEasy_time::calcSunRiseAndSet() {
   tsRise = addSeconds(tsRise, secOffset_longitude, false);
 
   breakTime(time_zone.toLocal(makeTime(tsRise)), sunRise);
-  breakTime(time_zone.toLocal(makeTime(tsSet)),  sunSet);
+  breakTime(time_zone.toLocal(makeTime(tsSet)),   sunSet);
 }
 
 struct tm ESPEasy_time::getSunRise(int secOffset) const {
@@ -724,7 +636,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
       return false;
     case ExtTimeSource_e::DS1307:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (!rtc.begin()) {
@@ -736,12 +648,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
     case ExtTimeSource_e::DS3231:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         RTC_DS3231 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -752,13 +664,13 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
       
     case ExtTimeSource_e::PCF8523:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         RTC_PCF8523 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -769,12 +681,12 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
     case ExtTimeSource_e::PCF8563:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         RTC_PCF8563 rtc;
         if (!rtc.begin()) {
           // Not found
@@ -785,7 +697,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t &unixtime)
           break;
         }
         unixtime = rtc.now().unixtime();
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
 
@@ -807,69 +719,69 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
     // Do not adjust the external RTC time if we already used it as a time source.
     return true;
   }
-  #ifdef USE_EXT_RTC
+  #if FEATURE_EXT_RTC
   bool timeAdjusted = false;
-  #endif
+  #endif // if FEATURE_EXT_RTC
   switch (Settings.ExtTimeSource()) {
     case ExtTimeSource_e::None:
       return false;
     case ExtTimeSource_e::DS1307:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         I2CSelect_Max100kHz_ClockSpeed(); // Only supports upto 100 kHz
         RTC_DS1307 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           timeAdjusted = true;
         }
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
     case ExtTimeSource_e::DS3231:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         RTC_DS3231 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           timeAdjusted = true;
         }
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
       
     case ExtTimeSource_e::PCF8523:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         RTC_PCF8523 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           rtc.start();
           timeAdjusted = true;
         }
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
     case ExtTimeSource_e::PCF8563:
       {
-        #ifdef USE_EXT_RTC
+        #if FEATURE_EXT_RTC
         RTC_PCF8563 rtc;
         if (rtc.begin()) {
           rtc.adjust(DateTime(unixtime));
           rtc.start();
           timeAdjusted = true;
         }
-        #endif
+        #endif // if FEATURE_EXT_RTC
         break;
       }
   }
-  #ifdef USE_EXT_RTC
+  #if FEATURE_EXT_RTC
   if (timeAdjusted) {
     String log = F("ExtRTC: External time source set to: ");
     log += unixtime;
     addLogMove(LOG_LEVEL_INFO, log);
     return true;
   }
-  #endif
+  #endif // if FEATURE_EXT_RTC
   addLog(LOG_LEVEL_ERROR, F("ExtRTC: Cannot set time to external time source"));
   return false;
 }

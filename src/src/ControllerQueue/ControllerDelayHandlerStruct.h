@@ -1,6 +1,8 @@
 #ifndef CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 #define CONTROLLERQUEUE_CONTROLLER_DELAY_HANDLER_STRUCT_H
 
+#include "../../ESPEasy_common.h"
+
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataStructs/UnitMessageCount.h"
@@ -310,20 +312,16 @@ struct ControllerDelayHandlerStruct {
   void process_c##NNN####M##_delay_queue() {                                                                           \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                                 \
     C##NNN####M##_queue_element *element(C##NNN####M##_DelayHandler->getNext());                                       \
-    if (element == nullptr) return;                                                                                       \
-    MakeControllerSettings(ControllerSettings);                                                                         \
-    bool ready = true;                                                                                                 \
-    if (!AllocatedControllerSettings()) {                                                                              \
-      ready = false;                                                                                                   \
-    } else {                                                                                                           \
-      LoadControllerSettings(element->controller_idx, ControllerSettings);                                             \
-      C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                     \
-      if (!C##NNN####M##_DelayHandler->readyToProcess(*element)) { ready = false; }                                    \
-    }                                                                                                                  \
-    if (ready) {                                                                                                       \
-      START_TIMER;                                                                                                     \
-      C##NNN####M##_DelayHandler->markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
-      STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
+    if (element == nullptr) return;                                                                                    \
+    if (C##NNN####M##_DelayHandler->readyToProcess(*element)) {                                                        \
+      MakeControllerSettings(ControllerSettings);                                                                      \
+      if (AllocatedControllerSettings()) {                                                                             \
+        LoadControllerSettings(element->controller_idx, ControllerSettings);                                           \
+        C##NNN####M##_DelayHandler->configureControllerSettings(ControllerSettings);                                   \
+        START_TIMER;                                                                                                   \
+        C##NNN####M##_DelayHandler->markProcessed(do_process_c##NNN####M##_delay_queue(M, *element, ControllerSettings)); \
+        STOP_TIMER(C##NNN####M##_DELAY_QUEUE);                                                                           \
+      }                                                                                                                \
     }                                                                                                                  \
     Scheduler.scheduleNextDelayQueue(ESPEasy_Scheduler::IntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE, C##NNN####M##_DelayHandler->getNextScheduleTime());         \
   }                                                                                                                    \

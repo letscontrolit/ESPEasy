@@ -6,8 +6,13 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
 
-#include "../../ESPEasy_common.h"
 
+#if defined(ESP8266)
+  # include <ESP8266WiFi.h>
+#endif // if defined(ESP8266)
+#if defined(ESP32)
+  # include <WiFi.h>
+#endif // if defined(ESP32)
 
 #define WIFI_CUSTOM_DEPLOYMENT_KEY_INDEX     3
 #define WIFI_CUSTOM_SUPPORT_KEY_INDEX        4
@@ -18,6 +23,13 @@ WiFi_AP_CandidatesList::WiFi_AP_CandidatesList() {
   candidates.clear();
   known_it = known.begin();
   load_knownCredentials();
+}
+
+WiFi_AP_CandidatesList::~WiFi_AP_CandidatesList() {
+  candidates.clear();
+  known.clear();
+  scanned.clear();
+  scanned_new.clear();
 }
 
 void WiFi_AP_CandidatesList::load_knownCredentials() {
@@ -350,7 +362,7 @@ void WiFi_AP_CandidatesList::addFromRTC() {
 
   // See if we may have a better candidate for the current network, with a significant better RSSI.
   auto bestMatch = candidates.end();
-  auto lastUsed  = candidates.end();
+  auto lastUsed  = bestMatch;
   for (auto it = candidates.begin(); lastUsed == candidates.end() && it != candidates.end(); ++it) {
     if (it->usable() && it->ssid.equals(fromRTC.ssid)) {
       const bool foundLastUsed = fromRTC.bssid_match(it->bssid);

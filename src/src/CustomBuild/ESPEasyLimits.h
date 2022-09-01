@@ -1,7 +1,7 @@
-#ifndef DATASTRUCTS_ESPEASY_LIMITS_H
-#define DATASTRUCTS_ESPEASY_LIMITS_H
+#ifndef CUSTOMBUILD_ESPEASY_LIMITS_H
+#define CUSTOMBUILD_ESPEASY_LIMITS_H
 
-#include "../../ESPEasy_common.h"
+#include "../../include/ESPEasy_config.h"
 
 // ***********************************************************************
 // * These limits have direct impact on the settings files
@@ -13,7 +13,7 @@
 
 // Performing a 2-stage define assignment using the _TMP defines
 // See: https://github.com/letscontrolit/ESPEasy/issues/2621
-#ifdef USE_NON_STANDARD_24_TASKS
+#if FEATURE_NON_STANDARD_24_TASKS
   #define TASKS_MAX_TMP                      24
 #else
   #define TASKS_MAX_TMP                      12
@@ -32,13 +32,23 @@
   #ifndef TASKS_MAX
     #define TASKS_MAX                          32
   #endif
+
   #ifndef MAX_GPIO
-    #ifdef ESP32S2
-      #define MAX_GPIO                           46
-    #else
-      #define MAX_GPIO                           39
+    #if ESP_IDF_VERSION_MAJOR > 3       // IDF 4+
+      #if CONFIG_IDF_TARGET_ESP32       // ESP32/PICO-D4
+        #define MAX_GPIO  39
+      #elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
+        #define MAX_GPIO  46
+      #elif CONFIG_IDF_TARGET_ESP32C3   // ESP32-C3
+        // FIXME TD-er: Implement ESP32C3 support
+      #else
+        #error Target CONFIG_IDF_TARGET is not supported
+      #endif
+    #else // ESP32 Before IDF 4.0
+      #define MAX_GPIO  39
     #endif
   #endif
+
 #endif
 
 #ifndef CONTROLLER_MAX
@@ -73,19 +83,15 @@
 // ***********************************************************************
 #ifndef DEVICES_MAX
   // TODO TD-er: This should be set automatically by counting the number of included plugins.
-  #if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-    # define DEVICES_MAX                      95
-  #else    // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
-    # ifdef ESP32
-      # ifdef PLUGIN_BUILD_MAX_ESP32
-        #  define DEVICES_MAX                    135
-      # else // ifdef PLUGIN_BUILD_MAX_ESP32
-      #  define DEVICES_MAX                      100
-      # endif // ifdef PLUGIN_BUILD_MAX_ESP32
-    # else // ifdef ESP32
+  # ifdef ESP32
+    # define DEVICES_MAX                      130
+  #else
+    #if defined(PLUGIN_BUILD_COLLECTION) || defined(PLUGIN_BUILD_DEV)
+      #  define DEVICES_MAX                      95
+    # else 
       #  define DEVICES_MAX                      60
-    # endif // ifdef ESP32
-  #endif // if defined(PLUGIN_BUILD_TESTING) || defined(PLUGIN_BUILD_DEV)
+    # endif
+  #endif
 #endif
 
 #ifndef PLUGIN_MAX
@@ -158,4 +164,4 @@
 #define DOMOTICZ_MAX_IDX            999999999 // Looks like it is an unsigned int, so could be up to 4 bln.
 
 
-#endif // DATASTRUCTS_ESPEASY_LIMITS_H
+#endif // CUSTOMBUILD_ESPEASY_LIMITS_H

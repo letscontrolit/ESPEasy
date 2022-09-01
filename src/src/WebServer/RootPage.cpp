@@ -3,11 +3,12 @@
 
 #ifdef WEBSERVER_ROOT
 
-#include "../WebServer/WebServer.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
+#include "../WebServer/Markup_Forms.h"
 
 #include "../Commands/InternalCommands.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
@@ -21,12 +22,13 @@
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/WebServer_commandHelper.h"
 
 
 #include "../../ESPEasy-Globals.h"
 
-#ifdef USES_MQTT
+#if FEATURE_MQTT
 # include "../Globals/MQTT.h"
 # include "../Helpers/PeriodicalActions.h" // For finding enabled MQTT controller
 #endif
@@ -184,9 +186,9 @@ void handle_root() {
         #endif
       }
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
       addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  #endif
+  #endif // if FEATURE_ETHERNET
 
       if (!WiFiEventData.WiFiDisconnected())
       {
@@ -198,14 +200,14 @@ void handle_root() {
         addHtml(')');
       }
 
-  #ifdef HAS_ETHERNET
+  #if FEATURE_ETHERNET
       if(active_network_medium == NetworkMedium_t::Ethernet) {
         addRowLabelValue(LabelType::ETH_SPEED_STATE);
         addRowLabelValue(LabelType::ETH_IP_ADDRESS);
       }
-  #endif
+  #endif // if FEATURE_ETHERNET
 
-      #ifdef FEATURE_MDNS
+      #if FEATURE_MDNS
       {
         addRowLabel(LabelType::M_DNS);
         addHtml(F("<a href='http://"));
@@ -214,9 +216,9 @@ void handle_root() {
         addHtml(getValue(LabelType::M_DNS));
         addHtml(F("</a>"));
       }
-      #endif // ifdef FEATURE_MDNS
+      #endif // if FEATURE_MDNS
 
-      #ifdef USES_MQTT
+      #if FEATURE_MQTT
       {
         if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
           addRowLabel(F("MQTT Client Connected"));
@@ -253,8 +255,10 @@ void handle_root() {
         }
       }
       html_end_table();
-
+      
+    #if FEATURE_ESPEASY_P2P
       html_BR();
+      if (Settings.Unit == 0 && Settings.UDPPort != 0) addFormNote(F("Warning: Unit number is 0, please change it if you want to send data to other units."));
       html_BR();
       html_table_class_multirow_noborder();
       html_TR();
@@ -296,7 +300,7 @@ void handle_root() {
 
           if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
             if (it->second.build) {
-              addHtmlInt(it->second.build);
+              addHtml(formatSystemBuildNr(it->second.build));
             }
             html_TD();
           }
@@ -323,6 +327,7 @@ void handle_root() {
       }
 
       html_end_table();
+    #endif
       html_end_form();
     }
 

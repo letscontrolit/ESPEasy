@@ -4,11 +4,13 @@
 
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Numerical.h"
+# include "../Helpers/RulesMatcher.h"
 # include "../WebServer/Markup_Forms.h"
-# include "../WebServer/WebServer.h"
+# include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../ESPEasyCore/ESPEasyRules.h"
+
 
 P037_data_struct::P037_data_struct(taskIndex_t taskIndex) : _taskIndex(taskIndex) {
   loadSettings();
@@ -21,21 +23,81 @@ P037_data_struct::~P037_data_struct() {}
  */
 bool P037_data_struct::loadSettings() {
   if (_taskIndex < TASKS_MAX) {
-    String tmp;
-    tmp.reserve(45);
-    LoadCustomTaskSettings(_taskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings)); // Part 1
-    LoadCustomTaskSettings(_taskIndex, valueArray,
-                           P037_ARRAY_SIZE, 0, sizeof(StoredSettings) + 1);                                   // Part 2, after part 1
+    size_t offset = 0;
+    LoadCustomTaskSettings(_taskIndex, mqttTopics,
+                           VARS_PER_TASK, 41, offset);
+    offset += VARS_PER_TASK * 41;
 
-    for (uint8_t i = 0; i < VARS_PER_TASK; i++) {
-      tmp = StoredSettings.deviceTemplate[i];
-      tmp.trim();
-      deviceTemplate[i] = tmp;
-      tmp               = StoredSettings.jsonAttributes[i];
-      tmp.trim();
-      jsonAttributes[i] = tmp;
+    LoadCustomTaskSettings(_taskIndex, jsonAttributes,
+                           VARS_PER_TASK, 21, offset);
+    offset += VARS_PER_TASK * 21;
+
+    {
+      String tmp[1];
+
+      LoadCustomTaskSettings(_taskIndex, tmp,
+                             1, 41, offset);
+      globalTopicPrefix = std::move(tmp[0]);
+      offset           += 41;
     }
+
+
+    LoadCustomTaskSettings(_taskIndex, valueArray,
+                           P037_ARRAY_SIZE, 0, offset + 1);
     return true;
+  }
+  return false;
+}
+
+String P037_data_struct::saveSettings() {
+  String res;
+
+  if (_taskIndex < TASKS_MAX) {
+    size_t offset = 0;
+    res += SaveCustomTaskSettings(_taskIndex, mqttTopics,
+                                  VARS_PER_TASK, 41, offset);
+    offset += VARS_PER_TASK * 41;
+
+    res += SaveCustomTaskSettings(_taskIndex, jsonAttributes,
+                                  VARS_PER_TASK, 21, offset);
+    offset += VARS_PER_TASK * 21;
+
+    {
+      String tmp[1];
+      tmp[0] = globalTopicPrefix;
+      res   += SaveCustomTaskSettings(_taskIndex, tmp,
+                                      1, 41, offset);
+      offset += 41;
+    }
+
+
+    res += SaveCustomTaskSettings(_taskIndex, valueArray,
+                                  P037_ARRAY_SIZE, 0, offset + 1);
+  }
+  return res;
+}
+
+String P037_data_struct::getFullMQTTTopic(uint8_t taskValueIndex) const {
+  String topic;
+
+  if ((taskValueIndex < VARS_PER_TASK) && (mqttTopics[taskValueIndex].length() > 0)) {
+    topic.reserve(globalTopicPrefix.length() + mqttTopics[taskValueIndex].length());
+    topic = globalTopicPrefix;
+    topic.trim();
+    topic += mqttTopics[taskValueIndex];
+    topic.trim();
+  }
+  return topic;
+}
+
+bool P037_data_struct::shouldSubscribeToMQTTtopic(const String& topic) const {
+  if (topic.length() == 0) { return false; }
+
+  for (uint8_t x = 0; x < VARS_PER_TASK; x++)
+  {
+    if (topic.equalsIgnoreCase(getFullMQTTTopic(x))) {
+      return true;
+    }
   }
   return false;
 }
@@ -64,8 +126,11 @@ void P037_data_struct::parseMappings() {
     _maxFilter = 0; // Initialize to empty
     #  endif // if P037_FILTER_SUPPORT
 
+    #  if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
+    int8_t idx;
+    #  endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
     #  if P037_MAPPING_SUPPORT
-    int8_t idx = P037_MAX_MAPPINGS;
+    idx = P037_MAX_MAPPINGS;
 
     for (uint8_t mappingOffset = P037_END_MAPPINGS; mappingOffset >= P037_START_MAPPINGS && _maxIdx == 0; mappingOffset--) {
       if (!valueArray[mappingOffset].isEmpty()) {
@@ -118,7 +183,7 @@ bool P037_data_struct::webform_load(
   addFormSubHeader(F("Topic subscriptions"));
 
   // Global topic prefix
-  addFormTextBox(F("Prefix for all topics"), F("p037_topicprefix"), StoredSettings.globalTopicPrefix, 40);
+  addFormTextBox(F("Prefix for all topics"), F("topicprefix"), globalTopicPrefix, 40);
 
   # ifdef P037_JSON_SUPPORT
 
@@ -140,29 +205,29 @@ bool P037_data_struct::webform_load(
       html_TR_TD();
       addHtml(F("&nbsp;"));
       addHtmlInt(varNr + 1);
-      html_TD();
-      id  = F("p037_template");
+      html_TD(F("padding-right: 8px"));
+      id  = F("template");
       id += (varNr + 1);
       addTextBox(id,
-                 StoredSettings.deviceTemplate[varNr],
+                 mqttTopics[varNr],
                  40,
-                 false, false, EMPTY_STRING, F("wide"));
-      html_TD();
-      id  = F("p037_attribute");
+                 false, false, EMPTY_STRING, F("xwide"));
+      html_TD(F("padding-right: 8px"));
+      id  = F("attribute");
       id += (varNr + 1);
       addTextBox(id,
-                 StoredSettings.jsonAttributes[varNr],
+                 jsonAttributes[varNr],
                  20,
-                 false, false, EMPTY_STRING, EMPTY_STRING);
+                 false, false, EMPTY_STRING, F("xwide"));
       html_TD();
     } else
     # endif // ifdef P037_JSON_SUPPORT
     {
       String label = F("MQTT Topic ");
       label += (varNr + 1);
-      id     = F("p037_template");
+      id     = F("template");
       id    += (varNr + 1);
-      addFormTextBox(label, id, StoredSettings.deviceTemplate[varNr], 40);
+      addFormTextBox(label, id, mqttTopics[varNr], 40);
     }
   }
   # ifdef P037_JSON_SUPPORT
@@ -415,33 +480,6 @@ bool P037_data_struct::webform_load(
   return success;
 } // webform_load
 
-/******************************************
- * enquoteString wrap in ", ' or ` unless all 3 quote types are used
- *****************************************/
-String P037_data_struct::enquoteString(const String& input) {
-  char quoteChar = '"';
-
-  if (input.indexOf(quoteChar) > -1) {
-    quoteChar = '\'';
-
-    if (input.indexOf(quoteChar) > -1) {
-      quoteChar = '`';
-
-      if (input.indexOf(quoteChar) > -1) {
-        return input; // All types of supported quotes used, return original string
-      }
-    }
-  }
-  String result;
-
-  result.reserve(input.length() + 2);
-  result += quoteChar;
-  result += input;
-  result += quoteChar;
-
-  return result;
-}
-
 bool P037_data_struct::webform_save(
   # if P037_FILTER_SUPPORT
   bool filterEnabled
@@ -461,34 +499,27 @@ bool P037_data_struct::webform_save(
 
   for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
   {
-    String argName = F("p037_template");
+    String argName = F("template");
     argName += (varNr + 1);
 
-    if (!safe_strncpy(StoredSettings.deviceTemplate[varNr], web_server.arg(argName).c_str(), sizeof(StoredSettings.deviceTemplate[varNr]))) {
-      error += getCustomTaskSettingsError(varNr);
-    }
+    mqttTopics[varNr] = web_server.arg(argName);
+
     # ifdef P037_JSON_SUPPORT
 
     if (jsonEnabled) {
-      argName  = F("p037_attribute");
-      argName += (varNr + 1);
-
-      if (!safe_strncpy(StoredSettings.jsonAttributes[varNr], web_server.arg(argName).c_str(),
-                        sizeof(StoredSettings.jsonAttributes[varNr]))) {
-        error += getCustomTaskSettingsError(varNr);
-      }
+      argName               = F("attribute");
+      argName              += (varNr + 1);
+      jsonAttributes[varNr] = web_server.arg(argName);
     }
     # endif // P037_JSON_SUPPORT
   }
 
-  if (!safe_strncpy(StoredSettings.globalTopicPrefix, web_server.arg(F("p037_topicprefix")).c_str(),
-                    sizeof(StoredSettings.globalTopicPrefix))) {
-    error += F("Prefix for all topics");
-  }
+  globalTopicPrefix = web_server.arg(F("topicprefix"));
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   String left, right;
   bool   firstError;
+  int8_t idx = 0;
   # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
 
   // Mappings are processed first
@@ -496,7 +527,6 @@ bool P037_data_struct::webform_save(
   firstError = true;
   String  operands = P037_OPERAND_LIST;
   uint8_t mapNr    = 1;
-  int8_t  idx      = 0;
   left.reserve(32);
   right.reserve(32);
 
@@ -509,18 +539,17 @@ bool P037_data_struct::webform_save(
     right.trim();
 
     if (!left.isEmpty() || !right.isEmpty()) {
-      valueArray[mappingOffset]  = enquoteString(left);
+      valueArray[mappingOffset]  = wrapWithQuotes(left);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
       uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 1));
       valueArray[mappingOffset] += operands.substring(oper, oper + 1);
       valueArray[mappingOffset] += P037_VALUE_SEPARATOR;
-      valueArray[mappingOffset] += enquoteString(right);
+      valueArray[mappingOffset] += wrapWithQuotes(right);
     } else {
       valueArray[mappingOffset] = EMPTY_STRING;
     }
 
-    if ((left.isEmpty() && !right.isEmpty()) ||
-        (!left.isEmpty() && right.isEmpty())) {
+    if (left.isEmpty() != right.isEmpty()) {
       if (firstError) {
         error     += F("Name and value should both be filled for mapping ");
         firstError = false;
@@ -556,18 +585,17 @@ bool P037_data_struct::webform_save(
         || true // Store all filters and in the same order, including empty filters
         #  endif // ifdef P037_FILTER_PER_TOPIC
         ) {
-      valueArray[filterOffset]  = enquoteString(left);
+      valueArray[filterOffset]  = wrapWithQuotes(left);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
       uint8_t oper = getFormItemInt(getPluginCustomArgName(idx + 100 + 1));
       valueArray[filterOffset] += filters.substring(oper, oper + 1);
       valueArray[filterOffset] += P037_VALUE_SEPARATOR;
-      valueArray[filterOffset] += enquoteString(right);
+      valueArray[filterOffset] += wrapWithQuotes(right);
     } else {
       valueArray[filterOffset] = EMPTY_STRING;
     }
 
-    if ((left.isEmpty() && !right.isEmpty()) ||
-        (!left.isEmpty() && right.isEmpty())) {
+    if (left.isEmpty() != right.isEmpty()) {
       if (firstError) {
         error     += F("Name and value should both be filled for filter ");
         firstError = false;
@@ -588,9 +616,7 @@ bool P037_data_struct::webform_save(
   #  endif // ifndef P037_FILTER_PER_TOPIC
   # endif  // if P037_FILTER_SUPPORT
 
-  error += SaveCustomTaskSettings(_taskIndex, (uint8_t *)&StoredSettings, sizeof(StoredSettings)); // Part 1
-  error += SaveCustomTaskSettings(_taskIndex, valueArray,
-                                  P037_ARRAY_SIZE, 0, sizeof(StoredSettings) + 1);                 // Part 2, after part 1
+  error += saveSettings();
 
   if (!error.isEmpty()) {
     addHtmlError(error);
@@ -632,14 +658,14 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
 
   if (!input.isEmpty()) {
     parseMappings();
-    String operands = P037_OPERAND_LIST;
+    const String operands = P037_OPERAND_LIST;
 
     int8_t idx = 0;
 
     for (uint8_t mappingOffset = P037_START_MAPPINGS; mappingOffset <= P037_END_MAPPINGS && idx <= _maxIdx; mappingOffset++) {
-      String name = parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR);
-      String oper = parseString(valueArray[mappingOffset], 2, P037_VALUE_SEPARATOR);
-      String valu = parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR);
+      const String name = parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR);
+      const String oper = parseString(valueArray[mappingOffset], 2, P037_VALUE_SEPARATOR);
+      const String valu = parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR);
 
       if ((name == input) || ((!attribute.isEmpty()) && (name == attribute))) {
         int8_t operandIndex = operands.indexOf(oper);
@@ -963,7 +989,7 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
   }
 
   if (nullptr != root) {
-    deserializeJson(*root, message.c_str());
+    deserializeJson(*root, message);
 
     if (!root->isNull()) {
       result = true;

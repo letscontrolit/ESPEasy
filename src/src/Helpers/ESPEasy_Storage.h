@@ -1,14 +1,16 @@
 #ifndef HELPERS_ESPEASY_STORAGE_H
 #define HELPERS_ESPEASY_STORAGE_H
 
-#include <FS.h>
 
+#include "../../ESPEasy_common.h"
 
+#include "../Helpers/FS_Helper.h"
+
+#include "../DataStructs/ProvisioningStruct.h"
+#include "../DataTypes/ESPEasyFileType.h"
 #include "../DataTypes/SettingsType.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/CPlugins.h"
-
-#include "../../ESPEasy_common.h"
 
 /********************************************************************************************\
    file system error handling
@@ -45,6 +47,14 @@ String BuildFixes();
  \*********************************************************************************************/
 void fileSystemCheck();
 
+bool FS_format();
+
+#ifdef ESP32
+
+int  getPartionCount(uint8_t pType, uint8_t pSubType = 0xFF);
+
+#endif
+
 /********************************************************************************************\
    Garbage collection
  \*********************************************************************************************/
@@ -68,16 +78,27 @@ String LoadSettings();
    Disable Plugin, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disablePlugin(uint8_t bootFailedCount);
+uint8_t disableAllPlugins(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
  \*********************************************************************************************/
 uint8_t disableController(uint8_t bootFailedCount);
+uint8_t disableAllControllers(uint8_t bootFailedCount);
 
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
  \*********************************************************************************************/
+#if FEATURE_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount);
+uint8_t disableAllNotifications(uint8_t bootFailedCount);
+#endif
+
+/********************************************************************************************\
+   Disable Rules, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableRules(uint8_t bootFailedCount);
+
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);
 
@@ -159,6 +180,22 @@ String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uin
  \*********************************************************************************************/
 String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *memAddress, int datasize);
 
+
+#if FEATURE_CUSTOM_PROVISIONING
+/********************************************************************************************\
+   Save Provisioning Settings
+ \*********************************************************************************************/
+String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings);
+
+/********************************************************************************************\
+   Load Provisioning Settings
+ \*********************************************************************************************/
+String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings);
+#endif
+
+
+
+#if FEATURE_NOTIFIER
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
@@ -170,7 +207,7 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize);
 
-
+#endif
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
@@ -182,7 +219,17 @@ String InitFile(SettingsType::SettingsFileEnum file_type);
 /********************************************************************************************\
    Save data into config file on file system
  \*********************************************************************************************/
+// Save to file in r+ mode
+// Open for reading and writing.  
+// The stream is positioned at the beginning of the file.
 String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize);
+
+// Save to file in w+ mode
+// Open for reading and writing.  
+// The file is created if it does not exist, otherwise it is truncated.
+// The stream is positioned at the beginning of the file.
+
+String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress, int datasize);
 
 // See for mode description: https://github.com/esp8266/Arduino/blob/master/doc/filesystem.rst
 String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize, const char *mode);
@@ -252,6 +299,22 @@ String getPartitionTableHeader(const String& itemSep, const String& lineEnd);
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd);
 
 #endif // ifdef ESP32
+
+
+/********************************************************************************************\
+   Download ESPEasy file types from HTTP server
+ \*********************************************************************************************/
+#if FEATURE_DOWNLOAD
+String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
+
+#endif // if FEATURE_DOWNLOAD
+#if FEATURE_CUSTOM_PROVISIONING
+// Download file type based on settings stored in provisioning.dat file.
+String downloadFileType(FileType::Enum filetype, unsigned int filenr = 0);
+
+#endif
+
+
 
 
 #endif // HELPERS_ESPEASY_STORAGE_H

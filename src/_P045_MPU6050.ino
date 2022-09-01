@@ -2,7 +2,7 @@
 #ifdef USES_P045
 
 // #######################################################################################################
-// #################################### Plugin 045: MPU6050 [Testing] ####################################
+// #################################### Plugin 045: MPU6050 ####################################
 // #######################################################################################################
 
 // Based on the works of Nolan Gilley @ https://home-assistant.io/blog/2016/08/03/laundry-automation-update/
@@ -68,7 +68,7 @@
 
 #define PLUGIN_045
 #define PLUGIN_ID_045                       45
-#define PLUGIN_NAME_045                     "Gyro - MPU 6050 [TESTING]"
+#define PLUGIN_NAME_045                     "Gyro - MPU 6050"
 #define PLUGIN_VALUENAME1_045               ""
 
 
@@ -87,6 +87,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption = true; //   and I use Domoticz ... so there.
       Device[deviceCount].TimerOption    = true;
       Device[deviceCount].FormulaOption  = false;
+      Device[deviceCount].PluginStats    = true;
       break;
     }
 

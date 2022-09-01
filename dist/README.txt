@@ -27,9 +27,11 @@ There is also a number of special builds:
 - normal_beta => "Normal" using the staged (beta) branch of the esp8266/Arduino repository.
 
 Chip can be:
-- ESP8266      => Most likely option
-- ESP8285      => Used in some Sonoff modules
+- ESP8266      => Most likely option  (use also for ESP8285 chips)
 - ESP32        => Showing up in commercial products, but mainly seen on NodeMCU like boards.
+- ESP32-S2     => Newer version of ESP32, with more GPIO pins, but lacking some features of ESP32.
+- ESP32-S3     => Not yet supported in ESPEasy. (hardly available to buy)
+- ESP32-C3     => Support in ESPEasy will be added soon.
 
 MemorySize can be:
 - 1M  => 1 MB flash modules (e.g. almost all Sonoff modules)
@@ -73,12 +75,12 @@ Ethernet support is included in similar builds as mentioned before, only ending 
 
 Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build:
 - test_ESP32_4M316k.bin
-- test_ESP32_4M316k-factory.bin
+- test_ESP32_4M316k.factory.bin
 
-The binary with "-factory" in the name must be flashed on a new node, via the serial interface of the board.
+The binary with ".factory" in the name must be flashed on a new node, via the serial interface of the board.
 This flash must be started at address 0.
 
-The binary without "-factory" can be used for OTA updates. (OTA for ESP32 is added in May 2020)
+The binary without ".factory" can be used for OTA updates. (OTA for ESP32 is added in May 2020)
 
 
 Please note that changing between those versions will destroy the settings!

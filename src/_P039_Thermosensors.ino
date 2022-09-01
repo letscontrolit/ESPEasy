@@ -252,6 +252,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       Device[deviceCount].SendDataOption     = true;
       Device[deviceCount].TimerOption        = true;
       Device[deviceCount].GlobalSyncOption   = true;
+      Device[deviceCount].PluginStats        = true;
       break;
     }
 
@@ -644,7 +645,7 @@ boolean Plugin_039(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_TIMER_IN: 
+    case PLUGIN_TASKTIMER_IN: 
     {
       P039_data_struct *P039_data = static_cast<P039_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -1222,7 +1223,7 @@ float readMax31865(struct EventStruct *event)
 
   // read conversion result and faults from plugin data structure 
   // if pointer exists and conversion has been finished
-  if ((nullptr != P039_data) && (true == P039_data->convReady)) {
+  if (P039_data->convReady) {
     rawValue = P039_data->conversionResult;
     registers[MAX31865_FAULT] = P039_data->deviceFaults;
   }
@@ -1270,14 +1271,12 @@ float readMax31865(struct EventStruct *event)
 
   // start time to follow up on BIAS activation before starting the conversion
   // and start conversion sequence via TIMER API
-  if(nullptr != P039_data){
-    // save current timer for next calculation
-    P039_data->timer = millis();
+  // save current timer for next calculation
+  P039_data->timer = millis();
 
-    // set next state to MAX31865_BIAS_ON_STATE
+  // set next state to MAX31865_BIAS_ON_STATE
 
-    Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
-  }
+  Scheduler.setPluginTaskTimer(MAX31865_BIAS_WAIT_TIME, event->TaskIndex, MAX31865_BIAS_ON_STATE);
  
  #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE))

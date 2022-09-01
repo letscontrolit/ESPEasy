@@ -3,7 +3,7 @@
 .. |P070_type| replace:: :cyan:`Output`
 .. |P070_typename| replace:: :cyan:`Output -  NeoPixel Ring Clock`
 .. |P070_porttype| replace:: `.`
-.. |P070_status| replace:: :yellow:`DISPLAY, TESTING A`
+.. |P070_status| replace:: :yellow:`NEOPIXEL, COLLECTION A`
 .. |P070_github| replace:: P070_NeoPixel_Clock.ino
 .. _P070_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P070_NeoPixel_Clock.ino
 .. |P070_usedby| replace:: `.`
@@ -16,7 +16,7 @@
 .. |P071_type| replace:: :cyan:`Communication`
 .. |P071_typename| replace:: :cyan:`Communication - Kamstrup Multical 401`
 .. |P071_porttype| replace:: `Serial`
-.. |P071_status| replace:: :yellow:`TESTING A`
+.. |P071_status| replace:: :yellow:`COLLECTION A`
 .. |P071_github| replace:: P071_Kamstrup401.ino
 .. _P071_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P071_Kamstrup401.ino
 .. |P071_usedby| replace:: `.`
@@ -29,7 +29,7 @@
 .. |P072_type| replace:: :cyan:`Environment`
 .. |P072_typename| replace:: :cyan:`Environment - HDC1080 (I2C)`
 .. |P072_porttype| replace:: `.`
-.. |P072_status| replace:: :yellow:`TESTING A`
+.. |P072_status| replace:: :yellow:`COLLECTION A`
 .. |P072_github| replace:: P072_HDC1080.ino
 .. _P072_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P072_HDC1080.ino
 .. |P072_usedby| replace:: `.`
@@ -55,7 +55,7 @@
 .. |P074_type| replace:: :cyan:`Light/Lux`
 .. |P074_typename| replace:: :cyan:`Light/Lux - TSL2591`
 .. |P074_porttype| replace:: `Serial`
-.. |P074_status| replace:: :yellow:`TESTING A`
+.. |P074_status| replace:: :yellow:`COLLECTION A`
 .. |P074_github| replace:: P074_TSL2591.ino
 .. _P074_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P074_TSL2591.ino
 .. |P074_usedby| replace:: `.`
@@ -68,7 +68,7 @@
 .. |P075_type| replace:: :cyan:`Display`
 .. |P075_typename| replace:: :cyan:`Display - Nextion`
 .. |P075_porttype| replace:: `.`
-.. |P075_status| replace:: :yellow:`DISPLAY, TESTING`
+.. |P075_status| replace:: :yellow:`DISPLAY, COLLECTION`
 .. |P075_github| replace:: P075_Nextion.ino
 .. _P075_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P075_Nextion.ino
 .. |P075_usedby| replace:: `.`

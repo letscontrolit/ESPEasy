@@ -7,13 +7,14 @@
 
 # define PLUGIN_096
 # define PLUGIN_ID_096         96
-# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen [TESTING]"
+# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen"
 # define PLUGIN_VALUENAME1_096 "CursorX"
 # define PLUGIN_VALUENAME2_096 "CursorY"
 
 // #define PLUGIN_096_MAX_DISPLAY 1 // Unused
 
 /* README.MD
+
 
  ## INTRO
 
@@ -134,8 +135,8 @@ void Plugin_096_printText(const char    *string,
 # else // ifdef ESP32
 
 // for D1 Mini with shield connection
-  #  define EPD_CS D0
-  #  define EPD_DC D8
+  #  define EPD_CS  16 // D0
+  #  define EPD_DC  15 // D8
   #  define EPD_RST -1  // can set to -1 and share with microcontroller Reset!
   #  define EPD_BUSY -1 // can set to -1 to not use a pin (will wait a fixed delay)
 # endif // ifdef ESP32
@@ -255,7 +256,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormPinSelect(formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), PIN(3));
+      addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_output(F("EPD BUSY")), F("p096_epd_busy"), PIN(3));
 
       # if P096_USE_EXTENDED_SETTINGS
 

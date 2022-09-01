@@ -211,19 +211,20 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command == F("pcapwm")) || (instanceCommand && (command == F("pwm"))))
+      if ((command.equals(F("pcapwm"))) || (instanceCommand && (command.equals(F("pwm")))))
       {
         success = true;
 
         // "log" is also sent along with the SendStatusOnlyIfNeeded
-        log  = F("PCA 0x");
-        log += String(address, HEX);
+        log  = formatToHex(address, F("PCA 0x"), 2);
         log += F(": PWM ");
         log += event->Par1;
+        const uint32_t dutyCycle       = event->Par2;
+        const uint32_t fadeDuration_ms = event->Par3;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {
-          if ((event->Par2 >= 0) && (event->Par2 <= range))
+          if ((dutyCycle >= 0) && (dutyCycle <= range))
           {
             if (!P022_data->p022_is_init(address))
             {
@@ -231,17 +232,49 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
               P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
               P022_data->Plugin_022_Frequency(address, freq);
             }
-            P022_data->Plugin_022_Write(address, event->Par1, map(event->Par2, 0, range, 0, PCA9685_MAX_PWM));
 
             // setPinState(PLUGIN_ID_022, event->Par1, PIN_MODE_PWM, event->Par2);
             portStatusStruct newStatus;
             const uint32_t   key = createKey(PLUGIN_ID_022, event->Par1);
 
             // WARNING: operator [] creates an entry in the map if key does not exist
-            newStatus         = globalMapPortStatus[key];
-            newStatus.command = 1;
-            newStatus.mode    = PIN_MODE_PWM;
-            newStatus.state   = event->Par2;
+            newStatus = globalMapPortStatus[key];
+
+            // Code 'borrowed' from set_Gpio_PWM() in Hardware.cpp, keeping variable names
+            if (fadeDuration_ms != 0)
+            {
+              const int32_t resolution_factor = (1 << 12);
+              const uint8_t prev_mode         = newStatus.mode;
+              int32_t prev_value              = newStatus.getDutyCycle();
+
+              // getPinState(pluginID, gpio, &prev_mode, &prev_value);
+              if (prev_mode != PIN_MODE_PWM) {
+                prev_value = 0;
+              }
+
+              const int32_t step_value = ((static_cast<int32_t>(dutyCycle) - prev_value) * resolution_factor) /
+                                         static_cast<int32_t>(fadeDuration_ms);
+              int32_t curr_value = prev_value * resolution_factor;
+
+              log += F(", fade: ");
+              log += fadeDuration_ms;
+              log += F("ms");
+
+              int i = fadeDuration_ms;
+
+              while (i--) {
+                curr_value += step_value;
+                const int16_t new_value = curr_value / resolution_factor;
+
+                P022_data->Plugin_022_Write(address, event->Par1, map(new_value, 0, range, 0, PCA9685_MAX_PWM));
+                delay(1);
+              }
+            }
+            P022_data->Plugin_022_Write(address, event->Par1, map(dutyCycle, 0, range, 0, PCA9685_MAX_PWM));
+
+            newStatus.command   = 1;
+            newStatus.mode      = PIN_MODE_PWM;
+            newStatus.dutyCycle = dutyCycle; // state was the wrong field...
             savePortStatus(key, newStatus);
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -264,7 +297,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if ((command == F("pcafrq")) || (instanceCommand && (command == F("frq"))))
+      if ((command.equals(F("pcafrq"))) || (instanceCommand && (command.equals(F("frq")))))
       {
         success = true;
 
@@ -288,8 +321,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           newStatus.state   = event->Par1;
           savePortStatus(key, newStatus);
 
-          log  = F("PCA 0x");
-          log += String(address, HEX);
+          log  = formatToHex(address, F("PCA 0x"), 2);
           log += F(": FREQ ");
           log += event->Par1;
           addLog(LOG_LEVEL_INFO, log);
@@ -299,12 +331,12 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
         else {
           addLog(LOG_LEVEL_ERROR,
-                 String(F("PCA 0x")) +
-                 String(address, HEX) + F(" The frequency ") + String(event->Par1) + F(" is out of range."));
+                 String(F("PCA ")) +
+                 formatToHex(address, 2) + F(" The frequency ") + String(event->Par1) + F(" is out of range."));
         }
       }
 
-      if (instanceCommand && (command == F("mode2")))
+      if (instanceCommand && (command.equals(F("mode2"))))
       {
         success = true;
 
@@ -316,22 +348,21 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-          log  = F("PCA 0x");
-          log += String(address, HEX);
-          log += F(": MODE2 0x");
-          log += String(event->Par1, HEX);
+          log  = formatToHex(address, F("PCA 0x"), 2);
+          log += ':';
+          log += formatToHex(event->Par1, F(" MODE2 0x"), 2);
           addLog(LOG_LEVEL_INFO, log);
         }
         else {
-          addLog(LOG_LEVEL_ERROR,
-                 String(F("PCA 0x")) +
-                 String(address, HEX) + F(" MODE2 0x") + String(event->Par1, HEX) + F(" is out of range."));
+          addLog(LOG_LEVEL_ERROR, 
+                 formatToHex(address, F("PCA 0x"), 2) + 
+                 formatToHex(event->Par1, F(" MODE2 0x"), 2) + F(" is out of range."));
         }
       }
 
-      if (command == F("status"))
+      if (command.equals(F("status")))
       {
-        if (parseString(string, 2) == F("pca"))
+        if (parseString(string, 2).equals(F("pca")))
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -347,14 +378,15 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command == F("gpio")))
+      if (instanceCommand && (command.equals(F("gpio"))))
       {
         success = true;
-        log     = F("PCA 0x");
-        log    += String(address, HEX);
+        log     = formatToHex(address, F("PCA 0x"), 2);
         log    += F(": GPIO ");
+        const bool allPins = parseString(string, 2).equals(F("all"));
 
-        if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
+        if (((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS)) ||
+            allPins)
         {
           if (!P022_data->p022_is_init(address))
           {
@@ -364,7 +396,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           int pin = event->Par1;
 
-          if (parseString(string, 2) == F("all"))
+          if (allPins)
           {
             pin  = -1;
             log += F("all");
@@ -405,11 +437,10 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      if (instanceCommand && (command == F("pulse")))
+      if (instanceCommand && (command.equals(F("pulse"))))
       {
         success = true;
-        log     = F("PCA 0x");
-        log    += String(address, HEX);
+        log     = formatToHex(address, F("PCA 0x"), 2);
         log    += F(": GPIO ");
         log    += event->Par1;
 
@@ -439,7 +470,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
           if (event->Par3 > 0)
           {
-            if (parseString(string, 5) == F("auto"))
+            if (parseString(string, 5).equals(F("auto")))
             {
               autoreset = -1;
               log      += F(" with autoreset infinity");
@@ -485,14 +516,13 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-    case PLUGIN_TIMER_IN:
+    case PLUGIN_TASKTIMER_IN:
     {
       P022_data_struct *P022_data =
         static_cast<P022_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P022_data) {
-        String log = F("PCA 0x");
-        log += String(address, HEX);
+        String log = formatToHex(address, F("PCA 0x"), 2);
         log += F(": GPIO ");
         log += event->Par1;
         int autoreset = event->Par4;

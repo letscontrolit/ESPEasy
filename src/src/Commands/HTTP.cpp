@@ -18,50 +18,87 @@
 #include "../Helpers/StringParser.h"
 
 
-const __FlashStringHelper * Command_HTTP_SendToHTTP(struct EventStruct *event, const char* Line)
+const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event, const char *Line)
 {
-	if (NetworkConnected()) {
-		const String host = parseString(Line, 2);
-		const int port = parseCommandArgumentInt(Line, 2);
-		#ifndef BUILD_NO_DEBUG
-		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-			String log = F("SendToHTTP: Host: ");
-			log += host;
-			log += F(" port: ");
-			log += port;
-			addLogMove(LOG_LEVEL_DEBUG, log);
-		}
-		#endif
-		if (port < 0 || port > 65535) return return_command_failed();
-		// FIXME TD-er: This is not using the tolerant settings option.
-    // String path = tolerantParseStringKeepCase(Line, 4);
-		const String path = parseStringToEndKeepCase(Line, 4);
+  if (NetworkConnected()) {
+    String   user, pass, host, file, path;
+    uint16_t port;
+
+    const String arg1 = parseStringKeepCase(Line, 2);
+
+    if (arg1.indexOf(F("://")) != -1) {
+      // Full url given
+      path = splitURL(arg1, user, pass, host, port, file);
+    } else {
+      // Command arguments are split into: host, port, url
+      if (!splitUserPass_HostPortString(
+            arg1,
+            user,
+            pass,
+            host,
+            port))
+      {
+        return return_command_failed();
+      }
+
+      const int port_arg = event->Par2;
+
+      if ((port_arg > 0) && (port_arg < 65536)) {
+        port = port_arg;
+      } else {
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("SendToHTTP: Invalid port argument: ");
+          log += port_arg;
+          log += F(" will use: ");
+          log += port;
+          addLogMove(LOG_LEVEL_ERROR, log);
+        }
+      }
+
+      // FIXME TD-er: This is not using the tolerant settings option.
+      // String path = tolerantParseStringKeepCase(Line, 4);
+      path = parseStringToEndKeepCase(Line, 4);
+    }
 #ifndef BUILD_NO_DEBUG
-		if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-			String log = F("SendToHTTP: Path: ");
-			log += path;
-			addLogMove(LOG_LEVEL_DEBUG, log);
-		}
-#endif
-		WiFiClient client;
-		client.setTimeout(CONTROLLER_CLIENTTIMEOUT_MAX);
-		const bool connected = connectClient(client, host.c_str(), port, CONTROLLER_CLIENTTIMEOUT_MAX);
-		if (connected) {
-			String hostportString = host;
-			if (port != 0 && port != 80) {
-				hostportString += ':';
-				hostportString += port;
-			}
-			const String request = do_create_http_request(hostportString, F("GET"), path);
-#ifndef BUILD_NO_DEBUG
-			addLog(LOG_LEVEL_DEBUG, request);
-#endif
-			send_via_http(F("Command_HTTP_SendToHTTP"), client, request, Settings.SendToHttp_ack());
-			return return_command_success();
-		}
-		addLog(LOG_LEVEL_ERROR, F("SendToHTTP connection failed"));
-	} else {
-		addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
-	}
-	return return_command_failed();
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("SendToHTTP: Host: ");
+      log += host;
+      log += F(" port: ");
+      log += port;
+      log += F(" path: ");
+      log += path;
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+#endif // ifndef BUILD_NO_DEBUG
+
+    // Some servers don't give an ack.
+    // For these it is adviced to uncheck to wait for an acknowledgement.
+    // However the default timeout of 4000 msec is then way too long
+    const int timeout = Settings.SendToHttp_ack() 
+       ? CONTROLLER_CLIENTTIMEOUT_MAX : 1000;
+    // FIXME TD-er: Make sendToHttp timeout a setting.       
+
+    int httpCode = -1;
+    send_via_http(
+      F("SendToHTTP"),
+      timeout,
+      user,
+      pass,
+      host,
+      port,
+      path,
+      F("GET"),
+      EMPTY_STRING, // header
+      EMPTY_STRING, // poststr
+      httpCode,
+      Settings.SendToHttp_ack());
+
+    if ((httpCode >= 100) && (httpCode < 300)) {
+      return return_command_success();
+    }
+  } else {
+    addLog(LOG_LEVEL_ERROR, F("SendToHTTP Not connected to network"));
+  }
+  return return_command_failed();
 }

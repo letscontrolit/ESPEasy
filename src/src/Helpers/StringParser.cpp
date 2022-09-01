@@ -1,11 +1,14 @@
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy_common.h"
+
 #include "../../_Plugin_Helper.h"
+
+#include "../Commands/GPIO.h"
 
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../Commands/GPIO.h"
 
 #include "../Globals/Cache.h"
 #include "../Globals/Plugins_other.h"
@@ -70,7 +73,34 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       newString += tmpString.substring(lastStartpos, startpos);
 
       // deviceName is lower case, so we can compare literal string (no need for equalsIgnoreCase)
-      if (deviceName.equals(F("plugin")))
+      const bool devNameEqInt = deviceName.equals(F("int"));
+      if (devNameEqInt || deviceName.equals(F("var")))
+      {
+        // Address an internal variable either as float or as int
+        // For example: Let,10,[VAR#9]
+        unsigned int varNum;
+
+        if (validUIntFromString(valueName, varNum)) {
+          unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
+          bool trimTrailingZeros    = true;
+
+          if (devNameEqInt) {
+            nr_decimals = 0;
+          } else if (!format.isEmpty())
+          {
+            // There is some formatting here, so do not throw away decimals
+            trimTrailingZeros = false;
+          }
+          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
+          transformValue(
+            newString, 
+            minimal_lineSize, 
+            std::move(value), 
+            format, 
+            tmpString);
+        }
+      }
+      else if (deviceName.equals(F("plugin")))
       {
         // Handle a plugin request.
         // For example: "[Plugin#GPIO#Pinstate#N]"
@@ -94,33 +124,11 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
         }
   */
       }
-      else if (deviceName.equals(F("var")) || deviceName.equals(F("int")))
-      {
-        // Address an internal variable either as float or as int
-        // For example: Let,10,[VAR#9]
-        unsigned int varNum;
-
-        if (validUIntFromString(valueName, varNum)) {
-          unsigned char nr_decimals = maxNrDecimals_double(getCustomFloatVar(varNum));
-          bool trimTrailingZeros    = true;
-
-          if (deviceName.equals(F("int"))) {
-            nr_decimals = 0;
-          } else if (!format.isEmpty())
-          {
-            // There is some formatting here, so do not throw away decimals
-            trimTrailingZeros = false;
-          }
-          String value = doubleToString(getCustomFloatVar(varNum), nr_decimals, trimTrailingZeros);
-          value.trim();
-          transformValue(newString, minimal_lineSize, value, format, tmpString);
-        }
-      }
       else
       {
         // Address a value from a plugin.
         // For example: "[bme#temp]"
-        // If value name is unknown, run a PLUGIN_GET_CONFIG command.
+        // If value name is unknown, run a PLUGIN_GET_CONFIG_VALUE command.
         // For example: "[<taskname>#getLevel]"
         taskIndex_t taskIndex = findTaskIndexByName(deviceName);
 
@@ -134,16 +142,16 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             String value = formatUserVar(taskIndex, valueNr, isvalid);
 
             if (isvalid) {
-              transformValue(newString, minimal_lineSize, value, format, tmpString);
+              transformValue(newString, minimal_lineSize, std::move(value), format, tmpString);
             }
           } else {
             // try if this is a get config request
             struct EventStruct TempEvent(taskIndex);
             String tmpName = valueName;
 
-            if (PluginCall(PLUGIN_GET_CONFIG, &TempEvent, tmpName))
+            if (PluginCall(PLUGIN_GET_CONFIG_VALUE, &TempEvent, tmpName))
             {
-              transformValue(newString, minimal_lineSize, tmpName, format, tmpString);
+              transformValue(newString, minimal_lineSize, std::move(tmpName), format, tmpString);
             }
           }
         }
@@ -277,7 +285,7 @@ void transformValue(
               maskChar = tempValueFormat[1];
             }
 
-            if (value == F("0")) {
+            if (value.equals(F("0"))) {
               value = String();
             } else {
               const int valueLength = value.length();
@@ -383,10 +391,10 @@ void transformValue(
             break;
           }
           case 'F': // FLOOR (round down)
-            value = static_cast<int>(floorf(valFloat));
+            value = static_cast<int>(floor(valFloat));
             break;
           case 'E': // CEILING (round up)
-            value = static_cast<int>(ceilf(valFloat));
+            value = static_cast<int>(ceil(valFloat));
             break;
           default:
             value = F("ERR");
@@ -603,14 +611,12 @@ uint8_t findDeviceValueIndexByName(const String& valueName, taskIndex_t taskInde
   if (result != Cache.taskIndexValueName.end()) {
     return result->second;
   }
-  LoadTaskSettings(taskIndex); // Probably already loaded, but just to be sure
-
   const uint8_t valCount = getValueCountForTask(taskIndex);
 
   for (uint8_t valueNr = 0; valueNr < valCount; valueNr++)
   {
     // Check case insensitive, since the user entered value name can have any case.
-    if (valueName.equalsIgnoreCase(ExtraTaskSettings.TaskDeviceValueNames[valueNr]))
+    if (valueName.equalsIgnoreCase(getTaskValueName(taskIndex, valueNr)))
     {
       Cache.taskIndexValueName[cache_valueName] = valueNr;
       return valueNr;
@@ -626,7 +632,7 @@ bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, i
   int tmpStartpos = input.indexOf('[', startpos);
 
   if (tmpStartpos == -1) { return false; }
-  int tmpHashpos = input.indexOf('#', tmpStartpos);
+  const int tmpHashpos = input.indexOf('#', tmpStartpos);
 
   if (tmpHashpos == -1) { return false; }
 
@@ -637,17 +643,18 @@ bool findNextValMarkInString(const String& input, int& startpos, int& hashpos, i
     }
   }
 
-  int tmpEndpos = input.indexOf(']', tmpStartpos);
+  const int tmpEndpos = input.indexOf(']', tmpStartpos);
 
   if (tmpEndpos == -1) { return false; }
 
-  if (tmpHashpos < tmpEndpos) {
-    hashpos  = tmpHashpos;
-    startpos = tmpStartpos;
-    endpos   = tmpEndpos;
-    return true;
+  if (tmpHashpos >= tmpEndpos) {
+    return false;
   }
-  return false;
+
+  hashpos  = tmpHashpos;
+  startpos = tmpStartpos;
+  endpos   = tmpEndpos;
+  return true;
 }
 
 // Find [deviceName#valueName] or [deviceName#valueName#format]

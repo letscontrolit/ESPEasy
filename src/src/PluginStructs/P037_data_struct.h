@@ -15,41 +15,60 @@
 
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
-# ifdef PLUGIN_BUILD_CUSTOM
+# if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 #  ifndef P037_MAPPING_SUPPORT
-#   define P037_MAPPING_SUPPORT 1 // Enable Value mapping support
+#   define P037_MAPPING_SUPPORT 1           // Enable Value mapping support
 #  endif // ifndef P037_MAPPING_SUPPORT
 #  ifndef P037_FILTER_SUPPORT
-#   define P037_FILTER_SUPPORT  1 // Enable filtering support
+#   define P037_FILTER_SUPPORT  1           // Enable filtering support
 #  endif // ifndef P037_FILTER_SUPPORT
 #  ifndef P037_JSON_SUPPORT
-#   define P037_JSON_SUPPORT    1 // Enable Json support
+#   define P037_JSON_SUPPORT    1           // Enable Json support
 #  endif // ifndef P037_JSON_SUPPORT
-# endif // ifdef PLUGIN_BUILD_CUSTOM
+#  ifndef P037_REPLACE_BY_COMMA_SUPPORT
+#   define P037_REPLACE_BY_COMMA_SUPPORT  1 // Enable Replace by comnma support
+#  endif // ifndef P037_REPLACE_BY_COMMA_SUPPORT
+# endif // if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
+// # define P037_LIMIT_BUILD_SIZE // Only limit build size for this plugin (to be defined in Custom.h etc.)
 
-# if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE) // Leave out the fancy stuff if available flash is tight
-#  ifdef PLUGIN_037_DEBUG
-#   undef PLUGIN_037_DEBUG
-#  endif // ifdef PLUGIN_037_DEBUG
-#  if P037_MAPPING_SUPPORT
-#   undef P037_MAPPING_SUPPORT
-#  endif // if P037_MAPPING_SUPPORT
-#  if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
-#   undef P037_FILTER_SUPPORT
-#  endif // if defined(FEATURE_ADC_VCC) && P037_FILTER_SUPPORT
+# ifndef PLUGIN_BUILD_MAX_ESP32
+
+// Leave out the fancy stuff if available flash is tight
+#  if (defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)) || defined(P037_LIMIT_BUILD_SIZE)
+#   ifndef P037_LIMIT_BUILD_SIZE
+#    define P037_LIMIT_BUILD_SIZE // Use this flag exclusively in P037 sources
+#   endif // ifndef P037_LIMIT_BUILD_SIZE
+#   ifdef PLUGIN_037_DEBUG
+#    undef PLUGIN_037_DEBUG
+#   endif // ifdef PLUGIN_037_DEBUG
+#   if P037_MAPPING_SUPPORT
+#    undef P037_MAPPING_SUPPORT
+#    define P037_MAPPING_SUPPORT  0
+#   endif // if P037_MAPPING_SUPPORT
+#   if FEATURE_ADC_VCC && P037_FILTER_SUPPORT
+#    undef P037_FILTER_SUPPORT
+#    define P037_FILTER_SUPPORT 0
+#   endif // if FEATURE_ADC_VCC && P037_FILTER_SUPPORT
 
 // #if P037_JSON_SUPPORT
 //   #undef P037_JSON_SUPPORT
+//   #define P037_JSON_SUPPORT 0
 // #endif
-# endif // if defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)
+#  endif // if (defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)) || defined(P037_LIMIT_BUILD_SIZE)
 
-# ifdef PLUGIN_DISPLAY_COLLECTION
-#  if P037_FILTER_SUPPORT
-#   undef P037_FILTER_SUPPORT
-#  endif // if P037_FILTER_SUPPORT
-# endif  // ifdef PLUGIN_DISPLAY_COLLECTION
+#  ifdef PLUGIN_DISPLAY_COLLECTION
+#   if P037_FILTER_SUPPORT
+#    undef P037_FILTER_SUPPORT
+#    define P037_FILTER_SUPPORT 0
+#   endif // if P037_FILTER_SUPPORT
+#   if P037_REPLACE_BY_COMMA_SUPPORT
+#    undef P037_REPLACE_BY_COMMA_SUPPORT
+#    define P037_REPLACE_BY_COMMA_SUPPORT 0
+#   endif // if P037_REPLACE_BY_COMMA_SUPPORT
+#  endif  // ifdef PLUGIN_DISPLAY_COLLECTION
+# endif // ifndef PLUGIN_BUILD_MAX_ESP32
 
 # define P037_MAX_MAPPINGS  25
 # define P037_MAX_FILTERS   VARS_PER_TASK // When VARS_PER_TASK is used, the filter is 1:1 mapped to a MQTT topic
@@ -134,19 +153,7 @@ struct P037_data_struct : public PluginTaskData_base
                         const String& match);
   #  endif // PLUGIN_037_DEBUG
   # endif  // if P037_FILTER_SUPPORT
-  String enquoteString(const String& input);
 
-  // The settings structures
-  // The stuff we want to save between settings
-  struct tP037_StoredSettings_struct {
-    char deviceTemplate[VARS_PER_TASK][41]; // variable for saving the subscription topics, leave as first element for
-                                            // backward compatibility
-    char jsonAttributes[VARS_PER_TASK][21]; // variable for saving the json attribute to use
-    char globalTopicPrefix[41];             // variable for saving the global topic prefix
-  };
-
-  // Stored settings data:
-  tP037_StoredSettings_struct StoredSettings;
 
   # if P037_JSON_SUPPORT
   bool parseJSONMessage(const String& message);
@@ -155,19 +162,26 @@ struct P037_data_struct : public PluginTaskData_base
   JsonObject::iterator iter;
   # endif // if P037_JSON_SUPPORT
 
-  std::map<uint8_t, String>deviceTemplate;
-  std::map<uint8_t, String>jsonAttributes;
-
+  // The settings structures
+  // The stuff we want to save between settings
+  String mqttTopics[VARS_PER_TASK];
+  String jsonAttributes[VARS_PER_TASK];
+  String globalTopicPrefix;
   String valueArray[P037_ARRAY_SIZE]; // Layout: P037_START_MAPPINGS..P037_END_MAPPINGS = mappings,
                                       // P037_START_FILTERS..P037_END_FILTERS = filters
 
+  String getFullMQTTTopic(uint8_t taskValueIndex) const;
+
+  bool   shouldSubscribeToMQTTtopic(const String& topic) const;
+
+  bool   loadSettings();
+
 private:
 
-  // Private methods and vars
-  bool loadSettings();
+  String saveSettings();
 
   # if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
-  void parseMappings();
+  void   parseMappings();
   # endif // if P037_MAPPING_SUPPORT || P037_FILTER_SUPPORT
   taskIndex_t _taskIndex = TASKS_MAX;
   # if P037_MAPPING_SUPPORT
