@@ -9,7 +9,7 @@
 
 # include <vector>
 
-# ifdef LIMIT_BUILD_SIZE
+# if defined(LIMIT_BUILD_SIZE) || defined(PLUGIN_BUILD_IR)
 #  define P036_LIMIT_BUILD_SIZE
 # endif // ifdef LIMIT_BUILD_SIZE
 

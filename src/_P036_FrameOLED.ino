@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-09-02
+// CHG: use P036_LIMIT_BUILD_SIZE if PLUGIN_BUILD_IR is defined 
 // @uwekaditz: 2022-08-11
 // CHG: using css style xwide as default (define P036_USE_XWIDE deleted)
 // CHG: correct English text (requested by tonhuisman)
