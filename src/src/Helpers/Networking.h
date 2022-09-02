@@ -32,10 +32,8 @@ void updateUDPport();
 /*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
 \*********************************************************************************************/
-#if FEATURE_ESPEASY_P2P
 extern boolean runningUPDCheck;
 void checkUDP();
-#endif
 
 /*********************************************************************************************\
    Send event using UDP message to specific unit

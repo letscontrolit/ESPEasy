@@ -247,7 +247,6 @@ void updateUDPport()
 /*********************************************************************************************\
    Check UDP messages (ESPEasy propiertary protocol)
 \*********************************************************************************************/
-#if FEATURE_ESPEASY_P2P
 boolean runningUPDCheck = false;
 void checkUDP()
 {
@@ -370,7 +369,6 @@ void checkUDP()
   }
   runningUPDCheck = false;
 }
-#endif
 
 /*********************************************************************************************\
    Get formatted IP address for unit

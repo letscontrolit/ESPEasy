@@ -7,6 +7,8 @@
 
 #include "../DataStructs/MAC_address.h"
 
+#include <IPAddress.h>
+
 bool     ethUseStaticIP();
 void     ethSetupStaticIPconfig();
 void     ethSetDNS(const IPAddress& dns0, const IPAddress& dns1);
