@@ -1,6 +1,7 @@
 #include "../Helpers/StringGenerator_System.h"
-#include "../Helpers/ESPEasy_time_calc.h"
 
+#include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 /*********************************************************************************************\
    ESPEasy specific strings
@@ -178,27 +179,27 @@ String formatSystemBuildNr(uint16_t buildNr) {
 }
 
 String getPluginDescriptionString() {
-  String result;
-
+  return F(
+    ""
   #ifdef PLUGIN_BUILD_NORMAL
-  result += F(" [Normal]");
+  "[Normal]"
   #endif // ifdef PLUGIN_BUILD_NORMAL
   #ifdef PLUGIN_BUILD_COLLECTION
-  result += F(" [Collection]");
+  "[Collection]"
   #endif // ifdef PLUGIN_BUILD_COLLECTION
   #ifdef PLUGIN_BUILD_DEV
-  result += F(" [Development]");
+  "[Development]"
   #endif // ifdef PLUGIN_BUILD_DEV
   #ifdef PLUGIN_DESCR
-  result += F(" [");
-  result += F(PLUGIN_DESCR);
-  result += ']';
+  "[" PLUGIN_DESCR "]"
   #endif // ifdef PLUGIN_DESCR
+  #ifdef BUILD_NO_DEBUG
+  "[No Debug Log]"
+  #endif
   #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
-  result += F(" 24tasks");
+  "[24tasks]"
   #endif // if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
-  result.trim();
-  return result;
+  );
 }
 
 String getSystemLibraryString() {
