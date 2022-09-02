@@ -92,68 +92,68 @@ void handle_root() {
   String sCommand  = webArg(F("cmd"));
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
+
+  int freeMem = ESP.getFreeHeap();
+
+  // TODO: move this to handle_tools, from where it is actually called?
+
+  // have to disconnect or reboot from within the main loop
+  // because the webconnection is still active at this point
+  // disconnect here could result into a crash/reboot...
+  if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
   {
-    int freeMem = ESP.getFreeHeap();
-
-    // TODO: move this to handle_tools, from where it is actually called?
-
-    // have to disconnect or reboot from within the main loop
-    // because the webconnection is still active at this point
-    // disconnect here could result into a crash/reboot...
-    if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
-    {
-      addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
-      cmd_within_mainloop = CMD_WIFI_DISCONNECT;
-      addHtml(F("OK"));
-    } else if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
-    {
-      addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+    addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+    cmd_within_mainloop = CMD_WIFI_DISCONNECT;
+    addHtml(F("OK"));
+  } else if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
+  {
+    addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+    cmd_within_mainloop = CMD_REBOOT;
+    addHtml(F("OK"));
+  } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+  {
+    if (loggedIn) {
+      addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
       cmd_within_mainloop = CMD_REBOOT;
-      addHtml(F("OK"));
-    } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
+      addHtml(F(
+                "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
+      TXBuffer.endStream();
+      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+      return;
+    }
+  } else {
+    if (loggedIn) {
+      handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
+      printToWeb     = false;
+      printToWebJSON = false;
+    }
+
+    addHtml(F("<form>"));
+    html_table_class_normal();
+    addFormHeader(F("System Info"));
+
+    addRowLabelValue(LabelType::UNIT_NR);
+    addRowLabelValue(LabelType::GIT_BUILD);
+    addRowLabel(LabelType::LOCAL_TIME);
+
+    if (node_time.systemTimePresent())
     {
-      if (loggedIn) {
-        addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
-        cmd_within_mainloop = CMD_REBOOT;
-        addHtml(F(
-                  "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
-        TXBuffer.endStream();
-        ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
-        return;
-      }
-    } else {
-      if (loggedIn) {
-        handle_command_from_web(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand);
-        printToWeb     = false;
-        printToWebJSON = false;
-      }
+      addHtml(getValue(LabelType::LOCAL_TIME));
+    }
+    else {
+      addHtml(F("<font color='red'>No system time source</font>"));
+    }
+    addRowLabelValue(LabelType::TIME_SOURCE);
 
-      addHtml(F("<form>"));
-      html_table_class_normal();
-      addFormHeader(F("System Info"));
-
-      addRowLabelValue(LabelType::UNIT_NR);
-      addRowLabelValue(LabelType::GIT_BUILD);
-      addRowLabel(LabelType::LOCAL_TIME);
-
-      if (node_time.systemTimePresent())
-      {
-        addHtml(getValue(LabelType::LOCAL_TIME));
-      }
-      else {
-        addHtml(F("<font color='red'>No system time source</font>"));
-      }
-      addRowLabelValue(LabelType::TIME_SOURCE);
-
-      addRowLabel(LabelType::UPTIME);
-      {
-        addHtml(getExtendedValue(LabelType::UPTIME));
-      }
-      addRowLabel(LabelType::LOAD_PCT);
+    addRowLabel(LabelType::UPTIME);
+    {
+      addHtml(getExtendedValue(LabelType::UPTIME));
+    }
+    addRowLabel(LabelType::LOAD_PCT);
 
       if (wdcounter > 0)
       {
-        addHtml(String(getCPUload()));
+        addHtmlFloat(getCPUload());
         addHtml(F("% (LC="));
         addHtmlInt(getLoopCountPerSec());
         addHtml(')');
@@ -171,8 +171,8 @@ void handle_root() {
       }
       {
         #ifdef USE_SECOND_HEAP
-        addRowLabelValue(LabelType::FREE_HEAP_IRAM);
-        #endif
+      addRowLabelValue(LabelType::FREE_HEAP_IRAM);
+      #endif
       }
       {
         addRowLabel(LabelType::FREE_STACK);
@@ -201,7 +201,7 @@ void handle_root() {
       }
 
   #if FEATURE_ETHERNET
-      if(active_network_medium == NetworkMedium_t::Ethernet) {
+    if(active_network_medium == NetworkMedium_t::Ethernet) {
         addRowLabelValue(LabelType::ETH_SPEED_STATE);
         addRowLabelValue(LabelType::ETH_IP_ADDRESS);
       }
@@ -218,35 +218,35 @@ void handle_root() {
       }
       #endif // if FEATURE_MDNS
 
-      #if FEATURE_MQTT
-      {
-        if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
-          addRowLabel(F("MQTT Client Connected"));
-          addEnabled(MQTTclient_connected);
-        }
+    #if FEATURE_MQTT
+    {
+      if (validControllerIndex(firstEnabledMQTT_ControllerIndex())) {
+        addRowLabel(F("MQTT Client Connected"));
+        addEnabled(MQTTclient_connected);
       }
-      #endif
+    }
+    #endif
 
 
-      #if MAIN_PAGE_SHOW_SYSINFO_BUTTON
-      html_TR_TD();
-      html_TD();
-      addButton(F("sysinfo"), F("More info"));
-      #endif
-      #if MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
-      html_TR_TD();
-      html_TD();
-      addButton(F("setup"), F("WiFi Setup"));
-      #endif
+    #if MAIN_PAGE_SHOW_SYSINFO_BUTTON
+    html_TR_TD();
+    html_TD();
+    addButton(F("sysinfo"), F("More info"));
+    #endif
+    #if MAIN_PAGE_SHOW_WiFi_SETUP_BUTTON
+    html_TR_TD();
+    html_TD();
+    addButton(F("setup"), F("WiFi Setup"));
+    #endif
 
-      if (loggedIn) {
-        if (printWebString.length() > 0)
-        {
-          html_BR();
-          html_BR();
-          addFormHeader(F("Command Argument"));
-          addRowLabel(F("Command"));
-          addHtml(sCommand);
+    if (loggedIn) {
+      if (printWebString.length() > 0)
+      {
+        html_BR();
+        html_BR();
+        addFormHeader(F("Command Argument"));
+        addRowLabel(F("Command"));
+        addHtml(sCommand);
 
           addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
           addHtml(printWebString);
@@ -260,76 +260,116 @@ void handle_root() {
       html_BR();
       if (Settings.Unit == 0 && Settings.UDPPort != 0) addFormNote(F("Warning: Unit number is 0, please change it if you want to send data to other units."));
       html_BR();
-      html_table_class_multirow_noborder();
-      html_TR();
-      html_table_header(F("Node List"));
-      html_table_header(F("Name"));
-      if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
-        html_table_header(getLabel(LabelType::BUILD_DESC));
-      }
-      if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
-        html_table_header(F("Type"));
-      }
-      html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
-      html_table_header(F("Age"));
+    html_table_class_multirow_noborder();
+    html_TR();
+    html_table_header(F("Node List"));
+    html_table_header(F("Name"));
+    if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+      html_table_header(getLabel(LabelType::BUILD_DESC));
+    }
+    if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+      html_table_header(F("Type"));
+    }
+    html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
+    html_table_header(F("Load"));
+    html_table_header(F("Age (s)"));
+    #ifdef USES_ESPEASY_NOW
+    if (Settings.UseESPEasyNow()) {
+      html_table_header(F("Dist"));
+      html_table_header(F("Peer Info"), 160);
+    }
+    #endif
 
-      for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it)
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it)
+    {
+      if (it->second.valid())
       {
+        bool isThisUnit = it->first == Settings.Unit;
+
+        if (isThisUnit) {
+          html_TR_TD_highlight();
+        }
+        else {
+          html_TR_TD();
+        }
+
+        addHtml(F("Unit "));
+        addHtmlInt(it->first);
+        html_TD();
+
+        if (isThisUnit) {
+          addHtml(Settings.Name);
+        }
+        else {
+          addHtml(it->second.getNodeName());
+        }
+        html_TD();
+
+        if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+          if (it->second.build) {
+            addHtml(formatSystemBuildNr(it->second.build));
+          }
+          html_TD();
+        }
+        if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+          addHtml(it->second.getNodeTypeDisplayString());
+          html_TD();
+        }
         if (it->second.ip[0] != 0)
         {
-          bool isThisUnit = it->first == Settings.Unit;
-
-          if (isThisUnit) {
-            html_TR_TD_highlight();
-          }
-          else {
-            html_TR_TD();
-          }
-
-          addHtml(F("Unit "));
-          addHtmlInt(it->first);
-          html_TD();
-
-          if (isThisUnit) {
-            addHtml(Settings.Name);
-          }
-          else {
-            addHtml(it->second.nodeName);
-          }
-          html_TD();
-
-          if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
-            if (it->second.build) {
-              addHtml(formatSystemBuildNr(it->second.build));
-            }
-            html_TD();
-          }
-          if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
-            addHtml(getNodeTypeDisplayString(it->second.nodeType));
-            html_TD();
-          }
           html_add_wide_button_prefix();
-          {
-            addHtml(F("http://"));
-            addHtml(it->second.ip.toString());
-            uint16_t port = it->second.webgui_portnumber;
-            if (port !=0 && port != 80) {
-              addHtml(':');
-              addHtmlInt(port);
-            }
-            addHtml('\'', '>');
-            addHtml(it->second.ip.toString());
-            addHtml(F("</a>"));
+
+          addHtml(F("http://"));
+          addHtml(it->second.IP().toString());
+          uint16_t port = it->second.webgui_portnumber;
+          if (port !=0 && port != 80) {
+            addHtml(':');
+            addHtmlInt(port);
+          }
+          addHtml('\'', '>');
+          addHtml(it->second.IP().toString());
+          addHtml(F("</a>"));
+        } 
+        html_TD();
+        const float load = it->second.getLoad();
+        if (load > 0.1) {
+          addHtmlFloat(load);
+        }
+        html_TD();
+        addHtmlInt(static_cast<uint32_t>(it->second.getAge()/1000)); // time in seconds
+        #ifdef USES_ESPEASY_NOW
+        if (Settings.UseESPEasyNow()) {
+          html_TD();
+          if (it->second.distance != 255) {
+            addHtmlInt(it->second.distance); 
           }
           html_TD();
-          addHtmlInt(it->second.age);
+          if (it->second.ESPEasyNowPeer) {
+            addHtml(F(ESPEASY_NOW_NAME));
+            addHtml(' ');
+            addHtml(it->second.ESPEasy_Now_MAC().toString());
+            addHtml(F(" (ch: "));
+            addHtmlInt(it->second.channel);
+            int8_t rssi = it->second.getRSSI();
+            if (rssi < 0) {
+              addHtml(' ');
+              addHtmlInt(rssi);
+            }
+            addHtml(')');
+            const ESPEasy_now_traceroute_struct* trace = Nodes.getDiscoveryRoute(it->second.unit);
+            if (trace != nullptr) {
+              addHtml(' ');
+              addHtml(trace->toString());
+            }          
+          }
         }
+        #endif
       }
-
-      html_end_table();
-    #endif
-      html_end_form();
     }
+
+    html_end_table();
+  #endif
+    html_end_form();
 
     printWebString = String();
     printToWeb     = false;

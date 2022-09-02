@@ -402,9 +402,9 @@ void handle_sysinfo_Ethernet() {
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
-  # if FEATURE_ETHERNET
+  # if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
   addRowLabelValue(LabelType::ETH_WIFI_MODE);
-  # endif // if FEATURE_ETHERNET
+  # endif 
 
   addRowLabelValue(LabelType::IP_CONFIG);
   addRowLabelValue(LabelType::IP_ADDRESS_SUBNET);
@@ -480,6 +480,10 @@ void handle_sysinfo_WiFiSettings() {
   addRowLabelValue(LabelType::WIFI_SEND_AT_MAX_TX_PWR);
 #endif
   addRowLabelValue(LabelType::WIFI_NR_EXTRA_SCANS);
+#ifdef USES_ESPEASY_NOW
+  addRowLabelValue(LabelType::USE_ESPEASY_NOW);
+  addRowLabelValue(LabelType::FORCE_ESPEASY_NOW_CHANNEL);
+#endif
   addRowLabelValue(LabelType::WIFI_USE_LAST_CONN_FROM_RTC);
 }
 #endif
