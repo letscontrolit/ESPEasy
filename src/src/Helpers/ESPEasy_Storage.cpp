@@ -470,9 +470,11 @@ String SaveSettings()
     return err;
   }
 
+#ifndef BUILD_MINIMAL_OTA
   // Must check this after saving, or else it is not possible to fix multiple
   // issues which can only corrected on different pages.
   if (!SettingsCheck(err)) { return err; }
+#endif
 
   //  }
 
@@ -919,10 +921,11 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                           TaskIndex,
                           reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                           sizeof(struct ExtraTaskSettingsStruct));
-
+#ifndef BUILD_MINIMAL_OTA
   if (err.isEmpty()) {
     err = checkTaskSettings(TaskIndex);
   }
+#endif
   return err;
 }
 

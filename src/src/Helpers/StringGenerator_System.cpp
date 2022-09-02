@@ -11,7 +11,7 @@
 
 #if FEATURE_MQTT
 
-#include <PubSubClient.h>
+//#include <PubSubClient.h>
 #include "../Globals/MQTT.h"
 
 const __FlashStringHelper * getMQTT_state() {
