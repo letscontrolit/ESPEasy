@@ -2,6 +2,7 @@
 
 
 #include "../../ESPEasy_common.h"
+#ifndef BUILD_MINIMAL_OTA
 
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
@@ -11,7 +12,9 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/LogStruct.h"
+#if FEATURE_ESPEASY_P2P
 #include "../DataStructs/NodeStruct.h"
+#endif
 #include "../DataStructs/PortStatusStruct.h"
 #include "../DataStructs/ProtocolStruct.h"
 #if FEATURE_CUSTOM_PROVISIONING
@@ -110,12 +113,7 @@ void run_compiletime_checks() {
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER
   #if FEATURE_ESPEASY_P2P
-  #if ESP_IDF_VERSION_MAJOR > 3
-  // String class has increased with 4 bytes
-  check_size<NodeStruct,                            32u>();
-  #else
-  check_size<NodeStruct,                            28u>();
-  #endif
+  check_size<NodeStruct,                            56u>();
   #endif
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
@@ -254,3 +252,4 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   #endif
   return err;
 }
+#endif

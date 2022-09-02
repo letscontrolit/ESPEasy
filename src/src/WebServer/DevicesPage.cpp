@@ -8,6 +8,8 @@
 # include "../WebServer/Markup_Buttons.h"
 # include "../WebServer/Markup_Forms.h"
 
+# include "../DataStructs/NodeStruct.h"
+
 # include "../Globals/CPlugins.h"
 # include "../Globals/Device.h"
 # include "../Globals/ExtraTaskSettings.h"
@@ -21,8 +23,11 @@
 # include "../Helpers/_Plugin_Helper_serial.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Hardware.h"
+# include "../Helpers/I2C_Plugin_Helper.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
+
+
 
 # include "../../_Plugin_Helper.h"
 
@@ -761,11 +766,11 @@ void format_originating_node(uint8_t remoteUnit) {
   addHtmlInt(remoteUnit);
 
   if (remoteUnit != 255) {
-    NodesMap::iterator it = Nodes.find(remoteUnit);
+    const NodeStruct *node = Nodes.getNode(remoteUnit);
 
-    if (it != Nodes.end()) {
+    if (node != nullptr) {
       addHtml(F(" - "));
-      addHtml(it->second.nodeName);
+      addHtml(node->getNodeName());
     } else {
       addHtml(F(" - Not Seen recently"));
     }
@@ -968,10 +973,10 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addFormNumericBox(F("Remote Unit"), F("RemoteUnit"), remoteUnit, 0, 255);
 
       if (remoteUnit != 255) {
-        NodesMap::iterator it = Nodes.find(remoteUnit);
+        const NodeStruct* node = Nodes.getNode(remoteUnit);
 
-        if (it != Nodes.end()) {
-          addUnit(it->second.nodeName);
+        if (node != nullptr) {
+          addUnit(node->getNodeName());
         } else {
           addUnit(F("Unknown Unit Name"));
         }
