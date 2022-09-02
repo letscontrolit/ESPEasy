@@ -161,6 +161,7 @@ bool ETHConnectRelaxed() {
   #endif
 
   if (!EthEventData.ethInitSuccess) {
+    ethResetGPIOpins();
     EthEventData.ethInitSuccess = ETH.begin( 
       Settings.ETH_Phy_Addr,
       Settings.ETH_Pin_power,
@@ -200,6 +201,10 @@ void ethPower(bool enable) {
       #endif
       ETH = ETHClass();
     }
+    if (enable) {
+      ethResetGPIOpins();
+    }
+    gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_power);
 
     GPIO_Write(1, Settings.ETH_Pin_power, enable ? 1 : 0);
     if (!enable) {
@@ -211,6 +216,33 @@ void ethPower(bool enable) {
       delay(400); // LAN chip needs to initialize before calling Eth.begin()
     }
   }
+}
+
+void ethResetGPIOpins() {
+  // fix an disconnection issue after rebooting Olimex POE - this forces a clean state for all GPIO involved in RMII
+  // Thanks to @s-hadinger and @Jason2866
+  // Resetting state of power pin is done in ethPower()
+  gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdc);
+  gpio_reset_pin((gpio_num_t)Settings.ETH_Pin_mdio);
+  gpio_reset_pin(GPIO_NUM_19);    // EMAC_TXD0 - hardcoded
+  gpio_reset_pin(GPIO_NUM_21);    // EMAC_TX_EN - hardcoded
+  gpio_reset_pin(GPIO_NUM_22);    // EMAC_TXD1 - hardcoded
+  gpio_reset_pin(GPIO_NUM_25);    // EMAC_RXD0 - hardcoded
+  gpio_reset_pin(GPIO_NUM_26);    // EMAC_RXD1 - hardcoded
+  gpio_reset_pin(GPIO_NUM_27);    // EMAC_RX_CRS_DV - hardcoded
+  switch (Settings.ETH_Clock_Mode) {
+    case EthClockMode_t::Ext_crystal_osc:       // ETH_CLOCK_GPIO0_IN
+    case EthClockMode_t::Int_50MHz_GPIO_0:      // ETH_CLOCK_GPIO0_OUT
+      gpio_reset_pin(GPIO_NUM_0);
+      break;
+    case EthClockMode_t::Int_50MHz_GPIO_16:     // ETH_CLOCK_GPIO16_OUT
+      gpio_reset_pin(GPIO_NUM_16);
+      break;
+    case EthClockMode_t::Int_50MHz_GPIO_17_inv: // ETH_CLOCK_GPIO17_OUT
+      gpio_reset_pin(GPIO_NUM_17);
+      break;
+  }
+  delay(1);
 }
 
 bool ETHConnected() {

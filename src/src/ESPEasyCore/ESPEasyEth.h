@@ -16,6 +16,7 @@ void     ethPrintSettings();
 bool     ETHConnectRelaxed();
 bool     ETHConnected();
 void     ethPower(bool enable);
+void     ethResetGPIOpins();
 MAC_address ETHMacAddress();
 
 #endif // if FEATURE_ETHERNET
