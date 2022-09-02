@@ -3,44 +3,48 @@
 
 #ifdef WEBSERVER_CONTROLLERS
 
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+# include "../WebServer/ESPEasy_WebServer.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/Markup.h"
+# include "../WebServer/Markup_Buttons.h"
+# include "../WebServer/Markup_Forms.h"
 
-#include "../DataStructs/ESPEasy_EventStruct.h"
+# include "../DataStructs/ESPEasy_EventStruct.h"
 
-#include "../ESPEasyCore/Controller.h"
+# include "../ESPEasyCore/Controller.h"
 
-#include "../Globals/CPlugins.h"
-#include "../Globals/Protocol.h"
-#include "../Globals/Settings.h"
+# include "../Globals/CPlugins.h"
+# include "../Globals/Protocol.h"
+# include "../Globals/Settings.h"
 
-#ifdef USES_MQTT
-#include "../Globals/MQTT.h"
-#endif
+# ifdef USES_MQTT
+#  include "../Globals/MQTT.h"
+# endif
 
-#include "../Helpers/_CPlugin_Helper_webform.h"
-#include "../Helpers/_Plugin_SensorTypeHelper.h"
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
+# include "../Helpers/_CPlugin_Helper_webform.h"
+# include "../Helpers/_Plugin_SensorTypeHelper.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
+# include "../Helpers/_CPlugin_Helper_webform.h"
+# include "../Helpers/_Plugin_SensorTypeHelper.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
 // ********************************************************************************
 // Web Interface controller page
 // ********************************************************************************
 void handle_controllers() {
-  #ifndef BUILD_NO_RAM_TRACKER
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_controllers"));
-  #endif
+  # endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (!isLoggedIn()) { return; }
   navMenuIndex = MENU_INDEX_CONTROLLERS;
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
-  uint8_t controllerindex     = getFormItemInt(F("index"), 0);
+  uint8_t controllerindex  = getFormItemInt(F("index"), 0);
   boolean controllerNotSet = controllerindex == 0;
   --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
 
@@ -49,11 +53,12 @@ void handle_controllers() {
   // submitted data
   if ((protocol != -1) && !controllerNotSet)
   {
-    bool mustInit = false;
+    bool mustInit            = false;
     bool mustCallCpluginSave = false;
     {
       // Place in a scope to free ControllerSettings memory ASAP
       MakeControllerSettings(ControllerSettings); //-V522
+
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Not enough free memory to save settings"));
       } else {
@@ -84,10 +89,11 @@ void handle_controllers() {
         addHtmlError(SaveControllerSettings(controllerindex, ControllerSettings));
       }
     }
+
     if (mustCallCpluginSave) {
       // Call CPLUGIN_WEBFORM_SAVE after destructing ControllerSettings object to reduce RAM usage.
       // Controller plugin almost only deals with custom controller settings.
-      // Even if they need to save things to the ControllerSettings, then the changes must 
+      // Even if they need to save things to the ControllerSettings, then the changes must
       // already be saved first as the CPluginCall does not have the ControllerSettings as argument.
       handle_controllers_CopySubmittedSettings_CPluginCall(controllerindex);
     }
@@ -101,7 +107,8 @@ void handle_controllers() {
         struct EventStruct TempEvent;
         TempEvent.ControllerIndex = controllerindex;
         String dummy;
-        CPlugin::Function cfunction = Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
+        CPlugin::Function cfunction =
+          Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
         CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy);
       }
     }
@@ -206,6 +213,7 @@ void handle_controllers_ShowAllControllersTable()
   html_table_header(F("Port"));
 
   MakeControllerSettings(ControllerSettings); //-V522
+
   if (AllocatedControllerSettings()) {
     for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
     {
@@ -280,6 +288,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addFormHeader(F("Controller Settings"));
   addRowLabel(F("Protocol"));
   uint8_t choice = Settings.Protocol[controllerindex];
+
   addSelector_Head_reloadOnChange(F("protocol"));
   addSelector_Item(F("- Standalone -"), 0, false, false, EMPTY_STRING);
 
@@ -298,9 +307,10 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (Settings.Protocol[controllerindex])
-  { 
+  {
     {
       MakeControllerSettings(ControllerSettings); //-V522
+
       if (!AllocatedControllerSettings()) {
         addHtmlError(F("Out of memory, cannot load page"));
       } else {
@@ -328,6 +338,13 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addFormNote(F("Default ports: MQTT: 1883 / MQTT TLS: 8883"));
           }
           #endif
+      # ifdef USES_ESPEASY_NOW
+
+          if (Protocol[ProtocolIndex].usesMQTT) {
+            // FIXME TD-er: Currently only enabled for MQTT protocols, later for more
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ENABLE_ESPEASY_NOW_FALLBACK);
+          }
+      # endif // ifdef USES_ESPEASY_NOW
 
           if (Protocol[ProtocolIndex].usesQueue) {
             addTableSeparator(F("Controller Queue"), 2, 3);
@@ -335,6 +352,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_QUEUE_DEPTH);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_MAX_RETRIES);
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_FULL_QUEUE_ACTION);
+
             if (Protocol[ProtocolIndex].allowsExpire) {
               addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_ALLOW_EXPIRE);
             }
@@ -379,7 +397,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             addTableSeparator(F("MQTT"), 2, 3);
 
             addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_CLIENT_ID);
-            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);        
+            addControllerParameterForm(ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_UNIQUE_CLIENT_ID_RECONNECT);
             addRowLabel(F("Current Client ID"));
             addHtml(getMQTTclientID(ControllerSettings));
             addFormNote(F("Updated on load of this page"));
@@ -406,6 +424,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
           #endif // if FEATURE_MQTT
         }
       }
+
       // End of scope for ControllerSettings, destruct it to save memory.
     }
     {
