@@ -1821,6 +1821,13 @@ To create/register a plugin, you have to :
 #endif
 */
 
+#ifdef USES_C013
+  #ifdef FEATURE_ESPEASY_P2P
+    #undef FEATURE_ESPEASY_P2P
+  #endif
+  #define FEATURE_ESPEASY_P2P 1
+#endif
+
 #if defined(USES_C018)
   #define FEATURE_PACKED_RAW_DATA 1
 #endif
