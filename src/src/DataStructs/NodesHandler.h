@@ -2,6 +2,7 @@
 #define DATASTRUCTS_NODESHANDLER_H
 
 #include "../../ESPEasy_common.h"
+#if FEATURE_ESPEASY_P2P
 
 #include "../DataStructs/MAC_address.h"
 #include "../DataStructs/NodeStruct.h"
@@ -10,10 +11,9 @@
 # include "../DataStructs/ESPEasy_now_traceroute.h"
 # include "../DataStructs/ESPEasy_now_Node_statistics.h"
 # include "../DataStructs/ESPEasy_Now_MQTT_queue_check_packet.h"
+# include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 # include "../Globals/ESPEasy_now_peermanager.h"
 #endif // ifdef USES_ESPEASY_NOW
-
-#include "../DataTypes/ESPEasy_Now_MQTT_queue_check_state.h"
 
 #include "../Helpers/ESPEasyMutex.h"
 
@@ -133,5 +133,6 @@ private:
   bool _recentlyBecameDistanceZero = false;
 };
 
+#endif
 
 #endif // ifndef DATASTRUCTS_NODESHANDLER_H

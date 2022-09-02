@@ -24,6 +24,8 @@
 # include <ESP8266WiFiType.h>
 #endif // ifdef ESP8266
 
+#include <map>
+
 // WifiStatus
 #define ESPEASY_WIFI_DISCONNECTED            0
 

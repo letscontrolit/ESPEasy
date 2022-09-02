@@ -23,8 +23,11 @@
 # include "../Helpers/_Plugin_Helper_serial.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Hardware.h"
+# include "../Helpers/I2C_Plugin_Helper.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
+
+
 
 # include "../../_Plugin_Helper.h"
 

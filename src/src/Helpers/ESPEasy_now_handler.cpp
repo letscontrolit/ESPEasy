@@ -1264,6 +1264,7 @@ void ESPEasy_now_handler_t::sendSendData_DuplicateCheck(uint32_t                
       break;
   }
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
     log = F("ESPEasy_now dup check: ");
@@ -1282,6 +1283,7 @@ void ESPEasy_now_handler_t::sendSendData_DuplicateCheck(uint32_t                
     }
     addLog(LOG_LEVEL_DEBUG, log);
   }
+#endif
 }
 
 bool ESPEasy_now_handler_t::handle_SendData_DuplicateCheck(const ESPEasy_now_merger& message, bool& mustKeep)

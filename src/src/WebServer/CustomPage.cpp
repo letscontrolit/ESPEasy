@@ -1,5 +1,7 @@
 #include "../WebServer/CustomPage.h"
 
+#ifdef WEBSERVER_CUSTOM
+
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -16,8 +18,6 @@
 #include "../Helpers/StringParser.h"
 
 #include "../../_Plugin_Helper.h"
-
-#ifdef WEBSERVER_CUSTOM
 
 // ********************************************************************************
 // Web Interface custom page handler

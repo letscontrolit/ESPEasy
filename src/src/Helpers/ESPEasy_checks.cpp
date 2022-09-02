@@ -2,6 +2,7 @@
 
 
 #include "../../ESPEasy_common.h"
+#ifndef BUILD_MINIMAL_OTA
 
 #include "../DataStructs/CRCStruct.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
@@ -11,7 +12,9 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 #include "../DataStructs/LogStruct.h"
+#if FEATURE_ESPEASY_P2P
 #include "../DataStructs/NodeStruct.h"
+#endif
 #include "../DataStructs/PortStatusStruct.h"
 #include "../DataStructs/ProtocolStruct.h"
 #if FEATURE_CUSTOM_PROVISIONING
@@ -108,11 +111,9 @@ void run_compiletime_checks() {
   #if FEATURE_NOTIFIER
   check_size<NotificationStruct,                    3u>();
   #endif // if FEATURE_NOTIFIER
-#if FEATURE_ESPEASY_P2P
-
+  #if FEATURE_ESPEASY_P2P
   check_size<NodeStruct,                            56u>();
-
-#endif
+  #endif
   check_size<systemTimerStruct,                     24u>();
   check_size<RTCStruct,                             32u>();
   check_size<portStatusStruct,                      6u>();
@@ -250,3 +251,4 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   #endif
   return err;
 }
+#endif

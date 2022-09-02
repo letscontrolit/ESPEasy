@@ -2,6 +2,8 @@
 #define DATASTRUCTS_NODESTRUCT_H
 
 #include "../../ESPEasy_common.h"
+
+#if FEATURE_ESPEASY_P2P
 #include "../Helpers/ESPEasy_time.h"
 #include "../DataStructs/MAC_address.h"
 
@@ -9,7 +11,6 @@
 #include <map>
 
 
-#if FEATURE_ESPEASY_P2P
 /*********************************************************************************************\
 * NodeStruct
 \*********************************************************************************************/
@@ -97,7 +98,5 @@ struct __attribute__((__packed__)) NodeStruct
   unsigned long lastUpdated = (1 << 30);
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
-
-#endif //FEATURE_ESPEASY_P2P
-
+#endif
 #endif // DATASTRUCTS_NODESTRUCT_H

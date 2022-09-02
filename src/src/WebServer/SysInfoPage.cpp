@@ -2,6 +2,7 @@
 
 #if defined(WEBSERVER_SYSINFO) || SHOW_SYSINFO_JSON
 
+#include "../WebServer/AccessControl.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"

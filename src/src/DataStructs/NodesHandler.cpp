@@ -1,6 +1,8 @@
 #include "../DataStructs/NodesHandler.h"
 
 #include "../../ESPEasy_common.h"
+
+#if FEATURE_ESPEASY_P2P
 #include "../../ESPEasy-Globals.h"
 
 #ifdef USES_ESPEASY_NOW
@@ -653,5 +655,6 @@ void NodesHandler::setMQTTQueueState(const MAC_address& mac, ESPEasy_Now_MQTT_Qu
   }
 }
 
+#endif
 
 #endif

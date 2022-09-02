@@ -400,7 +400,7 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
       if (WiFiEventData.connectionFailures > 0) {
         --WiFiEventData.connectionFailures;
       }
-//#ifndef BUILD_NO_DEBUG
+#ifndef BUILD_NO_DEBUG
 #ifdef USES_ESPEASY_NOW
       if (loglevelActiveFor(LOG_LEVEL_DEBUG) && messageRouteInfo != nullptr) {
         String log = F("MQTT : published from mesh: ");
@@ -408,7 +408,7 @@ bool processMQTT_message(controllerIndex_t controllerIndex,
         addLog(LOG_LEVEL_DEBUG, log);
       }
 #endif
-//#endif // ifndef BUILD_NO_DEBUG
+#endif // ifndef BUILD_NO_DEBUG
       processed = true;
     }
   }

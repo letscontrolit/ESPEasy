@@ -9,8 +9,10 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
+#ifdef USES_ESPEASY_NOW
 #include "../DataStructs/MAC_address.h"
 #include "../DataStructs/NodeStruct.h"
+#endif
 
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"

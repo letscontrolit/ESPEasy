@@ -70,7 +70,7 @@ void SecurityStruct::clearWiFiCredentials(SecurityStruct::WiFiCredentialsSlot sl
 }
 
 bool SecurityStruct::hasWiFiCredentials() const {
-  return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) || 
+  return hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first) ||
          hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second);
 }
 

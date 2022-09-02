@@ -1,12 +1,13 @@
 #include "../DataStructs/NodeStruct.h"
 
+#if FEATURE_ESPEASY_P2P
 #include "../../ESPEasy-Globals.h"
 #include "../DataTypes/NodeTypeID.h"
+#include "../ESPEasyCore/ESPEasyNetwork.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 
-#if FEATURE_ESPEASY_P2P
 
 #define NODE_STRUCT_AGE_TIMEOUT 300000  // 5 minutes
 
@@ -218,6 +219,7 @@ void NodeStruct::setRSSI(int8_t rssi)
 
 bool NodeStruct::markedAsPriorityPeer() const
 {
+#ifdef USES_ESPEASY_NOW
   for (int i = 0; i < ESPEASY_NOW_PEER_MAX; ++i) {
     if (SecuritySettings.peerMacSet(i)) {
       if (match(SecuritySettings.EspEasyNowPeerMAC[i])) {
@@ -225,6 +227,7 @@ bool NodeStruct::markedAsPriorityPeer() const
       }
     }
   }
+#endif
   return false;
 }
 
@@ -236,11 +239,8 @@ bool NodeStruct::match(const MAC_address& mac) const
 bool NodeStruct::isThisNode() const
 {
     // Check to see if we process a node we've sent ourselves.
-    MAC_address tmp;
-    WiFi.softAPmacAddress(tmp.mac);
-    if (tmp == ap_mac) return true;
-    WiFi.macAddress(tmp.mac);
-    if (tmp == sta_mac) return true;
+    if (WifiSoftAPmacAddress() == ap_mac) return true;
+    if (WifiSTAmacAddress() == sta_mac) return true;
 
     return false;
 }

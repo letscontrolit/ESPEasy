@@ -307,9 +307,11 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/version"), toString(Settings.Build, 0),
                                    errorCounter);
 
+#if FEATURE_ESPEASY_P2P
         // $fw/name	Device → Controller	Name of the firmware running on the device. Allowed characters are the same as the device ID	Yes	Yes
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$fw/name"), toNodeTypeDisplayString(NODE_TYPE_ID),
                                    errorCounter);
+#endif
 
         // $stats/interval	Device → Controller	Interval in seconds at which the device refreshes its $stats/+: See next section for
         // details about statistical attributes	Yes	Yes
