@@ -2103,4 +2103,8 @@ To create/register a plugin, you have to :
   #define SHOW_SYSINFO_JSON 1
 #endif
 
+#ifndef FEATURE_AUTO_DARK_MODE
+  #define FEATURE_AUTO_DARK_MODE              1
+#endif
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
