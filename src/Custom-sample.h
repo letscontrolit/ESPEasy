@@ -260,6 +260,7 @@
 
 #define SETUP_PAGE_SHOW_CONFIG_BUTTON    true
 
+// #define FEATURE_AUTO_DARK_MODE           0 // Disable auto-dark mode
 
 //#define WEBPAGE_TEMPLATE_HIDE_HELP_BUTTON
 

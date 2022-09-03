@@ -62,6 +62,9 @@ struct LabelType {
 #ifndef BUILD_NO_RAM_TRACKER
     ENABLE_RAM_TRACKING,
 #endif
+#if FEATURE_AUTO_DARK_MODE
+    ENABLE_AUTO_DARK_MODE,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
