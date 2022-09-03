@@ -1288,10 +1288,15 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         id += controllerNr + 1;
 
         html_TR_TD();
-        addHtml(F("Send to Controller "));
-        addHtml(getControllerSymbol(controllerNr));
+        addHtml(F("Send to: "));
+        addHtml(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr]));
         html_TD();
+        html_table(EMPTY_STRING); // Sub-table to allow nicer alignment of the ControllerSymbol
+        html_TD(F("width:30px;vertical-align:baseline;"));
+        addHtml(getControllerSymbol(controllerNr));
+        html_TD(F("width:50px;"));
         addCheckBox(id, Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+        html_end_table();
 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
 
@@ -1299,7 +1304,8 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
           if (Protocol[ProtocolIndex].usesID && (Settings.Protocol[controllerNr] != 0))
           {
             addRowLabel(F("IDX"));
-            id  = F("TDID"); // ="taskdeviceid"
+            id.clear();
+            id += F("TDID"); // ="taskdeviceid"
             id += controllerNr + 1;
             addNumericBox(id, Settings.TaskDeviceID[controllerNr][taskIndex], 0, DOMOTICZ_MAX_IDX);
           }
