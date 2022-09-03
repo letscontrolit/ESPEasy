@@ -45,7 +45,7 @@ void serve_CSS() {
 //  serve_CDN_CSS(F("espeasy_default.min.css"));
   serve_CDN_CSS(F("esp_auto.min.css"));
   #if FEATURE_AUTO_DARK_MODE
-  if (!Settings.DisableAutomaticDarkMode()) {
+  if (Settings.EnableAutomaticDarkMode()) {
     serve_CDN_CSS(F("esp_auto_dark.min.css"));
   }
   #endif
@@ -59,7 +59,7 @@ void serve_CSS() {
     #ifdef EMBED_ESPEASY_AUTO_MIN_CSS
     TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESP_AUTO_MIN_CSS));
     #if FEATURE_AUTO_DARK_MODE
-    if (!Settings.DisableAutomaticDarkMode()) {
+    if (Settings.EnableAutomaticDarkMode()) {
       TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESP_AUTO_DARK_MIN_CSS));
     }
     #endif

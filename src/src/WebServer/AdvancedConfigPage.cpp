@@ -122,7 +122,7 @@ void handle_advanced() {
     Settings.AllowOTAUnlimited(isFormItemChecked(LabelType::ALLOW_OTA_UNLIMITED));
 #endif // NO_HTTP_UPDATER
 #if FEATURE_AUTO_DARK_MODE
-    Settings.DisableAutomaticDarkMode(!isFormItemChecked(LabelType::ENABLE_AUTO_DARK_MODE));
+    Settings.EnableAutomaticDarkMode(isFormItemChecked(LabelType::ENABLE_AUTO_DARK_MODE));
 #endif // FEATURE_AUTO_DARK_MODE
 
     addHtmlError(SaveSettings());
@@ -252,7 +252,7 @@ void handle_advanced() {
   addFormNote(F("Requires reboot to activate"));
   # endif // ifndef NO_HTTP_UPDATER
   #if FEATURE_AUTO_DARK_MODE
-  addFormCheckBox(LabelType::ENABLE_AUTO_DARK_MODE, !Settings.DisableAutomaticDarkMode());
+  addFormCheckBox(LabelType::ENABLE_AUTO_DARK_MODE, Settings.EnableAutomaticDarkMode());
   #endif // FEATURE_AUTO_DARK_MODE
 
   #ifdef ESP8266

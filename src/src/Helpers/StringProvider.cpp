@@ -305,7 +305,7 @@ String getValue(LabelType::Enum label) {
     case LabelType::ENABLE_RAM_TRACKING:        return jsonBool(Settings.EnableRAMTracking());
 #endif
 #if FEATURE_AUTO_DARK_MODE
-    case LabelType::ENABLE_AUTO_DARK_MODE:      return jsonBool(!Settings.DisableAutomaticDarkMode());
+    case LabelType::ENABLE_AUTO_DARK_MODE:      return jsonBool(Settings.EnableAutomaticDarkMode());
 #endif // FEATURE_AUTO_DARK_MODE
 
 
