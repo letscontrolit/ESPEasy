@@ -17,6 +17,7 @@
 	--c5: #07d;
 	--bg10: #07d;
 	--bg11: #f8f8f8;
+	--c6: #c3c3c3;
 
 
 }
@@ -40,6 +41,7 @@
 	--c5: #c3c3c3;
 	--bg10: #44607a;
 	--bg11: #44607a;
+	--c6: #c3c3c3;
 
 }
 
@@ -62,7 +64,6 @@
 
 .closebtn,
 .div_r {
-	color: #fff;
 	float: right
 }
 
@@ -581,7 +582,7 @@ footer {
 
 	.closebtn,
 	.div_r {
-		color: #c3c3c3
+		color: var(--c6)
 	}
 
 	h1,
