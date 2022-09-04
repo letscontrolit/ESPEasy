@@ -743,10 +743,10 @@ bool isLoggedIn(bool mustProvideLogin)
 
 String getControllerSymbol(uint8_t index)
 {
-  String ret = F("<p style='font-size:20px; background: #00000000;line-height:21px;'>&#");
+  String ret = F("<span style='font-size:20px; background: #00000000;'>&#");
 
   ret += 10102 + index;
-  ret += F(";</p>");
+  ret += F(";</span>");
   return ret;
 }
 

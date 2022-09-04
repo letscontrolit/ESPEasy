@@ -1288,15 +1288,13 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         id += controllerNr + 1;
 
         html_TR_TD();
-        addHtml(F("Send to: "));
+        addHtml(F("Send to Controller "));
+        addHtml(getControllerSymbol(controllerNr));
+        html_BR();
+        addHtml(F(" - "));
         addHtml(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr]));
         html_TD();
-        html_table(EMPTY_STRING); // Sub-table to allow nicer alignment of the ControllerSymbol
-        html_TD(F("width:30px;vertical-align:baseline;"));
-        addHtml(getControllerSymbol(controllerNr));
-        html_TD(F("width:50px;"));
         addCheckBox(id, Settings.TaskDeviceSendData[controllerNr][taskIndex]);
-        html_end_table();
 
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerNr);
 
