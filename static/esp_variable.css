@@ -17,7 +17,7 @@
 	--c5: #07d;
 	--bg10: #07d;
 	--bg11: #f8f8f8;
-	--c6: #c3c3c3;
+	--c6: #fff;
 
 
 }
@@ -101,7 +101,7 @@ xmp {
 .button {
 	border: 0;
 	border-radius: 5px;
-	color: #fff;
+	color: var(--c6);
 	margin: 4px;
 	padding: 4px 16px
 }
@@ -530,8 +530,7 @@ textarea {
 }
 
 *,
-textarea,
-.wide {
+textarea {
 	color: var(--c4)
 }
 
