@@ -34,8 +34,7 @@
 
 enum class eP092pinmode {
   ePPM_Input          = 1,
-  ePPM_InputPullUp    = 2,
-  ePPM_InputPullDown  = 3
+  ePPM_InputPullUp    = 2
 };
 
 class DLBus {

@@ -22,6 +22,9 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @uwekaditz: 2022-09-04
+    CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed 
+
     @uwekaditz 2022-05-04
     CHG: Logging reduced for LIMIT_BUILD_SIZE
 
@@ -135,19 +138,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
             choice = static_cast<uint8_t>(eP092pinmode::ePPM_InputPullUp);
           }
         }
-# ifdef INPUT_PULLDOWN
-        int Opcount = 3;
-# else // ifdef INPUT_PULLDOWN
         int Opcount = 2;
-# endif // ifdef INPUT_PULLDOWN
-        const __FlashStringHelper *options[3];
+        const __FlashStringHelper *options[2];
         options[0]          = F("Input");
         options[1]          = F("Input pullup");
-        options[2]          = F("Input pulldown");
         int optionValues[3] =
         { static_cast<int>(eP092pinmode::ePPM_Input),
-          static_cast<int>(eP092pinmode::ePPM_InputPullUp),
-          static_cast<int>(eP092pinmode::ePPM_InputPullDown) };
+          static_cast<int>(eP092pinmode::ePPM_InputPullUp)
+        };
         addFormSelector(F("Pin mode"), F("p092_pinmode"), Opcount, options, optionValues, choice);
       }
       {

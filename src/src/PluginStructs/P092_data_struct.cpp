@@ -504,14 +504,6 @@ bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092p
 #endif // ifndef P092_LIMIT_BUILD_SIZE
       pinMode(pin1, INPUT_PULLUP);
     break;
-#ifdef INPUT_PULLDOWN
-    case eP092pinmode::ePPM_InputPullDown:
-# ifndef P092_LIMIT_BUILD_SIZE
-      addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin with pulldown"));
-#endif // ifndef P092_LIMIT_BUILD_SIZE
-      pinMode(pin1, INPUT_PULLDOWN);
-    break;
-#endif
     default:
 # ifndef P092_LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("P092_init: Set input pin"));

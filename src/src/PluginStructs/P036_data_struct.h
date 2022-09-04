@@ -88,7 +88,7 @@
 # define P036_FLAG_SCROLL_WITHOUTWIFI  24 // Bit 24 ScrollWithoutWifi
 # define P036_FLAG_HIDE_HEADER         25 // Bit 25 Hide header
 # define P036_FLAG_INPUT_PULLUP        26 // Bit 26 Input PullUp
-# define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown
+//# define P036_FLAG_INPUT_PULLDOWN      27 // Bit 27 Input PullDown, 2022-09-04 not longer used
 # define P036_FLAG_SEND_EVENTS         28 // Bit 28 SendEvents
 # define P036_FLAG_EVENTS_FRAME_LINE   29 // Bit 29 SendEvents also on Frame & Line
 # define P036_FLAG_HIDE_FOOTER         30 // Bit 30 Hide footer
@@ -130,8 +130,7 @@ enum class ePageScrollSpeed {
 
 enum class eP036pinmode {
   ePPM_Input         = 0,
-  ePPM_InputPullUp   = 1,
-  ePPM_InputPullDown = 2
+  ePPM_InputPullUp   = 1
 };
 
 typedef struct {

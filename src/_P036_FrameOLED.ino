@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // Al long as the device is not selected, no RAM is waisted.
 //
+// @uwekaditz: 2022-09-04
+// CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed 
 // @uwekaditz: 2022-09-02
 // CHG: use P036_LIMIT_BUILD_SIZE if PLUGIN_BUILD_IR is defined 
 // @uwekaditz: 2022-08-11
@@ -315,19 +317,10 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       {
         uint8_t choice  = uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)); // Bit 26 Input PullUp
         int     Opcount = 2;
-# ifdef INPUT_PULLDOWN
-        choice += uint8_t(bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) * 2;   // Bit 27 Input PullDown
-
-        if (choice > 2) {
-          choice = 2;
-        }
-        Opcount = 3;
-# endif // ifdef INPUT_PULLDOWN
-        const __FlashStringHelper *options[3] = { F("Input"), F("Input pullup"), F("Input pulldown") };
+        const __FlashStringHelper *options[2] = { F("Input"), F("Input pullup") };
         const int optionValues[3]             =
         { static_cast<int>(eP036pinmode::ePPM_Input),
-          static_cast<int>(eP036pinmode::ePPM_InputPullUp),
-          static_cast<int>(eP036pinmode::ePPM_InputPullDown) };
+          static_cast<int>(eP036pinmode::ePPM_InputPullUp) };
         addFormSelector(F("Pin mode"), F("p036_pinmode"), Opcount, options, optionValues, choice);
       }
 
@@ -581,11 +574,6 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           bitWrite(lSettings, P036_FLAG_INPUT_PULLUP, true); // Input PullUp
           break;
         }
-        case 2:
-        {
-          bitWrite(lSettings, P036_FLAG_INPUT_PULLDOWN, true); // Input PullDown
-          break;
-        }
       }
 # ifdef P036_SEND_EVENTS
       uint8_t generateEvents = getFormItemInt(F("p036_generateEvents")) & 0xFF;
@@ -725,21 +713,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifdef P036_SEND_EVENTS
 
       if (validGpio(CONFIG_PIN3)) {                            // Button related setup
-        # ifdef INPUT_PULLDOWN
 
-        if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) { // Bit 27 Input PullDown
-          pinMode(CONFIG_PIN3, INPUT_PULLDOWN);                // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
-        }
-        else
-        # endif // ifdef INPUT_PULLDOWN
-        {
           if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)) { // Bit 26 Input PullUp
             pinMode(CONFIG_PIN3, INPUT_PULLUP);                // Reset pinstate to PIN_MODE_INPUT_PULLUP
           }
           else {
             pinMode(CONFIG_PIN3, INPUT);                       // Reset pinstate to PIN_MODE_INPUT
           }
-        }
 
         P036_data->DebounceCounter = 0;
         P036_data->RepeatCounter   = 0;
@@ -837,21 +817,13 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         }
         P036_data->markButtonStateProcessed();
 
-# ifdef INPUT_PULLDOWN
 
-        if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLDOWN)) { // Bit 27 Input PullDown
-          pinMode(CONFIG_PIN3, INPUT_PULLDOWN);                // Reset pinstate to PIN_MODE_INPUT_PULLDOWN
-        }
-        else
-        # endif // ifdef INPUT_PULLDOWN
-        {
           if (bitRead(P036_FLAGS_0, P036_FLAG_INPUT_PULLUP)) { // Bit 26 Input PullUp
             pinMode(CONFIG_PIN3, INPUT_PULLUP);                // Reset pinstate to PIN_MODE_INPUT_PULLUP
           } else {
             pinMode(CONFIG_PIN3, INPUT);                       // Reset pinstate to PIN_MODE_INPUT
           }
         }
-      }
 
       if (P036_data->bLineScrollEnabled) {
         # ifdef P036_SEND_EVENTS
