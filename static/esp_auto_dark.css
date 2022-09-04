@@ -9,14 +9,6 @@
 		background-color: #2e2e2e
 	}
 
-	.dotmark {
-		background-color: #eee
-	}
-
-	.container2 .dotmark:after {
-		background: #fff
-	}
-
 	#toastmessage {
 		background-color: #00000085;
 		color: #fff
@@ -41,10 +33,6 @@
 		background-color: #553044
 	}
 
-	.note {
-		color: #7b7b7b
-	}
-
 	.menu {
 		background-color: transparent;
 		color: #fff
@@ -65,16 +53,8 @@
 		background-color: #30553d
 	}
 
-	.alert,
-	.warning {
-		color: #fff
-	}
-
-	.closebtn:hover {
-		color: #000
-	}
-
 	.apheader,
+	.body,
 	.bodymenu,
 	.checkmark,
 	.multirow tr,

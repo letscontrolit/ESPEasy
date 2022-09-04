@@ -1,6 +1,46 @@
-h1,
-h6 {
-	color: #07d
+:root {
+	--bg1: #eee;
+	--bg2: #cacaca;
+	--bg3: #07d;
+	--c1: #fff;
+	--bdc1: silver;
+	--bg4: #e8e8e8;
+	--bg5: #dbff0075;
+	--c2: #444;
+	--bg6: #fff;
+	--bdc2: #444 #444 #fff;
+	--c3: #000;
+	--bg7: #bdbdbd;
+	--bg8: #029b34;
+	--bg9: inherit;
+	--c4: inherit;
+	--c5: #07d;
+	--bg10: #07d;
+	--bg11: #f8f8f8;
+
+
+}
+
+[data-theme="dark"] {
+	--bg1: #444;
+	--bg2: #2e2e2e;
+	--bg3: #00000085;
+	--c1: #dfdfdf;
+	--bdc1: #545454;
+	--bg4: #2a2c2e;
+	--bg5: #553044;
+	--c2: #fff;
+	--bg6: #222;
+	--bdc2: transparent;
+	--c3: #fff;
+	--bg7: #00000030;
+	--bg8: #30553d;
+	--bg9: #222;
+	--c4: #c3c3c3;
+	--c5: #c3c3c3;
+	--bg10: #44607a;
+	--bg11: #44607a;
+
 }
 
 .checkmark:after,
@@ -39,7 +79,6 @@ h1 {
 }
 
 h3 {
-	background-color: #cacaca;
 	margin: -5px;
 	padding: 6px
 }
@@ -58,7 +97,6 @@ xmp {
 }
 
 .button {
-	background-color: #07d;
 	border: 0;
 	border-radius: 5px;
 	color: #fff;
@@ -106,7 +144,6 @@ textarea {
 input,
 select,
 textarea {
-	background-color: #eee;
 	margin: 4px;
 	padding: 4px 8px
 }
@@ -211,7 +248,6 @@ textarea {
 }
 
 #toastmessage {
-	background-color: #07d;
 	border-radius: 5px;
 	bottom: 30%;
 	color: #fff;
@@ -236,11 +272,6 @@ textarea {
 	cursor: pointer;
 	opacity: 0;
 	position: absolute
-}
-
-.container input:checked~.checkmark,
-.container2 input:checked~.dotmark {
-	background-color: #07d
 }
 
 .container input:checked~.checkmark:after,
@@ -309,8 +340,6 @@ tbody {
 
 .multirow th,
 .normal th {
-	background-color: #444;
-	color: #fff;
 	padding: 5px;
 	width: 100vw
 }
@@ -335,14 +364,9 @@ tbody {
 }
 
 .multirow td {
-	border-color: silver;
 	height: 30px;
 	padding: 4px;
 	text-align: center
-}
-
-.multirow tr:nth-child(odd) {
-	background-color: #e8e8e8
 }
 
 .sub {
@@ -350,13 +374,8 @@ tbody {
 	display: block
 }
 
-.highlight td {
-	background-color: #dbff0075
-}
-
 .apheader,
 .headermenu {
-	background-color: #f8f8f8;
 	padding: 8px 12px;
 	width: 100vw
 }
@@ -396,21 +415,12 @@ a.menu {
 .menu {
 	border: solid transparent 1px;
 	border-radius: 5px 5px 0 0;
-	color: #444;
 	padding: 10px 10px 8px;
 	white-space: nowrap
 }
 
 .menu.active {
-	background-color: #fff;
-	border-color: #444 #444 #fff;
 	border-width: .1px;
-	color: #000
-}
-
-.menu:hover {
-	background: #bdbdbd;
-	color: #000
 }
 
 .menu_button {
@@ -426,7 +436,6 @@ a.menu {
 }
 
 .div_r {
-	background-color: #029b34;
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -500,63 +509,60 @@ footer {
 	}
 }
 
-@media (prefers-color-scheme:dark) {
-
+/*variable color section*/
 	input,
 	select {
-		background-color: #444
+		background-color: var(--bg1)
 	}
 
 	h3 {
-		background-color: #2e2e2e
+		background-color: var(--bg2)
 	}
 
 	#toastmessage {
-		background-color: #00000085;
-		color: #fff
+		background-color: var(--bg3)
 	}
 
 	.multirow th,
 	.normal th {
 		background-color: #444;
-		border-color: #545454;
-		color: #dfdfdf
+		border-color: var(--bdc1);
+		color: var(--c1)
 	}
 
 	.multirow td {
-		border-color: #545454
+		border-color: var(--bdc1)
 	}
 
 	.multirow tr:nth-child(odd) {
-		background-color: #2a2c2e
+		background-color: var(--bg4)
 	}
 
 	.highlight td {
-		background-color: #553044
+		background-color: var(--bg5)
 	}
 
 	.menu {
-		background-color: transparent;
-		color: #fff
+		color: var(--c2)
 	}
 
 	.menu.active {
-		background-color: #222;
-		border-color: transparent;
-		color: #fff
+		background-color: var(--bg6);
+		border-color: var(--bdc2);
+		color: var(--c3)
 	}
 
 	.menu:hover {
-		background: #00000030;
-		color: #fff
+		background: var(--bg7);
+		color: var(--c3)
 	}
 
 	.div_r {
-		background-color: #30553d
+		background-color: var(--bg8)
 	}
 
 	.apheader,
-	.body,
+	body,
 	.bodymenu,
 	.checkmark,
 	.multirow tr,
@@ -564,23 +570,31 @@ footer {
 	.normal tr,
 	tbody,
 	textarea {
-		background-color: #222
+		background-color: var(--bg9)
 	}
 
 	*,
+	textarea,
+	.wide {
+		color: var(--c4)
+	}
+
 	.closebtn,
-	.div_r,
-	.textarea,
-	h1,
-	h6,
-	.wide,
-	textarea {
+	.div_r {
 		color: #c3c3c3
+	}
+
+	h1,
+	h6 {
+		color: var(--c5)
 	}
 
 	.button,
 	.container input:checked~.checkmark,
-	.headermenu {
-		background-color: #44607a
+	.container2 input:checked~.dotmark {
+		background-color: var(--bg10)
 	}
-}
+
+	.headermenu {
+		background-color: var(--bg11)
+	}
