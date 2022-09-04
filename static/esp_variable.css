@@ -80,6 +80,7 @@ h1 {
 }
 
 h3 {
+	background-color: var(--bg2);
 	margin: -5px;
 	padding: 6px
 }
@@ -103,6 +104,11 @@ xmp {
 	color: #fff;
 	margin: 4px;
 	padding: 4px 16px
+}
+
+input,
+select {
+	background-color: var(--bg1)
 }
 
 .button.help,
@@ -201,6 +207,10 @@ textarea {
 	top: 3px;
 	transform: rotate(45deg);
 	width: 5px
+}
+
+#toastmessage {
+	background-color: var(--bg3)
 }
 
 #toastmessage,
@@ -341,6 +351,9 @@ tbody {
 
 .multirow th,
 .normal th {
+	background-color: #444;
+	border-color: var(--bdc1);
+	color: var(--c1);
 	padding: 5px;
 	width: 100vw
 }
@@ -365,10 +378,16 @@ tbody {
 }
 
 .multirow td {
+	border-color: var(--bdc1);
 	height: 30px;
 	padding: 4px;
 	text-align: center
 }
+
+.multirow tr:nth-child(odd) {
+	background-color: var(--bg4)
+}
+
 
 .sub {
 	max-width: 100px;
@@ -387,6 +406,7 @@ tbody {
 }
 
 .headermenu {
+	background-color: var(--bg11);
 	border-bottom: .1px solid #444;
 	height: 100px;
 	position: fixed;
@@ -414,6 +434,7 @@ a.menu {
 }
 
 .menu {
+	color: var(--c2);
 	border: solid transparent 1px;
 	border-radius: 5px 5px 0 0;
 	padding: 10px 10px 8px;
@@ -421,7 +442,15 @@ a.menu {
 }
 
 .menu.active {
-	border-width: .1px;
+	background-color: var(--bg6);
+	border-color: var(--bdc2);
+	color: var(--c3);
+	border-width: .1px
+}
+
+.menu:hover {
+	background: var(--bg7);
+	color: var(--c3)
 }
 
 .menu_button {
@@ -437,6 +466,7 @@ a.menu {
 }
 
 .div_r {
+	background-color: var(--bg8);
 	border-radius: 4px;
 	margin: 2px;
 	padding: 1px 10px
@@ -447,6 +477,10 @@ a.menu {
 	color: #fff;
 	margin-bottom: 15px;
 	padding: 20px
+}
+
+.highlight td {
+	background-color: var(--bg5)
 }
 
 .div_br {
@@ -483,6 +517,40 @@ footer {
 	word-break: break-all
 }
 
+.apheader,
+body,
+.bodymenu,
+.checkmark,
+.multirow tr,
+.normal td,
+.normal tr,
+tbody,
+textarea {
+	background-color: var(--bg9)
+}
+
+*,
+textarea,
+.wide {
+	color: var(--c4)
+}
+
+.closebtn,
+.div_r {
+	color: var(--c6)
+}
+
+h1,
+h6 {
+	color: var(--c5)
+}
+
+.button,
+.container input:checked~.checkmark,
+.container2 input:checked~.dotmark {
+	background-color: var(--bg10)
+}
+
 @media screen and (max-width:780px) {
 	.showmenulabel {
 		display: none
@@ -509,93 +577,3 @@ footer {
 		user-select: none
 	}
 }
-
-/*variable color section*/
-	input,
-	select {
-		background-color: var(--bg1)
-	}
-
-	h3 {
-		background-color: var(--bg2)
-	}
-
-	#toastmessage {
-		background-color: var(--bg3)
-	}
-
-	.multirow th,
-	.normal th {
-		background-color: #444;
-		border-color: var(--bdc1);
-		color: var(--c1)
-	}
-
-	.multirow td {
-		border-color: var(--bdc1)
-	}
-
-	.multirow tr:nth-child(odd) {
-		background-color: var(--bg4)
-	}
-
-	.highlight td {
-		background-color: var(--bg5)
-	}
-
-	.menu {
-		color: var(--c2)
-	}
-
-	.menu.active {
-		background-color: var(--bg6);
-		border-color: var(--bdc2);
-		color: var(--c3)
-	}
-
-	.menu:hover {
-		background: var(--bg7);
-		color: var(--c3)
-	}
-
-	.div_r {
-		background-color: var(--bg8)
-	}
-
-	.apheader,
-	body,
-	.bodymenu,
-	.checkmark,
-	.multirow tr,
-	.normal td,
-	.normal tr,
-	tbody,
-	textarea {
-		background-color: var(--bg9)
-	}
-
-	*,
-	textarea,
-	.wide {
-		color: var(--c4)
-	}
-
-	.closebtn,
-	.div_r {
-		color: var(--c6)
-	}
-
-	h1,
-	h6 {
-		color: var(--c5)
-	}
-
-	.button,
-	.container input:checked~.checkmark,
-	.container2 input:checked~.dotmark {
-		background-color: var(--bg10)
-	}
-
-	.headermenu {
-		background-color: var(--bg11)
-	}
