@@ -1,6 +1,8 @@
 #include "../Commands/Servo.h"
 
 #include "../Commands/Common.h"
+#if FEATURE_SERVO
+
 #include "../DataStructs/EventStructCommandWrapper.h"
 #include "../DataStructs/PinMode.h"
 #include "../DataStructs/PortStatusStruct.h"
@@ -13,7 +15,6 @@
 
 // Needed also here for PlatformIO's library finder as the .h file 
 // is in a directory which is excluded in the src_filter
-#if FEATURE_SERVO
 # include <Servo.h>
 ServoPinMap_t ServoPinMap;
 #endif // if FEATURE_SERVO

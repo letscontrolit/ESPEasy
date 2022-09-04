@@ -120,7 +120,6 @@ bool P094_data_struct::loop() {
               valid = false;
             }
           }
-
           if (valid) {
             fullSentenceReceived = true;
           }
@@ -131,7 +130,11 @@ bool P094_data_struct::loop() {
           // Ignore LF
           break;
         default:
-          sentence_part += c;
+          if (c >= 32 && c < 127) {
+            sentence_part += c;
+          } else {
+            current_sentence_errored = true;
+          }
           break;
       }
 
