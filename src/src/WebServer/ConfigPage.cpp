@@ -9,10 +9,16 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
+#ifdef USES_ESPEASY_NOW
+#include "../DataStructs/MAC_address.h"
+#include "../DataStructs/NodeStruct.h"
+#endif
+
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyNetwork.h"
 
 #include "../Globals/MQTT.h"
+#include "../Globals/Nodes.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
@@ -21,9 +27,6 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
-
-
-#include "../DataStructs/MAC_address.h"
 
 // ********************************************************************************
 // Web Interface config page
@@ -111,6 +114,28 @@ void handle_config() {
         webArg2ip(F("iprangehigh"), SecuritySettings.AllowedIPrangeHigh);
         break;
     }
+
+    #ifdef USES_ESPEASY_NOW
+    for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+      String id = F("peer");
+      id += String(peer);
+      String peer_mac  = web_server.arg(id);
+      if (peer_mac.length() == 0) {
+        peer_mac = F("00:00:00:00:00:00");
+      }
+      MAC_address mac;
+      if (mac.set(peer_mac.c_str())) {
+        mac.get(SecuritySettings.EspEasyNowPeerMAC[peer]);
+      }
+      /*
+      String log = F("MAC decoding ");
+      log += peer_mac;
+      log += F(" => ");
+      log += mac.toString();
+      addLog(LOG_LEVEL_INFO, log);
+      */
+    }
+    #endif
 
     Settings.deepSleepOnFail = isFormItemChecked(F("deepsleeponfail"));
     webArg2ip(F("espip"),      Settings.IP);
@@ -200,6 +225,26 @@ void handle_config() {
   addFormNote(F("Leave empty for DHCP"));
 #endif // if FEATURE_ETHERNET
 
+#ifdef USES_ESPEASY_NOW
+  addFormSubHeader(F("ESPEasy-NOW"));
+  for (int peer = 0; peer < ESPEASY_NOW_PEER_MAX; ++peer) {
+    String label = F("Peer ");
+    label += String(peer + 1);
+    String id = F("peer");
+    id += String(peer);
+    addFormMACBox(label, id, SecuritySettings.EspEasyNowPeerMAC[peer]);
+
+    bool match_STA;
+    const NodeStruct* nodeInfo = Nodes.getNodeByMac(SecuritySettings.EspEasyNowPeerMAC[peer], match_STA);
+    if (nodeInfo != nullptr)
+    {
+      String summary = nodeInfo->getSummary();
+      summary += match_STA ? F(" (STA)") : F(" (AP)");
+      addFormNote(summary);
+    }
+    
+  }
+#endif
 
   addFormSubHeader(F("Sleep Mode"));
 
