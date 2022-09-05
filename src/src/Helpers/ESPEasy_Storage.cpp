@@ -100,7 +100,7 @@ String flashGuard()
     return log;
   }
   flashCount();
-  return String();
+  return EMPTY_STRING;
 }
 
 // use this in function that can return an error string. it automaticly returns with an error string if there where too many flash writes.
@@ -935,10 +935,10 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 String LoadTaskSettings(taskIndex_t TaskIndex)
 {
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
-    return String(); // already loaded
+    return EMPTY_STRING; // already loaded
   }
   if (!validTaskIndex(TaskIndex)) {
-    return String(); // Un-initialized task index.
+    return EMPTY_STRING; // Un-initialized task index.
   }
   ExtraTaskSettings.clear();
   #ifndef BUILD_NO_RAM_TRACKER
@@ -1213,7 +1213,7 @@ String InitFile(const String& fname, int datasize)
   }
 
   // OK
-  return String();
+  return EMPTY_STRING;
 }
 
 String InitFile(SettingsType::Enum settingsType)
@@ -1345,7 +1345,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   #endif
 
   // OK
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -1396,7 +1396,7 @@ String ClearInFile(const char *fname, int index, int datasize)
   }
 
   // OK
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
@@ -1429,7 +1429,7 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   STOP_TIMER(LOADFILE_STATS);
   delay(0);
 
-  return String();
+  return EMPTY_STRING;
 }
 
 /********************************************************************************************\
