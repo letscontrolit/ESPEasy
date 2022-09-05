@@ -26,18 +26,6 @@
 # define P007_OUTPUT_MODE        PCONFIG_LONG(1)
 # define P007_OUTPUT_ENABLED     (0b01000000)
 
-String Plugin_007_valuename(uint8_t value_nr, bool displayString) {
-  String name = F(PLUGIN_VALUENAME1_007);
-
-  if (value_nr != 0) {
-    name += String(value_nr + 1);
-  }
-
-  if (!displayString) {
-    name.toLowerCase();
-  }
-  return name;
-}
 
 boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -74,7 +62,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
         if (i < P007_NR_OUTPUT_VALUES) {
           safe_strncpy(
             ExtraTaskSettings.TaskDeviceValueNames[i],
-            Plugin_007_valuename(i, true),
+            Plugin_valuename(F(PLUGIN_VALUENAME1_007), i, true),
             sizeof(ExtraTaskSettings.TaskDeviceValueNames[i]));
           ExtraTaskSettings.TaskDeviceValueDecimals[i] = 2;
         } else {

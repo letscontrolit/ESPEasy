@@ -44,10 +44,11 @@ struct ExtraTaskSettingsStruct
 
   bool        valueInAllowedRange(taskVarIndex_t taskVarIndex,
                                   const float  & value) const;
-
+#if FEATURE_PLUGIN_STATS
   bool        enabledPluginStats(taskVarIndex_t taskVarIndex) const;  
   void        enablePluginStats(taskVarIndex_t taskVarIndex, bool enabled);
   bool        anyEnabledPluginStats() const;
+#endif
 
   taskIndex_t TaskIndex; // Always < TASKS_MAX or INVALID_TASK_INDEX
   char        TaskDeviceName[NAME_FORMULA_LENGTH_MAX + 1];
