@@ -60,6 +60,7 @@
 #include "../Globals/NetworkState.h"
 #include "../Globals/Protocol.h"
 #include "../Globals/SecuritySettings.h"
+#include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware.h"
@@ -416,8 +417,17 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
     if (!parser.isTail()) {
-      parser.process(F("<body class='bodymenu'>"
-                "<span class='message' id='rbtmsg'></span>"));
+      String body;
+      body += F("<body class='bodymenu'");
+      #if FEATURE_AUTO_DARK_MODE
+      if (0 == Settings.getCssMode()) {
+        body += F(" data-theme='auto'");
+      } else if (2 == Settings.getCssMode()) {
+        body += F(" data-theme='dark'");
+      }
+      #endif // FEATURE_AUTO_DARK_MODE
+      body += F("><span class='message' id='rbtmsg'></span>");
+      parser.process(body);
     }
     getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(parser);

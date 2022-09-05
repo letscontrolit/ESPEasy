@@ -43,22 +43,12 @@ void serve_CSS() {
   }
   #ifndef WEBSERVER_CSS
   serve_CDN_CSS(F("espeasy_default.min.css"));
-  #if FEATURE_AUTO_DARK_MODE
-  if (Settings.EnableAutomaticDarkMode()) {
-    serve_CDN_CSS(F("esp_auto_dark.min.css"));
-  }
-  #endif
   #else
   addHtml(F("<style>"));
 
   // Send CSS in chunks
   #if defined(EMBED_ESPEASY_DEFAULT_MIN_CSS) || defined(WEBSERVER_EMBED_CUSTOM_CSS)
   TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESPEASY_DEFAULT_MIN_CSS));
-  #if FEATURE_AUTO_DARK_MODE
-  if (Settings.EnableAutomaticDarkMode()) {
-    TXBuffer.addFlashString((PGM_P)FPSTR(DATA_ESP_AUTO_DARK_MIN_CSS));
-  }
-  #endif
   #endif
   addHtml(F("</style>"));
   #endif
