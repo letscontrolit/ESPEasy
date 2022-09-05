@@ -341,7 +341,7 @@ bool P094_data_struct::parsePacket(const String& received) const {
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               String log;
               if (log.reserve(64)) {
-                log  = F("CUL Reader: ");
+                log += F("CUL Reader: ");
                 log += P094_FilterValueType_toString(valueType_index[f]);
                 log += F(":  in:");
                 log += inputString;

@@ -15,6 +15,25 @@ class IPAddress;
 // -V::569
 
 /********************************************************************************************\
+   Concatenate using code which results in the smallest compiled code
+ \*********************************************************************************************/
+
+template <typename T>
+String concat(const __FlashStringHelper * str, const T &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+template <typename T>
+String concat(const String& str, const T &val) {
+  String res(str);
+  res.concat(val);
+  return res;
+}
+
+
+/********************************************************************************************\
    Convert a char string to integer
  \*********************************************************************************************/
 

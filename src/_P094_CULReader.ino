@@ -329,7 +329,7 @@ String Plugin_094_valuename(uint8_t value_nr, bool displayString) {
   switch (value_nr) {
     case P094_QUERY_VALUE: return displayString ? F("Value")          : F("v");
   }
-  return "";
+  return EMPTY_STRING;
 }
 
 void P094_html_show_matchForms(struct EventStruct *event) {
@@ -388,10 +388,7 @@ void P094_html_show_matchForms(struct EventStruct *event) {
             if (newLine) {
               // Label + first parameter
               ++filterSet;
-              String label;
-              label  = F("Filter ");
-              label += String(filterSet);
-              addRowLabel_tr_id(label, id);
+              addRowLabel_tr_id(concat(F("Filter "), filterSet), id);
             } else {
               html_B(F("AND"));
               html_BR();

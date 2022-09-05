@@ -101,7 +101,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
 
         for (uint8_t varNr = 0; varNr < 8; varNr++)
         {
-          addFormTextBox(String(F("Line ")) + (varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
+          addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], 64);
         }
       }
 
