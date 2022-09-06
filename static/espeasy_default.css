@@ -12,7 +12,6 @@
 	--c3: #000;
 	--bg7: #bdbdbd;
 	--bg8: #029b34;
-	--bg9: inherit;
 	--c4: inherit;
 	--c5: #07d;
 	--bg10: #07d;
@@ -26,7 +25,7 @@
 	--bg3: #00000085;
 	--c1: #dfdfdf;
 	--bdc1: #545454;
-	--bg4: #2a2c2e;
+	--bg4: #2e2e2e;
 	--bg5: #553044;
 	--c2: #fff;
 	--bg6: #222;
@@ -34,7 +33,6 @@
 	--c3: #fff;
 	--bg7: #00000030;
 	--bg8: #30553d;
-	--bg9: #222;
 	--c4: #c3c3c3;
 	--c5: #c3c3c3;
 	--bg10: #44607a;
@@ -49,7 +47,7 @@
 		--bg3: #00000085;
 		--c1: #dfdfdf;
 		--bdc1: #545454;
-		--bg4: #2a2c2e;
+		--bg4: #2e2e2e;
 		--bg5: #553044;
 		--c2: #fff;
 		--bg6: #222;
@@ -64,6 +62,16 @@
 		--bg11: #44607a;
 		--c6: #c3c3c3;
 	}
+}
+
+* :not(font, a),
+.closebtn,
+.div_r,
+h1,
+h6,
+.wide,
+textarea {
+	color: var(--c4)
 }
 
 .checkmark:after,
@@ -128,7 +136,8 @@ xmp {
 }
 
 input,
-select {
+select,
+.checkmark {
 	background-color: var(--bg1)
 }
 
@@ -212,7 +221,6 @@ textarea {
 }
 
 .checkmark {
-	background-color: #eee;
 	height: 25px;
 	left: 0;
 	position: absolute;
@@ -371,7 +379,6 @@ tbody {
 }
 
 .multirow th,
-.multi2row th,
 .normal th {
 	background-color: #444;
 	border-color: var(--bdc1);
@@ -381,7 +388,6 @@ tbody {
 }
 
 .multirow,
-.multi2row,
 .normal {
 	border-spacing: 0;
 	border-style: none;
@@ -391,7 +397,6 @@ tbody {
 }
 
 .multirow tr,
-.multi2row tr,
 .normal td,
 .normal tr {
 	padding: 5px
@@ -401,31 +406,29 @@ tbody {
 	height: 30px
 }
 
-.multi2row td,
 .multirow td {
 	border-color: var(--bdc1);
 	height: 30px;
-	padding: 4px
-}
-
-.multirow td {
+	padding: 4px;
 	text-align: center
 }
 
-.multi2row td {
+.tworow td,
+.tworow th {
 	text-align: left
 }
 
-.multi2row tr:nth-child(4n+3),
-.multi2row tr:nth-child(4n+4),
-.multirow tr:nth-child(odd) {
-	background-color: var(--bg4)
-}
-
-
 .sub {
+	border-spacing: 0;
 	max-width: 100px;
 	display: block
+}
+
+textarea,
+.odd tr:nth-child(2n+1),
+.tworow tr:nth-child(4n+3),
+.tworow tr:nth-child(4n+4) {
+	background-color: var(--bg4)
 }
 
 .apheader,
@@ -449,7 +452,6 @@ tbody {
 }
 
 .bodymenu {
-	background-color: #fff;
 	height: 100vh;
 	padding-top: 100px
 }
@@ -551,22 +553,9 @@ footer {
 	word-break: break-all
 }
 
-.apheader,
-body,
-.bodymenu,
-.checkmark,
-.multirow tr,
-.multi2row tr,
-.normal td,
-.normal tr,
-tbody,
-textarea {
-	background-color: var(--bg9)
-}
 
-*,
-textarea {
-	color: var(--c4)
+body {
+	background-color: var(--bg6)
 }
 
 .closebtn,
@@ -574,6 +563,7 @@ textarea {
 	color: var(--c6)
 }
 
+a,
 h1,
 h6 {
 	color: var(--c5)
