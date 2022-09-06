@@ -124,11 +124,11 @@ void html_table_class_normal() {
 }
 
 void html_table_class_multirow() {
-  html_table(F("multirow"), true);
+  html_table(F("multirow odd"), true);
 }
 
 void html_table_class_multirow_noborder() {
-  html_table(F("multirow"), false);
+  html_table(F("multirow odd"), false);
 }
 
 void html_table(const __FlashStringHelper * tableclass, bool boxed) {
