@@ -317,6 +317,18 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHTTP_follow_redirects(bool value) {
   bitWrite(VariousBits1, 27, value);
 }
 
+#if FEATURE_AUTO_DARK_MODE
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableAutomaticDarkMode() const {
+  return !bitRead(VariousBits1, 28);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableAutomaticDarkMode(bool value) {
+  bitWrite(VariousBits1, 28, !value);
+}
+#endif // FEATURE_AUTO_DARK_MODE
+
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
   return static_cast<ExtTimeSource_e>(ExternalTimeSource >> 1);

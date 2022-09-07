@@ -176,6 +176,10 @@ float ExtraTaskSettingsStruct::checkAllowedRange(taskVarIndex_t taskVarIndex, co
   return value;
 }
 
+#if FEATURE_PLUGIN_STATS
+// Plugin Stats is now only a single bit, but this may later changed into a combobox with some options.
+// Thus leave 8 bits for the plugin stats options.
+
 bool ExtraTaskSettingsStruct::enabledPluginStats(taskVarIndex_t taskVarIndex) const
 {
   if (!validTaskVarIndex(taskVarIndex)) { return false; }
@@ -196,3 +200,4 @@ bool ExtraTaskSettingsStruct::anyEnabledPluginStats() const
   }
   return false;
 }
+#endif

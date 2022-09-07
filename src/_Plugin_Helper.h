@@ -41,6 +41,7 @@
 #include "src/Helpers/PortStatus.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
+#include "src/Helpers/StringGenerator_Plugin.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
@@ -106,6 +107,7 @@ PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);
 bool                 pluginTaskData_initialized(taskIndex_t taskIndex);
 
 String               getPluginCustomArgName(int varNr);
+String               getPluginCustomArgName(const __FlashStringHelper * label, int varNr);
 
 int                  getFormItemIntCustomArgName(int varNr);
 
