@@ -4,6 +4,7 @@
 
 # include "../DataStructs/NodeStruct.h"
 # include "../ESPEasyCore/ESPEasy_Log.h"
+# include "../ESPEasyCore/ESPEasyNetwork.h"
 # include "../ESPEasyCore/ESPEasyWifi.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/SecuritySettings.h"
@@ -37,14 +38,7 @@ bool ESPEasy_now_peermanager_t::addPeer(const MAC_address& mac, int channel, con
   }
   {
     // Don't add yourself as a peer
-    MAC_address this_mac;
-    WiFi.macAddress(this_mac.mac);
-
-    if (this_mac == mac) { return false; }
-
-    WiFi.softAPmacAddress(this_mac.mac);
-
-    if (this_mac == mac) { return false; }
+    if (WifiSTAmacAddress() == mac || WifiSoftAPmacAddress() == mac) return false;
   }
 
   bool res = true;

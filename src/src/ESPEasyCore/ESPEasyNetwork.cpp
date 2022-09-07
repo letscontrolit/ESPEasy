@@ -190,9 +190,7 @@ MAC_address NetworkMacAddress() {
     return ETHMacAddress();
   }
   #endif
-  MAC_address mac;
-  WiFi.macAddress(mac.mac);
-  return mac;
+  return WifiSTAmacAddress();
 }
 
 String NetworkGetHostname() {

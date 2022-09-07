@@ -1602,6 +1602,9 @@ To create/register a plugin, you have to :
 // Add all plugins, controllers and features that don't fit in the COLLECTION set
 #ifdef PLUGIN_SET_MAX
   // Features
+  #ifndef USES_ESPEASY_NOW
+    #define USES_ESPEASY_NOW
+  #endif
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
   #endif

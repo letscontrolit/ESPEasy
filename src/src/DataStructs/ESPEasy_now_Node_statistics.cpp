@@ -32,8 +32,8 @@ void ESPEasy_now_Node_statistics_t::addRoute(uint8_t unit, const ESPEasy_now_tra
   routes[last_route_index] = route;
   routes[last_route_index].addUnit(unit);
   routes[last_route_index].setSuccessRate_last_node(unit, success_rate);
-  last_update_route[last_route_index] = millis();
   last_update                         = millis();
+  last_update_route[last_route_index] = last_update;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = F(ESPEASY_NOW_NAME);

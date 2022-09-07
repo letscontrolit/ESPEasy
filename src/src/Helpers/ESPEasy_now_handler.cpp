@@ -386,6 +386,8 @@ bool ESPEasy_now_handler_t::loop_process_ESPEasyNOW_in_queue()
         }
       } else if (!expired) {
         // Process it
+
+        // FIXME TD-er: removeMessage has not been changed since construction, is this correct?
         bool mustKeep = !removeMessage;
         somethingProcessed = processMessage(it->second, mustKeep);
         removeMessage      = !mustKeep;
@@ -492,15 +494,15 @@ bool ESPEasy_now_handler_t::active() const
 
 MAC_address ESPEasy_now_handler_t::getActiveESPEasyNOW_MAC() const
 {
-  MAC_address this_mac;
-
   if (use_EspEasy_now) {
+    // FIXME TD-er: Must not check active mode, but rather the intended mode.
     if (WifiIsAP(WiFi.getMode())) {
-      WiFi.softAPmacAddress(this_mac.mac);
+      return WifiSoftAPmacAddress();
     } else {
-      WiFi.macAddress(this_mac.mac);
+      return WifiSTAmacAddress();
     }
   }
+  MAC_address this_mac;
   return this_mac;
 }
 
@@ -560,11 +562,8 @@ bool ESPEasy_now_handler_t::processMessage(const ESPEasy_now_merger& message, bo
     // Check if message is sent by this node
     MAC_address receivedMAC;
     message.getMac(receivedMAC.mac);
-    MAC_address tmp;
-    WiFi.softAPmacAddress(tmp.mac);
-    if (tmp == receivedMAC) return handled;
-    WiFi.macAddress(tmp.mac);
-    if (tmp == receivedMAC) return handled; //-V649
+    if (WifiSoftAPmacAddress() == receivedMAC || 
+        WifiSTAmacAddress()    == receivedMAC) return handled;
   }
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
@@ -1327,11 +1326,13 @@ void ESPEasy_now_handler_t::load_ControllerSettingsCache(controllerIndex_t contr
   {
     // Place the ControllerSettings in a scope to free the memory as soon as we got all relevant information.
     MakeControllerSettings(ControllerSettings);
-    LoadControllerSettings(controllerIndex, ControllerSettings);
-    _enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
-    _ClientTimeout            = ControllerSettings.ClientTimeout;
-    _mqtt_retainFlag          = ControllerSettings.mqtt_retainFlag();
-    _controllerIndex          = controllerIndex;
+    if (AllocatedControllerSettings()) {
+      LoadControllerSettings(controllerIndex, ControllerSettings);
+      _enableESPEasyNowFallback = ControllerSettings.enableESPEasyNowFallback();
+      _ClientTimeout            = ControllerSettings.ClientTimeout;
+      _mqtt_retainFlag          = ControllerSettings.mqtt_retainFlag();
+      _controllerIndex          = controllerIndex;
+    }
   }
 }
 

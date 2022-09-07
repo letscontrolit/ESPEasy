@@ -205,17 +205,17 @@ const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr) co
 }
 
 const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
-  MAC_address this_mac;
-
-  WiFi.macAddress(this_mac.mac);
-  const NodeStruct *thisNode = getNodeByMac(this_mac);
-  const NodeStruct *reject   = getNodeByMac(not_matching);
+  const NodeStruct *thisNodeSTA = getNodeByMac(WifiSTAmacAddress());
+  const NodeStruct *thisNodeAP  = getNodeByMac(WifiSoftAPmacAddress());
+  const NodeStruct *reject      = getNodeByMac(not_matching);
 
   const NodeStruct *res = nullptr;
 
   for (auto it = _nodes.begin(); it != _nodes.end(); ++it)
   {
-    if ((&(it->second) != reject) && (&(it->second) != thisNode)) {
+    if ((&(it->second) != reject) && 
+        (&(it->second) != thisNodeSTA) && 
+        (&(it->second) != thisNodeAP)) {
       bool mustSet = false;
       if (res == nullptr) {
         mustSet = true;
