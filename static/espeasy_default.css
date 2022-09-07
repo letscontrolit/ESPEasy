@@ -425,7 +425,7 @@ tbody {
 }
 
 textarea,
-.odd tr:nth-child(2n+1),
+.even tr:nth-child(2n),
 .tworow tr:nth-child(4n+3),
 .tworow tr:nth-child(4n+4) {
 	background-color: var(--bg4)
