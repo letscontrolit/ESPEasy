@@ -383,8 +383,12 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
 
     if (!parser.isTail()) {
       #ifndef WEBPAGE_TEMPLATE_AP_HEADER
-      parser.process(F("<body><header class='apheader'>"
-                "<h1>Welcome to ESP Easy Mega AP</h1>"));
+      parser.process(F("<body"
+                       #if FEATURE_AUTO_DARK_MODE
+                       " data-theme='auto'"
+                       #endif // FEATURE_AUTO_DARK_MODE
+                       "><header class='apheader'>"
+                       "<h1>Welcome to ESP Easy Mega AP</h1>"));
       #else
       parser.process(F(WEBPAGE_TEMPLATE_AP_HEADER));
       #endif
@@ -398,7 +402,11 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, !addJS);
     if (!parser.isTail()) {
-      parser.process(F("<body>"));
+      parser.process(F("<body"
+                       #if FEATURE_AUTO_DARK_MODE
+                       " data-theme='auto'"
+                       #endif // FEATURE_AUTO_DARK_MODE
+                       ">"));
     }
     getWebPageTemplateDefaultHeader(parser, F("{{name}}"), false);
     getWebPageTemplateDefaultContentSection(parser);
@@ -407,11 +415,19 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else if (tmplName.equals(F("TmplDsh")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
-    parser.process(F(
-      "<body>"
-      "{{content}}"
-      "</body></html>"
-      ));
+    String body;
+    body += F("<body");
+    #if FEATURE_AUTO_DARK_MODE
+    if (0 == Settings.getCssMode()) {
+      body += F(" data-theme='auto'");
+    } else if (2 == Settings.getCssMode()) {
+      body += F(" data-theme='dark'");
+    }
+    #endif // FEATURE_AUTO_DARK_MODE
+    body += F(">"
+              "{{content}}"
+              "</body></html>");
+    parser.process(body);
   }
   else // all other template names e.g. TmplStd
   {
