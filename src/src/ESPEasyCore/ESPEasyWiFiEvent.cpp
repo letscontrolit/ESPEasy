@@ -143,6 +143,10 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info) {
       WiFiEventData.markDisconnectedAPmode(info.sta_disconnected.mac);
       #endif
       break;
+    case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
+      // Assigned an IP to the connected STA client while ESP is in AP mode.
+      // Not sure if it makes sense to record this information.
+      break;
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
       WiFiEventData.processedScanDone = false;
       break;
@@ -381,7 +385,7 @@ void onWiFiScanDone(void *arg, STATUS status) {
   }
 
   WiFiMode_t mode = WiFi.getMode();
-  WiFi.mode(WIFI_OFF);
+  //WiFi.mode(WIFI_OFF);
   WiFi.mode(mode);
 }
 

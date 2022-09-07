@@ -100,7 +100,7 @@ void handle_unprocessedNetworkEvents()
   }
 
   if (active_network_medium == NetworkMedium_t::WIFI || active_network_medium == NetworkMedium_t::ESPEasyNOW_only) {
-    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents()) {
+    if ((!WiFiEventData.WiFiServicesInitialized()) || WiFiEventData.unprocessedWifiEvents() || WiFiEventData.wifiConnectAttemptNeeded) {
       if (WiFi.status() == WL_DISCONNECTED && WiFiEventData.wifiConnectInProgress) {
         if (WiFiEventData.last_wifi_connect_attempt_moment.isSet() && WiFiEventData.last_wifi_connect_attempt_moment.millisPassedSince() > 20000) {
           WiFiEventData.last_wifi_connect_attempt_moment.clear();
@@ -247,12 +247,11 @@ void processDisconnect() {
     }
   }
 
-
   if (WiFiEventData.processedDisconnect || 
       WiFiEventData.processingDisconnect.isSet()) { return; }
+  addLog(LOG_LEVEL_INFO, F("WiFi : processDisconnect()"));
   WiFiEventData.processingDisconnect.setNow();
   WiFiEventData.setWiFiDisconnected();
-  WiFiEventData.wifiConnectAttemptNeeded = true;
   delay(100); // FIXME TD-er: See https://github.com/letscontrolit/ESPEasy/issues/1987#issuecomment-451644424
 
   if (Settings.UseRules) {
@@ -275,7 +274,7 @@ void processDisconnect() {
 
 
   // FIXME TD-er: Ignoring the actual setting for now as it seems to be more reliable to always restart WiFi.
-  bool mustRestartWiFi = true; //Settings.WiFiRestart_connection_lost();
+  bool mustRestartWiFi = Settings.WiFiRestart_connection_lost();
   if (WiFiEventData.lastConnectedDuration_us > 0 && (WiFiEventData.lastConnectedDuration_us / 1000) < 5000) {
     mustRestartWiFi = true;
   }
@@ -286,6 +285,8 @@ void processDisconnect() {
   }
   #endif
   WifiDisconnect(); // Needed or else node may not reconnect reliably.
+
+  WiFiEventData.processedDisconnect = true;
   if (mustRestartWiFi) {
     WifiScan(false);
     delay(100);
@@ -297,8 +298,8 @@ void processDisconnect() {
     }
   }
   logConnectionStatus();
-  WiFiEventData.processedDisconnect = true;
   WiFiEventData.processingDisconnect.clear();
+  WiFiEventData.wifiConnectAttemptNeeded = true;
 }
 
 void processConnect() {
@@ -481,12 +482,21 @@ void processDisconnectAPmode() {
   if (WiFiEventData.processedDisconnectAPmode) { return; }
   WiFiEventData.processedDisconnectAPmode = true;
 
+  if (WiFi.softAPgetStationNum() == 0) {
+    WiFiEventData.timerAPoff.setMillisFromNow(WIFI_AP_OFF_TIMER_EXTENSION);
+  }
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     const int nrStationsConnected = WiFi.softAPgetStationNum();
     String    log                 = F("AP Mode: Client disconnected: ");
     log += WiFiEventData.lastMacDisconnectedAPmode.toString();
     log += F(" Connected devices: ");
     log += nrStationsConnected;
+    if (nrStationsConnected == 0) {
+      log += F(" AP turn off timer: ");
+      log += WIFI_AP_OFF_TIMER_EXTENSION/1000;
+      log += 's';
+    }
     addLogMove(LOG_LEVEL_INFO, log);
   }
 }
