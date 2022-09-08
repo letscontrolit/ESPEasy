@@ -415,35 +415,31 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
   else if (tmplName.equals(F("TmplDsh")))
   {
     getWebPageTemplateDefaultHead(parser, !addMeta, addJS);
-    String body;
-    body += F("<body");
+    parser.process(F("<body"));
     #if FEATURE_AUTO_DARK_MODE
     if (0 == Settings.getCssMode()) {
-      body += F(" data-theme='auto'");
+      parser.process(F(" data-theme='auto'"));
     } else if (2 == Settings.getCssMode()) {
-      body += F(" data-theme='dark'");
+      parser.process(F(" data-theme='dark'"));
     }
     #endif // FEATURE_AUTO_DARK_MODE
-    body += F(">"
-              "{{content}}"
-              "</body></html>");
-    parser.process(body);
+    parser.process(F(">"
+                     "{{content}}"
+                     "</body></html>"));
   }
   else // all other template names e.g. TmplStd
   {
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
     if (!parser.isTail()) {
-      String body;
-      body += F("<body class='bodymenu'");
+      parser.process(F("<body class='bodymenu'"));
       #if FEATURE_AUTO_DARK_MODE
       if (0 == Settings.getCssMode()) {
-        body += F(" data-theme='auto'");
+        parser.process(F(" data-theme='auto'"));
       } else if (2 == Settings.getCssMode()) {
-        body += F(" data-theme='dark'");
+        parser.process(F(" data-theme='dark'"));
       }
       #endif // FEATURE_AUTO_DARK_MODE
-      body += F("><span class='message' id='rbtmsg'></span>");
-      parser.process(body);
+      parser.process(F("><span class='message' id='rbtmsg'></span>"));
     }
     getWebPageTemplateDefaultHeader(parser, F("{{name}} {{logo}}"), true);
     getWebPageTemplateDefaultContentSection(parser);
@@ -862,11 +858,11 @@ void createSvgHorRectPath(unsigned int color, int xoffset, int yoffset, int size
 }
 
 void createSvgTextElement(const String& text, float textXoffset, float textYoffset) {
-  addHtml(F("<text style=\"line-height:1.25\" x=\""));
+  addHtml(F("<text x=\""));
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
   addHtml(toString(textYoffset, 2));
-  addHtml(F("\" stroke-width=\".3\" font-family=\"sans-serif\" font-size=\"8\" letter-spacing=\"0\" word-spacing=\"0\">\n"));
+  addHtml(F("\" >\n"));
   addHtml(F("<tspan x=\""));
   addHtml(toString(textXoffset, 2));
   addHtml(F("\" y=\""));
@@ -890,6 +886,19 @@ void write_SVG_image_header(int width, int height, bool useViewbox) {
     addHtml(F(" viewBox=\"0 0 100 100\""));
   }
   addHtml('>');
+  addHtml(F("<style>text{line-height:1.25;stroke-width:.3;font-family:sans-serif;font-size:8;letter-spacing:0;word-spacing:0;"));
+  #if FEATURE_AUTO_DARK_MODE
+  if (2 == Settings.getCssMode()) { // Dark
+    addHtml(F("fill:#c3c3c3;"));    // Copied from espeasy_default.css var(--c4) in dark section
+  }
+  addHtml('}');
+  if (0 == Settings.getCssMode()) { // Auto
+    addHtml(F("@media(prefers-color-scheme:dark){text{fill:#c3c3c3;}}")); // ditto
+  }
+  #else // FEATURE_AUTO_DARK_MODE
+  addHtml('}'); // close 'text' style
+  #endif // FEATURE_AUTO_DARK_MODE
+  addHtml(F("</style>"));
 }
 
 /*
