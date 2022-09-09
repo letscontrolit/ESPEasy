@@ -383,7 +383,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
           const String P016_HEX_INPUT_PATTERN = F("(0x)?[0-9a-fA-F]{0,16}"); // 16 nibbles = 64 bit, 0x prefix is allowed but not added by
                                                                              // default
-          addRowLabel(F("Code:"));
+          addRowLabel(F("Code"));
           html_table(F("sub tworow"));
           html_table_header(F("&nbsp;#&nbsp;"));
           html_table_header(F("Decode type"));
