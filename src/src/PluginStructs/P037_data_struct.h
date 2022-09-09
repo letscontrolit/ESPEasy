@@ -16,7 +16,7 @@
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
 # if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32) \
-  || (defined(PLUGIN_SET_STABLE) && !defined(PLUGIN_SET_COLLECTION))
+  || (defined(PLUGIN_SET_STABLE) && !(defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_ENERGY_COLLECTION)))
 #  ifndef P037_MAPPING_SUPPORT
 #   define P037_MAPPING_SUPPORT 1           // Enable Value mapping support
 #  endif // ifndef P037_MAPPING_SUPPORT
@@ -30,7 +30,7 @@
 #   define P037_REPLACE_BY_COMMA_SUPPORT  1 // Enable Replace by comnma support
 #  endif // ifndef P037_REPLACE_BY_COMMA_SUPPORT
 # endif // if defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32)
-// || (defined(PLUGIN_SET_STABLE) && !defined(PLUGIN_SET_COLLECTION))
+// || (defined(PLUGIN_SET_STABLE) && !(defined(PLUGIN_SET_COLLECTION) || defined(PLUGIN_ENERGY_COLLECTION)))
 
 // # define P037_OVERRIDE        // When defined, do not limit features because of LIMIT_BUILD_SIZE
 // # define P037_LIMIT_BUILD_SIZE // Only limit build size for this plugin (to be defined in Custom.h etc.)
