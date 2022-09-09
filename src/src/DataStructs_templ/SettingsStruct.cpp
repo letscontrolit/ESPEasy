@@ -134,12 +134,18 @@ void SettingsStruct_tmpl<N_TASKS>::SendToHttp_ack(bool value) {
 
 template<unsigned int N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow() const {
+#ifdef USES_ESPEASY_NOW
   return bitRead(VariousBits1, 11);
+#else
+  return false;
+#endif
 }
 
 template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::UseESPEasyNow(bool value) {
+#ifdef USES_ESPEASY_NOW
   bitWrite(VariousBits1, 11, value);
+#endif
 }
 
 template<unsigned int N_TASKS>
@@ -310,6 +316,18 @@ template<unsigned int N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::SendToHTTP_follow_redirects(bool value) {
   bitWrite(VariousBits1, 27, value);
 }
+
+#if FEATURE_AUTO_DARK_MODE
+template<unsigned int N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::EnableAutomaticDarkMode() const {
+  return !bitRead(VariousBits1, 28);
+}
+
+template<unsigned int N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EnableAutomaticDarkMode(bool value) {
+  bitWrite(VariousBits1, 28, !value);
+}
+#endif // FEATURE_AUTO_DARK_MODE
 
 template<unsigned int N_TASKS>
 ExtTimeSource_e SettingsStruct_tmpl<N_TASKS>::ExtTimeSource() const {
@@ -500,6 +518,11 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   gratuitousARP(DEFAULT_GRATUITOUS_ARP);
   TolerantLastArgParse(DEFAULT_TOLERANT_LAST_ARG_PARSE);
   SendToHttp_ack(DEFAULT_SEND_TO_HTTP_ACK);
+  #ifdef USES_ESPEASY_NOW
+  UseESPEasyNow(DEFAULT_USE_ESPEASYNOW);
+  #else
+  UseESPEasyNow(false);
+  #endif
   ApDontForceSetup(DEFAULT_AP_DONT_FORCE_SETUP);
   DoNotStartAP(DEFAULT_DONT_ALLOW_START_AP);
 }

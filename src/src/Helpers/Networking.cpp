@@ -2,6 +2,7 @@
 
 #include "../Commands/InternalCommands.h"
 #include "../CustomBuild/CompiletimeDefines.h"
+#include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/TimingStats.h"
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -10,10 +11,16 @@
 #include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+
+#ifdef USES_ESPEASY_NOW
+#include "../Globals/ESPEasy_now_handler.h"
+#endif
+
 #include "../Globals/EventQueue.h"
 #include "../Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/Settings.h"
+#include "../Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
@@ -155,7 +162,7 @@ void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
     sendUDP(destUnit, (const uint8_t *)data, dataLength);
     delay(10);
   } else {
-    for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end(); ++it) {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
       if (it->first != Settings.Unit) {
         sendUDP(it->first, (const uint8_t *)data, dataLength);
         delay(10);
@@ -301,72 +308,39 @@ void checkUDP()
                 if (len < 13) {
                   break;
                 }
-                uint8_t unit = packetBuffer[12];
-# ifndef BUILD_NO_DEBUG
-                MAC_address mac;
-                uint8_t     ip[4];
+                int copy_length = sizeof(NodeStruct);
 
-                for (uint8_t x = 0; x < 6; x++) {
-                  mac.mac[x] = packetBuffer[x + 2];
+                if (copy_length > len) {
+                  copy_length = len;
                 }
+                NodeStruct received;
+                memcpy(&received, &packetBuffer[2], copy_length);
 
-                for (uint8_t x = 0; x < 4; x++) {
-                  ip[x] = packetBuffer[x + 8];
-                }
-# endif // ifndef BUILD_NO_DEBUG
-                {
-                  # ifdef USE_SECOND_HEAP
-                  HeapSelectIram ephemeral;
-
-                  // TD-er: Disabled for now as it is suspect for crashes.
-                  # endif // ifdef USE_SECOND_HEAP
-
-                  Nodes[unit].age = 0; // Create a new element when not present
-                }
-                NodesMap::iterator it = Nodes.find(unit);
-
-                if (it != Nodes.end()) {
-                  for (uint8_t x = 0; x < 4; x++) {
-                    it->second.ip[x] = packetBuffer[x + 8];
-                  }
-                  it->second.age = 0; // reset 'age counter'
-
-                  if (len >= 41)      // extended packet size
+                if (received.validate()) {
                   {
-                    it->second.build = makeWord(packetBuffer[14], packetBuffer[13]);
-                    char tmpNodeName[26] = { 0 };
-                    memcpy(&tmpNodeName[0], reinterpret_cast<uint8_t *>(&packetBuffer[15]), 25);
-                    tmpNodeName[25] = 0;
-                    {
-                      # ifdef USE_SECOND_HEAP
-                      HeapSelectIram ephemeral;
-                      # endif // ifdef USE_SECOND_HEAP
+                    #ifdef USE_SECOND_HEAP
+                    HeapSelectIram ephemeral;
+                    #endif
 
-                      it->second.nodeName = tmpNodeName;
-                      it->second.nodeName.trim();
-                    }
-                    it->second.nodeType          = packetBuffer[40];
-                    it->second.webgui_portnumber = 80;
-
-                    if ((len >= 43) && (it->second.build >= 20107)) {
-                      it->second.webgui_portnumber = makeWord(packetBuffer[42], packetBuffer[41]);
-                    }
+                    Nodes.addNode(received); // Create a new element when not present
                   }
-                }
 
 # ifndef BUILD_NO_DEBUG
 
-                if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                  String log;
-                  log += F("UDP  : ");
-                  log += mac.toString();
-                  log += ',';
-                  log += formatIP(ip);
-                  log += ',';
-                  log += unit;
-                  addLogMove(LOG_LEVEL_DEBUG_MORE, log);
+                  if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+                    String log;
+                    log.reserve(64);
+                    log  = F("UDP  : ");
+                    log += received.STA_MAC().toString();
+                    log += ',';
+                    log += received.IP().toString();
+                    log += ',';
+                    log += received.unit;
+                    addLog(LOG_LEVEL_DEBUG_MORE, log);
+                  }
+
+#endif // ifndef BUILD_NO_DEBUG
                 }
-# endif // ifndef BUILD_NO_DEBUG
                 break;
               }
 
@@ -428,7 +402,7 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
     remoteNodeIP = { 255, 255, 255, 255 };
   }
   else {
-    NodesMap::iterator it = Nodes.find(unit);
+    auto it = Nodes.find(unit);
 
     if (it == Nodes.end()) {
       return remoteNodeIP;
@@ -447,32 +421,34 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
 \*********************************************************************************************/
 void refreshNodeList()
 {
-  bool mustSendGratuitousARP = false;
+  unsigned long max_age;
+  const unsigned long max_age_allowed = 10 * 60 * 1000; // 10 minutes
 
-  for (NodesMap::iterator it = Nodes.begin(); it != Nodes.end();) {
-    bool mustRemove = true;
+  Nodes.refreshNodeList(max_age_allowed, max_age);
 
-    if (it->second.ip[0] != 0) {
-      if (it->second.age > 8) {
-        // Increase frequency sending ARP requests for 2 minutes
-        mustSendGratuitousARP = true;
-      }
-
-      if (it->second.age < 10) {
-        it->second.age++;
-        mustRemove = false;
-        ++it;
-      }
-    }
-
-    if (mustRemove) {
-      it = Nodes.erase(it);
-    }
+  #ifdef USES_ESPEASY_NOW
+  #ifdef ESP8266
+  // FIXME TD-er: Do not perform regular scans on ESP32 as long as we cannot scan per channel
+  if (!Nodes.isEndpoint()) {
+    WifiScan(true, Nodes.getESPEasyNOW_channel());
   }
+  #endif
+  #endif
 
-  if (mustSendGratuitousARP) {
+  if (max_age > (0.75 * max_age_allowed)) {
     Scheduler.sendGratuitousARP_now();
   }
+  sendSysInfoUDP(1);
+  #ifdef USES_ESPEASY_NOW
+  if (Nodes.recentlyBecameDistanceZero()) {
+    // Send to all channels
+    ESPEasy_now_handler.sendDiscoveryAnnounce(-1);
+  } else {
+    ESPEasy_now_handler.sendDiscoveryAnnounce();
+  }
+  ESPEasy_now_handler.sendNTPquery();
+  ESPEasy_now_handler.sendTraceRoute();
+  #endif // ifdef USES_ESPEASY_NOW
 }
 
 /*********************************************************************************************\
@@ -484,49 +460,30 @@ void sendSysInfoUDP(uint8_t repeats)
     return;
   }
 
-  // TODO: make a nice struct of it and clean up
-  // 1 uint8_t 'binary token 255'
-  // 1 uint8_t id '1'
-  // 6 uint8_t mac
-  // 4 uint8_t ip
-  // 1 uint8_t unit
-  // 2 uint8_t build
-  // 25 char name
-  // 1 uint8_t node type id
+  // 1 byte 'binary token 255'
+  // 1 byte id '1'
+  // NodeStruct object (packed data struct)
 
   // send my info to the world...
 # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG_MORE, F("UDP  : Send Sysinfo message"));
 # endif // ifndef BUILD_NO_DEBUG
 
+  const NodeStruct *thisNode = Nodes.getThisNode();
+
+  if (thisNode == nullptr) {
+    // Should not happen
+    return;
+  }
+
+  // Prepare UDP packet to send
+  uint8_t data[80];
+  data[0] = 255;
+  data[1] = 1;
+  memcpy(&data[2], thisNode, sizeof(NodeStruct));
+
   for (uint8_t counter = 0; counter < repeats; counter++)
   {
-    uint8_t data[80] = { 0 };
-    data[0] = 255;
-    data[1] = 1;
-
-    {
-      const MAC_address macread = NetworkMacAddress();
-
-      for (uint8_t x = 0; x < 6; x++) {
-        data[x + 2] = macread.mac[x];
-      }
-    }
-
-    {
-      const IPAddress ip = NetworkLocalIP();
-
-      for (uint8_t x = 0; x < 4; x++) {
-        data[x + 8] = ip[x];
-      }
-    }
-    data[12] = Settings.Unit;
-    data[13] =  lowByte(Settings.Build);
-    data[14] = highByte(Settings.Build);
-    memcpy(reinterpret_cast<uint8_t *>(data) + 15, Settings.Name, 25);
-    data[40] = NODE_TYPE_ID;
-    data[41] =  lowByte(Settings.WebserverPort);
-    data[42] = highByte(Settings.WebserverPort);
     statusLED(true);
 
     IPAddress broadcastIP(255, 255, 255, 255);
@@ -539,31 +496,6 @@ void sendSysInfoUDP(uint8_t repeats)
       // FIXME TD-er: Must use scheduler to send out messages, not using delay
       delay(100);
     }
-  }
-
-  {
-    # ifdef USE_SECOND_HEAP
-
-    // HeapSelectIram ephemeral;
-    // TD-er: disabled for now as it is suspect for crashes.
-    # endif // ifdef USE_SECOND_HEAP
-
-    Nodes[Settings.Unit].age = 0; // Create new node when not already present.
-  }
-
-  // store my own info also in the list
-  NodesMap::iterator it = Nodes.find(Settings.Unit);
-
-  if (it != Nodes.end())
-  {
-    IPAddress ip = NetworkLocalIP();
-
-    for (uint8_t x = 0; x < 4; x++) {
-      it->second.ip[x] = ip[x];
-    }
-    it->second.age      = 0;
-    it->second.build    = Settings.Build;
-    it->second.nodeType = NODE_TYPE_ID;
   }
 }
 
@@ -985,7 +917,18 @@ bool hasIPaddr() {
 
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms) {
-  uint32_t timer     = millis() + (timeout_ms > 500 ? 500 : timeout_ms);
+
+#ifdef USES_ESPEASY_NOW
+  if (isESPEasy_now_only()) {
+    return false;
+  }
+#endif
+
+  if (timeout_ms > 500) {
+    timeout_ms = 500;
+  }
+
+  uint32_t timer     = millis() + timeout_ms;
   uint32_t min_delay = timeout_ms / 20;
 
   if (min_delay < 10) {
