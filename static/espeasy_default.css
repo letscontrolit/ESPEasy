@@ -17,6 +17,8 @@
 	--bg10: #07d;
 	--bg11: #f8f8f8;
 	--c6: #fff;
+	--ro: 0deg;
+	--iv: 0;
 }
 
 [data-theme="dark"] {
@@ -38,6 +40,8 @@
 	--bg10: #44607a;
 	--bg11: #44607a;
 	--c6: #c3c3c3;
+	--ro: 180deg;
+	--iv: 1;
 }
 
 @media (prefers-color-scheme:dark) {
@@ -61,6 +65,8 @@
 		--bg10: #44607a;
 		--bg11: #44607a;
 		--c6: #c3c3c3;
+		--ro: 180deg;
+		--iv: 1;
 	}
 }
 
@@ -573,6 +579,10 @@ h6 {
 .container input:checked~.checkmark,
 .container2 input:checked~.dotmark {
 	background-color: var(--bg10)
+}
+
+canvas {
+	filter: invert(var(--iv)) hue-rotate(var(--ro));
 }
 
 @media screen and (max-width:780px) {
