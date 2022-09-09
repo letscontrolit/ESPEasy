@@ -2777,7 +2777,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                 g = file.read();
                 r = file.read();
                 (void)file.read(); // Ignore 4th byte
-                quantized[c] =     // -CWE-690
+                quantized[c] =     // -V757
                                ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
               }
             }
@@ -2853,8 +2853,8 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
                 if (depth == 24) {
                   // Convert each pixel from BMP to 565 format, save in dest
                   b               = sdbuf[srcidx++];
-                  g               = sdbuf[srcidx++]; // -CWE-125
-                  r               = sdbuf[srcidx++]; // -CWE-125
+                  g               = sdbuf[srcidx++]; // -V3106
+                  r               = sdbuf[srcidx++]; // -V3106
                   dest[destidx++] =
                     ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
                 } else {
@@ -2915,7 +2915,7 @@ bool AdafruitGFX_helper::showBmp(const String& filename,
   #  ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("showBmp: Done."));
   #  endif // ifndef BUILD_NO_DEBUG
-  return status; // -CWE-401
+  return status; // -V680
 
   // }
 }
