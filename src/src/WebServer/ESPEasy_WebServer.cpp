@@ -1,5 +1,7 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 
+#include "../WebServer/common.h"
+
 #include "../WebServer/404.h"
 #include "../WebServer/AccessControl.h"
 #include "../WebServer/AdvancedConfigPage.h"

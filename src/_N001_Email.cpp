@@ -127,9 +127,11 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, co
 
   String aHost = notificationsettings.Server;
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, String(F("EMAIL: Connecting to ")) + aHost + notificationsettings.Port);
   }
+#endif
 
   if (!connectClient(client, aHost.c_str(), notificationsettings.Port, CONTROLLER_CLIENTTIMEOUT_DFLT)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -252,9 +254,11 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
 
 bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String& aWaitForPattern)
 {
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, aStr);
   }
+#endif
 
   if (aStr.length()) { client.println(aStr); }
 
@@ -281,12 +285,12 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, const String& aWait
 
     const bool patternFound = line.indexOf(aWaitForPattern) >= 0;
 
-                # ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
       addLogMove(LOG_LEVEL_DEBUG, line);
     }
-                # endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
 
     if (patternFound) {
       return true;
