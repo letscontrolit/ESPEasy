@@ -28,6 +28,8 @@ var commonPlugins = [
   //P019
   "PCFGPIO", "PCFGPIOToggle", "PCFLongPulse", "PCFLongPulse_ms", "PCFPulse", "Status,PCF", "Monitor,PCF",
   "MonitorRange,PCF", "UnMonitorRange,PCF", "UnMonitor,PCF", "PCFGPIORange", "PCFGPIOpattern", "PCFMode", "PCFmodeRange",
+  //P022
+  "pcapwm", "pcafrq", "mode2",
   //P035
   "IRSEND", "IRSENDAC",
   //P036
@@ -40,6 +42,8 @@ var commonPlugins = [
   "Sensair_SetRelay",
   //P053
   "PMSX003", "PMSX003,Wake", "PMSX003,Sleep", "PMSX003,Reset",
+  //P059
+  "encwrite",
   //P065
   "Play", "Vol", "Eq", "Mode", "Repeat",
   //P067
@@ -266,6 +270,13 @@ function initCM() {
         for (const element of EXTRAWORDS) {
           let WinDB = element.substring(1);
           if ((element.includes(":") || element.includes(",")) && stream.match(WinDB)) void (0)
+        }
+      }
+//P022 addition
+      if (/\w/.test(ch)) {
+          stream.eatWhile(/[\w]/);
+          if (stream.match(".gpio") || stream.match(".pulse")|| stream.match(".frq")) {
+          return 'def';
         }
       }
 
