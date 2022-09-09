@@ -392,7 +392,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
           html_table_header(F("Alt. Decode type"));
           html_table_header(F("Repeat"));
           html_table_header(F("Alt. Code [Hex]"));
-          addHtml(F("<TR>")); //added to make "tworow" work
+          html_TR(); //added to make "tworow" work
 
           int rowCnt = 0;
 
