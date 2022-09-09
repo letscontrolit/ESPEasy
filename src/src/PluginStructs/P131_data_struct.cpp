@@ -472,7 +472,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
       }
     }
 
-    if (success) {
+    if (success && matrix) {
       matrix->show();
     }
   }

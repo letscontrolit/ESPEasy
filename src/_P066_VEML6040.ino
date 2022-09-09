@@ -230,7 +230,7 @@ float Plugin_066_CalcCCT(float R, float G, float B)
 
 float Plugin_066_CalcAmbientLight(float G, uint8_t it)
 {
-  float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f };
+  float Sensitivity[6] = { 0.25168f, 0.12584f, 0.06292f, 0.03146f, 0.01573f, 0.007865f }; //-CWE-547
 
   return G * Sensitivity[it];
 }
