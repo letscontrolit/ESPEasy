@@ -927,7 +927,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   const int bar_height_step = 100 / nbars;
 
   for (int i = 0; i < nbars; ++i) {
-    const unsigned int color = i < nbars_filled ? 0x07d : 0xa1a1a1; // Blue/Grey
+    const unsigned int color = i < nbars_filled ? 0x07d : 0xBFa1a1a1; // Blue/Grey75%
     const int barHeight      = (i + 1) * bar_height_step;
     createSvgRect_noStroke(i < nbars_filled ? F("bar_highlight") : F("bar_dimmed"), color, i * (barWidth + white_between_bar) * scale, 100 - barHeight, barWidth, barHeight, 0, 0);
   }
